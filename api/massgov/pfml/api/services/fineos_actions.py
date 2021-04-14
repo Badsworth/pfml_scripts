@@ -89,6 +89,7 @@ def register_employee(
     # If a FINEOS Id exists for SSN/FEIN return it.
     fineos_web_id_ext = (
         db_session.query(FINEOSWebIdExt)
+        .with_for_update(read=True)
         .filter(
             FINEOSWebIdExt.employee_tax_identifier == str(employee_ssn),
             FINEOSWebIdExt.employer_fein == str(employer_fein),
@@ -106,39 +107,40 @@ def register_employee(
             raise ValueError("fineos_web_id_ext is missing a fineos_web_id")
 
         return fineos_web_id_ext.fineos_web_id
-    else:
-        # Find FINEOS employer id using employer FEIN
-        employer_id = fineos.find_employer(employer_fein)
-        logger.info("found employer_id %s", employer_id)
 
-        # Generate external id
-        employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
+    # Find FINEOS employer id using employer FEIN
+    employer_id = fineos.find_employer(employer_fein)
+    logger.info("found employer_id %s", employer_id)
 
-        employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
-            user_id=employee_external_id,
-            customer_number=None,
-            date_of_birth=datetime.date(1753, 1, 1),
-            email=None,
-            employer_id=employer_id,
-            first_name=None,
-            last_name=None,
-            national_insurance_no=employee_ssn,
-        )
+    # Generate external id
+    employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
 
-        logger.info("registered as %s", employee_external_id)
+    employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
+        user_id=employee_external_id,
+        customer_number=None,
+        date_of_birth=datetime.date(1753, 1, 1),
+        email=None,
+        employer_id=employer_id,
+        first_name=None,
+        last_name=None,
+        national_insurance_no=employee_ssn,
+    )
 
-        # If successful save ExternalIdentifier in the database
-        fineos_web_id_ext = FINEOSWebIdExt()
-        fineos_web_id_ext.employee_tax_identifier = employee_ssn
-        fineos_web_id_ext.employer_fein = employer_fein
-        fineos_web_id_ext.fineos_web_id = employee_external_id
-        db_session.add(fineos_web_id_ext)
+    fineos_web_id_ext = FINEOSWebIdExt()
+    fineos_web_id_ext.employee_tax_identifier = employee_ssn
+    fineos_web_id_ext.employer_fein = employer_fein
+    fineos_web_id_ext.fineos_web_id = employee_external_id
+    db_session.add(fineos_web_id_ext)
+    db_session.commit()
 
-        db_session.commit()
-
+    try:
         fineos.register_api_user(employee_registration)
-        return employee_external_id
+    except FINEOSNotFound as err:
+        logger.error("FINEOS failed to register the employee; rolling back changes.", err)
+        db_session.rollback()
+        return None
 
+    return employee_external_id
 
 def send_to_fineos(
     application: Application, db_session: massgov.pfml.db.Session, current_user: Optional[User]
