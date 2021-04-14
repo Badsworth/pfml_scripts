@@ -544,7 +544,7 @@ jobs:
 
           if ! [ -z $prefix ]; then
             terraform state rm -lock-timeout=120s module.api.aws_cloudwatch_log_group.postgresql
-            terraform state import -lock-timeout=120s \
+            terraform import -lock-timeout=120s \
               module.api.aws_cloudwatch_log_group.postgresql \
               /aws/rds/instance/$prefix${{ needs.deploy-info.outputs.api-env }}/postgresql
           fi
