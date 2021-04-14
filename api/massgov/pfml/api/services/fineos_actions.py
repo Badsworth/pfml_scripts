@@ -85,7 +85,7 @@ def register_employee(
     employee_ssn: str,
     employer_fein: str,
     db_session: massgov.pfml.db.Session,
-) -> Optional[str]:
+) -> str:
     # If a FINEOS Id exists for SSN/FEIN return it.
     fineos_web_id_ext = (
         db_session.query(FINEOSWebIdExt)
@@ -136,13 +136,7 @@ def register_employee(
 
         db_session.commit()
 
-        try:
-            fineos.register_api_user(employee_registration)
-        except massgov.pfml.fineos.FINEOSClientError:
-            logger.exception("FINEOS API error while attempting to register employee/fineos api user.")
-            # NOTE: Should we remove `fineos_web_id_ext`? It wasn't saved.
-            return None
-
+        fineos.register_api_user(employee_registration)
         return employee_external_id
 
 
