@@ -37,10 +37,6 @@ def test_process_all_states_raises_exception_at_end_if_any_state_raised_execptio
         data_mart_states_processing.vcc_error_report_sent, "process", side_effect=Exception
     )
 
-    mock_eft_pending = mocker.patch.object(
-        data_mart_states_processing.eft_pending, "process", side_effect=Exception
-    )
-
     with pytest.raises(Exception):
         data_mart_states_processing.process_all_states(mock_db_session)
 
@@ -48,7 +44,6 @@ def test_process_all_states_raises_exception_at_end_if_any_state_raised_execptio
     mock_vcc_sent.assert_called_once()
     mock_vcm_report_sent.assert_called_once()
     mock_vcc_error_report_sent.assert_called_once()
-    mock_eft_pending.assert_called_once()
 
 
 def test_process_all_states_all_success(mocker, mock_db_session):
@@ -68,26 +63,9 @@ def test_process_all_states_all_success(mocker, mock_db_session):
         data_mart_states_processing.vcc_error_report_sent, "process"
     )
 
-    mock_eft_pending = mocker.patch.object(data_mart_states_processing.eft_pending, "process")
-
     data_mart_states_processing.process_all_states(mock_db_session)
 
     mock_identify_mmars_status.assert_called_once()
     mock_vcc_sent.assert_called_once()
     mock_vcm_report_sent.assert_called_once()
     mock_vcc_error_report_sent.assert_called_once()
-    mock_eft_pending.assert_called_once()
-
-
-def test_process_all_states_data_mart_mock(monkeypatch, mocker, mock_db_session):
-    monkeypatch.setenv("CTR_DATA_MART_MOCK", "true")
-
-    real_client_init = mocker.patch.object(data_mart.RealClient, "__init__", side_effect=Exception)
-    test_scenario_client_init = mocker.patch.object(
-        data_mart.TestScenariosClient, "__init__", side_effect=Exception
-    )
-
-    data_mart_states_processing.process_all_states(mock_db_session)
-
-    real_client_init.assert_not_called()
-    test_scenario_client_init.assert_called_once()
