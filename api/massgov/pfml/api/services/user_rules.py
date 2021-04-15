@@ -40,10 +40,8 @@ def get_users_patch_employer_issues(user: User, employer: Optional[Employer]) ->
         )
 
     with app.db_session() as db_session:
-        application = (
-            db_session.query(Application).filter(Application.user_id == user.user_id).first()
-        )
-        if application is not None:
+        application_count = db_session.query(Application).filter(Application.user_id == user.user_id).count()
+        if application_count:
             issues.append(
                 Issue(
                     field="applications",
