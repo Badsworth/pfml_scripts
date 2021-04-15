@@ -16,6 +16,7 @@ from massgov.pfml.db.models.employees import (
     Flow,
     Payment,
     PaymentCheck,
+    PaymentCheckStatus,
     PaymentReferenceFile,
     PubErrorType,
     ReferenceFile,
@@ -185,6 +186,8 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             ),
             self.db_session,
         )
+        payment.check.check_posted_date = check_payment.paid_date
+        payment.check.payment_check_status_id = PaymentCheckStatus.PAID.payment_check_status_id
         logger.info(
             "payment complete by paid check", extra=extra_for_log(check_payment, payment),
         )
@@ -212,6 +215,9 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 check_status=check_payment.status.name,
             ),
             self.db_session,
+        )
+        payment.check.payment_check_status_id = PaymentCheckStatus.get_id(
+            description=check_payment.status.value
         )
         logger.info(
             "payment failed by check", extra=extra_for_log(check_payment, payment),
