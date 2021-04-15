@@ -12,7 +12,7 @@ def get_users_patch_employer_issues(user: User, employer: Optional[Employer]) ->
     """Validate that the Employer a user is signing up to administer is valid"""
     issues = []
 
-    if employer is None:
+    if not employer or not employer.fineos_employer_id:
         issues.append(
             Issue(
                 field="user_leave_administrator.employer_fein",
