@@ -74,7 +74,7 @@ class RelationshipToCaregiver(str, LookupEnum):
     other_family_member = "Other Family Member"
     service_member = "Service Member"
     inlaw = "Inlaw"
-    sibling = "Sibling"
+    sibling = "Sibling - Brother/Sister"
     other = "Other"
     employee = "Employee"
 

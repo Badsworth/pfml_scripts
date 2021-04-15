@@ -357,7 +357,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
     if application.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id:
         issues += get_bonding_leave_issues(application)
 
-    if application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id:
+    if application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id and application.caring_leave_metadata:  # type: ignore
         issues += get_caring_leave_issues(application)
 
     if application.employer_notified:

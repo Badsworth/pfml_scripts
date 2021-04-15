@@ -546,7 +546,7 @@ class RelationshipToCaregiver(LookupTable):
     OTHER_FAMILY_MEMBER = LkRelationshipToCaregiver(5, "Other Family Member")
     SERVICE_MEMBER = LkRelationshipToCaregiver(6, "Service Member")
     INLAW = LkRelationshipToCaregiver(7, "Inlaw")
-    SIBLING = LkRelationshipToCaregiver(8, "Sibling")
+    SIBLING = LkRelationshipToCaregiver(8, "Sibling - Brother/Sister")
     OTHER = LkRelationshipToCaregiver(9, "Other")
     EMPLOYEE = LkRelationshipToCaregiver(10, "Employee")
     SPOUSE = LkRelationshipToCaregiver(11, "Spouse")
