@@ -85,8 +85,8 @@ PEI_FIELD_NAMES = [
     "EVENTREASON",
 ]
 PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
-PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU"]
-REQUESTED_ABSENCE_FIELD_NAMES = ["ABSENCE_CASENUMBER", "LEAVEREQUEST_DECISION"]
+PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"]
+REQUESTED_ABSENCE_FIELD_NAMES = ["LEAVEREQUEST_DECISION", "LEAVEREQUEST_ID"]
 
 FINEOS_VENDOR_EXPORT_FILES = [
     REQUESTED_ABSENCE_SOM_FILE_NAME,
@@ -145,6 +145,7 @@ class FineosPaymentData:
         self.payment_start_period = self.get_value("payment_start", "2021-01-01 12:00:00")
         self.payment_end_period = self.get_value("payment_end", "2021-01-08 12:00:00")
 
+        self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int()))
         self.leave_request_decision = self.get_value("leave_request_decision", "Approved")
 
     def get_vpei_record(self):
@@ -173,6 +174,7 @@ class FineosPaymentData:
         claim_detail_record["PECLASSID"] = self.c_value
         claim_detail_record["PEINDEXID"] = self.i_value
         claim_detail_record["ABSENCECASENU"] = self.absence_case_number
+        claim_detail_record["LEAVEREQUESTI"] = self.leave_request_id
         return claim_detail_record
 
     def get_payment_details_record(self):
@@ -187,8 +189,8 @@ class FineosPaymentData:
 
     def get_requested_absence_record(self):
         requested_absence_record = OrderedDict()
-        requested_absence_record["ABSENCE_CASENUMBER"] = self.absence_case_number
         requested_absence_record["LEAVEREQUEST_DECISION"] = self.leave_request_decision
+        requested_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id
         return requested_absence_record
 
     def get_value(self, key, default):
@@ -318,7 +320,7 @@ def generate_payment_extract_files(
             else INVALID_ADDRESSES[0]
         )
 
-        # Auto generated: c_value, i_value
+        # Auto generated: c_value, i_value, leave_request_id
         fineos_payments_data = FineosPaymentData(
             generate_defaults=True,
             tin=ssn,
