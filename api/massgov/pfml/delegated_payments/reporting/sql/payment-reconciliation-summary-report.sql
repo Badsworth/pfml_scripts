@@ -15,8 +15,8 @@ WITH PAYMENT_BATCH_TRANSACTIONS AS (
                                             WHERE SOURCE = 'PaymentExtractStep'))
 SELECT CASE
          WHEN CURRENT_STATE = 'Add employer reimbursement payment to FINEOS Writeback' THEN 'Employer Reimbursment'
-         WHEN CURRENT_STATE = 'Add to PUB Transaction - Check' THEN 'PUB Check'
-         WHEN CURRENT_STATE = 'Add to PUB Transaction - ACH' THEN 'PUB ACH'
+         WHEN CURRENT_STATE = 'FINEOS Writeback sent - Check' THEN 'PUB Check'
+         WHEN CURRENT_STATE = 'FINEOS Writeback sent - EFT' THEN 'PUB ACH'
          WHEN CURRENT_STATE = 'Add to Payment Error Report' THEN 'Payment Error'
          WHEN CURRENT_STATE = '$0 payment FINEOS Writeback sent' THEN 'Zero Dollar Payment'
          ELSE CURRENT_STATE
