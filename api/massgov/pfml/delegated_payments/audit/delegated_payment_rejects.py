@@ -268,11 +268,7 @@ class PaymentRejectsStep(Step):
         logger.info("Completed transition of not sampled payment audit pending states")
 
     def process_rejects_and_send_report(
-        self,
-        payment_rejects_received_folder_path: str,
-        payment_rejects_processed_folder_path: str,
-        payment_rejects_report_outbound_folder: str,
-        payment_rejects_report_sent_folder_path: str,
+        self, payment_rejects_received_folder_path: str, payment_rejects_processed_folder_path: str,
     ) -> None:
         # TODO Confirm we should look in a dated folder? if so today or yesterday's date?
         payment_rejects_received_folder_dated_path = os.path.join(
@@ -356,8 +352,6 @@ class PaymentRejectsStep(Step):
             self.process_rejects_and_send_report(
                 s3_config.payment_rejects_received_folder_path,
                 s3_config.payment_rejects_processed_folder_path,
-                s3_config.payment_rejects_report_outbound_folder,
-                s3_config.payment_rejects_report_sent_folder_path,
             )
 
             self.db_session.commit()

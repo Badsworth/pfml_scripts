@@ -754,6 +754,7 @@ class PaymentExtractStep(Step):
         # We need to add the address to the employee.
         # TODO - If FINEOS provides a value that indicates an address
         # has been validated, we would also set the experian_address here.
+        # When already verified address is supported, also add a happy path test scenario.
         new_experian_address_pair = ExperianAddressPair(fineos_address=payment_data_address)
 
         self.db_session.add(payment_data_address)

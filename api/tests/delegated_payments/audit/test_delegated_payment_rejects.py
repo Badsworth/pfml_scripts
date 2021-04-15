@@ -179,18 +179,10 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     # setup folder path configs
     payment_rejects_received_folder_path = str(tempfile.mkdtemp())
     payment_rejects_processed_folder_path = str(tempfile.mkdtemp())
-    payment_rejects_report_outbound_folder = str(tempfile.mkdtemp())
-    payment_rejects_report_sent_folder_path = str(tempfile.mkdtemp())
 
     monkeypatch.setenv("PAYMENT_REJECTS_RECEIVED_FOLDER_PATH", payment_rejects_received_folder_path)
     monkeypatch.setenv(
         "PAYMENT_REJECTS_PROCESSED_FOLDER_PATH", payment_rejects_processed_folder_path
-    )
-    monkeypatch.setenv(
-        "PAYMENT_REJECTS_REPORT_OUTBOUND_FOLDER", payment_rejects_report_outbound_folder
-    )
-    monkeypatch.setenv(
-        "PAYMENT_REJECTS_REPORT_SENT_FOLDER_PATH", payment_rejects_report_sent_folder_path
     )
 
     date_folder = "2021-01-15"

@@ -79,6 +79,7 @@ class AddressValidationStep(Step):
         # No response
         address = address_pair.fineos_address
         response = _experian_response_for_address(experian_client, address)
+
         if response.result is None:
             state_log_util.create_finished_state_log(
                 associated_model=payment,

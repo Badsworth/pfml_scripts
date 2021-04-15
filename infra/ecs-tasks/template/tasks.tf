@@ -159,8 +159,6 @@ locals {
       vars = {
         payment_rejects_received_folder_path    = var.payment_rejects_received_folder_path
         payment_rejects_processed_folder_path   = var.payment_rejects_processed_folder_path
-        payment_rejects_report_outbound_folder  = var.payment_rejects_report_outbound_folder
-        payment_rejects_report_sent_folder_path = var.payment_rejects_report_sent_folder_path
       }
     },
 
