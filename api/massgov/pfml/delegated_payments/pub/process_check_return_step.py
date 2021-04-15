@@ -15,6 +15,7 @@ from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
     Flow,
     Payment,
+    PaymentCheck,
     PaymentReferenceFile,
     PubErrorType,
     ReferenceFile,
@@ -114,7 +115,8 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         """Read the payment from the database that matches the given check payment."""
         payment = (
             self.db_session.query(Payment)
-            .filter(Payment.check_number == check_payment.check_number)
+            .join(PaymentCheck)
+            .filter(PaymentCheck.check_number == check_payment.check_number)
             .one_or_none()
         )
         if payment is not None:

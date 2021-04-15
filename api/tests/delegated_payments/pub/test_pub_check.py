@@ -132,7 +132,7 @@ def test_create_check_file_success(
             == 1
         )
 
-        assert payment.check_number == (i + 1)
+        assert payment.check.check_number == (i + 1)
 
 
 def test_send_check_file(mock_s3_bucket):
