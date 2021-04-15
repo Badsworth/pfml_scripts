@@ -6,7 +6,7 @@ locals {
 
 # TODO: a "burn rate" metric: given a send rate and remaining send quota, how long until the entire quota is used up?
 resource "aws_cloudwatch_metric_alarm" "ses_send_rate" {
-  alarm_name = "ses_send_rate"
+  alarm_name = "massgov_pfml_allenvs-ses_send_rate"
   alarm_description = "(SES CRIT) Abnormally high email send rate through SES"
   namespace = "AWS/SES"
   metric_name = "Send"
