@@ -1402,7 +1402,7 @@ components:
           type: object
           properties:
             role_description:
-              description: Type of user account to be created
+              description: Role type to request the user be updated to
               type: string
               enum:
                 - Claimant
