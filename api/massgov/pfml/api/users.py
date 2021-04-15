@@ -16,7 +16,7 @@ from massgov.pfml.api.services.user_rules import (
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
+from massgov.pfml.db.models.employees import Employer, Role, User
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein, sanitize_fein

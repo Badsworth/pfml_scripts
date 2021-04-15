@@ -1,7 +1,7 @@
 import secrets
 import string
 import time
-from typing import Optional, Union
+from typing import Dict, Optional, Tuple, Union
 
 import boto3
 import botocore
@@ -9,7 +9,7 @@ import botocore
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
 from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.db.models.employees import User
+from massgov.pfml.db.models.employees import Employer
 from massgov.pfml.util.employers import lookup_employer
 
 ACTIVE_DIRECTORY_ATTRIBUTE = "sub"
@@ -139,7 +139,7 @@ def create_verified_cognito_account(
     fein: str,
     cognito_user_pool_id: str,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
-) -> User:
+) -> Tuple[str, str, Optional[Employer], Dict[str, str]]:
     """Create Cognito and API records for a leave admin with a verified email and temporary password"""
 
     active_directory_id: Optional[str] = None

@@ -172,7 +172,7 @@ def register_or_update_leave_admin(
             try:
                 user = leave_admin_create(
                     db_session,
-                    User(auth_id=existing_cognito_id, email_address=email,),
+                    User(active_directory_id=existing_cognito_id, email_address=email),
                     requested_employer,
                     {"auth_id": existing_cognito_id},
                 )
@@ -197,9 +197,11 @@ def register_or_update_leave_admin(
                 cognito_user_pool_id=cognito_pool_id,
                 cognito_client=cognito_client,
             )
+            if employer is None:
+                raise ValueError("Invalid employer_fein")
             user = leave_admin_create(
                 db_session,
-                User(active_directory_id=auth_id, email_address=email,),
+                User(active_directory_id=auth_id, email_address=email),
                 employer,
                 log_attributes,
             )
@@ -253,8 +255,7 @@ def leave_admin_create(
     user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
     user_leave_admin = UserLeaveAdministrator(user=user, employer=employer, fineos_web_id=None,)
     try:
-        if user.user_id is None:
-            db_session.add(user)
+        db_session.add(user)
         db_session.add(user_role)
         db_session.add(user_leave_admin)
         db_session.commit()

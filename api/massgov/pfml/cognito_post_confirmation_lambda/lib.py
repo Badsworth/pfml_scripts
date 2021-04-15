@@ -1,12 +1,10 @@
 import re
 from typing import Any, Dict, Literal, Optional
 
-from sqlalchemy.exc import SQLAlchemyError
-
 import massgov.pfml.util.aws_lambda as aws_lambda
 import massgov.pfml.util.logging
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
+from massgov.pfml.db.models.employees import User
 from massgov.pfml.util.employers import lookup_employer
 from massgov.pfml.util.users import leave_admin_create
 
