@@ -181,9 +181,9 @@ def test_add_pub_error(test_db_session, tmp_path, initialize_factories_session):
 
     # error if log entry has not been set (i.e. process has not been run)
     with pytest.raises(
-        Exception, match="'ProcessReturnFileStep' object has no log entry set",
+        Exception, match="object has no log entry set",
     ):
-        step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, 6, "")
+        step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, "", 6)
 
     step.log_entry = LogEntry(test_db_session, "Test")
 
@@ -191,7 +191,7 @@ def test_add_pub_error(test_db_session, tmp_path, initialize_factories_session):
     with pytest.raises(
         AttributeError, match="'ProcessReturnFileStep' object has no attribute 'reference_file",
     ):
-        step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, 6, "")
+        step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, "", 6)
 
     # add reference file and log entry
     reference_file = ReferenceFile(
@@ -208,7 +208,7 @@ def test_add_pub_error(test_db_session, tmp_path, initialize_factories_session):
     raw_data = "62244400000303030000003      0000010375P3             Stephens John           1221172180000002"
 
     # no payment or pub_eft
-    pub_error = step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, 6, raw_data, details=details)
+    pub_error = step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, raw_data, 6, details=details)
 
     assert pub_error.pub_error_type_id == PubErrorType.ACH_RETURN.pub_error_type_id
     assert pub_error.message == "test"
@@ -223,20 +223,20 @@ def test_add_pub_error(test_db_session, tmp_path, initialize_factories_session):
     assert pub_error.pub_eft is None
 
     # no details
-    pub_error = step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, 6, raw_data)
+    pub_error = step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, raw_data, 6)
     assert pub_error.details == {}
 
     # with payment
     payment = PaymentFactory.create()
     pub_error = step.add_pub_error(
-        PubErrorType.ACH_RETURN, "test", 2, 6, raw_data, details=details, payment=payment
+        PubErrorType.ACH_RETURN, "test", 2, raw_data, 6, details=details, payment=payment
     )
     assert pub_error.payment_id == payment.payment_id
 
     # with pub_eft
     pub_eft = PubEftFactory.create()
     pub_error = step.add_pub_error(
-        PubErrorType.ACH_RETURN, "test", 2, 6, raw_data, details=details, pub_eft=pub_eft
+        PubErrorType.ACH_RETURN, "test", 2, raw_data, 6, details=details, pub_eft=pub_eft
     )
     assert pub_error.pub_eft_id == pub_eft.pub_eft_id
 

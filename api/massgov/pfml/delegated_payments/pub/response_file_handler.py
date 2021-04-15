@@ -3,10 +3,10 @@
 #
 # To run this locally, use `make pub-payments-process-pub-returns`.
 #
-import os.path
+
 import re
 import uuid
-from typing import Any, Dict, Optional, Sequence, TextIO, cast
+from typing import Optional, Sequence, TextIO, cast
 
 import massgov.pfml.db
 import massgov.pfml.util.datetime
@@ -15,18 +15,17 @@ import massgov.pfml.util.logging
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
     Flow,
-    LkPubErrorType,
     Payment,
     PaymentReferenceFile,
     PrenoteState,
     PubEft,
-    PubError,
     PubErrorType,
     ReferenceFile,
     ReferenceFileType,
     State,
 )
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
+from massgov.pfml.delegated_payments.pub import process_files_in_path_step
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.util.ach import reader
 
@@ -44,14 +43,8 @@ class CopyReturnFilesToS3Step(Step):
         return None
 
 
-class ProcessReturnFileStep(Step):
+class ProcessReturnFileStep(process_files_in_path_step.ProcessFilesInPathStep):
     """Process an ACH return file received from the bank."""
-
-    received_path: str
-    processed_path: str
-    error_path: str
-    reference_file: ReferenceFile
-    more_files_to_process: bool
 
     def __init__(
         self,
@@ -60,51 +53,9 @@ class ProcessReturnFileStep(Step):
         s3_config: delegated_config.PaymentsS3Config,
     ) -> None:
         """Constructor."""
-        self.compute_paths_from_config(s3_config)
-        self.more_files_to_process = True
+        super().__init__(db_session, log_entry_db_session, s3_config.pfml_pub_inbound_path)
 
-        super().__init__(db_session, log_entry_db_session)
-
-    def run_step(self) -> None:
-        """List incoming directory and process the oldest ACH return file.
-
-        Returns True if there are more incoming files to process.
-        """
-        s3_objects = massgov.pfml.util.files.list_files(self.received_path)
-        s3_objects.sort()
-
-        logger.info("found files in %s: %s", self.received_path, s3_objects)
-
-        if s3_objects:
-            file = s3_objects.pop(0)
-            path = os.path.join(self.received_path, file)
-            self.set_metrics(input_path=path)
-            self.process_return_file(path)
-
-        self.more_files_to_process = s3_objects != []
-
-    def have_more_files_to_process(self) -> bool:
-        """Determine if there are more incoming files to process.
-
-        If this returns True, the caller may call run() again to process the next file.
-        """
-        return self.more_files_to_process
-
-    def compute_paths_from_config(self, s3_config: delegated_config.PaymentsS3Config) -> None:
-        """Compute the subdirectory paths for received, processed, and error files."""
-        self.received_path = os.path.join(
-            s3_config.pfml_pub_inbound_path,
-            delegated_payments_util.Constants.S3_INBOUND_RECEIVED_DIR,
-        )
-        self.processed_path = os.path.join(
-            s3_config.pfml_pub_inbound_path,
-            delegated_payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
-        )
-        self.error_path = os.path.join(
-            s3_config.pfml_pub_inbound_path, delegated_payments_util.Constants.S3_INBOUND_ERROR_DIR,
-        )
-
-    def process_return_file(self, path: str) -> None:
+    def process_file(self, path: str) -> None:
         """Parse an ACH return file and process each record."""
         self.reference_file = ReferenceFile(
             reference_file_id=uuid.uuid4(),
@@ -141,8 +92,8 @@ class ProcessReturnFileStep(Step):
                 pub_error_type=PubErrorType.ACH_WARNING,
                 message=warning.warning,
                 line_number=warning.raw_record.line_number,
-                type_code=warning.raw_record.type_code.value,
                 raw_data=warning.raw_record.data,
+                type_code=warning.raw_record.type_code.value,
             )
 
         self.process_ach_returns(ach_reader.get_ach_returns())
@@ -189,8 +140,8 @@ class ProcessReturnFileStep(Step):
                 pub_error_type=PubErrorType.ACH_RETURN,
                 message="id number not in known PFML formats",
                 line_number=ach_return.line_number,
-                type_code=ach_return.raw_record.type_code.value,
                 raw_data=ach_return.raw_record.data,
+                type_code=ach_return.raw_record.type_code.value,
                 details=ach_return.get_details_for_error(),
             )
 
@@ -213,8 +164,8 @@ class ProcessReturnFileStep(Step):
                 pub_error_type=PubErrorType.ACH_PRENOTE,
                 message="id number not in pub_eft table",
                 line_number=ach_return.line_number,
-                type_code=ach_return.raw_record.type_code.value,
                 raw_data=ach_return.raw_record.data,
+                type_code=ach_return.raw_record.type_code.value,
                 details=ach_return.get_details_for_error(),
             )
             return
@@ -234,8 +185,8 @@ class ProcessReturnFileStep(Step):
                 pub_error_type=PubErrorType.ACH_PRENOTE,
                 message=message,
                 line_number=ach_return.line_number,
-                type_code=ach_return.raw_record.type_code.value,
                 raw_data=ach_return.raw_record.data,
+                type_code=ach_return.raw_record.type_code.value,
                 details=ach_return.get_details_for_error(),
                 pub_eft=pub_eft,
             )
@@ -252,8 +203,8 @@ class ProcessReturnFileStep(Step):
                 pub_error_type=PubErrorType.ACH_PRENOTE,
                 message=message,
                 line_number=ach_return.line_number,
-                type_code=ach_return.raw_record.type_code.value,
                 raw_data=ach_return.raw_record.data,
+                type_code=ach_return.raw_record.type_code.value,
                 details=ach_return.get_details_for_error(),
                 pub_eft=pub_eft,
             )
@@ -285,8 +236,8 @@ class ProcessReturnFileStep(Step):
                 pub_error_type=PubErrorType.ACH_RETURN,
                 message="id number not in payment table",
                 line_number=ach_return.line_number,
-                type_code=ach_return.raw_record.type_code.value,
                 raw_data=ach_return.raw_record.data,
+                type_code=ach_return.raw_record.type_code.value,
                 details=ach_return.get_details_for_error(),
             )
             return
@@ -354,8 +305,8 @@ class ProcessReturnFileStep(Step):
                 pub_error_type=PubErrorType.ACH_RETURN,
                 message="unexpected state for payment",
                 line_number=ach_return.line_number,
-                type_code=ach_return.raw_record.type_code.value,
                 raw_data=ach_return.raw_record.data,
+                type_code=ach_return.raw_record.type_code.value,
                 details=details,
                 payment=payment,
             )
@@ -396,8 +347,8 @@ class ProcessReturnFileStep(Step):
                 pub_error_type=PubErrorType.ACH_SUCCESS_WITH_NOTIFICATION,
                 message="Payment complete with change notification",
                 line_number=change_notification.line_number,
-                type_code=change_notification.raw_record.type_code.value,
                 raw_data=change_notification.raw_record.data,
+                type_code=change_notification.raw_record.type_code.value,
                 details=change_notification.get_details_for_error(),
                 payment=payment,
             )
@@ -429,46 +380,11 @@ class ProcessReturnFileStep(Step):
                 pub_error_type=PubErrorType.ACH_NOTIFICATION,
                 message="unexpected state for payment",
                 line_number=change_notification.line_number,
-                type_code=change_notification.raw_record.type_code.value,
                 raw_data=change_notification.raw_record.data,
+                type_code=change_notification.raw_record.type_code.value,
                 details=details,
                 payment=payment,
             )
-
-    def add_pub_error(
-        self,
-        pub_error_type: LkPubErrorType,
-        message: str,
-        line_number: int,
-        type_code: int,
-        raw_data: str,
-        details: Optional[Dict[str, Any]] = None,
-        payment: Optional[Payment] = None,
-        pub_eft: Optional[PubEft] = None,
-    ) -> PubError:
-        if self.get_import_log_id() is None:
-            raise Exception("'ProcessReturnFileStep' object has no log entry set")
-
-        pub_error = PubError(
-            pub_error_type_id=pub_error_type.pub_error_type_id,
-            message=message,
-            line_number=line_number,
-            type_code=type_code,
-            raw_data=raw_data,
-            details=details or {},
-            import_log_id=cast(int, self.get_import_log_id()),
-            reference_file_id=self.reference_file.reference_file_id,
-        )
-
-        if payment is not None:
-            pub_error.payment_id = payment.payment_id
-
-        if pub_eft is not None:
-            pub_error.pub_eft_id = pub_eft.pub_eft_id
-
-        self.db_session.add(pub_error)
-
-        return pub_error
 
 
 def parse_eft_prenote_pub_individual_id(id_number: str) -> Optional[int]:

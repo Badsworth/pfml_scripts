@@ -79,6 +79,7 @@ class CheckReader:
         self.line_errors: List[CheckParseLineError] = []
         self.is_outstanding_issues = False
         self.is_paid_checks = False
+        self.logging_extra = {"check_return.reader.name": self.name}
 
         self.parse_check_file()
 
@@ -106,17 +107,13 @@ class CheckReader:
             except LineParseError as err:
                 self.add_line_error(csv_reader.line_num, err.args[0], err.args[1])
 
-        logger.info(
-            "parse file done",
-            extra={
-                "check_return.reader.name": self.name,
-                "check_return.reader.payment_count": len(self.check_payments),
-                "check_return.reader.line_error_count": len(self.line_errors),
-            },
-        )
+        self.logging_extra["check_return.reader.payment_count"] = len(self.check_payments)
+        self.logging_extra["check_return.reader.line_error_count"] = len(self.line_errors)
+        logger.info("parse file done", extra=self.logging_extra)
 
     def parse_csv_line(self, line_number, line):
         """Parse a single csv line."""
+        logging_extra = {**self.logging_extra, "check_return.reader.line_number": line_number}
         check_payment = CheckPayment(
             line_number=line_number,
             raw_line=self.stream_iterator.last_item,
@@ -130,12 +127,19 @@ class CheckReader:
                 raise LineParseError("Type Detail", "invalid status")
             check_payment.issued_date = parse_date(line["Issued Date"], "Issued Date")
             check_payment.amount = parse_decimal(line["Issued Amount"], "Issued Amount")
+            if check_payment.amount <= 0:
+                logger.warning("check payment amount is not positive", extra=logging_extra)
+                check_payment.amount = abs(check_payment.amount)
         elif self.is_paid_checks:
             check_payment.status = PaidStatus.PAID
             check_payment.paid_date = parse_date(line["Posted Date"], "Posted Date")
             # Posted amounts are negative in the "Paid Checks" file, but we want positive for
             # consistency with "Outstanding Issues" file.
-            check_payment.amount = -parse_decimal(line["Posted Amount"], "Posted Amount")
+            check_payment.amount = parse_decimal(line["Posted Amount"], "Posted Amount")
+            if check_payment.amount < 0:
+                check_payment.amount = abs(check_payment.amount)
+            else:
+                logger.warning("check posted amount is not negative", extra=logging_extra)
         self.check_payments.append(check_payment)
 
     COMMON_FIELDS = {"Type", "Type Detail", "Check Number", "Payee Name"}
@@ -151,8 +155,10 @@ class CheckReader:
             raise CheckParseError("common fields not present in CSV header")
         if self.OUTSTANDING_ISSUES_FIELDS <= field_names:
             self.is_outstanding_issues = True
+            logger.info("detected file type: outstanding issues", extra=self.logging_extra)
         elif self.PAID_CHECKS_FIELDS <= field_names:
             self.is_paid_checks = True
+            logger.info("detected file type: paid checks", extra=self.logging_extra)
         else:
             raise CheckParseError("required fields for either format not present in CSV header")
 
