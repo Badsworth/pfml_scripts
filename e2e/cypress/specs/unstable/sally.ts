@@ -25,8 +25,9 @@ describe("Payment amounts", () => {
           if (typeof response.fineos_absence_id !== "string") {
             throw new Error("Response must include FINEOS absence ID");
           }
+          fineos.submitActualHours(response.fineos_absence_id);
           fineos.checkPaymentPreference(claim);
-          fineos.claimIntermittentAdjudicationFlow(
+          fineos.intermittentClaimAdjudicationFlow(
             response.fineos_absence_id,
             true
           );
