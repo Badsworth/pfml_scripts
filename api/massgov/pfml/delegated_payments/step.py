@@ -36,7 +36,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             before_map = {"before_state_log_counts": state_log_counts_before}
             flattened_state_log_counts_before = flatten(before_map)
 
-            self.set_metrics(state_log_counts_before=flattened_state_log_counts_before)
+            self.set_metrics(**flattened_state_log_counts_before)
             self.run_step()
 
             # Flatten these prefixed with the "after" key since nested values in the
@@ -46,7 +46,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             after_map = {"after_state_log_counts": state_log_counts_after}
             flattened_state_log_counts_after = flatten(after_map)
 
-            self.set_metrics(state_log_counts_after=flattened_state_log_counts_after)
+            self.set_metrics(**flattened_state_log_counts_after)
 
     @abc.abstractmethod
     def run_step(self) -> None:
