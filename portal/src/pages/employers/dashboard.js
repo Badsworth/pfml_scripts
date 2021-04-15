@@ -1,6 +1,9 @@
 import Alert from "../../components/Alert";
 import ClaimCollection from "../../models/ClaimCollection";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
+// TODO (EMPLOYER-859): Render component when pagination metadata is available
+// import PaginationNavigation from "../../components/PaginationNavigation";
+// import PaginationSummary from "../../components/PaginationSummary";
 import PropTypes from "prop-types";
 import React from "react";
 import Table from "../../components/Table";
@@ -49,6 +52,10 @@ export const Dashboard = (props) => {
     .filter(([columnKey, isVisible]) => isVisible)
     .map(([columnKey, isVisible]) => columnKey);
 
+  /* TODO (EMPLOYER-859): Implement API call to take in page index */
+  // const getUpdatedRecords = (pageIndex) => {
+  // };
+
   return (
     <React.Fragment>
       <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
@@ -73,7 +80,10 @@ export const Dashboard = (props) => {
       <p className="margin-bottom-4">
         {t("pages.employersDashboard.instructions")}
       </p>
-
+      {/* TODO (EMPLOYER-859): Render component when pagination metadata is available  */}
+      {/* <PaginationSummary
+        pageIndex={pageIndex} pageSize={pageSize} totalPages={totalPages} totalRecords={totalRecords}
+      /> */}
       <Table className="width-full tablet:width-auto" responsive scrollable>
         <thead>
           <tr>
@@ -109,6 +119,8 @@ export const Dashboard = (props) => {
           )}
         </tbody>
       </Table>
+      {/* TODO (EMPLOYER-859): Render component when pagination metadata is available  */}
+      {/* {totalPages > 1 && <PaginationWidget pageIndex={pageIndex} totalPages={totalPages} onClick={getUpdatedRecords} />} */}
     </React.Fragment>
   );
 };

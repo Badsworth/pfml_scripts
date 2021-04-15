@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PaginationNavigation renders the component 1`] = `
+<Pagination
+  next={
+    Object {
+      "disabled": false,
+      "onClick": [Function],
+      "text": "Next",
+    }
+  }
+  pages={
+    Array [
+      Object {
+        "active": false,
+        "onClick": [Function],
+        "text": "1",
+      },
+      Object {
+        "active": true,
+        "onClick": [Function],
+        "text": "2",
+      },
+      Object {
+        "active": false,
+        "onClick": [Function],
+        "text": "3",
+      },
+    ]
+  }
+  prev={
+    Object {
+      "disabled": false,
+      "onClick": [Function],
+      "text": "Previous",
+    }
+  }
+/>
+`;

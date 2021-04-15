@@ -2195,6 +2195,12 @@ const components = {
       "In the future, we'll ask you to verify your paid leave contributions to secure your account. <learn-more-link>Learn what you need to do to prepare.</learn-more-link>",
     header: "Account verification is coming soon",
   },
+  pagination: {
+    nextLabel: "Next",
+    previousLabel: "Previous",
+    summary:
+      "Viewing {{firstRecordIndex}} - {{lastRecordIndex}} of {{totalRecords}} results",
+  },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",
     haveAnAccountFooterLabel: "Have an account?",
