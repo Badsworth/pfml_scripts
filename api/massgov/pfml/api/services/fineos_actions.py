@@ -18,9 +18,8 @@ import uuid
 from enum import Enum
 from typing import Dict, List, Optional, Set, Tuple
 
-import sqlalchemy
-
 import phonenumbers
+import sqlalchemy
 
 import massgov.pfml.db
 import massgov.pfml.fineos.models
@@ -89,10 +88,14 @@ def register_employee(
     db_session: massgov.pfml.db.Session,
 ) -> str:
     # If a FINEOS Id exists for SSN/FEIN return it.
-    fineos_web_id_ext = (db_session.query(FINEOSWebIdExt).filter(
+    fineos_web_id_ext = (
+        db_session.query(FINEOSWebIdExt)
+        .filter(
             FINEOSWebIdExt.employee_tax_identifier == str(employee_ssn),
-            FINEOSWebIdExt.employer_fein == str(employer_fein)).one_or_none())
-
+            FINEOSWebIdExt.employer_fein == str(employer_fein),
+        )
+        .one_or_none()
+    )
 
     if fineos_web_id_ext is not None:
         # This should never happen and we should have a db constraint,
@@ -139,9 +142,10 @@ def register_employee(
     except FINEOSNotFound as err:
         logger.error("FINEOS failed to register the employee %s; rolling back changes.", err)
         db_session.rollback()
-        return None
+        return ""
 
     return employee_external_id
+
 
 def send_to_fineos(
     application: Application, db_session: massgov.pfml.db.Session, current_user: Optional[User]
