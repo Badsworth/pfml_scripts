@@ -180,14 +180,12 @@ def test_create_cognito_account_client_error(mock_cognito, mock_cognito_user_poo
 
 
 @pytest.mark.integration
-def test_create_verified_cognito_leave_admin_account(
-    test_db_session, mock_cognito, mock_cognito_user_pool
-):
+def test_create_verified_cognito_account(test_db_session, mock_cognito, mock_cognito_user_pool):
     # Moto will not return a 'sub' attribute so we expect this error
     with pytest.raises(
         cognito_util.CognitoSubNotFound, match="Cognito did not return an ID for the user!"
     ):
-        cognito_util.create_verified_cognito_leave_admin_account(
+        cognito_util.create_verified_cognito_account(
             test_db_session,
             "test@test.com",
             "1234567",

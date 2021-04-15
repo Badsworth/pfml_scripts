@@ -19,7 +19,7 @@ from massgov.pfml.util.aws.cognito import (
     CognitoPasswordSetFailure,
     CognitoUserExistsValidationError,
     create_cognito_account,
-    create_verified_cognito_leave_admin_account,
+    create_verified_cognito_account,
     lookup_cognito_account_id,
 )
 from massgov.pfml.util.employers import lookup_employer
@@ -190,12 +190,18 @@ def register_or_update_leave_admin(
     else:
         logger.debug("Creating new Cognito user", extra={"email": email})
         try:
-            user = create_verified_cognito_leave_admin_account(
+            auth_id, email, employer, log_attributes = create_verified_cognito_account(
                 db_session=db_session,
                 email=email,
                 fein=fein,
                 cognito_user_pool_id=cognito_pool_id,
                 cognito_client=cognito_client,
+            )
+            user = leave_admin_create(
+                db_session,
+                User(active_directory_id=auth_id, email_address=email,),
+                employer,
+                log_attributes,
             )
         except LeaveAdminCreationError:
             return False, "Unable to create records for user"
