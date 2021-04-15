@@ -30,8 +30,7 @@ def get_users_patch_employer_issues(user: User, employer: Optional[Employer]) ->
                 )
             )
 
-    existing_roles = [role.role_description for role in user.roles]
-    if Role.EMPLOYER.role_description in existing_roles:
+    if Role.EMPLOYER.role_id in [role.role_id for role in user.roles]:
         issues.append(
             Issue(
                 field="user_leave_administrator.employer_fein",
