@@ -21,8 +21,7 @@ def get_users_patch_employer_issues(user: User, employer: Optional[Employer]) ->
             )
         )
     else:
-        employer_feins = [ula.employer.employer_fein for ula in user.user_leave_administrators]
-        if employer.employer_fein in employer_feins:
+        if employer in user.employers:
             issues.append(
                 Issue(
                     field="user_leave_administrator.employer_fein",
