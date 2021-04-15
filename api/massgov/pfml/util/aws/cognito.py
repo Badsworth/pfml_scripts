@@ -9,8 +9,9 @@ import botocore
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
 from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.cognito_post_confirmation_lambda.lib import leave_admin_create
 from massgov.pfml.db.models.employees import User
+from massgov.pfml.util.employers import lookup_employer
+from massgov.pfml.util.users import leave_admin_create
 
 ACTIVE_DIRECTORY_ATTRIBUTE = "sub"
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -181,7 +182,13 @@ def create_verified_cognito_leave_admin_account(
     log_attributes = {
         "auth_id": active_directory_id,
     }
-    return leave_admin_create(db_session, active_directory_id, email, fein, log_attributes)
+    employer = lookup_employer(db_session=db_session, employer_fein=fein)
+    return leave_admin_create(
+        db_session,
+        User(active_directory_id=active_directory_id, email_address=email,),
+        employer,
+        log_attributes,
+    )
 
 
 def create_cognito_account(

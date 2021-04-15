@@ -377,7 +377,7 @@ def test_users_patch_employer(client, user, employer_for_new_user, auth_token, t
     ein = employer_for_new_user.employer_fein
     body = {
         "role": {"role_description": "Employer"},
-        "user_leave_administrator": {"employer_fein": f"{ein[:2]}-{ein[2:}"},
+        "user_leave_administrator": {"employer_fein": f"{ein[:2]}-{ein[2:]}"},
     }
     response = client.patch(
         "v1/users/{}".format(user.user_id),

@@ -7,6 +7,7 @@ import pytest
 import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
 from massgov.pfml.api.services.administrator_fineos_actions import register_leave_admin_with_fineos
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator
+from massgov.pfml.util.users import leave_admin_create
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -206,7 +207,12 @@ def test_leave_admin_create(test_db_session):
     test_db_session.add(employer)
     test_db_session.commit()
 
-    lib.leave_admin_create(test_db_session, "UUID", "fake@fake.com", employer.employer_fein, {})
+    leave_admin_create(
+        test_db_session,
+        User(active_directory_id="UUID", email_address="fake@fake.com",),
+        employer,
+        {},
+    )
 
     created_user = test_db_session.query(User).filter(User.active_directory_id == "UUID").one()
 
@@ -233,7 +239,12 @@ def test_register_fineos_updates_ula_record(test_db_session):
     test_db_session.add(employer)
     test_db_session.commit()
 
-    lib.leave_admin_create(test_db_session, "UUID", "fake@fake.com", employer.employer_fein, {})
+    leave_admin_create(
+        test_db_session,
+        User(active_directory_id="UUID", email_address="fake@fake.com",),
+        employer,
+        {},
+    )
 
     created_user = test_db_session.query(User).filter(User.active_directory_id == "UUID").one()
 

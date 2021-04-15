@@ -7,12 +7,10 @@ import massgov.pfml.util.aws_lambda as aws_lambda
 import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
+from massgov.pfml.util.employers import lookup_employer
+from massgov.pfml.util.users import leave_admin_create
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
-
-
-class LeaveAdminCreationError(SQLAlchemyError):
-    pass
 
 
 class PostConfirmationEventRequest(aws_lambda.CognitoUserPoolEventRequest):
@@ -68,11 +66,18 @@ def handler(
         assert "ein" in cognito_metadata
 
         logger.info("Creating a leave administrator account", extra=log_attributes)
+
+        employer = lookup_employer(db_session, re.sub("-", "", cognito_metadata["ein"]))
+        if employer is None:
+            raise ValueError("Invalid employer_fein")
+
         user = leave_admin_create(
             db_session=db_session,
-            auth_id=cognito_user_attrs["sub"],
-            email=cognito_user_attrs["email"],
-            employer_fein=re.sub("-", "", cognito_metadata["ein"]),
+            user=User(
+                active_directory_id=cognito_user_attrs["sub"],
+                email_address=cognito_user_attrs["email"],
+            ),
+            employer=employer,
             log_attributes=log_attributes,
         )
 
@@ -96,29 +101,3 @@ def handler(
     )
 
     return event
-
-
-def leave_admin_create(
-    db_session: db.Session, auth_id: str, email: str, employer_fein: str, log_attributes: dict
-) -> User:
-
-    employer = (
-        db_session.query(Employer).filter(Employer.employer_fein == employer_fein).one_or_none()
-    )
-
-    if employer is None:
-        raise ValueError("Invalid employer_fein")
-
-    user = User(active_directory_id=auth_id, email_address=email,)
-    user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
-    user_leave_admin = UserLeaveAdministrator(user=user, employer=employer, fineos_web_id=None,)
-    try:
-        db_session.add(user)
-        db_session.add(user_role)
-        db_session.add(user_leave_admin)
-        db_session.commit()
-    except SQLAlchemyError as exc:
-        logger.exception("Unable to create records for user")
-        raise LeaveAdminCreationError("Unable to create records for user") from exc
-
-    return user
