@@ -21,6 +21,7 @@ import {
   getEmployerPool,
   getPortalSubmitter,
   getVerificationFetcher,
+  getLeaveAdminCredentials,
 } from "../../src/scripts/util";
 import { Credentials } from "../../src/types";
 import { ApplicationResponse } from "../../src/api";
@@ -89,11 +90,14 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     ): Promise<ApplicationResponse> {
       if (!application.claim) throw new Error("Application missing!");
       const { credentials, employerCredentials, ...claim } = application;
+      const { employer_fein } = application.claim;
+      if (!employer_fein)
+        throw new Error("Application is missing employer FEIN");
       return submitter
         .submit(
           await ClaimGenerator.hydrate(claim, "/tmp"),
           credentials ?? getClaimantCredentials(),
-          employerCredentials
+          employerCredentials ?? getLeaveAdminCredentials(employer_fein)
         )
         .catch((err) => {
           console.error("Failed to submit claim:", err.data);
@@ -143,6 +147,14 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       );
 
       return pdf(PDFdataBuffer) as Promise<Result>;
+    },
+    syslog(arg: unknown | unknown[]): null {
+      if (Array.isArray(arg)) {
+        console.log(...arg);
+      } else {
+        console.log(arg);
+      }
+      return null;
     },
   });
 
