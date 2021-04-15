@@ -15,6 +15,7 @@ from massgov.pfml.api.services.user_rules import (
     get_users_post_required_fields_issues,
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
+from massgov.pfml.api.util.response import Issue, IssueType
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
@@ -132,11 +133,28 @@ def users_patch(user_id):
             employer_fein = sanitize_fein(
                 deepgetattr(body, "user_leave_administrator.employer_fein") or ""
             )
+            # find employer
             employer = (
                 db_session.query(Employer)
                 .filter(Employer.employer_fein == employer_fein)
                 .one_or_none()
             )
+            if not employer or not employer.fineos_employer_id:
+                logger.info("users_patch failure - Employer not found!")
+                return response_util.error_response(
+                    status_code=NotFound,
+                    message="Employer not found!",
+                    errors=[
+                        Issue(
+                            field="user_leave_administrator.employer_fein",
+                            message="Invalid EIN",
+                            type=IssueType.require_employer,
+                        )
+                    ],
+                    data={},
+                ).to_api_response()
+            
+            # verify that we can convert the account
             employer_issues = get_users_patch_employer_issues(updated_user, employer)
             if employer_issues:
                 logger.info("users_patch failure - Couldn't convert user to employer account")
@@ -146,7 +164,7 @@ def users_patch(user_id):
                     errors=employer_issues,
                     data={},
                 ).to_api_response()
-            elif employer is not None:
+            else:
                 user_role = UserRole(user=updated_user, role_id=Role.EMPLOYER.role_id)
                 user_leave_admin = UserLeaveAdministrator(
                     user=updated_user, employer=employer, fineos_web_id=None,

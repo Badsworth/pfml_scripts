@@ -8,27 +8,18 @@ from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Employer, Role, User
 
 
-def get_users_patch_employer_issues(user: User, employer: Optional[Employer]) -> List[Issue]:
+def get_users_patch_employer_issues(user: User, employer: Employer) -> List[Issue]:
     """Validate that the Employer a user is signing up to administer is valid"""
     issues = []
 
-    if not employer or not employer.fineos_employer_id:
+    if employer in user.employers:
         issues.append(
             Issue(
                 field="user_leave_administrator.employer_fein",
-                message="Invalid EIN",
-                type=IssueType.require_employer,
+                message="You're already an employer!",
+                type=IssueType.conflicting,
             )
         )
-    else:
-        if employer in user.employers:
-            issues.append(
-                Issue(
-                    field="user_leave_administrator.employer_fein",
-                    message="You're already an employer!",
-                    type=IssueType.conflicting,
-                )
-            )
 
     if Role.EMPLOYER.role_id in [role.role_id for role in user.roles]:
         issues.append(
