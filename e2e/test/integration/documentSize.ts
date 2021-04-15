@@ -10,7 +10,7 @@ import {
   getEmployeePool,
   getPortalSubmitter,
   getAuthManager,
-} from "../../src/scripts/util";
+} from "../../src/util/common";
 import { ClaimGenerator } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import config from "../../src/config";

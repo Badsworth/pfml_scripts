@@ -1,6 +1,6 @@
 import { CommandModule } from "yargs";
 import { SystemWideArgs } from "../../cli";
-import { getAuthManager } from "../../scripts/util";
+import { getAuthManager } from "../../util/common";
 
 type ResetArgs = {
   username: string;

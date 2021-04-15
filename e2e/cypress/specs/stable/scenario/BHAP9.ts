@@ -1,9 +1,8 @@
-import * as portal from "../../../tests/common/actions/portal";
-import { beforePortal } from "../../../tests/common/before";
+import { portal } from "../../../actions";
 
 describe("Submit a REDUCED LEAVE bonding claim and adjucation approval - BHAP8", () => {
   it("As a claimant, I should be able to submit a Reduced Leave claim (BHAP8) through the portal", () => {
-    beforePortal();
+    portal.before();
 
     cy.task("generateClaim", "BHAP9").then((claim) => {
       if (!claim) {

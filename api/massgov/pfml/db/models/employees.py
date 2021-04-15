@@ -224,6 +224,16 @@ class LkPaymentTransactionType(Base):
         self.payment_transaction_type_description = payment_transaction_type_description
 
 
+class LkPaymentCheckStatus(Base):
+    __tablename__ = "lk_payment_check_status"
+    payment_check_status_id = Column(Integer, primary_key=True, autoincrement=True)
+    payment_check_status_description = Column(Text)
+
+    def __init__(self, payment_check_status_id, payment_check_status_description):
+        self.payment_check_status_id = payment_check_status_id
+        self.payment_check_status_description = payment_check_status_description
+
+
 class LkReferenceFileType(Base):
     __tablename__ = "lk_reference_file_type"
     reference_file_type_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -595,10 +605,22 @@ class Payment(Base):
     pub_eft = relationship(PubEft)
     experian_address_pair = relationship(ExperianAddressPair, foreign_keys=experian_address_pair_id)
     fineos_extract_import_log = relationship("ImportLog")
-    check_number = Column(Integer, index=True, unique=True)
-
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
+
+    check = relationship("PaymentCheck", backref="payment", uselist=False)
+
+
+class PaymentCheck(Base):
+    __tablename__ = "payment_check"
+    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), primary_key=True)
+    check_number = Column(Integer, nullable=False, index=True, unique=True)
+    check_posted_date = Column(Date)
+    payment_check_status_id = Column(
+        Integer, ForeignKey("lk_payment_check_status.payment_check_status_id")
+    )
+
+    payment_check_status = relationship(LkPaymentCheckStatus)
 
 
 class AuthorizedRepEmployee(Base):
@@ -1081,7 +1103,7 @@ class PubError(Base):
 
     message = Column(Text, nullable=False)
     line_number = Column(Integer, nullable=False)
-    type_code = Column(Integer, nullable=False)
+    type_code = Column(Integer)
     raw_data = Column(Text, nullable=False)
     details = Column(JSON)
 
@@ -1131,6 +1153,9 @@ class PubErrorType(LookupTable):
     ACH_PRENOTE = LkPubErrorType(3, "ACH Prenote")
     ACH_NOTIFICATION = LkPubErrorType(4, "ACH Notification")
     ACH_SUCCESS_WITH_NOTIFICATION = LkPubErrorType(5, "ACH Success with Notification")
+    CHECK_PAYMENT_LINE_ERROR = LkPubErrorType(6, "Check payment line error")
+    CHECK_PAYMENT_ERROR = LkPubErrorType(7, "Check payment error")
+    CHECK_PAYMENT_FAILED = LkPubErrorType(8, "Check payment failed")
 
 
 class AbsenceStatus(LookupTable):
@@ -1900,6 +1925,14 @@ class State(LookupTable):
         156, "Payment failed address validation", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    # 2nd writeback to FINEOS for successful checks
+    DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK = LkState(
+        160, "Add to FINEOS Writeback #2 - Check", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK = LkState(
+        161, "FINEOS Writeback #2 sent - Check", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
 
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
@@ -1911,6 +1944,18 @@ class PaymentTransactionType(LookupTable):
     CANCELLATION = LkPaymentTransactionType(4, "Cancellation")
     UNKNOWN = LkPaymentTransactionType(5, "Unknown")
     EMPLOYER_REIMBURSEMENT = LkPaymentTransactionType(6, "Employer Reimbursement")
+
+
+class PaymentCheckStatus(LookupTable):
+    model = LkPaymentCheckStatus
+    column_names = ("payment_check_status_id", "payment_check_status_description")
+
+    PAID = LkPaymentCheckStatus(1, "Paid")
+    OUTSTANDING = LkPaymentCheckStatus(2, "Outstanding")
+    FUTURE = LkPaymentCheckStatus(3, "Future")
+    VOID = LkPaymentCheckStatus(4, "Void")
+    STALE = LkPaymentCheckStatus(5, "Stale")
+    STOP = LkPaymentCheckStatus(6, "Stop")
 
 
 class ReferenceFileType(LookupTable):
@@ -1946,7 +1991,7 @@ class ReferenceFileType(LookupTable):
     PUB_EZ_CHECK = LkReferenceFileType(26, "PUB EZ check file", 1)
     PUB_POSITIVE_PAYMENT = LkReferenceFileType(27, "PUB positive pay file", 1)
 
-    DELEGATED_PAYMENT_REPORT_FILE = LkReferenceFileType(27, "SQL Report", 1)
+    DELEGATED_PAYMENT_REPORT_FILE = LkReferenceFileType(28, "SQL Report", 1)
 
 
 class Title(LookupTable):
@@ -1985,6 +2030,7 @@ def sync_lookup_tables(db_session):
     Flow.sync_to_database(db_session)
     State.sync_to_database(db_session)
     PaymentTransactionType.sync_to_database(db_session)
+    PaymentCheckStatus.sync_to_database(db_session)
     PrenoteState.sync_to_database(db_session)
     PubErrorType.sync_to_database(db_session)
     db_session.commit()

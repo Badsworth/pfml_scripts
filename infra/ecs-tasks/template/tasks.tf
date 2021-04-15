@@ -214,7 +214,6 @@ locals {
 
         ctr_data_mart_host     = var.ctr_data_mart_host
         ctr_data_mart_username = var.ctr_data_mart_username
-        ctr_data_mart_mock     = var.ctr_data_mart_mock_enable
       }
     },
 

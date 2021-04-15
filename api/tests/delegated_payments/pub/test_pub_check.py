@@ -132,7 +132,7 @@ def test_create_check_file_success(
             == 1
         )
 
-        assert payment.check_number == (i + 1)
+        assert payment.check.check_number == (i + 1)
 
 
 def test_send_check_file(mock_s3_bucket):
@@ -236,7 +236,7 @@ def test_format_check_memo_success(initialize_factories_session, test_db_session
     memo = pub_check._format_check_memo(payment)
     claim_type = payment.claim.claim_type.claim_type_description
 
-    pattern = "PFML Payment {} {}".format(claim_type, payment.claim.fineos_absence_id)
+    pattern = "PFML {} Payment {}".format(claim_type, payment.claim.fineos_absence_id)
     assert re.search(pattern, memo)
 
 

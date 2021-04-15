@@ -13,6 +13,7 @@ from massgov.pfml.db.models.employees import (
     Flow,
     LkPaymentMethod,
     Payment,
+    PaymentCheck,
     PaymentMethod,
     PaymentReferenceFile,
     ReferenceFile,
@@ -37,27 +38,25 @@ def fineos_pei_writeback_step(initialize_factories_session, test_db_session, tes
     )
 
 
-def _generate_payment(
-    test_db_session: db.Session, payment_method: LkPaymentMethod = PaymentMethod.ACH
-) -> Payment:
-    check_number = None
-    if payment_method == PaymentMethod.CHECK:
-        check_number = check_number_provider["check_number"]
-        check_number_provider["check_number"] += 1
-
-    return PaymentFactory.create(
+def _generate_payment(payment_method: LkPaymentMethod = PaymentMethod.ACH) -> Payment:
+    payment = PaymentFactory.create(
         fineos_pei_c_value=str(fake.random_int(min=1000, max=9999)),
         fineos_pei_i_value=str(fake.random_int(min=1000, max=9999)),
         fineos_extraction_date=date.today() - timedelta(days=fake.random_int()),
         disb_method_id=payment_method.payment_method_id,
-        check_number=check_number,
     )
+    if payment_method == PaymentMethod.CHECK:
+        check_number = check_number_provider["check_number"]
+        check_number_provider["check_number"] += 1
+        payment.check = PaymentCheck(check_number=check_number)
+
+    return payment
 
 
 def _generate_payment_and_state(
     test_db_session: db.Session, state: State, payment_method: LkPaymentMethod = PaymentMethod.ACH
 ) -> Payment:
-    payment = _generate_payment(test_db_session, payment_method)
+    payment = _generate_payment(payment_method)
     state_log_util.create_finished_state_log(
         associated_model=payment,
         end_state=state,
@@ -400,7 +399,7 @@ def test_get_writeback_items_for_state(
 
 
 def test_extracted_payment_to_pei_writeback_record(fineos_pei_writeback_step, test_db_session):
-    payment = _generate_payment(test_db_session)
+    payment = _generate_payment()
     status = writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS
 
     writeback_record = fineos_pei_writeback_step._extracted_payment_to_pei_writeback_record(

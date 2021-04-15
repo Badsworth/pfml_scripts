@@ -1,5 +1,4 @@
 import urllib.parse
-from datetime import date
 from enum import Enum
 from typing import Optional
 
@@ -85,27 +84,6 @@ class VendorInfoResult(BaseModel):
     vendor_customer_code: Optional[str]
     vendor_active_status: Optional[VendorActiveStatus]
 
-    eft_status: Optional[EFTStatus]
-    # Indicates that the vendor/customer accepts electronic fund transfers (EFTs).
-    #
-    # In the Data Mart DB, this is represented by the string character Y or N.
-    generate_eft_payment: Optional[bool]
-    # The American Banking Association (routing) number assigned to the bank.
-    aba_no: Optional[str]
-    # The reason for the prenote rejection or the electronic funds transfer
-    # (EFT) hold.
-    #
-    # Up to 1500 characters.
-    prenote_hold_reason: Optional[str]
-    prenote_requested_date: Optional[date]
-    # The code provided by the Automated Clearing House (ACH) Rules book to
-    # identify the bank's reason for returning information related to a vendor?s
-    # prenote request. Examples of codes include Rejection Reason Codes or
-    # Notification of Change codes.
-    #
-    # 3 characters.
-    prenote_return_reason: Optional[str]
-
     # Will always be the value of `payments_util.Constants.COMPTROLLER_AD_ID`
     # (AD010 at time of writing), but used to distinguish between "no address
     # row exists" and "address row exists, but with no information" (since some
@@ -136,13 +114,6 @@ def get_vendor_info(data_mart_conn: Connection, vendor_tin: str) -> Optional[Ven
         SELECT
             vend.vendor_customer_code,
             vend.vendor_active_status,
-
-            vend.eft_status,
-            vend.generate_eft_payment,
-            vend.aba_no,
-            vend.prenote_hold_reason,
-            vend.prenote_requested_date,
-            vend.prenote_return_reason,
 
             vad.address_id,
             vad.street_1,

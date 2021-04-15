@@ -1,5 +1,5 @@
 import { describe, beforeAll, test, expect } from "@jest/globals";
-import { getEmployeePool, getAuthManager } from "../../src/scripts/util";
+import { getEmployeePool, getAuthManager } from "../../src/util/common";
 import { ClaimGenerator } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import config from "../../src/config";

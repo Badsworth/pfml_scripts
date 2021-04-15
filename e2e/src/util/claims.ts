@@ -1,5 +1,5 @@
-import { ApplicationRequestBody } from "../src/api";
-import { LeavePeriods } from "../src/types";
+import { ApplicationRequestBody } from "../_api";
+import { LeavePeriods } from "../types";
 import { parseISO } from "date-fns";
 
 export function extractLeavePeriod(

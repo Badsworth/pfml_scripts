@@ -480,7 +480,9 @@ class FineosPeiWritebackStep(Step):
             status=ACTIVE_WRITEBACK_RECORD_STATUS,
             extractionDate=payment.fineos_extraction_date,
             transactionStatus=transaction_status,
-            transactionNo=str(payment.check_number) if payment.check_number else None,
+            transactionNo=str(payment.check.check_number)
+            if payment.check and payment.check.check_number
+            else None,
             transStatusDate=transaction_status_date,
         )
 

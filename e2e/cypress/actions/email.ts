@@ -1,4 +1,4 @@
-import { GetEmailsOpts } from "../../../plugins/TestMailClient";
+import { GetEmailsOpts } from "../../src/submission/TestMailClient";
 
 /**
  * This function wraps the getEmails() task to provide better timeout handling.

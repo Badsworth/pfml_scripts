@@ -1,7 +1,7 @@
 import { CommandModule } from "yargs";
 import { SystemWideArgs } from "../../cli";
 import config from "../../config";
-import { getAuthManager } from "../../scripts/util";
+import { getAuthManager } from "../../util/common";
 
 const cmd: CommandModule<SystemWideArgs, SystemWideArgs> = {
   command: "get-token",

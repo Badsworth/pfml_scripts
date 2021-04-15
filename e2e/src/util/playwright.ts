@@ -1,39 +1,13 @@
-import puppeteer from "puppeteer";
-import { LeavePeriods } from "./types";
-import { parseISO } from "date-fns";
-import playwright from "playwright";
+import playwright from "playwright-chromium";
 import delay from "delay";
-import config from "./config";
-import { ApplicationRequestBody } from "./api";
-
-export function getFineosBaseUrl(): string {
-  const base = config("FINEOS_BASEURL");
-  const username = config("FINEOS_USERNAME");
-  const password = config("FINEOS_PASSWORD");
-  const url = new URL(base);
-  url.username = username;
-  url.password = password;
-  return url.toString();
-}
-
-export function extractLeavePeriod(
-  claim: ApplicationRequestBody,
-  leaveType: keyof LeavePeriods = "continuous_leave_periods"
-): [Date, Date] {
-  const period = claim.leave_details?.[leaveType]?.[0];
-  if (!period || !period.start_date || !period.end_date) {
-    throw new Error("No leave period given");
-  }
-  return [parseISO(period.start_date), parseISO(period.end_date)];
-}
 
 /**********
- * These are common actions for using puppeteer
+ * These are common actions for using Playwright.
  ***********/
 
 export async function click(
   page: playwright.Page,
-  element: playwright.ElementHandle | puppeteer.ElementHandle | null
+  element: playwright.ElementHandle | null
 ): Promise<void> {
   if (!element) {
     throw new Error(`No element given`);

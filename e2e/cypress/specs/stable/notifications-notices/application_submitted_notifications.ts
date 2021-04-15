@@ -1,5 +1,4 @@
-import { email } from "../../../tests/common/actions";
-import { getEmails } from "../../../tests/common/actions/email";
+import { email } from "../../../actions";
 import { ApplicationResponse } from "../../../../src/api";
 import { Submission } from "../../../../src/types";
 
@@ -26,17 +25,19 @@ describe("Email notifications should be sent to employee & employer after initia
     () => {
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
-        getEmails(
-          {
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject:
-              "Thank you for successfully submitting your Paid Family and Medical Leave Application",
-            timestamp_from: submission.timestamp_from,
-            messageWildcard: submission.fineos_absence_id,
-            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-          },
-          180000
-        ).should("not.be.empty");
+        email
+          .getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject:
+                "Thank you for successfully submitting your Paid Family and Medical Leave Application",
+              timestamp_from: submission.timestamp_from,
+              messageWildcard: submission.fineos_absence_id,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            },
+            180000
+          )
+          .should("not.be.empty");
       });
     }
   );
@@ -54,23 +55,25 @@ describe("Email notifications should be sent to employee & employer after initia
             "application started",
             submission.fineos_absence_id
           );
-          getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subject,
-              timestamp_from: submission.timestamp_from,
-              messageWildcard: submission.fineos_absence_id,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            120000
-          ).then(async (emails) => {
-            const data = email.getNotificationData(emails[0].html);
-            const dob =
-              claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-            expect(data.name).to.equal(employeeFullName);
-            expect(data.dob).to.equal(dob);
-            expect(data.applicationId).to.equal(submission.fineos_absence_id);
-          });
+          email
+            .getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subject,
+                timestamp_from: submission.timestamp_from,
+                messageWildcard: submission.fineos_absence_id,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              180000
+            )
+            .then(async (emails) => {
+              const data = email.getNotificationData(emails[0].html);
+              const dob =
+                claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
+              expect(data.name).to.equal(employeeFullName);
+              expect(data.dob).to.equal(dob);
+              expect(data.applicationId).to.equal(submission.fineos_absence_id);
+            });
         });
       });
     }

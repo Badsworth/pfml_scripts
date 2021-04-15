@@ -18,10 +18,11 @@ import routes from "../routes";
 
 export default class BenefitsApplicationsApi extends BaseApi {
   get basePath() {
-    return routes.api.claims;
+    return routes.api.applications;
   }
 
   get i18nPrefix() {
+    // TODO (CP-2077) Rename this to "applications"
     return "claims";
   }
 

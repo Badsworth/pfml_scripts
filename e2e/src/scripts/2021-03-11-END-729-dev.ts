@@ -15,7 +15,7 @@ import {
   denyClaim,
   closeDocuments,
 } from "../submission/PostSubmit";
-import { getFineosBaseUrl } from "../utils";
+import { getFineosBaseUrl } from "../util/common";
 import EmployerIndex from "../generation/writers/EmployerIndex";
 
 /**

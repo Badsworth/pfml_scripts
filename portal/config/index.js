@@ -12,4 +12,5 @@ module.exports = {
   training: merge({}, defaultEnvVariables, require("./training")),
   performance: merge({}, defaultEnvVariables, require("./performance")),
   uat: merge({}, defaultEnvVariables, require("./uat")),
+  breakfix: merge({}, defaultEnvVariables, require("./breakfix")),
 };

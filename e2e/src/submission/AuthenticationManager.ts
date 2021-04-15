@@ -7,7 +7,7 @@ import {
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
 import { OAuthCreds } from "types";
-import TestMailVerificationFetcher from "../../cypress/plugins/TestMailVerificationFetcher";
+import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
 import {
   getUsersCurrent,
   HttpError,

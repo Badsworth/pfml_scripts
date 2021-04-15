@@ -8,6 +8,7 @@ import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit as audit
 from massgov.pfml.delegated_payments import delegated_config
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
+from massgov.pfml.delegated_payments.pub import process_check_return_step
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     PROCESS_PUB_RESPONSES_REPORTS,
@@ -19,12 +20,14 @@ logger = logging.get_logger("massgov.pfml.delegated_payments.task.process_pub_re
 ALL = "ALL"
 PICKUP_FILES = "pickup"
 PROCESS_RESPONSES = "process"
+PROCESS_CHECKS = "process_checks"
 REPORT = "report"
 WRITEBACK = "writeback"
 ALLOWED_VALUES = [
     ALL,
     PICKUP_FILES,
     PROCESS_RESPONSES,
+    PROCESS_CHECKS,
     REPORT,
     WRITEBACK,
 ]
@@ -33,6 +36,7 @@ ALLOWED_VALUES = [
 class Configuration:
     pickup_files: bool
     process_responses: bool
+    process_checks: bool
     make_reports: bool
 
     def __init__(self, input_args: List[str]):
@@ -53,11 +57,13 @@ class Configuration:
         if ALL in steps:
             self.pickup_files = True
             self.process_responses = True
+            self.process_checks = True
             self.make_reports = True
             self.send_fineos_writeback = True
         else:
             self.pickup_files = PICKUP_FILES in steps
             self.process_responses = PROCESS_RESPONSES in steps
+            self.process_checks = PROCESS_CHECKS in steps
             self.make_reports = REPORT in steps
             self.send_fineos_writeback = WRITEBACK in steps
 
@@ -98,6 +104,13 @@ def _process_pub_responses(
         )
         while process_return_files_step.have_more_files_to_process():
             process_return_files_step.run()
+
+    if config.process_checks:
+        process_check_return_file_step = process_check_return_step.ProcessCheckReturnFileStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session, s3_config=s3_config,
+        )
+        while process_check_return_file_step.have_more_files_to_process():
+            process_check_return_file_step.run()
 
     if config.send_fineos_writeback:
         FineosPeiWritebackStep(

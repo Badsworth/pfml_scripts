@@ -1,4 +1,5 @@
 import abc
+import collections
 from typing import Any, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -27,13 +28,25 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
                 self.__class__.__name__,
                 self.get_import_log_id(),
             )
-            state_log_counts_before = state_log_util.get_state_counts(self.db_session)
-            self.set_metrics(state_log_counts_before=state_log_counts_before)
 
+            # Flatten these prefixed with the "before" key since nested values in the
+            # metrics dictionary aren’t properly imported into New Relic
+            state_log_counts_before = state_log_util.get_state_counts(self.db_session)
+
+            before_map = {"before_state_log_counts": state_log_counts_before}
+            flattened_state_log_counts_before = flatten(before_map)
+
+            self.set_metrics(**flattened_state_log_counts_before)
             self.run_step()
 
+            # Flatten these prefixed with the "after" key since nested values in the
+            # metrics dictionary aren’t properly imported into New Relic
             state_log_counts_after = state_log_util.get_state_counts(self.db_session)
-            self.set_metrics(state_log_counts_after=state_log_counts_after)
+
+            after_map = {"after_state_log_counts": state_log_counts_after}
+            flattened_state_log_counts_after = flatten(after_map)
+
+            self.set_metrics(**flattened_state_log_counts_after)
 
     @abc.abstractmethod
     def run_step(self) -> None:
@@ -58,3 +71,14 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         if not self.log_entry:
             return
         self.log_entry.increment(name)
+
+
+def flatten(d, parent_key="", sep="_"):
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)

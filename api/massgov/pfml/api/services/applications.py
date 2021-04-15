@@ -259,7 +259,7 @@ def remove_masked_fields_from_request(
         )
 
         # family member date of birth - partially masked
-        if existing_application.caring_leave_metadata:  # type: ignore
+        if existing_application.caring_leave_metadata and leave_details.get("caring_leave_metadata"):  # type: ignore
             masked_existing_family_member_dob = mask.mask_date(
                 existing_application.caring_leave_metadata.family_member_date_of_birth  # type: ignore
             )

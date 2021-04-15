@@ -2220,7 +2220,7 @@ components:
             - Pregnancy/Maternity
             - Child Bonding
             - Serious Health Condition - Employee
-            - Care For A Family Member
+            - Care for a Family Member
           example: "Child Bonding"
         reason_qualifier:
           type: string
@@ -2898,6 +2898,6 @@ components:
             - Other Family Member
             - Service Member
             - Inlaw
-            - Sibling
+            - Sibling - Brother/Sister
             - Other
             - Spouse

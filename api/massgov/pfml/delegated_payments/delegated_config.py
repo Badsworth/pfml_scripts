@@ -53,9 +53,12 @@ class PaymentsS3Config(PydanticBaseSettings):
     pfml_fineos_outbound_path: str
 
     ## ---- PUB-related S3 bucket envs
-    # All files we receive from PUB will be saved up in this directory.
+    # ACH return files we receive from PUB will be saved up in this directory.
     # Ex: s3://massgov-pfml-prod-agency-transfer/pub/inbound/
     pfml_pub_inbound_path: str
+    # Check payment return files we receive from PUB will be saved up in this directory.
+    # Ex: s3://massgov-pfml-prod-agency-transfer/pub/inbound_check/
+    pfml_pub_check_inbound_path: str
     # All files we send to PUB will be saved in this directory
     # Ex: s3://massgov-pfml-prod-agency-transfer/pub/outbound/
     pfml_pub_outbound_path: str

@@ -3,7 +3,7 @@ import { SystemWideArgs } from "../../cli";
 import config from "../../config";
 import { prompt } from "enquirer";
 import { endOfQuarter, formatISO, subQuarters } from "date-fns";
-import { getAuthManager } from "../../scripts/util";
+import { getAuthManager } from "../../util/common";
 
 type RegisterLeaveAdminArgs = {
   fein: string;

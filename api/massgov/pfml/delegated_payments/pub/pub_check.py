@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     ClaimType,
     Employee,
     Payment,
+    PaymentCheck,
     PaymentMethod,
     ReferenceFile,
     ReferenceFileType,
@@ -40,8 +41,8 @@ class Constants:
     EZ_CHECK_FILENAME_FORMAT = "PUB-EZ-CHECK_%Y%m%d-%H%M.csv"
     EZ_CHECK_MAX_NAME_LENGTH = 85
 
-    # e.g. PFML Payment NTN-240483-ABS-01 [03/01/2021-03/07/2021]
-    EZ_CHECK_MEMO_FORMAT = "PFML Payment {} {} [{}-{}]"
+    # e.g. PFML Medical Leave Payment NTN-240483-ABS-01 [03/01/2021-03/07/2021]
+    EZ_CHECK_MEMO_FORMAT = "PFML {} Payment {} [{}-{}]"
     EZ_CHECK_MEMO_DATE_FORMAT = "%m/%d/%Y"
 
     POSITIVE_PAY_FILENAME_FORMAT = "PUB-POSITIVE-PAY_%Y%m%d-%H%M.txt"
@@ -63,12 +64,12 @@ def create_check_file(
     # to write an EzCheckFile to PUB.
     encountered_exception = False
     records: List[Tuple[Payment, RecordContainer]] = []
-    check_number = db_session.query(func.max(Payment.check_number)).scalar() or 0
+    check_number = db_session.query(func.max(PaymentCheck.check_number)).scalar() or 0
 
     for payment in eligible_check_payments:
         try:
             check_number += 1
-            payment.check_number = check_number
+            payment.check = PaymentCheck(check_number=check_number)
             ez_check_record = _convert_payment_to_ez_check_record(payment, check_number)
             positive_pay_record = _convert_payment_to_check_issue_entry(payment)
 
@@ -164,7 +165,7 @@ def _convert_payment_to_check_issue_entry(payment: Payment) -> CheckIssueEntry:
 
     return CheckIssueEntry(
         status_code="I",  # Always use the issue code? Use "V" for void.
-        check_number=payment.check_number,  # check number has already been generated in previous EZ Check step
+        check_number=payment.check.check_number,  # check number has already been generated in previous EZ Check step
         issue_date=cast(date, payment.payment_date),
         amount=payment.amount,
         payee_id=payment.pub_individual_id,

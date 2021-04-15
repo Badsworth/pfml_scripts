@@ -21,6 +21,8 @@ class PaymentMethodsSplitStep(Step):
             state_log_util.AssociatedClass.PAYMENT, READY_STATE, self.db_session
         )
         state_log_count = len(state_logs)
+        self.set_metrics(payment_count=state_log_count)
+
         if state_log_count == 0:
             logger.warning(
                 "No payments found in state %s, nothing to split", READY_STATE.state_description,

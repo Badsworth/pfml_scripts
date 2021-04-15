@@ -1,17 +1,14 @@
-import { fineos, email } from "../../../../tests/common/actions";
-import { beforeFineos } from "../../../../tests/common/before";
-import { extractLeavePeriod } from "../../../../utils";
+import { fineos, email } from "../../../../actions";
+import { extractLeavePeriod } from "../../../../../src/util/claims";
 import { getFineosBaseUrl } from "../../../../config";
 import { Submission } from "../../../../../src/types";
-import { getEmails } from "../../../../tests/common/actions/email";
 
 describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
   const submit = it(
     "Should be able to create a claim",
     { baseUrl: getFineosBaseUrl() },
     () => {
-      beforeFineos();
-
+      fineos.before();
       cy.visit("/");
       cy.task("generateClaim", "BHAP1").then((claim) => {
         cy.stash("claim", claim.claim);
@@ -59,20 +56,22 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
             submission.fineos_absence_id
           );
           cy.log(subject);
-          getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              messageWildcard: submission.fineos_absence_id,
-              subject: subject,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            180000
-          ).then(async (emails) => {
-            const data = email.getNotificationData(emails[0].html);
-            expect(data.name).to.equal(employeeFullName);
-            expect(data.applicationId).to.equal(submission.fineos_absence_id);
-          });
+          email
+            .getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                messageWildcard: submission.fineos_absence_id,
+                subject: subject,
+                timestamp_from: submission.timestamp_from,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              180000
+            )
+            .then(async (emails) => {
+              const data = email.getNotificationData(emails[0].html);
+              expect(data.name).to.equal(employeeFullName);
+              expect(data.applicationId).to.equal(submission.fineos_absence_id);
+            });
         });
       });
     }

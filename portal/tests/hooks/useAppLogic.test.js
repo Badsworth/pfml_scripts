@@ -1,5 +1,6 @@
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
+import ClaimCollection from "../../src/models/ClaimCollection";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import { testHook } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
@@ -10,6 +11,7 @@ describe("useAppLogic", () => {
       auth,
       benefitsApplications,
       catchError,
+      claims,
       clearErrors,
       documents,
       employers,
@@ -24,6 +26,7 @@ describe("useAppLogic", () => {
         appErrors,
         auth,
         catchError,
+        claims,
         benefitsApplications,
         documents,
         employers,
@@ -50,6 +53,9 @@ describe("useAppLogic", () => {
     expect(benefitsApplications.loadAll).toBeInstanceOf(Function);
     expect(benefitsApplications.create).toBeInstanceOf(Function);
     expect(benefitsApplications.update).toBeInstanceOf(Function);
+    expect(claims.claims).toBeInstanceOf(ClaimCollection);
+    expect(claims.hasLoadedAll).toEqual(expect.any(Boolean));
+    expect(claims.loadAll).toBeInstanceOf(Function);
     expect(users.updateUser).toBeInstanceOf(Function);
     expect(setAppErrors).toBeInstanceOf(Function);
     expect(benefitsApplications.submit).toBeInstanceOf(Function);
