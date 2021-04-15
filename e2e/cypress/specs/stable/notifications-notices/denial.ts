@@ -1,13 +1,11 @@
-import { fineos, portal, email } from "../../../tests/common/actions";
-import { beforeFineos, beforePortal } from "../../../tests/common/before";
+import { fineos, portal, email } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { ApplicationResponse } from "../../../../src/api";
 import { Submission } from "../../../../src/types";
-import { getEmails } from "../../../tests/common/actions/email";
 
 describe("Denial Notification and Notice", () => {
   const submit = it("Submit a financially ineligible claim to API", () => {
-    beforePortal();
+    portal.before();
 
     cy.visit("/");
     cy.task("generateCredentials").then((credentials) => {
@@ -38,7 +36,7 @@ describe("Denial Notification and Notice", () => {
     { baseUrl: getFineosBaseUrl(), retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit]);
-      beforeFineos();
+      fineos.before();
       cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {
         fineos.visitClaim(submission.fineos_absence_id);
@@ -56,7 +54,7 @@ describe("Denial Notification and Notice", () => {
     { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit, adjudicate]);
-      beforePortal();
+      portal.before();
       cy.unstash<Credentials>("credentials").then((credentials) => {
         cy.unstash<Submission>("submission").then((submission) => {
           portal.login(credentials);
@@ -118,34 +116,38 @@ describe("Denial Notification and Notice", () => {
           cy.log(subjectEmployer);
           cy.log(subjectClaimant);
 
-          getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectEmployer,
-              timestamp_from: submission.timestamp_from,
-              messageWildcard: submission.fineos_absence_id,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            180000
-          ).then(async (emails) => {
-            const data = email.getNotificationData(emails[0].html);
-            const dob =
-              claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-            expect(data.name).to.equal(employeeFullName);
-            expect(data.dob).to.equal(dob);
-            expect(data.applicationId).to.equal(submission.fineos_absence_id);
-            expect(emails[0].html).to.contain(
-              `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
-            );
-          });
+          email
+            .getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subjectEmployer,
+                timestamp_from: submission.timestamp_from,
+                messageWildcard: submission.fineos_absence_id,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              180000
+            )
+            .then(async (emails) => {
+              const data = email.getNotificationData(emails[0].html);
+              const dob =
+                claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
+              expect(data.name).to.equal(employeeFullName);
+              expect(data.dob).to.equal(dob);
+              expect(data.applicationId).to.equal(submission.fineos_absence_id);
+              expect(emails[0].html).to.contain(
+                `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
+              );
+            });
 
           // Check email for Claimant
-          getEmails({
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject: subjectClaimant,
-            timestamp_from: submission.timestamp_from,
-            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-          }).should("not.be.empty");
+          email
+            .getEmails({
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subjectClaimant,
+              timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            })
+            .should("not.be.empty");
         });
       });
     }

@@ -6,7 +6,7 @@ import ClaimPool, {
   GeneratedClaim,
 } from "../../../src/generation/Claim";
 import EmployeePool from "../../../src/generation/Employee";
-import { extractLeavePeriod } from "../../../src/utils";
+import { extractLeavePeriod } from "../../../src/util/claims";
 import { parseISO } from "date-fns";
 import fs from "fs";
 import path from "path";

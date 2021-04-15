@@ -8,13 +8,12 @@
 /// <reference types="cypress-file-upload" />
 
 // Import some types here. We'll reference them below.
-type Application = import("./src/types").Application;
 type Credentials = import("./src/types").Credentials;
 type ApplicationRequestBody = import("./src/api").ApplicationRequestBody;
 type ApplicationResponse = import("./src/api").ApplicationResponse;
 type waitForClaimDocuments = import("./cypress/plugins/DocumentWaiter").default["waitForClaimDocuments"];
-type Email = import("./cypress/plugins/TestMailClient").Email;
-type GetEmailsOpts = import("./cypress/plugins/TestMailClient").GetEmailsOpts;
+type Email = import("./src/submission/TestMailClient").Email;
+type GetEmailsOpts = import("./src/submission/TestMailClient").GetEmailsOpts;
 type Result = import("pdf-parse").Result;
 type DehydratedClaim = import("./src/generation/Claim").DehydratedClaim;
 type Employer = import("./src/generation/Employer").Employer;
@@ -32,19 +31,12 @@ declare namespace Cypress {
       text: string,
       options?: Partial<Cypress.TypeOptions>
     ): Chainable<Element>;
-    generateIdVerification<App extends Pick<Application, firstName | lastName>>(
-      application: App
-    ): Chainable<App & Pick<Application, idVerification>>;
-    generateHCPForm<App extends Pick<Application, firstName | lastName>>(
-      application: App
-    ): Chainable<App & Pick<Application, claim>>;
     stash(key: string, value: unknown): null;
     unstash<T extends unknown>(key: string): Chainable<T>;
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
     dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;
     task(event: "generateClaim", scenario: string): Chainable<DehydratedClaim>;
-
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(event: "completeSSOLoginFineos"): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;

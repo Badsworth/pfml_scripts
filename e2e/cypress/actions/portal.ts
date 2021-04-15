@@ -1,4 +1,4 @@
-import { Credentials } from "../../../../src/types";
+import { Credentials } from "../../src/types";
 import {
   ApplicationResponse,
   WorkPattern,
@@ -7,12 +7,50 @@ import {
   ReducedScheduleLeavePeriods,
   PaymentPreference,
   PaymentPreferenceRequestBody,
-} from "../../../../src/api";
-import { inFieldset } from "../actions";
+} from "../../src/api";
+import { inFieldset } from "./common";
 import {
   extractDebugInfoFromBody,
   extractDebugInfoFromHeaders,
-} from "../../../../src/errors";
+} from "../../src/errors";
+
+export function before(): void {
+  // Set the feature flag necessary to see the portal.
+  cy.setCookie(
+    "_ff",
+    JSON.stringify({
+      pfmlTerriyay: true,
+      claimantShowAuth: true,
+      claimantShowMedicalLeaveType: true,
+      noMaintenance: true,
+      employerShowSelfRegistrationForm: true,
+      claimantShowOtherLeaveStep: true,
+      claimantAuthThroughApi: true,
+      employerShowAddOrganization: true,
+      employerShowVerifications: true,
+    }),
+    { log: true }
+  );
+
+  cy.on("uncaught:exception", (e) => {
+    if (e.message.match(/Cannot set property 'status' of undefined/)) {
+      return false;
+    }
+    return true;
+  });
+
+  // Setup a route for application submission so we can extract claim ID later.
+  cy.intercept({
+    method: "POST",
+    url: "**/api/v1/applications/*/submit_application",
+  }).as("submitClaimResponse");
+
+  // Block new-relic.js outright due to issues with Cypress networking code.
+  // Without this block, test retries on the portal error out due to fetch() errors.
+  cy.intercept("**/new-relic.js", (req) => {
+    req.reply("console.log('Fake New Relic script loaded');");
+  });
+}
 
 export function onPage(page: string): void {
   cy.url().should("include", `/applications/${page}`);

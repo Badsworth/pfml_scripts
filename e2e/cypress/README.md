@@ -37,21 +37,21 @@ describe("Denial Notifications", () => {
 ```
 When this test is executed, if the claim submission step fails, it will be retried, and **regardless of whether it succeeds, the notification step will be run**. Since notification is usually a time consuming process that requires the claim to be submitted, this will lead to us spending a lot of time trying (then later, retrying) notifications we know for certain will never arrive (because the claim submission failed).
 
-To work around this problem, we've introduced a helper, `bailIfThisTestFails()`. Calling this function will exit the suite if a particular test fails, skipping the rest of the tests entirely. Using this helper allows us to designate particular test functions as _required_ for the rest of the suite to pass.
+To work around this problem, we've introduced a helper, `cy.dependsOnPreviousPass();`. Calling this function will immediately fail the test if a dependent test fails.
 
 Eg:
 
 ```typescript
 describe("Denial Notifications", () => {
 
-  it("Submits a claim", () => {
-    bailIfThisTestFails();
+  const submit = it("Submits a claim", () => {
     // submit a claim.
   });
 
   it("Checks for a notification", () => {
+    cy.dependsOnPreviousPass([submit]);
     // Check for a notification.
   })
 })
 ```
-This code will exit properly if the initial submission fails, skipping the notifications check. Note that it will still use retries, meaning that if either test function fails, it will first try that function again before exiting, and if it's able to succeed, it will allow progression onto the next step.
+This code will exit properly if the initial submission fails, failing the notifications check. Note that it will still use retries, meaning that if either test function fails, it will first try that function again before exiting, and if it's able to succeed, it will allow progression onto the next step.

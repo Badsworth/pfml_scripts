@@ -1,9 +1,8 @@
-import * as portal from "../../tests/common/actions/portal";
-import { beforePortal } from "../../tests/common/before";
+import { portal } from "../../actions";
 
 describe("Leave Admin Self-Registration", () => {
   const register = it("Leave administrators should be able to self-register on the portal.", () => {
-    beforePortal();
+    portal.before();
     cy.task("pickEmployer", {
       withholdings: "non-exempt",
       metadata: { register_leave_admins: true },
@@ -28,7 +27,7 @@ describe("Leave Admin Self-Registration", () => {
 
   it("Leave administrators should be able to register for a second organization", () => {
     cy.dependsOnPreviousPass([register]);
-    beforePortal();
+    portal.before();
     cy.unstash<Credentials>("credentials").then((credentials) => {
       cy.unstash<string>("employer").then((fein) => {
         portal.login(credentials);

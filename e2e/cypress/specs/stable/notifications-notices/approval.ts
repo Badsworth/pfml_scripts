@@ -1,9 +1,6 @@
-import { fineos, portal, email } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
-import { beforePortal } from "../../../tests/common/before";
+import { fineos, portal, email } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
-import { getEmails } from "../../../tests/common/actions/email";
 
 describe("Approval (notifications/notices)", () => {
   const credentials: Credentials = {
@@ -15,7 +12,7 @@ describe("Approval (notifications/notices)", () => {
     "Given a fully approved claim",
     { baseUrl: getFineosBaseUrl() },
     () => {
-      beforeFineos();
+      fineos.before();
       cy.visit("/");
       // Submit a claim via the API, including Employer Response.
       cy.task("generateClaim", "BHAP1ER").then((claim) => {
@@ -45,7 +42,7 @@ describe("Approval (notifications/notices)", () => {
     { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit]);
-      beforePortal();
+      portal.before();
       cy.visit("/");
       portal.login(credentials);
       cy.unstash<Submission>("submission").then((submission) => {
@@ -73,7 +70,7 @@ describe("Approval (notifications/notices)", () => {
     { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit]);
-      beforePortal();
+      portal.before();
       cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
@@ -106,27 +103,29 @@ describe("Approval (notifications/notices)", () => {
             submission.fineos_absence_id
           );
           // Check email for Employer/Leave Admin
-          getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectEmployer,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            // Reduced timeout, since we have multiple tests that run prior to this.
-            60000
-          ).then(async (emails) => {
-            const data = email.getNotificationData(emails[0].html);
-            const dob =
-              claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-            expect(data.name).to.equal(employeeFullName);
-            expect(data.dob).to.equal(dob);
-            expect(data.applicationId).to.equal(submission.fineos_absence_id);
-            expect(emails[0].html).to.contain(
-              `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
-            );
-          });
+          email
+            .getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subjectEmployer,
+                messageWildcard: submission.fineos_absence_id,
+                timestamp_from: submission.timestamp_from,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              // Reduced timeout, since we have multiple tests that run prior to this.
+              60000
+            )
+            .then(async (emails) => {
+              const data = email.getNotificationData(emails[0].html);
+              const dob =
+                claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
+              expect(data.name).to.equal(employeeFullName);
+              expect(data.dob).to.equal(dob);
+              expect(data.applicationId).to.equal(submission.fineos_absence_id);
+              expect(emails[0].html).to.contain(
+                `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
+              );
+            });
         });
       });
     }
@@ -145,17 +144,19 @@ describe("Approval (notifications/notices)", () => {
             submission.fineos_absence_id
           );
           // Check email for Claimant/Employee
-          getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectClaimant,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            // Reduced timeout, since we have multiple tests that run prior to this.
-            30000
-          ).should("not.be.empty");
+          email
+            .getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subjectClaimant,
+                messageWildcard: submission.fineos_absence_id,
+                timestamp_from: submission.timestamp_from,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              // Reduced timeout, since we have multiple tests that run prior to this.
+              30000
+            )
+            .should("not.be.empty");
         });
       });
     }
