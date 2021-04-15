@@ -551,6 +551,7 @@ class RelationshipToCaregiver(LookupTable):
     SIBLING = LkRelationshipToCaregiver(8, "Sibling")
     OTHER = LkRelationshipToCaregiver(9, "Other")
     EMPLOYEE = LkRelationshipToCaregiver(10, "Employee")
+    SPOUSE = LkRelationshipToCaregiver(11, "Spouse")
 
 
 class RelationshipQualifier(LookupTable):

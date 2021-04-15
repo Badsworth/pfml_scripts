@@ -138,6 +138,7 @@ class PaymentData:
     payment_date: Optional[str]
     payment_amount: Optional[str]
     payment_event_type: Optional[str]
+    leave_request_id: Optional[str] = None
 
     routing_nbr: Optional[str]
     account_nbr: Optional[str]
@@ -261,6 +262,10 @@ class PaymentData:
         else:
             self.absence_case_number = payments_util.validate_csv_input(
                 "ABSENCECASENU", claim_details, self.validation_container, True
+            )
+
+            self.leave_request_id = payments_util.validate_csv_input(
+                "LEAVEREQUESTI", claim_details, self.validation_container, True
             )
 
     def aggregate_payment_details(self, payment_details):

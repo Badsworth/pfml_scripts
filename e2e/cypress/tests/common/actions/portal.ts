@@ -60,7 +60,7 @@ export function waitForClaimSubmission(): Cypress.Chainable<{
         .map(([key, value]) => `${key}: ${value}`)
         .join("\n");
       throw new Error(
-        `Application submission failed: ${xhr.response.url} - ${xhr.response.statusMessage} (${xhr.response.statusCode}\n\nDebug Information\n------------------\n${debugInfoString}`
+        `Application submission failed: ${xhr.request.url} - ${xhr.response.statusMessage} (${xhr.response.statusCode}\n\nDebug Information\n------------------\n${debugInfoString}`
       );
     }
 
@@ -88,14 +88,10 @@ export function waitForClaimSubmission(): Cypress.Chainable<{
 }
 
 export function login(credentials: Credentials): void {
-  // Alias the credentials for later use.
-  cy.wrap(credentials).as("credentials");
   cy.visit(`${Cypress.env("E2E_PORTAL_BASEURL")}/login`);
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").typeMasked(credentials.password);
-  cy.wait(1000);
-  cy.contains("button", "Log in").click();
-  cy.wait(1000);
+  cy.contains("button", "Log in").click({ waitForAnimations: true });
   cy.url().should("not.include", "login");
 }
 
@@ -169,10 +165,7 @@ export function verifyIdentity(
   if (leaveType === "normal") {
     cy.labelled("First name").type(application.first_name as string);
     cy.labelled("Last name").type(application.last_name as string);
-    cy.stashLog("firstName", application.first_name);
-    cy.stashLog("lastName", application.last_name);
-    cy.stashLog("employerFEIN", application.employer_fein);
-    cy.stashLog("dob", application.date_of_birth);
+    cy.log("Employer FEIN", application.employer_fein);
     cy.contains("button", "Save and continue").click();
   }
 

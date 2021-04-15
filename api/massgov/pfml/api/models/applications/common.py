@@ -48,6 +48,7 @@ class LeaveReason(str, LookupEnum):
     pregnancy = "Pregnancy/Maternity"
     child_bonding = "Child Bonding"
     serious_health_condition_employee = "Serious Health Condition - Employee"
+    caring_leave = "Care For A Family Member"
 
     @classmethod
     def get_lookup_model(cls):
@@ -177,6 +178,22 @@ class MaskedAddress(Address):
         return address_response
 
 
+class BaseCaringLeaveMetadata(PydanticBaseModel):
+    caring_leave_metadata_id: Optional[UUID4]
+    family_member_first_name: Optional[str]
+    family_member_middle_name: Optional[str]
+    family_member_last_name: Optional[str]
+    relationship_to_caregiver: Optional[RelationshipToCaregiver]
+
+
+class CaringLeaveMetadata(BaseCaringLeaveMetadata):
+    family_member_date_of_birth: Optional[date]
+
+
+class MaskedCaringLeaveMetadata(BaseCaringLeaveMetadata):
+    family_member_date_of_birth: Optional[MaskedDateStr]
+
+
 class BaseApplicationLeaveDetails(PydanticBaseModel):
     reason: Optional[LeaveReason]
     reason_qualifier: Optional[LeaveReasonQualifier]
@@ -195,6 +212,7 @@ class BaseApplicationLeaveDetails(PydanticBaseModel):
 class MaskedApplicationLeaveDetails(BaseApplicationLeaveDetails):
     child_birth_date: Optional[MaskedDateStr]
     child_placement_date: Optional[MaskedDateStr]
+    caring_leave_metadata: Optional[MaskedCaringLeaveMetadata]
 
     @classmethod
     def from_orm(
@@ -234,6 +252,7 @@ class MaskedApplicationLeaveDetails(BaseApplicationLeaveDetails):
 class ApplicationLeaveDetails(BaseApplicationLeaveDetails):
     child_birth_date: Optional[date]
     child_placement_date: Optional[date]
+    caring_leave_metadata: Optional[CaringLeaveMetadata]
 
 
 class PaymentMethod(str, LookupEnum):

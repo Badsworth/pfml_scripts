@@ -139,6 +139,7 @@ jobs:
     outputs:
       api-env: ${{ steps.api-env.outputs.api-env }}
       deployed-url: ${{ steps.deployed-url.outputs.deployed-url }}
+      subtitle: ${{ steps.choose-deploy-subtitle.outputs.message }}
     steps:
       - name: Set api-env value
         id: api-env
@@ -154,6 +155,19 @@ jobs:
           else
             echo "::set-output name=deployed-url::https://paidleave-api-${{ env.deployment_env || 'test' }}.mass.gov/api/docs/"
           fi
+
+      - name: Choose deployment subtitle
+        id: choose-deploy-subtitle
+        env:
+          just_the_deploy: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/commits/${{ env.version }}|commit history>"
+          with_release_notes: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/releases/tag/${{ env.version }}|release notes>"
+        run: |
+          if [[ ${{ env.version }} == api/* ]]; then
+            echo "::set-output name=message::${{ env.with_release_notes }}"
+          else
+            echo "::set-output name=message::${{ env.just_the_deploy }}"
+          fi
+
 
   start-comms-github:
     name: Start deploy comms (GitHub)
@@ -185,8 +199,6 @@ jobs:
   start-comms-slack:
     name: Start deploy comms (Slack)
     needs: [update-the-deploy-branch, deploy-info]
-    outputs:
-      subtitle: ${{ steps.choose_start_message.outputs.message }}
     if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test    
     runs-on: ubuntu-latest
     steps:
@@ -213,18 +225,6 @@ jobs:
           ssm_parameter: "/admin/common/nava-slackbot-api-key"
           env_variable_name: "slackbot_token"
 
-      - name: Choose deployment start message
-        id: choose_start_message
-        env:
-          just_the_deploy: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/commits/${{ env.version }}|commit history>"
-          with_release_notes: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/releases/tag/${{ env.version }}|release notes>"
-        run: |
-          if [[ ${{ env.version }} == api/* ]]; then
-            echo "::set-output name=message::${{ env.with_release_notes }}"
-          else
-            echo "::set-output name=message::${{ env.just_the_deploy }}"
-          fi
-
       - name: Post to Slack
         run: |
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
@@ -232,7 +232,7 @@ jobs:
           --data '{
             "channel": "${{ env.deploys_channel }}",
             "attachments": [{
-              "title": "API ${{ needs.deploy-info.outputs.api-env }} deployment #${{ github.run_number }} was started\n${{ steps.choose_start_message.outputs.message }}",
+              "title": "API ${{ needs.deploy-info.outputs.api-env }} deployment #${{ github.run_number }} was started\n${{ needs.deploy-info.outputs.subtitle }}",
               "color": "warning",
               "fields": [
                 { "title": "started by", "value": "`${{ github.actor }}`", "short": true },
@@ -536,7 +536,7 @@ jobs:
             echo "Importing old format massgov_pfml_"
             prefix=massgov_pfml_
           elif ! [[ -z "$needs_new" ]] && [[ -z "$is_new" ]]; then
-            echo "Importing old format massgov-pfml-"
+            echo "Importing new format massgov-pfml-"
             prefix=massgov-pfml-
           else
             echo "No imports needed."
@@ -544,9 +544,9 @@ jobs:
 
           if ! [ -z $prefix ]; then
             terraform state rm -lock-timeout=120s module.api.aws_cloudwatch_log_group.postgresql
-            terraform state import -lock-timeout=120s \
+            terraform import -lock-timeout=120s \
               module.api.aws_cloudwatch_log_group.postgresql \
-              /aws/rds/instance/$prefix${{ needs.deploy-info.outputs.api-env }}/postgresql
+              /aws/rds/instance/${prefix}${{ needs.deploy-info.outputs.api-env }}/postgresql
           fi
         working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
@@ -762,6 +762,7 @@ jobs:
             echo "::set-output name=message::${{ env.deployment_failure }}"
             echo "::set-output name=color::#2767cf"
           fi
+
       - name: Post to Slack
         run: |
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
@@ -769,7 +770,7 @@ jobs:
           --data '{
             "channel": "${{ env.deploys_channel }}",
             "attachments": [{
-              "title": "${{ steps.choose_finish_message.outputs.message }}\n${{ needs.start-comms-slack.outputs.subtitle }}",
+              "title": "${{ steps.choose_finish_message.outputs.message }}\n${{ needs.deploy-info.outputs.subtitle }}",
               "color": "${{ steps.choose_finish_message.outputs.color }}",
               "fields": [
                 { "title": "started by", "value": "`${{ github.actor }}`", "short": true },

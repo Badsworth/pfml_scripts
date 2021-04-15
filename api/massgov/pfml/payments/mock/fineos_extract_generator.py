@@ -90,7 +90,7 @@ PEI_FIELD_NAMES = [
     "PAYEEACCOUNTT",
 ]
 PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
-PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU"]
+PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"]
 
 REQUESTED_ABSENCE_SOM_FIELD_NAMES = [
     "ABSENCEREASON_COVERAGE",
@@ -332,6 +332,7 @@ def _generate_fineos_payment_rows_for_scenario(
             vpei_claim_details_row["PECLASSID"] = payment_c_value
             vpei_claim_details_row["PEINDEXID"] = payment_i_value
             vpei_claim_details_row["ABSENCECASENU"] = payment.claim.fineos_absence_id
+            vpei_claim_details_row["LEAVEREQUESTI"] = scenario_data.leave_request_id
             pei_claim_details_csv_writer.writerow(vpei_claim_details_row)
 
 

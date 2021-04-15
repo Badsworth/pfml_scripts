@@ -62,7 +62,7 @@ describe("Email notifications should be sent to employee & employer after initia
               messageWildcard: submission.fineos_absence_id,
               debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
-            120000
+            180000
           ).then(async (emails) => {
             const data = email.getNotificationData(emails[0].html);
             const dob =

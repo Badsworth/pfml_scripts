@@ -1,4 +1,4 @@
-import playwright, { chromium, Page } from "playwright";
+import playwright, { chromium, Page } from "playwright-chromium";
 import delay from "delay";
 import * as actions from "../utils";
 

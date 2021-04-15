@@ -172,6 +172,7 @@ class PaymentRejectsStep(Step):
         )
 
         if payment_state_log is None:
+            self.increment("payment_state_log_missing_count")
             raise PaymentRejectsException(
                 f"No state log found for payment found in audit reject file: {payment.payment_id}"
             )
@@ -180,6 +181,7 @@ class PaymentRejectsStep(Step):
             payment_state_log.end_state_id
             != State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id
         ):
+            self.increment("payment_state_log_not_in_audit_response_pending_count")
             raise PaymentRejectsException(
                 f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description if payment_state_log.end_state else None}, payment_id: {payment.payment_id}"
             )
@@ -302,7 +304,7 @@ class PaymentRejectsStep(Step):
             payment_rejects_file_path,
         )
         parsed_rows_count = len(payment_rejects_rows)
-
+        self.set_metrics(parsed_rows_count=parsed_rows_count)
         logger.info("Parsed %i payment rejects rows", parsed_rows_count)
 
         # check if returned rows match expected number in our state log
@@ -312,6 +314,8 @@ class PaymentRejectsStep(Step):
             self.db_session,
         )
         state_log_count = len(state_logs)
+        self.set_metrics(state_logs_count=state_log_count)
+
         if state_log_count != parsed_rows_count:
             raise PaymentRejectsException(
                 f"Unexpected number of parsed Payment Rejects file rows - found: {parsed_rows_count}, expected: {state_log_count}"

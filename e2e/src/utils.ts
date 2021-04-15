@@ -1,7 +1,6 @@
-import puppeteer from "puppeteer";
 import { LeavePeriods } from "./types";
 import { parseISO } from "date-fns";
-import playwright from "playwright";
+import playwright from "playwright-chromium";
 import delay from "delay";
 import config from "./config";
 import { ApplicationRequestBody } from "./api";
@@ -28,12 +27,12 @@ export function extractLeavePeriod(
 }
 
 /**********
- * These are common actions for using puppeteer
+ * These are common actions for using Playwright.
  ***********/
 
 export async function click(
   page: playwright.Page,
-  element: playwright.ElementHandle | puppeteer.ElementHandle | null
+  element: playwright.ElementHandle | null
 ): Promise<void> {
   if (!element) {
     throw new Error(`No element given`);

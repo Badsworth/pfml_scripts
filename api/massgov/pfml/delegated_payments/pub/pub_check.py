@@ -40,8 +40,8 @@ class Constants:
     EZ_CHECK_FILENAME_FORMAT = "PUB-EZ-CHECK_%Y%m%d-%H%M.csv"
     EZ_CHECK_MAX_NAME_LENGTH = 85
 
-    # e.g. PFML Payment NTN-240483-ABS-01 [03/01/2021-03/07/2021]
-    EZ_CHECK_MEMO_FORMAT = "PFML Payment {} {} [{}-{}]"
+    # e.g. PFML Medical Leave Payment NTN-240483-ABS-01 [03/01/2021-03/07/2021]
+    EZ_CHECK_MEMO_FORMAT = "PFML {} Payment {} [{}-{}]"
     EZ_CHECK_MEMO_DATE_FORMAT = "%m/%d/%Y"
 
     POSITIVE_PAY_FILENAME_FORMAT = "PUB-POSITIVE-PAY_%Y%m%d-%H%M.txt"

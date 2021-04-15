@@ -1081,7 +1081,7 @@ class PubError(Base):
 
     message = Column(Text, nullable=False)
     line_number = Column(Integer, nullable=False)
-    type_code = Column(Integer, nullable=False)
+    type_code = Column(Integer)
     raw_data = Column(Text, nullable=False)
     details = Column(JSON)
 
@@ -1131,6 +1131,9 @@ class PubErrorType(LookupTable):
     ACH_PRENOTE = LkPubErrorType(3, "ACH Prenote")
     ACH_NOTIFICATION = LkPubErrorType(4, "ACH Notification")
     ACH_SUCCESS_WITH_NOTIFICATION = LkPubErrorType(5, "ACH Success with Notification")
+    CHECK_PAYMENT_LINE_ERROR = LkPubErrorType(6, "Check payment line error")
+    CHECK_PAYMENT_ERROR = LkPubErrorType(7, "Check payment error")
+    CHECK_PAYMENT_FAILED = LkPubErrorType(8, "Check payment failed")
 
 
 class AbsenceStatus(LookupTable):
@@ -1898,6 +1901,14 @@ class State(LookupTable):
     )
     PAYMENT_FAILED_ADDRESS_VALIDATION = LkState(
         156, "Payment failed address validation", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    # 2nd writeback to FINEOS for successful checks
+    DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK = LkState(
+        160, "Add to FINEOS Writeback #2 - Check", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK = LkState(
+        161, "FINEOS Writeback #2 sent - Check", Flow.DELEGATED_PAYMENT.flow_id
     )
 
 

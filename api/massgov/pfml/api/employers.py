@@ -71,7 +71,7 @@ def employer_add_fein() -> flask.Response:
             db_session.query(Employer).filter(Employer.employer_fein == fein_to_add).one_or_none()
         )
 
-        if employer is None:
+        if not employer or not employer.fineos_employer_id:
             return response_util.error_response(
                 status_code=BadRequest,
                 message="Invalid FEIN",

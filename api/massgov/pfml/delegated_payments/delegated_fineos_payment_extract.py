@@ -156,6 +156,7 @@ class PaymentData:
     tin: Optional[str] = None
     absence_case_number: Optional[str] = None
 
+    leave_request_id: Optional[str] = None
     leave_request_decision: Optional[str] = None
 
     full_name: Optional[str] = None
@@ -410,10 +411,14 @@ class PaymentData:
         self.absence_case_number = payments_util.validate_csv_input(
             "ABSENCECASENU", claim_details, self.validation_container, True
         )
+        self.leave_request_id = payments_util.validate_csv_input(
+            "LEAVEREQUESTI", claim_details, self.validation_container, True
+        )
+
         requested_absence = None
-        if self.absence_case_number:
+        if self.leave_request_id:
             requested_absence = extract_data.requested_absence.indexed_data.get(
-                CiIndex(c=self.absence_case_number, i="")
+                CiIndex(c=self.leave_request_id, i="")
             )
         if requested_absence:
 
@@ -437,7 +442,7 @@ class PaymentData:
         else:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISMATCHED_DATA,
-                f"Payment absence case number not found in requested absence file: {self.absence_case_number}",
+                f"Payment leave request ID not found in requested absence file: {self.leave_request_id}",
             )
 
     def aggregate_payment_details(self, payment_details):
@@ -547,16 +552,27 @@ class PaymentExtractStep(Step):
                 "pei_file": extract_data.pei.file_location,
                 "payment_details_file": extract_data.payment_details.file_location,
                 "claim_details_file": extract_data.claim_details.file_location,
+                "requested_absence_file": extract_data.requested_absence.file_location,
             },
         )
         # To make processing simpler elsewhere, we index each extract file object on a key
         # that will let us join it with the PEI file later.
+        ref_file = extract_data.reference_file
 
         # VPEI file
         pei_data = self.download_and_parse_data(extract_data.pei.file_location, download_directory)
+
         # This doesn't specifically need to be indexed, but it lets us be consistent
         for record in pei_data:
             extract_data.pei.indexed_data[CiIndex(record["C"], record["I"])] = record
+
+            lower_key_record = payments_util.make_keys_lowercase(record)
+            vpei_record = payments_util.create_staging_table_instance(
+                lower_key_record, FineosExtractVpei, ref_file, self.get_import_log_id()
+            )
+            self.db_session.add(vpei_record)
+            self.increment("pei_record_count")
+
             logger.debug("indexed pei file row with CI: %s, %s", record["C"], record["I"])
 
         # Payment details file
@@ -566,10 +582,19 @@ class PaymentExtractStep(Step):
         # claim details needs to be indexed on PECLASSID and PEINDEXID
         # which point to the vpei.C and vpei.I columns
         for record in payment_details:
+            self.increment("payment_details_record_count")
+
             index = CiIndex(record["PECLASSID"], record["PEINDEXID"])
             if index not in extract_data.payment_details.indexed_data:
                 extract_data.payment_details.indexed_data[index] = []
             extract_data.payment_details.indexed_data[index].append(record)
+
+            lower_key_record = payments_util.make_keys_lowercase(record)
+            claim_details_record = payments_util.create_staging_table_instance(
+                lower_key_record, FineosExtractVpeiClaimDetails, ref_file, self.get_import_log_id()
+            )
+            self.db_session.add(claim_details_record)
+            self.increment("payment_details_record_count")
             logger.debug(
                 "indexed payment details file row with CI: %s, %s",
                 record["PECLASSID"],
@@ -583,9 +608,21 @@ class PaymentExtractStep(Step):
         # claim details needs to be indexed on PECLASSID and PEINDEXID
         # which point to the vpei.C and vpei.I columns
         for record in claim_details:
+            self.increment("claim_detail_record_count")
+
             extract_data.claim_details.indexed_data[
                 CiIndex(record["PECLASSID"], record["PEINDEXID"])
             ] = record
+
+            lower_key_record = payments_util.make_keys_lowercase(record)
+            payment_details_record = payments_util.create_staging_table_instance(
+                lower_key_record,
+                FineosExtractVpeiPaymentDetails,
+                ref_file,
+                self.get_import_log_id(),
+            )
+            self.db_session.add(payment_details_record)
+            self.increment("claim_details_record_count")
             logger.debug(
                 "indexed claim details file row with CI: %s, %s",
                 record["PECLASSID"],
@@ -597,10 +634,18 @@ class PaymentExtractStep(Step):
             extract_data.requested_absence.file_location, download_directory
         )
         for record in requested_absences:
-            absence_case_number = str(record.get("ABSENCE_CASENUMBER"))
-            extract_data.requested_absence.indexed_data[
-                CiIndex(c=absence_case_number, i="")
-            ] = record
+            leave_request_id = str(record.get("LEAVEREQUEST_ID"))
+            extract_data.requested_absence.indexed_data[CiIndex(c=leave_request_id, i="")] = record
+
+            lower_key_record = payments_util.make_keys_lowercase(record)
+            requested_absence_record = payments_util.create_staging_table_instance(
+                lower_key_record,
+                FineosExtractVbiRequestedAbsence,
+                ref_file,
+                self.get_import_log_id(),
+            )
+            self.db_session.add(requested_absence_record)
+            self.increment("requested_absence_record_count")
 
         logger.info("Successfully downloaded and indexed payment extract data files.")
 
@@ -666,6 +711,7 @@ class PaymentExtractStep(Step):
                     .one_or_none()
                 )
                 if not tax_identifier:
+                    self.increment("tax_identifier_missing_in_db_count")
                     payment_data.validation_container.add_validation_issue(
                         payments_util.ValidationReason.MISSING_IN_DB, "tax_identifier"
                     )
@@ -677,6 +723,7 @@ class PaymentExtractStep(Step):
                     )
 
                     if not employee:
+                        self.increment("employee_missing_in_db_count")
                         payment_data.validation_container.add_validation_issue(
                             payments_util.ValidationReason.MISSING_IN_DB, "employee"
                         )
@@ -828,6 +875,7 @@ class PaymentExtractStep(Step):
         # need to error the payment.
         active_state = self.get_active_payment_state(payment)
         if active_state:
+            self.increment("active_payment_error_count")
             validation_container.add_validation_issue(
                 payments_util.ValidationReason.RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED,
                 f"We received a payment that is already being processed. It is currently in state {active_state.state_description}.",
@@ -884,6 +932,7 @@ class PaymentExtractStep(Step):
         extra["employee_id"] = employee.employee_id
         if existing_eft:
             extra["pub_eft_id"] = existing_eft.pub_eft_id
+            self.increment("eft_previously_prenoted_count")
             logger.info(
                 "Found existing EFT info for claimant in prenote state %s",
                 existing_eft.prenote_state.prenote_state_description,
@@ -934,6 +983,7 @@ class PaymentExtractStep(Step):
                 payments_util.ValidationReason.EFT_PRENOTE_PENDING,
                 "New EFT info found, prenote required",
             )
+            self.increment("new_eft_count")
 
             state_log_util.create_finished_state_log(
                 end_state=State.DELEGATED_EFT_SEND_PRENOTE,
@@ -1369,7 +1419,6 @@ class PaymentExtractStep(Step):
                     continue
 
                 self.download_and_extract_data(extract_data, download_directory)
-                self.extract_to_staging_tables(extract_data)
 
                 self.process_records_to_db(extract_data)
                 self.move_files_from_received_to_processed(extract_data)
@@ -1391,46 +1440,3 @@ class PaymentExtractStep(Step):
                 raise
 
         logger.info("Successfully processed payment extract files")
-
-    def extract_to_staging_tables(self, extract_data: ExtractData) -> None:
-        ref_file = extract_data.reference_file
-        self.db_session.add(ref_file)
-        pei_data = [
-            payments_util.make_keys_lowercase(v) for v in extract_data.pei.indexed_data.values()
-        ]
-        claim_details_data = [
-            payments_util.make_keys_lowercase(v)
-            for v in extract_data.claim_details.indexed_data.values()
-        ]
-        requested_absence_data = [
-            payments_util.make_keys_lowercase(v)
-            for v in extract_data.requested_absence.indexed_data.values()
-        ]
-        payment_details_data = []
-        for _, v in extract_data.payment_details.indexed_data.items():
-            for data in v:
-                payment_details_data.append(payments_util.make_keys_lowercase(data))
-
-        for data in pei_data:
-            vpei = payments_util.create_staging_table_instance(
-                data, FineosExtractVpei, ref_file, self.get_import_log_id()
-            )
-            self.db_session.add(vpei)
-
-        for data in claim_details_data:
-            claim_details = payments_util.create_staging_table_instance(
-                data, FineosExtractVpeiClaimDetails, ref_file, self.get_import_log_id()
-            )
-            self.db_session.add(claim_details)
-
-        for data in payment_details_data:
-            payment_details = payments_util.create_staging_table_instance(
-                data, FineosExtractVpeiPaymentDetails, ref_file, self.get_import_log_id()
-            )
-            self.db_session.add(payment_details)
-
-        for data in requested_absence_data:
-            requested_absence = payments_util.create_staging_table_instance(
-                data, FineosExtractVbiRequestedAbsence, ref_file, self.get_import_log_id()
-            )
-            self.db_session.add(requested_absence)

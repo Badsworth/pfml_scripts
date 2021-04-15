@@ -20,6 +20,19 @@ export const BHAP1: ScenarioSpecification = {
     },
   },
 };
+
+export const BHAP1ER: ScenarioSpecification = {
+  ...BHAP1,
+  claim: {
+    ...BHAP1.claim,
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+  },
+};
+
 export const BHAP1INEL: ScenarioSpecification = {
   employee: { mass_id: true, wages: "ineligible" },
   claim: {

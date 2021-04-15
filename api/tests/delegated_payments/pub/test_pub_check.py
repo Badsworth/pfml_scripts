@@ -236,7 +236,7 @@ def test_format_check_memo_success(initialize_factories_session, test_db_session
     memo = pub_check._format_check_memo(payment)
     claim_type = payment.claim.claim_type.claim_type_description
 
-    pattern = "PFML Payment {} {}".format(claim_type, payment.claim.fineos_absence_id)
+    pattern = "PFML {} Payment {}".format(claim_type, payment.claim.fineos_absence_id)
     assert re.search(pattern, memo)
 
 

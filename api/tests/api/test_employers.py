@@ -341,3 +341,34 @@ def test_employers_receive_400_if_invalid_fein(
 
     assert response.status_code == 400
     tests.api.validate_error_response(response, 400, message="Invalid FEIN")
+
+
+def test_employers_receive_400_if_no_employer_fineos_employer_id(
+    monkeypatch, client, employer_user, employer_auth_token, test_db_session
+):
+    current_employer = EmployerFactory.create()
+    employer_to_add = EmployerFactory.create(employer_fein="999999999", fineos_employer_id=None)
+    yesterday = datetime.now() - timedelta(days=1)
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer_to_add, filing_period=yesterday.strftime("%Y-%m-%d")
+    )
+
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=current_employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    post_body = {"employer_fein": "999999999"}
+
+    response = client.post(
+        "/v1/employers/add",
+        json=post_body,
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400, message="Invalid FEIN")
