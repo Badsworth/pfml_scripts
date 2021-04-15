@@ -6,7 +6,7 @@ import EmployeeIndex from "../generation/writers/EmployeeIndex";
 import EmployerIndex from "../generation/writers/EmployerIndex";
 
 (async () => {
-  const storage = dataDirectory("e2e-2021-04-08");
+  const storage = dataDirectory("e2e-2021-04-14");
   await storage.prepare();
 
   // Generate 2 employers separately. We'll generate employees for these. The rest
@@ -14,7 +14,11 @@ import EmployerIndex from "../generation/writers/EmployerIndex";
   const eligibleEmployers = EmployerPool.generate(2, { size: "small" });
   const employerPool = EmployerPool.merge(
     eligibleEmployers,
-    EmployerPool.generate(1, { withholdings: [0, 0, 0, 0] })
+    EmployerPool.generate(1, {
+      withholdings: [0, 0, 0, 0],
+      metadata: { register_leave_admins: true },
+    }),
+    EmployerPool.generate(2, { metadata: { register_leave_admins: true } })
   );
   await employerPool.save(storage.employers);
   await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));

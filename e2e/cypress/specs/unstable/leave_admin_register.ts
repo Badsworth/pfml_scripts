@@ -4,7 +4,10 @@ import { beforePortal } from "../../tests/common/before";
 describe("Leave Admin Self-Registration", () => {
   const register = it("Leave administrators should be able to self-register on the portal.", () => {
     beforePortal();
-    cy.task("pickEmployer", { withholdings: "non-exempt" }).then((employer) => {
+    cy.task("pickEmployer", {
+      withholdings: "non-exempt",
+      metadata: { register_leave_admins: true },
+    }).then((employer) => {
       cy.task("generateCredentials").then((credentials) => {
         portal.registerAsLeaveAdmin(credentials, employer.fein);
         portal.login(credentials);
@@ -34,6 +37,7 @@ describe("Leave Admin Self-Registration", () => {
         cy.task("pickEmployer", {
           withholdings: "non-exempt",
           notFEIN: fein,
+          metadata: { register_leave_admins: true },
         }).then((secondary) => {
           const secondaryWithholding =
             secondary.withholdings[secondary.withholdings.length - 1];
