@@ -129,10 +129,9 @@ def users_patch(user_id):
     with app.db_session() as db_session:
         updated_user = get_or_404(db_session, User, user_id)
 
-        if wants_to_be_employer:
-            employer_fein = sanitize_fein(
-                deepgetattr(body, "user_leave_administrator.employer_fein") or ""
-            )
+        employer_fein = deepgetattr(body, "user_leave_administrator.employer_fein")
+        if wants_to_be_employer and employer_fein:
+            employer_fein = sanitize_fein(employer_fein)
             # find employer
             employer = (
                 db_session.query(Employer)
