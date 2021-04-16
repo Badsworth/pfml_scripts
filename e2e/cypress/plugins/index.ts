@@ -23,7 +23,7 @@ import {
   getVerificationFetcher,
   getLeaveAdminCredentials,
 } from "../../src/util/common";
-import { getFineosBaseUrl } from "../config";
+import { getFineosBaseUrl } from "../../src/util/common";
 import { Credentials } from "../../src/types";
 import { ApplicationResponse } from "../../src/api";
 
