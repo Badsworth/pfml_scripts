@@ -1754,23 +1754,29 @@ class State(LookupTable):
     DELEGATED_CLAIMANT_ADD_TO_CLAIMANT_EXTRACT_ERROR_REPORT = LkState(
         101, "Add to Claimant Extract Error Report", Flow.DELEGATED_CLAIMANT.flow_id
     )
-    DELEGATED_CLAIMANT_EXTRACT_ERROR_REPORT_SENT = LkState(
-        102, "Claimant Extract Error Report sent", Flow.DELEGATED_CLAIMANT.flow_id
+    DEPRECATED_DELEGATED_CLAIMANT_EXTRACT_ERROR_REPORT_SENT = LkState(
+        102,
+        "DEPRECATED STATE - Claimant Extract Error Report sent",
+        Flow.DELEGATED_CLAIMANT.flow_id,
     )
 
     # == EFT States
 
     DELEGATED_EFT_SEND_PRENOTE = LkState(110, "Send EFT Prenote", Flow.DELEGATED_EFT.flow_id)
     DELEGATED_EFT_PRENOTE_SENT = LkState(111, "EFT Prenote Sent", Flow.DELEGATED_EFT.flow_id)
-    DELEGATED_EFT_ALLOWABLE_TIME_IN_PRENOTE_STATE_EXCEEDED = LkState(
-        112, "EFT alllowable time in Prenote state exceeded", Flow.DELEGATED_EFT.flow_id
+    DEPRECATED_DELEGATED_EFT_ALLOWABLE_TIME_IN_PRENOTE_STATE_EXCEEDED = LkState(
+        112,
+        "DEPRECATED STATE - EFT alllowable time in Prenote state exceeded",
+        Flow.DELEGATED_EFT.flow_id,
     )
-    DELEGATED_EFT_ELIGIBLE = LkState(113, "EFT eligible", Flow.DELEGATED_EFT.flow_id)
-    DELEGATED_EFT_ADD_TO_ERROR_REPORT = LkState(
-        114, "Add to EFT Error Report", Flow.DELEGATED_EFT.flow_id
+    DEPRECATED_DELEGATED_EFT_ELIGIBLE = LkState(
+        113, "DEPRECATED STATE - EFT eligible", Flow.DELEGATED_EFT.flow_id
     )
-    DELEGATED_EFT_ERROR_REPORT_SENT = LkState(
-        115, "EFT Error Report sent", Flow.DELEGATED_EFT.flow_id
+    DEPRECATED_DELEGATED_EFT_ADD_TO_ERROR_REPORT = LkState(
+        114, "DEPRECATED STATE - Add to EFT Error Report", Flow.DELEGATED_EFT.flow_id
+    )
+    DEPRECATED_DELEGATED_EFT_ERROR_REPORT_SENT = LkState(
+        115, "DEPRECATED STATE - EFT Error Report sent", Flow.DELEGATED_EFT.flow_id
     )
 
     # == Payment States
@@ -1779,8 +1785,8 @@ class State(LookupTable):
     DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT = LkState(
         120, "Add to Payment Error Report", Flow.DELEGATED_PAYMENT.flow_id
     )
-    DELEGATED_PAYMENT_ERROR_REPORT_SENT = LkState(
-        121, "Payment Error Report sent", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_ERROR_REPORT_SENT = LkState(
+        121, "DEPRECATED STATE - Payment Error Report sent", Flow.DELEGATED_PAYMENT.flow_id
     )
 
     DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT = LkState(
@@ -1828,10 +1834,14 @@ class State(LookupTable):
     )
 
     DEPRECATED_DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
-        134, "Add accepted payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
+        134,
+        "DEPRECATED STATE - Add accepted payment to FINEOS Writeback",
+        Flow.DELEGATED_PAYMENT.flow_id,
     )
     DEPRECATED_DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
-        135, "Accepted payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+        135,
+        "DEPRECATED STATE - Accepted payment FINEOS Writeback sent",
+        Flow.DELEGATED_PAYMENT.flow_id,
     )
 
     DELEGATED_PAYMENT_VALIDATED = LkState(157, "Payment Validated", Flow.DELEGATED_PAYMENT.flow_id)
@@ -1859,22 +1869,24 @@ class State(LookupTable):
     )
 
     # PUB Status Return stage
-    DELEGATED_PAYMENT_ADD_TO_PUB_ERROR_REPORT = LkState(
-        140, "Add to PUB Error Report", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_ADD_TO_PUB_ERROR_REPORT = LkState(
+        140, "DEPRECATED STATE - Add to PUB Error Report", Flow.DELEGATED_PAYMENT.flow_id
     )
-    DELEGATED_PAYMENT_PUB_ERROR_REPORT_SENT = LkState(
-        141, "PUB Error Report sent", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_PUB_ERROR_REPORT_SENT = LkState(
+        141, "DEPRECATED STATE - PUB Error Report sent", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    DELEGATED_PAYMENT_ADD_TO_PUB_PAYMENT_FINEOS_WRITEBACK = LkState(
-        142, "Add to PUB payment FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_ADD_TO_PUB_PAYMENT_FINEOS_WRITEBACK = LkState(
+        142,
+        "DEPRECATED STATE - Add to PUB payment FINEOS Writeback",
+        Flow.DELEGATED_PAYMENT.flow_id,
     )
-    DELEGATED_PAYMENT_PUB_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
-        143, "PUB payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_PUB_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        143, "DEPRECATED STATE - PUB payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
     )
     DELEGATED_PAYMENT_COMPLETE = LkState(144, "Payment complete", Flow.DELEGATED_PAYMENT.flow_id)
 
-    # Delegated payment states for ACH cancellation (similar to 122-127)
+    # Delegated payment states for cancellations (similar to 122-127)
     DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION = LkState(
         145,
         "Waiting for Payment Audit Report response - cancellation payment",
@@ -1903,6 +1915,8 @@ class State(LookupTable):
     )
 
     # PEI WRITE BACK ERROR TO FINEOS
+    # These states are not retryable because this is erroring after we've sent a payment to PUB
+    # If there was an error, it will require a manual effort to fix.
     ADD_TO_ERRORED_PEI_WRITEBACK = LkState(
         151, "Add to Errored PEI writeback", Flow.DELEGATED_PAYMENT.flow_id
     )
@@ -1912,17 +1926,21 @@ class State(LookupTable):
     )
 
     # Delegated payments address validation states.
-    CLAIMANT_READY_FOR_ADDRESS_VALIDATION = LkState(
-        153, "Claimant ready for address validation", Flow.DELEGATED_CLAIMANT.flow_id
+    DEPRECATED_CLAIMANT_READY_FOR_ADDRESS_VALIDATION = LkState(
+        153,
+        "DEPRECATED STATE - Claimant ready for address validation",
+        Flow.DELEGATED_CLAIMANT.flow_id,
     )
-    CLAIMANT_FAILED_ADDRESS_VALIDATION = LkState(
-        154, "Claimant failed address validation", Flow.DELEGATED_CLAIMANT.flow_id
+    DEPRECATED_CLAIMANT_FAILED_ADDRESS_VALIDATION = LkState(
+        154,
+        "DEPRECATED STATE - Claimant failed address validation",
+        Flow.DELEGATED_CLAIMANT.flow_id,
     )
     PAYMENT_READY_FOR_ADDRESS_VALIDATION = LkState(
         155, "Payment ready for address validation", Flow.DELEGATED_PAYMENT.flow_id
     )
     PAYMENT_FAILED_ADDRESS_VALIDATION = LkState(
-        156, "Payment failed address validation", Flow.DELEGATED_PAYMENT.flow_id
+        156, "Payment failed address validation", Flow.DELEGATED_PAYMENT.flow_id,
     )
 
     # 2nd writeback to FINEOS for successful checks

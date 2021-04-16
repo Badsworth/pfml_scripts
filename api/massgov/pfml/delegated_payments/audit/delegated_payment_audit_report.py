@@ -130,7 +130,7 @@ class PaymentAuditReportStep(Step):
             else:
                 payment_history_ids = [p.payment_id for p in payment_history]
                 expected_end_states = [
-                    State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id,
+                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
                     State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id,
                 ]
 
@@ -150,7 +150,10 @@ class PaymentAuditReportStep(Step):
                     sl.end_state_id for sl in payment_error_or_rejected_state_log_history
                 ]
 
-                if State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id in payment_state_history:
+                if (
+                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+                    in payment_state_history
+                ):
                     is_previously_errored_payment = True
 
                 if (

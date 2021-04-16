@@ -517,15 +517,15 @@ class PaymentExtractStep(Step):
             .all()
         )
 
-        # For each payment, check whether it's in a specific set of states
-        # We query for the state specifically as the payment comes attached
+        # For each payment, check whether it's currently in any state that is not restartable.
         active_state = (
             self.db_session.query(StateLog)
             .join(LatestStateLog)
             .join(Payment)
+            .join(LkState, StateLog.end_state_id == LkState.state_id)
             .filter(
                 Payment.payment_id.in_(payment_ids),
-                StateLog.end_state_id.in_(payments_util.Constants.NON_RESTARTABLE_PAYMENT_STATES),
+                StateLog.end_state_id.notin_(payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS),
             )
             .first()
         )

@@ -937,7 +937,7 @@ def test_process_extract_data_existing_payment(
         mock_s3_bucket,
         test_db_session,
         add_payment=True,
-        additional_payment_state=State.DELEGATED_PAYMENT_ERROR_REPORT_SENT,
+        additional_payment_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
@@ -966,7 +966,7 @@ def test_process_extract_data_existing_payment(
             # The state ID will be either the prior state ID or the new successful one
             assert state_log.end_state_id in [
                 State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id,
-                State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id,
+                State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
             ]
 
     payment_count_after = test_db_session.query(Payment).count()
@@ -1721,3 +1721,47 @@ def test_extract_to_staging_tables(payment_extract_step, test_db_session, tmp_pa
     for data in requested_absence_data:
         assert data.reference_file_id == ref_file.reference_file_id
         assert data.fineos_extract_import_log_id == payment_extract_step.get_import_log_id()
+
+
+def test_get_active_payment_state(payment_extract_step, test_db_session):
+    non_restartable_states = [
+        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
+        State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK,
+        State.ADD_TO_ERRORED_PEI_WRITEBACK,
+    ]
+    restartable_states = payments_util.Constants.RESTARTABLE_PAYMENT_STATES
+
+    # Non restartable states should return the state.
+    for non_restartable_state in non_restartable_states:
+        # Create and load a payment in the non restartable state.
+        payment = PaymentFactory.create()
+        state_log_util.create_finished_state_log(
+            payment, non_restartable_state, EXPECTED_OUTCOME, test_db_session
+        )
+
+        # Create a payment with the same C/I value
+        new_payment = PaymentFactory.build(
+            fineos_pei_c_value=payment.fineos_pei_c_value,
+            fineos_pei_i_value=payment.fineos_pei_i_value,
+        )
+
+        # We should find that state associated with the payment
+        found_state = payment_extract_step.get_active_payment_state(new_payment)
+        assert found_state
+        assert found_state.state_id == non_restartable_state.state_id
+
+    for restartable_state in restartable_states:
+        # Create and load a payment in the restartable state.
+        payment = PaymentFactory.create()
+        state_log_util.create_finished_state_log(
+            payment, restartable_state, EXPECTED_OUTCOME, test_db_session
+        )
+
+        # Create a payment with the same C/I value
+        new_payment = PaymentFactory.build(
+            fineos_pei_c_value=payment.fineos_pei_c_value,
+            fineos_pei_i_value=payment.fineos_pei_i_value,
+        )
+        # We should not find anything
+        found_state = payment_extract_step.get_active_payment_state(new_payment)
+        assert found_state is None
