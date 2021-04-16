@@ -26,11 +26,13 @@ const setup = (claim = new MockClaimBuilder().create()) => {
 };
 
 const medicalLeaveClaim = new MockClaimBuilder().medicalLeaveReason().create();
+const caringLeaveClaim = new MockClaimBuilder().caringLeaveReason().create();
 
 describe("LeaveReasonPage", () => {
-  it("renders the page with all four reasons when type feature flags are enabled", () => {
+  it("renders the page with all five reasons when type feature flags are enabled", () => {
     process.env.featureFlags = {
       claimantShowMilitaryLeaveTypes: true,
+      showCaringLeaveType: true,
     };
 
     const { wrapper } = setup();
@@ -39,6 +41,7 @@ describe("LeaveReasonPage", () => {
 
     expect(choiceGroup.exists(`[value="${LeaveReason.medical}"]`)).toBe(true);
     expect(choiceGroup.exists(`[value="${LeaveReason.bonding}"]`)).toBe(true);
+    expect(choiceGroup.exists(`[value="${LeaveReason.care}"]`)).toBe(true);
     expect(
       choiceGroup.exists(`[value="${LeaveReason.activeDutyFamily}"]`)
     ).toBe(true);
@@ -47,9 +50,10 @@ describe("LeaveReasonPage", () => {
     ).toBe(true);
   });
 
-  it("renders the page without military leave options when type feature flags are disabled", () => {
+  it("renders the page without military leave and caring leave options when type feature flags are disabled", () => {
     process.env.featureFlags = {
       claimantShowMilitaryLeaveTypes: false,
+      showCaringLeaveType: false,
     };
 
     const { wrapper } = setup();
@@ -58,6 +62,7 @@ describe("LeaveReasonPage", () => {
 
     expect(choiceGroup.exists(`[value="${LeaveReason.medical}"]`)).toBe(true);
     expect(choiceGroup.exists(`[value="${LeaveReason.bonding}"]`)).toBe(true);
+    expect(choiceGroup.exists(`[value="${LeaveReason.care}"]`)).toBe(false);
     expect(
       choiceGroup.exists(`[value="${LeaveReason.activeDutyFamily}"]`)
     ).toBe(false);
@@ -68,6 +73,19 @@ describe("LeaveReasonPage", () => {
 
   it("renders the page for medical leave and does not show reason qualifier followup", () => {
     const { wrapper } = setup(medicalLeaveClaim);
+
+    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    expect(
+      wrapper
+        .find({ name: "leave_details.reason_qualifier" })
+        .parents("ConditionalContent")
+        .prop("visible")
+    ).toBe(false);
+  });
+
+  it("renders the page for caring leave and does not show reason qualifier followup", () => {
+    const { wrapper } = setup(caringLeaveClaim);
 
     expect(wrapper).toMatchSnapshot();
     expect(wrapper.find("Trans").dive()).toMatchSnapshot();
@@ -124,6 +142,25 @@ describe("LeaveReasonPage", () => {
           child_placement_date: null,
           has_future_child_date: null,
           reason: LeaveReason.medical,
+          reason_qualifier: null,
+        },
+      }
+    );
+  });
+
+  it("calls claims.update with with only leave reason for caring leave and set child birth/placement date to null", async () => {
+    const { appLogic, submitForm } = setup(caringLeaveClaim);
+
+    await submitForm();
+
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      medicalLeaveClaim.application_id,
+      {
+        leave_details: {
+          child_birth_date: null,
+          child_placement_date: null,
+          has_future_child_date: null,
+          reason: LeaveReason.care,
           reason_qualifier: null,
         },
       }

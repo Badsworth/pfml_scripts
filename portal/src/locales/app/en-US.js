@@ -1090,6 +1090,8 @@ const pages = {
     bondingTypeMultipleBirthsDetailsSummary:
       "Leave is determined based on benefit year (365 days from the start of the first week you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child. <multiple-births-link>Learn more about taking leave for multiple childbirths or placements</multiple-births-link>.",
     bondingTypeNewbornLabel: "Birth",
+    caringLeaveHint: "Family leave",
+    caringLeaveLabel: "I need to care for my family member",
     medicalLeaveHint: "Medical leave",
     medicalLeaveLabel: "I can’t work due to an illness, injury, or pregnancy.",
     sectionHint: "You can only request one leave at a time.",
@@ -1330,6 +1332,7 @@ const pages = {
     leaveReasonLabel: "Leave type",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
@@ -1877,6 +1880,7 @@ const components = {
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
