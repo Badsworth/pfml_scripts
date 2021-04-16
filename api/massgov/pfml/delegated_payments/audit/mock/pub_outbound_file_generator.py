@@ -19,6 +19,7 @@ from massgov.pfml.delegated_payments.delegated_payments_nacha import (
 from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     ScenarioData,
     ScenarioDataConfig,
+    ScenarioName,
     ScenarioNameWithCount,
     generate_scenario_dataset,
 )
@@ -70,6 +71,10 @@ def generate_pub_return_prenote(
         scenario_descriptor = scenario_data.scenario_descriptor
         payment = scenario_data.payment
         employee = scenario_data.employee
+
+        if payment is None:
+            logger.info("Skipping scenario data with empty payment")
+            continue
 
         state_log_util.create_finished_state_log(
             end_state=State.DELEGATED_EFT_PRENOTE_SENT,
@@ -135,6 +140,10 @@ def generate_pub_return_ach(
         payment = scenario_data.payment
         employee = scenario_data.employee
 
+        if payment is None:
+            logger.info("Skipping scenario data with empty payment")
+            continue
+
         state_log_util.create_finished_state_log(
             end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
             associated_model=payment,
@@ -195,7 +204,7 @@ def generate_pub_payment_return_file():
     args = parser.parse_args()
     folder_path = args.folder
 
-    scaenario_name_with_count = ScenarioNameWithCount(scenario_name="test", count=1)
+    scaenario_name_with_count = ScenarioNameWithCount(scenario_name=ScenarioName.SCENARIO_A, count=1)
 
     config = ScenarioDataConfig(scenarios_with_count=[scaenario_name_with_count],)
     scenario_dataset = generate_scenario_dataset(config)
