@@ -205,7 +205,6 @@ class FineosPaymentData:
         return self.kwargs.get(key)
 
 
-# == Utility data classes
 @dataclass
 class FineosPaymentsExportCsvWriter:
     file_name: str
