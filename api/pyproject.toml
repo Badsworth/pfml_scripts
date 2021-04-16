@@ -98,6 +98,7 @@ payments-fineos-process = "massgov.pfml.payments.process_payments:fineos_process
 payments-mock-generate = "massgov.pfml.payments.mock.generate:main"
 payments-rotate-data-mart-password = "massgov.pfml.payments.rotate_data_mart_password:main"
 payments-manual-payment-voucher = "massgov.pfml.payments.manual.payment_voucher:main"
+payments-ctr-vc-code-cleanup = "massgov.pfml.payments.ctr_vendor_customer_code_cleanup:main"
 pub-payments-process-fineos = "massgov.pfml.delegated_payments.task.process_fineos_extracts:main"
 pub-payments-create-pub-files = "massgov.pfml.delegated_payments.task.process_pub_payments:main"
 pub-payments-process-pub-returns = "massgov.pfml.delegated_payments.task.process_pub_responses:main"
