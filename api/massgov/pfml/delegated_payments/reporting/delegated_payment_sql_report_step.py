@@ -65,7 +65,7 @@ class ReportStep(Step):
                     self.increment("report_generated_count")
                 except Exception:
                     self.increment("report_error_count")
-                    logger.exception("Error generting report: %s", report_name.value)
+                    logger.exception("Error generating report: %s", report_name.value)
                     self.db_session.rollback()
 
             logger.info("Done generating %i reports: %s", len(generated_reports), generated_reports)

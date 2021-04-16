@@ -208,7 +208,7 @@ def test_invalid_and_missing_report_in_step_execution(
     # validate error messages
     log_with_counts = Counter(record.message for record in caplog.records)
 
-    invalid_report_message = f"Error generting report: {invalid_report_name}"
+    invalid_report_message = f"Error generating report: {invalid_report_name}"
     assert log_with_counts[invalid_report_message] == 1
 
     missing_report_message = f"Could not find configuration for report: {missing_report_name}"

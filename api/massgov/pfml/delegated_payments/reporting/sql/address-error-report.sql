@@ -1,4 +1,4 @@
--- PFML Overpayment Report
+-- PFML Address Error Report
 WITH PAYMENT_BATCH_TRANSACTIONS AS (
     SELECT P.PAYMENT_ID, P.PERIOD_START_DATE, P.PERIOD_END_DATE, P.PAYMENT_DATE,  P.AMOUNT, 
            C.FINEOS_ABSENCE_ID, C.ABSENCE_PERIOD_START_DATE, C.ABSENCE_PERIOD_END_DATE,
@@ -34,10 +34,17 @@ SELECT PBT.FINEOS_CUSTOMER_NUMBER "Customer Number",
        PBT.AMOUNT "Payment Amount", 
        PBT.FINEOS_PEI_C_VALUE "C", 
        PBT.FINEOS_PEI_I_VALUE "I", 
-       PBT.FINEOS_EXTRACTION_DATE "Fineos Extraction Date", 
-       PBT.PAYMENT_ID "Payment ID"
+       PBT.FINEOS_EXTRACTION_DATE "Fineos Extraction Date",
+       PBT.OUTCOME::json#>'{experian_result,input_address}' "Address Provided",
+       PBT.OUTCOME::json#>'{experian_result,confidence}' result,
+       PBT.OUTCOME::json#>'{experian_result,output_address_1}' "Experian Address Recommendation #1",
+       PBT.OUTCOME::json#>'{experian_result,output_address_2}' "Experian Address Recommendation #2",
+       PBT.OUTCOME::json#>'{experian_result,output_address_3}' "Experian Address Recommendation #3",
+       PBT.OUTCOME::json#>'{experian_result,output_address_4}' "Experian Address Recommendation #4",
+       PBT.OUTCOME::json#>'{experian_result,output_address_5}' "Experian Address Recommendation #5",
+       PBT.OUTCOME::json#>'{experian_result,output_address_6}' "Experian Address Recommendation #6",
+       PBT.OUTCOME::json#>'{experian_result,output_address_7}' "Experian Address Recommendation #7",
+       PBT.OUTCOME::json#>'{experian_result,output_address_8}' "Experian Address Recommendation #8"
 FROM PAYMENT_BATCH_TRANSACTIONS PBT
 WHERE PBT.IS_CURRENT = 'Y'
-  AND PBT.CURRENT_STATE_ID IN (126, 127)
--- Add overpayment to FINEOS Writeback
--- Overpayment FINEOS Writeback sent
+  AND PBT.CURRENT_STATE_ID IN (156)

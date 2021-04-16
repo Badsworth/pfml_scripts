@@ -136,7 +136,7 @@ class LogEntry:
 
     def _set_metrics_import_log_report(self):
         """Set the import_log.report string from member variables."""
-        self.import_log.report = json.dumps(self.metrics)
+        self.import_log.report = json.dumps(self.metrics, indent=2)
 
 
 @contextlib.contextmanager
@@ -170,4 +170,4 @@ def log_entry(db_session, source, import_type):
 
 def set_import_log_with_error_message(import_log: ImportLog, error_message: str) -> None:
     existing_report = json.loads(import_log.report) if import_log.report is not None else {}
-    import_log.report = json.dumps({"message": error_message, **existing_report})
+    import_log.report = json.dumps({"message": error_message, **existing_report}, indent=2)
