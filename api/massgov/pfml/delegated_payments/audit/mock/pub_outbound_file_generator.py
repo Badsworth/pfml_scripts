@@ -1,9 +1,8 @@
 import argparse
 import decimal
 import os
-from dataclasses import dataclass
 from random import randrange
-from typing import List, Tuple
+from typing import List
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
@@ -17,7 +16,12 @@ from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     create_nacha_batch,
     get_trans_code,
 )
-from massgov.pfml.delegated_payments.mock.scenario_data_generator import ScenarioData
+from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
+    ScenarioData,
+    ScenarioDataConfig,
+    ScenarioNameWithCount,
+    generate_scenario_dataset,
+)
 from massgov.pfml.delegated_payments.util.ach.nacha import (
     NachaAddendumResponse,
     NachaEntry,
@@ -180,29 +184,6 @@ def generate_pub_return_ach(
     write_file(folder_path, nacha_file)
 
 
-def generate_pub_return(
-    db_session: db.Session,
-    folder_location: str,
-    pre_note_configs: List[PubPaymentReturnScenario] = pre_note_configs,
-    ach_config: List[PubPaymentReturnScenario] = ach_configs,
-    skiprate: int = 0,
-) -> Tuple[List[PubPaymentReturnScenarioData], List[PubPaymentReturnScenarioData]]:
-
-    nacha_file = NachaFile()
-    batch = create_nacha_batch(NachaBatchType.MEDICAL_LEAVE)
-
-    nacha_file.add_batch(batch)
-
-    prenote_scenario_data = generate_pub_return_prenote(
-        db_session, batch, pre_note_configs, skiprate
-    )
-    ach_scenario_data = generate_pub_return_ach(db_session, batch, ach_config, skiprate)
-
-    write_file(folder_location, nacha_file)
-
-    return (prenote_scenario_data, ach_scenario_data)
-
-
 def generate_pub_payment_return_file():
     logging.init(__name__)
 
@@ -214,12 +195,13 @@ def generate_pub_payment_return_file():
     args = parser.parse_args()
     folder_path = args.folder
 
-    skiprate = int(args.skiprate)
+    scaenario_name_with_count = ScenarioNameWithCount(scenario_name="test", count=1)
 
-    if skiprate < 0 or skiprate > 100:
-        raise Exception("Error rate must be an integer between 0 and 100")
+    config = ScenarioDataConfig(scenarios_with_count=[scaenario_name_with_count],)
+    scenario_dataset = generate_scenario_dataset(config)
 
-    generate_pub_return(db_session, folder_path, skiprate=skiprate)
+    generate_pub_return_prenote(db_session, scenario_dataset, folder_path)
+    generate_pub_return_ach(db_session, scenario_dataset, folder_path)
 
     logger.info("Done generating payment return file.")
 
