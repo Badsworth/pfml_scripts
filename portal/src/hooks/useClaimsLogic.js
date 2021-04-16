@@ -13,22 +13,23 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
 
   // Track whether the loadAll method has been called. Checking that claims
   // is set isn't sufficient, since it may only include a subset of claims
-  const [hasLoadedAll, setHasLoadedAll] = useState(false);
+  const [loadedPage, setLoadedPage] = useState(null);
 
   const claimsApi = new ClaimsApi();
 
   /**
    * Load all claims for the authenticated user
+   * @param {number} page - zero-based page index
    */
-  const loadAll = async () => {
-    if (hasLoadedAll) return;
+  const loadAll = async (page) => {
+    if (loadedPage === page) return;
     appErrorsLogic.clearErrors();
 
     try {
-      const { claims } = await claimsApi.getClaims();
+      const { claims } = await claimsApi.getClaims(page);
 
       setClaims(claims);
-      setHasLoadedAll(true);
+      setLoadedPage(page);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -36,7 +37,7 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
 
   return {
     claims,
-    hasLoadedAll,
+    loadedPage,
     loadAll,
   };
 };

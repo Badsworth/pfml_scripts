@@ -10,14 +10,14 @@ import withClaims from "../../src/hoc/withClaims";
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("withClaims", () => {
-  function setup(appLogic) {
+  function setup(appLogic, query = {}) {
     let wrapper;
 
     act(() => {
       const PageComponent = () => <div />;
       const WrappedComponent = withClaims(PageComponent);
 
-      wrapper = mount(<WrappedComponent appLogic={appLogic} />);
+      wrapper = mount(<WrappedComponent appLogic={appLogic} query={query} />);
     });
 
     return { wrapper };
@@ -47,5 +47,25 @@ describe("withClaims", () => {
 
     expect(pageProps.user).toBeInstanceOf(User);
     expect(pageProps.claims).toBe(claimsCollection);
+  });
+
+  it("makes request with 0 as page index if value is not provided", () => {
+    const appLogic = useAppLogic();
+    appLogic.claims.hasLoadedAll = false;
+    const query = { page: null };
+
+    setup(appLogic, query);
+
+    expect(appLogic.claims.loadAll).toHaveBeenCalledWith(0);
+  });
+
+  it("makes request with zero-based page index if value is provided", () => {
+    const appLogic = useAppLogic();
+    appLogic.claims.hasLoadedAll = false;
+    const query = { page: "3" };
+
+    setup(appLogic, query);
+
+    expect(appLogic.claims.loadAll).toHaveBeenCalledWith(2);
   });
 });

@@ -15,10 +15,25 @@ describe("ClaimsApi", () => {
       mockFetch();
 
       const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims();
+      await claimsApi.getClaims(0);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/claims`,
+        `${process.env.apiUrl}/claims/?page=0`,
+        expect.objectContaining({
+          headers: expect.any(Object),
+          method: "GET",
+        })
+      );
+    });
+
+    it("makes request with page index in query string", async () => {
+      mockFetch();
+
+      const claimsApi = new ClaimsApi();
+      await claimsApi.getClaims(1);
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/claims/?page=1`,
         expect.objectContaining({
           headers: expect.any(Object),
           method: "GET",

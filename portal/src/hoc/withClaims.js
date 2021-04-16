@@ -15,7 +15,7 @@ import withUser from "./withUser";
  */
 const withClaims = (Component) => {
   const ComponentWithClaims = (props) => {
-    const { appLogic } = props;
+    const { appLogic, query } = props;
     const { users } = appLogic;
     const { t } = useTranslation();
 
@@ -28,7 +28,8 @@ const withClaims = (Component) => {
 
     useEffect(() => {
       if (shouldLoad) {
-        appLogic.claims.loadAll();
+        const pageIndex = query && query.page ? parseInt(query.page) - 1 : 0;
+        appLogic.claims.loadAll(pageIndex);
       }
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -56,6 +57,9 @@ const withClaims = (Component) => {
         loadAll: PropTypes.func.isRequired,
       }).isRequired,
     }).isRequired,
+    query: PropTypes.shape({
+      page: PropTypes.string,
+    }),
   };
 
   return withUser(ComponentWithClaims);
