@@ -31,7 +31,7 @@
         { "name": "DB_USERNAME", "value": "${db_username}" },
 
         { "name":  "PAYMENT_REJECTS_RECEIVED_FOLDER_PATH",  "value": "${payment_rejects_received_folder_path}"},
-        { "name":  "PAYMENT_REJECTS_PROCESSED_FOLDER_PATH",  "value": "${payment_rejects_processed_folder_path}"},
+        { "name":  "PAYMENT_REJECTS_PROCESSED_FOLDER_PATH",  "value": "${payment_rejects_processed_folder_path}"}
       ],
       "secrets": [
         { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
