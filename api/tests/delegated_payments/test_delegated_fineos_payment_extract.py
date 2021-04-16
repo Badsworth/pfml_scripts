@@ -1,7 +1,5 @@
-import csv
 import json
 import os
-from collections import OrderedDict
 from datetime import date, datetime, timedelta
 
 import boto3
