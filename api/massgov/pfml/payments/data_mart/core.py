@@ -76,6 +76,17 @@ class EFTStatus(Enum):
     EFT_HOLD = 6
 
 
+class OrganizationType(Enum):
+    INDIVIDUAL = 1
+    COMPANY = 2
+
+
+class TINType(Enum):
+    NULL = -9
+    EIN = 1
+    SSN_ITIN_ATIN = 2
+
+
 class VendorInfoResult(BaseModel):
     # The unique identifier assigned to the vendor/customer. In ADVANTAGE
     # Financial, a vendor can also be a customer, allowing you to enter
@@ -129,12 +140,16 @@ def get_vendor_info(data_mart_conn: Connection, vendor_tin: str) -> Optional[Ven
             AND vad.address_type = :address_type
             AND vad.valid_to_date = :valid_to_date_for_current
         WHERE vend.valid_to_date = :valid_to_date_for_current
+          AND vend.organization_type = :organization_type
+          AND vend.tin_type = :tin_type
           AND vend.tin = :vendor_tin
     """
         ),
         address_id=payments_util.Constants.COMPTROLLER_AD_ID,
         address_type=payments_util.Constants.COMPTROLLER_AD_TYPE,
         valid_to_date_for_current=VALID_TO_DATE_FOR_CURRENT,
+        organization_type=OrganizationType.INDIVIDUAL.value,
+        tin_type=TINType.SSN_ITIN_ATIN.value,
         vendor_tin=vendor_tin,
     ).fetchall()
 
