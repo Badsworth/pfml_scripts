@@ -4519,8 +4519,10 @@ def test_application_patch_caring_leave_metadata(client, user, auth_token, test_
     )
     assert application.caring_leave_metadata is None
 
-    caring_leave_metadata = CaringLeaveMetadata(application_id=application.application_id)
+    caring_leave_metadata = CaringLeaveMetadata()
+    application.caring_leave_meatadata = caring_leave_metadata
     test_db_session.add(caring_leave_metadata)
+    test_db_session.add(application)
     test_db_session.commit()
 
     # change leave reason to caring leave
