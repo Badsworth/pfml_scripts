@@ -204,7 +204,9 @@ def generate_pub_payment_return_file():
     args = parser.parse_args()
     folder_path = args.folder
 
-    scaenario_name_with_count = ScenarioNameWithCount(scenario_name=ScenarioName.SCENARIO_A, count=1)
+    scaenario_name_with_count = ScenarioNameWithCount(
+        scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED, count=1
+    )
 
     config = ScenarioDataConfig(scenarios_with_count=[scaenario_name_with_count],)
     scenario_dataset = generate_scenario_dataset(config)
