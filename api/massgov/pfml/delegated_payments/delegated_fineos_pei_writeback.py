@@ -20,6 +20,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFile,
     ReferenceFileType,
     State,
+    StateLog,
 )
 from massgov.pfml.delegated_payments.delegated_payments_util import Constants, get_now
 from massgov.pfml.delegated_payments.step import Step
@@ -54,6 +55,7 @@ class PeiWritebackItem:
 
 ACTIVE_WRITEBACK_RECORD_STATUS = "Active"
 PAID_WRITEBACK_RECORD_TRANSACTION_STATUS = "Paid"
+POSTED_WRITEBACK_RECORD_TRANSACTION_STATUS = "Posted"
 PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS = "Processed"
 ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS = "Error"
 WRITEBACK_FILE_SUFFIX = "-pei_writeback.csv"
@@ -201,6 +203,21 @@ class FineosPeiWritebackStep(Step):
             errored_payment_writeback_items_count=errored_payment_writeback_items_count
         )
 
+        payment_writeback_two_items = self._get_writeback_items_for_state(
+            prior_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK,
+            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK,
+            writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
+            transaction_status=POSTED_WRITEBACK_RECORD_TRANSACTION_STATUS,
+        )
+
+        payment_writeback_two_items_count = len(payment_writeback_two_items)
+        logger.info(
+            "Found %i extracted writeback items in state: %s",
+            payment_writeback_two_items,
+            State.ADD_TO_ERRORED_PEI_WRITEBACK.state_description,
+        )
+        self.set_metrics(payment_writeback_two_items_count=payment_writeback_two_items_count)
+
         # TODO: Add disbursed payments to this writeback using the same pattern as above but with a
         # writeback_record_converter of _disbursed_payment_to_pei_writeback_record.
 
@@ -211,6 +228,7 @@ class FineosPeiWritebackStep(Step):
             + eft_payment_writeback_items
             + cancelled_payment_writeback_items
             + errored_payment_writeback_items
+            + payment_writeback_two_items
         )
 
     def _get_writeback_items_for_state(
@@ -233,7 +251,7 @@ class FineosPeiWritebackStep(Step):
                 payment = log.payment
                 valid_pub_payment = transaction_status == PAID_WRITEBACK_RECORD_TRANSACTION_STATUS
                 writeback_record = writeback_record_converter(
-                    payment, transaction_status, valid_pub_payment
+                    payment, transaction_status, valid_pub_payment, log
                 )
 
                 pei_writeback_items.append(
@@ -445,7 +463,11 @@ class FineosPeiWritebackStep(Step):
             raise e
 
     def _extracted_payment_to_pei_writeback_record(
-        self, payment: Payment, transaction_status: str, valid_pub_payment: bool
+        self,
+        payment: Payment,
+        transaction_status: str,
+        valid_pub_payment: bool,
+        state_log: StateLog,
     ) -> PeiWritebackRecord:
         missing_fields = []
 
@@ -460,6 +482,21 @@ class FineosPeiWritebackStep(Step):
             raise Exception(error_msg)
 
         transaction_status_date = None
+
+        if state_log.end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK.state_id:
+            transaction_status_date = payment.check.check_posted_date
+
+        elif (
+            state_log.end_state_id == State.ADD_TO_ERRORED_PEI_WRITEBACK.state_id
+            and payment.check is not None
+        ):
+            if payment.check.payment_check_status.payment_check_status_description is not None:
+                transaction_status = (
+                    payment.check.payment_check_status.payment_check_status_description
+                )
+
+            current_datetime = get_now()
+            transaction_status_date = current_datetime
 
         if payment.fineos_extraction_date is not None:
             if valid_pub_payment:

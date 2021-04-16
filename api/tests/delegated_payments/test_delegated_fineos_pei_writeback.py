@@ -1,6 +1,7 @@
 import dataclasses
 import re
 from datetime import date, datetime, timedelta
+from typing import Tuple
 
 import faker
 import pytest
@@ -66,6 +67,19 @@ def _generate_payment_and_state(
     return payment
 
 
+def _generate_payment_and_state_tuple(
+    test_db_session: db.Session, state: State, payment_method: LkPaymentMethod = PaymentMethod.ACH
+) -> Tuple[Payment, StateLog]:
+    payment = _generate_payment(payment_method)
+    state_log = state_log_util.create_finished_state_log(
+        associated_model=payment,
+        end_state=state,
+        outcome=state_log_util.build_outcome("Creating for test"),
+        db_session=test_db_session,
+    )
+    return payment, state_log
+
+
 def _generate_zero_dollar_payment(test_db_session: db.Session) -> Payment:
     return _generate_payment_and_state(
         test_db_session, State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK
@@ -84,6 +98,14 @@ def _generate_accepted_payment(
     state = State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT
     if payment_method == PaymentMethod.CHECK:
         state = State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT
+
+    return _generate_payment_and_state(test_db_session, state, payment_method)
+
+
+def _generate_add_check_payment(
+    test_db_session: db.Session, payment_method: LkPaymentMethod
+) -> Payment:
+    state = State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK
 
     return _generate_payment_and_state(test_db_session, state, payment_method)
 
@@ -337,10 +359,10 @@ def test_process_payments_for_writeback_no_payments_ready_for_writeback(
 
 
 @pytest.mark.parametrize(
-    "zero_dollar_payment_count, overpayment_count, accepted_payment_count, cancelled_payment_count, errored_payment_count",
+    "zero_dollar_payment_count, overpayment_count, accepted_payment_count, cancelled_payment_count, errored_payment_count, add_check_payment_count",
     (
         # No payments in any of the states we want to pick up for the writeback.
-        (0, 0, 0, 0, 0),
+        (0, 0, 0, 0, 0, 0),
         # Some payments in each state.
         (
             fake.random_int(min=3, max=5),
@@ -348,6 +370,7 @@ def test_process_payments_for_writeback_no_payments_ready_for_writeback(
             fake.random_int(min=2, max=6),
             fake.random_int(min=4, max=7),
             fake.random_int(min=2, max=6),
+            fake.random_int(min=3, max=5),
         ),
     ),
     ids=["writeback", "payments"],
@@ -360,6 +383,7 @@ def test_get_writeback_items_for_state(
     accepted_payment_count,
     cancelled_payment_count,
     errored_payment_count,
+    add_check_payment_count,
     caplog,
 ):
     # Create some small amount of Payments that are in a state other than the one we pick up
@@ -387,23 +411,30 @@ def test_get_writeback_items_for_state(
     for _i in range(errored_payment_count):
         _generate_errored_payment(test_db_session)
 
+    for _i in range(add_check_payment_count):
+        _generate_add_check_payment(test_db_session, PaymentMethod.CHECK)
+
     payments_ready_for_writeback_count = (
         zero_dollar_payment_count
         + overpayment_count
         + (accepted_payment_count * 2)
         + cancelled_payment_count
         + errored_payment_count
+        + add_check_payment_count
     )
     writeback_records = fineos_pei_writeback_step.get_records_to_writeback()
     assert len(writeback_records) == payments_ready_for_writeback_count
 
 
 def test_extracted_payment_to_pei_writeback_record(fineos_pei_writeback_step, test_db_session):
-    payment = _generate_payment()
+    payment, state_log = _generate_payment_and_state_tuple(
+        test_db_session,
+        State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK,
+    )
     status = writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS
 
     writeback_record = fineos_pei_writeback_step._extracted_payment_to_pei_writeback_record(
-        payment, status, valid_pub_payment=True
+        payment, status, valid_pub_payment=True, state_log=state_log
     )
 
     assert writeback_record.status == writeback.ACTIVE_WRITEBACK_RECORD_STATUS
