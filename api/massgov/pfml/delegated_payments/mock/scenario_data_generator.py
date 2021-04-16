@@ -11,6 +11,7 @@ from massgov.pfml.db.models.employees import (
     GeoState,
     LkAbsenceStatus,
     LkClaimType,
+    Payment,
     PaymentMethod,
     PrenoteState,
     TaxIdentifier,
@@ -63,6 +64,8 @@ class ScenarioData:
 
     payment_c_value: Optional[str] = None
     payment_i_value: Optional[str] = None
+
+    payment: Optional[Payment] = None
 
 
 @dataclass

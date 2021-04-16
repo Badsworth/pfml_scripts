@@ -60,6 +60,12 @@ class ScenarioDescriptor:
 
     leave_request_decision: str = "Approved"
 
+    should_skip: bool = False
+    should_error: bool = False
+    no_response: bool = False
+    return_type: str = ""
+    reason_code: str = ""
+
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED),
