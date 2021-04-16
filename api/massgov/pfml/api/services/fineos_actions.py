@@ -86,7 +86,7 @@ def register_employee(
     employee_ssn: str,
     employer_fein: str,
     db_session: massgov.pfml.db.Session,
-) -> str:
+) -> Optional[str]:
     # If a FINEOS Id exists for SSN/FEIN return it.
     fineos_web_id_ext = (
         db_session.query(FINEOSWebIdExt)
@@ -136,13 +136,13 @@ def register_employee(
         fineos.register_api_user(employee_registration)
         db_session.commit()
     except sqlalchemy.exc.IntegrityError as err:
+        db_session.rollback()
         logger.error("The ID was already stored %s; calling self again.", err)
-        db_session.rollback()
-        register_employee(fineos, employee_ssn, employer_fein, db_session)
+        return None
     except FINEOSNotFound as err:
-        logger.error("FINEOS failed to register the employee %s; rolling back changes.", err)
         db_session.rollback()
-        return ""
+        logger.error("FINEOS failed to register the employee %s; rolling back changes.", err)
+        return None
 
     return employee_external_id
 
