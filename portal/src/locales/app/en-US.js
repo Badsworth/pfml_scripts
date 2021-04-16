@@ -967,6 +967,11 @@ const pages = {
     sectionLabel: "What is your family member's date of birth?",
   },
   claimsFamilyMemberName: {
+    firstNameLabel: "First name",
+    lastNameLabel: "Last name",
+    middleNameLabel: "Middle name",
+    sectionHint:
+      "Fill out their name as it appears on official documents like their driver’s license or W‑2.",
     sectionLabel: "What is your family member's name?",
   },
   claimsFamilyMemberRelationship: {
