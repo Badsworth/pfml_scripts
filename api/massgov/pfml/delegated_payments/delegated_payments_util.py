@@ -65,7 +65,7 @@ class Constants:
     COMPTROLLER_AD_TYPE = "PA"
     DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
 
-    PUB_FILENAME_TEMPLATE = "{}-{}"  # e.g. PUB-NACHA-20210830
+    PUB_FILENAME_TEMPLATE = "{}-{}"  # e.g. 2021-08-30-12-00-00-PUB-NACHA
     BATCH_ID_TEMPLATE = COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
     MMARS_FILE_SKIPPED = "Did not create file for MMARS because there was no work to do"
 
@@ -769,7 +769,7 @@ def create_pub_reference_file(
 ) -> ReferenceFile:
     s3_path = os.path.join(pub_outbound_path, Constants.S3_OUTBOUND_READY_DIR)
     filename = Constants.PUB_FILENAME_TEMPLATE.format(
-        file_type.reference_file_type_description, now.strftime("%Y%m%d"),
+        now.strftime("%Y-%m-%d-%H-%M-%S"), file_type.reference_file_type_description,
     )
     dir_path = os.path.join(s3_path, filename)
 

@@ -226,7 +226,7 @@ def test_nacha_file_upload(tmp_path):
     add_payments_to_nacha_file(nacha_file, [payment])
 
     folder_path = str(tmp_path)
-    nacha_file_name = "PUB-NACHA-20210315"
+    nacha_file_name = "2021-03-15-12-00-00-PUB-NACHA"
     file_path = os.path.join(folder_path, nacha_file_name)
 
     upload_nacha_file_to_s3(nacha_file, file_path)
