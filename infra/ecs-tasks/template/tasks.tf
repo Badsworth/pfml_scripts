@@ -157,8 +157,8 @@ locals {
       containers_template = "pub_payments_create_pub_files_template.json"
       task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-create-pub-files"
       vars = {
-        payment_rejects_received_folder_path    = var.payment_rejects_received_folder_path
-        payment_rejects_processed_folder_path   = var.payment_rejects_processed_folder_path
+        payment_rejects_received_folder_path  = var.payment_rejects_received_folder_path
+        payment_rejects_processed_folder_path = var.payment_rejects_processed_folder_path
       }
     },
 

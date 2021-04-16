@@ -80,8 +80,8 @@ module "tasks" {
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-test-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-test-agency-transfer/audit/sent"
 
-  payment_rejects_received_folder_path    = "s3://massgov-pfml-test-agency-transfer/audit/inbound"
-  payment_rejects_processed_folder_path   = "s3://massgov-pfml-test-agency-transfer/audit/processed"
+  payment_rejects_received_folder_path  = "s3://massgov-pfml-test-agency-transfer/audit/inbound"
+  payment_rejects_processed_folder_path = "s3://massgov-pfml-test-agency-transfer/audit/processed"
 
   enable_recurring_payments_schedule = false
   enable_register_admins_job         = true
