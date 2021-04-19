@@ -147,7 +147,7 @@ export function assertClaimApprovableIntermittent(): void {
   );
   cy.get("[id*='leavePlanAdjudicationListviewWidgetPlanDecision0']").should(
     "have.text",
-    "Undecided"
+    "Accepted"
   );
   // Assert that we can see the approve button.
   cy.contains(".menulink a", "Approve").should("be.visible");
@@ -400,7 +400,6 @@ export function fillAvailability(): void {
 }
 
 export function acceptLeavePlan(): void {
-  onTab("Manage Request");
   cy.get('input[title="Accept Leave Plan"]').click();
   clickBottomWidgetButton();
 }
@@ -615,6 +614,22 @@ export function fillAbsencePeriod(claimNumber: string): void {
   });
 }
 
+export function intermittentFillAbsencePeriod(claimNumber: string): void {
+  assertAdjudicatingClaim(claimNumber);
+  onTab("Evidence");
+  onTab("Certification Periods");
+  cy.get("input[value='Prefill with Requested Absence Periods']").click();
+  cy.get("#PopupContainer").within(() => {
+    cy.get("input[value='Yes']").click();
+  });
+  cy.get('input[name*="unspecifiedCertificationEpisodicPeriodDetailsWidget_un99_episodeDuration"]').type('{selectall}5{enter}', { force: true });
+  cy.wait(1000);
+  cy.get("input[name*='certificationEpisodicLeaveEntitlementWidget_un94_applyChanges']").click();
+  cy.get("#PopupContainer").within(() => {
+    cy.get("input[value='Yes']").click();
+  });
+}
+
 export function claimAdjudicationFlow(
   claimNumber: string,
   ERresponse = false
@@ -660,14 +675,14 @@ export function intermittentClaimAdjudicationFlow(
   markEvidence(claimNumber, "MHAP1", "State managed Paid Leave Confirmation");
   markEvidence(claimNumber, "MHAP1", "Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
-  fillAbsencePeriod(claimNumber);
-  acceptLeavePlan();
+  intermittentFillAbsencePeriod(claimNumber);
+  onTab("Manage Request");
+  cy.get('input[title="Accept Leave Plan"]').click();
   cy.wait(1000);
   checkStatus(claimNumber, "Availability", "As Certified");
   // Complete Adjudication
   assertAdjudicatingClaim(claimNumber);
   clickBottomWidgetButton("OK");
-  // assertClaimApprovable();
   assertClaimApprovableIntermittent();
   // Approve Claim
   if (ERresponse) {
@@ -676,7 +691,8 @@ export function intermittentClaimAdjudicationFlow(
   cy.wait(2000);
 }
 
-export function submitActualHours(claimNumber: string): void {
+// This is being used for Sally hours to allow us to see payment being made.
+export function submitIntermittentActualHours(claimNumber: string): void {
   cy.get('a[aria-label="Cases"]').click();
   cy.get('td[keytipnumber="4"]').contains("Case").click();
   cy.labelled("Case Number").type(claimNumber);
@@ -686,9 +702,9 @@ export function submitActualHours(claimNumber: string): void {
   cy.wait(1000);
   cy.contains("tbody", "Episodic").click();
   cy.contains("input", "Record Actual").click();
-  cy.get('input[name*="startDateAllDay_CHECKBOX"]').click();
-  cy.get('input[name*="endDateAllDay_CHECKBOX"]').click({ force: true });
-  cy.get("input[type='submit'][value='OK']").click();
+  // cy.get('input[name*="startDateAllDay_CHECKBOX"]').click();
+  // cy.get('input[name*="endDateAllDay_CHECKBOX"]').click({ force: true });
+  // cy.get("input[type='submit'][value='OK']").click();
   cy.get("#nextPreviousButtons").within(() => {
     cy.get(`input[value*="Next "]`).click({ force: true });
   });
@@ -703,17 +719,6 @@ export function submitActualHours(claimNumber: string): void {
   cy.get("#nextPreviousButtons").within(() => {
     cy.get(`input[value*="Next "]`).click({ force: true });
   });
-  cy.contains("td", "Time off period").click();
-  cy.contains("input", "Request Recertification").click({ force: true });
-  cy.get("#nextPreviousButtons").within(() => {
-    cy.get(`input[value*="Close"]`).click({ force: true });
-  });
-  cy.get('a[aria-label="Cases"]').click();
-  cy.get('td[keytipnumber="4"]').contains("Case").click();
-  cy.labelled("Case Number").type(claimNumber);
-  cy.labelled("Case Type").select("Absence Case");
-  cy.get('input[type="submit"][value="Search"]').click();
-  cy.contains("Review and Make Decision on Actual Time Submitted");
 }
 
 export function claimAdjudicationMailedDoc(claimNumber: string): void {
@@ -885,6 +890,17 @@ export function getPaymentAmount(): Cypress.Chainable<string> {
   onTab("Amounts Pending");
   return cy
     .get('#amountspendingtabWidget td[id*="benefit_amount_money0"]')
+    .invoke("text");
+}
+
+export function getIntermittentPaymentAmount(): Cypress.Chainable<string> {
+  cy.contains("Absence Paid Leave Case").click();
+  cy.wait("@ajaxRender");
+  onTab("Financials");
+  onTab("Payment History");
+  onTab("Payment Made");
+  return cy
+    .get('#PaymentHistoryDetailsListviewWidget td[id*="PaymentHistoryDetailsListviewWidget_un46_PaymentHistoryDetailsListviewNetPaymentAmount0"]')
     .invoke("text");
 }
 

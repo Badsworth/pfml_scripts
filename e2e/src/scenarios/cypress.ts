@@ -182,6 +182,6 @@ export const Sally: ScenarioSpecification = {
     },
     has_intermittent_leave_periods: true,
     // This scenario requires a 2 week leave time for payment calculation purposes.
-    leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
+    leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
   },
 };
