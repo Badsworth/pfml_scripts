@@ -1,6 +1,6 @@
 import { getFineosBaseUrl } from "../../../config";
 import { formatDateString } from "../util";
-import { format, addMonths, addDays, subDays } from "date-fns";
+import {format, addMonths, addDays, subDays, startOfWeek} from "date-fns";
 import { Submission } from "types";
 
 export function loginSavilinx(): void {
@@ -677,8 +677,9 @@ export function intermittentClaimAdjudicationFlow(
   checkStatus(claimNumber, "Evidence", "Satisfied");
   intermittentFillAbsencePeriod(claimNumber);
   onTab("Manage Request");
-  cy.get('input[title="Accept Leave Plan"]').click();
-  cy.wait(1000);
+  cy.wait(500);
+  cy.get('input[type="submit"][value="Accept"]').click();
+  cy.wait(500);
   checkStatus(claimNumber, "Availability", "As Certified");
   // Complete Adjudication
   assertAdjudicatingClaim(claimNumber);
@@ -692,7 +693,9 @@ export function intermittentClaimAdjudicationFlow(
 }
 
 // This is being used for Sally hours to allow us to see payment being made.
-export function submitIntermittentActualHours(claimNumber: string): void {
+export function submitIntermittentActualHours(
+  claimNumber: string,
+): void {
   cy.get('a[aria-label="Cases"]').click();
   cy.get('td[keytipnumber="4"]').contains("Case").click();
   cy.labelled("Case Number").type(claimNumber);
@@ -702,18 +705,38 @@ export function submitIntermittentActualHours(claimNumber: string): void {
   cy.wait(1000);
   cy.contains("tbody", "Episodic").click();
   cy.contains("input", "Record Actual").click();
-  // cy.get('input[name*="startDateAllDay_CHECKBOX"]').click();
-  // cy.get('input[name*="endDateAllDay_CHECKBOX"]').click({ force: true });
-  // cy.get("input[type='submit'][value='OK']").click();
+  cy.get(".popup-container").within(() => {
+    const mostRecentSunday = startOfWeek(new Date());
+    const startDate = subDays(mostRecentSunday, 13);
+    const startDateFormatted = format(startDate, "MM/dd/yyyy");
+    const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
+
+    cy.labelled("Absence start date").type(
+      `{selectall}{backspace}${startDateFormatted}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.labelled("Absence end date").type(
+      `{selectall}{backspace}${endDateFormatted}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursStartDate']").type(`{selectall}{backspace}4{enter}`)
+    cy.wait(200);
+    cy.get("input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursEndDate']").type(`{selectall}{backspace}4{enter}`)
+    cy.get("input[type='submit'][value='OK']").click();
+  });
   cy.get("#nextPreviousButtons").within(() => {
     cy.get(`input[value*="Next "]`).click({ force: true });
   });
   cy.contains("td", "Time off period").click({ force: true });
-  cy.wait(5000);
+  cy.wait(1000);
   cy.get('select[name*="reportedBy"]').select("Employee");
-  cy.wait(5000);
+  cy.wait(1000);
   cy.get('select[name*="receivedVia"]').select("Phone");
-  cy.wait(5000);
+  cy.wait(1000);
+  cy.get('select[name*="managerAccepted"]').select("Yes");
+  cy.get('select[name*="additionalNotes"').type('testing');
   cy.get("input[name*='applyActualTime']").click();
   cy.contains("td", "Time off period").click({ force: true });
   cy.get("#nextPreviousButtons").within(() => {
