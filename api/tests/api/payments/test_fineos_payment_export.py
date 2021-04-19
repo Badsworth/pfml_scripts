@@ -750,6 +750,7 @@ def test_validation_missing_fields(set_exporter_env_vars):
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "AMOUNT_MONAMT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUESTI"),
         ]
     )
     assert set(validation_container.validation_issues) == expected_missing_values

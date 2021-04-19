@@ -1,5 +1,4 @@
 import urllib.parse
-from datetime import date
 from enum import Enum
 from typing import Optional
 
@@ -77,6 +76,17 @@ class EFTStatus(Enum):
     EFT_HOLD = 6
 
 
+class OrganizationType(Enum):
+    INDIVIDUAL = 1
+    COMPANY = 2
+
+
+class TINType(Enum):
+    NULL = -9
+    EIN = 1
+    SSN_ITIN_ATIN = 2
+
+
 class VendorInfoResult(BaseModel):
     # The unique identifier assigned to the vendor/customer. In ADVANTAGE
     # Financial, a vendor can also be a customer, allowing you to enter
@@ -84,27 +94,6 @@ class VendorInfoResult(BaseModel):
     # (payable) and a customer (receivable).
     vendor_customer_code: Optional[str]
     vendor_active_status: Optional[VendorActiveStatus]
-
-    eft_status: Optional[EFTStatus]
-    # Indicates that the vendor/customer accepts electronic fund transfers (EFTs).
-    #
-    # In the Data Mart DB, this is represented by the string character Y or N.
-    generate_eft_payment: Optional[bool]
-    # The American Banking Association (routing) number assigned to the bank.
-    aba_no: Optional[str]
-    # The reason for the prenote rejection or the electronic funds transfer
-    # (EFT) hold.
-    #
-    # Up to 1500 characters.
-    prenote_hold_reason: Optional[str]
-    prenote_requested_date: Optional[date]
-    # The code provided by the Automated Clearing House (ACH) Rules book to
-    # identify the bank's reason for returning information related to a vendor?s
-    # prenote request. Examples of codes include Rejection Reason Codes or
-    # Notification of Change codes.
-    #
-    # 3 characters.
-    prenote_return_reason: Optional[str]
 
     # Will always be the value of `payments_util.Constants.COMPTROLLER_AD_ID`
     # (AD010 at time of writing), but used to distinguish between "no address
@@ -137,13 +126,6 @@ def get_vendor_info(data_mart_conn: Connection, vendor_tin: str) -> Optional[Ven
             vend.vendor_customer_code,
             vend.vendor_active_status,
 
-            vend.eft_status,
-            vend.generate_eft_payment,
-            vend.aba_no,
-            vend.prenote_hold_reason,
-            vend.prenote_requested_date,
-            vend.prenote_return_reason,
-
             vad.address_id,
             vad.street_1,
             vad.street_2,
@@ -158,12 +140,16 @@ def get_vendor_info(data_mart_conn: Connection, vendor_tin: str) -> Optional[Ven
             AND vad.address_type = :address_type
             AND vad.valid_to_date = :valid_to_date_for_current
         WHERE vend.valid_to_date = :valid_to_date_for_current
+          AND vend.organization_type = :organization_type
+          AND vend.tin_type = :tin_type
           AND vend.tin = :vendor_tin
     """
         ),
         address_id=payments_util.Constants.COMPTROLLER_AD_ID,
         address_type=payments_util.Constants.COMPTROLLER_AD_TYPE,
         valid_to_date_for_current=VALID_TO_DATE_FOR_CURRENT,
+        organization_type=OrganizationType.INDIVIDUAL.value,
+        tin_type=TINType.SSN_ITIN_ATIN.value,
         vendor_tin=vendor_tin,
     ).fetchall()
 

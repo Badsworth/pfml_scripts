@@ -52,7 +52,7 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/UserCreateRequest"
-  
+
   /users/{user_id}:
     get:
       tags:
@@ -308,10 +308,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  
+
   /claims:
     get:
-      summary: Retrieve claims 
+      summary: Retrieve claims
       operationId: massgov.pfml.api.claims.get_claims
       tags:
         - Claims
@@ -1196,7 +1196,7 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
-    
+
 
   schemas:
     SuccessfulResponse:
@@ -1959,7 +1959,7 @@ components:
           example: "NTN-01"
         absence_period_start_date:
           format: date
-          example: "1970-06-01"          
+          example: "1970-06-01"
         absence_period_end_date:
           format: date
           example: "1970-06-01"
@@ -2220,6 +2220,7 @@ components:
             - Pregnancy/Maternity
             - Child Bonding
             - Serious Health Condition - Employee
+            - Care for a Family Member
           example: "Child Bonding"
         reason_qualifier:
           type: string
@@ -2244,32 +2245,8 @@ components:
           nullable: true
           items:
             $ref: "#/components/schemas/IntermittentLeavePeriods"
-        relationship_to_caregiver:
-          type: string
-          nullable: true
-          enum:
-            - Parent
-            - Child
-            - Grandparent
-            - Grandchild
-            - Other Family Member
-            - Service Member
-            - Inlaw
-            - Sibling
-            - Other
-            - Employee
-          example: "Parent"
-        relationship_qualifier:
-          type: string
-          nullable: true
-          enum:
-            - Adoptive
-            - Biological
-            - Foster
-            - Custodial Parent
-            - Legal Guardian
-            - Step Parent
-          example: "Biological"
+        caring_leave_metadata:
+          $ref: "#/components/schemas/CaringLeaveMetadata"
         pregnant_or_recent_birth:
           type: boolean
           nullable: true
@@ -2787,9 +2764,9 @@ components:
           format: uuid
           example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
         withholding_amount:
-          type: number 
+          type: number
           example: 100
-        withholding_quarter: 
+        withholding_quarter:
           type: string
           format: date
           example: "1970-06-01"
@@ -2892,3 +2869,35 @@ components:
             - Cell
             - Fax
             - Phone
+    CaringLeaveMetadata:
+      type: object
+      properties:
+        family_member_first_name:
+          type: string
+          example: "Jane"
+          nullable: true
+        family_member_middle_name:
+          type: string
+          example: "Alice"
+          nullable: true
+        family_member_last_name:
+          type: string
+          example: "Doe"
+          nullable: true
+        family_member_date_of_birth:
+          $ref: "#/components/schemas/DateOrMaskedDate"
+          nullable: true
+        relationship_to_caregiver:
+          type: string
+          nullable: true
+          enum:
+            - Parent
+            - Child
+            - Grandparent
+            - Grandchild
+            - Other Family Member
+            - Service Member
+            - Inlaw
+            - Sibling - Brother/Sister
+            - Other
+            - Spouse

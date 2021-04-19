@@ -25,6 +25,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
       has_state_id: null,
       has_submitted_payment_preference: null,
       leave_details: {
+        caring_leave_metadata: null,
         child_birth_date: null,
         child_placement_date: null,
         employer_notified: null,
@@ -164,6 +165,19 @@ export class IntermittentLeavePeriod extends BaseModel {
       frequency_interval_basis: null,
       leave_period_id: null,
       start_date: null,
+    };
+  }
+}
+
+export class CaringLeaveMetadata extends BaseModel {
+  get defaults() {
+    return {
+      caring_leave_metadata_id: null,
+      family_member_date_of_birth: null,
+      family_member_first_name: null,
+      family_member_last_name: null,
+      family_member_middle_name: null,
+      relationship_to_caregiver: null,
     };
   }
 }
@@ -350,6 +364,23 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
 export const PhoneType = {
   cell: "Cell",
   phone: "Phone",
+};
+
+/**
+ * Enums for caring leave's relationship to caregiver
+ * @enum {string}
+ */
+export const RelationshipToCaregiver = {
+  child: "Child",
+  grandchild: "Grandchild",
+  grandparent: "Grandparent",
+  inlaw: "Inlaw",
+  other: "Other",
+  otherFamilyMember: "Other Family Member",
+  parent: "Parent",
+  serviceMember: "Service Member",
+  sibling: "Sibling - Brother/Sister",
+  spouse: "Spouse",
 };
 
 /**

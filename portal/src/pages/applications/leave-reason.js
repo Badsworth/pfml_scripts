@@ -80,6 +80,13 @@ export const LeaveReason = (props) => {
     value: LeaveReasonEnum.serviceMemberFamily,
   };
 
+  const choiceCaringLeave = {
+    checked: reason === LeaveReasonEnum.care,
+    hint: t("pages.claimsLeaveReason.caringLeaveHint"),
+    label: t("pages.claimsLeaveReason.caringLeaveLabel"),
+    value: LeaveReasonEnum.care,
+  };
+
   // Military leave types are disabled for soft launch (CP-1145)
   // TODO (CP-534): Remove this feature flag when the portal supports
   // activeDutyFamily and serviceMemberFamily
@@ -87,11 +94,17 @@ export const LeaveReason = (props) => {
     "claimantShowMilitaryLeaveTypes"
   );
 
+  // Caring leave type is behind a feature flag until 7/1 launch
+  // TODO (CP-1989): Remove showCaringLeaveType feature flag and move the choiceCaringLeave option into choices by default
+  const showCaringLeaveType = isFeatureEnabled("showCaringLeaveType");
+
   const getChoices = () => {
     const choices = [choiceMedical, choiceBonding];
 
     showMilitaryLeaveTypes &&
       choices.push(choiceActiveDutyFamily, choiceServiceMemberFamily);
+
+    showCaringLeaveType && choices.push(choiceCaringLeave);
 
     return choices;
   };

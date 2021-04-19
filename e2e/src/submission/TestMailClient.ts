@@ -38,37 +38,58 @@ export default class TestMailClient {
     // We instantiate a new client for every call. This is the only way to share a single timeout across multiple
     // API calls (ie: we may make 5 requests, but we want to time out 120s from the time we started making calls).
     const controller = new AbortController();
-    setTimeout(() => controller.abort(), opts.timeout ?? this.timeout);
+    const timeout = setTimeout(
+      () => controller.abort(),
+      opts.timeout ?? this.timeout
+    );
     const client = new GraphQLClient("https://api.testmail.app/api/graphql", {
       headers: this.headers,
       fetch: (url: RequestInfo, init: RequestInit = {}) =>
         fetch(url, { ...init, signal: controller.signal }),
     });
 
+    try {
+      const emails = this._getMatchingEmails(client, opts);
+      clearTimeout(timeout); // Clear the timeout to avoid hanging processes.
+      return emails;
+    } catch (e) {
+      clearTimeout(timeout); // Clear the timeout to avoid hanging processes.
+      throw e;
+    }
+  }
+
+  /**
+   * This method wraps our e-mail fetching to add additional functionality (body wildcard matching).
+   *
+   * If we've requested a message wildcard, we first query for all messages that match, then check to see if any of
+   * the messages returned match the message wildcard. If they don't, we go back and look for more, excluding the
+   * ones we've already found.
+   */
+  private async _getMatchingEmails(
+    client: GraphQLClient,
+    opts: GetEmailsOpts
+  ): Promise<Email[]> {
     const { messageWildcard } = opts;
     if (messageWildcard === undefined) {
       // For non-wildcard searches, use the basic logic.
-      return this._getEmails(opts, client);
+      return this._fetchEmails(opts, client);
     }
 
-    // If we've requested a message wildcard, we first query for all messages that match, then check to see if any of
-    // the messages returned match the message wildcard. If they don't, we go back and look for more, excluding the
-    // ones we've already found.
     let excludedIds: string[] = [];
     while (true) {
-      const emails = await this._getEmails(opts, client, excludedIds);
-      const matches = emails.filter((email) =>
+      const candidates = await this._fetchEmails(opts, client, excludedIds);
+      const matches = candidates.filter((email) =>
         email.html.includes(messageWildcard)
       );
       if (matches.length > 0) {
         return matches;
       }
       // Exclude these IDs from our next search, as we already know they're not matching.
-      excludedIds = excludedIds.concat(emails.map((e) => e.id));
+      excludedIds = excludedIds.concat(candidates.map((e) => e.id));
     }
   }
 
-  private async _getEmails(
+  private async _fetchEmails(
     opts: GetEmailsOpts,
     client: GraphQLClient,
     excludedIds: string[] = []

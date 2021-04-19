@@ -15,6 +15,7 @@
 
 // Mayflower design system global and component styles
 @use "~@massds/mayflower-assets/scss/00-base/elements";
+@use "~@massds/mayflower-assets/scss/02-molecules/pagination";
 @use "~@massds/mayflower-assets/scss/03-organisms/footer-slim";
 @use "~@massds/mayflower-assets/scss/03-organisms/header-slim";
 // U.S. Web Design System global and component styles
@@ -36,6 +37,7 @@
 @import "../src/components/FileCardList";
 @import "../src/components/BetaBanner";
 @import "../src/components/InputText";
+@import "../src/components/PaginationNavigation";
 @import "../src/components/Spinner";
 @import "../src/components/Table";
 @import "../src/components/Thumbnail";

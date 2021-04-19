@@ -65,7 +65,7 @@ class Constants:
     COMPTROLLER_AD_TYPE = "PA"
     DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
 
-    PUB_FILENAME_TEMPLATE = "{}-{}"  # e.g. PUB-NACHA-20210830
+    PUB_FILENAME_TEMPLATE = "{}-{}"  # e.g. 2021-08-30-12-00-00-PUB-NACHA
     BATCH_ID_TEMPLATE = COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
     MMARS_FILE_SKIPPED = "Did not create file for MMARS because there was no work to do"
 
@@ -78,45 +78,27 @@ class Constants:
     S3_INBOUND_ERROR_DIR = "error"
 
     # When processing payments, certain states
-    # indicate that a payment is actively being processed
-    # and should not be restarted. If we receive a payment
-    # record from FINEOS while that payment already is in
-    # one of these states, the new payment record should
+    # are allowed to be restarted (mainly error states)
+    # If we receive a payment record from FINEOS while
+    # a payment is in ANY other states, the new payment record should
     # immediately go into the payment error report
-    NON_RESTARTABLE_PAYMENT_STATES = [
-        # These states are a part of the normal payment extract flow
-        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT.state_id,
-        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id,
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED.state_id,
-        # These states are a part of the add to pub task
-        State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK.state_id,
-        State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id,
-        State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT.state_id,
-        State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id,
-        State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT.state_id,
-        State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_id,
-        # These states are a part of the pub response task
-        State.DELEGATED_PAYMENT_ADD_TO_PUB_PAYMENT_FINEOS_WRITEBACK.state_id,
-        State.DELEGATED_PAYMENT_PUB_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
-        State.DELEGATED_PAYMENT_COMPLETE.state_id,
-        # These states are a part of the $0 payment flow
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT.state_id,
-        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK.state_id,
-        State.DELEGATED_PAYMENT_ZERO_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
-        # These states are a part of the overpayment flow
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT.state_id,
-        State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK.state_id,
-        State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT.state_id,
-        # These states are a part of the cancellation flow
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id,
-        State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK.state_id,
-        State.DELEGATED_PAYMENT_CANCELLATION_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
-        # These states are a part of the employer reimbursement flow
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT.state_id,
-        State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK.state_id,
-        State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
-    ]
+    #
+    # How do you know if something should go in this list?
+    #   1. The payment associated with the state has reached an end state and will never change again
+    #   2. The state is an error state and someone will be notified (eg. Program Integrity) via a report
+    #   3. We expect, and want, to receive the payment again when the issue is corrected via the FINEOS extract
+    #   4. The payment has not already been sent to PUB - even if it's an error state
+    #   5. The state is in the DELEGATED_PAYMENT flow
+    RESTARTABLE_PAYMENT_STATES = frozenset(
+        [
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+            State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+        ]
+    )
+    RESTARTABLE_PAYMENT_STATE_IDS = frozenset(
+        [state.state_id for state in RESTARTABLE_PAYMENT_STATES]
+    )
 
     # States that we wait in while waiting for the reject file
     # If any payments are still in this state when the extract
@@ -769,7 +751,7 @@ def create_pub_reference_file(
 ) -> ReferenceFile:
     s3_path = os.path.join(pub_outbound_path, Constants.S3_OUTBOUND_READY_DIR)
     filename = Constants.PUB_FILENAME_TEMPLATE.format(
-        file_type.reference_file_type_description, now.strftime("%Y%m%d"),
+        now.strftime("%Y-%m-%d-%H-%M-%S"), file_type.reference_file_type_description,
     )
     dir_path = os.path.join(s3_path, filename)
 

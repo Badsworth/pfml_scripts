@@ -26,7 +26,7 @@ import routes from "../routes";
 
 export default class DocumentsApi extends BaseApi {
   get basePath() {
-    return routes.api.claims;
+    return routes.api.applications;
   }
 
   get i18nPrefix() {

@@ -1,4 +1,3 @@
-from datetime import date
 from decimal import Decimal
 
 import pydantic
@@ -49,12 +48,6 @@ def complete_vendor_info_result_set():
     db_result = {
         "vendor_customer_code": "foo",
         "vendor_active_status": Decimal("2"),
-        # EFT info
-        "eft_status": Decimal("6"),
-        "aba_no": "123456789",
-        "prenote_hold_reason": "foo",
-        "prenote_requested_date": date(2020, 12, 25),
-        "prenote_return_reason": "R04",
         # Address Info
         "address_id": payments_util.Constants.COMPTROLLER_AD_ID,
         "street_1": "123 MAIN ST",
@@ -68,12 +61,6 @@ def complete_vendor_info_result_set():
     parsed_result = data_mart.VendorInfoResult(
         vendor_customer_code="foo",
         vendor_active_status=data_mart.VendorActiveStatus.ACTIVE,
-        # EFT info
-        eft_status=data_mart.EFTStatus.EFT_HOLD,
-        aba_no="123456789",
-        prenote_hold_reason="foo",
-        prenote_requested_date=date(2020, 12, 25),
-        prenote_return_reason="R04",
         # Address Info
         address_id=payments_util.Constants.COMPTROLLER_AD_ID,
         street_1="123 MAIN ST",
@@ -114,14 +101,10 @@ def test_get_vendor_info_multiple_results():
 def test_get_vendor_info_mangled_data(minimal_vendor_info_result_set):
     (db_record, parsed_result) = minimal_vendor_info_result_set
 
-    db_record_bad_eft_status = db_record.copy()
-    db_record_bad_eft_status["eft_status"] = "junk"
-
     db_record_bad_active_status = db_record.copy()
     db_record_bad_active_status["vendor_active_status"] = -42
 
-    for bad_db_record in [db_record_bad_eft_status, db_record_bad_active_status]:
-        with pytest.raises(pydantic.ValidationError):
-            data_mart.get_vendor_info(
-                MockConnForFetchAll([bad_db_record]), "foo",
-            )
+    with pytest.raises(pydantic.ValidationError):
+        data_mart.get_vendor_info(
+            MockConnForFetchAll([db_record_bad_active_status]), "foo",
+        )

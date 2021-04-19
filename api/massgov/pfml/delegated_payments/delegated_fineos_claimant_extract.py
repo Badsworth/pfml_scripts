@@ -139,8 +139,6 @@ class ClaimantExtractStep(Step):
                 extract_data = ExtractData(s3_file_locations, date_str)
                 self.download_and_index_data(extract_data, download_directory)
 
-                self.extract_to_staging_tables(extract_data)
-
                 self.process_records_to_db(extract_data)
                 self.move_files_from_received_to_processed(extract_data)
                 logger.info(
@@ -164,7 +162,6 @@ class ClaimantExtractStep(Step):
 
         logger.info("Done processing claimant extract files")
 
-    # TODO move to payments_util
     def download_and_index_data(self, extract_data: ExtractData, download_directory: str) -> None:
         logger.info(
             "Downloading and indexing claimant extract data files.",
@@ -173,6 +170,7 @@ class ClaimantExtractStep(Step):
                 "requested_absence_file": extract_data.requested_absence_info.file_location,
             },
         )
+        ref_file = extract_data.reference_file
 
         # Index employee file for easy search.
         employee_indexed_data: Dict[str, Dict[str, str]] = {}
@@ -188,6 +186,14 @@ class ClaimantExtractStep(Step):
                     "indexed employee feed file row with Customer NO: %s",
                     str(row.get("CUSTOMERNO")),
                 )
+            # Always write the rows to the staging table even if we skipped indexing it.
+            lower_key_record = payments_util.make_keys_lowercase(row)
+            employee_feed_record = payments_util.create_staging_table_instance(
+                lower_key_record, FineosExtractEmployeeFeed, ref_file, self.get_import_log_id()
+            )
+            self.db_session.add(employee_feed_record)
+            self.increment("employee_feed_record_count")
+
         extract_data.employee_feed.indexed_data = employee_indexed_data
 
         requested_absence_indexed_data: Dict[str, Dict[str, str]] = {}
@@ -200,6 +206,15 @@ class ClaimantExtractStep(Step):
                 "indexed requested absence file row with Absence case no: %s",
                 str(row.get("ABSENCE_CASENUMBER")),
             )
+            lower_key_record = payments_util.make_keys_lowercase(row)
+            vbi_requested_absence_som_record = payments_util.create_staging_table_instance(
+                lower_key_record,
+                FineosExtractVbiRequestedAbsenceSom,
+                ref_file,
+                self.get_import_log_id(),
+            )
+            self.db_session.add(vbi_requested_absence_som_record)
+            self.increment("vbi_requested_absence_som_record_count")
 
         extract_data.requested_absence_info.indexed_data = requested_absence_indexed_data
 
@@ -827,27 +842,3 @@ class ClaimantExtractStep(Step):
         )
 
         logger.info("Successfully moved claimant files to error folder.")
-
-    def extract_to_staging_tables(self, extract_data: ExtractData) -> None:
-        ref_file = extract_data.reference_file
-        self.db_session.add(ref_file)
-        requested_absence_info_data = [
-            payments_util.make_keys_lowercase(v)
-            for v in extract_data.requested_absence_info.indexed_data.values()
-        ]
-        employee_feed_data = [
-            payments_util.make_keys_lowercase(v)
-            for v in extract_data.employee_feed.indexed_data.values()
-        ]
-
-        for data in requested_absence_info_data:
-            vbi_requested_absence_som = payments_util.create_staging_table_instance(
-                data, FineosExtractVbiRequestedAbsenceSom, ref_file, self.get_import_log_id()
-            )
-            self.db_session.add(vbi_requested_absence_som)
-
-        for data in employee_feed_data:
-            employee_feed = payments_util.create_staging_table_instance(
-                data, FineosExtractEmployeeFeed, ref_file, self.get_import_log_id()
-            )
-            self.db_session.add(employee_feed)

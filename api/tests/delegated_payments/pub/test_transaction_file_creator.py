@@ -4,6 +4,7 @@ import re
 import faker
 import pytest
 import sqlalchemy
+from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -41,6 +42,7 @@ def transaction_file_step(test_db_session, initialize_factories_session, test_db
     )
 
 
+@freeze_time("2021-01-01 12:00:00")
 def test_ach_file_creation(
     transaction_file_step: TransactionFileCreatorStep,
     test_db_session,
@@ -68,8 +70,8 @@ def test_ach_file_creation(
     transaction_file_step.run_step()
 
     # check that ach file were generated
-    formatted_now = payments_util.get_now().strftime("%Y%m%d")
-    pub_ach_file_name = f"PUB-NACHA-{formatted_now}"
+    formatted_now = payments_util.get_now().strftime("%Y-%m-%d-%H-%M-%S")
+    pub_ach_file_name = f"{formatted_now}-PUB-NACHA"
     expected_ach_file_folder = os.path.join(
         output_folder_path, payments_util.Constants.S3_OUTBOUND_READY_DIR
     )

@@ -21,20 +21,24 @@ import {
   getEmployerPool,
   getPortalSubmitter,
   getVerificationFetcher,
-} from "../../src/scripts/util";
+  getLeaveAdminCredentials,
+} from "../../src/util/common";
+import { getFineosBaseUrl } from "../../src/util/common";
 import { Credentials } from "../../src/types";
 import { ApplicationResponse } from "../../src/api";
 
 import fs from "fs";
 import pdf from "pdf-parse";
 import { Result } from "pdf-parse";
-import TestMailClient, { Email, GetEmailsOpts } from "./TestMailClient";
+import TestMailClient, {
+  Email,
+  GetEmailsOpts,
+} from "../../src/submission/TestMailClient";
 import DocumentWaiter from "./DocumentWaiter";
 import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
 import * as postSubmit from "../../src/submission/PostSubmit";
-import * as actions from "../../src/utils";
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
@@ -89,11 +93,14 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     ): Promise<ApplicationResponse> {
       if (!application.claim) throw new Error("Application missing!");
       const { credentials, employerCredentials, ...claim } = application;
+      const { employer_fein } = application.claim;
+      if (!employer_fein)
+        throw new Error("Application is missing employer FEIN");
       return submitter
         .submit(
           await ClaimGenerator.hydrate(claim, "/tmp"),
           credentials ?? getClaimantCredentials(),
-          employerCredentials
+          employerCredentials ?? getLeaveAdminCredentials(employer_fein)
         )
         .catch((err) => {
           console.error("Failed to submit claim:", err.data);
@@ -103,18 +110,15 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
 
     async completeSSOLoginFineos(): Promise<string> {
       let cookiesJson = "";
-      await postSubmit.withFineosBrowser(
-        actions.getFineosBaseUrl(),
-        async (page) => {
-          await page.fill('input[name="loginfmt"]', config("SSO_USERNAME"));
-          await page.click("text=Next");
-          await page.fill('input[name="passwd"]', config("SSO_PASSWORD"));
-          await page.click('input[type="submit"]');
-          await page.click("text=No");
-          const cookies = await page.context().cookies();
-          cookiesJson = JSON.stringify(cookies);
-        }
-      );
+      await postSubmit.withFineosBrowser(getFineosBaseUrl(), async (page) => {
+        await page.fill('input[name="loginfmt"]', config("SSO_USERNAME"));
+        await page.click("text=Next");
+        await page.fill('input[name="passwd"]', config("SSO_PASSWORD"));
+        await page.click('input[type="submit"]');
+        await page.click("text=No");
+        const cookies = await page.context().cookies();
+        cookiesJson = JSON.stringify(cookies);
+      });
       return cookiesJson;
     },
 
@@ -143,6 +147,14 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       );
 
       return pdf(PDFdataBuffer) as Promise<Result>;
+    },
+    syslog(arg: unknown | unknown[]): null {
+      if (Array.isArray(arg)) {
+        console.log(...arg);
+      } else {
+        console.log(arg);
+      }
+      return null;
     },
   });
 

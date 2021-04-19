@@ -65,6 +65,7 @@ locals {
         fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
         fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
         cognito_user_pool_id                       = var.cognito_user_pool_id
+        process_csv_data_bucket_name               = aws_s3_bucket.bulk_user_import.bucket # massgov-pfml-${environment_name}-bulk-user-import
       }
     },
 
@@ -215,7 +216,6 @@ locals {
 
         ctr_data_mart_host     = var.ctr_data_mart_host
         ctr_data_mart_username = var.ctr_data_mart_username
-        ctr_data_mart_mock     = var.ctr_data_mart_mock_enable
       }
     },
 
@@ -289,6 +289,16 @@ locals {
     "payments-rotate-data-mart-password" = {
       command             = ["payments-rotate-data-mart-password"]
       containers_template = "payments_rotate_data_mart_password_template.json"
+      task_role           = aws_iam_role.payments_ctr_process_task_role.arn
+      vars = {
+        ctr_data_mart_host     = var.ctr_data_mart_host
+        ctr_data_mart_username = var.ctr_data_mart_username
+      }
+    },
+
+    "payments-ctr-vc-code-cleanup" = {
+      command             = ["payments-ctr-vc-code-cleanup"]
+      containers_template = "payments_ctr_vc_code_cleanup_template.json"
       task_role           = aws_iam_role.payments_ctr_process_task_role.arn
       vars = {
         ctr_data_mart_host     = var.ctr_data_mart_host

@@ -27,6 +27,7 @@ export type Employer = {
   updated_date?: Date | string;
   size?: EmployerSize;
   withholdings: number[];
+  metadata?: Record<string, unknown>;
 };
 
 // Roulette wheel algorithm.
@@ -44,6 +45,7 @@ type EmployerGenerationSpec = {
   medical_exemption?: boolean;
   exemption_commence_date?: Date;
   exemption_cease_date?: Date;
+  metadata?: Record<string, unknown>;
 };
 
 export class EmployerGenerator {
@@ -99,6 +101,7 @@ export class EmployerGenerator {
       updated_date: formatISO(new Date()),
       size: spec.size ?? this.generateSize(),
       withholdings,
+      metadata: spec.metadata ?? {},
     };
   }
 }
@@ -107,6 +110,7 @@ export type EmployerPickSpec = {
   size?: EmployerSize;
   withholdings?: number[] | "exempt" | "non-exempt";
   notFEIN?: string;
+  metadata?: Record<string, unknown>;
 };
 
 export default class EmployerPool implements Iterable<Employer> {
@@ -244,6 +248,13 @@ function buildPickFilter(
         JSON.stringify(spec.withholdings)
     ) {
       return false;
+    }
+    if (spec.metadata) {
+      for (const [k, v] of Object.entries(spec.metadata)) {
+        if (!employer.metadata || employer.metadata[k] !== v) {
+          return false;
+        }
+      }
     }
     return true;
   };

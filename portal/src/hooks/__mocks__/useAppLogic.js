@@ -2,6 +2,7 @@ import User, { UserLeaveAdministrator } from "../../models/User";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
+import ClaimCollection from "../../models/ClaimCollection";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
 import { uniqueId } from "lodash";
@@ -39,6 +40,11 @@ export default jest.fn(() => ({
     submitPaymentPreference: jest.fn(),
     update: jest.fn(),
     warningsLists: {},
+  },
+  claims: {
+    claims: new ClaimCollection(),
+    hasLoadedAll: true,
+    loadAll: jest.fn(),
   },
   clearErrors: jest.fn(),
   documents: {

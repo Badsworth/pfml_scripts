@@ -2,6 +2,7 @@
 import useAppErrorsLogic from "./useAppErrorsLogic";
 import useAuthLogic from "./useAuthLogic";
 import useBenefitsApplicationsLogic from "./useBenefitsApplicationsLogic";
+import useClaimsLogic from "./useClaimsLogic";
 import useDocumentsLogic from "./useDocumentsLogic";
 import useEmployersLogic from "./useEmployersLogic";
 import useOtherLeavesLogic from "./useOtherLeavesLogic";
@@ -34,6 +35,10 @@ const useAppLogic = () => {
     user: users.user,
   });
 
+  const claims = useClaimsLogic({
+    appErrorsLogic,
+  });
+
   const documents = useDocumentsLogic({
     appErrorsLogic,
     portalFlow,
@@ -52,6 +57,7 @@ const useAppLogic = () => {
     auth,
     benefitsApplications,
     catchError: appErrorsLogic.catchError,
+    claims,
     // TODO (CP-886): remove once all API calls are behind appLogic
     clearErrors: appErrorsLogic.clearErrors,
     documents,

@@ -203,12 +203,6 @@ variable "ctr_data_mart_username" {
   default     = ""
 }
 
-variable "ctr_data_mart_mock_enable" {
-  description = "Enable a mock Data Mart client."
-  type        = bool
-  default     = false
-}
-
 variable "enable_recurring_payments_schedule" {
   description = "Enable scheduling for payments-ctr-process and payments-fineos-process ECS tasks"
   type        = bool

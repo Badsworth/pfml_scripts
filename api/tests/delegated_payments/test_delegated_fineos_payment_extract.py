@@ -79,8 +79,8 @@ PEI_FIELD_NAMES = [
     "EVENTREASON",
 ]
 PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
-PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU"]
-REQUESTED_ABSENCE_FIELD_NAMES = ["ABSENCE_CASENUMBER", "LEAVEREQUEST_DECISION"]
+PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"]
+REQUESTED_ABSENCE_FIELD_NAMES = ["LEAVEREQUEST_DECISION", "LEAVEREQUEST_ID"]
 
 
 fake = faker.Faker()
@@ -128,6 +128,7 @@ class FineosData:
         self.payment_start_period = self.get_value("payment_start", "2021-01-01 12:00:00")
         self.payment_end_period = self.get_value("payment_end", "2021-01-08 12:00:00")
 
+        self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int()))
         self.leave_request_decision = self.get_value("leave_request_decision", "Approved")
 
     def get_vpei_record(self):
@@ -135,17 +136,21 @@ class FineosData:
         vpei_record["C"] = self.c_value
         vpei_record["I"] = self.i_value
         vpei_record["PAYEESOCNUMBE"] = self.tin
+
         vpei_record["PAYMENTADD1"] = self.payment_address_1
         vpei_record["PAYMENTADD2"] = self.payment_address_2
         vpei_record["PAYMENTADD4"] = self.city
         vpei_record["PAYMENTADD6"] = self.state
         vpei_record["PAYMENTPOSTCO"] = self.zip_code
+
         vpei_record["PAYMENTMETHOD"] = self.payment_method
         vpei_record["PAYMENTDATE"] = self.payment_date
         vpei_record["AMOUNT_MONAMT"] = self.payment_amount
+
         vpei_record["PAYEEBANKSORT"] = self.routing_nbr
         vpei_record["PAYEEACCOUNTN"] = self.account_nbr
         vpei_record["PAYEEACCOUNTT"] = self.account_type
+
         vpei_record["EVENTTYPE"] = self.event_type
         vpei_record["PAYEEIDENTIFI"] = self.payee_identifier
         vpei_record["EVENTREASON"] = self.event_reason
@@ -156,6 +161,7 @@ class FineosData:
         claim_detail_record["PECLASSID"] = self.c_value
         claim_detail_record["PEINDEXID"] = self.i_value
         claim_detail_record["ABSENCECASENU"] = self.absence_case_number
+        claim_detail_record["LEAVEREQUESTI"] = self.leave_request_id
         return claim_detail_record
 
     def get_payment_details_record(self):
@@ -170,8 +176,8 @@ class FineosData:
 
     def get_requested_absence_record(self):
         requested_absence_record = OrderedDict()
-        requested_absence_record["ABSENCE_CASENUMBER"] = self.absence_case_number
         requested_absence_record["LEAVEREQUEST_DECISION"] = self.leave_request_decision
+        requested_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id
         return requested_absence_record
 
     def get_value(self, key, default):
@@ -931,7 +937,7 @@ def test_process_extract_data_existing_payment(
         mock_s3_bucket,
         test_db_session,
         add_payment=True,
-        additional_payment_state=State.DELEGATED_PAYMENT_ERROR_REPORT_SENT,
+        additional_payment_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
@@ -960,7 +966,7 @@ def test_process_extract_data_existing_payment(
             # The state ID will be either the prior state ID or the new successful one
             assert state_log.end_state_id in [
                 State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id,
-                State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id,
+                State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
             ]
 
     payment_count_after = test_db_session.query(Payment).count()
@@ -1227,7 +1233,7 @@ def make_payment_data_from_fineos_data(fineos_data):
     extract_data.claim_details.indexed_data = {ci_index: fineos_data.get_claim_details_record()}
     extract_data.requested_absence.indexed_data = {
         extractor.CiIndex(
-            fineos_data.absence_case_number, ""
+            fineos_data.leave_request_id, ""
         ): fineos_data.get_requested_absence_record()
     }
 
@@ -1246,7 +1252,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
         False,
         c_value="1000",
         i_value="1",
-        absence_case_number="ABS-01",
+        leave_request_id="1001",
         leave_request_decision="Unknown",
         payment_amount="Unknown",
     )
@@ -1256,6 +1262,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
@@ -1282,6 +1289,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
@@ -1301,6 +1309,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
@@ -1323,6 +1332,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
@@ -1681,7 +1691,6 @@ def test_extract_to_staging_tables(payment_extract_step, test_db_session, tmp_pa
 
     extract_data = extractor.ExtractData(test_file_names, date_str)
     payment_extract_step.download_and_extract_data(extract_data, tmp_path)
-    payment_extract_step.extract_to_staging_tables(extract_data)
 
     test_db_session.commit()
 
@@ -1712,3 +1721,47 @@ def test_extract_to_staging_tables(payment_extract_step, test_db_session, tmp_pa
     for data in requested_absence_data:
         assert data.reference_file_id == ref_file.reference_file_id
         assert data.fineos_extract_import_log_id == payment_extract_step.get_import_log_id()
+
+
+def test_get_active_payment_state(payment_extract_step, test_db_session):
+    non_restartable_states = [
+        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
+        State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK,
+        State.ADD_TO_ERRORED_PEI_WRITEBACK,
+    ]
+    restartable_states = payments_util.Constants.RESTARTABLE_PAYMENT_STATES
+
+    # Non restartable states should return the state.
+    for non_restartable_state in non_restartable_states:
+        # Create and load a payment in the non restartable state.
+        payment = PaymentFactory.create()
+        state_log_util.create_finished_state_log(
+            payment, non_restartable_state, EXPECTED_OUTCOME, test_db_session
+        )
+
+        # Create a payment with the same C/I value
+        new_payment = PaymentFactory.build(
+            fineos_pei_c_value=payment.fineos_pei_c_value,
+            fineos_pei_i_value=payment.fineos_pei_i_value,
+        )
+
+        # We should find that state associated with the payment
+        found_state = payment_extract_step.get_active_payment_state(new_payment)
+        assert found_state
+        assert found_state.state_id == non_restartable_state.state_id
+
+    for restartable_state in restartable_states:
+        # Create and load a payment in the restartable state.
+        payment = PaymentFactory.create()
+        state_log_util.create_finished_state_log(
+            payment, restartable_state, EXPECTED_OUTCOME, test_db_session
+        )
+
+        # Create a payment with the same C/I value
+        new_payment = PaymentFactory.build(
+            fineos_pei_c_value=payment.fineos_pei_c_value,
+            fineos_pei_i_value=payment.fineos_pei_i_value,
+        )
+        # We should not find anything
+        found_state = payment_extract_step.get_active_payment_state(new_payment)
+        assert found_state is None

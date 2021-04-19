@@ -1,12 +1,10 @@
-import { fineos, portal } from "../../tests/common/actions";
-import { beforeFineos } from "../../tests/common/before";
-import { beforePortal } from "../../tests/common/before";
+import { fineos, portal } from "../../actions";
 import { getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
 
 describe("Submit a bonding claim with other income and other leave - BHAP1", () => {
   const submit = it("As a claimant, I submit a BHAP1 claim with other leave and other income through the portal", () => {
-    beforePortal();
+    portal.before();
 
     cy.task("generateClaim", "BHAP1").then((claim) => {
       if (!claim) {
@@ -47,7 +45,7 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
     { baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass([submit]);
-      beforeFineos();
+      fineos.before();
       cy.unstash<Submission>("submission").then((submission) => {
         cy.visit("/");
         fineos.findOtherLeaveEForm(submission.fineos_absence_id);

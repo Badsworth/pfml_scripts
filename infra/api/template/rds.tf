@@ -31,48 +31,6 @@ resource "aws_db_subnet_group" "rds_postgres_dbprivate" {
   subnet_ids  = var.vpc_db_subnet_ids
 }
 
-resource "aws_db_parameter_group" "postgres11" {
-
-  lifecycle {
-    ignore_changes = all
-  }
-
-  name_prefix = "${local.app_name}-${var.environment_name}-${var.postgres_parameter_group_family}-"
-  family      = var.postgres_parameter_group_family
-  description = "PSQL 11 RDS parameters for ${local.app_name}-${var.environment_name}"
-
-  # Log all client connection details.
-  #
-  # This can help determine the source, username, frequency,
-  # and time of various connections.
-  parameter {
-    name  = "log_connections"
-    value = 1
-  }
-
-  # Log all client disconnection details.
-  #
-  # This can help to determine how long a client was connected.
-  parameter {
-    name  = "log_disconnections"
-    value = 1
-  }
-
-  # Log all DDL (schema-change-related) statements.
-  #
-  # This helps in identifying when changes were made,
-  # including any unexpected changes.
-  parameter {
-    name  = "log_statement"
-    value = "ddl"
-  }
-  # Error verbosity: TERSE excludes the logging of DETAIL, HINT, QUERY and CONTEXT information
-  parameter {
-    name  = "log_error_verbosity"
-    value = "terse"
-  }
-}
-
 resource "aws_db_instance" "default" {
   identifier = "massgov-pfml-${var.environment_name}"
 
@@ -113,7 +71,7 @@ resource "aws_db_instance" "default" {
   deletion_protection = true
 
   db_subnet_group_name = aws_db_subnet_group.rds_postgres_dbprivate.name
-  parameter_group_name = aws_db_parameter_group.postgres11.name
+  parameter_group_name = var.environment_name == "prod" ? "pfml-postgres12-prod" : "pfml-postgres12-non-prod"
 
   monitoring_interval = 30
   monitoring_role_arn = aws_iam_role.rds_enhanced_monitoring.arn

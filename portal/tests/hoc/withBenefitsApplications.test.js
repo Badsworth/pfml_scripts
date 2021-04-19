@@ -34,7 +34,7 @@ describe("withBenefitsApplications", () => {
         className="margin-top-8 text-center"
       >
         <Spinner
-          aria-valuetext="Loading claims"
+          aria-valuetext="Loading applications"
         />
       </div>
     `);

@@ -31,7 +31,6 @@ PROCESS_FINEOS_EXTRACT_REPORTS: List[ReportName] = [
     ReportName.CLAIMANT_EXTRACT_ERROR_REPORT,
     ReportName.PAYMENT_EXTRACT_ERROR_REPORT,
     ReportName.ADDRESS_ERROR_REPORT,
-    ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT,
 ]
 CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.OVERPAYMENT_REPORT,
@@ -42,6 +41,7 @@ CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.CHECK_PAYMENT_REPORT,
     ReportName.DAILY_CASH_REPORT,
     ReportName.PAYMENT_REJECT_REPORT,
+    ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT,
 ]
 PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [
     ReportName.PUB_ERROR_REPORT,
@@ -65,7 +65,7 @@ def _get_report_sql_command_from_file(sql_file_name: str) -> str:
 
 REPORTS: List[Report] = [
     Report(
-        sql_command="select * from lk_state",
+        sql_command=_get_report_sql_command_from_file(ReportName.CLAIMANT_EXTRACT_ERROR_REPORT),
         report_name=ReportName.CLAIMANT_EXTRACT_ERROR_REPORT,
         folder_name=FolderName.PROGRAM_INTEGRITY,
     ),
@@ -75,7 +75,7 @@ REPORTS: List[Report] = [
         folder_name=FolderName.PROGRAM_INTEGRITY,
     ),
     Report(
-        sql_command="select * from lk_state",
+        sql_command=_get_report_sql_command_from_file(ReportName.ADDRESS_ERROR_REPORT),
         report_name=ReportName.ADDRESS_ERROR_REPORT,
         folder_name=FolderName.PROGRAM_INTEGRITY,
     ),
@@ -132,7 +132,7 @@ REPORTS: List[Report] = [
         folder_name=FolderName.FINANCE,
     ),
     Report(
-        sql_command="select * from lk_state",
+        sql_command=_get_report_sql_command_from_file(ReportName.PAYMENT_REJECT_REPORT),
         report_name=ReportName.PAYMENT_REJECT_REPORT,
         folder_name=FolderName.PROGRAM_INTEGRITY,
     ),

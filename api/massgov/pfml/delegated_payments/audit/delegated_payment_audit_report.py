@@ -38,6 +38,9 @@ class PaymentAuditReportStep(Step):
             State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
             self.db_session,
         )
+        state_log_count = len(state_logs)
+
+        self.set_metrics(sampled_payment_count=state_log_count)
 
         payments: List[Payment] = []
         for state_log in state_logs:
@@ -127,7 +130,7 @@ class PaymentAuditReportStep(Step):
             else:
                 payment_history_ids = [p.payment_id for p in payment_history]
                 expected_end_states = [
-                    State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id,
+                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
                     State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id,
                 ]
 
@@ -147,7 +150,10 @@ class PaymentAuditReportStep(Step):
                     sl.end_state_id for sl in payment_error_or_rejected_state_log_history
                 ]
 
-                if State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id in payment_state_history:
+                if (
+                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+                    in payment_state_history
+                ):
                     is_previously_errored_payment = True
 
                 if (

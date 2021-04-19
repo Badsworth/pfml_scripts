@@ -1,9 +1,8 @@
-import * as portal from "../../../tests/common/actions/portal";
-import { beforePortal } from "../../../tests/common/before";
+import { portal } from "../../../actions";
 
 describe("Claimant Registration", () => {
   it("Should allow a new claimant to register", () => {
-    beforePortal();
+    portal.before();
     cy.task("generateCredentials").then((credentials) => {
       portal.registerAsClaimant(credentials);
       portal.login(credentials);

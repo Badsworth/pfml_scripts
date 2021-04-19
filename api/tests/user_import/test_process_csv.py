@@ -15,6 +15,7 @@ from massgov.pfml.user_import.process_csv import (
     pivot_csv_file,
     process_by_email,
     process_files,
+    split_successes_from_failures,
 )
 
 # every test in here requires real resources
@@ -170,7 +171,7 @@ class TestProcessByEmail:
         fineos_client = fineos.create_client()
         cognito_client = MockCognito()
         pivoted = pivot_csv_file(test_file_location)
-        processed = 0
+        processed = []
         for email, employers in pivoted.items():
             processed += process_by_email(
                 email=email,
@@ -182,7 +183,12 @@ class TestProcessByEmail:
                 fineos_client=fineos_client,
             )
         # 5 records in this file
-        assert processed == 5
+        (
+            successfully_processed_records,
+            unsuccessfully_processed_records,
+        ) = split_successes_from_failures(processed)
+        assert len(successfully_processed_records) == 5
+        assert len(unsuccessfully_processed_records) == 0
         # Should have created 3 cognito users
         assert len(cognito_client._memo) == 3
         # Ensure all emails in pivoted file were created in cognito
@@ -207,7 +213,7 @@ class TestProcessByEmail:
     ):
         cognito_client = MockCognito()
         pivoted = pivot_csv_file(test_file_location)
-        processed = 0
+        processed = []
         for email, employers in pivoted.items():
             processed += process_by_email(
                 email=email,
@@ -220,7 +226,12 @@ class TestProcessByEmail:
                 fineos_client=mock_bogus_fineos,
             )
         # 5 records in this file
-        assert processed == 0
+        (
+            successfully_processed_records,
+            unsuccessfully_processed_records,
+        ) = split_successes_from_failures(processed)
+        assert len(successfully_processed_records) == 0
+        assert len(unsuccessfully_processed_records) == 5
         count_error_in_fineos = 0
         count_unable_to_complete_reg = 0
         for record in caplog.records:
@@ -236,7 +247,7 @@ class TestProcessByEmail:
     ):
         cognito_client = MockCognitoPasswordError()
         pivoted = pivot_csv_file(test_file_location)
-        processed = 0
+        processed = []
         for email, employers in pivoted.items():
             processed += process_by_email(
                 email=email,
@@ -249,7 +260,12 @@ class TestProcessByEmail:
                 fineos_client=mock_bogus_fineos,
             )
         # 5 records in this file
-        assert processed == 0
+        (
+            successfully_processed_records,
+            unsuccessfully_processed_records,
+        ) = split_successes_from_failures(processed)
+        assert len(successfully_processed_records) == 0
+        assert len(unsuccessfully_processed_records) == 5
         count_error_in_cognito = 0
         for record in caplog.records:
             if "Unable to set Cognito password for user" in record.getMessage():
@@ -264,7 +280,7 @@ class TestProcessByEmail:
         caplog.set_level(logging.INFO)  # noqa: B1
         cognito_client = MockCognitoListRateLimit()
         pivoted = pivot_csv_file(test_file_location)
-        processed = 0
+        processed = []
         for email, employers in pivoted.items():
             processed += process_by_email(
                 email=email,
@@ -276,7 +292,12 @@ class TestProcessByEmail:
                 cognito_client=cognito_client,
             )
         # 5 records in this file
-        assert processed == 5
+        (
+            successfully_processed_records,
+            unsuccessfully_processed_records,
+        ) = split_successes_from_failures(processed)
+        assert len(successfully_processed_records) == 5
+        assert len(unsuccessfully_processed_records) == 0
         count_error_in_cognito_get_user = 0
         for record in caplog.records:
             if "Too many requests error from Cognito" in record.getMessage():
@@ -284,7 +305,16 @@ class TestProcessByEmail:
 
         assert count_error_in_cognito_get_user == 4
 
-    def test_process_files(self, test_file_location, test_db_session, create_employers, caplog):
+    @moto.mock_s3
+    def test_process_files(
+        self, test_file_location, test_db_session, create_employers, caplog, monkeypatch
+    ):
+        monkeypatch.setenv(
+            "PROCESS_CSV_DATA_BUCKET_NAME", "test-bucket",
+        )
+        conn = boto3.resource("s3", region_name="us-east-1")
+        conn.create_bucket(Bucket="test-bucket")
+
         caplog.set_level(logging.INFO)  # noqa: B1
         cognito_client = MockCognito()
 
@@ -296,13 +326,14 @@ class TestProcessByEmail:
             cognito_pool_id="fake_pool",
         )
         csv_log_records = [record for record in caplog.records if "process_csv" in record.filename]
-        startup_log, finished_file, complete_log = csv_log_records
+        startup_log, success_file_upload, finished_file, complete_log = csv_log_records
         assert f"found 3 emails to import in {test_file_location}" in startup_log.getMessage()
         assert (
             f"processed file: {test_file_location}; imported 3 emails, 5 records"
             in finished_file.getMessage()
         )
         assert "done processing files" in complete_log.getMessage()
+        assert "Uploading results to S3." in success_file_upload.getMessage()
 
     def test_no_fineos_web_ids_created_when_not_forcing_registration(
         self, test_file_location, test_db_session, create_employers
@@ -311,7 +342,7 @@ class TestProcessByEmail:
         fineos_client = fineos.create_client()
         cognito_client = MockCognito()
         pivoted = pivot_csv_file(test_file_location)
-        processed = 0
+        processed = []
         for email, employers in pivoted.items():
             processed += process_by_email(
                 email=email,
@@ -323,7 +354,12 @@ class TestProcessByEmail:
                 fineos_client=fineos_client,
             )
         # 5 records in this file
-        assert processed == 5
+        (
+            successfully_processed_records,
+            unsuccessfully_processed_records,
+        ) = split_successes_from_failures(processed)
+        assert len(successfully_processed_records) == 5
+        assert len(unsuccessfully_processed_records) == 0
         # Should have created 3 cognito users
         assert len(cognito_client._memo) == 3
         # Ensure all emails in pivoted file were created in cognito

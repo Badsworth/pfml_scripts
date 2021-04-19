@@ -19,6 +19,7 @@ from massgov.pfml.api.util.response import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
+    CaringLeaveMetadata,
     ContinuousLeavePeriod,
     DocumentType,
     EmploymentStatus,
@@ -236,8 +237,14 @@ def test_application_patch(client, user, auth_token, test_db_session):
     # Change last name
     update_request_body["last_name"] = "Perez"
     update_request_body["leave_details"] = {
-        "relationship_to_caregiver": "Parent",
         "employer_notification_method": "In Writing",
+        "caring_leave_metadata": {
+            "family_member_first_name": "Jane",
+            "family_member_middle_name": "Alice",
+            "family_member_last_name": "Doe",
+            "family_member_date_of_birth": "1975-01-01",
+            "relationship_to_caregiver": RelationshipToCaregiver.PARENT.relationship_to_caregiver_description,
+        },
     }
     update_request_body["middle_name"] = "Mike"
     update_request_body["tax_identifier"] = "123-45-6789"
@@ -278,6 +285,16 @@ def test_application_patch(client, user, auth_token, test_db_session):
     assert application.tax_identifier.tax_identifier == "123456789"
     assert application.employer_fein == "227777777"
 
+    # CaringLeaveMetadata fields added
+    assert application.caring_leave_metadata.family_member_first_name == "Jane"
+    assert application.caring_leave_metadata.family_member_middle_name == "Alice"
+    assert application.caring_leave_metadata.family_member_last_name == "Doe"
+    assert application.caring_leave_metadata.family_member_date_of_birth.isoformat() == "1975-01-01"
+    assert (
+        application.caring_leave_metadata.relationship_to_caregiver_id
+        == RelationshipToCaregiver.PARENT.relationship_to_caregiver_id
+    )
+
     # Phone number is saved as E.164
     assert application.phone.phone_number == "+12404879945"
 
@@ -289,17 +306,45 @@ def test_application_patch(client, user, auth_token, test_db_session):
     assert response_body.get("data").get("phone")["phone_type"] == "Cell"
 
     assert (
-        response_body.get("data").get("leave_details").get("relationship_to_caregiver") == "Parent"
-    )
-    assert (
         response_body.get("data").get("leave_details").get("employer_notification_method")
         == "In Writing"
+    )
+
+    assert (
+        response_body.get("data")
+        .get("leave_details")
+        .get("caring_leave_metadata")["family_member_first_name"]
+        == "Jane"
+    )
+    assert (
+        response_body.get("data")
+        .get("leave_details")
+        .get("caring_leave_metadata")["family_member_middle_name"]
+        == "Alice"
+    )
+    assert (
+        response_body.get("data")
+        .get("leave_details")
+        .get("caring_leave_metadata")["family_member_last_name"]
+        == "Doe"
+    )
+    assert (
+        response_body.get("data")
+        .get("leave_details")
+        .get("caring_leave_metadata")["relationship_to_caregiver"]
+        == RelationshipToCaregiver.PARENT.relationship_to_caregiver_description
     )
 
     # Formatted / masked fields:
     assert response_body.get("data").get("employer_fein") == "22-7777777"
     assert response_body.get("data").get("tax_identifier") == "***-**-6789"
     assert response_body.get("data").get("phone")["phone_number"] == "***-***-9945"
+    assert (
+        response_body.get("data")
+        .get("leave_details")
+        .get("caring_leave_metadata")["family_member_date_of_birth"]
+        == "****-01-01"
+    )
 
 
 def test_application_patch_masking(client, user, auth_token, test_db_session):
@@ -316,7 +361,11 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
             "line_2": "Apt #123",
             "zip": "12345-1234",
         },
-        "leave_details": {"child_birth_date": "2021-09-21", "child_placement_date": "2021-05-13"},
+        "leave_details": {
+            "child_birth_date": "2021-09-21",
+            "child_placement_date": "2021-05-13",
+            "caring_leave_metadata": {"family_member_date_of_birth": "2021-01-01"},
+        },
         "phone": {"int_code": "1", "phone_number": "240-487-9945", "phone_type": "Cell",},
     }
 
@@ -341,6 +390,7 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
     assert application.child_placement_date.isoformat() == "2021-05-13"
     assert application.child_birth_date.isoformat() == "2021-09-21"
     assert application.phone.phone_number == "+12404879945"
+    assert application.caring_leave_metadata.family_member_date_of_birth.isoformat() == "2021-01-01"
 
     # Verify values returned by the API are properly masked
     assert response_body.get("data").get("tax_identifier") == "***-**-6789"
@@ -353,6 +403,12 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
         response_body.get("data").get("leave_details").get("child_placement_date") == "****-05-13"
     )
     assert response_body.get("data").get("leave_details").get("child_birth_date") == "****-09-21"
+    assert (
+        response_body.get("data")
+        .get("leave_details")
+        .get("caring_leave_metadata")["family_member_date_of_birth"]
+        == "****-01-01"
+    )
     assert response_body.get("data").get("phone")["phone_number"] == "***-***-9945"
 
 
@@ -383,13 +439,23 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
     )
     application.phone = Phone(phone_number="+12404879945", phone_type_id=1)  # Cell
 
+    caring_leave_metadata = CaringLeaveMetadata(
+        family_member_date_of_birth=date(1975, 1, 1), application_id=application.application_id
+    )
+
+    test_db_session.add(caring_leave_metadata)
+
     test_db_session.commit()
 
     update_request_body = {
         "tax_identifier": "***-**-6789",
         "mass_id": "*********",
         "date_of_birth": "****-01-01",
-        "leave_details": {"child_birth_date": "****-09-21", "child_placement_date": "****-05-13"},
+        "leave_details": {
+            "child_birth_date": "****-09-21",
+            "child_placement_date": "****-05-13",
+            "caring_leave_metadata": {"family_member_date_of_birth": "****-01-01"},
+        },
         "mailing_address": {
             "city": "Chicago",
             "state": "IL",
@@ -429,6 +495,7 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
     assert application.child_placement_date.isoformat() == "2021-05-13"
     assert application.child_birth_date.isoformat() == "2021-09-21"
     assert application.phone.phone_number == "+12404879945"
+    assert application.caring_leave_metadata.family_member_date_of_birth.isoformat() == "1975-01-01"
 
 
 def test_application_patch_masked_mismatch_fields(client, user, auth_token, test_db_session):
@@ -4443,3 +4510,134 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
 
     assert submitted_application.claim is not None
     assert submitted_application.claim.employer is not None
+
+
+def test_application_patch_caring_leave_metadata(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, phone=None)
+    assert (
+        application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
+    )
+    assert application.caring_leave_metadata is None
+
+    caring_leave_metadata = CaringLeaveMetadata(application_id=application.application_id)
+    test_db_session.add(caring_leave_metadata)
+    test_db_session.commit()
+
+    # change leave reason to caring leave
+    update_request_body = {
+        "leave_details": {"reason": LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_description}
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+
+    # updating caring leave data
+    update_request_body = {
+        "leave_details": {
+            "caring_leave_metadata": {
+                "family_member_first_name": "Jane",
+                "family_member_middle_name": "Alice",
+                "family_member_last_name": "Doe",
+                "family_member_date_of_birth": "1975-01-01",
+                "relationship_to_caregiver": RelationshipToCaregiver.PARENT.relationship_to_caregiver_description,
+            }
+        }
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    assert response.status_code == 200
+
+    test_db_session.refresh(application)
+    assert application.caring_leave_metadata.family_member_first_name == "Jane"
+    assert application.caring_leave_metadata.family_member_middle_name == "Alice"
+    assert application.caring_leave_metadata.family_member_last_name == "Doe"
+    assert application.caring_leave_metadata.family_member_date_of_birth.isoformat() == "1975-01-01"
+    assert (
+        application.caring_leave_metadata.relationship_to_caregiver_id
+        == RelationshipToCaregiver.PARENT.relationship_to_caregiver_id
+    )
+
+    response_body = response.get_json()
+    response_caring_leave_metadata = (
+        response_body.get("data").get("leave_details").get("caring_leave_metadata")
+    )
+    assert (
+        response_caring_leave_metadata["family_member_first_name"]
+        == update_request_body["leave_details"]["caring_leave_metadata"]["family_member_first_name"]
+    )
+    assert (
+        response_caring_leave_metadata["family_member_middle_name"]
+        == update_request_body["leave_details"]["caring_leave_metadata"][
+            "family_member_middle_name"
+        ]
+    )
+    assert (
+        response_caring_leave_metadata["family_member_last_name"]
+        == update_request_body["leave_details"]["caring_leave_metadata"]["family_member_last_name"]
+    )
+    assert response_caring_leave_metadata["family_member_date_of_birth"] == "****-01-01"
+    assert (
+        response_caring_leave_metadata["relationship_to_caregiver"]
+        == update_request_body["leave_details"]["caring_leave_metadata"][
+            "relationship_to_caregiver"
+        ]
+    )
+
+
+def test_application_patch_caring_leave_metadata_issues(client, user, auth_token, test_db_session):
+    caring_leave_metadata_issues = [
+        {
+            "field": "leave_details.caring_leave_metadata.family_member_first_name",
+            "message": "leave_details.caring_leave_metadata.family_member_first_name is required",
+            "type": "required",
+        },
+        {
+            "field": "leave_details.caring_leave_metadata.family_member_last_name",
+            "message": "leave_details.caring_leave_metadata.family_member_last_name is required",
+            "type": "required",
+        },
+        {
+            "field": "leave_details.caring_leave_metadata.family_member_date_of_birth",
+            "message": "leave_details.caring_leave_metadata.family_member_date_of_birth is required",
+            "type": "required",
+        },
+        {
+            "field": "leave_details.caring_leave_metadata.relationship_to_caregiver",
+            "message": "leave_details.caring_leave_metadata.relationship_to_caregiver is required",
+            "type": "required",
+        },
+    ]
+
+    application = ApplicationFactory.create(
+        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+    )
+    assert application.caring_leave_metadata is None
+
+    # patch without data
+    update_request_body = {"leave_details": {"caring_leave_metadata": {}}}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_warnings = response.get_json().get("warnings")
+
+    assert response.status_code == 200
+    for issue in caring_leave_metadata_issues:
+        assert issue in response_warnings

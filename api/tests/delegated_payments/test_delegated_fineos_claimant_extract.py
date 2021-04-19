@@ -723,7 +723,6 @@ def test_extract_to_staging_tables(emp_updates_path, claimant_extract_step, test
 
     extract_data = claimant_extract.ExtractData(test_file_names, date)
     claimant_extract_step.download_and_index_data(extract_data, tempdir)
-    claimant_extract_step.extract_to_staging_tables(extract_data)
 
     test_db_session.commit()
 
@@ -733,7 +732,7 @@ def test_extract_to_staging_tables(emp_updates_path, claimant_extract_step, test
     ref_file = extract_data.reference_file
 
     assert len(requested_absence_info_data) == 4
-    assert len(employee_feed_data) == 2
+    assert len(employee_feed_data) == 3
 
     for data in requested_absence_info_data:
         assert data.reference_file_id == ref_file.reference_file_id

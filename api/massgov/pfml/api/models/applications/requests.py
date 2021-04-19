@@ -8,6 +8,7 @@ from pydantic import validator
 from massgov.pfml.api.models.applications.common import (
     Address,
     ApplicationLeaveDetails,
+    CaringLeaveMetadata,
     DocumentType,
     EmployerBenefit,
     EmploymentStatus,
@@ -53,6 +54,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     phone: Optional[Phone]
     previous_leaves: Optional[List[PreviousLeave]]
     has_previous_leaves: Optional[bool]
+    caring_leave_metadata: Optional[CaringLeaveMetadata]
 
     @validator("date_of_birth")
     def date_of_birth_in_valid_range(cls, date_of_birth):  # noqa: B902
