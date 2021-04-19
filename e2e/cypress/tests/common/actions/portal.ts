@@ -950,15 +950,17 @@ export function addOrganization(fein: string, withholding: number): void {
   cy.get('a[href="/employers/organizations/add-organization/"').click();
   cy.get('input[name="ein"]').type(fein);
   cy.get('button[type="submit"').click();
-  cy.get('input[name="withholdingAmount"]').type(withholding.toString());
-  cy.get('button[type="submit"').click();
-  cy.contains("h1", "Thanks for verifying your paid leave contributions");
-  cy.contains(
-    "p",
-    "Your account has been verified. In 15 minutes you will be able to log in and review applications"
-  );
-  cy.contains("button", "Continue").click();
-  cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
-    "not.exist"
-  );
+  if (withholding !== 0) {
+    cy.get('input[name="withholdingAmount"]').type(withholding.toString());
+    cy.get('button[type="submit"').click();
+    cy.contains("h1", "Thanks for verifying your paid leave contributions");
+    cy.contains(
+      "p",
+      "Your account has been verified. In 15 minutes you will be able to log in and review applications"
+    );
+    cy.contains("button", "Continue").click();
+    cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
+      "not.exist"
+    );
+  }
 }
