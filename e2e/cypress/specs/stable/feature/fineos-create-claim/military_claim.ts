@@ -27,7 +27,12 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
           claim.claim.last_name
         );
         const [startDate, endDate] = extractLeavePeriod(claim.claim);
-        fineos.createNotification(startDate, endDate, "military care leave");
+        fineos.createNotification(
+          startDate,
+          endDate,
+          "military care leave",
+          claim.claim.hours_worked_per_week ?? 40
+        );
         cy.get("a[name*='CaseMapWidget']")
           .invoke("text")
           .then((text) => {

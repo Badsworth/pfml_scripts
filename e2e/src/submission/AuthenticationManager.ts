@@ -6,7 +6,7 @@ import {
   CognitoUserPool,
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
-import { OAuthCreds } from "types";
+import { OAuthCreds } from "../types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
 import {
   getUsersCurrent,

@@ -9,7 +9,7 @@ import { config as dotenv } from "dotenv";
  * to use, it uses the `E2E_ENVIRONMENT` environment variable.
  */
 
-export interface E2EConfig {
+interface E2EConfig {
   PORTAL_BASEURL: string;
   COGNITO_POOL: string;
   COGNITO_CLIENTID: string;
@@ -31,7 +31,7 @@ export interface E2EConfig {
   SSO_PASSWORD: string;
   SSO_USERNAME: string;
 }
-export interface LSTConfig {
+interface LSTConfig {
   FLOOD_DATA_BASEURL: string;
   SIMULATION_SPEED: string;
   FLOOD_API_TOKEN: string;

@@ -3,10 +3,10 @@ import { getEmployeePool, getAuthManager } from "../../src/util/common";
 import { ClaimGenerator } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import config from "../../src/config";
-import { EligibilityRequest } from "api";
+import { EligibilityRequest } from "../../src/api";
 import { postFinancialEligibility } from "../../src/api";
 import { formatISO } from "date-fns";
-import { ScenarioSpecification } from "generation/Scenario";
+import { ScenarioSpecification } from "../../src/generation/Scenario";
 
 let token: string;
 
