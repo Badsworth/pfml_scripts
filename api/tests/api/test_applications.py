@@ -4641,3 +4641,28 @@ def test_application_patch_caring_leave_metadata_issues(client, user, auth_token
     assert response.status_code == 200
     for issue in caring_leave_metadata_issues:
         assert issue in response_warnings
+
+    # patch with null values
+    update_request_body = {
+        "leave_details": {
+            "caring_leave_metadata": {
+                "family_member_first_name": None,
+                "family_member_middle_name": None,
+                "family_member_last_name": None,
+                "family_member_date_of_birth": None,
+                "relationship_to_caregiver": None,
+            }
+        }
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    response_warnings = response.get_json().get("warnings")
+
+    assert response.status_code == 200
+    for issue in caring_leave_metadata_issues:
+        assert issue in response_warnings

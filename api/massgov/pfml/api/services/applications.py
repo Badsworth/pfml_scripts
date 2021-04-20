@@ -411,7 +411,7 @@ def add_or_update_caring_leave_metadata(
     for key in api_caring_leave_metadata.__fields_set__:
         value = getattr(api_caring_leave_metadata, key)
 
-        if key == "relationship_to_caregiver":
+        if key == "relationship_to_caregiver" and value is not None:
             relationship_to_caregiver_model = db_lookups.by_value(
                 db_session, value.get_lookup_model(), value,
             )
