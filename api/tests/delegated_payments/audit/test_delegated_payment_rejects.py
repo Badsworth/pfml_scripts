@@ -47,7 +47,9 @@ def test_parse_payment_rejects_file(tmp_path, test_db_session, payment_rejects_s
     )
 
     expected_rejects_folder = os.path.join(
-        str(tmp_path), payments_util.get_now().strftime("%Y-%m-%d")
+        str(tmp_path),
+        payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+        payments_util.get_now().strftime("%Y-%m-%d"),
     )
 
     file_path = os.path.join(expected_rejects_folder, "2021-01-15-12-00-00-Payment-Rejects.csv")
@@ -177,21 +179,15 @@ def test_transition_not_sampled_payment_audit_pending_states(test_db_session, pa
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     # setup folder path configs
-    payment_rejects_received_folder_path = str(tempfile.mkdtemp())
-    payment_rejects_processed_folder_path = str(tempfile.mkdtemp())
-    payment_rejects_report_outbound_folder = str(tempfile.mkdtemp())
-    payment_rejects_report_sent_folder_path = str(tempfile.mkdtemp())
+    payment_rejects_archive_folder_path = str(tempfile.mkdtemp())
+    payment_rejects_received_folder_path = os.path.join(
+        payment_rejects_archive_folder_path, "received"
+    )
+    payment_rejects_processed_folder_path = os.path.join(
+        payment_rejects_archive_folder_path, "processed"
+    )
 
-    monkeypatch.setenv("PAYMENT_REJECTS_RECEIVED_FOLDER_PATH", payment_rejects_received_folder_path)
-    monkeypatch.setenv(
-        "PAYMENT_REJECTS_PROCESSED_FOLDER_PATH", payment_rejects_processed_folder_path
-    )
-    monkeypatch.setenv(
-        "PAYMENT_REJECTS_REPORT_OUTBOUND_FOLDER", payment_rejects_report_outbound_folder
-    )
-    monkeypatch.setenv(
-        "PAYMENT_REJECTS_REPORT_SENT_FOLDER_PATH", payment_rejects_report_sent_folder_path
-    )
+    monkeypatch.setenv("PFML_PAYMENT_REJECTS_ARCHIVE_PATH", payment_rejects_archive_folder_path)
 
     date_folder = "2021-01-15"
     timestamp_file_prefix = "2021-01-15-12-00-00"
@@ -199,6 +195,20 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     # generate the rejects file
     audit_scenario_data = generate_payment_audit_data_set_and_rejects_file(
         DEFAULT_AUDIT_SCENARIO_DATA_SET, payment_rejects_received_folder_path, test_db_session, 1
+    )
+    # The above method creates the audit report in a dated folder
+    # as it uses the audit report generation logic. Move it out of that folder
+    # as we don't expect it to be there when we are processing reject files.
+    dated_input_folder = os.path.join(
+        payment_rejects_received_folder_path,
+        payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+        date_folder,
+    )
+    files = file_util.list_files(dated_input_folder)
+    assert len(files) == 1
+    file_util.rename_file(
+        os.path.join(dated_input_folder, files[0]),
+        os.path.join(payment_rejects_received_folder_path, files[0]),
     )
 
     # Create a few more payments in pending state (not sampled)
@@ -278,7 +288,7 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     )
     assert payment_state_log.end_state_id == State.DELEGATED_PAYMENT_VALIDATED.state_id
 
-    # check rejects file was moved to proccessed folder
+    # check rejects file was moved to processed folder
     expected_processed_folder_path = os.path.join(
         payment_rejects_processed_folder_path, date_folder
     )

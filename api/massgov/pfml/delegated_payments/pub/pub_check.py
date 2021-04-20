@@ -38,14 +38,17 @@ class RecordContainer:
 
 
 class Constants:
-    EZ_CHECK_FILENAME_FORMAT = "PUB-EZ-CHECK_%Y%m%d-%H%M.csv"
+    SIMPLE_EZ_CHECK_FILENAME = f"{payments_util.Constants.FILE_NAME_PUB_EZ_CHECK}.csv"
+    EZ_CHECK_FILENAME_FORMAT = f"%Y-%m-%d-%H-%M-%S-{SIMPLE_EZ_CHECK_FILENAME}"
+
     EZ_CHECK_MAX_NAME_LENGTH = 85
 
     # e.g. PFML Medical Leave Payment NTN-240483-ABS-01 [03/01/2021-03/07/2021]
     EZ_CHECK_MEMO_FORMAT = "PFML {} Payment {} [{}-{}]"
     EZ_CHECK_MEMO_DATE_FORMAT = "%m/%d/%Y"
 
-    POSITIVE_PAY_FILENAME_FORMAT = "PUB-POSITIVE-PAY_%Y%m%d-%H%M.txt"
+    SIMPLE_POSITIVE_PAY_FILENAME = f"{payments_util.Constants.FILE_NAME_PUB_POSITIVE_PAY}.txt"
+    POSITIVE_PAY_FILENAME_FORMAT = f"%Y-%m-%d-%H-%M-%S-{SIMPLE_POSITIVE_PAY_FILENAME}"
 
     US_COUNTRY_CODE = "US"
 
@@ -110,34 +113,53 @@ def create_check_file(
     return ez_check_file, check_issue_file
 
 
-def send_check_file(check_file: EzCheckFile, folder_path: str) -> ReferenceFile:
-    s3_path = os.path.join(
-        folder_path,
-        payments_util.Constants.S3_OUTBOUND_READY_DIR,
-        payments_util.get_now().strftime(Constants.EZ_CHECK_FILENAME_FORMAT),
+def send_check_file(
+    check_file: EzCheckFile, archive_folder_path: str, outgoing_folder_path: str
+) -> ReferenceFile:
+    now = payments_util.get_now()
+    ez_check_file_name = now.strftime(Constants.EZ_CHECK_FILENAME_FORMAT)
+    archive_s3_path = payments_util.build_archive_path(
+        archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, ez_check_file_name, now
     )
 
-    with file_util.write_file(s3_path) as s3_file:
+    with file_util.write_file(archive_s3_path) as s3_file:
         check_file.write_to(s3_file)
+    logger.info("Wrote check file to archive path %s", archive_s3_path)
+
+    # The outgoing file doesn't have the timestamp in the path and goes directly in the directory configured
+    outgoing_s3_path = os.path.join(outgoing_folder_path, Constants.SIMPLE_EZ_CHECK_FILENAME)
+    file_util.copy_file(archive_s3_path, outgoing_s3_path)
+    logger.info("Copied check file to outgoing path %s", outgoing_s3_path)
 
     return ReferenceFile(
-        file_location=s3_path,
+        file_location=archive_s3_path,
         reference_file_type_id=ReferenceFileType.PUB_EZ_CHECK.reference_file_type_id,
     )
 
 
-def send_positive_pay_file(check_file: CheckIssueFile, folder_path: str) -> ReferenceFile:
-    s3_path = os.path.join(
-        folder_path,
-        payments_util.Constants.S3_OUTBOUND_READY_DIR,
-        payments_util.get_now().strftime(Constants.POSITIVE_PAY_FILENAME_FORMAT),
+def send_positive_pay_file(
+    check_file: CheckIssueFile, archive_folder_path: str, outgoing_folder_path: str
+) -> ReferenceFile:
+    now = payments_util.get_now()
+    positive_pay_file_name = now.strftime(Constants.POSITIVE_PAY_FILENAME_FORMAT)
+    archive_s3_path = payments_util.build_archive_path(
+        archive_folder_path,
+        payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+        positive_pay_file_name,
+        now,
     )
 
-    with file_util.write_file(s3_path, "wb") as s3_file:
+    with file_util.write_file(archive_s3_path, "wb") as s3_file:
         s3_file.write(check_file.to_bytes())
+    logger.info("Wrote positive pay file to archive path %s", archive_s3_path)
+
+    # The outgoing file doesn't have the timestamp in the path and goes directly in the directory configured
+    outgoing_s3_path = os.path.join(outgoing_folder_path, Constants.SIMPLE_POSITIVE_PAY_FILENAME)
+    file_util.copy_file(archive_s3_path, outgoing_s3_path)
+    logger.info("Copied positive pay file to outgoing path %s", outgoing_s3_path)
 
     return ReferenceFile(
-        file_location=s3_path,
+        file_location=archive_s3_path,
         reference_file_type_id=ReferenceFileType.PUB_POSITIVE_PAYMENT.reference_file_type_id,
     )
 

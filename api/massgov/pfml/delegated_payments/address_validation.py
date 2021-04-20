@@ -120,7 +120,7 @@ class AddressValidationStep(Step):
 
         # Multiple responses
         if result.confidence == Confidence.MULTIPLE_MATCHES:
-            self.increment("mutliple_experian_matches")
+            self.increment("multiple_experian_matches")
 
             end_state, message = _get_end_state_and_message_for_multiple_matches(
                 result, experian_client, address_pair

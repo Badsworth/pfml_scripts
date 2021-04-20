@@ -9,6 +9,7 @@ from typing import Callable, Dict, List, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
@@ -22,7 +23,7 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
-from massgov.pfml.delegated_payments.delegated_payments_util import Constants, get_now
+from massgov.pfml.delegated_payments.delegated_payments_util import get_now
 from massgov.pfml.delegated_payments.step import Step
 
 logger = logging.get_logger(__package__)
@@ -153,7 +154,7 @@ class FineosPeiWritebackStep(Step):
         eft_payment_count = len(eft_payment_writeback_items)
         logger.info(
             "Found %i extracted writeback items in state: %s",
-            check_payment_count,
+            eft_payment_count,
             State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_description,
         )
         self.set_metrics(eft_payment_count=eft_payment_count)
@@ -213,7 +214,7 @@ class FineosPeiWritebackStep(Step):
         payment_writeback_two_items_count = len(payment_writeback_two_items)
         logger.info(
             "Found %i extracted writeback items in state: %s",
-            payment_writeback_two_items,
+            payment_writeback_two_items_count,
             State.ADD_TO_ERRORED_PEI_WRITEBACK.state_description,
         )
         self.set_metrics(payment_writeback_two_items_count=payment_writeback_two_items_count)
@@ -290,9 +291,13 @@ class FineosPeiWritebackStep(Step):
         s3_config = payments_config.get_s3_config()
 
         # Step 1: save writeback file to PFML S3 first in the /ready dir and set metadata
-        pfml_pei_writeback_ready_filepath = os.path.join(
-            s3_config.pfml_fineos_outbound_path, Constants.S3_OUTBOUND_READY_DIR, filename_to_upload
+        pfml_pei_writeback_ready_filepath = payments_util.build_archive_path(
+            s3_config.pfml_fineos_writeback_archive_path,
+            payments_util.Constants.S3_OUTBOUND_READY_DIR,
+            filename_to_upload,
+            current_datetime,
         )
+
         try:
             reference_file = ReferenceFile(
                 file_location=pfml_pei_writeback_ready_filepath,
@@ -347,11 +352,13 @@ class FineosPeiWritebackStep(Step):
 
         # Step 3: move the writeback from /ready to /sent and update ReferenceFile
         try:
-            pfml_pei_writeback_sent_filepath = os.path.join(
-                s3_config.pfml_fineos_outbound_path,
-                Constants.S3_OUTBOUND_SENT_DIR,
+            pfml_pei_writeback_sent_filepath = payments_util.build_archive_path(
+                s3_config.pfml_fineos_writeback_archive_path,
+                payments_util.Constants.S3_OUTBOUND_SENT_DIR,
                 filename_to_upload,
+                current_datetime,
             )
+
             file_util.rename_file(
                 pfml_pei_writeback_ready_filepath, pfml_pei_writeback_sent_filepath
             )

@@ -460,7 +460,7 @@ def test_process_extract_data(
     monkeypatch,
     create_triggers,
 ):
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(mock_s3_bucket, test_db_session)
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
@@ -584,7 +584,7 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
     create_triggers,
     caplog,
 ):
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
         mock_s3_bucket,
         test_db_session,
@@ -643,7 +643,7 @@ def test_process_extract_data_one_bad_record(
     monkeypatch,
     create_triggers,
 ):
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     # This test will properly process record 1 & 3, but record 2 will
     # end up in an error state because we don't have an TIN/employee/claim associated with them
     setup_process_tests(
@@ -712,29 +712,31 @@ def test_process_extract_data_rollback(
     def err_method(*args):
         raise Exception("Fake Error")
 
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     monkeypatch.setattr(payment_extract_step, "move_files_from_received_to_processed", err_method)
 
     with pytest.raises(Exception, match="Fake Error"):
         payment_extract_step.run()
-        # Make certain that there are no payments or state logs in the DB
-        payments = test_db_session.query(Payment).all()
-        assert len(payments) == 0
-        state_logs = test_db_session.query(StateLog).all()
-        assert len(state_logs) == 0
 
-        # The files should have been moved to the error folder
-        files = file_util.list_files(f"s3://{mock_s3_bucket}/cps/inbound/error/")
-        assert len(files) == 3
+    # Make certain that there are no payments or state logs in the DB
+    payments = test_db_session.query(Payment).all()
+    assert len(payments) == 0
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 0
 
-        # The reference file should have been created
-        reference_files = test_db_session.query(ReferenceFile).all()
-        assert len(reference_files) == 1
-        assert reference_files[0].file_location == f"s3://{mock_s3_bucket}/cps/inbound/error/"
-        assert (
-            reference_files[0].reference_file_type_id
-            == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
-        )
+    # The files should have been moved to the error folder
+    expected_path = f"s3://{mock_s3_bucket}/cps/inbound/error/2020-01-01-11-30-00-payment-extract/"
+    files = file_util.list_files(expected_path)
+    assert len(files) == 4
+
+    # The reference file should have been created
+    reference_files = test_db_session.query(ReferenceFile).all()
+    assert len(reference_files) == 1
+    assert reference_files[0].file_location == expected_path
+    assert (
+        reference_files[0].reference_file_type_id
+        == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
+    )
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -748,7 +750,7 @@ def test_process_extract_unprocessed_folder_files(
     monkeypatch,
     create_triggers,
 ):
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
     # add files
     add_s3_files(mock_fineos_s3_bucket, "DT2/dataexports/2020-01-01-11-30-00/2020-01-01-11-30-00-")
@@ -759,7 +761,7 @@ def test_process_extract_unprocessed_folder_files(
     # add reference files for processed folders
     ReferenceFileFactory.create(
         file_location=os.path.join(
-            get_s3_config().pfml_fineos_inbound_path,
+            get_s3_config().pfml_fineos_extract_archive_path,
             "processed",
             payments_util.get_date_group_folder_name(
                 "2020-01-01-11-30-00", ReferenceFileType.FINEOS_PAYMENT_EXTRACT
@@ -769,7 +771,7 @@ def test_process_extract_unprocessed_folder_files(
     )
     ReferenceFileFactory.create(
         file_location=os.path.join(
-            get_s3_config().pfml_fineos_inbound_path,
+            get_s3_config().pfml_fineos_extract_archive_path,
             "processed",
             payments_util.get_date_group_folder_name(
                 "2020-01-03-11-30-00", ReferenceFileType.FINEOS_PAYMENT_EXTRACT
@@ -780,10 +782,12 @@ def test_process_extract_unprocessed_folder_files(
 
     payment_extract_step.run()
     processed_folder = os.path.join(
-        get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+        get_s3_config().pfml_fineos_extract_archive_path,
+        payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
     )
     skipped_folder = os.path.join(
-        get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_SKIPPED_DIR,
+        get_s3_config().pfml_fineos_extract_archive_path,
+        payments_util.Constants.S3_INBOUND_SKIPPED_DIR,
     )
     processed_files = file_util.list_files(processed_folder, recursive=True)
     skipped_files = file_util.list_files(skipped_folder, recursive=True)
@@ -826,7 +830,7 @@ def test_process_extract_data_no_existing_address_eft(
     monkeypatch,
     create_triggers,
 ):
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
         mock_s3_bucket, test_db_session, add_address=False, add_eft=False,
     )
@@ -932,7 +936,7 @@ def test_process_extract_data_existing_payment(
     monkeypatch,
     create_triggers,
 ):
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
         mock_s3_bucket,
         test_db_session,
@@ -991,7 +995,7 @@ def test_process_extract_data_minimal_viable_payment(
     # to test that all of our validations work, and all of the missing data
     # edge cases are accounted for and handled appropriately. This shouldn't
     # ever be a real scenario, but might encompass small pieces of something real
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
@@ -1030,7 +1034,7 @@ def test_process_extract_data_leave_request_decision_validation(
     monkeypatch,
     create_triggers,
 ):
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
@@ -1092,7 +1096,7 @@ def test_process_extract_additional_payment_types(
     monkeypatch,
     create_triggers,
 ):
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     datasets = []
     # This tests that the behavior of non-standard payment types are handled properly
     # All of these are setup as EFT payments, but we won't create EFT information for them
@@ -1458,7 +1462,7 @@ def test_update_eft_existing_eft_matches_and_approved(
     # This is the happiest of paths, we've already got the EFT info for the
     # employee and it has already been prenoted.
 
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
 
     # Set an employee to have the same EFT we know is going to be extracted
@@ -1519,7 +1523,7 @@ def test_update_eft_existing_eft_matches_and_not_approved(
     # This is the happiest of paths, we've already got the EFT info for the
     # employee and it has already been prenoted.
 
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
 
     # Set an employee to have the same EFT we know is going to be extracted
@@ -1577,7 +1581,7 @@ def test_update_eft_existing_eft_matches_and_pending_with_pub(
     # This is the happiest of paths, we've already got the EFT info for the
     # employee and it has already been prenoted.
 
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
 
     # Set an employee to have the same EFT we know is going to be extracted
@@ -1617,7 +1621,7 @@ def test_update_eft_existing_eft_matches_and_pending_with_pub(
     assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
 
     import_log_report = json.loads(payment.fineos_extract_import_log.report)
-    assert import_log_report["prenote_past_waiting_period_accepted_count"] == 1
+    assert import_log_report["prenote_past_waiting_period_approved_count"] == 1
 
     # There should not be a DELEGATED_EFT_SEND_PRENOTE record
     employee_state_logs_after = (
@@ -1635,7 +1639,7 @@ def test_update_experian_address_pair_fineos_address_no_update(
     #   2. We create a new ExperianAddressPair
     # In this test, we cover #1. #2 is covered by other tests.
 
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(mock_s3_bucket, test_db_session)
 
     # Set an employee to have the same address we know is going to be extracted

@@ -178,7 +178,11 @@ def list_files(
 
         return file_paths
 
-    return os.listdir(path)
+    # os.listdir throws an exception if the path doesn't exist
+    # Make it behave like S3 list and return an empty list
+    if os.path.exists(path):
+        return os.listdir(path)
+    return []
 
 
 def list_files_without_folder(
@@ -236,6 +240,7 @@ def list_s3_files_and_directories_by_level(
 
 
 def copy_file(source, destination):
+    logger.info(f"Copying file from {source} to {destination}")
     is_source_s3 = is_s3_path(source)
     is_dest_s3 = is_s3_path(destination)
 

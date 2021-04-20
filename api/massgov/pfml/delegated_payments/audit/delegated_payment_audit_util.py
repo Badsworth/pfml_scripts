@@ -1,7 +1,8 @@
-import pathlib
+import os
 from dataclasses import dataclass
 from typing import Iterable, List, Optional
 
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Address,
@@ -46,7 +47,7 @@ def write_audit_report(
     output_path: str,
     db_session: db.Session,
     report_name: str,
-) -> Optional[pathlib.Path]:
+) -> Optional[str]:
     payment_audit_report_rows: List[PaymentAuditCSV] = []
     for payment_audit_data in payment_audit_data_set:
         payment_audit_report_rows.append(build_audit_report_row(payment_audit_data))
@@ -59,9 +60,10 @@ def write_audit_report_rows(
     output_path: str,
     db_session: db.Session,
     report_name: str,
-) -> Optional[pathlib.Path]:
+) -> Optional[str]:
     # Setup the output file
-    file_config = FileConfig(file_prefix=output_path)
+    file_prefix = os.path.join(output_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR)
+    file_config = FileConfig(file_prefix=file_prefix)
     report_group = ReportGroup(file_config=file_config)
 
     report = Report(report_name=report_name, header_record=PAYMENT_AUDIT_CSV_HEADERS)

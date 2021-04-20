@@ -30,23 +30,19 @@
       { "name": "DB_NAME", "value": "${db_name}" },
       { "name": "DB_USERNAME", "value": "${db_username}" },
 
+      { "name": "FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "value": "2021-04-21" },
+      { "name": "FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "value": "2021-04-21" },
+
       { "name": "FINEOS_AWS_IAM_ROLE_ARN", "value": "${fineos_aws_iam_role_arn}" },
       { "name": "FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", "value": "${fineos_aws_iam_role_external_id}" },
-
       { "name": "FINEOS_DATA_EXPORT_PATH", "value": "${fineos_data_export_path}" },
-      { "name": "FINEOS_DATA_IMPORT_PATH", "value": "${fineos_data_import_path}" },
-      { "name": "PFML_FINEOS_INBOUND_PATH", "value": "${pfml_fineos_inbound_path}" },
-      { "name": "PFML_FINEOS_OUTBOUND_PATH", "value": "${pfml_fineos_outbound_path}" },
-      { "name": "FINEOS_VENDOR_MAX_HISTORY_DATE", "value": "${fineos_vendor_max_history_date}" },
-      { "name": "FINEOS_PAYMENT_MAX_HISTORY_DATE", "value": "${fineos_payment_max_history_date}" },
 
-      { "name": "PFML_ERROR_REPORTS_PATH", "value": "${pfml_error_reports_path}" },
-      { "name": "PFML_ERROR_REPORTS_ARCHIVE_PATH", "value": "s3://massgov-pfml-{environment_name}-agency-transfer/error-reports/sent" },
+      { "name": "PFML_FINEOS_EXTRACT_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/cps/extracts" },
+      { "name": "PFML_ERROR_REPORTS_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/reports" },
 
-      { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"},
+      { "name": "DFML_REPORT_OUTBOUND_PATH", "value": "s3://massgov-pfml-${environment_name}-reports/dfml-reports"},
 
-      { "name": "PAYMENT_AUDIT_REPORT_OUTBOUND_FOLDER_PATH", "value":  "payment_audit_report_outbound_folder_path"},
-      { "name": "PAYMENT_AUDIT_REPORT_SENT_FOLDER_PATH", "value":  "payment_audit_report_sent_folder_path"}
+      { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"}
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },

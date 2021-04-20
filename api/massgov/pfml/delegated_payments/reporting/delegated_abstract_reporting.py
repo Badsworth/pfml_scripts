@@ -122,7 +122,7 @@ class ReportGroup:
         except Exception:
             logger.exception("Failed to send email for report %s", report_names)
 
-    def send_reports_to_storage(self, report_file_paths: List[pathlib.Path]) -> List[pathlib.Path]:
+    def send_reports_to_storage(self, report_file_paths: List[pathlib.Path]) -> List[str]:
         if not self.file_config:
             return []
 
@@ -146,20 +146,20 @@ class ReportGroup:
                 try:
                     file_util.upload_to_s3(str(report_file_path), output_path)
                     logger.info("Successfully uploaded report %s to S3", output_path, extra=extra)
-                    output_paths.append(pathlib.Path(output_path))
+                    output_paths.append(output_path)
                 except Exception:
                     logger.exception("Failed to upload report %s to S3", output_path, extra=extra)
             else:
                 try:
                     file_util.copy_file(str(report_file_path), output_path)
                     logger.info("Successfully copied report to %s", output_path, extra=extra)
-                    output_paths.append(pathlib.Path(output_path))
+                    output_paths.append(output_path)
                 except Exception:
                     logger.exception("Failed to copy report to %s", output_path, extra=extra)
 
         return output_paths
 
-    def create_and_send_reports(self) -> List[pathlib.Path]:
+    def create_and_send_reports(self) -> List[str]:
         report_files = []
 
         temp_directory = pathlib.Path(tempfile.mkdtemp())
