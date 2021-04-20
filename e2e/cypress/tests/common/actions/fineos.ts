@@ -721,9 +721,10 @@ export function submitIntermittentActualHours(
     );
     cy.wait("@ajaxRender");
     cy.wait(200);
-    cy.get("input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursStartDate']").type(`{selectall}{backspace}4{enter}`)
+    cy.get("input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursStartDate']").type(`{selectall}{backspace}4`);
+    cy.wait("@ajaxRender");
     cy.wait(200);
-    cy.get("input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursEndDate']").type(`{selectall}{backspace}4{enter}`)
+    cy.get("input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursEndDate']").type(`{selectall}{backspace}4`);
     cy.get("input[type='submit'][value='OK']").click();
   });
   cy.get("#nextPreviousButtons").within(() => {
@@ -731,12 +732,11 @@ export function submitIntermittentActualHours(
   });
   cy.contains("td", "Time off period").click({ force: true });
   cy.wait(1000);
-  cy.get('select[name*="reportedBy"]').select("Employee");
+  cy.get("select[name*='reportedBy']").select("Employee");
   cy.wait(1000);
-  cy.get('select[name*="receivedVia"]').select("Phone");
+  cy.get("select[name*='receivedVia']").select("Phone");
   cy.wait(1000);
-  cy.get('select[name*="managerAccepted"]').select("Yes");
-  cy.get('select[name*="additionalNotes"').type('testing');
+  cy.get("select[name*='managerAccepted']").select("Yes");
   cy.get("input[name*='applyActualTime']").click();
   cy.contains("td", "Time off period").click({ force: true });
   cy.get("#nextPreviousButtons").within(() => {
@@ -921,7 +921,6 @@ export function getIntermittentPaymentAmount(): Cypress.Chainable<string> {
   cy.wait("@ajaxRender");
   onTab("Financials");
   onTab("Payment History");
-  onTab("Payment Made");
   return cy
     .get('#PaymentHistoryDetailsListviewWidget td[id*="PaymentHistoryDetailsListviewWidget_un46_PaymentHistoryDetailsListviewNetPaymentAmount0"]')
     .invoke("text");
