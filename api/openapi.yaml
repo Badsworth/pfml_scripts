@@ -1405,6 +1405,7 @@ components:
               description: Role type to request the user be updated to
               type: string
               enum:
+                - Claimant
                 - Employer
               example: Employer
         user_leave_administrator:

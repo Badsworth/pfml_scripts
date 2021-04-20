@@ -8,6 +8,21 @@ from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Employer, Role, User
 
 
+def get_users_patch_claimant_issues(user: User, employer: Employer) -> List[Issue]:
+    issues = []
+    user_roles = [role.role_id for role in user.roles]
+    if not (Role.EMPLOYER.role_id in user_roles and employer in user.employers):
+        issues.append(
+            Issue(
+                field="user_leave_administrator.employer_fein",
+                message="User is not a Leave Administrator!",
+                type=IssueType.conflicting,
+            )
+        )
+
+    return issues
+
+
 def get_users_patch_employer_issues(user: User, employer: Employer) -> List[Issue]:
     """Validate that the Employer a user is signing up to administer is valid"""
     issues = []

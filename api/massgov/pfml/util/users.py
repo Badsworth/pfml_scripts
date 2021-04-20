@@ -265,3 +265,37 @@ def leave_admin_create(
         raise LeaveAdminCreationError("Unable to create records for user") from exc
 
     return user
+
+
+def leave_admin_remove(
+    db_session: db.Session, user: User, employer: Employer, log_attributes: dict
+) -> User:
+    try:
+        user_leave_admins = (
+            db_session.query(UserLeaveAdministrator)
+            .filter(UserLeaveAdministrator.user_id == user.user_id)
+            .all()
+        )
+        if len(user_leave_admins) == 1:
+            user_role = (
+                db_session.query(Role)
+                .filter(Role.user_id == user.user_id and Role.role_id == Role.EMPLOYER.role_id)
+                .one()
+            )
+            db_session.remove(user_role)
+            db_session.remove(user_leave_admins[0])
+        else:
+            employer_leave_admin = [
+                leave_admin
+                for leave_admin in user_leave_admins
+                if leave_admin.employer_id == employer.employer_id
+            ]
+            db_session.remove(employer_leave_admin)
+
+        db_session.commit()
+        logger.info("Removed a leave admin", extra=log_attributes)
+    except SQLAlchemyError as exc:
+        logger.exception("Unable to create records for user")
+        raise LeaveAdminCreationError("Unable to create records for user") from exc
+
+    return user

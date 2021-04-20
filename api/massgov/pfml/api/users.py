@@ -10,6 +10,7 @@ from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
 from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
 from massgov.pfml.api.services.user_rules import (
+    get_users_patch_claimant_issues,
     get_users_patch_employer_issues,
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
@@ -20,7 +21,7 @@ from massgov.pfml.db.models.employees import Employer, Role, User
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein, sanitize_fein
-from massgov.pfml.util.users import leave_admin_create, register_user
+from massgov.pfml.util.users import leave_admin_create, leave_admin_remove, register_user
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -122,17 +123,18 @@ def users_current_get():
 def users_patch(user_id):
     """This endpoint modifies the user specified by the user_id"""
     body = UserUpdateRequest.parse_obj(connexion.request.json)
-    wants_to_be_employer = (
-        deepgetattr(body, "role.role_description") == Role.EMPLOYER.role_description
-    )
+    new_role = deepgetattr(body, "role.role_description")
+    wants_to_be_employer = new_role == Role.EMPLOYER.role_description
+    wants_to_be_claimant = new_role == "Claimant"
 
     with app.db_session() as db_session:
         updated_user = get_or_404(db_session, User, user_id)
+        employer = None
+        ensure(EDIT, updated_user)
 
         employer_fein = deepgetattr(body, "user_leave_administrator.employer_fein")
-        if wants_to_be_employer and employer_fein:
+        if employer_fein:
             employer_fein = sanitize_fein(employer_fein)
-            # find employer
             employer = (
                 db_session.query(Employer)
                 .filter(Employer.employer_fein == employer_fein)
@@ -153,21 +155,35 @@ def users_patch(user_id):
                     data={},
                 ).to_api_response()
 
-            # verify that we can convert the account
-            employer_issues = get_users_patch_employer_issues(updated_user, employer)
-            if employer_issues:
-                logger.info("users_patch failure - Couldn't convert user to employer account")
-                return response_util.error_response(
-                    status_code=BadRequest,
-                    message="Couldn't convert user to employer account!",
-                    errors=employer_issues,
-                    data={},
-                ).to_api_response()
-            else:
-                updated_user = leave_admin_create(db_session, updated_user, employer, {})
-                db_session.refresh(updated_user)
+            if wants_to_be_employer:
+                # verify that we can convert the account
+                employer_issues = get_users_patch_employer_issues(updated_user, employer)
+                if employer_issues:
+                    logger.info("users_patch failure - Couldn't convert user to employer account")
+                    return response_util.error_response(
+                        status_code=BadRequest,
+                        message="Couldn't convert user to employer account!",
+                        errors=employer_issues,
+                        data={},
+                    ).to_api_response()
+                else:
+                    updated_user = leave_admin_create(db_session, updated_user, employer, {})
+                    db_session.refresh(updated_user)
 
-        ensure(EDIT, updated_user)
+            if wants_to_be_claimant:
+                claimant_issues = get_users_patch_claimant_issues(updated_user, employer)
+                if claimant_issues:
+                    logger.info("users_patch failure - Couldn't convert user to claimant account")
+                    return response_util.error_response(
+                        status_code=BadRequest,
+                        message="Couldn't convert user to claimant account!",
+                        errors=employer_issues,
+                        data={},
+                    ).to_api_response()
+                else:
+                    updated_user = leave_admin_remove(db_session, updated_user, employer, {})
+                    db_session.refresh(updated_user)
+
         for key in body.__fields_set__:
             value = getattr(body, key)
             setattr(updated_user, key, value)
