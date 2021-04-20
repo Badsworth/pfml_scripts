@@ -5,6 +5,7 @@ export const mockRouter = {
   query: {},
   asPath: "",
   push: jest.fn(),
+  replace: jest.fn(),
   events: {
     on: (name, callback) => {
       mockRouterEvents.push({ name, callback });

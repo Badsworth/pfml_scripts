@@ -24,6 +24,11 @@ describe("usePortalFlow", () => {
       expect(mockRouter.push).toHaveBeenCalledWith(expectedRoute);
     });
 
+    it("replaces the current page when redirect option is true", () => {
+      portalFlow.goToPageFor("CREATE_CLAIM", {}, {}, { redirect: true });
+      expect(mockRouter.replace).toHaveBeenCalledWith(expectedRoute);
+    });
+
     describe("when params are passed", () => {
       it("adds params to route", () => {
         const params = { param1: "test" };

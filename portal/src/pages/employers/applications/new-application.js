@@ -12,7 +12,6 @@ import StatusRow from "../../../components/StatusRow";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
-import routes from "../../../../src/routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
@@ -30,9 +29,12 @@ export const NewApplication = (props) => {
   // temporarily allows the redirect behavior to work even
   // if the API has not been updated to populate the field.
   if (claim.is_reviewable === false) {
-    portalFlow.goTo(routes.employers.status, {
-      absence_id: absenceId,
-    });
+    portalFlow.goToPageFor(
+      "CLAIM_NOT_REVIEWABLE",
+      {},
+      { absence_id: absenceId },
+      { redirect: true }
+    );
   }
 
   const handleSubmit = (event) => {
