@@ -53,6 +53,7 @@ from massgov.pfml.payments.manual.payment_voucher_csv import (
     payment_voucher_csv_writer,
     writeback_csv_writer,
 )
+from massgov.pfml.payments.step import Step
 from massgov.pfml.util.sentry import initialize_sentry
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.payments.manual.manual_payment")
@@ -101,6 +102,31 @@ class Configuration:
         self.writeback = args.writeback
 
 
+class PaymentVoucherStep(Step):
+    """Step to run Payment Voucher process."""
+
+    config: Configuration
+
+    def __init__(
+        self,
+        db_session: massgov.pfml.db.Session,
+        log_entry_db_session: massgov.pfml.db.Session,
+        config: Configuration,
+    ) -> None:
+        super().__init__(db_session=db_session, log_entry_db_session=log_entry_db_session)
+        self.config = config
+
+    def run_step(self) -> None:
+        process_extracts_to_payment_voucher(
+            input_path=self.config.input_path,
+            output_path=self.config.output_path,
+            payment_date=self.config.payment_date,
+            writeback=self.config.writeback,
+            db_session=self.db_session,
+            log_entry=self.log_entry,
+        )
+
+
 def main():
     """Main entry point for manual payment voucher tool."""
     initialize_sentry()
@@ -145,7 +171,7 @@ def process_extracts_to_payment_voucher(
     payment_date: Optional[datetime.date],
     writeback: Optional[str],
     db_session: massgov.pfml.db.Session,
-    log_entry: batch_log.LogEntry,
+    log_entry: Optional[batch_log.LogEntry],
 ) -> None:
     """Get FINEOS extract files from input path and write to payment voucher CSV."""
     if payment_date is None:
@@ -231,13 +257,14 @@ def process_payment_records(
     writeback_file: io.TextIOWrapper,
     payment_date: datetime.date,
     db_session: massgov.pfml.db.Session,
-    log_entry: batch_log.LogEntry,
+    log_entry: Optional[batch_log.LogEntry],
 ) -> None:
     """Process the extracted records and write to output CSV."""
     output_csv = payment_voucher_csv_writer(output_file)
     writeback_csv = writeback_csv_writer(writeback_file)
 
-    log_entry.set_metrics(total=len(payment_extract_data.pei.indexed_data))
+    if log_entry is not None:
+        log_entry.set_metrics(total=len(payment_extract_data.pei.indexed_data))
 
     for ci_index, pei_record in massgov.pfml.util.logging.log_every(
         logger,
@@ -277,7 +304,7 @@ def process_payment_record(
     writeback_csv: csv.DictWriter,
     payment_date: datetime.date,
     db_session: massgov.pfml.db.Session,
-    log_entry: batch_log.LogEntry,
+    log_entry: Optional[batch_log.LogEntry],
 ) -> None:
     """Process a single payment record with the given index."""
     extra: Dict[str, Optional[str]] = {}
@@ -300,7 +327,6 @@ def process_payment_record(
             voucher_extract_data,
             payment_date,
             output_csv,
-            log_entry,
             extra,
             db_session,
         )
@@ -308,18 +334,21 @@ def process_payment_record(
 
         logger.info("wrote payment row", extra=extra)
 
-        if voucher_has_errors:
-            log_entry.increment("error")
-        else:
-            log_entry.increment("success")
+        if log_entry is not None:
+            if voucher_has_errors:
+                log_entry.increment("error_count")
+            else:
+                log_entry.increment("success_count")
 
     except PaymentRowError as err:
         logger.warning("Unexpected: %s", err, extra=extra)
-        log_entry.increment("error")
+        if log_entry is not None:
+            log_entry.increment("error_count")
 
     except Exception:
         logger.exception("Unexpected: exception for payment row", extra=extra)
-        log_entry.increment("exception")
+        if log_entry is not None:
+            log_entry.increment("exception_count")
 
 
 def get_employee(tax_identifier: Optional[str], db_session: massgov.pfml.db.Session) -> Employee:
@@ -378,7 +407,6 @@ def write_row_to_output(
     voucher_extract_data: VoucherExtractData,
     payment_date: datetime.date,
     output_csv: csv.DictWriter,
-    log_entry: batch_log.LogEntry,
     extra: Dict[str, Optional[str]],
     db_session: massgov.pfml.db.Session,
 ) -> bool:

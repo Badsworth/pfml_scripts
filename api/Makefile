@@ -155,13 +155,16 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 fineos-payments-mock-generate:
 	mkdir -p mock_fineos_payments_files
 	rm -rf mock_fineos_payments_files/*
-	$(PY_RUN_CMD) fineos-payments-mock-generate --folder mock_fineos_payments_files --fein 102000000 --ssn 252000000
+	$(PY_RUN_CMD) fineos-payments-mock-generate --folder mock_fineos_payments_files --fein 102000000 --ssn 252000000 $(DECODE_LOG)
 
 payments-fineos-process: # Run the Payments FINEOS import process (Just the vendor extract parts for VCC right now)
 	$(PY_RUN_CMD) payments-fineos-process --steps vendor-extract error-report
 
 payments-ctr-process: # Run the Payments Comptroller processes (Just the VCC parts right now)
 	$(PY_RUN_CMD) payments-ctr-process --steps vcc data-mart error-report
+
+payments-payment-voucher-plus:
+	$(PY_RUN_CMD) payments-payment-voucher-plus $(DECODE_LOG)
 
 pub-payments-process-fineos:
 	$(PY_RUN_CMD) pub-payments-process-fineos --steps ALL $(DECODE_LOG)

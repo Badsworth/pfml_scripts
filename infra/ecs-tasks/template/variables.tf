@@ -161,6 +161,12 @@ variable "pfml_error_reports_path" {
   default     = ""
 }
 
+variable "pfml_voucher_output_path" {
+  description = "PFML API stores a copy of all payment vouchers generated"
+  type        = string
+  default     = ""
+}
+
 variable "ctr_moveit_incoming_path" {
   description = "CTR/MMARS generates Outbound Return files for PFML API to pick up (MOVEit folder)"
   type        = string

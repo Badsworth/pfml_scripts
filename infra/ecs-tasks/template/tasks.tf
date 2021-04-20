@@ -304,6 +304,31 @@ locals {
       }
     },
 
+    "payments-payment-voucher-plus" = {
+      command             = ["payments-payment-voucher-plus"]
+      containers_template = "payments_payment_voucher_plus_template.json"
+      task_role           = aws_iam_role.payments_fineos_process_task_role.arn
+      cpu                 = "2048"
+      memory              = "16384"
+      vars = {
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
+
+        fineos_data_export_path  = var.fineos_data_export_path
+        pfml_fineos_inbound_path = var.pfml_fineos_inbound_path
+        pfml_error_reports_path  = var.pfml_error_reports_path
+        pfml_voucher_output_path = var.pfml_voucher_output_path
+
+        fineos_vendor_max_history_date = var.fineos_vendor_max_history_date
+
+        pfml_email_address                     = var.pfml_email_address
+        dfml_business_operations_email_address = var.dfml_business_operations_email_address
+
+        ctr_data_mart_host     = var.ctr_data_mart_host
+        ctr_data_mart_username = var.ctr_data_mart_username
+      }
+    },
+
     "transmogrify-state" = {
       command = ["transmogrify-state"]
     }

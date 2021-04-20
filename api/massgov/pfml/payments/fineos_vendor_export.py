@@ -31,6 +31,7 @@ from massgov.pfml.db.models.employees import (
     State,
     TaxIdentifier,
 )
+from massgov.pfml.payments.step import Step
 
 logger = logging.get_logger(__name__)
 
@@ -92,6 +93,11 @@ class ExtractData:
             reference_file_id=uuid.uuid4(),
         )
         logger.debug("Intialized extract data: %s", self.reference_file.file_location)
+
+
+class VendorExtractStep(Step):
+    def run_step(self) -> None:
+        process_vendor_extract_data(self.db_session)
 
 
 def process_vendor_extract_data(db_session: db.Session) -> None:
