@@ -178,8 +178,8 @@ export function assertClaimApprovableIntermittent(): void {
 }
 
 /**
-* Helper to switch to a particular tab.
-*/
+ * Helper to switch to a particular tab.
+ */
 function onTab(label: string): void {
   cy.contains(".TabStrip td", label).click().should("have.class", "TabOn");
   // Wait on any in-flight Ajax to complete, then add a very slight delay for rendering to occur.
@@ -449,9 +449,13 @@ export function intermittentFillAbsencePeriod(claimNumber: string): void {
   cy.get("#PopupContainer").within(() => {
     cy.get("input[value='Yes']").click();
   });
-  cy.get("input[name*='unspecifiedCertificationEpisodicPeriodDetailsWidget_un99_episodeDuration']").type('{selectall}5{enter}', { force: true });
+  cy.get(
+    "input[name*='unspecifiedCertificationEpisodicPeriodDetailsWidget_un99_episodeDuration']"
+  ).type("{selectall}5{enter}", { force: true });
   wait();
-  cy.get("input[name*='certificationEpisodicLeaveEntitlementWidget_un94_applyChanges']").click();
+  cy.get(
+    "input[name*='certificationEpisodicLeaveEntitlementWidget_un94_applyChanges']"
+  ).click();
   cy.get("#PopupContainer").within(() => {
     cy.get("input[value='Yes']").click();
   });
@@ -520,9 +524,7 @@ export function intermittentClaimAdjudicationFlow(
 }
 
 // This is being used for Sally hours to allow us to see payment being made.
-export function submitIntermittentActualHours(
-  claimNumber: string,
-): void {
+export function submitIntermittentActualHours(claimNumber: string): void {
   cy.get("a[aria-label='Cases']").click();
   cy.get("td[keytipnumber='4']").contains("Case").click();
   cy.labelled("Case Number").type(claimNumber);
@@ -548,8 +550,12 @@ export function submitIntermittentActualHours(
     );
     cy.wait("@ajaxRender");
     cy.wait(200);
-    cy.get("input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursStartDate']").type(`{selectall}{backspace}4`);
-    cy.get("input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursEndDate']").type(`{selectall}{backspace}4`);
+    cy.get(
+      "input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursStartDate']"
+    ).type(`{selectall}{backspace}4`);
+    cy.get(
+      "input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursEndDate']"
+    ).type(`{selectall}{backspace}4`);
     cy.get("input[type='submit'][value='OK']").click();
   });
   cy.get("#nextPreviousButtons").within(() => {
@@ -739,21 +745,10 @@ export function getIntermittentPaymentAmount(): Cypress.Chainable<string> {
   onTab("Financials");
   onTab("Payment History");
   return cy
-    .get('#PaymentHistoryDetailsListviewWidget td[id*="PaymentHistoryDetailsListviewWidget_un46_PaymentHistoryDetailsListviewNetPaymentAmount0"]')
+    .get(
+      '#PaymentHistoryDetailsListviewWidget td[id*="PaymentHistoryDetailsListviewWidget_un46_PaymentHistoryDetailsListviewNetPaymentAmount0"]'
+    )
     .invoke("text");
-}
-
-export function closeReleaseNoticeTask(docType: string): void {
-  onTab("Task");
-  cy.get(`.divListviewGrid .ListTable td[title='Release Notice']`)
-    .should("have.text", "Release Notice")
-    .click();
-  cy.wait("@ajaxRender");
-  cy.get('input[type="submit"][value="Close"]').click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  onTab("Documents");
-  cy.contains("a", docType);
 }
 
 export function triggerNoticeRelease(docType: string): void {
