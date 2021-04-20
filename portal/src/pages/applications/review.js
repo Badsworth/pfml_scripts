@@ -396,6 +396,20 @@ export const Review = (props) => {
           </ReviewRow>
         )}
 
+      {claim.isCaringLeave && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.familyMemberDateOfBirthLabel")}
+        >
+          {formatDateRange(
+            get(
+              claim,
+              "leave_details.caring_leave_metadata.family_member_date_of_birth"
+            )
+          )}
+        </ReviewRow>
+      )}
+
       <ReviewRow
         level={reviewRowLevel}
         label={t("pages.claimsReview.leavePeriodLabel", {

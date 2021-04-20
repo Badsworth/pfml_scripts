@@ -175,6 +175,12 @@ const errors = {
       required: "Enter a last name.",
     },
     leave_details: {
+      caring_leave_metadata: {
+        family_member_date_of_birth: {
+          format: "Date of birth must include a valid month, day, and year.",
+          required: "Enter a date of birth.",
+        },
+      },
       child_birth_date: {
         format: "Date of birth must include a valid month, day, and year.",
         required: "Enter your child’s date of birth or due date.",
@@ -1325,6 +1331,7 @@ const pages = {
     familyLeaveTypeValue_adoption: "Adoption",
     familyLeaveTypeValue_fosterCare: "Foster care",
     familyLeaveTypeValue_newBorn: "Birth",
+    familyMemberDateOfBirthLabel: "Family member's date of birth",
     intermittentFrequencyDurationLabel: "Frequency of intermittent leave",
     intermittentFrequencyDuration_irregularMonths_days:
       "Estimated {{frequency}} absences over the next 6 months, each lasting {{duration}} days.",

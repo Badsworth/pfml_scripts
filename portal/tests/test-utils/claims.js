@@ -136,6 +136,11 @@ export class BaseMockClaimBuilder {
 
   caringLeaveReason() {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.care);
+    set(
+      this.claimAttrs,
+      "leave_details.caring_leave_metadata.family_member_date_of_birth",
+      "****-10-14"
+    );
     return this;
   }
 
