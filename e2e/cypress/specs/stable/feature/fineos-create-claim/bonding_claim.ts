@@ -28,7 +28,12 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
           claim.claim.last_name
         );
         const [startDate, endDate] = extractLeavePeriod(claim.claim);
-        fineos.createNotification(startDate, endDate);
+        fineos.createNotification(
+          startDate,
+          endDate,
+          "bonding claim",
+          claim.claim.hours_worked_per_week ?? 40
+        );
         cy.get("a[name*='CaseMapWidget']")
           .invoke("text")
           .then((text) => {

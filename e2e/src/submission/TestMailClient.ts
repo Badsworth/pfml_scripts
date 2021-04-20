@@ -49,7 +49,7 @@ export default class TestMailClient {
     });
 
     try {
-      const emails = this._getMatchingEmails(client, opts);
+      const emails = await this._getMatchingEmails(client, opts);
       clearTimeout(timeout); // Clear the timeout to avoid hanging processes.
       return emails;
     } catch (e) {

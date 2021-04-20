@@ -43,7 +43,6 @@ describe("Submit a bonding claim and adjudication approval - BHAP1", () => {
     () => {
       cy.dependsOnPreviousPass([submissionTest]);
       fineos.before();
-      cy.wait(1000);
       cy.visit("/");
 
       cy.unstash<Submission>("submission").then((submission) => {

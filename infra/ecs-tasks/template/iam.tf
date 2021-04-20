@@ -749,18 +749,16 @@ resource "aws_iam_role_policy" "pub_payments_process_fineos_task_role_extras" {
 
 data "aws_iam_policy_document" "pub_payments_process_fineos_task_role_extras" {
   statement {
-    sid = "ReadWriteAccessToReportsBucket"
+    sid = "AllowListingOfBucket"
     actions = [
-      "s3:Get*",
-      "s3:List*",
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:AbortMultipartUpload"
+      "s3:ListBucket"
     ]
 
     resources = [
-      "${data.aws_s3_bucket.reports.arn}/audit",
-      "${data.aws_s3_bucket.reports.arn}/audit/*"
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
     ]
 
     effect = "Allow"
@@ -769,6 +767,7 @@ data "aws_iam_policy_document" "pub_payments_process_fineos_task_role_extras" {
   statement {
     sid = "ReadWriteAccessToAgencyTransferBucket"
     actions = [
+      "s3:ListBucket",
       "s3:Get*",
       "s3:List*",
       "s3:PutObject",
@@ -779,12 +778,12 @@ data "aws_iam_policy_document" "pub_payments_process_fineos_task_role_extras" {
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/cps",
       "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/payments",
-      "${data.aws_s3_bucket.agency_transfer.arn}/payments/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit",
-      "${data.aws_s3_bucket.agency_transfer.arn}/audit/*"
+      "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports/*"
     ]
 
     effect = "Allow"
@@ -843,18 +842,16 @@ resource "aws_iam_role_policy" "pub_payments_create_pub_files_task_role_extras" 
 
 data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" {
   statement {
-    sid = "ReadWriteAccessToReportsBucket"
+    sid = "AllowListingOfBucket"
     actions = [
-      "s3:Get*",
-      "s3:List*",
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:AbortMultipartUpload"
+      "s3:ListBucket"
     ]
 
     resources = [
-      "${data.aws_s3_bucket.reports.arn}/audit",
-      "${data.aws_s3_bucket.reports.arn}/audit/*"
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
     ]
 
     effect = "Allow"
@@ -863,6 +860,7 @@ data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" 
   statement {
     sid = "ReadWriteAccessToAgencyTransferBucket"
     actions = [
+      "s3:ListBucket",
       "s3:Get*",
       "s3:List*",
       "s3:PutObject",
@@ -873,14 +871,16 @@ data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" 
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/pub",
       "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/payments",
-      "${data.aws_s3_bucket.agency_transfer.arn}/payments/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/cps",
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*"
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses/*"
     ]
 
     effect = "Allow"
@@ -938,26 +938,24 @@ resource "aws_iam_role_policy" "pub_payments_process_pub_returns_task_role_extra
 
 data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extras" {
   statement {
-    sid = "ReadWriteAccessToReportsBucket"
+    sid = "AllowListingOfBucket"
     actions = [
-      "s3:Get*",
-      "s3:List*",
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:AbortMultipartUpload"
+      "s3:ListBucket"
     ]
 
     resources = [
-      "${data.aws_s3_bucket.reports.arn}/audit",
-      "${data.aws_s3_bucket.reports.arn}/audit/*"
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
     ]
 
     effect = "Allow"
   }
-
   statement {
     sid = "ReadWriteAccessToAgencyTransferBucket"
     actions = [
+      "s3:ListBucket",
       "s3:Get*",
       "s3:List*",
       "s3:PutObject",
@@ -968,10 +966,14 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/pub",
       "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/cps",
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*"
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses/*"
     ]
 
     effect = "Allow"

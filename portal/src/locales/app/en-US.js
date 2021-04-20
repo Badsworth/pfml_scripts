@@ -474,7 +474,7 @@ const errors = {
   employers: {
     ein: {
       employer_verification_data_required:
-        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. <file-a-return-link>Learn more about filing returns and remitting contributions</file-a-return-link>.",
+        "$t(shared.ein.employer_verification_data_required)",
     },
     employer_benefits: {
       benefit_amount_frequency: {
@@ -494,7 +494,7 @@ const errors = {
       duplicate:
         "The employer ID you entered is already associated with your account.",
       employer_verification_data_required:
-        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications.",
+        "$t(shared.ein.employer_verification_data_required)",
       invalid:
         "Enter your 9-digit Employer Identification Number in the correct format.",
     },
@@ -625,6 +625,10 @@ const shared = {
     "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>",
   documentsUploadError:
     "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
+  ein: {
+    employer_verification_data_required:
+      "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. <file-a-return-link>Learn more about filing returns and remitting contributions</file-a-return-link>.",
+  },
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",

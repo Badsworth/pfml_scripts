@@ -40,7 +40,7 @@ class ReportStep(Step):
             logger.info("Start generating %i reports: %s", expected_reports_count, report_names_str)
 
             s3_config = payments_config.get_s3_config()
-            outbound_path = s3_config.pfml_error_reports_path
+            outbound_path = s3_config.dfml_report_outbound_path
             archive_path = s3_config.pfml_error_reports_archive_path
 
             generated_reports: List[str] = []
@@ -55,11 +55,7 @@ class ReportStep(Step):
 
                 try:
                     self.generate_report(
-                        outbound_path,
-                        archive_path,
-                        report.folder_name.value,
-                        report.report_name.value,
-                        report.sql_command,
+                        outbound_path, archive_path, report.report_name.value, report.sql_command,
                     )
                     generated_reports.append(report.report_name.value)
                     self.increment("report_generated_count")
@@ -82,32 +78,29 @@ class ReportStep(Step):
             raise
 
     def generate_report(
-        self,
-        outbound_path: str,
-        archive_path: str,
-        folder_name: str,
-        report_name: str,
-        sql_command: str,
+        self, outbound_path: str, archive_path: str, report_name: str, sql_command: str,
     ) -> None:
         logger.info("Generating report: %s", report_name)
 
         now = payments_util.get_now()
-        date_folder = now.strftime("%Y-%m-%d")
         timestamp_prefix = now.strftime("%Y-%m-%d-%H-%M-%S")
-        file_name = f"{timestamp_prefix}-{report_name}.csv"
+        base_file_name = f"{report_name}.csv"
+        archive_file_name = f"{timestamp_prefix}-{base_file_name}"
 
         temp_directory = pathlib.Path(tempfile.mkdtemp())
-        report_file_path = os.path.join(str(temp_directory), file_name)
+        report_file_path = os.path.join(str(temp_directory), archive_file_name)
 
         execute_sql_statement_file_path(self.db_session, sql_command, report_file_path)
 
-        file_path = os.path.join(outbound_path, folder_name, file_name)
-        archive_file_path = os.path.join(archive_path, folder_name, date_folder, file_name)
+        outbound_file_path = os.path.join(outbound_path, base_file_name)
+        archive_file_path = payments_util.build_archive_path(
+            archive_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, archive_file_name
+        )
 
-        if file_util.is_s3_path(file_path):
-            file_util.upload_to_s3(report_file_path, file_path)
+        if file_util.is_s3_path(outbound_file_path):
+            file_util.upload_to_s3(report_file_path, outbound_file_path)
         else:
-            file_util.copy_file(report_file_path, file_path)
+            file_util.copy_file(report_file_path, outbound_file_path)
 
         if file_util.is_s3_path(archive_file_path):
             file_util.upload_to_s3(report_file_path, archive_file_path)
@@ -122,8 +115,8 @@ class ReportStep(Step):
         self.db_session.add(reference_file)
 
         logger.info(
-            "Done generating report: %s, path: %s, archive path: %s",
+            "Done generating report: %s, outbound path: %s, archive path: %s",
             report_name,
-            file_path,
+            outbound_file_path,
             archive_file_path,
         )

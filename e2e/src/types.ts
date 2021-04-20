@@ -17,11 +17,6 @@ export type LeavePeriods = Pick<
   | "intermittent_leave_periods"
 >;
 
-export type notificationRequest = {
-  notificationType: string;
-  employeeName: string;
-  recipientEmail: string;
-};
 export type Submission = {
   application_id: string;
   fineos_absence_id: string;

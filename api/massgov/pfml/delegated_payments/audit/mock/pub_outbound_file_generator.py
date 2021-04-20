@@ -86,9 +86,8 @@ ach_configs = [
 
 def write_file(folder_path: str, nacha_file: NachaFile) -> None:
     now = payments_util.get_now()
-    payment_return_filename = delegated_payments_util.Constants.PUB_FILENAME_TEMPLATE.format(
-        now.strftime("%Y-%m-%d-%H-%M-%S"), "PUB-NACHA",
-    )
+    timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
+    payment_return_filename = f"{timestamp}-{delegated_payments_util.Constants.FILE_NAME_PUB_NACHA}"
 
     file_content = nacha_file.to_bytes()
 

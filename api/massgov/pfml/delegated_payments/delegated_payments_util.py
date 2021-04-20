@@ -51,9 +51,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
 )
-from massgov.pfml.util.aws.ses import EmailRecipient, send_email
 from massgov.pfml.util.csv import CSVSourceWrapper
-from massgov.pfml.util.files import create_csv_from_list
 
 logger = logging.get_logger(__package__)
 
@@ -65,7 +63,6 @@ class Constants:
     COMPTROLLER_AD_TYPE = "PA"
     DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
 
-    PUB_FILENAME_TEMPLATE = "{}-{}"  # e.g. 2021-08-30-12-00-00-PUB-NACHA
     BATCH_ID_TEMPLATE = COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
     MMARS_FILE_SKIPPED = "Did not create file for MMARS because there was no work to do"
 
@@ -76,6 +73,13 @@ class Constants:
     S3_INBOUND_PROCESSED_DIR = "processed"
     S3_INBOUND_SKIPPED_DIR = "skipped"
     S3_INBOUND_ERROR_DIR = "error"
+
+    FILE_NAME_PUB_NACHA = "PUB-NACHA"
+    FILE_NAME_PUB_EZ_CHECK = "PUB-EZ-CHECK"
+    FILE_NAME_PUB_POSITIVE_PAY = "PUB-POSITIVE-PAY"
+    FILE_NAME_PAYMENT_AUDIT_REPORT = "Payment-Audit-Report"
+
+    NACHA_FILE_FORMAT = f"%Y-%m-%d-%H-%M-%S-{FILE_NAME_PUB_NACHA}"
 
     # When processing payments, certain states
     # are allowed to be restarted (mainly error states)
@@ -178,6 +182,37 @@ def get_now() -> datetime:
     # Note that this uses Eastern time (not UTC)
     tz = pytz.timezone("America/New_York")
     return datetime.now(tz)
+
+
+def build_archive_path(
+    prefix: str, file_status: str, file_name: str, current_time: Optional[datetime] = None
+) -> str:
+    """
+    Construct the path to a file. In the format: prefix / file_status / current_time as date / file_name
+    If no current_time specified, will use get_now() method.
+    For example:
+
+    build_archive_path("s3://bucket/path/archive", Constants.S3_INBOUND_RECEIVED_DIR, "2021-01-01-12-00-00-example-file.csv", datetime.datetime(2021, 1, 1, 12, 0, 0))
+    produces
+    "s3://bucket/path/archive/received/2021-01-01/2021-01-01-12-00-00-example-file.csv"
+
+    Parameters
+    -----------
+    prefix: str
+      The beginning of the path, likely based on a s3 path configured by an env var
+    file_status: str
+      The state the file is in, should be one of constants defined above that start with S3_INBOUND or S3_OUTBOUND
+    file_name: str
+      name of the file - will not be modified
+    current_time: Optional[datetime]
+      An optional datetime for use in the path, will be formatted as %Y-%m-%d
+    """
+
+    if not current_time:
+        current_time = get_now()
+
+    date_folder = current_time.strftime("%Y-%m-%d")
+    return os.path.join(prefix, file_status, date_folder, file_name)
 
 
 def lookup_validator(
@@ -497,13 +532,13 @@ def payment_extract_reference_file_exists_by_date_group(
     db_session: db.Session, date_group: str, export_type: LkReferenceFileType
 ) -> bool:
     processed_path = os.path.join(
-        payments_config.get_s3_config().pfml_fineos_inbound_path,
+        payments_config.get_s3_config().pfml_fineos_extract_archive_path,
         Constants.S3_INBOUND_PROCESSED_DIR,
         get_date_group_folder_name(date_group, export_type),
     )
 
     skipped_path = os.path.join(
-        payments_config.get_s3_config().pfml_fineos_inbound_path,
+        payments_config.get_s3_config().pfml_fineos_extract_archive_path,
         Constants.S3_INBOUND_SKIPPED_DIR,
         get_date_group_folder_name(date_group, export_type),
     )
@@ -536,13 +571,13 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         export_type.reference_file_type_id
         == ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id
     ):
-        datestring = date_config.fineos_vendor_max_history_date
+        datestring = date_config.fineos_claimant_extract_max_history_date
 
     elif (
         export_type.reference_file_type_id
         == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
     ):
-        datestring = date_config.fineos_payment_max_history_date
+        datestring = date_config.fineos_payment_extract_max_history_date
 
     else:
         raise ValueError(f"Incorrect export_type {export_type} provided")
@@ -558,7 +593,7 @@ def copy_fineos_data_to_archival_bucket(
     s3_config = payments_config.get_s3_config()
     source_folder = s3_config.fineos_data_export_path
     destination_folder = os.path.join(
-        s3_config.pfml_fineos_inbound_path, Constants.S3_INBOUND_RECEIVED_DIR
+        s3_config.pfml_fineos_extract_archive_path, Constants.S3_INBOUND_RECEIVED_DIR
     )
 
     # If get_fineos_max_history_date() raises a ValueError, we have
@@ -720,13 +755,12 @@ def copy_fineos_data_to_archival_bucket(
     return copied_file_mapping_by_date
 
 
-# TODO adjust tests and replace with new version
 def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str]]:
     s3_config = payments_config.get_s3_config()
     source_folder = os.path.join(
-        s3_config.pfml_fineos_inbound_path, Constants.S3_INBOUND_RECEIVED_DIR
+        s3_config.pfml_fineos_extract_archive_path, Constants.S3_INBOUND_RECEIVED_DIR
     )
-    logger.debug("Grouping files by date in path: %s", source_folder)
+    logger.info("Grouping files by date in path: %s", source_folder)
 
     s3_objects = file_util.list_files(source_folder)
     s3_objects.sort()
@@ -744,25 +778,6 @@ def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str
                 date_to_full_path[fixed_date_str].append(full_path)
 
     return date_to_full_path
-
-
-def create_pub_reference_file(
-    now: datetime, file_type: LkReferenceFileType, db_session: db.Session, pub_outbound_path: str
-) -> ReferenceFile:
-    s3_path = os.path.join(pub_outbound_path, Constants.S3_OUTBOUND_READY_DIR)
-    filename = Constants.PUB_FILENAME_TEMPLATE.format(
-        now.strftime("%Y-%m-%d-%H-%M-%S"), file_type.reference_file_type_description,
-    )
-    dir_path = os.path.join(s3_path, filename)
-
-    ref_file = ReferenceFile(
-        reference_file_id=uuid.uuid4(),
-        file_location=dir_path,
-        reference_file_type_id=file_type.reference_file_type_id,
-    )
-    db_session.add(ref_file)
-
-    return ref_file
 
 
 def create_mmars_files_in_s3(
@@ -930,32 +945,6 @@ def get_inf_data_as_plain_text(inf_data: Dict) -> str:
     return text
 
 
-def email_inf_data(
-    ref_file: ReferenceFile, db_session: db.Session, recipient: EmailRecipient, subject: str
-) -> None:
-
-    inf_data = get_inf_data_from_reference_file(ref_file, db_session)
-
-    if inf_data is None:
-        logger.error(
-            "Could not find INF data for reference file",
-            extra={"reference_file_id": ref_file.reference_file_id},
-        )
-        return
-
-    payment_config = payments_config.get_email_config()
-    sender = payment_config.pfml_email_address
-    data = get_inf_data_as_plain_text(inf_data)
-    bounce_forwarding_email_address_arn = payment_config.bounce_forwarding_email_address_arn
-    send_email(
-        recipient=recipient,
-        subject=subject,
-        body_text=data,
-        sender=sender,
-        bounce_forwarding_email_address_arn=bounce_forwarding_email_address_arn,
-    )
-
-
 def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
     """Given a string from a Vendor Extract, return a LkClaimType
 
@@ -968,40 +957,6 @@ def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
         return ClaimType.MEDICAL_LEAVE
     else:
         raise ValueError("Unknown claim type")
-
-
-def email_fineos_vendor_customer_numbers(
-    ref_file: ReferenceFile, db_session: db.Session, recipient: EmailRecipient, subject: str
-) -> None:
-
-    inf_data = get_inf_data_from_reference_file(ref_file, db_session)
-
-    if inf_data is None:
-        logger.error(
-            "Could not find INF data for reference file",
-            extra={"reference_file_id": ref_file.reference_file_id},
-        )
-        return
-
-    payment_config = payments_config.get_email_config()
-    body_text = get_inf_data_as_plain_text(inf_data)
-
-    fineos_vendor_customer_numbers = get_fineos_vendor_customer_numbers_from_reference_file(
-        ref_file
-    )
-    fieldnames = ["fineos_customer_number", "ctr_vendor_customer_code"]
-    file_name = f"{get_now():%Y-%m-%d}-VCC-BIEVNT-supplement"
-
-    csv_data_path = [create_csv_from_list(fineos_vendor_customer_numbers, fieldnames, file_name)]
-
-    send_email(
-        recipient,
-        subject,
-        body_text,
-        payment_config.pfml_email_address,
-        payment_config.bounce_forwarding_email_address_arn,
-        csv_data_path,
-    )
 
 
 def get_fineos_vendor_customer_numbers_from_reference_file(reference: ReferenceFile) -> List[Dict]:

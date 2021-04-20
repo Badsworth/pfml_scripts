@@ -60,7 +60,9 @@ def test_write_audit_report(tmp_path, test_db_session, initialize_factories_sess
 
     # Report is created
     expected_output_folder = os.path.join(
-        str(tmp_path), payments_util.get_now().strftime("%Y-%m-%d")
+        str(tmp_path),
+        payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+        payments_util.get_now().strftime("%Y-%m-%d"),
     )
     files = file_util.list_files(expected_output_folder)
     assert len(files) == 1
@@ -156,15 +158,11 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
 def test_generate_audit_report(test_db_session, payment_audit_report_step, monkeypatch):
     # setup folder path configs
-    payment_audit_report_outbound_folder_path = str(tempfile.mkdtemp())
-    payment_audit_report_sent_folder_path = str(tempfile.mkdtemp())
+    archive_folder_path = str(tempfile.mkdtemp())
+    outgoing_folder_path = str(tempfile.mkdtemp())
 
-    monkeypatch.setenv(
-        "PAYMENT_AUDIT_REPORT_OUTBOUND_FOLDER_PATH", payment_audit_report_outbound_folder_path
-    )
-    monkeypatch.setenv(
-        "PAYMENT_AUDIT_REPORT_SENT_FOLDER_PATH", payment_audit_report_sent_folder_path
-    )
+    monkeypatch.setenv("PFML_ERROR_REPORTS_ARCHIVE_PATH", archive_folder_path)
+    monkeypatch.setenv("DFML_REPORT_OUTBOUND_PATH", outgoing_folder_path)
 
     date_folder = "2021-01-15"
     timestamp_file_prefix = "2021-01-15-12-00-00"
@@ -186,14 +184,14 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
     assert len(sampled_state_logs) == len(DEFAULT_AUDIT_SCENARIO_DATA_SET)
 
     # check that audit report file was generated in outbound folder with correct number of rows
-    expected_audit_report_outbound_folder_path = os.path.join(
-        payment_audit_report_outbound_folder_path, date_folder
+    expected_audit_report_archive_folder_path = os.path.join(
+        archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, date_folder
     )
     payment_audit_report_file_name = f"{timestamp_file_prefix}-Payment-Audit-Report.csv"
-    assert_files(expected_audit_report_outbound_folder_path, [payment_audit_report_file_name])
+    assert_files(expected_audit_report_archive_folder_path, [payment_audit_report_file_name])
 
     audit_report_file_path = os.path.join(
-        expected_audit_report_outbound_folder_path, payment_audit_report_file_name
+        expected_audit_report_archive_folder_path, payment_audit_report_file_name
     )
     payment_audit_report_file_content = file_util.read_file(audit_report_file_path)
     payment_audit_report_file_line_count = payment_audit_report_file_content.count("\n")
@@ -212,19 +210,15 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
 
         index += 1
 
-    # check that audit report file was generated in sent folder
-    expected_audit_report_sent_folder_path = os.path.join(
-        payment_audit_report_sent_folder_path, date_folder
-    )
-    assert_files(expected_audit_report_sent_folder_path, [payment_audit_report_file_name])
-
-    # check reference file created for sent folder file
+    # check reference file created for archive folder file
     assert (
         test_db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.file_location
             == str(
-                os.path.join(expected_audit_report_sent_folder_path, payment_audit_report_file_name)
+                os.path.join(
+                    expected_audit_report_archive_folder_path, payment_audit_report_file_name
+                )
             ),
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.DELEGATED_PAYMENT_AUDIT_REPORT.reference_file_type_id,
@@ -232,6 +226,9 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
         .one_or_none()
         is not None
     )
+
+    # check that audit report file was generated in outgoing folder without any timestamps in path/name
+    assert_files(outgoing_folder_path, ["Payment-Audit-Report.csv"])
 
 
 # Assertion helpers
