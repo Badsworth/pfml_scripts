@@ -20,7 +20,13 @@ export default {
         CREATE_ACCOUNT: routes.auth.verifyAccount,
       },
     },
-    [routes.employers.dashboard]: {},
+    [routes.employers.dashboard]: {
+      on: {
+        // New Application page handles conditional routing for claims, because the logic
+        // is dependent on fetching additional claim data from Fineos first
+        VIEW_CLAIM: routes.employers.newApplication,
+      },
+    },
     [routes.employers.finishAccountSetup]: {
       on: {
         SEND_CODE: routes.auth.resetPassword,
@@ -31,9 +37,11 @@ export default {
         CONTINUE: routes.employers.success,
       },
     },
+    [routes.employers.status]: {},
     [routes.employers.success]: {},
     [routes.employers.newApplication]: {
       on: {
+        CLAIM_NOT_REVIEWABLE: routes.employers.status,
         CONFIRMATION: routes.employers.confirmation,
         CONTINUE: routes.employers.review,
       },

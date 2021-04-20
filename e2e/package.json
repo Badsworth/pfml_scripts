@@ -7,6 +7,7 @@
     "cypress": "cypress",
     "cypress:open": "cypress open",
     "cypress:open:local": "E2E_ENVIRONMENT=local cypress open",
+    "cypress:open:local:portal": "E2E_ENVIRONMENT=local cypress open --config integrationFolder=cypress/specs/stable/scenario",
     "cypress:run": "cypress run",
     "lint": "npm run lint:js -- --fix && npm run lint:ts",
     "lint:ci": "npm run lint:js && npm run lint:ts",

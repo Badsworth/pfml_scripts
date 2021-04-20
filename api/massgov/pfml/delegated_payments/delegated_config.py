@@ -75,8 +75,6 @@ class PaymentsS3Config(PydanticBaseSettings):
 
     payment_rejects_received_folder_path: str
     payment_rejects_processed_folder_path: str
-    payment_rejects_report_outbound_folder: str
-    payment_rejects_report_sent_folder_path: str
 
 
 def get_s3_config() -> PaymentsS3Config:

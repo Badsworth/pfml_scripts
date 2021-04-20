@@ -68,7 +68,7 @@ describe("NewApplication", () => {
   });
 
   it("does not redirect if is_reviewable is true", () => {
-    expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+    expect(appLogic.portalFlow.goToPageFor).not.toHaveBeenCalled();
   });
 
   it("redirects to the status page if is_reviewable is false", () => {
@@ -82,11 +82,13 @@ describe("NewApplication", () => {
       },
     }));
 
-    expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-      "/employers/applications/status",
+    expect(appLogic.portalFlow.goToPageFor).toHaveBeenCalledWith(
+      "CLAIM_NOT_REVIEWABLE",
+      {},
       {
         absence_id: "mock-absence-id",
-      }
+      },
+      { redirect: true }
     );
   });
 
