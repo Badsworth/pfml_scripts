@@ -210,7 +210,7 @@ variable "ctr_data_mart_username" {
 }
 
 variable "enable_recurring_payments_schedule" {
-  description = "Enable scheduling for payments-ctr-process and payments-fineos-process ECS tasks"
+  description = "Enable scheduling for payments-payment-voucher-plus ECS task"
   type        = bool
   default     = false
 }

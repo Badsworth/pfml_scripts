@@ -58,41 +58,22 @@ module "register_leave_admins_with_fineos_scheduler" {
   ecs_task_role              = aws_iam_role.register_admins_task_role.arn
 }
 
-# Run payments-ctr-process daily at 9am EST (10am EDT) (2pm UTC)
-module "payments_ctr_process_scheduler" {
-  source     = "../../modules/ecs_task_scheduler"
-  is_enabled = var.enable_recurring_payments_schedule
-
-  task_name           = "payments-ctr-process"
-  schedule_expression = "cron(0 14 * * ? *)"
-  environment_name    = var.environment_name
-
-  cluster_arn        = data.aws_ecs_cluster.cluster.arn
-  app_subnet_ids     = var.app_subnet_ids
-  security_group_ids = [aws_security_group.tasks.id]
-
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["payments-ctr-process"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["payments-ctr-process"].family
-  ecs_task_executor_role     = aws_iam_role.task_executor.arn
-  ecs_task_role              = aws_iam_role.payments_ctr_process_task_role.arn
-}
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Run payments-fineos-process daily at 8pm EST (9pm EDT) (1am UTC)
-module "payments_fineos_process_scheduler" {
+# Run payments-payment-voucher-plus at 12am EST (1am EDT) (5am UTC)
+module "payments_payment_voucher_plus_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_recurring_payments_schedule
 
-  task_name           = "payments-fineos-process"
-  schedule_expression = "cron(0 1 * * ? *)"
+  task_name           = "payments-payment-voucher-plus"
+  schedule_expression = "cron(0 5 ? * MON-FRI *)"
   environment_name    = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
   app_subnet_ids     = var.app_subnet_ids
   security_group_ids = [aws_security_group.tasks.id]
 
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["payments-fineos-process"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["payments-fineos-process"].family
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["payments-payment-voucher-plus"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["payments-payment-voucher-plus"].family
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
   ecs_task_role              = aws_iam_role.payments_fineos_process_task_role.arn
 }
