@@ -1,7 +1,7 @@
 import secrets
 import string
 import time
-from typing import Optional, Union
+from typing import Dict, Optional, Tuple, Union
 
 import boto3
 import botocore
@@ -9,8 +9,8 @@ import botocore
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
 from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.cognito_post_confirmation_lambda.lib import leave_admin_create
-from massgov.pfml.db.models.employees import User
+from massgov.pfml.db.models.employees import Employer
+from massgov.pfml.util.employers import lookup_employer
 
 ACTIVE_DIRECTORY_ATTRIBUTE = "sub"
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -133,13 +133,13 @@ def lookup_cognito_account_id(
     return None
 
 
-def create_verified_cognito_leave_admin_account(
+def create_verified_cognito_account(
     db_session: db.Session,
     email: str,
     fein: str,
     cognito_user_pool_id: str,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
-) -> User:
+) -> Tuple[str, str, Optional[Employer], Dict[str, str]]:
     """Create Cognito and API records for a leave admin with a verified email and temporary password"""
 
     active_directory_id: Optional[str] = None
@@ -181,7 +181,8 @@ def create_verified_cognito_leave_admin_account(
     log_attributes = {
         "auth_id": active_directory_id,
     }
-    return leave_admin_create(db_session, active_directory_id, email, fein, log_attributes)
+    employer = lookup_employer(db_session=db_session, employer_fein=fein)
+    return active_directory_id, email, employer, log_attributes
 
 
 def create_cognito_account(

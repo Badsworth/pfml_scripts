@@ -6,7 +6,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import MultipleResultsFound
 
 import massgov.pfml.api.app as app
-import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
 from massgov.pfml.api.services.administrator_fineos_actions import (
@@ -20,7 +19,7 @@ from massgov.pfml.util.aws.cognito import (
     CognitoPasswordSetFailure,
     CognitoUserExistsValidationError,
     create_cognito_account,
-    create_verified_cognito_leave_admin_account,
+    create_verified_cognito_account,
     lookup_cognito_account_id,
 )
 from massgov.pfml.util.employers import lookup_employer
@@ -171,10 +170,13 @@ def register_or_update_leave_admin(
             logger.debug("Existing PFML user found", extra={"user_id": user.user_id})
         else:
             try:
-                user = lib.leave_admin_create(
-                    db_session, existing_cognito_id, email, fein, {"auth_id": existing_cognito_id}
+                user = leave_admin_create(
+                    db_session,
+                    User(active_directory_id=existing_cognito_id, email_address=email),
+                    requested_employer,
+                    {"auth_id": existing_cognito_id},
                 )
-            except lib.LeaveAdminCreationError:
+            except LeaveAdminCreationError:
                 return False, "Unable to create database records for user"
         if not user.roles:
             try:
@@ -188,14 +190,22 @@ def register_or_update_leave_admin(
     else:
         logger.debug("Creating new Cognito user", extra={"email": email})
         try:
-            user = create_verified_cognito_leave_admin_account(
+            auth_id, email, employer, log_attributes = create_verified_cognito_account(
                 db_session=db_session,
                 email=email,
                 fein=fein,
                 cognito_user_pool_id=cognito_pool_id,
                 cognito_client=cognito_client,
             )
-        except lib.LeaveAdminCreationError:
+            if employer is None:
+                raise ValueError("Invalid employer_fein")
+            user = leave_admin_create(
+                db_session,
+                User(active_directory_id=auth_id, email_address=email),
+                employer,
+                log_attributes,
+            )
+        except LeaveAdminCreationError:
             return False, "Unable to create records for user"
         except CognitoAccountCreationFailure:
             return False, "Unable to create Cognito account for user"
@@ -233,3 +243,25 @@ def register_or_update_leave_admin(
         else:
             return True, "Successed!"
     return False, "Unable to register user in FINEOS"
+
+
+class LeaveAdminCreationError(SQLAlchemyError):
+    pass
+
+
+def leave_admin_create(
+    db_session: db.Session, user: User, employer: Employer, log_attributes: dict
+) -> User:
+    user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
+    user_leave_admin = UserLeaveAdministrator(user=user, employer=employer, fineos_web_id=None,)
+    try:
+        db_session.add(user)
+        db_session.add(user_role)
+        db_session.add(user_leave_admin)
+        db_session.commit()
+        logger.info("Created a leave admin", extra=log_attributes)
+    except SQLAlchemyError as exc:
+        logger.exception("Unable to create records for user")
+        raise LeaveAdminCreationError("Unable to create records for user") from exc
+
+    return user
