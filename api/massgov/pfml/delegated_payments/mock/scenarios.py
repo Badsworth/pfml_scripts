@@ -12,6 +12,8 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     PaymentTransactionType,
 )
+from massgov.pfml.delegated_payments.delegated_payments_nacha import NachaBatchType
+from massgov.pfml.delegated_payments.util.ach.nacha import Constants
 
 
 class ScenarioName(Enum):
@@ -60,11 +62,12 @@ class ScenarioDescriptor:
 
     leave_request_decision: str = "Approved"
 
-    should_skip: bool = False
-    should_error: bool = False
-    no_response: bool = False
-    return_type: str = ""
-    reason_code: str = ""
+    eft_returns_should_skip: bool = False
+    eft_returns_should_error: bool = False
+    eft_returns_no_response: bool = False
+    eft_returns_return_type: str = Constants.addendum_return_types[0]
+    eft_returns_reason_code: str = Constants.addendum_return_reason_codes[0]
+    eft_return_batch_type: NachaBatchType = NachaBatchType.MEDICAL_LEAVE
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [

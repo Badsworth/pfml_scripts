@@ -83,11 +83,11 @@ def generate_pub_return_prenote(
             db_session=db_session,
         )
 
-        skip = scenario_descriptor.should_skip
+        skip = scenario_descriptor.eft_returns_should_skip
 
         # If there should be a response, add it to the NACHA file.
         if not skip:
-            if not scenario_descriptor.no_response:
+            if not scenario_descriptor.eft_returns_no_response:
                 entry = NachaEntry(
                     trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
                     receiving_dfi_id=payment.pub_eft.routing_nbr,
@@ -98,15 +98,15 @@ def generate_pub_return_prenote(
                 )
 
                 addendum = NachaAddendumResponse(
-                    return_reason_code=scenario_descriptor.reason_code,
+                    return_reason_code=scenario_descriptor.eft_returns_reason_code,
                     date_of_death=employee.date_of_death,
-                    return_type=scenario_descriptor.return_type,
+                    return_type=scenario_descriptor.eft_returns_return_type,
                 )
 
                 nacha_batch.add_entry(entry, addendum)
 
             # If error, set a bad amount
-            if scenario_descriptor.should_error:
+            if scenario_descriptor.eft_returns_should_error:
                 entry = NachaEntry(
                     trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
                     receiving_dfi_id=payment.pub_eft.routing_nbr,
@@ -117,9 +117,9 @@ def generate_pub_return_prenote(
                 )
 
                 addendum = NachaAddendumResponse(
-                    return_reason_code=scenario_descriptor.reason_code,
+                    return_reason_code=scenario_descriptor.eft_returns_reason_code,
                     date_of_death=employee.date_of_death,
-                    return_type=scenario_descriptor.return_type,
+                    return_type=scenario_descriptor.eft_returns_return_type,
                 )
 
                 nacha_batch.add_entry(entry, addendum)
@@ -131,12 +131,13 @@ def generate_pub_return_ach(
     db_session: db.Session, scenario_dataset: List[ScenarioData], folder_path: str,
 ) -> None:
     nacha_file = NachaFile()
-    nacha_batch = create_nacha_batch(NachaBatchType.MEDICAL_LEAVE)
-
-    nacha_file.add_batch(nacha_batch)
 
     for scenario_data in scenario_dataset:
         scenario_descriptor = scenario_data.scenario_descriptor
+
+        nacha_batch = create_nacha_batch(scenario_descriptor.eft_return_batch_type)
+        nacha_file.add_batch(nacha_batch)
+
         payment = scenario_data.payment
         employee = scenario_data.employee
 
@@ -151,10 +152,10 @@ def generate_pub_return_ach(
             db_session=db_session,
         )
 
-        skip = scenario_descriptor.should_skip
+        skip = scenario_descriptor.eft_returns_should_skip
 
         if not skip:
-            if not scenario_descriptor.no_response:
+            if not scenario_descriptor.eft_returns_no_response:
                 entry = NachaEntry(
                     trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
                     receiving_dfi_id=payment.pub_eft.routing_nbr,
@@ -165,14 +166,14 @@ def generate_pub_return_ach(
                 )
 
                 addendum = NachaAddendumResponse(
-                    return_reason_code=scenario_descriptor.reason_code,
+                    return_reason_code=scenario_descriptor.eft_returns_reason_code,
                     date_of_death=employee.date_of_death,
-                    return_type=scenario_descriptor.return_type,
+                    return_type=scenario_descriptor.eft_returns_return_type,
                 )
 
                 nacha_batch.add_entry(entry, addendum)
 
-            if scenario_descriptor.should_error:
+            if scenario_descriptor.eft_returns_should_error:
                 entry = NachaEntry(
                     trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
                     receiving_dfi_id=payment.pub_eft.routing_nbr,
@@ -183,9 +184,9 @@ def generate_pub_return_ach(
                 )
 
                 addendum = NachaAddendumResponse(
-                    return_reason_code=scenario_descriptor.reason_code,
+                    return_reason_code=scenario_descriptor.eft_returns_reason_code,
                     date_of_death=employee.date_of_death,
-                    return_type=scenario_descriptor.return_type,
+                    return_type=scenario_descriptor.eft_returns_return_type,
                 )
 
                 nacha_batch.add_entry(entry, addendum)
