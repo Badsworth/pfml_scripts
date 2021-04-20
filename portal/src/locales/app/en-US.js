@@ -180,6 +180,12 @@ const errors = {
           format: "Date of birth must include a valid month, day, and year.",
           required: "Enter a date of birth.",
         },
+        family_member_first_name: {
+          required: "Enter a family member's first name.",
+        },
+        family_member_last_name: {
+          required: "Enter a family member's last name.",
+        },
       },
       child_birth_date: {
         format: "Date of birth must include a valid month, day, and year.",
@@ -1332,6 +1338,7 @@ const pages = {
     familyLeaveTypeValue_fosterCare: "Foster care",
     familyLeaveTypeValue_newBorn: "Birth",
     familyMemberDateOfBirthLabel: "Family member's date of birth",
+    familyMemberNameLabel: "Family member's name",
     intermittentFrequencyDurationLabel: "Frequency of intermittent leave",
     intermittentFrequencyDuration_irregularMonths_days:
       "Estimated {{frequency}} absences over the next 6 months, each lasting {{duration}} days.",

@@ -426,6 +426,12 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
     Caring leave
   </ReviewRow>
   <ReviewRow
+    label="Family member's name"
+    level="4"
+  >
+    Luther James Toggle
+  </ReviewRow>
+  <ReviewRow
     label="Family member's date of birth"
     level="4"
   >
