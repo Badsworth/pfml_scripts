@@ -1,4 +1,4 @@
-import { format, addMonths, addDays } from "date-fns";
+import { format, addMonths, addDays, startOfWeek, subDays } from "date-fns";
 
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
@@ -158,7 +158,6 @@ export function assertClaimApprovableIntermittent(): void {
     "have.text",
     "Satisfied"
   );
-
   cy.get(
     "[id*='leavePlanAdjudicationListviewWidgetAvailabilityStatus']"
   ).should("have.text", "As Certified");
@@ -178,14 +177,9 @@ export function assertClaimApprovableIntermittent(): void {
   cy.contains(".menulink a", "Approve").should("be.visible");
 }
 
-export function searchScenario(claimNumber: string): void {
-  cy.get('a[aria-label="Cases"]').click();
-  cy.get('td[keytipnumber="4"]').contains("Case").click();
-  cy.labelled("Case Number").type(claimNumber);
-  cy.get('input[type="submit"][value="Search"]').click();
 /**
- * Helper to switch to a particular tab.
- */
+* Helper to switch to a particular tab.
+*/
 function onTab(label: string): void {
   cy.contains(".TabStrip td", label).click().should("have.class", "TabOn");
   // Wait on any in-flight Ajax to complete, then add a very slight delay for rendering to occur.
@@ -455,8 +449,8 @@ export function intermittentFillAbsencePeriod(claimNumber: string): void {
   cy.get("#PopupContainer").within(() => {
     cy.get("input[value='Yes']").click();
   });
-  cy.get('input[name*="unspecifiedCertificationEpisodicPeriodDetailsWidget_un99_episodeDuration"]').type('{selectall}5{enter}', { force: true });
-  cy.wait(1000);
+  cy.get("input[name*='unspecifiedCertificationEpisodicPeriodDetailsWidget_un99_episodeDuration']").type('{selectall}5{enter}', { force: true });
+  wait();
   cy.get("input[name*='certificationEpisodicLeaveEntitlementWidget_un94_applyChanges']").click();
   cy.get("#PopupContainer").within(() => {
     cy.get("input[value='Yes']").click();
@@ -511,7 +505,7 @@ export function intermittentClaimAdjudicationFlow(
   intermittentFillAbsencePeriod(claimNumber);
   onTab("Manage Request");
   cy.wait(500);
-  cy.get('input[type="submit"][value="Accept"]').click();
+  cy.get("input[type='submit'][value='Accept']").click();
   cy.wait(500);
   checkStatus(claimNumber, "Availability", "As Certified");
   // Complete Adjudication
@@ -522,20 +516,20 @@ export function intermittentClaimAdjudicationFlow(
   if (ERresponse) {
     approveClaim();
   }
-  cy.wait(2000);
+  wait();
 }
 
 // This is being used for Sally hours to allow us to see payment being made.
 export function submitIntermittentActualHours(
   claimNumber: string,
 ): void {
-  cy.get('a[aria-label="Cases"]').click();
-  cy.get('td[keytipnumber="4"]').contains("Case").click();
+  cy.get("a[aria-label='Cases']").click();
+  cy.get("td[keytipnumber='4']").contains("Case").click();
   cy.labelled("Case Number").type(claimNumber);
   cy.labelled("Case Type").select("Absence Case");
-  cy.get('input[type="submit"][value="Search"]').click();
+  cy.get("input[type='submit'][value='Search']").click();
   cy.contains("span[class='LinkText']", "Record Actual").click({ force: true });
-  cy.wait(1000);
+  wait();
   cy.contains("tbody", "Episodic").click();
   cy.contains("input", "Record Actual").click();
   cy.get(".popup-container").within(() => {
@@ -555,25 +549,23 @@ export function submitIntermittentActualHours(
     cy.wait("@ajaxRender");
     cy.wait(200);
     cy.get("input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursStartDate']").type(`{selectall}{backspace}4`);
-    cy.wait("@ajaxRender");
-    cy.wait(200);
     cy.get("input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursEndDate']").type(`{selectall}{backspace}4`);
     cy.get("input[type='submit'][value='OK']").click();
   });
   cy.get("#nextPreviousButtons").within(() => {
-    cy.get(`input[value*="Next "]`).click({ force: true });
+    cy.get("input[value*='Next ']").click({ force: true });
   });
   cy.contains("td", "Time off period").click({ force: true });
-  cy.wait(1000);
+  wait();
   cy.get("select[name*='reportedBy']").select("Employee");
-  cy.wait(1000);
+  wait();
   cy.get("select[name*='receivedVia']").select("Phone");
-  cy.wait(1000);
+  wait();
   cy.get("select[name*='managerAccepted']").select("Yes");
   cy.get("input[name*='applyActualTime']").click();
   cy.contains("td", "Time off period").click({ force: true });
   cy.get("#nextPreviousButtons").within(() => {
-    cy.get(`input[value*="Next "]`).click({ force: true });
+    cy.get("input[value*='Next ']").click({ force: true });
   });
 }
 
@@ -743,35 +735,12 @@ export function getPaymentAmount(): Cypress.Chainable<string> {
 
 export function getIntermittentPaymentAmount(): Cypress.Chainable<string> {
   cy.contains("Absence Paid Leave Case").click();
-  cy.wait("@ajaxRender");
+  wait();
   onTab("Financials");
   onTab("Payment History");
   return cy
     .get('#PaymentHistoryDetailsListviewWidget td[id*="PaymentHistoryDetailsListviewWidget_un46_PaymentHistoryDetailsListviewNetPaymentAmount0"]')
     .invoke("text");
-}
-
-export function modifyDates(submission: Submission): void {
-  visitClaim(submission.fineos_absence_id);
-  cy.get('.date-wrapper span[id*="leaveStartDate"]')
-    .invoke("text")
-    .as("previousStartDate");
-
-  cy.get("input[type='submit'][value='Adjudicate']").click();
-  cy.get<string>("@previousStartDate").then((dateString) => {
-    const newStartDate = subDays(new Date(dateString), 1);
-    changeLeaveStart(newStartDate);
-    cy.wrap(newStartDate).as("newStartDate");
-  });
-
-  clickBottomWidgetButton("OK");
-  cy.get<Date>("@newStartDate").then((date) => {
-    cy.get('.date-wrapper span[id*="leaveStartDate"]').should(
-      "have.text",
-      format(date, "MM/dd/yyyy")
-    );
-  });
-  cy.wait(2000);
 }
 
 export function closeReleaseNoticeTask(docType: string): void {
