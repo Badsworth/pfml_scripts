@@ -2000,6 +2000,7 @@ class ReferenceFileType(LookupTable):
     )
     PUB_NACHA = LkReferenceFileType(15, "PUB NACHA file", 1)
     PUB_ACH_RETURN = LkReferenceFileType(16, "PUB ACH Return", 1)
+    PUB_CHECK_RETURN = LkReferenceFileType(17, "PUB Check Return", 1)
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)

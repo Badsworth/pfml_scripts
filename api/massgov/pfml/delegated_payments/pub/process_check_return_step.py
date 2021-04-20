@@ -44,7 +44,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         self.reference_file = ReferenceFile(
             reference_file_id=uuid.uuid4(),
             file_location=path,
-            reference_file_type_id=ReferenceFileType.PUB_ACH_RETURN.reference_file_type_id,
+            reference_file_type_id=ReferenceFileType.PUB_CHECK_RETURN.reference_file_type_id,
         )
         self.db_session.add(self.reference_file)
 
