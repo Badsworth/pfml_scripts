@@ -1,6 +1,10 @@
 import Alert from "../../components/Alert";
 import ClaimCollection from "../../models/ClaimCollection";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
+import Link from "next/link";
+// TODO (EMPLOYER-859): Render component when pagination metadata is available
+// import PaginationNavigation from "../../components/PaginationNavigation";
+// import PaginationSummary from "../../components/PaginationSummary";
 import PropTypes from "prop-types";
 import React from "react";
 import Table from "../../components/Table";
@@ -10,7 +14,6 @@ import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import { isFeatureEnabled } from "../../services/featureFlags";
-import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
@@ -49,6 +52,10 @@ export const Dashboard = (props) => {
     .filter(([columnKey, isVisible]) => isVisible)
     .map(([columnKey, isVisible]) => columnKey);
 
+  /* TODO (EMPLOYER-859): Implement API call to take in page index */
+  // const getUpdatedRecords = (pageIndex) => {
+  // };
+
   return (
     <React.Fragment>
       <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
@@ -73,7 +80,10 @@ export const Dashboard = (props) => {
       <p className="margin-bottom-4">
         {t("pages.employersDashboard.instructions")}
       </p>
-
+      {/* TODO (EMPLOYER-859): Render component when pagination metadata is available  */}
+      {/* <PaginationSummary
+        pageIndex={pageIndex} pageSize={pageSize} totalPages={totalPages} totalRecords={totalRecords}
+      /> */}
       <Table className="width-full tablet:width-auto" responsive scrollable>
         <thead>
           <tr>
@@ -103,12 +113,15 @@ export const Dashboard = (props) => {
           )}
           {!showVerificationRowInPlaceOfClaims && (
             <ClaimTableRows
+              appLogic={props.appLogic}
               claims={props.claims}
               tableColumnKeys={tableColumnKeys}
             />
           )}
         </tbody>
       </Table>
+      {/* TODO (EMPLOYER-859): Render component when pagination metadata is available  */}
+      {/* {totalPages > 1 && <PaginationWidget pageIndex={pageIndex} totalPages={totalPages} onClick={getUpdatedRecords} />} */}
     </React.Fragment>
   );
 };
@@ -116,6 +129,7 @@ export const Dashboard = (props) => {
 Dashboard.propTypes = {
   appLogic: PropTypes.shape({
     portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
       goTo: PropTypes.func.isRequired,
       pathname: PropTypes.string.isRequired,
     }).isRequired,
@@ -129,7 +143,7 @@ Dashboard.propTypes = {
  * no claim data exists
  */
 const ClaimTableRows = (props) => {
-  const { claims, tableColumnKeys } = props;
+  const { appLogic, claims, tableColumnKeys } = props;
   const { t } = useTranslation();
 
   if (claims.isEmpty) {
@@ -150,18 +164,27 @@ const ClaimTableRows = (props) => {
    * @returns {string|React.ReactNode}
    */
   const getValueForColumn = (claim, columnKey) => {
-    // New Application page handles conditional routing for claims (if is not reviewable, navigates to Status page)
-    const infoRequestRoute = routeWithParams("employers.newApplication", {
-      absence_id: get(claim, "fineos_absence_id"),
-    });
+    const claimRoute = appLogic.portalFlow.getNextPageRoute(
+      "VIEW_CLAIM",
+      {},
+      { absence_id: get(claim, "fineos_absence_id") }
+    );
 
     switch (columnKey) {
       case "created_at":
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
-        return <a href={infoRequestRoute}>{get(claim, columnKey)}</a>;
+        return (
+          <Link href={claimRoute}>
+            <a>{get(claim, columnKey)}</a>
+          </Link>
+        );
       case "employee_name":
-        return <a href={infoRequestRoute}>{get(claim, "employee.fullName")}</a>;
+        return (
+          <Link href={claimRoute}>
+            <a>{get(claim, "employee.fullName")}</a>
+          </Link>
+        );
       case "employer_dba":
         return get(claim, "employer.employer_dba");
       case "employer_fein":
@@ -199,6 +222,7 @@ const ClaimTableRows = (props) => {
 };
 
 ClaimTableRows.propTypes = {
+  appLogic: Dashboard.propTypes.appLogic,
   claims: Dashboard.propTypes.claims,
   tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
 };

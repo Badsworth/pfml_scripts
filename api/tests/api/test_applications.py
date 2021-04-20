@@ -4510,3 +4510,159 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
 
     assert submitted_application.claim is not None
     assert submitted_application.claim.employer is not None
+
+
+def test_application_patch_caring_leave_metadata(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, phone=None)
+    assert (
+        application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
+    )
+    assert application.caring_leave_metadata is None
+
+    caring_leave_metadata = CaringLeaveMetadata(application_id=application.application_id)
+    test_db_session.add(caring_leave_metadata)
+    test_db_session.commit()
+
+    # change leave reason to caring leave
+    update_request_body = {
+        "leave_details": {"reason": LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_description}
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+
+    # updating caring leave data
+    update_request_body = {
+        "leave_details": {
+            "caring_leave_metadata": {
+                "family_member_first_name": "Jane",
+                "family_member_middle_name": "Alice",
+                "family_member_last_name": "Doe",
+                "family_member_date_of_birth": "1975-01-01",
+                "relationship_to_caregiver": RelationshipToCaregiver.PARENT.relationship_to_caregiver_description,
+            }
+        }
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    assert response.status_code == 200
+
+    test_db_session.refresh(application)
+    assert application.caring_leave_metadata.family_member_first_name == "Jane"
+    assert application.caring_leave_metadata.family_member_middle_name == "Alice"
+    assert application.caring_leave_metadata.family_member_last_name == "Doe"
+    assert application.caring_leave_metadata.family_member_date_of_birth.isoformat() == "1975-01-01"
+    assert (
+        application.caring_leave_metadata.relationship_to_caregiver_id
+        == RelationshipToCaregiver.PARENT.relationship_to_caregiver_id
+    )
+
+    response_body = response.get_json()
+    response_caring_leave_metadata = (
+        response_body.get("data").get("leave_details").get("caring_leave_metadata")
+    )
+    assert (
+        response_caring_leave_metadata["family_member_first_name"]
+        == update_request_body["leave_details"]["caring_leave_metadata"]["family_member_first_name"]
+    )
+    assert (
+        response_caring_leave_metadata["family_member_middle_name"]
+        == update_request_body["leave_details"]["caring_leave_metadata"][
+            "family_member_middle_name"
+        ]
+    )
+    assert (
+        response_caring_leave_metadata["family_member_last_name"]
+        == update_request_body["leave_details"]["caring_leave_metadata"]["family_member_last_name"]
+    )
+    assert response_caring_leave_metadata["family_member_date_of_birth"] == "****-01-01"
+    assert (
+        response_caring_leave_metadata["relationship_to_caregiver"]
+        == update_request_body["leave_details"]["caring_leave_metadata"][
+            "relationship_to_caregiver"
+        ]
+    )
+
+
+def test_application_patch_caring_leave_metadata_issues(client, user, auth_token, test_db_session):
+    caring_leave_metadata_issues = [
+        {
+            "field": "leave_details.caring_leave_metadata.family_member_first_name",
+            "message": "leave_details.caring_leave_metadata.family_member_first_name is required",
+            "type": "required",
+        },
+        {
+            "field": "leave_details.caring_leave_metadata.family_member_last_name",
+            "message": "leave_details.caring_leave_metadata.family_member_last_name is required",
+            "type": "required",
+        },
+        {
+            "field": "leave_details.caring_leave_metadata.family_member_date_of_birth",
+            "message": "leave_details.caring_leave_metadata.family_member_date_of_birth is required",
+            "type": "required",
+        },
+        {
+            "field": "leave_details.caring_leave_metadata.relationship_to_caregiver",
+            "message": "leave_details.caring_leave_metadata.relationship_to_caregiver is required",
+            "type": "required",
+        },
+    ]
+
+    application = ApplicationFactory.create(
+        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+    )
+    assert application.caring_leave_metadata is None
+
+    # patch without data
+    update_request_body = {"leave_details": {"caring_leave_metadata": {}}}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_warnings = response.get_json().get("warnings")
+
+    assert response.status_code == 200
+    for issue in caring_leave_metadata_issues:
+        assert issue in response_warnings
+
+    # patch with null values
+    update_request_body = {
+        "leave_details": {
+            "caring_leave_metadata": {
+                "family_member_first_name": None,
+                "family_member_middle_name": None,
+                "family_member_last_name": None,
+                "family_member_date_of_birth": None,
+                "relationship_to_caregiver": None,
+            }
+        }
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    response_warnings = response.get_json().get("warnings")
+
+    assert response.status_code == 200
+    for issue in caring_leave_metadata_issues:
+        assert issue in response_warnings

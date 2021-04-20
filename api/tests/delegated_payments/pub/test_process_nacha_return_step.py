@@ -4,13 +4,13 @@
 
 import datetime
 import pathlib
-import shutil
 import uuid
 from collections import Counter
 
 import pytest
 
 import massgov.pfml.api.util.state_log_util
+import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models import factories
 from massgov.pfml.db.models.employees import (
     BankAccountType,
@@ -31,12 +31,20 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.db.models.factories import PaymentFactory, PubEftFactory
-from massgov.pfml.delegated_payments import delegated_config
-from massgov.pfml.delegated_payments.pub import response_file_handler
+from massgov.pfml.delegated_payments.pub import process_nacha_return_step
 from massgov.pfml.util.batch.log import LogEntry
 
 
-def test_process_return_file_step_full(test_db_session, tmp_path, initialize_factories_session):
+@pytest.fixture
+def process_nacha_file_step(test_db_session, initialize_factories_session, test_db_other_session):
+    return process_nacha_return_step.ProcessNachaReturnFileStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+
+def test_process_nacha_return_file_step_full(
+    test_db_session, monkeypatch, tmp_path, initialize_factories_session, test_db_other_session
+):
     # Note: see ach_return_small.ach to understand this test. That file contains a mix of prenote
     # and payment returns, with some being ACH Returns (errors) and some Change Notifications.
     #
@@ -44,11 +52,12 @@ def test_process_return_file_step_full(test_db_session, tmp_path, initialize_fac
     # items in ach_return_small.ach. Some are intentionally excluded to test error paths.
 
     # Build directory structure with test file.
+    monkeypatch.setenv("PFML_PUB_ACH_ARCHIVE_PATH", str(tmp_path))
     test_files = pathlib.Path(__file__).parent / "test_files"
-    received_dir = tmp_path / "received"
-    received_dir.mkdir()
-    shutil.copy(test_files / "ach_return_small.ach", received_dir)
-    s3_config = delegated_config.PaymentsS3Config(pfml_pub_inbound_path=str(tmp_path))
+
+    source_file_path = str(test_files / "ach_return_small.ach")
+    destination_file_path = str(tmp_path / "received" / "ach_return_small.ach")
+    file_util.copy_file(source_file_path, destination_file_path)
 
     # Add prenotes 0 to 39 to database. These correspond to E0 to E39 ids in return file.
     pub_efts = [pub_eft_pending_with_pub_factory(i, test_db_session) for i in range(40)]
@@ -57,12 +66,12 @@ def test_process_return_file_step_full(test_db_session, tmp_path, initialize_fac
     payments = [payment_sent_to_pub_factory(i, test_db_session) for i in range(40, 80)]
 
     # Run step.
-    process_return_file_step = response_file_handler.ProcessReturnFileStep(
-        test_db_session, test_db_session, s3_config
+    process_nacha_file_step = process_nacha_return_step.ProcessNachaReturnFileStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
     )
-    assert process_return_file_step.have_more_files_to_process() is True
-    process_return_file_step.run()
-    assert process_return_file_step.have_more_files_to_process() is False
+    assert process_nacha_file_step.have_more_files_to_process() is True
+    process_nacha_file_step.run()
+    assert process_nacha_file_step.have_more_files_to_process() is False
 
     # Test updates to pub_eft table.
     assert pub_efts[1].prenote_response_reason_code == "R01"
@@ -121,7 +130,7 @@ def test_process_return_file_step_full(test_db_session, tmp_path, initialize_fac
             assert payment.reference_files[0].reference_file == reference_file
         else:
             # Not in test file - state unchanged.
-            assert state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id
+            assert state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_id
             assert payment.reference_files == []
 
     # Metrics collected.
@@ -137,7 +146,7 @@ def test_process_return_file_step_full(test_db_session, tmp_path, initialize_fac
         "payment_id_not_found_count": 3,
         "payment_rejected_count": 1,
     }
-    assert expected_metrics.items() <= process_return_file_step.log_entry.metrics.items()
+    assert expected_metrics.items() <= process_nacha_file_step.log_entry.metrics.items()
 
     pub_errors = test_db_session.query(PubError).all()
     pub_error_count = Counter(p.pub_error_type_id for p in pub_errors)
@@ -174,10 +183,14 @@ def test_process_return_file_step_full(test_db_session, tmp_path, initialize_fac
     )
 
 
-def test_add_pub_error(test_db_session, tmp_path, initialize_factories_session):
-    s3_config = delegated_config.PaymentsS3Config(pfml_pub_inbound_path=str(tmp_path))
+def test_add_pub_error(
+    test_db_session, monkeypatch, tmp_path, initialize_factories_session, test_db_other_session
+):
+    monkeypatch.setenv("PFML_PUB_ACH_ARCHIVE_PATH", str(tmp_path))
 
-    step = response_file_handler.ProcessReturnFileStep(test_db_session, test_db_session, s3_config)
+    step = process_nacha_return_step.ProcessNachaReturnFileStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
 
     # error if log entry has not been set (i.e. process has not been run)
     with pytest.raises(
@@ -189,7 +202,8 @@ def test_add_pub_error(test_db_session, tmp_path, initialize_factories_session):
 
     # error if reference file has not been set (i.e. process has not been run)
     with pytest.raises(
-        AttributeError, match="'ProcessReturnFileStep' object has no attribute 'reference_file",
+        AttributeError,
+        match="'ProcessNachaReturnFileStep' object has no attribute 'reference_file",
     ):
         step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, "", 6)
 
@@ -309,11 +323,11 @@ def payment_sent_to_pub_factory(pub_individual_id, test_db_session):
     test_db_session.commit()
 
     massgov.pfml.api.util.state_log_util.create_finished_state_log(
-        end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+        end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
         associated_model=payment,
         db_session=test_db_session,
         outcome=massgov.pfml.api.util.state_log_util.build_outcome(
-            "Generated state PAYMENT_PUB_TRANSACTION_EFT_SENT"
+            "Generated state DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT"
         ),
     )
 

@@ -26,7 +26,6 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
 from massgov.pfml.delegated_payments.pub import process_files_in_path_step
-from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.util.ach import reader
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -35,25 +34,15 @@ EFT_PRENOTE_ID_PATTERN = re.compile(r"^E([1-9][0-9]*)$")
 PAYMENT_ID_PATTERN = re.compile(r"^P([1-9][0-9]*)$")
 
 
-class CopyReturnFilesToS3Step(Step):
-    def run_step(self):
-        # TODO: Copy all files from the source directory to S3 and create ReferenceFiles.
-        # s3://massgov-pfml-prod-agency-transfer/pub/inbound/received/
-
-        return None
-
-
-class ProcessReturnFileStep(process_files_in_path_step.ProcessFilesInPathStep):
+class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathStep):
     """Process an ACH return file received from the bank."""
 
     def __init__(
-        self,
-        db_session: massgov.pfml.db.Session,
-        log_entry_db_session: massgov.pfml.db.Session,
-        s3_config: delegated_config.PaymentsS3Config,
+        self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session,
     ) -> None:
         """Constructor."""
-        super().__init__(db_session, log_entry_db_session, s3_config.pfml_pub_inbound_path)
+        pub_ach_inbound_path = delegated_config.get_s3_config().pfml_pub_ach_archive_path
+        super().__init__(db_session, log_entry_db_session, pub_ach_inbound_path)
 
     def process_file(self, path: str) -> None:
         """Parse an ACH return file and process each record."""
@@ -262,7 +251,7 @@ class ProcessReturnFileStep(process_files_in_path_step.ProcessFilesInPathStep):
         else:
             end_state_id = payment_state_log.end_state_id
 
-        if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
+        if end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_id:
             # Expected normal state for an ACH returned payment.
             state_log_util.create_finished_state_log(
                 payment,
@@ -323,7 +312,7 @@ class ProcessReturnFileStep(process_files_in_path_step.ProcessFilesInPathStep):
         else:
             end_state_id = payment_state_log.end_state_id
 
-        if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
+        if end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_id:
             # Expected normal state for an ACH change notification payment.
             state_log_util.create_finished_state_log(
                 payment,

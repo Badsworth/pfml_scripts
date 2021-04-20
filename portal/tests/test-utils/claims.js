@@ -134,6 +134,11 @@ export class BaseMockClaimBuilder {
     return this;
   }
 
+  caringLeaveReason() {
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.care);
+    return this;
+  }
+
   medicalLeaveReason() {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
     return this;

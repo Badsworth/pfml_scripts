@@ -474,7 +474,7 @@ const errors = {
   employers: {
     ein: {
       employer_verification_data_required:
-        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. <file-a-return-link>Learn more about filing returns and remitting contributions</file-a-return-link>.",
+        "$t(shared.ein.employer_verification_data_required)",
     },
     employer_benefits: {
       benefit_amount_frequency: {
@@ -494,7 +494,7 @@ const errors = {
       duplicate:
         "The employer ID you entered is already associated with your account.",
       employer_verification_data_required:
-        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications.",
+        "$t(shared.ein.employer_verification_data_required)",
       invalid:
         "Enter your 9-digit Employer Identification Number in the correct format.",
     },
@@ -625,6 +625,10 @@ const shared = {
     "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>",
   documentsUploadError:
     "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
+  ein: {
+    employer_verification_data_required:
+      "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. <file-a-return-link>Learn more about filing returns and remitting contributions</file-a-return-link>.",
+  },
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
@@ -855,10 +859,15 @@ const pages = {
       "<p>You need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
     stepHTMLDescription_bondingNewbornFuture:
       "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.",
+    stepHTMLDescription_care:
+      "<p>You need to provide your completed <caregiver-certification-form-link>Caregiver Certification Form</caregiver-certification-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
-      "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider complete a <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking family leave to bond with a child, you will need to know:</p><ul><li>The child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
+      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p>",
+    // TODO (CP-1983) Merge leaveDetails and leaveDetailsWithCaring when showCaringLeave feature flag is not needed
+    stepHTMLDescription_leaveDetailsWithCaring:
+      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>Caregiver Certification Form</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship for Caregiver leave<caregiver-relationship-link/>.</p>",
     stepHTMLDescription_medical:
       "<p>You need to provide your completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_otherLeave:
@@ -967,6 +976,11 @@ const pages = {
     sectionLabel: "What is your family member's date of birth?",
   },
   claimsFamilyMemberName: {
+    firstNameLabel: "First name",
+    lastNameLabel: "Last name",
+    middleNameLabel: "Middle name",
+    sectionHint:
+      "Fill out their name as it appears on official documents like their driver’s license or W‑2.",
     sectionLabel: "What is your family member's name?",
   },
   claimsFamilyMemberRelationship: {
@@ -1090,6 +1104,8 @@ const pages = {
     bondingTypeMultipleBirthsDetailsSummary:
       "Leave is determined based on benefit year (365 days from the start of the first week you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child. <multiple-births-link>Learn more about taking leave for multiple childbirths or placements</multiple-births-link>.",
     bondingTypeNewbornLabel: "Birth",
+    caringLeaveHint: "Family leave",
+    caringLeaveLabel: "I need to care for my family member",
     medicalLeaveHint: "Medical leave",
     medicalLeaveLabel: "I can’t work due to an illness, injury, or pregnancy.",
     sectionHint: "You can only request one leave at a time.",
@@ -1330,6 +1346,7 @@ const pages = {
     leaveReasonLabel: "Leave type",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
@@ -1877,6 +1894,7 @@ const components = {
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
@@ -2194,6 +2212,12 @@ const components = {
     body:
       "In the future, we'll ask you to verify your paid leave contributions to secure your account. <learn-more-link>Learn what you need to do to prepare.</learn-more-link>",
     header: "Account verification is coming soon",
+  },
+  pagination: {
+    nextLabel: "Next",
+    previousLabel: "Previous",
+    summary:
+      "Viewing {{firstRecordIndex}} - {{lastRecordIndex}} of {{totalRecords}} results",
   },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",

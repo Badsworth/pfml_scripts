@@ -21,15 +21,15 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
 
 
 @pytest.fixture
-def report_path(monkeypatch, mock_s3_bucket):
-    pfml_error_reports_path = f"s3://{mock_s3_bucket}/archive"
-    monkeypatch.setenv("PFML_ERROR_REPORTS_PATH", pfml_error_reports_path)
-    return pfml_error_reports_path
+def outbound_report_path(monkeypatch, mock_s3_bucket):
+    dfml_report_outbound_path = f"s3://{mock_s3_bucket}/outbound"
+    monkeypatch.setenv("DFML_REPORT_OUTBOUND_PATH", dfml_report_outbound_path)
+    return dfml_report_outbound_path
 
 
 @pytest.fixture
 def report_archive_path(monkeypatch, mock_s3_bucket):
-    pfml_error_reports_archive_path = f"s3://{mock_s3_bucket}/archive"
+    pfml_error_reports_archive_path = f"s3://{mock_s3_bucket}/error-reports/archive"
     monkeypatch.setenv("PFML_ERROR_REPORTS_ARCHIVE_PATH", pfml_error_reports_archive_path)
     return pfml_error_reports_archive_path
 
@@ -45,7 +45,7 @@ def test_report_generation(
     test_db_session,
     test_db_other_session,
     initialize_factories_session,
-    report_path,
+    outbound_report_path,
     report_archive_path,
 ):
     def create_employee_with_pre_note_state(first_name, last_name, pre_note_state):
@@ -68,34 +68,30 @@ def test_report_generation(
 
     test_db_session.commit()
 
-    folder_name = "test-folder"
-
     step = ReportStep(test_db_session, test_db_other_session, [])
     step.generate_report(
-        report_path,
+        outbound_report_path,
         report_archive_path,
-        folder_name,
         "test-error-report",
         "select employee.employee_id, employee.first_name from employee inner join state_log on state_log.employee_id = employee.employee_id where state_log.end_state_id = 110 order by employee.first_name",
     )
 
     date_folder = "2021-01-15"
     timestamp_prefix = "2021-01-15-12-00-00"
+    archive_folder_path = os.path.join(report_archive_path, "sent", date_folder)
 
-    folder_path = os.path.join(report_path, folder_name)
-    archive_folder_path = os.path.join(report_archive_path, folder_name, date_folder)
-
-    file_name = f"{timestamp_prefix}-test-error-report.csv"
+    base_file_name = "test-error-report.csv"
+    file_name = f"{timestamp_prefix}-{base_file_name}"
 
     # confirm report was generated
-    assert_files(folder_path, [file_name])
+    assert_files(outbound_report_path, [base_file_name])
     assert_files(archive_folder_path, [file_name])
 
     # confirm we have a reference file for archive
-    assert_report_reference_files([os.path.join(archive_folder_path, file_name)], test_db_session)
+    file_path = os.path.join(archive_folder_path, file_name)
+    assert_report_reference_files([file_path], test_db_session)
 
     # confirm content of report
-    file_path = os.path.join(folder_path, file_name)
     reader = csv.DictReader(file_util.open_stream(file_path), delimiter=",")
     rows = [record for record in reader]
 
@@ -112,15 +108,14 @@ def test_report_generation_query_exception(
     test_db_session,
     test_db_other_session,
     initialize_factories_session,
-    report_path,
+    outbound_report_path,
     report_archive_path,
 ):
     step = ReportStep(test_db_session, test_db_other_session, [])
     with pytest.raises(sqlalchemy.exc.ProgrammingError):
         step.generate_report(
-            report_path,
+            outbound_report_path,
             report_archive_path,
-            "test-folder",
             "test-error-report",
             "select * from nonexistent_table",
         )
@@ -131,7 +126,7 @@ def test_all_reports(
     test_db_session,
     test_db_other_session,
     initialize_factories_session,
-    report_path,
+    outbound_report_path,
     report_archive_path,
 ):
     """Validate that all reports run without any exceptions"""
@@ -152,25 +147,18 @@ def test_all_reports(
     date_folder = "2021-01-15"
     timestamp_prefix = "2021-01-15-12-00-00"
 
-    folder_names = set()
-    for report in REPORTS:
-        folder_names.add(report.folder_name)
+    archive_folder_path = os.path.join(report_archive_path, "sent", date_folder)
 
-    for folder_name in folder_names:
-        folder_path = os.path.join(report_path, folder_name)
-        archive_folder_path = os.path.join(report_archive_path, folder_name, date_folder)
+    expected_archive_files = [f"{timestamp_prefix}-{report.report_name}.csv" for report in REPORTS]
+    expected_outbound_files = [f"{report.report_name}.csv" for report in REPORTS]
 
-        expected_files = [
-            f"{timestamp_prefix}-{report.report_name}.csv"
-            for report in REPORTS
-            if report.folder_name == folder_name
-        ]
+    assert_files(archive_folder_path, expected_archive_files)
+    assert_files(outbound_report_path, expected_outbound_files)
 
-        assert_files(folder_path, expected_files)
-        assert_files(archive_folder_path, expected_files)
-
-        file_paths = [os.path.join(archive_folder_path, file_name) for file_name in expected_files]
-        assert_report_reference_files(file_paths, test_db_session)
+    file_paths = [
+        os.path.join(archive_folder_path, file_name) for file_name in expected_archive_files
+    ]
+    assert_report_reference_files(file_paths, test_db_session)
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
@@ -178,7 +166,7 @@ def test_invalid_and_missing_report_in_step_execution(
     test_db_session,
     test_db_other_session,
     initialize_factories_session,
-    report_path,
+    outbound_report_path,
     report_archive_path,
     caplog,
 ):
@@ -208,7 +196,7 @@ def test_invalid_and_missing_report_in_step_execution(
     # validate error messages
     log_with_counts = Counter(record.message for record in caplog.records)
 
-    invalid_report_message = f"Error generting report: {invalid_report_name}"
+    invalid_report_message = f"Error generating report: {invalid_report_name}"
     assert log_with_counts[invalid_report_message] == 1
 
     missing_report_message = f"Could not find configuration for report: {missing_report_name}"

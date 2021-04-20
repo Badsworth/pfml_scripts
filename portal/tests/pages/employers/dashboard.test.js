@@ -1,11 +1,11 @@
 import Claim, { ClaimEmployee, ClaimEmployer } from "../../../src/models/Claim";
+import User, { UserLeaveAdministrator } from "../../../src/models/User";
+import { renderWithAppLogic, testHook } from "../../test-utils";
 import ClaimCollection from "../../../src/models/ClaimCollection";
 import Dashboard from "../../../src/pages/employers/dashboard";
-import { UserLeaveAdministrator } from "../../../src/models/User";
-import { renderWithAppLogic } from "../../test-utils";
+import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
-
-jest.mock("../../../src/hooks/useAppLogic");
+import useAppLogic from "../../../src/hooks/useAppLogic";
 
 const verifiedUserLeaveAdministrator = new UserLeaveAdministrator({
   employer_dba: "Work Inc",
@@ -23,14 +23,31 @@ const verifiableUserLeaveAdministrator = new UserLeaveAdministrator({
 });
 
 const setup = (claims = [], userAttrs = {}) => {
-  const { appLogic, wrapper } = renderWithAppLogic(Dashboard, {
+  let appLogic;
+  // Need to set an accurate pathname so portalFlow can return the correct links to route to
+  mockRouter.pathname = routes.employers.dashboard;
+
+  testHook(() => {
+    appLogic = useAppLogic();
+    // Fulfill the needs of withClaims to simulate that the user can view the page,
+    // and that a list of claims has been loaded
+    appLogic.users.user = new User({
+      consented_to_data_sharing: true,
+      ...userAttrs,
+    });
+    appLogic.claims.claims = new ClaimCollection(claims);
+    appLogic.claims.hasLoadedAll = true;
+  });
+  const goToSpy = jest.spyOn(appLogic.portalFlow, "goTo");
+
+  const { wrapper } = renderWithAppLogic(Dashboard, {
+    props: { appLogic },
     userAttrs,
-    mockAppLogic: (appLogicMock) =>
-      (appLogicMock.claims.claims = new ClaimCollection(claims)),
   });
 
   return {
     appLogic,
+    goToSpy,
     wrapper,
   };
 };
@@ -122,11 +139,9 @@ describe("Employer dashboard", () => {
 
   it("redirects to the Welcome page when employerShowDashboard flag is disabled", () => {
     process.env.featureFlags = { employerShowDashboard: false };
-    const { appLogic } = setup();
+    const { goToSpy } = setup();
 
-    expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-      routes.employers.welcome
-    );
+    expect(goToSpy).toHaveBeenCalledWith(routes.employers.welcome);
   });
 
   describe("when employerShowVerifications flag is enabled", () => {

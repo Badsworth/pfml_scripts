@@ -33,16 +33,25 @@ const usePortalFlow = () => {
    * Navigate to a page route
    * @param {string} route - url
    * @param {object} params - query parameters to append to page route
+   * @param {object} [options]
+   * @param {boolean} [options.redirect] - when true, replaces the current page in the browser history
+   * with the new route, preserving expected Backwards navigation behavior.
    */
-  const goTo = (route, params) => {
+  const goTo = (route, params, options = {}) => {
     const url = createRouteWithQuery(route, params);
+
+    if (options.redirect) {
+      router.replace(route);
+      return;
+    }
+
     router.push(url);
   };
 
   /**
    * Compose urls based on the given state transition event
    * @param {string} event - name of transition event defined in the state machine's configs
-   * @param {object} context - additional context used to evaluate action
+   * @param {object} context - extended state, used by state machine for evaluating action conditions
    * @param {object} params - query parameters to append to page route
    * @returns {string}
    */
@@ -58,17 +67,20 @@ const usePortalFlow = () => {
   /**
    * Navigate to the page for the given state transition event
    * @param {string} event - name of transition event defined in the state machine's configs
-   * @param {object} context - additional context used to evaluate action
+   * @param {object} context - extended state, used by state machine for evaluating action conditions
    * @param {object} params - query parameters to append to page route
+   * @param {object} [options]
+   * @param {boolean} [options.redirect] - when true, replaces the current page in the browser history
+   * with the new route, preserving expected Backwards navigation behavior.
    */
-  const goToPageFor = (event, context, params) => {
-    const nextPage = getNextPageRoute(event, context, params);
-    goTo(nextPage);
+  const goToPageFor = (event, context, params, options = {}) => {
+    const nextPageRouteWithParams = getNextPageRoute(event, context, params);
+    goTo(nextPageRouteWithParams, {}, options);
   };
 
   /**
    * Navigate to the next page in the flow
-   * @param {object} context - additional context used to evaluate action
+   * @param {object} context - extended state, used by state machine for evaluating action conditions
    * @param {object} params - query parameters to append to page route
    */
   const goToNextPage = (context, params = {}, event = "CONTINUE") => {

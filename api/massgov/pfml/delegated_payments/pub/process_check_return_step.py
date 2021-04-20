@@ -15,6 +15,8 @@ from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
     Flow,
     Payment,
+    PaymentCheck,
+    PaymentCheckStatus,
     PaymentReferenceFile,
     PubErrorType,
     ReferenceFile,
@@ -31,20 +33,18 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
     """Process a check payment return file received from the bank."""
 
     def __init__(
-        self,
-        db_session: massgov.pfml.db.Session,
-        log_entry_db_session: massgov.pfml.db.Session,
-        s3_config: delegated_config.PaymentsS3Config,
+        self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session,
     ) -> None:
         """Constructor."""
-        super().__init__(db_session, log_entry_db_session, s3_config.pfml_pub_check_inbound_path)
+        pub_check_inbound_path = delegated_config.get_s3_config().pfml_pub_check_archive_path
+        super().__init__(db_session, log_entry_db_session, pub_check_inbound_path)
 
     def process_file(self, path: str) -> None:
         """Parse a check payment return file and process each record."""
         self.reference_file = ReferenceFile(
             reference_file_id=uuid.uuid4(),
             file_location=path,
-            reference_file_type_id=ReferenceFileType.PUB_ACH_RETURN.reference_file_type_id,
+            reference_file_type_id=ReferenceFileType.PUB_CHECK_RETURN.reference_file_type_id,
         )
         self.db_session.add(self.reference_file)
 
@@ -114,7 +114,8 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         """Read the payment from the database that matches the given check payment."""
         payment = (
             self.db_session.query(Payment)
-            .filter(Payment.check_number == check_payment.check_number)
+            .join(PaymentCheck)
+            .filter(PaymentCheck.check_number == check_payment.check_number)
             .one_or_none()
         )
         if payment is not None:
@@ -151,7 +152,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         if latest_state is not None and latest_state.end_state is not None:
             end_state_id = latest_state.end_state_id
             state_description = str(latest_state.end_state.state_description)
-        if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id:
+        if end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT.state_id:
             return True
 
         # The latest state for this payment is not compatible with a check return.
@@ -183,6 +184,8 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             ),
             self.db_session,
         )
+        payment.check.check_posted_date = check_payment.paid_date
+        payment.check.payment_check_status_id = PaymentCheckStatus.PAID.payment_check_status_id
         logger.info(
             "payment complete by paid check", extra=extra_for_log(check_payment, payment),
         )
@@ -210,6 +213,9 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 check_status=check_payment.status.name,
             ),
             self.db_session,
+        )
+        payment.check.payment_check_status_id = PaymentCheckStatus.get_id(
+            description=check_payment.status.value
         )
         logger.info(
             "payment failed by check", extra=extra_for_log(check_payment, payment),

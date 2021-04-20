@@ -504,8 +504,7 @@ class LeaveReason(LookupTable):
     model = LkLeaveReason
     column_names = ("leave_reason_id", "leave_reason_description")
 
-    # This reason is not currently being used. See API-389 & PR #1280.
-    CARE_FOR_A_FAMILY_MEMBER = LkLeaveReason(1, "Care For A Family Member")
+    CARE_FOR_A_FAMILY_MEMBER = LkLeaveReason(1, "Care for a Family Member")
     PREGNANCY_MATERNITY = LkLeaveReason(2, "Pregnancy/Maternity")
     CHILD_BONDING = LkLeaveReason(3, "Child Bonding")
     SERIOUS_HEALTH_CONDITION_EMPLOYEE = LkLeaveReason(4, "Serious Health Condition - Employee")
@@ -516,7 +515,6 @@ class LeaveReasonQualifier(LookupTable):
     column_names = ("leave_reason_qualifier_id", "leave_reason_qualifier_description")
 
     NEWBORN = LkLeaveReasonQualifier(1, "Newborn")
-    # This reason qualifier is not currently being used. See API-389 & PR #1280.
     SERIOUS_HEALTH_CONDITION = LkLeaveReasonQualifier(2, "Serious Health Condition")
     # This reason qualifier is not currently being used. See API-389 & PR #1280.
     WORK_RELATED_ACCIDENT_INJURY = LkLeaveReasonQualifier(3, "Work Related Accident/Injury")
@@ -548,7 +546,7 @@ class RelationshipToCaregiver(LookupTable):
     OTHER_FAMILY_MEMBER = LkRelationshipToCaregiver(5, "Other Family Member")
     SERVICE_MEMBER = LkRelationshipToCaregiver(6, "Service Member")
     INLAW = LkRelationshipToCaregiver(7, "Inlaw")
-    SIBLING = LkRelationshipToCaregiver(8, "Sibling")
+    SIBLING = LkRelationshipToCaregiver(8, "Sibling - Brother/Sister")
     OTHER = LkRelationshipToCaregiver(9, "Other")
     EMPLOYEE = LkRelationshipToCaregiver(10, "Employee")
     SPOUSE = LkRelationshipToCaregiver(11, "Spouse")

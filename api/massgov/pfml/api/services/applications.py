@@ -259,7 +259,7 @@ def remove_masked_fields_from_request(
         )
 
         # family member date of birth - partially masked
-        if existing_application.caring_leave_metadata:  # type: ignore
+        if existing_application.caring_leave_metadata and leave_details.get("caring_leave_metadata"):  # type: ignore
             masked_existing_family_member_dob = mask.mask_date(
                 existing_application.caring_leave_metadata.family_member_date_of_birth  # type: ignore
             )
@@ -411,7 +411,7 @@ def add_or_update_caring_leave_metadata(
     for key in api_caring_leave_metadata.__fields_set__:
         value = getattr(api_caring_leave_metadata, key)
 
-        if key == "relationship_to_caregiver":
+        if key == "relationship_to_caregiver" and value is not None:
             relationship_to_caregiver_model = db_lookups.by_value(
                 db_session, value.get_lookup_model(), value,
             )

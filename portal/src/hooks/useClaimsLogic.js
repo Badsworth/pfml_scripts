@@ -19,13 +19,14 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
 
   /**
    * Load all claims for the authenticated user
+   * @param {number} page - zero-based page index
    */
-  const loadAll = async () => {
+  const loadAll = async (page) => {
     if (hasLoadedAll) return;
     appErrorsLogic.clearErrors();
 
     try {
-      const { claims } = await claimsApi.getClaims();
+      const { claims } = await claimsApi.getClaims(page);
 
       setClaims(claims);
       setHasLoadedAll(true);

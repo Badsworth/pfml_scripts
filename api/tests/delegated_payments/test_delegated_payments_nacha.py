@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Tuple
 
 import pytest
@@ -30,7 +31,7 @@ from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     add_payments_to_nacha_file,
     create_nacha_batch,
     create_nacha_file,
-    upload_nacha_file_to_s3,
+    send_nacha_file,
 )
 from massgov.pfml.delegated_payments.util.ach.nacha import NachaEntry, NachaFile
 
@@ -216,7 +217,7 @@ def test_nacha_file_payment_and_prenote_entries():
 # parse and validate and contents of generated nacha file for ach and pre note fields
 
 
-def test_nacha_file_upload(tmp_path):
+def test_nacha_file_upload(mock_s3_bucket):
     nacha_file = create_nacha_file()
 
     employee_with_eft = build_employee_with_eft(PrenoteState.PENDING_PRE_PUB)
@@ -225,13 +226,22 @@ def test_nacha_file_upload(tmp_path):
     payment = build_payment(PaymentMethod.ACH)
     add_payments_to_nacha_file(nacha_file, [payment])
 
-    folder_path = str(tmp_path)
-    nacha_file_name = "PUB-NACHA-20210315"
-    file_path = os.path.join(folder_path, nacha_file_name)
+    archive_folder_path = f"s3://{mock_s3_bucket}/pub/archive"
+    outbound_folder_path = f"s3://{mock_s3_bucket}/pub/outbound"
 
-    upload_nacha_file_to_s3(nacha_file, file_path)
+    ref_file = send_nacha_file(nacha_file, archive_folder_path, outbound_folder_path)
 
-    assert nacha_file_name in file_util.list_files(folder_path)
+    filename_pattern = r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-PUB-NACHA"
+    assert re.search(filename_pattern, ref_file.file_location)
+
+    # With a two records, there will be:
+    # header, 2 batch header, 2 entry, 2 batch control and file control and 2 9-padded lines
+    file_stream = file_util.open_stream(ref_file.file_location)
+    assert len([line for line in file_stream]) == 10
+
+    # The outbound file should have been identically built
+    file_stream = file_util.open_stream(f"{outbound_folder_path}/PUB-NACHA")
+    assert len([line for line in file_stream]) == 10
 
 
 def build_employee_with_eft(prenote_state: LkPrenoteState) -> Tuple[Employee, PubEft]:

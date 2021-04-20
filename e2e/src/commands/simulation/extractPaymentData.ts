@@ -6,8 +6,8 @@ import playwright, { chromium, ElementHandle } from "playwright-chromium";
 import delay from "delay";
 import { CommandModule } from "yargs";
 import { SystemWideArgs } from "../../cli";
-import * as actions from "../../utils";
-import { getFineosBaseUrl } from "../../utils";
+import * as actions from "../../util/playwright";
+import { getFineosBaseUrl } from "../../util/common";
 import { DataDirectory, dataDirectory } from "../../scripts/util";
 
 type ExtractPaymentDataArgs = {

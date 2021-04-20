@@ -75,7 +75,9 @@ class ExtractData:
 
         self.reference_file = ReferenceFile(
             file_location=os.path.join(
-                payments_config.get_s3_config().pfml_fineos_inbound_path, "received", self.date_str
+                payments_config.get_s3_config().pfml_fineos_extract_archive_path,
+                "received",
+                self.date_str,
             ),
             reference_file_type_id=ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id,
             reference_file_id=uuid.uuid4(),
@@ -804,7 +806,7 @@ class ClaimantExtractStep(Step):
             extract_data.date_str, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         )
         new_requested_absence_info_s3_path = extract_data.requested_absence_info.file_location.replace(
-            RECEIVED_FOLDER, f"{date_group_folder}"
+            RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{date_group_folder}"
         )
         file_util.rename_file(
             extract_data.requested_absence_info.file_location, new_requested_absence_info_s3_path

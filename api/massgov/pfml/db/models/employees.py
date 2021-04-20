@@ -224,6 +224,16 @@ class LkPaymentTransactionType(Base):
         self.payment_transaction_type_description = payment_transaction_type_description
 
 
+class LkPaymentCheckStatus(Base):
+    __tablename__ = "lk_payment_check_status"
+    payment_check_status_id = Column(Integer, primary_key=True, autoincrement=True)
+    payment_check_status_description = Column(Text)
+
+    def __init__(self, payment_check_status_id, payment_check_status_description):
+        self.payment_check_status_id = payment_check_status_id
+        self.payment_check_status_description = payment_check_status_description
+
+
 class LkReferenceFileType(Base):
     __tablename__ = "lk_reference_file_type"
     reference_file_type_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -595,10 +605,22 @@ class Payment(Base):
     pub_eft = relationship(PubEft)
     experian_address_pair = relationship(ExperianAddressPair, foreign_keys=experian_address_pair_id)
     fineos_extract_import_log = relationship("ImportLog")
-    check_number = Column(Integer, index=True, unique=True)
-
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
+
+    check = relationship("PaymentCheck", backref="payment", uselist=False)
+
+
+class PaymentCheck(Base):
+    __tablename__ = "payment_check"
+    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), primary_key=True)
+    check_number = Column(Integer, nullable=False, index=True, unique=True)
+    check_posted_date = Column(Date)
+    payment_check_status_id = Column(
+        Integer, ForeignKey("lk_payment_check_status.payment_check_status_id")
+    )
+
+    payment_check_status = relationship(LkPaymentCheckStatus)
 
 
 class AuthorizedRepEmployee(Base):
@@ -1732,23 +1754,29 @@ class State(LookupTable):
     DELEGATED_CLAIMANT_ADD_TO_CLAIMANT_EXTRACT_ERROR_REPORT = LkState(
         101, "Add to Claimant Extract Error Report", Flow.DELEGATED_CLAIMANT.flow_id
     )
-    DELEGATED_CLAIMANT_EXTRACT_ERROR_REPORT_SENT = LkState(
-        102, "Claimant Extract Error Report sent", Flow.DELEGATED_CLAIMANT.flow_id
+    DEPRECATED_DELEGATED_CLAIMANT_EXTRACT_ERROR_REPORT_SENT = LkState(
+        102,
+        "DEPRECATED STATE - Claimant Extract Error Report sent",
+        Flow.DELEGATED_CLAIMANT.flow_id,
     )
 
     # == EFT States
 
     DELEGATED_EFT_SEND_PRENOTE = LkState(110, "Send EFT Prenote", Flow.DELEGATED_EFT.flow_id)
     DELEGATED_EFT_PRENOTE_SENT = LkState(111, "EFT Prenote Sent", Flow.DELEGATED_EFT.flow_id)
-    DELEGATED_EFT_ALLOWABLE_TIME_IN_PRENOTE_STATE_EXCEEDED = LkState(
-        112, "EFT alllowable time in Prenote state exceeded", Flow.DELEGATED_EFT.flow_id
+    DEPRECATED_DELEGATED_EFT_ALLOWABLE_TIME_IN_PRENOTE_STATE_EXCEEDED = LkState(
+        112,
+        "DEPRECATED STATE - EFT alllowable time in Prenote state exceeded",
+        Flow.DELEGATED_EFT.flow_id,
     )
-    DELEGATED_EFT_ELIGIBLE = LkState(113, "EFT eligible", Flow.DELEGATED_EFT.flow_id)
-    DELEGATED_EFT_ADD_TO_ERROR_REPORT = LkState(
-        114, "Add to EFT Error Report", Flow.DELEGATED_EFT.flow_id
+    DEPRECATED_DELEGATED_EFT_ELIGIBLE = LkState(
+        113, "DEPRECATED STATE - EFT eligible", Flow.DELEGATED_EFT.flow_id
     )
-    DELEGATED_EFT_ERROR_REPORT_SENT = LkState(
-        115, "EFT Error Report sent", Flow.DELEGATED_EFT.flow_id
+    DEPRECATED_DELEGATED_EFT_ADD_TO_ERROR_REPORT = LkState(
+        114, "DEPRECATED STATE - Add to EFT Error Report", Flow.DELEGATED_EFT.flow_id
+    )
+    DEPRECATED_DELEGATED_EFT_ERROR_REPORT_SENT = LkState(
+        115, "DEPRECATED STATE - EFT Error Report sent", Flow.DELEGATED_EFT.flow_id
     )
 
     # == Payment States
@@ -1757,8 +1785,8 @@ class State(LookupTable):
     DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT = LkState(
         120, "Add to Payment Error Report", Flow.DELEGATED_PAYMENT.flow_id
     )
-    DELEGATED_PAYMENT_ERROR_REPORT_SENT = LkState(
-        121, "Payment Error Report sent", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_ERROR_REPORT_SENT = LkState(
+        121, "DEPRECATED STATE - Payment Error Report sent", Flow.DELEGATED_PAYMENT.flow_id
     )
 
     DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT = LkState(
@@ -1806,10 +1834,14 @@ class State(LookupTable):
     )
 
     DEPRECATED_DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
-        134, "Add accepted payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
+        134,
+        "DEPRECATED STATE - Add accepted payment to FINEOS Writeback",
+        Flow.DELEGATED_PAYMENT.flow_id,
     )
     DEPRECATED_DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
-        135, "Accepted payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+        135,
+        "DEPRECATED STATE - Accepted payment FINEOS Writeback sent",
+        Flow.DELEGATED_PAYMENT.flow_id,
     )
 
     DELEGATED_PAYMENT_VALIDATED = LkState(157, "Payment Validated", Flow.DELEGATED_PAYMENT.flow_id)
@@ -1837,22 +1869,24 @@ class State(LookupTable):
     )
 
     # PUB Status Return stage
-    DELEGATED_PAYMENT_ADD_TO_PUB_ERROR_REPORT = LkState(
-        140, "Add to PUB Error Report", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_ADD_TO_PUB_ERROR_REPORT = LkState(
+        140, "DEPRECATED STATE - Add to PUB Error Report", Flow.DELEGATED_PAYMENT.flow_id
     )
-    DELEGATED_PAYMENT_PUB_ERROR_REPORT_SENT = LkState(
-        141, "PUB Error Report sent", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_PUB_ERROR_REPORT_SENT = LkState(
+        141, "DEPRECATED STATE - PUB Error Report sent", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    DELEGATED_PAYMENT_ADD_TO_PUB_PAYMENT_FINEOS_WRITEBACK = LkState(
-        142, "Add to PUB payment FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_ADD_TO_PUB_PAYMENT_FINEOS_WRITEBACK = LkState(
+        142,
+        "DEPRECATED STATE - Add to PUB payment FINEOS Writeback",
+        Flow.DELEGATED_PAYMENT.flow_id,
     )
-    DELEGATED_PAYMENT_PUB_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
-        143, "PUB payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_PUB_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        143, "DEPRECATED STATE - PUB payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
     )
     DELEGATED_PAYMENT_COMPLETE = LkState(144, "Payment complete", Flow.DELEGATED_PAYMENT.flow_id)
 
-    # Delegated payment states for ACH cancellation (similar to 122-127)
+    # Delegated payment states for cancellations (similar to 122-127)
     DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION = LkState(
         145,
         "Waiting for Payment Audit Report response - cancellation payment",
@@ -1881,6 +1915,8 @@ class State(LookupTable):
     )
 
     # PEI WRITE BACK ERROR TO FINEOS
+    # These states are not retryable because this is erroring after we've sent a payment to PUB
+    # If there was an error, it will require a manual effort to fix.
     ADD_TO_ERRORED_PEI_WRITEBACK = LkState(
         151, "Add to Errored PEI writeback", Flow.DELEGATED_PAYMENT.flow_id
     )
@@ -1890,17 +1926,21 @@ class State(LookupTable):
     )
 
     # Delegated payments address validation states.
-    CLAIMANT_READY_FOR_ADDRESS_VALIDATION = LkState(
-        153, "Claimant ready for address validation", Flow.DELEGATED_CLAIMANT.flow_id
+    DEPRECATED_CLAIMANT_READY_FOR_ADDRESS_VALIDATION = LkState(
+        153,
+        "DEPRECATED STATE - Claimant ready for address validation",
+        Flow.DELEGATED_CLAIMANT.flow_id,
     )
-    CLAIMANT_FAILED_ADDRESS_VALIDATION = LkState(
-        154, "Claimant failed address validation", Flow.DELEGATED_CLAIMANT.flow_id
+    DEPRECATED_CLAIMANT_FAILED_ADDRESS_VALIDATION = LkState(
+        154,
+        "DEPRECATED STATE - Claimant failed address validation",
+        Flow.DELEGATED_CLAIMANT.flow_id,
     )
     PAYMENT_READY_FOR_ADDRESS_VALIDATION = LkState(
         155, "Payment ready for address validation", Flow.DELEGATED_PAYMENT.flow_id
     )
     PAYMENT_FAILED_ADDRESS_VALIDATION = LkState(
-        156, "Payment failed address validation", Flow.DELEGATED_PAYMENT.flow_id
+        156, "Payment failed address validation", Flow.DELEGATED_PAYMENT.flow_id,
     )
 
     # 2nd writeback to FINEOS for successful checks
@@ -1922,6 +1962,18 @@ class PaymentTransactionType(LookupTable):
     CANCELLATION = LkPaymentTransactionType(4, "Cancellation")
     UNKNOWN = LkPaymentTransactionType(5, "Unknown")
     EMPLOYER_REIMBURSEMENT = LkPaymentTransactionType(6, "Employer Reimbursement")
+
+
+class PaymentCheckStatus(LookupTable):
+    model = LkPaymentCheckStatus
+    column_names = ("payment_check_status_id", "payment_check_status_description")
+
+    PAID = LkPaymentCheckStatus(1, "Paid")
+    OUTSTANDING = LkPaymentCheckStatus(2, "Outstanding")
+    FUTURE = LkPaymentCheckStatus(3, "Future")
+    VOID = LkPaymentCheckStatus(4, "Void")
+    STALE = LkPaymentCheckStatus(5, "Stale")
+    STOP = LkPaymentCheckStatus(6, "Stop")
 
 
 class ReferenceFileType(LookupTable):
@@ -1946,8 +1998,9 @@ class ReferenceFileType(LookupTable):
     DIA_REDUCTION_REPORT_FOR_DFML = LkReferenceFileType(
         14, "DIA payments for DFML reduction report", 1
     )
-    PUB_TRANSACTION = LkReferenceFileType(15, "PUB-NACHA", 1)
+    PUB_NACHA = LkReferenceFileType(15, "PUB NACHA file", 1)
     PUB_ACH_RETURN = LkReferenceFileType(16, "PUB ACH Return", 1)
+    PUB_CHECK_RETURN = LkReferenceFileType(17, "PUB Check Return", 1)
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)
@@ -1957,7 +2010,7 @@ class ReferenceFileType(LookupTable):
     PUB_EZ_CHECK = LkReferenceFileType(26, "PUB EZ check file", 1)
     PUB_POSITIVE_PAYMENT = LkReferenceFileType(27, "PUB positive pay file", 1)
 
-    DELEGATED_PAYMENT_REPORT_FILE = LkReferenceFileType(27, "SQL Report", 1)
+    DELEGATED_PAYMENT_REPORT_FILE = LkReferenceFileType(28, "SQL Report", 1)
 
 
 class Title(LookupTable):
@@ -1996,6 +2049,7 @@ def sync_lookup_tables(db_session):
     Flow.sync_to_database(db_session)
     State.sync_to_database(db_session)
     PaymentTransactionType.sync_to_database(db_session)
+    PaymentCheckStatus.sync_to_database(db_session)
     PrenoteState.sync_to_database(db_session)
     PubErrorType.sync_to_database(db_session)
     db_session.commit()

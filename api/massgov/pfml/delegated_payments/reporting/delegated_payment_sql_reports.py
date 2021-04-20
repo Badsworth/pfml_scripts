@@ -4,15 +4,10 @@ from enum import Enum
 from typing import Dict, List, Optional
 
 
-class FolderName(str, Enum):
-    PROGRAM_INTEGRITY = "program-integrity"
-    FINANCE = "finance"
-
-
 class ReportName(str, Enum):
-    CLAIMANT_EXTRACT_ERROR_REPORT = "claimant-extract-error-report"  # TODO needs code change first
+    CLAIMANT_EXTRACT_ERROR_REPORT = "claimant-extract-error-report"
     PAYMENT_EXTRACT_ERROR_REPORT = "payment-extract-error-report"
-    ADDRESS_ERROR_REPORT = "address-error-report"  # TODO wait for PUB-111
+    ADDRESS_ERROR_REPORT = "address-error-report"
     OVERPAYMENT_REPORT = "overpayment-report"
     ZERO_DOLLAR_PAYMENT_REPORT = "zero-dollar-payment_report"
     CANCELLATION_REPORT = "cancellation-report"
@@ -31,7 +26,6 @@ PROCESS_FINEOS_EXTRACT_REPORTS: List[ReportName] = [
     ReportName.CLAIMANT_EXTRACT_ERROR_REPORT,
     ReportName.PAYMENT_EXTRACT_ERROR_REPORT,
     ReportName.ADDRESS_ERROR_REPORT,
-    ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT,
 ]
 CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.OVERPAYMENT_REPORT,
@@ -42,6 +36,7 @@ CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.CHECK_PAYMENT_REPORT,
     ReportName.DAILY_CASH_REPORT,
     ReportName.PAYMENT_REJECT_REPORT,
+    ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT,
 ]
 PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [
     ReportName.PUB_ERROR_REPORT,
@@ -53,7 +48,6 @@ PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [
 class Report:
     sql_command: str
     report_name: ReportName
-    folder_name: FolderName
 
 
 def _get_report_sql_command_from_file(sql_file_name: str) -> str:
@@ -65,76 +59,56 @@ def _get_report_sql_command_from_file(sql_file_name: str) -> str:
 
 REPORTS: List[Report] = [
     Report(
-        sql_command="select * from lk_state",
+        sql_command=_get_report_sql_command_from_file(ReportName.CLAIMANT_EXTRACT_ERROR_REPORT),
         report_name=ReportName.CLAIMANT_EXTRACT_ERROR_REPORT,
-        folder_name=FolderName.PROGRAM_INTEGRITY,
     ),
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.PAYMENT_EXTRACT_ERROR_REPORT),
         report_name=ReportName.PAYMENT_EXTRACT_ERROR_REPORT,
-        folder_name=FolderName.PROGRAM_INTEGRITY,
     ),
     Report(
-        sql_command="select * from lk_state",
+        sql_command=_get_report_sql_command_from_file(ReportName.ADDRESS_ERROR_REPORT),
         report_name=ReportName.ADDRESS_ERROR_REPORT,
-        folder_name=FolderName.PROGRAM_INTEGRITY,
     ),
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.OVERPAYMENT_REPORT),
         report_name=ReportName.OVERPAYMENT_REPORT,
-        folder_name=FolderName.FINANCE,
     ),
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.ZERO_DOLLAR_PAYMENT_REPORT),
         report_name=ReportName.ZERO_DOLLAR_PAYMENT_REPORT,
-        folder_name=FolderName.FINANCE,
     ),
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.CANCELLATION_REPORT),
         report_name=ReportName.CANCELLATION_REPORT,
-        folder_name=FolderName.FINANCE,
     ),
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.EMPLOYER_REIMBURSEMENT_REPORT),
         report_name=ReportName.EMPLOYER_REIMBURSEMENT_REPORT,
-        folder_name=FolderName.FINANCE,
     ),
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.ACH_PAYMENT_REPORT),
         report_name=ReportName.ACH_PAYMENT_REPORT,
-        folder_name=FolderName.FINANCE,
     ),
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.CHECK_PAYMENT_REPORT),
         report_name=ReportName.CHECK_PAYMENT_REPORT,
-        folder_name=FolderName.FINANCE,
     ),
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.DAILY_CASH_REPORT),
         report_name=ReportName.DAILY_CASH_REPORT,
-        folder_name=FolderName.FINANCE,
     ),
-    Report(
-        sql_command="select * from lk_state",
-        report_name=ReportName.PUB_ERROR_REPORT,
-        folder_name=FolderName.PROGRAM_INTEGRITY,
-    ),
-    Report(
-        sql_command="select * from lk_state",
-        report_name=ReportName.EFT_ERROR_REPORT,
-        folder_name=FolderName.PROGRAM_INTEGRITY,
-    ),
+    Report(sql_command="select * from lk_state", report_name=ReportName.PUB_ERROR_REPORT,),
+    Report(sql_command="select * from lk_state", report_name=ReportName.EFT_ERROR_REPORT,),
     Report(
         sql_command=_get_report_sql_command_from_file(
             ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT
         ),
         report_name=ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT,
-        folder_name=FolderName.FINANCE,
     ),
     Report(
-        sql_command="select * from lk_state",
+        sql_command=_get_report_sql_command_from_file(ReportName.PAYMENT_REJECT_REPORT),
         report_name=ReportName.PAYMENT_REJECT_REPORT,
-        folder_name=FolderName.PROGRAM_INTEGRITY,
     ),
 ]
 

@@ -32,7 +32,8 @@ Tests can be executed locally (against one of the cloud environments) by followi
 
 The test suite can run against your local portal enviornment.
 
-* Run `npm run cypress:open:local`
+* To run all tests use `npm run cypress:open:local`
+* To run a subset of Portal-based tests as a Portal smoke test run `npm run cypress:open:local:portal` instead
 * A window will pop open showing the various tests available for running.
 * Depending on what feature you're working on will determine the test of most interest. See Below ⬇️
 

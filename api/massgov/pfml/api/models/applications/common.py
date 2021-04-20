@@ -48,7 +48,7 @@ class LeaveReason(str, LookupEnum):
     pregnancy = "Pregnancy/Maternity"
     child_bonding = "Child Bonding"
     serious_health_condition_employee = "Serious Health Condition - Employee"
-    caring_leave = "Care For A Family Member"
+    caring_leave = "Care for a Family Member"
 
     @classmethod
     def get_lookup_model(cls):
@@ -59,6 +59,7 @@ class LeaveReasonQualifier(str, LookupEnum):
     newborn = "Newborn"
     adoption = "Adoption"
     foster_care = "Foster Care"
+    serious_health_condition = "Serious Health Condition"
 
     @classmethod
     def get_lookup_model(cls):
@@ -73,7 +74,7 @@ class RelationshipToCaregiver(str, LookupEnum):
     other_family_member = "Other Family Member"
     service_member = "Service Member"
     inlaw = "Inlaw"
-    sibling = "Sibling"
+    sibling = "Sibling - Brother/Sister"
     other = "Other"
     employee = "Employee"
 

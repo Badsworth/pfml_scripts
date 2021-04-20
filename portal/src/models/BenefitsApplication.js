@@ -176,7 +176,7 @@ export class CaringLeaveMetadata extends BaseModel {
       family_member_date_of_birth: null,
       family_member_first_name: null,
       family_member_last_name: null,
-      family_member_middle_initial: null,
+      family_member_middle_name: null,
       relationship_to_caregiver: null,
     };
   }

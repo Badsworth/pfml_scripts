@@ -1,11 +1,67 @@
-import { getFineosBaseUrl } from "../../../config";
-import { formatDateString } from "../util";
-import {format, addMonths, addDays, subDays, startOfWeek} from "date-fns";
-import { Submission } from "types";
+import { format, addMonths, addDays } from "date-fns";
 
-export function loginSavilinx(): void {
-  Cypress.config("baseUrl", getFineosBaseUrl());
-  cy.visit("/");
+/**
+ * This function is used to fetch and set the proper cookies for access Fineos UAT
+ *
+ * Note: Only used for UAT enviornment
+ */
+function SSO(): void {
+  cy.clearCookies();
+  // Perform SSO login in a task. We can't visit other domains in Cypress.
+  cy.task("completeSSOLoginFineos").then((cookiesJson) => {
+    const deserializedCookies: Record<string, string>[] = JSON.parse(
+      cookiesJson
+    );
+    // There's no way we can stop the redirection from Fineos -> SSO login.
+    // What we _can_ do is set the login cookies so that when that request is made,
+    // it bounces back immediately with a HTTP redirect instead of showing the login page.
+    const noSecure = deserializedCookies.filter((cookie) =>
+      cookie.domain.match(/login\.microsoftonline/)
+    );
+    for (const cookie_info of noSecure) {
+      cy.setCookie(cookie_info.name, cookie_info.value, cookie_info);
+    }
+  });
+}
+
+export function before(): void {
+  // Suppress known application errors in Fineos.
+  cy.on("uncaught:exception", (e) => {
+    if (
+      e.message.match(
+        /(#.(CaseOwnershipSummaryPanelElement|CaseParticipantsSummaryPanelElement)|panelsdrilldown|startHeartbeatMonitorForPage)/
+      )
+    ) {
+      return false;
+    }
+    if (e.message.match(/Cannot set property 'status' of undefined/)) {
+      return false;
+    }
+    return true;
+  });
+  // Block new-relic.js outright due to issues with Cypress networking code.
+  // Without this block, test retries on the portal error out due to fetch() errors.
+  cy.intercept("https://js-agent.newrelic.com/*", (req) => {
+    req.reply("console.log('Fake New Relic script loaded');");
+  });
+
+  // Fineos error pages have been found to cause test crashes when rendered. This is very hard to debug, as Cypress
+  // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we instead
+  // throw an error.
+  cy.intercept(/\/util\/errorpage.jsp/, (req) => {
+    req.reply(
+      "A fatal Fineos error was thrown at this point. We've blocked the rendering of this page to prevent test crashes"
+    );
+  });
+
+  // Set up a route we can listen to wait on ajax rendering to complete.
+  cy.intercept(
+    /(ajax\/pagerender\.jsp|sharedpages\/ajax\/listviewpagerender\.jsp|AJAXRequestHandler\.do)/
+  ).as("ajaxRender");
+
+  if (Cypress.env("E2E_ENVIRONMENT") === "uat") {
+    SSO();
+  }
 }
 
 export function visitClaim(claimId: string): void {
@@ -17,40 +73,11 @@ export function visitClaim(claimId: string): void {
   assertOnClaimPage(claimId);
 }
 
-export function visitEmployer(fein: string): void {
-  fein = fein.replace("-", "");
-  cy.get('a[aria-label="Parties"]').click();
-  cy.get("input[value*='Organisation']").click();
-  cy.contains("td", "Identification Number")
-    .next()
-    .within(() => cy.get("input").type(fein));
-
-  cy.get('input[type="submit"][value="Search"]').click();
-  // cy.get('td[title="Adjudication"]').first().click();
-  cy.get('input[value="OK"]').last().click();
-}
-
-export function confirmPOC(email: string): void {
-  cy.get('td[keytipnumber="6"]')
-    .contains("Party History")
-    .click({ force: true });
-  cy.wait("@ajaxRender");
-  cy.contains("span", email);
-}
-
-export function commenceIntake(claimId: string): void {
-  cy.get('a[aria-label="Cases"]').click();
-  cy.get('td[keytipnumber="4"]').contains("Case").click();
-  cy.labelled("Case Number").type(claimId);
-  cy.get('input[type="submit"][value="Search"]').click();
-  cy.contains("Capture the following details in order to commence intake");
-}
-
 export function denyClaim(reason: string): void {
   cy.get("input[type='submit'][value='Adjudicate']").click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  cy.get("input[type='submit'][value='Reject']").click({ force: true });
+  // Make sure the page is fully loaded by waiting for the leave plan to show up.
+  cy.get("table[id*='selectedLeavePlans'] tr").should("have.length", 1).click();
+  cy.get("input[type='submit'][value='Reject']").click();
   clickBottomWidgetButton("OK");
 
   cy.get('a[title="Deny the Pending Leave Request"]').click();
@@ -59,8 +86,6 @@ export function denyClaim(reason: string): void {
     .select(reason);
   cy.get('input[type="submit"][value="OK"]').click();
   cy.get(".absenceProgressSummaryTitle").should("contain.text", "Completed");
-  cy.wait("@ajaxRender");
-  cy.wait(200);
 }
 
 export function assertOnClaimPage(claimNumber: string): void {
@@ -158,188 +183,31 @@ export function searchScenario(claimNumber: string): void {
   cy.get('td[keytipnumber="4"]').contains("Case").click();
   cy.labelled("Case Number").type(claimNumber);
   cy.get('input[type="submit"][value="Search"]').click();
-}
-
-export function findClaim(claimNumber: string): void {
-  cy.get("h2 > span").should("contain.text", claimNumber);
-}
-
-export function onPage(page: string): void {
-  let url = "";
-  switch (page) {
-    case "claims":
-      url = "/sharedpages/casemanager/displaycase/displaycasepage";
-      break;
-
-    case "dept":
-      url = "/sharedpages/workmanager/transfertodeptpage";
-      break;
-  }
-  if (!url) throw new Error(`Page ${page} not found!`);
-  cy.url().should("include", url);
-}
-
-export function onTab(label: string): void {
+/**
+ * Helper to switch to a particular tab.
+ */
+function onTab(label: string): void {
   cy.contains(".TabStrip td", label).click().should("have.class", "TabOn");
-  // Wait on any in-flight Ajax to complete.
+  // Wait on any in-flight Ajax to complete, then add a very slight delay for rendering to occur.
+  cy.wait("@ajaxRender").wait(50);
+}
+
+/**
+ * Helper to wait for ajax-y actions to complete before proceeding.
+ *
+ * Note: Please do not add explicit waits here. This function should be fast -
+ * it will be called often. Try to find a better way to determine if we can move
+ * on with processing (element detection).
+ */
+function wait() {
   cy.wait("@ajaxRender");
-  // Slight delay after that to allow for the content to be populated.
-  cy.wait(200);
-}
-
-export function manageEvidence(): void {
-  cy.wait(2000).get('input[type="submit"][value="Manage Evidence"]').click();
-}
-
-export function clickReject(): void {
-  cy.get('input[title="Reject Leave Plan"]').click();
-  cy.get("#footerButtonsBar").find('input[value="OK"]').dblclick();
-}
-
-export function clickDeny(): void {
-  cy.get('a[title="Deny the Pending Leave Request"]')
-    .dblclick({ force: true })
-    .wait(150);
-  cy.get('span[id="leaveRequestDenialDetailsWidget"]');
+  cy.get("#disablingLayer").should("not.be.visible");
 }
 
 export function clickBottomWidgetButton(value = "OK"): void {
   cy.get("#PageFooterWidget").within(() => {
     cy.get(`input[value="${value}"]`).click({ force: true });
   });
-}
-
-export function validateEvidence(label: string): void {
-  let receipt: string, decision: string, reason: string;
-  switch (label) {
-    case "valid":
-      receipt = "Received";
-      decision = "Satisfied";
-      reason = "Evidence is Approved";
-      break;
-    case "invalid due to missing HCP form":
-      receipt = "Not Received";
-      decision = "Pending";
-      reason = "Missing HCP Form";
-      break;
-    case "invalid due to missing identity documents":
-      receipt = "Received";
-      decision = "Not Satisfied";
-      reason = "Submitted document is not a valid out-of-state ID.";
-      break;
-    case "invalid due to invalid HCP form":
-      receipt = "Received";
-      decision = "Not Satisfied";
-      reason =
-        "Submitted document is not a valid DFML-certified HCP form or FMLA form.";
-      break;
-    case "invalid due to mismatched ID and SSN":
-      receipt = "Received";
-      decision = "Not Satisfied";
-      reason = "ID does not match SSN.";
-      break;
-    default:
-      throw new Error("Evidence status not set or not recognized.");
-  }
-  cy.labelled("Evidence Receipt")
-    .get('select[id="manageEvidenceResultPopupWidget_un92_evidence-receipt"]')
-    .select(receipt);
-  cy.labelled("Evidence Decision")
-    .get(
-      'select[id="manageEvidenceResultPopupWidget_un92_evidence-resulttype"]'
-    )
-    .select(decision);
-  cy.labelled("Evidence Decision Reason").type(reason);
-  cy.get('input[type="button"][value="OK"]').click();
-}
-
-export function denialReason(reason: string): void {
-  let reasonSelection = "";
-  switch (reason) {
-    case "Financial Ineligibility":
-      reasonSelection = "Claimant wages failed 30x rule";
-      break;
-    case "Insufficient Certification":
-      reasonSelection = "ID documents fail requirements";
-      break;
-    default:
-      throw new Error("Denial reason not set or not recognized.");
-  }
-  cy.get('span[id="leaveRequestDenialDetailsWidget"]')
-    .find("select")
-    .select(reasonSelection);
-  cy.get('input[type="submit"][value="OK"]').click();
-}
-
-export function changeLeaveStart(startDate: Date): void {
-  onTab("Request Information");
-  cy.get("input[type='submit'][value='Edit']").click();
-  cy.get("input[value='Yes']").click();
-  cy.get(".popup-container").within(() => {
-    const formattedDate = format(startDate, "MM/dd/yyyy");
-    cy.labelled("Absence start date").type(
-      `{selectall}{backspace}${formattedDate}{enter}`
-    );
-    cy.labelled(
-      "Last day worked"
-    ).type(`{selectall}{backspace}${formattedDate}{enter}`, { force: true });
-    cy.get("input[type='button'][value='OK']").click();
-  });
-}
-
-export function claimCompletion(): void {
-  cy.get("#completedLeaveCardWidget").contains("Complete");
-}
-
-export function addEvidenceReviewTask(): void {
-  cy.get("input[type='submit'][title='Add a task to this case']").click({
-    force: true,
-    timeout: 30000,
-  });
-  cy.get("#NameSearchWidget")
-    .find('input[type="text"]')
-    .type("outstanding document");
-  cy.get("#NameSearchWidget").find('input[type="submit"]').click();
-  clickBottomWidgetButton("Next");
-  cy.get('td[title*="Outstanding Document"]').first().click();
-  cy.get("input[type='submit'][title='Open this task']").click();
-}
-
-export function transferToDFML(reason: string): void {
-  let reasonText: string;
-  switch (reason) {
-    case "missing HCP form":
-      reasonText = "This claim is missing a Health Care Provider form.";
-      break;
-    case "mismatched ID/SSN":
-      reasonText =
-        "This claim has a mismatched ID number and Social Security Number.";
-      break;
-    case "invalid HCP":
-      reasonText = "This claim has an invalid Health Care Provider form.";
-      break;
-    default:
-      throw new Error("Provided reason for transfer is not recognized.");
-  }
-
-  cy.get('div[title="Transfer"]').dblclick();
-  cy.get('a[title="Transfer to Dept"]').dblclick({ force: true });
-  cy.url().should("include", "/sharedpages/workmanager/transfertodeptpage");
-  cy.get(':nth-child(2) > [title="DFML Ops"]').first().click();
-  cy.contains("label", "Description")
-    .parentsUntil("tr")
-    .get("textarea")
-    .type(reasonText);
-  clickBottomWidgetButton();
-}
-
-export function confirmDFMLTransfer(): void {
-  cy.get("#PopupContainer").contains("Transferred to DFML Ops");
-  cy.get(".popup_buttons").find('input[value="OK"]').click();
-  cy.get("#BasicDetailsUsersDeptWidget_un16_Department").should(
-    "contain.text",
-    "DFML Ops"
-  );
 }
 
 export function uploadDocument(
@@ -386,24 +254,6 @@ export function findDocument(documentType: string): void {
   }
 }
 
-export function addWeeklyWage(): void {
-  cy.labelled("Average weekly wage").type("{selectall}{backspace}1000");
-  clickBottomWidgetButton();
-}
-
-export function fillAvailability(): void {
-  cy.get('input[type="submit"][value="Prefill with Requested Absence Periods"]')
-    .click()
-    .wait(1000);
-  cy.get('input[type="submit"][value="Yes"]').click();
-  clickBottomWidgetButton();
-}
-
-export function acceptLeavePlan(): void {
-  cy.get('input[title="Accept Leave Plan"]').click();
-  clickBottomWidgetButton();
-}
-
 export function approveClaim(): void {
   // This button turns out to be unclickable without force, because selecting
   // it seems to scroll it out of view. Force works around that.
@@ -411,11 +261,6 @@ export function approveClaim(): void {
     force: true,
   });
   cy.get(".key-info-bar .status").should("contain.text", "Approved");
-}
-
-export function findEmployerResponse(employerResponseComment: string): void {
-  cy.contains("a", "Employer Response to Leave Request").click();
-  cy.contains("textarea", employerResponseComment);
 }
 
 export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
@@ -442,21 +287,27 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
 export function createNotification(
   startDate: Date,
   endDate: Date,
-  claimType?: string
+  claimType?: string,
+  hours_worked_per_week?: number
 ): void {
+  const clickNext = (timeout?: number) =>
+    cy.get('#navButtons input[value="Next "]', { timeout }).first().click();
   cy.contains("span", "Create Notification").click();
-  cy.get("span[id='nextContainer']").first().find("input").click();
-  cy.labelled("Hours worked per week").type(`{selectall}{backspace}40`);
-  cy.get("span[id='nextContainer']").first().find("input").click();
+  clickNext();
+  cy.labelled("Hours worked per week").type(
+    `{selectall}{backspace}${hours_worked_per_week}`
+  );
+  clickNext();
+  // @todo: Make claim type dynamic.
   if (claimType === "military care leave") {
     cy.contains("div", "Out of work for another reason")
       .prev()
       .find("input")
       .click();
-    cy.get("span[id='nextContainer']").first().find("input").click();
+    clickNext();
     cy.labelled("Absence relates to").select("Family");
-    cy.wait(1000);
-    cy.labelled("Absence reason").select("Military Caregiver");
+    wait();
+    cy.labelled("Absence reason").select("Military Caregiver", {});
   } else {
     cy.contains(
       "div",
@@ -465,62 +316,45 @@ export function createNotification(
       .prev()
       .find("input")
       .click();
-    cy.get("span[id='nextContainer']").first().find("input").click();
+    clickNext();
     cy.labelled("Qualifier 1").select("Foster Care");
   }
 
-  cy.get("span[id='nextContainer']")
-    .first()
-    .find("input")
-    .click({ timeout: 20000 });
-  cy.contains("div", "One or more fixed time off periods")
-    .prev()
-    .find("input[type='checkbox'][id*='continuousTimeToggle_CHECKBOX']")
-    .click({ force: true });
-  cy.get("span[id='nextContainer']").first().find("input").click();
+  clickNext(5000);
+  cy.contains("div.toggle-guidance-row", "One or more fixed time off periods")
+    .find("span.slider")
+    .click();
+
+  clickNext();
   cy.labelled("Absence status").select("Estimated");
 
+  wait();
   cy.labelled("Absence start date").type(
-    `${formatDateString(startDate)}{enter}`
+    `${format(startDate, "MM/dd/yyyy")}{enter}`
   );
-  cy.wait(1000);
-  cy.labelled("Absence end date").type(`${formatDateString(endDate)}{enter}`, {
-    force: true,
-  });
-  cy.wait("@ajaxRender");
-  cy.wait(200);
+  wait();
+  cy.labelled("Absence end date").type(
+    `${format(endDate, "MM/dd/yyyy")}{enter}`
+  );
+  wait();
   cy.get(
-    "input[type='button'][id*='AddTimeOffAbsencePeriod'][value='Add']"
-  ).click({ force: true });
-  cy.wait("@ajaxRender");
-  cy.wait(500);
-  cy.wait("@ajaxRender");
-  cy.wait(500);
-  cy.get("span[id='nextContainer']")
-    .first()
-    .find("input")
-    .click({ timeout: 20000 });
+    '#timeOffAbsencePeriodDetailsQuickAddWidget input[value="Add"]'
+  ).click();
+
+  clickNext(5000);
   cy.labelled("Work Pattern Type").select("Fixed");
-  cy.wait("@ajaxRender");
-  cy.wait(1000);
-  cy.get("input[type=checkbox][id*=standardWorkWeek_CHECKBOX]").click();
-  cy.get("span[id='nextContainer']").first().find("input").click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
+  wait();
+
+  cy.labelled("Standard Work Week").click();
+  clickNext();
   if (claimType === "military care leave") {
     cy.labelled("Military Caregiver Description").type(
       "I am a parent military caregiver."
     );
   }
-  cy.get("span[id='nextContainer']")
-    .first()
-    .find("input")
-    .click({ timeout: 20000 });
+  clickNext(20000);
   cy.contains("div", "Thank you. Your notification has been submitted.");
-  cy.get("span[id='nextContainer']")
-    .first()
-    .find("input")
-    .click({ timeout: 20000 });
+  clickNext(20000);
 }
 
 export function additionalEvidenceRequest(claimNumber: string): void {
@@ -587,9 +421,8 @@ export function markEvidence(
   onTab("Evidence");
   cy.contains(".ListTable td", evidenceType).click();
   cy.get("input[type='submit'][value='Manage Evidence']").click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  // Focus inside popup.
+  // Focus inside popup. Note: There should be no need for an explicit wait here because
+  // Cypress will not move on until the popup has been rendered.
   cy.get(".WidgetPanel_PopupWidget").within(() => {
     if (claimType === "BGBM1") {
       cy.labelled("Evidence Receipt").select("Received");
@@ -838,14 +671,6 @@ export function searchClaimantSSN(ssn: string): void {
   cy.get('input[type="submit"][value="Search"]').click();
 }
 
-export function uploadIDdoc(claimNumber: string): void {
-  visitClaim(claimNumber);
-  onTab("Documents");
-  uploadDocument("MA ID", "Identification Proof");
-  findDocument("MA ID");
-  cy.wait(200);
-}
-
 export function findOtherLeaveEForm(claimNumber: string): void {
   visitClaim(claimNumber);
   onTab("Documents");
@@ -965,49 +790,16 @@ export function closeReleaseNoticeTask(docType: string): void {
 export function triggerNoticeRelease(docType: string): void {
   onTab("Task");
   onTab("Processes");
-  cy.wait("@ajaxRender");
-  cy.wait(500);
-  cy.get(".TreeRootContainer").contains("SOM Generate Legal Notice").click();
-  cy.wait("@ajaxRender");
-  cy.wait(500);
-  cy.get('input[type="submit"][value="Properties"]').click({ force: true });
-  cy.get('input[type="submit"][value="Continue"]').click({ force: true });
-  cy.wait("@ajaxRender");
-  cy.wait(2000);
+  cy.contains(".TreeNodeElement", "SOM Generate Legal Notice").click({
+    force: true,
+  });
+  cy.get('input[type="submit"][value="Properties"]').click();
+  cy.get('input[type="submit"][value="Continue"]').click();
+  cy.contains(".TreeNodeContainer", "SOM Generate Legal Notice", {
+    timeout: 20000,
+  })
+    .find("input[type='checkbox']")
+    .should("be.checked");
   onTab("Documents");
   cy.contains("a", docType);
-}
-
-export function confirmRMVStatus(RMVStatus: string): void {
-  let statusText = "";
-  switch (RMVStatus) {
-    case "valid":
-      statusText = "Verification check passed";
-      cy.get("div[id*='identificationStatus']").should(
-        "contain.text",
-        statusText
-      );
-      break;
-
-    case "invalid":
-    case "fraud":
-      statusText =
-        "Verification failed because no record could be found for given ID information";
-      cy.get("div[id*='identificationStatus']").should(
-        "contain.text",
-        statusText
-      );
-      break;
-
-    case "mismatch":
-      statusText = "Verification failed because ID number mismatch";
-      cy.get("div[id*='identificationStatus']").should(
-        "contain.text",
-        statusText
-      );
-      break;
-
-    default:
-      throw new Error("RMV Status Type not found!");
-  }
 }

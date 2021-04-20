@@ -16,10 +16,12 @@ export default class ClaimsApi extends BaseApi {
 
   /**
    * Fetches the list of claims for a user
+   *
+   * @param {number} page - zero-based page index
    * @returns {Promise<{ claims: ClaimCollection }>}
    */
-  getClaims = async () => {
-    const { data } = await this.request("GET");
+  getClaims = async (page) => {
+    const { data } = await this.request("GET", `?page=${page}`);
 
     const claims = data.map((claimData) => {
       claimData.employee = claimData.employee

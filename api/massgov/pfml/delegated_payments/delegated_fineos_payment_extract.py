@@ -130,7 +130,9 @@ class ExtractData:
         self.date_str = date_str
 
         file_location = os.path.join(
-            payments_config.get_s3_config().pfml_fineos_inbound_path, RECEIVED_FOLDER, self.date_str
+            payments_config.get_s3_config().pfml_fineos_extract_archive_path,
+            RECEIVED_FOLDER,
+            self.date_str,
         )
         self.reference_file = ReferenceFile(
             file_location=file_location,
@@ -517,15 +519,15 @@ class PaymentExtractStep(Step):
             .all()
         )
 
-        # For each payment, check whether it's in a specific set of states
-        # We query for the state specifically as the payment comes attached
+        # For each payment, check whether it's currently in any state that is not restartable.
         active_state = (
             self.db_session.query(StateLog)
             .join(LatestStateLog)
             .join(Payment)
+            .join(LkState, StateLog.end_state_id == LkState.state_id)
             .filter(
                 Payment.payment_id.in_(payment_ids),
-                StateLog.end_state_id.in_(payments_util.Constants.NON_RESTARTABLE_PAYMENT_STATES),
+                StateLog.end_state_id.notin_(payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS),
             )
             .first()
         )
@@ -932,7 +934,7 @@ class PaymentExtractStep(Step):
         extra["employee_id"] = employee.employee_id
         if existing_eft:
             extra["pub_eft_id"] = existing_eft.pub_eft_id
-            self.increment("eft_previously_prenoted_count")
+            self.increment("eft_found_count")
             logger.info(
                 "Found existing EFT info for claimant in prenote state %s",
                 existing_eft.prenote_state.prenote_state_description,
@@ -947,8 +949,9 @@ class PaymentExtractStep(Step):
                 and (get_now() - existing_eft.prenote_sent_at).days
                 >= PRENOTE_PRENDING_WAITING_PERIOD
             ):
-                self.increment("prenote_past_waiting_period_accepted_count")
+                self.increment("prenote_past_waiting_period_approved_count")
             else:
+                self.increment("not_approved_prenote_count")
                 reason = (
                     payments_util.ValidationReason.EFT_PRENOTE_REJECTED
                     if existing_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id
@@ -1326,7 +1329,7 @@ class PaymentExtractStep(Step):
             extract_data.date_str, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
         new_pei_s3_path = extract_data.pei.file_location.replace(
-            "received", f"error/{date_group_folder}"
+            RECEIVED_FOLDER, f"error/{date_group_folder}"
         )
         file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
         logger.debug(
@@ -1335,7 +1338,7 @@ class PaymentExtractStep(Step):
         )
 
         new_payment_s3_path = extract_data.payment_details.file_location.replace(
-            "received", f"error/{date_group_folder}"
+            RECEIVED_FOLDER, f"error/{date_group_folder}"
         )
         file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
         logger.debug(
@@ -1347,7 +1350,7 @@ class PaymentExtractStep(Step):
         )
 
         new_claim_s3_path = extract_data.claim_details.file_location.replace(
-            "received", f"error/{date_group_folder}"
+            RECEIVED_FOLDER, f"error/{date_group_folder}"
         )
         file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
         logger.debug(
@@ -1355,6 +1358,20 @@ class PaymentExtractStep(Step):
             extra={
                 "source": extract_data.claim_details.file_location,
                 "destination": new_claim_s3_path,
+            },
+        )
+
+        new_requested_absence_s3_path = extract_data.requested_absence.file_location.replace(
+            RECEIVED_FOLDER, f"error/{date_group_folder}"
+        )
+        file_util.rename_file(
+            extract_data.requested_absence.file_location, new_requested_absence_s3_path
+        )
+        logger.debug(
+            "Moved requested absence file to error folder.",
+            extra={
+                "source": extract_data.requested_absence.file_location,
+                "destination": new_requested_absence_s3_path,
             },
         )
 

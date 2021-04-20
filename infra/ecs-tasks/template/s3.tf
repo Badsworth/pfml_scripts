@@ -2,6 +2,10 @@ data "aws_s3_bucket" "agency_transfer" {
   bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
 }
 
+data "aws_s3_bucket" "reports" {
+  bucket = "massgov-pfml-${var.environment_name}-reports"
+}
+
 resource "aws_s3_bucket" "bulk_user_import" {
   bucket = "massgov-pfml-${var.environment_name}-bulk-user-import"
   acl    = "private"
