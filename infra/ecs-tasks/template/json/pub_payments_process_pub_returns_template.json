@@ -28,7 +28,14 @@
 
         { "name": "DB_HOST", "value": "${db_host}" },
         { "name": "DB_NAME", "value": "${db_name}" },
-        { "name": "DB_USERNAME", "value": "${db_username}" }
+        { "name": "DB_USERNAME", "value": "${db_username}" },
+
+        { "name": "FINEOS_DATA_IMPORT_PATH", "value": "${fineos_data_import_path}" },
+        { "name": "PFML_FINEOS_OUTBOUND_PATH", "value": "${pfml_fineos_outbound_path}" },
+
+        { "name": "PFML_ERROR_REPORTS_PATH", "value": "${pfml_error_reports_path}" },
+        { "name": "PFML_ERROR_REPORTS_ARCHIVE_PATH", "value": "s3://massgov-pfml-{environment_name}-agency-transfer/error-reports/sent" },
+        { "name": "PFML_PUB_INBOUND_PATH", "value": "s3://massgov-pfml-{environment_name}-agency-transfer/pub/inbound" }
       ],
       "secrets": [
         { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }

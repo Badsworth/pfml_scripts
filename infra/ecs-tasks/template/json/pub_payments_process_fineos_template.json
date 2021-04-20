@@ -40,11 +40,13 @@
       { "name": "FINEOS_VENDOR_MAX_HISTORY_DATE", "value": "${fineos_vendor_max_history_date}" },
       { "name": "FINEOS_PAYMENT_MAX_HISTORY_DATE", "value": "${fineos_payment_max_history_date}" },
 
+      { "name": "PFML_ERROR_REPORTS_PATH", "value": "${pfml_error_reports_path}" },
+      { "name": "PFML_ERROR_REPORTS_ARCHIVE_PATH", "value": "s3://massgov-pfml-{environment_name}-agency-transfer/error-reports/sent" },
+
       { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"},
 
       { "name": "PAYMENT_AUDIT_REPORT_OUTBOUND_FOLDER_PATH", "value":  "payment_audit_report_outbound_folder_path"},
       { "name": "PAYMENT_AUDIT_REPORT_SENT_FOLDER_PATH", "value":  "payment_audit_report_sent_folder_path"}
-
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },

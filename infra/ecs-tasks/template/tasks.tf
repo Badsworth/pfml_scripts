@@ -156,12 +156,24 @@ locals {
       command             = ["pub-payments-create-pub-files"]
       containers_template = "pub_payments_create_pub_files_template.json"
       task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-create-pub-files"
+      vars = {
+        fineos_data_import_path   = var.fineos_data_import_path
+        fineos_data_export_path   = var.fineos_data_export_path
+        pfml_fineos_inbound_path  = var.pfml_fineos_inbound_path
+        pfml_fineos_outbound_path = var.pfml_fineos_outbound_path
+        pfml_error_reports_path   = var.pfml_error_reports_path
+      }
     },
 
     "pub-payments-process-pub-returns" = {
       command             = ["pub-payments-process-pub-returns"]
       containers_template = "pub_payments_process_pub_returns_template.json"
       task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-process-pub-returns"
+      vars = {
+        fineos_data_import_path   = var.fineos_data_import_path
+        pfml_fineos_outbound_path = var.pfml_fineos_outbound_path
+        pfml_error_reports_path   = var.pfml_error_reports_path
+      }
     },
 
     "fineos-eligibility-feed-export" = {
@@ -250,13 +262,13 @@ locals {
         fineos_data_import_path   = var.fineos_data_import_path
         pfml_fineos_inbound_path  = var.pfml_fineos_inbound_path
         pfml_fineos_outbound_path = var.pfml_fineos_outbound_path
+        pfml_error_reports_path   = var.pfml_error_reports_path
 
         fineos_vendor_max_history_date  = var.fineos_vendor_max_history_date
         fineos_payment_max_history_date = var.fineos_payment_max_history_date
 
         payment_audit_report_outbound_folder_path = var.payment_audit_report_outbound_folder_path
         payment_audit_report_sent_folder_path     = var.payment_audit_report_sent_folder_path
-
       }
     },
 
