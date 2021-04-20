@@ -128,10 +128,15 @@ Array [
 
 exports[`Checklist renders description for Step 3`] = `
 Array [
-  <p
-    key="p-0"
+  <strong
+    key="strong-0"
   >
-    If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider complete a 
+    Are you taking medical leave?
+  </strong>,
+  <p
+    key="p-1"
+  >
+    You need to have a completed 
     <a
       href="https://www.mass.gov/hcp-form"
       key="1"
@@ -140,28 +145,27 @@ Array [
     >
       Certification of a Serious Health Condition
     </a>
-    . Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.
+    . Use your health care provider’s answers on the certification form to fill out some parts of the application.
   </p>,
   <p
-    key="p-1"
+    key="p-2"
   >
-    If you are taking family leave to bond with a child, you will need to know:
+    <strong
+      key="strong-0"
+    >
+      Are you taking leave to bond with a child?
+    </strong>
   </p>,
-  <ul
-    className="usa-list"
-    key="2"
+  <p
+    key="p-3"
   >
-    <li
-      key="0"
-    >
-      The child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.
-    </li>
-    <li
-      key="1"
-    >
-      When you want your leave to begin and end.
-    </li>
-  </ul>,
+    You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.
+  </p>,
+  <p
+    key="p-4"
+  >
+    You also need to know when you want your leave to begin and end.
+  </p>,
 ]
 `;
 
@@ -300,6 +304,16 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       <Trans
         components={
           Object {
+            "caregiver-certification-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "caregiver-relationship-link": <a
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
+              rel="noopener"
+              target="_blank"
+            />,
             "contact-center-phone-link": <a
               href="tel:(833) 344‑7365"
             />,
@@ -334,6 +348,16 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       <Trans
         components={
           Object {
+            "caregiver-certification-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "caregiver-relationship-link": <a
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
+              rel="noopener"
+              target="_blank"
+            />,
             "contact-center-phone-link": <a
               href="tel:(833) 344‑7365"
             />,
@@ -368,6 +392,16 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       <Trans
         components={
           Object {
+            "caregiver-certification-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "caregiver-relationship-link": <a
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
+              rel="noopener"
+              target="_blank"
+            />,
             "contact-center-phone-link": <a
               href="tel:(833) 344‑7365"
             />,
@@ -402,6 +436,16 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       <Trans
         components={
           Object {
+            "caregiver-certification-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "caregiver-relationship-link": <a
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
+              rel="noopener"
+              target="_blank"
+            />,
             "contact-center-phone-link": <a
               href="tel:(833) 344‑7365"
             />,
@@ -454,6 +498,16 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       <Trans
         components={
           Object {
+            "caregiver-certification-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "caregiver-relationship-link": <a
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
+              rel="noopener"
+              target="_blank"
+            />,
             "contact-center-phone-link": <a
               href="tel:(833) 344‑7365"
             />,
@@ -506,6 +560,16 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       <Trans
         components={
           Object {
+            "caregiver-certification-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "caregiver-relationship-link": <a
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
+              rel="noopener"
+              target="_blank"
+            />,
             "contact-center-phone-link": <a
               href="tel:(833) 344‑7365"
             />,
@@ -540,6 +604,16 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       <Trans
         components={
           Object {
+            "caregiver-certification-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "caregiver-relationship-link": <a
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
+              rel="noopener"
+              target="_blank"
+            />,
             "contact-center-phone-link": <a
               href="tel:(833) 344‑7365"
             />,
