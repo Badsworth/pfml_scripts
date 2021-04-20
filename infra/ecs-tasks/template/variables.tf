@@ -291,27 +291,3 @@ variable "payment_audit_report_sent_folder_path" {
   type        = string
   default     = ""
 }
-
-variable "payment_rejects_received_folder_path" {
-  description = "Payment rejects received path"
-  type        = string
-  default     = ""
-}
-
-variable "payment_rejects_processed_folder_path" {
-  description = "Payment rejects processed folder path"
-  type        = string
-  default     = ""
-}
-
-variable "payment_rejects_report_outbound_folder" {
-  description = "Payment rejects outbound folder"
-  type        = string
-  default     = ""
-}
-
-variable "payment_rejects_report_sent_folder_path" {
-  description = "Payment rejects report sent folder path"
-  type        = string
-  default     = ""
-}

@@ -749,43 +749,28 @@ resource "aws_iam_role_policy" "pub_payments_process_fineos_task_role_extras" {
 
 data "aws_iam_policy_document" "pub_payments_process_fineos_task_role_extras" {
   statement {
-    sid = "AllowListingOfBucket"
-    actions = [
-      "s3:ListBucket"
-    ]
-
-    resources = [
-      data.aws_s3_bucket.agency_transfer.arn,
-      "${data.aws_s3_bucket.agency_transfer.arn}/*"
-    ]
-
-    effect = "Allow"
-  }
-
-  statement {
-    sid = "AllowS3ReadOnBucket"
+    sid = "ReadWriteAccessToReportsBucket"
     actions = [
       "s3:Get*",
-      "s3:List*"
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
     ]
 
     resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/payments",
-      "${data.aws_s3_bucket.agency_transfer.arn}/payments/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/audit",
-      "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
+      "${data.aws_s3_bucket.reports.arn}/audit",
+      "${data.aws_s3_bucket.reports.arn}/audit/*"
     ]
 
     effect = "Allow"
   }
 
   statement {
-    sid = "AllowS3WriteOnBucket"
+    sid = "ReadWriteAccessToAgencyTransferBucket"
     actions = [
+      "s3:Get*",
+      "s3:List*",
       "s3:PutObject",
       "s3:DeleteObject",
       "s3:AbortMultipartUpload"
@@ -796,10 +781,10 @@ data "aws_iam_policy_document" "pub_payments_process_fineos_task_role_extras" {
       "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/payments",
       "${data.aws_s3_bucket.agency_transfer.arn}/payments/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit",
-      "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/audit/*"
     ]
 
     effect = "Allow"
@@ -858,43 +843,28 @@ resource "aws_iam_role_policy" "pub_payments_create_pub_files_task_role_extras" 
 
 data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" {
   statement {
-    sid = "AllowListingOfBucket"
-    actions = [
-      "s3:ListBucket"
-    ]
-
-    resources = [
-      data.aws_s3_bucket.agency_transfer.arn,
-      "${data.aws_s3_bucket.agency_transfer.arn}/*"
-    ]
-
-    effect = "Allow"
-  }
-
-  statement {
-    sid = "AllowS3ReadOnBucket"
+    sid = "ReadWriteAccessToReportsBucket"
     actions = [
       "s3:Get*",
-      "s3:List*"
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
     ]
 
     resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}/pub",
-      "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/audit",
-      "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.reports.arn}/audit",
+      "${data.aws_s3_bucket.reports.arn}/audit/*"
     ]
 
     effect = "Allow"
   }
 
   statement {
-    sid = "AllowS3WriteOnBucket"
+    sid = "ReadWriteAccessToAgencyTransferBucket"
     actions = [
+      "s3:Get*",
+      "s3:List*",
       "s3:PutObject",
       "s3:DeleteObject",
       "s3:AbortMultipartUpload"
@@ -903,12 +873,14 @@ data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" 
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/pub",
       "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/payments",
+      "${data.aws_s3_bucket.agency_transfer.arn}/payments/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/cps",
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*"
     ]
 
     effect = "Allow"
@@ -966,41 +938,28 @@ resource "aws_iam_role_policy" "pub_payments_process_pub_returns_task_role_extra
 
 data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extras" {
   statement {
-    sid = "AllowListingOfBucket"
-    actions = [
-      "s3:ListBucket"
-    ]
-
-    resources = [
-      data.aws_s3_bucket.agency_transfer.arn,
-      "${data.aws_s3_bucket.agency_transfer.arn}/*"
-    ]
-
-    effect = "Allow"
-  }
-
-  statement {
-    sid = "AllowS3ReadOnBucket"
+    sid = "ReadWriteAccessToReportsBucket"
     actions = [
       "s3:Get*",
-      "s3:List*"
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
     ]
 
     resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}/pub",
-      "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.reports.arn}/audit",
+      "${data.aws_s3_bucket.reports.arn}/audit/*"
     ]
 
     effect = "Allow"
   }
 
   statement {
-    sid = "AllowS3WriteOnBucket"
+    sid = "ReadWriteAccessToAgencyTransferBucket"
     actions = [
+      "s3:Get*",
+      "s3:List*",
       "s3:PutObject",
       "s3:DeleteObject",
       "s3:AbortMultipartUpload"
@@ -1009,10 +968,10 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/pub",
       "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/cps",
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*"
     ]
 
     effect = "Allow"
