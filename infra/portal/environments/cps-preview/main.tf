@@ -45,7 +45,6 @@ module "massgov_pfml" {
   # 'false' will set rule to 'COUNT' (counts traffic that meets rule(s) instead of blocking)
   enforce_cloudfront_rate_limit     = true
   enforce_cloudfront_fortinet_rules = true
-
   # You probably don't need to change the variables below:
   source                 = "../../template"
   environment_name       = "cps-preview"
