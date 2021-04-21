@@ -1,24 +1,65 @@
+import uuid
 from dataclasses import dataclass
-from typing import List
+from typing import Dict, List, Optional
 
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
+    Address,
     Claim,
     Employee,
     Employer,
+    GeoState,
     LkAbsenceStatus,
     LkClaimType,
+    PaymentMethod,
+    PrenoteState,
     TaxIdentifier,
 )
-from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory, EmployerFactory
+from massgov.pfml.db.models.factories import (
+    AddressFactory,
+    ClaimFactory,
+    EmployeeFactory,
+    EmployeePubEftPairFactory,
+    EmployerFactory,
+    PubEftFactory,
+)
 from massgov.pfml.delegated_payments.mock.scenarios import (
     ScenarioDescriptor,
     ScenarioName,
     get_scenario_by_name,
 )
+from massgov.pfml.experian.physical_address.client.mock import MockClient
+from massgov.pfml.experian.physical_address.client.models import Confidence
 
 logger = logging.get_logger(__name__)
+
+
+# == Constants ==
+
+VALID_ADDRESS = {
+    "line_1": "20 South Ave",
+    "line_2": "",
+    "city": "Burlington",
+    "state": "MA",
+    "zip": "01803",
+}
+
+MULTI_MATCH_ADDRESS = {
+    "line_1": "374 Multi St",
+    "line_2": "aPt 123",
+    "city": "Burlington",
+    "state": "MA",
+    "zip": "01803",
+}
+
+INVALID_ADDRESS = {
+    "line_1": "123 Main St",
+    "line_2": "",
+    "city": "Burlington",
+    "state": "MA",
+    "zip": "01803",
+}
 
 
 # == Data structures ==
@@ -35,7 +76,10 @@ class ScenarioData:
     scenario_descriptor: ScenarioDescriptor
     employer: Employer
     employee: Employee
-    claims: List[Claim]
+    claim: Claim
+
+    payment_c_value: Optional[str] = None
+    payment_i_value: Optional[str] = None
 
 
 @dataclass
@@ -45,15 +89,50 @@ class ScenarioDataConfig:
     fein_id_base: int = 250000000
 
 
+# == Common Utils ==
+
+
+def get_mock_address_client() -> MockClient:
+    def parse_address(mock_address: Dict) -> Address:
+        state = GeoState.description_to_db_instance.get(mock_address["state"], GeoState.MA)
+
+        return AddressFactory.build(
+            address_line_one=mock_address["line_1"],
+            address_line_two=mock_address["line_2"],
+            city=mock_address["city"],
+            geo_state=state,
+            zip_code=mock_address["zip"],
+        )
+
+    client = MockClient(fallback_confidence=Confidence.NO_MATCHES)
+
+    # add valid address
+    valid_address = parse_address(VALID_ADDRESS)
+    client.add_mock_address_response(valid_address, Confidence.VERIFIED_MATCH)
+
+    # add no match address
+    invalid_address = parse_address(INVALID_ADDRESS)
+    client.add_mock_address_response(invalid_address, Confidence.NO_MATCHES)
+
+    # add multi match address
+    multi_match_address = parse_address(MULTI_MATCH_ADDRESS)
+    client.add_mock_address_response(multi_match_address, Confidence.MULTIPLE_MATCHES)
+
+    return client
+
+
 # == Helpers ==
 
 
 def create_employer(fein: str, fineos_employer_id: str) -> Employer:
-    return EmployerFactory.create(employer_fein=fein, fineos_employer_id=fineos_employer_id)
+    return EmployerFactory.create(
+        employer_id=uuid.uuid4(), employer_fein=fein, fineos_employer_id=fineos_employer_id
+    )
 
 
 def create_employee(ssn: str, fineos_customer_number: str) -> Employee:
     return EmployeeFactory.create(
+        employee_id=uuid.uuid4(),
         tax_identifier=TaxIdentifier(tax_identifier=ssn),
         fineos_customer_number=fineos_customer_number,
     )
@@ -91,28 +170,35 @@ def generate_scenario_data_in_db(
 
     employee = create_employee(ssn, fineos_customer_number)
 
-    # address
-
-    claims: List[Claim] = []
-
-    for c in range(scenario_descriptor.claims_count):
-        absence_case_index = c + 1
-        absence_case_id = (
-            f"{fineos_notification_id}-ABS-{str(absence_case_index)}"  # maximum length of 19
+    add_eft = (
+        scenario_descriptor.payment_method == PaymentMethod.ACH
+        and not scenario_descriptor.no_prior_eft_account
+    )
+    if add_eft:
+        prenote_state = (
+            PrenoteState.APPROVED if scenario_descriptor.prenoted else PrenoteState.PENDING_PRE_PUB
         )
-
-        claim = create_claim(
-            employer=employer,
-            employee=employee,
-            claim_type=scenario_descriptor.claim_type,
-            fineos_absence_id=absence_case_id,
-            absence_status=AbsenceStatus.APPROVED,
+        pub_eft = PubEftFactory.create(
+            pub_eft_id=uuid.uuid4(),
+            routing_nbr=ssn,
+            account_nbr=ssn,
+            bank_account_type_id=scenario_descriptor.account_type.bank_account_type_id,
+            prenote_state_id=prenote_state.prenote_state_id,
         )
+        EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
 
-        claims.append(claim)
+    absence_case_id = f"{fineos_notification_id}-ABS-001"
+
+    claim = create_claim(
+        employer=employer,
+        employee=employee,
+        claim_type=scenario_descriptor.claim_type,
+        fineos_absence_id=absence_case_id,
+        absence_status=AbsenceStatus.APPROVED,
+    )
 
     return ScenarioData(
-        scenario_descriptor=scenario_descriptor, employer=employer, employee=employee, claims=claims
+        scenario_descriptor=scenario_descriptor, employer=employer, employee=employee, claim=claim,
     )
 
 
@@ -121,8 +207,8 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
         scenario_dataset: List[ScenarioData] = []
 
         # provided unique keys, sequences etc
-        ssn = config.ssn_id_base
-        fein = config.fein_id_base
+        ssn = config.ssn_id_base + 1
+        fein = config.fein_id_base + 1
 
         for scenario_with_count in config.scenarios_with_count:
             scenario_name = scenario_with_count.scenario_name
