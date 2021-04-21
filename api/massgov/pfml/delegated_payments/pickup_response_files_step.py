@@ -34,13 +34,13 @@ class PickupResponseFilesStep(Step):
             payments_util.Constants.FILE_NAME_PAYMENT_AUDIT_REPORT,
         )
 
-        # Move check return files from the DFML folder populated by Sharepoint
+        # Move check return files from the DFML folder populated by MoveIt
         # We expect this to copy both the Paid & Outstanding files
         pub_check_received_folder = os.path.join(
             s3_config.pfml_pub_check_archive_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
         )
         self.move_files(
-            s3_config.dfml_response_inbound_path,
+            s3_config.pub_moveit_inbound_path,
             pub_check_received_folder,
             payments_util.Constants.FILE_NAME_PUB_POSITIVE_PAY,
         )

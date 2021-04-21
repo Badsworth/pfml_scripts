@@ -451,14 +451,28 @@ def test_e2e_pub_payments(
         )
         dfml_report_outbound_path = os.path.join(s3_config.dfml_report_outbound_path)
 
-        assert_files(pub_folder_path, ["PUB-EZ-CHECK.csv"])
-        assert_files(pub_check_archive_folder_path, ["PUB-EZ-CHECK.csv"], timestamp_prefix)
+        assert_files(
+            dfml_report_outbound_path, [f"{payments_util.Constants.FILE_NAME_PUB_EZ_CHECK}.csv"]
+        )
+        assert_files(
+            pub_check_archive_folder_path,
+            [f"{payments_util.Constants.FILE_NAME_PUB_EZ_CHECK}.csv"],
+            timestamp_prefix,
+        )
 
-        assert_files(dfml_report_outbound_path, ["PUB-POSITIVE-PAY.txt"])
-        assert_files(pub_check_archive_folder_path, ["PUB-POSITIVE-PAY.txt"], timestamp_prefix)
+        assert_files(pub_folder_path, [f"{payments_util.Constants.FILE_NAME_PUB_POSITIVE_PAY}.txt"])
+        assert_files(
+            pub_check_archive_folder_path,
+            [f"{payments_util.Constants.FILE_NAME_PUB_POSITIVE_PAY}.txt"],
+            timestamp_prefix,
+        )
 
-        assert_files(pub_folder_path, ["PUB-NACHA"])
-        assert_files(pub_ach_archive_folder_path, ["PUB-NACHA"], timestamp_prefix)
+        assert_files(pub_folder_path, [payments_util.Constants.FILE_NAME_PUB_NACHA])
+        assert_files(
+            pub_ach_archive_folder_path,
+            [payments_util.Constants.FILE_NAME_PUB_NACHA],
+            timestamp_prefix,
+        )
 
         # TODO validate content of outgoing files
 

@@ -9,14 +9,13 @@ class ReportName(str, Enum):
     PAYMENT_EXTRACT_ERROR_REPORT = "payment-extract-error-report"
     ADDRESS_ERROR_REPORT = "address-error-report"
     OVERPAYMENT_REPORT = "overpayment-report"
-    ZERO_DOLLAR_PAYMENT_REPORT = "zero-dollar-payment_report"
+    ZERO_DOLLAR_PAYMENT_REPORT = "zero-dollar-payment-report"
     CANCELLATION_REPORT = "cancellation-report"
     EMPLOYER_REIMBURSEMENT_REPORT = "employer-reimbursement-report"
     ACH_PAYMENT_REPORT = "ach-payment-report"
     CHECK_PAYMENT_REPORT = "check-payment-report"
     DAILY_CASH_REPORT = "daily-cash-report"
     PUB_ERROR_REPORT = "pub-error-report"  # TODO wait for PUB-75
-    EFT_ERROR_REPORT = "eft-error-report"  # TODO wait for PUB-75
     PAYMENT_RECONCILIATION_SUMMARY_REPORT = "payment-reconciliation-summary-report"
     PAYMENT_REJECT_REPORT = "payment-reject-report"
 
@@ -38,10 +37,7 @@ CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.PAYMENT_REJECT_REPORT,
     ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT,
 ]
-PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [
-    ReportName.PUB_ERROR_REPORT,
-    ReportName.EFT_ERROR_REPORT,
-]
+PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [ReportName.PUB_ERROR_REPORT]
 
 
 @dataclass
@@ -99,7 +95,6 @@ REPORTS: List[Report] = [
         report_name=ReportName.DAILY_CASH_REPORT,
     ),
     Report(sql_command="select * from lk_state", report_name=ReportName.PUB_ERROR_REPORT,),
-    Report(sql_command="select * from lk_state", report_name=ReportName.EFT_ERROR_REPORT,),
     Report(
         sql_command=_get_report_sql_command_from_file(
             ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT

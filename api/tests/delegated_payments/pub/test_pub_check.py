@@ -142,7 +142,9 @@ def test_send_check_file(mock_s3_bucket):
 
     ref_file = pub_check.send_check_file(ez_check_file, archive_folder_path, outbound_folder_path)
 
-    filename_pattern = r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-PUB-EZ-CHECK.csv"
+    filename_pattern = (
+        r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-EOLWD-DFML-EZ-CHECK.csv"
+    )
     assert re.search(filename_pattern, ref_file.file_location)
 
     # Confirm output file has 2 rows for each record and 1 for the header.
@@ -150,7 +152,7 @@ def test_send_check_file(mock_s3_bucket):
     assert len([line for line in file_stream]) == 1 + 2 * len(ez_check_file.records)
 
     # The outbound file should have been identically built
-    file_stream = file_util.open_stream(f"{outbound_folder_path}/PUB-EZ-CHECK.csv")
+    file_stream = file_util.open_stream(f"{outbound_folder_path}/EOLWD-DFML-EZ-CHECK.csv")
     assert len([line for line in file_stream]) == 1 + 2 * len(ez_check_file.records)
 
 
@@ -164,7 +166,7 @@ def test_send_positive_pay_file(mock_s3_bucket):
     )
 
     filename_pattern = (
-        r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-PUB-POSITIVE-PAY.txt"
+        r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-EOLWD-DFML-POSITIVE-PAY.txt"
     )
     assert re.search(filename_pattern, ref_file.file_location)
 
@@ -173,7 +175,7 @@ def test_send_positive_pay_file(mock_s3_bucket):
     assert len([line for line in file_stream]) == len(positive_pay_file.entries)
 
     # The outbound file should have been identically built
-    file_stream = file_util.open_stream(f"{outbound_folder_path}/PUB-POSITIVE-PAY.txt")
+    file_stream = file_util.open_stream(f"{outbound_folder_path}/EOLWD-DFML-POSITIVE-PAY.txt")
     assert len([line for line in file_stream]) == len(positive_pay_file.entries)
 
 
