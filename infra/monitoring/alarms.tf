@@ -25,3 +25,10 @@ module "alarms_portal" {
   low_priority_nr_portal_integration_key  = pagerduty_service_integration.newrelic_low_priority_portal_notification.integration_key
   high_priority_nr_portal_integration_key = pagerduty_service_integration.newrelic_high_priority_portal_notification.integration_key
 }
+
+module "email_bounce" {
+  source = "../modules/email_bounce"
+
+  low_priority_nr_integration_key  = pagerduty_service_integration.newrelic_low_priority_notification.integration_key
+  high_priority_nr_integration_key = pagerduty_service_integration.newrelic_high_priority_notification.integration_key
+}
