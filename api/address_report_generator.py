@@ -8,6 +8,7 @@ from massgov.pfml.experian.physical_address.service import (
     address_to_experian_suggestion_text_format,
 )
 
+# Replace with "Experian address validation API development token" from PFML Eng 1Password vault.
 experian_client = Client(config=ExperianConfig(auth_token="..."))
 
 infile_location = "check-addresses.csv"
