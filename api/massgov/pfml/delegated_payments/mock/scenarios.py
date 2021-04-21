@@ -47,6 +47,12 @@ class ScenarioName(Enum):
     # TODO CLAIM_DOES_NOT_EXIST
     PENDING_LEAVE_REQUEST_DECISION = "PENDING_LEAVE_REQUEST_DECISION"
 
+    # Audit
+    AUDIT_REJECTED = "AUDIT_REJECTED"
+
+    # TODO PEI writeback error
+    # TODO positive pay check outbound
+
 
 @dataclass
 class ScenarioDescriptor:
@@ -69,6 +75,8 @@ class ScenarioDescriptor:
     fineos_extract_address_multiple_matches: bool = False
 
     leave_request_decision: str = "Approved"
+
+    is_audit_approved: bool = True
 
     negative_payment_amount: bool = False
 
@@ -128,6 +136,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
         scenario_name=ScenarioName.PENDING_LEAVE_REQUEST_DECISION, leave_request_decision="Pending"
     ),
+    ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_approved=False),
 ]
 
 SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {

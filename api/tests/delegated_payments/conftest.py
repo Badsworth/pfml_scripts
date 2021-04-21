@@ -23,6 +23,12 @@ def set_exporter_env_vars(mock_s3_bucket, mock_fineos_s3_bucket, mock_sftp_clien
     monkeypatch.setenv(
         "PFML_ERROR_REPORTS_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/error_reports/outbound"
     )
+    monkeypatch.setenv(
+        "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/rejects/inbound"
+    )
+    monkeypatch.setenv("PFML_PUB_CHECK_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/pub/check")
+    monkeypatch.setenv("PFML_PUB_ACH_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/pub/ach")
+    monkeypatch.setenv("PUB_MOVEIT_OUTBOUND_PATH", f"s3://{mock_s3_bucket}/pub/outbound")
 
 
 def upload_file_to_s3(file_path, s3_bucket, key):

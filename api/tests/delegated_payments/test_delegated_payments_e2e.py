@@ -5,6 +5,7 @@ import csv
 import json
 import logging  # noqa: B1
 import os
+from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 from unittest import mock
 
@@ -25,6 +26,7 @@ from massgov.pfml.db.models.payments import (
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
 )
+from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import CiIndex
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     FINEOS_PAYMENT_EXTRACT_FILES,
     generate_payment_extract_files,
@@ -38,7 +40,9 @@ from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
 )
 from massgov.pfml.delegated_payments.mock.scenarios import SCENARIO_DESCRIPTORS, ScenarioName
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
+    CREATE_PUB_FILES_REPORTS,
     PROCESS_FINEOS_EXTRACT_REPORTS,
+    ReportName,
     get_report_by_name,
 )
 from massgov.pfml.delegated_payments.task.process_fineos_extracts import (
@@ -46,6 +50,12 @@ from massgov.pfml.delegated_payments.task.process_fineos_extracts import (
 )
 from massgov.pfml.delegated_payments.task.process_fineos_extracts import (
     _process_fineos_extracts as run_fineos_ecs_task,
+)
+from massgov.pfml.delegated_payments.task.process_pub_payments import (
+    Configuration as ProcessPubPaymentsTaskConfiguration,
+)
+from massgov.pfml.delegated_payments.task.process_pub_payments import (
+    _process_pub_payments as run_process_pub_payments_ecs_task,
 )
 
 # == Data Structures ==
@@ -66,7 +76,15 @@ class TestDataSet:
     def get_scenario_data_by_name(
         self, scenario_name: ScenarioName
     ) -> Optional[List[ScenarioData]]:
-        return self.scenario_dataset_map[scenario_name]
+        return self.scenario_dataset_map.get(scenario_name, None)
+
+    def get_scenario_data_by_payment_ci(self, c_value: str, i_value: str) -> Optional[ScenarioData]:
+        for scenario_data in self.scenario_dataset:
+            if CiIndex(c=scenario_data.payment_c_value, i=scenario_data.payment_i_value) == CiIndex(
+                c=c_value, i=i_value
+            ):
+                return scenario_data
+        return None
 
 
 # == The E2E Test ==
@@ -91,6 +109,9 @@ def test_e2e_pub_payments(
 
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2021-04-30")
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2021-04-30")
+
+    monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", "123456789")
+    monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", "234567890")
 
     s3_config = payments_config.get_s3_config()
 
@@ -183,6 +204,7 @@ def test_e2e_pub_payments(
                 ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                 ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
                 ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                ScenarioName.AUDIT_REJECTED,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=test_db_session,
@@ -219,6 +241,7 @@ def test_e2e_pub_payments(
             db_session=test_db_session,
         )
 
+        # End State
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN],
@@ -226,6 +249,7 @@ def test_e2e_pub_payments(
             db_session=test_db_session,
         )
 
+        # End State
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[
@@ -266,7 +290,7 @@ def test_e2e_pub_payments(
         audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)
 
         assert (
-            len(audit_report_parsed_csv_rows) == 4
+            len(audit_report_parsed_csv_rows) == 5
         )  # See DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT validation above
 
         payments = get_payments_in_end_state(
@@ -278,28 +302,20 @@ def test_e2e_pub_payments(
         )
 
         # == Validate all reports
-        for report_name in PROCESS_FINEOS_EXTRACT_REPORTS:
-            report = get_report_by_name(report_name)
-            file_name = f"{report.report_name.value}.csv"
+        assert_reports(
+            s3_config.dfml_report_outbound_path,
+            s3_config.pfml_error_reports_archive_path,
+            PROCESS_FINEOS_EXTRACT_REPORTS,
+        )
 
-            outbound_folder = os.path.join(s3_config.dfml_report_outbound_path)
-            sent_folder = os.path.join(
-                s3_config.pfml_error_reports_archive_path,
-                payments_util.Constants.S3_OUTBOUND_SENT_DIR,
-                date_folder,
-            )
-
-            assert_files(outbound_folder, [file_name])
-            assert_files(sent_folder, [file_name], timestamp_prefix)
-
-        # Validate metrics
+        # == Validate metrics
         assert_metrics(
             test_db_other_session,
             "PaymentExtractStep",
             {
                 "processed_payment_count": len(SCENARIO_DESCRIPTORS),
                 "unapproved_leave_request_count": 1,
-                "approved_prenote_count": 2,
+                "approved_prenote_count": 3,
                 "zero_dollar_payment_count": 1,
                 "cancellation_count": 1,
                 "overpayment_count": 2,
@@ -312,7 +328,7 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "PaymentAuditReportStep",
             {
-                "payment_sampled_for_audit_count": 4,  # See DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT state check above
+                "payment_sampled_for_audit_count": 5,  # See DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT state check above
             },
         )
 
@@ -324,7 +340,163 @@ def test_e2e_pub_payments(
 
         # TODO validate metrics for other steps when available
 
-    # TODO - Day 2 PUB Processing ECS Task
+    # ===============================================================================
+    # [Day 2 - 12:00 PM] Payment Integrity Team returns Payment Rejects File
+    # ===============================================================================
+
+    with freeze_time("2021-05-02 12:00:00"):
+        rejects_file_received_path = os.path.join(
+            s3_config.pfml_payment_rejects_archive_path,
+            payments_util.Constants.S3_INBOUND_RECEIVED_DIR,
+            "Payment-Rejects.csv",
+        )
+        generate_rejects_file(test_dataset, audit_report_file_path, rejects_file_received_path)
+
+    # ==============================================================================================
+    # [Day 2 - 2:00 PM] Run the PUB Processing ECS task - Rejects, PUB Transaction Files, Writeback
+    # ==============================================================================================
+
+    with freeze_time("2021-05-02 14:00:00"):
+
+        # == Run the task
+        run_process_pub_payments_ecs_task(
+            db_session=test_db_session,
+            log_entry_db_session=test_db_other_session,
+            config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
+        )
+
+        # == Validate payments state logs
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+            ],
+            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+            db_session=test_db_session,
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,],
+            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT,
+            db_session=test_db_session,
+        )
+
+        # End State
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.ZERO_DOLLAR_PAYMENT,],
+            end_state=State.DELEGATED_PAYMENT_ZERO_PAYMENT_FINEOS_WRITEBACK_SENT,
+            db_session=test_db_session,
+        )
+
+        # End State
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.CANCELLATION_PAYMENT,],
+            end_state=State.DELEGATED_PAYMENT_CANCELLATION_PAYMENT_FINEOS_WRITEBACK_SENT,
+            db_session=test_db_session,
+        )
+
+        # End State
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
+                ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
+            ],
+            end_state=State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT,
+            db_session=test_db_session,
+        )
+
+        # End State
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,],
+            end_state=State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_PAYMENT_FINEOS_WRITEBACK_SENT,
+            db_session=test_db_session,
+        )
+
+        # End State
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.AUDIT_REJECTED],
+            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+            db_session=test_db_session,
+        )
+
+        # == Rejects processed
+        date_folder = get_current_date_folder()
+        timestamp_prefix = get_current_timestamp_prefix()
+
+        rejects_file_received_path = os.path.join(
+            s3_config.pfml_payment_rejects_archive_path,
+            payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+            date_folder,
+        )
+        assert_files(rejects_file_received_path, ["Payment-Rejects.csv"])
+
+        # == Transaction Files
+        pub_folder_path = os.path.join(s3_config.pub_moveit_outbound_path)
+        pub_check_archive_folder_path = os.path.join(
+            s3_config.pfml_pub_check_archive_path,
+            payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+            date_folder,
+        )
+        pub_ach_archive_folder_path = os.path.join(
+            s3_config.pfml_pub_ach_archive_path,
+            payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+            date_folder,
+        )
+        dfml_report_outbound_path = os.path.join(s3_config.dfml_report_outbound_path)
+
+        assert_files(pub_folder_path, ["PUB-EZ-CHECK.csv"])
+        assert_files(pub_check_archive_folder_path, ["PUB-EZ-CHECK.csv"], timestamp_prefix)
+
+        assert_files(dfml_report_outbound_path, ["PUB-POSITIVE-PAY.txt"])
+        assert_files(pub_check_archive_folder_path, ["PUB-POSITIVE-PAY.txt"], timestamp_prefix)
+
+        assert_files(pub_folder_path, ["PUB-NACHA"])
+        assert_files(pub_ach_archive_folder_path, ["PUB-NACHA"], timestamp_prefix)
+
+        # TODO validate content of outgoing files
+
+        # == Writeback
+        writeback_folder_path = os.path.join(s3_config.fineos_data_import_path)
+        assert_files(writeback_folder_path, ["pei_writeback.csv"], get_current_timestamp_prefix())
+
+        # == Reports
+        assert_reports(
+            s3_config.dfml_report_outbound_path,
+            s3_config.pfml_error_reports_archive_path,
+            CREATE_PUB_FILES_REPORTS,
+        )
+
+        # == Metrics
+        assert_metrics(
+            test_db_other_session,
+            "PaymentRejectsStep",
+            {"rejected_payment_count": 1, "accepted_payment_count": 4},
+        )
+
+        assert_metrics(
+            test_db_other_session,
+            "PaymentMethodsSplitStep",
+            {"ach_payment_count": 2, "check_payment_count": 2},
+        )
+
+        assert_metrics(
+            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 9,},
+        )
+
+        assert_metrics(
+            test_db_other_session,
+            "ReportStep",
+            {"report_generated_count": len(CREATE_PUB_FILES_REPORTS)},
+        )
+
+        # TODO file transaction metrics when available
 
     # TODO - Day 3 PUB Returns ECS Task
 
@@ -412,6 +584,25 @@ def assert_csv_content(rows: Dict[str, str], column_to_expected_values: Dict[str
             ), f"Expected csv column value not found - column: {column}, expected value: {expected_value}"
 
 
+def assert_reports(
+    reports_folder_path: str, reports_archive_folder_path: str, report_names: List[ReportName],
+):
+    date_folder = get_current_date_folder()
+    timestamp_prefix = get_current_timestamp_prefix()
+
+    for report_name in report_names:
+        report = get_report_by_name(report_name)
+        file_name = f"{report.report_name.value}.csv"
+
+        outbound_folder = reports_folder_path
+        sent_folder = os.path.join(
+            reports_archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, date_folder,
+        )
+
+        assert_files(outbound_folder, [file_name])
+        assert_files(sent_folder, [file_name], timestamp_prefix)
+
+
 def assert_metrics(
     log_report_db_session: db.Session, log_report_name: str, metrics_expected_values: Dict[str, Any]
 ):
@@ -454,3 +645,30 @@ def get_current_date_folder():
 
 def get_current_timestamp_prefix():
     return payments_util.get_now().strftime("%Y-%m-%d-%H-%M-%S-")
+
+
+def generate_rejects_file(test_dataset: TestDataSet, audit_file_path: str, rejects_file_path: str):
+    parsed_audit_rows = parse_csv(audit_file_path)
+
+    csv_file = file_util.write_file(rejects_file_path)
+    csv_output = csv.DictWriter(
+        csv_file,
+        fieldnames=asdict(PAYMENT_AUDIT_CSV_HEADERS).values(),
+        lineterminator="\n",
+        quotechar='"',
+        quoting=csv.QUOTE_ALL,
+    )
+    csv_output.writeheader()
+
+    for parsed_audit_row in parsed_audit_rows:
+        c_value = parsed_audit_row[PAYMENT_AUDIT_CSV_HEADERS.c_value]
+        i_value = parsed_audit_row[PAYMENT_AUDIT_CSV_HEADERS.i_value]
+
+        scenario_data = test_dataset.get_scenario_data_by_payment_ci(c_value, i_value)
+        assert scenario_data, f"Can not find scenario data with c: {c_value}, i:{i_value}"
+
+        if not scenario_data.scenario_descriptor.is_audit_approved:
+            parsed_audit_row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] = "Y"
+
+    csv_output.writerows(parsed_audit_rows)
+    csv_file.close()
