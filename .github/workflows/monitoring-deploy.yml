@@ -6,12 +6,8 @@ name: Monitoring Deploy
 on:
   push:
     branches:
-      - main
-    paths:
-      - infra/monitoring/**
-      - infra/modules/alarms_api/**
-      - infra/modules/alarms_portal/**
-      - infra/modules/newrelic_baseline_error_rate/**
+      - kev/fix-monitoring
+
 env: 
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
