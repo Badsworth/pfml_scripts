@@ -672,12 +672,12 @@
 <tbody>
 <tr>
 <td>test</td>
-<td><a href="https://github.com/EOLWD/pfml/commits/8cb71c225">8cb71c225</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v1.21.0...8cb71c225">79 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.21.0">api/v1.21.0</a>)</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.23.0">api/v1.23.0</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(test)">GitHub</a></td>
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.22.0">api/v1.22.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.23.0">api/v1.23.0</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -703,113 +703,10 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (PUB-167,API-1379,INFRA-346,PUB-167,PUB-152,INFRA-409,PUB-151,API-1515,API-1585,API-1579,API-1480,API-1480,CP-1952,PUB-32,PUB-156,PUB-156,PUB-156,CP-1956,API-1529,PUB-158,API-1529,PUB-157,INFRA-398,PUB-102,PUB-158,PUB-32,PUB-32,PUB-158,API-1178,CP-2084,CP-1948,PUB-32,INFRA-397,INFRA-390,PUB-32,API-1514,PUB-110,API-1565,EMPLOYER-1133,PUB-158,PUB-162,CP-1952,EMPLOYER-977)">Jira List</a>):</p>
-<ul>
-<li><a href="https://lwd.atlassian.net/browse/PUB-32">PUB-32</a>: write check posted date and status to payment_check table for writeback (<a href="https://github.com/EOLWD/pfml/pull/3790">#3790</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-32">PUB-32</a>: add payment_check table for check writeback data (<a href="https://github.com/EOLWD/pfml/pull/3775">#3775</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-32">PUB-32</a>: add check_tool for viewing check files (<a href="https://github.com/EOLWD/pfml/pull/3760">#3760</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-32">PUB-32</a>: add ProcessCheckReturnFileStep to process PUB check payment return files (<a href="https://github.com/EOLWD/pfml/pull/3726">#3726</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-32">PUB-32</a>: add PUB_CHECK_RETURN reference file type (<a href="https://github.com/EOLWD/pfml/pull/3827">#3827</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-167">PUB-167</a>: Setup New Relic configuration for PUB ecs tasks (<a href="https://github.com/EOLWD/pfml/pull/3833">#3833</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-167">PUB-167</a>: Fix paths, and file names, update a report (<a href="https://github.com/EOLWD/pfml/pull/3847">#3847</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-162">PUB-162</a>: Requested absence file should be looked up on absence ID (<a href="https://github.com/EOLWD/pfml/pull/3759">#3759</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-158">PUB-158</a>: Update reports to have correct states (<a href="https://github.com/EOLWD/pfml/pull/3794">#3794</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-158">PUB-158</a>: Reverse restartable/non-restartable logic for easier maintenance and deprecate old states (<a href="https://github.com/EOLWD/pfml/pull/3798">#3798</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-158">PUB-158</a>: Make NACHA file have full prefixed timestamp (<a href="https://github.com/EOLWD/pfml/pull/3795">#3795</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-158">PUB-158</a>: Load staging data as we iterate over extracts (<a href="https://github.com/EOLWD/pfml/pull/3761">#3761</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-157">PUB-157</a>: Add/update payment SQL queries for reports (<a href="https://github.com/EOLWD/pfml/pull/3813">#3813</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-156">PUB-156</a>: Update audit reject file paths (<a href="https://github.com/EOLWD/pfml/pull/3778">#3778</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-156">PUB-156</a>: Rewrite PUB payments file logic and reconfigure it for consistency (<a href="https://github.com/EOLWD/pfml/pull/3818">#3818</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-156">PUB-156</a>: Add FINEOS, PUB, and error paths (<a href="https://github.com/EOLWD/pfml/pull/3800">#3800</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-152">PUB-152</a>: E2E PUB Processing - rejects, outgoing transactions, writeback 1 (<a href="https://github.com/EOLWD/pfml/pull/3821">#3821</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-151">PUB-151</a>: PUB E2E - FINEOS Extract Stage (<a href="https://github.com/EOLWD/pfml/pull/3803">#3803</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-110">PUB-110</a>: Add Metrics for import log (<a href="https://github.com/EOLWD/pfml/pull/3766">#3766</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-102">PUB-102</a>: Update status and dates from pub check return files (<a href="https://github.com/EOLWD/pfml/pull/3797">#3797</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-409">INFRA-409</a>: Make lambda builds smaller to unblock CI (<a href="https://github.com/EOLWD/pfml/pull/3836">#3836</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-398">INFRA-398</a>: Use Smartronix-managed RDS parameter groups (<a href="https://github.com/EOLWD/pfml/pull/3810">#3810</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-397">INFRA-397</a>: Bump database connection timeout to 3s (<a href="https://github.com/EOLWD/pfml/pull/3774">#3774</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-390">INFRA-390</a>: Add ACM certs for breakfix and cps-preview environments (<a href="https://github.com/EOLWD/pfml/pull/3781">#3781</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-346">INFRA-346</a>: portal environment for cps preview (<a href="https://github.com/EOLWD/pfml/pull/3758">#3758</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-977">EMPLOYER-977</a>: Writing successes and failures from process_csv to CSV in S3 (<a href="https://github.com/EOLWD/pfml/pull/3620">#3620</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1133">EMPLOYER-1133</a>: <code>employer_add_fein</code> needs to check if Employer has fineos_employer_id (<a href="https://github.com/EOLWD/pfml/pull/3742">#3742</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-2084">CP-2084</a>: caring leave bug (<a href="https://github.com/EOLWD/pfml/pull/3773">#3773</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1956">CP-1956</a>: Add family member name inputs (<a href="https://github.com/EOLWD/pfml/pull/3804">#3804</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1952">CP-1952</a>: Caring Leave data operations (<a href="https://github.com/EOLWD/pfml/pull/3721">#3721</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1952">CP-1952</a>: Allow none family relationship values (<a href="https://github.com/EOLWD/pfml/pull/3826">#3826</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1948">CP-1948</a>: Care for a Family Member enum (<a href="https://github.com/EOLWD/pfml/pull/3782">#3782</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1585">API-1585</a>: Update DIA benefit start date to 2018-01-01 (<a href="https://github.com/EOLWD/pfml/pull/3825">#3825</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1579">API-1579</a>: Strip commas from name fields in claimant list for DIA  (<a href="https://github.com/EOLWD/pfml/pull/3799">#3799</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1565">API-1565</a>: Only validate and update EFT fields if payment method is EFT (<a href="https://github.com/EOLWD/pfml/pull/3768">#3768</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1529">API-1529</a>: (2/2): Create tool to cleanup CTR vendor customer codes (<a href="https://github.com/EOLWD/pfml/pull/3753">#3753</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1529">API-1529</a>: (1/2): Update Data Mart query to only return results for individuals (<a href="https://github.com/EOLWD/pfml/pull/3752">#3752</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1515">API-1515</a>: Always look for reductions files in MOVEit (<a href="https://github.com/EOLWD/pfml/pull/3808">#3808</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1514">API-1514</a>: Remove EFT portions of the Data Mart query (<a href="https://github.com/EOLWD/pfml/pull/3751">#3751</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1480">API-1480</a>: (2/2): Set up scheduler for automated payment vouchers (<a href="https://github.com/EOLWD/pfml/pull/3817">#3817</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1480">API-1480</a>: (1/2): Automate payment voucher (<a href="https://github.com/EOLWD/pfml/pull/3816">#3816</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1379">API-1379</a>: Backfill Outbound Vendor Returns (<a href="https://github.com/EOLWD/pfml/pull/3837">#3837</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1285">API-1285</a>: Reimplement changes for API-1178 (<a href="https://github.com/EOLWD/pfml/pull/2892">#2892</a>)</li>
-<li>Update metrics to NR (<a href="https://github.com/EOLWD/pfml/pull/3786">#3786</a>)</li>
-<li>Restore deploy info links in autodeploy failures (<a href="https://github.com/EOLWD/pfml/pull/3702">#3702</a>)</li>
-<li>PUB: Update check memo line (<a href="https://github.com/EOLWD/pfml/pull/3785">#3785</a>)</li>
-<li>Internal: Fix extra deploys (<a href="https://github.com/EOLWD/pfml/pull/3835">#3835</a>)</li>
-<li>INTERNAL: Wrap prefix reference in API deploy workflow (<a href="https://github.com/EOLWD/pfml/pull/3777">#3777</a>)</li>
-<li>Fix terraform import call (<a href="https://github.com/EOLWD/pfml/pull/3771">#3771</a>)</li>
-<li>Enable verifications in test, stage, perf (<a href="https://github.com/EOLWD/pfml/pull/3788">#3788</a>)</li>
-<li>DFMLBI-147: Populate BI warehouse with FINEOS extracts in a structured manner (<a href="https://github.com/EOLWD/pfml/pull/3756">#3756</a>)</li>
-</ul>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in ()">Jira List</a>):</p>
 <details>
 <summary>Raw</summary>
- <br>* [PUB-32](https://lwd.atlassian.net/browse/PUB-32): write check posted date and status to payment_check table for writeback ([#3790](https://github.com/EOLWD/pfml/pull/3790))
- <br>* [PUB-32](https://lwd.atlassian.net/browse/PUB-32): add payment_check table for check writeback data ([#3775](https://github.com/EOLWD/pfml/pull/3775))
- <br>* [PUB-32](https://lwd.atlassian.net/browse/PUB-32): add check_tool for viewing check files ([#3760](https://github.com/EOLWD/pfml/pull/3760))
- <br>* [PUB-32](https://lwd.atlassian.net/browse/PUB-32): add ProcessCheckReturnFileStep to process PUB check payment return files ([#3726](https://github.com/EOLWD/pfml/pull/3726))
- <br>* [PUB-32](https://lwd.atlassian.net/browse/PUB-32): add PUB_CHECK_RETURN reference file type ([#3827](https://github.com/EOLWD/pfml/pull/3827))
- <br>* [PUB-167](https://lwd.atlassian.net/browse/PUB-167): Setup New Relic configuration for PUB ecs tasks ([#3833](https://github.com/EOLWD/pfml/pull/3833))
- <br>* [PUB-167](https://lwd.atlassian.net/browse/PUB-167): Fix paths, and file names, update a report ([#3847](https://github.com/EOLWD/pfml/pull/3847))
- <br>* [PUB-162](https://lwd.atlassian.net/browse/PUB-162): Requested absence file should be looked up on absence ID ([#3759](https://github.com/EOLWD/pfml/pull/3759))
- <br>* [PUB-158](https://lwd.atlassian.net/browse/PUB-158): Update reports to have correct states ([#3794](https://github.com/EOLWD/pfml/pull/3794))
- <br>* [PUB-158](https://lwd.atlassian.net/browse/PUB-158): Reverse restartable/non-restartable logic for easier maintenance and deprecate old states ([#3798](https://github.com/EOLWD/pfml/pull/3798))
- <br>* [PUB-158](https://lwd.atlassian.net/browse/PUB-158): Make NACHA file have full prefixed timestamp ([#3795](https://github.com/EOLWD/pfml/pull/3795))
- <br>* [PUB-158](https://lwd.atlassian.net/browse/PUB-158): Load staging data as we iterate over extracts ([#3761](https://github.com/EOLWD/pfml/pull/3761))
- <br>* [PUB-157](https://lwd.atlassian.net/browse/PUB-157): Add/update payment SQL queries for reports ([#3813](https://github.com/EOLWD/pfml/pull/3813))
- <br>* [PUB-156](https://lwd.atlassian.net/browse/PUB-156): Update audit reject file paths ([#3778](https://github.com/EOLWD/pfml/pull/3778))
- <br>* [PUB-156](https://lwd.atlassian.net/browse/PUB-156): Rewrite PUB payments file logic and reconfigure it for consistency ([#3818](https://github.com/EOLWD/pfml/pull/3818))
- <br>* [PUB-156](https://lwd.atlassian.net/browse/PUB-156): Add FINEOS, PUB, and error paths ([#3800](https://github.com/EOLWD/pfml/pull/3800))
- <br>* [PUB-152](https://lwd.atlassian.net/browse/PUB-152): E2E PUB Processing - rejects, outgoing transactions, writeback 1 ([#3821](https://github.com/EOLWD/pfml/pull/3821))
- <br>* [PUB-151](https://lwd.atlassian.net/browse/PUB-151): PUB E2E - FINEOS Extract Stage ([#3803](https://github.com/EOLWD/pfml/pull/3803))
- <br>* [PUB-110](https://lwd.atlassian.net/browse/PUB-110): Add Metrics for import log ([#3766](https://github.com/EOLWD/pfml/pull/3766))
- <br>* [PUB-102](https://lwd.atlassian.net/browse/PUB-102): Update status and dates from pub check return files ([#3797](https://github.com/EOLWD/pfml/pull/3797))
- <br>* [INFRA-409](https://lwd.atlassian.net/browse/INFRA-409): Make lambda builds smaller to unblock CI ([#3836](https://github.com/EOLWD/pfml/pull/3836))
- <br>* [INFRA-398](https://lwd.atlassian.net/browse/INFRA-398): Use Smartronix-managed RDS parameter groups ([#3810](https://github.com/EOLWD/pfml/pull/3810))
- <br>* [INFRA-397](https://lwd.atlassian.net/browse/INFRA-397): Bump database connection timeout to 3s ([#3774](https://github.com/EOLWD/pfml/pull/3774))
- <br>* [INFRA-390](https://lwd.atlassian.net/browse/INFRA-390): Add ACM certs for breakfix and cps-preview environments ([#3781](https://github.com/EOLWD/pfml/pull/3781))
- <br>* [INFRA-346](https://lwd.atlassian.net/browse/INFRA-346): portal environment for cps preview ([#3758](https://github.com/EOLWD/pfml/pull/3758))
- <br>* [EMPLOYER-977](https://lwd.atlassian.net/browse/EMPLOYER-977): Writing successes and failures from process_csv to CSV in S3 ([#3620](https://github.com/EOLWD/pfml/pull/3620))
- <br>* [EMPLOYER-1133](https://lwd.atlassian.net/browse/EMPLOYER-1133): `employer_add_fein` needs to check if Employer has fineos_employer_id ([#3742](https://github.com/EOLWD/pfml/pull/3742))
- <br>* [CP-2084](https://lwd.atlassian.net/browse/CP-2084): caring leave bug ([#3773](https://github.com/EOLWD/pfml/pull/3773))
- <br>* [CP-1956](https://lwd.atlassian.net/browse/CP-1956): Add family member name inputs ([#3804](https://github.com/EOLWD/pfml/pull/3804))
- <br>* [CP-1952](https://lwd.atlassian.net/browse/CP-1952): Caring Leave data operations ([#3721](https://github.com/EOLWD/pfml/pull/3721))
- <br>* [CP-1952](https://lwd.atlassian.net/browse/CP-1952): Allow none family relationship values ([#3826](https://github.com/EOLWD/pfml/pull/3826))
- <br>* [CP-1948](https://lwd.atlassian.net/browse/CP-1948): Care for a Family Member enum ([#3782](https://github.com/EOLWD/pfml/pull/3782))
- <br>* [API-1585](https://lwd.atlassian.net/browse/API-1585): Update DIA benefit start date to 2018-01-01 ([#3825](https://github.com/EOLWD/pfml/pull/3825))
- <br>* [API-1579](https://lwd.atlassian.net/browse/API-1579): Strip commas from name fields in claimant list for DIA  ([#3799](https://github.com/EOLWD/pfml/pull/3799))
- <br>* [API-1565](https://lwd.atlassian.net/browse/API-1565): Only validate and update EFT fields if payment method is EFT ([#3768](https://github.com/EOLWD/pfml/pull/3768))
- <br>* [API-1529](https://lwd.atlassian.net/browse/API-1529): (2/2): Create tool to cleanup CTR vendor customer codes ([#3753](https://github.com/EOLWD/pfml/pull/3753))
- <br>* [API-1529](https://lwd.atlassian.net/browse/API-1529): (1/2): Update Data Mart query to only return results for individuals ([#3752](https://github.com/EOLWD/pfml/pull/3752))
- <br>* [API-1515](https://lwd.atlassian.net/browse/API-1515): Always look for reductions files in MOVEit ([#3808](https://github.com/EOLWD/pfml/pull/3808))
- <br>* [API-1514](https://lwd.atlassian.net/browse/API-1514): Remove EFT portions of the Data Mart query ([#3751](https://github.com/EOLWD/pfml/pull/3751))
- <br>* [API-1480](https://lwd.atlassian.net/browse/API-1480): (2/2): Set up scheduler for automated payment vouchers ([#3817](https://github.com/EOLWD/pfml/pull/3817))
- <br>* [API-1480](https://lwd.atlassian.net/browse/API-1480): (1/2): Automate payment voucher ([#3816](https://github.com/EOLWD/pfml/pull/3816))
- <br>* [API-1379](https://lwd.atlassian.net/browse/API-1379): Backfill Outbound Vendor Returns ([#3837](https://github.com/EOLWD/pfml/pull/3837))
- <br>* [API-1285](https://lwd.atlassian.net/browse/API-1285): Reimplement changes for API-1178 ([#2892](https://github.com/EOLWD/pfml/pull/2892))
- <br>* Update metrics to NR ([#3786](https://github.com/EOLWD/pfml/pull/3786))
- <br>* Restore deploy info links in autodeploy failures ([#3702](https://github.com/EOLWD/pfml/pull/3702))
- <br>* PUB: Update check memo line ([#3785](https://github.com/EOLWD/pfml/pull/3785))
- <br>* Internal: Fix extra deploys ([#3835](https://github.com/EOLWD/pfml/pull/3835))
- <br>* INTERNAL: Wrap prefix reference in API deploy workflow ([#3777](https://github.com/EOLWD/pfml/pull/3777))
- <br>* Fix terraform import call ([#3771](https://github.com/EOLWD/pfml/pull/3771))
- <br>* Enable verifications in test, stage, perf ([#3788](https://github.com/EOLWD/pfml/pull/3788))
- <br>* DFMLBI-147: Populate BI warehouse with FINEOS extracts in a structured manner ([#3756](https://github.com/EOLWD/pfml/pull/3756))
+
 </details>
                 
               
