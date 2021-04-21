@@ -31,7 +31,9 @@ logger = logging.get_logger(__name__)
 
 
 class Constants:
-    TEMPORARY_BENEFIT_START_DATE = "20210101"
+    # DIA claims can last up to 3 years, so hard-coding to the start of 2018 for
+    # the 2021 launch.
+    TEMPORARY_BENEFIT_START_DATE = "20180101"
     DATE_OF_BIRTH_FORMAT = "%Y%m%d"
 
     CLAIMAINT_LIST_FILENAME_PREFIX = "DFML_DIA_CLAIMANTS_"
