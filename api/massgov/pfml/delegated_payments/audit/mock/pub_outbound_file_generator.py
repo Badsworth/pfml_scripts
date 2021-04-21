@@ -1,9 +1,8 @@
 import argparse
 import decimal
 import os
-from dataclasses import dataclass
 from random import randrange
-from typing import List, Tuple
+from typing import List
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
@@ -11,33 +10,21 @@ import massgov.pfml.delegated_payments.delegated_payments_util as delegated_paym
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
-    BankAccountType,
-    ClaimType,
-    EmployeeAddress,
-    Payment,
-    PaymentMethod,
-    PrenoteState,
-    State,
-)
-from massgov.pfml.db.models.factories import (
-    AddressFactory,
-    ClaimFactory,
-    EmployeeFactory,
-    EmployeePubEftPairFactory,
-    EmployerFactory,
-    PaymentFactory,
-    PubEftFactory,
-)
+from massgov.pfml.db.models.employees import State
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     NachaBatchType,
     create_nacha_batch,
     get_trans_code,
 )
+from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
+    ScenarioData,
+    ScenarioDataConfig,
+    ScenarioName,
+    ScenarioNameWithCount,
+    generate_scenario_dataset,
+)
 from massgov.pfml.delegated_payments.util.ach.nacha import (
     NachaAddendumResponse,
-    NachaBatch,
     NachaEntry,
     NachaFile,
 )
@@ -58,32 +45,6 @@ parser.add_argument(
 )
 
 
-@dataclass
-class PubPaymentReturnScenario:
-    no_response: bool
-    error: bool
-    reason_code: str = NachaAddendumResponse.random_reason()
-    return_type: str = NachaAddendumResponse.random_return_type()
-    date_of_death: str = ""
-
-
-@dataclass
-class PubPaymentReturnScenarioData:
-    scenario: PubPaymentReturnScenario
-    payment: Payment
-
-
-pre_note_configs = [
-    PubPaymentReturnScenario(no_response=True, error=False),
-    PubPaymentReturnScenario(no_response=False, error=True),
-]
-
-ach_configs = [
-    PubPaymentReturnScenario(no_response=True, error=False),
-    PubPaymentReturnScenario(no_response=False, error=True),
-]
-
-
 def write_file(folder_path: str, nacha_file: NachaFile) -> None:
     now = payments_util.get_now()
     timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -98,46 +59,21 @@ def write_file(folder_path: str, nacha_file: NachaFile) -> None:
 
 
 def generate_pub_return_prenote(
-    db_session: db.Session,
-    nacha_batch: NachaBatch,
-    pre_note_configs: List[PubPaymentReturnScenario],
-    skiprate: int = 0,
-) -> List[PubPaymentReturnScenarioData]:
-    scenario_data_list = []
+    db_session: db.Session, scenario_dataset: List[ScenarioData], folder_path: str,
+) -> None:
+    nacha_file = NachaFile()
+    nacha_batch = create_nacha_batch(NachaBatchType.MEDICAL_LEAVE)
 
-    for pre_note_config in pre_note_configs:
-        # The following data will be generated elsewhere we glue together scenario data.
-        mailing_address = AddressFactory.create(
-            address_line_one="20 South Ave",
-            city="Burlington",
-            geo_state_id=1,
-            geo_state_text="Massachusetts",
-            zip_code="01803",
-        )
+    nacha_file.add_batch(nacha_batch)
 
-        employer = EmployerFactory.create()
+    for scenario_data in scenario_dataset:
+        scenario_descriptor = scenario_data.scenario_descriptor
+        payment = scenario_data.payment
+        employee = scenario_data.employee
 
-        employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
-        employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
-
-        pub_eft = PubEftFactory.create(
-            prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
-            routing_nbr="123546789",
-            account_nbr="123546789",
-            bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
-        )
-        EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
-
-        claim = ClaimFactory.create(
-            employee=employee,
-            employer=employer,
-            claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
-            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
-        )
-
-        payment = PaymentFactory.create(claim=claim, pub_eft=pub_eft)
-
-        scenario_data = PubPaymentReturnScenarioData(scenario=pre_note_config, payment=payment)
+        if payment is None:
+            logger.info("Skipping scenario data with empty payment")
+            continue
 
         state_log_util.create_finished_state_log(
             end_state=State.DELEGATED_EFT_PRENOTE_SENT,
@@ -146,10 +82,11 @@ def generate_pub_return_prenote(
             db_session=db_session,
         )
 
-        skip = _should_skip(skiprate)
+        skip = scenario_descriptor.eft_returns_should_skip
+
         # If there should be a response, add it to the NACHA file.
         if not skip:
-            if not pre_note_config.no_response:
+            if not scenario_descriptor.eft_returns_no_response:
                 entry = NachaEntry(
                     trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
                     receiving_dfi_id=payment.pub_eft.routing_nbr,
@@ -160,15 +97,15 @@ def generate_pub_return_prenote(
                 )
 
                 addendum = NachaAddendumResponse(
-                    return_reason_code=pre_note_config.reason_code,
-                    date_of_death=pre_note_config.date_of_death,
-                    return_type=pre_note_config.return_type,
+                    return_reason_code=scenario_descriptor.eft_returns_reason_code,
+                    date_of_death=employee.date_of_death,
+                    return_type=scenario_descriptor.eft_returns_return_type,
                 )
 
                 nacha_batch.add_entry(entry, addendum)
 
             # If error, set a bad amount
-            if pre_note_config.error:
+            if scenario_descriptor.eft_returns_should_error:
                 entry = NachaEntry(
                     trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
                     receiving_dfi_id=payment.pub_eft.routing_nbr,
@@ -179,60 +116,33 @@ def generate_pub_return_prenote(
                 )
 
                 addendum = NachaAddendumResponse(
-                    return_reason_code=pre_note_config.reason_code,
-                    date_of_death=pre_note_config.date_of_death,
-                    return_type=pre_note_config.return_type,
+                    return_reason_code=scenario_descriptor.eft_returns_reason_code,
+                    date_of_death=employee.date_of_death,
+                    return_type=scenario_descriptor.eft_returns_return_type,
                 )
 
                 nacha_batch.add_entry(entry, addendum)
 
-        scenario_data_list.append(scenario_data)
-
-    return scenario_data_list
+    write_file(folder_path, nacha_file)
 
 
 def generate_pub_return_ach(
-    db_session: db.Session,
-    nacha_batch: NachaBatch,
-    ach_configs: List[PubPaymentReturnScenario],
-    skiprate: int = 0,
-) -> List[PubPaymentReturnScenarioData]:
-    scenario_data_list: List[PubPaymentReturnScenarioData] = []
+    db_session: db.Session, scenario_dataset: List[ScenarioData], folder_path: str,
+) -> None:
+    nacha_file = NachaFile()
 
-    for ach_config in ach_configs:
+    for scenario_data in scenario_dataset:
+        scenario_descriptor = scenario_data.scenario_descriptor
 
-        # The following data will be generated elsewhere we glue together scenario data.
-        mailing_address = AddressFactory.create(
-            address_line_one="20 South Ave",
-            city="Burlington",
-            geo_state_id=1,
-            geo_state_text="Massachusetts",
-            zip_code="01803",
-        )
+        nacha_batch = create_nacha_batch(scenario_descriptor.eft_return_batch_type)
+        nacha_file.add_batch(nacha_batch)
 
-        employer = EmployerFactory.create()
+        payment = scenario_data.payment
+        employee = scenario_data.employee
 
-        employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
-        employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
-
-        pub_eft = PubEftFactory.create(
-            prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
-            routing_nbr="123546789",
-            account_nbr="123546789",
-            bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
-        )
-        EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
-
-        claim = ClaimFactory.create(
-            employee=employee,
-            employer=employer,
-            claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
-            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
-        )
-
-        payment = PaymentFactory.create(claim=claim, pub_eft=pub_eft)
-
-        scenario_data = PubPaymentReturnScenarioData(scenario=ach_config, payment=payment)
+        if payment is None:
+            logger.info("Skipping scenario data with empty payment")
+            continue
 
         state_log_util.create_finished_state_log(
             end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
@@ -241,10 +151,10 @@ def generate_pub_return_ach(
             db_session=db_session,
         )
 
-        skip = _should_skip(skiprate)
+        skip = scenario_descriptor.eft_returns_should_skip
 
         if not skip:
-            if not ach_config.no_response:
+            if not scenario_descriptor.eft_returns_no_response:
                 entry = NachaEntry(
                     trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
                     receiving_dfi_id=payment.pub_eft.routing_nbr,
@@ -255,14 +165,14 @@ def generate_pub_return_ach(
                 )
 
                 addendum = NachaAddendumResponse(
-                    return_reason_code=ach_config.reason_code,
-                    date_of_death=ach_config.date_of_death,
-                    return_type=ach_config.return_type,
+                    return_reason_code=scenario_descriptor.eft_returns_reason_code,
+                    date_of_death=employee.date_of_death,
+                    return_type=scenario_descriptor.eft_returns_return_type,
                 )
 
                 nacha_batch.add_entry(entry, addendum)
 
-            if ach_config.error:
+            if scenario_descriptor.eft_returns_should_error:
                 entry = NachaEntry(
                     trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
                     receiving_dfi_id=payment.pub_eft.routing_nbr,
@@ -273,39 +183,14 @@ def generate_pub_return_ach(
                 )
 
                 addendum = NachaAddendumResponse(
-                    return_reason_code=ach_config.reason_code,
-                    date_of_death=ach_config.date_of_death,
-                    return_type=ach_config.return_type,
+                    return_reason_code=scenario_descriptor.eft_returns_reason_code,
+                    date_of_death=employee.date_of_death,
+                    return_type=scenario_descriptor.eft_returns_return_type,
                 )
 
                 nacha_batch.add_entry(entry, addendum)
 
-        scenario_data_list.append(scenario_data)
-
-    return scenario_data_list
-
-
-def generate_pub_return(
-    db_session: db.Session,
-    folder_location: str,
-    pre_note_configs: List[PubPaymentReturnScenario] = pre_note_configs,
-    ach_config: List[PubPaymentReturnScenario] = ach_configs,
-    skiprate: int = 0,
-) -> Tuple[List[PubPaymentReturnScenarioData], List[PubPaymentReturnScenarioData]]:
-
-    nacha_file = NachaFile()
-    batch = create_nacha_batch(NachaBatchType.MEDICAL_LEAVE)
-
-    nacha_file.add_batch(batch)
-
-    prenote_scenario_data = generate_pub_return_prenote(
-        db_session, batch, pre_note_configs, skiprate
-    )
-    ach_scenario_data = generate_pub_return_ach(db_session, batch, ach_config, skiprate)
-
-    write_file(folder_location, nacha_file)
-
-    return (prenote_scenario_data, ach_scenario_data)
+    write_file(folder_path, nacha_file)
 
 
 def generate_pub_payment_return_file():
@@ -319,12 +204,15 @@ def generate_pub_payment_return_file():
     args = parser.parse_args()
     folder_path = args.folder
 
-    skiprate = int(args.skiprate)
+    scaenario_name_with_count = ScenarioNameWithCount(
+        scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED, count=1
+    )
 
-    if skiprate < 0 or skiprate > 100:
-        raise Exception("Error rate must be an integer between 0 and 100")
+    config = ScenarioDataConfig(scenarios_with_count=[scaenario_name_with_count],)
+    scenario_dataset = generate_scenario_dataset(config)
 
-    generate_pub_return(db_session, folder_path, skiprate=skiprate)
+    generate_pub_return_prenote(db_session, scenario_dataset, folder_path)
+    generate_pub_return_ach(db_session, scenario_dataset, folder_path)
 
     logger.info("Done generating payment return file.")
 

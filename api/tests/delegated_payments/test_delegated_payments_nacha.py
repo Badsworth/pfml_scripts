@@ -23,7 +23,8 @@ from massgov.pfml.db.models.factories import (
     PubEftFactory,
 )
 from massgov.pfml.delegated_payments.audit.mock.pub_outbound_file_generator import (
-    generate_pub_return,
+    generate_pub_return_ach,
+    generate_pub_return_prenote,
 )
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     NachaBatchType,
@@ -266,7 +267,8 @@ def build_payment(payment_method: LkPaymentMethod, claim_type: ClaimType = Claim
 
 def test_generate_eft_response(initialize_factories_session, test_db_session, tmp_path):
 
-    prenote_scenario_data, ach_scenario_data = generate_pub_return(test_db_session, tmp_path)
+    generate_pub_return_prenote(test_db_session, [], tmp_path)
+    generate_pub_return_ach(test_db_session, [], tmp_path)
 
     # TODO: read and parse NACHA file, compare to scenarios
 
