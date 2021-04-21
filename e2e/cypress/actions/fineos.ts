@@ -524,12 +524,10 @@ export function intermittentClaimAdjudicationFlow(
 }
 
 // This is being used for Sally hours to allow us to see payment being made.
-export function submitIntermittentActualHours(claimNumber: string): void {
-  cy.get("a[aria-label='Cases']").click();
-  cy.get("td[keytipnumber='4']").contains("Case").click();
-  cy.labelled("Case Number").type(claimNumber);
-  cy.labelled("Case Type").select("Absence Case");
-  cy.get("input[type='submit'][value='Search']").click();
+export function submitIntermittentActualHours(
+  timeSpanHoursStart: number,
+  timeSpanHoursEnd: number
+): void {
   cy.contains("span[class='LinkText']", "Record Actual").click({ force: true });
   wait();
   cy.contains("tbody", "Episodic").click();
@@ -552,10 +550,10 @@ export function submitIntermittentActualHours(claimNumber: string): void {
     cy.wait(200);
     cy.get(
       "input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursStartDate']"
-    ).type(`{selectall}{backspace}4`);
+    ).type(`{selectall}{backspace}${timeSpanHoursStart}`);
     cy.get(
       "input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursEndDate']"
-    ).type(`{selectall}{backspace}4`);
+    ).type(`{selectall}{backspace}${timeSpanHoursEnd}`);
     cy.get("input[type='submit'][value='OK']").click();
   });
   cy.get("#nextPreviousButtons").within(() => {

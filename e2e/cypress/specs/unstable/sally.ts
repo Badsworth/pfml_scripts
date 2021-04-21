@@ -25,7 +25,7 @@ describe("Payment amounts", () => {
             response.fineos_absence_id,
             true
           );
-          fineos.submitIntermittentActualHours(response.fineos_absence_id);
+          fineos.submitIntermittentActualHours(4, 4);
           fineos.getIntermittentPaymentAmount().then((amount) => {
             expect(amount).to.eq("800.09");
           });
