@@ -25,7 +25,7 @@ describe("Leave Admin Self-Registration", () => {
     });
   });
 
-  it("Leave administrators should be able to register for a second organization", () => {
+  const secondOrg = it("Leave administrators should be able to register for a second organization", () => {
     cy.dependsOnPreviousPass([register]);
     portal.before();
     cy.unstash<Credentials>("credentials").then((credentials) => {
@@ -41,6 +41,26 @@ describe("Leave Admin Self-Registration", () => {
           const secondaryWithholding =
             secondary.withholdings[secondary.withholdings.length - 1];
           portal.addOrganization(secondary.fein, secondaryWithholding);
+        });
+      });
+    });
+  });
+
+  it("Leave administrators scannot verify with an organization whose withholding amounts equal 0", () => {
+    cy.dependsOnPreviousPass([secondOrg]);
+    portal.before();
+    cy.unstash<Credentials>("credentials").then((credentials) => {
+      cy.unstash<string>("employer").then((fein) => {
+        portal.login(credentials);
+        cy.contains("Your organizations").click();
+        // Pick a second employer from the dataset to register as an additional organization.
+        cy.task("pickEmployer", {
+          withholdings: [0, 0, 0, 0],
+          metadata: { register_leave_admins: true },
+        }).then((tertiary) => {
+          const tertiaryWithholding =
+            tertiary.withholdings[tertiary.withholdings.length - 1];
+          portal.addOrganization(tertiary.fein, tertiaryWithholding);
         });
       });
     });
