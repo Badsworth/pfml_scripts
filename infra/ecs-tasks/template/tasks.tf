@@ -331,7 +331,18 @@ locals {
 
     "transmogrify-state" = {
       command = ["transmogrify-state"]
-    }
+    },
+
+    "import-fineos-to-warehouse" = {
+      command             = ["import-fineos-to-warehouse"]
+      containers_template = "import_fineos_to_warehouse.json"
+      task_role           = aws_iam_role.fineos_bucket_tool_role.arn
+      vars = {
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
+        fineos_data_export_path         = var.fineos_data_export_path
+      }
+    },
   }
 }
 
