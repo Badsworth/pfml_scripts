@@ -118,7 +118,7 @@ def _process_pub_responses(
         process_check_return_file_step = ProcessCheckReturnFileStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session,
         )
-        iteration_count += 1
+        iteration_count = 0
         while process_check_return_file_step.have_more_files_to_process():
             process_check_return_file_step.run()
             iteration_count += 1
