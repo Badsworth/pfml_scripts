@@ -59,7 +59,7 @@ resource "newrelic_nrql_alert_condition" "api_bounce_email" {
       SELECT count(*) FROM Log
       WHERE plugin.type = 'aws-firehose'
       AND Message.bounce.bouncedRecipients is not null
-      ( Message.bounce.bouncedRecipients LIKE '%EOL-DL-DFML-GAXVCC_Confirmation@mass.gov%' 
+      AND ( Message.bounce.bouncedRecipients LIKE '%EOL-DL-DFML-GAXVCC_Confirmation@mass.gov%' 
         OR Message.bounce.bouncedRecipients LIKE '%Accounts.Payable@detma.org%' 
         OR Message.bounce.bouncedRecipients LIKE '%EOL-DL-DFML-Agency-Reductions@mass.gov%' 
         OR Message.bounce.bouncedRecipients LIKE '%mass-pfml-payments-test-email@navapbc.com%')
