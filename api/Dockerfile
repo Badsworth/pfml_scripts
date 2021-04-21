@@ -46,7 +46,7 @@ WORKDIR /app
 
 # install dependencies
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-root --extras mssql-server
+RUN poetry install --no-root --extras "mssql-server api-only-dependencies"
 
 # grab the application
 COPY . ./
@@ -70,7 +70,7 @@ WORKDIR /app
 # use a project-local virtualenv to be easy to find
 ENV POETRY_VIRTUALENVS_IN_PROJECT true
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-root --no-dev --extras mssql-server
+RUN poetry install --no-root --no-dev --extras "mssql-server api-only-dependencies"
 
 # for simplicity, grab the whole project
 COPY . ./
