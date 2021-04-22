@@ -9,12 +9,12 @@ class Claim extends BaseModel {
   constructor(attrs) {
     super(attrs);
 
-    if (attrs.employee && !(attrs.employee instanceof ClaimEmployee)) {
-      console.error("employee should be an instance of ClaimEmployee");
+    if (this.employee) {
+      this.employee = new ClaimEmployee(this.employee);
     }
 
-    if (attrs.employer && !(attrs.employer instanceof ClaimEmployer)) {
-      console.error("employer should be an instance of ClaimEmployer");
+    if (this.employer) {
+      this.employer = new ClaimEmployer(this.employer);
     }
   }
 
