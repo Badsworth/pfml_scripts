@@ -463,7 +463,6 @@ export function intermittentClaimAdjudicationFlow(
     clickBottomWidgetButton("Close");
   }
   assertOnClaimPage(claimNumber);
-  checkTask();
   cy.get("input[type='submit'][value='Adjudicate']").click();
   checkStatus(claimNumber, "Eligibility", "Met");
   markEvidence(claimNumber, "MHAP1", "State managed Paid Leave Confirmation");
@@ -478,7 +477,6 @@ export function intermittentClaimAdjudicationFlow(
   // Complete Adjudication
   assertAdjudicatingClaim(claimNumber);
   clickBottomWidgetButton("OK");
-  assertClaimApprovableIntermittent();
   // Approve Claim
   if (ERresponse) {
     approveClaim();
