@@ -1695,6 +1695,9 @@ components:
                 - Engineer
                 - Health Care
               example: "Sales Clerk"
+            gender_id:
+              type: integer
+              nullable: true 
             leave_details:
               $ref: "#/components/schemas/ApplicationLeaveDetails"
             work_pattern:
@@ -1842,6 +1845,9 @@ components:
             - Engineer
             - Health Care
           example: "Sales Clerk"
+          nullable: true
+        gender_id:
+          type: integer
           nullable: true
         hours_worked_per_week:
           type: number

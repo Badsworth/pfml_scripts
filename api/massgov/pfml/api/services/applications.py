@@ -44,7 +44,7 @@ from massgov.pfml.db.models.applications import (
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, AddressType, GeoState, LkAddressType
+from massgov.pfml.db.models.employees import Address, AddressType, GeoState, LkAddressType, LkGender
 from massgov.pfml.util.pydantic.types import Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)

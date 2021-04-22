@@ -45,6 +45,7 @@ class ApplicationResponse(PydanticBaseModel):
     middle_name: Optional[str]
     last_name: Optional[str]
     date_of_birth: Optional[MaskedDateStr]
+    gender_id: Optional[int]
     has_continuous_leave_periods: Optional[bool]
     has_intermittent_leave_periods: Optional[bool]
     has_reduced_schedule_leave_periods: Optional[bool]

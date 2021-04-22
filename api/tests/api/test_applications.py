@@ -3172,6 +3172,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     application.employer_notification_date = date(2021, 1, 7)
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.gender_id = 1
     application.work_pattern = WorkPatternFixedFactory.create()
     application.has_continuous_leave_periods = True
 
@@ -3235,6 +3236,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                             country="USA",
                         ),
                     ),
+                    gender="Male",
                     classExtensionInformation=[
                         massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
                             name="MassachusettsID", stringValue=application.mass_id

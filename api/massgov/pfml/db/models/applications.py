@@ -25,6 +25,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     Employer,
     LkBankAccountType,
+    LkGender,
     LkOccupation,
     LkPaymentMethod,
     TaxIdentifier,
@@ -253,6 +254,7 @@ class Application(Base):
     has_state_id = Column(Boolean)
     mass_id = Column(Text)
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
+    gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
     hours_worked_per_week = Column(Numeric)
     relationship_to_caregiver_id = Column(
         Integer, ForeignKey("lk_relationship_to_caregiver.relationship_to_caregiver_id")
@@ -294,6 +296,7 @@ class Application(Base):
     employer = relationship(Employer)
     employee = relationship(Employee)
     occupation = relationship(LkOccupation)
+    gender = relationship(LkGender)
     leave_type = relationship(LkLeaveType)
     leave_reason = relationship(LkLeaveReason)
     leave_reason_qualifier = relationship(LkLeaveReasonQualifier)
