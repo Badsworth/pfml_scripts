@@ -86,6 +86,18 @@ class TestDataSet:
                 return scenario_data
         return None
 
+    def populate_scenario_data_payments(self, db_session) -> None:
+        for scenario_data in self.scenario_dataset:
+            payment = (
+                db_session.query(Payment)
+                .filter(
+                    Payment.fineos_pei_c_value == scenario_data.payment_c_value,
+                    Payment.fineos_pei_i_value == scenario_data.payment_i_value,
+                )
+                .one_or_none()
+            )
+            scenario_data.payment = payment
+
 
 # == The E2E Test ==
 
@@ -105,7 +117,7 @@ def test_e2e_pub_payments(
     # ========================================================================
     # Configuration / Setup
     # ========================================================================
-    caplog.set_level(logging.INFO)  # noqa: B1
+    caplog.set_level(logging.WARNING)  # noqa: B1
 
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2021-04-30")
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2021-04-30")
@@ -171,6 +183,8 @@ def test_e2e_pub_payments(
                 config=FineosTaskConfiguration(["--steps", "ALL"]),
             )
 
+        test_dataset.populate_scenario_data_payments(test_db_session)
+
         # == Validate created rows
 
         # TODO claimant rows
@@ -200,6 +214,7 @@ def test_e2e_pub_payments(
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[
+                ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
                 ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
                 ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                 ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
@@ -524,14 +539,7 @@ def assert_payment_state_for_scenarios(
         assert scenario_data_items is not None, f"No data found for scenario: {scenario_name}"
 
         for scenario_data in scenario_data_items:
-            payment = (
-                db_session.query(Payment)
-                .filter(
-                    Payment.fineos_pei_c_value == scenario_data.payment_c_value,
-                    Payment.fineos_pei_i_value == scenario_data.payment_i_value,
-                )
-                .one_or_none()
-            )
+            payment = scenario_data.payment
 
             assert payment is not None
 

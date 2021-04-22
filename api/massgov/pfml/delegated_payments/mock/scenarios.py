@@ -18,6 +18,7 @@ from massgov.pfml.delegated_payments.util.ach.nacha import Constants
 
 class ScenarioName(Enum):
     # Happy path scenarios
+    HAPPY_PATH_MEDICAL_ACH_PRENOTED = "HAPPY_PATH_MEDICAL_ACH_PRENOTED"
     HAPPY_PATH_FAMILY_ACH_PRENOTED = "HAPPY_PATH_FAMILY_ACH_PRENOTED"
     HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
     HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
@@ -52,6 +53,16 @@ class ScenarioName(Enum):
 
     # Audit
     AUDIT_REJECTED = "AUDIT_REJECTED"
+
+    # Returns
+    PUB_ACH_PRENOTE_RETURN = "PUB_ACH_PRENOTE_RETURN"
+    PUB_ACH_PRENOTE_NOTIFICATION = "PUB_ACH_PRENOTE_NOTIFICATION"
+
+    PUB_ACH_FAMILY_RETURN = "PUB_ACH_FAMILY_RETURN"
+    PUB_ACH_FAMILY_NOTIFICATION = "PUB_ACH_FAMILY_NOTIFICATION"
+
+    PUB_ACH_MEDICAL_RETURN = "PUB_ACH_MEDICAL_RETURN"
+    PUB_ACH_MEDICAL_NOTIFICATION = "PUB_ACH_MEDICAL_NOTIFICATION"
 
     # TODO PEI writeback error
     # TODO positive pay check outbound
@@ -101,6 +112,7 @@ class ScenarioDescriptor:
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
+    ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED, claim_type=ClaimType.MEDICAL_LEAVE),
     ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
@@ -156,6 +168,35 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.PENDING_LEAVE_REQUEST_DECISION, leave_request_decision="Pending"
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_approved=False),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_PRENOTE_RETURN,
+        prenoted=False,
+        pub_ach_response_return=True
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+        prenoted=False,
+        pub_ach_response_change_notification=True
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN,
+        pub_ach_response_return=True
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+        pub_ach_response_change_notification=True
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_MEDICAL_RETURN,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+        pub_ach_response_return=True
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+        pub_ach_response_change_notification=True
+    ),
+
 ]
 
 SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {

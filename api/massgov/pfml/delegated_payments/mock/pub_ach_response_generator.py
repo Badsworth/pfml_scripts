@@ -48,7 +48,7 @@ def get_or_create_nacha_batch_by_type(nacha_file: NachaFile, nacha_batch_type: N
     return nacha_batch
 
 
-def add_response_entry_for_scenario(scenario_data: ScenarioData, nacha_file):
+def add_response_entry_for_scenario(scenario_data: ScenarioData, nacha_file: NachaFile):
     scenario_descriptor = scenario_data.scenario_descriptor
     payment = scenario_data.payment
 
@@ -64,7 +64,7 @@ def add_response_entry_for_scenario(scenario_data: ScenarioData, nacha_file):
     if scenario_descriptor.claim_type == ClaimType.MEDICAL_LEAVE or not scenario_descriptor.prenoted:
         nacha_batch_type = NachaBatchType.MEDICAL_LEAVE
     
-    nacha_batch: NachaBatch = get_or_create_nacha_batch_by_type(nacha_file)
+    nacha_batch: NachaBatch = get_or_create_nacha_batch_by_type(nacha_file, nacha_batch_type)
 
     is_return = scenario_descriptor.prenoted
     is_prenote = not is_return
