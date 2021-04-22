@@ -82,6 +82,7 @@ describe("Employer dashboard", () => {
           employer_fein: verifiedUserLeaveAdministrator.employer_fein,
         }),
         fineos_absence_id: "NTN-111-ABS-01",
+        fineos_absence_status: "Approved",
       }),
     ];
     const userAttrs = {

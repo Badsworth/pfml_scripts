@@ -1,3 +1,4 @@
+import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
 import ClaimCollection from "../../models/ClaimCollection";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
@@ -189,8 +190,9 @@ const ClaimTableRows = (props) => {
       case "employer_fein":
         return get(claim, "employer.employer_fein");
       case "status":
-        // TODO (EMPLOYER-1125): Render a <Tag> for the status
-        return "--";
+        return (
+          <AbsenceCaseStatusTag status={get(claim, "fineos_absence_status")} />
+        );
       default:
         return "";
     }

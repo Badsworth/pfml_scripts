@@ -1,5 +1,7 @@
 import Document, { DocumentType } from "../../../models/Document";
 import React, { useEffect } from "react";
+import { AbsenceCaseStatus } from "../../../models/Claim";
+import AbsenceCaseStatusTag from "../../../components/AbsenceCaseStatusTag";
 import BackButton from "../../../components/BackButton";
 import DocumentCollection from "../../../models/DocumentCollection";
 import EmployerClaim from "../../../models/EmployerClaim";
@@ -8,7 +10,6 @@ import Lead from "../../../components/Lead";
 import LeaveReason from "../../../models/LeaveReason";
 import PropTypes from "prop-types";
 import StatusRow from "../../../components/StatusRow";
-import Tag from "../../../components/Tag";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import download from "downloadjs";
@@ -31,15 +32,6 @@ export const Status = (props) => {
   } = appLogic;
   const { isContinuous, isIntermittent, isReducedSchedule } = claim;
   const { t } = useTranslation();
-
-  const getDisplayState = (status) => {
-    const successState = ["Approved"];
-    const errorState = ["Denied", "Cancelled", "Withdrawn", "Voided"];
-
-    if (successState.includes(status)) return "success";
-    if (errorState.includes(status)) return "error";
-    return "warning";
-  };
 
   useEffect(() => {
     if (!documents) {
@@ -65,10 +57,12 @@ export const Status = (props) => {
       </Title>
       <Lead>
         <Trans
+          data-test="lead-text"
           i18nKey="pages.employersClaimsStatus.lead"
           tOptions={{
-            context:
-              getDisplayState(claim.status) === "warning" ? "pending" : "",
+            context: findKeyByValue(AbsenceCaseStatus, claim.status)
+              ? "decision"
+              : "pending",
           }}
           components={{
             "dfml-regulations-link": (
@@ -87,9 +81,9 @@ export const Status = (props) => {
       <StatusRow label={t("pages.employersClaimsStatus.applicationIdLabel")}>
         {absenceId}
       </StatusRow>
-      {shouldShowDashboard && claim.status && (
+      {shouldShowDashboard && (
         <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
-          <Tag state={getDisplayState(claim.status)} label={claim.status} />
+          <AbsenceCaseStatusTag status={claim.status} />
         </StatusRow>
       )}
       <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>

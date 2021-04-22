@@ -120,6 +120,14 @@ export const Default = (args) => {
             new Claim({
               created_at: DateTime.local().minus({ days: num }).toISODate(),
               fineos_absence_id: `NTN-101-ABS-${num}`,
+              fineos_absence_status: faker.helpers.randomize([
+                "Approved",
+                "Declined",
+                "Closed",
+                "Completed",
+                "Adjudication",
+                "Intake In Progress",
+              ]),
               employee: new ClaimEmployee({
                 first_name: faker.name.firstName(),
                 last_name: faker.name.lastName(),

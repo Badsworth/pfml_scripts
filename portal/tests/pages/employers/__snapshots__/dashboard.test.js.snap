@@ -56,7 +56,9 @@ exports[`Employer dashboard renders a table of claims 1`] = `
     data-label="Status"
     key="status"
   >
-    --
+    <AbsenceCaseStatusTag
+      status="Approved"
+    />
   </td>
 </tr>
 `;
