@@ -197,15 +197,17 @@ def test_e2e_pub_payments(
         # TODO claimant file related state log assertions
 
         # == Validate payments state logs
+        stage_1_happy_path_scenarios = [
+            ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+            ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+            ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+            ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+            ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+            ScenarioName.AUDIT_REJECTED,
+        ]
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                ScenarioName.AUDIT_REJECTED,
-            ],
+            scenario_names=stage_1_happy_path_scenarios,
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=test_db_session,
         )
@@ -253,10 +255,10 @@ def test_e2e_pub_payments(
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[
-                ScenarioName.PENDING_LEAVE_REQUEST_DECISION,
                 ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
                 ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
                 ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
+                ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
             ],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
             db_session=test_db_session,
@@ -289,9 +291,7 @@ def test_e2e_pub_payments(
 
         audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)
 
-        assert (
-            len(audit_report_parsed_csv_rows) == 5
-        )  # See DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT validation above
+        assert len(audit_report_parsed_csv_rows) == len(stage_1_happy_path_scenarios)
 
         payments = get_payments_in_end_state(
             test_db_session, State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
@@ -314,8 +314,8 @@ def test_e2e_pub_payments(
             "PaymentExtractStep",
             {
                 "processed_payment_count": len(SCENARIO_DESCRIPTORS),
-                "unapproved_leave_request_count": 1,
-                "approved_prenote_count": 3,
+                "not_pending_or_approved_leave_request_count": 1,
+                "approved_prenote_count": 4,
                 "zero_dollar_payment_count": 1,
                 "cancellation_count": 1,
                 "overpayment_count": 2,
@@ -327,9 +327,7 @@ def test_e2e_pub_payments(
         assert_metrics(
             test_db_other_session,
             "PaymentAuditReportStep",
-            {
-                "payment_sampled_for_audit_count": 5,  # See DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT state check above
-            },
+            {"payment_sampled_for_audit_count": len(stage_1_happy_path_scenarios),},
         )
 
         assert_metrics(
@@ -491,17 +489,17 @@ def test_e2e_pub_payments(
         assert_metrics(
             test_db_other_session,
             "PaymentRejectsStep",
-            {"rejected_payment_count": 1, "accepted_payment_count": 4},
+            {"rejected_payment_count": 1, "accepted_payment_count": 5},
         )
 
         assert_metrics(
             test_db_other_session,
             "PaymentMethodsSplitStep",
-            {"ach_payment_count": 2, "check_payment_count": 2},
+            {"ach_payment_count": 3, "check_payment_count": 2},
         )
 
         assert_metrics(
-            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 9,},
+            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 10,},
         )
 
         assert_metrics(

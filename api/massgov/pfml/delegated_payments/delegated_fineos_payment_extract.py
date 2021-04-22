@@ -427,9 +427,9 @@ class PaymentData:
             def leave_request_decision_validator(
                 leave_request_decision: str,
             ) -> Optional[payments_util.ValidationReason]:
-                if leave_request_decision != "Approved":
+                if leave_request_decision not in ["Pending", "Approved"]:
                     if count_incrementer is not None:
-                        count_incrementer("unapproved_leave_request_count")
+                        count_incrementer("not_pending_or_approved_leave_request_count")
                     return payments_util.ValidationReason.INVALID_VALUE
                 return None
 
@@ -869,6 +869,7 @@ class PaymentExtractStep(Step):
         payment.fineos_pei_i_value = payment_data.i_value
         payment.fineos_extraction_date = payments_util.get_now().date()
         payment.fineos_extract_import_log_id = self.get_import_log_id()
+        payment.leave_request_decision = payment_data.leave_request_decision
 
         # If the payment is already being processed,
         # then FINEOS sent us a payment they should not have

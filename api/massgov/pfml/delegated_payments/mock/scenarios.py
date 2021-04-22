@@ -24,6 +24,7 @@ class ScenarioName(Enum):
     HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN = (
         "HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN"
     )
+    HAPPY_PENDING_LEAVE_REQUEST_DECISION = "HAPPY_PENDING_LEAVE_REQUEST_DECISION"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -42,10 +43,11 @@ class ScenarioName(Enum):
     )
 
     # Automated Validation Rules (TODO add more validation issue scenarios)
+    REJECTED_LEAVE_REQUEST_DECISION = "REJECTED_LEAVE_REQUEST_DECISION"
     PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
+
     # TODO CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB
     # TODO CLAIM_DOES_NOT_EXIST
-    PENDING_LEAVE_REQUEST_DECISION = "PENDING_LEAVE_REQUEST_DECISION"
 
     # Audit
     AUDIT_REJECTED = "AUDIT_REJECTED"
@@ -134,7 +136,12 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         employee_missing_in_db=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.PENDING_LEAVE_REQUEST_DECISION, leave_request_decision="Pending"
+        scenario_name=ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+        leave_request_decision="Pending",
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
+        leave_request_decision="Rejected",
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_approved=False),
 ]
