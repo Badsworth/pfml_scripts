@@ -299,8 +299,12 @@ class Application(Base):
     other_incomes_awaiting_approval = Column(Boolean)
     has_submitted_payment_preference = Column(Boolean)
     has_previous_leaves = Column(Boolean)
+    caring_leave_metadata_id = Column(
+        UUID(as_uuid=True), ForeignKey("caring_leave_metadata.caring_leave_metadata_id")
+    )
 
     user = relationship(User)
+    caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
     claim = relationship(Claim, backref=backref("application", uselist=False))
     employer = relationship(Employer)
     employee = relationship(Employee)
@@ -336,6 +340,21 @@ class Application(Base):
     employer_benefits = relationship("EmployerBenefit", back_populates="application", uselist=True)
     other_incomes = relationship("OtherIncome", back_populates="application", uselist=True)
     previous_leaves = relationship("PreviousLeave", back_populates="application", uselist=True)
+
+
+class CaringLeaveMetadata(Base):
+    __tablename__ = "caring_leave_metadata"
+    caring_leave_metadata_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    family_member_first_name = Column(Text)
+    family_member_last_name = Column(Text)
+    family_member_middle_name = Column(Text)
+    family_member_date_of_birth = Column(Date)
+    relationship_to_caregiver_id = Column(
+        Integer, ForeignKey("lk_relationship_to_caregiver.relationship_to_caregiver_id")
+    )
+
+    relationship_to_caregiver = relationship(LkRelationshipToCaregiver)
+    application = relationship("Application", back_populates="caring_leave_metadata", uselist=False)
 
 
 class ApplicationPaymentPreference(Base):
@@ -851,24 +870,6 @@ class PreviousLeaveQualifyingReason(LookupTable):
     CHILD_BONDING = LkPreviousLeaveQualifyingReason(4, "Child bonding")
     MILITARY_CAREGIVER = LkPreviousLeaveQualifyingReason(5, "Military caregiver")
     MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(6, "Military exigency family")
-
-
-class CaringLeaveMetadata(Base):
-    __tablename__ = "caring_leave_metadata"
-    caring_leave_metadata_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    family_member_first_name = Column(Text)
-    family_member_last_name = Column(Text)
-    family_member_middle_name = Column(Text, nullable=True)
-    family_member_date_of_birth = Column(Date)
-    application_id = Column(
-        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True, unique=True
-    )
-    relationship_to_caregiver_id = Column(
-        Integer, ForeignKey("lk_relationship_to_caregiver.relationship_to_caregiver_id")
-    )
-
-    application = relationship(Application, backref=backref("caring_leave_metadata", uselist=False))
-    relationship_to_caregiver = relationship(LkRelationshipToCaregiver)
 
 
 def sync_lookup_tables(db_session):

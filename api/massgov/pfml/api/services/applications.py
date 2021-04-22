@@ -259,9 +259,11 @@ def remove_masked_fields_from_request(
         )
 
         # family member date of birth - partially masked
-        if existing_application.caring_leave_metadata and leave_details.get("caring_leave_metadata"):  # type: ignore
+        if existing_application.caring_leave_metadata and leave_details.get(
+            "caring_leave_metadata"
+        ):
             masked_existing_family_member_dob = mask.mask_date(
-                existing_application.caring_leave_metadata.family_member_date_of_birth  # type: ignore
+                existing_application.caring_leave_metadata.family_member_date_of_birth
             )
             errors += process_partially_masked_field(
                 field_key="family_member_date_of_birth",
@@ -404,9 +406,7 @@ def add_or_update_caring_leave_metadata(
     if not api_caring_leave_metadata:
         return None
 
-    caring_leave_metadata = (
-        getattr(application, "caring_leave_metadata", None) or CaringLeaveMetadata()
-    )
+    caring_leave_metadata = application.caring_leave_metadata or CaringLeaveMetadata()
 
     for key in api_caring_leave_metadata.__fields_set__:
         value = getattr(api_caring_leave_metadata, key)
@@ -419,8 +419,7 @@ def add_or_update_caring_leave_metadata(
                 value = relationship_to_caregiver_model
         setattr(caring_leave_metadata, key, value)
 
-    application.caring_leave_metadata = caring_leave_metadata  # type: ignore
-    db_session.add(application.caring_leave_metadata)  # type: ignore
+    application.caring_leave_metadata = caring_leave_metadata
 
 
 def update_leave_details(
@@ -460,9 +459,9 @@ def update_leave_details(
                         and application.leave_reason
                         and application.leave_reason.leave_reason_description
                         == LeaveReason.caring_leave
-                        and application.caring_leave_metadata is not None  # type: ignore
+                        and application.caring_leave_metadata is not None
                     ):
-                        db_session.delete(application.caring_leave_metadata)  # type: ignore
+                        db_session.delete(application.caring_leave_metadata)
 
                 if key == "reason_qualifier":
                     key = "leave_reason_qualifier"

@@ -439,9 +439,9 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
     )
     application.phone = Phone(phone_number="+12404879945", phone_type_id=1)  # Cell
 
-    caring_leave_metadata = CaringLeaveMetadata(
-        family_member_date_of_birth=date(1975, 1, 1), application_id=application.application_id
-    )
+    caring_leave_metadata = CaringLeaveMetadata(family_member_date_of_birth=date(1975, 1, 1))
+
+    application.caring_leave_metadata = caring_leave_metadata
 
     test_db_session.add(caring_leave_metadata)
 
@@ -4526,8 +4526,10 @@ def test_application_patch_caring_leave_metadata(client, user, auth_token, test_
     )
     assert application.caring_leave_metadata is None
 
-    caring_leave_metadata = CaringLeaveMetadata(application_id=application.application_id)
+    caring_leave_metadata = CaringLeaveMetadata()
+    application.caring_leave_meatadata = caring_leave_metadata
     test_db_session.add(caring_leave_metadata)
+    test_db_session.add(application)
     test_db_session.commit()
 
     # change leave reason to caring leave
@@ -4683,8 +4685,8 @@ def test_application_patch_caring_leave_metadata_change_leave_reason(
     )
     assert application.caring_leave_metadata is None
 
-    caring_leave_metadata = CaringLeaveMetadata(application_id=application.application_id)
-    test_db_session.add(caring_leave_metadata)
+    application.caring_leave_metadata = CaringLeaveMetadata()
+    test_db_session.add(application)
     test_db_session.commit()
 
     # change leave reason to medical leave
