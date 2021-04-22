@@ -22,6 +22,7 @@ import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
     Address,
     Claim,
+    ClaimType,
     Employee,
     Employer,
     LkBankAccountType,
@@ -79,6 +80,16 @@ class LkLeaveType(Base):
     def __init__(self, leave_type_id, leave_type_description):
         self.leave_type_id = leave_type_id
         self.leave_type_description = leave_type_description
+
+    @hybrid_property
+    def absence_to_claim_type(self) -> int:
+        _map = {
+            LeaveType.BONDING_LEAVE.leave_type_id: ClaimType.FAMILY_LEAVE.claim_type_id,
+            LeaveType.MEDICAL_LEAVE.leave_type_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
+            LeaveType.ACCIDENT.leave_type_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
+            LeaveType.MILITARY.leave_type_id: ClaimType.MILITARY_LEAVE.claim_type_id,
+        }
+        return _map[self.leave_type_id]
 
 
 class LkRelationshipToCaregiver(Base):

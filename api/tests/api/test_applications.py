@@ -4486,8 +4486,11 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
         employer=application.employer, employee=application.employee
     )
 
+    startDate = date(2021, 1, 1)
+    endDate = date(2021, 4, 1)
+
     application.continuous_leave_periods = [
-        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+        ContinuousLeavePeriodFactory.create(start_date=startDate, end_date=endDate)
     ]
     application.date_of_birth = "1997-06-06"
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
@@ -4495,6 +4498,7 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
     application.has_continuous_leave_periods = True
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
+    application.leave_type_id = 1
 
     test_db_session.commit()
     client.post(
@@ -4510,6 +4514,9 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
 
     assert submitted_application.claim is not None
     assert submitted_application.claim.employer is not None
+    assert submitted_application.claim.absence_period_start_date == startDate
+    assert submitted_application.claim.absence_period_end_date == endDate
+    assert submitted_application.claim.claim_type_id == 1
 
 
 def test_application_patch_caring_leave_metadata(client, user, auth_token, test_db_session):
