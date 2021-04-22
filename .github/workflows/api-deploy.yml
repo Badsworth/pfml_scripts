@@ -568,8 +568,31 @@ jobs:
 
           # Wait for ECS service to be stable, and run it twice to allow for
           # abnormally long deploys (up to 20 minutes.)
-          (aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID ||
-           aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
+          failures=0
+
+          while [[ $failures -lt 2 ]]; do
+            set +e -x
+            result=$(aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
+            set -e +x
+
+            if [[ $? -eq 0 ]]; then
+              break
+            elif [[ "${result}" =~ "MISSING" ]]; then
+              # This happens sometimes when the script runs too quickly after terraform apply.
+              # Sleep for a little bit and try again without considering it a retry.
+              sleep 5
+            else
+              ((failures++))
+            fi
+          done
+
+          if [[ $failures -ge 2 ]]; then
+            echo "ECS service failed to stabilize within 20 minutes."
+            echo "Please check the ECS service at https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters/${{ needs.deploy-info.outputs.api-env }}/services/pfml-api-${{ needs.deploy-info.outputs.api-env }}/events"
+            echo "More info: https://lwd.atlassian.net/wiki/spaces/DD/pages/786694343/API+General+Runbook"
+            exit 1
+          fi
+
         working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
   update-newrelic:
