@@ -309,14 +309,14 @@ def build_customer_model(application, current_user):
 
 def build_gender(
     application: Application,
-) -> massgov.pfml.fineos.models.customer_api.ExtensionAttribute:
+) -> Optional[str]:
     """Convert an application's gender to FINEOS API Customer model's Gender attribute."""
     application_gender = [
         gender.fineos_gender_description
         for gender in vars(Gender).values()
         if isinstance(gender, LkGender) and gender.gender_id is application.gender_id
     ]
-    if len(application_gender) is not 1:
+    if len(application_gender) != 1:
         raise NotFound(
             description="Could not find the following gender id {}".format(application.gender_id)
         )
