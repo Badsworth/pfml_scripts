@@ -74,9 +74,9 @@ class Constants:
     S3_INBOUND_SKIPPED_DIR = "skipped"
     S3_INBOUND_ERROR_DIR = "error"
 
-    FILE_NAME_PUB_NACHA = "PUB-NACHA"
-    FILE_NAME_PUB_EZ_CHECK = "PUB-EZ-CHECK"
-    FILE_NAME_PUB_POSITIVE_PAY = "PUB-POSITIVE-PAY"
+    FILE_NAME_PUB_NACHA = "EOLWD-DFML-NACHA"
+    FILE_NAME_PUB_EZ_CHECK = "EOLWD-DFML-EZ-CHECK"
+    FILE_NAME_PUB_POSITIVE_PAY = "EOLWD-DFML-POSITIVE-PAY"
     FILE_NAME_PAYMENT_AUDIT_REPORT = "Payment-Audit-Report"
 
     NACHA_FILE_FORMAT = f"%Y-%m-%d-%H-%M-%S-{FILE_NAME_PUB_NACHA}"
@@ -184,6 +184,13 @@ def get_now() -> datetime:
     return datetime.now(tz)
 
 
+def get_date_folder(current_time: Optional[datetime] = None) -> str:
+    if not current_time:
+        current_time = get_now()
+
+    return current_time.strftime("%Y-%m-%d")
+
+
 def build_archive_path(
     prefix: str, file_status: str, file_name: str, current_time: Optional[datetime] = None
 ) -> str:
@@ -208,11 +215,7 @@ def build_archive_path(
       An optional datetime for use in the path, will be formatted as %Y-%m-%d
     """
 
-    if not current_time:
-        current_time = get_now()
-
-    date_folder = current_time.strftime("%Y-%m-%d")
-    return os.path.join(prefix, file_status, date_folder, file_name)
+    return os.path.join(prefix, file_status, get_date_folder(current_time), file_name)
 
 
 def lookup_validator(

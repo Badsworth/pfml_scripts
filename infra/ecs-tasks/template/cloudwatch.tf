@@ -116,6 +116,26 @@ module "fineos_bucket_tool_scheduler" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Run import-fineos-to-warehouse at 10pm EST (11pm EDT) (3am UTC +1 day)
+module "import_fineos_to_warehouse" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name           = "import-fineos-to-warehouse"
+  schedule_expression = "cron(0 3 * * ? *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["import-fineos-to-warehouse"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["import-fineos-to-warehouse"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.fineos_bucket_tool_role.arn
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run fineos-bucket-tool daily at 8am EST (9am EDT) (1pm UTC)
 module "fineos_error_extract_scheduler" {
   source     = "../../modules/ecs_task_scheduler"

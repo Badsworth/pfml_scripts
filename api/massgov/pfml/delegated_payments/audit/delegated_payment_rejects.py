@@ -141,8 +141,15 @@ class PaymentRejectsStep(Step):
                     absence_case_number=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_number),
                     c_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.c_value),
                     i_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.i_value),
+                    fineos_customer_number=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number
+                    ),
                     employer_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_id),
                     case_status=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.case_status),
+                    leave_request_decision=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision
+                    ),
+                    check_description=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.check_description),
                     is_first_time_payment=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment
                     ),

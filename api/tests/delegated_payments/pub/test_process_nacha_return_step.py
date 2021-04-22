@@ -10,6 +10,7 @@ from collections import Counter
 import pytest
 
 import massgov.pfml.api.util.state_log_util
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models import factories
 from massgov.pfml.db.models.employees import (
@@ -89,7 +90,10 @@ def test_process_nacha_return_file_step_full(
         reference_file.reference_file_type_id
         == ReferenceFileType.PUB_ACH_RETURN.reference_file_type_id
     )
-    assert reference_file.file_location == str(tmp_path / "processed" / "ach_return_small.ach")
+
+    assert reference_file.file_location == str(
+        tmp_path / payments_util.get_date_folder() / "processed" / "ach_return_small.ach"
+    )
 
     # There should be no change to employee states in this process (returns are tracked in the
     # pub_eft table). All should remain in the DELEGATED_EFT_PRENOTE_SENT state.

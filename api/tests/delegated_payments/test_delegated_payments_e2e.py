@@ -113,11 +113,12 @@ def test_e2e_pub_payments(
 ):
     # TODO Validate error and warning logs
     # TODO Validate reference files
+    # TODO make metric count numbers more readable (use variables etc)
 
     # ========================================================================
     # Configuration / Setup
     # ========================================================================
-    caplog.set_level(logging.WARNING)  # noqa: B1
+    caplog.set_level(logging.ERROR)  # noqa: B1
 
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2021-04-30")
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2021-04-30")
@@ -211,15 +212,29 @@ def test_e2e_pub_payments(
         # TODO claimant file related state log assertions
 
         # == Validate payments state logs
+        stage_1_happy_path_scenarios = [
+            ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+            ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+            ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+            ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+            ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+            ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+            ScenarioName.AUDIT_REJECTED,
+        ]
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                ScenarioName.AUDIT_REJECTED,
+            scenario_names=stage_1_happy_path_scenarios,
+            end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+            db_session=test_db_session,
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[                
+                ScenarioName.PUB_ACH_FAMILY_RETURN,
+                ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=test_db_session,
@@ -267,11 +282,13 @@ def test_e2e_pub_payments(
         # End State
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.PENDING_LEAVE_REQUEST_DECISION,
+            scenario_names=[                
                 ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
                 ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                 ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
+                ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
             ],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
             db_session=test_db_session,
@@ -302,11 +319,12 @@ def test_e2e_pub_payments(
             payment_audit_report_outbound_folder_path, audit_report_file_name
         )
 
-        audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)
+        audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)        
 
-        assert (
-            len(audit_report_parsed_csv_rows) == 5
-        )  # See DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT validation above
+        assert len(audit_report_parsed_csv_rows) == (
+            len(stage_1_happy_path_scenarios) + 
+            4 # non_prenote_pub_returns
+        )
 
         payments = get_payments_in_end_state(
             test_db_session, State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
@@ -329,21 +347,23 @@ def test_e2e_pub_payments(
             "PaymentExtractStep",
             {
                 "processed_payment_count": len(SCENARIO_DESCRIPTORS),
-                "unapproved_leave_request_count": 1,
-                "approved_prenote_count": 3,
+                "not_pending_or_approved_leave_request_count": 1,
+                "approved_prenote_count": 9,
                 "zero_dollar_payment_count": 1,
                 "cancellation_count": 1,
                 "overpayment_count": 2,
                 "employer_reimbursement_count": 1,
-                "errored_payment_count": 4,  # See DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT state check above
+                "errored_payment_count": 6,  # See DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT state check above
             },
         )
 
         assert_metrics(
             test_db_other_session,
             "PaymentAuditReportStep",
-            {
-                "payment_sampled_for_audit_count": 5,  # See DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT state check above
+            {"payment_sampled_for_audit_count": (
+                    len(stage_1_happy_path_scenarios) + 
+                    4 # non_prenote_pub_returns
+                ),
             },
         )
 
@@ -466,14 +486,28 @@ def test_e2e_pub_payments(
         )
         dfml_report_outbound_path = os.path.join(s3_config.dfml_report_outbound_path)
 
-        assert_files(pub_folder_path, ["PUB-EZ-CHECK.csv"])
-        assert_files(pub_check_archive_folder_path, ["PUB-EZ-CHECK.csv"], timestamp_prefix)
+        assert_files(
+            dfml_report_outbound_path, [f"{payments_util.Constants.FILE_NAME_PUB_EZ_CHECK}.csv"]
+        )
+        assert_files(
+            pub_check_archive_folder_path,
+            [f"{payments_util.Constants.FILE_NAME_PUB_EZ_CHECK}.csv"],
+            timestamp_prefix,
+        )
 
-        assert_files(dfml_report_outbound_path, ["PUB-POSITIVE-PAY.txt"])
-        assert_files(pub_check_archive_folder_path, ["PUB-POSITIVE-PAY.txt"], timestamp_prefix)
+        assert_files(pub_folder_path, [f"{payments_util.Constants.FILE_NAME_PUB_POSITIVE_PAY}.txt"])
+        assert_files(
+            pub_check_archive_folder_path,
+            [f"{payments_util.Constants.FILE_NAME_PUB_POSITIVE_PAY}.txt"],
+            timestamp_prefix,
+        )
 
-        assert_files(pub_folder_path, ["PUB-NACHA"])
-        assert_files(pub_ach_archive_folder_path, ["PUB-NACHA"], timestamp_prefix)
+        assert_files(pub_folder_path, [payments_util.Constants.FILE_NAME_PUB_NACHA])
+        assert_files(
+            pub_ach_archive_folder_path,
+            [payments_util.Constants.FILE_NAME_PUB_NACHA],
+            timestamp_prefix,
+        )
 
         # TODO validate content of outgoing files
 
@@ -492,17 +526,17 @@ def test_e2e_pub_payments(
         assert_metrics(
             test_db_other_session,
             "PaymentRejectsStep",
-            {"rejected_payment_count": 1, "accepted_payment_count": 4},
+            {"rejected_payment_count": 1, "accepted_payment_count": 10},
         )
 
         assert_metrics(
             test_db_other_session,
             "PaymentMethodsSplitStep",
-            {"ach_payment_count": 2, "check_payment_count": 2},
+            {"ach_payment_count": 8, "check_payment_count": 2},
         )
 
         assert_metrics(
-            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 9,},
+            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 15,},
         )
 
         assert_metrics(

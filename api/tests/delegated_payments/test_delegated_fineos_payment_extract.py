@@ -861,17 +861,19 @@ def test_process_extract_data_leave_request_decision_validation(
 
     approved_record = FineosPaymentData(leave_request_decision="Approved")
     pending_record = FineosPaymentData(leave_request_decision="Pending")
+    rejected_record = FineosPaymentData(leave_request_decision="Rejected")
 
     # setup both payments in DB
     add_db_records_from_fineos_data(test_db_session, approved_record)
     add_db_records_from_fineos_data(test_db_session, pending_record)
+    add_db_records_from_fineos_data(test_db_session, rejected_record)
 
-    upload_fineos_data(tmp_path, mock_s3_bucket, [approved_record, pending_record])
+    upload_fineos_data(tmp_path, mock_s3_bucket, [approved_record, pending_record, rejected_record])
 
     # We deliberately do no DB setup, there will not be any prior employee or claim
     payment_extract_step.run()
 
-    valid_payment = (
+    approved_payment = (
         test_db_session.query(Payment)
         .filter(
             Payment.fineos_pei_c_value == approved_record.c_value,
@@ -879,14 +881,14 @@ def test_process_extract_data_leave_request_decision_validation(
         )
         .one_or_none()
     )
-    assert valid_payment
-    assert len(valid_payment.state_logs) == 1
+    assert approved_payment
+    assert len(approved_payment.state_logs) == 1
     assert (
-        valid_payment.state_logs[0].end_state_id
+        approved_payment.state_logs[0].end_state_id
         == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
     )
 
-    unapproved_payment = (
+    pending_payment = (
         test_db_session.query(Payment)
         .filter(
             Payment.fineos_pei_c_value == pending_record.c_value,
@@ -894,16 +896,31 @@ def test_process_extract_data_leave_request_decision_validation(
         )
         .one_or_none()
     )
-    assert unapproved_payment
-    assert len(unapproved_payment.state_logs) == 1
+    assert pending_payment
+    assert len(pending_payment.state_logs) == 1
     assert (
-        unapproved_payment.state_logs[0].end_state_id
+        pending_payment.state_logs[0].end_state_id
+        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+    )
+
+    rejected_payment = (
+        test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == rejected_record.c_value,
+            Payment.fineos_pei_i_value == rejected_record.i_value,
+        )
+        .one_or_none()
+    )
+    assert rejected_payment
+    assert len(rejected_payment.state_logs) == 1
+    assert (
+        rejected_payment.state_logs[0].end_state_id
         == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
     )
 
-    import_log_report = json.loads(unapproved_payment.fineos_extract_import_log.report)
-    assert import_log_report["unapproved_leave_request_count"] == 1
-    assert import_log_report["standard_valid_payment_count"] == 1
+    import_log_report = json.loads(rejected_payment.fineos_extract_import_log.report)
+    assert import_log_report["not_pending_or_approved_leave_request_count"] == 1
+    assert import_log_report["standard_valid_payment_count"] == 2
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time

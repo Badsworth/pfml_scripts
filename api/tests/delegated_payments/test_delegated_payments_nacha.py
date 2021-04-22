@@ -232,7 +232,7 @@ def test_nacha_file_upload(mock_s3_bucket):
 
     ref_file = send_nacha_file(nacha_file, archive_folder_path, outbound_folder_path)
 
-    filename_pattern = r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-PUB-NACHA"
+    filename_pattern = r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-EOLWD-DFML-NACHA"
     assert re.search(filename_pattern, ref_file.file_location)
 
     # With a two records, there will be:
@@ -241,7 +241,7 @@ def test_nacha_file_upload(mock_s3_bucket):
     assert len([line for line in file_stream]) == 10
 
     # The outbound file should have been identically built
-    file_stream = file_util.open_stream(f"{outbound_folder_path}/PUB-NACHA")
+    file_stream = file_util.open_stream(f"{outbound_folder_path}/EOLWD-DFML-NACHA")
     assert len([line for line in file_stream]) == 10
 
 
