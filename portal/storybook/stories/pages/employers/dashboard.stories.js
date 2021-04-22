@@ -137,6 +137,7 @@ export const Default = (args) => {
 
   const appLogic = {
     portalFlow: {
+      getNextPageRoute: () => {},
       goTo: () => {},
       pathname: routes.employers.dashboard,
     },

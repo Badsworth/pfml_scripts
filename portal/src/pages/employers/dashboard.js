@@ -8,6 +8,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Table from "../../components/Table";
 import Title from "../../components/Title";
+import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
@@ -91,6 +92,11 @@ export const Dashboard = (props) => {
                 {t("pages.employersDashboard.tableColHeading", {
                   context: columnKey,
                 })}
+                {columnKey === "created_at" && (
+                  <TooltipIcon position="bottom">
+                    {t("pages.employersDashboard.startDateTooltip")}
+                  </TooltipIcon>
+                )}
               </th>
             ))}
           </tr>

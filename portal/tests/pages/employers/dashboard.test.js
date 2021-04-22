@@ -94,6 +94,7 @@ describe("Employer dashboard", () => {
     const { wrapper } = setup(claims, userAttrs);
 
     expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
+    expect(wrapper.find("thead")).toMatchSnapshot();
   });
 
   it("does not render Employer DBA when user has only one Employer associated", () => {
