@@ -582,6 +582,7 @@ class Payment(Base):
     disb_check_eft_issue_date = Column(Date)
     disb_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     disb_amount = Column(Numeric(asdecimal=True))
+    leave_request_decision = Column(Text)
     experian_address_pair_id = Column(
         UUID(as_uuid=True), ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
     )

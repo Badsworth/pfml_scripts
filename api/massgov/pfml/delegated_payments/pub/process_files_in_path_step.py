@@ -68,14 +68,16 @@ class ProcessFilesInPathStep(Step, metaclass=abc.ABCMeta):
 
     def compute_paths_from_base_path(self) -> None:
         """Compute the subdirectory paths for received, processed, and error files."""
+        date_folder = delegated_payments_util.get_date_folder()
+
         self.received_path = os.path.join(
             self.base_path, delegated_payments_util.Constants.S3_INBOUND_RECEIVED_DIR,
         )
         self.processed_path = os.path.join(
-            self.base_path, delegated_payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+            self.base_path, date_folder, delegated_payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
         )
         self.error_path = os.path.join(
-            self.base_path, delegated_payments_util.Constants.S3_INBOUND_ERROR_DIR,
+            self.base_path, date_folder, delegated_payments_util.Constants.S3_INBOUND_ERROR_DIR,
         )
 
     @abc.abstractmethod

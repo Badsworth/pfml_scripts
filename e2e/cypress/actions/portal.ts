@@ -265,13 +265,12 @@ export function selectClaimType(application: ApplicationRequestBody): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Enter leave details"
-  const reason = application.leave_details && application.leave_details.reason;
-  const reasonQualifier =
-    application.leave_details && application.leave_details.reason_qualifier;
-  type ClaimTypePortal = {
-    [index: string]: string;
-  };
-  const claimType: ClaimTypePortal = {
+  const reason = application.leave_details?.reason;
+  const reasonQualifier = application.leave_details?.reason_qualifier;
+  if (!reason) {
+    throw new Error("Claim is missing reason or reason qualifier");
+  }
+  const reasonMap: Record<typeof reason, string> = {
     "Serious Health Condition - Employee":
       "I can’t work due to an illness, injury, or pregnancy.",
     "Child Bonding":
@@ -279,14 +278,17 @@ export function selectClaimType(application: ApplicationRequestBody): void {
     "Pregnancy/Maternity":
       "I can’t work due to an illness, injury, or pregnancy.",
   };
-  const leaveReason: ClaimTypePortal = {
-    Newborn: "Birth",
-    Adoption: "Adoption",
-    "Foster Care": "Foster placement",
-  };
-  cy.contains(claimType[reason as string]).click();
-  if (reason === "Child Bonding") {
-    cy.contains(leaveReason[reasonQualifier as string]).click();
+  cy.contains(reasonMap[reason]).click();
+  if (reasonQualifier) {
+    const reasonQualifierMap: Record<typeof reasonQualifier, string> = {
+      Newborn: "Birth",
+      Adoption: "Adoption",
+      "Foster Care": "Foster placement",
+    };
+    if (!(reasonQualifier in reasonQualifierMap)) {
+      throw new Error(`Unknown reason qualifier: ${reasonQualifier}`);
+    }
+    cy.contains(reasonQualifierMap[reasonQualifier]).click();
   }
   cy.contains("button", "Save and continue").click();
 }
@@ -549,12 +551,12 @@ export function reportOtherLeave(
   clickChecklistButton("Report other leave, income, and benefits");
   cy.contains("No").click();
   cy.contains("button", "Save and continue").click();
-  cy.wait(500);
+  cy.contains("legend", "Will you receive income from any other sources");
 
   if (otherLeave) {
     cy.contains("Yes").click();
     cy.contains("button", "Save and continue").click();
-    cy.wait(500);
+    cy.contains("h2", "Tell us about your other sources of income");
     cy.contains("Workers Compensation").click();
     if (
       application.leave_details &&
@@ -586,10 +588,9 @@ export function reportOtherLeave(
         cy.contains("Year").type(endYear);
       });
       cy.contains("button", "Save and continue").click();
-      cy.wait(500);
       cy.contains("Yes").click();
       cy.contains("button", "Save and continue").click();
-      cy.wait(500);
+      cy.contains("h2", "Tell us about previous paid or unpaid leave");
       cy.contains("Yes").click();
       cy.contains("An illness or injury").click();
       cy.contains("fieldset", "When did your leave begin?").within(() => {
@@ -605,10 +606,9 @@ export function reportOtherLeave(
       cy.contains("button", "Save and continue").click();
     }
   } else {
-    cy.wait(500);
     cy.contains("No").click();
     cy.contains("button", "Save and continue").click();
-    cy.wait(500);
+    cy.contains("legend", "Have you taken paid or unpaid leave");
     cy.contains("No").click();
     cy.contains("button", "Save and continue").click();
   }

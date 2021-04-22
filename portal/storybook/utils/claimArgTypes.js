@@ -40,6 +40,7 @@ export const claimArgTypes = {
         "Family - Birth",
         "Family - Adoption",
         "Family - Foster care",
+        "Caring",
       ],
     },
   },
@@ -124,6 +125,9 @@ export function createClaimFromArgs(args) {
       break;
     case "Family - Foster care":
       claim = claim.bondingFosterCareLeaveReason();
+      break;
+    case "Caring":
+      claim.caringLeaveReason();
       break;
   }
 

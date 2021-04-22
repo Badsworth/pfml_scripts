@@ -16,7 +16,7 @@ on:
           🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.     
           --------------------------------------
           ⬇️ Environment to be deployed.
-            (test, performance, stage, training, uat and prod).
+            (test, performance, stage, training, uat, prod, breakfix, cps-preview).
       version:
         required: true
         default: "main"
@@ -256,14 +256,13 @@ jobs:
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          UAT_DEPLOYMENT_VERSION: ${{ env.version }}
           WORKFLOW_NAME: "api-deploy.yml"
         run: |
           echo "*** An API staging deploy is now in progress. Enqueuing an extra deployment to UAT... ***"
           curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         -H "Accept: application/vnd.github.v3+json" \
-                        -d '{ "ref": "deploy/api/uat", "inputs": { "version": "${{ env.UAT_DEPLOYMENT_VERSION }}" } }'
+                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "uat", "version": "${{ env.version }}" } }'
           echo "Done."
 
   extra-performance-deploy:
@@ -280,14 +279,13 @@ jobs:
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          PERFORMANCE_DEPLOYMENT_VERSION: ${{ env.version }}
           WORKFLOW_NAME: "api-deploy.yml"
         run: |
           echo "*** An API staging deploy is now in progress. Enqueuing an extra deployment to Performance... ***"
           curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         -H "Accept: application/vnd.github.v3+json" \
-                        -d '{ "ref": "deploy/api/performance", "inputs": { "version": "${{ env.PERFORMANCE_DEPLOYMENT_VERSION }}" } }'
+                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "performance", "version": "${{ env.version }}" } }'
           echo "Done."
 
   api-build:

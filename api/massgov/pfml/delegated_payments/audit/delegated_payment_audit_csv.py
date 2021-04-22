@@ -25,8 +25,11 @@ class PaymentAuditCSV(AbstractRecord):
     absence_case_number: Optional[str]
     c_value: Optional[str]
     i_value: Optional[str]
+    fineos_customer_number: Optional[str]
     employer_id: Optional[str]
     case_status: Optional[str]
+    leave_request_decision: Optional[str]
+    check_description: Optional[str]
     is_first_time_payment: Optional[str]
     is_previously_errored_payment: Optional[str]
     is_previously_rejected_payment: Optional[str]
@@ -53,8 +56,11 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     absence_case_number="Absence Case Number",
     c_value="C Value",
     i_value="I Value",
+    fineos_customer_number="Customer Number",
     employer_id="Employer ID",
     case_status="Case Status",
+    leave_request_decision="Leave Request Decision",
+    check_description="Check Memo",
     is_first_time_payment="First Time Payment",
     is_previously_errored_payment="Previously Errored Payment",
     is_previously_rejected_payment="Previously Rejected Payment",

@@ -12,19 +12,19 @@ include = ["openapi.yaml", "newrelic.ini"]
 alembic = "^1.4.2"
 boto3 = "^1.13.7"
 boto3_extensions = "^0.14.1"
-connexion = {extras = ["swagger-ui"], version = "^2.7.0"}
+connexion = {extras = ["swagger-ui"], version = "^2.7.0", optional = true}
 cryptography = "^3.4.4"
 csvsorter = "^1.4"
 ebcdic = "^1.1.1"
 factory_boy = "^2.12.0"
 faker = "^4.2.0"
-flask-bouncer = "^0.3.0"
-flask_cors = "^3.0.9"
-Flask-HTTPAuth = "^4.2.0"
-gunicorn = "^20.0.4"
+flask-bouncer = { version = "^0.3.0", optional = true }
+flask_cors = { version = "^3.0.9", optional = true }
+Flask-HTTPAuth = { version = "^4.2.0", optional = true }
+gunicorn = { version = "^20.0.4", optional = true }
 # Locking indirect lxml dependency to version that addresses CVE-2021-28957. Can remove when Zeep
 # pins lxml dependency to version that addresses CVE-2021-28957.
-lxml = "^4.6.3"
+lxml = { version = "^4.6.3", optional = true }
 newrelic = "^5.14.1"
 paramiko = "^2.7.2"
 phonenumbers = "^8.12.13"
@@ -47,7 +47,7 @@ sqlalchemy = "~1.3.15"
 strict-rfc3339 = "^0.7"
 tenacity = "^6.2.0"
 xmlschema = "^1.2.2"
-zeep = "^3.4.0"
+zeep = { version = "^3.4.0", optional = true }
 
 
 [tool.poetry.dev-dependencies]
@@ -76,7 +76,24 @@ safety = "^1.9.0"
 sqlalchemy-stubs = {git = "https://github.com/dropbox/sqlalchemy-stubs", rev = "55470ceab8149db983411d5c094c9fe16343c58b"}
 
 [tool.poetry.extras]
+# pyodbc requires building/linking against native libraries, which we don't have
+# control over with AWS SAM, making it optional makes AWS SAM skip it.
+#
+# It's only required for connecting to Data Mart (part of the payments ECS
+# tasks).
 mssql-server = ["pyodbc"]
+# These are packages only used by the API component itself, and so can be
+# excluded from the AWS Lambda builds to reduce the size of the Lambda package
+# below AWS limits.
+api-only-dependencies = [
+ "connexion",
+ "flask-bouncer",
+ "flask_cors",
+ "Flask-HTTPAuth",
+ "gunicorn",
+ "lxml",
+ "zeep",
+]
 
 [tool.poetry.scripts]
 massgov-pfml-api = "massgov.pfml.api.__main__:main"
@@ -99,6 +116,7 @@ payments-mock-generate = "massgov.pfml.payments.mock.generate:main"
 payments-rotate-data-mart-password = "massgov.pfml.payments.rotate_data_mart_password:main"
 payments-manual-payment-voucher = "massgov.pfml.payments.manual.payment_voucher:main"
 payments-ctr-vc-code-cleanup = "massgov.pfml.payments.ctr_vendor_customer_code_cleanup:main"
+payments-payment-voucher-plus = "massgov.pfml.payments.payment_voucher_plus:main"
 pub-payments-process-fineos = "massgov.pfml.delegated_payments.task.process_fineos_extracts:main"
 pub-payments-create-pub-files = "massgov.pfml.delegated_payments.task.process_pub_payments:main"
 pub-payments-process-pub-returns = "massgov.pfml.delegated_payments.task.process_pub_responses:main"
@@ -110,6 +128,7 @@ fineos-test-vendor-export-generate = "massgov.pfml.payments.mock.fineos_extract_
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
 fineos-import-employee-updates = "massgov.pfml.fineos.import_fineos_updates:handler"
 fineos-bucket-tool = "massgov.pfml.fineos.tool.bucket:main"
+import-fineos-to-warehouse = "massgov.pfml.fineos.import_fineos_to_warehouse:handler"
 reductions-retrieve-payment-lists-from-agencies = "massgov.pfml.reductions.retrieve_payment_lists_from_agencies:main"
 reductions-send-claimant-lists-to-agencies = "massgov.pfml.reductions.send_claimant_lists_to_agencies:main"
 reductions-send-wage-replacement-payments-to-dfml = "massgov.pfml.reductions.send_wage_replacement_payments_to_dfml:main"

@@ -92,9 +92,9 @@ def pub_check_files(setup_paths):
     outstanding_file_name = f"Outstanding {file_name}"
     paid_file_name = f"Paid {file_name}"
 
-    dfml_response_inbound_path = payments_config.get_s3_config().dfml_response_inbound_path
-    return generate_files(outstanding_file_name, dfml_response_inbound_path) + generate_files(
-        paid_file_name, dfml_response_inbound_path
+    moveit_inbound_path = payments_config.get_s3_config().pub_moveit_inbound_path
+    return generate_files(outstanding_file_name, moveit_inbound_path) + generate_files(
+        paid_file_name, moveit_inbound_path
     )
 
 
@@ -143,8 +143,8 @@ def test_run_step(pickup_response_file_step, payment_reject_files, pub_check_fil
     )
 
     # Verify all input directories contain the expected files
-    verify_files(s3_config.pub_moveit_inbound_path, pub_ach_files)
-    verify_files(s3_config.dfml_response_inbound_path, payment_reject_files + pub_check_files)
+    verify_files(s3_config.pub_moveit_inbound_path, pub_check_files + pub_ach_files)
+    verify_files(s3_config.dfml_response_inbound_path, payment_reject_files)
     # Verify the output directories are empty
     verify_files(payment_audit_received_path, [])
     verify_files(pub_check_received_path, [])
@@ -185,11 +185,12 @@ def test_run_step_miscellaneous_files_present(
 
     # Verify all input directories contain the expected files
     verify_files(
-        s3_config.pub_moveit_inbound_path, pub_ach_files + random_files_in_moveit_response_path
+        s3_config.pub_moveit_inbound_path,
+        pub_check_files + pub_ach_files + random_files_in_moveit_response_path,
     )
     verify_files(
         s3_config.dfml_response_inbound_path,
-        payment_reject_files + pub_check_files + random_files_in_dfml_response_path,
+        payment_reject_files + random_files_in_dfml_response_path,
     )
     # Verify the output directories are empty
     verify_files(payment_audit_received_path, [])

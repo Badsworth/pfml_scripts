@@ -127,8 +127,8 @@ class TransactionFileCreatorStep(Step):
         ach_archive_path = s3_config.pfml_pub_ach_archive_path
 
         # Outgoing files to PUB go to different locations
-        # NACHA and EZ Check files go to the S3 folder that MoveIt grabs from
-        # Positive pay file goes to the S3 folder that Sharepoint grabs from
+        # NACHA and Positive Pay files go to the S3 folder that MoveIt grabs from
+        # EzCheck pay file goes to the S3 folder that Sharepoint grabs from
         moveit_outgoing_path = s3_config.pub_moveit_outbound_path
         dfml_sharepoint_outgoing_path = s3_config.dfml_report_outbound_path
 
@@ -136,7 +136,7 @@ class TransactionFileCreatorStep(Step):
             logger.info("No check file to send to PUB")
         else:
             ref_file = pub_check.send_check_file(
-                self.check_file, check_archive_path, moveit_outgoing_path
+                self.check_file, check_archive_path, dfml_sharepoint_outgoing_path
             )
             self.db_session.add(ref_file)
 
@@ -144,7 +144,7 @@ class TransactionFileCreatorStep(Step):
             logger.info("No positive pay file to send to PUB")
         else:
             ref_file = pub_check.send_positive_pay_file(
-                self.positive_pay_file, check_archive_path, dfml_sharepoint_outgoing_path
+                self.positive_pay_file, check_archive_path, moveit_outgoing_path
             )
             self.db_session.add(ref_file)
 

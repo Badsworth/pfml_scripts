@@ -427,9 +427,9 @@ class PaymentData:
             def leave_request_decision_validator(
                 leave_request_decision: str,
             ) -> Optional[payments_util.ValidationReason]:
-                if leave_request_decision != "Approved":
+                if leave_request_decision not in ["Pending", "Approved"]:
                     if count_incrementer is not None:
-                        count_incrementer("unapproved_leave_request_count")
+                        count_incrementer("not_pending_or_approved_leave_request_count")
                     return payments_util.ValidationReason.INVALID_VALUE
                 return None
 
@@ -610,8 +610,6 @@ class PaymentExtractStep(Step):
         # claim details needs to be indexed on PECLASSID and PEINDEXID
         # which point to the vpei.C and vpei.I columns
         for record in claim_details:
-            self.increment("claim_detail_record_count")
-
             extract_data.claim_details.indexed_data[
                 CiIndex(record["PECLASSID"], record["PEINDEXID"])
             ] = record
@@ -803,6 +801,7 @@ class PaymentExtractStep(Step):
         # We need to add the address to the employee.
         # TODO - If FINEOS provides a value that indicates an address
         # has been validated, we would also set the experian_address here.
+        # When already verified address is supported, also add a happy path test scenario.
         new_experian_address_pair = ExperianAddressPair(fineos_address=payment_data_address)
 
         self.db_session.add(payment_data_address)
@@ -870,6 +869,7 @@ class PaymentExtractStep(Step):
         payment.fineos_pei_i_value = payment_data.i_value
         payment.fineos_extraction_date = payments_util.get_now().date()
         payment.fineos_extract_import_log_id = self.get_import_log_id()
+        payment.leave_request_decision = payment_data.leave_request_decision
 
         # If the payment is already being processed,
         # then FINEOS sent us a payment they should not have

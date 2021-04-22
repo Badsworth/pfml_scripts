@@ -76,14 +76,14 @@ def test_ach_file_creation(
     now = payments_util.get_now()
     date_folder = now.strftime("%Y-%m-%d")
     formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S")
-    pub_ach_file_name = f"{formatted_now}-PUB-NACHA"
+    pub_ach_file_name = f"{formatted_now}-EOLWD-DFML-NACHA"
     expected_ach_file_folder = os.path.join(
         archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, date_folder
     )
     assert pub_ach_file_name in file_util.list_files(expected_ach_file_folder)
 
     # check that ach outgoing file was generated
-    assert "PUB-NACHA" in file_util.list_files(outbound_folder_path)
+    assert "EOLWD-DFML-NACHA" in file_util.list_files(outbound_folder_path)
 
     # check that no check file was created because no check payments were in the correct state.
     assert transaction_file_step.check_file is None
@@ -177,7 +177,9 @@ def test_check_file_creation(
     )
     assert ref_file is not None
 
-    filename_pattern = r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-PUB-EZ-CHECK.csv"
+    filename_pattern = (
+        r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-EOLWD-DFML-EZ-CHECK.csv"
+    )
     assert re.search(filename_pattern, ref_file.file_location)
 
     # Confirm output file has 2 rows for each record and 1 for the header.
@@ -185,7 +187,7 @@ def test_check_file_creation(
     assert len([line for line in file_stream]) == 1 + 2 * len(ez_check_file.records)
 
     # The outbound EZ Check file should have been identically built
-    file_stream = file_util.open_stream(f"{outbound_moveit_folder_path}/PUB-EZ-CHECK.csv")
+    file_stream = file_util.open_stream(f"{outbound_dfml_folder_path}/EOLWD-DFML-EZ-CHECK.csv")
     assert len([line for line in file_stream]) == 1 + 2 * len(ez_check_file.records)
 
     # Validate the positive pay file was created correctly
@@ -204,7 +206,7 @@ def test_check_file_creation(
     assert ref_file is not None
 
     filename_pattern = (
-        r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-PUB-POSITIVE-PAY.txt"
+        r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-EOLWD-DFML-POSITIVE-PAY.txt"
     )
     assert re.search(filename_pattern, ref_file.file_location)
 
@@ -213,7 +215,9 @@ def test_check_file_creation(
     assert len([line for line in file_stream]) == len(positive_pay_file.entries)
 
     # The outbound positive pay file should have been identically built
-    file_stream = file_util.open_stream(f"{outbound_dfml_folder_path}/PUB-POSITIVE-PAY.txt")
+    file_stream = file_util.open_stream(
+        f"{outbound_moveit_folder_path}/EOLWD-DFML-POSITIVE-PAY.txt"
+    )
     assert len([line for line in file_stream]) == len(positive_pay_file.entries)
 
     # Confirm that we updated the state log for each payment.

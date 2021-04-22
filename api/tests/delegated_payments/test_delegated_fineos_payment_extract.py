@@ -1,8 +1,6 @@
-import csv
 import json
 import os
-from collections import OrderedDict
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import boto3
 import faker
@@ -52,6 +50,10 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationReason,
     get_now,
 )
+from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
+    FineosPaymentData,
+    create_fineos_payment_extract_files,
+)
 
 # every test in here requires real resources
 
@@ -59,137 +61,8 @@ pytestmark = pytest.mark.integration
 
 EXPECTED_OUTCOME = {"message": "Success"}
 
-PEI_FIELD_NAMES = [
-    "C",
-    "I",
-    "PAYEESOCNUMBE",
-    "PAYMENTADD1",
-    "PAYMENTADD2",
-    "PAYMENTADD4",
-    "PAYMENTADD6",
-    "PAYMENTPOSTCO",
-    "PAYMENTMETHOD",
-    "PAYMENTDATE",
-    "AMOUNT_MONAMT",
-    "PAYEEBANKSORT",
-    "PAYEEACCOUNTN",
-    "PAYEEACCOUNTT",
-    "EVENTTYPE",
-    "PAYEEIDENTIFI",
-    "EVENTREASON",
-]
-PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
-PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"]
-REQUESTED_ABSENCE_FIELD_NAMES = ["LEAVEREQUEST_DECISION", "LEAVEREQUEST_ID"]
-
-
 fake = faker.Faker()
 fake.seed_instance(1212)
-
-
-class FineosData:
-    """
-    FINEOS Data contains all data we care about for processing a FINEOS extract
-    With no parameters,, will generate a valid, mostly-random valid standard payment
-    Parameters can be overriden by specifying them as kwargs. If you do not want
-    random generated values, set generate_defaults to False in the constructor.
-    """
-
-    def __init__(self, generate_defaults=True, **kwargs):
-        self.generate_defaults = generate_defaults
-        self.kwargs = kwargs
-
-        self.c_value = self.get_value("c_value", "7326")
-        self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
-        self.absence_case_number = self.get_value(
-            "absence_case_number", f"ABS-{fake.unique.random_int()}"
-        )
-
-        ssn = fake.ssn().replace("-", "")
-        self.tin = self.get_value("tin", ssn)
-
-        self.payment_address_1 = self.get_value(
-            "address1", f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}"
-        )
-        self.payment_address_2 = self.get_value("address2", "")
-        self.city = self.get_value("city", fake.city())
-        self.state = self.get_value("state", fake.state_abbr().upper())
-        self.zip_code = self.get_value("zip_code", fake.zipcode_plus4())
-        self.payment_method = self.get_value("payment_method", "Elec Funds Transfer")
-        self.payment_date = self.get_value("payment_date", "2021-01-01 12:00:00")
-        self.payment_amount = self.get_value("payment_amount", "100.00")
-        self.routing_nbr = self.get_value("routing_nbr", ssn)
-        self.account_nbr = self.get_value("account_nbr", ssn)
-        self.account_type = self.get_value("account_type", "Checking")
-        self.event_type = self.get_value("payment_type", "PaymentOut")
-        self.payee_identifier = self.get_value("payee_identifier", "Social Security Number")
-        self.event_reason = self.get_value("event_reason", "Automatic Main Payment")
-
-        self.payment_start_period = self.get_value("payment_start", "2021-01-01 12:00:00")
-        self.payment_end_period = self.get_value("payment_end", "2021-01-08 12:00:00")
-
-        self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int()))
-        self.leave_request_decision = self.get_value("leave_request_decision", "Approved")
-
-    def get_vpei_record(self):
-        vpei_record = OrderedDict()
-        vpei_record["C"] = self.c_value
-        vpei_record["I"] = self.i_value
-        vpei_record["PAYEESOCNUMBE"] = self.tin
-
-        vpei_record["PAYMENTADD1"] = self.payment_address_1
-        vpei_record["PAYMENTADD2"] = self.payment_address_2
-        vpei_record["PAYMENTADD4"] = self.city
-        vpei_record["PAYMENTADD6"] = self.state
-        vpei_record["PAYMENTPOSTCO"] = self.zip_code
-
-        vpei_record["PAYMENTMETHOD"] = self.payment_method
-        vpei_record["PAYMENTDATE"] = self.payment_date
-        vpei_record["AMOUNT_MONAMT"] = self.payment_amount
-
-        vpei_record["PAYEEBANKSORT"] = self.routing_nbr
-        vpei_record["PAYEEACCOUNTN"] = self.account_nbr
-        vpei_record["PAYEEACCOUNTT"] = self.account_type
-
-        vpei_record["EVENTTYPE"] = self.event_type
-        vpei_record["PAYEEIDENTIFI"] = self.payee_identifier
-        vpei_record["EVENTREASON"] = self.event_reason
-        return vpei_record
-
-    def get_claim_details_record(self):
-        claim_detail_record = OrderedDict()
-        claim_detail_record["PECLASSID"] = self.c_value
-        claim_detail_record["PEINDEXID"] = self.i_value
-        claim_detail_record["ABSENCECASENU"] = self.absence_case_number
-        claim_detail_record["LEAVEREQUESTI"] = self.leave_request_id
-        return claim_detail_record
-
-    def get_payment_details_record(self):
-        payment_detail_record = OrderedDict()
-        payment_detail_record["PECLASSID"] = self.c_value
-        payment_detail_record["PEINDEXID"] = self.i_value
-
-        payment_detail_record["PAYMENTSTARTP"] = self.payment_start_period
-        payment_detail_record["PAYMENTENDPER"] = self.payment_end_period
-
-        return payment_detail_record
-
-    def get_requested_absence_record(self):
-        requested_absence_record = OrderedDict()
-        requested_absence_record["LEAVEREQUEST_DECISION"] = self.leave_request_decision
-        requested_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id
-        return requested_absence_record
-
-    def get_value(self, key, default):
-        # We want to support setting values as None
-        contains_value = key in self.kwargs
-
-        if not contains_value:
-            if self.generate_defaults:
-                return default
-            return ""
-
-        return self.kwargs.get(key)
 
 
 ### UTILITY METHODS
@@ -211,62 +84,10 @@ def make_s3_file(s3_bucket, key, test_file_name):
     s3.upload_file(test_file_path, s3_bucket, key)
 
 
-def make_and_upload_extract_file(tmp_path, mock_s3_bucket, file_name, fieldnames, records):
-    csv_file_path = tmp_path / file_name
-    csv_file = file_util.write_file(str(csv_file_path))
-    csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-    csv_writer.writeheader()
-
-    for record in records:
-        csv_writer.writerow(record)
-
-    csv_file.close()
-
-    s3 = boto3.client("s3")
-    s3.upload_file(
-        str(csv_file_path), mock_s3_bucket, f"cps/inbound/received/2020-01-01-11-30-00-{file_name}"
-    )
-
-
 def upload_fineos_data(tmp_path, mock_s3_bucket, fineos_dataset):
-    vpei_records = [fineos_data.get_vpei_record() for fineos_data in fineos_dataset]
-    claim_details_records = [
-        fineos_data.get_claim_details_record() for fineos_data in fineos_dataset
-    ]
-    payment_details_records = [
-        fineos_data.get_payment_details_record() for fineos_data in fineos_dataset
-    ]
-    requested_absence_records = [
-        fineos_data.get_requested_absence_record() for fineos_data in fineos_dataset
-    ]
-
-    make_and_upload_extract_file(
-        tmp_path, mock_s3_bucket, "vpei.csv", PEI_FIELD_NAMES, vpei_records
-    )
-
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "vpeiclaimdetails.csv",
-        PEI_CLAIM_DETAILS_FIELD_NAMES,
-        claim_details_records,
-    )
-
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "vpeipaymentdetails.csv",
-        PEI_PAYMENT_DETAILS_FIELD_NAMES,
-        payment_details_records,
-    )
-
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "VBI_REQUESTEDABSENCE.csv",
-        REQUESTED_ABSENCE_FIELD_NAMES,
-        requested_absence_records,
-    )
+    folder_path = os.path.join(f"s3://{mock_s3_bucket}", "cps/inbound/received")
+    date_of_extract = datetime.strptime("2020-01-01-11-30-00", "%Y-%m-%d-%H-%M-%S")
+    create_fineos_payment_extract_files(fineos_dataset, folder_path, date_of_extract)
 
 
 def add_db_records(
@@ -1000,7 +821,7 @@ def test_process_extract_data_minimal_viable_payment(
     assert employee_log_count_before == 0
 
     # C & I value are the bare minimum to have a payment
-    fineos_data = FineosData(False, c_value="1000", i_value="1")
+    fineos_data = FineosPaymentData(False, c_value="1000", i_value="1")
     upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
     # We deliberately do no DB setup, there will not be any prior employee or claim
     payment_extract_step.run()
@@ -1038,19 +859,21 @@ def test_process_extract_data_leave_request_decision_validation(
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
-    approved_record = FineosData(leave_request_decision="Approved")
-    pending_record = FineosData(leave_request_decision="Pending")
+    approved_record = FineosPaymentData(leave_request_decision="Approved")
+    pending_record = FineosPaymentData(leave_request_decision="Pending")
+    rejected_record = FineosPaymentData(leave_request_decision="Rejected")
 
     # setup both payments in DB
     add_db_records_from_fineos_data(test_db_session, approved_record)
     add_db_records_from_fineos_data(test_db_session, pending_record)
+    add_db_records_from_fineos_data(test_db_session, rejected_record)
 
-    upload_fineos_data(tmp_path, mock_s3_bucket, [approved_record, pending_record])
+    upload_fineos_data(tmp_path, mock_s3_bucket, [approved_record, pending_record, rejected_record])
 
     # We deliberately do no DB setup, there will not be any prior employee or claim
     payment_extract_step.run()
 
-    valid_payment = (
+    approved_payment = (
         test_db_session.query(Payment)
         .filter(
             Payment.fineos_pei_c_value == approved_record.c_value,
@@ -1058,14 +881,14 @@ def test_process_extract_data_leave_request_decision_validation(
         )
         .one_or_none()
     )
-    assert valid_payment
-    assert len(valid_payment.state_logs) == 1
+    assert approved_payment
+    assert len(approved_payment.state_logs) == 1
     assert (
-        valid_payment.state_logs[0].end_state_id
+        approved_payment.state_logs[0].end_state_id
         == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
     )
 
-    unapproved_payment = (
+    pending_payment = (
         test_db_session.query(Payment)
         .filter(
             Payment.fineos_pei_c_value == pending_record.c_value,
@@ -1073,16 +896,31 @@ def test_process_extract_data_leave_request_decision_validation(
         )
         .one_or_none()
     )
-    assert unapproved_payment
-    assert len(unapproved_payment.state_logs) == 1
+    assert pending_payment
+    assert len(pending_payment.state_logs) == 1
     assert (
-        unapproved_payment.state_logs[0].end_state_id
+        pending_payment.state_logs[0].end_state_id
+        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+    )
+
+    rejected_payment = (
+        test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == rejected_record.c_value,
+            Payment.fineos_pei_i_value == rejected_record.i_value,
+        )
+        .one_or_none()
+    )
+    assert rejected_payment
+    assert len(rejected_payment.state_logs) == 1
+    assert (
+        rejected_payment.state_logs[0].end_state_id
         == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
     )
 
-    import_log_report = json.loads(unapproved_payment.fineos_extract_import_log.report)
-    assert import_log_report["unapproved_leave_request_count"] == 1
-    assert import_log_report["standard_valid_payment_count"] == 1
+    import_log_report = json.loads(rejected_payment.fineos_extract_import_log.report)
+    assert import_log_report["not_pending_or_approved_leave_request_count"] == 1
+    assert import_log_report["standard_valid_payment_count"] == 2
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
@@ -1103,22 +941,24 @@ def test_process_extract_additional_payment_types(
     # or reject them for not being prenoted yet.
 
     # Create a zero dollar payment
-    zero_dollar_data = FineosData(payment_amount="0.00", payment_method="Elec Funds Transfer")
+    zero_dollar_data = FineosPaymentData(
+        payment_amount="0.00", payment_method="Elec Funds Transfer"
+    )
     add_db_records_from_fineos_data(test_db_session, zero_dollar_data)
     datasets.append(zero_dollar_data)
 
     # Create an overpayment
     # note that the event reason for an overpayment is Unknown which is treated as
     # None in our approach, setting it here to make sure that doesn't cause a validation issue.
-    overpayment_data = FineosData(
-        payment_type="Overpayment", event_reason="Unknown", payment_method="Elec Funds Transfer"
+    overpayment_data = FineosPaymentData(
+        event_type="Overpayment", event_reason="Unknown", payment_method="Elec Funds Transfer"
     )
     add_db_records_from_fineos_data(test_db_session, overpayment_data)
     datasets.append(overpayment_data)
 
     # Create a cancellation
-    cancellation_data = FineosData(
-        payment_type="PaymentOut Cancellation",
+    cancellation_data = FineosPaymentData(
+        event_type="PaymentOut Cancellation",
         payment_amount="-123.45",
         payment_method="Elec Funds Transfer",
     )
@@ -1126,28 +966,30 @@ def test_process_extract_additional_payment_types(
     datasets.append(cancellation_data)
 
     # Unknown - negative payment amount, but PaymentOut
-    negative_payment_out_data = FineosData(
-        payment_type="PaymentOut", payment_amount="-100.00", payment_method="Elec Funds Transfer"
+    negative_payment_out_data = FineosPaymentData(
+        event_type="PaymentOut", payment_amount="-100.00", payment_method="Elec Funds Transfer"
     )
     add_db_records_from_fineos_data(test_db_session, negative_payment_out_data)
     datasets.append(negative_payment_out_data)
 
     # Unknown - missing payment amount
-    no_payment_out_data = FineosData(payment_amount=None, payment_method="Elec Funds Transfer")
+    no_payment_out_data = FineosPaymentData(
+        payment_amount=None, payment_method="Elec Funds Transfer"
+    )
     add_db_records_from_fineos_data(test_db_session, no_payment_out_data)
     datasets.append(no_payment_out_data)
 
     # Unknown - missing event type
-    missing_event_payment_out_data = FineosData(
+    missing_event_payment_out_data = FineosPaymentData(
         event_type=None, payment_method="Elec Funds Transfer"
     )
     add_db_records_from_fineos_data(test_db_session, missing_event_payment_out_data)
     datasets.append(missing_event_payment_out_data)
 
     # Create a record for an employer reimbursement
-    employer_reimbursement_data = FineosData(
+    employer_reimbursement_data = FineosPaymentData(
         event_reason=extractor.AUTO_ALT_EVENT_REASON,
-        payment_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
         payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
         payment_method="Elec Funds Transfer",
     )
@@ -1252,7 +1094,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
 
     # Create a fineos dataset that only contains C/I values with all other values empty
     # We want to make sure "" and Unknown are treated the same, so set a few to Unknown
-    fineos_data = FineosData(
+    fineos_data = FineosPaymentData(
         False,
         c_value="1000",
         i_value="1",
@@ -1357,7 +1199,7 @@ def test_validation_param_length(initialize_factories_session, set_exporter_env_
     # ones we want to test the length.
 
     # Routing number too short
-    fineos_data = FineosData(payment_method="Elec Funds Transfer", routing_nbr="123")
+    fineos_data = FineosPaymentData(payment_method="Elec Funds Transfer", routing_nbr="123")
     ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set([ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYEEBANKSORT")]) == set(
         payment_data.validation_container.validation_issues
@@ -1365,7 +1207,7 @@ def test_validation_param_length(initialize_factories_session, set_exporter_env_
 
     # Routing/account number too long
     long_num = "1" * 50
-    fineos_data = FineosData(
+    fineos_data = FineosPaymentData(
         payment_method="Elec Funds Transfer", routing_nbr=long_num, account_nbr=long_num
     )
     ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
@@ -1377,7 +1219,7 @@ def test_validation_param_length(initialize_factories_session, set_exporter_env_
     ) == set(payment_data.validation_container.validation_issues)
 
     # ZIP too short + formatted incorrectly
-    fineos_data = FineosData(payment_method="Check", zip_code="123")
+    fineos_data = FineosPaymentData(payment_method="Check", zip_code="123")
     ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [
@@ -1387,7 +1229,7 @@ def test_validation_param_length(initialize_factories_session, set_exporter_env_
     ) == set(payment_data.validation_container.validation_issues)
 
     # ZIP too long + formatted incorrectly
-    fineos_data = FineosData(payment_method="Check", zip_code="1234567890123456")
+    fineos_data = FineosPaymentData(payment_method="Check", zip_code="1234567890123456")
     ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [
@@ -1402,21 +1244,21 @@ def test_validation_lookup_validators(initialize_factories_session, set_exporter
     # ones we want to test the lookup validators.
 
     # Verify payment method lookup validator
-    fineos_data = FineosData(payment_method="Gold")
+    fineos_data = FineosPaymentData(payment_method="Gold")
     ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set([ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTMETHOD")]) == set(
         payment_data.validation_container.validation_issues
     )
 
     # Verify account type lookup validator
-    fineos_data = FineosData(payment_method="Elec Funds Transfer", account_type="Vault")
+    fineos_data = FineosPaymentData(payment_method="Elec Funds Transfer", account_type="Vault")
     ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set([ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYEEACCOUNTT")]) == set(
         payment_data.validation_container.validation_issues
     )
 
     # Verify state lookup validator
-    fineos_data = FineosData(payment_method="Check", state="NotAState")
+    fineos_data = FineosPaymentData(payment_method="Check", state="NotAState")
     ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set([ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTADD6")]) == set(
         payment_data.validation_container.validation_issues
@@ -1429,7 +1271,7 @@ def test_validation_payment_amount(initialize_factories_session, set_exporter_en
     invalid_payment_amounts = ["words", "300-00", "400.xx", "-----5"]
 
     for invalid_payment_amount in invalid_payment_amounts:
-        fineos_data = FineosData(payment_amount=invalid_payment_amount)
+        fineos_data = FineosPaymentData(payment_amount=invalid_payment_amount)
         ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
         assert set(
             [
@@ -1448,7 +1290,7 @@ def test_validation_zip_code(initialize_factories_session, set_exporter_env_vars
     invalid_zips = ["abcde", "1234567", "-12345", "12345-000"]
 
     for invalid_zip in invalid_zips:
-        fineos_data = FineosData(payment_method="Check", zip_code=invalid_zip)
+        fineos_data = FineosPaymentData(payment_method="Check", zip_code=invalid_zip)
         ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
         assert set([ValidationIssue(ValidationReason.INVALID_VALUE, "PAYMENTPOSTCO")]) == set(
             payment_data.validation_container.validation_issues

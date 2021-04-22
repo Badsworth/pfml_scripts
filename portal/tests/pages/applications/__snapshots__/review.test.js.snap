@@ -322,6 +322,194 @@ exports[`Intermittent leave frequency renders the leave frequency and duration i
 
 exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 6`] = `"Estimated 2 absences per month, each lasting 3 hours."`;
 
+exports[`Leave reason When the reason is caring leave renders caring leave details 1`] = `
+<div
+  className="measure-6"
+>
+  <BackButton />
+  <Title
+    hidden={true}
+  >
+    Check your answers before submitting your application.
+  </Title>
+  <Heading
+    className="margin-top-0"
+    level="2"
+    size="1"
+  >
+    <HeadingPrefix>
+      Part 1
+    </HeadingPrefix>
+    Review and confirm: Tell us about yourself and your leave
+  </Heading>
+  <ReviewHeading
+    editHref="/applications?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Your identification
+  </ReviewHeading>
+  <ReviewRow
+    label="Name"
+    level="4"
+  >
+    Jane  Doe
+  </ReviewRow>
+  <ReviewRow
+    label="Phone number"
+    level="4"
+  >
+    Mobile
+    <br />
+    123-456-****
+  </ReviewRow>
+  <ReviewRow
+    label="Residential address"
+    level="4"
+  >
+    1234 My St., Boston, MA 00000
+  </ReviewRow>
+  <ReviewRow
+    label="Driver’s License Number"
+    level="4"
+  >
+    *********
+  </ReviewRow>
+  <ReviewRow
+    label="Social Security Number or ITIN"
+    level="4"
+  >
+    ***-**-****
+  </ReviewRow>
+  <ReviewRow
+    label="Date of birth"
+    level="4"
+  >
+    7/17/****
+  </ReviewRow>
+  <ReviewHeading
+    editHref="/applications?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Employment information
+  </ReviewHeading>
+  <ReviewRow
+    label="Employer’s EIN"
+    level="4"
+  >
+    12-3456789
+  </ReviewRow>
+  <ReviewRow
+    label="Notified employer"
+    level="4"
+  >
+    Notified employer on 1/1/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Work schedule type"
+    level="4"
+  >
+    Each week I work the same number of hours on the same days.
+  </ReviewRow>
+  <ReviewHeading
+    editHref="/applications?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Leave details
+  </ReviewHeading>
+  <ReviewRow
+    label="Leave type"
+    level="4"
+  >
+    Caring leave
+  </ReviewRow>
+  <ReviewRow
+    label="Family member's name"
+    level="4"
+  >
+    Luther James Toggle
+  </ReviewRow>
+  <ReviewRow
+    label="Family member's date of birth"
+    level="4"
+  >
+    10/14/****
+  </ReviewRow>
+  <ReviewRow
+    label="Continuous leave"
+    level="4"
+  >
+    1/1/2021 – 6/1/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Reduced leave"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Intermittent leave"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <div
+    data-test="other-leave"
+  >
+    <ReviewHeading
+      editText="Edit"
+      level="3"
+    >
+      Other leave, income, and benefits
+    </ReviewHeading>
+    <ReviewRow
+      label="Employer-sponsored benefits?"
+      level="4"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Other sources of income?"
+      level="4"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      editText="Edit"
+      label="Previous paid or unpaid leave?"
+      level="4"
+    >
+      No
+    </ReviewRow>
+  </div>
+  <div
+    className="margin-top-6 margin-bottom-2"
+  >
+    <Trans
+      components={
+        Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
+        }
+      }
+      i18nKey="pages.claimsReview.partOneNextSteps"
+    />
+  </div>
+  <Button
+    className="margin-top-3"
+    loading={false}
+    loadingMessage="Submitting… Do not refresh or go back."
+    onClick={[Function]}
+    type="button"
+  >
+    Submit Part 1
+  </Button>
+</div>
+`;
+
 exports[`OtherIncomeList when all data are present renders all data fields 1`] = `
 Array [
   <OtherLeaveEntry

@@ -66,7 +66,7 @@ export function before(): void {
 
 export function visitClaim(claimId: string): void {
   cy.get('a[aria-label="Cases"]').click();
-  cy.get('td[keytipnumber="4"]').contains("Case").click();
+  onTab("Case");
   cy.labelled("Case Number").type(claimId);
   cy.labelled("Case Type").select("Absence Case");
   cy.get('input[type="submit"][value="Search"]').click();
@@ -85,7 +85,56 @@ export function denyClaim(reason: string): void {
     .find("select")
     .select(reason);
   cy.get('input[type="submit"][value="OK"]').click();
-  cy.get(".absenceProgressSummaryTitle").should("contain.text", "Completed");
+  assertClaimStatus("Declined");
+}
+
+/**
+ * Called from the claim page, asserts that the claim status is an expected value.
+ */
+function assertClaimStatus(expected: string) {
+  cy.get(".key-info-bar .status dd").should((statusElement) => {
+    expect(statusElement, `Absence case should be ${expected}`).to.contain.text(
+      expected
+    );
+  });
+}
+
+/**
+ * Called from the claim page or the manage request page, asserts that the claim's eligibility, applicability,
+ * eligibility, etc matches a known state.
+ */
+export function assertPlanStatus(
+  section: string,
+  expectedStatus: string
+): void {
+  cy.get(
+    `.divListviewGrid .ListTable td[id*='ListviewWidget${section}Status0']`
+  ).should((element) => {
+    expect(
+      element,
+      `Expected claim's "${section}" to be "${expectedStatus}"`
+    ).to.have.text(expectedStatus);
+  });
+}
+
+/**
+ * Called from the tasks page, asserts that a particular task is found.
+ * @param name
+ */
+function assertHasTask(name: string) {
+  cy.get("table[id*='TasksForCaseWidget']").should((table) => {
+    expect(table, `Expected to find a "${name}" task`).to.have.descendants(
+      `tr td:nth-child(6)[title="${name}"]`
+    );
+  });
+}
+
+function assertHasDocument(name: string) {
+  cy.get("table[id*='DocumentsForCaseListviewWidget']").should((table) => {
+    expect(table, `Expected to find a "${name}" document`).to.have.descendants(
+      `a:contains("${name}")`
+    );
+  });
 }
 
 export function assertOnClaimPage(claimNumber: string): void {
@@ -103,78 +152,6 @@ export function assertOnClaimantPage(
 export function assertAdjudicatingClaim(claimId: string): void {
   cy.contains(".case_pageheader_title", claimId);
   cy.contains(".pageheader_subtitle", "Editing Leave Request");
-}
-
-export function assertClaimFinancialEligibility(expectMet: boolean): void {
-  cy.get("[id*=leavePlanAdjudicationListviewWidgetEligibilityStatus").should(
-    "have.text",
-    expectMet ? "Met" : "Not Met"
-  );
-}
-
-export function assertClaimApprovable(): void {
-  // Assert that we have all green checkboxes.
-  cy.get(
-    "[id*='leavePlanAdjudicationListviewWidgetApplicabilityStatus']"
-  ).should("have.text", "Applicable");
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetEligibilityStatus']").should(
-    "have.text",
-    "Met"
-  );
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetEvidenceStatus']").should(
-    "have.text",
-    "Satisfied"
-  );
-
-  cy.get(
-    "[id*='leavePlanAdjudicationListviewWidgetAvailabilityStatus']"
-  ).should("have.text", "Time Available");
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetRestrictionStatus']").should(
-    "have.text",
-    "Passed"
-  );
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetProtocolsStatus']").should(
-    "have.text",
-    "Passed"
-  );
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetPlanDecision0']").should(
-    "have.text",
-    "Undecided"
-  );
-  // Assert that we can see the approve button.
-  cy.contains(".menulink a", "Approve").should("be.visible");
-}
-
-export function assertClaimApprovableIntermittent(): void {
-  // Assert that we have all green checkboxes.
-  cy.get(
-    "[id*='leavePlanAdjudicationListviewWidgetApplicabilityStatus']"
-  ).should("have.text", "Applicable");
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetEligibilityStatus']").should(
-    "have.text",
-    "Met"
-  );
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetEvidenceStatus']").should(
-    "have.text",
-    "Satisfied"
-  );
-  cy.get(
-    "[id*='leavePlanAdjudicationListviewWidgetAvailabilityStatus']"
-  ).should("have.text", "As Certified");
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetRestrictionStatus']").should(
-    "have.text",
-    "Passed"
-  );
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetProtocolsStatus']").should(
-    "have.text",
-    "Passed"
-  );
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetPlanDecision0']").should(
-    "have.text",
-    "Accepted"
-  );
-  // Assert that we can see the approve button.
-  cy.contains(".menulink a", "Approve").should("be.visible");
 }
 
 /**
@@ -199,9 +176,7 @@ function wait() {
 }
 
 export function clickBottomWidgetButton(value = "OK"): void {
-  cy.get("#PageFooterWidget").within(() => {
-    cy.get(`input[value="${value}"]`).click({ force: true });
-  });
+  cy.get(`#PageFooterWidget input[value="${value}"]`).click({ force: true });
 }
 
 export function uploadDocument(
@@ -254,7 +229,7 @@ export function approveClaim(): void {
   cy.get('a[title="Approve the Pending Leaving Request"]').click({
     force: true,
   });
-  cy.get(".key-info-bar .status").should("contain.text", "Approved");
+  assertClaimStatus("Approved");
 }
 
 export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
@@ -393,19 +368,6 @@ export function checkStatus(
   ).should("have.text", status);
 }
 
-export function checkTask(): void {
-  onTab("Task");
-  cy.get(`.divListviewGrid .ListTable td[title='Certification Review']`).should(
-    "have.text",
-    "Certification Review"
-  );
-  cy.get(`.divListviewGrid .ListTable td[title='ID Review']`).should(
-    "have.text",
-    "ID Review"
-  );
-  onTab("Absence Hub");
-}
-
 export function markEvidence(
   claimNumber: string,
   claimType: string,
@@ -436,9 +398,7 @@ export function fillAbsencePeriod(claimNumber: string): void {
   onTab("Evidence");
   onTab("Certification Periods");
   cy.get("input[value='Prefill with Requested Absence Periods']").click();
-  cy.get("#PopupContainer").within(() => {
-    cy.get("input[value='Yes']").click();
-  });
+  cy.get("#PopupContainer input[value='Yes']").click();
 }
 
 export function intermittentFillAbsencePeriod(claimNumber: string): void {
@@ -466,23 +426,26 @@ export function claimAdjudicationFlow(
   ERresponse = false
 ): void {
   visitClaim(claimNumber);
+  onTab("Tasks");
+  assertHasTask("Certification Review");
+  assertHasTask("ID Review");
   if (ERresponse) {
-    assertClaimHasLeaveAdminResponse(true);
-    clickBottomWidgetButton("Close");
+    assertHasTask("Employer Approval Received");
   }
-  assertOnClaimPage(claimNumber);
-  checkTask();
+  onTab("Absence Hub");
+  assertPlanStatus("Applicability", "Applicable");
+  assertPlanStatus("Eligibility", "Met");
   cy.get("input[type='submit'][value='Adjudicate']").click();
-  checkStatus(claimNumber, "Eligibility", "Met");
   markEvidence(claimNumber, "MHAP1", "State managed Paid Leave Confirmation");
   markEvidence(claimNumber, "MHAP1", "Identification Proof");
-  checkStatus(claimNumber, "Evidence", "Satisfied");
   fillAbsencePeriod(claimNumber);
-  checkStatus(claimNumber, "Availability", "Time Available");
-  // Complete Adjudication
-  assertAdjudicatingClaim(claimNumber);
+  onTab("Manage Request");
+  assertPlanStatus("Evidence", "Satisfied");
+  assertPlanStatus("Availability", "Time Available");
+  assertPlanStatus("Restriction", "Passed");
+  assertPlanStatus("Protocols", "Passed");
   clickBottomWidgetButton("OK");
-  assertClaimApprovable();
+
   // Approve Claim
   if (ERresponse) {
     approveClaim();
@@ -592,7 +555,12 @@ export function claimAdjudicationMailedDoc(claimNumber: string): void {
   // Complete Adjudication
   assertAdjudicatingClaim(claimNumber);
   clickBottomWidgetButton("OK");
-  assertClaimApprovable();
+  assertPlanStatus("Applicability", "Applicable");
+  assertPlanStatus("Eligibility", "Met");
+  assertPlanStatus("Evidence", "Satisfied");
+  assertPlanStatus("Availability", "Time Available");
+  assertPlanStatus("Restriction", "Passed");
+  assertPlanStatus("Protocols", "Passed");
 }
 
 export function addBondingLeaveFlow(timeStamp: Date): void {
@@ -670,7 +638,7 @@ export function searchClaimantSSN(ssn: string): void {
 export function findOtherLeaveEForm(claimNumber: string): void {
   visitClaim(claimNumber);
   onTab("Documents");
-  cy.contains("a", "Other Leaves");
+  assertHasDocument("Other Leaves");
   cy.wait(200);
 }
 
@@ -763,5 +731,5 @@ export function triggerNoticeRelease(docType: string): void {
     .find("input[type='checkbox']")
     .should("be.checked");
   onTab("Documents");
-  cy.contains("a", docType);
+  assertHasDocument(docType);
 }

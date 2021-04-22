@@ -477,6 +477,69 @@ def test_process_extracts_to_payment_voucher(
     assert writeback == expected_writeback
 
 
+@freezegun.freeze_time("2021-01-21 13:12:30", tz_offset=0)
+def test_payment_voucher_step(
+    test_db_session, initialize_factories_session, tmp_path, test_db_other_session
+):
+    # Verify that PaymentVoucher.run_step() is functionally equivalent
+    # to process_extracts_to_payment_voucher().
+    input_path = os.path.join(os.path.dirname(__file__), "test_files")
+
+    for ssn in (
+        "390666954",
+        "235702221",
+        "158786713",
+        "037408790",
+        "135407982",
+        "003061455",
+        "066360920",
+    ):
+        setup_state_log(
+            associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+            end_states=[State.IDENTIFY_MMARS_STATUS],
+            test_db_session=test_db_session,
+            additional_params=AdditionalParams(
+                tax_identifier=TaxIdentifier(tax_identifier=ssn),
+                ctr_vendor_customer_code="VC00012300" + ssn[-2:],
+            ),
+        )
+
+    test_db_session.add(
+        EmployeeFactory(
+            tax_identifier=TaxIdentifier(tax_identifier="375563922"), ctr_vendor_customer_code=None,
+        )
+    )
+
+    # DOC ID in output is randomized so seed to get reproducible output.
+    random.seed(1)
+
+    output_file_path = os.path.join(tmp_path, "voucher_output")
+    config = payment_voucher.Configuration([input_path, output_file_path])
+    payment_voucher.PaymentVoucherStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session, config=config
+    ).run_step()
+
+    # Outcome:
+    # Of the 22 vpei rows:
+    # - 7 have employees seeded in the database and should have all the expected columns
+    # - 1 has an employee without a VC code, state log entry, and from
+    #   VBI_REQUSTEDABSENCE.csv so it should be missing a number of columns
+    # - 14 are missing employees and missing from VBI_REQUESTEDABSENCE.csv, so should be
+    #   missing a number of columns
+
+    csv_output = open(
+        os.path.join(tmp_path, "voucher_output", "20210121_131230_payment_voucher.csv")
+    ).readlines()
+    expected_output = open(os.path.join(input_path, "expected_payment_voucher.csv")).readlines()
+    assert csv_output == expected_output
+
+    writeback = open(
+        os.path.join(tmp_path, "voucher_output", "20210121_131230_writeback.csv")
+    ).readlines()
+    expected_writeback = open(os.path.join(input_path, "expected_writeback.csv")).readlines()
+    assert writeback == expected_writeback
+
+
 def test_run_voucher_process(initialize_factories_session, test_db_session, tmp_path):
     # Create files with one payment.
     standard_test_data = get_standard_test_data(

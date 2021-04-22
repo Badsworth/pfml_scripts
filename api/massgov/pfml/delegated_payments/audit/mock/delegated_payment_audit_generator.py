@@ -247,6 +247,7 @@ def create_payment_with_end_state(
         period_start_date=period_start_date,
         period_end_date=period_end_date,
         experian_address_pair=address_pair,
+        leave_request_decision="Approved",
     )
 
     state_log_util.create_finished_state_log(
@@ -272,7 +273,7 @@ def generate_scenario_data(
 
     employer = EmployerFactory.create()
 
-    employee = EmployeeFactory.create()
+    employee = EmployeeFactory.create(fineos_customer_number=str(uuid.uuid4()))
     address_pair = ExperianAddressPairFactory.create(experian_address=mailing_address)
 
     claim = ClaimFactory.create(

@@ -161,6 +161,12 @@ variable "pfml_error_reports_path" {
   default     = ""
 }
 
+variable "pfml_voucher_output_path" {
+  description = "PFML API stores a copy of all payment vouchers generated"
+  type        = string
+  default     = ""
+}
+
 variable "ctr_moveit_incoming_path" {
   description = "CTR/MMARS generates Outbound Return files for PFML API to pick up (MOVEit folder)"
   type        = string
@@ -204,7 +210,7 @@ variable "ctr_data_mart_username" {
 }
 
 variable "enable_recurring_payments_schedule" {
-  description = "Enable scheduling for payments-ctr-process and payments-fineos-process ECS tasks"
+  description = "Enable scheduling for payments-payment-voucher-plus ECS task"
   type        = bool
   default     = false
 }

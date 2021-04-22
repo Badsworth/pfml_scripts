@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     PaymentReferenceFile,
     ReferenceFileType,
 )
+from massgov.pfml.db.models.factories import EmployeeReferenceFileFactory, ReferenceFileFactory
 
 ### Outbound Vendor Return values
 
@@ -221,14 +222,26 @@ def _generate_outbound_vendor_return(scenario_datasets: List[scenario_generator.
             if not scenario_data.scenario_descriptor.has_outbound_vendor_return:
                 continue
 
-            # We assume that this scenario has an associated EmployeeReferenceFile
-            employee_reference_file = [
+            employee_reference_files = [
                 ref_file
                 for ref_file in scenario_data.employee.reference_files
                 if ref_file.__class__ == EmployeeReferenceFile
                 and ref_file.reference_file.reference_file_type_id
                 == ReferenceFileType.VCC.reference_file_type_id
-            ][0]
+            ]
+            if not employee_reference_files:
+                # When generating an Outbound Vender Return without running the scenario,
+                # there will be no pre-existing VCC EmployeeReferenceFile.
+                ref_file = ReferenceFileFactory.create(
+                    reference_file_type_id=ReferenceFileType.VCC.reference_file_type_id
+                )
+                employee_reference_file = EmployeeReferenceFileFactory.create(
+                    employee=scenario_data.employee, reference_file=ref_file
+                )
+            else:
+                # We assume that this scenario has an associated EmployeeReferenceFile
+                # and take the first one.
+                employee_reference_file = employee_reference_files[0]
 
             doc_id = employee_reference_file.ctr_document_identifier.ctr_document_identifier
 
@@ -502,13 +515,22 @@ def write_file(
     temp_file.write(file_content)
     temp_file.close()
 
-    config = payments_config.get_moveit_config()
-    sftp_client = file_util.get_sftp_client(
-        uri=config.ctr_moveit_sftp_uri,
-        ssh_key_password=config.ctr_moveit_ssh_key_password,
-        ssh_key=config.ctr_moveit_ssh_key,
-    )
-    sftp_client.put(tempfile_path, full_path, confirm=False)
+    if file_util.is_sftp_path(full_path):
+        config = payments_config.get_moveit_config()
+        sftp_client = file_util.get_sftp_client(
+            uri=config.ctr_moveit_sftp_uri,
+            ssh_key_password=config.ctr_moveit_ssh_key_password,
+            ssh_key=config.ctr_moveit_ssh_key,
+        )
+        sftp_client.put(tempfile_path, full_path, confirm=False)
+    else:
+        with file_util.write_file(full_path, mode="wb") as xml_file:
+            xml_file.write(file_content)
+        # Create EmployeeReferenceFiles since we are bypassing MOVEit.
+        ReferenceFileFactory.create(
+            file_location=full_path,
+            reference_file_type_id=ReferenceFileType.OUTBOUND_VENDOR_CUSTOMER_RETURN.reference_file_type_id,
+        )
 
 
 # === Main Generator Functions ===

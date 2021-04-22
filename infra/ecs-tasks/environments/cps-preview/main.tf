@@ -55,6 +55,7 @@ module "tasks" {
   pfml_ctr_inbound_path    = "s3://massgov-pfml-cps-preview-agency-transfer/ctr/inbound"
   pfml_ctr_outbound_path   = "s3://massgov-pfml-cps-preview-agency-transfer/ctr/outbound"
   pfml_error_reports_path  = "s3://massgov-pfml-cps-preview-agency-transfer/error-reports/outbound"
+  pfml_voucher_output_path = "s3://massgov-pfml-cps-preview-agency-transfer/payments/manual-payment-voucher"
 
   dfml_project_manager_email_address     = "mass-pfml-payments-test-email@navapbc.com"
   pfml_email_address                     = "PFML_DoNotReply@eol.mass.gov"

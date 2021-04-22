@@ -27,6 +27,7 @@ from massgov.pfml.payments.reporting.error_reporting import (
     initialize_error_report,
     initialize_fineos_payments_error_report_group,
 )
+from massgov.pfml.payments.step import Step
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email
 
 # import massgov.pfml.util.datetime as datetime_util
@@ -77,6 +78,29 @@ class FileInfo:
 class ErrorLogs:
     errors: List[ErrorRecord]
     state_logs: List[StateLog]
+
+
+class VendorExtractErrorReportStep(Step):
+    """Step for running the CPS vendor extract error report."""
+
+    def run_step(self) -> None:
+        # Create the report group which will contain the reports
+        report_group = initialize_fineos_payments_error_report_group()
+
+        # ADD_TO_VENDOR_EXPORT_ERROR_REPORT -> VENDOR_EXPORT_ERROR_REPORT_SENT
+        cps_vendor_export_report = _make_simple_report(
+            report_name="CPS-vendor-export-error-report",
+            current_states=[State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT],
+            next_state=State.VENDOR_EXPORT_ERROR_REPORT_SENT,
+            associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+            add_vendor_customer_code=False,
+            add_mmars_doc_id=False,
+            db_session=self.db_session,
+        )
+        report_group.add_report(cps_vendor_export_report)
+
+        # Finally create the reports and send them
+        report_group.create_and_send_reports()
 
 
 def _parse_outcome(state_log: StateLog) -> Outcome:

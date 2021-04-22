@@ -12,6 +12,7 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     Address,
     Payment,
+    PaymentMethod,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -36,6 +37,7 @@ from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generato
     AuditScenarioData,
     generate_audit_report_dataset,
 )
+from massgov.pfml.delegated_payments.pub.pub_check import _format_check_memo
 
 pytestmark = pytest.mark.integration
 
@@ -119,6 +121,10 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
     address: Address = payment.experian_address_pair.experian_address
 
+    check_description = (
+        _format_check_memo(payment) if payment.disb_method == PaymentMethod.CHECK else ""
+    )
+
     assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment.claim)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.claim.employee.first_name
@@ -146,6 +152,10 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
     assert row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number] == payment.claim.fineos_absence_id
     assert row[PAYMENT_AUDIT_CSV_HEADERS.c_value] == payment.fineos_pei_c_value
     assert row[PAYMENT_AUDIT_CSV_HEADERS.i_value] == payment.fineos_pei_i_value
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number]
+        == payment.claim.employee.fineos_customer_number
+    )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.employer_id] == str(
         payment.claim.employer.fineos_employer_id
     )
@@ -153,6 +163,8 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
         row[PAYMENT_AUDIT_CSV_HEADERS.case_status]
         == payment.claim.fineos_absence_status.absence_status_description
     )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision] == payment.leave_request_decision
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.check_description] == check_description
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time

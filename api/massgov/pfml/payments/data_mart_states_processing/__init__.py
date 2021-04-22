@@ -1,10 +1,18 @@
 import massgov.pfml.db as pfml_db
 import massgov.pfml.payments.data_mart as data_mart
 import massgov.pfml.util.logging as logging
+from massgov.pfml.payments.step import Step
 
 from . import identify_mmars_status, vcc_error_report_sent, vcc_sent, vcm_report_sent
 
 logger = logging.get_logger(__name__)
+
+
+class DataMartStep(Step):
+    """Step for running the Data Mart queries."""
+
+    def run_step(self) -> None:
+        process_all_states(self.db_session)
 
 
 def process_all_states(pfml_db_session: pfml_db.Session) -> None:

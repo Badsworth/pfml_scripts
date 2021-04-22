@@ -34,12 +34,9 @@ SELECT PBT.FINEOS_CUSTOMER_NUMBER "Customer Number",
        PBT.AMOUNT "Payment Amount", 
        PBT.FINEOS_PEI_C_VALUE "C", 
        PBT.FINEOS_PEI_I_VALUE "I", 
-       PBT.FINEOS_EXTRACTION_DATE "Fineos Extraction Date"
+       PBT.FINEOS_EXTRACTION_DATE "Fineos Extraction Date", 
+       PBT.PAYMENT_ID "Payment ID"
 FROM PAYMENT_BATCH_TRANSACTIONS PBT
 WHERE PBT.IS_CURRENT = 'Y'
   AND PBT.CURRENT_STATE_ID IN (158)
 -- PUB Transaction sent - Check
-
-
-
-

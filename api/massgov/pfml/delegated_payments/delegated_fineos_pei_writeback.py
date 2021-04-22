@@ -228,6 +228,7 @@ class FineosPeiWritebackStep(Step):
             + check_payment_writeback_items
             + eft_payment_writeback_items
             + cancelled_payment_writeback_items
+            + employer_reimbursement_payment_writeback_items
             + errored_payment_writeback_items
             + payment_writeback_two_items
         )
