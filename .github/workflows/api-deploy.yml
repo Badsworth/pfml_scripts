@@ -590,6 +590,8 @@ jobs:
           if [[ $failures -ge 2 ]]; then
             echo "ECS service failed to stabilize within 20 minutes."
             echo "Please check the ECS service at https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters/${{ needs.deploy-info.outputs.api-env }}/services/pfml-api-${{ needs.deploy-info.outputs.api-env }}/events"
+            echo "If the service stabilizes, you do not need to re-deploy. For lower environments you should run the E2E test job manually."
+            echo
             echo "More info: https://lwd.atlassian.net/wiki/spaces/DD/pages/786694343/API+General+Runbook"
             exit 1
           fi
