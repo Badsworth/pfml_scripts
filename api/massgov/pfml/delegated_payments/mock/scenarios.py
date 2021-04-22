@@ -26,6 +26,7 @@ class ScenarioName(Enum):
     HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN = (
         "HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN"
     )
+    # TODO medical leave
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -82,12 +83,21 @@ class ScenarioDescriptor:
 
     negative_payment_amount: bool = False
 
-    eft_returns_should_skip: bool = False
-    eft_returns_should_error: bool = False
-    eft_returns_no_response: bool = False
-    eft_returns_return_type: str = Constants.addendum_return_types[0]
-    eft_returns_reason_code: str = Constants.addendum_return_reason_codes[0]
-    eft_return_batch_type: NachaBatchType = NachaBatchType.MEDICAL_LEAVE
+    # eft_returns_should_skip: bool = False
+    # eft_returns_should_error: bool = False
+    # eft_returns_no_response: bool = False
+    # eft_returns_return_type: str = Constants.addendum_return_types[0]
+    # eft_returns_reason_code: str = Constants.addendum_return_reason_codes[0]
+    # eft_return_batch_type: NachaBatchType = NachaBatchType.MEDICAL_LEAVE
+
+    # ACH Returns
+    # https://lwd.atlassian.net/wiki/spaces/API/pages/1333364105/PUB+ACH+Return+File+Format
+
+    pub_ach_response_return: bool = False
+    pub_ach_return_reason_code: str = "RO1"
+
+    pub_ach_response_change_notification: bool = False
+    pub_ach_notification_reason_code: str = "CO1"
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [

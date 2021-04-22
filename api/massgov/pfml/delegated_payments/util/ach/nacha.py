@@ -113,6 +113,13 @@ class NachaFile:
     def add_batch(self, batch):
         self.batches.append(batch)
 
+    def get_batch_by_description(description):
+        for batch in self.batches:
+            if batch.description == description:
+                return batch
+
+        return None
+
     def finalize(self):
 
         for batch in self.batches:
