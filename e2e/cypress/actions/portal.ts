@@ -179,14 +179,13 @@ export function assertLoggedIn(): void {
 
 export function startClaim(): void {
   cy.get('[href="/applications/start/"]').click();
-}
-
-export function agreeToStart(): void {
-  cy.contains("button", "I understand and agree", { timeout: 30000 }).click();
-}
-
-export function hasClaimId(): void {
-  cy.url().should("include", "claim_id");
+  cy.contains("button", "I understand and agree").click();
+  cy.location({ timeout: 30000 }).should((location) => {
+    expect(location.pathname, "Expect to be on the checklist page").to.equal(
+      "/applications/checklist/"
+    );
+    expect(location.search, "Expect to have a claim ID").to.include("claim_id");
+  });
 }
 
 export function clickChecklistButton(label: string): void {
