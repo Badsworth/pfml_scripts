@@ -4673,3 +4673,38 @@ def test_application_patch_caring_leave_metadata_issues(client, user, auth_token
     assert response.status_code == 200
     for issue in caring_leave_metadata_issues:
         assert issue in response_warnings
+
+
+def test_application_patch_caring_leave_metadata_change_leave_reason(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(
+        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+    )
+    assert application.caring_leave_metadata is None
+
+    caring_leave_metadata = CaringLeaveMetadata(application_id=application.application_id)
+    test_db_session.add(caring_leave_metadata)
+    test_db_session.commit()
+
+    # change leave reason to medical leave
+    update_request_body = {
+        "leave_details": {
+            "reason": LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_description
+        }
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert (
+        application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
+    )
+    assert application.caring_leave_metadata is None
+    assert response_body.get("data").get("leave_details").get("caring_leave_metadata") is None

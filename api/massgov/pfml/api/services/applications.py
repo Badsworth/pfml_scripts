@@ -14,7 +14,7 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
-from massgov.pfml.api.models.applications.common import PaymentPreference
+from massgov.pfml.api.models.applications.common import LeaveReason, PaymentPreference
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
@@ -453,6 +453,16 @@ def update_leave_details(
             if lookup_model:
                 if key == "reason":
                     key = "leave_reason"
+
+                    # If leave reason changes from Caring Leave, delete CaringLeaveMetadata record if it exists
+                    if (
+                        value != LeaveReason.caring_leave
+                        and application.leave_reason
+                        and application.leave_reason.leave_reason_description
+                        == LeaveReason.caring_leave
+                        and application.caring_leave_metadata is not None  # type: ignore
+                    ):
+                        db_session.delete(application.caring_leave_metadata)  # type: ignore
 
                 if key == "reason_qualifier":
                     key = "leave_reason_qualifier"
