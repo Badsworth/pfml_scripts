@@ -190,7 +190,7 @@ def test_payment_extract_reference_file_exists_by_date_group_for_processed_payme
     )
 
     file_location = os.path.join(
-        payments_config.get_s3_config().pfml_fineos_inbound_path,
+        payments_config.get_s3_config().pfml_fineos_extract_archive_path,
         payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
         payments_util.get_date_group_folder_name(
             date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
@@ -216,7 +216,7 @@ def test_payment_extract_reference_file_exists_by_date_group_for_skipped_payment
     )
 
     file_location = os.path.join(
-        payments_config.get_s3_config().pfml_fineos_inbound_path,
+        payments_config.get_s3_config().pfml_fineos_extract_archive_path,
         payments_util.Constants.S3_INBOUND_SKIPPED_DIR,
         payments_util.get_date_group_folder_name(
             date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
@@ -235,7 +235,7 @@ def test_payment_extract_reference_file_exists_by_date_group_for_skipped_payment
 def test_copy_fineos_data_to_archival_bucket(
     test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
 ):
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2020-01-01")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2020-01-01")
 
     expected_timestamp_1 = "2020-01-02-11-30-00"
     s3_prefix = "DT2/dataexports/"
@@ -305,7 +305,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_payment(
     caplog,
 ):
     # Monkey path the max history date
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2020-01-02")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2020-01-02")
     caplog.set_level(logging.INFO)  # noqa: B1
 
     # Add 3 top level files: should be processed
@@ -342,7 +342,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_payment(
 
     # Verify there is a skipped file
     file_location = os.path.join(
-        payments_config.get_s3_config().pfml_fineos_inbound_path,
+        payments_config.get_s3_config().pfml_fineos_extract_archive_path,
         payments_util.Constants.S3_INBOUND_SKIPPED_DIR,
         payments_util.get_date_group_folder_name(
             date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
@@ -387,7 +387,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_vendor(
     test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
 ):
     # Monkey path the max history date
-    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-01-02")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-01-02")
 
     # Add 3 top level files: should be processed
     expected_timestamp_1 = "2020-01-03-11-30-00"
@@ -441,7 +441,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_top_level(
     test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
 ):
     # Monkey path the max history date
-    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-04-01")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-04-01")
 
     # Add 3 top level files: should not be processed
     expected_timestamp_1 = "2020-01-03-11-30-00"
@@ -463,7 +463,7 @@ def test_copy_fineos_data_to_archival_bucket_duplicate_suffix_error(
     test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
 ):
     # Monkey path the max history date
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2020-12-01")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2020-12-01")
 
     date_prefix = "2020-12-01-11-30-00"
     s3_prefix = "DT2/dataexports/"
@@ -487,7 +487,7 @@ def test_copy_fineos_data_to_archival_bucket_missing_file_error(
     test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
 ):
     # Monkey path the max history date
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2020-12-01")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2020-12-01")
 
     date_prefix = "2020-12-01-11-30-00"
     s3_prefix = f"DT2/dataexports/{date_prefix}"
@@ -1075,8 +1075,8 @@ def test_create_batch_id_and_reference_file(test_db_session):
 
 
 def test_get_fineos_max_history_date(monkeypatch):
-    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2021-01-01")
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2021-01-15")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2021-01-01")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2021-01-15")
 
     vendor_datetime = payments_util.get_fineos_max_history_date(
         ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
@@ -1090,15 +1090,15 @@ def test_get_fineos_max_history_date(monkeypatch):
 
 
 def test_get_fineos_max_history_date_bad_type(monkeypatch):
-    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2021-01-01")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2021-01-01")
 
     with pytest.raises(ValueError):
         payments_util.get_fineos_max_history_date(ReferenceFileType.GAX)
 
 
 def test_get_fineos_max_history_date_bad_string(monkeypatch):
-    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "foo")
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "bar")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "foo")
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "bar")
 
     with pytest.raises(ValueError):
         payments_util.get_fineos_max_history_date(ReferenceFileType.FINEOS_CLAIMANT_EXTRACT)

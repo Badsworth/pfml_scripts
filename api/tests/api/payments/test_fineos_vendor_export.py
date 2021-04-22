@@ -115,7 +115,115 @@ def test_process_vendor_extract_data_happy_path(
     vendor_export.process_vendor_extract_data(test_db_session)
 
     # Requested absences file artifact above has three records but only one with the
-    # LEAVEREQUEST_EVIDENCERESULTTYPE != Satisfied
+    # LEAVEREQUEST_EVIDENCERESULTTYPE == Satisfied
+    claims: List[Claim] = (
+        test_db_session.query(Claim).filter(Claim.fineos_absence_id == "NTN-1308-ABS-01").all()
+    )
+
+    assert len(claims) == 1
+    claim = claims[0]
+
+    assert claim is not None
+    assert claim.employee_id == employee.employee_id
+    # assert claim.employer_id == employer.employer_id  # TODO - See comment in update_employee_info
+
+    assert claim.fineos_notification_id == "NTN-1308"
+    assert claim.claim_type.claim_type_id == ClaimType.MEDICAL_LEAVE.claim_type_id
+    assert (
+        claim.fineos_absence_status.absence_status_id
+        == AbsenceStatus.ADJUDICATION.absence_status_id
+    )
+    assert claim.absence_period_start_date == datetime.date(2021, 5, 13)
+    assert claim.absence_period_end_date == datetime.date(2021, 7, 22)
+    assert claim.is_id_proofed is True
+
+    updated_employee: Optional[Employee] = (
+        test_db_session.query(Employee)
+        .filter(Employee.tax_identifier_id == tax_identifier.tax_identifier_id)
+        .one_or_none()
+    )
+
+    # Sample employee file above has two records for Glennie. Only one has the
+    # DEFPAYMENTPREF flag set to Y, with the address and EFT instructions tested
+    # here.
+    assert updated_employee is not None
+    # We are not updating first or last name with FINEOS data as DOR is source of truth.
+    assert updated_employee.first_name != "Glennie"
+    assert updated_employee.last_name != "Balistreri"
+    assert updated_employee.date_of_birth == datetime.date(1980, 1, 1)
+    assert updated_employee.payment_method.payment_method_id == PaymentMethod.ACH.payment_method_id
+
+    assert updated_employee.ctr_address_pair.fineos_address.address_line_one == "123 Main St"
+    assert updated_employee.ctr_address_pair.fineos_address.address_line_two == ""
+    assert updated_employee.ctr_address_pair.fineos_address.city == "Oakland"
+    assert updated_employee.ctr_address_pair.fineos_address.geo_state_id == GeoState.CA.geo_state_id
+    assert updated_employee.ctr_address_pair.fineos_address.zip_code == "94612"
+
+    assert updated_employee.eft.routing_nbr == "123546789"
+    assert updated_employee.eft.account_nbr == "123546789"
+    assert (
+        updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+    )
+
+    # Confirm StateLogs
+    state_logs = test_db_session.query(StateLog).all()
+
+    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
+    #
+    # updated_employee_state_log_count = 2
+    updated_employee_state_log_count = 1
+
+    assert len(state_logs) == updated_employee_state_log_count
+    assert len(updated_employee.state_logs) == updated_employee_state_log_count
+
+    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
+    #
+    # Confirm 1 state log for VENDOR_EFT flow
+    # assert (
+    #     test_db_session.query(func.count(StateLog.state_log_id))
+    #     .filter(StateLog.end_state_id == State.EFT_REQUEST_RECEIVED.state_id)
+    #     .scalar()
+    #     == 1
+    # )
+
+    # Confirm 1 state log for VENDOR_CHECK flow
+    assert (
+        test_db_session.query(func.count(StateLog.state_log_id))
+        .filter(StateLog.end_state_id == State.IDENTIFY_MMARS_STATUS.state_id)
+        .scalar()
+        == 1
+    )
+
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
+
+
+def test_vendor_extract_step(
+    test_db_session,
+    test_db_other_session,
+    initialize_factories_session,
+    emp_updates_path,
+    set_exporter_env_vars,
+    monkeypatch,
+    create_triggers,
+):
+    # Verify that the VendorExtractStep.run_step() is functionally equivalent to calling
+    # process_vendor_extract_data() directly.
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-12-20")
+
+    tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
+    employee = EmployeeFactory(tax_identifier=tax_identifier)
+    EmployerFactory(fineos_employer_id=96)
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 1
+
+    vendor_export.VendorExtractStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    ).run_step()
+
+    # Requested absences file artifact above has three records but only one with the
+    # LEAVEREQUEST_EVIDENCERESULTTYPE == Satisfied
     claims: List[Claim] = (
         test_db_session.query(Claim).filter(Claim.fineos_absence_id == "NTN-1308-ABS-01").all()
     )
@@ -431,6 +539,36 @@ def test_update_employee_info_dob_not_required(
     assert len(validation_container.validation_issues) == 0
     # Assert date of birth was not wiped out
     assert employee.date_of_birth == datetime.date(1970, 4, 27)
+
+
+def test_update_employee_info_payment_method_check_eft_issues(
+    test_db_session, initialize_factories_session, formatted_claim
+):
+    """Test that EFT validation is skipped when payment method is not EFT."""
+    extract_data, requested_absence = format_absence_data()
+    add_employee_feed(extract_data)
+    fineos_customer_number = "12345"
+    # Set payment method to check.
+    extract_data.employee_feed.indexed_data[fineos_customer_number]["PAYMENTMETHOD"] = "Check"
+    # Routing number is too short.
+    extract_data.employee_feed.indexed_data[fineos_customer_number]["SORTCODE"] = "1"
+
+    tax_identifier = TaxIdentifierFactory(tax_identifier="123456789")
+    EmployeeFactory(tax_identifier=tax_identifier)
+
+    absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
+    validation_container = payments_util.ValidationContainer(record_key=absence_case_id)
+
+    employee, has_vendor_update = vendor_export.update_employee_info(
+        test_db_session, extract_data, requested_absence, formatted_claim, validation_container
+    )
+
+    # Assert no validation issues even though eft fields had validation issues.
+    assert len(validation_container.validation_issues) == 0
+    # Assert payment method is check.
+    assert employee.payment_method_id == PaymentMethod.CHECK.payment_method_id
+    # Assert employee has no associated eft data.
+    assert employee.eft is None
 
 
 def test_update_employee_info_not_in_db(

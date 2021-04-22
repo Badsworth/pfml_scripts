@@ -586,7 +586,7 @@ def test_finish_state_log_with_validation_issues(
     assert state_log.end_state_id == State.VCC_SENT.state_id
     assert state_log.employee_id == employee.employee_id
     assert state_log.outcome == {
-        "message": "Validation issues found",
+        "message": "Processed Outbound Vendor Return: Validation issues found",
         "validation_container": {
             "record_key": "_INTFDFML161220200011",
             "validation_issues": [
@@ -643,7 +643,9 @@ def test_finish_state_log_with_no_validation_issues(
     state_log = state_log[1]
     assert state_log.end_state_id == State.VCC_SENT.state_id
     assert state_log.employee_id == employee.employee_id
-    assert state_log.outcome == {"message": "No validation issues found"}
+    assert state_log.outcome == {
+        "message": "Processed Outbound Vendor Return: No validation issues found"
+    }
 
     address = ams_document.find("VC_DOC_AD")
 

@@ -55,6 +55,7 @@ module "tasks" {
   pfml_ctr_inbound_path    = "s3://massgov-pfml-cps-preview-agency-transfer/ctr/inbound"
   pfml_ctr_outbound_path   = "s3://massgov-pfml-cps-preview-agency-transfer/ctr/outbound"
   pfml_error_reports_path  = "s3://massgov-pfml-cps-preview-agency-transfer/error-reports/outbound"
+  pfml_voucher_output_path = "s3://massgov-pfml-cps-preview-agency-transfer/payments/manual-payment-voucher"
 
   dfml_project_manager_email_address     = "mass-pfml-payments-test-email@navapbc.com"
   pfml_email_address                     = "PFML_DoNotReply@eol.mass.gov"
@@ -82,11 +83,6 @@ module "tasks" {
 
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-cps-preview-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-cps-preview-agency-transfer/audit/sent"
-
-  payment_rejects_received_folder_path    = "s3://massgov-pfml-cps-preview-agency-transfer/audit/inbound"
-  payment_rejects_processed_folder_path   = "s3://massgov-pfml-cps-preview-agency-transfer/audit/processed"
-  payment_rejects_report_outbound_folder  = "s3://massgov-pfml-cps-preview-agency-transfer/audit/outbound"
-  payment_rejects_report_sent_folder_path = "s3://massgov-pfml-cps-preview-agency-transfer/audit/sent"
 
   enable_recurring_payments_schedule = false
   enable_register_admins_job         = false

@@ -115,7 +115,7 @@ function buildNRDebugURL(request_id: string): string {
   // Use this ponyfill so it can work in both places.
   const CrossUrlSearchParams = URLSearchParams || window.URLSearchParams;
   const searchParams = new CrossUrlSearchParams({
-    launcher: new Buffer(JSON.stringify(launcherParams)).toString("base64"),
+    launcher: Buffer.from(JSON.stringify(launcherParams)).toString("base64"),
     // Start and end 15 minutes before and after "now".
     "platform[timeRange][begin_time]": (Date.now() - 10 * 60 * 1000).toString(),
     "platform[timeRange][end_time]": (Date.now() + 10 * 60 * 1000).toString(),

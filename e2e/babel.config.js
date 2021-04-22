@@ -5,7 +5,10 @@ module.exports = {
       "@babel/preset-env",
       {
         targets: {
-          node: "current",
+          // Specifically target node 12 for the moment.
+          // This works around Cypress using Node 14, while most of us (and CI) are still on Node 12.
+          // Can be removed once we bump CI to Node 14.
+          node: "12",
         },
       },
     ],

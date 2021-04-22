@@ -1,6 +1,5 @@
-import { fineos } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { fineos } from "../../../actions";
+import { getFineosBaseUrl } from "../../../config";
 import { ApplicationResponse } from "../../../../src/api";
 
 describe("Payment amounts", () => {
@@ -8,19 +7,15 @@ describe("Payment amounts", () => {
     "Verify the payment amount for a continuous bonding claim with a regular schedule",
     { baseUrl: getFineosBaseUrl() },
     () => {
-      beforeFineos();
+      fineos.before();
       cy.visit("/");
       // Generate Creds for Registration/Login - submit claim via API
       cy.task("generateClaim", "Jill").then((claim) => {
         if (!claim.claim.employer_fein) {
           throw new Error("Claim has no Employer FEIN");
         }
-        const employerCredentials = getLeaveAdminCredentials(
-          claim.claim.employer_fein
-        );
         cy.task("submitClaimToAPI", {
           ...claim,
-          employerCredentials,
         }).then((response: ApplicationResponse) => {
           if (typeof response.fineos_absence_id !== "string") {
             throw new Error("Response must include FINEOS absence ID");

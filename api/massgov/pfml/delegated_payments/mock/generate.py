@@ -22,6 +22,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeePubEftPair,
     Payment,
+    PaymentCheck,
     PaymentMethod,
     PaymentTransactionType,
     PrenoteState,
@@ -179,3 +180,20 @@ class PaymentScenariosGenerator:
                 ),
             )
             logger.info("  .. set finished state DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT")
+
+        elif scenario == 5:
+            # PUB Transaction sent - Check
+            massgov.pfml.api.util.state_log_util.create_finished_state_log(
+                end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+                associated_model=payment,
+                db_session=self.db_session,
+                outcome=massgov.pfml.api.util.state_log_util.build_outcome(
+                    "Generated state DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT"
+                ),
+            )
+            payment.check = PaymentCheck(check_number=500 + index)
+            logger.info(
+                "  .. set finished state DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,"
+                "check_number %i",
+                payment.check.check_number,
+            )

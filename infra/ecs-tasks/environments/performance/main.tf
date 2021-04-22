@@ -55,6 +55,7 @@ module "tasks" {
   pfml_ctr_inbound_path    = "s3://massgov-pfml-performance-agency-transfer/ctr/inbound"
   pfml_ctr_outbound_path   = "s3://massgov-pfml-performance-agency-transfer/ctr/outbound"
   pfml_error_reports_path  = "s3://massgov-pfml-performance-agency-transfer/error-reports/outbound"
+  pfml_voucher_output_path = "s3://massgov-pfml-performance-agency-transfer/payments/manual-payment-voucher"
 
   dfml_project_manager_email_address     = "mass-pfml-payments-test-email@navapbc.com"
   pfml_email_address                     = "PFML_DoNotReply@eol.mass.gov"
@@ -65,9 +66,8 @@ module "tasks" {
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
   agency_reductions_email_address        = "mass-pfml-payments-test-email@navapbc.com"
 
-  ctr_data_mart_host        = "duaua-fdm-wdb1.cs.govt.state.ma.us"
-  ctr_data_mart_username    = "SRV-LWD-DFML-NONPROD"
-  ctr_data_mart_mock_enable = true
+  ctr_data_mart_host     = "duaua-fdm-wdb1.cs.govt.state.ma.us"
+  ctr_data_mart_username = "SRV-LWD-DFML-NONPROD"
 
   enable_sentry                   = "0"
   fineos_data_export_path         = "s3://fin-somdev-data-export/PERF/dataexports"
@@ -80,11 +80,6 @@ module "tasks" {
 
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-performance-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-performance-agency-transfer/audit/sent"
-
-  payment_rejects_received_folder_path    = "s3://massgov-pfml-performance-agency-transfer/audit/inbound"
-  payment_rejects_processed_folder_path   = "s3://massgov-pfml-performance-agency-transfer/audit/processed"
-  payment_rejects_report_outbound_folder  = "s3://massgov-pfml-performance-agency-transfer/audit/outbound"
-  payment_rejects_report_sent_folder_path = "s3://massgov-pfml-performance-agency-transfer/audit/sent"
 
   enable_recurring_payments_schedule = false
   enable_register_admins_job         = true

@@ -247,6 +247,7 @@ def create_payment_with_end_state(
         period_start_date=period_start_date,
         period_end_date=period_end_date,
         experian_address_pair=address_pair,
+        leave_request_decision="Approved",
     )
 
     state_log_util.create_finished_state_log(
@@ -272,7 +273,7 @@ def generate_scenario_data(
 
     employer = EmployerFactory.create()
 
-    employee = EmployeeFactory.create()
+    employee = EmployeeFactory.create(fineos_customer_number=str(uuid.uuid4()))
     address_pair = ExperianAddressPairFactory.create(experian_address=mailing_address)
 
     claim = ClaimFactory.create(
@@ -291,7 +292,7 @@ def generate_scenario_data(
                 claim,
                 address_pair,
                 scenario_descriptor.payment_method,
-                State.DELEGATED_PAYMENT_ERROR_REPORT_SENT,
+                State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
                 db_session,
             )
 
@@ -387,7 +388,7 @@ def generate_payment_audit_data_set_and_rejects_file(
 def generate_payment_rejects_file():
     logging.init(__name__)
 
-    logger.info("Genrating payment rejects file.")
+    logger.info("Generating payment rejects file.")
 
     db_session = db.init(sync_lookups=True)
     db.models.factories.db_session = db_session
@@ -402,4 +403,4 @@ def generate_payment_rejects_file():
 
     generate_payment_audit_data_set_and_rejects_file(config, folder_path, db_session)
 
-    logger.info("Done genrating payment rejects file.")
+    logger.info("Done generating payment rejects file.")

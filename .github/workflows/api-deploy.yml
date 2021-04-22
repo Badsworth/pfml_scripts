@@ -16,7 +16,7 @@ on:
           🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.     
           --------------------------------------
           ⬇️ Environment to be deployed.
-            (test, performance, stage, training, uat and prod).
+            (test, performance, stage, training, uat, prod, breakfix, cps-preview).
       version:
         required: true
         default: "main"
@@ -256,14 +256,13 @@ jobs:
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          UAT_DEPLOYMENT_VERSION: ${{ env.version }}
           WORKFLOW_NAME: "api-deploy.yml"
         run: |
           echo "*** An API staging deploy is now in progress. Enqueuing an extra deployment to UAT... ***"
           curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         -H "Accept: application/vnd.github.v3+json" \
-                        -d '{ "ref": "deploy/api/uat", "inputs": { "version": "${{ env.UAT_DEPLOYMENT_VERSION }}" } }'
+                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "uat", "version": "${{ env.version }}" } }'
           echo "Done."
 
   extra-performance-deploy:
@@ -280,14 +279,13 @@ jobs:
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          PERFORMANCE_DEPLOYMENT_VERSION: ${{ env.version }}
           WORKFLOW_NAME: "api-deploy.yml"
         run: |
           echo "*** An API staging deploy is now in progress. Enqueuing an extra deployment to Performance... ***"
           curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         -H "Accept: application/vnd.github.v3+json" \
-                        -d '{ "ref": "deploy/api/performance", "inputs": { "version": "${{ env.PERFORMANCE_DEPLOYMENT_VERSION }}" } }'
+                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "performance", "version": "${{ env.version }}" } }'
           echo "Done."
 
   api-build:
@@ -536,7 +534,7 @@ jobs:
             echo "Importing old format massgov_pfml_"
             prefix=massgov_pfml_
           elif ! [[ -z "$needs_new" ]] && [[ -z "$is_new" ]]; then
-            echo "Importing old format massgov-pfml-"
+            echo "Importing new format massgov-pfml-"
             prefix=massgov-pfml-
           else
             echo "No imports needed."
@@ -544,9 +542,9 @@ jobs:
 
           if ! [ -z $prefix ]; then
             terraform state rm -lock-timeout=120s module.api.aws_cloudwatch_log_group.postgresql
-            terraform state import -lock-timeout=120s \
+            terraform import -lock-timeout=120s \
               module.api.aws_cloudwatch_log_group.postgresql \
-              /aws/rds/instance/$prefix${{ needs.deploy-info.outputs.api-env }}/postgresql
+              /aws/rds/instance/${prefix}${{ needs.deploy-info.outputs.api-env }}/postgresql
           fi
         working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 

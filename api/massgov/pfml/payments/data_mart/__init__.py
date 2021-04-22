@@ -6,7 +6,6 @@ Warehouse), which in turn is a representation of Comptroller's MMARS.
 """
 
 from .client import Client, RealClient  # noqa: F401
-from .client_test_scenarios import TestScenariosClient  # noqa: F401
 from .core import (  # noqa: F401
     DataMartConfig,
     EFTStatus,

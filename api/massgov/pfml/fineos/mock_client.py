@@ -284,8 +284,24 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     ) -> models.customer_api.AbsenceCaseSummary:
         _capture_call("start_absence", user_id, absence_case=absence_case)
 
+        start_date = None
+        end_date = None
+
+        if absence_case.timeOffLeavePeriods:
+            start_date = absence_case.timeOffLeavePeriods[0].startDate
+            end_date = absence_case.timeOffLeavePeriods[0].endDate
+        elif absence_case.reducedScheduleLeavePeriods:
+            start_date = absence_case.reducedScheduleLeavePeriods[0].startDate
+            end_date = absence_case.reducedScheduleLeavePeriods[0].endDate
+        elif absence_case.episodicLeavePeriods:
+            start_date = absence_case.episodicLeavePeriods[0].startDate
+            end_date = absence_case.episodicLeavePeriods[0].endDate
+
         absence_case_summary = models.customer_api.AbsenceCaseSummary(
-            absenceId="NTN-259-ABS-01", notificationCaseId="NTN-259"
+            absenceId="NTN-259-ABS-01",
+            notificationCaseId="NTN-259",
+            startDate=start_date,
+            endDate=end_date,
         )
         logger.info(
             "mock: %r %r => %r %r",
@@ -650,7 +666,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
     def create_service_agreement_for_employer(
-        self, fineos_employee_id: int, leave_plans: str
+        self,
+        fineos_employee_id: int,
+        service_agreement_inputs: models.CreateOrUpdateServiceAgreement,
     ) -> str:
         _capture_call(
             "create_service_agreement_for_employer", None, fineos_employee_id=fineos_employee_id

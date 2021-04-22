@@ -1,15 +1,12 @@
-import { fineos, portal, email } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
-import { beforePortal } from "../../../tests/common/before";
+import { fineos, portal, email } from "../../../actions";
 import { getFineosBaseUrl } from "../../../config";
-import { getEmails } from "../../../tests/common/actions/email";
 
 describe("Request for More Information (notifications/notices)", () => {
   const submit = it(
     "Create a financially eligible claim in which a CSR rep will 'Request for More Information'",
     { baseUrl: getFineosBaseUrl() },
     () => {
-      beforeFineos();
+      fineos.before();
       cy.visit("/");
 
       // Generate Creds for Registration/Login - submit claim via API
@@ -46,7 +43,7 @@ describe("Request for More Information (notifications/notices)", () => {
     "As a claimant, I should see a request for additional info notice reflected in the portal",
     { retries: 0 },
     () => {
-      beforePortal();
+      portal.before();
       cy.dependsOnPreviousPass([submit]);
 
       cy.unstash<Credentials>("credentials").then((credentials) => {
@@ -94,16 +91,18 @@ describe("Request for More Information (notifications/notices)", () => {
           cy.log(subjectClaimant);
 
           // Check email notification for claimant
-          getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectClaimant,
-              messageWildcard: caseNumber,
-              timestamp_from,
-              debugInfo: { "Fineos Claim ID": caseNumber },
-            },
-            180000
-          ).should("not.be.empty");
+          email
+            .getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subjectClaimant,
+                messageWildcard: caseNumber,
+                timestamp_from,
+                debugInfo: { "Fineos Claim ID": caseNumber },
+              },
+              180000
+            )
+            .should("not.be.empty");
         });
       });
     });

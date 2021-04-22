@@ -18,7 +18,6 @@ from massgov.pfml.db.models.employees import (
     LatestStateLog,
     LkState,
     Payment,
-    PaymentMethod,
     State,
     StateLog,
     TaxIdentifier,
@@ -130,25 +129,6 @@ def query_data_mart_for_issues_and_updates_core(
             if employee.ctr_address_pair.ctr_address is None:
                 employee.ctr_address_pair.ctr_address = mmars_address
                 result.employee_updates = True
-
-    if employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
-        if not vendor_info.eft_status:
-            result.issues.add_validation_issue(
-                payments_util.ValidationReason.MISSING_FIELD,
-                "No EFT information for Employee with ACH payment method in MMARS",
-            )
-
-        employee_eft_info = employee.eft
-        if not employee_eft_info:
-            raise ValueError(
-                f"No EFT information for Employee with ACH payment method in API DB. Employee ID: {employee.employee_id}"
-            )
-
-        if vendor_info.aba_no != str(employee_eft_info.routing_nbr):
-            result.issues.add_validation_issue(
-                payments_util.ValidationReason.MISMATCHED_DATA,
-                "Routing number in EFT information for Employee differs",
-            )
 
     return result
 

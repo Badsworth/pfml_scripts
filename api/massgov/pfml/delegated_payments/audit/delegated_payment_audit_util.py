@@ -1,7 +1,8 @@
-import pathlib
+import os
 from dataclasses import dataclass
 from typing import Iterable, List, Optional
 
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Address,
@@ -17,6 +18,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
 )
+from massgov.pfml.delegated_payments.pub.pub_check import _format_check_memo
 from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting import (
     FileConfig,
     Report,
@@ -46,7 +48,7 @@ def write_audit_report(
     output_path: str,
     db_session: db.Session,
     report_name: str,
-) -> Optional[pathlib.Path]:
+) -> Optional[str]:
     payment_audit_report_rows: List[PaymentAuditCSV] = []
     for payment_audit_data in payment_audit_data_set:
         payment_audit_report_rows.append(build_audit_report_row(payment_audit_data))
@@ -59,9 +61,10 @@ def write_audit_report_rows(
     output_path: str,
     db_session: db.Session,
     report_name: str,
-) -> Optional[pathlib.Path]:
+) -> Optional[str]:
     # Setup the output file
-    file_config = FileConfig(file_prefix=output_path)
+    file_prefix = os.path.join(output_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR)
+    file_config = FileConfig(file_prefix=file_prefix)
     report_group = ReportGroup(file_config=file_config)
 
     report = Report(report_name=report_name, header_record=PAYMENT_AUDIT_CSV_HEADERS)
@@ -91,6 +94,10 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
     ] = experian_address_pair.experian_address if experian_address_pair else None
     employer: Employer = claim.employer
 
+    check_description = (
+        _format_check_memo(payment) if payment.disb_method == PaymentMethod.CHECK else ""
+    )
+
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
         leave_type=get_leave_type(claim),
@@ -113,10 +120,17 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         absence_case_number=claim.fineos_absence_id,
         c_value=payment.fineos_pei_c_value,
         i_value=payment.fineos_pei_i_value,
+        fineos_customer_number=employee.fineos_customer_number
+        if employee.fineos_customer_number
+        else None,
         employer_id=str(employer.fineos_employer_id) if employer else None,
         case_status=claim.fineos_absence_status.absence_status_description
         if claim.fineos_absence_status
         else None,
+        leave_request_decision=payment.leave_request_decision
+        if payment.leave_request_decision
+        else None,
+        check_description=check_description,
         is_first_time_payment=bool_to_str[payment_audit_data.is_first_time_payment],
         is_previously_errored_payment=bool_to_str[payment_audit_data.is_previously_errored_payment],
         is_previously_rejected_payment=bool_to_str[

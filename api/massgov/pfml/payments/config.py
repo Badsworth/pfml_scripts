@@ -66,6 +66,11 @@ class PaymentsS3Config:
     # Ex: s3://massgov-pfml-prod-agency-transfer/error-reports/outbound/
     pfml_error_reports_path: str
 
+    ## ---- Manual Payments-related S3 bucket envs
+    # Payment Vouchers are stored in a separate path
+    # Ex: s3://massgov-pyfml-prod-agency-transfer/payments/manual-payment-voucher/
+    pfml_voucher_output_path: str
+
 
 def get_s3_config() -> PaymentsS3Config:
     return PaymentsS3Config(
@@ -76,6 +81,7 @@ def get_s3_config() -> PaymentsS3Config:
         pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
         pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
         pfml_error_reports_path=str(os.environ.get("PFML_ERROR_REPORTS_PATH")),
+        pfml_voucher_output_path=str(os.environ.get("PFML_VOUCHER_OUTPUT_PATH")),
     )
 
 

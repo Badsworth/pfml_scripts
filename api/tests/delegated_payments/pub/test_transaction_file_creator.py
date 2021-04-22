@@ -4,6 +4,7 @@ import re
 import faker
 import pytest
 import sqlalchemy
+from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -27,6 +28,7 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
     PubEftFactory,
 )
+from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile
 from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreatorStep
 from tests.delegated_payments.pub.test_pub_check import _random_valid_check_payment_with_state_log
@@ -41,6 +43,7 @@ def transaction_file_step(test_db_session, initialize_factories_session, test_db
     )
 
 
+@freeze_time("2021-01-01 12:00:00")
 def test_ach_file_creation(
     transaction_file_step: TransactionFileCreatorStep,
     test_db_session,
@@ -49,8 +52,10 @@ def test_ach_file_creation(
     monkeypatch,
 ):
     # set environment variables
-    output_folder_path = str(tmp_path)
-    monkeypatch.setenv("PFML_PUB_OUTBOUND_PATH", output_folder_path)
+    archive_folder_path = str(tmp_path / "archive")
+    outbound_folder_path = str(tmp_path / "outbound")
+    monkeypatch.setenv("PFML_PUB_ACH_ARCHIVE_PATH", archive_folder_path)
+    monkeypatch.setenv("PUB_MOVEIT_OUTBOUND_PATH", outbound_folder_path)
 
     # setup data
     prenote_count = 5
@@ -67,13 +72,18 @@ def test_ach_file_creation(
     # generate the ach file
     transaction_file_step.run_step()
 
-    # check that ach file were generated
-    formatted_now = payments_util.get_now().strftime("%Y%m%d")
-    pub_ach_file_name = f"PUB-NACHA-{formatted_now}"
+    # check that ach archive file was generated
+    now = payments_util.get_now()
+    date_folder = now.strftime("%Y-%m-%d")
+    formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S")
+    pub_ach_file_name = f"{formatted_now}-EOLWD-DFML-NACHA"
     expected_ach_file_folder = os.path.join(
-        output_folder_path, payments_util.Constants.S3_OUTBOUND_READY_DIR
+        archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, date_folder
     )
     assert pub_ach_file_name in file_util.list_files(expected_ach_file_folder)
+
+    # check that ach outgoing file was generated
+    assert "EOLWD-DFML-NACHA" in file_util.list_files(outbound_folder_path)
 
     # check that no check file was created because no check payments were in the correct state.
     assert transaction_file_step.check_file is None
@@ -94,7 +104,7 @@ def test_ach_file_creation(
             ReferenceFile.file_location
             == str(os.path.join(expected_ach_file_folder, pub_ach_file_name)),
             ReferenceFile.reference_file_type_id
-            == ReferenceFileType.PUB_TRANSACTION.reference_file_type_id,
+            == ReferenceFileType.PUB_NACHA.reference_file_type_id,
         )
         .one_or_none()
         is not None
@@ -131,10 +141,16 @@ def test_check_file_creation(
     monkeypatch,
 ):
     # set environment variables
-    output_folder_path = str(tmp_path)
     accounting_number = str(fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999))
     routing_number = str(fake.random_int(min=10_000_000_000, max=99_999_999_999))
-    monkeypatch.setenv("PFML_PUB_OUTBOUND_PATH", output_folder_path)
+
+    archive_folder_path = str(tmp_path / "archive")
+    outbound_dfml_folder_path = str(tmp_path / "outbound-dfml-reports")
+    outbound_moveit_folder_path = str(tmp_path / "outbound-moveit")
+    monkeypatch.setenv("PFML_PUB_CHECK_ARCHIVE_PATH", archive_folder_path)
+    monkeypatch.setenv("DFML_REPORT_OUTBOUND_PATH", outbound_dfml_folder_path)
+    monkeypatch.setenv("PUB_MOVEIT_OUTBOUND_PATH", outbound_moveit_folder_path)
+
     monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", accounting_number)
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", routing_number)
 
@@ -143,33 +159,66 @@ def test_check_file_creation(
     for _i in range(fake.random_int(min=6, max=15)):
         payments.append(_random_valid_check_payment_with_state_log(test_db_session))
 
-    # generate the check file
+    # generate the check files
     transaction_file_step.run_step()
 
+    # Validate the EZ Check File was created properly
     ez_check_file = transaction_file_step.check_file
     assert isinstance(ez_check_file, EzCheckFile)
     assert len(ez_check_file.records) == len(payments)
 
-    file_location_pattern = os.path.join(
-        output_folder_path, payments_util.Constants.S3_OUTBOUND_READY_DIR, "%"
-    )
     ref_file = (
         test_db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.PUB_EZ_CHECK.reference_file_type_id
         )
-        .filter(ReferenceFile.file_location.like(file_location_pattern))
         .one_or_none()
     )
     assert ref_file is not None
 
-    filename_pattern = r"PUB-EZ-CHECK_\d{4}\d{2}\d{2}-\d{2}\d{2}\.csv"
+    filename_pattern = (
+        r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-EOLWD-DFML-EZ-CHECK.csv"
+    )
     assert re.search(filename_pattern, ref_file.file_location)
 
     # Confirm output file has 2 rows for each record and 1 for the header.
     file_stream = file_util.open_stream(ref_file.file_location)
     assert len([line for line in file_stream]) == 1 + 2 * len(ez_check_file.records)
+
+    # The outbound EZ Check file should have been identically built
+    file_stream = file_util.open_stream(f"{outbound_dfml_folder_path}/EOLWD-DFML-EZ-CHECK.csv")
+    assert len([line for line in file_stream]) == 1 + 2 * len(ez_check_file.records)
+
+    # Validate the positive pay file was created correctly
+    positive_pay_file = transaction_file_step.positive_pay_file
+    assert isinstance(positive_pay_file, CheckIssueFile)
+    assert len(positive_pay_file.entries) == len(payments)
+
+    ref_file = (
+        test_db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.PUB_POSITIVE_PAYMENT.reference_file_type_id
+        )
+        .one_or_none()
+    )
+    assert ref_file is not None
+
+    filename_pattern = (
+        r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-EOLWD-DFML-POSITIVE-PAY.txt"
+    )
+    assert re.search(filename_pattern, ref_file.file_location)
+
+    # Confirm output file has a row for each record
+    file_stream = file_util.open_stream(ref_file.file_location)
+    assert len([line for line in file_stream]) == len(positive_pay_file.entries)
+
+    # The outbound positive pay file should have been identically built
+    file_stream = file_util.open_stream(
+        f"{outbound_moveit_folder_path}/EOLWD-DFML-POSITIVE-PAY.txt"
+    )
+    assert len([line for line in file_stream]) == len(positive_pay_file.entries)
 
     # Confirm that we updated the state log for each payment.
     for payment in payments:

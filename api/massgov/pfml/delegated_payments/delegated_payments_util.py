@@ -51,9 +51,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
 )
-from massgov.pfml.util.aws.ses import EmailRecipient, send_email
 from massgov.pfml.util.csv import CSVSourceWrapper
-from massgov.pfml.util.files import create_csv_from_list
 
 logger = logging.get_logger(__package__)
 
@@ -65,7 +63,6 @@ class Constants:
     COMPTROLLER_AD_TYPE = "PA"
     DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
 
-    PUB_FILENAME_TEMPLATE = "{}-{}"  # e.g. PUB-NACHA-20210830
     BATCH_ID_TEMPLATE = COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
     MMARS_FILE_SKIPPED = "Did not create file for MMARS because there was no work to do"
 
@@ -77,46 +74,35 @@ class Constants:
     S3_INBOUND_SKIPPED_DIR = "skipped"
     S3_INBOUND_ERROR_DIR = "error"
 
+    FILE_NAME_PUB_NACHA = "EOLWD-DFML-NACHA"
+    FILE_NAME_PUB_EZ_CHECK = "EOLWD-DFML-EZ-CHECK"
+    FILE_NAME_PUB_POSITIVE_PAY = "EOLWD-DFML-POSITIVE-PAY"
+    FILE_NAME_PAYMENT_AUDIT_REPORT = "Payment-Audit-Report"
+
+    NACHA_FILE_FORMAT = f"%Y-%m-%d-%H-%M-%S-{FILE_NAME_PUB_NACHA}"
+
     # When processing payments, certain states
-    # indicate that a payment is actively being processed
-    # and should not be restarted. If we receive a payment
-    # record from FINEOS while that payment already is in
-    # one of these states, the new payment record should
+    # are allowed to be restarted (mainly error states)
+    # If we receive a payment record from FINEOS while
+    # a payment is in ANY other states, the new payment record should
     # immediately go into the payment error report
-    NON_RESTARTABLE_PAYMENT_STATES = [
-        # These states are a part of the normal payment extract flow
-        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT.state_id,
-        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id,
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED.state_id,
-        # These states are a part of the add to pub task
-        State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK.state_id,
-        State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id,
-        State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT.state_id,
-        State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id,
-        State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT.state_id,
-        State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_id,
-        # These states are a part of the pub response task
-        State.DELEGATED_PAYMENT_ADD_TO_PUB_PAYMENT_FINEOS_WRITEBACK.state_id,
-        State.DELEGATED_PAYMENT_PUB_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
-        State.DELEGATED_PAYMENT_COMPLETE.state_id,
-        # These states are a part of the $0 payment flow
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT.state_id,
-        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK.state_id,
-        State.DELEGATED_PAYMENT_ZERO_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
-        # These states are a part of the overpayment flow
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT.state_id,
-        State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK.state_id,
-        State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT.state_id,
-        # These states are a part of the cancellation flow
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id,
-        State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK.state_id,
-        State.DELEGATED_PAYMENT_CANCELLATION_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
-        # These states are a part of the employer reimbursement flow
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT.state_id,
-        State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK.state_id,
-        State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
-    ]
+    #
+    # How do you know if something should go in this list?
+    #   1. The payment associated with the state has reached an end state and will never change again
+    #   2. The state is an error state and someone will be notified (eg. Program Integrity) via a report
+    #   3. We expect, and want, to receive the payment again when the issue is corrected via the FINEOS extract
+    #   4. The payment has not already been sent to PUB - even if it's an error state
+    #   5. The state is in the DELEGATED_PAYMENT flow
+    RESTARTABLE_PAYMENT_STATES = frozenset(
+        [
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+            State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+        ]
+    )
+    RESTARTABLE_PAYMENT_STATE_IDS = frozenset(
+        [state.state_id for state in RESTARTABLE_PAYMENT_STATES]
+    )
 
     # States that we wait in while waiting for the reject file
     # If any payments are still in this state when the extract
@@ -196,6 +182,40 @@ def get_now() -> datetime:
     # Note that this uses Eastern time (not UTC)
     tz = pytz.timezone("America/New_York")
     return datetime.now(tz)
+
+
+def get_date_folder(current_time: Optional[datetime] = None) -> str:
+    if not current_time:
+        current_time = get_now()
+
+    return current_time.strftime("%Y-%m-%d")
+
+
+def build_archive_path(
+    prefix: str, file_status: str, file_name: str, current_time: Optional[datetime] = None
+) -> str:
+    """
+    Construct the path to a file. In the format: prefix / file_status / current_time as date / file_name
+    If no current_time specified, will use get_now() method.
+    For example:
+
+    build_archive_path("s3://bucket/path/archive", Constants.S3_INBOUND_RECEIVED_DIR, "2021-01-01-12-00-00-example-file.csv", datetime.datetime(2021, 1, 1, 12, 0, 0))
+    produces
+    "s3://bucket/path/archive/received/2021-01-01/2021-01-01-12-00-00-example-file.csv"
+
+    Parameters
+    -----------
+    prefix: str
+      The beginning of the path, likely based on a s3 path configured by an env var
+    file_status: str
+      The state the file is in, should be one of constants defined above that start with S3_INBOUND or S3_OUTBOUND
+    file_name: str
+      name of the file - will not be modified
+    current_time: Optional[datetime]
+      An optional datetime for use in the path, will be formatted as %Y-%m-%d
+    """
+
+    return os.path.join(prefix, file_status, get_date_folder(current_time), file_name)
 
 
 def lookup_validator(
@@ -515,13 +535,13 @@ def payment_extract_reference_file_exists_by_date_group(
     db_session: db.Session, date_group: str, export_type: LkReferenceFileType
 ) -> bool:
     processed_path = os.path.join(
-        payments_config.get_s3_config().pfml_fineos_inbound_path,
+        payments_config.get_s3_config().pfml_fineos_extract_archive_path,
         Constants.S3_INBOUND_PROCESSED_DIR,
         get_date_group_folder_name(date_group, export_type),
     )
 
     skipped_path = os.path.join(
-        payments_config.get_s3_config().pfml_fineos_inbound_path,
+        payments_config.get_s3_config().pfml_fineos_extract_archive_path,
         Constants.S3_INBOUND_SKIPPED_DIR,
         get_date_group_folder_name(date_group, export_type),
     )
@@ -554,13 +574,13 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         export_type.reference_file_type_id
         == ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id
     ):
-        datestring = date_config.fineos_vendor_max_history_date
+        datestring = date_config.fineos_claimant_extract_max_history_date
 
     elif (
         export_type.reference_file_type_id
         == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
     ):
-        datestring = date_config.fineos_payment_max_history_date
+        datestring = date_config.fineos_payment_extract_max_history_date
 
     else:
         raise ValueError(f"Incorrect export_type {export_type} provided")
@@ -576,7 +596,7 @@ def copy_fineos_data_to_archival_bucket(
     s3_config = payments_config.get_s3_config()
     source_folder = s3_config.fineos_data_export_path
     destination_folder = os.path.join(
-        s3_config.pfml_fineos_inbound_path, Constants.S3_INBOUND_RECEIVED_DIR
+        s3_config.pfml_fineos_extract_archive_path, Constants.S3_INBOUND_RECEIVED_DIR
     )
 
     # If get_fineos_max_history_date() raises a ValueError, we have
@@ -738,13 +758,12 @@ def copy_fineos_data_to_archival_bucket(
     return copied_file_mapping_by_date
 
 
-# TODO adjust tests and replace with new version
 def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str]]:
     s3_config = payments_config.get_s3_config()
     source_folder = os.path.join(
-        s3_config.pfml_fineos_inbound_path, Constants.S3_INBOUND_RECEIVED_DIR
+        s3_config.pfml_fineos_extract_archive_path, Constants.S3_INBOUND_RECEIVED_DIR
     )
-    logger.debug("Grouping files by date in path: %s", source_folder)
+    logger.info("Grouping files by date in path: %s", source_folder)
 
     s3_objects = file_util.list_files(source_folder)
     s3_objects.sort()
@@ -762,25 +781,6 @@ def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str
                 date_to_full_path[fixed_date_str].append(full_path)
 
     return date_to_full_path
-
-
-def create_pub_reference_file(
-    now: datetime, file_type: LkReferenceFileType, db_session: db.Session, pub_outbound_path: str
-) -> ReferenceFile:
-    s3_path = os.path.join(pub_outbound_path, Constants.S3_OUTBOUND_READY_DIR)
-    filename = Constants.PUB_FILENAME_TEMPLATE.format(
-        file_type.reference_file_type_description, now.strftime("%Y%m%d"),
-    )
-    dir_path = os.path.join(s3_path, filename)
-
-    ref_file = ReferenceFile(
-        reference_file_id=uuid.uuid4(),
-        file_location=dir_path,
-        reference_file_type_id=file_type.reference_file_type_id,
-    )
-    db_session.add(ref_file)
-
-    return ref_file
 
 
 def create_mmars_files_in_s3(
@@ -948,32 +948,6 @@ def get_inf_data_as_plain_text(inf_data: Dict) -> str:
     return text
 
 
-def email_inf_data(
-    ref_file: ReferenceFile, db_session: db.Session, recipient: EmailRecipient, subject: str
-) -> None:
-
-    inf_data = get_inf_data_from_reference_file(ref_file, db_session)
-
-    if inf_data is None:
-        logger.error(
-            "Could not find INF data for reference file",
-            extra={"reference_file_id": ref_file.reference_file_id},
-        )
-        return
-
-    payment_config = payments_config.get_email_config()
-    sender = payment_config.pfml_email_address
-    data = get_inf_data_as_plain_text(inf_data)
-    bounce_forwarding_email_address_arn = payment_config.bounce_forwarding_email_address_arn
-    send_email(
-        recipient=recipient,
-        subject=subject,
-        body_text=data,
-        sender=sender,
-        bounce_forwarding_email_address_arn=bounce_forwarding_email_address_arn,
-    )
-
-
 def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
     """Given a string from a Vendor Extract, return a LkClaimType
 
@@ -986,40 +960,6 @@ def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
         return ClaimType.MEDICAL_LEAVE
     else:
         raise ValueError("Unknown claim type")
-
-
-def email_fineos_vendor_customer_numbers(
-    ref_file: ReferenceFile, db_session: db.Session, recipient: EmailRecipient, subject: str
-) -> None:
-
-    inf_data = get_inf_data_from_reference_file(ref_file, db_session)
-
-    if inf_data is None:
-        logger.error(
-            "Could not find INF data for reference file",
-            extra={"reference_file_id": ref_file.reference_file_id},
-        )
-        return
-
-    payment_config = payments_config.get_email_config()
-    body_text = get_inf_data_as_plain_text(inf_data)
-
-    fineos_vendor_customer_numbers = get_fineos_vendor_customer_numbers_from_reference_file(
-        ref_file
-    )
-    fieldnames = ["fineos_customer_number", "ctr_vendor_customer_code"]
-    file_name = f"{get_now():%Y-%m-%d}-VCC-BIEVNT-supplement"
-
-    csv_data_path = [create_csv_from_list(fineos_vendor_customer_numbers, fieldnames, file_name)]
-
-    send_email(
-        recipient,
-        subject,
-        body_text,
-        payment_config.pfml_email_address,
-        payment_config.bounce_forwarding_email_address_arn,
-        csv_data_path,
-    )
 
 
 def get_fineos_vendor_customer_numbers_from_reference_file(reference: ReferenceFile) -> List[Dict]:

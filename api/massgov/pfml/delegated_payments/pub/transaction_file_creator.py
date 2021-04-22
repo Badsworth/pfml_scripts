@@ -11,7 +11,6 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     PrenoteState,
     PubEft,
-    ReferenceFileType,
     State,
 )
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
@@ -19,7 +18,7 @@ from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     add_eft_prenote_to_nacha_file,
     add_payments_to_nacha_file,
     create_nacha_file,
-    upload_nacha_file_to_s3,
+    send_nacha_file,
 )
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile
 from massgov.pfml.delegated_payments.step import Step
@@ -30,15 +29,12 @@ logger = logging.get_logger(__name__)
 
 class TransactionFileCreatorStep(Step):
     check_file: Optional[EzCheckFile] = None
-    positive_pay_file: Optional[CheckIssueFile]
+    positive_pay_file: Optional[CheckIssueFile] = None
     ach_file: Optional[NachaFile] = None
 
     def run_step(self) -> None:
         try:
             logger.info("Start creating PUB transaction file")
-
-            s3_config = payments_config.get_s3_config()
-            transaction_files_path = s3_config.pfml_pub_outbound_path
 
             # ACH
             self.add_ach_payments()
@@ -48,7 +44,7 @@ class TransactionFileCreatorStep(Step):
             self.check_file, self.positive_pay_file = pub_check.create_check_file(self.db_session)
 
             # Send the file
-            self.send_payment_files(transaction_files_path)
+            self.send_payment_files()
 
             # Commit pending changes to db
             self.db_session.commit()
@@ -123,32 +119,40 @@ class TransactionFileCreatorStep(Step):
 
         logger.info("Done adding ACH payments to PUB transaction file: %i", len(payments))
 
-    def send_payment_files(self, ach_file_folder_path: str) -> None:
+    def send_payment_files(self) -> None:
+        s3_config = payments_config.get_s3_config()
+
+        # We locally archive the Check & NACHA output files
+        check_archive_path = s3_config.pfml_pub_check_archive_path
+        ach_archive_path = s3_config.pfml_pub_ach_archive_path
+
+        # Outgoing files to PUB go to different locations
+        # NACHA and Positive Pay files go to the S3 folder that MoveIt grabs from
+        # EzCheck pay file goes to the S3 folder that Sharepoint grabs from
+        moveit_outgoing_path = s3_config.pub_moveit_outbound_path
+        dfml_sharepoint_outgoing_path = s3_config.dfml_report_outbound_path
+
         if self.check_file is None:
             logger.info("No check file to send to PUB")
         else:
-            ref_file = pub_check.send_check_file(self.check_file, ach_file_folder_path)
+            ref_file = pub_check.send_check_file(
+                self.check_file, check_archive_path, dfml_sharepoint_outgoing_path
+            )
             self.db_session.add(ref_file)
 
         if self.positive_pay_file is None:
             logger.info("No positive pay file to send to PUB")
         else:
             ref_file = pub_check.send_positive_pay_file(
-                self.positive_pay_file, ach_file_folder_path
+                self.positive_pay_file, check_archive_path, moveit_outgoing_path
             )
             self.db_session.add(ref_file)
 
         if self.ach_file is None:
             logger.info("No ACH file to send to PUB")
         else:
-            ref_file = payments_util.create_pub_reference_file(
-                payments_util.get_now(),
-                ReferenceFileType.PUB_TRANSACTION,
-                self.db_session,
-                ach_file_folder_path,
-            )
-
-            upload_nacha_file_to_s3(self.ach_file, ref_file.file_location)
+            ref_file = send_nacha_file(self.ach_file, ach_archive_path, moveit_outgoing_path)
+            self.db_session.add(ref_file)
 
         return None
 

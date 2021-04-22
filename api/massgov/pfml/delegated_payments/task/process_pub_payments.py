@@ -7,6 +7,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import PaymentRejectsStep
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
 from massgov.pfml.delegated_payments.payment_methods_split_step import PaymentMethodsSplitStep
+from massgov.pfml.delegated_payments.pickup_response_files_step import PickupResponseFilesStep
 from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreatorStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
@@ -18,26 +19,29 @@ logger = logging.get_logger(__name__)
 
 
 ALL = "ALL"
+PICKUP_FILES = "pickup"
 PROCESS_AUDIT_REJECT = "audit-reject"
-CREATE_PEI_WRITEBACK = "initial-writeback"
 SPLIT_PAYMENT_METHODS = "split-payment-methods"
 PUB_TRANSACTION = "pub-transaction"
+CREATE_PEI_WRITEBACK = "initial-writeback"
 REPORT = "report"
 ALLOWED_VALUES = [
     ALL,
+    PICKUP_FILES,
     PROCESS_AUDIT_REJECT,
-    CREATE_PEI_WRITEBACK,
     SPLIT_PAYMENT_METHODS,
     PUB_TRANSACTION,
+    CREATE_PEI_WRITEBACK,
     REPORT,
 ]
 
 
 class Configuration:
+    pickup_files: bool
     process_audit_reject: bool
-    create_pei_writeback: bool
     split_payment_methods: bool
     pub_transaction: bool
+    create_pei_writeback: bool
     make_reports: bool
 
     def __init__(self, input_args: List[str]):
@@ -56,16 +60,18 @@ class Configuration:
         steps = set(args.steps)
 
         if ALL in steps:
+            self.pickup_files = True
             self.process_audit_reject = True
-            self.create_pei_writeback = True
             self.split_payment_methods = True
             self.pub_transaction = True
+            self.create_pei_writeback = True
             self.make_reports = True
         else:
+            self.pickup_files = PICKUP_FILES in steps
             self.process_audit_reject = PROCESS_AUDIT_REJECT in steps
-            self.create_pei_writeback = CREATE_PEI_WRITEBACK in steps
             self.split_payment_methods = SPLIT_PAYMENT_METHODS in steps
             self.pub_transaction = PUB_TRANSACTION in steps
+            self.create_pei_writeback = CREATE_PEI_WRITEBACK in steps
             self.make_reports = REPORT in steps
 
 
@@ -91,6 +97,11 @@ def _process_pub_payments(
 ) -> None:
     """Process PUB Payments"""
     logger.info("Start - PUB Payments ECS Task")
+
+    if config.pickup_files:
+        PickupResponseFilesStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
 
     if config.process_audit_reject:
         PaymentRejectsStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()

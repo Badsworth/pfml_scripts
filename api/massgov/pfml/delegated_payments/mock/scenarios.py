@@ -8,14 +8,54 @@ from massgov.pfml.db.models.employees import (
     LkBankAccountType,
     LkClaimType,
     LkPaymentMethod,
+    LkPaymentTransactionType,
     PaymentMethod,
+    PaymentTransactionType,
 )
 
 
 class ScenarioName(Enum):
     # Happy path scenarios
-    HAPPY_PATH_FAMILY_LEAVE = "HAPPY_PATH_FAMILY_LEAVE"
-    HAPPY_PATH_MEDICAL_LEAVE = "HAPPY_PATH_MEDICAL_LEAVE"
+    HAPPY_PATH_FAMILY_ACH_PRENOTED = "HAPPY_PATH_FAMILY_ACH_PRENOTED"
+    HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
+    HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
+        "HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
+    )
+    HAPPY_PATH_CHECK_RESPONSE_PAID_FTP = "HAPPY_PATH_CHECK_RESPONSE_PAID_FTP"
+    HAPPY_PATH_CHECK_RESPONSE_OUTSTANDING_FTP = "HAPPY_PATH_CHECK_RESPONSE_OUTSTANDING_FTP"
+    HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN = (
+        "HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN"
+    )
+    HAPPY_PENDING_LEAVE_REQUEST_DECISION = "HAPPY_PENDING_LEAVE_REQUEST_DECISION"
+
+    # Non-Standard Payments
+    ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
+    CANCELLATION_PAYMENT = "CANCELLATION_PAYMENT"
+    OVERPAYMENT_PAYMENT_POSITIVE = "OVERPAYMENT_PAYMENT_POSITIVE"
+    OVERPAYMENT_PAYMENT_NEGATIVE = "OVERPAYMENT_PAYMENT_NEGATIVE"
+    EMPLOYER_REIMBURSEMENT_PAYMENT = "EMPLOYER_REIMBURSEMENT_PAYMENT"
+
+    # Prenote
+    NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE = "NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE"
+    EFT_ACCOUNT_NOT_PRENOTED = "EFT_ACCOUNT_NOT_PRENOTED"
+
+    # Address Verification
+    CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
+        "CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
+    )
+
+    # Automated Validation Rules (TODO add more validation issue scenarios)
+    REJECTED_LEAVE_REQUEST_DECISION = "REJECTED_LEAVE_REQUEST_DECISION"
+    PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
+
+    # TODO CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB
+    # TODO CLAIM_DOES_NOT_EXIST
+
+    # Audit
+    AUDIT_REJECTED = "AUDIT_REJECTED"
+
+    # TODO PEI writeback error
+    # TODO positive pay check outbound
 
 
 @dataclass
@@ -23,18 +63,89 @@ class ScenarioDescriptor:
     scenario_name: ScenarioName
 
     # general payment options
-    claim_type: LkClaimType = ClaimType.FAMILY_LEAVE
-    payment_method: Optional[LkPaymentMethod] = PaymentMethod.ACH
-    account_type: Optional[LkBankAccountType] = BankAccountType.CHECKING
+    employee_missing_in_db: bool = False
 
-    claims_count: int = 1
+    claim_type: LkClaimType = ClaimType.FAMILY_LEAVE
+
+    payment_method: LkPaymentMethod = PaymentMethod.ACH
+    payment_transaction_type: LkPaymentTransactionType = PaymentTransactionType.STANDARD
+
+    account_type: LkBankAccountType = BankAccountType.CHECKING
+
+    no_prior_eft_account: bool = False
+    prenoted: bool = True  # TODO add all prenote states
+
+    # prior_verified_address: bool = False TODO add when available
+    fineos_extract_address_valid: bool = True
+    fineos_extract_address_multiple_matches: bool = False
+
+    leave_request_decision: str = "Approved"
+    is_audit_approved: bool = True
+
+    negative_payment_amount: bool = False
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
-    ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_LEAVE),
+    ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_LEAVE, claim_type=ClaimType.MEDICAL_LEAVE
+        scenario_name=ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+        payment_method=PaymentMethod.CHECK,
     ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.ZERO_DOLLAR_PAYMENT,
+        payment_transaction_type=PaymentTransactionType.ZERO_DOLLAR,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.CANCELLATION_PAYMENT,
+        payment_transaction_type=PaymentTransactionType.CANCELLATION,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
+        payment_transaction_type=PaymentTransactionType.OVERPAYMENT,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
+        payment_transaction_type=PaymentTransactionType.OVERPAYMENT,
+        negative_payment_amount=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
+        no_prior_eft_account=True,
+        prenoted=False,
+    ),
+    ScenarioDescriptor(scenario_name=ScenarioName.EFT_ACCOUNT_NOT_PRENOTED, prenoted=False),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+        payment_method=PaymentMethod.CHECK,
+        fineos_extract_address_valid=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+        payment_method=PaymentMethod.CHECK,
+        fineos_extract_address_valid=False,
+        fineos_extract_address_multiple_matches=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+        fineos_extract_address_valid=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
+        employee_missing_in_db=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+        leave_request_decision="Pending",
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
+        leave_request_decision="Rejected",
+    ),
+    ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_approved=False),
 ]
 
 SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {

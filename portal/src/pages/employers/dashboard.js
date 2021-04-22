@@ -1,5 +1,9 @@
 import Alert from "../../components/Alert";
+import ClaimCollection from "../../models/ClaimCollection";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
+// TODO (EMPLOYER-859): Render component when pagination metadata is available
+// import PaginationNavigation from "../../components/PaginationNavigation";
+// import PaginationSummary from "../../components/PaginationSummary";
 import PropTypes from "prop-types";
 import React from "react";
 import Table from "../../components/Table";
@@ -9,10 +13,9 @@ import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import { isFeatureEnabled } from "../../services/featureFlags";
-import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withUser from "../../hoc/withUser";
+import withClaims from "../../hoc/withClaims";
 
 export const Dashboard = (props) => {
   const { appLogic, user } = props;
@@ -48,6 +51,10 @@ export const Dashboard = (props) => {
     .filter(([columnKey, isVisible]) => isVisible)
     .map(([columnKey, isVisible]) => columnKey);
 
+  /* TODO (EMPLOYER-859): Implement API call to take in page index */
+  // const getUpdatedRecords = (pageIndex) => {
+  // };
+
   return (
     <React.Fragment>
       <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
@@ -72,7 +79,10 @@ export const Dashboard = (props) => {
       <p className="margin-bottom-4">
         {t("pages.employersDashboard.instructions")}
       </p>
-
+      {/* TODO (EMPLOYER-859): Render component when pagination metadata is available  */}
+      {/* <PaginationSummary
+        pageIndex={pageIndex} pageSize={pageSize} totalPages={totalPages} totalRecords={totalRecords}
+      /> */}
       <Table className="width-full tablet:width-auto" responsive scrollable>
         <thead>
           <tr>
@@ -102,12 +112,15 @@ export const Dashboard = (props) => {
           )}
           {!showVerificationRowInPlaceOfClaims && (
             <ClaimTableRows
+              appLogic={props.appLogic}
               claims={props.claims}
               tableColumnKeys={tableColumnKeys}
             />
           )}
         </tbody>
       </Table>
+      {/* TODO (EMPLOYER-859): Render component when pagination metadata is available  */}
+      {/* {totalPages > 1 && <PaginationWidget pageIndex={pageIndex} totalPages={totalPages} onClick={getUpdatedRecords} />} */}
     </React.Fragment>
   );
 };
@@ -115,13 +128,12 @@ export const Dashboard = (props) => {
 Dashboard.propTypes = {
   appLogic: PropTypes.shape({
     portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
       goTo: PropTypes.func.isRequired,
       pathname: PropTypes.string.isRequired,
     }).isRequired,
   }).isRequired,
-  // TODO (EMPLOYER-858): Change to more specific PropTypes.instanceOf once we
-  // know what the API response looks like, which informs the model we use
-  claims: PropTypes.arrayOf(PropTypes.object),
+  claims: PropTypes.instanceOf(ClaimCollection),
   user: PropTypes.instanceOf(User).isRequired,
 };
 
@@ -130,10 +142,10 @@ Dashboard.propTypes = {
  * no claim data exists
  */
 const ClaimTableRows = (props) => {
-  const { claims, tableColumnKeys } = props;
+  const { appLogic, claims, tableColumnKeys } = props;
   const { t } = useTranslation();
 
-  if (!claims.length) {
+  if (claims.isEmpty) {
     return (
       <tr>
         <td colSpan={tableColumnKeys.length}>
@@ -151,32 +163,34 @@ const ClaimTableRows = (props) => {
    * @returns {string|React.ReactNode}
    */
   const getValueForColumn = (claim, columnKey) => {
-    // New Application page handles conditional routing for claims (if is not reviewable, navigates to Status page)
-    const infoRequestRoute = routeWithParams("employers.newApplication", {
-      absence_id: get(claim, "fineos_absence_id"),
-    });
+    const claimRoute = appLogic.portalFlow.getNextPageRoute(
+      "VIEW_CLAIM",
+      {},
+      { absence_id: get(claim, "fineos_absence_id") }
+    );
 
     switch (columnKey) {
       case "created_at":
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
-        return <a href={infoRequestRoute}>{get(claim, columnKey)}</a>;
+        // TODO (EMPLOYER-1178) Use <Link> for client-side navigation
+        return <a href={claimRoute}>{get(claim, columnKey)}</a>;
       case "employee_name":
-        // TODO (EMPLOYER-858): Use a fullName getter on the claim instance
-        return (
-          <a href={infoRequestRoute}>
-            {[get(claim, "first_name"), get(claim, "last_name")].join(" ")}
-          </a>
-        );
+        // TODO (EMPLOYER-1178) Use <Link> for client-side navigation
+        return <a href={claimRoute}>{get(claim, "employee.fullName")}</a>;
+      case "employer_dba":
+        return get(claim, "employer.employer_dba");
+      case "employer_fein":
+        return get(claim, "employer.employer_fein");
       case "status":
-        // TODO (EMPLOYER-858): Render a <Tag> for the status
+        // TODO (EMPLOYER-1125): Render a <Tag> for the status
         return "--";
       default:
-        return get(claim, columnKey);
+        return "";
     }
   };
 
-  return claims.map((claim) => (
+  return claims.items.map((claim) => (
     <tr key={claim.fineos_absence_id}>
       <th
         scope="row"
@@ -201,8 +215,9 @@ const ClaimTableRows = (props) => {
 };
 
 ClaimTableRows.propTypes = {
+  appLogic: Dashboard.propTypes.appLogic,
   claims: Dashboard.propTypes.claims,
   tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
-export default withUser(Dashboard);
+export default withClaims(Dashboard);

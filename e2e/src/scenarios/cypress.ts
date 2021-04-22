@@ -20,6 +20,19 @@ export const BHAP1: ScenarioSpecification = {
     },
   },
 };
+
+export const BHAP1ER: ScenarioSpecification = {
+  ...BHAP1,
+  claim: {
+    ...BHAP1.claim,
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+  },
+};
+
 export const BHAP1INEL: ScenarioSpecification = {
   employee: { mass_id: true, wages: "ineligible" },
   claim: {
@@ -145,5 +158,30 @@ export const Dave: ScenarioSpecification = {
     },
     // This scenario requires a 2 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
+  },
+};
+
+export const Sally: ScenarioSpecification = {
+  employee: {
+    wages: 60000,
+    mass_id: true,
+  },
+  claim: {
+    label: "Sally",
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
+    work_pattern_spec: "0,240,240,240,240,240,0",
+    docs: {
+      MASSID: {},
+      FOSTERPLACEMENT: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 20,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+    has_intermittent_leave_periods: true,
+    // This scenario requires a 4 week leave time for payment calculation purposes.
+    leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
   },
 };

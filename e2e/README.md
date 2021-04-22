@@ -4,7 +4,7 @@ PFML End to End Testing
 Here you will find the end-to-end testing code for this project. Testing efforts on this project have been broken into three groups:
 
 * **[End to End](#end-to-end-tests)** - Tests application functionality from a user (employee, CSR) perspective across multiple components using [Cypress](https://www.cypress.io/). This test type is browser based, and runs nightly in CI to ensure continuity of functionality.
-* **[Business Simulation](#business-simulation)** - Tests business process by flooding the system with a large number of realistic claims. Business simulation runs are schedule activities that involve human participants.
+* **[Data Generation](#data-generation)** - Generates ad-hoc data to be used for manual testing and training activities (Employers, Employees, and Claims).
 * **[Load and Stress](#load-and-stress-testing)** - Tests performance of the system by simulating a large amount of user activity on multiple points in the application. Load and stress tests are scheduled activities that will run against a production-like environment.
 
 End-to-End Tests
@@ -32,7 +32,8 @@ Tests can be executed locally (against one of the cloud environments) by followi
 
 The test suite can run against your local portal enviornment.
 
-* Run `npm run cypress:open:local`
+* To run all tests use `npm run cypress:open:local`
+* To run a subset of Portal-based tests as a Portal smoke test run `npm run cypress:open:local:portal` instead
 * A window will pop open showing the various tests available for running.
 * Depending on what feature you're working on will determine the test of most interest. See Below ⬇️
 
@@ -66,33 +67,22 @@ We have two different styles of Cypress tests:
 </details>
 
 
-Business Simulation
--------------------
+Data Generation
+---------------
 
-Business simulation is a tool we use to give the business enough fake data to exercise the business process of adjudicating claims. Simulations have 3 main steps:
+The End-to-End team regularly conducts data generation activities to support testing activities for other teams.  We have developed a suite of data generation tools to make this process easy(ier).  Generally, the types of data we generate are:
 
-1. **Preparation**: Generating claims, documents, and DOR files. Test data and documents will be saved for programmatic submission later. DOR files will be shipped to the API to pre-create the necessary employees.
-    * Command to generate 2000 claims worth of data: `npm run pilot3:gen -- -n 2000`
-2. **Technical Execution**: Programatically submitting the claims and documents to the API.
-    * Command to submit previously generated claims: `npm run pilot3:sim -- -n 2000`
-3. **Business Execution**: The human participants actively processing the claims.
+* **Employers/Employees**: May be generated in virtually any amount or mix.  We have complete control over the employer's withholding, employer exemption status and employee's wages. We do not currently support customization of most other aspects of employer/employee generation.
+* **Claims**: May be generated in limited quantities and programatically submitted to the API. We have control over most of the aspects of claim generation, including which employee we pick, what ER is submitted, what documents are generated (or missing), and specific properties like address and payment details. Generally, we can submit claims to an environment at a rate of ~300/hr, which means that ~2400 claims is about the maximum amount we can submit in a given day.
 
+### Requesting data from the E2E team:
 
-#### Simulation directory structure:
+If you would like to request data from the End-to-End team, please fill out [this form](https://docs.google.com/spreadsheets/d/11oR5o4macQO1LsHMlYCuylXlWiHtDpH2oypwYfJmgoE/edit#gid=1227817983) and submit it to an E2E team member such as Rob (rob@lastcallmedia.com) or Lili (lili@lastcallmedia.com).
 
-For each generated simulation, the following directory structure will be followed:
+### Technical process of generating data
 
-```text
-<selected directory>
-  documents/ <- Document files originally generated here.
-  mail/      <- Document files for manual submission end up here.
-  submitted/ <- Document files submitted over API end up here.
-  claims.json <- Canonical file listing all claims.
-  DORDFML_{DATE} <- DOR Employee file.
-  DORDFMLEMP_{DATE} <- DOR Employer file
-  index.csv    <- A CSV "manifest" of the claims to be submitted.
-  state.json  <- A JSON file tracking the submitted applications to avoid resubmission.
-```
+The process is documented in [our docs folder](./docs/data.md).
+
 
 Load and Stress Testing
 -----------------------

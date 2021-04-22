@@ -81,7 +81,7 @@ jobs:
   post-to-slack:
     name: post failures to slack
     needs: [get-deploy-state]
-    if: needs.get-deploy-state.outputs.deploy-state == 'failure' || needs.get-deploy-state.outputs.deploy-state == 'timed_out'
+    if: always() && (needs.get-deploy-state.outputs.deploy-state == 'failure' || needs.get-deploy-state.outputs.deploy-state == 'timed_out')
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials

@@ -10,7 +10,10 @@ from massgov.pfml.payments.data_mart_states_processing import (
 )
 from massgov.pfml.payments.error_reports import send_ctr_error_reports
 from massgov.pfml.payments.gax import build_gax_files_for_s3
-from massgov.pfml.payments.outbound_returns import process_outbound_returns
+from massgov.pfml.payments.outbound_returns import (
+    ProcessOutboundReturnsConfig,
+    process_outbound_returns,
+)
 from massgov.pfml.payments.vcc import build_vcc_files_for_s3
 from massgov.pfml.util.logging import audit
 from massgov.pfml.util.sentry import initialize_sentry
@@ -20,7 +23,7 @@ logger = logging.get_logger(__name__)
 
 ALL = "ALL"
 PICKUP_FROM_MOVEIT = "pickup-from-moveit"
-CTR_OUTBOUND_RETURN = "ctr-outbound-return"
+OUTBOUND_VENDOR_RETURN = "outbound-vendor-return"
 DATA_MART = "data-mart"
 GAX = "gax"
 VCC = "vcc"
@@ -29,7 +32,7 @@ ERROR_REPORT = "error-report"
 ALLOWED_VALUES = [
     ALL,
     PICKUP_FROM_MOVEIT,
-    CTR_OUTBOUND_RETURN,
+    OUTBOUND_VENDOR_RETURN,
     DATA_MART,
     GAX,
     VCC,
@@ -40,7 +43,7 @@ ALLOWED_VALUES = [
 
 class Configuration:
     pickup_from_moveit: bool
-    do_ctr_outbound_return: bool
+    run_outbound_vendor_return: bool
     query_data_mart: bool
     make_gax: bool
     make_vcc: bool
@@ -64,7 +67,7 @@ class Configuration:
 
         if ALL in steps:
             self.pickup_from_moveit = True
-            self.do_ctr_outbound_return = True
+            self.run_outbound_vendor_return = True
             self.query_data_mart = True
             self.make_gax = True
             self.make_vcc = True
@@ -72,7 +75,7 @@ class Configuration:
             self.make_error_report = True
         else:
             self.pickup_from_moveit = PICKUP_FROM_MOVEIT in steps
-            self.do_ctr_outbound_return = CTR_OUTBOUND_RETURN in steps
+            self.run_outbound_vendor_return = OUTBOUND_VENDOR_RETURN in steps
             self.query_data_mart = DATA_MART in steps
             self.make_gax = GAX in steps
             self.make_vcc = VCC in steps
@@ -109,9 +112,14 @@ def _ctr_process(db_session: db.Session, config: Configuration) -> None:
         if config.pickup_from_moveit:
             moveit.pickup_files_from_moveit(db_session)
 
-        # 2. Process Outbound Return files from CTR
-        if config.do_ctr_outbound_return:
-            process_outbound_returns(db_session)
+        # 2. Process Outbound Vendor Customer Return files from CTR
+        if config.run_outbound_vendor_return:
+            outbound_vendor_return_config = ProcessOutboundReturnsConfig(
+                process_outbound_vendor_returns=True,
+                process_outbound_status_returns=False,
+                process_outbound_payment_returns=False,
+            )
+            process_outbound_returns(db_session, outbound_vendor_return_config)
 
         # 3.Run queries against Data Mart
         if config.query_data_mart:

@@ -1,5 +1,6 @@
 import { expect, describe, it } from "@jest/globals";
 import EmployerPool, { Employer } from "../../../src/generation/Employer";
+import { collect } from "streaming-iterables";
 
 describe("Employer Generation", () => {
   it("generate() should generate an employer pool", () => {
@@ -23,6 +24,7 @@ describe("Employer Generation", () => {
       medical_exemption: false,
       updated_date: expect.any(String),
       size: expect.stringMatching(/(small|medium|large)/),
+      metadata: {},
     });
   });
 
@@ -38,6 +40,15 @@ describe("Employer Generation", () => {
     for (const employer of pool) {
       expect(employer.size).toEqual("small");
     }
+  });
+
+  it("Should allow generation of employers with specific metadata", () => {
+    const pool = EmployerPool.generate(1, { metadata: { foo: "bar" } });
+    expect(collect(pool)).toContainEqual(
+      expect.objectContaining({
+        metadata: { foo: "bar" },
+      })
+    );
   });
 
   it("Should generate employers according to a size distribution if not given an explicit size", () => {
@@ -111,6 +122,19 @@ describe("Employer Generation", () => {
     );
   });
 
+  it("pick() should accept a specification that allows it to pick employers by metadata properties", () => {
+    const employers = ([
+      { fein: "123", metadata: { foo: "bar" } },
+    ] as unknown) as Employer[];
+    const pool = new EmployerPool(employers);
+    expect(() => pool.pick({ metadata: { foo: "baz" } })).toThrow(
+      "No employers match the specification"
+    );
+    expect(pool.pick({ metadata: { foo: "bar" } })).toMatchObject({
+      fein: "123",
+    });
+  });
+
   it("generate() should return an employer with quarterly withholding amounts that reflect the employers FEIN", () => {
     const [fresh] = EmployerPool.generate(1);
     for (const withholding of fresh.withholdings) {
@@ -143,7 +167,7 @@ describe("Employer Generation", () => {
     expect(zeroAmount).toEqual(zeroReceived);
   });
 
-  it("generate() will set employers quartlery amount to FEIN when withholdings is explicitly undefined", () => {
+  it("generate() will set employers quarterly amount to FEIN when withholdings is explicitly undefined", () => {
     const [fresh] = EmployerPool.generate(1, {
       withholdings: undefined,
     });

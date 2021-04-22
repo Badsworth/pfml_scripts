@@ -141,8 +141,15 @@ class PaymentRejectsStep(Step):
                     absence_case_number=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_number),
                     c_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.c_value),
                     i_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.i_value),
+                    fineos_customer_number=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number
+                    ),
                     employer_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_id),
                     case_status=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.case_status),
+                    leave_request_decision=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision
+                    ),
+                    check_description=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.check_description),
                     is_first_time_payment=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment
                     ),
@@ -172,6 +179,7 @@ class PaymentRejectsStep(Step):
         )
 
         if payment_state_log is None:
+            self.increment("payment_state_log_missing_count")
             raise PaymentRejectsException(
                 f"No state log found for payment found in audit reject file: {payment.payment_id}"
             )
@@ -180,6 +188,7 @@ class PaymentRejectsStep(Step):
             payment_state_log.end_state_id
             != State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id
         ):
+            self.increment("payment_state_log_not_in_audit_response_pending_count")
             raise PaymentRejectsException(
                 f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description if payment_state_log.end_state else None}, payment_id: {payment.payment_id}"
             )
@@ -267,18 +276,12 @@ class PaymentRejectsStep(Step):
 
         logger.info("Completed transition of not sampled payment audit pending states")
 
-    def process_rejects_and_send_report(
-        self,
-        payment_rejects_received_folder_path: str,
-        payment_rejects_processed_folder_path: str,
-        payment_rejects_report_outbound_folder: str,
-        payment_rejects_report_sent_folder_path: str,
-    ) -> None:
-        # TODO Confirm we should look in a dated folder? if so today or yesterday's date?
-        payment_rejects_received_folder_dated_path = os.path.join(
-            payment_rejects_received_folder_path, payments_util.get_now().strftime("%Y-%m-%d")
+    def process_rejects_and_send_report(self, payment_rejects_archive_path: str) -> None:
+        payment_rejects_received_folder_path = os.path.join(
+            payment_rejects_archive_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
         )
-        rejects_files = file_util.list_files(payment_rejects_received_folder_dated_path)
+
+        rejects_files = file_util.list_files(payment_rejects_received_folder_path)
 
         if len(rejects_files) == 0:
             raise PaymentRejectsException("No Payment Rejects file found.")
@@ -292,7 +295,7 @@ class PaymentRejectsStep(Step):
         # process the file
         rejects_file_name = rejects_files[0]
         payment_rejects_file_path = os.path.join(
-            payment_rejects_received_folder_dated_path, rejects_file_name
+            payment_rejects_received_folder_path, rejects_file_name
         )
 
         logger.info("Start processing Payment Rejects file: %s", payment_rejects_file_path)
@@ -302,7 +305,7 @@ class PaymentRejectsStep(Step):
             payment_rejects_file_path,
         )
         parsed_rows_count = len(payment_rejects_rows)
-
+        self.set_metrics(parsed_rows_count=parsed_rows_count)
         logger.info("Parsed %i payment rejects rows", parsed_rows_count)
 
         # check if returned rows match expected number in our state log
@@ -312,6 +315,8 @@ class PaymentRejectsStep(Step):
             self.db_session,
         )
         state_log_count = len(state_logs)
+        self.set_metrics(state_logs_count=state_log_count)
+
         if state_log_count != parsed_rows_count:
             raise PaymentRejectsException(
                 f"Unexpected number of parsed Payment Rejects file rows - found: {parsed_rows_count}, expected: {state_log_count}"
@@ -324,9 +329,9 @@ class PaymentRejectsStep(Step):
         self.transition_not_sampled_payment_audit_pending_states()
 
         # put file in processed folder
-        processed_file_path = os.path.join(
-            payment_rejects_processed_folder_path,
-            payments_util.get_now().strftime("%Y-%m-%d"),
+        processed_file_path = payments_util.build_archive_path(
+            payment_rejects_archive_path,
+            payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
             rejects_file_name,
         )
         file_util.rename_file(payment_rejects_file_path, processed_file_path)
@@ -353,12 +358,7 @@ class PaymentRejectsStep(Step):
 
             s3_config = payments_config.get_s3_config()
 
-            self.process_rejects_and_send_report(
-                s3_config.payment_rejects_received_folder_path,
-                s3_config.payment_rejects_processed_folder_path,
-                s3_config.payment_rejects_report_outbound_folder,
-                s3_config.payment_rejects_report_sent_folder_path,
-            )
+            self.process_rejects_and_send_report(s3_config.pfml_payment_rejects_archive_path)
 
             self.db_session.commit()
 

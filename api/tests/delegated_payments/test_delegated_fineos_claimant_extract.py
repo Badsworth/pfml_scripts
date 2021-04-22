@@ -98,7 +98,7 @@ def test_run_step_happy_path(
     monkeypatch,
     create_triggers,
 ):
-    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-12-20")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-12-20")
 
     tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
     employee = EmployeeFactory(tax_identifier=tax_identifier)
@@ -190,7 +190,7 @@ def test_run_step_existing_approved_eft_info(
 ):
     # Very similar to the happy path test, but EFT info has already been
     # previously approved and we do not need to start the prenoting process
-    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-12-20")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-12-20")
 
     tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
     employee = EmployeeFactory(tax_identifier=tax_identifier)
@@ -243,7 +243,7 @@ def test_run_step_existing_rejected_eft_info(
 ):
     # Very similar to the happy path test, but EFT info has already been
     # previously rejected and thus it goes into an error state instead
-    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-12-20")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-12-20")
 
     tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
     employee = EmployeeFactory(tax_identifier=tax_identifier)
@@ -301,7 +301,7 @@ def test_run_step_no_employee(
     monkeypatch,
     create_triggers,
 ):
-    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-12-20")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-12-20")
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
@@ -495,7 +495,7 @@ def test_process_extract_unprocessed_folder_files(
     monkeypatch,
     create_triggers,
 ):
-    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
     s3 = boto3.client("s3")
 
@@ -518,7 +518,7 @@ def test_process_extract_unprocessed_folder_files(
     # add reference files for processed folders
     ReferenceFileFactory.create(
         file_location=os.path.join(
-            get_s3_config().pfml_fineos_inbound_path,
+            get_s3_config().pfml_fineos_extract_archive_path,
             payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
             payments_util.get_date_group_folder_name(
                 "2020-01-01-11-30-00", ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
@@ -528,7 +528,7 @@ def test_process_extract_unprocessed_folder_files(
     )
     ReferenceFileFactory.create(
         file_location=os.path.join(
-            get_s3_config().pfml_fineos_inbound_path,
+            get_s3_config().pfml_fineos_extract_archive_path,
             payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
             payments_util.get_date_group_folder_name(
                 "2020-01-03-11-30-00", ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
@@ -544,10 +544,12 @@ def test_process_extract_unprocessed_folder_files(
     claimant_extract_step.run()
 
     destination_folder = os.path.join(
-        get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+        get_s3_config().pfml_fineos_extract_archive_path,
+        payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
     )
     skipped_folder = os.path.join(
-        get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_SKIPPED_DIR,
+        get_s3_config().pfml_fineos_extract_archive_path,
+        payments_util.Constants.S3_INBOUND_SKIPPED_DIR,
     )
     processed_files = file_util.list_files(destination_folder, recursive=True)
 
@@ -723,7 +725,6 @@ def test_extract_to_staging_tables(emp_updates_path, claimant_extract_step, test
 
     extract_data = claimant_extract.ExtractData(test_file_names, date)
     claimant_extract_step.download_and_index_data(extract_data, tempdir)
-    claimant_extract_step.extract_to_staging_tables(extract_data)
 
     test_db_session.commit()
 
@@ -733,7 +734,7 @@ def test_extract_to_staging_tables(emp_updates_path, claimant_extract_step, test
     ref_file = extract_data.reference_file
 
     assert len(requested_absence_info_data) == 4
-    assert len(employee_feed_data) == 2
+    assert len(employee_feed_data) == 3
 
     for data in requested_absence_info_data:
         assert data.reference_file_id == ref_file.reference_file_id

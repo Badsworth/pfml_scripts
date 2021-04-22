@@ -1,9 +1,8 @@
-import * as portal from "../../../tests/common/actions/portal";
-import { beforePortal } from "../../../tests/common/before";
+import { portal } from "../../../actions";
 
 describe("Submit a REDUCED LEAVE bonding claim and adjucation approval - BHAP8", () => {
   it("As a claimant, I should be able to submit a Reduced Leave claim (BHAP8) through the portal", () => {
-    beforePortal();
+    portal.before();
 
     cy.task("generateClaim", "BHAP8").then((claim) => {
       const application: ApplicationRequestBody = claim.claim;
@@ -16,14 +15,8 @@ describe("Submit a REDUCED LEAVE bonding claim and adjucation approval - BHAP8",
       portal.login(credentials);
       portal.goToDashboardFromApplicationsPage();
 
-      // Continue Creating Claim
-      portal.startClaim();
-      portal.onPage("start");
-      portal.agreeToStart();
-      portal.hasClaimId();
-      portal.onPage("checklist");
-
       // Submit Claim
+      portal.startClaim();
       portal.submitClaimPartOne(application);
       portal.waitForClaimSubmission().then((data) => {
         cy.stash("submission", {

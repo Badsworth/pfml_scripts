@@ -1,13 +1,10 @@
-import * as portal from "../../tests/common/actions/portal";
-import { fineos } from "../../tests/common/actions";
-import { beforeFineos } from "../../tests/common/before";
-import { beforePortal } from "../../tests/common/before";
+import { portal, fineos } from "../../actions";
 import { getLeaveAdminCredentials, getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
 
 describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineos", () => {
   it("Create a financially eligible claim (MHAP4) in which an employer will respond", () => {
-    beforePortal();
+    portal.before();
 
     cy.task("generateClaim", "MHAP4").then((claim) => {
       cy.task("submitClaimToAPI", claim).then((response) => {
@@ -41,7 +38,7 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
     "In Fineos, complete an Adjudication Approval along w/adding Bonding Leave",
     { baseUrl: getFineosBaseUrl() },
     () => {
-      beforeFineos();
+      fineos.before();
       cy.unstash<Submission>("submission").then((submission) => {
         cy.visit("/");
         fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);

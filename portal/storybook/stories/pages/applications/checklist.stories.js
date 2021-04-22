@@ -54,6 +54,15 @@ const scenarios = {
     claim: new MockClaimBuilder().paymentPrefSubmitted().submitted().create(),
     warnings: generateWarningsForStep(ClaimSteps.payment),
   },
+  "Part 2 submitted, caring leave with no certification form uploaded": {
+    claim: new MockClaimBuilder()
+      .paymentPrefSubmitted()
+      .submitted()
+      .caringLeaveReason()
+      .create(),
+    warnings: generateWarningsForStep(ClaimSteps.payment),
+  },
+
   "Proof of birth not uploaded (newborn)": {
     claim: new MockClaimBuilder()
       .paymentPrefSubmitted()

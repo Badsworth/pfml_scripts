@@ -1,13 +1,15 @@
-import { MockEmployerClaimBuilder, renderWithAppLogic } from "../../test-utils";
+import Claim, { ClaimEmployee, ClaimEmployer } from "../../../src/models/Claim";
+import User, { UserLeaveAdministrator } from "../../../src/models/User";
+import { renderWithAppLogic, testHook } from "../../test-utils";
+import ClaimCollection from "../../../src/models/ClaimCollection";
 import Dashboard from "../../../src/pages/employers/dashboard";
-import { UserLeaveAdministrator } from "../../../src/models/User";
+import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
-
-jest.mock("../../../src/hooks/useAppLogic");
+import useAppLogic from "../../../src/hooks/useAppLogic";
 
 const verifiedUserLeaveAdministrator = new UserLeaveAdministrator({
-  employer_dba: "Acme Co",
-  employer_fein: "**-***0001",
+  employer_dba: "Work Inc",
+  employer_fein: "12-3456789",
   employer_id: "mock-employer-id-1",
   has_verification_data: true,
   verified: true,
@@ -21,14 +23,31 @@ const verifiableUserLeaveAdministrator = new UserLeaveAdministrator({
 });
 
 const setup = (claims = [], userAttrs = {}) => {
-  const { appLogic, wrapper } = renderWithAppLogic(Dashboard, {
-    diveLevels: 1,
-    props: { claims },
+  let appLogic;
+  // Need to set an accurate pathname so portalFlow can return the correct links to route to
+  mockRouter.pathname = routes.employers.dashboard;
+
+  testHook(() => {
+    appLogic = useAppLogic();
+    // Fulfill the needs of withClaims to simulate that the user can view the page,
+    // and that a list of claims has been loaded
+    appLogic.users.user = new User({
+      consented_to_data_sharing: true,
+      ...userAttrs,
+    });
+    appLogic.claims.claims = new ClaimCollection(claims);
+    appLogic.claims.hasLoadedAll = true;
+  });
+  const goToSpy = jest.spyOn(appLogic.portalFlow, "goTo");
+
+  const { wrapper } = renderWithAppLogic(Dashboard, {
+    props: { appLogic },
     userAttrs,
   });
 
   return {
     appLogic,
+    goToSpy,
     wrapper,
   };
 };
@@ -51,8 +70,19 @@ describe("Employer dashboard", () => {
 
   it("renders a table of claims", () => {
     const claims = [
-      new MockEmployerClaimBuilder().completed().create(),
-      new MockEmployerClaimBuilder().completed().create(),
+      new Claim({
+        created_at: "2021-01-15",
+        employee: new ClaimEmployee({
+          first_name: "Jane",
+          middle_name: null,
+          last_name: "Doe",
+        }),
+        employer: new ClaimEmployer({
+          employer_dba: verifiedUserLeaveAdministrator.employer_dba,
+          employer_fein: verifiedUserLeaveAdministrator.employer_fein,
+        }),
+        fineos_absence_id: "NTN-111-ABS-01",
+      }),
     ];
     const userAttrs = {
       // Set multiple employers so the table shows all possible columns
@@ -109,11 +139,9 @@ describe("Employer dashboard", () => {
 
   it("redirects to the Welcome page when employerShowDashboard flag is disabled", () => {
     process.env.featureFlags = { employerShowDashboard: false };
-    const { appLogic } = setup();
+    const { goToSpy } = setup();
 
-    expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-      routes.employers.welcome
-    );
+    expect(goToSpy).toHaveBeenCalledWith(routes.employers.welcome);
   });
 
   describe("when employerShowVerifications flag is enabled", () => {

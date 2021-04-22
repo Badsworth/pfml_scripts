@@ -38,19 +38,13 @@ module "massgov_pfml" {
   cognito_extra_logout_urls              = []
   cognito_enable_provisioned_concurrency = false
 
-  # Disable custom domain names by default for a new environment.
-  #
-  # Follow the steps in /docs/creating-environments.md to
-  # set up custom mass.gov domain names.
-  #
-  enable_pretty_domain = false
+  enable_pretty_domain = true
 
   # Firewall rules
   # 'true' will set rule to 'BLOCK' (or 'NONE' which is equivalent)
   # 'false' will set rule to 'COUNT' (counts traffic that meets rule(s) instead of blocking)
   enforce_cloudfront_rate_limit     = true
   enforce_cloudfront_fortinet_rules = true
-
   # You probably don't need to change the variables below:
   source                 = "../../template"
   environment_name       = "cps-preview"

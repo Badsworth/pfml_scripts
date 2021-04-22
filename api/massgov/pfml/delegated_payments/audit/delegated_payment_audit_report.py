@@ -1,7 +1,10 @@
+import os
 from typing import Iterable, List
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
+import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Flow,
@@ -38,6 +41,9 @@ class PaymentAuditReportStep(Step):
             State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
             self.db_session,
         )
+        state_log_count = len(state_logs)
+
+        self.set_metrics(sampled_payment_count=state_log_count)
 
         payments: List[Payment] = []
         for state_log in state_logs:
@@ -127,7 +133,7 @@ class PaymentAuditReportStep(Step):
             else:
                 payment_history_ids = [p.payment_id for p in payment_history]
                 expected_end_states = [
-                    State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id,
+                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
                     State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id,
                 ]
 
@@ -147,7 +153,10 @@ class PaymentAuditReportStep(Step):
                     sl.end_state_id for sl in payment_error_or_rejected_state_log_history
                 ]
 
-                if State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id in payment_state_history:
+                if (
+                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+                    in payment_state_history
+                ):
                     is_previously_errored_payment = True
 
                 if (
@@ -192,39 +201,33 @@ class PaymentAuditReportStep(Step):
                 payments
             )
 
-            # write the report
-            outbound_file_path = write_audit_report(
+            # write the report to the archive directory
+            archive_folder_path = write_audit_report(
                 payment_audit_data_set,
-                s3_config.payment_audit_report_outbound_folder_path,
+                s3_config.pfml_error_reports_archive_path,
                 self.db_session,
-                report_name="Payment-Audit-Report",
+                report_name=payments_util.Constants.FILE_NAME_PAYMENT_AUDIT_REPORT,
             )
 
-            if outbound_file_path is None:
+            if archive_folder_path is None:
                 raise Exception("Payment Audit Report file not written to outbound folder")
 
             logger.info(
-                "Done writing Payment Audit Report file to outbound folder: %s", outbound_file_path
+                "Done writing Payment Audit Report file to archive folder: %s", archive_folder_path
             )
 
-            # also write the report to the sent folder
-            send_file_path = write_audit_report(
-                payment_audit_data_set,
-                s3_config.payment_audit_report_sent_folder_path,
-                self.db_session,
-                report_name="Payment-Audit-Report",
-            )
-
-            if send_file_path is None:
-                raise Exception("Payment Audit Report file not written to send folder")
+            # Copy the report to the outgoing folder for program integrity
+            outgoing_file_name = f"{payments_util.Constants.FILE_NAME_PAYMENT_AUDIT_REPORT}.csv"
+            outbound_path = os.path.join(s3_config.dfml_report_outbound_path, outgoing_file_name)
+            file_util.copy_file(str(archive_folder_path), str(outbound_path))
 
             logger.info(
-                "Done writing Payment Audit Report file to outbound folder: %s", send_file_path
+                "Done copying Payment Audit Report file to outbound folder: %s", outbound_path
             )
 
-            # create a reference file
+            # create a reference file for the archived report
             reference_file = ReferenceFile(
-                file_location=str(send_file_path),
+                file_location=str(archive_folder_path),
                 reference_file_type_id=ReferenceFileType.DELEGATED_PAYMENT_AUDIT_REPORT.reference_file_type_id,
             )
             self.db_session.add(reference_file)

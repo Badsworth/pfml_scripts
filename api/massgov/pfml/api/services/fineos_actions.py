@@ -149,10 +149,16 @@ def send_to_fineos(
     )
 
     new_claim = Claim(
-        fineos_absence_id=new_case.absenceId, fineos_notification_id=new_case.notificationCaseId
+        fineos_absence_id=new_case.absenceId,
+        fineos_notification_id=new_case.notificationCaseId,
+        absence_period_start_date=new_case.startDate,
+        absence_period_end_date=new_case.endDate,
+        employee_id=application.employee_id,
     )
     if employer:
         new_claim.employer = employer
+    if application.leave_type_id:
+        new_claim.claim_type_id = application.leave_type.absence_to_claim_type
 
     application.claim = new_claim
 
@@ -936,8 +942,14 @@ def create_service_agreement_for_employer(
 
     leave_plans = resolve_leave_plans(family_exemption, medical_exemption)
 
+    absence_management_flag = False if len(leave_plans) == 0 else True
+
+    service_agreement_inputs = massgov.pfml.fineos.models.CreateOrUpdateServiceAgreement(
+        absence_management_flag=absence_management_flag, leave_plans=", ".join(leave_plans)
+    )
+
     fineos_service_agreement_id = fineos.create_service_agreement_for_employer(
-        employer.fineos_employer_id, ", ".join(leave_plans)
+        employer.fineos_employer_id, service_agreement_inputs
     )
 
     return fineos_service_agreement_id
@@ -946,7 +958,7 @@ def create_service_agreement_for_employer(
 def resolve_leave_plans(family_exemption: bool, medical_exemption: bool) -> Set[str]:
     if family_exemption:
         if medical_exemption:
-            leave_plans: set = set("")
+            return set()
         else:
             leave_plans = {"MA PFML - Employee"}
     else:

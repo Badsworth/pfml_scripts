@@ -1,16 +1,9 @@
 import path from "path";
 import fs from "fs";
 import { format as formatDate } from "date-fns";
-import PortalSubmitter from "../submission/PortalSubmitter";
 import { consume, pipeline } from "streaming-iterables";
 import { GeneratedClaim } from "../generation/Claim";
-import AuthenticationManager from "../submission/AuthenticationManager";
-import { CognitoUserPool } from "amazon-cognito-identity-js";
-import config from "../config";
-import { Credentials } from "../types";
-import TestMailVerificationFetcher from "../../cypress/plugins/TestMailVerificationFetcher";
 import ClaimStateTracker from "../submission/ClaimStateTracker";
-import EmployeePool from "../generation/Employee";
 import { ApplicationResponse } from "../api";
 import {
   logSubmissions,
@@ -18,7 +11,7 @@ import {
   submitAll,
   watchFailures,
 } from "../submission/iterable";
-import EmployerPool from "../generation/Employer";
+import { getPortalSubmitter } from "../util/common";
 
 export interface DataDirectory {
   dir: string;
@@ -50,50 +43,6 @@ export function dataDirectory(name: string, rootDir?: string): DataDirectory {
       return path.join(dir, filename);
     },
   };
-}
-
-export function getVerificationFetcher(): TestMailVerificationFetcher {
-  return new TestMailVerificationFetcher(
-    config("TESTMAIL_APIKEY"),
-    config("TESTMAIL_NAMESPACE")
-  );
-}
-
-export function getAuthManager(): AuthenticationManager {
-  return new AuthenticationManager(
-    new CognitoUserPool({
-      UserPoolId: config("COGNITO_POOL"),
-      ClientId: config("COGNITO_CLIENTID"),
-    }),
-    config("API_BASEURL"),
-    getVerificationFetcher()
-  );
-}
-
-export function getClaimantCredentials(): Credentials {
-  return {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
-}
-
-export function getLeaveAdminCredentials(fein: string): Credentials {
-  return {
-    username: `gqzap.employer.${fein.replace("-", "")}@inbox.testmail.app`,
-    password: config("EMPLOYER_PORTAL_PASSWORD"),
-  };
-}
-
-export function getPortalSubmitter(): PortalSubmitter {
-  return new PortalSubmitter(getAuthManager(), config("API_BASEURL"));
-}
-
-export function getEmployerPool(): Promise<EmployerPool> {
-  return EmployerPool.load(config("EMPLOYERS_FILE"));
-}
-
-export function getEmployeePool(): Promise<EmployeePool> {
-  return EmployeePool.load(config("EMPLOYEES_FILE"));
 }
 
 export type PostSubmitCallback = (

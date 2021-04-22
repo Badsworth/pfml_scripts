@@ -13,6 +13,7 @@ from .wscomposer import (  # noqa: F401
     AdditionalData,
     AdditionalDataSet,
     CreateOrUpdateEmployer,
+    CreateOrUpdateServiceAgreement,
     EmployeeRegistration,
     InstanceDomainAndFullId,
     OccupationDetailUpdateData,

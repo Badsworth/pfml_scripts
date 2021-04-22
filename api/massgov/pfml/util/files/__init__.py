@@ -178,7 +178,11 @@ def list_files(
 
         return file_paths
 
-    return os.listdir(path)
+    # os.listdir throws an exception if the path doesn't exist
+    # Make it behave like S3 list and return an empty list
+    if os.path.exists(path):
+        return os.listdir(path)
+    return []
 
 
 def list_files_without_folder(
@@ -236,6 +240,7 @@ def list_s3_files_and_directories_by_level(
 
 
 def copy_file(source, destination):
+    logger.info(f"Copying file from {source} to {destination}")
     is_source_s3 = is_s3_path(source)
     is_dest_s3 = is_s3_path(destination)
 
@@ -474,17 +479,22 @@ def remove_if_exists(path: str) -> None:
 
 
 def create_csv_from_list(
-    customer_data: Iterable[Dict], fieldnames: Iterable[str], file_name: str
+    data: Iterable[Dict],
+    fieldnames: Iterable[str],
+    file_name: str,
+    folder_path: Optional[pathlib.Path] = None,
 ) -> pathlib.Path:
-    directory = tempfile.mkdtemp()
-
-    csv_filepath = pathlib.Path(os.path.join(directory, f"{file_name}.csv"))
+    if not folder_path:
+        directory = tempfile.mkdtemp()
+        csv_filepath = pathlib.Path(os.path.join(directory, f"{file_name}.csv"))
+    else:
+        csv_filepath = pathlib.Path(os.path.join(folder_path, f"{file_name}.csv"))
 
     with open(csv_filepath, mode="w") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames, extrasaction="ignore")
 
         writer.writeheader()
-        for data in customer_data:
-            writer.writerow(data)
+        for d in data:
+            writer.writerow(d)
 
     return csv_filepath

@@ -1,12 +1,9 @@
-import * as portal from "../../../tests/common/actions/portal";
-import { fineos } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
-import { beforePortal } from "../../../tests/common/before";
+import { fineos, portal } from "../../../actions";
 import { getFineosBaseUrl } from "../../../config";
 
 describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
   const submit = it("As a claimant, I should be able to submit a claim (BHAP1) through the portal", () => {
-    beforePortal();
+    portal.before();
 
     cy.task("generateClaim", "BGBM1").then((claim) => {
       if (!claim) {
@@ -24,14 +21,8 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
       portal.login(credentials);
       portal.goToDashboardFromApplicationsPage();
 
-      // Continue Creating Claim
-      portal.startClaim();
-      portal.onPage("start");
-      portal.agreeToStart();
-      portal.hasClaimId();
-      portal.onPage("checklist");
-
       // Submit Claim
+      portal.startClaim();
       portal.submitClaimPartOne(application);
       portal.waitForClaimSubmission().then((data) => {
         cy.stashLog("claimNumber", data.fineos_absence_id);
@@ -47,7 +38,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
     { baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass([submit]);
-      beforeFineos();
+      fineos.before();
       cy.visit("/");
 
       cy.unstash<string>("claimNumber").then((claimNumber) => {
@@ -59,7 +50,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
   // Check Application card in portal for document uploaded in Fineos
   it("I should be able to see that a document has been uploaded in the portal", () => {
     cy.dependsOnPreviousPass([submit, adjudicate]);
-    beforePortal();
+    portal.before();
     cy.unstash<Credentials>("credentials").then((credentials) => {
       portal.login(credentials);
       cy.unstash<string>("applicationId").then((application_id) => {

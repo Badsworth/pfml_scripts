@@ -55,6 +55,7 @@ class AddressValidationStep(Step):
         payments = _get_payments_awaiting_address_validation(self.db_session)
         for payment in payments:
             self._validate_address_for_payment(payment, experian_client)
+            self.increment("validated_address_count")
 
         self.db_session.commit()
         return None
@@ -74,11 +75,14 @@ class AddressValidationStep(Step):
                 ),
                 db_session=self.db_session,
             )
+            self.increment("previously_validated_match_count")
+
             return None
 
         # No response
         address = address_pair.fineos_address
         response = _experian_response_for_address(experian_client, address)
+
         if response.result is None:
             state_log_util.create_finished_state_log(
                 associated_model=payment,
@@ -86,20 +90,25 @@ class AddressValidationStep(Step):
                 outcome=state_log_util.build_outcome(Constants.MESSAGE_INVALID_EXPERIAN_RESPONSE),
                 db_session=self.db_session,
             )
+            self.increment("invalid_experian_response")
             return None
 
         result = response.result
 
         # Exactly one response
         if result.confidence == Confidence.VERIFIED_MATCH:
+            self.increment("verified_experian_match")
+
             formatted_address = _formatted_address_for_match(experian_client, address, result)
             if formatted_address is None:
                 end_state = Constants.ERROR_STATE
                 message = Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE
+                self.increment("invalid_experian_format")
             else:
                 address_pair.experian_address = formatted_address
                 end_state = Constants.SUCCESS_STATE
                 message = Constants.MESSAGE_VALID_ADDRESS
+                self.increment("valid_experian_format")
             _create_end_state_by_payment_type(
                 payment=payment,
                 address=address,
@@ -112,6 +121,8 @@ class AddressValidationStep(Step):
 
         # Multiple responses
         if result.confidence == Confidence.MULTIPLE_MATCHES:
+            self.increment("multiple_experian_matches")
+
             end_state, message = _get_end_state_and_message_for_multiple_matches(
                 result, experian_client, address_pair
             )
@@ -126,6 +137,7 @@ class AddressValidationStep(Step):
             return
 
         # Zero responses
+        self.increment("no_experian_match_count")
         _create_end_state_by_payment_type(
             payment=payment,
             address=address,

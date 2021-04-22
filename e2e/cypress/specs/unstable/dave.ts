@@ -1,5 +1,4 @@
-import { fineos } from "../../tests/common/actions";
-import { beforeFineos } from "../../tests/common/before";
+import { fineos } from "../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 import { ApplicationResponse } from "../../../src/api";
 
@@ -8,7 +7,7 @@ describe("Payment amounts", () => {
     "Verify the payment amount for a continuous medical leave with a rotating schedule",
     { baseUrl: getFineosBaseUrl() },
     () => {
-      beforeFineos();
+      fineos.before();
       cy.visit("/");
       // Generate Creds for Registration/Login - submit claim via API
       cy.task("generateCredentials").then((credentials) => {

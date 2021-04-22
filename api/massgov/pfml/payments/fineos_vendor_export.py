@@ -31,6 +31,7 @@ from massgov.pfml.db.models.employees import (
     State,
     TaxIdentifier,
 )
+from massgov.pfml.payments.step import Step
 
 logger = logging.get_logger(__name__)
 
@@ -92,6 +93,11 @@ class ExtractData:
             reference_file_id=uuid.uuid4(),
         )
         logger.debug("Intialized extract data: %s", self.reference_file.file_location)
+
+
+class VendorExtractStep(Step):
+    def run_step(self) -> None:
+        process_vendor_extract_data(self.db_session)
 
 
 def process_vendor_extract_data(db_session: db.Session) -> None:
@@ -543,9 +549,12 @@ def update_employee_info(
             except KeyError:
                 pass
 
-        has_eft_update = update_eft_info(
-            db_session, employee_feed_entry, employee_pfml_entry, validation_container
-        )
+        # Only validate and update eft fields if payment method is EFT.
+        has_eft_update = False
+        if employee_pfml_entry.payment_method_id == ELECTRONIC_FUNDS_TRANSFER:
+            has_eft_update = update_eft_info(
+                db_session, employee_feed_entry, employee_pfml_entry, validation_container
+            )
 
         fineos_customer_number = payments_util.validate_csv_input(
             "CUSTOMERNO", employee_feed_entry, validation_container, True

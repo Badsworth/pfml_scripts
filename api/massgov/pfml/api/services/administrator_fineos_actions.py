@@ -167,10 +167,7 @@ def get_claim_as_leave_admin(
         return None
 
     customer_id = absence_periods["decisions"][0]["employee"]["id"]
-    if "leaveRequest" in absence_periods["decisions"][0]["period"]:
-        status = absence_periods["decisions"][0]["period"]["leaveRequest"]["decisionStatus"]
-    else:
-        status = "Unknown"
+    status = absence_periods["decisions"][0]["period"]["status"] or "Unknown"
     customer_info = fineos_client.get_customer_info(fineos_user_id, customer_id).dict()
     customer_occupations = fineos_client.get_customer_occupations(
         fineos_user_id, customer_id

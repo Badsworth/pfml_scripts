@@ -1,10 +1,10 @@
 import { describe, beforeAll, test, expect } from "@jest/globals";
-import { getAuthManager } from "../../src/scripts/util";
+import { getAuthManager } from "../../src/util/common";
 import config from "../../src/config";
 import { RMVCheckRequest, postRmvCheck } from "../../src/api";
 import * as data from "../util";
 
-/* 
+/*
   Note: The function will skip this test if E2E_ENVIRONMENT
   is NOT stage.  The id-proofing test will only work in stage based
   on specific claimant in RMV database

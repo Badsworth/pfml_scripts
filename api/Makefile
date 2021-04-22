@@ -119,7 +119,7 @@ create-user: ## Create local API User
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py $(args)
 
 deps: ## Install dependencies
-	$(POETRY_CMD) install --no-root --extras mssql-server
+	$(POETRY_CMD) install --no-root --extras "mssql-server api-only-dependencies"
 	$(RUN_CMD) npm install --only=dev
 
 deps-check:
@@ -155,13 +155,16 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 fineos-payments-mock-generate:
 	mkdir -p mock_fineos_payments_files
 	rm -rf mock_fineos_payments_files/*
-	$(PY_RUN_CMD) fineos-payments-mock-generate --folder mock_fineos_payments_files --fein 102000000 --ssn 252000000
+	$(PY_RUN_CMD) fineos-payments-mock-generate --folder mock_fineos_payments_files --fein 102000000 --ssn 252000000 $(DECODE_LOG)
 
 payments-fineos-process: # Run the Payments FINEOS import process (Just the vendor extract parts for VCC right now)
 	$(PY_RUN_CMD) payments-fineos-process --steps vendor-extract error-report
 
 payments-ctr-process: # Run the Payments Comptroller processes (Just the VCC parts right now)
 	$(PY_RUN_CMD) payments-ctr-process --steps vcc data-mart error-report
+
+payments-payment-voucher-plus:
+	$(PY_RUN_CMD) payments-payment-voucher-plus $(DECODE_LOG)
 
 pub-payments-process-fineos:
 	$(PY_RUN_CMD) pub-payments-process-fineos --steps ALL $(DECODE_LOG)
@@ -187,6 +190,10 @@ delegated-payment-audit-rejects-generate:
 delegated-payment-eft-response-generate:
 	mkdir -p mock_payment_eft_response
 	$(PY_RUN_CMD) delegated-payment-eft-response-generate --skiprate 50 --folder mock_payment_eft_response $(DECODE_LOG)
+
+delegated-payment-check-response-generate:
+	mkdir -p mock_payment_check_response
+	$(PY_RUN_CMD) delegated-payment-check-response-generate --folder mock_payment_check_response $(DECODE_LOG)
 
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"

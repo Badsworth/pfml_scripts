@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import faker
 
+from massgov.pfml.delegated_payments.check_issue_file import CheckIssueEntry, CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile, EzCheckHeader, EzCheckRecord
 
 fake = faker.Faker()
@@ -46,3 +47,25 @@ def EzCheckFileFactory() -> EzCheckFile:
         ez_check_file.add_record(EzCheckRecordFactory())
 
     return ez_check_file
+
+
+def PositivePayRecordFactory(**args) -> CheckIssueEntry:
+    default_args = {
+        "status_code": "I",
+        "check_number": fake.random_int(min=1_000_000_000, max=9_999_999_999),
+        "issue_date": fake.date_between("-3w", "today"),
+        "amount": Decimal(fake.random_int(min=10, max=9_999)),
+        "payee_id": fake.random_int(min=1_000, max=9_999),
+        "payee_name": fake.name(),
+        "account_number": fake.random_int(min=1_000_000, max=9_999_999),
+    }
+
+    return CheckIssueEntry(**{**default_args, **args})
+
+
+def PositivePayFileFactory() -> CheckIssueFile:
+    positive_pay_file = CheckIssueFile()
+    for _ in range(fake.random_int(min=3, max=12)):
+        positive_pay_file.add_entry(PositivePayRecordFactory())
+
+    return positive_pay_file

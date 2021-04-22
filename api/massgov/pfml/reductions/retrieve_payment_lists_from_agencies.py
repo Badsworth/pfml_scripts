@@ -49,9 +49,9 @@ def main():
     with db.session_scope(db.init(), close=True) as db_session:
 
         if config.get_dia_list:
-            dia.download_payment_list_if_none_today(db_session)
+            dia.download_payment_list_from_moveit(db_session)
             dia.load_new_dia_payments(db_session)
 
         if config.get_dua_list:
-            dua.download_payment_list_if_none_today(db_session)
+            dua.download_payment_list_from_moveit(db_session)
             dua.load_new_dua_payments(db_session)

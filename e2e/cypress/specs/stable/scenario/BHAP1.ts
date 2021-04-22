@@ -1,12 +1,10 @@
-import { fineos, portal } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
-import { beforePortal } from "../../../tests/common/before";
+import { fineos, portal } from "../../../actions";
 import { getFineosBaseUrl } from "../../../config";
 import { Submission } from "../../../../src/types";
 
 describe("Submit a bonding claim and adjudication approval - BHAP1", () => {
   const submissionTest = it("As a claimant, I should be able to submit a claim (BHAP1) through the portal", () => {
-    beforePortal();
+    portal.before();
     cy.task("generateClaim", "BHAP1").then((claim) => {
       cy.stash("claim", claim.claim);
       const application: ApplicationRequestBody = claim.claim;
@@ -19,14 +17,8 @@ describe("Submit a bonding claim and adjudication approval - BHAP1", () => {
       portal.login(credentials);
       portal.goToDashboardFromApplicationsPage();
 
-      // Continue Creating Claim
-      portal.startClaim();
-      portal.onPage("start");
-      portal.agreeToStart();
-      portal.hasClaimId();
-      portal.onPage("checklist");
-
       // Submit Claim
+      portal.startClaim();
       portal.submitClaimPartOne(application);
       portal.waitForClaimSubmission().then((data) => {
         cy.stash("submission", {
@@ -44,8 +36,7 @@ describe("Submit a bonding claim and adjudication approval - BHAP1", () => {
     { baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass([submissionTest]);
-      beforeFineos();
-      cy.wait(1000);
+      fineos.before();
       cy.visit("/");
 
       cy.unstash<Submission>("submission").then((submission) => {
