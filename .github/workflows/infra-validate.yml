@@ -9,8 +9,7 @@ on:
 
 env:
   working-dir: ./infra
-  tf-version-monitoring: 0.14.7
-  tf-version-default: 0.14.7
+  tf-version: 0.14.7
 
 jobs:
   tf-format:
@@ -22,7 +21,7 @@ jobs:
       - name: tf-format-check
         uses: hashicorp/terraform-github-actions@master
         with:
-          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
+          tf_actions_version: ${{ env.tf-version }}
           tf_actions_subcommand: "fmt"
           tf_actions_working_dir: ${{ env.working-dir }}
           tf_actions_comment: false
@@ -61,14 +60,36 @@ jobs:
         run: |
           echo "::set-output name=has-changes::false"
 
+          common_components="${{ env.working-dir }}/constants ${{ env.working-dir }}/modules"
+
           if [ -z "${{ matrix.environment }}" ]; then
             tf_dir=${{ env.working-dir }}/${{ matrix.component }}
-            folders=${tf_dir}
           else
             tf_dir=${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
-            template_dir=${{ env.working-dir }}/${{ matrix.component }}/template
-            folders="${tf_dir} ${template_dir}"
+            template_dir=${{ env.working-dir }}/${{ matrix.component 
+            folders="${common_components} ${tf_dir} ${template_dir}"
           fi
+
+          folders=${tf_dir}
+
+          folders_to_search="$folders"
+
+          while [[ ! -z "$folders_to_search" ]]; do
+            new_folders=""
+
+            for folder in $folders_to_search; do
+              echo "looking for submodules in: $folder"
+              echo "found:"
+              new_folders="$new_folders $(git grep -h source\ =\ \"\\.\\. -- ${folder} | sed s/\ *source\ =\ \"//g | sed s/\"//g | sed s:^:${folder}/:g | xargs realpath)"
+            done
+
+            echo
+            new_folders=$(echo "$new_folders" | xargs -n1 | sort | uniq)
+
+            folders="$folders $new_folders"
+            folders=$(echo "$folders" | xargs -n1 | sort | uniq)
+            folders_to_search="$new_folders"
+          done
 
           echo "::set-output name=tf_working_dir::${tf_dir}"
 
@@ -93,7 +114,7 @@ jobs:
         if: steps.check-for-changes.outputs.has-changes == 'true'
         uses: hashicorp/terraform-github-actions@master
         with:
-          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
+          tf_actions_version: ${{ env.tf-version }}
           tf_actions_subcommand: "init"
           tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
           tf_actions_comment: false
@@ -102,7 +123,7 @@ jobs:
         if: steps.check-for-changes.outputs.has-changes == 'true'
         uses: hashicorp/terraform-github-actions@master
         with:
-          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
+          tf_actions_version: ${{ env.tf-version }}
           tf_actions_subcommand: "plan"
           tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
           tf_actions_comment: false
