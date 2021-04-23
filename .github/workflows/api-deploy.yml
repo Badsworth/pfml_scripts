@@ -97,7 +97,7 @@ jobs:
 
           while [[ $failures -lt 2 ]]; do
             set +e -x
-            result_msg=$(efjwoighjowiehgoieawg)
+            result_msg=$({ echo "Something something something aoeigjaiow MISSINGfigoegowh o weigoj \niowe gioe"; exit 1; })
             result_code=$?
             set -e +x
 
