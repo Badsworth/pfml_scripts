@@ -874,10 +874,24 @@ jobs:
       - name: Post to Slack
         run: |
           echo "Slackbot message reply TS is ${{ needs.start-comms-slack.outputs.message-ts }}"
+          if [[ -z "${{ needs.start-comms-slack.outputs.message-ts }}" ]]; then
+          else 
+            SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "thread_ts": "${{ needs.start-comms-slack.outputs.message-ts }}",
+            "attachments": [{
+              "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)
+          fi
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
           -H 'Content-Type: application/json;charset=utf-8' \
           --data '{
             "channel": "${{ env.deploys_channel }}",
+            "thread_ts": "${{ needs.start-comms-slack.outputs.message-ts }}",
             "attachments": [{
               "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
               "color": "danger"
