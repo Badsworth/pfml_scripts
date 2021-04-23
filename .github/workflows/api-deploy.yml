@@ -415,36 +415,39 @@ jobs:
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: ci-run-deploys
-          role-duration-seconds: 3600
+      - name: exit zero
+        run: exit 0
 
-      - uses: hashicorp/setup-terraform@v1.2.1
-        with:
-          terraform_version: 0.14.7
-          terraform_wrapper: false
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: us-east-1
+      #     role-to-assume: ci-run-deploys
+      #     role-duration-seconds: 3600
 
-      - name: Terraform Init
-        id: terraform_init
-        run: terraform init
-        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
+      # - uses: hashicorp/setup-terraform@v1.2.1
+      #   with:
+      #     terraform_version: 0.14.7
+      #     terraform_wrapper: false
 
-      - name: Terraform Plan with new docker image
-        id: terraform_plan
-        run: terraform plan -out=plan.tfplan
-        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
+      # - name: Terraform Init
+      #   id: terraform_init
+      #   run: terraform init
+      #   working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      - name: Terraform Apply from execution plan
-        id: terraform_apply
-        run: terraform apply plan.tfplan
-        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
+      # - name: Terraform Plan with new docker image
+      #   id: terraform_plan
+      #   run: terraform plan -out=plan.tfplan
+      #   working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      - name: Start migration ECS task
+      # - name: Terraform Apply from execution plan
+      #   id: terraform_apply
+      #   run: terraform apply plan.tfplan
+      #   working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
+
+      # - name: Start migration ECS task
         run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ needs.deploy-info.outputs.api-env }} db-migrate-up
         working-directory: ${{ env.working-dir }}
         env:
@@ -464,26 +467,29 @@ jobs:
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: ci-run-deploys
-          role-duration-seconds: 3600
+      - name: exit zero
+        run: exit 0
 
-      - uses: hashicorp/setup-terraform@v1.2.1
-        with:
-          terraform_version: 0.14.7
-          terraform_wrapper: false
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: us-east-1
+      #     role-to-assume: ci-run-deploys
+      #     role-duration-seconds: 3600
 
-      - name: Terraform Init
-        id: terraform_init
-        run: terraform init
-        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
+      # - uses: hashicorp/setup-terraform@v1.2.1
+      #   with:
+      #     terraform_version: 0.14.7
+      #     terraform_wrapper: false
 
-      - name: Start DB user create ECS task
+      # - name: Terraform Init
+      #   id: terraform_init
+      #   run: terraform init
+      #   working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
+
+      # - name: Start DB user create ECS task
         run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ needs.deploy-info.outputs.api-env }} db-admin-create-db-users
         working-directory: ${{ env.working-dir }}
         env:
@@ -507,8 +513,8 @@ jobs:
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
         
-        - name: exit zero
-          run: exit 0 
+      - name: exit zero
+        run: exit 0 
 
       # - name: Configure AWS Credentials
       #   uses: aws-actions/configure-aws-credentials@v1
