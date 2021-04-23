@@ -246,8 +246,8 @@ jobs:
             }]
           }' https://slack.com/api/chat.postMessage)
 
-          MESSAGE_TIMESTAMP=$(echo $SLACKBOT_RESPONSE | jq '.ts')
-          echo "::set-output name=message-ts::$MESSAGE_TIMESTAMP"
+          echo "message-ts=$(echo $SLACKBOT_RESPONSE | jq '.ts')" >> $GITHUB_ENV
+          echo "::set-output name=message-ts::${{ env.message-ts }}"
 
 
   extra-uat-deploy:
