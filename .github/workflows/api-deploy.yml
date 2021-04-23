@@ -97,7 +97,7 @@ jobs:
 
           while [[ $failures -lt 2 ]]; do
             set +e -x
-            result_msg=$(aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
+            result_msg=$(efjwoighjowiehgoieawg)
             result_code=$?
             set -e +x
 
