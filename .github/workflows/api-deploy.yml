@@ -239,9 +239,9 @@ jobs:
               "title": "API ${{ needs.deploy-info.outputs.api-env }} deployment #${{ github.run_number }} was started\n${{ needs.deploy-info.outputs.subtitle }}",
               "color": "warning",
               "fields": [
-                { "title": "started by", "value": "`${{ github.actor }}`", "short": true },
-                { "title": "releasing", "value": "`${{ env.version }}`", "short": true },
-                { "title": "commit details", "value": "`${{ env.commit_details }}`" }
+                { "title": "started by", "value": "*${{ github.actor }}*", "short": true },
+                { "title": "releasing", "value": "*${{ env.version }}*", "short": true },
+                { "title": "commit details", "value": "*${{ env.commit_details }}*" }
               ]
             }]
           }' https://slack.com/api/chat.postMessage)
