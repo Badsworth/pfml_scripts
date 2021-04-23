@@ -16,20 +16,17 @@ export default {
         options: ["Continuous", "Intermittent", "Reduced"],
       },
     },
-    adjudicationStatus: {
-      defaultValue: "Pending",
+    status: {
+      defaultValue: "Approved",
       control: {
         type: "radio",
         options: [
           "Approved",
-          "Cancelled",
-          "Denied",
-          "In Review",
-          "Pending",
-          "Projected",
-          "Unknown",
-          "Voided",
-          "Withdrawn",
+          "Declined",
+          "Closed",
+          "Completed",
+          "Adjudication",
+          "Intake In Progress",
         ],
       },
     },
@@ -50,13 +47,9 @@ export default {
   },
 };
 
-export const Default = ({
-  adjudicationStatus,
-  document,
-  leaveDurationType,
-}) => {
+export const Default = ({ status, document, leaveDurationType }) => {
   const claim = new MockEmployerClaimBuilder()
-    .status(adjudicationStatus)
+    .status(status)
     .bondingLeaveReason();
 
   if (leaveDurationType.includes("Continuous")) {

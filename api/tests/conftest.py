@@ -265,12 +265,21 @@ def mock_ses(monkeypatch, reset_aws_env_vars):
 
 
 @pytest.fixture
-def mock_s3_bucket(reset_aws_env_vars):
+def mock_s3(reset_aws_env_vars):
     with moto.mock_s3():
-        s3 = boto3.resource("s3")
-        bucket_name = "test_bucket"
-        s3.create_bucket(Bucket=bucket_name)
-        yield bucket_name
+        yield boto3.resource("s3")
+
+
+@pytest.fixture
+def mock_s3_bucket_resource(mock_s3):
+    bucket = mock_s3.Bucket("test_bucket")
+    bucket.create()
+    yield bucket
+
+
+@pytest.fixture
+def mock_s3_bucket(mock_s3_bucket_resource):
+    yield mock_s3_bucket_resource.name
 
 
 @pytest.fixture

@@ -1,30 +1,36 @@
 import Claim, { ClaimEmployee, ClaimEmployer } from "../../src/models/Claim";
 
 describe("Claim", () => {
-  /* eslint-disable no-new */
-  it("logs error when employee and employer are plain objects", () => {
-    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
+  it("instantiates employee and employer models", () => {
+    let claim;
 
     // null is fine
-    new Claim({
+    claim = new Claim({
       employee: null,
       employer: null,
     });
-    expect(errorSpy).toHaveBeenCalledTimes(0);
+    expect(claim.employee).toBeNull();
+    expect(claim.employer).toBeNull();
 
     // instances are fine
-    new Claim({
+    claim = new Claim({
       employee: new ClaimEmployee({ first_name: "Bud" }),
       employer: new ClaimEmployer({ employer_fein: "12-3456789" }),
     });
-    expect(errorSpy).toHaveBeenCalledTimes(0);
+    expect(claim.employee).toBeInstanceOf(ClaimEmployee);
+    expect(claim.employee.first_name).toBe("Bud");
+    expect(claim.employer).toBeInstanceOf(ClaimEmployer);
+    expect(claim.employer.employer_fein).toBe("12-3456789");
 
-    // objects are not okay
-    new Claim({
-      employee: { first_name: "Bud" },
-      employer: { employer_fein: "12-3456789" },
+    // objects get turned into instance
+    claim = new Claim({
+      employee: { first_name: "Baxter" },
+      employer: { employer_fein: "00-3456789" },
     });
-    expect(errorSpy).toHaveBeenCalledTimes(2);
+    expect(claim.employee).toBeInstanceOf(ClaimEmployee);
+    expect(claim.employee.first_name).toBe("Baxter");
+    expect(claim.employer).toBeInstanceOf(ClaimEmployer);
+    expect(claim.employer.employer_fein).toBe("00-3456789");
   });
 });
 /* eslint-enable no-new */

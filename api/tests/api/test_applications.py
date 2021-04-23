@@ -439,9 +439,9 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
     )
     application.phone = Phone(phone_number="+12404879945", phone_type_id=1)  # Cell
 
-    caring_leave_metadata = CaringLeaveMetadata(
-        family_member_date_of_birth=date(1975, 1, 1), application_id=application.application_id
-    )
+    caring_leave_metadata = CaringLeaveMetadata(family_member_date_of_birth=date(1975, 1, 1))
+
+    application.caring_leave_metadata = caring_leave_metadata
 
     test_db_session.add(caring_leave_metadata)
 
@@ -4488,8 +4488,11 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
         employer=application.employer, employee=application.employee
     )
 
+    startDate = date(2021, 1, 1)
+    endDate = date(2021, 4, 1)
+
     application.continuous_leave_periods = [
-        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+        ContinuousLeavePeriodFactory.create(start_date=startDate, end_date=endDate)
     ]
     application.date_of_birth = "1997-06-06"
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
@@ -4497,6 +4500,7 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
     application.has_continuous_leave_periods = True
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
+    application.leave_type_id = 1
 
     test_db_session.commit()
     client.post(
@@ -4512,6 +4516,9 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
 
     assert submitted_application.claim is not None
     assert submitted_application.claim.employer is not None
+    assert submitted_application.claim.absence_period_start_date == startDate
+    assert submitted_application.claim.absence_period_end_date == endDate
+    assert submitted_application.claim.claim_type_id == 1
 
 
 def test_application_patch_caring_leave_metadata(client, user, auth_token, test_db_session):
@@ -4521,8 +4528,10 @@ def test_application_patch_caring_leave_metadata(client, user, auth_token, test_
     )
     assert application.caring_leave_metadata is None
 
-    caring_leave_metadata = CaringLeaveMetadata(application_id=application.application_id)
+    caring_leave_metadata = CaringLeaveMetadata()
+    application.caring_leave_meatadata = caring_leave_metadata
     test_db_session.add(caring_leave_metadata)
+    test_db_session.add(application)
     test_db_session.commit()
 
     # change leave reason to caring leave
@@ -4668,3 +4677,38 @@ def test_application_patch_caring_leave_metadata_issues(client, user, auth_token
     assert response.status_code == 200
     for issue in caring_leave_metadata_issues:
         assert issue in response_warnings
+
+
+def test_application_patch_caring_leave_metadata_change_leave_reason(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(
+        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+    )
+    assert application.caring_leave_metadata is None
+
+    application.caring_leave_metadata = CaringLeaveMetadata()
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    # change leave reason to medical leave
+    update_request_body = {
+        "leave_details": {
+            "reason": LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_description
+        }
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert (
+        application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
+    )
+    assert application.caring_leave_metadata is None
+    assert response_body.get("data").get("leave_details").get("caring_leave_metadata") is None

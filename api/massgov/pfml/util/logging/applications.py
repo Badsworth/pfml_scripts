@@ -117,13 +117,13 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
     # for caring leave, log relationship type
     if (
         application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
-        and application.caring_leave_metadata  # type: ignore
-        and application.caring_leave_metadata.relationship_to_caregiver  # type: ignore
+        and application.caring_leave_metadata
+        and application.caring_leave_metadata.relationship_to_caregiver
     ):
         result[
             "application.leave_details.caring_leave_metadata.relationship_to_caregiver"
         ] = (
-            application.caring_leave_metadata.relationship_to_caregiver.relationship_to_caregiver_description  # type: ignore
+            application.caring_leave_metadata.relationship_to_caregiver.relationship_to_caregiver_description
         )
 
     result["work_pattern.work_pattern_type"] = (

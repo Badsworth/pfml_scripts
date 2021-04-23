@@ -17,14 +17,8 @@ describe("Submit a bonding claim and adjudication approval - BHAP1", () => {
       portal.login(credentials);
       portal.goToDashboardFromApplicationsPage();
 
-      // Continue Creating Claim
-      portal.startClaim();
-      portal.onPage("start");
-      portal.agreeToStart();
-      portal.hasClaimId();
-      portal.onPage("checklist");
-
       // Submit Claim
+      portal.startClaim();
       portal.submitClaimPartOne(application);
       portal.waitForClaimSubmission().then((data) => {
         cy.stash("submission", {

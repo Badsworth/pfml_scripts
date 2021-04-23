@@ -19,14 +19,8 @@ describe("Submit Part One of a claim, without documents, and then find in FINEOS
       portal.login(credentials);
       portal.goToDashboardFromApplicationsPage();
 
-      // Continue Creating Claim
-      portal.startClaim();
-      portal.onPage("start");
-      portal.agreeToStart();
-      portal.hasClaimId();
-      portal.onPage("checklist");
-
       // Submit Part 1
+      portal.startClaim();
       portal.submitClaimPartOne(application);
       portal.waitForClaimSubmission().then((data) => {
         cy.stashLog("claimNumber", data.fineos_absence_id);

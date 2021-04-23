@@ -371,6 +371,13 @@ class PubEft(Base):
         default=utc_timestamp_gen,
         server_default=sqlnow(),
     )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
     prenote_response_at = Column(TIMESTAMP(timezone=True))
     prenote_sent_at = Column(TIMESTAMP(timezone=True))
     prenote_response_reason_code = Column(Text)
@@ -602,6 +609,20 @@ class Payment(Base):
         server_default=payment_individual_id_seq.next_value(),
     )
 
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
     claim = relationship(Claim)
     payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
@@ -621,6 +642,20 @@ class PaymentCheck(Base):
     check_posted_date = Column(Date)
     payment_check_status_id = Column(
         Integer, ForeignKey("lk_payment_check_status.payment_check_status_id")
+    )
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
     )
 
     payment_check_status = relationship(LkPaymentCheckStatus)
@@ -919,7 +954,17 @@ class ReferenceFile(Base):
         "DuaReductionPaymentReferenceFile", back_populates="reference_file"
     )
     created_at = Column(
-        TIMESTAMP(timezone=True), nullable=True, default=utc_timestamp_gen, server_default=sqlnow(),
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
     )
 
 
@@ -1127,6 +1172,14 @@ class PubError(Base):
         TIMESTAMP(timezone=True),
         nullable=False,
         default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
         server_default=sqlnow(),
     )
 

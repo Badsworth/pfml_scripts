@@ -5,11 +5,52 @@ exports[`FamilyMemberRelationship renders the page 1`] = `
   onSave={[Function]}
   title="Leave details"
 >
-  <Heading
-    level="2"
-    size="1"
-  >
-    What is your relationship with the family member you are caring for?
-  </Heading>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "I am caring for my child.",
+          "value": "Child",
+        },
+        Object {
+          "checked": false,
+          "label": "I am caring for my spouse or domestic partner.",
+          "value": "Spouse",
+        },
+        Object {
+          "checked": false,
+          "label": "I am caring for my parent.",
+          "value": "Parent",
+        },
+        Object {
+          "checked": false,
+          "label": "I am caring for a parent of my spouse or domestic partner.",
+          "value": "Inlaw",
+        },
+        Object {
+          "checked": false,
+          "label": "I am caring for my sibling.",
+          "value": "Sibling - Brother/Sister",
+        },
+        Object {
+          "checked": false,
+          "label": "I am caring for my grandchild.",
+          "value": "Grandchild",
+        },
+        Object {
+          "checked": false,
+          "label": "I am caring for my grandparent.",
+          "value": "Grandparent",
+        },
+      ]
+    }
+    hint="Learn more about which relationships are covered."
+    label="What is your relationship with the family member you are caring for?"
+    name="leave_details.caring_leave_metadata.relationship_to_caregiver"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
 </QuestionPage>
 `;

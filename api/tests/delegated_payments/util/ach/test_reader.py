@@ -10,6 +10,7 @@ import string
 
 import pytest
 
+import massgov.pfml.util.files
 from massgov.pfml.delegated_payments.util.ach import reader
 
 SIMPLE_RETURN = (
@@ -31,61 +32,89 @@ SIMPLE_RETURN = (
 )
 
 
+def build_rr_from_return(return_str, line_number):
+    split = return_str.split("\r\n")
+    data = split[line_number - 1]
+    type_code = int(data[0:1])
+
+    return reader.RawRecord(type_code=type_code, line_number=line_number, data=data)
+
+
+EXPECTED_SIMPLE_ACH_RETURNS = [
+    reader.ACHReturn(
+        id_number="A1001",
+        return_reason_code="R01",
+        original_dfi_id="24823818",
+        dfi_account_number="130009783",
+        amount=decimal.Decimal("893.73"),
+        name="Emily Schenck",
+        line_number=3,
+        raw_record=build_rr_from_return(SIMPLE_RETURN, 3),
+    ),
+    reader.ACHReturn(
+        id_number="B1002",
+        return_reason_code="R01",
+        original_dfi_id="73088833",
+        dfi_account_number="823795428",
+        amount=decimal.Decimal("4809.54"),
+        name="The Beatles",
+        line_number=5,
+        raw_record=build_rr_from_return(SIMPLE_RETURN, 5),
+    ),
+    reader.ACHReturn(
+        id_number="A1003",
+        return_reason_code="R09",
+        original_dfi_id="20844164",
+        dfi_account_number="456630883",
+        amount=decimal.Decimal("62.93"),
+        name="John Krazit",
+        line_number=7,
+        raw_record=build_rr_from_return(SIMPLE_RETURN, 7),
+    ),
+    reader.ACHReturn(
+        id_number="B1003",
+        return_reason_code="R02",
+        original_dfi_id="78087339",
+        dfi_account_number="657340609",
+        amount=decimal.Decimal("83.52"),
+        name="Debbie Glasser",
+        line_number=9,
+        raw_record=build_rr_from_return(SIMPLE_RETURN, 9),
+    ),
+    reader.ACHReturn(
+        id_number="A1004",
+        return_reason_code="R02",
+        original_dfi_id="86084788",
+        dfi_account_number="362060253",
+        amount=decimal.Decimal("3.93"),
+        name="Daniel Longest",
+        line_number=11,
+        raw_record=build_rr_from_return(SIMPLE_RETURN, 11),
+    ),
+]
+
+
 def test_ach_reader_simple():
-    stream = io.StringIO(SIMPLE_RETURN, newline=None)
+    stream = io.StringIO(SIMPLE_RETURN)
     ach_reader = reader.ACHReader(stream)
-    assert ach_reader.get_ach_returns() == [
-        reader.ACHReturn(
-            id_number="A1001",
-            return_reason_code="R01",
-            original_dfi_id="24823818",
-            dfi_account_number="130009783",
-            amount=decimal.Decimal("893.73"),
-            name="Emily Schenck",
-            line_number=3,
-            raw_record=build_rr_from_return(SIMPLE_RETURN, 3),
-        ),
-        reader.ACHReturn(
-            id_number="B1002",
-            return_reason_code="R01",
-            original_dfi_id="73088833",
-            dfi_account_number="823795428",
-            amount=decimal.Decimal("4809.54"),
-            name="The Beatles",
-            line_number=5,
-            raw_record=build_rr_from_return(SIMPLE_RETURN, 5),
-        ),
-        reader.ACHReturn(
-            id_number="A1003",
-            return_reason_code="R09",
-            original_dfi_id="20844164",
-            dfi_account_number="456630883",
-            amount=decimal.Decimal("62.93"),
-            name="John Krazit",
-            line_number=7,
-            raw_record=build_rr_from_return(SIMPLE_RETURN, 7),
-        ),
-        reader.ACHReturn(
-            id_number="B1003",
-            return_reason_code="R02",
-            original_dfi_id="78087339",
-            dfi_account_number="657340609",
-            amount=decimal.Decimal("83.52"),
-            name="Debbie Glasser",
-            line_number=9,
-            raw_record=build_rr_from_return(SIMPLE_RETURN, 9),
-        ),
-        reader.ACHReturn(
-            id_number="A1004",
-            return_reason_code="R02",
-            original_dfi_id="86084788",
-            dfi_account_number="362060253",
-            amount=decimal.Decimal("3.93"),
-            name="Daniel Longest",
-            line_number=11,
-            raw_record=build_rr_from_return(SIMPLE_RETURN, 11),
-        ),
-    ]
+    assert ach_reader.get_ach_returns() == EXPECTED_SIMPLE_ACH_RETURNS
+    assert ach_reader.get_change_notifications() == []
+    assert ach_reader.get_warnings() == []
+
+
+def test_ach_reader_simple_from_s3(mock_s3_bucket_resource):
+    mock_s3_bucket_resource.put_object(Key="tst.ach", Body=SIMPLE_RETURN)
+    stream = massgov.pfml.util.files.open_stream("s3://%s/tst.ach" % mock_s3_bucket_resource.name)
+    ach_reader = reader.ACHReader(stream)
+    assert ach_reader.get_ach_returns() == EXPECTED_SIMPLE_ACH_RETURNS
+    assert ach_reader.get_change_notifications() == []
+    assert ach_reader.get_warnings() == []
+
+
+def test_ach_reader_simple_newline():
+    stream = io.StringIO(SIMPLE_RETURN.replace("\r\n", "\n"))
+    ach_reader = reader.ACHReader(stream)
+    assert ach_reader.get_ach_returns() == EXPECTED_SIMPLE_ACH_RETURNS
     assert ach_reader.get_change_notifications() == []
     assert ach_reader.get_warnings() == []
 
@@ -101,7 +130,7 @@ INVALID_LENGTH_LINES_RETURN = (
 
 
 def test_ach_reader_invalid_length_lines():
-    stream = io.StringIO(INVALID_LENGTH_LINES_RETURN, newline=None)
+    stream = io.StringIO(INVALID_LENGTH_LINES_RETURN)
     ach_reader = reader.ACHReader(stream)
     assert ach_reader.get_ach_returns() == []
     assert ach_reader.get_change_notifications() == []
@@ -130,7 +159,7 @@ MISSING_ADDENDA_RETURN = (
 
 
 def test_ach_reader_missing_addenda():
-    stream = io.StringIO(MISSING_ADDENDA_RETURN, newline=None)
+    stream = io.StringIO(MISSING_ADDENDA_RETURN)
     ach_reader = reader.ACHReader(stream)
     assert ach_reader.get_ach_returns() == [
         reader.ACHReturn(
@@ -162,7 +191,7 @@ INVALID_ADDENDA_CODE_RETURN = (
 
 
 def test_ach_reader_invalid_addenda_code():
-    stream = io.StringIO(INVALID_ADDENDA_CODE_RETURN, newline=None)
+    stream = io.StringIO(INVALID_ADDENDA_CODE_RETURN)
     ach_reader = reader.ACHReader(stream)
     assert ach_reader.get_ach_returns() == []
     assert ach_reader.get_change_notifications() == []
@@ -174,7 +203,7 @@ def test_ach_reader_invalid_addenda_code():
 
 
 def test_ach_reader_empty_file():
-    stream = io.StringIO("", newline=None)
+    stream = io.StringIO("")
     with pytest.raises(reader.ACHFatalParseError, match="empty file"):
         reader.ACHReader(stream)
 
@@ -183,9 +212,9 @@ def test_ach_reader_large():
     test_files = os.path.join(os.path.dirname(__file__), "test_files")
 
     return_str = open(
-        os.path.join(test_files, "PUBACHRTRN__scrambled.txt"), mode="r", newline=None
+        os.path.join(test_files, "PUBACHRTRN__scrambled.txt"), mode="r", newline=""
     ).read()
-    stream = open(os.path.join(test_files, "PUBACHRTRN__scrambled.txt"), mode="r", newline=None)
+    stream = open(os.path.join(test_files, "PUBACHRTRN__scrambled.txt"), mode="r")
     ach_reader = reader.ACHReader(stream)
 
     assert len(ach_reader.get_ach_returns()) == 399
@@ -199,7 +228,7 @@ def test_ach_reader_large():
         amount=decimal.Decimal("0"),
         name="BPBHSR  BPSPPP",
         line_number=3,
-        raw_record=build_rr_from_return(return_str, 3, delimiter="\n"),
+        raw_record=build_rr_from_return(return_str, 3),
     )
     assert ach_reader.get_change_notifications()[0] == reader.ACHChangeNotification(
         id_number="20629",
@@ -210,7 +239,7 @@ def test_ach_reader_large():
         name="BPBH X APDHAX",
         addenda_information="211070175",
         line_number=53,
-        raw_record=build_rr_from_return(return_str, 53, delimiter="\n"),
+        raw_record=build_rr_from_return(return_str, 53),
     )
     assert warnings_summary(ach_reader.get_warnings()) == ()
 
@@ -227,7 +256,7 @@ ENTRY_COUNT_WRONG_RETURN = (
 
 
 def test_ach_reader_entry_count_wrong():
-    stream = io.StringIO(ENTRY_COUNT_WRONG_RETURN, newline=None)
+    stream = io.StringIO(ENTRY_COUNT_WRONG_RETURN)
     ach_reader = reader.ACHReader(stream)
     assert ach_reader.get_ach_returns() == [
         reader.ACHReturn(
@@ -256,7 +285,7 @@ NO_FILE_HEADER_RETURN = (
 
 
 def test_ach_reader_no_file_header():
-    stream = io.StringIO(NO_FILE_HEADER_RETURN, newline=None)
+    stream = io.StringIO(NO_FILE_HEADER_RETURN)
     with pytest.raises(reader.ACHFatalParseError, match="unexpected type for first record"):
         reader.ACHReader(stream)
 
@@ -269,7 +298,7 @@ NO_BATCH_HEADER_RETURN = (
 
 
 def test_ach_reader_no_batch_header():
-    stream = io.StringIO(NO_BATCH_HEADER_RETURN, newline=None)
+    stream = io.StringIO(NO_BATCH_HEADER_RETURN)
     ach_reader = reader.ACHReader(stream)
     assert ach_reader.get_ach_returns() == [
         reader.ACHReturn(
@@ -298,7 +327,7 @@ FILE_HEADER = "101 122287329 6910001340705312050F094101ABC CREDIT UNION       AB
 @pytest.mark.parametrize("seed", range(20))
 def test_ach_reader_fuzz(seed):
     random.seed(seed)
-    stream = io.StringIO(newline=None)
+    stream = io.StringIO()
     stream.write(FILE_HEADER)
     for _i in range(10):
         stream.write("".join(random.choices(RANDOM_CHARACTERS, k=94)))
@@ -311,7 +340,7 @@ def test_ach_reader_fuzz(seed):
 @pytest.mark.parametrize("seed", range(20))
 def test_ach_reader_fuzz_valid_start(seed):
     random.seed(seed)
-    stream = io.StringIO(newline=None)
+    stream = io.StringIO()
     stream.write(FILE_HEADER)
     for _i in range(10):
         stream.write(random.choice("156789"))
@@ -325,17 +354,9 @@ def test_ach_reader_fuzz_valid_start(seed):
 
 @pytest.mark.parametrize("line", SIMPLE_RETURN.split("\r\n"))
 def test_ach_reader_fuzz_single_line(line):
-    stream = io.StringIO(FILE_HEADER + line, newline=None)
+    stream = io.StringIO(FILE_HEADER + line)
     ach_reader = reader.ACHReader(stream)
     assert len(ach_reader.get_warnings()) >= 1
-
-
-def build_rr_from_return(return_str, line_number, delimiter="\r\n"):
-    split = return_str.split(delimiter)
-    data = split[line_number - 1]
-    type_code = int(data[0:1])
-
-    return reader.RawRecord(type_code=type_code, line_number=line_number, data=data)
 
 
 def build_rr(type_code, line_number):

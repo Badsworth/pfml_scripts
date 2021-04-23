@@ -9,12 +9,12 @@ class Claim extends BaseModel {
   constructor(attrs) {
     super(attrs);
 
-    if (attrs.employee && !(attrs.employee instanceof ClaimEmployee)) {
-      console.error("employee should be an instance of ClaimEmployee");
+    if (this.employee) {
+      this.employee = new ClaimEmployee(this.employee);
     }
 
-    if (attrs.employer && !(attrs.employer instanceof ClaimEmployer)) {
-      console.error("employer should be an instance of ClaimEmployer");
+    if (this.employer) {
+      this.employer = new ClaimEmployer(this.employer);
     }
   }
 
@@ -33,6 +33,9 @@ class Claim extends BaseModel {
        */
       employer: null,
       fineos_absence_id: null,
+      /**
+       * @type {AbsenceCaseStatus}
+       */
       fineos_absence_status: null,
       fineos_notification_id: null,
     };
@@ -75,5 +78,18 @@ export class ClaimEmployer extends BaseModel {
     };
   }
 }
+
+/**
+ * Enums for `claim.fineos_absence_status` field
+ * This is the subset of potential values returned by the API that we show to the user.
+ * We currently ignore other potential values like "Adjudication", "Intake In Progress", "Unknown"
+ * @enum {string}
+ */
+export const AbsenceCaseStatus = {
+  approved: "Approved",
+  closed: "Closed",
+  completed: "Completed",
+  declined: "Declined",
+};
 
 export default Claim;

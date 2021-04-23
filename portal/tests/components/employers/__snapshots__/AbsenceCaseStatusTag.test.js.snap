@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AbsenceCaseStatusTag renders the component with error state and mapped status for 'Declined' 1`] = `
+<Tag
+  label="Denied"
+  state="error"
+/>
+`;
+
+exports[`AbsenceCaseStatusTag renders the component with success state for 'Approved' 1`] = `
+<Tag
+  label="Approved"
+  state="success"
+/>
+`;
+
+exports[`AbsenceCaseStatusTag renders the component with warning state and mapped status for 'Closed' 1`] = `
+<Tag
+  label="Completed"
+  state="warning"
+/>
+`;
+
+exports[`AbsenceCaseStatusTag renders the component with warning state and mapped status for 'Completed' 1`] = `
+<Tag
+  label="Completed"
+  state="warning"
+/>
+`;
