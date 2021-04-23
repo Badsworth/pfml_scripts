@@ -201,6 +201,8 @@ jobs:
     needs: [update-the-deploy-branch, deploy-info]
     if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test    
     runs-on: ubuntu-latest
+    outputs:
+      message-ts: steps.post-start-slack.outputs.message-ts
     steps:
       - uses: actions/checkout@v2
         with:
@@ -226,6 +228,7 @@ jobs:
           env_variable_name: "slackbot_token"
 
       - name: Post to Slack
+        id: post-start-slack
         run: |
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
           -H 'Content-Type: application/json;charset=utf-8' \
@@ -241,6 +244,10 @@ jobs:
               ]
             }]
           }' https://slack.com/api/chat.postMessage)
+
+          MESSAGE_TIMESTAMP=$(echo $SLACKBOT_RESPONSE | jq '.ts')
+          echo "::set-output name=message-ts::$MESSAGE_TIMESTAMP"
+
 
   extra-uat-deploy:
     if: contains(github.event.inputs.deployment_env, 'stage') && github.event.inputs.extraUatDeploy == 'true'
@@ -851,6 +858,7 @@ jobs:
 
       - name: Post to Slack
         run: |
+          echo "Slackbot message reply TS is ${{ needs.start-comms-slack.outputs.message-ts }}"
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
           -H 'Content-Type: application/json;charset=utf-8' \
           --data '{
