@@ -103,7 +103,6 @@ jobs:
               result_msg=$({ echo "something something"; exit 1; })
             fi
             result_code=$?
-            set -e
 
             if [[ ${result_code} -eq 0 ]]; then
               break
