@@ -307,9 +307,7 @@ def build_customer_model(application, current_user):
     return customer
 
 
-def build_gender(
-    application: Application,
-) -> Optional[str]:
+def build_gender(application: Application,) -> Optional[str]:
     """Convert an application's gender to FINEOS API Customer model's Gender attribute."""
     application_gender = [
         gender.fineos_gender_description
