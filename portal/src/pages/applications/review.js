@@ -7,6 +7,7 @@ import BenefitsApplication, {
   PhoneType,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
+  RelationshipToCaregiver,
   WorkPattern,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
@@ -398,6 +399,20 @@ export const Review = (props) => {
 
       {claim.isCaringLeave && (
         <React.Fragment>
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.familyMemberRelationshipLabel")}
+          >
+            {t("pages.claimsReview.familyMemberRelationship", {
+              context: findKeyByValue(
+                RelationshipToCaregiver,
+                get(
+                  claim,
+                  "leave_details.caring_leave_metadata.relationship_to_caregiver"
+                )
+              ),
+            })}
+          </ReviewRow>
           <ReviewRow
             level={reviewRowLevel}
             label={t("pages.claimsReview.familyMemberNameLabel")}

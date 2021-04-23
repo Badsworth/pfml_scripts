@@ -1,5 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`CaringLeave renders family member's relationship 1`] = `
+<ReviewRow
+  label="Family member's relationship"
+  level="4"
+>
+  Child
+</ReviewRow>
+`;
+
 exports[`EmployerBenefitList when all data are present renders all data fields 1`] = `
 Array [
   <OtherLeaveEntry
@@ -424,6 +433,12 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
     level="4"
   >
     Caring leave
+  </ReviewRow>
+  <ReviewRow
+    label="Family member's relationship"
+    level="4"
+  >
+    Child
   </ReviewRow>
   <ReviewRow
     label="Family member's name"

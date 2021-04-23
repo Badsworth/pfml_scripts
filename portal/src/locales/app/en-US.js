@@ -186,6 +186,9 @@ const errors = {
         family_member_last_name: {
           required: "Enter a family member's last name.",
         },
+        relationship_to_caregiver: {
+          required: "Please choose your relationship with the family member.",
+        },
       },
       child_birth_date: {
         format: "Date of birth must include a valid month, day, and year.",
@@ -999,6 +1002,15 @@ const pages = {
     sectionLabel: "What is your family member's name?",
   },
   claimsFamilyMemberRelationship: {
+    choiceLabel_child: "I am caring for my child.",
+    choiceLabel_grandchild: "I am caring for my grandchild.",
+    choiceLabel_grandparent: "I am caring for my grandparent.",
+    choiceLabel_inlaw:
+      "I am caring for a parent of my spouse or domestic partner.",
+    choiceLabel_parent: "I am caring for my parent.",
+    choiceLabel_sibling: "I am caring for my sibling.",
+    choiceLabel_spouse: "I am caring for my spouse or domestic partner.",
+    sectionHint: "Learn more about which relationships are covered.",
     sectionLabel:
       "What is your relationship with the family member you are caring for?",
   },
@@ -1342,6 +1354,15 @@ const pages = {
     familyLeaveTypeValue_newBorn: "Birth",
     familyMemberDateOfBirthLabel: "Family member's date of birth",
     familyMemberNameLabel: "Family member's name",
+    familyMemberRelationshipLabel: "Family member's relationship",
+    familyMemberRelationship_child: "Child",
+    familyMemberRelationship_grandchild: "Grandchild",
+    familyMemberRelationship_grandparent: "Grandparent",
+    familyMemberRelationship_inlaw: "Inlaw",
+    familyMemberRelationship_parent: "Parent",
+    familyMemberRelationship_serviceMember: "Service Member",
+    familyMemberRelationship_sibling: "Sibling - Brother/Sister",
+    familyMemberRelationship_spouse: "Spouse",
     intermittentFrequencyDurationLabel: "Frequency of intermittent leave",
     intermittentFrequencyDuration_irregularMonths_days:
       "Estimated {{frequency}} absences over the next 6 months, each lasting {{duration}} days.",
