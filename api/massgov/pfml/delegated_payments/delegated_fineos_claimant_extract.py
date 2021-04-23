@@ -566,6 +566,7 @@ class ClaimantExtractStep(Step):
             # but do need to add an error to the report if the EFT
             # information is invalid
             if existing_eft:
+                self.increment("eft_found_count")
                 logger.info(
                     "Found existing EFT info for claimant in prenote state %s",
                     existing_eft.prenote_state.prenote_state_description,
@@ -579,8 +580,10 @@ class ClaimantExtractStep(Step):
                         payments_util.ValidationReason.EFT_PRENOTE_REJECTED,
                         "EFT prenote was rejected - cannot pay with this account info",
                     )
+                    self.increment("eft_rejected_count")
 
             else:
+                self.increment("new_eft_count")
                 # This EFT info is new, it needs to be linked to the employee
                 # and added to the EFT prenoting flow
                 logger.info(

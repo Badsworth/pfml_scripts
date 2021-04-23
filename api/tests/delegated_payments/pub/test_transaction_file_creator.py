@@ -143,6 +143,7 @@ def test_check_file_creation(
     # set environment variables
     accounting_number = str(fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999))
     routing_number = str(fake.random_int(min=10_000_000_000, max=99_999_999_999))
+    starting_check_num = str(fake.random_int(min=1_000, max=10_000))
 
     archive_folder_path = str(tmp_path / "archive")
     outbound_dfml_folder_path = str(tmp_path / "outbound-dfml-reports")
@@ -153,6 +154,7 @@ def test_check_file_creation(
 
     monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", accounting_number)
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", routing_number)
+    monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", starting_check_num)
 
     # Stock the database with a handful of check payments in the correct state to be picked up.
     payments = []

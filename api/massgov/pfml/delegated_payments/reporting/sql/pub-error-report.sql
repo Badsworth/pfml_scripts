@@ -1,19 +1,30 @@
--- PFML Payment Error Report
+-- PFML PUB Error Report
 WITH PAYMENT_BATCH_TRANSACTIONS AS (
     SELECT P.PAYMENT_ID, P.PERIOD_START_DATE, P.PERIOD_END_DATE, P.PAYMENT_DATE,  P.AMOUNT, 
            C.FINEOS_ABSENCE_ID, C.ABSENCE_PERIOD_START_DATE, C.ABSENCE_PERIOD_END_DATE,
            CT.CLAIM_TYPE_DESCRIPTION, E.FINEOS_CUSTOMER_NUMBER, FAS.ABSENCE_STATUS_DESCRIPTION,
            P.FINEOS_PEI_C_VALUE,  P.FINEOS_PEI_I_VALUE,  P.FINEOS_EXTRACTION_DATE,
            PE.MESSAGE, PE.DETAILS -- PUB_ERROR_TYPE_ID, LINE_NUMBER, TYPE_CODE, REFERENCE_FILE_ID
-    FROM PAYMENT P
-	INNER JOIN PUB_ERROR PE ON PE.PAYMENT_ID = P.PAYMENT_ID
+    FROM PUB_ERROR PE
+	LEFT OUTER JOIN PAYMENT P ON PE.PAYMENT_ID = P.PAYMENT_ID
     LEFT OUTER JOIN CLAIM C ON P.CLAIM_ID = C.CLAIM_ID
 	LEFT OUTER JOIN LK_CLAIM_TYPE CT ON CT.CLAIM_TYPE_ID = C.CLAIM_TYPE_ID
 	LEFT OUTER JOIN LK_ABSENCE_STATUS FAS ON C.FINEOS_ABSENCE_STATUS_ID = FAS.ABSENCE_STATUS_ID
 	LEFT OUTER JOIN EMPLOYEE E ON C.EMPLOYEE_ID = E.EMPLOYEE_ID
-    WHERE P.FINEOS_EXTRACT_IMPORT_LOG_ID = (SELECT IMPORT_LOG_ID
-                                            FROM IMPORT_LOG
-                                            WHERE SOURCE in 'PaymentExtractStep'))
+    WHERE PE.IMPORT_LOG_ID IN (SELECT MAX(IMPORT_LOG_ID)
+                               FROM IMPORT_LOG
+                               WHERE SOURCE = 'ProcessNachaReturnFileStep'
+							   UNION ALL
+                               SELECT MAX(IMPORT_LOG_ID)
+                               FROM IMPORT_LOG
+                               WHERE SOURCE = 'ProcessCheckReturnFileStep'
+                               UNION ALL
+                               SELECT MAX(IMPORT_LOG_ID)
+                               FROM IMPORT_LOG
+                               WHERE SOURCE = 'ProcessCheckReturnFileStep'
+                                 AND IMPORT_LOG_ID < (SELECT MAX(IMPORT_LOG_ID)
+                                                      FROM IMPORT_LOG
+                                                      WHERE SOURCE = 'ProcessCheckReturnFileStep')))
 SELECT PBT.FINEOS_CUSTOMER_NUMBER "Customer Number",
        PBT.FINEOS_ABSENCE_ID "NTN Number", 
        PBT.CLAIM_TYPE_DESCRIPTION "Absence Case Type",
