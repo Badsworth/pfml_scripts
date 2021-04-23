@@ -809,8 +809,8 @@ jobs:
           # Limit to "stable" suite for any environment but test.
           only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
 
-  get-test-state:
-    name: Finalize test state
+  get-test-deploy-state:
+    name: Finalize Test Deploy State
     needs: [end-to-end]
     if: always()
     runs-on: ubuntu-latest
@@ -825,13 +825,12 @@ jobs:
         run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
 
   post-to-slack:
-    name: post failures to slack
-    needs: [start-comms-slack, get-test-state]
-    if: needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out'
+    name: Post Test failures to Slack
+    needs: [start-comms-slack, get-test-deploy-state]
     if: always() && 
       (
         (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
-        (needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out')
+        (needs.get-test-deploy-state.outputs.test-state == 'failure' || needs.get-test-deploy-state.outputs.test-state == 'timed_out')
       )
     runs-on: ubuntu-latest
     steps:
