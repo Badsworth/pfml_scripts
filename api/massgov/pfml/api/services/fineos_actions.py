@@ -46,7 +46,7 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     TaxIdentifier,
     User,
-)
+    Address, Claim, Country, Employer, PaymentMethod, User
 from massgov.pfml.fineos.exception import FINEOSNotFound
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
@@ -133,16 +133,20 @@ def register_employee(
 
     try:
         db_session.add(fineos_web_id_ext)
-        db_session.commit()
         fineos.register_api_user(employee_registration)
-    except sqlalchemy.exc.IntegrityError as err:
-        db_session.rollback()
-        logger.error("The ID was already stored %s; calling self again.", err)
-        raise err
-    except FINEOSNotFound as err:
-        db_session.rollback()
+    except FINEOSClientError as err:
         logger.error("FINEOS failed to register the employee %s; rolling back changes.", err)
+        db_session.rollback()
         raise err
+
+    try:
+        db_session.commit()
+    except sqlalchemy.exc.IntegrityError as err:
+        logger.error(
+            "The ID was already stored %s; rolling back changes and calling self again.", err
+        )
+        db_session.rollback()
+        return register_employee(fineos, employee_ssn, employer_fein, db_session)
 
     return employee_external_id
 
