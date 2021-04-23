@@ -635,8 +635,8 @@ jobs:
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
-        - name: exit zero
-          run: exit 0
+      - name: exit zero
+        run: exit 0
   
 
       # - name: Configure AWS Credentials
