@@ -77,11 +77,17 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraform-version }}
+          terraform_wrapper: false
+
       - name: Wait for stable ECS service
         env:
           # Clear out the invalid timeout args for terraform output
           TF_CLI_ARGS: ''
         run: |
+          terraform init
           CLUSTER_ID=$(terraform output ecs_cluster_arn | sed s/\"//g | cut -d/ -f2)
           SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | cut -d/ -f2)
 
