@@ -246,8 +246,9 @@ jobs:
             }]
           }' https://slack.com/api/chat.postMessage)
 
-          echo $SLACKBOT_RESPONSE
-          echo $SLACKBOT_RESPONSE | jq '.ts'
+          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq '.ts')
+          echo $MESSAGE_TS >> $GITHUB_ENV
+          echo "::set-output name=message-ts::${{ env.MESSAGE_TS }}"
 
 
   extra-uat-deploy:
