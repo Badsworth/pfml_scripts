@@ -112,7 +112,7 @@ jobs:
               echo "Sleeping for 5 seconds"
               sleep 5
             else
-              ((failures++))
+              failures=$((failures+1))
             fi
           done
 
