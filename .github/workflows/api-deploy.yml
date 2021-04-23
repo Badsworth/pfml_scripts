@@ -678,15 +678,15 @@ jobs:
       #     args: "plan.tfplan"
 
       # - name: Terraform Output
-        id: terraform_output
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: output
-          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
-        env:
-        # Clear out the CLI args for terraform output
-          TF_CLI_ARGS: ''
+        # id: terraform_output
+        # uses: hashicorp/terraform-github-actions@master
+        # with:
+        #   tf_actions_version: ${{ env.terraform-version }}
+        #   tf_actions_subcommand: output
+        #   tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
+        # env:
+        # # Clear out the CLI args for terraform output
+        #   TF_CLI_ARGS: ''
 
   postdeploy-info:
     name: Finalize deployment state
