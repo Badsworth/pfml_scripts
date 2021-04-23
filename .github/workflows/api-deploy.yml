@@ -203,7 +203,7 @@ jobs:
     if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test    
     runs-on: ubuntu-latest
     outputs:
-      message-ts: steps.post-start-slack.outputs.message-ts
+      message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
     steps:
       - uses: actions/checkout@v2
         with:
