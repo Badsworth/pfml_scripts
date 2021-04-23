@@ -16,7 +16,15 @@ import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import Flow, ImportLog, LkFlow, LkState, Payment, State
+from massgov.pfml.db.models.employees import (
+    Flow,
+    ImportLog,
+    LkFlow,
+    LkState,
+    Payment,
+    PubError,
+    State,
+)
 from massgov.pfml.db.models.payments import (
     FineosExtractVbiRequestedAbsence,
     FineosExtractVpei,
@@ -31,6 +39,7 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     FINEOS_PAYMENT_EXTRACT_FILES,
     generate_payment_extract_files,
 )
+from massgov.pfml.delegated_payments.mock.pub_ach_response_generator import PubACHResponseGenerator
 from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     ScenarioData,
     ScenarioDataConfig,
@@ -42,10 +51,10 @@ from massgov.pfml.delegated_payments.mock.scenarios import SCENARIO_DESCRIPTORS,
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     CREATE_PUB_FILES_REPORTS,
     PROCESS_FINEOS_EXTRACT_REPORTS,
+    PROCESS_PUB_RESPONSES_REPORTS,
     ReportName,
     get_report_by_name,
 )
-from massgov.pfml.delegated_payments.mock.pub_ach_response_generator import PubACHResponseGenerator
 from massgov.pfml.delegated_payments.task.process_fineos_extracts import (
     Configuration as FineosTaskConfiguration,
 )
@@ -64,8 +73,6 @@ from massgov.pfml.delegated_payments.task.process_pub_responses import (
 from massgov.pfml.delegated_payments.task.process_pub_responses import (
     _process_pub_responses as run_process_pub_responses_ecs_task,
 )
-
-from massgov.pfml.delegated_payments.util.ach import reader
 
 # == Data Structures ==
 
@@ -122,7 +129,7 @@ def test_e2e_pub_payments(
 ):
     # TODO Validate error and warning logs
     # TODO Validate reference files
-    # TODO make metric count numbers more readable (use variables etc)
+    # TODO make metric count numbers more readable (use variables etc), check diffs in state
 
     # ========================================================================
     # Configuration / Setup
@@ -227,7 +234,7 @@ def test_e2e_pub_payments(
             ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
             ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
             ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-            ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,            
+            ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
         ]
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
@@ -238,7 +245,7 @@ def test_e2e_pub_payments(
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[                
+            scenario_names=[
                 ScenarioName.PUB_ACH_FAMILY_RETURN,
                 ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
@@ -291,7 +298,7 @@ def test_e2e_pub_payments(
         # End State
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[                
+            scenario_names=[
                 ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
                 ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
                 ScenarioName.PUB_ACH_PRENOTE_RETURN,
@@ -328,12 +335,10 @@ def test_e2e_pub_payments(
             payment_audit_report_outbound_folder_path, audit_report_file_name
         )
 
-        audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)        
+        audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)
 
         assert len(audit_report_parsed_csv_rows) == (
-            len(stage_1_happy_path_scenarios) + 
-            1 +  # audit_rejected
-            4  # non_prenote_pub_returns
+            len(stage_1_happy_path_scenarios) + 1 + 4  # audit_rejected  # non_prenote_pub_returns
         )
 
         payments = get_payments_in_end_state(
@@ -370,10 +375,11 @@ def test_e2e_pub_payments(
         assert_metrics(
             test_db_other_session,
             "PaymentAuditReportStep",
-            {"payment_sampled_for_audit_count": (
-                    len(stage_1_happy_path_scenarios) + 
-                    1 +  # audit_rejected
-                    4 # non_prenote_pub_returns
+            {
+                "payment_sampled_for_audit_count": (
+                    len(stage_1_happy_path_scenarios)
+                    + 1
+                    + 4  # audit_rejected  # non_prenote_pub_returns
                 ),
             },
         )
@@ -571,20 +577,12 @@ def test_e2e_pub_payments(
 
     with freeze_time("2021-05-03 07:00:00"):
         pub_ach_response_folder = os.path.join(s3_config.pub_moveit_inbound_path)
-        pub_ach_response_generator = PubACHResponseGenerator(test_dataset.scenario_dataset, pub_ach_response_folder)
+        pub_ach_response_generator = PubACHResponseGenerator(
+            test_dataset.scenario_dataset, pub_ach_response_folder
+        )
         pub_ach_response_generator.run()
 
-    pub_ach_response_file_path = os.path.join(pub_ach_response_folder, '2021-05-03-03-00-00-EOLWD-DFML-NACHA')
-    # print("pub ach response", file_util.list_files(pub_ach_response_folder))
-    # print(file_util.read_file(pub_ach_response_file_path))
-
-    # stream = file_util.open_stream(pub_ach_response_file_path)
-    # ach_reader = reader.ACHReader(stream)
-    # print(len(ach_reader.warnings), len(ach_reader.ach_returns), len(ach_reader.change_notifications))
-    # print("warnings:\n", [asdict(warning) for warning in ach_reader.warnings])
-    # print("ach_returns:\n", [asdict(warning) for warning in ach_reader.ach_returns])
-    # print("change_notifications:\n", [asdict(warning) for warning in ach_reader.change_notifications])
-    
+        # TODO generate check returns
 
     # ==============================================================================================
     # [Day 3 - 9:00 AM] Run the PUB Response ECS task - response, writeback, reports
@@ -600,14 +598,51 @@ def test_e2e_pub_payments(
         )
 
         # == Validate payment states
+
+        # End State
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[
                 ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,                
+                ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
             ],
             end_state=State.DELEGATED_PAYMENT_COMPLETE,
             db_session=test_db_session,
+        )
+
+        # End State
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.PUB_ACH_FAMILY_RETURN,
+                ScenarioName.PUB_ACH_MEDICAL_RETURN,
+            ],
+            end_state=State.ERRORED_PEI_WRITEBACK_SENT,
+            db_session=test_db_session,
+        )
+
+        # == Assert files
+
+        # processed ach return files
+        date_folder = get_current_date_folder()
+        timestamp_prefix = get_current_timestamp_prefix()
+
+        pub_ach_response_processed_folder = os.path.join(
+            s3_config.pfml_pub_ach_archive_path,
+            date_folder,
+            payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+        )
+        assert_files(
+            pub_ach_response_processed_folder,
+            [payments_util.Constants.FILE_NAME_PUB_NACHA],
+            timestamp_prefix,
+        )
+
+        # TODO processed check return files
+
+        # == PubError TODO adjust as metric based scenarios below are added
+        len(test_db_session.query(PubError).all()) == (
+            2 + 2  # eft_prenote_unexpected_state_count  # payment_complete_with_change_count
         )
 
         # == Metrics
@@ -615,27 +650,37 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ProcessNachaReturnFileStep",
             {
-                # "warning_count": 0,
+                "warning_count": None,
                 "ach_return_count": 3,
                 "change_notification_count": 3,
                 "eft_prenote_count": 2,
-                "payment_count": 3,
-                "unknown_id_format_count": None, # TODO add scenario
-                "eft_prenote_id_not_found_count": None, # TODO add scenario
-                "eft_prenote_unexpected_state_count": None, 
-                "eft_prenote_already_approved_count": 2, # TODO validate
-                "eft_prenote_rejected_count": None, # TODO add scenario
-                "payment_id_not_found_count": None, # TODO add scenario
-                "payment_rejected_count": 2, # Both prenotes
-                "payment_already_rejected_count": None, # TODO add scenario
+                "payment_count": 4,
+                "unknown_id_format_count": None,  # TODO add scenario
+                "eft_prenote_id_not_found_count": None,  # TODO add scenario
+                "eft_prenote_unexpected_state_count": None,
+                "eft_prenote_already_approved_count": 2,  # TODO validate
+                "eft_prenote_rejected_count": None,  # TODO add scenario
+                "payment_id_not_found_count": None,  # TODO add scenario
+                "payment_rejected_count": 2,  # Both prenotes
+                "payment_already_rejected_count": None,  # TODO add scenario
                 "payment_unexpected_state_count": None,
-                "payment_complete_with_change_count": 1, # TODO validate
-                "payment_already_complete_count": None, # TODO add scenario?
-                "payment_notification_unexpected_state_count": None, # TODO add scenario
+                "payment_complete_with_change_count": 2,  # TODO validate
+                "payment_already_complete_count": None,  # TODO add scenario?
+                "payment_notification_unexpected_state_count": None,  # TODO add scenario
             },
         )
 
-    assert False
+        # == Reports
+        assert_reports(
+            s3_config.dfml_report_outbound_path,
+            s3_config.pfml_error_reports_archive_path,
+            PROCESS_PUB_RESPONSES_REPORTS,
+        )
+
+    # == Day 4
+    # TODO new extract to work with same payments (maybe reuse the same extract with name updated)
+    # - prenotes should move along
+    # - all others should error since they are already processed
 
 
 # == Assertion Helpers ==
@@ -749,10 +794,14 @@ def assert_metrics(
     for metric_key, expected_value in metrics_expected_values.items():
         value = log_report.get(metric_key, None)
         if value != expected_value:
-            assertion_errors.append(f"metric: {metric_key}, expected: {expected_value}, found: {value}\n")
-    
+            assertion_errors.append(
+                f"metric: {metric_key}, expected: {expected_value}, found: {value}\n"
+            )
+
     errors = ";".join(assertion_errors)
-    assert len(assertion_errors) == 0, f"Unexpected metric value(s) in log report '{log_report_name}'\n{errors}"
+    assert (
+        len(assertion_errors) == 0
+    ), f"Unexpected metric value(s) in log report '{log_report_name}'\n{errors}"
 
 
 # == Utility Helpers ==

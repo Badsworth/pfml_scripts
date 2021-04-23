@@ -1,25 +1,17 @@
 import os
 from typing import List, Optional
 
-import massgov.pfml.util.logging as logging
-
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-
-from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
-    ScenarioData,
-)
-from massgov.pfml.db.models.employees import (
-    ClaimType,
-    PaymentMethod,
-)
+import massgov.pfml.util.logging as logging
+from massgov.pfml.db.models.employees import ClaimType, PaymentMethod
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     NachaBatchType,
     create_nacha_batch,
     get_trans_code,
 )
+from massgov.pfml.delegated_payments.mock.scenario_data_generator import ScenarioData
 from massgov.pfml.delegated_payments.util.ach.nacha import (
-    Constants,
     NachaAddendumResponse,
     NachaBatch,
     NachaEntry,
@@ -30,41 +22,51 @@ logger = logging.get_logger(__name__)
 
 
 class PubACHResponseGenerator:
-    
-    def __init__(
-        self, scenario_dataset: List[ScenarioData], folder_path: str
-    ):
+    def __init__(self, scenario_dataset: List[ScenarioData], folder_path: str):
         self.scenario_dataset = scenario_dataset
         self.folder_path = folder_path
         self.nacha_file = NachaFile()
 
-        self.medical_leave_nacha_batch = None
-        self.family_leave_nacha_batch = None
+        self.medical_leave_nacha_batch: Optional[NachaBatch] = None
+        self.family_leave_nacha_batch: Optional[NachaBatch] = None
 
     def run(self):
         for scenario_data in self.scenario_dataset:
             if scenario_data.scenario_descriptor.payment_method != PaymentMethod.ACH:
                 continue
             self.add_response_entry_for_scenario(scenario_data)
-        self.write_file()    
+        self.write_file()
 
-    def add_response_entry_for_scenario(self, scenario_data: ScenarioData):
+    def add_response_entry_for_scenario(self, scenario_data: ScenarioData) -> None:
         scenario_descriptor = scenario_data.scenario_descriptor
         payment = scenario_data.payment
         employee = scenario_data.employee
 
         if payment is None:
-            logger.warning("Skipping scenario data with empty payment: %s", scenario_descriptor.scenario_name)
+            logger.warning(
+                "Skipping scenario data with empty payment: %s", scenario_descriptor.scenario_name
+            )
             return
 
-        if not scenario_descriptor.pub_ach_response_return and not scenario_descriptor.pub_ach_response_change_notification:
-            logger.warning("Skipping returns for scenario data with name: %s and ci: %s, %s", scenario_descriptor.scenario_name, scenario_data.payment_c_value, scenario_data.payment_i_value)
+        if (
+            not scenario_descriptor.pub_ach_response_return
+            and not scenario_descriptor.pub_ach_response_change_notification
+        ):
+            logger.warning(
+                "Skipping returns for scenario data with name: %s and ci: %s, %s",
+                scenario_descriptor.scenario_name,
+                scenario_data.payment_c_value,
+                scenario_data.payment_i_value,
+            )
             return
 
         nacha_batch_type: NachaBatchType = NachaBatchType.FAMILY_LEAVE
-        if scenario_descriptor.claim_type == ClaimType.MEDICAL_LEAVE or not scenario_descriptor.prenoted:
+        if (
+            scenario_descriptor.claim_type == ClaimType.MEDICAL_LEAVE
+            or not scenario_descriptor.prenoted
+        ):
             nacha_batch_type = NachaBatchType.MEDICAL_LEAVE
-        
+
         nacha_batch = self.get_batch_by_type(nacha_batch_type)
 
         is_return = scenario_descriptor.prenoted
@@ -81,8 +83,12 @@ class PubACHResponseGenerator:
             return_type = 98
             return_reason_code = scenario_descriptor.pub_ach_notification_reason_code
         else:
-            raise Exception("Invalid scenario - name: %s, pub_ach_response_return: %s, pub_ach_response_change_notificatio: %s", scenario_descriptor.scenario_name, scenario_descriptor.pub_ach_response_return, scenario_descriptor.pub_ach_response_change_notification)
-
+            raise Exception(
+                "Invalid scenario - name: %s, pub_ach_response_return: %s, pub_ach_response_change_notificatio: %s",
+                scenario_descriptor.scenario_name,
+                scenario_descriptor.pub_ach_response_return,
+                scenario_descriptor.pub_ach_response_change_notification,
+            )
 
         entry = NachaEntry(
             trans_code=trans_code,
@@ -96,15 +102,13 @@ class PubACHResponseGenerator:
         addendum = NachaAddendumResponse(
             return_type=return_type,
             return_reason_code=return_reason_code,
-            date_of_death=employee.date_of_death,        
+            date_of_death=employee.date_of_death,
         )
-        
+
         nacha_batch.add_entry(entry, addendum=addendum)
 
     def write_file(self) -> None:
-        now = payments_util.get_now()
-        timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
-        payment_return_filename = f"{timestamp}-{payments_util.Constants.FILE_NAME_PUB_NACHA}"
+        payment_return_filename = payments_util.Constants.FILE_NAME_PUB_NACHA
 
         file_content = self.nacha_file.to_bytes()
 

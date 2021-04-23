@@ -12,8 +12,6 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     PaymentTransactionType,
 )
-from massgov.pfml.delegated_payments.delegated_payments_nacha import NachaBatchType
-from massgov.pfml.delegated_payments.util.ach.nacha import Constants
 
 
 class ScenarioName(Enum):
@@ -51,8 +49,8 @@ class ScenarioName(Enum):
     REJECTED_LEAVE_REQUEST_DECISION = "REJECTED_LEAVE_REQUEST_DECISION"
     PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
 
-    # TODO CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB
-    # TODO CLAIM_DOES_NOT_EXIST
+    # TODO CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB - PUB-165
+    # TODO CLAIM_DOES_NOT_EXIST - PUB-165
 
     # Audit
     AUDIT_REJECTED = "AUDIT_REJECTED"
@@ -67,8 +65,14 @@ class ScenarioName(Enum):
     PUB_ACH_MEDICAL_RETURN = "PUB_ACH_MEDICAL_RETURN"
     PUB_ACH_MEDICAL_NOTIFICATION = "PUB_ACH_MEDICAL_NOTIFICATION"
 
-    # TODO PEI writeback error
     # TODO positive pay check outbound
+    # TODO Check scenarios - see PaidStatus:
+    # PAID = "Paid"
+    # OUTSTANDING = "Outstanding"
+    # FUTURE = "Future"
+    # VOID = "Void"
+    # STALE = "Stale"
+    # STOP = "Stop"
 
 
 @dataclass
@@ -115,7 +119,10 @@ class ScenarioDescriptor:
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
-    ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED, claim_type=ClaimType.MEDICAL_LEAVE),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+    ),
     ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
@@ -179,32 +186,30 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_RETURN,
         prenoted=False,
-        pub_ach_response_return=True
+        pub_ach_response_return=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
         prenoted=False,
-        pub_ach_response_change_notification=True
+        pub_ach_response_change_notification=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN,
-        pub_ach_response_return=True
+        scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN, pub_ach_response_return=True
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-        pub_ach_response_change_notification=True
+        pub_ach_response_change_notification=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_RETURN,
         claim_type=ClaimType.MEDICAL_LEAVE,
-        pub_ach_response_return=True
+        pub_ach_response_return=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
         claim_type=ClaimType.MEDICAL_LEAVE,
-        pub_ach_response_change_notification=True
+        pub_ach_response_change_notification=True,
     ),
-
 ]
 
 SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {
