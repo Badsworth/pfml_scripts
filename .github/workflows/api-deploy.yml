@@ -100,7 +100,7 @@ jobs:
             if [[ $failures -eq 1 ]]; then
               result_msg=$(aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
             else
-              result_msg=$({ echo "Something something something aoeigjaiow MISSINGfigoegowh o weigoj \niowe gioe"; exit 1; })
+              result_msg=$({ echo "something something"; exit 1; })
             fi
             result_code=$?
             set -e +x
