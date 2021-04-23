@@ -963,10 +963,7 @@ export function verifyLeaveAdmin(withholding: number): void {
   cy.get('input[id="InputText1"]').type(withholding.toString());
   cy.get('button[type="submit"').click();
   cy.contains("h1", "Thanks for verifying your paid leave contributions");
-  cy.contains(
-    "p",
-    "Your account has been verified. In 15 minutes you will be able to log in and review applications"
-  );
+  cy.contains("p", "Your account has been verified");
   cy.contains("button", "Continue").click();
   cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
     "not.exist"
@@ -983,10 +980,7 @@ export function addOrganization(fein: string, withholding: number): void {
   cy.get('input[name="withholdingAmount"]').type(withholding.toString());
   cy.get('button[type="submit"').click();
   cy.contains("h1", "Thanks for verifying your paid leave contributions");
-  cy.contains(
-    "p",
-    "Your account has been verified. In 15 minutes you will be able to log in and review applications"
-  );
+  cy.contains("p", "Your account has been verified");
   cy.contains("button", "Continue").click();
   cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
     "not.exist"
