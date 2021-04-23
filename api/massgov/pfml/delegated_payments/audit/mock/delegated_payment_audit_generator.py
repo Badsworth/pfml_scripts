@@ -388,7 +388,7 @@ def generate_payment_audit_data_set_and_rejects_file(
 def generate_payment_rejects_file():
     logging.init(__name__)
 
-    logger.info("Genrating payment rejects file.")
+    logger.info("Generating payment rejects file.")
 
     db_session = db.init(sync_lookups=True)
     db.models.factories.db_session = db_session
@@ -403,4 +403,4 @@ def generate_payment_rejects_file():
 
     generate_payment_audit_data_set_and_rejects_file(config, folder_path, db_session)
 
-    logger.info("Done genrating payment rejects file.")
+    logger.info("Done generating payment rejects file.")

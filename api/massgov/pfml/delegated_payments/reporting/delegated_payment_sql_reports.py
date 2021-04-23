@@ -15,7 +15,7 @@ class ReportName(str, Enum):
     ACH_PAYMENT_REPORT = "ach-payment-report"
     CHECK_PAYMENT_REPORT = "check-payment-report"
     DAILY_CASH_REPORT = "daily-cash-report"
-    PUB_ERROR_REPORT = "pub-error-report"  # TODO wait for PUB-75
+    PUB_ERROR_REPORT = "pub-error-report"
     PAYMENT_RECONCILIATION_SUMMARY_REPORT = "payment-reconciliation-summary-report"
     PAYMENT_REJECT_REPORT = "payment-reject-report"
 
@@ -94,7 +94,10 @@ REPORTS: List[Report] = [
         sql_command=_get_report_sql_command_from_file(ReportName.DAILY_CASH_REPORT),
         report_name=ReportName.DAILY_CASH_REPORT,
     ),
-    Report(sql_command="select * from lk_state", report_name=ReportName.PUB_ERROR_REPORT,),
+    Report(
+        sql_command=_get_report_sql_command_from_file(ReportName.PUB_ERROR_REPORT),
+        report_name=ReportName.PUB_ERROR_REPORT,
+    ),
     Report(
         sql_command=_get_report_sql_command_from_file(
             ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT

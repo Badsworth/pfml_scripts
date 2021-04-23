@@ -70,7 +70,7 @@ Array [
 
 exports[`Success when "employerShowVerifications" feature flag is enabled renders the page 4`] = `
 Array [
-  "Your account has been verified. In 15 minutes you will be able to log in and review applications. If anyone else on your team needs to review applications, they'll also need to complete the ",
+  "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the ",
   <a
     href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
     key="1"

@@ -598,3 +598,21 @@ describe("OtherLeaveEntry", () => {
     });
   });
 });
+
+describe("CaringLeave", () => {
+  it("renders family member's relationship", () => {
+    const claim = new MockClaimBuilder()
+      .part1Complete()
+      .caringLeaveReason()
+      .create();
+
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: claim,
+      diveLevels,
+    });
+
+    expect(
+      wrapper.find({ label: "Family member's relationship" })
+    ).toMatchSnapshot();
+  });
+});

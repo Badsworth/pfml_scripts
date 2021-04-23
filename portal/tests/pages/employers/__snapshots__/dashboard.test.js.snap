@@ -47,7 +47,7 @@ exports[`Employer dashboard renders a table of claims 1`] = `
     12-3456789
   </td>
   <td
-    data-label="Date filed"
+    data-label="Application start date"
     key="created_at"
   >
     1/15/2021
@@ -56,9 +56,59 @@ exports[`Employer dashboard renders a table of claims 1`] = `
     data-label="Status"
     key="status"
   >
-    --
+    <AbsenceCaseStatusTag
+      status="Approved"
+    />
   </td>
 </tr>
+`;
+
+exports[`Employer dashboard renders a table of claims 2`] = `
+<thead>
+  <tr>
+    <th
+      key="employee_name"
+      scope="col"
+    >
+      Employee name
+    </th>
+    <th
+      key="fineos_absence_id"
+      scope="col"
+    >
+      Application ID
+    </th>
+    <th
+      key="employer_dba"
+      scope="col"
+    >
+      Organization
+    </th>
+    <th
+      key="employer_fein"
+      scope="col"
+    >
+      Employer ID number
+    </th>
+    <th
+      key="created_at"
+      scope="col"
+    >
+      Application start date
+      <TooltipIcon
+        position="bottom"
+      >
+        The date a new application for leave was started
+      </TooltipIcon>
+    </th>
+    <th
+      key="status"
+      scope="col"
+    >
+      Status
+    </th>
+  </tr>
+</thead>
 `;
 
 exports[`Employer dashboard renders the page 1`] = `

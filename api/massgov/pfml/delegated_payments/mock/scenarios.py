@@ -24,6 +24,8 @@ class ScenarioName(Enum):
     HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
         "HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
     )
+    HAPPY_PATH_CHECK_RESPONSE_PAID_FTP = "HAPPY_PATH_CHECK_RESPONSE_PAID_FTP"
+    HAPPY_PATH_CHECK_RESPONSE_OUTSTANDING_FTP = "HAPPY_PATH_CHECK_RESPONSE_OUTSTANDING_FTP"
     HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN = (
         "HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN"
     )
@@ -73,6 +75,7 @@ class ScenarioName(Enum):
 class ScenarioDescriptor:
     scenario_name: ScenarioName
 
+    # general payment options
     employee_missing_in_db: bool = False
 
     claim_type: LkClaimType = ClaimType.FAMILY_LEAVE
@@ -90,7 +93,6 @@ class ScenarioDescriptor:
     fineos_extract_address_multiple_matches: bool = False
 
     leave_request_decision: str = "Approved"
-
     is_audit_approved: bool = True
 
     negative_payment_amount: bool = False

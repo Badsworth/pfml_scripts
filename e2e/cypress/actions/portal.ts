@@ -179,14 +179,13 @@ export function assertLoggedIn(): void {
 
 export function startClaim(): void {
   cy.get('[href="/applications/start/"]').click();
-}
-
-export function agreeToStart(): void {
-  cy.contains("button", "I understand and agree", { timeout: 30000 }).click();
-}
-
-export function hasClaimId(): void {
-  cy.url().should("include", "claim_id");
+  cy.contains("button", "I understand and agree").click();
+  cy.location({ timeout: 30000 }).should((location) => {
+    expect(location.pathname, "Expect to be on the checklist page").to.equal(
+      "/applications/checklist/"
+    );
+    expect(location.search, "Expect to have a claim ID").to.include("claim_id");
+  });
 }
 
 export function clickChecklistButton(label: string): void {
@@ -964,10 +963,7 @@ export function verifyLeaveAdmin(withholding: number): void {
   cy.get('input[id="InputText1"]').type(withholding.toString());
   cy.get('button[type="submit"').click();
   cy.contains("h1", "Thanks for verifying your paid leave contributions");
-  cy.contains(
-    "p",
-    "Your account has been verified. In 15 minutes you will be able to log in and review applications"
-  );
+  cy.contains("p", "Your account has been verified");
   cy.contains("button", "Continue").click();
   cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
     "not.exist"
@@ -984,10 +980,7 @@ export function addOrganization(fein: string, withholding: number): void {
   cy.get('input[name="withholdingAmount"]').type(withholding.toString());
   cy.get('button[type="submit"').click();
   cy.contains("h1", "Thanks for verifying your paid leave contributions");
-  cy.contains(
-    "p",
-    "Your account has been verified. In 15 minutes you will be able to log in and review applications"
-  );
+  cy.contains("p", "Your account has been verified");
   cy.contains("button", "Continue").click();
   cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
     "not.exist"

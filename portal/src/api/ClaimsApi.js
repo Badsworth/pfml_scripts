@@ -1,6 +1,5 @@
-/* eslint-disable jsdoc/require-returns */
-import Claim, { ClaimEmployee, ClaimEmployer } from "../models/Claim";
 import BaseApi from "./BaseApi";
+import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
 import routes from "../routes";
 
@@ -23,16 +22,7 @@ export default class ClaimsApi extends BaseApi {
   getClaims = async (page) => {
     const { data } = await this.request("GET", `?page=${page}`);
 
-    const claims = data.map((claimData) => {
-      claimData.employee = claimData.employee
-        ? new ClaimEmployee(claimData.employee)
-        : null;
-      claimData.employer = claimData.employer
-        ? new ClaimEmployer(claimData.employer)
-        : null;
-
-      return new Claim(claimData);
-    });
+    const claims = data.map((claimData) => new Claim(claimData));
 
     return {
       claims: new ClaimCollection(claims),

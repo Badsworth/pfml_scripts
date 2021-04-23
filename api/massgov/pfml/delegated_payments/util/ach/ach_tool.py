@@ -3,10 +3,12 @@
 #
 # Example usage:
 #   poetry run ach-reader tests/delegated_payments/util/ach/test_files/PUBACHRTRN__scrambled.txt
+#   poetry run ach-reader s3://some-bucket/ach/processed/2021-04-20-17-39-25-Return-NACHA.txt
 #
 
 import argparse
 
+import massgov.pfml.util.files
 import massgov.pfml.util.logging
 
 from . import reader
@@ -23,7 +25,7 @@ def ach_reader():
     for file in args.file:
         print("========== %s ==========\n" % file)
 
-        stream = open(file, mode="r", newline=None)
+        stream = massgov.pfml.util.files.open_stream(file)
         ach = reader.ACHReader(stream)
 
         print("ACH RETURNS (%i total)\n" % len(ach.get_ach_returns()))

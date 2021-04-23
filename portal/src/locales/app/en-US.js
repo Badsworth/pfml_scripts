@@ -186,6 +186,9 @@ const errors = {
         family_member_last_name: {
           required: "Enter a family member's last name.",
         },
+        relationship_to_caregiver: {
+          required: "Please choose your relationship with the family member.",
+        },
       },
       child_birth_date: {
         format: "Date of birth must include a valid month, day, and year.",
@@ -579,6 +582,9 @@ const errors = {
 };
 
 const shared = {
+  absenceCaseStatus_approved: "Approved",
+  absenceCaseStatus_completed: "Completed",
+  absenceCaseStatus_denied: "Denied",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequency_daily: "Daily",
@@ -996,6 +1002,15 @@ const pages = {
     sectionLabel: "What is your family member's name?",
   },
   claimsFamilyMemberRelationship: {
+    choiceLabel_child: "I am caring for my child.",
+    choiceLabel_grandchild: "I am caring for my grandchild.",
+    choiceLabel_grandparent: "I am caring for my grandparent.",
+    choiceLabel_inlaw:
+      "I am caring for a parent of my spouse or domestic partner.",
+    choiceLabel_parent: "I am caring for my parent.",
+    choiceLabel_sibling: "I am caring for my sibling.",
+    choiceLabel_spouse: "I am caring for my spouse or domestic partner.",
+    sectionHint: "Learn more about which relationships are covered.",
     sectionLabel:
       "What is your relationship with the family member you are caring for?",
   },
@@ -1339,6 +1354,15 @@ const pages = {
     familyLeaveTypeValue_newBorn: "Birth",
     familyMemberDateOfBirthLabel: "Family member's date of birth",
     familyMemberNameLabel: "Family member's name",
+    familyMemberRelationshipLabel: "Family member's relationship",
+    familyMemberRelationship_child: "Child",
+    familyMemberRelationship_grandchild: "Grandchild",
+    familyMemberRelationship_grandparent: "Grandparent",
+    familyMemberRelationship_inlaw: "Inlaw",
+    familyMemberRelationship_parent: "Parent",
+    familyMemberRelationship_serviceMember: "Service Member",
+    familyMemberRelationship_sibling: "Sibling - Brother/Sister",
+    familyMemberRelationship_spouse: "Spouse",
     intermittentFrequencyDurationLabel: "Frequency of intermittent leave",
     intermittentFrequencyDuration_irregularMonths_days:
       "Estimated {{frequency}} absences over the next 6 months, each lasting {{duration}} days.",
@@ -1684,7 +1708,7 @@ const pages = {
   },
   employersClaimsStatus: {
     applicationIdLabel: "Application ID",
-    lead:
+    lead_decision:
       "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
     lead_pending:
       "This application is being reviewed by the Department. It was either reviewed by an administrator on your team or the review deadline has passed. No action is required of you.<br /><br />After we make a decision, you'll receive an email with a direct link for more details.",
@@ -1728,7 +1752,8 @@ const pages = {
     instructions:
       "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
-    tableColHeading_created_at: "Date filed",
+    startDateTooltip: "The date a new application for leave was started",
+    tableColHeading_created_at: "Application start date",
     tableColHeading_employee_name: "Employee name",
     tableColHeading_employer_dba: "Organization",
     tableColHeading_employer_fein: "Employer ID number",
@@ -1763,7 +1788,7 @@ const pages = {
     continueButton: "Continue",
     employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
     instructions:
-      "Your account has been verified. In 15 minutes you will be able to log in and review applications. If anyone else on your team needs to review applications, they'll also need to complete the <learn-more-link>verification process</learn-more-link>.",
+      "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the <learn-more-link>verification process</learn-more-link>.",
     title: "Thanks for verifying your paid leave contributions",
   },
   employersOrganizationsVerifyContributions: {
@@ -1875,6 +1900,12 @@ const pages = {
 };
 
 const components = {
+  absenceCaseStatusTag: {
+    status_approved: "$t(shared.absenceCaseStatus_approved)",
+    status_closed: "$t(shared.absenceCaseStatus_completed)",
+    status_completed: "$t(shared.absenceCaseStatus_completed)",
+    status_declined: "$t(shared.absenceCaseStatus_denied)",
+  },
   amendButton: {
     amend: "Amend",
   },

@@ -82,6 +82,7 @@ describe("Employer dashboard", () => {
           employer_fein: verifiedUserLeaveAdministrator.employer_fein,
         }),
         fineos_absence_id: "NTN-111-ABS-01",
+        fineos_absence_status: "Approved",
       }),
     ];
     const userAttrs = {
@@ -94,6 +95,7 @@ describe("Employer dashboard", () => {
     const { wrapper } = setup(claims, userAttrs);
 
     expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
+    expect(wrapper.find("thead")).toMatchSnapshot();
   });
 
   it("does not render Employer DBA when user has only one Employer associated", () => {

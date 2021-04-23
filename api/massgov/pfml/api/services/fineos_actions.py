@@ -149,10 +149,16 @@ def send_to_fineos(
     )
 
     new_claim = Claim(
-        fineos_absence_id=new_case.absenceId, fineos_notification_id=new_case.notificationCaseId
+        fineos_absence_id=new_case.absenceId,
+        fineos_notification_id=new_case.notificationCaseId,
+        absence_period_start_date=new_case.startDate,
+        absence_period_end_date=new_case.endDate,
+        employee_id=application.employee_id,
     )
     if employer:
         new_claim.employer = employer
+    if application.leave_type_id:
+        new_claim.claim_type_id = application.leave_type.absence_to_claim_type
 
     application.claim = new_claim
 

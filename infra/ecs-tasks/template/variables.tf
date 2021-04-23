@@ -297,3 +297,18 @@ variable "payment_audit_report_sent_folder_path" {
   type        = string
   default     = ""
 }
+
+variable "enable_pub_automation_fineos" {
+  description = "Enable scheduling for pub automation fineos task"
+  default     = false
+}
+
+variable "enable_pub_automation_create_pub_files" {
+  description = "Enable scheduling for pub automation create pub files task"
+  default     = false
+}
+
+variable "enable_pub_automation_process_returns" {
+  description = "Enable scheduling for pub automation return processing task"
+  default     = false
+}

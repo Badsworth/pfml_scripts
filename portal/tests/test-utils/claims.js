@@ -141,6 +141,7 @@ export class BaseMockClaimBuilder {
       family_member_first_name: "Luther",
       family_member_middle_name: "James",
       family_member_last_name: "Toggle",
+      relationship_to_caregiver: "Child",
     });
     return this;
   }

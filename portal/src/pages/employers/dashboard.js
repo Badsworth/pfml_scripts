@@ -1,3 +1,4 @@
+import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
 import ClaimCollection from "../../models/ClaimCollection";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
@@ -8,6 +9,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Table from "../../components/Table";
 import Title from "../../components/Title";
+import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
@@ -91,6 +93,11 @@ export const Dashboard = (props) => {
                 {t("pages.employersDashboard.tableColHeading", {
                   context: columnKey,
                 })}
+                {columnKey === "created_at" && (
+                  <TooltipIcon position="bottom">
+                    {t("pages.employersDashboard.startDateTooltip")}
+                  </TooltipIcon>
+                )}
               </th>
             ))}
           </tr>
@@ -183,8 +190,9 @@ const ClaimTableRows = (props) => {
       case "employer_fein":
         return get(claim, "employer.employer_fein");
       case "status":
-        // TODO (EMPLOYER-1125): Render a <Tag> for the status
-        return "--";
+        return (
+          <AbsenceCaseStatusTag status={get(claim, "fineos_absence_status")} />
+        );
       default:
         return "";
     }

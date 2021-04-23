@@ -9,7 +9,11 @@ import Status from "../../../../src/pages/employers/applications/status";
 jest.mock("../../../../src/hooks/useAppLogic");
 
 const CLAIM = new MockEmployerClaimBuilder()
-  .status("Pending")
+  .status("Approved")
+  .completed()
+  .create();
+const PENDING_CLAIM = new MockEmployerClaimBuilder()
+  .status("Adjudication")
   .completed()
   .create();
 const DOCUMENTS = new DocumentCollection([
@@ -78,9 +82,23 @@ describe("Status", () => {
     );
   });
 
-  it("shows lead text for pending claims", () => {
-    expect(wrapper.find("Lead").exists()).toEqual(true);
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+  it("shows lead text for a claim that has a decision", () => {
+    expect(
+      wrapper.find("Trans[data-test='lead-text']").dive()
+    ).toMatchSnapshot();
+  });
+
+  it("shows lead text for a claim that is pending", () => {
+    ({ appLogic, wrapper } = renderWithAppLogic(Status, {
+      employerClaimAttrs: PENDING_CLAIM,
+      props: {
+        query,
+      },
+    }));
+
+    expect(
+      wrapper.find("Trans[data-test='lead-text']").dive()
+    ).toMatchSnapshot();
   });
 
   it("shows lead text for resolved claims", () => {
@@ -209,26 +227,32 @@ describe("Status", () => {
       }));
     });
 
-    it("displays adjudication status if status is provided", () => {
-      const tagComponent = wrapper.find("StatusRow").at(1).dive().find("Tag");
+    it("displays status if status is a valid and expected value", () => {
+      const tagComponent = wrapper
+        .find("StatusRow")
+        .at(1)
+        .dive()
+        .find("AbsenceCaseStatusTag");
+
       expect(tagComponent.exists()).toBe(true);
-      expect(tagComponent.prop("state")).toEqual("warning");
-      expect(tagComponent.prop("label")).toEqual("Pending");
+      expect(tagComponent.prop("status")).toEqual("Approved");
     });
 
-    it("hides adjudication status if status is undefined", () => {
-      const claimWithoutStatus = new MockEmployerClaimBuilder()
-        .completed()
-        .create();
+    it("displays -- if status is an invalid or unexpected value", () => {
       ({ wrapper } = renderWithAppLogic(Status, {
-        employerClaimAttrs: claimWithoutStatus,
+        employerClaimAttrs: PENDING_CLAIM,
         props: {
           query,
         },
       }));
+      const tagComponent = wrapper
+        .find("StatusRow")
+        .at(1)
+        .dive()
+        .find("AbsenceCaseStatusTag");
 
-      const tagComponent = wrapper.find("StatusRow").at(1).dive().find("Tag");
-      expect(tagComponent.exists()).toBe(false);
+      expect(tagComponent.exists()).toBe(true);
+      expect(tagComponent.dive().text()).toEqual("--");
     });
   });
 

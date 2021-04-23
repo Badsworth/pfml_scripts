@@ -134,6 +134,7 @@ def test_e2e_pub_payments(
 
     monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", "123456789")
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", "234567890")
+    monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", "100")
 
     s3_config = payments_config.get_s3_config()
 
@@ -181,7 +182,6 @@ def test_e2e_pub_payments(
     # ===============================================================================
 
     with freeze_time("2021-05-01 19:00:00"):
-
         # == Run the task
         with mock.patch(
             "massgov.pfml.delegated_payments.address_validation._get_experian_client",
@@ -403,7 +403,6 @@ def test_e2e_pub_payments(
     # ==============================================================================================
 
     with freeze_time("2021-05-02 14:00:00"):
-
         # == Run the task
         run_process_pub_payments_ecs_task(
             db_session=test_db_session,

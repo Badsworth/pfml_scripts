@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
 from datetime import date
-from typing import List, Optional, Tuple, cast
+from typing import Callable, List, Optional, Tuple, cast
 
 from sqlalchemy import func
 
@@ -54,7 +54,7 @@ class Constants:
 
 
 def create_check_file(
-    db_session: db.Session,
+    db_session: db.Session, count_incrementer: Optional[Callable[[str], None]] = None
 ) -> Tuple[Optional[EzCheckFile], Optional[CheckIssueFile]]:
     eligible_check_payments = _get_eligible_check_payments(db_session)
 
@@ -67,10 +67,26 @@ def create_check_file(
     # to write an EzCheckFile to PUB.
     encountered_exception = False
     records: List[Tuple[Payment, RecordContainer]] = []
-    check_number = db_session.query(func.max(PaymentCheck.check_number)).scalar() or 0
+
+    starting_check_number = os.environ.get("PUB_PAYMENT_STARTING_CHECK_NUMBER")
+    if not starting_check_number or not starting_check_number.isnumeric():
+        raise Exception("PUB_PAYMENT_STARTING_CHECK_NUMBER is a required environment variable")
+
+    # Generally, we'll start the count from the max check number when we first run in
+    # an environment, otherwise we use the maximum from the DB
+    # In the event we want to change the next check number, we can
+    # update the environment variable to what we want. Note that the next number used
+    # is actually that number+1.
+    db_check_num = db_session.query(func.max(PaymentCheck.check_number)).scalar()
+    if not db_check_num:
+        check_number = int(starting_check_number)
+    else:
+        check_number = max(db_check_num, int(starting_check_number))
 
     for payment in eligible_check_payments:
         try:
+            if count_incrementer:
+                count_incrementer("check_payment_count")
             check_number += 1
             payment.check = PaymentCheck(check_number=check_number)
             ez_check_record = _convert_payment_to_ez_check_record(payment, check_number)

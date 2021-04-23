@@ -479,17 +479,22 @@ def remove_if_exists(path: str) -> None:
 
 
 def create_csv_from_list(
-    customer_data: Iterable[Dict], fieldnames: Iterable[str], file_name: str
+    data: Iterable[Dict],
+    fieldnames: Iterable[str],
+    file_name: str,
+    folder_path: Optional[pathlib.Path] = None,
 ) -> pathlib.Path:
-    directory = tempfile.mkdtemp()
-
-    csv_filepath = pathlib.Path(os.path.join(directory, f"{file_name}.csv"))
+    if not folder_path:
+        directory = tempfile.mkdtemp()
+        csv_filepath = pathlib.Path(os.path.join(directory, f"{file_name}.csv"))
+    else:
+        csv_filepath = pathlib.Path(os.path.join(folder_path, f"{file_name}.csv"))
 
     with open(csv_filepath, mode="w") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames, extrasaction="ignore")
 
         writer.writeheader()
-        for data in customer_data:
-            writer.writerow(data)
+        for d in data:
+            writer.writerow(d)
 
     return csv_filepath
