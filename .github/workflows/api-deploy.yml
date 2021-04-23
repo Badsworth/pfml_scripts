@@ -448,11 +448,11 @@ jobs:
       #   working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
       # - name: Start migration ECS task
-        run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ needs.deploy-info.outputs.api-env }} db-migrate-up
-        working-directory: ${{ env.working-dir }}
-        env:
-          # Clear out the invalid timeout setting when the run-task script runs terraform output.
-          TF_CLI_ARGS: ''
+        # run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ needs.deploy-info.outputs.api-env }} db-migrate-up
+        # working-directory: ${{ env.working-dir }}
+        # env:
+        #   # Clear out the invalid timeout setting when the run-task script runs terraform output.
+        #   TF_CLI_ARGS: ''
 
   api-create-db-users:
     name: Create/update database users
@@ -490,11 +490,11 @@ jobs:
       #   working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
       # - name: Start DB user create ECS task
-        run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ needs.deploy-info.outputs.api-env }} db-admin-create-db-users
-        working-directory: ${{ env.working-dir }}
-        env:
-          # Clear out the invalid timeout setting when the run-task script runs terraform output.
-          TF_CLI_ARGS: ''
+        # run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ needs.deploy-info.outputs.api-env }} db-admin-create-db-users
+        # working-directory: ${{ env.working-dir }}
+        # env:
+        #   # Clear out the invalid timeout setting when the run-task script runs terraform output.
+        #   TF_CLI_ARGS: ''
 
   api-release:
     name: Release
