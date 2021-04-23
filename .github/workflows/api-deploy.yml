@@ -67,6 +67,16 @@ jobs:
     # run if environment is production
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
       - name: Wait for stable ECS service
         env:
           # Clear out the invalid timeout args for terraform output
