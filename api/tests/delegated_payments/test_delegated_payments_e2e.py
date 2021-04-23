@@ -112,6 +112,7 @@ def test_e2e_pub_payments(
 
     monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", "123456789")
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", "234567890")
+    monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", "100")
 
     s3_config = payments_config.get_s3_config()
 

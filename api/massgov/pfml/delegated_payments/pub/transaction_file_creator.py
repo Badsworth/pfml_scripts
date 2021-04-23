@@ -76,6 +76,7 @@ class TransactionFileCreatorStep(Step):
 
         # transition eft states for employee
         for employee_with_eft in employees_with_efts:
+            self.increment("ach_prenote_count")
             employee: Employee = employee_with_eft[0]
             eft: PubEft = employee_with_eft[1]
 
@@ -110,6 +111,7 @@ class TransactionFileCreatorStep(Step):
 
         # transition states
         for payment in payments:
+            self.increment("ach_payment_count")
             state_log_util.create_finished_state_log(
                 associated_model=payment,
                 end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,

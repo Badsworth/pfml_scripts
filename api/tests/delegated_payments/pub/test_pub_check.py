@@ -81,8 +81,9 @@ def test_create_check_file_no_eligible_payments(test_db_session):
 
 
 def test_create_check_file_eligible_payment_error(
-    initialize_factories_session, test_db_session, caplog
+    initialize_factories_session, test_db_session, caplog, monkeypatch
 ):
+    monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", "0")
     # Update zip code so that it fails validation.
     payment = _random_valid_check_payment_with_state_log(test_db_session)
     payment.experian_address_pair.experian_address.zip_code = "An invalid zip code"
@@ -104,8 +105,10 @@ def test_create_check_file_success(
 ):
     account_number = str(fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999))
     routing_number = str(fake.random_int(min=10_000_000_000, max=99_999_999_999))
+    starting_check_num = str(fake.random_int(min=1_000, max=10_000))
     monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", account_number)
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", routing_number)
+    monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", starting_check_num)
 
     payments = []
     for _i in range(fake.random_int(min=3, max=8)):
@@ -132,7 +135,7 @@ def test_create_check_file_success(
             == 1
         )
 
-        assert payment.check.check_number == (i + 1)
+        assert payment.check.check_number == (i + int(starting_check_num) + 1)
 
 
 def test_send_check_file(mock_s3_bucket):
