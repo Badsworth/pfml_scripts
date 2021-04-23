@@ -808,3 +808,56 @@ jobs:
           github_branch: ${{ steps.determine_e2e_ref.outputs.e2e_ref }}
           # Limit to "stable" suite for any environment but test.
           only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
+
+  get-test-state:
+    name: Finalize test state
+    needs: [end-to-end]
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      test-state: ${{ steps.test-state.outputs.test-state }}
+    steps:
+        # https://github.com/technote-space/workflow-conclusion-action
+        # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+      - uses: technote-space/workflow-conclusion-action@v2
+      - name: Set test-state value
+        id: test-state
+        run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
+
+  post-to-slack:
+    name: post failures to slack
+    needs: [start-comms-slack, get-test-state]
+    if: needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out'
+    if: always() && 
+      (
+        (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
+        (needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out')
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Post to Slack
+        run: |
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "attachments": [{
+              "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)
