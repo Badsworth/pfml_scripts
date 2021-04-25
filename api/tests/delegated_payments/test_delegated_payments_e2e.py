@@ -170,13 +170,13 @@ def test_e2e_pub_payments(
     with freeze_time("2021-05-01 12:00:00"):
         fineos_data_export_path = s3_config.fineos_data_export_path
 
-        # TODO generate claimant extract files
+        # TODO generate claimant extract files - PUB-165
 
         generate_payment_extract_files(
             scenario_dataset, fineos_data_export_path, payments_util.get_now()
         )
 
-        # TODO Confirm expected claimant files were generated
+        # TODO Confirm expected claimant files were generated - PUB-165
 
         # Confirm expected payment files were generated
         fineos_extract_date_prefix = get_current_timestamp_prefix()
@@ -204,7 +204,7 @@ def test_e2e_pub_payments(
 
         # == Validate created rows
 
-        # TODO claimant rows
+        # TODO claimant rows - PUB-165
 
         # Payments
         payments = test_db_session.query(Payment).all()
@@ -225,7 +225,7 @@ def test_e2e_pub_payments(
             db_session=test_db_session,
         )
 
-        # TODO claimant file related state log assertions
+        # TODO claimant file related state log assertions - PUB-165
 
         # == Validate payments state logs
         stage_1_happy_path_scenarios = [
@@ -582,7 +582,7 @@ def test_e2e_pub_payments(
         )
         pub_ach_response_generator.run()
 
-        # TODO generate check returns
+        # TODO generate check returns - PUB-153
 
     # ==============================================================================================
     # [Day 3 - 9:00 AM] Run the PUB Response ECS task - response, writeback, reports

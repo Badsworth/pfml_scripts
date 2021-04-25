@@ -101,13 +101,6 @@ class ScenarioDescriptor:
 
     negative_payment_amount: bool = False
 
-    # eft_returns_should_skip: bool = False
-    # eft_returns_should_error: bool = False
-    # eft_returns_no_response: bool = False
-    # eft_returns_return_type: str = Constants.addendum_return_types[0]
-    # eft_returns_reason_code: str = Constants.addendum_return_reason_codes[0]
-    # eft_return_batch_type: NachaBatchType = NachaBatchType.MEDICAL_LEAVE
-
     # ACH Returns
     # https://lwd.atlassian.net/wiki/spaces/API/pages/1333364105/PUB+ACH+Return+File+Format
 
