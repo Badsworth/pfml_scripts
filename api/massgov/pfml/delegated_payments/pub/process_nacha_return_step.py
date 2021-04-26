@@ -263,6 +263,16 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 ),
                 self.db_session,
             )
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_RETURN,
+                message="Payment rejected by PUB",
+                line_number=ach_return.line_number,
+                raw_data=ach_return.raw_record.data,
+                type_code=ach_return.raw_record.type_code.value,
+                details=ach_return.get_details_for_error(),
+                payment=payment,
+            )
+
             self.increment("payment_rejected_count")
         elif end_state_id in {
             State.ADD_TO_ERRORED_PEI_WRITEBACK.state_id,

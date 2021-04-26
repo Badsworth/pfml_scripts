@@ -46,7 +46,9 @@
 
         { "name": "PFML_ERROR_REPORTS_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/reports" },
 
-        { "name": "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/audit" }
+        { "name": "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/audit" },
+
+        { "name": "PUB_PAYMENT_STARTING_CHECK_NUMBER", "value": "106" }
       ],
       "secrets": [
         { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
