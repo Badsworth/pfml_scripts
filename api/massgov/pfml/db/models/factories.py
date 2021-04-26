@@ -201,6 +201,7 @@ class EmployeeFactory(EmployeeOnlyDORDataFactory):
     email_address = factory.Faker("email")
     phone_number = "+19425290727"
     ctr_vendor_customer_code = "VC0001201168"
+    gender_id = None
 
 
 class EmployeeWithFineosNumberFactory(EmployeeFactory):
