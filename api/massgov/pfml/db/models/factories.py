@@ -455,7 +455,7 @@ class ApplicationFactory(BaseFactory):
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda a: a.employer.employer_id)
 
-    employee = factory.SubFactory(EmployeeFactory)
+    employee = factory.SubFactory(EmployeeFactory, gender_id=1)
     employee_id = factory.LazyAttribute(lambda a: a.employee.employee_id)
 
     tax_identifier = factory.SelfAttribute("employee.tax_identifier")
@@ -464,7 +464,7 @@ class ApplicationFactory(BaseFactory):
     phone = factory.SubFactory(PhoneFactory)
 
     # Lookups
-    gender_id = None
+    gender_id = 1
     occupation_id = None
     employment_status_id = None
     relationship_to_caregiver_id = None
