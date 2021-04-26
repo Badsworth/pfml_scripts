@@ -6,7 +6,9 @@ exports[`Index renders the page 1`] = `
   <Title>
     Your organizations
   </Title>
-  <p>
+  <p
+    data-test="future-availability-message"
+  >
     You'll be able to add more organizations to your account in the near future.
   </p>
   <Table
