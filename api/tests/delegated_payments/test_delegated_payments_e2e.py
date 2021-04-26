@@ -641,9 +641,9 @@ def test_e2e_pub_payments(
         # TODO processed check return files
 
         # == PubError TODO adjust as metric based scenarios below are added
-        len(test_db_session.query(PubError).all()) == (
-            2 + 2  # eft_prenote_unexpected_state_count  # payment_complete_with_change_count
-        )
+        assert len(test_db_session.query(PubError).all()) == (
+            2 + 2 + 2
+        )  # eft_prenote_unexpected_state_count + payment_complete_with_change_count + payment_rejected_count
 
         # == Metrics
         assert_metrics(
