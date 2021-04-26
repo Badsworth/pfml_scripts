@@ -1697,7 +1697,7 @@ components:
               example: "Sales Clerk"
             gender_id:
               type: integer
-              nullable: true 
+              nullable: true
             leave_details:
               $ref: "#/components/schemas/ApplicationLeaveDetails"
             work_pattern:
