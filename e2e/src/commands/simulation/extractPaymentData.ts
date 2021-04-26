@@ -8,7 +8,7 @@ import { CommandModule } from "yargs";
 import { SystemWideArgs } from "../../cli";
 import * as actions from "../../util/playwright";
 import { getFineosBaseUrl } from "../../util/common";
-import { DataDirectory, dataDirectory } from "../../scripts/util";
+import dataDirectory, { DataDirectory } from "../../generation/DataDirectory";
 
 type ExtractPaymentDataArgs = {
   directory: string;
