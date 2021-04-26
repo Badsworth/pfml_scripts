@@ -29,6 +29,28 @@ class Occupation(str, LookupEnum):
     engineer = "Engineer"
     health_care = "Health Care"
 
+    # NAICS Categories -> https://www.naics.com/search/
+    AGRICULTURE_FORESTRY_FISHING_HUNTING = "Agriculture, Forestry, Fishing and Hunting"
+    MINING = "Mining"
+    UTILITIES = "Utilities"
+    CONSTRUCTION = "Construction"
+    MANUFACTURING = "Manufacturing"
+    WHOLESALE_TRADE = "Wholesale Trade"
+    RETAIL_TRADE = "Retail Trade"
+    TRANSPORTATION_WAREHOUSING = "Transportation and Warehousing"
+    INFORMATION = "Information"
+    FINANCE_INSURANCE = "Finance and Insurance"
+    REAL_ESTATE_RENTAL_LEASING = "Real Estate Rental and Leasing"
+    PROFESSIONAL_SCIENTIFIC_TECHNICAL = "Professional, Scientific, and Technical Services"
+    MANAGEMENT_COMPANIES_ENTERPRISES = "Management of Companies and Enterprises"
+    ADMINISTRATIVE_SUPPORT = "Administrative and Support and Waste Management and Remediation Services"
+    EDUCATIONAL = "Educational Services"
+    HEALTH_CARE_SOCIAL_ASSISTANCE = "Health Care and Social Assistance"
+    ARTS_ENTERTAINMENT_RECREATION = "Arts, Entertainment, and Recreation"
+    ACCOMMODATION_FOOD_SERVICES = "Accommodation and Food Services"
+    OTHER_SERVICES = "Other Services (except Public Administration)"
+    PUBLIC_ADMINISTRATION = "Public Administration"
+
     @classmethod
     def get_lookup_model(cls):
         return db_employee_models.LkOccupation

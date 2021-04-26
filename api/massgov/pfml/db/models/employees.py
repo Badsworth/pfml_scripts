@@ -1597,7 +1597,28 @@ class Occupation(LookupTable):
     SALES_CLERK = LkOccupation(2, "Sales Clerk")
     ADMINISTRATIVE = LkOccupation(3, "Administrative")
     ENGINEER = LkOccupation(4, "Engineer")
-
+    
+    # NAICS Categories -> https://www.naics.com/search/
+    AGRICULTURE_FORESTRY_FISHING_HUNTING = LkOccupation(11, "Agriculture, Forestry, Fishing and Hunting")
+    MINING = LkOccupation(21, "Mining")
+    UTILITIES = LkOccupation(22, "Utilities")
+    CONSTRUCTION = LkOccupation(23, "Construction")
+    MANUFACTURING = LkOccupation(31, "Manufacturing") # -33
+    WHOLESALE_TRADE = LkOccupation(42, "Wholesale Trade")
+    RETAIL_TRADE = LkOccupation(44, "Retail Trade") # -45
+    TRANSPORTATION_WAREHOUSING = LkOccupation(48, "Transportation and Warehousing") # -49
+    INFORMATION = LkOccupation(51, "Information")
+    FINANCE_INSURANCE = LkOccupation(52, "Finance and Insurance")
+    REAL_ESTATE_RENTAL_LEASING = LkOccupation(53, "Real Estate Rental and Leasing")
+    PROFESSIONAL_SCIENTIFIC_TECHNICAL = LkOccupation(54, "Professional, Scientific, and Technical Services")
+    MANAGEMENT_COMPANIES_ENTERPRISES = LkOccupation(55, "Management of Companies and Enterprises")
+    ADMINISTRATIVE_SUPPORT_WASTE_MANAGEMENT_REMEDIATION = LkOccupation(56, "Administrative and Support and Waste Management and Remediation Services")
+    EDUCATIONAL = LkOccupation(61, "Educational Services")
+    HEALTH_CARE_SOCIAL_ASSISTANCE = LkOccupation(62, "Health Care and Social Assistance")
+    ARTS_ENTERTAINMENT_RECREATION = LkOccupation(71, "Arts, Entertainment, and Recreation")
+    ACCOMMODATION_FOOD_SERVICES = LkOccupation(72, "Accommodation and Food Services")
+    OTHER_SERVICES = LkOccupation(81, "Other Services (except Public Administration)")
+    PUBLIC_ADMINISTRATION = LkOccupation(92, "Public Administration")
 
 class EducationLevel(LookupTable):
     model = LkEducationLevel
