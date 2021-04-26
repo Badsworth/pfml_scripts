@@ -656,7 +656,7 @@
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.0.0">api/v2.0.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.0.1">api/v2.0.1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -682,19 +682,45 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (PUB-175,INFRA-344,PUB-167)">Jira List</a>):</p>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (PUB-175,INFRA-344,PUB-167,INFRA-423,INFRA-399,PUB-167,CP-1953,CP-2013,CP-1954,PUB-168,PUB-166,EMPLOYER-1129,EMPLOYER-1160,PUB-99,PUB-164)">Jira List</a>):</p>
 <ul>
 <li>internal: Add DFMLBI and PSD to list of JIRA projects for release notes (<a href="https://github.com/EOLWD/pfml/pull/3874">#3874</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/PUB-99">PUB-99</a>: create mock checkfile response creator (<a href="https://github.com/EOLWD/pfml/pull/3807">#3807</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-175">PUB-175</a>: When Experian throws an exception, recover gracefully (<a href="https://github.com/EOLWD/pfml/pull/3894">#3894</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/PUB-168">PUB-168</a>: fix ACH reader line ending handling when reading from S3 (<a href="https://github.com/EOLWD/pfml/pull/3853">#3853</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/PUB-167">PUB-167</a>: Update check number logic, add some metrics (<a href="https://github.com/EOLWD/pfml/pull/3867">#3867</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-167">PUB-167</a>: Add records to PUB error table for rejected payments (<a href="https://github.com/EOLWD/pfml/pull/3878">#3878</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/PUB-166">PUB-166</a>: Add created_at and updated_at columns to database tables (<a href="https://github.com/EOLWD/pfml/pull/3839">#3839</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/PUB-164">PUB-164</a>: Updates to audit report. Allow pending leave request decision through. (<a href="https://github.com/EOLWD/pfml/pull/3848">#3848</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/INFRA-423">INFRA-423</a>: Improve resiliency of ECS wait step in API deployment (<a href="https://github.com/EOLWD/pfml/pull/3868">#3868</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/INFRA-399">INFRA-399</a>: Set event triggers for PUB ECS tasks (<a href="https://github.com/EOLWD/pfml/pull/3852">#3852</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-344">INFRA-344</a>: (2/2): Add breakfix ECS Tasks (<a href="https://github.com/EOLWD/pfml/pull/3694">#3694</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1160">EMPLOYER-1160</a>: Retrieve absence case status in GET /claims/review (<a href="https://github.com/EOLWD/pfml/pull/3856">#3856</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1129">EMPLOYER-1129</a>: Application submission should store available values on the Claim record (<a href="https://github.com/EOLWD/pfml/pull/3770">#3770</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2013">CP-2013</a>: move CaringLeaveMetadata relationship to Application model (<a href="https://github.com/EOLWD/pfml/pull/3812">#3812</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-1954">CP-1954</a>: Delete CaringLeaveMetadata when leave reason changes (<a href="https://github.com/EOLWD/pfml/pull/3838">#3838</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-1953">CP-1953</a>: Implement family member relationship question (<a href="https://github.com/EOLWD/pfml/pull/3830">#3830</a>)</li>
+<li>Add new FINEOS extracts to lists that are processed. (<a href="https://github.com/EOLWD/pfml/pull/3870">#3870</a>)</li>
 </ul>
 <details>
 <summary>Raw</summary>
  <br>* internal: Add DFMLBI and PSD to list of JIRA projects for release notes ([#3874](https://github.com/EOLWD/pfml/pull/3874))
+ <br>* [PUB-99](https://lwd.atlassian.net/browse/PUB-99): create mock checkfile response creator ([#3807](https://github.com/EOLWD/pfml/pull/3807))
  <br>* [PUB-175](https://lwd.atlassian.net/browse/PUB-175): When Experian throws an exception, recover gracefully ([#3894](https://github.com/EOLWD/pfml/pull/3894))
+ <br>* [PUB-168](https://lwd.atlassian.net/browse/PUB-168): fix ACH reader line ending handling when reading from S3 ([#3853](https://github.com/EOLWD/pfml/pull/3853))
+ <br>* [PUB-167](https://lwd.atlassian.net/browse/PUB-167): Update check number logic, add some metrics ([#3867](https://github.com/EOLWD/pfml/pull/3867))
  <br>* [PUB-167](https://lwd.atlassian.net/browse/PUB-167): Add records to PUB error table for rejected payments ([#3878](https://github.com/EOLWD/pfml/pull/3878))
+ <br>* [PUB-166](https://lwd.atlassian.net/browse/PUB-166): Add created_at and updated_at columns to database tables ([#3839](https://github.com/EOLWD/pfml/pull/3839))
+ <br>* [PUB-164](https://lwd.atlassian.net/browse/PUB-164): Updates to audit report. Allow pending leave request decision through. ([#3848](https://github.com/EOLWD/pfml/pull/3848))
+ <br>* [INFRA-423](https://lwd.atlassian.net/browse/INFRA-423): Improve resiliency of ECS wait step in API deployment ([#3868](https://github.com/EOLWD/pfml/pull/3868))
+ <br>* [INFRA-399](https://lwd.atlassian.net/browse/INFRA-399): Set event triggers for PUB ECS tasks ([#3852](https://github.com/EOLWD/pfml/pull/3852))
  <br>* [INFRA-344](https://lwd.atlassian.net/browse/INFRA-344): (2/2): Add breakfix ECS Tasks ([#3694](https://github.com/EOLWD/pfml/pull/3694))
+ <br>* [EMPLOYER-1160](https://lwd.atlassian.net/browse/EMPLOYER-1160): Retrieve absence case status in GET /claims/review ([#3856](https://github.com/EOLWD/pfml/pull/3856))
+ <br>* [EMPLOYER-1129](https://lwd.atlassian.net/browse/EMPLOYER-1129): Application submission should store available values on the Claim record ([#3770](https://github.com/EOLWD/pfml/pull/3770))
+ <br>* [CP-2013](https://lwd.atlassian.net/browse/CP-2013): move CaringLeaveMetadata relationship to Application model ([#3812](https://github.com/EOLWD/pfml/pull/3812))
+ <br>* [CP-1954](https://lwd.atlassian.net/browse/CP-1954): Delete CaringLeaveMetadata when leave reason changes ([#3838](https://github.com/EOLWD/pfml/pull/3838))
+ <br>* [CP-1953](https://lwd.atlassian.net/browse/CP-1953): Implement family member relationship question ([#3830](https://github.com/EOLWD/pfml/pull/3830))
+ <br>* Add new FINEOS extracts to lists that are processed. ([#3870](https://github.com/EOLWD/pfml/pull/3870))
 </details>
                 
               
