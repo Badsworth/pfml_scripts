@@ -1585,8 +1585,8 @@ class MaritalStatus(LookupTable):
 class Gender(LookupTable):
     model = LkGender
     column_names = ("gender_id", "gender_description", "fineos_gender_description")
-    MAN = LkGender(1, "Man", "Male")
-    WOMAN = LkGender(2, "Woman", "Female")
+    WOMAN = LkGender(1, "Woman", "Female")
+    MAN = LkGender(2, "Man", "Male")
     NONBINARY = LkGender(3, "Nonbinary", "Neutral")
     NOT_LISTED = LkGender(4, "Gender not listed", "Unknown")
 
