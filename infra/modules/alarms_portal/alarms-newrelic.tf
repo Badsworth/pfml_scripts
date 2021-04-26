@@ -299,22 +299,19 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
   }
 }
 
-resource "newrelic_nrql_alert_condition" "unexpected_validation_violations" {
-  # CRIT: ValidationError with matching issueType, above 0, for at least 5 minutes
+module "unexpected_validation_violations" {
+  # Alarm on validation errors that should never happen, like type or enum mismatches.
+  # This will eventually be replaced by a Sentry notification so it's less noisy.
+  source = "../newrelic_single_error_alarm"
+
   enabled     = true
   name        = "Unexpected validation violations"
   policy_id   = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
   runbook_url = "https://lwd.atlassian.net/l/c/XSzdMmJ6"
 
-  aggregation_window           = 120 # 2 minutes, should match threshold_duration
-  type                         = "static"
-  value_function               = "single_value"
-  violation_time_limit_seconds = 86400 # 24 hours
-
-  nrql {
-    # Ignoring employer_benefits[%].benefit_amount_frequency since we expect an
-    # enum ValidationError for it on the Employer review page
-    query             = <<-NRQL
+  # Ignoring employer_benefits[%].benefit_amount_frequency since we expect an
+  # enum ValidationError for it on the Employer review page
+  nrql = <<-NRQL
     SELECT count(*) FROM PageAction
     WHERE actionName = 'ValidationError'
       AND environment = '${var.environment_name}'
@@ -326,119 +323,66 @@ resource "newrelic_nrql_alert_condition" "unexpected_validation_violations" {
       AND issueField NOT LIKE 'employer_benefits[%].benefit_amount_frequency'
       AND issueField NOT LIKE 'OCOrganisation[%].CustomerNo'
     FACET issueType, issueField
-    NRQL
-    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
-  }
-
-  critical {
-    threshold             = 0
-    threshold_duration    = 120 # 2 minutes, should match aggregation_window
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
+  NRQL
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Alerts relating to errors in user account actions
 
-resource "newrelic_nrql_alert_condition" "cognito_sign_up_without_api_records" {
-  # CRIT: API User records failed to create at least once in the past 5 minutes
-  policy_id      = newrelic_alert_policy.low_priority_portal_alerts.id
-  name           = "API records failed to create for new Cognito user"
-  runbook_url    = "https://lwd.atlassian.net/l/c/k9Uj81fH"
-  type           = "static"
-  value_function = "single_value"
-  enabled        = true
+module "cognito_sign_up_without_api_records" {
+  # CRIT: API User records failed to create at least once
+  source = "../newrelic_single_error_alarm"
 
-  nrql {
-    query             = <<-NRQL
-      SELECT count(*) FROM Log
-      WHERE aws.logGroup = 'service/pfml-api-${var.environment_name}'
+  enabled     = true
+  name        = "API records failed to create for new Cognito user"
+  policy_id   = newrelic_alert_policy.low_priority_portal_alerts.id
+  runbook_url = "https://lwd.atlassian.net/l/c/k9Uj81fH"
+
+  nrql = <<-NRQL
+    SELECT count(*) FROM Log
+    WHERE aws.logGroup = 'service/pfml-api-${var.environment_name}'
       AND message LIKE 'API User records failed to save%'
-    NRQL
-    evaluation_offset = 3
-  }
-
-  violation_time_limit_seconds = 2592000 # 30 days (max)
-
-  critical {
-    threshold_duration    = 300
-    threshold             = 0
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
+  NRQL
 }
 
-resource "newrelic_nrql_alert_condition" "cognito_sign_up_client_error" {
-  # CRIT: Generic Cognito ClientError was raised at least once in the past 5 minutes
-  policy_id      = newrelic_alert_policy.low_priority_portal_alerts.id
-  name           = "Cognito sign up failed with unexpected ClientError"
-  runbook_url    = "https://lwd.atlassian.net/l/c/k9Uj81fH"
-  type           = "static"
-  value_function = "single_value"
-  enabled        = true
+module "cognito_sign_up_client_error" {
+  # CRIT: Generic Cognito ClientError was raised at least once
+  source = "../newrelic_single_error_alarm"
 
-  nrql {
-    query             = <<-NRQL
-      SELECT count(*) FROM Log
-      WHERE aws.logGroup = 'service/pfml-api-${var.environment_name}'
+  enabled     = true
+  name        = "Cognito sign up failed with unexpected ClientError"
+  policy_id   = newrelic_alert_policy.low_priority_portal_alerts.id
+  runbook_url = "https://lwd.atlassian.net/l/c/k9Uj81fH"
+
+  nrql = <<-NRQL
+    SELECT count(*) FROM Log
+    WHERE aws.logGroup = 'service/pfml-api-${var.environment_name}'
       AND message = 'Failed to add user to Cognito due to unexpected ClientError'
-    NRQL
-    evaluation_offset = 3
-  }
-
-  violation_time_limit_seconds = 86400 # 1 day
-
-  critical {
-    threshold_duration    = 300
-    threshold             = 0
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
+  NRQL
 }
 
-resource "newrelic_nrql_alert_condition" "portal_synthetic_ping_failure" {
-  policy_id                    = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
-  name                         = "Portal synthetic ping failed"
-  type                         = "static"
-  value_function               = "single_value"
-  violation_time_limit_seconds = 86400 # 24 hours
+module "portal_synthetic_ping_failure" {
+  # Alarm on validation errors that should never happen, like type or enum mismatches.
+  # This will eventually be replaced by a Sentry notification so it's less noisy.
+  source = "../newrelic_single_error_alarm"
 
   # ignore performance and training environments
-  enabled = contains(["prod", "stage", "test"], var.environment_name)
+  enabled     = contains(["prod", "stage", "test"], var.environment_name)
+  name        = "Portal synthetic ping failed"
+  policy_id   = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
+  fill_option = "none"
 
-  nrql {
-    query             = "SELECT count(*) FROM SyntheticCheck WHERE monitorName = 'portal_ping--${var.environment_name}' AND result = 'FAILED'"
-    evaluation_offset = 5
-  }
-
-  critical {
-    threshold_duration    = 300
-    threshold             = 0
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
+  nrql = "SELECT filter(count(*), WHERE result = 'FAILED') FROM SyntheticCheck WHERE monitorName = 'portal_ping--${var.environment_name}'"
 }
 
-resource "newrelic_nrql_alert_condition" "portal_synthetic_login_failure" {
-  policy_id                    = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
-  name                         = "Portal scripted synthetic login failed"
-  type                         = "static"
-  value_function               = "single_value"
-  violation_time_limit_seconds = 86400 # 24 hours
+module "portal_synthetic_login_failure" {
+  source = "../newrelic_single_error_alarm"
 
   # ignore performance and training environments
-  enabled = contains(["prod", "stage", "test"], var.environment_name)
+  enabled     = contains(["prod", "stage", "test"], var.environment_name)
+  name        = "Portal scripted synthetic login failed"
+  policy_id   = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
+  fill_option = "none"
 
-  nrql {
-    query             = "SELECT count(*) FROM SyntheticCheck WHERE monitorName = 'portal_scripted_login--${var.environment_name}' AND result = 'FAILED'"
-    evaluation_offset = 5
-  }
-
-  critical {
-    threshold_duration    = 300
-    threshold             = 0
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
+  nrql = "SELECT filter(count(*), WHERE result = 'FAILED') FROM SyntheticCheck WHERE monitorName = 'portal_scripted_login--${var.environment_name}'"
 }

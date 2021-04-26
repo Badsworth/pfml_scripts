@@ -1,7 +1,7 @@
 # Terraform configuration for any alarm that's stored in New Relic.
 
 locals {
-  environments = ["test", "stage", "prod", "performance", "training"]
+  environments = ["test", "stage", "prod", "performance", "training", "uat"]
 }
 
 module "alarms_api" {
