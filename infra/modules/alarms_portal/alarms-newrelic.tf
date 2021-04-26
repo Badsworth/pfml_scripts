@@ -266,6 +266,10 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
         filter(
           count(errorMessage), 
           WHERE errorMessage != 'undefined is not an object (evaluating \'ceCurrentVideo.currentTime\')'
+            AND errorClass IS NOT 'NetworkError'
+            AND errorMessage != 'Failed to fetch'
+            AND errorMessage != 'cancelled'
+            AND errorMessage != 'Network error'
         ) / ${local.js_error_total_count}
       ) * clamp_max(floor(${local.js_error_uniq_count} / ${local.js_error_min_uniq_per_window}), 1)
       FROM JavaScriptError, BrowserInteraction
