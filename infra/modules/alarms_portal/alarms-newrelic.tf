@@ -266,7 +266,7 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
         filter(
           count(errorMessage), 
           WHERE errorMessage != 'undefined is not an object (evaluating \'ceCurrentVideo.currentTime\')'
-            AND errorClass IS NOT 'NetworkError'
+            AND errorClass != 'NetworkError'
             AND errorMessage != 'Failed to fetch'
             AND errorMessage != 'cancelled'
             AND errorMessage != 'Network error'
