@@ -3236,7 +3236,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                             country="USA",
                         ),
                     ),
-                    gender="Male",
+                    gender="Female",
                     classExtensionInformation=[
                         massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
                             name="MassachusettsID", stringValue=application.mass_id
