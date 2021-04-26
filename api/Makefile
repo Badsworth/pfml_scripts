@@ -449,14 +449,14 @@ API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../.github/wo
 release-notes: refs=origin/deploy/api/stage..origin/main
 release-notes: ## Generate API release notes for $refs (defaults between stage and test)
 	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
-	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA|PUB)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
+	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
 	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
 
 release-list: refs=origin/deploy/api/stage..origin/main
 release-list: ## Generate comma-separated list of ticket ids for $refs
 	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
-	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA|PUB)-[0-9]+' | \
-	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA|PUB)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
+	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+' | \
+	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
 
 
 API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat)
