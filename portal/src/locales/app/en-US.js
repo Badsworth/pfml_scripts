@@ -1769,8 +1769,10 @@ const pages = {
   employersOrganizations: {
     addOrganizationButton: "Add organization",
     einTableHeader: "Employer ID number (EIN)",
-    nearFutureAvailability:
+    nearFutureAvailability_addOrganization:
       "You'll be able to add more organizations to your account in the near future.",
+    nearFutureAvailability_inviteMembers:
+      "You can manage leave for these organizations. In the future, you’ll be able to invite other members of your team to review applications.",
     organizationsTableHeader: "Organization",
     title: "Your organizations",
     verificationBlocked: "Verification blocked",

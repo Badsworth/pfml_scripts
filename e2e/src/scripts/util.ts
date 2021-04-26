@@ -1,6 +1,3 @@
-import path from "path";
-import fs from "fs";
-import { format as formatDate } from "date-fns";
 import { consume, pipeline } from "streaming-iterables";
 import { GeneratedClaim } from "../generation/Claim";
 import ClaimStateTracker from "../submission/ClaimStateTracker";
@@ -12,38 +9,6 @@ import {
   watchFailures,
 } from "../submission/iterable";
 import { getPortalSubmitter } from "../util/common";
-
-export interface DataDirectory {
-  dir: string;
-  documents: string;
-  employers: string;
-  employees: string;
-  claims: string;
-  state: string;
-  prepare(): Promise<void>;
-  dorFile(prefix: string): string;
-}
-
-export function dataDirectory(name: string, rootDir?: string): DataDirectory {
-  const base = rootDir ?? path.join(__dirname, "..", "..", "data");
-  const dir = path.join(base, name);
-  const documents = path.join(dir, "documents");
-  return {
-    dir: dir,
-    documents: documents,
-    employers: path.join(dir, "employers.json"),
-    employees: path.join(dir, "employees.json"),
-    claims: path.join(dir, "claims.ndjson"),
-    state: path.join(dir, "state.json"),
-    async prepare(): Promise<void> {
-      await fs.promises.mkdir(documents, { recursive: true });
-    },
-    dorFile(prefix: string): string {
-      const filename = `${prefix}_${formatDate(new Date(), "yyyyMMddHHmmss")}`;
-      return path.join(dir, filename);
-    },
-  };
-}
 
 export type PostSubmitCallback = (
   claim: GeneratedClaim,
