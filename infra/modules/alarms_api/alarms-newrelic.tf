@@ -140,7 +140,7 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
 }
 
 resource "newrelic_alert_condition" "api_response_time" {
-  # WARN: Average response time above 250ms for at least ten minutes
+  # WARN: Average response time above 750ms for at least ten minutes
   # CRIT: Average response time above 2½sec for at least ten minutes
   policy_id       = newrelic_alert_policy.api_alerts.id
   name            = "API response time too high"
@@ -154,7 +154,7 @@ resource "newrelic_alert_condition" "api_response_time" {
     time_function = "all" # e.g. "for at least..."
     duration      = 10    # units: minutes
     operator      = "above"
-    threshold     = 0.25 # units: seconds
+    threshold     = 0.75 # units: seconds
   }
 
   term {
