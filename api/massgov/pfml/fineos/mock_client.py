@@ -430,6 +430,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        NAICS_occupation: Optional[str],
     ) -> None:
         _capture_call(
             "update_occupation",
@@ -437,6 +438,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             employment_status=employment_status,
             hours_worked_per_week=hours_worked_per_week,
             occupation_id=occupation_id,
+            NAICS_occupation=NAICS_occupation,
         )
 
     def upload_document(

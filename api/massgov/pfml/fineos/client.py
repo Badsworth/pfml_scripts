@@ -146,6 +146,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         occupation_id: int,
         employment_status: typing.Optional[str],
         hours_worked_per_week: typing.Optional[Decimal],
+        NAICS_occupation: typing.Optional[str],
     ) -> None:
         pass
 

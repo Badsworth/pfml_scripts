@@ -43,7 +43,9 @@ class Occupation(str, LookupEnum):
     REAL_ESTATE_RENTAL_LEASING = "Real Estate Rental and Leasing"
     PROFESSIONAL_SCIENTIFIC_TECHNICAL = "Professional, Scientific, and Technical Services"
     MANAGEMENT_COMPANIES_ENTERPRISES = "Management of Companies and Enterprises"
-    ADMINISTRATIVE_SUPPORT = "Administrative and Support and Waste Management and Remediation Services"
+    ADMINISTRATIVE_SUPPORT = (
+        "Administrative and Support and Waste Management and Remediation Services"
+    )
     EDUCATIONAL = "Educational Services"
     HEALTH_CARE_SOCIAL_ASSISTANCE = "Health Care and Social Assistance"
     ARTS_ENTERTAINMENT_RECREATION = "Arts, Entertainment, and Recreation"

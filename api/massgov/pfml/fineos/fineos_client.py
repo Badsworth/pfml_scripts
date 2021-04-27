@@ -792,7 +792,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             additional_data_set.additional_data.append(
                 models.AdditionalData(name="AdditionalEmploymentCategory", value=NAICS_occupation)
             )
-        
+
         # Put the XML object together properly.
         service_data = models.OccupationDetailUpdateData()
         service_data.additional_data_set = additional_data_set

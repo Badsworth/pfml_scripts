@@ -414,12 +414,14 @@ class PhoneFactory(BaseFactory):
     phone_number = "+12404879945"
     phone_type_id = application_models.PhoneType.CELL.phone_type_id
 
+
 class OccupationFactory(BaseFactory):
     class Meta:
         model = employee_models.Occupation
 
     occupation_id = None
     occupation_description = None
+
 
 class ApplicationFactory(BaseFactory):
     class Meta:
