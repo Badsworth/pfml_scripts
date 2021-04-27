@@ -24,7 +24,6 @@ describe("Leave Admin Self-Registration", () => {
       });
     });
   });
-
   const secondOrg = it("Leave administrators should be able to register for a second organization", () => {
     cy.dependsOnPreviousPass([register]);
     portal.before();
@@ -45,7 +44,6 @@ describe("Leave Admin Self-Registration", () => {
       });
     });
   });
-
   it("Leave administrators cannot verify with an organization whose withholding amounts equal 0", () => {
     cy.dependsOnPreviousPass([secondOrg]);
     portal.before();
