@@ -305,7 +305,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
         components={
           Object {
             "caregiver-certification-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/family-caring-form"
               rel="noopener"
               target="_blank"
             />,
@@ -349,7 +349,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
         components={
           Object {
             "caregiver-certification-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/family-caring-form"
               rel="noopener"
               target="_blank"
             />,
@@ -393,7 +393,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
         components={
           Object {
             "caregiver-certification-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/family-caring-form"
               rel="noopener"
               target="_blank"
             />,
@@ -437,7 +437,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
         components={
           Object {
             "caregiver-certification-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/family-caring-form"
               rel="noopener"
               target="_blank"
             />,
@@ -499,7 +499,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
         components={
           Object {
             "caregiver-certification-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/family-caring-form"
               rel="noopener"
               target="_blank"
             />,
@@ -561,7 +561,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
         components={
           Object {
             "caregiver-certification-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/family-caring-form"
               rel="noopener"
               target="_blank"
             />,
@@ -605,7 +605,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
         components={
           Object {
             "caregiver-certification-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/family-caring-form"
               rel="noopener"
               target="_blank"
             />,

@@ -9,6 +9,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplications from "../../hoc/withBenefitsApplications";
@@ -58,6 +59,11 @@ export const GetReady = (props) => {
             ul: <ul className="usa-list" />,
             li: <li />,
           }}
+          tOptions={{
+            context: isFeatureEnabled("showCaringLeaveType")
+              ? "caring"
+              : undefined,
+          }}
         />
 
         <Heading level="3">
@@ -93,14 +99,45 @@ export const GetReady = (props) => {
           <Icon className={iconClassName} name="upload_file" />
           {t("pages.getReady.stepTwoHeading")}
         </Heading>
+
+        <Heading level="3">
+          {t("pages.getReady.stepTwoMedicalLeaveSubhead")}
+        </Heading>
         <Trans
-          i18nKey="pages.getReady.stepTwo"
+          i18nKey="pages.getReady.stepTwoMedicalLeaveBody"
           components={{
             "healthcare-provider-form-link": (
               <a href={routes.external.massgov.healthcareProviderForm} />
             ),
           }}
         />
+
+        <Heading level="3">
+          {t("pages.getReady.stepTwoFamilyLeaveSubhead")}
+        </Heading>
+        <Heading level="4">
+          {t("pages.getReady.stepTwoBondingLeaveSubhead")}
+        </Heading>
+
+        <Trans i18nKey="pages.getReady.stepTwoBondingLeaveBody" />
+
+        {isFeatureEnabled("showCaringLeaveType") ? (
+          <React.Fragment>
+            <Heading level="4">
+              {t("pages.getReady.stepTwoCaringLeaveSubhead")}
+            </Heading>
+            <Trans
+              i18nKey="pages.getReady.stepTwoCaringLeaveBody"
+              components={{
+                "caregiver-certification-form-link": (
+                  <a
+                    href={routes.external.massgov.caregiverCertificationForm}
+                  />
+                ),
+              }}
+            />
+          </React.Fragment>
+        ) : undefined}
 
         <Heading level="2">
           <Icon className={iconClassName} name="edit" />
