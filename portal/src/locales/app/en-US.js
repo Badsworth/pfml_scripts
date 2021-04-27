@@ -1752,7 +1752,7 @@ const pages = {
     instructions:
       "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
-    startDateTooltip: "The date a new application for leave was started",
+    startDateTooltip: "When an employee started a new leave application",
     tableColHeading_created_at: "Application start date",
     tableColHeading_employee_name: "Employee name",
     tableColHeading_employer_dba: "Organization",

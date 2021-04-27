@@ -98,7 +98,7 @@ exports[`Employer dashboard renders a table of claims 2`] = `
       <TooltipIcon
         position="bottom"
       >
-        The date a new application for leave was started
+        When an employee started a new leave application
       </TooltipIcon>
     </th>
     <th
