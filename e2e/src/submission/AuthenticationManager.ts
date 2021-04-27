@@ -14,6 +14,7 @@ import {
   postEmployersVerifications,
   UserResponse,
   postUsers,
+  UserCreateRequest,
 } from "../api";
 
 export default class AuthenticationManager {
@@ -157,23 +158,21 @@ export default class AuthenticationManager {
     username: string,
     password: string,
     role: "Employer" | "Claimant",
-    fein?: string
+    employer_fein?: string
   ): Promise<CognitoUser> {
-    await postUsers(
-      {
-        email_address: username,
-        password,
-        role: {
-          role_description: role,
-        },
-        user_leave_administrator: {
-          employer_fein: fein,
-        },
+    const data: UserCreateRequest = {
+      email_address: username,
+      password,
+      role: {
+        role_description: role,
       },
-      {
-        baseUrl: this.apiBaseUrl,
-      }
-    );
+    };
+    if (employer_fein) {
+      data.user_leave_administrator = { employer_fein };
+    }
+    await postUsers(data, {
+      baseUrl: this.apiBaseUrl,
+    });
 
     const details = new AuthenticationDetails({
       Username: username,
