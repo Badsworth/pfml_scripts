@@ -412,48 +412,45 @@ jobs:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
     steps:
-      # - uses: actions/checkout@v2
-      #   with:
-      #     ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
-      - name: exit zero
-        run: exit 0
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
 
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: us-east-1
-      #     role-to-assume: ci-run-deploys
-      #     role-duration-seconds: 3600
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: 0.14.7
+          terraform_wrapper: false
 
-      # - uses: hashicorp/setup-terraform@v1.2.1
-      #   with:
-      #     terraform_version: 0.14.7
-      #     terraform_wrapper: false
+      - name: Terraform Init
+        id: terraform_init
+        run: terraform init
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      # - name: Terraform Init
-      #   id: terraform_init
-      #   run: terraform init
-      #   working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
+      - name: Terraform Plan with new docker image
+        id: terraform_plan
+        run: terraform plan -out=plan.tfplan
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      # - name: Terraform Plan with new docker image
-      #   id: terraform_plan
-      #   run: terraform plan -out=plan.tfplan
-      #   working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
+      - name: Terraform Apply from execution plan
+        id: terraform_apply
+        run: terraform apply plan.tfplan
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      # - name: Terraform Apply from execution plan
-      #   id: terraform_apply
-      #   run: terraform apply plan.tfplan
-      #   working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
-
-      # - name: Start migration ECS task
-        # run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ needs.deploy-info.outputs.api-env }} db-migrate-up
-        # working-directory: ${{ env.working-dir }}
-        # env:
-        #   # Clear out the invalid timeout setting when the run-task script runs terraform output.
-        #   TF_CLI_ARGS: ''
+      - name: Start migration ECS task
+        run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ needs.deploy-info.outputs.api-env }} db-migrate-up
+        working-directory: ${{ env.working-dir }}
+        env:
+          # Clear out the invalid timeout setting when the run-task script runs terraform output.
+          TF_CLI_ARGS: ''
 
   api-create-db-users:
     name: Create/update database users
@@ -464,38 +461,35 @@ jobs:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
     steps:
-      # - uses: actions/checkout@v2
-      #   with:
-      #     ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
-      - name: exit zero
-        run: exit 0
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
 
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: us-east-1
-      #     role-to-assume: ci-run-deploys
-      #     role-duration-seconds: 3600
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: 0.14.7
+          terraform_wrapper: false
 
-      # - uses: hashicorp/setup-terraform@v1.2.1
-      #   with:
-      #     terraform_version: 0.14.7
-      #     terraform_wrapper: false
+      - name: Terraform Init
+        id: terraform_init
+        run: terraform init
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      # - name: Terraform Init
-      #   id: terraform_init
-      #   run: terraform init
-      #   working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
-
-      # - name: Start DB user create ECS task
-        # run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ needs.deploy-info.outputs.api-env }} db-admin-create-db-users
-        # working-directory: ${{ env.working-dir }}
-        # env:
-        #   # Clear out the invalid timeout setting when the run-task script runs terraform output.
-        #   TF_CLI_ARGS: ''
+      - name: Start DB user create ECS task
+        run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ needs.deploy-info.outputs.api-env }} db-admin-create-db-users
+        working-directory: ${{ env.working-dir }}
+        env:
+          # Clear out the invalid timeout setting when the run-task script runs terraform output.
+          TF_CLI_ARGS: ''
 
   api-release:
     name: Release
@@ -510,85 +504,108 @@ jobs:
       TF_VAR_release_version: ${{ github.event.inputs.version || 'main' }}
 
     steps:
-      # - uses: actions/checkout@v2
-      #   with:
-      #     ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
         
-      - name: exit zero
-        run: exit 0 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
 
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: us-east-1
-      #     role-to-assume: ci-run-deploys
-      #     role-duration-seconds: 3600
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraform-version }}
+          terraform_wrapper: false
 
-      # - uses: hashicorp/setup-terraform@v1.2.1
-      #   with:
-      #     terraform_version: ${{ env.terraform-version }}
-      #     terraform_wrapper: false
+      - name: Terraform Init
+        id: terraform_init
+        run: terraform init
+        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      # - name: Terraform Init
-      #   id: terraform_init
-      #   run: terraform init
-      #   working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
-
-      # # Temporary step to ensure the existing RDS log group gets imported into the state.
-      # # This is necessary to prevent terraform from running into a duplicate-log-group error.
+      # Temporary step to ensure the existing RDS log group gets imported into the state.
+      # This is necessary to prevent terraform from running into a duplicate-log-group error.
       # #
       # # (TODO: Remove in INFRA-386 after rollout)
-      # - name: (temp) Fix RDS log group state
+      - name: (temp) Fix RDS log group state
         # Clear out global lock timeout for "terraform state show""
-        # env:
-        #   TF_CLI_ARGS: ''
-        # run: |
-        #   needs_new=$(git grep aws/rds/instance/massgov-pfml-.*/postgresql ../../template/rds.tf || true)
-        #   is_new=$(terraform state show module.api.aws_cloudwatch_log_group.postgresql | { grep massgov-pfml- || true; })
+        env:
+          TF_CLI_ARGS: ''
+        run: |
+          needs_new=$(git grep aws/rds/instance/massgov-pfml-.*/postgresql ../../template/rds.tf || true)
+          is_new=$(terraform state show module.api.aws_cloudwatch_log_group.postgresql | { grep massgov-pfml- || true; })
 
-        #   if [[ -z "$needs_new" ]] && ! [[ -z "$is_new" ]]; then
-        #     echo "Importing old format massgov_pfml_"
-        #     prefix=massgov_pfml_
-        #   elif ! [[ -z "$needs_new" ]] && [[ -z "$is_new" ]]; then
-        #     echo "Importing new format massgov-pfml-"
-        #     prefix=massgov-pfml-
-        #   else
-        #     echo "No imports needed."
-        #   fi
+          if [[ -z "$needs_new" ]] && ! [[ -z "$is_new" ]]; then
+            echo "Importing old format massgov_pfml_"
+            prefix=massgov_pfml_
+          elif ! [[ -z "$needs_new" ]] && [[ -z "$is_new" ]]; then
+            echo "Importing new format massgov-pfml-"
+            prefix=massgov-pfml-
+          else
+            echo "No imports needed."
+          fi
 
-        #   if ! [ -z $prefix ]; then
-        #     terraform state rm -lock-timeout=120s module.api.aws_cloudwatch_log_group.postgresql
-        #     terraform import -lock-timeout=120s \
-        #       module.api.aws_cloudwatch_log_group.postgresql \
-        #       /aws/rds/instance/${prefix}${{ needs.deploy-info.outputs.api-env }}/postgresql
-        #   fi
-        # working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
+          if ! [ -z $prefix ]; then
+            terraform state rm -lock-timeout=120s module.api.aws_cloudwatch_log_group.postgresql
+            terraform import -lock-timeout=120s \
+              module.api.aws_cloudwatch_log_group.postgresql \
+              /aws/rds/instance/${prefix}${{ needs.deploy-info.outputs.api-env }}/postgresql
+          fi
+        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      # - name: Terraform Plan with new docker image
-      #   id: terraform_plan
-      #   run: terraform plan -out=plan.tfplan
-      #   working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
+      - name: Terraform Plan with new docker image
+        id: terraform_plan
+        run: terraform plan -out=plan.tfplan
+        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      # - name: Terraform Apply from execution plan
-      #   id: terraform_apply
-      #   run: terraform apply plan.tfplan
-      #   working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
+      - name: Terraform Apply from execution plan
+        id: terraform_apply
+        run: terraform apply plan.tfplan
+        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      # - name: Wait for stable ECS service
-      #   env:
-      #     # Clear out the invalid timeout args for terraform output
-      #     TF_CLI_ARGS: ''
-      #   run: |
-      #     CLUSTER_ID=$(terraform output ecs_cluster_arn | sed s/\"//g | cut -d/ -f2)
-      #     SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | cut -d/ -f2)
+      - name: Wait for stable ECS service
+        env:
+          # Clear out the invalid timeout args for terraform output
+          TF_CLI_ARGS: ''
+        run: |
+          CLUSTER_ID=$(terraform output ecs_cluster_arn | sed s/\"//g | cut -d/ -f2)
+          SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | cut -d/ -f2)
 
-      #     # Wait for ECS service to be stable, and run it twice to allow for
-      #     # abnormally long deploys (up to 20 minutes.)
-      #     (aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID ||
-      #      aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
-      #   working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
+          # Wait for ECS service to be stable, and run it twice to allow for
+          # abnormally long deploys (up to 20 minutes.)
+          failures=0
+
+          while [[ $failures -lt 2 ]]; do
+            set +e -x
+            result_msg=$(aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
+            result_code=$?
+            set -e +x
+
+            if [[ ${result_code} -eq 0 ]]; then
+              break
+            elif [[ "${result_msg}" =~ "MISSING" ]]; then
+              # This happens sometimes when the script runs too quickly after terraform apply.
+              # Sleep for a little bit and try again without considering it a retry.
+              sleep 5
+            else
+              failures=$((failures+=1))
+            fi
+          done
+
+          if [[ $failures -ge 2 ]]; then
+            echo "ECS service failed to stabilize within 20 minutes."
+            echo "Please check the ECS service at https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters/${{ needs.deploy-info.outputs.api-env }}/services/pfml-api-${{ needs.deploy-info.outputs.api-env }}/events"
+            echo "If the service stabilizes, you do not need to re-deploy. For lower environments you should run the E2E test job manually."
+            echo
+            echo "More info: https://lwd.atlassian.net/wiki/spaces/DD/pages/786694343/API+General+Runbook"
+            exit 1
+          fi
+
+        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
   update-newrelic:
     name: Update New Relic
@@ -632,62 +649,58 @@ jobs:
     needs: [update-the-deploy-branch, api-db-migrate-up, deploy-info]
 
     steps:
-      # - uses: actions/checkout@v2
-      #   with:
-      #     ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
-      - name: exit zero
-        run: exit 0
-  
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
 
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: us-east-1
-      #     role-to-assume: ci-run-deploys
-      #     role-duration-seconds: 3600
+      - name: Terraform Init
+        id: terraform_init
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: init
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      # - name: Terraform Init
-      #   id: terraform_init
-      #   uses: hashicorp/terraform-github-actions@master
-      #   with:
-      #     tf_actions_version: ${{ env.terraform-version }}
-      #     tf_actions_subcommand: init
-      #     tf_actions_comment: false
-      #     tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
+      - name: Terraform Plan with new docker image
+        id: terraform_plan
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: plan
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
+          args: "-out=plan.tfplan"
 
-      # - name: Terraform Plan with new docker image
-      #   id: terraform_plan
-      #   uses: hashicorp/terraform-github-actions@master
-      #   with:
-      #     tf_actions_version: ${{ env.terraform-version }}
-      #     tf_actions_subcommand: plan
-      #     tf_actions_comment: false
-      #     tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
-      #     args: "-out=plan.tfplan"
+      - name: Terraform Apply from execution plan
+        id: terraform_apply
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: apply
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
+          args: "plan.tfplan"
 
-      # - name: Terraform Apply from execution plan
-      #   id: terraform_apply
-      #   uses: hashicorp/terraform-github-actions@master
-      #   with:
-      #     tf_actions_version: ${{ env.terraform-version }}
-      #     tf_actions_subcommand: apply
-      #     tf_actions_comment: false
-      #     tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
-      #     args: "plan.tfplan"
-
-      # - name: Terraform Output
-        # id: terraform_output
-        # uses: hashicorp/terraform-github-actions@master
-        # with:
-        #   tf_actions_version: ${{ env.terraform-version }}
-        #   tf_actions_subcommand: output
-        #   tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
-        # env:
-        # # Clear out the CLI args for terraform output
-        #   TF_CLI_ARGS: ''
+      - name: Terraform Output
+        id: terraform_output
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: output
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
+        env:
+        # Clear out the CLI args for terraform output
+          TF_CLI_ARGS: ''
 
   postdeploy-info:
     name: Finalize deployment state

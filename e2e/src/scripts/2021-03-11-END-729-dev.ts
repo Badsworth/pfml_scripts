@@ -6,7 +6,8 @@ import EmployeePool from "../generation/Employee";
 import EmployeeIndex from "../generation/writers/EmployeeIndex";
 import { ScenarioSpecification } from "../generation/Scenario";
 import DOR from "../generation/writers/DOR";
-import { dataDirectory, submit, PostSubmitCallback } from "./util";
+import dataDirectory from "../generation/DataDirectory";
+import { submit, PostSubmitCallback } from "./util";
 import ClaimSubmissionTracker from "../submission/ClaimStateTracker";
 import SubmittedClaimIndex from "../submission/writers/SubmittedClaimIndex";
 import {

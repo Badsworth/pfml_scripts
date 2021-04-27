@@ -174,6 +174,7 @@ def test_process_nacha_return_file_step_full(
 
     assert pub_error_count[PubErrorType.ACH_RETURN.pub_error_type_id] == (
         expected_metrics["payment_id_not_found_count"]
+        + expected_metrics["payment_rejected_count"]
         # expected_metrics["unknown_id_format_count"] # TODO
         # expected_metrics["payment_unexpected_state_count"] # TODO
     )
