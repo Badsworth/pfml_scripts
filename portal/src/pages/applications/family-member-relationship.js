@@ -2,11 +2,11 @@ import BenefitsApplication, {
   CaringLeaveMetadata,
   RelationshipToCaregiver,
 } from "../../models/BenefitsApplication";
+import { get, pick } from "lodash";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { get } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -34,7 +34,11 @@ export const FamilyMemberRelationship = (props) => {
     `${caringLeaveMetadataKey}.relationship_to_caregiver`
   );
   const handleSave = async () => {
-    await appLogic.benefitsApplications.update(claim.application_id, formState);
+    const updatedData = pick({ claim: formState }, fields).claim;
+    await appLogic.benefitsApplications.update(
+      claim.application_id,
+      updatedData
+    );
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

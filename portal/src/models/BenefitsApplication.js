@@ -172,7 +172,6 @@ export class IntermittentLeavePeriod extends BaseModel {
 export class CaringLeaveMetadata extends BaseModel {
   get defaults() {
     return {
-      caring_leave_metadata_id: null,
       family_member_date_of_birth: null,
       family_member_first_name: null,
       family_member_last_name: null,

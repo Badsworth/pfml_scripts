@@ -584,8 +584,6 @@ class PaymentExtractStep(Step):
         # claim details needs to be indexed on PECLASSID and PEINDEXID
         # which point to the vpei.C and vpei.I columns
         for record in payment_details:
-            self.increment("payment_details_record_count")
-
             index = CiIndex(record["PECLASSID"], record["PEINDEXID"])
             if index not in extract_data.payment_details.indexed_data:
                 extract_data.payment_details.indexed_data[index] = []
