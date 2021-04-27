@@ -1598,7 +1598,7 @@ class Occupation(LookupTable):
     ADMINISTRATIVE = LkOccupation(3, "Administrative")
     ENGINEER = LkOccupation(4, "Engineer")
     
-    # NAICS Categories -> https://www.naics.com/search/
+    # NAICS Occupations -> https://www.naics.com/search/
     AGRICULTURE_FORESTRY_FISHING_HUNTING = LkOccupation(11, "Agriculture, Forestry, Fishing and Hunting")
     MINING = LkOccupation(21, "Mining")
     UTILITIES = LkOccupation(22, "Utilities")

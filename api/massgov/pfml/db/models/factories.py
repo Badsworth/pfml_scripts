@@ -414,6 +414,12 @@ class PhoneFactory(BaseFactory):
     phone_number = "+12404879945"
     phone_type_id = application_models.PhoneType.CELL.phone_type_id
 
+class OccupationFactory(BaseFactory):
+    class Meta:
+        model = employee_models.Occupation
+
+    occupation_id = None
+    occupation_description = None
 
 class ApplicationFactory(BaseFactory):
     class Meta:
@@ -463,7 +469,8 @@ class ApplicationFactory(BaseFactory):
     phone = factory.SubFactory(PhoneFactory)
 
     # Lookups
-    occupation_id = None
+    occupation = factory.SubFactory(OccupationFactory)
+    occupation_id = factory.LazyAttribute(lambda o: o.occupation.occupation_id)
     employment_status_id = None
     relationship_to_caregiver_id = None
     relationship_qualifier_id = None

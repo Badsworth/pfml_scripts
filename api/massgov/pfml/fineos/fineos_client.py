@@ -753,9 +753,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        NAICS_occupation: Optional[str],
     ) -> None:
         xml_body = self._create_update_occupation_payload(
-            occupation_id, employment_status, hours_worked_per_week
+            occupation_id, employment_status, hours_worked_per_week, NAICS_occupation
         )
         self._wscomposer_request(
             "POST", "webservice", {"config": "OccupationDetailUpdateService"}, xml_body
@@ -766,6 +767,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        NAICS_occupation: Optional[str],
     ) -> str:
         additional_data_set = models.AdditionalDataSet()
 
@@ -786,6 +788,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 models.AdditionalData(name="EmploymentStatus", value=employment_status)
             )
 
+        if NAICS_occupation:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(name="AdditionalEmploymentCategory", value=NAICS_occupation)
+            )
+        
         # Put the XML object together properly.
         service_data = models.OccupationDetailUpdateData()
         service_data.additional_data_set = additional_data_set

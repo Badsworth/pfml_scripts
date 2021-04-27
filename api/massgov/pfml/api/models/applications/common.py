@@ -29,7 +29,7 @@ class Occupation(str, LookupEnum):
     engineer = "Engineer"
     health_care = "Health Care"
 
-    # NAICS Categories -> https://www.naics.com/search/
+    # NAICS Occupations -> https://www.naics.com/search/
     AGRICULTURE_FORESTRY_FISHING_HUNTING = "Agriculture, Forestry, Fishing and Hunting"
     MINING = "Mining"
     UTILITIES = "Utilities"
