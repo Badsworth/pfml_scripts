@@ -156,6 +156,10 @@ def test_verification_successful_for_valid_data(
     assert user_leave_administrator.verification_id == verification.verification_id
     assert "Successfully verified user." in caplog.text
 
+    assert (
+        verification.verification_type_id == VerificationType.PFML_WITHHOLDING.verification_type_id
+    )
+
     assert response.status_code == 201
     response_body = response.get_json()
     assert response_body.get("data")["user_id"] == str(employer_user.user_id)

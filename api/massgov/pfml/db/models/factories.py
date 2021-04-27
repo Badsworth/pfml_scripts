@@ -295,7 +295,8 @@ class VerificationFactory(BaseFactory):
     created_at = Generators.UtcNow
     updated_at = Generators.UtcNow
     verification_id = Generators.UuidObj
-    verification_type_id = None
+    verification_type = factory.SubFactory(VerificationTypeFactory, __sequence=100)
+    verification_type_id = factory.LazyAttribute(lambda w: w.verification_type.verification_type_id)
     verification_metadata = factory.Faker("json")
 
 
