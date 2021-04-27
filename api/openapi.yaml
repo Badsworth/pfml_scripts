@@ -1285,6 +1285,36 @@ components:
           type: string
       additionalProperties: false
 
+    Occupation:
+      type: string
+      nullable: false
+      enum:
+        - Sales Clerk
+        - Administrative
+        - Engineer
+        - Health Care
+        - Agriculture, Forestry, Fishing and Hunting
+        - Mining
+        - Utilities
+        - Construction
+        - Manufacturing
+        - Wholesale Trade
+        - Retail Trade
+        - Transportation and Warehousing
+        - Information
+        - Finance and Insurance
+        - Real Estate Rental and Leasing
+        - Professional, Scientific, and Technical Services
+        - Management of Companies and Enterprises
+        - Administrative and Support and Waste Management and Remediation
+        - Educational Services
+        - Health Care and Social Assistance
+        - Arts, Entertainment, and Recreation
+        - Accommodation and Food Services
+        - Other Services (except Public Administration)
+        - Public Administration
+      example: "Educational Services"
+
     Address:
       type: object
       properties:
@@ -1687,14 +1717,7 @@ components:
                 - Self-Employed
               example: "Employed"
             occupation:
-              type: string
-              nullable: true
-              enum:
-                - Sales Clerk
-                - Administrative
-                - Engineer
-                - Health Care
-              example: "Sales Clerk"
+              $ref: "#/components/schemas/Occupation"
             leave_details:
               $ref: "#/components/schemas/ApplicationLeaveDetails"
             work_pattern:
@@ -1835,14 +1858,7 @@ components:
           example: "Employed"
           nullable: true
         occupation:
-          type: string
-          enum:
-            - Sales Clerk
-            - Administrative
-            - Engineer
-            - Health Care
-          example: "Sales Clerk"
-          nullable: true
+          $ref: "#/components/schemas/Occupation"
         hours_worked_per_week:
           type: number
           nullable: true
