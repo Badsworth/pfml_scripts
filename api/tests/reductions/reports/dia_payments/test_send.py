@@ -2,9 +2,9 @@ import boto3
 import pytest
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
+import massgov.pfml.reductions.reports.dia_payments.send as dia_payments_reports_send
 from massgov.pfml.db.models.employees import ReferenceFileType
 from massgov.pfml.db.models.factories import ReferenceFileFactory
-from massgov.pfml.reductions.reports import dua_payments_reports
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -38,18 +38,9 @@ def _setup_reductions_reporting(
     return full_path
 
 
-def test_send_dua_reductions_report(
+def test_send_dia_reductions_report(
     test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
 ):
-
-    monkeypatch.setenv(
-        "S3_DFML_OUTBOUND_DIRECTORY_PATH",
-        "s3://test_bucket/reductions/dfml/outbound/test_file.csv",
-    )
-
-    monkeypatch.setenv(
-        "S3_DFML_ARCHIVE_DIRECTORY_PATH", "s3://test_bucket/reductions/dfml/archive/test_file.csv",
-    )
 
     full_path = _setup_reductions_reporting(
         test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
@@ -57,13 +48,13 @@ def test_send_dua_reductions_report(
 
     ref_file = ReferenceFileFactory.create(
         file_location=full_path,
-        reference_file_type_id=ReferenceFileType.DUA_REDUCTION_REPORT_FOR_DFML.reference_file_type_id,
+        reference_file_type_id=ReferenceFileType.DIA_REDUCTION_REPORT_FOR_DFML.reference_file_type_id,
     )
 
     # current number of State Logs
     state_logs_num = len(ref_file.state_logs)
 
-    dua_payments_reports.send_dua_reductions_report(test_db_session)
+    dia_payments_reports_send.send_dia_reductions_report(test_db_session)
 
     # check that a State Log has been created
     assert len(ref_file.state_logs) == state_logs_num + 1
@@ -79,7 +70,7 @@ def test_send_dua_reductions_report(
     assert mock_ses_response_meta_data["HTTPStatusCode"] == 200
 
 
-def test_send_dua_reductions_report_no_result(
+def test_send_dia_reductions_report_no_result(
     test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
 ):
 
@@ -88,10 +79,10 @@ def test_send_dua_reductions_report_no_result(
     )
 
     with pytest.raises(NoResultFound):
-        dua_payments_reports.send_dua_reductions_report(test_db_session)
+        dia_payments_reports_send.send_dia_reductions_report(test_db_session)
 
 
-def test_send_dua_reductions_report_multiple_results(
+def test_send_dia_reductions_report_multiple_results(
     test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
 ):
 
@@ -101,13 +92,13 @@ def test_send_dua_reductions_report_multiple_results(
 
     ReferenceFileFactory.create(
         file_location=full_path,
-        reference_file_type_id=ReferenceFileType.DUA_REDUCTION_REPORT_FOR_DFML.reference_file_type_id,
+        reference_file_type_id=ReferenceFileType.DIA_REDUCTION_REPORT_FOR_DFML.reference_file_type_id,
     )
 
     ReferenceFileFactory.create(
         file_location="s3://test_bucket/reductions/dfml/outbound/test_file2.csv",
-        reference_file_type_id=ReferenceFileType.DUA_REDUCTION_REPORT_FOR_DFML.reference_file_type_id,
+        reference_file_type_id=ReferenceFileType.DIA_REDUCTION_REPORT_FOR_DFML.reference_file_type_id,
     )
 
     with pytest.raises(MultipleResultsFound):
-        dua_payments_reports.send_dua_reductions_report(test_db_session)
+        dia_payments_reports_send.send_dia_reductions_report(test_db_session)

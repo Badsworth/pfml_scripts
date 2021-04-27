@@ -757,7 +757,7 @@ class DiaReductionPaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.DiaReductionPayment
 
-    absence_case_id = Generators.FineosAbsenceId
+    fineos_customer_number = factory.Faker("numerify", text="####")
     board_no = factory.Faker("uuid4")
     event_id = factory.Faker("uuid4")
     event_description = "PC"
