@@ -48,7 +48,7 @@ describe("Leave Admin Self-Registration", () => {
     cy.dependsOnPreviousPass([secondOrg]);
     portal.before();
     cy.unstash<Credentials>("credentials").then((credentials) => {
-      cy.unstash<string>("employer").then((fein) => {
+      cy.unstash<string>("employer").then(() => {
         portal.login(credentials);
         cy.contains("Your organizations").click();
         cy.task("pickEmployer", {
