@@ -54,7 +54,7 @@ export default class AuthenticationManager {
   }
 
   async registerClaimant(username: string, password: string): Promise<void> {
-    const cognitoUser = await this.registerUser(username, password, "Employer");
+    const cognitoUser = await this.registerUser(username, password, "Claimant");
     // Wait for code.
     await this.verifyCognitoAccount(cognitoUser, username);
     // Agree to terms and conditions.
