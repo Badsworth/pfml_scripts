@@ -977,12 +977,23 @@ export function addOrganization(fein: string, withholding: number): void {
   cy.get('a[href="/employers/organizations/add-organization/"').click();
   cy.get('input[name="ein"]').type(fein);
   cy.get('button[type="submit"').click();
-  cy.get('input[name="withholdingAmount"]').type(withholding.toString());
-  cy.get('button[type="submit"').click();
-  cy.contains("h1", "Thanks for verifying your paid leave contributions");
-  cy.contains("p", "Your account has been verified");
-  cy.contains("button", "Continue").click();
-  cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
-    "not.exist"
+  if (withholding !== 0) {
+    cy.get('input[name="withholdingAmount"]').type(withholding.toString());
+    cy.get('button[type="submit"').click();
+    cy.contains("h1", "Thanks for verifying your paid leave contributions");
+    cy.contains("p", "Your account has been verified");
+    cy.contains("button", "Continue").click();
+    cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
+      "not.exist"
+    );
+  } else {
+    assertZeroWithholdings();
+  }
+}
+
+export function assertZeroWithholdings(): void {
+  cy.contains(
+    "p",
+    "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. "
   );
 }
