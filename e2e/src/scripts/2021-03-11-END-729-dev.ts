@@ -16,7 +16,6 @@ import {
   denyClaim,
   closeDocuments,
 } from "../submission/PostSubmit";
-import { getFineosBaseUrl } from "../util/common";
 import EmployerIndex from "../generation/writers/EmployerIndex";
 
 /**
@@ -131,34 +130,30 @@ import EmployerIndex from "../generation/writers/EmployerIndex";
       const { metadata } = claim;
       if (metadata && "postSubmit" in metadata) {
         // Open a puppeteer browser for the duration of this callback.
-        await withFineosBrowser(
-          getFineosBaseUrl(),
-          async (page) => {
-            const { fineos_absence_id } = response;
-            if (!fineos_absence_id)
+        await withFineosBrowser(async (page) => {
+          const { fineos_absence_id } = response;
+          if (!fineos_absence_id)
+            throw new Error(
+              `No fineos_absence_id was found on this response: ${JSON.stringify(
+                response
+              )}`
+            );
+          switch (metadata.postSubmit) {
+            case "APPROVE":
+              await approveClaim(page, fineos_absence_id);
+              break;
+            case "DENY":
+              await denyClaim(page, fineos_absence_id);
+              break;
+            case "APPROVEDOCS":
+              await closeDocuments(page, fineos_absence_id);
+              break;
+            default:
               throw new Error(
-                `No fineos_absence_id was found on this response: ${JSON.stringify(
-                  response
-                )}`
+                `Unknown claim.metadata.postSubmit property: ${metadata.postSubmit}`
               );
-            switch (metadata.postSubmit) {
-              case "APPROVE":
-                await approveClaim(page, fineos_absence_id);
-                break;
-              case "DENY":
-                await denyClaim(page, fineos_absence_id);
-                break;
-              case "APPROVEDOCS":
-                await closeDocuments(page, fineos_absence_id);
-                break;
-              default:
-                throw new Error(
-                  `Unknown claim.metadata.postSubmit property: ${metadata.postSubmit}`
-                );
-            }
-          },
-          true
-        );
+          }
+        }, true);
       }
     };
 

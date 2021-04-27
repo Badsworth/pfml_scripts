@@ -1,6 +1,7 @@
 import playwright, { chromium, Page } from "playwright-chromium";
 import delay from "delay";
 import * as actions from "../util/playwright";
+import config from "../config";
 
 export type Tasks =
   | "ID Review"
@@ -8,27 +9,46 @@ export type Tasks =
   | "Employer Approval Received";
 
 export async function withFineosBrowser(
-  baseUrl: string,
   next: (page: Page) => Promise<void>,
   debug = false
 ): Promise<void> {
+  const isSSO = config("ENVIRONMENT") === "uat";
   const browser = await chromium.launch({
     headless: !debug,
   });
+  const httpCredentials = isSSO
+    ? undefined
+    : {
+        username: config("FINEOS_USERNAME"),
+        password: config("FINEOS_PASSWORD"),
+      };
   const page = await browser.newPage({
     viewport: { width: 1200, height: 1000 },
+    httpCredentials,
   });
-  await page.goto(baseUrl);
   page.on("dialog", async (dialog) => {
     await delay(2000);
     await dialog.dismiss().catch(() => {
       //intentional no-op on error.
     });
   });
+  await page.goto(config("FINEOS_BASEURL"));
+  if (isSSO) {
+    await page.type(
+      "input[type='email'][name='loginfmt']",
+      config("SSO_USERNAME")
+    );
+    await page.click("input[value='Next']");
+    await page.type(
+      "input[type='password'][name='passwd']",
+      config("SSO_PASSWORD")
+    );
+    await page.click("input[value='Sign in']");
+    await page.click("input[value='No']");
+  }
 
   try {
     await next(page).catch(async (e) => {
-      // When in debug mode, hold the browser window open for 100 seconds for debugging purposes.
       if (debug) {
         console.log(
           "Caught error - holding browser window open for debugging.",
