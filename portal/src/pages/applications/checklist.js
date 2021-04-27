@@ -148,6 +148,21 @@ export const Checklist = (props) => {
                   href={routes.external.massgov.healthcareProviderForm}
                 />
               ),
+              "caregiver-certification-form-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.caregiverCertificationForm}
+                />
+              ),
+              "caregiver-relationship-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  // DFML page for caregiver relationship href TBD
+                  href={routes.external.massgov.caregiverRelationship}
+                />
+              ),
               ul: <ul className="usa-list" />,
               li: <li />,
             }}
@@ -174,11 +189,21 @@ export const Checklist = (props) => {
       claim,
       "leave_details.has_future_child_date"
     );
+    if (
+      stepName === ClaimSteps.leaveDetails &&
+      isFeatureEnabled("showCaringLeaveType")
+    ) {
+      return "leaveDetailsWithCaring";
+    }
+    // TODO (CP-2101) rename context strings for clarity in en-US.js strings i.e. uploadMedicalCert, uploadCareCert
     if (stepName !== ClaimSteps.uploadCertification) {
       return camelCase(stepName);
     }
     if (claimReason === LeaveReason.medical) {
       return "medical";
+    }
+    if (claimReason === LeaveReason.care) {
+      return "care";
     }
     if (claimReason !== LeaveReason.bonding) {
       return undefined;

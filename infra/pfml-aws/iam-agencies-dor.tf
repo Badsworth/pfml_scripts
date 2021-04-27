@@ -1,7 +1,8 @@
 # The department of revenue (DOR) sends us data through an S3 bucket pushed from
-# their MoveIT instance. This sets up their user and S3 bucket.
+# their MoveIT instance. This sets up their user.
+
 #
-# 1. Create a user for DOR data.
+# Create a user for DOR data.
 #    After creating this user, generate an access key through the AWS console
 #    and share it to a DOR representative over Interchange.
 resource "aws_iam_user" "agency_department_of_revenue" {

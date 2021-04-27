@@ -21,7 +21,7 @@ resource "newrelic_nrql_alert_condition" "newrelic_baseline_error_rate" {
 
   nrql {
     query             = var.query
-    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+    evaluation_offset = 1 # minimum value -- offset by one window (15 minutes)
   }
 
   warning {

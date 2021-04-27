@@ -15,28 +15,20 @@ def mock_fineos_s3_bucket(mock_s3_bucket):
 @pytest.fixture
 def set_exporter_env_vars(mock_s3_bucket, mock_fineos_s3_bucket, mock_sftp_client, monkeypatch):
     monkeypatch.setenv("FINEOS_DATA_EXPORT_PATH", f"s3://{mock_fineos_s3_bucket}/DT2/dataexports/")
-    monkeypatch.setenv("PFML_FINEOS_INBOUND_PATH", f"s3://{mock_s3_bucket}/cps/inbound/")
+    monkeypatch.setenv("PFML_FINEOS_EXTRACT_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/cps/inbound/")
     monkeypatch.setenv("FINEOS_DATA_IMPORT_PATH", f"s3://{mock_fineos_s3_bucket}/DT2/dataimports/")
-    monkeypatch.setenv("PFML_FINEOS_OUTBOUND_PATH", f"s3://{mock_s3_bucket}/cps/outbound/")
+    monkeypatch.setenv("PFML_FINEOS_WRITEBACK_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/cps/outbound/")
 
-    monkeypatch.setenv("PFML_CTR_INBOUND_PATH", f"s3://{mock_s3_bucket}/ctr/inbound/")
-    monkeypatch.setenv("PFML_CTR_OUTBOUND_PATH", f"s3://{mock_s3_bucket}/ctr/outbound/")
-
-    monkeypatch.setenv("PFML_ERROR_REPORTS_PATH", f"s3://{mock_s3_bucket}/error_reports/outbound")
-
-    monkeypatch.setenv("CTR_MOVEIT_INCOMING_PATH", "pfml/inbox")
-    monkeypatch.setenv("CTR_MOVEIT_OUTGOING_PATH", "source/outbox")
-    monkeypatch.setenv("CTR_MOVEIT_ARCHIVE_PATH", "archive")
-    monkeypatch.setenv("EOLWD_MOVEIT_SFTP_URI", "sftp://api_user@mass.gov")
-    monkeypatch.setenv("CTR_MOVEIT_SSH_KEY", "No ssh_key_password used during mocked tests")
-    monkeypatch.setenv("CTR_MOVEIT_SSH_KEY_PASSWORD", "No ssh_key used during mocked tests")
-
-    monkeypatch.setenv("DFML_PROJECT_MANAGER_EMAIL_ADDRESS", "test@test.gov")
-    monkeypatch.setenv("PFML_EMAIL_ADDRESS", "noreplypfml@mass.gov")
-    monkeypatch.setenv("BOUNCE_FORWARDING_EMAIL_ADDRESS", "noreplypfml@mass.gov")
-    monkeypatch.setenv("CTR_GAX_BIEVNT_EMAIL_ADDRESS", "test1@test.com")
-    monkeypatch.setenv("CTR_VCC_BIEVNT_EMAIL_ADDRESS", "test2@test.com")
-    monkeypatch.setenv("DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", "test3@test.com")
+    monkeypatch.setenv("DFML_REPORT_OUTBOUND_PATH", f"s3://{mock_s3_bucket}/dfml-reports/")
+    monkeypatch.setenv(
+        "PFML_ERROR_REPORTS_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/error_reports/outbound"
+    )
+    monkeypatch.setenv(
+        "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/rejects/inbound"
+    )
+    monkeypatch.setenv("PFML_PUB_CHECK_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/pub/check")
+    monkeypatch.setenv("PFML_PUB_ACH_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/pub/ach")
+    monkeypatch.setenv("PUB_MOVEIT_OUTBOUND_PATH", f"s3://{mock_s3_bucket}/pub/outbound")
 
 
 def upload_file_to_s3(file_path, s3_bucket, key):

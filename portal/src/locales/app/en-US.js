@@ -175,6 +175,21 @@ const errors = {
       required: "Enter a last name.",
     },
     leave_details: {
+      caring_leave_metadata: {
+        family_member_date_of_birth: {
+          format: "Date of birth must include a valid month, day, and year.",
+          required: "Enter a date of birth.",
+        },
+        family_member_first_name: {
+          required: "Enter a family member's first name.",
+        },
+        family_member_last_name: {
+          required: "Enter a family member's last name.",
+        },
+        relationship_to_caregiver: {
+          required: "Please choose your relationship with the family member.",
+        },
+      },
       child_birth_date: {
         format: "Date of birth must include a valid month, day, and year.",
         required: "Enter your child’s date of birth or due date.",
@@ -474,7 +489,7 @@ const errors = {
   employers: {
     ein: {
       employer_verification_data_required:
-        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. <file-a-return-link>Learn more about filing returns and remitting contributions</file-a-return-link>.",
+        "$t(shared.ein.employer_verification_data_required)",
     },
     employer_benefits: {
       benefit_amount_frequency: {
@@ -494,7 +509,7 @@ const errors = {
       duplicate:
         "The employer ID you entered is already associated with your account.",
       employer_verification_data_required:
-        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications.",
+        "$t(shared.ein.employer_verification_data_required)",
       invalid:
         "Enter your 9-digit Employer Identification Number in the correct format.",
     },
@@ -567,6 +582,9 @@ const errors = {
 };
 
 const shared = {
+  absenceCaseStatus_approved: "Approved",
+  absenceCaseStatus_completed: "Completed",
+  absenceCaseStatus_denied: "Denied",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequency_daily: "Daily",
@@ -625,6 +643,10 @@ const shared = {
     "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>",
   documentsUploadError:
     "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
+  ein: {
+    employer_verification_data_required:
+      "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. <file-a-return-link>Learn more about filing returns and remitting contributions</file-a-return-link>.",
+  },
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
@@ -855,10 +877,15 @@ const pages = {
       "<p>You need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
     stepHTMLDescription_bondingNewbornFuture:
       "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.",
+    stepHTMLDescription_care:
+      "<p>You need to provide your completed <caregiver-certification-form-link>Caregiver Certification Form</caregiver-certification-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
-      "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider complete a <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking family leave to bond with a child, you will need to know:</p><ul><li>The child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
+      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p>",
+    // TODO (CP-1983) Merge leaveDetails and leaveDetailsWithCaring when showCaringLeave feature flag is not needed
+    stepHTMLDescription_leaveDetailsWithCaring:
+      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>Caregiver Certification Form</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship for Caregiver leave<caregiver-relationship-link/>.</p>",
     stepHTMLDescription_medical:
       "<p>You need to provide your completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_otherLeave:
@@ -975,6 +1002,15 @@ const pages = {
     sectionLabel: "What is your family member's name?",
   },
   claimsFamilyMemberRelationship: {
+    choiceLabel_child: "I am caring for my child.",
+    choiceLabel_grandchild: "I am caring for my grandchild.",
+    choiceLabel_grandparent: "I am caring for my grandparent.",
+    choiceLabel_inlaw:
+      "I am caring for a parent of my spouse or domestic partner.",
+    choiceLabel_parent: "I am caring for my parent.",
+    choiceLabel_sibling: "I am caring for my sibling.",
+    choiceLabel_spouse: "I am caring for my spouse or domestic partner.",
+    sectionHint: "Learn more about which relationships are covered.",
     sectionLabel:
       "What is your relationship with the family member you are caring for?",
   },
@@ -1316,6 +1352,17 @@ const pages = {
     familyLeaveTypeValue_adoption: "Adoption",
     familyLeaveTypeValue_fosterCare: "Foster care",
     familyLeaveTypeValue_newBorn: "Birth",
+    familyMemberDateOfBirthLabel: "Family member's date of birth",
+    familyMemberNameLabel: "Family member's name",
+    familyMemberRelationshipLabel: "Family member's relationship",
+    familyMemberRelationship_child: "Child",
+    familyMemberRelationship_grandchild: "Grandchild",
+    familyMemberRelationship_grandparent: "Grandparent",
+    familyMemberRelationship_inlaw: "Inlaw",
+    familyMemberRelationship_parent: "Parent",
+    familyMemberRelationship_serviceMember: "Service Member",
+    familyMemberRelationship_sibling: "Sibling - Brother/Sister",
+    familyMemberRelationship_spouse: "Spouse",
     intermittentFrequencyDurationLabel: "Frequency of intermittent leave",
     intermittentFrequencyDuration_irregularMonths_days:
       "Estimated {{frequency}} absences over the next 6 months, each lasting {{duration}} days.",
@@ -1661,7 +1708,7 @@ const pages = {
   },
   employersClaimsStatus: {
     applicationIdLabel: "Application ID",
-    lead:
+    lead_decision:
       "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
     lead_pending:
       "This application is being reviewed by the Department. It was either reviewed by an administrator on your team or the review deadline has passed. No action is required of you.<br /><br />After we make a decision, you'll receive an email with a direct link for more details.",
@@ -1705,7 +1752,8 @@ const pages = {
     instructions:
       "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
-    tableColHeading_created_at: "Date filed",
+    startDateTooltip: "The date a new application for leave was started",
+    tableColHeading_created_at: "Application start date",
     tableColHeading_employee_name: "Employee name",
     tableColHeading_employer_dba: "Organization",
     tableColHeading_employer_fein: "Employer ID number",
@@ -1721,8 +1769,10 @@ const pages = {
   employersOrganizations: {
     addOrganizationButton: "Add organization",
     einTableHeader: "Employer ID number (EIN)",
-    nearFutureAvailability:
+    nearFutureAvailability_addOrganization:
       "You'll be able to add more organizations to your account in the near future.",
+    nearFutureAvailability_inviteMembers:
+      "You can manage leave for these organizations. In the future, you’ll be able to invite other members of your team to review applications.",
     organizationsTableHeader: "Organization",
     title: "Your organizations",
     verificationBlocked: "Verification blocked",
@@ -1740,7 +1790,7 @@ const pages = {
     continueButton: "Continue",
     employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
     instructions:
-      "Your account has been verified. In 15 minutes you will be able to log in and review applications. If anyone else on your team needs to review applications, they'll also need to complete the <learn-more-link>verification process</learn-more-link>.",
+      "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the <learn-more-link>verification process</learn-more-link>.",
     title: "Thanks for verifying your paid leave contributions",
   },
   employersOrganizationsVerifyContributions: {
@@ -1852,6 +1902,12 @@ const pages = {
 };
 
 const components = {
+  absenceCaseStatusTag: {
+    status_approved: "$t(shared.absenceCaseStatus_approved)",
+    status_closed: "$t(shared.absenceCaseStatus_completed)",
+    status_completed: "$t(shared.absenceCaseStatus_completed)",
+    status_declined: "$t(shared.absenceCaseStatus_denied)",
+  },
   amendButton: {
     amend: "Amend",
   },

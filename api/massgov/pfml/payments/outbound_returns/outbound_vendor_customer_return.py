@@ -493,7 +493,9 @@ def process_ams_document(
         state_log = state_log_util.create_finished_state_log(
             end_state=current_state.end_state,
             associated_model=dependencies.employee,
-            outcome=state_log_util.build_outcome("Validation issues found", validation_container),
+            outcome=state_log_util.build_outcome(
+                "Processed Outbound Vendor Return: Validation issues found", validation_container
+            ),
             db_session=db_session,
         )
 
@@ -510,7 +512,7 @@ def process_ams_document(
             end_state=current_state.end_state,
             associated_model=dependencies.employee,
             outcome=state_log_util.build_outcome(
-                "No validation issues found", validation_container
+                "Processed Outbound Vendor Return: No validation issues found", validation_container
             ),
             db_session=db_session,
         )

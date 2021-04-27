@@ -156,12 +156,25 @@ locals {
       command             = ["pub-payments-create-pub-files"]
       containers_template = "pub_payments_create_pub_files_template.json"
       task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-create-pub-files"
+      vars = {
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
+
+        fineos_data_import_path = var.fineos_data_import_path
+        fineos_data_export_path = var.fineos_data_export_path
+      }
     },
 
     "pub-payments-process-pub-returns" = {
       command             = ["pub-payments-process-pub-returns"]
       containers_template = "pub_payments_process_pub_returns_template.json"
       task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-process-pub-returns"
+      vars = {
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
+
+        fineos_data_import_path = var.fineos_data_import_path
+      }
     },
 
     "fineos-eligibility-feed-export" = {
@@ -246,17 +259,8 @@ locals {
         fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
         fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
 
-        fineos_data_export_path   = var.fineos_data_export_path
-        fineos_data_import_path   = var.fineos_data_import_path
-        pfml_fineos_inbound_path  = var.pfml_fineos_inbound_path
-        pfml_fineos_outbound_path = var.pfml_fineos_outbound_path
-
-        fineos_vendor_max_history_date  = var.fineos_vendor_max_history_date
-        fineos_payment_max_history_date = var.fineos_payment_max_history_date
-
-        payment_audit_report_outbound_folder_path = var.payment_audit_report_outbound_folder_path
-        payment_audit_report_sent_folder_path     = var.payment_audit_report_sent_folder_path
-
+        fineos_data_export_path = var.fineos_data_export_path
+        fineos_data_import_path = var.fineos_data_import_path
       }
     },
 
@@ -300,9 +304,45 @@ locals {
       }
     },
 
+    "payments-payment-voucher-plus" = {
+      command             = ["payments-payment-voucher-plus"]
+      containers_template = "payments_payment_voucher_plus_template.json"
+      task_role           = aws_iam_role.payments_fineos_process_task_role.arn
+      cpu                 = "2048"
+      memory              = "16384"
+      vars = {
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
+
+        fineos_data_export_path  = var.fineos_data_export_path
+        pfml_fineos_inbound_path = var.pfml_fineos_inbound_path
+        pfml_error_reports_path  = var.pfml_error_reports_path
+        pfml_voucher_output_path = var.pfml_voucher_output_path
+
+        fineos_vendor_max_history_date = var.fineos_vendor_max_history_date
+
+        pfml_email_address                     = var.pfml_email_address
+        dfml_business_operations_email_address = var.dfml_business_operations_email_address
+
+        ctr_data_mart_host     = var.ctr_data_mart_host
+        ctr_data_mart_username = var.ctr_data_mart_username
+      }
+    },
+
     "transmogrify-state" = {
       command = ["transmogrify-state"]
-    }
+    },
+
+    "import-fineos-to-warehouse" = {
+      command             = ["import-fineos-to-warehouse"]
+      containers_template = "import_fineos_to_warehouse.json"
+      task_role           = aws_iam_role.fineos_bucket_tool_role.arn
+      vars = {
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
+        fineos_data_export_path         = var.fineos_data_export_path
+      }
+    },
   }
 }
 

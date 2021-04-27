@@ -410,6 +410,84 @@ def test_send_fineos_payments_errors(
 
 
 @freeze_time("2020-01-01 12:00:00")
+def test_vendor_extract_error_report_step(
+    test_db_session,
+    initialize_factories_session,
+    mock_ses,
+    set_exporter_env_vars,
+    test_db_other_session,
+):
+    # Verify that the VendorExtractErrorReportStep.run_step() is functionally equivalent
+    # to send_fineos_payments_errors() for just the vendor report.
+    s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
+
+    # Setup for cps_vendor_export_report (adding 2 records)
+    setup_state_log_in_end_state(
+        state_log_util.AssociatedClass.EMPLOYEE,
+        end_state=State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT,
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(
+            fineos_customer_num="000000001",
+            fineos_absence_id="NTN-01-ABS-01",
+            add_claim_payment_for_employee=False,  # No payment or claim data will be found
+        ),
+    )
+
+    setup_state_log_in_end_state(
+        state_log_util.AssociatedClass.EMPLOYEE,
+        end_state=State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT,
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(
+            fineos_customer_num="000000002",
+            fineos_absence_id="NTN-02-ABS-02",
+            add_claim_payment_for_employee=True,  # Will add claim+payment DB entries + payment state log in CONFIRM_VENDOR_STATUS_IN_MMARS
+        ),
+    )
+    test_db_session.commit()
+
+    error_reports.VendorExtractErrorReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    ).run_step()
+
+    file_names = file_util.list_files(s3_prefix, recursive=True)
+    assert len(file_names) == 1
+    assert file_names[0] == "2020-01-01/2020-01-01-07-00-00-CPS-vendor-export-error-report.csv"
+
+    cps_vendor_records = parse_csv(s3_prefix, file_names[0])
+    assert len(cps_vendor_records) == 2
+    assert cps_vendor_records[0] == {
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000001",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",
+        error_reporting.PAYMENT_DATE_COLUMN: "",
+    }
+    assert cps_vendor_records[1] == {
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000002",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-02-ABS-02",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
+    }
+
+    # Show that we can do a rollback
+
+    # 7 total state logs:
+    # 2 calls to setup_state_log_in_end_state (created employee or payment state logs)
+    # 2 prior states created in setup_state_log_in_end_state
+    #    the one setup_state_log_in_end_state call with add_claim_payment_for_employee=True created an addtional payment state log
+    # the 2 records created to move the payment/employee state logs to the next state.
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 7
+    test_db_session.rollback()
+    # the 2 created as part of processing no longer exist
+    rolled_back_state_logs = test_db_session.query(StateLog).all()
+    assert len(rolled_back_state_logs) == 5
+
+
+@freeze_time("2020-01-01 12:00:00")
 def test_send_ctr_payments_errors_simple_reports(
     test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
 ):

@@ -141,8 +141,15 @@ class PaymentRejectsStep(Step):
                     absence_case_number=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_number),
                     c_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.c_value),
                     i_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.i_value),
+                    fineos_customer_number=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number
+                    ),
                     employer_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_id),
                     case_status=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.case_status),
+                    leave_request_decision=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision
+                    ),
+                    check_description=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.check_description),
                     is_first_time_payment=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment
                     ),
@@ -269,14 +276,12 @@ class PaymentRejectsStep(Step):
 
         logger.info("Completed transition of not sampled payment audit pending states")
 
-    def process_rejects_and_send_report(
-        self, payment_rejects_received_folder_path: str, payment_rejects_processed_folder_path: str,
-    ) -> None:
-        # TODO Confirm we should look in a dated folder? if so today or yesterday's date?
-        payment_rejects_received_folder_dated_path = os.path.join(
-            payment_rejects_received_folder_path, payments_util.get_now().strftime("%Y-%m-%d")
+    def process_rejects_and_send_report(self, payment_rejects_archive_path: str) -> None:
+        payment_rejects_received_folder_path = os.path.join(
+            payment_rejects_archive_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
         )
-        rejects_files = file_util.list_files(payment_rejects_received_folder_dated_path)
+
+        rejects_files = file_util.list_files(payment_rejects_received_folder_path)
 
         if len(rejects_files) == 0:
             raise PaymentRejectsException("No Payment Rejects file found.")
@@ -290,7 +295,7 @@ class PaymentRejectsStep(Step):
         # process the file
         rejects_file_name = rejects_files[0]
         payment_rejects_file_path = os.path.join(
-            payment_rejects_received_folder_dated_path, rejects_file_name
+            payment_rejects_received_folder_path, rejects_file_name
         )
 
         logger.info("Start processing Payment Rejects file: %s", payment_rejects_file_path)
@@ -324,9 +329,9 @@ class PaymentRejectsStep(Step):
         self.transition_not_sampled_payment_audit_pending_states()
 
         # put file in processed folder
-        processed_file_path = os.path.join(
-            payment_rejects_processed_folder_path,
-            payments_util.get_now().strftime("%Y-%m-%d"),
+        processed_file_path = payments_util.build_archive_path(
+            payment_rejects_archive_path,
+            payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
             rejects_file_name,
         )
         file_util.rename_file(payment_rejects_file_path, processed_file_path)
@@ -353,10 +358,7 @@ class PaymentRejectsStep(Step):
 
             s3_config = payments_config.get_s3_config()
 
-            self.process_rejects_and_send_report(
-                s3_config.payment_rejects_received_folder_path,
-                s3_config.payment_rejects_processed_folder_path,
-            )
+            self.process_rejects_and_send_report(s3_config.pfml_payment_rejects_archive_path)
 
             self.db_session.commit()
 

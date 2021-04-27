@@ -31,7 +31,9 @@ logger = logging.get_logger(__name__)
 
 
 class Constants:
-    TEMPORARY_BENEFIT_START_DATE = "20210101"
+    # DIA claims can last up to 3 years, so hard-coding to the start of 2018 for
+    # the 2021 launch.
+    TEMPORARY_BENEFIT_START_DATE = "20180101"
     DATE_OF_BIRTH_FORMAT = "%Y%m%d"
 
     CLAIMAINT_LIST_FILENAME_PREFIX = "DFML_DIA_CLAIMANTS_"
@@ -104,7 +106,8 @@ class Constants:
 def _format_claimants_for_dia_claimant_list(claimants: List[Employee]) -> List[Dict[str, str]]:
     claimants_info = []
 
-    # DIA cannot accept CSVs that contain commas
+    # DIA cannot accept CSVs that contain commas, we strip them from the name
+    # fields below, but track if any show up in other fields
     value_errors = []
 
     for employee in claimants:
@@ -127,22 +130,20 @@ def _format_claimants_for_dia_claimant_list(claimants: List[Employee]) -> List[D
         info: Dict[str, str] = {
             Constants.CUSTOMER_NUMBER_FIELD: fineos_customer_number,
             Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
-            Constants.FIRST_NAME_FIELD: employee.first_name,
-            Constants.LAST_NAME_FIELD: employee.last_name,
+            Constants.FIRST_NAME_FIELD: employee.first_name.replace(",", ""),
+            Constants.LAST_NAME_FIELD: employee.last_name.replace(",", ""),
             Constants.BIRTH_DATE_FIELD: date_of_birth.strftime(Constants.DATE_OF_BIRTH_FORMAT),
             Constants.SSN_FIELD: tax_id.tax_identifier.replace("-", ""),
         }
 
-        for key in info:
-            value = info[key]
+        for key, value in info.items():
             if "," in value:
                 value_errors.append(f"({employee.employee_id}, {key})")
 
         claimants_info.append(info)
 
-    # API-1335: DIA cannot accept values that contain commas, and we don't expect to see values
-    # commas. If/when we encounter this situation, discuss a solution with DIA (Different file
-    # format? Update DIA process to accept commas? Exclude in code in the meantime.).
+    # This should be impossible, but if commas slipped in somehow, bail out.
+    # Could just skip the record above, but failing hard for how.
     if len(value_errors) > 0:
         errors = ", ".join(value_errors)
         raise ValueError(f"Value for claimants contains comma: {errors}")
@@ -154,7 +155,15 @@ def _write_claimants_to_tempfile(claimants: List[Dict]) -> str:
     # Not using file_util.create_csv_from_list() because DIA does not want a header row.
     _handle, csv_filepath = tempfile.mkstemp()
     with open(csv_filepath, mode="w") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=Constants.CLAIMAINT_LIST_FIELDS)
+        # No quoting because DIA does not ever want quotes around fields and no
+        # escape character either (so any value containing quotes will cause an
+        # error)
+        writer = csv.DictWriter(
+            csv_file,
+            fieldnames=Constants.CLAIMAINT_LIST_FIELDS,
+            quoting=csv.QUOTE_NONE,
+            escapechar=None,
+        )
         for data in claimants:
             writer.writerow(data)
 
@@ -330,8 +339,8 @@ def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> None:
     for row in rows:
         db_data = _convert_dict_with_csv_keys_to_db_keys(row)
         if len(_get_matching_dia_reduction_payments(db_data, db_session)) == 0:
-            dua_reduction_payment = DiaReductionPayment(**db_data)
-            db_session.add(dua_reduction_payment)
+            dia_reduction_payment = DiaReductionPayment(**db_data)
+            db_session.add(dia_reduction_payment)
 
 
 def _load_dia_payment_from_reference_file(

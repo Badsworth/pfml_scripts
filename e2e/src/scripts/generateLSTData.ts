@@ -4,7 +4,7 @@ import * as fs from "fs";
 import { promisify } from "util";
 import { pipeline, Readable } from "stream";
 import { merge, AnyIterable } from "streaming-iterables";
-import { dataDirectory } from "./util";
+import dataDirectory from "../generation/DataDirectory";
 import * as scenarios from "../scenarios";
 import { ApplicationRequestBody } from "../api";
 import { factory as EnvFactory } from "../config";

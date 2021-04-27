@@ -3,12 +3,12 @@ import sys
 from typing import List
 
 import massgov.pfml.db as db
-import massgov.pfml.delegated_payments.pub.response_file_handler as response_file_handler
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit as audit
-from massgov.pfml.delegated_payments import delegated_config
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
-from massgov.pfml.delegated_payments.pub import process_check_return_step
+from massgov.pfml.delegated_payments.pickup_response_files_step import PickupResponseFilesStep
+from massgov.pfml.delegated_payments.pub.process_check_return_step import ProcessCheckReturnFileStep
+from massgov.pfml.delegated_payments.pub.process_nacha_return_step import ProcessNachaReturnFileStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     PROCESS_PUB_RESPONSES_REPORTS,
@@ -16,27 +16,31 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
 
 logger = logging.get_logger("massgov.pfml.delegated_payments.task.process_pub_responses")
 
+# The maximum number of files we'll attempt to process for each PUB file type
+# This exists in case we are endlessly processing files, and failing to move them
+MAX_FILE_COUNT = 25
 
 ALL = "ALL"
 PICKUP_FILES = "pickup"
-PROCESS_RESPONSES = "process"
-PROCESS_CHECKS = "process_checks"
-REPORT = "report"
+PROCESS_NACHA_RESPONSES = "process-nacha"
+PROCESS_CHECK_RESPONSES = "process-checks"
 WRITEBACK = "writeback"
+REPORT = "report"
 ALLOWED_VALUES = [
     ALL,
     PICKUP_FILES,
-    PROCESS_RESPONSES,
-    PROCESS_CHECKS,
-    REPORT,
+    PROCESS_NACHA_RESPONSES,
+    PROCESS_CHECK_RESPONSES,
     WRITEBACK,
+    REPORT,
 ]
 
 
 class Configuration:
     pickup_files: bool
-    process_responses: bool
-    process_checks: bool
+    process_nacha_responses: bool
+    process_check_responses: bool
+    send_fineos_writeback: bool
     make_reports: bool
 
     def __init__(self, input_args: List[str]):
@@ -56,16 +60,16 @@ class Configuration:
 
         if ALL in steps:
             self.pickup_files = True
-            self.process_responses = True
-            self.process_checks = True
-            self.make_reports = True
+            self.process_nacha_responses = True
+            self.process_check_responses = True
             self.send_fineos_writeback = True
+            self.make_reports = True
         else:
             self.pickup_files = PICKUP_FILES in steps
-            self.process_responses = PROCESS_RESPONSES in steps
-            self.process_checks = PROCESS_CHECKS in steps
-            self.make_reports = REPORT in steps
+            self.process_nacha_responses = PROCESS_NACHA_RESPONSES in steps
+            self.process_check_responses = PROCESS_CHECK_RESPONSES in steps
             self.send_fineos_writeback = WRITEBACK in steps
+            self.make_reports = REPORT in steps
 
 
 def make_db_session() -> db.Session:
@@ -91,26 +95,38 @@ def _process_pub_responses(
     """Process PUB Responses"""
     logger.info("Start - PUB Responses ECS Task")
 
-    s3_config = delegated_config.get_s3_config()
-
     if config.pickup_files:
-        response_file_handler.CopyReturnFilesToS3Step(
+        PickupResponseFilesStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 
-    if config.process_responses:
-        process_return_files_step = response_file_handler.ProcessReturnFileStep(
-            db_session=db_session, log_entry_db_session=log_entry_db_session, s3_config=s3_config,
+    if config.process_nacha_responses:
+        process_nacha_return_files_step = ProcessNachaReturnFileStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session,
         )
-        while process_return_files_step.have_more_files_to_process():
-            process_return_files_step.run()
+        iteration_count = 0
+        while process_nacha_return_files_step.have_more_files_to_process():
+            process_nacha_return_files_step.run()
+            iteration_count += 1
+            if iteration_count > MAX_FILE_COUNT:
+                raise Exception(
+                    "Found more than 25 files in %s directory, this may indicate that the process was failing to move the files"
+                    % process_nacha_return_files_step.received_path
+                )
 
-    if config.process_checks:
-        process_check_return_file_step = process_check_return_step.ProcessCheckReturnFileStep(
-            db_session=db_session, log_entry_db_session=log_entry_db_session, s3_config=s3_config,
+    if config.process_check_responses:
+        process_check_return_file_step = ProcessCheckReturnFileStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session,
         )
+        iteration_count = 0
         while process_check_return_file_step.have_more_files_to_process():
             process_check_return_file_step.run()
+            iteration_count += 1
+            if iteration_count > MAX_FILE_COUNT:
+                raise Exception(
+                    "Found more than 25 files in %s directory, this may indicate that the process was failing to move the files"
+                    % process_check_return_file_step.received_path
+                )
 
     if config.send_fineos_writeback:
         FineosPeiWritebackStep(

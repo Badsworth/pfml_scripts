@@ -119,7 +119,7 @@ create-user: ## Create local API User
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py $(args)
 
 deps: ## Install dependencies
-	$(POETRY_CMD) install --no-root --extras mssql-server
+	$(POETRY_CMD) install --no-root --extras "mssql-server api-only-dependencies"
 	$(RUN_CMD) npm install --only=dev
 
 deps-check:
@@ -155,13 +155,16 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 fineos-payments-mock-generate:
 	mkdir -p mock_fineos_payments_files
 	rm -rf mock_fineos_payments_files/*
-	$(PY_RUN_CMD) fineos-payments-mock-generate --folder mock_fineos_payments_files --fein 102000000 --ssn 252000000
+	$(PY_RUN_CMD) fineos-payments-mock-generate --folder mock_fineos_payments_files --fein 102000000 --ssn 252000000 $(DECODE_LOG)
 
 payments-fineos-process: # Run the Payments FINEOS import process (Just the vendor extract parts for VCC right now)
 	$(PY_RUN_CMD) payments-fineos-process --steps vendor-extract error-report
 
 payments-ctr-process: # Run the Payments Comptroller processes (Just the VCC parts right now)
 	$(PY_RUN_CMD) payments-ctr-process --steps vcc data-mart error-report
+
+payments-payment-voucher-plus:
+	$(PY_RUN_CMD) payments-payment-voucher-plus $(DECODE_LOG)
 
 pub-payments-process-fineos:
 	$(PY_RUN_CMD) pub-payments-process-fineos --steps ALL $(DECODE_LOG)
@@ -187,6 +190,10 @@ delegated-payment-audit-rejects-generate:
 delegated-payment-eft-response-generate:
 	mkdir -p mock_payment_eft_response
 	$(PY_RUN_CMD) delegated-payment-eft-response-generate --skiprate 50 --folder mock_payment_eft_response $(DECODE_LOG)
+
+delegated-payment-check-response-generate:
+	mkdir -p mock_payment_check_response
+	$(PY_RUN_CMD) delegated-payment-check-response-generate --folder mock_payment_check_response $(DECODE_LOG)
 
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
@@ -442,14 +449,14 @@ API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../.github/wo
 release-notes: refs=origin/deploy/api/stage..origin/main
 release-notes: ## Generate API release notes for $refs (defaults between stage and test)
 	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
-	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA|PUB)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
+	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
 	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
 
 release-list: refs=origin/deploy/api/stage..origin/main
 release-list: ## Generate comma-separated list of ticket ids for $refs
 	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
-	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA|PUB)-[0-9]+' | \
-	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA|PUB)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
+	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+' | \
+	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
 
 
 API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat)

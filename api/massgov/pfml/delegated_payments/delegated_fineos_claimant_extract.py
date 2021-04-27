@@ -75,7 +75,9 @@ class ExtractData:
 
         self.reference_file = ReferenceFile(
             file_location=os.path.join(
-                payments_config.get_s3_config().pfml_fineos_inbound_path, "received", self.date_str
+                payments_config.get_s3_config().pfml_fineos_extract_archive_path,
+                "received",
+                self.date_str,
             ),
             reference_file_type_id=ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id,
             reference_file_id=uuid.uuid4(),
@@ -564,6 +566,7 @@ class ClaimantExtractStep(Step):
             # but do need to add an error to the report if the EFT
             # information is invalid
             if existing_eft:
+                self.increment("eft_found_count")
                 logger.info(
                     "Found existing EFT info for claimant in prenote state %s",
                     existing_eft.prenote_state.prenote_state_description,
@@ -577,8 +580,10 @@ class ClaimantExtractStep(Step):
                         payments_util.ValidationReason.EFT_PRENOTE_REJECTED,
                         "EFT prenote was rejected - cannot pay with this account info",
                     )
+                    self.increment("eft_rejected_count")
 
             else:
+                self.increment("new_eft_count")
                 # This EFT info is new, it needs to be linked to the employee
                 # and added to the EFT prenoting flow
                 logger.info(
@@ -804,7 +809,7 @@ class ClaimantExtractStep(Step):
             extract_data.date_str, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         )
         new_requested_absence_info_s3_path = extract_data.requested_absence_info.file_location.replace(
-            RECEIVED_FOLDER, f"{date_group_folder}"
+            RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{date_group_folder}"
         )
         file_util.rename_file(
             extract_data.requested_absence_info.file_location, new_requested_absence_info_s3_path

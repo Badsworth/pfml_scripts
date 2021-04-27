@@ -14,7 +14,7 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
-from massgov.pfml.api.models.applications.common import PaymentPreference
+from massgov.pfml.api.models.applications.common import LeaveReason, PaymentPreference
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
@@ -259,9 +259,11 @@ def remove_masked_fields_from_request(
         )
 
         # family member date of birth - partially masked
-        if existing_application.caring_leave_metadata and leave_details.get("caring_leave_metadata"):  # type: ignore
+        if existing_application.caring_leave_metadata and leave_details.get(
+            "caring_leave_metadata"
+        ):
             masked_existing_family_member_dob = mask.mask_date(
-                existing_application.caring_leave_metadata.family_member_date_of_birth  # type: ignore
+                existing_application.caring_leave_metadata.family_member_date_of_birth
             )
             errors += process_partially_masked_field(
                 field_key="family_member_date_of_birth",
@@ -404,14 +406,12 @@ def add_or_update_caring_leave_metadata(
     if not api_caring_leave_metadata:
         return None
 
-    caring_leave_metadata = (
-        getattr(application, "caring_leave_metadata", None) or CaringLeaveMetadata()
-    )
+    caring_leave_metadata = application.caring_leave_metadata or CaringLeaveMetadata()
 
     for key in api_caring_leave_metadata.__fields_set__:
         value = getattr(api_caring_leave_metadata, key)
 
-        if key == "relationship_to_caregiver":
+        if key == "relationship_to_caregiver" and value is not None:
             relationship_to_caregiver_model = db_lookups.by_value(
                 db_session, value.get_lookup_model(), value,
             )
@@ -419,8 +419,7 @@ def add_or_update_caring_leave_metadata(
                 value = relationship_to_caregiver_model
         setattr(caring_leave_metadata, key, value)
 
-    application.caring_leave_metadata = caring_leave_metadata  # type: ignore
-    db_session.add(application.caring_leave_metadata)  # type: ignore
+    application.caring_leave_metadata = caring_leave_metadata
 
 
 def update_leave_details(
@@ -453,6 +452,16 @@ def update_leave_details(
             if lookup_model:
                 if key == "reason":
                     key = "leave_reason"
+
+                    # If leave reason changes from Caring Leave, delete CaringLeaveMetadata record if it exists
+                    if (
+                        value != LeaveReason.caring_leave
+                        and application.leave_reason
+                        and application.leave_reason.leave_reason_description
+                        == LeaveReason.caring_leave
+                        and application.caring_leave_metadata is not None
+                    ):
+                        db_session.delete(application.caring_leave_metadata)
 
                 if key == "reason_qualifier":
                     key = "leave_reason_qualifier"

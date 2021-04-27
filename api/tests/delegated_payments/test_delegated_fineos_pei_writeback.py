@@ -152,7 +152,7 @@ def test_process_payments_for_writeback(
     monkeypatch.setenv("FINEOS_DATA_IMPORT_PATH", fineos_data_import_path)
 
     pfml_fineos_outbound_path = s3_bucket_uri + "/cps/outbound/"
-    monkeypatch.setenv("PFML_FINEOS_OUTBOUND_PATH", pfml_fineos_outbound_path)
+    monkeypatch.setenv("PFML_FINEOS_WRITEBACK_ARCHIVE_PATH", pfml_fineos_outbound_path)
 
     # Create some small amount of Payments that are in a state other than the one we pick up
     # for the writeback.

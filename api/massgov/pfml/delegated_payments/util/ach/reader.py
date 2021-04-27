@@ -222,7 +222,7 @@ class ACHReader:
         """Parse stream of lines to RawRecord objects."""
         raw_records = []
         for line_number, data in enumerate(self.f, start=1):
-            data = data.rstrip("\n")
+            data = data.rstrip("\r\n")
             try:
                 record_type = TypeCode(int(data[0]))
             except ValueError:

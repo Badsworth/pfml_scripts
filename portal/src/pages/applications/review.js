@@ -7,6 +7,7 @@ import BenefitsApplication, {
   PhoneType,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
+  RelationshipToCaregiver,
   WorkPattern,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
@@ -395,6 +396,55 @@ export const Review = (props) => {
             {formatDateRange(get(claim, "leave_details.child_placement_date"))}
           </ReviewRow>
         )}
+
+      {claim.isCaringLeave && (
+        <React.Fragment>
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.familyMemberRelationshipLabel")}
+          >
+            {t("pages.claimsReview.familyMemberRelationship", {
+              context: findKeyByValue(
+                RelationshipToCaregiver,
+                get(
+                  claim,
+                  "leave_details.caring_leave_metadata.relationship_to_caregiver"
+                )
+              ),
+            })}
+          </ReviewRow>
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.familyMemberNameLabel")}
+          >
+            {[
+              get(
+                claim,
+                "leave_details.caring_leave_metadata.family_member_first_name"
+              ),
+              get(
+                claim,
+                "leave_details.caring_leave_metadata.family_member_middle_name"
+              ),
+              get(
+                claim,
+                "leave_details.caring_leave_metadata.family_member_last_name"
+              ),
+            ].join(" ")}
+          </ReviewRow>
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.familyMemberDateOfBirthLabel")}
+          >
+            {formatDateRange(
+              get(
+                claim,
+                "leave_details.caring_leave_metadata.family_member_date_of_birth"
+              )
+            )}
+          </ReviewRow>
+        </React.Fragment>
+      )}
 
       <ReviewRow
         level={reviewRowLevel}

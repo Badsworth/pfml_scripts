@@ -1,13 +1,19 @@
+import datetime
 import logging  # noqa: B1
 import os
 
 import pytest
 
+import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.gax as gax
+import massgov.pfml.payments.mock.ctr_outbound_file_generator as ctr_outbound_file_generator
+import massgov.pfml.payments.mock.fineos_extract_generator as fineos_extract_generator
+import massgov.pfml.payments.mock.payments_test_scenario_generator as scenario_generator
 import massgov.pfml.payments.moveit as moveit
 import massgov.pfml.payments.vcc as vcc
 import massgov.pfml.util.files as file_util
+from massgov.pfml.db.models.employees import State
 from massgov.pfml.payments.process_ctr_payments import Configuration, _ctr_process
 
 # every test in here requires real resources
@@ -83,3 +89,45 @@ def test_ctr_process_errors(
             os.path.join(payments_config.get_s3_config().pfml_error_reports_path, error_report)
         )
         assert len(list(lines)) == 1  # Just a header
+
+
+def test_ctr_process_outbound_vendor_return(
+    initialize_factories_session, mock_s3_bucket, set_exporter_env_vars, test_db_session
+):
+    scenario_list = [
+        scenario_generator.ScenarioNameWithCount(scenario_generator.ScenarioName.SCENARIO_A, 1),
+        scenario_generator.ScenarioNameWithCount(scenario_generator.ScenarioName.SCENARIO_B, 1),
+    ]
+    scenario_config = scenario_generator.ScenarioDataConfig(
+        scenario_list, ssn_id_base=526000029, fein_id_base=626000029
+    )
+    scenario_data_list = fineos_extract_generator.generate(
+        scenario_config, "mock_fineos_payments_input_files"
+    )
+
+    for scenario_data in scenario_data_list:
+        state_log_util.create_finished_state_log(
+            end_state=State.VCC_SENT,
+            associated_model=scenario_data.employee,
+            outcome="Initial state",
+            db_session=test_db_session,
+        )
+
+        # Assert ctr_address_pair exists, but only the FINEOS half.
+        assert scenario_data.employee.ctr_address_pair is not None
+        assert scenario_data.employee.ctr_address_pair.fineos_address is not None
+        assert scenario_data.employee.ctr_address_pair.ctr_address is None
+
+    ctr_outbound_file_generator.generate_outbound_vendor_return(
+        scenario_data_list,
+        f"s3://{mock_s3_bucket}/ctr/inbound/received",
+        datetime.datetime.now().isoformat(),
+    )
+    ctr_process_config = Configuration(["--steps", "outbound-vendor-return"])
+    _ctr_process(test_db_session, ctr_process_config)
+
+    for scenario_data in scenario_data_list:
+        # Assert ctr_address_pair exists, but only the FINEOS half.
+        assert scenario_data.employee.ctr_address_pair is not None
+        assert scenario_data.employee.ctr_address_pair.fineos_address is not None
+        assert scenario_data.employee.ctr_address_pair.ctr_address is not None

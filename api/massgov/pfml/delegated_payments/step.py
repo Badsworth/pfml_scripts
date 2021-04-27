@@ -1,6 +1,6 @@
 import abc
 import collections
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
@@ -48,6 +48,12 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
 
             self.set_metrics(**flattened_state_log_counts_after)
 
+            # Calculate the difference in counts for the metrics
+            state_log_diff = calculate_state_log_count_diff(
+                state_log_counts_before, state_log_counts_after
+            )
+            self.set_metrics(**state_log_diff)
+
     @abc.abstractmethod
     def run_step(self) -> None:
         pass
@@ -73,11 +79,44 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         self.log_entry.increment(name)
 
 
+def calculate_state_log_count_diff(
+    state_log_counts_before: Dict[str, int], state_log_counts_after: Dict[str, int]
+) -> Dict[str, int]:
+    # First, create a map of state log description to a tuple of before count/after count
+    # Note that a state log that isn't present means there was 0.
+    # We need to iterate over both so that we account for any that only appear before or after.
+    count_map = {}
+    for key, value in state_log_counts_before.items():
+        count_map[key] = [value, 0]
+
+    for key, value in state_log_counts_after.items():
+        if key not in count_map:
+            count_map[key] = [0, 0]
+
+        count_map[key][1] = value
+
+    # Calculate the diffs
+    diff_map = {}
+    for description, counts in count_map.items():
+        count_before = counts[0]
+        count_after = counts[1]
+
+        diff = count_after - count_before
+        # If it didn't change, don't bother adding it
+        if diff == 0:
+            continue
+
+        key_name = f"diff_state_log_counts_{description}"
+        diff_map[key_name] = diff
+
+    return diff_map
+
+
 def flatten(d, parent_key="", sep="_"):
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, collections.MutableMapping):
+        if isinstance(v, collections.abc.MutableMapping):
             items.extend(flatten(v, new_key, sep=sep).items())
         else:
             items.append((new_key, v))

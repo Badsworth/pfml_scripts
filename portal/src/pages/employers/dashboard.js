@@ -1,7 +1,7 @@
+import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
 import ClaimCollection from "../../models/ClaimCollection";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
-import Link from "next/link";
 // TODO (EMPLOYER-859): Render component when pagination metadata is available
 // import PaginationNavigation from "../../components/PaginationNavigation";
 // import PaginationSummary from "../../components/PaginationSummary";
@@ -9,6 +9,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Table from "../../components/Table";
 import Title from "../../components/Title";
+import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
@@ -92,6 +93,11 @@ export const Dashboard = (props) => {
                 {t("pages.employersDashboard.tableColHeading", {
                   context: columnKey,
                 })}
+                {columnKey === "created_at" && (
+                  <TooltipIcon position="bottom">
+                    {t("pages.employersDashboard.startDateTooltip")}
+                  </TooltipIcon>
+                )}
               </th>
             ))}
           </tr>
@@ -174,24 +180,19 @@ const ClaimTableRows = (props) => {
       case "created_at":
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
-        return (
-          <Link href={claimRoute}>
-            <a>{get(claim, columnKey)}</a>
-          </Link>
-        );
+        // TODO (EMPLOYER-1178) Use <Link> for client-side navigation
+        return <a href={claimRoute}>{get(claim, columnKey)}</a>;
       case "employee_name":
-        return (
-          <Link href={claimRoute}>
-            <a>{get(claim, "employee.fullName")}</a>
-          </Link>
-        );
+        // TODO (EMPLOYER-1178) Use <Link> for client-side navigation
+        return <a href={claimRoute}>{get(claim, "employee.fullName")}</a>;
       case "employer_dba":
         return get(claim, "employer.employer_dba");
       case "employer_fein":
         return get(claim, "employer.employer_fein");
       case "status":
-        // TODO (EMPLOYER-1125): Render a <Tag> for the status
-        return "--";
+        return (
+          <AbsenceCaseStatusTag status={get(claim, "fineos_absence_status")} />
+        );
       default:
         return "";
     }

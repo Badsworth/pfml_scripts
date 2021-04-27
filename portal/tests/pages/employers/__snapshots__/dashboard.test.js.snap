@@ -18,25 +18,21 @@ exports[`Employer dashboard renders a table of claims 1`] = `
     data-label="Employee name"
     scope="row"
   >
-    <Link
+    <a
       href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
     >
-      <a>
-        Jane Doe
-      </a>
-    </Link>
+      Jane Doe
+    </a>
   </th>
   <td
     data-label="Application ID"
     key="fineos_absence_id"
   >
-    <Link
+    <a
       href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
     >
-      <a>
-        NTN-111-ABS-01
-      </a>
-    </Link>
+      NTN-111-ABS-01
+    </a>
   </td>
   <td
     data-label="Organization"
@@ -51,7 +47,7 @@ exports[`Employer dashboard renders a table of claims 1`] = `
     12-3456789
   </td>
   <td
-    data-label="Date filed"
+    data-label="Application start date"
     key="created_at"
   >
     1/15/2021
@@ -60,9 +56,59 @@ exports[`Employer dashboard renders a table of claims 1`] = `
     data-label="Status"
     key="status"
   >
-    --
+    <AbsenceCaseStatusTag
+      status="Approved"
+    />
   </td>
 </tr>
+`;
+
+exports[`Employer dashboard renders a table of claims 2`] = `
+<thead>
+  <tr>
+    <th
+      key="employee_name"
+      scope="col"
+    >
+      Employee name
+    </th>
+    <th
+      key="fineos_absence_id"
+      scope="col"
+    >
+      Application ID
+    </th>
+    <th
+      key="employer_dba"
+      scope="col"
+    >
+      Organization
+    </th>
+    <th
+      key="employer_fein"
+      scope="col"
+    >
+      Employer ID number
+    </th>
+    <th
+      key="created_at"
+      scope="col"
+    >
+      Application start date
+      <TooltipIcon
+        position="bottom"
+      >
+        The date a new application for leave was started
+      </TooltipIcon>
+    </th>
+    <th
+      key="status"
+      scope="col"
+    >
+      Status
+    </th>
+  </tr>
+</thead>
 `;
 
 exports[`Employer dashboard renders the page 1`] = `

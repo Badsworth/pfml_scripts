@@ -67,6 +67,7 @@ class LeaveReasonQualifier(str, LookupEnum):
 
 
 class RelationshipToCaregiver(str, LookupEnum):
+    spouse = "Spouse"
     parent = "Parent"
     child = "Child"
     grandparent = "Grandparent"

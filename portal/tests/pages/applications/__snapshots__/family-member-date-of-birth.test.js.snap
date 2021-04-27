@@ -5,11 +5,15 @@ exports[`FamilyMemberDateOfBirth renders the page 1`] = `
   onSave={[Function]}
   title="Leave details"
 >
-  <Heading
-    level="2"
-    size="1"
-  >
-    What is your family member's date of birth?
-  </Heading>
+  <InputDate
+    dayLabel="Day"
+    example="mm / dd / yyyy"
+    label="What is your family member's date of birth?"
+    monthLabel="Month"
+    name="leave_details.caring_leave_metadata.family_member_date_of_birth"
+    onChange={[Function]}
+    value=""
+    yearLabel="Year"
+  />
 </QuestionPage>
 `;

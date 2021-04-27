@@ -44,15 +44,7 @@ def update_log_entry(db_session, existing_import_log, status, report):
     db_session.commit()
     logger.info("Finished saving import report in log")
 
-    report_with_metadata = asdict(report)
-    report_with_metadata.update(
-        {
-            "job.id": existing_import_log.import_log_id,
-            "job.data_source": existing_import_log.source,
-            "job.job_type": existing_import_log.import_type,
-        }
-    )
-    massgov.pfml.util.newrelic.events.log_newrelic_event(report_with_metadata)
+    log_report_to_newrelic(existing_import_log)
 
 
 METRIC_COMMIT_INTERVAL = 5  # Seconds between writes to import_log.
@@ -104,6 +96,8 @@ class LogEntry:
 
         self.import_log.end = massgov.pfml.util.datetime.utcnow()
         self.db_session.commit()
+
+        log_report_to_newrelic(self.import_log)
 
         # Continue propagating the exception after this method.
         return False
@@ -157,17 +151,25 @@ def log_entry(db_session, source, import_type):
         import_log.end = massgov.pfml.util.datetime.utcnow()
         db_session.commit()
 
-        report_with_metadata = json.loads(import_log.report)
-        report_with_metadata.update(
-            {
-                "job.id": import_log.import_log_id,
-                "job.data_source": import_log.source,
-                "job.job_type": import_log.import_type,
-            }
-        )
-        massgov.pfml.util.newrelic.events.log_newrelic_event(report_with_metadata)
+        log_report_to_newrelic(import_log)
 
 
 def set_import_log_with_error_message(import_log: ImportLog, error_message: str) -> None:
     existing_report = json.loads(import_log.report) if import_log.report is not None else {}
     import_log.report = json.dumps({"message": error_message, **existing_report}, indent=2)
+
+
+def log_report_to_newrelic(import_log: ImportLog) -> None:
+    if import_log.report:
+        report_with_metadata = json.loads(import_log.report)
+    else:
+        report_with_metadata = {}
+
+    report_with_metadata.update(
+        {
+            "job.id": import_log.import_log_id,
+            "job.data_source": import_log.source,
+            "job.job_type": import_log.import_type,
+        }
+    )
+    massgov.pfml.util.newrelic.events.log_newrelic_event(report_with_metadata)

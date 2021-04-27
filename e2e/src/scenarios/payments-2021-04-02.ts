@@ -29,14 +29,8 @@ const payments = {
   },
   eftvalid: {
     payment_method: "Elec Funds Transfer" as const,
-    routing_number: "121042882",
-    account_number: "5555555555",
-    bank_account_type: "Checking" as const,
-  },
-  eftinvalid: {
-    payment_method: "Elec Funds Transfer" as const,
-    routing_number: "121042882",
-    account_number: "5555555555",
+    routing_number: "221172186",
+    account_number: "014901507",
     bank_account_type: "Checking" as const,
   },
 };
@@ -89,57 +83,57 @@ export const PMT2: ScenarioSpecification = {
   },
 };
 
-// export const PMT3: ScenarioSpecification = {
-//   // Note: For prenoted employees, we'll use a picker function instead of the regular spec.
-//   // This allows us to manually mark some employees as prenoted, then use them.
-//   employee: { wages: 30000, metadata: { prenoted: "yes" } },
-//   claim: {
-//     label: "PMT3",
-//     reason: "Child Bonding",
-//     reason_qualifier: "Newborn",
-//     has_continuous_leave_periods: true,
-//     leave_dates: [addWeeks(new Date(), -2), addWeeks(new Date(), 4)],
-//     address: addresses.valid,
-//     payment: payments.check,
-//     bondingDate: "past",
-//     docs: {
-//       MASSID: {},
-//       BIRTHCERTIFICATE: {},
-//     },
-//     employerResponse: {
-//       hours_worked_per_week: 40,
-//       employer_decision: "Approve",
-//       fraud: "No",
-//     },
-//     metadata: { postSubmit: "APPROVE" },
-//   },
-// };
-//
-// export const PMT4: ScenarioSpecification = {
-//   // Note: For prenoted employees, we'll use a picker function instead of the regular spec.
-//   // This allows us to manually mark some employees as prenoted, then use them.
-//   employee: { wages: 30000, metadata: { prenoted: "pending" } },
-//   claim: {
-//     label: "PMT4",
-//     reason: "Child Bonding",
-//     reason_qualifier: "Newborn",
-//     has_continuous_leave_periods: true,
-//     leave_dates: [addWeeks(new Date(), -2), addWeeks(new Date(), 4)],
-//     address: addresses.valid,
-//     payment: payments.eftvalid,
-//     bondingDate: "past",
-//     docs: {
-//       MASSID: {},
-//       BIRTHCERTIFICATE: {},
-//     },
-//     employerResponse: {
-//       hours_worked_per_week: 40,
-//       employer_decision: "Approve",
-//       fraud: "No",
-//     },
-//     metadata: { postSubmit: "APPROVE" },
-//   },
-// };
+export const PMT3: ScenarioSpecification = {
+  // Note: For prenoted employees, we'll use a picker function instead of the regular spec.
+  // This allows us to manually mark some employees as prenoted, then use them.
+  employee: { wages: 30000, metadata: { prenoted: "yes" } },
+  claim: {
+    label: "PMT3",
+    reason: "Child Bonding",
+    reason_qualifier: "Newborn",
+    has_continuous_leave_periods: true,
+    leave_dates: [addWeeks(new Date(), -2), addWeeks(new Date(), 4)],
+    address: addresses.valid,
+    payment: payments.eftvalid,
+    bondingDate: "past",
+    docs: {
+      MASSID: {},
+      BIRTHCERTIFICATE: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+    metadata: { postSubmit: "APPROVE" },
+  },
+};
+
+export const PMT4: ScenarioSpecification = {
+  // Note: For prenoted employees, we'll use a picker function instead of the regular spec.
+  // This allows us to manually mark some employees as prenoted, then use them.
+  employee: { wages: 30000, metadata: { prenoted: "pending" } },
+  claim: {
+    label: "PMT4",
+    reason: "Child Bonding",
+    reason_qualifier: "Newborn",
+    has_continuous_leave_periods: true,
+    leave_dates: [addWeeks(new Date(), -2), addWeeks(new Date(), 4)],
+    address: addresses.valid,
+    payment: payments.eftvalid,
+    bondingDate: "past",
+    docs: {
+      MASSID: {},
+      BIRTHCERTIFICATE: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+    metadata: { postSubmit: "APPROVE" },
+  },
+};
 
 // ACH payment with no prenote request
 export const PMT5: ScenarioSpecification = {
@@ -170,7 +164,7 @@ export const PMT5: ScenarioSpecification = {
 
 // Family leave claim payment(s)
 export const PMT6: ScenarioSpecification = {
-  employee: { wages: 30000, metadata: { prenoted: "no" } },
+  employee: { wages: 30000, metadata: { prenoted: "yes" } },
   claim: {
     label: "PMT6",
     reason: "Child Bonding",
@@ -240,27 +234,27 @@ export const PRENOTE1: ScenarioSpecification = {
 };
 
 // Prenote request – invalid bank routing number, valid account number
-export const PRENOTE2: ScenarioSpecification = {
-  employee: { wages: 30000, metadata: { prenoted: "no" } },
-  claim: {
-    label: "PRENOTE2",
-    reason: "Serious Health Condition - Employee",
-    has_continuous_leave_periods: true,
-    leave_dates: [addWeeks(new Date(), 1), addWeeks(new Date(), 4)],
-    address: addresses.valid,
-    payment: payments.eftinvalid,
-    docs: {
-      HCP: {},
-      MASSID: {},
-    },
-    employerResponse: {
-      hours_worked_per_week: 40,
-      employer_decision: "Approve",
-      fraud: "No",
-    },
-    metadata: { postSubmit: "APPROVEDOCS" },
-  },
-};
+// export const PRENOTE2: ScenarioSpecification = {
+//   employee: { wages: 30000, metadata: { prenoted: "no" } },
+//   claim: {
+//     label: "PRENOTE2",
+//     reason: "Serious Health Condition - Employee",
+//     has_continuous_leave_periods: true,
+//     leave_dates: [addWeeks(new Date(), 1), addWeeks(new Date(), 4)],
+//     address: addresses.valid,
+//     payment: payments.eftinvalid,
+//     docs: {
+//       HCP: {},
+//       MASSID: {},
+//     },
+//     employerResponse: {
+//       hours_worked_per_week: 40,
+//       employer_decision: "Approve",
+//       fraud: "No",
+//     },
+//     metadata: { postSubmit: "APPROVEDOCS" },
+//   },
+// };
 
 // Invalid Address
 export const PRENOTE5: ScenarioSpecification = {
@@ -355,7 +349,7 @@ export const ADDRESS3: ScenarioSpecification = {
 
 // Valid address for ACH payment – no correction needed from Experian
 export const ADDRESS5: ScenarioSpecification = {
-  employee: { wages: 30000, metadata: { prenoted: "no" } },
+  employee: { wages: 30000, metadata: { prenoted: "yes" } },
   claim: {
     label: "ADDRESS5",
     reason: "Serious Health Condition - Employee",
@@ -379,7 +373,7 @@ export const ADDRESS5: ScenarioSpecification = {
 // Valid address for ACH payment – one for one correction provided from Experian
 // Valid address for ACH payment – no correction needed from Experian
 export const ADDRESS6: ScenarioSpecification = {
-  employee: { wages: 30000, metadata: { prenoted: "no" } },
+  employee: { wages: 30000, metadata: { prenoted: "yes" } },
   claim: {
     label: "ADDRESS6",
     reason: "Serious Health Condition - Employee",
@@ -401,7 +395,7 @@ export const ADDRESS6: ScenarioSpecification = {
 };
 // Valid address for ACH payment – no correction needed from Experian
 export const ADDRESS7: ScenarioSpecification = {
-  employee: { wages: 30000, metadata: { prenoted: "no" } },
+  employee: { wages: 30000, metadata: { prenoted: "yes" } },
   claim: {
     label: "ADDRESS7",
     reason: "Serious Health Condition - Employee",

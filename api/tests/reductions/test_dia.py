@@ -1,3 +1,4 @@
+import csv
 import os
 import random
 import string
@@ -62,10 +63,20 @@ def _create_dia_payment_list_reference_file(
 
 
 def test_format_claimants_for_dia_claimant_list():
-    employees = EmployeeWithFineosNumberFactory.build_batch(size=2)
+    employees_general = EmployeeWithFineosNumberFactory.build_batch(size=2)
+
+    employee_with_comma_names = [
+        EmployeeWithFineosNumberFactory.build(first_name="Jane", last_name="Doe, JR."),
+        EmployeeWithFineosNumberFactory.build(first_name="Doe, Jane", last_name="Doe"),
+        EmployeeWithFineosNumberFactory.build(first_name="Doe, Jane", last_name="Doe, JR."),
+        EmployeeWithFineosNumberFactory.build(first_name="Fo,o,,,"),
+    ]
+
+    employees = employees_general + employee_with_comma_names
+
     claimants_dia_info = _format_claimants_for_dia_claimant_list(employees)
 
-    assert len(claimants_dia_info) == 2
+    assert len(claimants_dia_info) == len(employees)
 
     for employee, dia_claimant in zip(employees, claimants_dia_info):
         assert dia_claimant[Constants.CUSTOMER_NUMBER_FIELD] == employee.fineos_customer_number
@@ -73,8 +84,13 @@ def test_format_claimants_for_dia_claimant_list():
             dia_claimant[Constants.BENEFIT_START_DATE_FIELD]
             == Constants.TEMPORARY_BENEFIT_START_DATE
         )
-        assert dia_claimant[Constants.FIRST_NAME_FIELD] == employee.first_name
-        assert dia_claimant[Constants.LAST_NAME_FIELD] == employee.last_name
+
+        assert "," not in dia_claimant[Constants.FIRST_NAME_FIELD]
+        assert dia_claimant[Constants.FIRST_NAME_FIELD] == employee.first_name.replace(",", "")
+
+        assert "," not in dia_claimant[Constants.LAST_NAME_FIELD]
+        assert dia_claimant[Constants.LAST_NAME_FIELD] == employee.last_name.replace(",", "")
+
         assert dia_claimant[Constants.BIRTH_DATE_FIELD] == employee.date_of_birth.strftime(
             Constants.DATE_OF_BIRTH_FORMAT
         )
@@ -83,10 +99,20 @@ def test_format_claimants_for_dia_claimant_list():
         assert "-" not in dia_claimant[Constants.SSN_FIELD]
 
 
-def test_write_claimants_to_tempfile_invalid_data():
-    employees = EmployeeWithFineosNumberFactory.build_batch(size=2, first_name="Jo,hn")
+def test_write_claimants_to_tempfile_comma_error():
+    employees = EmployeeWithFineosNumberFactory.build_batch(size=2, fineos_customer_number="test,")
 
     with pytest.raises(ValueError):
+        claimants_dia_info = _format_claimants_for_dia_claimant_list(employees)
+        _write_claimants_to_tempfile(claimants_dia_info)
+
+
+def test_write_claimants_to_tempfile_quote_error():
+    employees = EmployeeWithFineosNumberFactory.build_batch(
+        size=2, first_name='Jane "The Unknown" Doe'
+    )
+
+    with pytest.raises(csv.Error):
         claimants_dia_info = _format_claimants_for_dia_claimant_list(employees)
         _write_claimants_to_tempfile(claimants_dia_info)
 

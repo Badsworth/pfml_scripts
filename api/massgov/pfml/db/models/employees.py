@@ -369,6 +369,13 @@ class PubEft(Base):
         default=utc_timestamp_gen,
         server_default=sqlnow(),
     )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
     prenote_response_at = Column(TIMESTAMP(timezone=True))
     prenote_sent_at = Column(TIMESTAMP(timezone=True))
     prenote_response_reason_code = Column(Text)
@@ -582,6 +589,7 @@ class Payment(Base):
     disb_check_eft_issue_date = Column(Date)
     disb_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     disb_amount = Column(Numeric(asdecimal=True))
+    leave_request_decision = Column(Text)
     experian_address_pair_id = Column(
         UUID(as_uuid=True), ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
     )
@@ -597,6 +605,20 @@ class Payment(Base):
         payment_individual_id_seq,
         index=True,
         server_default=payment_individual_id_seq.next_value(),
+    )
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
     )
 
     claim = relationship(Claim)
@@ -618,6 +640,20 @@ class PaymentCheck(Base):
     check_posted_date = Column(Date)
     payment_check_status_id = Column(
         Integer, ForeignKey("lk_payment_check_status.payment_check_status_id")
+    )
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
     )
 
     payment_check_status = relationship(LkPaymentCheckStatus)
@@ -916,7 +952,17 @@ class ReferenceFile(Base):
         "DuaReductionPaymentReferenceFile", back_populates="reference_file"
     )
     created_at = Column(
-        TIMESTAMP(timezone=True), nullable=True, default=utc_timestamp_gen, server_default=sqlnow(),
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
     )
 
 
@@ -1124,6 +1170,14 @@ class PubError(Base):
         TIMESTAMP(timezone=True),
         nullable=False,
         default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
         server_default=sqlnow(),
     )
 
@@ -1627,6 +1681,7 @@ class State(LookupTable):
     DUA_REPORT_FOR_DFML_CREATED = LkState(
         6, "Create DUA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     )
+    # not used, see DUA_REDUCTIONS_REPORT_SENT
     DUA_REPORT_FOR_DFML_SUBMITTED = LkState(
         7, "Submit DUA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     )
@@ -1951,6 +2006,10 @@ class State(LookupTable):
         161, "FINEOS Writeback #2 sent - Check", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    DIA_REPORT_FOR_DFML_CREATED = LkState(
+        162, "Create DIA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
+    )
+
 
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
@@ -1998,8 +2057,9 @@ class ReferenceFileType(LookupTable):
     DIA_REDUCTION_REPORT_FOR_DFML = LkReferenceFileType(
         14, "DIA payments for DFML reduction report", 1
     )
-    PUB_TRANSACTION = LkReferenceFileType(15, "PUB-NACHA", 1)
+    PUB_NACHA = LkReferenceFileType(15, "PUB NACHA file", 1)
     PUB_ACH_RETURN = LkReferenceFileType(16, "PUB ACH Return", 1)
+    PUB_CHECK_RETURN = LkReferenceFileType(17, "PUB Check Return", 1)
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)

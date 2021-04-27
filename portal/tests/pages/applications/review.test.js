@@ -287,6 +287,20 @@ describe("Leave reason", () => {
       expect(wrapper.find({ label: familyLeaveTypeLabel }).exists()).toBe(true);
     });
   });
+
+  describe("When the reason is caring leave", () => {
+    it("renders caring leave details", () => {
+      const claim = new MockClaimBuilder()
+        .completed()
+        .caringLeaveReason()
+        .create();
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: claim,
+        diveLevels,
+      });
+      expect(wrapper).toMatchSnapshot();
+    });
+  });
 });
 
 describe("Reduced leave", () => {
@@ -582,5 +596,23 @@ describe("OtherLeaveEntry", () => {
 
       expect(wrapper).toMatchSnapshot();
     });
+  });
+});
+
+describe("CaringLeave", () => {
+  it("renders family member's relationship", () => {
+    const claim = new MockClaimBuilder()
+      .part1Complete()
+      .caringLeaveReason()
+      .create();
+
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: claim,
+      diveLevels,
+    });
+
+    expect(
+      wrapper.find({ label: "Family member's relationship" })
+    ).toMatchSnapshot();
   });
 });

@@ -1,8 +1,10 @@
+import os
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import List, Tuple
 
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
@@ -13,6 +15,8 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     PrenoteState,
     PubEft,
+    ReferenceFile,
+    ReferenceFileType,
 )
 from massgov.pfml.delegated_payments.util.ach.nacha import (
     Constants,
@@ -55,13 +59,32 @@ def create_nacha_batch(nacha_batch_type: NachaBatchType) -> NachaBatch:
     return batch
 
 
-def upload_nacha_file_to_s3(nacha_file: NachaFile, file_path: str) -> None:
+def send_nacha_file(
+    nacha_file: NachaFile, archive_folder_path: str, outgoing_folder_path: str
+) -> ReferenceFile:
     logger.info("Creating NACHA files")
-
     nacha_file.finalize()
 
-    with file_util.write_file(file_path, mode="wb") as pub_file:
+    now = payments_util.get_now()
+    nacha_file_name = now.strftime(payments_util.Constants.NACHA_FILE_FORMAT)
+    archive_s3_path = payments_util.build_archive_path(
+        archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, nacha_file_name, now
+    )
+
+    with file_util.write_file(archive_s3_path, mode="wb") as pub_file:
         pub_file.write(nacha_file.to_bytes())
+    logger.info("Wrote NACHA file to archive path %s", archive_s3_path)
+
+    outgoing_s3_path = os.path.join(
+        outgoing_folder_path, payments_util.Constants.FILE_NAME_PUB_NACHA
+    )
+    file_util.copy_file(archive_s3_path, outgoing_s3_path)
+    logger.info("Copied NACHA file to outgoing path %s", outgoing_s3_path)
+
+    return ReferenceFile(
+        file_location=archive_s3_path,
+        reference_file_type_id=ReferenceFileType.PUB_NACHA.reference_file_type_id,
+    )
 
 
 def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]) -> None:

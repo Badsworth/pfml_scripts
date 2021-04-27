@@ -18,6 +18,8 @@ resource "aws_lb" "nlbs" {
   load_balancer_type = "network"
   subnets            = data.aws_subnet_ids.app_private[each.key].ids
 
+  enable_deletion_protection = true
+
   # Even though the load balancer and ECS instances run in the same subnets,
   # an LB instance in zone A cannot route to an ECS instance in zone B unless
   # cross zone load balancing is enabled.

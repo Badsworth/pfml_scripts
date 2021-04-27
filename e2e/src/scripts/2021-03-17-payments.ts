@@ -1,5 +1,6 @@
 import ClaimPool from "../generation/Claim";
-import { dataDirectory, submit, PostSubmitCallback } from "./util";
+import dataDirectory from "../generation/DataDirectory";
+import { submit, PostSubmitCallback } from "./util";
 import ClaimSubmissionTracker from "../submission/ClaimStateTracker";
 import SubmittedClaimIndex from "../submission/writers/SubmittedClaimIndex";
 import path from "path";

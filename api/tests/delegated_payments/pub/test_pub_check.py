@@ -28,7 +28,7 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile, EzCheckRecord
-from tests.factories import EzCheckFileFactory
+from tests.factories import EzCheckFileFactory, PositivePayFileFactory
 
 fake = faker.Faker()
 
@@ -81,8 +81,9 @@ def test_create_check_file_no_eligible_payments(test_db_session):
 
 
 def test_create_check_file_eligible_payment_error(
-    initialize_factories_session, test_db_session, caplog
+    initialize_factories_session, test_db_session, caplog, monkeypatch
 ):
+    monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", "0")
     # Update zip code so that it fails validation.
     payment = _random_valid_check_payment_with_state_log(test_db_session)
     payment.experian_address_pair.experian_address.zip_code = "An invalid zip code"
@@ -104,8 +105,10 @@ def test_create_check_file_success(
 ):
     account_number = str(fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999))
     routing_number = str(fake.random_int(min=10_000_000_000, max=99_999_999_999))
+    starting_check_num = str(fake.random_int(min=1_000, max=10_000))
     monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", account_number)
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", routing_number)
+    monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", starting_check_num)
 
     payments = []
     for _i in range(fake.random_int(min=3, max=8)):
@@ -132,21 +135,51 @@ def test_create_check_file_success(
             == 1
         )
 
-        assert payment.check.check_number == (i + 1)
+        assert payment.check.check_number == (i + int(starting_check_num) + 1)
 
 
 def test_send_check_file(mock_s3_bucket):
     ez_check_file = EzCheckFileFactory()
-    folder_path = "s3://{}/pub/outbound/".format(mock_s3_bucket)
+    archive_folder_path = f"s3://{mock_s3_bucket}/pub/archive"
+    outbound_folder_path = f"s3://{mock_s3_bucket}/pub/outbound"
 
-    ref_file = pub_check.send_check_file(ez_check_file, folder_path)
+    ref_file = pub_check.send_check_file(ez_check_file, archive_folder_path, outbound_folder_path)
 
-    filename_pattern = r"PUB-EZ-CHECK_\d{4}\d{2}\d{2}-\d{2}\d{2}\.csv"
+    filename_pattern = (
+        r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-EOLWD-DFML-EZ-CHECK.csv"
+    )
     assert re.search(filename_pattern, ref_file.file_location)
 
     # Confirm output file has 2 rows for each record and 1 for the header.
     file_stream = file_util.open_stream(ref_file.file_location)
     assert len([line for line in file_stream]) == 1 + 2 * len(ez_check_file.records)
+
+    # The outbound file should have been identically built
+    file_stream = file_util.open_stream(f"{outbound_folder_path}/EOLWD-DFML-EZ-CHECK.csv")
+    assert len([line for line in file_stream]) == 1 + 2 * len(ez_check_file.records)
+
+
+def test_send_positive_pay_file(mock_s3_bucket):
+    positive_pay_file = PositivePayFileFactory()
+    archive_folder_path = f"s3://{mock_s3_bucket}/pub/archive"
+    outbound_folder_path = f"s3://{mock_s3_bucket}/pub/outbound"
+
+    ref_file = pub_check.send_positive_pay_file(
+        positive_pay_file, archive_folder_path, outbound_folder_path
+    )
+
+    filename_pattern = (
+        r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-EOLWD-DFML-POSITIVE-PAY.txt"
+    )
+    assert re.search(filename_pattern, ref_file.file_location)
+
+    # Confirm output file has a row for each record
+    file_stream = file_util.open_stream(ref_file.file_location)
+    assert len([line for line in file_stream]) == len(positive_pay_file.entries)
+
+    # The outbound file should have been identically built
+    file_stream = file_util.open_stream(f"{outbound_folder_path}/EOLWD-DFML-POSITIVE-PAY.txt")
+    assert len([line for line in file_stream]) == len(positive_pay_file.entries)
 
 
 @pytest.mark.parametrize(

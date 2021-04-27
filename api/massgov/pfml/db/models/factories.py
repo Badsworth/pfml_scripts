@@ -183,7 +183,7 @@ class PubEftFactory(BaseFactory):
     prenote_response_at = Generators.UtcNow
 
 
-class EmployeeFactory(BaseFactory):
+class EmployeeOnlyDORDataFactory(BaseFactory):
     class Meta:
         model = employee_models.Employee
 
@@ -192,8 +192,11 @@ class EmployeeFactory(BaseFactory):
     tax_identifier = factory.SubFactory(TaxIdentifierFactory)
     tax_identifier_id = factory.LazyAttribute(lambda t: t.tax_identifier.tax_identifier_id)
     first_name = factory.Faker("first_name")
-    middle_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
+
+
+class EmployeeFactory(EmployeeOnlyDORDataFactory):
+    middle_name = factory.Faker("first_name")
     other_name = None
     email_address = factory.Faker("email")
     phone_number = "+19425290727"
@@ -754,7 +757,7 @@ class DiaReductionPaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.DiaReductionPayment
 
-    absence_case_id = Generators.FineosAbsenceId
+    fineos_customer_number = factory.Faker("numerify", text="####")
     board_no = factory.Faker("uuid4")
     event_id = factory.Faker("uuid4")
     event_description = "PC"
