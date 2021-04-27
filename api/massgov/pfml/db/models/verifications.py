@@ -31,11 +31,11 @@ class VerificationType(LookupTable):
     column_names = ("verification_type_id", "verification_type_description")
 
     VERIFICATION_CODE = LkVerificationType(1, "Verification Code")
+    MANUAL = LkVerificationType(2, "Manual Verification")
 
 
 class Verification(Base):
     """ Stores a record of a Verification that occurred for association with a Role;
-        Initial verification_type is `Verification Code`
     """
 
     __tablename__ = "verification"
