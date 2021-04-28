@@ -16,6 +16,7 @@ from massgov.pfml.db.models.employees import (
 
 class ScenarioName(Enum):
     # Happy path scenarios
+    HAPPY_PATH_MEDICAL_ACH_PRENOTED = "HAPPY_PATH_MEDICAL_ACH_PRENOTED"
     HAPPY_PATH_FAMILY_ACH_PRENOTED = "HAPPY_PATH_FAMILY_ACH_PRENOTED"
     HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
     HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
@@ -48,14 +49,30 @@ class ScenarioName(Enum):
     REJECTED_LEAVE_REQUEST_DECISION = "REJECTED_LEAVE_REQUEST_DECISION"
     PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
 
-    # TODO CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB
-    # TODO CLAIM_DOES_NOT_EXIST
+    # TODO CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB - PUB-165
+    # TODO CLAIM_DOES_NOT_EXIST - PUB-165
 
     # Audit
     AUDIT_REJECTED = "AUDIT_REJECTED"
 
-    # TODO PEI writeback error
+    # Returns
+    PUB_ACH_PRENOTE_RETURN = "PUB_ACH_PRENOTE_RETURN"
+    PUB_ACH_PRENOTE_NOTIFICATION = "PUB_ACH_PRENOTE_NOTIFICATION"
+
+    PUB_ACH_FAMILY_RETURN = "PUB_ACH_FAMILY_RETURN"
+    PUB_ACH_FAMILY_NOTIFICATION = "PUB_ACH_FAMILY_NOTIFICATION"
+
+    PUB_ACH_MEDICAL_RETURN = "PUB_ACH_MEDICAL_RETURN"
+    PUB_ACH_MEDICAL_NOTIFICATION = "PUB_ACH_MEDICAL_NOTIFICATION"
+
     # TODO positive pay check outbound
+    # TODO Check scenarios - see PaidStatus:
+    # PAID = "Paid"
+    # OUTSTANDING = "Outstanding"
+    # FUTURE = "Future"
+    # VOID = "Void"
+    # STALE = "Stale"
+    # STOP = "Stop"
 
 
 @dataclass
@@ -84,8 +101,21 @@ class ScenarioDescriptor:
 
     negative_payment_amount: bool = False
 
+    # ACH Returns
+    # https://lwd.atlassian.net/wiki/spaces/API/pages/1333364105/PUB+ACH+Return+File+Format
+
+    pub_ach_response_return: bool = False
+    pub_ach_return_reason_code: str = "RO1"
+
+    pub_ach_response_change_notification: bool = False
+    pub_ach_notification_reason_code: str = "CO1"
+
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+    ),
     ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
@@ -146,6 +176,33 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         leave_request_decision="Rejected",
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_approved=False),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_PRENOTE_RETURN,
+        prenoted=False,
+        pub_ach_response_return=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+        prenoted=False,
+        pub_ach_response_change_notification=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN, pub_ach_response_return=True
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+        pub_ach_response_change_notification=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_MEDICAL_RETURN,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+        pub_ach_response_return=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+        pub_ach_response_change_notification=True,
+    ),
 ]
 
 SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {
