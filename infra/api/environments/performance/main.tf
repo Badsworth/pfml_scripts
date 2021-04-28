@@ -57,7 +57,6 @@ module "api" {
     "https://paidleave-api-performance.mass.gov",
     "https://paidleave-performance.mass.gov"
   ]
-  formstack_import_lambda_build_s3_key = local.formstack_lambda_artifact_s3_key
 
   cognito_user_pool_arn                               = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_0jv6SlemT"
   cognito_user_pool_id                                = "us-east-1_0jv6SlemT"

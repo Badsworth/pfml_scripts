@@ -101,10 +101,6 @@ resource "aws_s3_bucket_policy" "document_upload_policy" {
   policy = data.aws_iam_policy_document.document_upload.json
 }
 
-data "aws_s3_bucket" "formstack_import" {
-  bucket = "massgov-pfml-${var.environment_name}-formstack-data"
-}
-
 data "aws_s3_bucket" "agency_transfer" {
   bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
 }

@@ -698,5 +698,6 @@ module "unexpected_import_error" {
   nrql = <<-NRQL
     SELECT count(*) FROM Log
     WHERE message LIKE '%Unable to import module%'
+    AND aws.logGroup LIKE '%${var.environment_name}%'
   NRQL
 }
