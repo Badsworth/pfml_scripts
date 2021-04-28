@@ -492,10 +492,6 @@ const errors = {
         "$t(shared.ein.employer_verification_data_required)",
     },
     employer_benefits: {
-      benefit_amount_frequency: {
-        enum:
-          "Select a frequency (daily, weekly, monthly, or all at once) for each employer benefit.",
-      },
       benefit_end_date: {
         format: "End date must include a valid month, day, and year.",
         minimum:
@@ -590,10 +586,12 @@ const shared = {
   amountFrequency_daily: "Daily",
   amountFrequency_inTotal: "All at once",
   amountFrequency_monthly: "Monthly",
+  amountFrequency_unknown: "Unknown",
   amountFrequency_weekly: "Weekly",
   amountPerFrequency_daily: "{{amount, currency}} per day",
   amountPerFrequency_inTotal: "{{amount, currency}} all at once",
   amountPerFrequency_monthly: "{{amount, currency}} per month",
+  amountPerFrequency_unknown: "{{amount, currency}} (frequency unknown)",
   amountPerFrequency_weekly: "{{amount, currency}} per week",
   auth: {
     emailError_exists: "An account with the given email already exists",
@@ -959,6 +957,7 @@ const pages = {
     amountFrequency_daily: "$t(shared.amountFrequency_daily)",
     amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
     amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
+    amountFrequency_unknown: "$t(shared.amountFrequency_unknown)",
     amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
     amountLabel: "Amount",
     amountLegend: "How much will you receive?",
@@ -2029,11 +2028,13 @@ const components = {
     amountFrequency_daily: "$t(shared.amountFrequency_daily)",
     amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
     amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
+    amountFrequency_unknown: "$t(shared.amountFrequency_unknown)",
     amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
     amountPerFrequency: "{{amount, currency}}",
     amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
     amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
     amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",
+    amountPerFrequency_unknown: "$t(shared.amountPerFrequency_unknown)",
     amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     benefitTypeLabel: "Benefit type",
     caption:
@@ -2041,7 +2042,6 @@ const components = {
     commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
-    frequencyHelperText: "[Needs review]",
     header: "Employer benefits",
     tableName: "Employer-sponsored benefit details",
   },

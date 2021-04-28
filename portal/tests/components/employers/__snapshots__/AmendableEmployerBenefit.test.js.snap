@@ -86,6 +86,10 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
                   "label": "All at once",
                   "value": "In Total",
                 },
+                Object {
+                  "label": "Unknown",
+                  "value": "Unknown",
+                },
               ]
             }
             class="margin-top-0"
