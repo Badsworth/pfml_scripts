@@ -141,7 +141,7 @@ def get_vendor_info(data_mart_conn: Connection, vendor_tin: str) -> Optional[Ven
             AND vad.valid_to_date = :valid_to_date_for_current
         WHERE vend.valid_to_date = :valid_to_date_for_current
           AND vend.organization_type = :organization_type
-          AND vend.tin_type = :tin_type
+          AND vend.tin_type <> :unwanted_tin_type
           AND vend.tin = :vendor_tin
     """
         ),
@@ -149,7 +149,7 @@ def get_vendor_info(data_mart_conn: Connection, vendor_tin: str) -> Optional[Ven
         address_type=payments_util.Constants.COMPTROLLER_AD_TYPE,
         valid_to_date_for_current=VALID_TO_DATE_FOR_CURRENT,
         organization_type=OrganizationType.INDIVIDUAL.value,
-        tin_type=TINType.SSN_ITIN_ATIN.value,
+        unwanted_tin_type=TINType.EIN.value,
         vendor_tin=vendor_tin,
     ).fetchall()
 
