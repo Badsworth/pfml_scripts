@@ -40,9 +40,8 @@ jobs:
       fail-fast: false
       matrix:
         component: ["portal", "api", "env-shared", "ecs-tasks"]
-        environment: ["test", "stage", "prod", "performance", "training", "uat"]
+        environment: ["test", "stage", "prod", "performance", "training", "uat", "breakfix", "cps-preview"]
         include:
-        - component: "constants"
         - component: "pfml-aws"
         - component: "monitoring"
 
@@ -60,14 +59,10 @@ jobs:
         run: |
           echo "::set-output name=has-changes::false"
 
-          common_components="${{ env.working-dir }}/constants ${{ env.working-dir }}/modules"
-
           if [ -z "${{ matrix.environment }}" ]; then
             tf_dir=${{ env.working-dir }}/${{ matrix.component }}
           else
             tf_dir=${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
-            template_dir=${{ env.working-dir }}/${{ matrix.component 
-            folders="${common_components} ${tf_dir} ${template_dir}"
           fi
 
           folders=${tf_dir}
