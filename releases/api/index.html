@@ -651,12 +651,12 @@
 <tbody>
 <tr>
 <td>test</td>
-<td><a href="https://github.com/EOLWD/pfml/commits/c1bff1818">c1bff1818</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v2.0.0...c1bff1818">44 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.0.0">api/v2.0.0</a>)</td>
+<td><a href="https://github.com/EOLWD/pfml/commits/0bba73a4b">0bba73a4b</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v2.1.0...0bba73a4b">1 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.1.0">api/v2.1.0</a>)</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(test)">GitHub</a></td>
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.0.2">api/v2.0.2</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.1.0">api/v2.1.0</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -666,7 +666,7 @@
 </tr>
 <tr>
 <td>performance</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.20.1">api/v1.20.1</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.1.0">api/v2.1.0</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(performance)">GitHub</a></td>
 </tr>
 <tr>
@@ -682,55 +682,10 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (API-1617,PUB-178,PUB-177,PUB-153,PUB-109,EMPLOYER-819,API-1608,PUB-153,PUB-172,INFRA-252,PUB-172,EMPLOYER-1195,API-1612,EMPLOYER-1119,INFRA-388,API-981,PUB-175,INFRA-344,PUB-167)">Jira List</a>):</p>
-<ul>
-<li>silence deprecation warnings in docker mode (<a href="https://github.com/EOLWD/pfml/pull/3909">#3909</a>)</li>
-<li>internal: Add DFMLBI and PSD to list of JIRA projects for release notes (<a href="https://github.com/EOLWD/pfml/pull/3874">#3874</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-178">PUB-178</a>: Update the validation logic to include the value and ease validations for non standard payments (<a href="https://github.com/EOLWD/pfml/pull/3936">#3936</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-177">PUB-177</a>: Add unverified addresses to audit report. (<a href="https://github.com/EOLWD/pfml/pull/3935">#3935</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-175">PUB-175</a>: When Experian throws an exception, recover gracefully (<a href="https://github.com/EOLWD/pfml/pull/3894">#3894</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-172">PUB-172</a>: Update LogEntry.set_metrics() to accept dict instead of named arguments (<a href="https://github.com/EOLWD/pfml/pull/3923">#3923</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-172">PUB-172</a>: Remove doubled counter (<a href="https://github.com/EOLWD/pfml/pull/3914">#3914</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-167">PUB-167</a>: Add records to PUB error table for rejected payments (<a href="https://github.com/EOLWD/pfml/pull/3878">#3878</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-153">PUB-153</a>: 2/2 E2E test check returns (<a href="https://github.com/EOLWD/pfml/pull/3890">#3890</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-153">PUB-153</a>: 1/2 E2E PUB ACH Returns Processing (<a href="https://github.com/EOLWD/pfml/pull/3875">#3875</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-109">PUB-109</a>: Change exception log to warning (<a href="https://github.com/EOLWD/pfml/pull/3932">#3932</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-388">INFRA-388</a>: added user contex for new relic (<a href="https://github.com/EOLWD/pfml/pull/3843">#3843</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-344">INFRA-344</a>: (2/2): Add breakfix ECS Tasks (<a href="https://github.com/EOLWD/pfml/pull/3694">#3694</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-252">INFRA-252</a>: report task.durationMillis instead so newrelic can timeseries it (<a href="https://github.com/EOLWD/pfml/pull/3913">#3913</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-819">EMPLOYER-819</a>: Archive formstack lambda infra (<a href="https://github.com/EOLWD/pfml/pull/3905">#3905</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1195">EMPLOYER-1195</a>: - Adding PFML_WITHHOLDING verification_type (<a href="https://github.com/EOLWD/pfml/pull/3899">#3899</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1119">EMPLOYER-1119</a>: Adding new verification type, test to ensure manual verification type exists (<a href="https://github.com/EOLWD/pfml/pull/3897">#3897</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-981">API-981</a>: DIA report (<a href="https://github.com/EOLWD/pfml/pull/3784">#3784</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1617">API-1617</a>: Enable schedule for Payment Voucher Plus ECS task (<a href="https://github.com/EOLWD/pfml/pull/3921">#3921</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1612">API-1612</a>: Fix help text in transmogrify-states (<a href="https://github.com/EOLWD/pfml/pull/3908">#3908</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1608">API-1608</a>: Update DOR-FINEOS ETL schedule to start at 00:30 UTC (20:30 EDT/19:30 EST) (<a href="https://github.com/EOLWD/pfml/pull/3912">#3912</a>)</li>
-<li>Capture stderr in ECS stable wait (<a href="https://github.com/EOLWD/pfml/pull/3902">#3902</a>)</li>
-</ul>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in ()">Jira List</a>):</p>
 <details>
 <summary>Raw</summary>
- <br>* silence deprecation warnings in docker mode ([#3909](https://github.com/EOLWD/pfml/pull/3909))
- <br>* internal: Add DFMLBI and PSD to list of JIRA projects for release notes ([#3874](https://github.com/EOLWD/pfml/pull/3874))
- <br>* [PUB-178](https://lwd.atlassian.net/browse/PUB-178): Update the validation logic to include the value and ease validations for non standard payments ([#3936](https://github.com/EOLWD/pfml/pull/3936))
- <br>* [PUB-177](https://lwd.atlassian.net/browse/PUB-177): Add unverified addresses to audit report. ([#3935](https://github.com/EOLWD/pfml/pull/3935))
- <br>* [PUB-175](https://lwd.atlassian.net/browse/PUB-175): When Experian throws an exception, recover gracefully ([#3894](https://github.com/EOLWD/pfml/pull/3894))
- <br>* [PUB-172](https://lwd.atlassian.net/browse/PUB-172): Update LogEntry.set_metrics() to accept dict instead of named arguments ([#3923](https://github.com/EOLWD/pfml/pull/3923))
- <br>* [PUB-172](https://lwd.atlassian.net/browse/PUB-172): Remove doubled counter ([#3914](https://github.com/EOLWD/pfml/pull/3914))
- <br>* [PUB-167](https://lwd.atlassian.net/browse/PUB-167): Add records to PUB error table for rejected payments ([#3878](https://github.com/EOLWD/pfml/pull/3878))
- <br>* [PUB-153](https://lwd.atlassian.net/browse/PUB-153): 2/2 E2E test check returns ([#3890](https://github.com/EOLWD/pfml/pull/3890))
- <br>* [PUB-153](https://lwd.atlassian.net/browse/PUB-153): 1/2 E2E PUB ACH Returns Processing ([#3875](https://github.com/EOLWD/pfml/pull/3875))
- <br>* [PUB-109](https://lwd.atlassian.net/browse/PUB-109): Change exception log to warning ([#3932](https://github.com/EOLWD/pfml/pull/3932))
- <br>* [INFRA-388](https://lwd.atlassian.net/browse/INFRA-388): added user contex for new relic ([#3843](https://github.com/EOLWD/pfml/pull/3843))
- <br>* [INFRA-344](https://lwd.atlassian.net/browse/INFRA-344): (2/2): Add breakfix ECS Tasks ([#3694](https://github.com/EOLWD/pfml/pull/3694))
- <br>* [INFRA-252](https://lwd.atlassian.net/browse/INFRA-252): report task.durationMillis instead so newrelic can timeseries it ([#3913](https://github.com/EOLWD/pfml/pull/3913))
- <br>* [EMPLOYER-819](https://lwd.atlassian.net/browse/EMPLOYER-819): Archive formstack lambda infra ([#3905](https://github.com/EOLWD/pfml/pull/3905))
- <br>* [EMPLOYER-1195](https://lwd.atlassian.net/browse/EMPLOYER-1195): - Adding PFML_WITHHOLDING verification_type ([#3899](https://github.com/EOLWD/pfml/pull/3899))
- <br>* [EMPLOYER-1119](https://lwd.atlassian.net/browse/EMPLOYER-1119): Adding new verification type, test to ensure manual verification type exists ([#3897](https://github.com/EOLWD/pfml/pull/3897))
- <br>* [API-981](https://lwd.atlassian.net/browse/API-981): DIA report ([#3784](https://github.com/EOLWD/pfml/pull/3784))
- <br>* [API-1617](https://lwd.atlassian.net/browse/API-1617): Enable schedule for Payment Voucher Plus ECS task ([#3921](https://github.com/EOLWD/pfml/pull/3921))
- <br>* [API-1612](https://lwd.atlassian.net/browse/API-1612): Fix help text in transmogrify-states ([#3908](https://github.com/EOLWD/pfml/pull/3908))
- <br>* [API-1608](https://lwd.atlassian.net/browse/API-1608): Update DOR-FINEOS ETL schedule to start at 00:30 UTC (20:30 EDT/19:30 EST) ([#3912](https://github.com/EOLWD/pfml/pull/3912))
- <br>* Capture stderr in ECS stable wait ([#3902](https://github.com/EOLWD/pfml/pull/3902))
+
 </details>
                 
               
