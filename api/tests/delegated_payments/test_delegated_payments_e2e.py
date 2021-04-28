@@ -9,6 +9,7 @@ from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 from unittest import mock
 
+from collections import Counter
 from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -99,7 +100,6 @@ def test_e2e_pub_payments(
     caplog,
     create_triggers,
 ):
-    # TODO Validate error and warning logs
     # TODO Validate reference files
 
     # ========================================================================
@@ -147,6 +147,9 @@ def test_e2e_pub_payments(
             scenario_dataset, fineos_data_export_path, payments_util.get_now()
         )
 
+        log_counts = get_log_message_counts(caplog)
+        print(log_counts)
+
         # TODO Confirm expected claimant files were generated
 
         # Confirm expected payment files were generated
@@ -154,6 +157,9 @@ def test_e2e_pub_payments(
         assert_files(
             fineos_data_export_path, FINEOS_PAYMENT_EXTRACT_FILES, fineos_extract_date_prefix
         )
+
+        log_counts = get_log_message_counts(caplog)
+        print(log_counts)
 
     # ===============================================================================
     # [Day 1 - 7:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
@@ -193,6 +199,9 @@ def test_e2e_pub_payments(
             flow=Flow.DELEGATED_EFT,
             db_session=test_db_session,
         )
+
+        log_counts = get_log_message_counts(caplog)
+        print(log_counts)
 
         # TODO claimant file related state log assertions
 
@@ -507,6 +516,8 @@ def test_e2e_pub_payments(
             {"report_generated_count": len(CREATE_PUB_FILES_REPORTS)},
         )
 
+
+        assert False
         # TODO file transaction metrics when available
 
     # TODO - Day 3 PUB Returns ECS Task
@@ -683,3 +694,18 @@ def generate_rejects_file(test_dataset: TestDataSet, audit_file_path: str, rejec
 
     csv_output.writerows(parsed_audit_rows)
     csv_file.close()
+
+
+def get_log_message_counts(caplog):
+    # Create a dictionary of log messages to their counts
+    return Counter(record.msg for record in caplog.records)
+
+
+def assert_vendor_errors(log_counter, expected_scenarios, test_scenario_dataset):
+    for scenario in expected_scenarios:
+        fineos_customer_numbers = test_scenario_dataset.get_fineos_customer_numbers_by_scenario(
+            scenario
+        )
+        for fineos_customer_number in fineos_customer_numbers:
+            message = f"Employee in employee file with customer nbr {fineos_customer_number} not found in PFML DB."
+            assert log_counter[message] == 1  # The log messages are unique
