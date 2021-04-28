@@ -108,12 +108,14 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     },
 
     async completeSSOLoginFineos(): Promise<string> {
-      let cookiesJson = "";
-      await postSubmit.withFineosBrowser(async (page) => {
-        const cookies = await page.context().cookies();
-        cookiesJson = JSON.stringify(cookies);
-      });
-      return cookiesJson;
+      return postSubmit.withFineosBrowser(
+        async (page) => {
+          const cookies = await page.context().cookies();
+          return JSON.stringify(cookies);
+        },
+        false,
+        path.join(__dirname, "..", "screenshots")
+      );
     },
 
     waitForClaimDocuments: documentWaiter.waitForClaimDocuments.bind(
