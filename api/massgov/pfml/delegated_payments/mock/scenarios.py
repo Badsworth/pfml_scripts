@@ -12,22 +12,25 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     PaymentTransactionType,
 )
+from massgov.pfml.delegated_payments.pub.check_return import PaidStatus
 
 
 class ScenarioName(Enum):
     # Happy path scenarios
     HAPPY_PATH_MEDICAL_ACH_PRENOTED = "HAPPY_PATH_MEDICAL_ACH_PRENOTED"
     HAPPY_PATH_FAMILY_ACH_PRENOTED = "HAPPY_PATH_FAMILY_ACH_PRENOTED"
-    HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
     HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
         "HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
     )
-    HAPPY_PATH_CHECK_RESPONSE_PAID_FTP = "HAPPY_PATH_CHECK_RESPONSE_PAID_FTP"
-    HAPPY_PATH_CHECK_RESPONSE_OUTSTANDING_FTP = "HAPPY_PATH_CHECK_RESPONSE_OUTSTANDING_FTP"
+    HAPPY_PENDING_LEAVE_REQUEST_DECISION = "HAPPY_PENDING_LEAVE_REQUEST_DECISION"
+
+    HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
     HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN = (
         "HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN"
     )
-    HAPPY_PENDING_LEAVE_REQUEST_DECISION = "HAPPY_PENDING_LEAVE_REQUEST_DECISION"
+    HAPPY_PATH_CHECK_FAMILY_RETURN_PAID = "PUB_CHECK_FAMILY_RETURN_PAID"
+    HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING = "PUB_CHECK_FAMILY_RETURN_OUTSTANDING"
+    HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE = "PUB_CHECK_FAMILY_RETURN_FUTURE"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -65,14 +68,9 @@ class ScenarioName(Enum):
     PUB_ACH_MEDICAL_RETURN = "PUB_ACH_MEDICAL_RETURN"
     PUB_ACH_MEDICAL_NOTIFICATION = "PUB_ACH_MEDICAL_NOTIFICATION"
 
-    # TODO positive pay check outbound
-    # TODO Check scenarios - see PaidStatus:
-    # PAID = "Paid"
-    # OUTSTANDING = "Outstanding"
-    # FUTURE = "Future"
-    # VOID = "Void"
-    # STALE = "Stale"
-    # STOP = "Stop"
+    PUB_CHECK_FAMILY_RETURN_VOID = "PUB_CHECK_FAMILY_RETURN_VOID"
+    PUB_CHECK_FAMILY_RETURN_STALE = "PUB_CHECK_FAMILY_RETURN_STALE"
+    PUB_CHECK_FAMILY_RETURN_STOP = "PUB_CHECK_FAMILY_RETURN_STOP"
 
 
 @dataclass
@@ -109,6 +107,12 @@ class ScenarioDescriptor:
 
     pub_ach_response_change_notification: bool = False
     pub_ach_notification_reason_code: str = "CO1"
+
+    # Check returns
+    pub_check_response: bool = True
+    pub_check_paid_response: bool = True
+    pub_check_outstanding_response: bool = False
+    pub_check_outstanding_response_status: PaidStatus = PaidStatus.OUTSTANDING
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
@@ -152,6 +156,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
         payment_method=PaymentMethod.CHECK,
         fineos_extract_address_valid=False,
+        pub_check_response=False,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
@@ -202,6 +207,45 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
         claim_type=ClaimType.MEDICAL_LEAVE,
         pub_ach_response_change_notification=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+        payment_method=PaymentMethod.CHECK,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+        payment_method=PaymentMethod.CHECK,
+        pub_check_paid_response=False,
+        pub_check_outstanding_response=True,
+        pub_check_outstanding_response_status=PaidStatus.OUTSTANDING,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+        payment_method=PaymentMethod.CHECK,
+        pub_check_paid_response=False,
+        pub_check_outstanding_response=True,
+        pub_check_outstanding_response_status=PaidStatus.FUTURE,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+        payment_method=PaymentMethod.CHECK,
+        pub_check_paid_response=False,
+        pub_check_outstanding_response=True,
+        pub_check_outstanding_response_status=PaidStatus.VOID,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+        payment_method=PaymentMethod.CHECK,
+        pub_check_paid_response=False,
+        pub_check_outstanding_response=True,
+        pub_check_outstanding_response_status=PaidStatus.STALE,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+        payment_method=PaymentMethod.CHECK,
+        pub_check_paid_response=False,
+        pub_check_outstanding_response=True,
+        pub_check_outstanding_response_status=PaidStatus.STOP,
     ),
 ]
 

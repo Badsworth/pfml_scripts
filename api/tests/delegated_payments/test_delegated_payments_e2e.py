@@ -39,6 +39,7 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     FINEOS_PAYMENT_EXTRACT_FILES,
     generate_payment_extract_files,
 )
+from massgov.pfml.delegated_payments.mock.generate_check_response import PubCheckResponseGenerator
 from massgov.pfml.delegated_payments.mock.pub_ach_response_generator import PubACHResponseGenerator
 from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     ScenarioData,
@@ -235,6 +236,9 @@ def test_e2e_pub_payments(
             ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
             ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
             ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
         ]
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
@@ -250,6 +254,9 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                 ScenarioName.AUDIT_REJECTED,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
@@ -338,8 +345,8 @@ def test_e2e_pub_payments(
         audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)
 
         assert len(audit_report_parsed_csv_rows) == (
-            len(stage_1_happy_path_scenarios) + 1 + 4  # audit_rejected  # non_prenote_pub_returns
-        )
+            len(stage_1_happy_path_scenarios) + 1 + 4 + 3
+        )  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks
 
         payments = get_payments_in_end_state(
             test_db_session, State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
@@ -377,10 +384,8 @@ def test_e2e_pub_payments(
             "PaymentAuditReportStep",
             {
                 "payment_sampled_for_audit_count": (
-                    len(stage_1_happy_path_scenarios)
-                    + 1
-                    + 4  # audit_rejected  # non_prenote_pub_returns
-                ),
+                    len(stage_1_happy_path_scenarios) + 1 + 4 + 3
+                ),  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks
             },
         )
 
@@ -449,6 +454,12 @@ def test_e2e_pub_payments(
             scenario_names=[
                 ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                 ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
             ],
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT,
             db_session=test_db_session,
@@ -562,17 +573,17 @@ def test_e2e_pub_payments(
         assert_metrics(
             test_db_other_session,
             "PaymentRejectsStep",
-            {"rejected_payment_count": 1, "accepted_payment_count": 10},
+            {"rejected_payment_count": 1, "accepted_payment_count": 16},
         )
 
         assert_metrics(
             test_db_other_session,
             "PaymentMethodsSplitStep",
-            {"ach_payment_count": 8, "check_payment_count": 2},
+            {"ach_payment_count": 8, "check_payment_count": 8},
         )
 
         assert_metrics(
-            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 15,},
+            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 21,},
         )
 
         assert_metrics(
@@ -588,13 +599,16 @@ def test_e2e_pub_payments(
     # ===============================================================================
 
     with freeze_time("2021-05-03 07:00:00"):
-        pub_ach_response_folder = os.path.join(s3_config.pub_moveit_inbound_path)
+        pub_response_folder = os.path.join(s3_config.pub_moveit_inbound_path)
         pub_ach_response_generator = PubACHResponseGenerator(
-            test_dataset.scenario_dataset, pub_ach_response_folder
+            test_dataset.scenario_dataset, pub_response_folder
         )
         pub_ach_response_generator.run()
 
-        # TODO generate check returns - PUB-153
+        pub_check_response_generator = PubCheckResponseGenerator(
+            test_dataset.scenario_dataset, pub_response_folder
+        )
+        pub_check_response_generator.run()
 
     # ==============================================================================================
     # [Day 3 - 9:00 AM] Run the PUB Response ECS task - response, writeback, reports
@@ -633,6 +647,40 @@ def test_e2e_pub_payments(
             db_session=test_db_session,
         )
 
+        # Unchanged
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+            ],
+            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT,
+            db_session=test_db_session,
+        )
+
+        # End State
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+            ],
+            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK,
+            db_session=test_db_session,
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+            ],
+            end_state=State.ERRORED_PEI_WRITEBACK_SENT,
+            db_session=test_db_session,
+        )
+
         # == Assert files
 
         # processed ach return files
@@ -650,12 +698,28 @@ def test_e2e_pub_payments(
             timestamp_prefix,
         )
 
-        # TODO processed check return files
+        # processed check return files
+        pub_check_response_processed_folder = os.path.join(
+            s3_config.pfml_pub_check_archive_path,
+            date_folder,
+            payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+        )
+        positive_pay_check_response_file = (
+            f"Paid-{payments_util.Constants.FILE_NAME_PUB_POSITIVE_PAY}.csv"
+        )
+        outstanding_check_response_file = (
+            f"Outstanding-{payments_util.Constants.FILE_NAME_PUB_POSITIVE_PAY}.csv"
+        )
+        assert_files(
+            pub_check_response_processed_folder,
+            [positive_pay_check_response_file, outstanding_check_response_file],
+            timestamp_prefix,
+        )
 
         # == PubError TODO adjust as metric based scenarios below are added
         assert len(test_db_session.query(PubError).all()) == (
-            2 + 2 + 2
-        )  # eft_prenote_unexpected_state_count + payment_complete_with_change_count + payment_rejected_count
+            2 + 2 + 2 + 3
+        )  # eft_prenote_unexpected_state_count + payment_complete_with_change_count + payment_rejected_count + payment_failed_by_check
 
         # == Metrics
         assert_metrics(
@@ -667,19 +731,53 @@ def test_e2e_pub_payments(
                 "change_notification_count": 3,
                 "eft_prenote_count": 2,
                 "payment_count": 4,
-                "unknown_id_format_count": None,  # TODO add scenario
-                "eft_prenote_id_not_found_count": None,  # TODO add scenario
+                "unknown_id_format_count": None,  # TODO add scenario (PUB-174)
+                "eft_prenote_id_not_found_count": None,  # TODO add scenario (PUB-174)
                 "eft_prenote_unexpected_state_count": None,
                 "eft_prenote_already_approved_count": 2,  # TODO validate
-                "eft_prenote_rejected_count": None,  # TODO add scenario
-                "payment_id_not_found_count": None,  # TODO add scenario
+                "eft_prenote_rejected_count": None,  # TODO add scenario (PUB-174)
+                "payment_id_not_found_count": None,  # TODO add scenario (PUB-174)
                 "payment_rejected_count": 2,  # Both prenotes
-                "payment_already_rejected_count": None,  # TODO add scenario
+                "payment_already_rejected_count": None,  # TODO add scenario (PUB-174)
                 "payment_unexpected_state_count": None,
                 "payment_complete_with_change_count": 2,  # TODO validate
-                "payment_already_complete_count": None,  # TODO add scenario?
-                "payment_notification_unexpected_state_count": None,  # TODO add scenario
+                "payment_already_complete_count": None,  # TODO add scenario? (PUB-174)
+                "payment_notification_unexpected_state_count": None,  # TODO add scenario (PUB-174)
             },
+        )
+
+        # Outstanding check response (processed first by file name alphabetical order)
+        assert_metrics(
+            test_db_other_session,
+            "ProcessCheckReturnFileStep",
+            {
+                "warning_count": None,
+                "check_payment_count": 5,
+                "payment_complete_by_paid_check": None,
+                "payment_still_outstanding": 2,
+                "payment_failed_by_check": 3,
+                "check_number_not_found_count": None,  # TODO add scenario  (PUB-174)
+                "payment_unexpected_state_count": None,  # TODO add scenario (PUB-174)
+            },
+            log_report_index=1,  # second when sorted by import log id desc order
+            description="Outstanding check responses",
+        )
+
+        # Positive pay check response (processed second by file name alphabetical order)
+        assert_metrics(
+            test_db_other_session,
+            "ProcessCheckReturnFileStep",
+            {
+                "warning_count": None,
+                "check_payment_count": 3,
+                "payment_complete_by_paid_check": 3,
+                "payment_still_outstanding": None,
+                "payment_failed_by_check": None,
+                "check_number_not_found_count": None,  # TODO add scenario (PUB-174)
+                "payment_unexpected_state_count": None,  # TODO add scenario (PUB-174)
+            },
+            log_report_index=0,  # first when sorted by import log id desc order
+            description="Positive pay check responses",
         )
 
         # == Reports
@@ -791,15 +889,20 @@ def assert_reports(
 
 
 def assert_metrics(
-    log_report_db_session: db.Session, log_report_name: str, metrics_expected_values: Dict[str, Any]
+    log_report_db_session: db.Session,
+    log_report_name: str,
+    metrics_expected_values: Dict[str, Any],
+    description: str = "",
+    log_report_index: int = 0,  # we may have more than one report for a step
 ):
-    log_report = (
+    log_reports = (
         log_report_db_session.query(ImportLog)
         .filter(ImportLog.source == log_report_name)
-        .order_by(ImportLog.start.desc())
-        .first()
+        .order_by(ImportLog.import_log_id.desc())
+        .all()
     )
 
+    log_report = log_reports[log_report_index]
     log_report = json.loads(log_report.report)
 
     assertion_errors = []
@@ -810,10 +913,10 @@ def assert_metrics(
                 f"metric: {metric_key}, expected: {expected_value}, found: {value}\n"
             )
 
-    errors = ";".join(assertion_errors)
+    errors = "".join(assertion_errors)
     assert (
         len(assertion_errors) == 0
-    ), f"Unexpected metric value(s) in log report '{log_report_name}'\n{errors}"
+    ), f"Unexpected metric value(s) in log report '{log_report_name}', description: {description}\n{errors}"
 
 
 # == Utility Helpers ==
