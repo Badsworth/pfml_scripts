@@ -37,6 +37,7 @@ class ScenarioName(Enum):
     CANCELLATION_PAYMENT = "CANCELLATION_PAYMENT"
     OVERPAYMENT_PAYMENT_POSITIVE = "OVERPAYMENT_PAYMENT_POSITIVE"
     OVERPAYMENT_PAYMENT_NEGATIVE = "OVERPAYMENT_PAYMENT_NEGATIVE"
+    OVERPAYMENT_MISSING_NON_VPEI_RECORDS = "OVERPAYMENT_MISSING_NON_VPEI_RECORDS"
     EMPLOYER_REIMBURSEMENT_PAYMENT = "EMPLOYER_REIMBURSEMENT_PAYMENT"
 
     # Prenote
@@ -99,6 +100,8 @@ class ScenarioDescriptor:
 
     negative_payment_amount: bool = False
 
+    include_non_vpei_records: bool = True
+
     # ACH Returns
     # https://lwd.atlassian.net/wiki/spaces/API/pages/1333364105/PUB+ACH+Return+File+Format
 
@@ -141,6 +144,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
         payment_transaction_type=PaymentTransactionType.OVERPAYMENT,
         negative_payment_amount=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
+        payment_transaction_type=PaymentTransactionType.OVERPAYMENT,
+        include_non_vpei_records=False,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,

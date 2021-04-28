@@ -282,6 +282,7 @@ def test_e2e_pub_payments(
             scenario_names=[
                 ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
                 ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
+                ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
             ],
             end_state=State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT,
             db_session=test_db_session,
@@ -373,7 +374,7 @@ def test_e2e_pub_payments(
                 "approved_prenote_count": 9,
                 "zero_dollar_payment_count": 1,
                 "cancellation_count": 1,
-                "overpayment_count": 2,
+                "overpayment_count": 3,
                 "employer_reimbursement_count": 1,
                 "errored_payment_count": 6,  # See DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT state check above
             },
@@ -487,6 +488,7 @@ def test_e2e_pub_payments(
             scenario_names=[
                 ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
                 ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
+                ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
             ],
             end_state=State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT,
             db_session=test_db_session,
@@ -583,7 +585,7 @@ def test_e2e_pub_payments(
         )
 
         assert_metrics(
-            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 21,},
+            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 22,},
         )
 
         assert_metrics(
