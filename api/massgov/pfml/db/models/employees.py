@@ -134,12 +134,24 @@ class LkGender(Base):
 
 class LkOccupation(Base):
     __tablename__ = "lk_occupation"
-    occupation_id = Column(Integer, primary_key=True)
+    occupation_id = Column(Integer, primary_key=True, autoincrement=True)
+    occupation_code = Column(Integer)
     occupation_description = Column(Text)
 
     def __init__(self, occupation_id, occupation_description):
         self.occupation_id = occupation_id
         self.occupation_description = occupation_description
+
+class LkOccupationTitle(Base):
+    __tablename__ = "lk_occupation_title"
+    occupation_title_id = Column(Integer, primary_key=True, autoincrement=True)
+    occupation_code= Column(Integer, ForeignKey("lk_occupation.occupation_code"))
+    occupation_title_code =  Column(Integer) # length <= 6
+    occupation_title_description = Column(Text)
+
+    def __init__(self, occupation_id, occupation_description):
+        self.occupation_title_id = occupation_id
+        self.occupation_title_description = occupation_title_description
 
 
 class LkEducationLevel(Base):
