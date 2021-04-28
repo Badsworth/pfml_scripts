@@ -22,7 +22,7 @@ Array [
   >
     You need to provide your completed 
     <a
-      href="https://www.mass.gov/hcp-form"
+      href="https://www.mass.gov/medical-leave-form"
       key="1"
       rel="noopener"
       target="_blank"
@@ -138,7 +138,7 @@ Array [
   >
     You need to have a completed 
     <a
-      href="https://www.mass.gov/hcp-form"
+      href="https://www.mass.gov/medical-leave-form"
       key="1"
       rel="noopener"
       target="_blank"
@@ -318,7 +318,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               href="tel:(833) 344‑7365"
             />,
             "healthcare-provider-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/medical-leave-form"
               rel="noopener"
               target="_blank"
             />,
@@ -362,7 +362,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               href="tel:(833) 344‑7365"
             />,
             "healthcare-provider-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/medical-leave-form"
               rel="noopener"
               target="_blank"
             />,
@@ -406,7 +406,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               href="tel:(833) 344‑7365"
             />,
             "healthcare-provider-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/medical-leave-form"
               rel="noopener"
               target="_blank"
             />,
@@ -450,7 +450,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               href="tel:(833) 344‑7365"
             />,
             "healthcare-provider-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/medical-leave-form"
               rel="noopener"
               target="_blank"
             />,
@@ -512,7 +512,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               href="tel:(833) 344‑7365"
             />,
             "healthcare-provider-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/medical-leave-form"
               rel="noopener"
               target="_blank"
             />,
@@ -574,7 +574,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               href="tel:(833) 344‑7365"
             />,
             "healthcare-provider-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/medical-leave-form"
               rel="noopener"
               target="_blank"
             />,
@@ -618,7 +618,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               href="tel:(833) 344‑7365"
             />,
             "healthcare-provider-form-link": <a
-              href="https://www.mass.gov/hcp-form"
+              href="https://www.mass.gov/medical-leave-form"
               rel="noopener"
               target="_blank"
             />,

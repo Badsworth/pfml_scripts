@@ -101,7 +101,7 @@ exports[`GetReady renders get ready content 1`] = `
       components={
         Object {
           "healthcare-provider-form-link": <a
-            href="https://www.mass.gov/hcp-form"
+            href="https://www.mass.gov/medical-leave-form"
           />,
         }
       }
@@ -246,7 +246,7 @@ exports[`GetReady renders get ready content 5`] = `
 Array [
   "Your health care provider must complete the ",
   <a
-    href="https://www.mass.gov/hcp-form"
+    href="https://www.mass.gov/medical-leave-form"
     key="1"
   >
     PFML Certification of a Serious Health Condition
