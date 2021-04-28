@@ -305,7 +305,7 @@ class PaymentRejectsStep(Step):
             payment_rejects_file_path,
         )
         parsed_rows_count = len(payment_rejects_rows)
-        self.set_metrics(parsed_rows_count=parsed_rows_count)
+        self.set_metrics({"parsed_rows_count": parsed_rows_count})
         logger.info("Parsed %i payment rejects rows", parsed_rows_count)
 
         # check if returned rows match expected number in our state log
@@ -315,7 +315,7 @@ class PaymentRejectsStep(Step):
             self.db_session,
         )
         state_log_count = len(state_logs)
-        self.set_metrics(state_logs_count=state_log_count)
+        self.set_metrics({"state_logs_count": state_log_count})
 
         if state_log_count != parsed_rows_count:
             raise PaymentRejectsException(

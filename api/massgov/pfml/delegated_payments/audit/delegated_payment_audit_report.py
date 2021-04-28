@@ -43,7 +43,7 @@ class PaymentAuditReportStep(Step):
         )
         state_log_count = len(state_logs)
 
-        self.set_metrics(sampled_payment_count=state_log_count)
+        self.set_metrics({"sampled_payment_count": state_log_count})
 
         payments: List[Payment] = []
         for state_log in state_logs:

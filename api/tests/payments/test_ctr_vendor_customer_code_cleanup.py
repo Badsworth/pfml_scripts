@@ -9,7 +9,7 @@ from massgov.pfml.db.models.factories import EmployeeFactory
 
 
 class MockLogEntry:
-    def set_metrics(self, **metrics):
+    def set_metrics(self, metrics):
         pass
 
     def increment(self, metric):

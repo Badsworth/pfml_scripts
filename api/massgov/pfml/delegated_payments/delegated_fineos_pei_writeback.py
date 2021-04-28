@@ -115,7 +115,7 @@ class FineosPeiWritebackStep(Step):
             zero_dollar_payment_count,
             State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
-        self.set_metrics(zero_dollar_payment_count=zero_dollar_payment_count)
+        self.set_metrics({"zero_dollar_payment_count": zero_dollar_payment_count})
 
         overpayment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK,
@@ -129,7 +129,7 @@ class FineosPeiWritebackStep(Step):
             overpayment_count,
             State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
-        self.set_metrics(overpayment_count=overpayment_count)
+        self.set_metrics({"overpayment_count": overpayment_count})
 
         check_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
@@ -143,7 +143,7 @@ class FineosPeiWritebackStep(Step):
             check_payment_count,
             State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_description,
         )
-        self.set_metrics(check_payment_count=check_payment_count)
+        self.set_metrics({"check_payment_count": check_payment_count})
 
         eft_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
@@ -157,7 +157,7 @@ class FineosPeiWritebackStep(Step):
             eft_payment_count,
             State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_description,
         )
-        self.set_metrics(eft_payment_count=eft_payment_count)
+        self.set_metrics({"eft_payment_count": eft_payment_count})
 
         cancelled_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK,
@@ -171,7 +171,7 @@ class FineosPeiWritebackStep(Step):
             cancelled_payment_count,
             State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
-        self.set_metrics(cancelled_payment_count=cancelled_payment_count)
+        self.set_metrics({"cancelled_payment_count": cancelled_payment_count})
 
         employer_reimbursement_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK,
@@ -185,7 +185,9 @@ class FineosPeiWritebackStep(Step):
             employer_reimbursement_payment_count,
             State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
-        self.set_metrics(employer_reimbursement_payment_count=employer_reimbursement_payment_count)
+        self.set_metrics(
+            {"employer_reimbursement_payment_count": employer_reimbursement_payment_count}
+        )
 
         errored_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.ADD_TO_ERRORED_PEI_WRITEBACK,
@@ -201,7 +203,7 @@ class FineosPeiWritebackStep(Step):
             State.ADD_TO_ERRORED_PEI_WRITEBACK.state_description,
         )
         self.set_metrics(
-            errored_payment_writeback_items_count=errored_payment_writeback_items_count
+            {"errored_payment_writeback_items_count": errored_payment_writeback_items_count}
         )
 
         payment_writeback_two_items = self._get_writeback_items_for_state(
@@ -217,7 +219,7 @@ class FineosPeiWritebackStep(Step):
             payment_writeback_two_items_count,
             State.ADD_TO_ERRORED_PEI_WRITEBACK.state_description,
         )
-        self.set_metrics(payment_writeback_two_items_count=payment_writeback_two_items_count)
+        self.set_metrics({"payment_writeback_two_items_count": payment_writeback_two_items_count})
 
         # TODO: Add disbursed payments to this writeback using the same pattern as above but with a
         # writeback_record_converter of _disbursed_payment_to_pei_writeback_record.

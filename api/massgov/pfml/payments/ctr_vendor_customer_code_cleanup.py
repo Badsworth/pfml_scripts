@@ -66,7 +66,7 @@ def run_vc_code_cleanup_process(config: Configuration) -> None:
         with batch_log.LogEntry(
             db_session_raw, "MMARS vendor customer code cleanup"
         ) as log_entry, db.session_scope(db_session_raw) as db_session:
-            log_entry.set_metrics(**vars(config))
+            log_entry.set_metrics(vars(config))
             cleanup_ctr_vendor_customer_codes(config, db_session, log_entry)
     except Exception as ex:
         logger.exception("%s", ex)
@@ -90,7 +90,7 @@ def cleanup_ctr_vendor_customer_codes(
         logger.info("No employees have MMARS vendor customer codes")
         return
 
-    log_entry.set_metrics(total=len(all_employees_with_vc_codes))
+    log_entry.set_metrics({"total": len(all_employees_with_vc_codes)})
 
     for employee in logging.log_every(
         logger,
