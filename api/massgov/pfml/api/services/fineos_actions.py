@@ -707,9 +707,9 @@ def update_occupation_details(
     if application.employment_status:
         employment_status_label = application.employment_status.fineos_label
 
-    NAICS_occupation = None
-    if application.occupation.occupation_description:
-        NAICS_occupation = application.occupation.occupation_description
+    NAICS_occupation = "Educational Services"
+    # if application.occupation.occupation_description:
+    #     NAICS_occupation = application.occupation.occupation_description
 
     fineos_client.update_occupation(
         occupation_id, employment_status_label, application.hours_worked_per_week, NAICS_occupation
