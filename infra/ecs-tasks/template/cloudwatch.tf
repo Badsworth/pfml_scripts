@@ -59,13 +59,13 @@ module "register_leave_admins_with_fineos_scheduler" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Run payments-payment-voucher-plus at 12am EST (1am EDT) (5am UTC)
+# Run payments-payment-voucher-plus at 3am EST (4am EDT) (8am UTC)
 module "payments_payment_voucher_plus_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_recurring_payments_schedule
 
   task_name           = "payments-payment-voucher-plus"
-  schedule_expression = "cron(0 5 ? * MON-FRI *)"
+  schedule_expression = "cron(0 8 ? * MON-FRI *)"
   environment_name    = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
