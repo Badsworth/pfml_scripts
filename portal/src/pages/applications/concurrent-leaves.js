@@ -8,7 +8,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [];
 
-export const PreviousLeaves = (props) => {
+export const ConcurrentLeaves = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
 
@@ -18,20 +18,20 @@ export const PreviousLeaves = (props) => {
 
   return (
     <QuestionPage
-      title={t("pages.claimsPreviousLeaves.title")}
+      title={t("pages.claimsConcurrentLeaves.title")}
       onSave={handleSave}
     >
       <Heading level="2" size="1">
-        {t("pages.claimsPreviousLeaves.sectionLabel")}
+        {t("pages.claimsConcurrentLeaves.sectionLabel")}
       </Heading>
     </QuestionPage>
   );
 };
 
-PreviousLeaves.propTypes = {
+ConcurrentLeaves.propTypes = {
   appLogic: PropTypes.object.isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   query: PropTypes.object.isRequired,
 };
 
-export default withBenefitsApplication(PreviousLeaves);
+export default withBenefitsApplication(ConcurrentLeaves);

@@ -925,6 +925,16 @@ const pages = {
     submitButton: "Review and submit application",
     title: "Checklist: Create a new application",
   },
+  claimsConcurrentLeaves: {
+    sectionLabel:
+      "Will you use any employer-sponsored accrued paid leave during your PFML leave?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
+  claimsConcurrentLeavesDetails: {
+    sectionLabel:
+      "Tell us about the accrued paid leave you'll use during your PFML leave",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
   claimsDateOfBirth: {
     sectionLabel: "What’s your date of birth?",
     title: "$t(shared.claimsVerifyIdTitle)",
@@ -1256,39 +1266,25 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsPreviousLeaves: {
-    choiceNo: "$t(shared.choiceNo)",
-    choiceYes: "$t(shared.choiceYes)",
-    detailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",
-    hintHeader:
-      "The following are qualifying reasons for taking paid or unpaid leave:",
-    hintList:
-      "<li>You had a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy. If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.</li><li>You bonded with your child after birth or placement.</li><li>You needed to manage family affairs while a family member is on active duty in the armed forces.</li><li>You needed to care for a family member who serves in the armed forces.</li><li>You needed to care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>.</li>",
-    sectionLabel:
-      "Have you taken paid or unpaid leave since January 1, 2021 for a qualifying reason?",
+    sectionLabel: "Tell us about your previous leave.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
-  claimsPreviousLeavesDetails: {
-    addButton: "Add another leave",
-    cardHeadingPrefix: "$t(shared.previousLeaveEntryPrefix)",
-    currentEmployerChoice_no: "$t(shared.choiceNo)",
-    currentEmployerChoice_yes: "$t(shared.choiceYes)",
-    currentEmployerLabel:
-      "Did you take leave from this employer ({{employer_fein}})?",
-    endDateLabel: "When did your leave end?",
-    leaveReasonChoice_activeDutyFamily:
-      "Managing family affairs while a family member was on active duty in the armed forces",
-    leaveReasonChoice_bonding: "Bonding with my child after birth or placement",
-    leaveReasonChoice_care: "Caring for a family member",
-    leaveReasonChoice_medical: "An illness or injury",
-    leaveReasonChoice_pregnancy: "Pregnancy",
-    leaveReasonChoice_serviceMemberFamily:
-      "Caring for a family member who serves in the armed forces",
-    leaveReasonLabel: "What was the qualifying reason for your leave?",
-    limitMessage: "You can only add up to 6 leaves",
-    removeButton: "Remove leave",
+  claimsPreviousLeavesOtherReason: {
     sectionLabel:
-      "Tell us about previous paid or unpaid leave since January 1, 2021",
-    startDateLabel: "When did your leave begin?",
+      "Did you take leave between January 1, 2021–{{leaveStartDate}} for a different qualifying reason?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
+  claimsPreviousLeavesOtherReasonDetails: {
+    sectionLabel: "Tell us about your previous time off",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
+  claimsPreviousLeavesSameReason: {
+    sectionLabel:
+      "Did you take any other leave between January 1, 2021–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
+  claimsPreviousLeavesSameReasonDetails: {
+    sectionLabel: "Tell us about your previous time off",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsReasonPregnancy: {

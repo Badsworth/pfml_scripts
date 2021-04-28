@@ -1,24 +1,27 @@
 import { renderWithAppLogic, simulateEvents } from "../../test-utils";
-import PreviousLeaves from "../../../src/pages/applications/previous-leaves";
+import PreviousLeavesOtherReasonDetails from "../../../src/pages/applications/previous-leaves-other-reason-details";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
 const setup = (claimAttrs = {}) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(PreviousLeaves, {
-    claimAttrs,
-  });
+  const {
+    appLogic,
+    claim,
+    wrapper,
+  } = renderWithAppLogic(PreviousLeavesOtherReasonDetails, { claimAttrs });
 
-  const { submitForm } = simulateEvents(wrapper);
+  const { changeField, submitForm } = simulateEvents(wrapper);
 
   return {
     appLogic,
+    changeField,
     claim,
     submitForm,
     wrapper,
   };
 };
 
-describe("PreviousLeaves", () => {
+describe("PreviousLeavesOtherReasonDetails", () => {
   it("renders the page", () => {
     const { wrapper } = setup();
 

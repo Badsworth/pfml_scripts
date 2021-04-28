@@ -15,6 +15,8 @@ const routes = {
     bondingLeaveAttestation: "/applications/bonding-leave-attestation",
     caringLeaveAttestation: "/applications/caring-leave-attestation",
     checklist: "/applications/checklist",
+    concurrentLeaves: "/applications/concurrent-leaves",
+    concurrentLeavesDetails: "/applications/concurrent-leaves-details",
     dashboard: "/dashboard",
     dateOfBirth: "/applications/date-of-birth",
     dateOfChild: "/applications/date-of-child",
@@ -38,7 +40,12 @@ const routes = {
     paymentMethod: "/applications/payment-method",
     phoneNumber: "/applications/phone-number",
     previousLeaves: "/applications/previous-leaves",
-    previousLeavesDetails: "/applications/previous-leaves-details",
+    previousLeavesOtherReason: "/applications/previous-leaves-other-reason",
+    previousLeavesOtherReasonDetails:
+      "/applications/previous-leaves-other-reason-details",
+    previousLeavesSameReason: "/applications/previous-leaves-same-reason",
+    previousLeavesSameReasonDetails:
+      "/applications/previous-leaves-same-reason-details",
     reasonPregnancy: "/applications/reason-pregnancy",
     reducedLeaveSchedule: "/applications/reduced-leave-schedule",
     review: "/applications/review",
