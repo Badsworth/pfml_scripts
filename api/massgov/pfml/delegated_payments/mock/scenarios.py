@@ -47,6 +47,7 @@ class ScenarioName(Enum):
     CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
         "CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
     )
+    CHECK_PAYMENT_CHECK_NUMBER_NOT_FOUND = "CHECK_PAYMENT_CHECK_NUMBER_NOT_FOUND"
 
     # Automated Validation Rules (TODO add more validation issue scenarios)
     REJECTED_LEAVE_REQUEST_DECISION = "REJECTED_LEAVE_REQUEST_DECISION"
@@ -106,6 +107,8 @@ class ScenarioDescriptor:
     pub_ach_response_return: bool = False
     pub_ach_return_reason_code: str = "RO1"
     pub_ach_return_invalid_id: bool = False
+
+    pub_ach_return_invalid_check_number: bool = False
 
     pub_ach_response_change_notification: bool = False
     pub_ach_notification_reason_code: str = "CO1"
@@ -204,6 +207,12 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_ID,
         pub_ach_response_return=True,
         pub_ach_return_invalid_id=True
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.CHECK_PAYMENT_CHECK_NUMBER_NOT_FOUND,
+        pub_ach_response_return=True,
+        payment_method=PaymentMethod.CHECK,
+        pub_ach_return_invalid_check_number=True
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_RETURN,
