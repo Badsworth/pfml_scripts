@@ -65,6 +65,9 @@ class AuditScenarioName(Enum):
     MULTIPLE_DAYS_IN_REJECTED_STATE = "Multiple Days in Rejected State"
     MIXED_DAYS_IN_ERROR_OR_REJECTED_STATE = "Mixed Days in Error or Rejected State"
 
+    ADDRESS_PAIR_DOES_NOT_EXIST = "Address pair does not exist"
+    ADDRESS_IS_NOT_VERIFIED = "Address is not verified"
+
 
 @dataclass
 class AuditScenarioDescriptor:
@@ -76,6 +79,9 @@ class AuditScenarioDescriptor:
     is_previously_rejected_payment: bool
     number_of_times_in_error_state: int
     number_of_times_in_rejected_state: int
+
+    has_address_pair: bool = True
+    is_address_verified: bool = True
 
 
 @dataclass
@@ -212,6 +218,30 @@ AUDIT_SCENARIO_DESCRIPTORS[
     number_of_times_in_rejected_state=3,
 )
 
+AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.ADDRESS_PAIR_DOES_NOT_EXIST] = AuditScenarioDescriptor(
+    scenario_name=AuditScenarioName.ADDRESS_PAIR_DOES_NOT_EXIST,
+    claim_type=ClaimType.FAMILY_LEAVE,
+    payment_method=PaymentMethod.ACH,
+    is_first_time_payment=True,
+    is_previously_errored_payment=False,
+    is_previously_rejected_payment=False,
+    number_of_times_in_error_state=0,
+    number_of_times_in_rejected_state=0,
+    has_address_pair=False,
+)
+
+AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.ADDRESS_IS_NOT_VERIFIED] = AuditScenarioDescriptor(
+    scenario_name=AuditScenarioName.ADDRESS_IS_NOT_VERIFIED,
+    claim_type=ClaimType.FAMILY_LEAVE,
+    payment_method=PaymentMethod.ACH,
+    is_first_time_payment=True,
+    is_previously_errored_payment=False,
+    is_previously_rejected_payment=False,
+    number_of_times_in_error_state=0,
+    number_of_times_in_rejected_state=0,
+    is_address_verified=False,
+)
+
 DEFAULT_AUDIT_SCENARIO_DATA_SET = [
     AuditScenarioNameWithCount(scenario_name, 1)
     for scenario_name in AUDIT_SCENARIO_DESCRIPTORS.keys()
@@ -226,7 +256,7 @@ def create_payment_with_end_state(
     c_value: str,
     i_value: str,
     claim: Claim,
-    address_pair: ExperianAddressPair,
+    address_pair: Optional[ExperianAddressPair],
     payment_method: LkPaymentMethod,
     end_state: LkState,
     db_session: db.Session,
@@ -264,17 +294,25 @@ def generate_scenario_data(
     i_value = str(uuid.uuid4().int)
 
     mailing_address = AddressFactory.create(
-        address_line_one="20 South Ave",
-        city="Burlington",
-        geo_state_id=1,
-        geo_state_text="Massachusetts",
-        zip_code="01803",
+        address_line_one="20 South Ave", city="Burlington", geo_state_id=1, zip_code="01803",
+    )
+
+    verified_address = AddressFactory.create(
+        address_line_one="20 South Avenue", city="Burlington", geo_state_id=1, zip_code="01803",
     )
 
     employer = EmployerFactory.create()
 
     employee = EmployeeFactory.create(fineos_customer_number=str(uuid.uuid4()))
-    address_pair = ExperianAddressPairFactory.create(experian_address=mailing_address)
+
+    address_pair: Optional[ExperianAddressPair] = None
+    if scenario_descriptor.has_address_pair:
+        if scenario_descriptor.is_address_verified:
+            address_pair = ExperianAddressPairFactory.create(
+                fineos_address=mailing_address, experian_address=verified_address
+            )
+        else:
+            address_pair = ExperianAddressPairFactory.create(fineos_address=mailing_address)
 
     claim = ClaimFactory.create(
         employee=employee,
