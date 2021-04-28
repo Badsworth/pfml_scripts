@@ -252,6 +252,7 @@ def test_e2e_pub_payments(
             scenario_names=[
                 ScenarioName.PUB_ACH_FAMILY_RETURN,
                 ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_ID,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
@@ -345,7 +346,7 @@ def test_e2e_pub_payments(
         audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)
 
         assert len(audit_report_parsed_csv_rows) == (
-            len(stage_1_happy_path_scenarios) + 1 + 4 + 3
+            len(stage_1_happy_path_scenarios) + 1 + 5 + 3
         )  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks
 
         payments = get_payments_in_end_state(
@@ -370,7 +371,7 @@ def test_e2e_pub_payments(
             {
                 "processed_payment_count": len(SCENARIO_DESCRIPTORS),
                 "not_pending_or_approved_leave_request_count": 1,
-                "approved_prenote_count": 9,
+                "approved_prenote_count": 10,
                 "zero_dollar_payment_count": 1,
                 "cancellation_count": 1,
                 "overpayment_count": 2,
@@ -384,7 +385,7 @@ def test_e2e_pub_payments(
             "PaymentAuditReportStep",
             {
                 "payment_sampled_for_audit_count": (
-                    len(stage_1_happy_path_scenarios) + 1 + 4 + 3
+                    len(stage_1_happy_path_scenarios) + 1 + 5 + 3
                 ),  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks
             },
         )
@@ -438,7 +439,7 @@ def test_e2e_pub_payments(
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
+            scenario_names=[                
                 ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                 ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                 ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -560,17 +561,17 @@ def test_e2e_pub_payments(
         assert_metrics(
             test_db_other_session,
             "PaymentRejectsStep",
-            {"rejected_payment_count": 1, "accepted_payment_count": 16},
+            {"rejected_payment_count": 1, "accepted_payment_count": 17},
         )
 
         assert_metrics(
             test_db_other_session,
             "PaymentMethodsSplitStep",
-            {"ach_payment_count": 8, "check_payment_count": 8},
+            {"ach_payment_count": 9, "check_payment_count": 8},
         )
 
         assert_metrics(
-            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 21,},
+            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 22,},
         )
 
         assert_metrics(
@@ -631,6 +632,16 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
             ],
             end_state=State.ERRORED_PEI_WRITEBACK_SENT,
+            db_session=test_db_session,
+        )
+
+        # Unchanged
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_ID,
+            ],
+            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
             db_session=test_db_session,
         )
 
@@ -705,8 +716,8 @@ def test_e2e_pub_payments(
 
         # == PubError TODO adjust as metric based scenarios below are added
         assert len(test_db_session.query(PubError).all()) == (
-            2 + 2 + 2 + 3
-        )  # eft_prenote_unexpected_state_count + payment_complete_with_change_count + payment_rejected_count + payment_failed_by_check
+            2 + 2 + 2 + 3 + 1
+        )  # eft_prenote_unexpected_state_count + payment_complete_with_change_count + payment_rejected_count + payment_failed_by_check + unknown_id_format_count
 
         # == Metrics
         assert_metrics(
@@ -714,11 +725,11 @@ def test_e2e_pub_payments(
             "ProcessNachaReturnFileStep",
             {
                 "warning_count": None,
-                "ach_return_count": 3,
+                "ach_return_count": 4,
                 "change_notification_count": 3,
                 "eft_prenote_count": 2,
                 "payment_count": 4,
-                "unknown_id_format_count": None,  # TODO add scenario
+                "unknown_id_format_count": 1,  # TODO add scenario
                 "eft_prenote_id_not_found_count": None,  # TODO add scenario
                 "eft_prenote_unexpected_state_count": None,
                 "eft_prenote_already_approved_count": 2,  # TODO validate
