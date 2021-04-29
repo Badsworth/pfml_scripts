@@ -37,7 +37,7 @@ class EzCheckField:
     def __str__(self) -> str:
         if len(self.validation_issues) > 0:
             raise payments_util.ValidationIssueException(
-                message="Cannot stringify field because there are validation_issues",
+                message="Can not stringify field because there are validation_issues",
                 issues=self.validation_issues,
             )
 
