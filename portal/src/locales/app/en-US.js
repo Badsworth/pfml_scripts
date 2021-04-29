@@ -1269,6 +1269,19 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReason: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    detailsLabel: "What counts as a qualifying reason?",
+    hintHeader:
+      "Answer yes if you took paid or unpaid leave for a qualifying reason that is not the reason you are applying for paid leave now. The following are qualifying reasons:",
+    hintList: [
+      "You had a serious health condition, including illness, injury, or pregnancy.",
+      "If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.",
+      "You bonded with your child after birth or placement.",
+      "You needed to manage family affairs while a family member is on active duty in the armed forces.",
+      "You needed to care for a family member who serves in the armed forces.",
+      "You needed to care for a family member with a serious health condition.",
+    ],
     sectionLabel:
       "Did you take leave between January 1, 2021–{{leaveStartDate}} for a different qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",
