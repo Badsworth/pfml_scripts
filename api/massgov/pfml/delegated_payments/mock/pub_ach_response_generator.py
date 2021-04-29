@@ -72,6 +72,8 @@ class PubACHResponseGenerator:
         is_return = scenario_descriptor.prenoted
         is_prenote = not is_return
 
+        pub_individual_id = payment.pub_individual_id * 10 if scenario_descriptor.pub_ach_return_invalid_eft_prenote_id else payment.pub_individual_id
+
         trans_code = get_trans_code(payment.pub_eft.bank_account_type_id, is_prenote, is_return)
 
         id_prefix = "E" if is_prenote else "P"
@@ -96,7 +98,7 @@ class PubACHResponseGenerator:
             receiving_dfi_id=payment.pub_eft.routing_nbr,
             dfi_act_num=payment.pub_eft.account_nbr,
             amount=payment.amount,
-            id=f"{id_prefix}{payment.pub_individual_id}",
+            id=f"{id_prefix}{pub_individual_id}",
             name=f"{employee.last_name} {employee.first_name}",
         )
 

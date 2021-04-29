@@ -66,6 +66,7 @@ class ScenarioName(Enum):
     PUB_ACH_FAMILY_RETURN = "PUB_ACH_FAMILY_RETURN"
     PUB_ACH_FAMILY_NOTIFICATION = "PUB_ACH_FAMILY_NOTIFICATION"
     PUB_ACH_FAMILY_RETURN_INVALID_ID = "PUB_ACH_FAMILY_RETURN_INVALID_ID"
+    PUB_ACH_FAMILY_RETURN_INVALID_EFT_PRENOTE_ID = "PUB_ACH_FAMILY_RETURN_INVALID_EFT_PRENOTE_ID"
 
     PUB_ACH_MEDICAL_RETURN = "PUB_ACH_MEDICAL_RETURN"
     PUB_ACH_MEDICAL_NOTIFICATION = "PUB_ACH_MEDICAL_NOTIFICATION"
@@ -109,6 +110,7 @@ class ScenarioDescriptor:
     pub_ach_return_invalid_id: bool = False
 
     pub_ach_return_invalid_check_number: bool = False
+    pub_ach_return_invalid_eft_prenote_id: bool = False
 
     pub_ach_response_change_notification: bool = False
     pub_ach_notification_reason_code: str = "CO1"
@@ -207,6 +209,12 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_ID,
         pub_ach_response_return=True,
         pub_ach_return_invalid_id=True
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_EFT_PRENOTE_ID,
+        pub_ach_response_return=True,
+        pub_ach_return_invalid_eft_prenote_id=True,
+        prenoted=False,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CHECK_PAYMENT_CHECK_NUMBER_NOT_FOUND,
