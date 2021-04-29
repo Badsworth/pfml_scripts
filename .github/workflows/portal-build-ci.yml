@@ -52,7 +52,7 @@ jobs:
   get-build-state:
     name: Finalize build state
     needs: [storybook]
-    if: always() && github.ref == "refs/heads/main"
+    if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       build-state: ${{ steps.build-state.outputs.build-state }}
