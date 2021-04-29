@@ -1,11 +1,11 @@
-import { fineos, portal } from "../../../actions";
+import { portal, fineos } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 
-describe("Submit bonding application via the web portal: Adjudication Approval & payment checking", () => {
-  const submissionTest = it("As a claimant, I should be able to submit a continous bonding application through the portal", () => {
+describe("Submit medical application via the web portal: Adjudication Approval & payment checking", () => {
+  const submissionTest = it("As a claimant, I should be able to submit a reduced medical application through the portal", () => {
     portal.before();
-    cy.task("generateClaim", "BCAP90").then((claim) => {
+    cy.task("generateClaim", "MRAP30").then((claim) => {
       cy.stash("claim", claim);
       const application: ApplicationRequestBody = claim.claim;
       const paymentPreference = claim.paymentPreference;
@@ -50,8 +50,8 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
   });
 
   it(
-    "CSR rep will approve continous bonding application",
-    { retries: 0, baseUrl: getFineosBaseUrl() },
+    "CSR rep will approve reduced medical application",
+    { baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();
@@ -63,7 +63,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
   );
 
   it(
-    "Should be able to confirm the weekly payment amount",
+    "Should be able to confirm the weekly payment amount for a reduced schedule",
     { baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();

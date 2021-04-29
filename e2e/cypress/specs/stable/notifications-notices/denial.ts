@@ -31,6 +31,7 @@ describe("Denial Notification and Notice", () => {
             timestamp_from: Date.now(),
           });
           fineos.visitClaim(responseData.fineos_absence_id);
+          fineos.assertClaimStatus("Adjudication");
           fineos.assertPlanStatus("Eligibility", "Not Met");
           fineos.denyClaim("Claimant wages failed 30x rule");
           fineos.triggerNoticeRelease("Denial Notice");

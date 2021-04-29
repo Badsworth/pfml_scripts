@@ -63,16 +63,12 @@ export function before(): void {
   }
 }
 
-export function visitClaim(
-  claimId: string,
-  claimStatus = "Adjudication"
-): void {
+export function visitClaim(claimId: string): void {
   cy.get('a[aria-label="Cases"]').click();
   onTab("Case");
   cy.labelled("Case Number").type(claimId);
   cy.labelled("Case Type").select("Absence Case");
   cy.get('input[type="submit"][value="Search"]').click();
-  assertClaimStatus(claimStatus);
   assertAbsenceCaseNumber(claimId);
 }
 
@@ -94,7 +90,7 @@ export function denyClaim(reason: string): void {
 /**
  * Called from the claim page, asserts that the claim status is an expected value.
  */
-function assertClaimStatus(expected: string) {
+export function assertClaimStatus(expected: string): void {
   cy.get(".key-info-bar .status dd").should((statusElement) => {
     expect(statusElement, `Absence case should be ${expected}`).to.contain.text(
       expected
@@ -422,11 +418,10 @@ export function intermittentFillAbsencePeriod(claimNumber: string): void {
   });
   cy.get(
     "input[name*='unspecifiedCertificationEpisodicPeriodDetailsWidget_un99_episodeDuration']"
-  ).type("{selectall}5{enter}", { force: true });
+  ).type("{selectall}5");
+  clickBottomWidgetButton("OK");
   wait();
-  cy.get(
-    "input[name*='certificationEpisodicLeaveEntitlementWidget_un94_applyChanges']"
-  ).click();
+  cy.get("input[type='button'][value='Apply']").click();
   cy.get("#PopupContainer").within(() => {
     cy.get("input[value='Yes']").click();
   });
@@ -437,6 +432,7 @@ export function claimAdjudicationFlow(
   ERresponse = false
 ): void {
   visitClaim(claimNumber);
+  assertClaimStatus("Adjudication");
   onTab("Tasks");
   assertHasTask("Certification Review");
   assertHasTask("ID Review");
@@ -474,7 +470,6 @@ export function intermittentClaimAdjudicationFlow(
     clickBottomWidgetButton("Close");
   }
   assertClaimStatus("Adjudication");
-  assertAbsenceCaseNumber(claimNumber);
   cy.get("input[type='submit'][value='Adjudicate']").click();
   checkStatus(claimNumber, "Eligibility", "Met");
   markEvidence(claimNumber, "MHAP1", "State managed Paid Leave Confirmation");
@@ -549,7 +544,6 @@ export function submitIntermittentActualHours(
 export function claimAdjudicationMailedDoc(claimNumber: string): void {
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
-  assertAbsenceCaseNumber(claimNumber);
   onTab("Documents");
   // Assert ID Doc is present
   findDocument("MA ID");
