@@ -15,11 +15,11 @@ import massgov.pfml.util.datetime as datetime_util
 import tests.api
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
+from massgov.pfml.api.services.fineos_actions import LeaveNotificationReason
 from massgov.pfml.api.util.response import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
-    CaringLeaveMetadata,
     ContinuousLeavePeriod,
     DocumentType,
     EmploymentStatus,
@@ -37,6 +37,7 @@ from massgov.pfml.db.models.employees import Address, GeoState, PaymentMethod, T
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    CaringLeaveMetadataFactory,
     ClaimFactory,
     ContinuousLeavePeriodFactory,
     DocumentFactory,
@@ -439,7 +440,9 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
     )
     application.phone = Phone(phone_number="+12404879945", phone_type_id=1)  # Cell
 
-    caring_leave_metadata = CaringLeaveMetadata(family_member_date_of_birth=date(1975, 1, 1))
+    caring_leave_metadata = CaringLeaveMetadataFactory.create(
+        family_member_date_of_birth=date(1975, 1, 1)
+    )
 
     application.caring_leave_metadata = caring_leave_metadata
 
@@ -3956,6 +3959,65 @@ def test_application_post_submit_no_benefits_or_incomes_does_not_create_other_in
     assert "customer_create_eform" not in map(lambda capture: capture[0], captures)
 
 
+def test_application_post_submit_to_fineos_caring_leave(client, user, auth_token, test_db_session):
+    caring_leave_metadata = CaringLeaveMetadataFactory.create(
+        relationship_to_caregiver_id=RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_id
+    )
+    application = ApplicationFactory.create(user=user, caring_leave_metadata=caring_leave_metadata)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
+    application.hours_worked_per_week = 40
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    leave_period = ContinuousLeavePeriod(
+        start_date=date(2021, 1, 1),
+        end_date=date(2021, 2, 9),
+        application_id=application.application_id,
+    )
+    test_db_session.add(leave_period)
+
+    application.leave_reason_id = LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    captured_absence_case = capture[3][2]["absence_case"]
+
+    assert response.status_code == 201
+    assert (
+        captured_absence_case.reason
+        == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_description
+    )
+    assert (
+        captured_absence_case.reasonQualifier1
+        == LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_description
+    )
+    assert (
+        captured_absence_case.notificationReason
+        == LeaveNotificationReason.CARING_FOR_A_FAMILY_MEMBER
+    )
+    assert (
+        captured_absence_case.primaryRelationship
+        == RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_description
+    )
+    assert (
+        captured_absence_case.primaryRelQualifier1
+        == RelationshipQualifier.LEGALLY_MARRIED.relationship_qualifier_description
+    )
+    assert (
+        captured_absence_case.primaryRelQualifier2
+        == RelationshipQualifier.UNDISCLOSED.relationship_qualifier_description
+    )
+
+
 def test_application_post_complete_app(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     claim = ClaimFactory.create(
@@ -4526,7 +4588,7 @@ def test_application_patch_caring_leave_metadata(client, user, auth_token, test_
     )
     assert application.caring_leave_metadata is None
 
-    caring_leave_metadata = CaringLeaveMetadata()
+    caring_leave_metadata = CaringLeaveMetadataFactory.create()
     application.caring_leave_meatadata = caring_leave_metadata
     test_db_session.add(caring_leave_metadata)
     test_db_session.add(application)
@@ -4685,7 +4747,7 @@ def test_application_patch_caring_leave_metadata_change_leave_reason(
     )
     assert application.caring_leave_metadata is None
 
-    application.caring_leave_metadata = CaringLeaveMetadata()
+    application.caring_leave_metadata = CaringLeaveMetadataFactory.create()
     test_db_session.add(application)
     test_db_session.commit()
 

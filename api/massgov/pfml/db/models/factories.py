@@ -772,3 +772,13 @@ class DiaReductionPaymentFactory(BaseFactory):
     end_date = factory.Faker("date_object")
     weekly_amount = 400.00
     award_created_date = factory.Faker("date_object")
+
+
+class CaringLeaveMetadataFactory(BaseFactory):
+    class Meta:
+        model = application_models.CaringLeaveMetadata
+
+    family_member_first_name = factory.Faker("first_name")
+    family_member_middle_name = factory.Faker("first_name")
+    family_member_last_name = factory.Faker("last_name")
+    family_member_date_of_birth = factory.Faker("date_object")
