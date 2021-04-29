@@ -223,6 +223,12 @@ class PaymentRejectsStep(Step):
         self, payment_rejects_rows: List[PaymentAuditCSV]
     ) -> None:
         for payment_rejects_row in payment_rejects_rows:
+            if payment_rejects_row.pfml_payment_id is None:
+                raise PaymentRejectsException("Missing payment id column in rejects file.")
+
+            if payment_rejects_row.rejected_by_program_integrity is None:
+                raise PaymentRejectsException("Missing rejection column in rejects file.")
+
             payment = (
                 self.db_session.query(Payment)
                 .filter(Payment.payment_id == payment_rejects_row.pfml_payment_id)
