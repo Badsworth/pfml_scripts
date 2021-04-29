@@ -860,7 +860,7 @@ jobs:
 
   post-e2e-failures-to-slack:
     name: Post E2E failures to Slack
-    needs: [start-comms-slack, get-test-deploy-state]
+    needs: [start-comms-slack, end-to-end]
     if: always() && 
       (
         (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
