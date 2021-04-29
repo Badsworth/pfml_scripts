@@ -45,4 +45,23 @@ describe("Leave Admin Self-Registration", () => {
       });
     });
   });
+
+  it("Leave administrators cannot verify with an organization whose withholding amounts equal 0", () => {
+    cy.dependsOnPreviousPass([register]);
+    portal.before();
+    cy.unstash<Credentials>("credentials").then((credentials) => {
+      cy.unstash<string>("employer").then(() => {
+        portal.login(credentials);
+        cy.contains("Your organizations").click();
+        cy.task("pickEmployer", {
+          withholdings: [0, 0, 0, 0],
+          metadata: { register_leave_admins: true },
+        }).then((tertiary) => {
+          const tertiaryWithholding =
+            tertiary.withholdings[tertiary.withholdings.length - 1];
+          portal.addOrganization(tertiary.fein, tertiaryWithholding);
+        });
+      });
+    });
+  });
 });
