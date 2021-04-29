@@ -106,9 +106,7 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
 
     employer: Employer = claim.employer
 
-    check_description = (
-        _format_check_memo(payment) if payment.disb_method == PaymentMethod.CHECK else ""
-    )
+    check_description = _format_check_memo(payment)
 
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
