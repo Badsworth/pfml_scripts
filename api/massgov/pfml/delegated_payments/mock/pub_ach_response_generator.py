@@ -73,6 +73,7 @@ class PubACHResponseGenerator:
         is_prenote = not is_return
 
         pub_individual_id = payment.pub_individual_id * 10 if scenario_descriptor.pub_ach_return_invalid_eft_prenote_id else payment.pub_individual_id
+        pub_individual_id = payment.pub_individual_id * 10 if scenario_descriptor.pub_ach_return_invalid_payment_id else payment.pub_individual_id
 
         trans_code = get_trans_code(payment.pub_eft.bank_account_type_id, is_prenote, is_return)
 

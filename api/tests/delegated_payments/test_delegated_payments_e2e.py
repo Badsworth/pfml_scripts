@@ -346,8 +346,8 @@ def test_e2e_pub_payments(
         audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)
 
         assert len(audit_report_parsed_csv_rows) == (
-            len(stage_1_happy_path_scenarios) + 1 + 5 + 3 + 1
-        )  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks + invalid prenote ID
+            len(stage_1_happy_path_scenarios) + 1 + 5 + 3 + 1 + 1
+        )  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks + invalid prenote ID + invalid payment ID
 
         payments = get_payments_in_end_state(
             test_db_session, State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
@@ -371,7 +371,7 @@ def test_e2e_pub_payments(
             {
                 "processed_payment_count": len(SCENARIO_DESCRIPTORS),
                 "not_pending_or_approved_leave_request_count": 1,
-                "approved_prenote_count": 10,
+                "approved_prenote_count": 11,
                 "zero_dollar_payment_count": 1,
                 "cancellation_count": 1,
                 "overpayment_count": 2,
@@ -385,8 +385,8 @@ def test_e2e_pub_payments(
             "PaymentAuditReportStep",
             {
                 "payment_sampled_for_audit_count": (
-                    len(stage_1_happy_path_scenarios) + 1 + 5 + 3 + 1
-                ),  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks + check_not_found
+                    len(stage_1_happy_path_scenarios) + 1 + 5 + 3 + 1 + 1
+                ),  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks + check_not_found + invalid_payment_id
             },
         )
 
@@ -561,17 +561,17 @@ def test_e2e_pub_payments(
         assert_metrics(
             test_db_other_session,
             "PaymentRejectsStep",
-            {"rejected_payment_count": 1, "accepted_payment_count": 18},
+            {"rejected_payment_count": 1, "accepted_payment_count": 19},
         )
 
         assert_metrics(
             test_db_other_session,
             "PaymentMethodsSplitStep",
-            {"ach_payment_count": 9, "check_payment_count": 9},
+            {"ach_payment_count": 10, "check_payment_count": 9},
         )
 
         assert_metrics(
-            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 23,},
+            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 24,},
         )
 
         assert_metrics(
@@ -725,16 +725,16 @@ def test_e2e_pub_payments(
             "ProcessNachaReturnFileStep",
             {
                 "warning_count": None,
-                "ach_return_count": 5,
+                "ach_return_count": 6,
                 "change_notification_count": 3,
                 "eft_prenote_count": 3,
-                "payment_count": 4,
+                "payment_count": 5,
                 "unknown_id_format_count": 1,
-                "eft_prenote_id_not_found_count": 1,
+                "eft_prenote_id_not_found_count": None,
                 "eft_prenote_unexpected_state_count": 1,
                 "eft_prenote_already_approved_count": 1,
-                "eft_prenote_rejected_count": None,  # TODO add scenario
-                "payment_id_not_found_count": None, 
+                "eft_prenote_rejected_count": 1,  # TODO add scenario
+                "payment_id_not_found_count": 1, 
                 "payment_rejected_count": 2,  # Both prenotes
                 "payment_already_rejected_count": None,  # TODO add scenario
                 "payment_unexpected_state_count": None,
