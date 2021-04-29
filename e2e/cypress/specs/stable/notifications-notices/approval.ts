@@ -90,7 +90,35 @@ describe("Approval (notifications/notices)", () => {
   );
 
   it(
-    "Should generate a notification for the Leave Administrator",
+    "Should generate a 'Action Required' ER notification for the Leave Administrator",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([submit]);
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+          email
+            .getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: `Action required: Respond to ${claim.first_name} ${claim.last_name}'s paid leave application`,
+                messageWildcard: submission.fineos_absence_id,
+                timestamp_from: submission.timestamp_from,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              180000
+            )
+            .then((emails) => {
+              expect(emails[0].html).to.contain(
+                `/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}`
+              );
+            });
+        });
+      });
+    }
+  );
+
+  it(
+    "Should generate an approval notification for the Leave Administrator",
     { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit]);

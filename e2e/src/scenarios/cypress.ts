@@ -138,26 +138,23 @@ export const Jill: ScenarioSpecification = {
   },
 };
 
-export const Dave: ScenarioSpecification = {
+export const BCAP90: ScenarioSpecification = {
   employee: {
     wages: 90000,
     mass_id: true,
   },
   claim: {
-    label: "Dave",
-    reason: "Serious Health Condition - Employee",
+    label: "BCAP90",
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: {
       MASSID: {},
       HCP: {},
     },
-    employerResponse: {
-      hours_worked_per_week: 36,
-      employer_decision: "Approve",
-      fraud: "No",
-    },
     // This scenario requires a 2 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
+    metadata: { expected_weekly_payment: "850.00" },
   },
 };
 
