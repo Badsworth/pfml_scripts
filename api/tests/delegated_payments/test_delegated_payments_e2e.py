@@ -728,23 +728,23 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ProcessNachaReturnFileStep",
             {
-                "warning_count": None,
+                "warning_count": 0,
                 "ach_return_count": 3,
                 "change_notification_count": 3,
                 "eft_prenote_count": 2,
                 "payment_count": 4,
-                "unknown_id_format_count": None,  # TODO add scenario (PUB-174)
-                "eft_prenote_id_not_found_count": None,  # TODO add scenario (PUB-174)
-                "eft_prenote_unexpected_state_count": None,
+                "unknown_id_format_count": 0,  # TODO add scenario (PUB-174)
+                "eft_prenote_id_not_found_count": 0,  # TODO add scenario (PUB-174)
+                "eft_prenote_unexpected_state_count": 0,
                 "eft_prenote_already_approved_count": 2,  # TODO validate
-                "eft_prenote_rejected_count": None,  # TODO add scenario (PUB-174)
-                "payment_id_not_found_count": None,  # TODO add scenario (PUB-174)
+                "eft_prenote_rejected_count": 0,  # TODO add scenario (PUB-174)
+                "payment_id_not_found_count": 0,  # TODO add scenario (PUB-174)
                 "payment_rejected_count": 2,  # Both prenotes
-                "payment_already_rejected_count": None,  # TODO add scenario (PUB-174)
-                "payment_unexpected_state_count": None,
+                "payment_already_rejected_count": 0,  # TODO add scenario (PUB-174)
+                "payment_unexpected_state_count": 0,
                 "payment_complete_with_change_count": 2,  # TODO validate
-                "payment_already_complete_count": None,  # TODO add scenario? (PUB-174)
-                "payment_notification_unexpected_state_count": None,  # TODO add scenario (PUB-174)
+                "payment_already_complete_count": 0,  # TODO add scenario? (PUB-174)
+                "payment_notification_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
             },
         )
 
@@ -753,13 +753,13 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ProcessCheckReturnFileStep",
             {
-                "warning_count": None,
+                "warning_count": 0,
                 "check_payment_count": 5,
-                "payment_complete_by_paid_check": None,
+                "payment_complete_by_paid_check": 0,
                 "payment_still_outstanding": 2,
                 "payment_failed_by_check": 3,
-                "check_number_not_found_count": None,  # TODO add scenario  (PUB-174)
-                "payment_unexpected_state_count": None,  # TODO add scenario (PUB-174)
+                "check_number_not_found_count": 0,  # TODO add scenario  (PUB-174)
+                "payment_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
             },
             log_report_index=1,  # second when sorted by import log id desc order
             description="Outstanding check responses",
@@ -770,13 +770,13 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ProcessCheckReturnFileStep",
             {
-                "warning_count": None,
+                "warning_count": 0,
                 "check_payment_count": 3,
                 "payment_complete_by_paid_check": 3,
-                "payment_still_outstanding": None,
-                "payment_failed_by_check": None,
-                "check_number_not_found_count": None,  # TODO add scenario (PUB-174)
-                "payment_unexpected_state_count": None,  # TODO add scenario (PUB-174)
+                "payment_still_outstanding": 0,
+                "payment_failed_by_check": 0,
+                "check_number_not_found_count": 0,  # TODO add scenario (PUB-174)
+                "payment_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
             },
             log_report_index=0,  # first when sorted by import log id desc order
             description="Positive pay check responses",
