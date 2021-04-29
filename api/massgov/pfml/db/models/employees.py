@@ -1632,10 +1632,12 @@ class Occupation(LookupTable):
     MINING = LkOccupation(2, 21, "Mining")
     UTILITIES = LkOccupation(3, 22, "Utilities")
     CONSTRUCTION = LkOccupation(4, 23, "Construction")
-    MANUFACTURING = LkOccupation(5, 31, "Manufacturing") # @todo: category code up to 33
+    MANUFACTURING = LkOccupation(5, 31, "Manufacturing")  # @todo: category code up to 33
     WHOLESALE_TRADE = LkOccupation(6, 42, "Wholesale Trade")
-    RETAIL_TRADE = LkOccupation(7, 44, "Retail Trade") # @todo: category code up to 45
-    TRANSPORTATION_WAREHOUSING = LkOccupation(8, 48, "Transportation and Warehousing") # @todo: category code up to 49
+    RETAIL_TRADE = LkOccupation(7, 44, "Retail Trade")  # @todo: category code up to 45
+    TRANSPORTATION_WAREHOUSING = LkOccupation(
+        8, 48, "Transportation and Warehousing"
+    )  # @todo: category code up to 49
     INFORMATION = LkOccupation(9, 51, "Information")
     FINANCE_INSURANCE = LkOccupation(10, 52, "Finance and Insurance")
     REAL_ESTATE_RENTAL_LEASING = LkOccupation(11, 53, "Real Estate Rental and Leasing")
@@ -1670,7 +1672,7 @@ class OccupationTitle(LookupTable):
     OILSEED_EXCEPT_SOYBEAN_FARMING = LkOccupationTitle(
         3, 1, 111120, "Oilseed (except Soybean) Farming"
     )
-    
+
     DRY_PEA_AND_BEAN_FARMING = LkOccupationTitle(4, 1, 111130, "Dry Pea and Bean Farming")
     WHEAT_FARMING = LkOccupationTitle(5, 1, 111140, "Wheat Farming")
     CORN_FARMING = LkOccupationTitle(6, 1, 111150, "Corn Farming")
@@ -1858,9 +1860,7 @@ class OccupationTitle(LookupTable):
     ALL_OTHER_NONMETALLIC_MINERAL_MINING = LkOccupationTitle(
         110, 2, 212399, "All Other Nonmetallic Mineral Mining"
     )
-    SUPPORT_ACTIVITIES_FOR_MINING = LkOccupationTitle(
-        111, 2, 2131, "Support Activities for Mining"
-    )
+    SUPPORT_ACTIVITIES_FOR_MINING = LkOccupationTitle(111, 2, 2131, "Support Activities for Mining")
     DRILLING_OIL_AND_GAS_WELLS = LkOccupationTitle(112, 2, 213111, "Drilling Oil and Gas Wells")
     SUPPORT_ACTIVITIES_FOR_OIL_AND_GAS_OPERATIONS = LkOccupationTitle(
         113, 2, 213112, "Support Activities for Oil and Gas Operations"
@@ -2007,18 +2007,14 @@ class OccupationTitle(LookupTable):
     TILE_AND_TERRAZZO_CONTRACTORS = LkOccupationTitle(
         169, 4, 238340, "Tile and Terrazzo Contractors"
     )
-    FINISH_CARPENTRY_CONTRACTORS = LkOccupationTitle(
-        170, 4, 238350, "Finish Carpentry Contractors"
-    )
+    FINISH_CARPENTRY_CONTRACTORS = LkOccupationTitle(170, 4, 238350, "Finish Carpentry Contractors")
     OTHER_BUILDING_FINISHING_CONTRACTORS = LkOccupationTitle(
         171, 4, 238390, "Other Building Finishing Contractors"
     )
     OTHER_SPECIALTY_TRADE_CONTRACTORS = LkOccupationTitle(
         172, 4, 2389, "Other Specialty Trade Contractors"
     )
-    SITE_PREPARATION_CONTRACTORS = LkOccupationTitle(
-        173, 4, 238910, "Site Preparation Contractors"
-    )
+    SITE_PREPARATION_CONTRACTORS = LkOccupationTitle(173, 4, 238910, "Site Preparation Contractors")
     ALL_OTHER_SPECIALTY_TRADE_CONTRACTORS = LkOccupationTitle(
         174, 4, 238990, "All Other Specialty Trade Contractors"
     )
@@ -2124,9 +2120,7 @@ class OccupationTitle(LookupTable):
     OTHER_SNACK_FOOD_MANUFACTURING = LkOccupationTitle(
         220, 5, 311919, "Other Snack Food Manufacturing"
     )
-    COFFEE_AND_TEA_MANUFACTURING = LkOccupationTitle(
-        221, 5, 311920, "Coffee and Tea Manufacturing"
-    )
+    COFFEE_AND_TEA_MANUFACTURING = LkOccupationTitle(221, 5, 311920, "Coffee and Tea Manufacturing")
     FLAVORING_SYRUP_AND_CONCENTRATE_MANUFACTURING = LkOccupationTitle(
         222, 5, 311930, "Flavoring Syrup and Concentrate Manufacturing"
     )
@@ -2152,9 +2146,7 @@ class OccupationTitle(LookupTable):
     TOBACCO_MANUFACTURING_4 = LkOccupationTitle(234, 5, 3122, "Tobacco Manufacturing")
     TOBACCO_MANUFACTURING = LkOccupationTitle(235, 5, 312230, "Tobacco Manufacturing")
     FIBER_YARN_AND_THREAD_MILLS_4 = LkOccupationTitle(236, 5, 3131, "Fiber, Yarn, and Thread Mills")
-    FIBER_YARN_AND_THREAD_MILLS = LkOccupationTitle(
-        237, 5, 313110, "Fiber, Yarn, and Thread Mills"
-    )
+    FIBER_YARN_AND_THREAD_MILLS = LkOccupationTitle(237, 5, 313110, "Fiber, Yarn, and Thread Mills")
     FABRIC_MILLS = LkOccupationTitle(238, 5, 3132, "Fabric Mills")
     BROADWOVEN_FABRIC_MILLS = LkOccupationTitle(239, 5, 313210, "Broadwoven Fabric Mills")
     NARROW_FABRIC_MILLS_AND_SCHIFFLI_MACHINE_EMBROIDERY = LkOccupationTitle(
@@ -2173,9 +2165,7 @@ class OccupationTitle(LookupTable):
     CARPET_AND_RUG_MILLS = LkOccupationTitle(247, 5, 314110, "Carpet and Rug Mills")
     CURTAIN_AND_LINEN_MILLS = LkOccupationTitle(248, 5, 314120, "Curtain and Linen Mills")
     OTHER_TEXTILE_PRODUCT_MILLS = LkOccupationTitle(249, 5, 3149, "Other Textile Product Mills")
-    TEXTILE_BAG_AND_CANVAS_MILLS = LkOccupationTitle(
-        250, 5, 314910, "Textile Bag and Canvas Mills"
-    )
+    TEXTILE_BAG_AND_CANVAS_MILLS = LkOccupationTitle(250, 5, 314910, "Textile Bag and Canvas Mills")
     ROPE_CORDAGE_TWINE_TIRE_CORD_AND_TIRE_FABRIC_MILLS = LkOccupationTitle(
         251, 5, 314994, "Rope, Cordage, Twine, Tire Cord, and Tire Fabric Mills"
     )
@@ -2184,9 +2174,7 @@ class OccupationTitle(LookupTable):
     )
     APPAREL_KNITTING_MILLS = LkOccupationTitle(253, 5, 3151, "Apparel Knitting Mills")
     HOSIERY_AND_SOCK_MILLS = LkOccupationTitle(254, 5, 315110, "Hosiery and Sock Mills")
-    OTHER_APPAREL_KNITTING_MILLS = LkOccupationTitle(
-        255, 5, 315190, "Other Apparel Knitting Mills"
-    )
+    OTHER_APPAREL_KNITTING_MILLS = LkOccupationTitle(255, 5, 315190, "Other Apparel Knitting Mills")
     CUT_AND_SEW_APPAREL_MANUFACTURING = LkOccupationTitle(
         256, 5, 3152, "Cut and Sew Apparel Manufacturing"
     )
@@ -2332,9 +2320,7 @@ class OccupationTitle(LookupTable):
     )
     BASIC_CHEMICAL_MANUFACTURING = LkOccupationTitle(311, 5, 3251, "Basic Chemical Manufacturing")
     PETROCHEMICAL_MANUFACTURING = LkOccupationTitle(312, 5, 325110, "Petrochemical Manufacturing")
-    INDUSTRIAL_GAS_MANUFACTURING = LkOccupationTitle(
-        313, 5, 325120, "Industrial Gas Manufacturing"
-    )
+    INDUSTRIAL_GAS_MANUFACTURING = LkOccupationTitle(313, 5, 325120, "Industrial Gas Manufacturing")
     SYNTHETIC_DYE_AND_PIGMENT_MANUFACTURING = LkOccupationTitle(
         314, 5, 325130, "Synthetic Dye and Pigment Manufacturing"
     )
@@ -2522,9 +2508,7 @@ class OccupationTitle(LookupTable):
         379, 5, 3274, "Lime and Gypsum Product Manufacturing"
     )
     LIME_MANUFACTURING = LkOccupationTitle(380, 5, 327410, "Lime Manufacturing")
-    GYPSUM_PRODUCT_MANUFACTURING = LkOccupationTitle(
-        381, 5, 327420, "Gypsum Product Manufacturing"
-    )
+    GYPSUM_PRODUCT_MANUFACTURING = LkOccupationTitle(381, 5, 327420, "Gypsum Product Manufacturing")
     OTHER_NONMETALLIC_MINERAL_PRODUCT_MANUFACTURING = LkOccupationTitle(
         382, 5, 3279, "Other Nonmetallic Mineral Product Manufacturing"
     )
@@ -3092,9 +3076,7 @@ class OccupationTitle(LookupTable):
     MOTOR_VEHICLE_SEATING_AND_INTERIOR_TRIM_MANUFACTURING = LkOccupationTitle(
         569, 5, 336360, "Motor Vehicle Seating and Interior Trim Manufacturing"
     )
-    MOTOR_VEHICLE_METAL_STAMPING = LkOccupationTitle(
-        570, 5, 336370, "Motor Vehicle Metal Stamping"
-    )
+    MOTOR_VEHICLE_METAL_STAMPING = LkOccupationTitle(570, 5, 336370, "Motor Vehicle Metal Stamping")
     OTHER_MOTOR_VEHICLE_PARTS_MANUFACTURING = LkOccupationTitle(
         571, 5, 336390, "Other Motor Vehicle Parts Manufacturing"
     )
@@ -3542,9 +3524,7 @@ class OccupationTitle(LookupTable):
     NEW_CAR_DEALERS = LkOccupationTitle(712, 7, 441110, "New Car Dealers")
     USED_CAR_DEALERS = LkOccupationTitle(713, 7, 441120, "Used Car Dealers")
     OTHER_MOTOR_VEHICLE_DEALERS = LkOccupationTitle(714, 7, 4412, "Other Motor Vehicle Dealers")
-    RECREATIONAL_VEHICLE_DEALERS = LkOccupationTitle(
-        715, 7, 441210, "Recreational Vehicle Dealers"
-    )
+    RECREATIONAL_VEHICLE_DEALERS = LkOccupationTitle(715, 7, 441210, "Recreational Vehicle Dealers")
     BOAT_DEALERS = LkOccupationTitle(716, 7, 441222, "Boat Dealers")
     MOTORCYCLE_ATV_AND_ALL_OTHER_MOTOR_VEHICLE_DEALERS = LkOccupationTitle(
         717, 7, 441228, "Motorcycle, ATV, and All Other Motor Vehicle Dealers"
@@ -3597,16 +3577,12 @@ class OccupationTitle(LookupTable):
     FISH_AND_SEAFOOD_MARKETS = LkOccupationTitle(743, 7, 445220, "Fish and Seafood Markets")
     FRUIT_AND_VEGETABLE_MARKETS = LkOccupationTitle(744, 7, 445230, "Fruit and Vegetable Markets")
     BAKED_GOODS_STORES = LkOccupationTitle(745, 7, 445291, "Baked Goods Stores")
-    CONFECTIONERY_AND_NUT_STORES = LkOccupationTitle(
-        746, 7, 445292, "Confectionery and Nut Stores"
-    )
+    CONFECTIONERY_AND_NUT_STORES = LkOccupationTitle(746, 7, 445292, "Confectionery and Nut Stores")
     ALL_OTHER_SPECIALTY_FOOD_STORES = LkOccupationTitle(
         747, 7, 445299, "All Other Specialty Food Stores"
     )
     BEER_WINE_AND_LIQUOR_STORES_4 = LkOccupationTitle(748, 7, 4453, "Beer, Wine, and Liquor Stores")
-    BEER_WINE_AND_LIQUOR_STORES = LkOccupationTitle(
-        749, 7, 445310, "Beer, Wine, and Liquor Stores"
-    )
+    BEER_WINE_AND_LIQUOR_STORES = LkOccupationTitle(749, 7, 445310, "Beer, Wine, and Liquor Stores")
     HEALTH_AND_PERSONAL_CARE_STORES = LkOccupationTitle(
         750, 7, 4461, "Health and Personal Care Stores"
     )
@@ -3702,9 +3678,7 @@ class OccupationTitle(LookupTable):
     )
     VENDING_MACHINE_OPERATORS_4 = LkOccupationTitle(799, 7, 4542, "Vending Machine Operators")
     VENDING_MACHINE_OPERATORS = LkOccupationTitle(800, 7, 454210, "Vending Machine Operators")
-    DIRECT_SELLING_ESTABLISHMENTS = LkOccupationTitle(
-        801, 7, 4543, "Direct Selling Establishments"
-    )
+    DIRECT_SELLING_ESTABLISHMENTS = LkOccupationTitle(801, 7, 4543, "Direct Selling Establishments")
     FUEL_DEALERS = LkOccupationTitle(802, 7, 454310, "Fuel Dealers")
     OTHER_DIRECT_SELLING_ESTABLISHMENTS = LkOccupationTitle(
         803, 7, 454390, "Other Direct Selling Establishments"
@@ -3800,9 +3774,7 @@ class OccupationTitle(LookupTable):
     OTHER_TRANSIT_AND_GROUND_PASSENGER_TRANSPORTATION = LkOccupationTitle(
         844, 8, 4859, "Other Transit and Ground Passenger Transportation"
     )
-    SPECIAL_NEEDS_TRANSPORTATION = LkOccupationTitle(
-        845, 8, 485991, "Special Needs Transportation"
-    )
+    SPECIAL_NEEDS_TRANSPORTATION = LkOccupationTitle(845, 8, 485991, "Special Needs Transportation")
     ALL_OTHER_TRANSIT_AND_GROUND_PASSENGER_TRANSPORTATION = LkOccupationTitle(
         846, 8, 485999, "All Other Transit and Ground Passenger Transportation"
     )
@@ -3818,9 +3790,7 @@ class OccupationTitle(LookupTable):
     PIPELINE_TRANSPORTATION_OF_NATURAL_GAS = LkOccupationTitle(
         850, 8, 486210, "Pipeline Transportation of Natural Gas"
     )
-    OTHER_PIPELINE_TRANSPORTATION = LkOccupationTitle(
-        851, 8, 4869, "Other Pipeline Transportation"
-    )
+    OTHER_PIPELINE_TRANSPORTATION = LkOccupationTitle(851, 8, 4869, "Other Pipeline Transportation")
     PIPELINE_TRANSPORTATION_OF_REFINED_PETROLEUM_PRODUCTS = LkOccupationTitle(
         852, 8, 486910, "Pipeline Transportation of Refined Petroleum Products"
     )
@@ -3982,16 +3952,10 @@ class OccupationTitle(LookupTable):
         919, 9, 517312, "Wireless Telecommunications Carriers (except Satellite)"
     )
     SATELLITE_TELECOMMUNICATIONS_4 = LkOccupationTitle(920, 9, 5174, "Satellite Telecommunications")
-    SATELLITE_TELECOMMUNICATIONS = LkOccupationTitle(
-        921, 9, 517410, "Satellite Telecommunications"
-    )
+    SATELLITE_TELECOMMUNICATIONS = LkOccupationTitle(921, 9, 517410, "Satellite Telecommunications")
     OTHER_TELECOMMUNICATIONS = LkOccupationTitle(922, 9, 5179, "Other Telecommunications")
-    TELECOMMUNICATIONS_RESELLERS = LkOccupationTitle(
-        923, 9, 517911, "Telecommunications Resellers"
-    )
-    ALL_OTHER_TELECOMMUNICATIONS = LkOccupationTitle(
-        924, 9, 517919, "All Other Telecommunications"
-    )
+    TELECOMMUNICATIONS_RESELLERS = LkOccupationTitle(923, 9, 517911, "Telecommunications Resellers")
+    ALL_OTHER_TELECOMMUNICATIONS = LkOccupationTitle(924, 9, 517919, "All Other Telecommunications")
     DATA_PROCESSING_HOSTING_AND_RELATED_SERVICES_4 = LkOccupationTitle(
         925, 9, 5182, "Data Processing, Hosting, and Related Services"
     )
@@ -4516,7 +4480,9 @@ class OccupationTitle(LookupTable):
     ALL_OTHER_MISCELLANEOUS_SCHOOLS_AND_INSTRUCTION = LkOccupationTitle(
         1154, 15, 611699, "All Other Miscellaneous Schools and Instruction"
     )
-    EDUCATIONAL_SUPPORT_SERVICES_4 = LkOccupationTitle(1155, 15, 6117, "Educational Support Services")
+    EDUCATIONAL_SUPPORT_SERVICES_4 = LkOccupationTitle(
+        1155, 15, 6117, "Educational Support Services"
+    )
     EDUCATIONAL_SUPPORT_SERVICES = LkOccupationTitle(
         1156, 15, 611710, "Educational Support Services"
     )

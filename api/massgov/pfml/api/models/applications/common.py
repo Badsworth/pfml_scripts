@@ -24,33 +24,30 @@ from massgov.pfml.util.pydantic.types import (
 
 
 class Occupation(str, LookupEnum):
-    sales_clerk = "Sales Clerk"
-    administrative = "Administrative"
-    engineer = "Engineer"
-    health_care = "Health Care"
-
     # NAICS Occupations -> https://www.naics.com/search/
-    AGRICULTURE_FORESTRY_FISHING_HUNTING = "Agriculture, Forestry, Fishing and Hunting"
+    AGRICULTURE_FORESTRY_FISHING_AND_HUNTING = "Agriculture, Forestry, Fishing and Hunting"
     MINING = "Mining"
     UTILITIES = "Utilities"
     CONSTRUCTION = "Construction"
     MANUFACTURING = "Manufacturing"
     WHOLESALE_TRADE = "Wholesale Trade"
     RETAIL_TRADE = "Retail Trade"
-    TRANSPORTATION_WAREHOUSING = "Transportation and Warehousing"
+    TRANSPORTATION_AND_WAREHOUSING = "Transportation and Warehousing"
     INFORMATION = "Information"
-    FINANCE_INSURANCE = "Finance and Insurance"
-    REAL_ESTATE_RENTAL_LEASING = "Real Estate Rental and Leasing"
-    PROFESSIONAL_SCIENTIFIC_TECHNICAL = "Professional, Scientific, and Technical Services"
-    MANAGEMENT_COMPANIES_ENTERPRISES = "Management of Companies and Enterprises"
-    ADMINISTRATIVE_SUPPORT = (
+    FINANCE_AND_INSURANCE = "Finance and Insurance"
+    REAL_ESTATE_RENTAL_AND_LEASING = "Real Estate Rental and Leasing"
+    PROFESSIONAL_SCIENTIFIC_AND_TECHNICAL_SERVICES = (
+        "Professional, Scientific, and Technical Services"
+    )
+    MANAGEMENT_OF_COMPANIES_AND_ENTERPRISES = "Management of Companies and Enterprises"
+    ADMINISTRATIVE_AND_SUPPORT_AND_WASTE_MANAGEMENT_AND_REMEDIATION_SERVICES = (
         "Administrative and Support and Waste Management and Remediation Services"
     )
-    EDUCATIONAL = "Educational Services"
-    HEALTH_CARE_SOCIAL_ASSISTANCE = "Health Care and Social Assistance"
-    ARTS_ENTERTAINMENT_RECREATION = "Arts, Entertainment, and Recreation"
-    ACCOMMODATION_FOOD_SERVICES = "Accommodation and Food Services"
-    OTHER_SERVICES = "Other Services (except Public Administration)"
+    EDUCATIONAL_SERVICES = "Educational Services"
+    HEALTH_CARE_AND_SOCIAL_ASSISTANCE = "Health Care and Social Assistance"
+    ARTS_ENTERTAINMENT_AND_RECREATION = "Arts, Entertainment, and Recreation"
+    ACCOMMODATION_AND_FOOD_SERVICES = "Accommodation and Food Services"
+    OTHER_SERVICES_EXCEPT_PUBLIC_ADMINISTRATION = "Other Services (except Public Administration)"
     PUBLIC_ADMINISTRATION = "Public Administration"
 
     @classmethod

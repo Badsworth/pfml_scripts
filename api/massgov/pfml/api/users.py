@@ -8,19 +8,64 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
-from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
+from massgov.pfml.api.models.users.responses import (
+    OccupationResponse,
+    OccupationsResponse,
+    OccupationTitleResponse,
+    OccupationTitlesResponse,
+    UserLeaveAdminResponse,
+    UserResponse,
+)
 from massgov.pfml.api.services.user_rules import (
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.db.models.employees import Employer, Role, User
+from massgov.pfml.db.models.employees import Employer, LkOccupation, LkOccupationTitle, Role, User
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_user
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+
+def users_get_occupations_list(user_id):
+    industries = None
+    with app.db_session() as db_session:
+        u = get_or_404(db_session, User, user_id)
+
+        industries = db_session.query(LkOccupation).all()
+
+    # @todo: not responding properly
+    data = OccupationResponse.from_orm(industries).dict()
+
+    ensure(READ, u)
+    return response_util.success_response(
+        message="Successfully retrieved occupations list", data=data,
+    ).to_api_response()
+
+
+def users_get_occupation_titles_list(user_id, occupation_id):
+    job_titles = None
+    with app.db_session() as db_session:
+        u = get_or_404(db_session, User, user_id)
+
+        job_titles = (
+            db_session.query(LkOccupationTitle)
+            .filter(
+                LkOccupationTitle.occupation_id is int(occupation_id)
+                and LkOccupationTitle.occupation_title_code > 9999
+            )
+            .all()
+        )
+
+    # @todo: not responding properly
+    ensure(READ, u)
+    return response_util.success_response(
+        message="Successfully occupation titles list",
+        data=OccupationTitlesResponse.from_orm(job_titles).dict(),
+    ).to_api_response()
 
 
 def users_post():

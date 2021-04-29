@@ -31,3 +31,25 @@ class UserResponse(PydanticBaseModel):
     consented_to_data_sharing: bool
     roles: List[RoleResponse]
     user_leave_administrators: List[UserLeaveAdminResponse]
+
+
+class OccupationResponse(PydanticBaseModel):
+    occupation_id: int
+    occupation_code: int
+    occupation_description: str
+
+
+class OccupationTitleResponse(PydanticBaseModel):
+    occupation_title_id: int
+    occupation_id: int
+    occupation_title_code: int
+    occupation_title_description: str
+
+
+# @todo: temp classes to debug
+class OccupationsResponse(PydanticBaseModel):
+    occupations: List[OccupationResponse]
+
+
+class OccupationTitlesResponse(PydanticBaseModel):
+    occupation_titles: List[OccupationTitleResponse]
