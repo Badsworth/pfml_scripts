@@ -1,3 +1,5 @@
+import enum
+
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import PaymentMethod, State
@@ -13,6 +15,11 @@ class PaymentMethodsSplitError(Exception):
 
 
 class PaymentMethodsSplitStep(Step):
+    class Metrics(str, enum.Enum):
+        ACH_PAYMENT_COUNT = "ach_payment_count"
+        CHECK_PAYMENT_COUNT = "check_payment_count"
+        PAYMENT_COUNT = "payment_count"
+
     def run_step(self) -> None:
         self.split_payment_methods()
 
@@ -21,7 +28,7 @@ class PaymentMethodsSplitStep(Step):
             state_log_util.AssociatedClass.PAYMENT, READY_STATE, self.db_session
         )
         state_log_count = len(state_logs)
-        self.set_metrics({"payment_count": state_log_count})
+        self.set_metrics({self.Metrics.PAYMENT_COUNT: state_log_count})
 
         if state_log_count == 0:
             logger.warning(
@@ -44,7 +51,7 @@ class PaymentMethodsSplitStep(Step):
             payment_method_id = payment.disb_method_id
 
             if payment_method_id == PaymentMethod.ACH.payment_method_id:
-                self.increment("ach_payment_count")
+                self.increment(self.Metrics.ACH_PAYMENT_COUNT)
                 message = state_log_util.build_outcome(
                     "Moving payment to the EFT PUB file creation state"
                 )
@@ -55,7 +62,7 @@ class PaymentMethodsSplitStep(Step):
                     db_session=self.db_session,
                 )
             elif payment_method_id == PaymentMethod.CHECK.payment_method_id:
-                self.increment("check_payment_count")
+                self.increment(self.Metrics.CHECK_PAYMENT_COUNT)
                 message = state_log_util.build_outcome(
                     "Moving payment to the Check PUB file creation state"
                 )

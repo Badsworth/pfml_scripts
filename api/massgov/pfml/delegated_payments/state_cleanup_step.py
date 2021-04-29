@@ -1,3 +1,5 @@
+import enum
+
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
@@ -20,6 +22,9 @@ ERROR_OUTCOME = state_log_util.build_outcome("Payment timed out waiting for audi
 
 
 class StateCleanupStep(Step):
+    class Metrics(str, enum.Enum):
+        AUDIT_STATE_CLEANUP_COUNT = "audit_state_cleanup_count"
+
     def run_step(self) -> None:
         self.cleanup_states()
 
@@ -42,7 +47,7 @@ class StateCleanupStep(Step):
         )
 
         for state_log in state_logs:
-            self.increment("audit_state_cleanup_count")
+            self.increment(self.Metrics.AUDIT_STATE_CLEANUP_COUNT)
             payment = state_log.payment
 
             # Shouldn't happen as they should always have a payment attached
