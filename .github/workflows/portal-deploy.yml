@@ -178,6 +178,7 @@ jobs:
     needs: [update-the-deploy-branch, deploy-info]
     outputs:
       version_link: ${{ steps.create_version_link.outputs.version_link }}
+      message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
     if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test
     runs-on: ubuntu-latest
     steps:
@@ -540,6 +541,10 @@ jobs:
             ]
           }' https://slack.com/api/chat.postMessage)
 
+          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq '.ts')
+          echo $MESSAGE_TS
+          echo "::set-output name=message-ts::$MESSAGE_TS"
+
   end-to-end:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
@@ -572,3 +577,55 @@ jobs:
           github_branch: ${{ steps.determine_e2e_ref.outputs.e2e_ref }}
           # Limit to "stable" suite for any environment but test.
           only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
+
+  post-e2e-failures-to-slack:
+    name: Post E2E failures to Slack
+    needs: [start-comms-slack, end-to-end]
+    if: always() && 
+      (
+        (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
+        (needs.end-to-end.conclusion == 'failure' || needs.end-to-end.conclusion == 'timed_out')
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Post to Slack
+        run: |
+          echo "Slackbot message reply TS is ${{ needs.start-comms-slack.outputs.message-ts }}"
+
+          if [[ -z "${{ needs.start-comms-slack.outputs.message-ts }}" ]]; then
+            SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+            -H 'Content-Type: application/json;charset=utf-8' \
+            --data '{
+              "channel": "${{ env.deploys_channel }}",
+              "attachments": [{
+                "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
+                "color": "danger"
+              }]
+            }' https://slack.com/api/chat.postMessage)
+          else
+            SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+            -H 'Content-Type: application/json;charset=utf-8' \
+            --data '{
+              "channel": "${{ env.deploys_channel }}",
+              "thread_ts": "${{ needs.start-comms-slack.outputs.message-ts }}",
+              "attachments": [{
+                "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
+                "color": "danger"
+              }]
+            }' https://slack.com/api/chat.postMessage)
+          fi
