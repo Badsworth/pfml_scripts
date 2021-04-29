@@ -4,7 +4,6 @@ import { submit, PostSubmitCallback } from "./util";
 import ClaimSubmissionTracker from "../submission/ClaimStateTracker";
 import SubmittedClaimIndex from "../submission/writers/SubmittedClaimIndex";
 import path from "path";
-import { getFineosBaseUrl } from "../util/common";
 import {
   approveClaim,
   withFineosBrowser,
@@ -75,7 +74,7 @@ import DOR from "../generation/writers/DOR";
     const { metadata } = claim;
     if (metadata && "postSubmit" in metadata) {
       // Open a puppeteer browser for the duration of this callback.
-      await withFineosBrowser(getFineosBaseUrl(), async (page) => {
+      await withFineosBrowser(async (page) => {
         const { fineos_absence_id } = response;
         if (!fineos_absence_id)
           throw new Error(

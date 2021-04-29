@@ -76,7 +76,7 @@ expected_file_names = [
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
-    ["Overpayment", "Overpayment Actual Recovery"]
+    ["Overpayment", "Overpayment Actual Recovery", "Overpayment Recovery"]
 )  # There may be multiple types needed here, need to test further to know
 PAYMENT_OUT_TRANSACTION_TYPE = "PaymentOut"
 AUTO_ALT_EVENT_REASON = "Automatic Alternate Payment"
@@ -197,35 +197,13 @@ class PaymentData:
         self.i_value = index.i
 
         #######################################
-        # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED
+        # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED FOR ALL PAYMENTS
         #######################################
-
-        # Find the record in the other datasets.
-        payment_details = extract_data.payment_details.indexed_data.get(index)
-        claim_details = extract_data.claim_details.indexed_data.get(index)
-        if not payment_details:
-            self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_DATASET, "payment_details"
-            )
-        if not claim_details:
-            self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_DATASET, "claim_details"
-            )
 
         # Grab every value we might need out of the datasets
         self.tin = payments_util.validate_csv_input(
             "PAYEESOCNUMBE", pei_record, self.validation_container, True
         )
-        if claim_details:
-            self.process_claim_details(claim_details, extract_data, count_incrementer)
-        else:
-            # We require the absence case number, if claim details doesn't exist
-            # we want to set the validation issue manually here
-            self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
-            )
-
-        self.payment_amount = self.get_payment_amount(pei_record)
 
         self.payee_identifier = payments_util.validate_csv_input(
             "PAYEEIDENTIFI", pei_record, self.validation_container, True
@@ -248,8 +226,7 @@ class PaymentData:
             custom_validator_func=self.payment_period_date_validator,
         )
 
-        if payment_details:
-            self.aggregate_payment_details(payment_details)
+        self.payment_amount = self.get_payment_amount(pei_record)
 
         self.payment_transaction_type = self.get_payment_transaction_type()
         # We only want to do specific checks if it is a standard payment
@@ -259,6 +236,34 @@ class PaymentData:
             self.payment_transaction_type.payment_transaction_type_id
             == PaymentTransactionType.STANDARD.payment_transaction_type_id
         )
+
+        #######################################
+        # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED FOR STANDARD PAYMENTS
+        #######################################
+
+        # Find the record in the other datasets.
+        payment_details = extract_data.payment_details.indexed_data.get(index)
+        claim_details = extract_data.claim_details.indexed_data.get(index)
+        if not payment_details and self.is_standard_payment:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_DATASET, "payment_details"
+            )
+        if not claim_details and self.is_standard_payment:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_DATASET, "claim_details"
+            )
+
+        if claim_details:
+            self.process_claim_details(claim_details, extract_data, count_incrementer)
+        elif self.is_standard_payment:
+            # We require the absence case number, if claim details doesn't exist
+            # we want to set the validation issue manually here
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
+            )
+
+        if payment_details:
+            self.aggregate_payment_details(payment_details)
 
         self.raw_payment_method = payments_util.validate_csv_input(
             "PAYMENTMETHOD",
@@ -274,7 +279,7 @@ class PaymentData:
         )
 
         #######################################
-        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR CHECKS + standard payment
+        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR CHECKS + STANDARD PAYMENT
         #######################################
 
         # Address values are only required if we are paying by check
@@ -313,7 +318,7 @@ class PaymentData:
         )
 
         #######################################
-        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR EFT + standard payment
+        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR EFT + STANDARD PAYMENT
         #######################################
 
         # These are only required if payment_method is for EFT
@@ -411,10 +416,10 @@ class PaymentData:
         count_incrementer: Optional[Callable[[str], None]] = None,
     ) -> None:
         self.absence_case_number = payments_util.validate_csv_input(
-            "ABSENCECASENU", claim_details, self.validation_container, True
+            "ABSENCECASENU", claim_details, self.validation_container, self.is_standard_payment
         )
         self.leave_request_id = payments_util.validate_csv_input(
-            "LEAVEREQUESTI", claim_details, self.validation_container, True
+            "LEAVEREQUESTI", claim_details, self.validation_container, self.is_standard_payment
         )
 
         requested_absence = None
@@ -437,11 +442,11 @@ class PaymentData:
                 "LEAVEREQUEST_DECISION",
                 requested_absence,
                 self.validation_container,
-                True,
+                self.is_standard_payment,
                 custom_validator_func=leave_request_decision_validator,
             )
 
-        else:
+        elif self.is_standard_payment:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISMATCHED_DATA,
                 f"Payment leave request ID not found in requested absence file: {self.leave_request_id}",
@@ -461,14 +466,14 @@ class PaymentData:
                 "PAYMENTSTARTP",
                 payment_detail_row,
                 self.validation_container,
-                True,
+                self.is_standard_payment,
                 custom_validator_func=self.payment_period_date_validator,
             )
             row_end_period = payments_util.validate_csv_input(
                 "PAYMENTENDPER",
                 payment_detail_row,
                 self.validation_container,
-                True,
+                self.is_standard_payment,
                 custom_validator_func=self.payment_period_date_validator,
             )
             if row_start_period is not None:
@@ -584,8 +589,6 @@ class PaymentExtractStep(Step):
         # claim details needs to be indexed on PECLASSID and PEINDEXID
         # which point to the vpei.C and vpei.I columns
         for record in payment_details:
-            self.increment("payment_details_record_count")
-
             index = CiIndex(record["PECLASSID"], record["PEINDEXID"])
             if index not in extract_data.payment_details.indexed_data:
                 extract_data.payment_details.indexed_data[index] = []
@@ -713,7 +716,8 @@ class PaymentExtractStep(Step):
                 if not tax_identifier:
                     self.increment("tax_identifier_missing_in_db_count")
                     payment_data.validation_container.add_validation_issue(
-                        payments_util.ValidationReason.MISSING_IN_DB, "tax_identifier"
+                        payments_util.ValidationReason.MISSING_IN_DB,
+                        f"tax_identifier: {payment_data.tin}",
                     )
                 else:
                     employee = (
@@ -725,7 +729,8 @@ class PaymentExtractStep(Step):
                     if not employee:
                         self.increment("employee_missing_in_db_count")
                         payment_data.validation_container.add_validation_issue(
-                            payments_util.ValidationReason.MISSING_IN_DB, "employee"
+                            payments_util.ValidationReason.MISSING_IN_DB,
+                            f"employee: {payment_data.tin}",
                         )
 
             claim = (
@@ -746,7 +751,8 @@ class PaymentExtractStep(Step):
         # it's less of a concern to us.
         if not claim and payment_data.is_standard_payment:
             payment_data.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_IN_DB, "claim"
+                payments_util.ValidationReason.MISSING_IN_DB,
+                f"claim: {payment_data.absence_case_number}",
             )
             self.increment("claim_not_found_count")
             return None, None
@@ -880,7 +886,7 @@ class PaymentExtractStep(Step):
             self.increment("active_payment_error_count")
             validation_container.add_validation_issue(
                 payments_util.ValidationReason.RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED,
-                f"We received a payment that is already being processed. It is currently in state {active_state.state_description}.",
+                f"We received a payment that is already being processed. It is currently in state [{active_state.state_description}].",
             )
 
         self.db_session.add(payment)

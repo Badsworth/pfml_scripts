@@ -164,11 +164,34 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.applications.previousLeavesDetails]: {
+  [routes.applications.previousLeavesSameReason]: {
     meta: {
-      test: (_, event) => {
-        expect(get(event.context.claim, "has_previous_leaves")).toEqual(true);
-      },
+      test: () => {},
+    },
+  },
+  [routes.applications.previousLeavesSameReasonDetails]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.previousLeavesOtherReason]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.previousLeavesOtherReasonDetails]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.concurrentLeaves]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.concurrentLeavesDetails]: {
+    meta: {
+      test: () => {},
     },
   },
   [routes.applications.employmentStatus]: {

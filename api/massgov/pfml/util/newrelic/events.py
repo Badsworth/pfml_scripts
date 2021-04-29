@@ -56,7 +56,10 @@ def generate_etl_report(report):
     :return: dict: The generated report, suitably enriched.
     """
     task_duration = (
-        str(datetime.fromisoformat(report["end"]) - datetime.fromisoformat(report["start"]))
+        (
+            datetime.fromisoformat(report["end"]) - datetime.fromisoformat(report["start"])
+        ).total_seconds()
+        * 1000
         if {"end", "start"} <= report.keys()
         else None
     )
@@ -69,7 +72,7 @@ def generate_etl_report(report):
         {
             "eventType": "EtlReport",
             "environment": os.environ.get("ENVIRONMENT", "local"),
-            "task.duration": task_duration,
+            "task.durationMillis": task_duration,
         }
     )
 

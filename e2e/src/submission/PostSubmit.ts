@@ -1,43 +1,89 @@
 import playwright, { chromium, Page } from "playwright-chromium";
 import delay from "delay";
 import * as actions from "../util/playwright";
+import config from "../config";
+import path from "path";
+import { v4 as uuid } from "uuid";
 
 export type Tasks =
   | "ID Review"
   | "Certification Review"
   | "Employer Approval Received";
 
-export async function withFineosBrowser(
-  baseUrl: string,
-  next: (page: Page) => Promise<void>,
-  debug = false
-): Promise<void> {
+export async function withFineosBrowser<T extends unknown>(
+  next: (page: Page) => Promise<T>,
+  debug = false,
+  screenshots?: string
+): Promise<T> {
+  const isSSO = config("ENVIRONMENT") === "uat";
   const browser = await chromium.launch({
     headless: !debug,
   });
+  const httpCredentials = isSSO
+    ? undefined
+    : {
+        username: config("FINEOS_USERNAME"),
+        password: config("FINEOS_PASSWORD"),
+      };
   const page = await browser.newPage({
     viewport: { width: 1200, height: 1000 },
+    httpCredentials,
   });
-  await page.goto(baseUrl);
   page.on("dialog", async (dialog) => {
     await delay(2000);
     await dialog.dismiss().catch(() => {
       //intentional no-op on error.
     });
   });
+  await page.goto(config("FINEOS_BASEURL"));
+
+  const start = async () => {
+    if (isSSO) {
+      await page.fill(
+        "input[type='email'][name='loginfmt']",
+        config("SSO_USERNAME")
+      );
+      await page.click("input[value='Next']");
+      await page.fill(
+        "input[type='password'][name='passwd']",
+        config("SSO_PASSWORD")
+      );
+      await page.click("input[value='Sign in']");
+      // Sometimes we end up with a "Do you want to stay logged in" question.
+      // This seems inconsistent, so we only look for it if we haven't already found ourselves
+      // in Fineos.
+      await Promise.race([
+        page.waitForSelector("body.PageBody", { timeout: 29000 }),
+        page.click("input[value='No']", { timeout: 30000 }),
+      ]);
+    }
+    await page.waitForSelector("body.PageBody");
+  };
 
   try {
-    await next(page).catch(async (e) => {
-      // When in debug mode, hold the browser window open for 100 seconds for debugging purposes.
-      if (debug) {
-        console.log(
-          "Caught error - holding browser window open for debugging.",
-          e
-        );
-        await delay(100000);
+    await start();
+    return await next(page);
+  } catch (e) {
+    if (debug) {
+      console.log(
+        "Caught error - holding browser window open for debugging.",
+        e
+      );
+      await delay(100000);
+    }
+    if (screenshots) {
+      const filename = path.join(screenshots, `${uuid()}.jpg`);
+      try {
+        await page.screenshot({
+          fullPage: true,
+          path: filename,
+        });
+        console.log(`Saving screenshot of error to ${filename}`);
+      } catch (e) {
+        console.error("An err was caught during screenshot capture");
       }
-      throw e;
-    });
+    }
+    throw e;
   } finally {
     await browser.close();
   }

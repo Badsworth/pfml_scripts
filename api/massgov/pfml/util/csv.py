@@ -3,7 +3,7 @@ import dataclasses
 import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, Generator, Optional, Type, Union
+from typing import Any, Callable, Dict, Generator, Iterable, Mapping, Optional, Type, Union
 from uuid import UUID
 
 import smart_open
@@ -66,6 +66,35 @@ def _encode_value(obj: Any, encoders: Encoders) -> str:
         return encoder(obj)
     else:  # We have exited the for loop without finding a suitable encoder
         raise TypeError(f"Object of type '{obj.__class__.__name__}' is not CSV serializable")
+
+
+_DictRow = Mapping[str, Any]
+_DialectLike = Union[str, csv.Dialect, Type[csv.Dialect]]
+
+
+class EncodingDictWriter(csv.DictWriter):
+    encoders: Optional[Encoders]
+
+    def __init__(
+        self,
+        f: Any,
+        fieldnames: Iterable[str],
+        restval: Optional[Any] = "",
+        extrasaction: str = "raise",
+        dialect: _DialectLike = "excel",
+        encoders: Optional[Encoders] = None,
+        *args: Any,
+        **kwds: Any,
+    ) -> None:
+        self.encoders = encoders
+
+        super().__init__(f, fieldnames, restval, extrasaction, dialect, *args, **kwds)
+
+    def writerow(self, rowdict: _DictRow) -> Any:
+        return super().writerow(encode_row(rowdict, self.encoders))
+
+    def writerows(self, rowdicts: Iterable[_DictRow]) -> Any:
+        return super().writerows(map(lambda d: encode_row(d, self.encoders), rowdicts))
 
 
 class CSVSourceWrapper:

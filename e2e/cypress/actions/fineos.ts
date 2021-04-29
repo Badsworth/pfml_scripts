@@ -12,11 +12,10 @@ function SSO(): void {
     const deserializedCookies: Record<string, string>[] = JSON.parse(
       cookiesJson
     );
-    // There's no way we can stop the redirection from Fineos -> SSO login.
-    // What we _can_ do is set the login cookies so that when that request is made,
-    // it bounces back immediately with a HTTP redirect instead of showing the login page.
-    const noSecure = deserializedCookies.filter((cookie) =>
-      cookie.domain.match(/login\.microsoftonline/)
+    // Filter out any cookies that will fail to be set. Those are ones where secure: false
+    // and sameSite: "None"
+    const noSecure = deserializedCookies.filter(
+      (cookie) => !(!cookie.secure && cookie.sameSite === "None")
     );
     for (const cookie_info of noSecure) {
       cy.setCookie(cookie_info.name, cookie_info.value, cookie_info);

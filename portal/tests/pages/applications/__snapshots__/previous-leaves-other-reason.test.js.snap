@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviousLeavesOtherReason renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other leave, income, and benefits"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Did you take leave between January 1, 2021– for a different qualifying reason?
+  </Heading>
+</QuestionPage>
+`;

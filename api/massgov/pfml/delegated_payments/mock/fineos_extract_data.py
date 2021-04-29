@@ -111,8 +111,20 @@ class FineosPaymentData:
     random generated values, set generate_defaults to False in the constructor.
     """
 
-    def __init__(self, generate_defaults=True, **kwargs):
+    def __init__(
+        self,
+        generate_defaults=True,
+        include_vpei=True,
+        include_claim_details=True,
+        include_payment_details=True,
+        include_requested_absence=True,
+        **kwargs,
+    ):
         self.generate_defaults = generate_defaults
+        self.include_vpei = include_vpei
+        self.include_claim_details = include_claim_details
+        self.include_payment_details = include_payment_details
+        self.include_requested_absence = include_requested_absence
         self.kwargs = kwargs
 
         self.c_value = self.get_value("c_value", "7326")
@@ -150,47 +162,51 @@ class FineosPaymentData:
 
     def get_vpei_record(self):
         vpei_record = OrderedDict()
-        vpei_record["C"] = self.c_value
-        vpei_record["I"] = self.i_value
-        vpei_record["PAYEESOCNUMBE"] = self.tin
-        vpei_record["PAYMENTADD1"] = self.payment_address_1
-        vpei_record["PAYMENTADD2"] = self.payment_address_2
-        vpei_record["PAYMENTADD4"] = self.city
-        vpei_record["PAYMENTADD6"] = self.state
-        vpei_record["PAYMENTPOSTCO"] = self.zip_code
-        vpei_record["PAYMENTMETHOD"] = self.payment_method
-        vpei_record["PAYMENTDATE"] = self.payment_date
-        vpei_record["AMOUNT_MONAMT"] = self.payment_amount
-        vpei_record["PAYEEBANKSORT"] = self.routing_nbr
-        vpei_record["PAYEEACCOUNTN"] = self.account_nbr
-        vpei_record["PAYEEACCOUNTT"] = self.account_type
-        vpei_record["EVENTTYPE"] = self.event_type
-        vpei_record["PAYEEIDENTIFI"] = self.payee_identifier
-        vpei_record["EVENTREASON"] = self.event_reason
+        if self.include_vpei:
+            vpei_record["C"] = self.c_value
+            vpei_record["I"] = self.i_value
+            vpei_record["PAYEESOCNUMBE"] = self.tin
+            vpei_record["PAYMENTADD1"] = self.payment_address_1
+            vpei_record["PAYMENTADD2"] = self.payment_address_2
+            vpei_record["PAYMENTADD4"] = self.city
+            vpei_record["PAYMENTADD6"] = self.state
+            vpei_record["PAYMENTPOSTCO"] = self.zip_code
+            vpei_record["PAYMENTMETHOD"] = self.payment_method
+            vpei_record["PAYMENTDATE"] = self.payment_date
+            vpei_record["AMOUNT_MONAMT"] = self.payment_amount
+            vpei_record["PAYEEBANKSORT"] = self.routing_nbr
+            vpei_record["PAYEEACCOUNTN"] = self.account_nbr
+            vpei_record["PAYEEACCOUNTT"] = self.account_type
+            vpei_record["EVENTTYPE"] = self.event_type
+            vpei_record["PAYEEIDENTIFI"] = self.payee_identifier
+            vpei_record["EVENTREASON"] = self.event_reason
         return vpei_record
 
     def get_claim_details_record(self):
         claim_detail_record = OrderedDict()
-        claim_detail_record["PECLASSID"] = self.c_value
-        claim_detail_record["PEINDEXID"] = self.i_value
-        claim_detail_record["ABSENCECASENU"] = self.absence_case_number
-        claim_detail_record["LEAVEREQUESTI"] = self.leave_request_id
+        if self.include_claim_details:
+            claim_detail_record["PECLASSID"] = self.c_value
+            claim_detail_record["PEINDEXID"] = self.i_value
+            claim_detail_record["ABSENCECASENU"] = self.absence_case_number
+            claim_detail_record["LEAVEREQUESTI"] = self.leave_request_id
         return claim_detail_record
 
     def get_payment_details_record(self):
         payment_detail_record = OrderedDict()
-        payment_detail_record["PECLASSID"] = self.c_value
-        payment_detail_record["PEINDEXID"] = self.i_value
+        if self.include_payment_details:
+            payment_detail_record["PECLASSID"] = self.c_value
+            payment_detail_record["PEINDEXID"] = self.i_value
 
-        payment_detail_record["PAYMENTSTARTP"] = self.payment_start_period
-        payment_detail_record["PAYMENTENDPER"] = self.payment_end_period
+            payment_detail_record["PAYMENTSTARTP"] = self.payment_start_period
+            payment_detail_record["PAYMENTENDPER"] = self.payment_end_period
 
         return payment_detail_record
 
     def get_requested_absence_record(self):
         requested_absence_record = OrderedDict()
-        requested_absence_record["LEAVEREQUEST_DECISION"] = self.leave_request_decision
-        requested_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id
+        if self.include_requested_absence:
+            requested_absence_record["LEAVEREQUEST_DECISION"] = self.leave_request_decision
+            requested_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id
         return requested_absence_record
 
     def get_value(self, key, default):
@@ -326,6 +342,9 @@ def generate_payment_extract_files(
         # Auto generated: c_value, i_value, leave_request_id
         fineos_payments_data = FineosPaymentData(
             generate_defaults=True,
+            include_claim_details=scenario_descriptor.include_non_vpei_records,
+            include_payment_details=scenario_descriptor.include_non_vpei_records,
+            include_requested_absence=scenario_descriptor.include_non_vpei_records,
             tin=ssn,
             absence_case_number=claim.fineos_absence_id,
             payment_address_1=mock_address["line_1"],

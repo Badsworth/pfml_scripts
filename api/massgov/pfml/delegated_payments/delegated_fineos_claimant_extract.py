@@ -459,7 +459,7 @@ class ClaimantExtractStep(Step):
 
         # Assumption is we should not be creating employees in the PFML DB through this extract.
         if employee_pfml_entry is None:
-            logger.exception(
+            logger.warning(
                 f"Employee in employee file with customer nbr {fineos_customer_number} not found in PFML DB.",
             )
             return None

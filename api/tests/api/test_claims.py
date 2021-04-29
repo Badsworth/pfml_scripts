@@ -22,7 +22,7 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture(params=["env_var", "feature_gate", "disabled"])
-def test_verification(request, monkeypatch):
+def test_verification(request, monkeypatch, initialize_factories_session):
     # This checks that all tests work _both_ with
     # 1. Verification disabled and no verification record AND
     # 2. Verification enabled and verification record

@@ -120,11 +120,6 @@ variable "cors_origins" {
   type        = list(string)
 }
 
-variable "formstack_import_lambda_build_s3_key" {
-  description = "The S3 object key of the Formstack integration lambda artifact"
-  type        = string
-}
-
 variable "runtime_py" {
   description = "Pointer to the Python runtime used by the PFML API lambdas"
   type        = string

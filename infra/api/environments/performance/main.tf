@@ -57,7 +57,6 @@ module "api" {
     "https://paidleave-api-performance.mass.gov",
     "https://paidleave-performance.mass.gov"
   ]
-  formstack_import_lambda_build_s3_key = local.formstack_lambda_artifact_s3_key
 
   cognito_user_pool_arn                               = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_0jv6SlemT"
   cognito_user_pool_id                                = "us-east-1_0jv6SlemT"
@@ -85,6 +84,6 @@ module "api" {
   portal_base_url                                     = "https://paidleave-performance.mass.gov"
   enable_application_fraud_check                      = "0"
   dor_fineos_etl_definition                           = local.dor_fineos_etl_definition
-  dor_fineos_etl_schedule_expression                  = "cron(0 4 * * ? *)" # Daily at 04:00 UTC [23:00 EST] [00:00 EDT]
+  dor_fineos_etl_schedule_expression                  = "cron(30 0 * * ? *)" # Daily at 00:30 UTC [19:30 EST] [20:30 EDT]
   release_version                                     = var.release_version
 }

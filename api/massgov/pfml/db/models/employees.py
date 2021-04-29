@@ -1681,6 +1681,7 @@ class State(LookupTable):
     DUA_REPORT_FOR_DFML_CREATED = LkState(
         6, "Create DUA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     )
+    # not used, see DUA_REDUCTIONS_REPORT_SENT
     DUA_REPORT_FOR_DFML_SUBMITTED = LkState(
         7, "Submit DUA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     )
@@ -2003,6 +2004,10 @@ class State(LookupTable):
     )
     DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK = LkState(
         161, "FINEOS Writeback #2 sent - Check", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DIA_REPORT_FOR_DFML_CREATED = LkState(
+        162, "Create DIA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     )
 
 

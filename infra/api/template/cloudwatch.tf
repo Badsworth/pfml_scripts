@@ -33,32 +33,6 @@ resource "aws_lambda_permission" "ecs_permission_service_logging" {
   source_arn    = "${aws_cloudwatch_log_group.service_logs.arn}:*"
 }
 
-
-resource "aws_cloudwatch_event_target" "trigger_formstack_import_lambda_daily_at_11_pm" {
-  rule      = aws_cloudwatch_event_rule.formstack_lambda_daily_11pm_et.name
-  arn       = aws_lambda_function.formstack_import.arn
-  target_id = "formstack_import_${var.environment_name}_lambda_event_target"
-  input     = "{\"is_daily_lambda\":true}"
-}
-
-resource "aws_cloudwatch_event_rule" "formstack_lambda_daily_11pm_et" {
-  name        = "${var.environment_name}-formstack-lambda-daily-at-11-pm"
-  description = "Fires the ${var.environment_name} Formstack Import lambda daily at 11pm US EDT/3am UTC"
-  # The time of day can only be specified in UTC and will need to be updated when daylight savings changes occur, if the 2300 US ET is desired to be consistent.
-  schedule_expression = "cron(0 03 * * ? *)"
-  tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
-  })
-}
-
-resource "aws_lambda_permission" "allow_cloudwatch_to_call_formstack_import" {
-  statement_id  = "Allow${title(var.environment_name)}ExecutionFromCloudWatch"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.formstack_import.arn
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.formstack_lambda_daily_11pm_et.arn
-}
-
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_cloudwatch_log_group" "lambda_cognito_presignup" {
@@ -95,27 +69,3 @@ resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cognito_postconf" {
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-resource "aws_cloudwatch_log_group" "lambda_formstack_import" {
-  name = "/aws/lambda/${aws_lambda_function.formstack_import.function_name}"
-
-  tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
-  })
-}
-
-resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_formstack_import" {
-  name            = "nr_lambda_formstack_import"
-  log_group_name  = aws_cloudwatch_log_group.lambda_formstack_import.name
-  filter_pattern  = ""
-  destination_arn = local.newrelic_log_ingestion_lambda
-}
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# RDS Cloudwatch logs subscription filter and lambda permission
-
-resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_permission_rds_logs" {
-  name            = "nr_lambda_rds_logs"
-  log_group_name  = aws_cloudwatch_log_group.postgresql.name
-  filter_pattern  = ""
-  destination_arn = local.newrelic_log_ingestion_lambda
-}

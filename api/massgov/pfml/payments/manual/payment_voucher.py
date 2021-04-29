@@ -151,7 +151,7 @@ def run_voucher_process(config: Configuration) -> None:
         with batch_log.LogEntry(
             db_session_raw, "Payment voucher"
         ) as log_entry, massgov.pfml.db.session_scope(db_session_raw) as db_session:
-            log_entry.set_metrics(**vars(config))
+            log_entry.set_metrics(vars(config))
             process_extracts_to_payment_voucher(
                 config.input_path,
                 config.output_path,
@@ -264,7 +264,7 @@ def process_payment_records(
     writeback_csv = writeback_csv_writer(writeback_file)
 
     if log_entry is not None:
-        log_entry.set_metrics(total=len(payment_extract_data.pei.indexed_data))
+        log_entry.set_metrics({"total": len(payment_extract_data.pei.indexed_data)})
 
     for ci_index, pei_record in massgov.pfml.util.logging.log_every(
         logger,

@@ -150,13 +150,13 @@ export const EmployerBenefitCard = (props) => {
   const { entry, getFunctionalInputProps, index } = props;
   const selectedType = entry.benefit_type;
 
-  const benefitFrequencyChoices = Object.entries(EmployerBenefitFrequency).map(
-    ([frequencyKey, frequency]) => {
+  const benefitFrequencyChoices = ["daily", "weekly", "monthly", "inTotal"].map(
+    (frequencyKey) => {
       return {
         label: t("pages.claimsEmployerBenefitsDetails.amountFrequency", {
           context: frequencyKey,
         }),
-        value: frequency,
+        value: EmployerBenefitFrequency[frequencyKey],
       };
     }
   );

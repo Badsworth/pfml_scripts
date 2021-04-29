@@ -4,7 +4,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from massgov.pfml.db.models.employees import ReferenceFileType
 from massgov.pfml.db.models.factories import ReferenceFileFactory
-from massgov.pfml.reductions.reports import dia_payments_reports, dua_payments_reports
+from massgov.pfml.reductions.reports import dua_payments_reports
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -36,72 +36,6 @@ def _setup_reductions_reporting(
     s3.put_object(Bucket=mock_s3_bucket, Key=key, Body="Filler text\n")
 
     return full_path
-
-
-def test_send_dia_reductions_report(
-    test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
-):
-
-    full_path = _setup_reductions_reporting(
-        test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
-    )
-
-    ref_file = ReferenceFileFactory.create(
-        file_location=full_path,
-        reference_file_type_id=ReferenceFileType.DIA_REDUCTION_REPORT_FOR_DFML.reference_file_type_id,
-    )
-
-    # current number of State Logs
-    state_logs_num = len(ref_file.state_logs)
-
-    dia_payments_reports.send_dia_reductions_report(test_db_session)
-
-    # check that a State Log has been created
-    assert len(ref_file.state_logs) == state_logs_num + 1
-
-    # check that the reference file location has changed, and that it is now in the archive dir
-    assert ref_file.file_location != full_path
-    assert "archive" in ref_file.file_location
-
-    # inspect mock_ses response meta data
-    mock_ses_response_meta_data = mock_ses.get_send_quota()["ResponseMetadata"]
-
-    assert mock_ses_response_meta_data["RequestId"] is not None
-    assert mock_ses_response_meta_data["HTTPStatusCode"] == 200
-
-
-def test_send_dia_reductions_report_no_result(
-    test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
-):
-
-    _setup_reductions_reporting(
-        test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
-    )
-
-    with pytest.raises(NoResultFound):
-        dia_payments_reports.send_dia_reductions_report(test_db_session)
-
-
-def test_send_dia_reductions_report_multiple_results(
-    test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
-):
-
-    full_path = _setup_reductions_reporting(
-        test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
-    )
-
-    ReferenceFileFactory.create(
-        file_location=full_path,
-        reference_file_type_id=ReferenceFileType.DIA_REDUCTION_REPORT_FOR_DFML.reference_file_type_id,
-    )
-
-    ReferenceFileFactory.create(
-        file_location="s3://test_bucket/reductions/dfml/outbound/test_file2.csv",
-        reference_file_type_id=ReferenceFileType.DIA_REDUCTION_REPORT_FOR_DFML.reference_file_type_id,
-    )
-
-    with pytest.raises(MultipleResultsFound):
-        dia_payments_reports.send_dia_reductions_report(test_db_session)
 
 
 def test_send_dua_reductions_report(

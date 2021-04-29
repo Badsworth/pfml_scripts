@@ -422,6 +422,19 @@ describe("UploadCertification", () => {
         expect(wrapper.find("Trans").dive()).toMatchSnapshot();
       });
     });
+
+    describe("when leave reason is caregiver leave", () => {
+      it("renders page with caregiver leave content", () => {
+        claim = new MockClaimBuilder().caringLeaveReason().create();
+        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+          [claim]
+        );
+        render();
+        // Only take snapshots of the i18n content
+        expect(wrapper.find("Heading")).toMatchSnapshot();
+        expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+      });
+    });
   });
 
   describe("there is an error while loading document", () => {

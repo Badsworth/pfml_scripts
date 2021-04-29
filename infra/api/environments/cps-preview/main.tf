@@ -44,23 +44,22 @@ data "aws_ecs_cluster" "cps-preview" {
 module "api" {
   source = "../../template"
 
-  environment_name                     = local.environment_name
-  service_app_count                    = 2
-  service_max_app_count                = 10
-  service_docker_tag                   = local.service_docker_tag
-  service_ecs_cluster_arn              = data.aws_ecs_cluster.cps-preview.arn
-  vpc_id                               = data.aws_vpc.vpc.id
-  vpc_app_subnet_ids                   = data.aws_subnet_ids.vpc_app.ids
-  vpc_db_subnet_ids                    = data.aws_subnet_ids.vpc_db.ids
-  postgres_version                     = "12.4"
-  postgres_parameter_group_family      = "postgres12"
-  nlb_name                             = "${local.vpc}-nlb"
-  nlb_port                             = 3505
-  cors_origins                         = []
-  formstack_import_lambda_build_s3_key = local.formstack_lambda_artifact_s3_key
-  enforce_leave_admin_verification     = "0"
-  enable_application_fraud_check       = "0"
-  release_version                      = var.release_version
+  environment_name                 = local.environment_name
+  service_app_count                = 2
+  service_max_app_count            = 10
+  service_docker_tag               = local.service_docker_tag
+  service_ecs_cluster_arn          = data.aws_ecs_cluster.cps-preview.arn
+  vpc_id                           = data.aws_vpc.vpc.id
+  vpc_app_subnet_ids               = data.aws_subnet_ids.vpc_app.ids
+  vpc_db_subnet_ids                = data.aws_subnet_ids.vpc_db.ids
+  postgres_version                 = "12.4"
+  postgres_parameter_group_family  = "postgres12"
+  nlb_name                         = "${local.vpc}-nlb"
+  nlb_port                         = 3505
+  cors_origins                     = []
+  enforce_leave_admin_verification = "0"
+  enable_application_fraud_check   = "0"
+  release_version                  = var.release_version
 
   cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_1OVYp4aZo"
   cognito_user_pool_id        = "us-east-1_1OVYp4aZo"

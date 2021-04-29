@@ -24,7 +24,7 @@ export function before(): void {
       claimantShowMedicalLeaveType: true,
       noMaintenance: true,
       employerShowSelfRegistrationForm: true,
-      claimantShowOtherLeaveStep: true,
+      claimantShowOtherLeaveStep: false,
       claimantAuthThroughApi: true,
       employerShowAddOrganization: true,
       employerShowVerifications: true,
@@ -881,10 +881,7 @@ export function confirmEligibleParent(): void {
   cy.contains("button", "I understand and agree").click();
 }
 
-export function submitClaimPartOne(
-  application: ApplicationRequestBody,
-  otherLeave = false
-): void {
+export function submitClaimPartOne(application: ApplicationRequestBody): void {
   const reason = application.leave_details && application.leave_details.reason;
   const reasonQualifier =
     application.leave_details && application.leave_details.reason_qualifier;
@@ -912,7 +909,9 @@ export function submitClaimPartOne(
   answerReducedLeaveQuestion(application);
   answerIntermittentLeaveQuestion(application);
   onPage("checklist");
-  reportOtherLeave(application, otherLeave);
+  // @Reminder - This section is currenlty being removed
+  // Will return once development work is complete
+  // reportOtherLeave(application, otherLeave);
   clickChecklistButton("Review and confirm");
   if (reason === "Child Bonding") {
     confirmEligibleParent();

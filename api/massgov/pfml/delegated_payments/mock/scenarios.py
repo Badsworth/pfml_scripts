@@ -12,27 +12,32 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     PaymentTransactionType,
 )
+from massgov.pfml.delegated_payments.pub.check_return import PaidStatus
 
 
 class ScenarioName(Enum):
     # Happy path scenarios
+    HAPPY_PATH_MEDICAL_ACH_PRENOTED = "HAPPY_PATH_MEDICAL_ACH_PRENOTED"
     HAPPY_PATH_FAMILY_ACH_PRENOTED = "HAPPY_PATH_FAMILY_ACH_PRENOTED"
-    HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
     HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
         "HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
     )
-    HAPPY_PATH_CHECK_RESPONSE_PAID_FTP = "HAPPY_PATH_CHECK_RESPONSE_PAID_FTP"
-    HAPPY_PATH_CHECK_RESPONSE_OUTSTANDING_FTP = "HAPPY_PATH_CHECK_RESPONSE_OUTSTANDING_FTP"
+    HAPPY_PENDING_LEAVE_REQUEST_DECISION = "HAPPY_PENDING_LEAVE_REQUEST_DECISION"
+
+    HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
     HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN = (
         "HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN"
     )
-    HAPPY_PENDING_LEAVE_REQUEST_DECISION = "HAPPY_PENDING_LEAVE_REQUEST_DECISION"
+    HAPPY_PATH_CHECK_FAMILY_RETURN_PAID = "PUB_CHECK_FAMILY_RETURN_PAID"
+    HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING = "PUB_CHECK_FAMILY_RETURN_OUTSTANDING"
+    HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE = "PUB_CHECK_FAMILY_RETURN_FUTURE"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
     CANCELLATION_PAYMENT = "CANCELLATION_PAYMENT"
     OVERPAYMENT_PAYMENT_POSITIVE = "OVERPAYMENT_PAYMENT_POSITIVE"
     OVERPAYMENT_PAYMENT_NEGATIVE = "OVERPAYMENT_PAYMENT_NEGATIVE"
+    OVERPAYMENT_MISSING_NON_VPEI_RECORDS = "OVERPAYMENT_MISSING_NON_VPEI_RECORDS"
     EMPLOYER_REIMBURSEMENT_PAYMENT = "EMPLOYER_REIMBURSEMENT_PAYMENT"
 
     # Prenote
@@ -48,14 +53,25 @@ class ScenarioName(Enum):
     REJECTED_LEAVE_REQUEST_DECISION = "REJECTED_LEAVE_REQUEST_DECISION"
     PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
 
-    # TODO CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB
-    # TODO CLAIM_DOES_NOT_EXIST
+    # TODO CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB - PUB-165
+    # TODO CLAIM_DOES_NOT_EXIST - PUB-165
 
     # Audit
     AUDIT_REJECTED = "AUDIT_REJECTED"
 
-    # TODO PEI writeback error
-    # TODO positive pay check outbound
+    # Returns
+    PUB_ACH_PRENOTE_RETURN = "PUB_ACH_PRENOTE_RETURN"
+    PUB_ACH_PRENOTE_NOTIFICATION = "PUB_ACH_PRENOTE_NOTIFICATION"
+
+    PUB_ACH_FAMILY_RETURN = "PUB_ACH_FAMILY_RETURN"
+    PUB_ACH_FAMILY_NOTIFICATION = "PUB_ACH_FAMILY_NOTIFICATION"
+
+    PUB_ACH_MEDICAL_RETURN = "PUB_ACH_MEDICAL_RETURN"
+    PUB_ACH_MEDICAL_NOTIFICATION = "PUB_ACH_MEDICAL_NOTIFICATION"
+
+    PUB_CHECK_FAMILY_RETURN_VOID = "PUB_CHECK_FAMILY_RETURN_VOID"
+    PUB_CHECK_FAMILY_RETURN_STALE = "PUB_CHECK_FAMILY_RETURN_STALE"
+    PUB_CHECK_FAMILY_RETURN_STOP = "PUB_CHECK_FAMILY_RETURN_STOP"
 
 
 @dataclass
@@ -84,8 +100,29 @@ class ScenarioDescriptor:
 
     negative_payment_amount: bool = False
 
+    include_non_vpei_records: bool = True
+
+    # ACH Returns
+    # https://lwd.atlassian.net/wiki/spaces/API/pages/1333364105/PUB+ACH+Return+File+Format
+
+    pub_ach_response_return: bool = False
+    pub_ach_return_reason_code: str = "RO1"
+
+    pub_ach_response_change_notification: bool = False
+    pub_ach_notification_reason_code: str = "CO1"
+
+    # Check returns
+    pub_check_response: bool = True
+    pub_check_paid_response: bool = True
+    pub_check_outstanding_response: bool = False
+    pub_check_outstanding_response_status: PaidStatus = PaidStatus.OUTSTANDING
+
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+    ),
     ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
@@ -109,6 +146,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         negative_payment_amount=True,
     ),
     ScenarioDescriptor(
+        scenario_name=ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
+        payment_transaction_type=PaymentTransactionType.OVERPAYMENT,
+        include_non_vpei_records=False,
+    ),
+    ScenarioDescriptor(
         scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     ),
@@ -122,6 +164,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
         payment_method=PaymentMethod.CHECK,
         fineos_extract_address_valid=False,
+        pub_check_response=False,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
@@ -146,6 +189,72 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         leave_request_decision="Rejected",
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_approved=False),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_PRENOTE_RETURN,
+        prenoted=False,
+        pub_ach_response_return=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+        prenoted=False,
+        pub_ach_response_change_notification=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN, pub_ach_response_return=True
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+        pub_ach_response_change_notification=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_MEDICAL_RETURN,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+        pub_ach_response_return=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+        pub_ach_response_change_notification=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+        payment_method=PaymentMethod.CHECK,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+        payment_method=PaymentMethod.CHECK,
+        pub_check_paid_response=False,
+        pub_check_outstanding_response=True,
+        pub_check_outstanding_response_status=PaidStatus.OUTSTANDING,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+        payment_method=PaymentMethod.CHECK,
+        pub_check_paid_response=False,
+        pub_check_outstanding_response=True,
+        pub_check_outstanding_response_status=PaidStatus.FUTURE,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+        payment_method=PaymentMethod.CHECK,
+        pub_check_paid_response=False,
+        pub_check_outstanding_response=True,
+        pub_check_outstanding_response_status=PaidStatus.VOID,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+        payment_method=PaymentMethod.CHECK,
+        pub_check_paid_response=False,
+        pub_check_outstanding_response=True,
+        pub_check_outstanding_response_status=PaidStatus.STALE,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+        payment_method=PaymentMethod.CHECK,
+        pub_check_paid_response=False,
+        pub_check_outstanding_response=True,
+        pub_check_outstanding_response_status=PaidStatus.STOP,
+    ),
 ]
 
 SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {

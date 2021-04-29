@@ -36,7 +36,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             before_map = {"before_state_log_counts": state_log_counts_before}
             flattened_state_log_counts_before = flatten(before_map)
 
-            self.set_metrics(**flattened_state_log_counts_before)
+            self.set_metrics(flattened_state_log_counts_before)
             self.run_step()
 
             # Flatten these prefixed with the "after" key since nested values in the
@@ -46,13 +46,13 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             after_map = {"after_state_log_counts": state_log_counts_after}
             flattened_state_log_counts_after = flatten(after_map)
 
-            self.set_metrics(**flattened_state_log_counts_after)
+            self.set_metrics(flattened_state_log_counts_after)
 
             # Calculate the difference in counts for the metrics
             state_log_diff = calculate_state_log_count_diff(
                 state_log_counts_before, state_log_counts_after
             )
-            self.set_metrics(**state_log_diff)
+            self.set_metrics(state_log_diff)
 
     @abc.abstractmethod
     def run_step(self) -> None:
@@ -68,10 +68,10 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             return None
         return self.log_entry.import_log.import_log_id
 
-    def set_metrics(self, **metrics: Any) -> None:
+    def set_metrics(self, metrics: Any) -> None:
         if not self.log_entry:
             return
-        self.log_entry.set_metrics(**metrics)
+        self.log_entry.set_metrics(metrics)
 
     def increment(self, name: str) -> None:
         if not self.log_entry:

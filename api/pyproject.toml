@@ -134,7 +134,6 @@ reductions-send-claimant-lists-to-agencies = "massgov.pfml.reductions.send_claim
 reductions-send-wage-replacement-payments-to-dfml = "massgov.pfml.reductions.send_wage_replacement_payments_to_dfml:main"
 transmogrify-state-logs = "massgov.pfml.util.tasks.transmogrify_states:transmogrify_states"
 delegated-payment-audit-rejects-generate = "massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generator:generate_payment_rejects_file"
-delegated-payment-eft-response-generate = "massgov.pfml.delegated_payments.audit.mock.pub_outbound_file_generator:generate_pub_payment_return_file"
 delegated-payment-check-response-generate = "massgov.pfml.delegated_payments.mock.generate_check_response:generate_check_response_files"
 
 [tool.black]

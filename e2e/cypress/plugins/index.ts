@@ -23,7 +23,6 @@ import {
   getVerificationFetcher,
   getLeaveAdminCredentials,
 } from "../../src/util/common";
-import { getFineosBaseUrl } from "../../src/util/common";
 import { Credentials } from "../../src/types";
 import { ApplicationResponse } from "../../src/api";
 
@@ -109,17 +108,14 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     },
 
     async completeSSOLoginFineos(): Promise<string> {
-      let cookiesJson = "";
-      await postSubmit.withFineosBrowser(getFineosBaseUrl(), async (page) => {
-        await page.fill('input[name="loginfmt"]', config("SSO_USERNAME"));
-        await page.click("text=Next");
-        await page.fill('input[name="passwd"]', config("SSO_PASSWORD"));
-        await page.click('input[type="submit"]');
-        await page.click("text=No");
-        const cookies = await page.context().cookies();
-        cookiesJson = JSON.stringify(cookies);
-      });
-      return cookiesJson;
+      return postSubmit.withFineosBrowser(
+        async (page) => {
+          const cookies = await page.context().cookies();
+          return JSON.stringify(cookies);
+        },
+        false,
+        path.join(__dirname, "..", "screenshots")
+      );
     },
 
     waitForClaimDocuments: documentWaiter.waitForClaimDocuments.bind(

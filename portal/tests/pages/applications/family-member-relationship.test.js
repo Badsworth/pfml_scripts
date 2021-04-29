@@ -1,5 +1,4 @@
 import { renderWithAppLogic, simulateEvents } from "../../test-utils";
-import { CaringLeaveMetadata } from "../../../src/models/BenefitsApplication";
 import FamilyMemberRelationship from "../../../src/pages/applications/family-member-relationship";
 
 const setup = (claimAttrs = {}) => {
@@ -39,9 +38,9 @@ describe("FamilyMemberRelationship", () => {
     await submitForm();
     expect(spy).toHaveBeenCalledWith(claim.application_id, {
       leave_details: {
-        caring_leave_metadata: new CaringLeaveMetadata({
+        caring_leave_metadata: {
           relationship_to_caregiver: "Child",
-        }),
+        },
       },
     });
   });
@@ -57,9 +56,9 @@ describe("FamilyMemberRelationship", () => {
 
     expect(spy).toHaveBeenCalledWith(claim.application_id, {
       leave_details: {
-        caring_leave_metadata: new CaringLeaveMetadata({
+        caring_leave_metadata: {
           relationship_to_caregiver: "Child",
-        }),
+        },
       },
     });
   });
