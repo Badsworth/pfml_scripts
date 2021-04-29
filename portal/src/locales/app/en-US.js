@@ -849,8 +849,24 @@ const pages = {
       "I agree that I am a new parent by one of the routes listed and can provide certification to support this relationship.",
   },
   claimsCaringLeaveAttestation: {
-    title: "Confirm that you are an eligible caregiver",
+    lead:
+      "This paid leave applies to caregivers with an <eligible-relationship-link>eligible family relationship</eligible-relationship-link>.",
     submitApplicationButton: "$t(shared.submitApplicationButton)",
+    title: "Confirm that you are an eligible caregiver",
+    truthAttestation_child:
+      "I agree that I have an eligible relationship with my child who is experiencing a serious health condition and needs my care.",
+    truthAttestation_grandchild:
+      "I agree that I have an eligible relationship with my grandchild who is experiencing a serious health condition and needs my care.",
+    truthAttestation_grandparent:
+      "I agree that I have an eligible relationship with my grandparent who is experiencing a serious health condition and needs my care.",
+    truthAttestation_inlaw:
+      "I agree that I have an eligible relationship with a parent of my spouse or domestic partner who is experiencing a serious health condition and needs my care.",
+    truthAttestation_parent:
+      "I agree that I have an eligible relationship with my parent who is experiencing a serious health condition and needs my care.",
+    truthAttestation_sibling:
+      "I agree that I have an eligible relationship with my sibling who is experiencing a serious health condition and needs my care.",
+    truthAttestation_spouse:
+      "I agree that I have an eligible relationship with my spouse or domestic partner who is experiencing a serious health condition and needs my care.",
   },
   claimsChecklist: {
     backButtonLabel: "Back to applications",
