@@ -246,10 +246,6 @@ jobs:
             }]
           }' https://slack.com/api/chat.postMessage)
 
-          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq '.ts')
-          echo $MESSAGE_TS
-          echo "::set-output name=message-ts::$MESSAGE_TS"
-
 
   extra-uat-deploy:
     if: contains(github.event.inputs.deployment_env, 'stage') && github.event.inputs.extraUatDeploy == 'true'
@@ -812,6 +808,10 @@ jobs:
             }]
           }' https://slack.com/api/chat.postMessage)
 
+          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq '.ts')
+          echo $MESSAGE_TS
+          echo "::set-output name=message-ts::$MESSAGE_TS"
+
   end-to-end:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
@@ -844,28 +844,28 @@ jobs:
           # Limit to "stable" suite for any environment but test.
           only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
 
-  get-test-deploy-state:
-    name: Finalize Test Deploy State
-    needs: [end-to-end]
-    if: always()
-    runs-on: ubuntu-latest
-    outputs:
-      test-state: ${{ steps.test-state.outputs.test-state }}
-    steps:
-        # https://github.com/technote-space/workflow-conclusion-action
-        # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
-      - uses: technote-space/workflow-conclusion-action@v2
-      - name: Set test-state value
-        id: test-state
-        run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
+  # get-test-deploy-state:
+  #   name: Finalize Test Deploy State
+  #   needs: [end-to-end]
+  #   if: always()
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     test-state: ${{ steps.test-state.outputs.test-state }}
+  #   steps:
+  #       # https://github.com/technote-space/workflow-conclusion-action
+  #       # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+  #     - uses: technote-space/workflow-conclusion-action@v2
+  #     - name: Set test-state value
+  #       id: test-state
+  #       run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
 
-  post-to-slack:
-    name: Post Test failures to Slack
+  post-e2e-failures-to-slack:
+    name: Post E2E failures to Slack
     needs: [start-comms-slack, get-test-deploy-state]
     if: always() && 
       (
         (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
-        (needs.get-test-deploy-state.outputs.test-state == 'failure' || needs.get-test-deploy-state.outputs.test-state == 'timed_out')
+        (needs.end-to-end.conclusion == 'failure' || needs.end-to-end.conclusion == 'timed_out')
       )
     runs-on: ubuntu-latest
     steps:
