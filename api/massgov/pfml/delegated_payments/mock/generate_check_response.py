@@ -128,7 +128,11 @@ class PubCheckResponseGenerator:
         ):
             raise Exception("Invalid check response scenario")
 
-        check_number = "0" if scenario_descriptor.pub_ach_return_invalid_check_number else str(payment.check.check_number)
+        check_number = (
+            "0"
+            if scenario_descriptor.pub_ach_return_invalid_check_number
+            else str(payment.check.check_number)
+        )
 
         check_response_data_common = CheckResponseData(
             begin_date=str(payment.period_start_date.strftime("%m/%d/%Y"))

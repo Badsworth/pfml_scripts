@@ -210,7 +210,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_ID,
         pub_ach_response_return=True,
-        pub_ach_return_invalid_id=True
+        pub_ach_return_invalid_id=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_EFT_PRENOTE_ID,
@@ -227,7 +227,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.CHECK_PAYMENT_CHECK_NUMBER_NOT_FOUND,
         pub_ach_response_return=True,
         payment_method=PaymentMethod.CHECK,
-        pub_ach_return_invalid_check_number=True
+        pub_ach_return_invalid_check_number=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_RETURN,

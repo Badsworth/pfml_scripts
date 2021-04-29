@@ -439,7 +439,7 @@ def test_e2e_pub_payments(
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[                
+            scenario_names=[
                 ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                 ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                 ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -638,9 +638,7 @@ def test_e2e_pub_payments(
         # Unchanged
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_ID,
-            ],
+            scenario_names=[ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_ID,],
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
             db_session=test_db_session,
         )
@@ -734,7 +732,7 @@ def test_e2e_pub_payments(
                 "eft_prenote_unexpected_state_count": 1,
                 "eft_prenote_already_approved_count": 1,
                 "eft_prenote_rejected_count": 1,  # TODO add scenario
-                "payment_id_not_found_count": 1, 
+                "payment_id_not_found_count": 1,
                 "payment_rejected_count": 2,  # Both prenotes
                 "payment_already_rejected_count": None,  # TODO add scenario
                 "payment_unexpected_state_count": None,
