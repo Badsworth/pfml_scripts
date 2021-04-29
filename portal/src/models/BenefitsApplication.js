@@ -21,6 +21,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
       has_mailing_address: null,
       has_other_incomes: null,
       has_previous_leaves: null,
+      has_previous_leaves_same_reason: null,
       has_reduced_schedule_leave_periods: null,
       has_state_id: null,
       has_submitted_payment_preference: null,
@@ -46,6 +47,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
         phone_number: null,
         phone_type: null, // PhoneType
       },
+      previous_leaves_same_reason: [],
       work_pattern: null,
     });
   }

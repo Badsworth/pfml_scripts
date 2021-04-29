@@ -1278,6 +1278,8 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesSameReason: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
     sectionLabel:
       "Did you take any other leave between January 1, 2021–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
     title: "$t(shared.claimsOtherLeaveTitle)",

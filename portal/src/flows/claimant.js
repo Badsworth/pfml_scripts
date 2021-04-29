@@ -69,6 +69,8 @@ export const guards = {
   hasReducedScheduleLeavePeriods: ({ claim }) =>
     claim.has_reduced_schedule_leave_periods === true,
   hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
+  hasPreviousLeavesSameReason: ({ claim }) =>
+    claim.has_previous_leaves_same_reason === true,
   isFixedWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
@@ -358,7 +360,15 @@ export default {
         fields: previousLeavesSameReasonFields,
       },
       on: {
-        CONTINUE: routes.applications.previousLeavesSameReasonDetails,
+        CONTINUE: [
+          {
+            target: routes.applications.previousLeavesSameReasonDetails,
+            cond: "hasPreviousLeavesSameReason",
+          },
+          {
+            target: routes.applications.previousLeavesOtherReason,
+          },
+        ],
       },
     },
     [routes.applications.previousLeavesSameReasonDetails]: {

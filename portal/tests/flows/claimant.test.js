@@ -318,7 +318,7 @@ describe("claimFlowConfigs", () => {
   const hasOtherLeavesAndIncomes = {
     has_employer_benefits: true,
     has_other_incomes: true,
-    has_previous_leaves: true,
+    has_previous_leaves_same_reason: true,
   };
   const hasStateId = { has_state_id: true };
   const fixedWorkPattern = {
