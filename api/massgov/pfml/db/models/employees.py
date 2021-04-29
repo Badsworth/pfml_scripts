@@ -135,30 +135,33 @@ class LkGender(Base):
 class LkOccupation(Base):
     __tablename__ = "lk_occupation"
     occupation_id = Column(Integer, primary_key=True, autoincrement=True)
-    occupation_description = Column(Text)
     occupation_code = Column(Integer, unique=True)
-    
+    occupation_description = Column(Text)
 
-    def __init__(self, occupation_id, occupation_description, occupation_code):
+    def __init__(self, occupation_id, occupation_code, occupation_description):
         self.occupation_id = occupation_id
         self.occupation_description = occupation_description
         self.occupation_code = occupation_code
-        
+
 
 class LkOccupationTitle(Base):
     __tablename__ = "lk_occupation_title"
     occupation_title_id = Column(Integer, primary_key=True, autoincrement=True)
+    occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
+    occupation_title_code = Column(Integer)
     occupation_title_description = Column(Text)
-    occupation_code = Column(Integer, ForeignKey("lk_occupation.occupation_code"))
-    occupation_title_code = Column(Integer) 
-    
 
-    def __init__(self, occupation_title_id, occupation_title_description, occupation_code, occupation_title_code):
+    def __init__(
+        self,
+        occupation_title_id,
+        occupation_id,
+        occupation_title_code,
+        occupation_title_description,
+    ):
         self.occupation_title_id = occupation_title_id
-        self.occupation_title_description = occupation_title_description
-        self.occupation_code = occupation_code
+        self.occupation_id = occupation_id
         self.occupation_title_code = occupation_title_code
-        
+        self.occupation_title_description = occupation_title_description
 
 
 class LkEducationLevel(Base):
@@ -931,7 +934,7 @@ class EmployeeOccupation(Base):
     worksite_id = Column(Text)
     occupation_qualifier = Column(Text)
 
-    employee = relationship("Employee", back_populactes="employee_occupations")
+    employee = relationship("Employee", back_populates="employee_occupations")
     employer = relationship("Employer", back_populates="employer_occupations")
 
 
@@ -1611,7 +1614,11 @@ class Gender(LookupTable):
 
 class Occupation(LookupTable):
     model = LkOccupation
-    column_names = ("occupation_id", "occupation_description", "occupation_code",)
+    column_names = (
+        "occupation_id",
+        "occupation_code",
+        "occupation_description",
+    )
 
     # HEALTH_CARE = LkOccupation(1, "Health Care")
     # SALES_CLERK = LkOccupation(2, "Sales Clerk")
@@ -1620,1406 +1627,3414 @@ class Occupation(LookupTable):
 
     # NAICS Occupations -> https://www.naics.com/search/
     AGRICULTURE_FORESTRY_FISHING_HUNTING = LkOccupation(
-        1, "Agriculture, Forestry, Fishing and Hunting", 11
+        1, 11, "Agriculture, Forestry, Fishing and Hunting"
     )
-    MINING = LkOccupation(2, "Mining", 21)
-    UTILITIES = LkOccupation(3, "Utilities", 22)
-    CONSTRUCTION = LkOccupation(4, "Construction", 23)
-    MANUFACTURING = LkOccupation(5, "Manufacturing", 31)  # -33
-    WHOLESALE_TRADE = LkOccupation(6, "Wholesale Trade", 42)
-    RETAIL_TRADE = LkOccupation(7, "Retail Trade", 44)  # -45
-    TRANSPORTATION_WAREHOUSING = LkOccupation(8, "Transportation and Warehousing", 48)  # -49
-    INFORMATION = LkOccupation(9, "Information", 51)
-    FINANCE_INSURANCE = LkOccupation(10, "Finance and Insurance", 52)
-    REAL_ESTATE_RENTAL_LEASING = LkOccupation(11, "Real Estate Rental and Leasing", 53)
+    MINING = LkOccupation(2, 21, "Mining")
+    UTILITIES = LkOccupation(3, 22, "Utilities")
+    CONSTRUCTION = LkOccupation(4, 23, "Construction")
+    MANUFACTURING = LkOccupation(5, 31, "Manufacturing") # @todo: category code up to 33
+    WHOLESALE_TRADE = LkOccupation(6, 42, "Wholesale Trade")
+    RETAIL_TRADE = LkOccupation(7, 44, "Retail Trade") # @todo: category code up to 45
+    TRANSPORTATION_WAREHOUSING = LkOccupation(8, 48, "Transportation and Warehousing") # @todo: category code up to 49
+    INFORMATION = LkOccupation(9, 51, "Information")
+    FINANCE_INSURANCE = LkOccupation(10, 52, "Finance and Insurance")
+    REAL_ESTATE_RENTAL_LEASING = LkOccupation(11, 53, "Real Estate Rental and Leasing")
     PROFESSIONAL_SCIENTIFIC_TECHNICAL = LkOccupation(
-        12, "Professional, Scientific, and Technical Services", 54
+        12, 54, "Professional, Scientific, and Technical Services"
     )
-    MANAGEMENT_COMPANIES_ENTERPRISES = LkOccupation(13, "Management of Companies and Enterprises", 55)
+    MANAGEMENT_COMPANIES_ENTERPRISES = LkOccupation(
+        13, 55, "Management of Companies and Enterprises"
+    )
     ADMINISTRATIVE_SUPPORT_WASTE_MANAGEMENT_REMEDIATION = LkOccupation(
-        14, "Administrative and Support and Waste Management and Remediation Services", 56
+        14, 56, "Administrative and Support and Waste Management and Remediation Services"
     )
-    EDUCATIONAL = LkOccupation(15, "Educational Services", 61)
-    HEALTH_CARE_SOCIAL_ASSISTANCE = LkOccupation(16, "Health Care and Social Assistance", 62)
-    ARTS_ENTERTAINMENT_RECREATION = LkOccupation(17, "Arts, Entertainment, and Recreation", 71)
-    ACCOMMODATION_FOOD_SERVICES = LkOccupation(18, "Accommodation and Food Services", 72)
-    OTHER_SERVICES = LkOccupation(19, "Other Services (except Public Administration)", 81)
-    PUBLIC_ADMINISTRATION = LkOccupation(20, "Public Administration", 92)
+    EDUCATIONAL = LkOccupation(15, 61, "Educational Services")
+    HEALTH_CARE_SOCIAL_ASSISTANCE = LkOccupation(16, 62, "Health Care and Social Assistance")
+    ARTS_ENTERTAINMENT_RECREATION = LkOccupation(17, 71, "Arts, Entertainment, and Recreation")
+    ACCOMMODATION_FOOD_SERVICES = LkOccupation(18, 72, "Accommodation and Food Services")
+    OTHER_SERVICES = LkOccupation(19, 81, "Other Services (except Public Administration)")
+    PUBLIC_ADMINISTRATION = LkOccupation(20, 92, "Public Administration")
+
 
 class OccupationTitle(LookupTable):
     model = LkOccupationTitle
-    column_names = ("occupation_title_id", "occupation_title_description", "occupation_code", "occupation_title_code")
-    OILSEED_AND_GRAIN_FARMING = LkOccupationTitle(1, "Oilseed and Grain Farming", 11, 1111)
-    SOYBEAN_FARMING = LkOccupationTitle(1, "Soybean Farming", 11, 111110)
-    OILSEED_EXCEPT_SOYBEAN_FARMING = LkOccupationTitle(1, "Oilseed (except Soybean) Farming", 11, 111120)
-    DRY_PEA_AND_BEAN_FARMING = LkOccupationTitle(1, "Dry Pea and Bean Farming", 11, 111130)
-    WHEAT_FARMING = LkOccupationTitle(1, "Wheat Farming", 11, 111140)
-    CORN_FARMING = LkOccupationTitle(1, "Corn Farming", 11, 111150)
-    RICE_FARMING = LkOccupationTitle(1, "Rice Farming", 11, 111160)
-    OILSEED_AND_GRAIN_COMBINATION_FARMING = LkOccupationTitle(1, "Oilseed and Grain Combination Farming", 11, 111191)
-    ALL_OTHER_GRAIN_FARMING = LkOccupationTitle(1, "All Other Grain Farming", 11, 111199)
-    VEGETABLE_AND_MELON_FARMING = LkOccupationTitle(1, "Vegetable and Melon Farming", 11, 1112)
-    POTATO_FARMING = LkOccupationTitle(1, "Potato Farming", 11, 111211)
-    OTHER_VEGETABLE_EXCEPT_POTATO_AND_MELON_FARMING = LkOccupationTitle(1, "Other Vegetable (except Potato) and Melon Farming", 11, 111219)
-    FRUIT_AND_TREE_NUT_FARMING = LkOccupationTitle(1, "Fruit and Tree Nut Farming", 11, 1113)
-    ORANGE_GROVES = LkOccupationTitle(1, "Orange Groves", 11, 111310)
-    CITRUS_EXCEPT_ORANGE_GROVES = LkOccupationTitle(1, "Citrus (except Orange) Groves", 11, 111320)
-    APPLE_ORCHARDS = LkOccupationTitle(1, "Apple Orchards", 11, 111331)
-    GRAPE_VINEYARDS = LkOccupationTitle(1, "Grape Vineyards", 11, 111332)
-    STRAWBERRY_FARMING = LkOccupationTitle(1, "Strawberry Farming", 11, 111333)
-    BERRY_EXCEPT_STRAWBERRY_FARMING = LkOccupationTitle(1, "Berry (except Strawberry) Farming", 11, 111334)
-    TREE_NUT_FARMING = LkOccupationTitle(1, "Tree Nut Farming", 11, 111335)
-    FRUIT_AND_TREE_NUT_COMBINATION_FARMING = LkOccupationTitle(1, "Fruit and Tree Nut Combination Farming", 11, 111336)
-    OTHER_NONCITRUS_FRUIT_FARMING = LkOccupationTitle(1, "Other Noncitrus Fruit Farming", 11, 111339)
-    GREENHOUSE_NURSERY_AND_FLORICULTURE_PRODUCTION = LkOccupationTitle(1, "Greenhouse, Nursery, and Floriculture Production", 11, 1114)
-    MUSHROOM_PRODUCTION = LkOccupationTitle(1, "Mushroom Production", 11, 111411)
-    OTHER_FOOD_CROPS_GROWN_UNDER_COVER = LkOccupationTitle(1, "Other Food Crops Grown Under Cover", 11, 111419)
-    NURSERY_AND_TREE_PRODUCTION = LkOccupationTitle(1, "Nursery and Tree Production", 11, 111421)
-    FLORICULTURE_PRODUCTION = LkOccupationTitle(1, "Floriculture Production", 11, 111422)
-    OTHER_CROP_FARMING = LkOccupationTitle(1, "Other Crop Farming", 11, 1119)
-    TOBACCO_FARMING = LkOccupationTitle(1, "Tobacco Farming", 11, 111910)
-    COTTON_FARMING = LkOccupationTitle(1, "Cotton Farming", 11, 111920)
-    SUGARCANE_FARMING = LkOccupationTitle(1, "Sugarcane Farming", 11, 111930)
-    HAY_FARMING = LkOccupationTitle(1, "Hay Farming", 11, 111940)
-    SUGAR_BEET_FARMING = LkOccupationTitle(1, "Sugar Beet Farming", 11, 111991)
-    PEANUT_FARMING = LkOccupationTitle(1, "Peanut Farming", 11, 111992)
-    ALL_OTHER_MISCELLANEOUS_CROP_FARMING = LkOccupationTitle(1, "All Other Miscellaneous Crop Farming", 11, 111998)
-    CATTLE_RANCHING_AND_FARMING = LkOccupationTitle(1, "Cattle Ranching and Farming", 11, 1121)
-    BEEF_CATTLE_RANCHING_AND_FARMING = LkOccupationTitle(1, "Beef Cattle Ranching and Farming", 11, 112111)
-    CATTLE_FEEDLOTS = LkOccupationTitle(1, "Cattle Feedlots", 11, 112112)
-    DAIRY_CATTLE_AND_MILK_PRODUCTION = LkOccupationTitle(1, "Dairy Cattle and Milk Production", 11, 112120)
-    DUALPURPOSE_CATTLE_RANCHING_AND_FARMING = LkOccupationTitle(1, "Dual-Purpose Cattle Ranching and Farming", 11, 112130)
-    HOG_AND_PIG_FARMING = LkOccupationTitle(1, "Hog and Pig Farming", 11, 1122)
-    HOG_AND_PIG_FARMING = LkOccupationTitle(1, "Hog and Pig Farming", 11, 112210)
-    POULTRY_AND_EGG_PRODUCTION = LkOccupationTitle(1, "Poultry and Egg Production", 11, 1123)
-    CHICKEN_EGG_PRODUCTION = LkOccupationTitle(1, "Chicken Egg Production", 11, 112310)
-    BROILERS_AND_OTHER_MEAT_TYPE_CHICKEN_PRODUCTION = LkOccupationTitle(1, "Broilers and Other Meat Type Chicken Production", 11, 112320)
-    TURKEY_PRODUCTION = LkOccupationTitle(1, "Turkey Production", 11, 112330)
-    POULTRY_HATCHERIES = LkOccupationTitle(1, "Poultry Hatcheries", 11, 112340)
-    OTHER_POULTRY_PRODUCTION = LkOccupationTitle(1, "Other Poultry Production", 11, 112390)
-    SHEEP_AND_GOAT_FARMING = LkOccupationTitle(1, "Sheep and Goat Farming", 11, 1124)
-    SHEEP_FARMING = LkOccupationTitle(1, "Sheep Farming", 11, 112410)
-    GOAT_FARMING = LkOccupationTitle(1, "Goat Farming", 11, 112420)
-    AQUACULTURE = LkOccupationTitle(1, "Aquaculture", 11, 1125)
-    FINFISH_FARMING_AND_FISH_HATCHERIES = LkOccupationTitle(1, "Finfish Farming and Fish Hatcheries", 11, 112511)
-    SHELLFISH_FARMING = LkOccupationTitle(1, "Shellfish Farming", 11, 112512)
-    OTHER_AQUACULTURE = LkOccupationTitle(1, "Other Aquaculture", 11, 112519)
-    OTHER_ANIMAL_PRODUCTION = LkOccupationTitle(1, "Other Animal Production", 11, 1129)
-    APICULTURE = LkOccupationTitle(1, "Apiculture", 11, 112910)
-    HORSES_AND_OTHER_EQUINE_PRODUCTION = LkOccupationTitle(1, "Horses and Other Equine Production", 11, 112920)
-    FURBEARING_ANIMAL_AND_RABBIT_PRODUCTION = LkOccupationTitle(1, "Fur-Bearing Animal and Rabbit Production", 11, 112930)
-    ALL_OTHER_ANIMAL_PRODUCTION = LkOccupationTitle(1, "All Other Animal Production", 11, 112990)
-    TIMBER_TRACT_OPERATIONS = LkOccupationTitle(1, "Timber Tract Operations", 11, 1131)
-    TIMBER_TRACT_OPERATIONS = LkOccupationTitle(1, "Timber Tract Operations", 11, 113110)
-    FOREST_NURSERIES_AND_GATHERING_OF_FOREST_PRODUCTS = LkOccupationTitle(1, "Forest Nurseries and Gathering of Forest Products", 11, 1132)
-    FOREST_NURSERIES_AND_GATHERING_OF_FOREST_PRODUCTS = LkOccupationTitle(1, "Forest Nurseries and Gathering of Forest Products", 11, 113210)
-    LOGGING = LkOccupationTitle(1, "Logging", 11, 1133)
-    LOGGING = LkOccupationTitle(1, "Logging", 11, 113310)
-    FISHING = LkOccupationTitle(1, "Fishing", 11, 1141)
-    FINFISH_FISHING = LkOccupationTitle(1, "Finfish Fishing", 11, 114111)
-    SHELLFISH_FISHING = LkOccupationTitle(1, "Shellfish Fishing", 11, 114112)
-    OTHER_MARINE_FISHING = LkOccupationTitle(1, "Other Marine Fishing", 11, 114119)
-    HUNTING_AND_TRAPPING = LkOccupationTitle(1, "Hunting and Trapping", 11, 1142)
-    HUNTING_AND_TRAPPING = LkOccupationTitle(1, "Hunting and Trapping", 11, 114210)
-    SUPPORT_ACTIVITIES_FOR_CROP_PRODUCTION = LkOccupationTitle(1, "Support Activities for Crop Production", 11, 1151)
-    COTTON_GINNING = LkOccupationTitle(1, "Cotton Ginning", 11, 115111)
-    SOIL_PREPARATION_PLANTING_AND_CULTIVATING = LkOccupationTitle(1, "Soil Preparation, Planting, and Cultivating", 11, 115112)
-    CROP_HARVESTING_PRIMARILY_BY_MACHINE = LkOccupationTitle(1, "Crop Harvesting, Primarily by Machine", 11, 115113)
-    POSTHARVEST_CROP_ACTIVITIES_EXCEPT_COTTON_GINNING = LkOccupationTitle(1, "Postharvest Crop Activities (except Cotton Ginning)", 11, 115114)
-    FARM_LABOR_CONTRACTORS_AND_CREW_LEADERS = LkOccupationTitle(1, "Farm Labor Contractors and Crew Leaders", 11, 115115)
-    FARM_MANAGEMENT_SERVICES = LkOccupationTitle(1, "Farm Management Services", 11, 115116)
-    SUPPORT_ACTIVITIES_FOR_ANIMAL_PRODUCTION = LkOccupationTitle(1, "Support Activities for Animal Production", 11, 1152)
-    SUPPORT_ACTIVITIES_FOR_ANIMAL_PRODUCTION = LkOccupationTitle(1, "Support Activities for Animal Production", 11, 115210)
-    SUPPORT_ACTIVITIES_FOR_FORESTRY = LkOccupationTitle(1, "Support Activities for Forestry", 11, 1153)
-    SUPPORT_ACTIVITIES_FOR_FORESTRY = LkOccupationTitle(1, "Support Activities for Forestry", 11, 115310)
-    OIL_AND_GAS_EXTRACTION = LkOccupationTitle(1, "Oil and Gas Extraction", 21, 2111)
-    CRUDE_PETROLEUM_EXTRACTION = LkOccupationTitle(1, "Crude Petroleum Extraction", 21, 211120)
-    NATURAL_GAS_EXTRACTION = LkOccupationTitle(1, "Natural Gas Extraction", 21, 211130)
-    COAL_MINING = LkOccupationTitle(1, "Coal Mining", 21, 2121)
-    BITUMINOUS_COAL_AND_LIGNITE_SURFACE_MINING = LkOccupationTitle(1, "Bituminous Coal and Lignite Surface Mining", 21, 212111)
-    BITUMINOUS_COAL_UNDERGROUND_MINING = LkOccupationTitle(1, "Bituminous Coal Underground Mining", 21, 212112)
-    ANTHRACITE_MINING = LkOccupationTitle(1, "Anthracite Mining", 21, 212113)
-    METAL_ORE_MINING = LkOccupationTitle(1, "Metal Ore Mining", 21, 2122)
-    IRON_ORE_MINING = LkOccupationTitle(1, "Iron Ore Mining", 21, 212210)
-    GOLD_ORE_MINING = LkOccupationTitle(1, "Gold Ore Mining", 21, 212221)
-    SILVER_ORE_MINING = LkOccupationTitle(1, "Silver Ore Mining", 21, 212222)
-    COPPER_NICKEL_LEAD_AND_ZINC_MINING = LkOccupationTitle(1, "Copper, Nickel, Lead, and Zinc Mining", 21, 212230)
-    URANIUMRADIUMVANADIUM_ORE_MINING = LkOccupationTitle(1, "Uranium-Radium-Vanadium Ore Mining", 21, 212291)
-    ALL_OTHER_METAL_ORE_MINING = LkOccupationTitle(1, "All Other Metal Ore Mining", 21, 212299)
-    NONMETALLIC_MINERAL_MINING_AND_QUARRYING = LkOccupationTitle(1, "Nonmetallic Mineral Mining and Quarrying", 21, 2123)
-    DIMENSION_STONE_MINING_AND_QUARRYING = LkOccupationTitle(1, "Dimension Stone Mining and Quarrying", 21, 212311)
-    CRUSHED_AND_BROKEN_LIMESTONE_MINING_AND_QUARRYING = LkOccupationTitle(1, "Crushed and Broken Limestone Mining and Quarrying", 21, 212312)
-    CRUSHED_AND_BROKEN_GRANITE_MINING_AND_QUARRYING = LkOccupationTitle(1, "Crushed and Broken Granite Mining and Quarrying", 21, 212313)
-    OTHER_CRUSHED_AND_BROKEN_STONE_MINING_AND_QUARRYING = LkOccupationTitle(1, "Other Crushed and Broken Stone Mining and Quarrying", 21, 212319)
-    CONSTRUCTION_SAND_AND_GRAVEL_MINING = LkOccupationTitle(1, "Construction Sand and Gravel Mining", 21, 212321)
-    INDUSTRIAL_SAND_MINING = LkOccupationTitle(1, "Industrial Sand Mining", 21, 212322)
-    KAOLIN_AND_BALL_CLAY_MINING = LkOccupationTitle(1, "Kaolin and Ball Clay Mining", 21, 212324)
-    CLAY_AND_CERAMIC_AND_REFRACTORY_MINERALS_MINING = LkOccupationTitle(1, "Clay and Ceramic and Refractory Minerals Mining", 21, 212325)
-    POTASH_SODA_AND_BORATE_MINERAL_MINING = LkOccupationTitle(1, "Potash, Soda, and Borate Mineral Mining", 21, 212391)
-    PHOSPHATE_ROCK_MINING = LkOccupationTitle(1, "Phosphate Rock Mining", 21, 212392)
-    OTHER_CHEMICAL_AND_FERTILIZER_MINERAL_MINING = LkOccupationTitle(1, "Other Chemical and Fertilizer Mineral Mining", 21, 212393)
-    ALL_OTHER_NONMETALLIC_MINERAL_MINING = LkOccupationTitle(1, "All Other Nonmetallic Mineral Mining", 21, 212399)
-    SUPPORT_ACTIVITIES_FOR_MINING = LkOccupationTitle(1, "Support Activities for Mining", 21, 2131)
-    DRILLING_OIL_AND_GAS_WELLS = LkOccupationTitle(1, "Drilling Oil and Gas Wells", 21, 213111)
-    SUPPORT_ACTIVITIES_FOR_OIL_AND_GAS_OPERATIONS = LkOccupationTitle(1, "Support Activities for Oil and Gas Operations", 21, 213112)
-    SUPPORT_ACTIVITIES_FOR_COAL_MINING = LkOccupationTitle(1, "Support Activities for Coal Mining", 21, 213113)
-    SUPPORT_ACTIVITIES_FOR_METAL_MINING = LkOccupationTitle(1, "Support Activities for Metal Mining", 21, 213114)
-    SUPPORT_ACTIVITIES_FOR_NONMETALLIC_MINERALS_EXCEPT_FUELS_MINING = LkOccupationTitle(1, "Support Activities for Nonmetallic Minerals (except Fuels) Mining", 21, 213115)
-    ELECTRIC_POWER_GENERATION_TRANSMISSION_AND_DISTRIBUTION = LkOccupationTitle(1, "Electric Power Generation, Transmission and Distribution", 22, 2211)
-    HYDROELECTRIC_POWER_GENERATION = LkOccupationTitle(1, "Hydroelectric Power Generation", 22, 221111)
-    FOSSIL_FUEL_ELECTRIC_POWER_GENERATION = LkOccupationTitle(1, "Fossil Fuel Electric Power Generation", 22, 221112)
-    NUCLEAR_ELECTRIC_POWER_GENERATION = LkOccupationTitle(1, "Nuclear Electric Power Generation", 22, 221113)
-    SOLAR_ELECTRIC_POWER_GENERATION = LkOccupationTitle(1, "Solar Electric Power Generation", 22, 221114)
-    WIND_ELECTRIC_POWER_GENERATION = LkOccupationTitle(1, "Wind Electric Power Generation", 22, 221115)
-    GEOTHERMAL_ELECTRIC_POWER_GENERATION = LkOccupationTitle(1, "Geothermal Electric Power Generation", 22, 221116)
-    BIOMASS_ELECTRIC_POWER_GENERATION = LkOccupationTitle(1, "Biomass Electric Power Generation", 22, 221117)
-    OTHER_ELECTRIC_POWER_GENERATION = LkOccupationTitle(1, "Other Electric Power Generation", 22, 221118)
-    ELECTRIC_BULK_POWER_TRANSMISSION_AND_CONTROL = LkOccupationTitle(1, "Electric Bulk Power Transmission and Control", 22, 221121)
-    ELECTRIC_POWER_DISTRIBUTION = LkOccupationTitle(1, "Electric Power Distribution", 22, 221122)
-    NATURAL_GAS_DISTRIBUTION = LkOccupationTitle(1, "Natural Gas Distribution", 22, 2212)
-    NATURAL_GAS_DISTRIBUTION = LkOccupationTitle(1, "Natural Gas Distribution", 22, 221210)
-    WATER_SEWAGE_AND_OTHER_SYSTEMS = LkOccupationTitle(1, "Water, Sewage and Other Systems", 22, 2213)
-    WATER_SUPPLY_AND_IRRIGATION_SYSTEMS = LkOccupationTitle(1, "Water Supply and Irrigation Systems", 22, 221310)
-    SEWAGE_TREATMENT_FACILITIES = LkOccupationTitle(1, "Sewage Treatment Facilities", 22, 221320)
-    STEAM_AND_AIRCONDITIONING_SUPPLY = LkOccupationTitle(1, "Steam and Air-Conditioning Supply", 22, 221330)
-    RESIDENTIAL_BUILDING_CONSTRUCTION = LkOccupationTitle(1, "Residential Building Construction", 23, 2361)
-    NEW_SINGLEFAMILY_HOUSING_CONSTRUCTION_EXCEPT_FORSALE_BUILDERS = LkOccupationTitle(1, "New Single-Family Housing Construction (except For-Sale Builders)", 23, 236115)
-    NEW_MULTIFAMILY_HOUSING_CONSTRUCTION_EXCEPT_FORSALE_BUILDERS = LkOccupationTitle(1, "New Multifamily Housing Construction (except For-Sale Builders)", 23, 236116)
-    NEW_HOUSING_FORSALE_BUILDERS = LkOccupationTitle(1, "New Housing For-Sale Builders", 23, 236117)
-    RESIDENTIAL_REMODELERS = LkOccupationTitle(1, "Residential Remodelers", 23, 236118)
-    NONRESIDENTIAL_BUILDING_CONSTRUCTION = LkOccupationTitle(1, "Nonresidential Building Construction", 23, 2362)
-    INDUSTRIAL_BUILDING_CONSTRUCTION = LkOccupationTitle(1, "Industrial Building Construction", 23, 236210)
-    COMMERCIAL_AND_INSTITUTIONAL_BUILDING_CONSTRUCTION = LkOccupationTitle(1, "Commercial and Institutional Building Construction", 23, 236220)
-    UTILITY_SYSTEM_CONSTRUCTION = LkOccupationTitle(1, "Utility System Construction", 23, 2371)
-    WATER_AND_SEWER_LINE_AND_RELATED_STRUCTURES_CONSTRUCTION = LkOccupationTitle(1, "Water and Sewer Line and Related Structures Construction", 23, 237110)
-    OIL_AND_GAS_PIPELINE_AND_RELATED_STRUCTURES_CONSTRUCTION = LkOccupationTitle(1, "Oil and Gas Pipeline and Related Structures Construction", 23, 237120)
-    POWER_AND_COMMUNICATION_LINE_AND_RELATED_STRUCTURES_CONSTRUCTION = LkOccupationTitle(1, "Power and Communication Line and Related Structures Construction", 23, 237130)
-    LAND_SUBDIVISION = LkOccupationTitle(1, "Land Subdivision", 23, 2372)
-    LAND_SUBDIVISION = LkOccupationTitle(1, "Land Subdivision", 23, 237210)
-    HIGHWAY_STREET_AND_BRIDGE_CONSTRUCTION = LkOccupationTitle(1, "Highway, Street, and Bridge Construction", 23, 2373)
-    HIGHWAY_STREET_AND_BRIDGE_CONSTRUCTION = LkOccupationTitle(1, "Highway, Street, and Bridge Construction", 23, 237310)
-    OTHER_HEAVY_AND_CIVIL_ENGINEERING_CONSTRUCTION = LkOccupationTitle(1, "Other Heavy and Civil Engineering Construction", 23, 2379)
-    OTHER_HEAVY_AND_CIVIL_ENGINEERING_CONSTRUCTION = LkOccupationTitle(1, "Other Heavy and Civil Engineering Construction", 23, 237990)
-    FOUNDATION_STRUCTURE_AND_BUILDING_EXTERIOR_CONTRACTORS = LkOccupationTitle(1, "Foundation, Structure, and Building Exterior Contractors", 23, 2381)
-    POURED_CONCRETE_FOUNDATION_AND_STRUCTURE_CONTRACTORS = LkOccupationTitle(1, "Poured Concrete Foundation and Structure Contractors", 23, 238110)
-    STRUCTURAL_STEEL_AND_PRECAST_CONCRETE_CONTRACTORS = LkOccupationTitle(1, "Structural Steel and Precast Concrete Contractors", 23, 238120)
-    FRAMING_CONTRACTORS = LkOccupationTitle(1, "Framing Contractors", 23, 238130)
-    MASONRY_CONTRACTORS = LkOccupationTitle(1, "Masonry Contractors", 23, 238140)
-    GLASS_AND_GLAZING_CONTRACTORS = LkOccupationTitle(1, "Glass and Glazing Contractors", 23, 238150)
-    ROOFING_CONTRACTORS = LkOccupationTitle(1, "Roofing Contractors", 23, 238160)
-    SIDING_CONTRACTORS = LkOccupationTitle(1, "Siding Contractors", 23, 238170)
-    OTHER_FOUNDATION_STRUCTURE_AND_BUILDING_EXTERIOR_CONTRACTORS = LkOccupationTitle(1, "Other Foundation, Structure, and Building Exterior Contractors", 23, 238190)
-    BUILDING_EQUIPMENT_CONTRACTORS = LkOccupationTitle(1, "Building Equipment Contractors", 23, 2382)
-    ELECTRICAL_CONTRACTORS_AND_OTHER_WIRING_INSTALLATION_CONTRACTORS = LkOccupationTitle(1, "Electrical Contractors and Other Wiring Installation Contractors", 23, 238210)
-    PLUMBING_HEATING_AND_AIRCONDITIONING_CONTRACTORS = LkOccupationTitle(1, "Plumbing, Heating, and Air-Conditioning Contractors", 23, 238220)
-    OTHER_BUILDING_EQUIPMENT_CONTRACTORS = LkOccupationTitle(1, "Other Building Equipment Contractors", 23, 238290)
-    BUILDING_FINISHING_CONTRACTORS = LkOccupationTitle(1, "Building Finishing Contractors", 23, 2383)
-    DRYWALL_AND_INSULATION_CONTRACTORS = LkOccupationTitle(1, "Drywall and Insulation Contractors", 23, 238310)
-    PAINTING_AND_WALL_COVERING_CONTRACTORS = LkOccupationTitle(1, "Painting and Wall Covering Contractors", 23, 238320)
-    FLOORING_CONTRACTORS = LkOccupationTitle(1, "Flooring Contractors", 23, 238330)
-    TILE_AND_TERRAZZO_CONTRACTORS = LkOccupationTitle(1, "Tile and Terrazzo Contractors", 23, 238340)
-    FINISH_CARPENTRY_CONTRACTORS = LkOccupationTitle(1, "Finish Carpentry Contractors", 23, 238350)
-    OTHER_BUILDING_FINISHING_CONTRACTORS = LkOccupationTitle(1, "Other Building Finishing Contractors", 23, 238390)
-    OTHER_SPECIALTY_TRADE_CONTRACTORS = LkOccupationTitle(1, "Other Specialty Trade Contractors", 23, 2389)
-    SITE_PREPARATION_CONTRACTORS = LkOccupationTitle(1, "Site Preparation Contractors", 23, 238910)
-    ALL_OTHER_SPECIALTY_TRADE_CONTRACTORS = LkOccupationTitle(1, "All Other Specialty Trade Contractors", 23, 238990)
-    MANUFACTURING = LkOccupationTitle(1, "Manufacturing", 31, 31-33)
-    ANIMAL_FOOD_MANUFACTURING = LkOccupationTitle(1, "Animal Food Manufacturing", 31, 3111)
-    DOG_AND_CAT_FOOD_MANUFACTURING = LkOccupationTitle(1, "Dog and Cat Food Manufacturing", 31, 311111)
-    OTHER_ANIMAL_FOOD_MANUFACTURING = LkOccupationTitle(1, "Other Animal Food Manufacturing", 31, 311119)
-    GRAIN_AND_OILSEED_MILLING = LkOccupationTitle(1, "Grain and Oilseed Milling", 31, 3112)
-    FLOUR_MILLING = LkOccupationTitle(1, "Flour Milling", 31, 311211)
-    RICE_MILLING = LkOccupationTitle(1, "Rice Milling", 31, 311212)
-    MALT_MANUFACTURING = LkOccupationTitle(1, "Malt Manufacturing", 31, 311213)
-    WET_CORN_MILLING = LkOccupationTitle(1, "Wet Corn Milling", 31, 311221)
-    SOYBEAN_AND_OTHER_OILSEED_PROCESSING = LkOccupationTitle(1, "Soybean and Other Oilseed Processing", 31, 311224)
-    FATS_AND_OILS_REFINING_AND_BLENDING = LkOccupationTitle(1, "Fats and Oils Refining and Blending", 31, 311225)
-    BREAKFAST_CEREAL_MANUFACTURING = LkOccupationTitle(1, "Breakfast Cereal Manufacturing", 31, 311230)
-    SUGAR_AND_CONFECTIONERY_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Sugar and Confectionery Product Manufacturing", 31, 3113)
-    BEET_SUGAR_MANUFACTURING = LkOccupationTitle(1, "Beet Sugar Manufacturing", 31, 311313)
-    CANE_SUGAR_MANUFACTURING = LkOccupationTitle(1, "Cane Sugar Manufacturing", 31, 311314)
-    NONCHOCOLATE_CONFECTIONERY_MANUFACTURING = LkOccupationTitle(1, "Nonchocolate Confectionery Manufacturing", 31, 311340)
-    CHOCOLATE_AND_CONFECTIONERY_MANUFACTURING_FROM_CACAO_BEANS = LkOccupationTitle(1, "Chocolate and Confectionery Manufacturing from Cacao Beans", 31, 311351)
-    CONFECTIONERY_MANUFACTURING_FROM_PURCHASED_CHOCOLATE = LkOccupationTitle(1, "Confectionery Manufacturing from Purchased Chocolate", 31, 311352)
-    FRUIT_AND_VEGETABLE_PRESERVING_AND_SPECIALTY_FOOD_MANUFACTURING = LkOccupationTitle(1, "Fruit and Vegetable Preserving and Specialty Food Manufacturing", 31, 3114)
-    FROZEN_FRUIT_JUICE_AND_VEGETABLE_MANUFACTURING = LkOccupationTitle(1, "Frozen Fruit, Juice, and Vegetable Manufacturing", 31, 311411)
-    FROZEN_SPECIALTY_FOOD_MANUFACTURING = LkOccupationTitle(1, "Frozen Specialty Food Manufacturing", 31, 311412)
-    FRUIT_AND_VEGETABLE_CANNING = LkOccupationTitle(1, "Fruit and Vegetable Canning", 31, 311421)
-    SPECIALTY_CANNING = LkOccupationTitle(1, "Specialty Canning", 31, 311422)
-    DRIED_AND_DEHYDRATED_FOOD_MANUFACTURING = LkOccupationTitle(1, "Dried and Dehydrated Food Manufacturing", 31, 311423)
-    DAIRY_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Dairy Product Manufacturing", 31, 3115)
-    FLUID_MILK_MANUFACTURING = LkOccupationTitle(1, "Fluid Milk Manufacturing", 31, 311511)
-    CREAMERY_BUTTER_MANUFACTURING = LkOccupationTitle(1, "Creamery Butter Manufacturing", 31, 311512)
-    CHEESE_MANUFACTURING = LkOccupationTitle(1, "Cheese Manufacturing", 31, 311513)
-    DRY_CONDENSED_AND_EVAPORATED_DAIRY_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Dry, Condensed, and Evaporated Dairy Product Manufacturing", 31, 311514)
-    ICE_CREAM_AND_FROZEN_DESSERT_MANUFACTURING = LkOccupationTitle(1, "Ice Cream and Frozen Dessert Manufacturing", 31, 311520)
-    ANIMAL_SLAUGHTERING_AND_PROCESSING = LkOccupationTitle(1, "Animal Slaughtering and Processing", 31, 3116)
-    ANIMAL_EXCEPT_POULTRY_SLAUGHTERING = LkOccupationTitle(1, "Animal (except Poultry) Slaughtering", 31, 311611)
-    MEAT_PROCESSED_FROM_CARCASSES = LkOccupationTitle(1, "Meat Processed from Carcasses", 31, 311612)
-    RENDERING_AND_MEAT_BYPRODUCT_PROCESSING = LkOccupationTitle(1, "Rendering and Meat Byproduct Processing", 31, 311613)
-    POULTRY_PROCESSING = LkOccupationTitle(1, "Poultry Processing", 31, 311615)
-    SEAFOOD_PRODUCT_PREPARATION_AND_PACKAGING = LkOccupationTitle(1, "Seafood Product Preparation and Packaging", 31, 3117)
-    SEAFOOD_PRODUCT_PREPARATION_AND_PACKAGING = LkOccupationTitle(1, "Seafood Product Preparation and Packaging", 31, 311710)
-    BAKERIES_AND_TORTILLA_MANUFACTURING = LkOccupationTitle(1, "Bakeries and Tortilla Manufacturing", 31, 3118)
-    RETAIL_BAKERIES = LkOccupationTitle(1, "Retail Bakeries", 31, 311811)
-    COMMERCIAL_BAKERIES = LkOccupationTitle(1, "Commercial Bakeries", 31, 311812)
-    FROZEN_CAKES_PIES_AND_OTHER_PASTRIES_MANUFACTURING = LkOccupationTitle(1, "Frozen Cakes, Pies, and Other Pastries Manufacturing", 31, 311813)
-    COOKIE_AND_CRACKER_MANUFACTURING = LkOccupationTitle(1, "Cookie and Cracker Manufacturing", 31, 311821)
-    DRY_PASTA_DOUGH_AND_FLOUR_MIXES_MANUFACTURING_FROM_PURCHASED_FLOUR = LkOccupationTitle(1, "Dry Pasta, Dough, and Flour Mixes Manufacturing from Purchased Flour", 31, 311824)
-    TORTILLA_MANUFACTURING = LkOccupationTitle(1, "Tortilla Manufacturing", 31, 311830)
-    OTHER_FOOD_MANUFACTURING = LkOccupationTitle(1, "Other Food Manufacturing", 31, 3119)
-    ROASTED_NUTS_AND_PEANUT_BUTTER_MANUFACTURING = LkOccupationTitle(1, "Roasted Nuts and Peanut Butter Manufacturing", 31, 311911)
-    OTHER_SNACK_FOOD_MANUFACTURING = LkOccupationTitle(1, "Other Snack Food Manufacturing", 31, 311919)
-    COFFEE_AND_TEA_MANUFACTURING = LkOccupationTitle(1, "Coffee and Tea Manufacturing", 31, 311920)
-    FLAVORING_SYRUP_AND_CONCENTRATE_MANUFACTURING = LkOccupationTitle(1, "Flavoring Syrup and Concentrate Manufacturing", 31, 311930)
-    MAYONNAISE_DRESSING_AND_OTHER_PREPARED_SAUCE_MANUFACTURING = LkOccupationTitle(1, "Mayonnaise, Dressing, and Other Prepared Sauce Manufacturing", 31, 311941)
-    SPICE_AND_EXTRACT_MANUFACTURING = LkOccupationTitle(1, "Spice and Extract Manufacturing", 31, 311942)
-    PERISHABLE_PREPARED_FOOD_MANUFACTURING = LkOccupationTitle(1, "Perishable Prepared Food Manufacturing", 31, 311991)
-    ALL_OTHER_MISCELLANEOUS_FOOD_MANUFACTURING = LkOccupationTitle(1, "All Other Miscellaneous Food Manufacturing", 31, 311999)
-    BEVERAGE_MANUFACTURING = LkOccupationTitle(1, "Beverage Manufacturing", 31, 3121)
-    SOFT_DRINK_MANUFACTURING = LkOccupationTitle(1, "Soft Drink Manufacturing", 31, 312111)
-    BOTTLED_WATER_MANUFACTURING = LkOccupationTitle(1, "Bottled Water Manufacturing", 31, 312112)
-    ICE_MANUFACTURING = LkOccupationTitle(1, "Ice Manufacturing", 31, 312113)
-    BREWERIES = LkOccupationTitle(1, "Breweries", 31, 312120)
-    WINERIES = LkOccupationTitle(1, "Wineries", 31, 312130)
-    DISTILLERIES = LkOccupationTitle(1, "Distilleries", 31, 312140)
-    TOBACCO_MANUFACTURING = LkOccupationTitle(1, "Tobacco Manufacturing", 31, 3122)
-    TOBACCO_MANUFACTURING = LkOccupationTitle(1, "Tobacco Manufacturing", 31, 312230)
-    FIBER_YARN_AND_THREAD_MILLS = LkOccupationTitle(1, "Fiber, Yarn, and Thread Mills", 31, 3131)
-    FIBER_YARN_AND_THREAD_MILLS = LkOccupationTitle(1, "Fiber, Yarn, and Thread Mills", 31, 313110)
-    FABRIC_MILLS = LkOccupationTitle(1, "Fabric Mills", 31, 3132)
-    BROADWOVEN_FABRIC_MILLS = LkOccupationTitle(1, "Broadwoven Fabric Mills", 31, 313210)
-    NARROW_FABRIC_MILLS_AND_SCHIFFLI_MACHINE_EMBROIDERY = LkOccupationTitle(1, "Narrow Fabric Mills and Schiffli Machine Embroidery", 31, 313220)
-    NONWOVEN_FABRIC_MILLS = LkOccupationTitle(1, "Nonwoven Fabric Mills", 31, 313230)
-    KNIT_FABRIC_MILLS = LkOccupationTitle(1, "Knit Fabric Mills", 31, 313240)
-    TEXTILE_AND_FABRIC_FINISHING_AND_FABRIC_COATING_MILLS = LkOccupationTitle(1, "Textile and Fabric Finishing and Fabric Coating Mills", 31, 3133)
-    TEXTILE_AND_FABRIC_FINISHING_MILLS = LkOccupationTitle(1, "Textile and Fabric Finishing Mills", 31, 313310)
-    FABRIC_COATING_MILLS = LkOccupationTitle(1, "Fabric Coating Mills", 31, 313320)
-    TEXTILE_FURNISHINGS_MILLS = LkOccupationTitle(1, "Textile Furnishings Mills", 31, 3141)
-    CARPET_AND_RUG_MILLS = LkOccupationTitle(1, "Carpet and Rug Mills", 31, 314110)
-    CURTAIN_AND_LINEN_MILLS = LkOccupationTitle(1, "Curtain and Linen Mills", 31, 314120)
-    OTHER_TEXTILE_PRODUCT_MILLS = LkOccupationTitle(1, "Other Textile Product Mills", 31, 3149)
-    TEXTILE_BAG_AND_CANVAS_MILLS = LkOccupationTitle(1, "Textile Bag and Canvas Mills", 31, 314910)
-    ROPE_CORDAGE_TWINE_TIRE_CORD_AND_TIRE_FABRIC_MILLS = LkOccupationTitle(1, "Rope, Cordage, Twine, Tire Cord, and Tire Fabric Mills", 31, 314994)
-    ALL_OTHER_MISCELLANEOUS_TEXTILE_PRODUCT_MILLS = LkOccupationTitle(1, "All Other Miscellaneous Textile Product Mills", 31, 314999)
-    APPAREL_KNITTING_MILLS = LkOccupationTitle(1, "Apparel Knitting Mills", 31, 3151)
-    HOSIERY_AND_SOCK_MILLS = LkOccupationTitle(1, "Hosiery and Sock Mills", 31, 315110)
-    OTHER_APPAREL_KNITTING_MILLS = LkOccupationTitle(1, "Other Apparel Knitting Mills", 31, 315190)
-    CUT_AND_SEW_APPAREL_MANUFACTURING = LkOccupationTitle(1, "Cut and Sew Apparel Manufacturing", 31, 3152)
-    CUT_AND_SEW_APPAREL_CONTRACTORS = LkOccupationTitle(1, "Cut and Sew Apparel Contractors", 31, 315210)
-    MENS_AND_BOYS_CUT_AND_SEW_APPAREL_MANUFACTURING = LkOccupationTitle(1, "Men's and Boys' Cut and Sew Apparel Manufacturing", 31, 315220)
-    WOMENS_GIRLS_AND_INFANTS_CUT_AND_SEW_APPAREL_MANUFACTURING = LkOccupationTitle(1, "Women's, Girls', and Infants' Cut and Sew Apparel Manufacturing", 31, 315240)
-    OTHER_CUT_AND_SEW_APPAREL_MANUFACTURING = LkOccupationTitle(1, "Other Cut and Sew Apparel Manufacturing", 31, 315280)
-    APPAREL_ACCESSORIES_AND_OTHER_APPAREL_MANUFACTURING = LkOccupationTitle(1, "Apparel Accessories and Other Apparel Manufacturing", 31, 3159)
-    APPAREL_ACCESSORIES_AND_OTHER_APPAREL_MANUFACTURING = LkOccupationTitle(1, "Apparel Accessories and Other Apparel Manufacturing", 31, 315990)
-    LEATHER_AND_HIDE_TANNING_AND_FINISHING = LkOccupationTitle(1, "Leather and Hide Tanning and Finishing", 31, 3161)
-    LEATHER_AND_HIDE_TANNING_AND_FINISHING = LkOccupationTitle(1, "Leather and Hide Tanning and Finishing", 31, 316110)
-    FOOTWEAR_MANUFACTURING = LkOccupationTitle(1, "Footwear Manufacturing", 31, 3162)
-    FOOTWEAR_MANUFACTURING = LkOccupationTitle(1, "Footwear Manufacturing", 31, 316210)
-    OTHER_LEATHER_AND_ALLIED_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Other Leather and Allied Product Manufacturing", 31, 3169)
-    WOMENS_HANDBAG_AND_PURSE_MANUFACTURING = LkOccupationTitle(1, "Women's Handbag and Purse Manufacturing", 31, 316992)
-    ALL_OTHER_LEATHER_GOOD_AND_ALLIED_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "All Other Leather Good and Allied Product Manufacturing", 31, 316998)
-    SAWMILLS_AND_WOOD_PRESERVATION = LkOccupationTitle(1, "Sawmills and Wood Preservation", 32, 3211)
-    SAWMILLS = LkOccupationTitle(1, "Sawmills", 32, 321113)
-    WOOD_PRESERVATION = LkOccupationTitle(1, "Wood Preservation", 32, 321114)
-    VENEER_PLYWOOD_AND_ENGINEERED_WOOD_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Veneer, Plywood, and Engineered Wood Product Manufacturing", 32, 3212)
-    HARDWOOD_VENEER_AND_PLYWOOD_MANUFACTURING = LkOccupationTitle(1, "Hardwood Veneer and Plywood Manufacturing", 32, 321211)
-    SOFTWOOD_VENEER_AND_PLYWOOD_MANUFACTURING = LkOccupationTitle(1, "Softwood Veneer and Plywood Manufacturing", 32, 321212)
-    ENGINEERED_WOOD_MEMBER_EXCEPT_TRUSS_MANUFACTURING = LkOccupationTitle(1, "Engineered Wood Member (except Truss) Manufacturing", 32, 321213)
-    TRUSS_MANUFACTURING = LkOccupationTitle(1, "Truss Manufacturing", 32, 321214)
-    RECONSTITUTED_WOOD_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Reconstituted Wood Product Manufacturing", 32, 321219)
-    OTHER_WOOD_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Other Wood Product Manufacturing", 32, 3219)
-    WOOD_WINDOW_AND_DOOR_MANUFACTURING = LkOccupationTitle(1, "Wood Window and Door Manufacturing", 32, 321911)
-    CUT_STOCK_RESAWING_LUMBER_AND_PLANING = LkOccupationTitle(1, "Cut Stock, Resawing Lumber, and Planing", 32, 321912)
-    OTHER_MILLWORK_INCLUDING_FLOORING = LkOccupationTitle(1, "Other Millwork (including Flooring)", 32, 321918)
-    WOOD_CONTAINER_AND_PALLET_MANUFACTURING = LkOccupationTitle(1, "Wood Container and Pallet Manufacturing", 32, 321920)
-    MANUFACTURED_HOME_MOBILE_HOME_MANUFACTURING = LkOccupationTitle(1, "Manufactured Home (Mobile Home) Manufacturing", 32, 321991)
-    PREFABRICATED_WOOD_BUILDING_MANUFACTURING = LkOccupationTitle(1, "Prefabricated Wood Building Manufacturing", 32, 321992)
-    ALL_OTHER_MISCELLANEOUS_WOOD_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "All Other Miscellaneous Wood Product Manufacturing", 32, 321999)
-    PULP_PAPER_AND_PAPERBOARD_MILLS = LkOccupationTitle(1, "Pulp, Paper, and Paperboard Mills", 32, 3221)
-    PULP_MILLS = LkOccupationTitle(1, "Pulp Mills", 32, 322110)
-    PAPER_EXCEPT_NEWSPRINT_MILLS = LkOccupationTitle(1, "Paper (except Newsprint) Mills", 32, 322121)
-    NEWSPRINT_MILLS = LkOccupationTitle(1, "Newsprint Mills", 32, 322122)
-    PAPERBOARD_MILLS = LkOccupationTitle(1, "Paperboard Mills", 32, 322130)
-    CONVERTED_PAPER_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Converted Paper Product Manufacturing", 32, 3222)
-    CORRUGATED_AND_SOLID_FIBER_BOX_MANUFACTURING = LkOccupationTitle(1, "Corrugated and Solid Fiber Box Manufacturing", 32, 322211)
-    FOLDING_PAPERBOARD_BOX_MANUFACTURING = LkOccupationTitle(1, "Folding Paperboard Box Manufacturing", 32, 322212)
-    OTHER_PAPERBOARD_CONTAINER_MANUFACTURING = LkOccupationTitle(1, "Other Paperboard Container Manufacturing", 32, 322219)
-    PAPER_BAG_AND_COATED_AND_TREATED_PAPER_MANUFACTURING = LkOccupationTitle(1, "Paper Bag and Coated and Treated Paper Manufacturing", 32, 322220)
-    STATIONERY_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Stationery Product Manufacturing", 32, 322230)
-    SANITARY_PAPER_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Sanitary Paper Product Manufacturing", 32, 322291)
-    ALL_OTHER_CONVERTED_PAPER_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "All Other Converted Paper Product Manufacturing", 32, 322299)
-    PRINTING_AND_RELATED_SUPPORT_ACTIVITIES = LkOccupationTitle(1, "Printing and Related Support Activities", 32, 3231)
-    COMMERCIAL_PRINTING_EXCEPT_SCREEN_AND_BOOKS = LkOccupationTitle(1, "Commercial Printing (except Screen and Books)", 32, 323111)
-    COMMERCIAL_SCREEN_PRINTING = LkOccupationTitle(1, "Commercial Screen Printing", 32, 323113)
-    BOOKS_PRINTING = LkOccupationTitle(1, "Books Printing", 32, 323117)
-    SUPPORT_ACTIVITIES_FOR_PRINTING = LkOccupationTitle(1, "Support Activities for Printing", 32, 323120)
-    PETROLEUM_AND_COAL_PRODUCTS_MANUFACTURING = LkOccupationTitle(1, "Petroleum and Coal Products Manufacturing", 32, 3241)
-    PETROLEUM_REFINERIES = LkOccupationTitle(1, "Petroleum Refineries", 32, 324110)
-    ASPHALT_PAVING_MIXTURE_AND_BLOCK_MANUFACTURING = LkOccupationTitle(1, "Asphalt Paving Mixture and Block Manufacturing", 32, 324121)
-    ASPHALT_SHINGLE_AND_COATING_MATERIALS_MANUFACTURING = LkOccupationTitle(1, "Asphalt Shingle and Coating Materials Manufacturing", 32, 324122)
-    PETROLEUM_LUBRICATING_OIL_AND_GREASE_MANUFACTURING = LkOccupationTitle(1, "Petroleum Lubricating Oil and Grease Manufacturing", 32, 324191)
-    ALL_OTHER_PETROLEUM_AND_COAL_PRODUCTS_MANUFACTURING = LkOccupationTitle(1, "All Other Petroleum and Coal Products Manufacturing", 32, 324199)
-    BASIC_CHEMICAL_MANUFACTURING = LkOccupationTitle(1, "Basic Chemical Manufacturing", 32, 3251)
-    PETROCHEMICAL_MANUFACTURING = LkOccupationTitle(1, "Petrochemical Manufacturing", 32, 325110)
-    INDUSTRIAL_GAS_MANUFACTURING = LkOccupationTitle(1, "Industrial Gas Manufacturing", 32, 325120)
-    SYNTHETIC_DYE_AND_PIGMENT_MANUFACTURING = LkOccupationTitle(1, "Synthetic Dye and Pigment Manufacturing", 32, 325130)
-    OTHER_BASIC_INORGANIC_CHEMICAL_MANUFACTURING = LkOccupationTitle(1, "Other Basic Inorganic Chemical Manufacturing", 32, 325180)
-    ETHYL_ALCOHOL_MANUFACTURING = LkOccupationTitle(1, "Ethyl Alcohol Manufacturing", 32, 325193)
-    CYCLIC_CRUDE_INTERMEDIATE_AND_GUM_AND_WOOD_CHEMICAL_MANUFACTURING = LkOccupationTitle(1, "Cyclic Crude, Intermediate, and Gum and Wood Chemical Manufacturing", 32, 325194)
-    ALL_OTHER_BASIC_ORGANIC_CHEMICAL_MANUFACTURING = LkOccupationTitle(1, "All Other Basic Organic Chemical Manufacturing", 32, 325199)
-    RESIN_SYNTHETIC_RUBBER_AND_ARTIFICIAL_AND_SYNTHETIC_FIBERS_AND_FILAMENTS_MANUFACTURING = LkOccupationTitle(1, "Resin, Synthetic Rubber, and Artificial and Synthetic Fibers and Filaments Manufacturing", 32, 3252)
-    PLASTICS_MATERIAL_AND_RESIN_MANUFACTURING = LkOccupationTitle(1, "Plastics Material and Resin Manufacturing", 32, 325211)
-    SYNTHETIC_RUBBER_MANUFACTURING = LkOccupationTitle(1, "Synthetic Rubber Manufacturing", 32, 325212)
-    ARTIFICIAL_AND_SYNTHETIC_FIBERS_AND_FILAMENTS_MANUFACTURING = LkOccupationTitle(1, "Artificial and Synthetic Fibers and Filaments Manufacturing", 32, 325220)
-    PESTICIDE_FERTILIZER_AND_OTHER_AGRICULTURAL_CHEMICAL_MANUFACTURING = LkOccupationTitle(1, "Pesticide, Fertilizer, and Other Agricultural Chemical Manufacturing", 32, 3253)
-    NITROGENOUS_FERTILIZER_MANUFACTURING = LkOccupationTitle(1, "Nitrogenous Fertilizer Manufacturing", 32, 325311)
-    PHOSPHATIC_FERTILIZER_MANUFACTURING = LkOccupationTitle(1, "Phosphatic Fertilizer Manufacturing", 32, 325312)
-    FERTILIZER_MIXING_ONLY_MANUFACTURING = LkOccupationTitle(1, "Fertilizer (Mixing Only) Manufacturing", 32, 325314)
-    PESTICIDE_AND_OTHER_AGRICULTURAL_CHEMICAL_MANUFACTURING = LkOccupationTitle(1, "Pesticide and Other Agricultural Chemical Manufacturing", 32, 325320)
-    PHARMACEUTICAL_AND_MEDICINE_MANUFACTURING = LkOccupationTitle(1, "Pharmaceutical and Medicine Manufacturing", 32, 3254)
-    MEDICINAL_AND_BOTANICAL_MANUFACTURING = LkOccupationTitle(1, "Medicinal and Botanical Manufacturing", 32, 325411)
-    PHARMACEUTICAL_PREPARATION_MANUFACTURING = LkOccupationTitle(1, "Pharmaceutical Preparation Manufacturing", 32, 325412)
-    INVITRO_DIAGNOSTIC_SUBSTANCE_MANUFACTURING = LkOccupationTitle(1, "In-Vitro Diagnostic Substance Manufacturing", 32, 325413)
-    BIOLOGICAL_PRODUCT_EXCEPT_DIAGNOSTIC_MANUFACTURING = LkOccupationTitle(1, "Biological Product (except Diagnostic) Manufacturing", 32, 325414)
-    PAINT_COATING_AND_ADHESIVE_MANUFACTURING = LkOccupationTitle(1, "Paint, Coating, and Adhesive Manufacturing", 32, 3255)
-    PAINT_AND_COATING_MANUFACTURING = LkOccupationTitle(1, "Paint and Coating Manufacturing", 32, 325510)
-    ADHESIVE_MANUFACTURING = LkOccupationTitle(1, "Adhesive Manufacturing", 32, 325520)
-    SOAP_CLEANING_COMPOUND_AND_TOILET_PREPARATION_MANUFACTURING = LkOccupationTitle(1, "Soap, Cleaning Compound, and Toilet Preparation Manufacturing", 32, 3256)
-    SOAP_AND_OTHER_DETERGENT_MANUFACTURING = LkOccupationTitle(1, "Soap and Other Detergent Manufacturing", 32, 325611)
-    POLISH_AND_OTHER_SANITATION_GOOD_MANUFACTURING = LkOccupationTitle(1, "Polish and Other Sanitation Good Manufacturing", 32, 325612)
-    SURFACE_ACTIVE_AGENT_MANUFACTURING = LkOccupationTitle(1, "Surface Active Agent Manufacturing", 32, 325613)
-    TOILET_PREPARATION_MANUFACTURING = LkOccupationTitle(1, "Toilet Preparation Manufacturing", 32, 325620)
-    OTHER_CHEMICAL_PRODUCT_AND_PREPARATION_MANUFACTURING = LkOccupationTitle(1, "Other Chemical Product and Preparation Manufacturing", 32, 3259)
-    PRINTING_INK_MANUFACTURING = LkOccupationTitle(1, "Printing Ink Manufacturing", 32, 325910)
-    EXPLOSIVES_MANUFACTURING = LkOccupationTitle(1, "Explosives Manufacturing", 32, 325920)
-    CUSTOM_COMPOUNDING_OF_PURCHASED_RESINS = LkOccupationTitle(1, "Custom Compounding of Purchased Resins", 32, 325991)
-    PHOTOGRAPHIC_FILM_PAPER_PLATE_AND_CHEMICAL_MANUFACTURING = LkOccupationTitle(1, "Photographic Film, Paper, Plate, and Chemical Manufacturing", 32, 325992)
-    ALL_OTHER_MISCELLANEOUS_CHEMICAL_PRODUCT_AND_PREPARATION_MANUFACTURING = LkOccupationTitle(1, "All Other Miscellaneous Chemical Product and Preparation Manufacturing", 32, 325998)
-    PLASTICS_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Plastics Product Manufacturing", 32, 3261)
-    PLASTICS_BAG_AND_POUCH_MANUFACTURING = LkOccupationTitle(1, "Plastics Bag and Pouch Manufacturing", 32, 326111)
-    PLASTICS_PACKAGING_FILM_AND_SHEET_INCLUDING_LAMINATED_MANUFACTURING = LkOccupationTitle(1, "Plastics Packaging Film and Sheet (including Laminated) Manufacturing", 32, 326112)
-    UNLAMINATED_PLASTICS_FILM_AND_SHEET_EXCEPT_PACKAGING_MANUFACTURING = LkOccupationTitle(1, "Unlaminated Plastics Film and Sheet (except Packaging) Manufacturing", 32, 326113)
-    UNLAMINATED_PLASTICS_PROFILE_SHAPE_MANUFACTURING = LkOccupationTitle(1, "Unlaminated Plastics Profile Shape Manufacturing", 32, 326121)
-    PLASTICS_PIPE_AND_PIPE_FITTING_MANUFACTURING = LkOccupationTitle(1, "Plastics Pipe and Pipe Fitting Manufacturing", 32, 326122)
-    LAMINATED_PLASTICS_PLATE_SHEET_EXCEPT_PACKAGING_AND_SHAPE_MANUFACTURING = LkOccupationTitle(1, "Laminated Plastics Plate, Sheet (except Packaging), and Shape Manufacturing", 32, 326130)
-    POLYSTYRENE_FOAM_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Polystyrene Foam Product Manufacturing", 32, 326140)
-    URETHANE_AND_OTHER_FOAM_PRODUCT_EXCEPT_POLYSTYRENE_MANUFACTURING = LkOccupationTitle(1, "Urethane and Other Foam Product (except Polystyrene) Manufacturing", 32, 326150)
-    PLASTICS_BOTTLE_MANUFACTURING = LkOccupationTitle(1, "Plastics Bottle Manufacturing", 32, 326160)
-    PLASTICS_PLUMBING_FIXTURE_MANUFACTURING = LkOccupationTitle(1, "Plastics Plumbing Fixture Manufacturing", 32, 326191)
-    ALL_OTHER_PLASTICS_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "All Other Plastics Product Manufacturing", 32, 326199)
-    RUBBER_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Rubber Product Manufacturing", 32, 3262)
-    TIRE_MANUFACTURING_EXCEPT_RETREADING = LkOccupationTitle(1, "Tire Manufacturing (except Retreading)", 32, 326211)
-    TIRE_RETREADING = LkOccupationTitle(1, "Tire Retreading", 32, 326212)
-    RUBBER_AND_PLASTICS_HOSES_AND_BELTING_MANUFACTURING = LkOccupationTitle(1, "Rubber and Plastics Hoses and Belting Manufacturing", 32, 326220)
-    RUBBER_PRODUCT_MANUFACTURING_FOR_MECHANICAL_USE = LkOccupationTitle(1, "Rubber Product Manufacturing for Mechanical Use", 32, 326291)
-    ALL_OTHER_RUBBER_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "All Other Rubber Product Manufacturing", 32, 326299)
-    CLAY_PRODUCT_AND_REFRACTORY_MANUFACTURING = LkOccupationTitle(1, "Clay Product and Refractory Manufacturing", 32, 3271)
-    POTTERY_CERAMICS_AND_PLUMBING_FIXTURE_MANUFACTURING = LkOccupationTitle(1, "Pottery, Ceramics, and Plumbing Fixture Manufacturing", 32, 327110)
-    CLAY_BUILDING_MATERIAL_AND_REFRACTORIES_MANUFACTURING = LkOccupationTitle(1, "Clay Building Material and Refractories Manufacturing", 32, 327120)
-    GLASS_AND_GLASS_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Glass and Glass Product Manufacturing", 32, 3272)
-    FLAT_GLASS_MANUFACTURING = LkOccupationTitle(1, "Flat Glass Manufacturing", 32, 327211)
-    OTHER_PRESSED_AND_BLOWN_GLASS_AND_GLASSWARE_MANUFACTURING = LkOccupationTitle(1, "Other Pressed and Blown Glass and Glassware Manufacturing", 32, 327212)
-    GLASS_CONTAINER_MANUFACTURING = LkOccupationTitle(1, "Glass Container Manufacturing", 32, 327213)
-    GLASS_PRODUCT_MANUFACTURING_MADE_OF_PURCHASED_GLASS = LkOccupationTitle(1, "Glass Product Manufacturing Made of Purchased Glass", 32, 327215)
-    CEMENT_AND_CONCRETE_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Cement and Concrete Product Manufacturing", 32, 3273)
-    CEMENT_MANUFACTURING = LkOccupationTitle(1, "Cement Manufacturing", 32, 327310)
-    READYMIX_CONCRETE_MANUFACTURING = LkOccupationTitle(1, "Ready-Mix Concrete Manufacturing", 32, 327320)
-    CONCRETE_BLOCK_AND_BRICK_MANUFACTURING = LkOccupationTitle(1, "Concrete Block and Brick Manufacturing", 32, 327331)
-    CONCRETE_PIPE_MANUFACTURING = LkOccupationTitle(1, "Concrete Pipe Manufacturing", 32, 327332)
-    OTHER_CONCRETE_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Other Concrete Product Manufacturing", 32, 327390)
-    LIME_AND_GYPSUM_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Lime and Gypsum Product Manufacturing", 32, 3274)
-    LIME_MANUFACTURING = LkOccupationTitle(1, "Lime Manufacturing", 32, 327410)
-    GYPSUM_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Gypsum Product Manufacturing", 32, 327420)
-    OTHER_NONMETALLIC_MINERAL_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Other Nonmetallic Mineral Product Manufacturing", 32, 3279)
-    ABRASIVE_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Abrasive Product Manufacturing", 32, 327910)
-    CUT_STONE_AND_STONE_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Cut Stone and Stone Product Manufacturing", 32, 327991)
-    GROUND_OR_TREATED_MINERAL_AND_EARTH_MANUFACTURING = LkOccupationTitle(1, "Ground or Treated Mineral and Earth Manufacturing", 32, 327992)
-    MINERAL_WOOL_MANUFACTURING = LkOccupationTitle(1, "Mineral Wool Manufacturing", 32, 327993)
-    ALL_OTHER_MISCELLANEOUS_NONMETALLIC_MINERAL_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "All Other Miscellaneous Nonmetallic Mineral Product Manufacturing", 32, 327999)
-    IRON_AND_STEEL_MILLS_AND_FERROALLOY_MANUFACTURING = LkOccupationTitle(1, "Iron and Steel Mills and Ferroalloy Manufacturing", 33, 3311)
-    IRON_AND_STEEL_MILLS_AND_FERROALLOY_MANUFACTURING = LkOccupationTitle(1, "Iron and Steel Mills and Ferroalloy Manufacturing", 33, 331110)
-    STEEL_PRODUCT_MANUFACTURING_FROM_PURCHASED_STEEL = LkOccupationTitle(1, "Steel Product Manufacturing from Purchased Steel", 33, 3312)
-    IRON_AND_STEEL_PIPE_AND_TUBE_MANUFACTURING_FROM_PURCHASED_STEEL = LkOccupationTitle(1, "Iron and Steel Pipe and Tube Manufacturing from Purchased Steel", 33, 331210)
-    ROLLED_STEEL_SHAPE_MANUFACTURING = LkOccupationTitle(1, "Rolled Steel Shape Manufacturing", 33, 331221)
-    STEEL_WIRE_DRAWING = LkOccupationTitle(1, "Steel Wire Drawing", 33, 331222)
-    ALUMINA_AND_ALUMINUM_PRODUCTION_AND_PROCESSING = LkOccupationTitle(1, "Alumina and Aluminum Production and Processing", 33, 3313)
-    ALUMINA_REFINING_AND_PRIMARY_ALUMINUM_PRODUCTION = LkOccupationTitle(1, "Alumina Refining and Primary Aluminum Production", 33, 331313)
-    SECONDARY_SMELTING_AND_ALLOYING_OF_ALUMINUM = LkOccupationTitle(1, "Secondary Smelting and Alloying of Aluminum", 33, 331314)
-    ALUMINUM_SHEET_PLATE_AND_FOIL_MANUFACTURING = LkOccupationTitle(1, "Aluminum Sheet, Plate, and Foil Manufacturing", 33, 331315)
-    OTHER_ALUMINUM_ROLLING_DRAWING_AND_EXTRUDING = LkOccupationTitle(1, "Other Aluminum Rolling, Drawing, and Extruding", 33, 331318)
-    NONFERROUS_METAL_EXCEPT_ALUMINUM_PRODUCTION_AND_PROCESSING = LkOccupationTitle(1, "Nonferrous Metal (except Aluminum) Production and Processing", 33, 3314)
-    NONFERROUS_METAL_EXCEPT_ALUMINUM_SMELTING_AND_REFINING = LkOccupationTitle(1, "Nonferrous Metal (except Aluminum) Smelting and Refining", 33, 331410)
-    COPPER_ROLLING_DRAWING_EXTRUDING_AND_ALLOYING = LkOccupationTitle(1, "Copper Rolling, Drawing, Extruding, and Alloying", 33, 331420)
-    NONFERROUS_METAL_EXCEPT_COPPER_AND_ALUMINUM_ROLLING_DRAWING_AND_EXTRUDING = LkOccupationTitle(1, "Nonferrous Metal (except Copper and Aluminum) Rolling, Drawing, and Extruding", 33, 331491)
-    SECONDARY_SMELTING_REFINING_AND_ALLOYING_OF_NONFERROUS_METAL_EXCEPT_COPPER_AND_ALUMINUM = LkOccupationTitle(1, "Secondary Smelting, Refining, and Alloying of Nonferrous Metal (except Copper and Aluminum)", 33, 331492)
-    FOUNDRIES = LkOccupationTitle(1, "Foundries", 33, 3315)
-    IRON_FOUNDRIES = LkOccupationTitle(1, "Iron Foundries", 33, 331511)
-    STEEL_INVESTMENT_FOUNDRIES = LkOccupationTitle(1, "Steel Investment Foundries", 33, 331512)
-    STEEL_FOUNDRIES_EXCEPT_INVESTMENT = LkOccupationTitle(1, "Steel Foundries (except Investment)", 33, 331513)
-    NONFERROUS_METAL_DIECASTING_FOUNDRIES = LkOccupationTitle(1, "Nonferrous Metal Die-Casting Foundries", 33, 331523)
-    ALUMINUM_FOUNDRIES_EXCEPT_DIECASTING = LkOccupationTitle(1, "Aluminum Foundries (except Die-Casting)", 33, 331524)
-    OTHER_NONFERROUS_METAL_FOUNDRIES_EXCEPT_DIECASTING = LkOccupationTitle(1, "Other Nonferrous Metal Foundries (except Die-Casting)", 33, 331529)
-    FORGING_AND_STAMPING = LkOccupationTitle(1, "Forging and Stamping", 33, 3321)
-    IRON_AND_STEEL_FORGING = LkOccupationTitle(1, "Iron and Steel Forging", 33, 332111)
-    NONFERROUS_FORGING = LkOccupationTitle(1, "Nonferrous Forging", 33, 332112)
-    CUSTOM_ROLL_FORMING = LkOccupationTitle(1, "Custom Roll Forming", 33, 332114)
-    POWDER_METALLURGY_PART_MANUFACTURING = LkOccupationTitle(1, "Powder Metallurgy Part Manufacturing", 33, 332117)
-    METAL_CROWN_CLOSURE_AND_OTHER_METAL_STAMPING_EXCEPT_AUTOMOTIVE = LkOccupationTitle(1, "Metal Crown, Closure, and Other Metal Stamping (except Automotive)", 33, 332119)
-    CUTLERY_AND_HANDTOOL_MANUFACTURING = LkOccupationTitle(1, "Cutlery and Handtool Manufacturing", 33, 3322)
-    METAL_KITCHEN_COOKWARE_UTENSIL_CUTLERY_AND_FLATWARE_EXCEPT_PRECIOUS_MANUFACTURING = LkOccupationTitle(1, "Metal Kitchen Cookware, Utensil, Cutlery, and Flatware (except Precious) Manufacturing273", 33, 332215)
-    SAW_BLADE_AND_HANDTOOL_MANUFACTURING = LkOccupationTitle(1, "Saw Blade and Handtool Manufacturing", 33, 332216)
-    ARCHITECTURAL_AND_STRUCTURAL_METALS_MANUFACTURING = LkOccupationTitle(1, "Architectural and Structural Metals Manufacturing", 33, 3323)
-    PREFABRICATED_METAL_BUILDING_AND_COMPONENT_MANUFACTURING = LkOccupationTitle(1, "Prefabricated Metal Building and Component Manufacturing", 33, 332311)
-    FABRICATED_STRUCTURAL_METAL_MANUFACTURING = LkOccupationTitle(1, "Fabricated Structural Metal Manufacturing", 33, 332312)
-    PLATE_WORK_MANUFACTURING = LkOccupationTitle(1, "Plate Work Manufacturing", 33, 332313)
-    METAL_WINDOW_AND_DOOR_MANUFACTURING = LkOccupationTitle(1, "Metal Window and Door Manufacturing", 33, 332321)
-    SHEET_METAL_WORK_MANUFACTURING = LkOccupationTitle(1, "Sheet Metal Work Manufacturing", 33, 332322)
-    ORNAMENTAL_AND_ARCHITECTURAL_METAL_WORK_MANUFACTURING = LkOccupationTitle(1, "Ornamental and Architectural Metal Work Manufacturing", 33, 332323)
-    BOILER_TANK_AND_SHIPPING_CONTAINER_MANUFACTURING = LkOccupationTitle(1, "Boiler, Tank, and Shipping Container Manufacturing", 33, 3324)
-    POWER_BOILER_AND_HEAT_EXCHANGER_MANUFACTURING = LkOccupationTitle(1, "Power Boiler and Heat Exchanger Manufacturing", 33, 332410)
-    METAL_TANK_HEAVY_GAUGE_MANUFACTURING = LkOccupationTitle(1, "Metal Tank (Heavy Gauge) Manufacturing", 33, 332420)
-    METAL_CAN_MANUFACTURING = LkOccupationTitle(1, "Metal Can Manufacturing", 33, 332431)
-    OTHER_METAL_CONTAINER_MANUFACTURING = LkOccupationTitle(1, "Other Metal Container Manufacturing", 33, 332439)
-    HARDWARE_MANUFACTURING = LkOccupationTitle(1, "Hardware Manufacturing", 33, 3325)
-    HARDWARE_MANUFACTURING = LkOccupationTitle(1, "Hardware Manufacturing", 33, 332510)
-    SPRING_AND_WIRE_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Spring and Wire Product Manufacturing", 33, 3326)
-    SPRING_MANUFACTURING = LkOccupationTitle(1, "Spring Manufacturing", 33, 332613)
-    OTHER_FABRICATED_WIRE_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Other Fabricated Wire Product Manufacturing", 33, 332618)
-    MACHINE_SHOPS_TURNED_PRODUCT_AND_SCREW_NUT_AND_BOLT_MANUFACTURING = LkOccupationTitle(1, "Machine Shops; Turned Product; and Screw, Nut, and Bolt Manufacturing", 33, 3327)
-    MACHINE_SHOPS = LkOccupationTitle(1, "Machine Shops", 33, 332710)
-    PRECISION_TURNED_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Precision Turned Product Manufacturing", 33, 332721)
-    BOLT_NUT_SCREW_RIVET_AND_WASHER_MANUFACTURING = LkOccupationTitle(1, "Bolt, Nut, Screw, Rivet, and Washer Manufacturing", 33, 332722)
-    COATING_ENGRAVING_HEAT_TREATING_AND_ALLIED_ACTIVITIES = LkOccupationTitle(1, "Coating, Engraving, Heat Treating, and Allied Activities", 33, 3328)
-    METAL_HEAT_TREATING = LkOccupationTitle(1, "Metal Heat Treating", 33, 332811)
-    METAL_COATING_ENGRAVING_EXCEPT_JEWELRY_AND_SILVERWARE_AND_ALLIED_SERVICES_TO_MANUFACTURERS = LkOccupationTitle(1, "Metal Coating, Engraving (except Jewelry and Silverware), and Allied Services to Manufacturers", 33, 332812)
-    ELECTROPLATING_PLATING_POLISHING_ANODIZING_AND_COLORING = LkOccupationTitle(1, "Electroplating, Plating, Polishing, Anodizing, and Coloring", 33, 332813)
-    OTHER_FABRICATED_METAL_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Other Fabricated Metal Product Manufacturing", 33, 3329)
-    INDUSTRIAL_VALVE_MANUFACTURING = LkOccupationTitle(1, "Industrial Valve Manufacturing", 33, 332911)
-    FLUID_POWER_VALVE_AND_HOSE_FITTING_MANUFACTURING = LkOccupationTitle(1, "Fluid Power Valve and Hose Fitting Manufacturing", 33, 332912)
-    PLUMBING_FIXTURE_FITTING_AND_TRIM_MANUFACTURING = LkOccupationTitle(1, "Plumbing Fixture Fitting and Trim Manufacturing", 33, 332913)
-    OTHER_METAL_VALVE_AND_PIPE_FITTING_MANUFACTURING = LkOccupationTitle(1, "Other Metal Valve and Pipe Fitting Manufacturing", 33, 332919)
-    BALL_AND_ROLLER_BEARING_MANUFACTURING = LkOccupationTitle(1, "Ball and Roller Bearing Manufacturing", 33, 332991)
-    SMALL_ARMS_AMMUNITION_MANUFACTURING = LkOccupationTitle(1, "Small Arms Ammunition Manufacturing", 33, 332992)
-    AMMUNITION_EXCEPT_SMALL_ARMS_MANUFACTURING = LkOccupationTitle(1, "Ammunition (except Small Arms) Manufacturing", 33, 332993)
-    SMALL_ARMS_ORDNANCE_AND_ORDNANCE_ACCESSORIES_MANUFACTURING = LkOccupationTitle(1, "Small Arms, Ordnance, and Ordnance Accessories Manufacturing", 33, 332994)
-    FABRICATED_PIPE_AND_PIPE_FITTING_MANUFACTURING = LkOccupationTitle(1, "Fabricated Pipe and Pipe Fitting Manufacturing", 33, 332996)
-    ALL_OTHER_MISCELLANEOUS_FABRICATED_METAL_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "All Other Miscellaneous Fabricated Metal Product Manufacturing", 33, 332999)
-    AGRICULTURE_CONSTRUCTION_AND_MINING_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Agriculture, Construction, and Mining Machinery Manufacturing", 33, 3331)
-    FARM_MACHINERY_AND_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Farm Machinery and Equipment Manufacturing", 33, 333111)
-    LAWN_AND_GARDEN_TRACTOR_AND_HOME_LAWN_AND_GARDEN_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Lawn and Garden Tractor and Home Lawn and Garden Equipment Manufacturing", 33, 333112)
-    CONSTRUCTION_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Construction Machinery Manufacturing", 33, 333120)
-    MINING_MACHINERY_AND_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Mining Machinery and Equipment Manufacturing", 33, 333131)
-    OIL_AND_GAS_FIELD_MACHINERY_AND_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Oil and Gas Field Machinery and Equipment Manufacturing", 33, 333132)
-    INDUSTRIAL_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Industrial Machinery Manufacturing", 33, 3332)
-    FOOD_PRODUCT_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Food Product Machinery Manufacturing", 33, 333241)
-    SEMICONDUCTOR_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Semiconductor Machinery Manufacturing", 33, 333242)
-    SAWMILL_WOODWORKING_AND_PAPER_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Sawmill, Woodworking, and Paper Machinery Manufacturing", 33, 333243)
-    PRINTING_MACHINERY_AND_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Printing Machinery and Equipment Manufacturing", 33, 333244)
-    OTHER_INDUSTRIAL_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Other Industrial Machinery Manufacturing", 33, 333249)
-    COMMERCIAL_AND_SERVICE_INDUSTRY_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Commercial and Service Industry Machinery Manufacturing", 33, 3333)
-    OPTICAL_INSTRUMENT_AND_LENS_MANUFACTURING = LkOccupationTitle(1, "Optical Instrument and Lens Manufacturing", 33, 333314)
-    PHOTOGRAPHIC_AND_PHOTOCOPYING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Photographic and Photocopying Equipment Manufacturing", 33, 333316)
-    OTHER_COMMERCIAL_AND_SERVICE_INDUSTRY_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Other Commercial and Service Industry Machinery Manufacturing", 33, 333318)
-    VENTILATION_HEATING_AIRCONDITIONING_AND_COMMERCIAL_REFRIGERATION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Ventilation, Heating, Air-Conditioning, and Commercial Refrigeration Equipment Manufacturing", 33, 3334)
-    INDUSTRIAL_AND_COMMERCIAL_FAN_AND_BLOWER_AND_AIR_PURIFICATION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Industrial and Commercial Fan and Blower and Air Purification Equipment Manufacturing123", 33, 333413)
-    HEATING_EQUIPMENT_EXCEPT_WARM_AIR_FURNACES_MANUFACTURING = LkOccupationTitle(1, "Heating Equipment (except Warm Air Furnaces) Manufacturing", 33, 333414)
-    AIRCONDITIONING_AND_WARM_AIR_HEATING_EQUIPMENT_AND_COMMERCIAL_AND_INDUSTRIAL_REFRIGERATION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Air-Conditioning and Warm Air Heating Equipment and Commercial and Industrial Refrigeration Equipment Manufacturing", 33, 333415)
-    METALWORKING_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Metalworking Machinery Manufacturing", 33, 3335)
-    INDUSTRIAL_MOLD_MANUFACTURING = LkOccupationTitle(1, "Industrial Mold Manufacturing", 33, 333511)
-    SPECIAL_DIE_AND_TOOL_DIE_SET_JIG_AND_FIXTURE_MANUFACTURING = LkOccupationTitle(1, "Special Die and Tool, Die Set, Jig, and Fixture Manufacturing", 33, 333514)
-    CUTTING_TOOL_AND_MACHINE_TOOL_ACCESSORY_MANUFACTURING = LkOccupationTitle(1, "Cutting Tool and Machine Tool Accessory Manufacturing", 33, 333515)
-    MACHINE_TOOL_MANUFACTURING = LkOccupationTitle(1, "Machine Tool Manufacturing", 33, 333517)
-    ROLLING_MILL_AND_OTHER_METALWORKING_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Rolling Mill and Other Metalworking Machinery Manufacturing", 33, 333519)
-    ENGINE_TURBINE_AND_POWER_TRANSMISSION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Engine, Turbine, and Power Transmission Equipment Manufacturing", 33, 3336)
-    TURBINE_AND_TURBINE_GENERATOR_SET_UNITS_MANUFACTURING = LkOccupationTitle(1, "Turbine and Turbine Generator Set Units Manufacturing", 33, 333611)
-    SPEED_CHANGER_INDUSTRIAL_HIGHSPEED_DRIVE_AND_GEAR_MANUFACTURING = LkOccupationTitle(1, "Speed Changer, Industrial High-Speed Drive, and Gear Manufacturing", 33, 333612)
-    MECHANICAL_POWER_TRANSMISSION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Mechanical Power Transmission Equipment Manufacturing", 33, 333613)
-    OTHER_ENGINE_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Other Engine Equipment Manufacturing", 33, 333618)
-    OTHER_GENERAL_PURPOSE_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Other General Purpose Machinery Manufacturing", 33, 3339)
-    AIR_AND_GAS_COMPRESSOR_MANUFACTURING = LkOccupationTitle(1, "Air and Gas Compressor Manufacturing", 33, 333912)
-    MEASURING_DISPENSING_AND_OTHER_PUMPING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Measuring, Dispensing, and Other Pumping Equipment Manufacturing", 33, 333914)
-    ELEVATOR_AND_MOVING_STAIRWAY_MANUFACTURING = LkOccupationTitle(1, "Elevator and Moving Stairway Manufacturing", 33, 333921)
-    CONVEYOR_AND_CONVEYING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Conveyor and Conveying Equipment Manufacturing", 33, 333922)
-    OVERHEAD_TRAVELING_CRANE_HOIST_AND_MONORAIL_SYSTEM_MANUFACTURING = LkOccupationTitle(1, "Overhead Traveling Crane, Hoist, and Monorail System Manufacturing", 33, 333923)
-    INDUSTRIAL_TRUCK_TRACTOR_TRAILER_AND_STACKER_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Industrial Truck, Tractor, Trailer, and Stacker Machinery Manufacturing", 33, 333924)
-    POWERDRIVEN_HANDTOOL_MANUFACTURING = LkOccupationTitle(1, "Power-Driven Handtool Manufacturing", 33, 333991)
-    WELDING_AND_SOLDERING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Welding and Soldering Equipment Manufacturing", 33, 333992)
-    PACKAGING_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "Packaging Machinery Manufacturing", 33, 333993)
-    INDUSTRIAL_PROCESS_FURNACE_AND_OVEN_MANUFACTURING = LkOccupationTitle(1, "Industrial Process Furnace and Oven Manufacturing", 33, 333994)
-    FLUID_POWER_CYLINDER_AND_ACTUATOR_MANUFACTURING = LkOccupationTitle(1, "Fluid Power Cylinder and Actuator Manufacturing", 33, 333995)
-    FLUID_POWER_PUMP_AND_MOTOR_MANUFACTURING = LkOccupationTitle(1, "Fluid Power Pump and Motor Manufacturing", 33, 333996)
-    SCALE_AND_BALANCE_MANUFACTURING = LkOccupationTitle(1, "Scale and Balance Manufacturing", 33, 333997)
-    ALL_OTHER_MISCELLANEOUS_GENERAL_PURPOSE_MACHINERY_MANUFACTURING = LkOccupationTitle(1, "All Other Miscellaneous General Purpose Machinery Manufacturing", 33, 333999)
-    COMPUTER_AND_PERIPHERAL_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Computer and Peripheral Equipment Manufacturing", 33, 3341)
-    ELECTRONIC_COMPUTER_MANUFACTURING = LkOccupationTitle(1, "Electronic Computer Manufacturing", 33, 334111)
-    COMPUTER_STORAGE_DEVICE_MANUFACTURING = LkOccupationTitle(1, "Computer Storage Device Manufacturing", 33, 334112)
-    COMPUTER_TERMINAL_AND_OTHER_COMPUTER_PERIPHERAL_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Computer Terminal and Other Computer Peripheral Equipment Manufacturing", 33, 334118)
-    COMMUNICATIONS_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Communications Equipment Manufacturing", 33, 3342)
-    TELEPHONE_APPARATUS_MANUFACTURING = LkOccupationTitle(1, "Telephone Apparatus Manufacturing", 33, 334210)
-    RADIO_AND_TELEVISION_BROADCASTING_AND_WIRELESS_COMMUNICATIONS_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Radio and Television Broadcasting and Wireless Communications Equipment Manufacturing163", 33, 334220)
-    OTHER_COMMUNICATIONS_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Other Communications Equipment Manufacturing", 33, 334290)
-    AUDIO_AND_VIDEO_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Audio and Video Equipment Manufacturing", 33, 3343)
-    AUDIO_AND_VIDEO_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Audio and Video Equipment Manufacturing", 33, 334310)
-    SEMICONDUCTOR_AND_OTHER_ELECTRONIC_COMPONENT_MANUFACTURING = LkOccupationTitle(1, "Semiconductor and Other Electronic Component Manufacturing", 33, 3344)
-    BARE_PRINTED_CIRCUIT_BOARD_MANUFACTURING = LkOccupationTitle(1, "Bare Printed Circuit Board Manufacturing", 33, 334412)
-    SEMICONDUCTOR_AND_RELATED_DEVICE_MANUFACTURING = LkOccupationTitle(1, "Semiconductor and Related Device Manufacturing", 33, 334413)
-    CAPACITOR_RESISTOR_COIL_TRANSFORMER_AND_OTHER_INDUCTOR_MANUFACTURING = LkOccupationTitle(1, "Capacitor, Resistor, Coil, Transformer, and Other Inductor Manufacturing", 33, 334416)
-    ELECTRONIC_CONNECTOR_MANUFACTURING = LkOccupationTitle(1, "Electronic Connector Manufacturing", 33, 334417)
-    PRINTED_CIRCUIT_ASSEMBLY_ELECTRONIC_ASSEMBLY_MANUFACTURING = LkOccupationTitle(1, "Printed Circuit Assembly (Electronic Assembly) Manufacturing", 33, 334418)
-    OTHER_ELECTRONIC_COMPONENT_MANUFACTURING = LkOccupationTitle(1, "Other Electronic Component Manufacturing", 33, 334419)
-    NAVIGATIONAL_MEASURING_ELECTROMEDICAL_AND_CONTROL_INSTRUMENTS_MANUFACTURING = LkOccupationTitle(1, "Navigational, Measuring, Electromedical, and Control Instruments Manufacturing", 33, 3345)
-    ELECTROMEDICAL_AND_ELECTROTHERAPEUTIC_APPARATUS_MANUFACTURING = LkOccupationTitle(1, "Electromedical and Electrotherapeutic Apparatus Manufacturing", 33, 334510)
-    SEARCH_DETECTION_NAVIGATION_GUIDANCE_AERONAUTICAL_AND_NAUTICAL_SYSTEM_AND_INSTRUMENT_MANUFACTURING = LkOccupationTitle(1, "Search, Detection, Navigation, Guidance, Aeronautical, and Nautical System and Instrument Manufacturing", 33, 334511)
-    AUTOMATIC_ENVIRONMENTAL_CONTROL_MANUFACTURING_FOR_RESIDENTIAL_COMMERCIAL_AND_APPLIANCE_USE = LkOccupationTitle(1, "Automatic Environmental Control Manufacturing for Residential, Commercial, and Appliance Use", 33, 334512)
-    INSTRUMENTS_AND_RELATED_PRODUCTS_MANUFACTURING_FOR_MEASURING_DISPLAYING_AND_CONTROLLING_INDUSTRIAL_PROCESS_VARIABLES = LkOccupationTitle(1, "Instruments and Related Products Manufacturing for Measuring, Displaying, and Controlling Industrial Process Variables", 33, 334513)
-    TOTALIZING_FLUID_METER_AND_COUNTING_DEVICE_MANUFACTURING = LkOccupationTitle(1, "Totalizing Fluid Meter and Counting Device Manufacturing", 33, 334514)
-    INSTRUMENT_MANUFACTURING_FOR_MEASURING_AND_TESTING_ELECTRICITY_AND_ELECTRICAL_SIGNALS = LkOccupationTitle(1, "Instrument Manufacturing for Measuring and Testing Electricity and Electrical Signals832", 33, 334515)
-    ANALYTICAL_LABORATORY_INSTRUMENT_MANUFACTURING = LkOccupationTitle(1, "Analytical Laboratory Instrument Manufacturing", 33, 334516)
-    IRRADIATION_APPARATUS_MANUFACTURING = LkOccupationTitle(1, "Irradiation Apparatus Manufacturing", 33, 334517)
-    OTHER_MEASURING_AND_CONTROLLING_DEVICE_MANUFACTURING = LkOccupationTitle(1, "Other Measuring and Controlling Device Manufacturing", 33, 334519)
-    MANUFACTURING_AND_REPRODUCING_MAGNETIC_AND_OPTICAL_MEDIA = LkOccupationTitle(1, "Manufacturing and Reproducing Magnetic and Optical Media", 33, 3346)
-    BLANK_MAGNETIC_AND_OPTICAL_RECORDING_MEDIA_MANUFACTURING = LkOccupationTitle(1, "Blank Magnetic and Optical Recording Media Manufacturing", 33, 334613)
-    SOFTWARE_AND_OTHER_PRERECORDED_COMPACT_DISC_TAPE_AND_RECORD_REPRODUCING = LkOccupationTitle(1, "Software and Other Prerecorded Compact Disc, Tape, and Record Reproducing", 33, 334614)
-    ELECTRIC_LIGHTING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Electric Lighting Equipment Manufacturing", 33, 3351)
-    ELECTRIC_LAMP_BULB_AND_PART_MANUFACTURING = LkOccupationTitle(1, "Electric Lamp Bulb and Part Manufacturing", 33, 335110)
-    RESIDENTIAL_ELECTRIC_LIGHTING_FIXTURE_MANUFACTURING = LkOccupationTitle(1, "Residential Electric Lighting Fixture Manufacturing", 33, 335121)
-    COMMERCIAL_INDUSTRIAL_AND_INSTITUTIONAL_ELECTRIC_LIGHTING_FIXTURE_MANUFACTURING = LkOccupationTitle(1, "Commercial, Industrial, and Institutional Electric Lighting Fixture Manufacturing", 33, 335122)
-    OTHER_LIGHTING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Other Lighting Equipment Manufacturing", 33, 335129)
-    HOUSEHOLD_APPLIANCE_MANUFACTURING = LkOccupationTitle(1, "Household Appliance Manufacturing", 33, 3352)
-    SMALL_ELECTRICAL_APPLIANCE_MANUFACTURING = LkOccupationTitle(1, "Small Electrical Appliance Manufacturing", 33, 335210)
-    MAJOR_HOUSEHOLD_APPLIANCE_MANUFACTURING = LkOccupationTitle(1, "Major Household Appliance Manufacturing", 33, 335220)
-    ELECTRICAL_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Electrical Equipment Manufacturing", 33, 3353)
-    POWER_DISTRIBUTION_AND_SPECIALTY_TRANSFORMER_MANUFACTURING = LkOccupationTitle(1, "Power, Distribution, and Specialty Transformer Manufacturing", 33, 335311)
-    MOTOR_AND_GENERATOR_MANUFACTURING = LkOccupationTitle(1, "Motor and Generator Manufacturing", 33, 335312)
-    SWITCHGEAR_AND_SWITCHBOARD_APPARATUS_MANUFACTURING = LkOccupationTitle(1, "Switchgear and Switchboard Apparatus Manufacturing", 33, 335313)
-    RELAY_AND_INDUSTRIAL_CONTROL_MANUFACTURING = LkOccupationTitle(1, "Relay and Industrial Control Manufacturing", 33, 335314)
-    OTHER_ELECTRICAL_EQUIPMENT_AND_COMPONENT_MANUFACTURING = LkOccupationTitle(1, "Other Electrical Equipment and Component Manufacturing", 33, 3359)
-    STORAGE_BATTERY_MANUFACTURING = LkOccupationTitle(1, "Storage Battery Manufacturing", 33, 335911)
-    PRIMARY_BATTERY_MANUFACTURING = LkOccupationTitle(1, "Primary Battery Manufacturing", 33, 335912)
-    FIBER_OPTIC_CABLE_MANUFACTURING = LkOccupationTitle(1, "Fiber Optic Cable Manufacturing", 33, 335921)
-    OTHER_COMMUNICATION_AND_ENERGY_WIRE_MANUFACTURING = LkOccupationTitle(1, "Other Communication and Energy Wire Manufacturing", 33, 335929)
-    CURRENTCARRYING_WIRING_DEVICE_MANUFACTURING = LkOccupationTitle(1, "Current-Carrying Wiring Device Manufacturing", 33, 335931)
-    NONCURRENTCARRYING_WIRING_DEVICE_MANUFACTURING = LkOccupationTitle(1, "Noncurrent-Carrying Wiring Device Manufacturing", 33, 335932)
-    CARBON_AND_GRAPHITE_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Carbon and Graphite Product Manufacturing", 33, 335991)
-    ALL_OTHER_MISCELLANEOUS_ELECTRICAL_EQUIPMENT_AND_COMPONENT_MANUFACTURING = LkOccupationTitle(1, "All Other Miscellaneous Electrical Equipment and Component Manufacturing", 33, 335999)
-    MOTOR_VEHICLE_MANUFACTURING = LkOccupationTitle(1, "Motor Vehicle Manufacturing", 33, 3361)
-    AUTOMOBILE_MANUFACTURING = LkOccupationTitle(1, "Automobile Manufacturing", 33, 336111)
-    LIGHT_TRUCK_AND_UTILITY_VEHICLE_MANUFACTURING = LkOccupationTitle(1, "Light Truck and Utility Vehicle Manufacturing", 33, 336112)
-    HEAVY_DUTY_TRUCK_MANUFACTURING = LkOccupationTitle(1, "Heavy Duty Truck Manufacturing", 33, 336120)
-    MOTOR_VEHICLE_BODY_AND_TRAILER_MANUFACTURING = LkOccupationTitle(1, "Motor Vehicle Body and Trailer Manufacturing", 33, 3362)
-    MOTOR_VEHICLE_BODY_MANUFACTURING = LkOccupationTitle(1, "Motor Vehicle Body Manufacturing", 33, 336211)
-    TRUCK_TRAILER_MANUFACTURING = LkOccupationTitle(1, "Truck Trailer Manufacturing", 33, 336212)
-    MOTOR_HOME_MANUFACTURING = LkOccupationTitle(1, "Motor Home Manufacturing", 33, 336213)
-    TRAVEL_TRAILER_AND_CAMPER_MANUFACTURING = LkOccupationTitle(1, "Travel Trailer and Camper Manufacturing", 33, 336214)
-    MOTOR_VEHICLE_PARTS_MANUFACTURING = LkOccupationTitle(1, "Motor Vehicle Parts Manufacturing", 33, 3363)
-    MOTOR_VEHICLE_GASOLINE_ENGINE_AND_ENGINE_PARTS_MANUFACTURING = LkOccupationTitle(1, "Motor Vehicle Gasoline Engine and Engine Parts Manufacturing", 33, 336310)
-    MOTOR_VEHICLE_ELECTRICAL_AND_ELECTRONIC_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Motor Vehicle Electrical and Electronic Equipment Manufacturing", 33, 336320)
-    MOTOR_VEHICLE_STEERING_AND_SUSPENSION_COMPONENTS_EXCEPT_SPRING_MANUFACTURING = LkOccupationTitle(1, "Motor Vehicle Steering and Suspension Components (except Spring) Manufacturing", 33, 336330)
-    MOTOR_VEHICLE_BRAKE_SYSTEM_MANUFACTURING = LkOccupationTitle(1, "Motor Vehicle Brake System Manufacturing", 33, 336340)
-    MOTOR_VEHICLE_TRANSMISSION_AND_POWER_TRAIN_PARTS_MANUFACTURING = LkOccupationTitle(1, "Motor Vehicle Transmission and Power Train Parts Manufacturing", 33, 336350)
-    MOTOR_VEHICLE_SEATING_AND_INTERIOR_TRIM_MANUFACTURING = LkOccupationTitle(1, "Motor Vehicle Seating and Interior Trim Manufacturing", 33, 336360)
-    MOTOR_VEHICLE_METAL_STAMPING = LkOccupationTitle(1, "Motor Vehicle Metal Stamping", 33, 336370)
-    OTHER_MOTOR_VEHICLE_PARTS_MANUFACTURING = LkOccupationTitle(1, "Other Motor Vehicle Parts Manufacturing", 33, 336390)
-    AEROSPACE_PRODUCT_AND_PARTS_MANUFACTURING = LkOccupationTitle(1, "Aerospace Product and Parts Manufacturing", 33, 3364)
-    AIRCRAFT_MANUFACTURING = LkOccupationTitle(1, "Aircraft Manufacturing", 33, 336411)
-    AIRCRAFT_ENGINE_AND_ENGINE_PARTS_MANUFACTURING = LkOccupationTitle(1, "Aircraft Engine and Engine Parts Manufacturing", 33, 336412)
-    OTHER_AIRCRAFT_PARTS_AND_AUXILIARY_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Other Aircraft Parts and Auxiliary Equipment Manufacturing", 33, 336413)
-    GUIDED_MISSILE_AND_SPACE_VEHICLE_MANUFACTURING = LkOccupationTitle(1, "Guided Missile and Space Vehicle Manufacturing", 33, 336414)
-    GUIDED_MISSILE_AND_SPACE_VEHICLE_PROPULSION_UNIT_AND_PROPULSION_UNIT_PARTS_MANUFACTURING = LkOccupationTitle(1, "Guided Missile and Space Vehicle Propulsion Unit and Propulsion Unit Parts Manufacturing", 33, 336415)
-    OTHER_GUIDED_MISSILE_AND_SPACE_VEHICLE_PARTS_AND_AUXILIARY_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Other Guided Missile and Space Vehicle Parts and Auxiliary Equipment Manufacturing", 33, 336419)
-    RAILROAD_ROLLING_STOCK_MANUFACTURING = LkOccupationTitle(1, "Railroad Rolling Stock Manufacturing", 33, 3365)
-    RAILROAD_ROLLING_STOCK_MANUFACTURING = LkOccupationTitle(1, "Railroad Rolling Stock Manufacturing", 33, 336510)
-    SHIP_AND_BOAT_BUILDING = LkOccupationTitle(1, "Ship and Boat Building", 33, 3366)
-    SHIP_BUILDING_AND_REPAIRING = LkOccupationTitle(1, "Ship Building and Repairing", 33, 336611)
-    BOAT_BUILDING = LkOccupationTitle(1, "Boat Building", 33, 336612)
-    OTHER_TRANSPORTATION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "Other Transportation Equipment Manufacturing", 33, 3369)
-    MOTORCYCLE_BICYCLE_AND_PARTS_MANUFACTURING = LkOccupationTitle(1, "Motorcycle, Bicycle, and Parts Manufacturing", 33, 336991)
-    MILITARY_ARMORED_VEHICLE_TANK_AND_TANK_COMPONENT_MANUFACTURING = LkOccupationTitle(1, "Military Armored Vehicle, Tank, and Tank Component Manufacturing", 33, 336992)
-    ALL_OTHER_TRANSPORTATION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(1, "All Other Transportation Equipment Manufacturing", 33, 336999)
-    HOUSEHOLD_AND_INSTITUTIONAL_FURNITURE_AND_KITCHEN_CABINET_MANUFACTURING = LkOccupationTitle(1, "Household and Institutional Furniture and Kitchen Cabinet Manufacturing", 33, 3371)
-    WOOD_KITCHEN_CABINET_AND_COUNTERTOP_MANUFACTURING = LkOccupationTitle(1, "Wood Kitchen Cabinet and Countertop Manufacturing", 33, 337110)
-    UPHOLSTERED_HOUSEHOLD_FURNITURE_MANUFACTURING = LkOccupationTitle(1, "Upholstered Household Furniture Manufacturing", 33, 337121)
-    NONUPHOLSTERED_WOOD_HOUSEHOLD_FURNITURE_MANUFACTURING = LkOccupationTitle(1, "Nonupholstered Wood Household Furniture Manufacturing", 33, 337122)
-    METAL_HOUSEHOLD_FURNITURE_MANUFACTURING = LkOccupationTitle(1, "Metal Household Furniture Manufacturing", 33, 337124)
-    HOUSEHOLD_FURNITURE_EXCEPT_WOOD_AND_METAL_MANUFACTURING = LkOccupationTitle(1, "Household Furniture (except Wood and Metal) Manufacturing", 33, 337125)
-    INSTITUTIONAL_FURNITURE_MANUFACTURING = LkOccupationTitle(1, "Institutional Furniture Manufacturing", 33, 337127)
-    OFFICE_FURNITURE_INCLUDING_FIXTURES_MANUFACTURING = LkOccupationTitle(1, "Office Furniture (including Fixtures) Manufacturing", 33, 3372)
-    WOOD_OFFICE_FURNITURE_MANUFACTURING = LkOccupationTitle(1, "Wood Office Furniture Manufacturing", 33, 337211)
-    CUSTOM_ARCHITECTURAL_WOODWORK_AND_MILLWORK_MANUFACTURING = LkOccupationTitle(1, "Custom Architectural Woodwork and Millwork Manufacturing", 33, 337212)
-    OFFICE_FURNITURE_EXCEPT_WOOD_MANUFACTURING = LkOccupationTitle(1, "Office Furniture (except Wood) Manufacturing", 33, 337214)
-    SHOWCASE_PARTITION_SHELVING_AND_LOCKER_MANUFACTURING = LkOccupationTitle(1, "Showcase, Partition, Shelving, and Locker Manufacturing", 33, 337215)
-    OTHER_FURNITURE_RELATED_PRODUCT_MANUFACTURING = LkOccupationTitle(1, "Other Furniture Related Product Manufacturing", 33, 3379)
-    MATTRESS_MANUFACTURING = LkOccupationTitle(1, "Mattress Manufacturing", 33, 337910)
-    BLIND_AND_SHADE_MANUFACTURING = LkOccupationTitle(1, "Blind and Shade Manufacturing", 33, 337920)
-    MEDICAL_EQUIPMENT_AND_SUPPLIES_MANUFACTURING = LkOccupationTitle(1, "Medical Equipment and Supplies Manufacturing", 33, 3391)
-    SURGICAL_AND_MEDICAL_INSTRUMENT_MANUFACTURING = LkOccupationTitle(1, "Surgical and Medical Instrument Manufacturing", 33, 339112)
-    SURGICAL_APPLIANCE_AND_SUPPLIES_MANUFACTURING = LkOccupationTitle(1, "Surgical Appliance and Supplies Manufacturing", 33, 339113)
-    DENTAL_EQUIPMENT_AND_SUPPLIES_MANUFACTURING = LkOccupationTitle(1, "Dental Equipment and Supplies Manufacturing", 33, 339114)
-    OPHTHALMIC_GOODS_MANUFACTURING = LkOccupationTitle(1, "Ophthalmic Goods Manufacturing", 33, 339115)
-    DENTAL_LABORATORIES = LkOccupationTitle(1, "Dental Laboratories", 33, 339116)
-    OTHER_MISCELLANEOUS_MANUFACTURING = LkOccupationTitle(1, "Other Miscellaneous Manufacturing", 33, 3399)
-    JEWELRY_AND_SILVERWARE_MANUFACTURING = LkOccupationTitle(1, "Jewelry and Silverware Manufacturing", 33, 339910)
-    SPORTING_AND_ATHLETIC_GOODS_MANUFACTURING = LkOccupationTitle(1, "Sporting and Athletic Goods Manufacturing", 33, 339920)
-    DOLL_TOY_AND_GAME_MANUFACTURING = LkOccupationTitle(1, "Doll, Toy, and Game Manufacturing", 33, 339930)
-    OFFICE_SUPPLIES_EXCEPT_PAPER_MANUFACTURING = LkOccupationTitle(1, "Office Supplies (except Paper) Manufacturing", 33, 339940)
-    SIGN_MANUFACTURING = LkOccupationTitle(1, "Sign Manufacturing", 33, 339950)
-    GASKET_PACKING_AND_SEALING_DEVICE_MANUFACTURING = LkOccupationTitle(1, "Gasket, Packing, and Sealing Device Manufacturing", 33, 339991)
-    MUSICAL_INSTRUMENT_MANUFACTURING = LkOccupationTitle(1, "Musical Instrument Manufacturing", 33, 339992)
-    FASTENER_BUTTON_NEEDLE_AND_PIN_MANUFACTURING = LkOccupationTitle(1, "Fastener, Button, Needle, and Pin Manufacturing", 33, 339993)
-    BROOM_BRUSH_AND_MOP_MANUFACTURING = LkOccupationTitle(1, "Broom, Brush, and Mop Manufacturing", 33, 339994)
-    BURIAL_CASKET_MANUFACTURING = LkOccupationTitle(1, "Burial Casket Manufacturing", 33, 339995)
-    ALL_OTHER_MISCELLANEOUS_MANUFACTURING = LkOccupationTitle(1, "All Other Miscellaneous Manufacturing", 33, 339999)
-    MOTOR_VEHICLE_AND_MOTOR_VEHICLE_PARTS_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Motor Vehicle and Motor Vehicle Parts and Supplies Merchant Wholesalers", 42, 4231)
-    AUTOMOBILE_AND_OTHER_MOTOR_VEHICLE_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Automobile and Other Motor Vehicle Merchant Wholesalers", 42, 423110)
-    MOTOR_VEHICLE_SUPPLIES_AND_NEW_PARTS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Motor Vehicle Supplies and New Parts Merchant Wholesalers", 42, 423120)
-    TIRE_AND_TUBE_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Tire and Tube Merchant Wholesalers", 42, 423130)
-    MOTOR_VEHICLE_PARTS_USED_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Motor Vehicle Parts (Used) Merchant Wholesalers", 42, 423140)
-    FURNITURE_AND_HOME_FURNISHING_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Furniture and Home Furnishing Merchant Wholesalers", 42, 4232)
-    FURNITURE_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Furniture Merchant Wholesalers", 42, 423210)
-    HOME_FURNISHING_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Home Furnishing Merchant Wholesalers", 42, 423220)
-    LUMBER_AND_OTHER_CONSTRUCTION_MATERIALS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Lumber and Other Construction Materials Merchant Wholesalers", 42, 4233)
-    LUMBER_PLYWOOD_MILLWORK_AND_WOOD_PANEL_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Lumber, Plywood, Millwork, and Wood Panel Merchant Wholesalers", 42, 423310)
-    BRICK_STONE_AND_RELATED_CONSTRUCTION_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Brick, Stone, and Related Construction Material Merchant Wholesalers", 42, 423320)
-    ROOFING_SIDING_AND_INSULATION_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Roofing, Siding, and Insulation Material Merchant Wholesalers", 42, 423330)
-    OTHER_CONSTRUCTION_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Other Construction Material Merchant Wholesalers", 42, 423390)
-    PROFESSIONAL_AND_COMMERCIAL_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Professional and Commercial Equipment and Supplies Merchant Wholesalers", 42, 4234)
-    PHOTOGRAPHIC_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Photographic Equipment and Supplies Merchant Wholesalers", 42, 423410)
-    OFFICE_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Office Equipment Merchant Wholesalers", 42, 423420)
-    COMPUTER_AND_COMPUTER_PERIPHERAL_EQUIPMENT_AND_SOFTWARE_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Computer and Computer Peripheral Equipment and Software Merchant Wholesalers", 42, 423430)
-    OTHER_COMMERCIAL_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Other Commercial Equipment Merchant Wholesalers", 42, 423440)
-    MEDICAL_DENTAL_AND_HOSPITAL_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Medical, Dental, and Hospital Equipment and Supplies Merchant Wholesalers", 42, 423450)
-    OPHTHALMIC_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Ophthalmic Goods Merchant Wholesalers", 42, 423460)
-    OTHER_PROFESSIONAL_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Other Professional Equipment and Supplies Merchant Wholesalers", 42, 423490)
-    METAL_AND_MINERAL_EXCEPT_PETROLEUM_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Metal and Mineral (except Petroleum) Merchant Wholesalers", 42, 4235)
-    METAL_SERVICE_CENTERS_AND_OTHER_METAL_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Metal Service Centers and Other Metal Merchant Wholesalers", 42, 423510)
-    COAL_AND_OTHER_MINERAL_AND_ORE_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Coal and Other Mineral and Ore Merchant Wholesalers", 42, 423520)
-    HOUSEHOLD_APPLIANCES_AND_ELECTRICAL_AND_ELECTRONIC_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Household Appliances and Electrical and Electronic Goods Merchant Wholesalers", 42, 4236)
-    ELECTRICAL_APPARATUS_AND_EQUIPMENT_WIRING_SUPPLIES_AND_RELATED_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Electrical Apparatus and Equipment, Wiring Supplies, and Related Equipment Merchant Wholesalers", 42, 423610)
-    HOUSEHOLD_APPLIANCES_ELECTRIC_HOUSEWARES_AND_CONSUMER_ELECTRONICS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Household Appliances, Electric Housewares, and Consumer Electronics Merchant Wholesalers", 42, 423620)
-    OTHER_ELECTRONIC_PARTS_AND_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Other Electronic Parts and Equipment Merchant Wholesalers", 42, 423690)
-    HARDWARE_AND_PLUMBING_AND_HEATING_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Hardware, and Plumbing and Heating Equipment and Supplies Merchant Wholesalers", 42, 4237)
-    HARDWARE_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Hardware Merchant Wholesalers", 42, 423710)
-    PLUMBING_AND_HEATING_EQUIPMENT_AND_SUPPLIES_HYDRONICS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Plumbing and Heating Equipment and Supplies (Hydronics) Merchant Wholesalers", 42, 423720)
-    WARM_AIR_HEATING_AND_AIRCONDITIONING_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Warm Air Heating and Air-Conditioning Equipment and Supplies Merchant Wholesalers", 42, 423730)
-    REFRIGERATION_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Refrigeration Equipment and Supplies Merchant Wholesalers", 42, 423740)
-    MACHINERY_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Machinery, Equipment, and Supplies Merchant Wholesalers", 42, 4238)
-    CONSTRUCTION_AND_MINING_EXCEPT_OIL_WELL_MACHINERY_AND_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Construction and Mining (except Oil Well) Machinery and Equipment Merchant Wholesalers220", 42, 423810)
-    FARM_AND_GARDEN_MACHINERY_AND_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Farm and Garden Machinery and Equipment Merchant Wholesalers", 42, 423820)
-    INDUSTRIAL_MACHINERY_AND_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Industrial Machinery and Equipment Merchant Wholesalers", 42, 423830)
-    INDUSTRIAL_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Industrial Supplies Merchant Wholesalers", 42, 423840)
-    SERVICE_ESTABLISHMENT_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Service Establishment Equipment and Supplies Merchant Wholesalers", 42, 423850)
-    TRANSPORTATION_EQUIPMENT_AND_SUPPLIES_EXCEPT_MOTOR_VEHICLE_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Transportation Equipment and Supplies (except Motor Vehicle) Merchant Wholesalers", 42, 423860)
-    MISCELLANEOUS_DURABLE_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Miscellaneous Durable Goods Merchant Wholesalers", 42, 4239)
-    SPORTING_AND_RECREATIONAL_GOODS_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Sporting and Recreational Goods and Supplies Merchant Wholesalers", 42, 423910)
-    TOY_AND_HOBBY_GOODS_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Toy and Hobby Goods and Supplies Merchant Wholesalers", 42, 423920)
-    RECYCLABLE_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Recyclable Material Merchant Wholesalers", 42, 423930)
-    JEWELRY_WATCH_PRECIOUS_STONE_AND_PRECIOUS_METAL_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Jewelry, Watch, Precious Stone, and Precious Metal Merchant Wholesalers", 42, 423940)
-    OTHER_MISCELLANEOUS_DURABLE_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Other Miscellaneous Durable Goods Merchant Wholesalers", 42, 423990)
-    PAPER_AND_PAPER_PRODUCT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Paper and Paper Product Merchant Wholesalers", 42, 4241)
-    PRINTING_AND_WRITING_PAPER_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Printing and Writing Paper Merchant Wholesalers", 42, 424110)
-    STATIONERY_AND_OFFICE_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Stationery and Office Supplies Merchant Wholesalers", 42, 424120)
-    INDUSTRIAL_AND_PERSONAL_SERVICE_PAPER_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Industrial and Personal Service Paper Merchant Wholesalers", 42, 424130)
-    DRUGS_AND_DRUGGISTS_SUNDRIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Drugs and Druggists' Sundries Merchant Wholesalers", 42, 4242)
-    DRUGS_AND_DRUGGISTS_SUNDRIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Drugs and Druggists' Sundries Merchant Wholesalers", 42, 424210)
-    APPAREL_PIECE_GOODS_AND_NOTIONS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Apparel, Piece Goods, and Notions Merchant Wholesalers", 42, 4243)
-    PIECE_GOODS_NOTIONS_AND_OTHER_DRY_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Piece Goods, Notions, and Other Dry Goods Merchant Wholesalers", 42, 424310)
-    MENS_AND_BOYS_CLOTHING_AND_FURNISHINGS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Men's and Boys' Clothing and Furnishings Merchant Wholesalers", 42, 424320)
-    WOMENS_CHILDRENS_AND_INFANTS_CLOTHING_AND_ACCESSORIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Women's, Children's, and Infants' Clothing and Accessories Merchant Wholesalers", 42, 424330)
-    FOOTWEAR_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Footwear Merchant Wholesalers", 42, 424340)
-    GROCERY_AND_RELATED_PRODUCT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Grocery and Related Product Merchant Wholesalers", 42, 4244)
-    GENERAL_LINE_GROCERY_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "General Line Grocery Merchant Wholesalers", 42, 424410)
-    PACKAGED_FROZEN_FOOD_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Packaged Frozen Food Merchant Wholesalers", 42, 424420)
-    DAIRY_PRODUCT_EXCEPT_DRIED_OR_CANNED_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Dairy Product (except Dried or Canned) Merchant Wholesalers", 42, 424430)
-    POULTRY_AND_POULTRY_PRODUCT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Poultry and Poultry Product Merchant Wholesalers", 42, 424440)
-    CONFECTIONERY_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Confectionery Merchant Wholesalers", 42, 424450)
-    FISH_AND_SEAFOOD_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Fish and Seafood Merchant Wholesalers", 42, 424460)
-    MEAT_AND_MEAT_PRODUCT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Meat and Meat Product Merchant Wholesalers", 42, 424470)
-    FRESH_FRUIT_AND_VEGETABLE_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Fresh Fruit and Vegetable Merchant Wholesalers", 42, 424480)
-    OTHER_GROCERY_AND_RELATED_PRODUCTS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Other Grocery and Related Products Merchant Wholesalers", 42, 424490)
-    FARM_PRODUCT_RAW_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Farm Product Raw Material Merchant Wholesalers", 42, 4245)
-    GRAIN_AND_FIELD_BEAN_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Grain and Field Bean Merchant Wholesalers", 42, 424510)
-    LIVESTOCK_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Livestock Merchant Wholesalers", 42, 424520)
-    OTHER_FARM_PRODUCT_RAW_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Other Farm Product Raw Material Merchant Wholesalers", 42, 424590)
-    CHEMICAL_AND_ALLIED_PRODUCTS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Chemical and Allied Products Merchant Wholesalers", 42, 4246)
-    PLASTICS_MATERIALS_AND_BASIC_FORMS_AND_SHAPES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Plastics Materials and Basic Forms and Shapes Merchant Wholesalers", 42, 424610)
-    OTHER_CHEMICAL_AND_ALLIED_PRODUCTS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Other Chemical and Allied Products Merchant Wholesalers", 42, 424690)
-    PETROLEUM_AND_PETROLEUM_PRODUCTS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Petroleum and Petroleum Products Merchant Wholesalers", 42, 4247)
-    PETROLEUM_BULK_STATIONS_AND_TERMINALS = LkOccupationTitle(1, "Petroleum Bulk Stations and Terminals", 42, 424710)
-    PETROLEUM_AND_PETROLEUM_PRODUCTS_MERCHANT_WHOLESALERS_EXCEPT_BULK_STATIONS_AND_TERMINALS = LkOccupationTitle(1, "Petroleum and Petroleum Products Merchant Wholesalers (except Bulk Stations and Terminals)", 42, 424720)
-    BEER_WINE_AND_DISTILLED_ALCOHOLIC_BEVERAGE_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Beer, Wine, and Distilled Alcoholic Beverage Merchant Wholesalers", 42, 4248)
-    BEER_AND_ALE_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Beer and Ale Merchant Wholesalers", 42, 424810)
-    WINE_AND_DISTILLED_ALCOHOLIC_BEVERAGE_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Wine and Distilled Alcoholic Beverage Merchant Wholesalers", 42, 424820)
-    MISCELLANEOUS_NONDURABLE_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Miscellaneous Nondurable Goods Merchant Wholesalers", 42, 4249)
-    FARM_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Farm Supplies Merchant Wholesalers", 42, 424910)
-    BOOK_PERIODICAL_AND_NEWSPAPER_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Book, Periodical, and Newspaper Merchant Wholesalers", 42, 424920)
-    FLOWER_NURSERY_STOCK_AND_FLORISTS_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Flower, Nursery Stock, and Florists' Supplies Merchant Wholesalers", 42, 424930)
-    TOBACCO_AND_TOBACCO_PRODUCT_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Tobacco and Tobacco Product Merchant Wholesalers", 42, 424940)
-    PAINT_VARNISH_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Paint, Varnish, and Supplies Merchant Wholesalers", 42, 424950)
-    OTHER_MISCELLANEOUS_NONDURABLE_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(1, "Other Miscellaneous Nondurable Goods Merchant Wholesalers", 42, 424990)
-    WHOLESALE_ELECTRONIC_MARKETS_AND_AGENTS_AND_BROKERS = LkOccupationTitle(1, "Wholesale Electronic Markets and Agents and Brokers", 42, 4251)
-    BUSINESS_TO_BUSINESS_ELECTRONIC_MARKETS = LkOccupationTitle(1, "Business to Business Electronic Markets", 42, 425110)
-    WHOLESALE_TRADE_AGENTS_AND_BROKERS = LkOccupationTitle(1, "Wholesale Trade Agents and Brokers", 42, 425120)
-    RETAIL_TRADE = LkOccupationTitle(1, "Retail Trade", 44, 44-45)
-    AUTOMOBILE_DEALERS = LkOccupationTitle(1, "Automobile Dealers", 44, 4411)
-    NEW_CAR_DEALERS = LkOccupationTitle(1, "New Car Dealers", 44, 441110)
-    USED_CAR_DEALERS = LkOccupationTitle(1, "Used Car Dealers", 44, 441120)
-    OTHER_MOTOR_VEHICLE_DEALERS = LkOccupationTitle(1, "Other Motor Vehicle Dealers", 44, 4412)
-    RECREATIONAL_VEHICLE_DEALERS = LkOccupationTitle(1, "Recreational Vehicle Dealers", 44, 441210)
-    BOAT_DEALERS = LkOccupationTitle(1, "Boat Dealers", 44, 441222)
-    MOTORCYCLE_ATV_AND_ALL_OTHER_MOTOR_VEHICLE_DEALERS = LkOccupationTitle(1, "Motorcycle, ATV, and All Other Motor Vehicle Dealers", 44, 441228)
-    AUTOMOTIVE_PARTS_ACCESSORIES_AND_TIRE_STORES = LkOccupationTitle(1, "Automotive Parts, Accessories, and Tire Stores", 44, 4413)
-    AUTOMOTIVE_PARTS_AND_ACCESSORIES_STORES = LkOccupationTitle(1, "Automotive Parts and Accessories Stores", 44, 441310)
-    TIRE_DEALERS = LkOccupationTitle(1, "Tire Dealers", 44, 441320)
-    FURNITURE_STORES = LkOccupationTitle(1, "Furniture Stores", 44, 4421)
-    FURNITURE_STORES = LkOccupationTitle(1, "Furniture Stores", 44, 442110)
-    HOME_FURNISHINGS_STORES = LkOccupationTitle(1, "Home Furnishings Stores", 44, 4422)
-    FLOOR_COVERING_STORES = LkOccupationTitle(1, "Floor Covering Stores", 44, 442210)
-    WINDOW_TREATMENT_STORES = LkOccupationTitle(1, "Window Treatment Stores", 44, 442291)
-    ALL_OTHER_HOME_FURNISHINGS_STORES = LkOccupationTitle(1, "All Other Home Furnishings Stores", 44, 442299)
-    ELECTRONICS_AND_APPLIANCE_STORES = LkOccupationTitle(1, "Electronics and Appliance Stores", 44, 4431)
-    HOUSEHOLD_APPLIANCE_STORES = LkOccupationTitle(1, "Household Appliance Stores", 44, 443141)
-    ELECTRONICS_STORES = LkOccupationTitle(1, "Electronics Stores", 44, 443142)
-    BUILDING_MATERIAL_AND_SUPPLIES_DEALERS = LkOccupationTitle(1, "Building Material and Supplies Dealers", 44, 4441)
-    HOME_CENTERS = LkOccupationTitle(1, "Home Centers", 44, 444110)
-    PAINT_AND_WALLPAPER_STORES = LkOccupationTitle(1, "Paint and Wallpaper Stores", 44, 444120)
-    HARDWARE_STORES = LkOccupationTitle(1, "Hardware Stores", 44, 444130)
-    OTHER_BUILDING_MATERIAL_DEALERS = LkOccupationTitle(1, "Other Building Material Dealers", 44, 444190)
-    LAWN_AND_GARDEN_EQUIPMENT_AND_SUPPLIES_STORES = LkOccupationTitle(1, "Lawn and Garden Equipment and Supplies Stores", 44, 4442)
-    OUTDOOR_POWER_EQUIPMENT_STORES = LkOccupationTitle(1, "Outdoor Power Equipment Stores", 44, 444210)
-    NURSERY_GARDEN_CENTER_AND_FARM_SUPPLY_STORES = LkOccupationTitle(1, "Nursery, Garden Center, and Farm Supply Stores", 44, 444220)
-    GROCERY_STORES = LkOccupationTitle(1, "Grocery Stores", 44, 4451)
-    SUPERMARKETS_AND_OTHER_GROCERY_EXCEPT_CONVENIENCE_STORES = LkOccupationTitle(1, "Supermarkets and Other Grocery (except Convenience) Stores", 44, 445110)
-    CONVENIENCE_STORES = LkOccupationTitle(1, "Convenience Stores", 44, 445120)
-    SPECIALTY_FOOD_STORES = LkOccupationTitle(1, "Specialty Food Stores", 44, 4452)
-    MEAT_MARKETS = LkOccupationTitle(1, "Meat Markets", 44, 445210)
-    FISH_AND_SEAFOOD_MARKETS = LkOccupationTitle(1, "Fish and Seafood Markets", 44, 445220)
-    FRUIT_AND_VEGETABLE_MARKETS = LkOccupationTitle(1, "Fruit and Vegetable Markets", 44, 445230)
-    BAKED_GOODS_STORES = LkOccupationTitle(1, "Baked Goods Stores", 44, 445291)
-    CONFECTIONERY_AND_NUT_STORES = LkOccupationTitle(1, "Confectionery and Nut Stores", 44, 445292)
-    ALL_OTHER_SPECIALTY_FOOD_STORES = LkOccupationTitle(1, "All Other Specialty Food Stores", 44, 445299)
-    BEER_WINE_AND_LIQUOR_STORES = LkOccupationTitle(1, "Beer, Wine, and Liquor Stores", 44, 4453)
-    BEER_WINE_AND_LIQUOR_STORES = LkOccupationTitle(1, "Beer, Wine, and Liquor Stores", 44, 445310)
-    HEALTH_AND_PERSONAL_CARE_STORES = LkOccupationTitle(1, "Health and Personal Care Stores", 44, 4461)
-    PHARMACIES_AND_DRUG_STORES = LkOccupationTitle(1, "Pharmacies and Drug Stores", 44, 446110)
-    COSMETICS_BEAUTY_SUPPLIES_AND_PERFUME_STORES = LkOccupationTitle(1, "Cosmetics, Beauty Supplies, and Perfume Stores", 44, 446120)
-    OPTICAL_GOODS_STORES = LkOccupationTitle(1, "Optical Goods Stores", 44, 446130)
-    FOOD_HEALTH_SUPPLEMENT_STORES = LkOccupationTitle(1, "Food (Health) Supplement Stores", 44, 446191)
-    ALL_OTHER_HEALTH_AND_PERSONAL_CARE_STORES = LkOccupationTitle(1, "All Other Health and Personal Care Stores", 44, 446199)
-    GASOLINE_STATIONS = LkOccupationTitle(1, "Gasoline Stations", 44, 4471)
-    GASOLINE_STATIONS_WITH_CONVENIENCE_STORES = LkOccupationTitle(1, "Gasoline Stations with Convenience Stores", 44, 447110)
-    OTHER_GASOLINE_STATIONS = LkOccupationTitle(1, "Other Gasoline Stations", 44, 447190)
-    CLOTHING_STORES = LkOccupationTitle(1, "Clothing Stores", 44, 4481)
-    MENS_CLOTHING_STORES = LkOccupationTitle(1, "Men's Clothing Stores", 44, 448110)
-    WOMENS_CLOTHING_STORES = LkOccupationTitle(1, "Women's Clothing Stores", 44, 448120)
-    CHILDRENS_AND_INFANTS_CLOTHING_STORES = LkOccupationTitle(1, "Children's and Infants' Clothing Stores", 44, 448130)
-    FAMILY_CLOTHING_STORES = LkOccupationTitle(1, "Family Clothing Stores", 44, 448140)
-    CLOTHING_ACCESSORIES_STORES = LkOccupationTitle(1, "Clothing Accessories Stores", 44, 448150)
-    OTHER_CLOTHING_STORES = LkOccupationTitle(1, "Other Clothing Stores", 44, 448190)
-    SHOE_STORES = LkOccupationTitle(1, "Shoe Stores", 44, 4482)
-    SHOE_STORES = LkOccupationTitle(1, "Shoe Stores", 44, 448210)
-    JEWELRY_LUGGAGE_AND_LEATHER_GOODS_STORES = LkOccupationTitle(1, "Jewelry, Luggage, and Leather Goods Stores", 44, 4483)
-    JEWELRY_STORES = LkOccupationTitle(1, "Jewelry Stores", 44, 448310)
-    LUGGAGE_AND_LEATHER_GOODS_STORES = LkOccupationTitle(1, "Luggage and Leather Goods Stores", 44, 448320)
-    SPORTING_GOODS_HOBBY_AND_MUSICAL_INSTRUMENT_STORES = LkOccupationTitle(1, "Sporting Goods, Hobby, and Musical Instrument Stores", 45, 4511)
-    SPORTING_GOODS_STORES = LkOccupationTitle(1, "Sporting Goods Stores", 45, 451110)
-    HOBBY_TOY_AND_GAME_STORES = LkOccupationTitle(1, "Hobby, Toy, and Game Stores", 45, 451120)
-    SEWING_NEEDLEWORK_AND_PIECE_GOODS_STORES = LkOccupationTitle(1, "Sewing, Needlework, and Piece Goods Stores", 45, 451130)
-    MUSICAL_INSTRUMENT_AND_SUPPLIES_STORES = LkOccupationTitle(1, "Musical Instrument and Supplies Stores", 45, 451140)
-    BOOK_STORES_AND_NEWS_DEALERS = LkOccupationTitle(1, "Book Stores and News Dealers", 45, 4512)
-    BOOK_STORES = LkOccupationTitle(1, "Book Stores", 45, 451211)
-    NEWS_DEALERS_AND_NEWSSTANDS = LkOccupationTitle(1, "News Dealers and Newsstands", 45, 451212)
-    DEPARTMENT_STORES = LkOccupationTitle(1, "Department Stores", 45, 4522)
-    DEPARTMENT_STORES = LkOccupationTitle(1, "Department Stores", 45, 452210)
-    GENERAL_MERCHANDISE_STORES_INCLUDING_WAREHOUSE_CLUBS_AND_SUPERCENTERS = LkOccupationTitle(1, "General Merchandise Stores, including Warehouse Clubs and Supercenters", 45, 4523)
-    WAREHOUSE_CLUBS_AND_SUPERCENTERS = LkOccupationTitle(1, "Warehouse Clubs and Supercenters", 45, 452311)
-    ALL_OTHER_GENERAL_MERCHANDISE_STORES = LkOccupationTitle(1, "All Other General Merchandise Stores", 45, 452319)
-    FLORISTS = LkOccupationTitle(1, "Florists", 45, 4531)
-    FLORISTS = LkOccupationTitle(1, "Florists", 45, 453110)
-    OFFICE_SUPPLIES_STATIONERY_AND_GIFT_STORES = LkOccupationTitle(1, "Office Supplies, Stationery, and Gift Stores", 45, 4532)
-    OFFICE_SUPPLIES_AND_STATIONERY_STORES = LkOccupationTitle(1, "Office Supplies and Stationery Stores", 45, 453210)
-    GIFT_NOVELTY_AND_SOUVENIR_STORES = LkOccupationTitle(1, "Gift, Novelty, and Souvenir Stores", 45, 453220)
-    USED_MERCHANDISE_STORES = LkOccupationTitle(1, "Used Merchandise Stores", 45, 4533)
-    USED_MERCHANDISE_STORES = LkOccupationTitle(1, "Used Merchandise Stores", 45, 453310)
-    OTHER_MISCELLANEOUS_STORE_RETAILERS = LkOccupationTitle(1, "Other Miscellaneous Store Retailers", 45, 4539)
-    PET_AND_PET_SUPPLIES_STORES = LkOccupationTitle(1, "Pet and Pet Supplies Stores", 45, 453910)
-    ART_DEALERS = LkOccupationTitle(1, "Art Dealers", 45, 453920)
-    MANUFACTURED_MOBILE_HOME_DEALERS = LkOccupationTitle(1, "Manufactured (Mobile) Home Dealers", 45, 453930)
-    TOBACCO_STORES = LkOccupationTitle(1, "Tobacco Stores", 45, 453991)
-    ALL_OTHER_MISCELLANEOUS_STORE_RETAILERS_EXCEPT_TOBACCO_STORES = LkOccupationTitle(1, "All Other Miscellaneous Store Retailers (except Tobacco Stores)", 45, 453998)
-    ELECTRONIC_SHOPPING_AND_MAILORDER_HOUSES = LkOccupationTitle(1, "Electronic Shopping and Mail-Order Houses", 45, 4541)
-    ELECTRONIC_SHOPPING_AND_MAILORDER_HOUSES = LkOccupationTitle(1, "Electronic Shopping and Mail-Order Houses", 45, 454110)
-    VENDING_MACHINE_OPERATORS = LkOccupationTitle(1, "Vending Machine Operators", 45, 4542)
-    VENDING_MACHINE_OPERATORS = LkOccupationTitle(1, "Vending Machine Operators", 45, 454210)
-    DIRECT_SELLING_ESTABLISHMENTS = LkOccupationTitle(1, "Direct Selling Establishments", 45, 4543)
-    FUEL_DEALERS = LkOccupationTitle(1, "Fuel Dealers", 45, 454310)
-    OTHER_DIRECT_SELLING_ESTABLISHMENTS = LkOccupationTitle(1, "Other Direct Selling Establishments", 45, 454390)
-    TRANSPORTATION_AND_WAREHOUSING = LkOccupationTitle(1, "Transportation and Warehousing", 48, 48-49)
-    SCHEDULED_AIR_TRANSPORTATION = LkOccupationTitle(1, "Scheduled Air Transportation", 48, 4811)
-    SCHEDULED_PASSENGER_AIR_TRANSPORTATION = LkOccupationTitle(1, "Scheduled Passenger Air Transportation", 48, 481111)
-    SCHEDULED_FREIGHT_AIR_TRANSPORTATION = LkOccupationTitle(1, "Scheduled Freight Air Transportation", 48, 481112)
-    NONSCHEDULED_AIR_TRANSPORTATION = LkOccupationTitle(1, "Nonscheduled Air Transportation", 48, 4812)
-    NONSCHEDULED_CHARTERED_PASSENGER_AIR_TRANSPORTATION = LkOccupationTitle(1, "Nonscheduled Chartered Passenger Air Transportation", 48, 481211)
-    NONSCHEDULED_CHARTERED_FREIGHT_AIR_TRANSPORTATION = LkOccupationTitle(1, "Nonscheduled Chartered Freight Air Transportation", 48, 481212)
-    OTHER_NONSCHEDULED_AIR_TRANSPORTATION = LkOccupationTitle(1, "Other Nonscheduled Air Transportation", 48, 481219)
-    RAIL_TRANSPORTATION = LkOccupationTitle(1, "Rail Transportation", 48, 4821)
-    LINEHAUL_RAILROADS = LkOccupationTitle(1, "Line-Haul Railroads", 48, 482111)
-    SHORT_LINE_RAILROADS = LkOccupationTitle(1, "Short Line Railroads", 48, 482112)
-    DEEP_SEA_COASTAL_AND_GREAT_LAKES_WATER_TRANSPORTATION = LkOccupationTitle(1, "Deep Sea, Coastal, and Great Lakes Water Transportation", 48, 4831)
-    DEEP_SEA_FREIGHT_TRANSPORTATION = LkOccupationTitle(1, "Deep Sea Freight Transportation", 48, 483111)
-    DEEP_SEA_PASSENGER_TRANSPORTATION = LkOccupationTitle(1, "Deep Sea Passenger Transportation", 48, 483112)
-    COASTAL_AND_GREAT_LAKES_FREIGHT_TRANSPORTATION = LkOccupationTitle(1, "Coastal and Great Lakes Freight Transportation", 48, 483113)
-    COASTAL_AND_GREAT_LAKES_PASSENGER_TRANSPORTATION = LkOccupationTitle(1, "Coastal and Great Lakes Passenger Transportation", 48, 483114)
-    INLAND_WATER_TRANSPORTATION = LkOccupationTitle(1, "Inland Water Transportation", 48, 4832)
-    INLAND_WATER_FREIGHT_TRANSPORTATION = LkOccupationTitle(1, "Inland Water Freight Transportation", 48, 483211)
-    INLAND_WATER_PASSENGER_TRANSPORTATION = LkOccupationTitle(1, "Inland Water Passenger Transportation", 48, 483212)
-    GENERAL_FREIGHT_TRUCKING = LkOccupationTitle(1, "General Freight Trucking", 48, 4841)
-    GENERAL_FREIGHT_TRUCKING_LOCAL = LkOccupationTitle(1, "General Freight Trucking, Local", 48, 484110)
-    GENERAL_FREIGHT_TRUCKING_LONGDISTANCE_TRUCKLOAD = LkOccupationTitle(1, "General Freight Trucking, Long-Distance, Truckload", 48, 484121)
-    GENERAL_FREIGHT_TRUCKING_LONGDISTANCE_LESS_THAN_TRUCKLOAD = LkOccupationTitle(1, "General Freight Trucking, Long-Distance, Less Than Truckload", 48, 484122)
-    SPECIALIZED_FREIGHT_TRUCKING = LkOccupationTitle(1, "Specialized Freight Trucking", 48, 4842)
-    USED_HOUSEHOLD_AND_OFFICE_GOODS_MOVING = LkOccupationTitle(1, "Used Household and Office Goods Moving", 48, 484210)
-    SPECIALIZED_FREIGHT_EXCEPT_USED_GOODS_TRUCKING_LOCAL = LkOccupationTitle(1, "Specialized Freight (except Used Goods) Trucking, Local", 48, 484220)
-    SPECIALIZED_FREIGHT_EXCEPT_USED_GOODS_TRUCKING_LONGDISTANCE = LkOccupationTitle(1, "Specialized Freight (except Used Goods) Trucking, Long-Distance", 48, 484230)
-    URBAN_TRANSIT_SYSTEMS = LkOccupationTitle(1, "Urban Transit Systems", 48, 4851)
-    MIXED_MODE_TRANSIT_SYSTEMS = LkOccupationTitle(1, "Mixed Mode Transit Systems", 48, 485111)
-    COMMUTER_RAIL_SYSTEMS = LkOccupationTitle(1, "Commuter Rail Systems", 48, 485112)
-    BUS_AND_OTHER_MOTOR_VEHICLE_TRANSIT_SYSTEMS = LkOccupationTitle(1, "Bus and Other Motor Vehicle Transit Systems", 48, 485113)
-    OTHER_URBAN_TRANSIT_SYSTEMS = LkOccupationTitle(1, "Other Urban Transit Systems", 48, 485119)
-    INTERURBAN_AND_RURAL_BUS_TRANSPORTATION = LkOccupationTitle(1, "Interurban and Rural Bus Transportation", 48, 4852)
-    INTERURBAN_AND_RURAL_BUS_TRANSPORTATION = LkOccupationTitle(1, "Interurban and Rural Bus Transportation", 48, 485210)
-    TAXI_AND_LIMOUSINE_SERVICE = LkOccupationTitle(1, "Taxi and Limousine Service", 48, 4853)
-    TAXI_SERVICE = LkOccupationTitle(1, "Taxi Service", 48, 485310)
-    LIMOUSINE_SERVICE = LkOccupationTitle(1, "Limousine Service", 48, 485320)
-    SCHOOL_AND_EMPLOYEE_BUS_TRANSPORTATION = LkOccupationTitle(1, "School and Employee Bus Transportation", 48, 4854)
-    SCHOOL_AND_EMPLOYEE_BUS_TRANSPORTATION = LkOccupationTitle(1, "School and Employee Bus Transportation", 48, 485410)
-    CHARTER_BUS_INDUSTRY = LkOccupationTitle(1, "Charter Bus Industry", 48, 4855)
-    CHARTER_BUS_INDUSTRY = LkOccupationTitle(1, "Charter Bus Industry", 48, 485510)
-    OTHER_TRANSIT_AND_GROUND_PASSENGER_TRANSPORTATION = LkOccupationTitle(1, "Other Transit and Ground Passenger Transportation", 48, 4859)
-    SPECIAL_NEEDS_TRANSPORTATION = LkOccupationTitle(1, "Special Needs Transportation", 48, 485991)
-    ALL_OTHER_TRANSIT_AND_GROUND_PASSENGER_TRANSPORTATION = LkOccupationTitle(1, "All Other Transit and Ground Passenger Transportation", 48, 485999)
-    PIPELINE_TRANSPORTATION_OF_CRUDE_OIL = LkOccupationTitle(1, "Pipeline Transportation of Crude Oil", 48, 4861)
-    PIPELINE_TRANSPORTATION_OF_CRUDE_OIL = LkOccupationTitle(1, "Pipeline Transportation of Crude Oil", 48, 486110)
-    PIPELINE_TRANSPORTATION_OF_NATURAL_GAS = LkOccupationTitle(1, "Pipeline Transportation of Natural Gas", 48, 4862)
-    PIPELINE_TRANSPORTATION_OF_NATURAL_GAS = LkOccupationTitle(1, "Pipeline Transportation of Natural Gas", 48, 486210)
-    OTHER_PIPELINE_TRANSPORTATION = LkOccupationTitle(1, "Other Pipeline Transportation", 48, 4869)
-    PIPELINE_TRANSPORTATION_OF_REFINED_PETROLEUM_PRODUCTS = LkOccupationTitle(1, "Pipeline Transportation of Refined Petroleum Products", 48, 486910)
-    ALL_OTHER_PIPELINE_TRANSPORTATION = LkOccupationTitle(1, "All Other Pipeline Transportation", 48, 486990)
-    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_LAND = LkOccupationTitle(1, "Scenic and Sightseeing Transportation, Land", 48, 4871)
-    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_LAND = LkOccupationTitle(1, "Scenic and Sightseeing Transportation, Land", 48, 487110)
-    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_WATER = LkOccupationTitle(1, "Scenic and Sightseeing Transportation, Water", 48, 4872)
-    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_WATER = LkOccupationTitle(1, "Scenic and Sightseeing Transportation, Water", 48, 487210)
-    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_OTHER = LkOccupationTitle(1, "Scenic and Sightseeing Transportation, Other", 48, 4879)
-    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_OTHER = LkOccupationTitle(1, "Scenic and Sightseeing Transportation, Other", 48, 487990)
-    SUPPORT_ACTIVITIES_FOR_AIR_TRANSPORTATION = LkOccupationTitle(1, "Support Activities for Air Transportation", 48, 4881)
-    AIR_TRAFFIC_CONTROL = LkOccupationTitle(1, "Air Traffic Control", 48, 488111)
-    OTHER_AIRPORT_OPERATIONS = LkOccupationTitle(1, "Other Airport Operations", 48, 488119)
-    OTHER_SUPPORT_ACTIVITIES_FOR_AIR_TRANSPORTATION = LkOccupationTitle(1, "Other Support Activities for Air Transportation", 48, 488190)
-    SUPPORT_ACTIVITIES_FOR_RAIL_TRANSPORTATION = LkOccupationTitle(1, "Support Activities for Rail Transportation", 48, 4882)
-    SUPPORT_ACTIVITIES_FOR_RAIL_TRANSPORTATION = LkOccupationTitle(1, "Support Activities for Rail Transportation", 48, 488210)
-    SUPPORT_ACTIVITIES_FOR_WATER_TRANSPORTATION = LkOccupationTitle(1, "Support Activities for Water Transportation", 48, 4883)
-    PORT_AND_HARBOR_OPERATIONS = LkOccupationTitle(1, "Port and Harbor Operations", 48, 488310)
-    MARINE_CARGO_HANDLING = LkOccupationTitle(1, "Marine Cargo Handling", 48, 488320)
-    NAVIGATIONAL_SERVICES_TO_SHIPPING = LkOccupationTitle(1, "Navigational Services to Shipping", 48, 488330)
-    OTHER_SUPPORT_ACTIVITIES_FOR_WATER_TRANSPORTATION = LkOccupationTitle(1, "Other Support Activities for Water Transportation", 48, 488390)
-    SUPPORT_ACTIVITIES_FOR_ROAD_TRANSPORTATION = LkOccupationTitle(1, "Support Activities for Road Transportation", 48, 4884)
-    MOTOR_VEHICLE_TOWING = LkOccupationTitle(1, "Motor Vehicle Towing", 48, 488410)
-    OTHER_SUPPORT_ACTIVITIES_FOR_ROAD_TRANSPORTATION = LkOccupationTitle(1, "Other Support Activities for Road Transportation", 48, 488490)
-    FREIGHT_TRANSPORTATION_ARRANGEMENT = LkOccupationTitle(1, "Freight Transportation Arrangement", 48, 4885)
-    FREIGHT_TRANSPORTATION_ARRANGEMENT = LkOccupationTitle(1, "Freight Transportation Arrangement", 48, 488510)
-    OTHER_SUPPORT_ACTIVITIES_FOR_TRANSPORTATION = LkOccupationTitle(1, "Other Support Activities for Transportation", 48, 4889)
-    PACKING_AND_CRATING = LkOccupationTitle(1, "Packing and Crating", 48, 488991)
-    ALL_OTHER_SUPPORT_ACTIVITIES_FOR_TRANSPORTATION = LkOccupationTitle(1, "All Other Support Activities for Transportation", 48, 488999)
-    POSTAL_SERVICE = LkOccupationTitle(1, "Postal Service", 49, 4911)
-    POSTAL_SERVICE = LkOccupationTitle(1, "Postal Service", 49, 491110)
-    COURIERS_AND_EXPRESS_DELIVERY_SERVICES = LkOccupationTitle(1, "Couriers and Express Delivery Services", 49, 4921)
-    COURIERS_AND_EXPRESS_DELIVERY_SERVICES = LkOccupationTitle(1, "Couriers and Express Delivery Services", 49, 492110)
-    LOCAL_MESSENGERS_AND_LOCAL_DELIVERY = LkOccupationTitle(1, "Local Messengers and Local Delivery", 49, 4922)
-    LOCAL_MESSENGERS_AND_LOCAL_DELIVERY = LkOccupationTitle(1, "Local Messengers and Local Delivery", 49, 492210)
-    WAREHOUSING_AND_STORAGE = LkOccupationTitle(1, "Warehousing and Storage", 49, 4931)
-    GENERAL_WAREHOUSING_AND_STORAGE = LkOccupationTitle(1, "General Warehousing and Storage", 49, 493110)
-    REFRIGERATED_WAREHOUSING_AND_STORAGE = LkOccupationTitle(1, "Refrigerated Warehousing and Storage", 49, 493120)
-    FARM_PRODUCT_WAREHOUSING_AND_STORAGE = LkOccupationTitle(1, "Farm Product Warehousing and Storage", 49, 493130)
-    OTHER_WAREHOUSING_AND_STORAGE = LkOccupationTitle(1, "Other Warehousing and Storage", 49, 493190)
-    NEWSPAPER_PERIODICAL_BOOK_AND_DIRECTORY_PUBLISHERS = LkOccupationTitle(1, "Newspaper, Periodical, Book, and Directory Publishers", 51, 5111)
-    NEWSPAPER_PUBLISHERS = LkOccupationTitle(1, "Newspaper Publishers", 51, 511110)
-    PERIODICAL_PUBLISHERS = LkOccupationTitle(1, "Periodical Publishers", 51, 511120)
-    BOOK_PUBLISHERS = LkOccupationTitle(1, "Book Publishers", 51, 511130)
-    DIRECTORY_AND_MAILING_LIST_PUBLISHERS = LkOccupationTitle(1, "Directory and Mailing List Publishers", 51, 511140)
-    GREETING_CARD_PUBLISHERS = LkOccupationTitle(1, "Greeting Card Publishers", 51, 511191)
-    ALL_OTHER_PUBLISHERS = LkOccupationTitle(1, "All Other Publishers", 51, 511199)
-    SOFTWARE_PUBLISHERS = LkOccupationTitle(1, "Software Publishers", 51, 5112)
-    SOFTWARE_PUBLISHERS = LkOccupationTitle(1, "Software Publishers", 51, 511210)
-    MOTION_PICTURE_AND_VIDEO_INDUSTRIES = LkOccupationTitle(1, "Motion Picture and Video Industries", 51, 5121)
-    MOTION_PICTURE_AND_VIDEO_PRODUCTION = LkOccupationTitle(1, "Motion Picture and Video Production", 51, 512110)
-    MOTION_PICTURE_AND_VIDEO_DISTRIBUTION = LkOccupationTitle(1, "Motion Picture and Video Distribution", 51, 512120)
-    MOTION_PICTURE_THEATERS_EXCEPT_DRIVEINS = LkOccupationTitle(1, "Motion Picture Theaters (except Drive-Ins)", 51, 512131)
-    DRIVEIN_MOTION_PICTURE_THEATERS = LkOccupationTitle(1, "Drive-In Motion Picture Theaters", 51, 512132)
-    TELEPRODUCTION_AND_OTHER_POSTPRODUCTION_SERVICES = LkOccupationTitle(1, "Teleproduction and Other Postproduction Services", 51, 512191)
-    OTHER_MOTION_PICTURE_AND_VIDEO_INDUSTRIES = LkOccupationTitle(1, "Other Motion Picture and Video Industries", 51, 512199)
-    SOUND_RECORDING_INDUSTRIES = LkOccupationTitle(1, "Sound Recording Industries", 51, 5122)
-    MUSIC_PUBLISHERS = LkOccupationTitle(1, "Music Publishers", 51, 512230)
-    SOUND_RECORDING_STUDIOS = LkOccupationTitle(1, "Sound Recording Studios", 51, 512240)
-    RECORD_PRODUCTION_AND_DISTRIBUTION = LkOccupationTitle(1, "Record Production and Distribution", 51, 512250)
-    OTHER_SOUND_RECORDING_INDUSTRIES = LkOccupationTitle(1, "Other Sound Recording Industries", 51, 512290)
-    RADIO_AND_TELEVISION_BROADCASTING = LkOccupationTitle(1, "Radio and Television Broadcasting", 51, 5151)
-    RADIO_NETWORKS = LkOccupationTitle(1, "Radio Networks", 51, 515111)
-    RADIO_STATIONS = LkOccupationTitle(1, "Radio Stations", 51, 515112)
-    TELEVISION_BROADCASTING = LkOccupationTitle(1, "Television Broadcasting", 51, 515120)
-    CABLE_AND_OTHER_SUBSCRIPTION_PROGRAMMING = LkOccupationTitle(1, "Cable and Other Subscription Programming", 51, 5152)
-    CABLE_AND_OTHER_SUBSCRIPTION_PROGRAMMING = LkOccupationTitle(1, "Cable and Other Subscription Programming", 51, 515210)
-    WIRED_AND_WIRELESS_TELECOMMUNICATIONS_CARRIERS = LkOccupationTitle(1, "Wired and Wireless Telecommunications Carriers", 51, 5173)
-    WIRED_TELECOMMUNICATIONS_CARRIERS = LkOccupationTitle(1, "Wired Telecommunications Carriers", 51, 517311)
-    WIRELESS_TELECOMMUNICATIONS_CARRIERS_EXCEPT_SATELLITE = LkOccupationTitle(1, "Wireless Telecommunications Carriers (except Satellite)", 51, 517312)
-    SATELLITE_TELECOMMUNICATIONS = LkOccupationTitle(1, "Satellite Telecommunications", 51, 5174)
-    SATELLITE_TELECOMMUNICATIONS = LkOccupationTitle(1, "Satellite Telecommunications", 51, 517410)
-    OTHER_TELECOMMUNICATIONS = LkOccupationTitle(1, "Other Telecommunications", 51, 5179)
-    TELECOMMUNICATIONS_RESELLERS = LkOccupationTitle(1, "Telecommunications Resellers", 51, 517911)
-    ALL_OTHER_TELECOMMUNICATIONS = LkOccupationTitle(1, "All Other Telecommunications", 51, 517919)
-    DATA_PROCESSING_HOSTING_AND_RELATED_SERVICES = LkOccupationTitle(1, "Data Processing, Hosting, and Related Services", 51, 5182)
-    DATA_PROCESSING_HOSTING_AND_RELATED_SERVICES = LkOccupationTitle(1, "Data Processing, Hosting, and Related Services", 51, 518210)
-    OTHER_INFORMATION_SERVICES = LkOccupationTitle(1, "Other Information Services", 51, 5191)
-    NEWS_SYNDICATES = LkOccupationTitle(1, "News Syndicates", 51, 519110)
-    LIBRARIES_AND_ARCHIVES = LkOccupationTitle(1, "Libraries and Archives", 51, 519120)
-    INTERNET_PUBLISHING_AND_BROADCASTING_AND_WEB_SEARCH_PORTALS = LkOccupationTitle(1, "Internet Publishing and Broadcasting and Web Search Portals", 51, 519130)
-    ALL_OTHER_INFORMATION_SERVICES = LkOccupationTitle(1, "All Other Information Services", 51, 519190)
-    MONETARY_AUTHORITIESCENTRAL_BANK = LkOccupationTitle(1, "Monetary Authorities-Central Bank", 52, 5211)
-    MONETARY_AUTHORITIESCENTRAL_BANK = LkOccupationTitle(1, "Monetary Authorities-Central Bank", 52, 521110)
-    DEPOSITORY_CREDIT_INTERMEDIATION = LkOccupationTitle(1, "Depository Credit Intermediation", 52, 5221)
-    COMMERCIAL_BANKING = LkOccupationTitle(1, "Commercial Banking", 52, 522110)
-    SAVINGS_INSTITUTIONS = LkOccupationTitle(1, "Savings Institutions", 52, 522120)
-    CREDIT_UNIONS = LkOccupationTitle(1, "Credit Unions", 52, 522130)
-    OTHER_DEPOSITORY_CREDIT_INTERMEDIATION = LkOccupationTitle(1, "Other Depository Credit Intermediation", 52, 522190)
-    NONDEPOSITORY_CREDIT_INTERMEDIATION = LkOccupationTitle(1, "Nondepository Credit Intermediation", 52, 5222)
-    CREDIT_CARD_ISSUING = LkOccupationTitle(1, "Credit Card Issuing", 52, 522210)
-    SALES_FINANCING = LkOccupationTitle(1, "Sales Financing", 52, 522220)
-    CONSUMER_LENDING = LkOccupationTitle(1, "Consumer Lending", 52, 522291)
-    REAL_ESTATE_CREDIT = LkOccupationTitle(1, "Real Estate Credit", 52, 522292)
-    INTERNATIONAL_TRADE_FINANCING = LkOccupationTitle(1, "International Trade Financing", 52, 522293)
-    SECONDARY_MARKET_FINANCING = LkOccupationTitle(1, "Secondary Market Financing", 52, 522294)
-    ALL_OTHER_NONDEPOSITORY_CREDIT_INTERMEDIATION = LkOccupationTitle(1, "All Other Nondepository Credit Intermediation", 52, 522298)
-    ACTIVITIES_RELATED_TO_CREDIT_INTERMEDIATION = LkOccupationTitle(1, "Activities Related to Credit Intermediation", 52, 5223)
-    MORTGAGE_AND_NONMORTGAGE_LOAN_BROKERS = LkOccupationTitle(1, "Mortgage and Nonmortgage Loan Brokers", 52, 522310)
-    FINANCIAL_TRANSACTIONS_PROCESSING_RESERVE_AND_CLEARINGHOUSE_ACTIVITIES = LkOccupationTitle(1, "Financial Transactions Processing, Reserve, and Clearinghouse Activities", 52, 522320)
-    OTHER_ACTIVITIES_RELATED_TO_CREDIT_INTERMEDIATION = LkOccupationTitle(1, "Other Activities Related to Credit Intermediation", 52, 522390)
-    SECURITIES_AND_COMMODITY_CONTRACTS_INTERMEDIATION_AND_BROKERAGE = LkOccupationTitle(1, "Securities and Commodity Contracts Intermediation and Brokerage", 52, 5231)
-    INVESTMENT_BANKING_AND_SECURITIES_DEALING = LkOccupationTitle(1, "Investment Banking and Securities Dealing", 52, 523110)
-    SECURITIES_BROKERAGE = LkOccupationTitle(1, "Securities Brokerage", 52, 523120)
-    COMMODITY_CONTRACTS_DEALING = LkOccupationTitle(1, "Commodity Contracts Dealing", 52, 523130)
-    COMMODITY_CONTRACTS_BROKERAGE = LkOccupationTitle(1, "Commodity Contracts Brokerage", 52, 523140)
-    SECURITIES_AND_COMMODITY_EXCHANGES = LkOccupationTitle(1, "Securities and Commodity Exchanges", 52, 5232)
-    SECURITIES_AND_COMMODITY_EXCHANGES = LkOccupationTitle(1, "Securities and Commodity Exchanges", 52, 523210)
-    OTHER_FINANCIAL_INVESTMENT_ACTIVITIES = LkOccupationTitle(1, "Other Financial Investment Activities", 52, 5239)
-    MISCELLANEOUS_INTERMEDIATION = LkOccupationTitle(1, "Miscellaneous Intermediation", 52, 523910)
-    PORTFOLIO_MANAGEMENT = LkOccupationTitle(1, "Portfolio Management", 52, 523920)
-    INVESTMENT_ADVICE = LkOccupationTitle(1, "Investment Advice", 52, 523930)
-    TRUST_FIDUCIARY_AND_CUSTODY_ACTIVITIES = LkOccupationTitle(1, "Trust, Fiduciary, and Custody Activities", 52, 523991)
-    MISCELLANEOUS_FINANCIAL_INVESTMENT_ACTIVITIES = LkOccupationTitle(1, "Miscellaneous Financial Investment Activities", 52, 523999)
-    INSURANCE_CARRIERS = LkOccupationTitle(1, "Insurance Carriers", 52, 5241)
-    DIRECT_LIFE_INSURANCE_CARRIERS = LkOccupationTitle(1, "Direct Life Insurance Carriers", 52, 524113)
-    DIRECT_HEALTH_AND_MEDICAL_INSURANCE_CARRIERS = LkOccupationTitle(1, "Direct Health and Medical Insurance Carriers", 52, 524114)
-    DIRECT_PROPERTY_AND_CASUALTY_INSURANCE_CARRIERS = LkOccupationTitle(1, "Direct Property and Casualty Insurance Carriers", 52, 524126)
-    DIRECT_TITLE_INSURANCE_CARRIERS = LkOccupationTitle(1, "Direct Title Insurance Carriers", 52, 524127)
-    OTHER_DIRECT_INSURANCE_EXCEPT_LIFE_HEALTH_AND_MEDICAL_CARRIERS = LkOccupationTitle(1, "Other Direct Insurance (except Life, Health, and Medical) Carriers", 52, 524128)
-    REINSURANCE_CARRIERS = LkOccupationTitle(1, "Reinsurance Carriers", 52, 524130)
-    AGENCIES_BROKERAGES_AND_OTHER_INSURANCE_RELATED_ACTIVITIES = LkOccupationTitle(1, "Agencies, Brokerages, and Other Insurance Related Activities", 52, 5242)
-    INSURANCE_AGENCIES_AND_BROKERAGES = LkOccupationTitle(1, "Insurance Agencies and Brokerages", 52, 524210)
-    CLAIMS_ADJUSTING = LkOccupationTitle(1, "Claims Adjusting", 52, 524291)
-    THIRD_PARTY_ADMINISTRATION_OF_INSURANCE_AND_PENSION_FUNDS = LkOccupationTitle(1, "Third Party Administration of Insurance and Pension Funds", 52, 524292)
-    ALL_OTHER_INSURANCE_RELATED_ACTIVITIES = LkOccupationTitle(1, "All Other Insurance Related Activities", 52, 524298)
-    INSURANCE_AND_EMPLOYEE_BENEFIT_FUNDS = LkOccupationTitle(1, "Insurance and Employee Benefit Funds", 52, 5251)
-    PENSION_FUNDS = LkOccupationTitle(1, "Pension Funds", 52, 525110)
-    HEALTH_AND_WELFARE_FUNDS = LkOccupationTitle(1, "Health and Welfare Funds", 52, 525120)
-    OTHER_INSURANCE_FUNDS = LkOccupationTitle(1, "Other Insurance Funds", 52, 525190)
-    OTHER_INVESTMENT_POOLS_AND_FUNDS = LkOccupationTitle(1, "Other Investment Pools and Funds", 52, 5259)
-    OPENEND_INVESTMENT_FUNDS = LkOccupationTitle(1, "Open-End Investment Funds", 52, 525910)
-    TRUSTS_ESTATES_AND_AGENCY_ACCOUNTS = LkOccupationTitle(1, "Trusts, Estates, and Agency Accounts", 52, 525920)
-    OTHER_FINANCIAL_VEHICLES = LkOccupationTitle(1, "Other Financial Vehicles", 52, 525990)
-    LESSORS_OF_REAL_ESTATE = LkOccupationTitle(1, "Lessors of Real Estate", 53, 5311)
-    LESSORS_OF_RESIDENTIAL_BUILDINGS_AND_DWELLINGS = LkOccupationTitle(1, "Lessors of Residential Buildings and Dwellings", 53, 531110)
-    LESSORS_OF_NONRESIDENTIAL_BUILDINGS_EXCEPT_MINIWAREHOUSES = LkOccupationTitle(1, "Lessors of Nonresidential Buildings (except Miniwarehouses)", 53, 531120)
-    LESSORS_OF_MINIWAREHOUSES_AND_SELFSTORAGE_UNITS = LkOccupationTitle(1, "Lessors of Miniwarehouses and Self-Storage Units", 53, 531130)
-    LESSORS_OF_OTHER_REAL_ESTATE_PROPERTY = LkOccupationTitle(1, "Lessors of Other Real Estate Property", 53, 531190)
-    OFFICES_OF_REAL_ESTATE_AGENTS_AND_BROKERS = LkOccupationTitle(1, "Offices of Real Estate Agents and Brokers", 53, 5312)
-    OFFICES_OF_REAL_ESTATE_AGENTS_AND_BROKERS = LkOccupationTitle(1, "Offices of Real Estate Agents and Brokers", 53, 531210)
-    ACTIVITIES_RELATED_TO_REAL_ESTATE = LkOccupationTitle(1, "Activities Related to Real Estate", 53, 5313)
-    RESIDENTIAL_PROPERTY_MANAGERS = LkOccupationTitle(1, "Residential Property Managers", 53, 531311)
-    NONRESIDENTIAL_PROPERTY_MANAGERS = LkOccupationTitle(1, "Nonresidential Property Managers", 53, 531312)
-    OFFICES_OF_REAL_ESTATE_APPRAISERS = LkOccupationTitle(1, "Offices of Real Estate Appraisers", 53, 531320)
-    OTHER_ACTIVITIES_RELATED_TO_REAL_ESTATE = LkOccupationTitle(1, "Other Activities Related to Real Estate", 53, 531390)
-    AUTOMOTIVE_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(1, "Automotive Equipment Rental and Leasing", 53, 5321)
-    PASSENGER_CAR_RENTAL = LkOccupationTitle(1, "Passenger Car Rental", 53, 532111)
-    PASSENGER_CAR_LEASING = LkOccupationTitle(1, "Passenger Car Leasing", 53, 532112)
-    TRUCK_UTILITY_TRAILER_AND_RV_RECREATIONAL_VEHICLE_RENTAL_AND_LEASING = LkOccupationTitle(1, "Truck, Utility Trailer, and RV (Recreational Vehicle) Rental and Leasing", 53, 532120)
-    CONSUMER_GOODS_RENTAL = LkOccupationTitle(1, "Consumer Goods Rental", 53, 5322)
-    CONSUMER_ELECTRONICS_AND_APPLIANCES_RENTAL = LkOccupationTitle(1, "Consumer Electronics and Appliances Rental", 53, 532210)
-    FORMAL_WEAR_AND_COSTUME_RENTAL = LkOccupationTitle(1, "Formal Wear and Costume Rental", 53, 532281)
-    VIDEO_TAPE_AND_DISC_RENTAL = LkOccupationTitle(1, "Video Tape and Disc Rental", 53, 532282)
-    HOME_HEALTH_EQUIPMENT_RENTAL = LkOccupationTitle(1, "Home Health Equipment Rental", 53, 532283)
-    RECREATIONAL_GOODS_RENTAL = LkOccupationTitle(1, "Recreational Goods Rental", 53, 532284)
-    ALL_OTHER_CONSUMER_GOODS_RENTAL = LkOccupationTitle(1, "All Other Consumer Goods Rental", 53, 532289)
-    GENERAL_RENTAL_CENTERS = LkOccupationTitle(1, "General Rental Centers", 53, 5323)
-    GENERAL_RENTAL_CENTERS = LkOccupationTitle(1, "General Rental Centers", 53, 532310)
-    COMMERCIAL_AND_INDUSTRIAL_MACHINERY_AND_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(1, "Commercial and Industrial Machinery and Equipment Rental and Leasing", 53, 5324)
-    COMMERCIAL_AIR_RAIL_AND_WATER_TRANSPORTATION_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(1, "Commercial Air, Rail, and Water Transportation Equipment Rental and Leasing", 53, 532411)
-    CONSTRUCTION_MINING_AND_FORESTRY_MACHINERY_AND_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(1, "Construction, Mining, and Forestry Machinery and Equipment Rental and Leasing", 53, 532412)
-    OFFICE_MACHINERY_AND_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(1, "Office Machinery and Equipment Rental and Leasing", 53, 532420)
-    OTHER_COMMERCIAL_AND_INDUSTRIAL_MACHINERY_AND_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(1, "Other Commercial and Industrial Machinery and Equipment Rental and Leasing", 53, 532490)
-    LESSORS_OF_NONFINANCIAL_INTANGIBLE_ASSETS_EXCEPT_COPYRIGHTED_WORKS = LkOccupationTitle(1, "Lessors of Nonfinancial Intangible Assets (except Copyrighted Works)", 53, 5331)
-    LESSORS_OF_NONFINANCIAL_INTANGIBLE_ASSETS_EXCEPT_COPYRIGHTED_WORKS = LkOccupationTitle(1, "Lessors of Nonfinancial Intangible Assets (except Copyrighted Works)", 53, 533110)
-    LEGAL_SERVICES = LkOccupationTitle(1, "Legal Services", 54, 5411)
-    OFFICES_OF_LAWYERS = LkOccupationTitle(1, "Offices of Lawyers", 54, 541110)
-    OFFICES_OF_NOTARIES = LkOccupationTitle(1, "Offices of Notaries", 54, 541120)
-    TITLE_ABSTRACT_AND_SETTLEMENT_OFFICES = LkOccupationTitle(1, "Title Abstract and Settlement Offices", 54, 541191)
-    ALL_OTHER_LEGAL_SERVICES = LkOccupationTitle(1, "All Other Legal Services", 54, 541199)
-    ACCOUNTING_TAX_PREPARATION_BOOKKEEPING_AND_PAYROLL_SERVICES = LkOccupationTitle(1, "Accounting, Tax Preparation, Bookkeeping, and Payroll Services", 54, 5412)
-    OFFICES_OF_CERTIFIED_PUBLIC_ACCOUNTANTS = LkOccupationTitle(1, "Offices of Certified Public Accountants", 54, 541211)
-    TAX_PREPARATION_SERVICES = LkOccupationTitle(1, "Tax Preparation Services", 54, 541213)
-    PAYROLL_SERVICES = LkOccupationTitle(1, "Payroll Services", 54, 541214)
-    OTHER_ACCOUNTING_SERVICES = LkOccupationTitle(1, "Other Accounting Services", 54, 541219)
-    ARCHITECTURAL_ENGINEERING_AND_RELATED_SERVICES = LkOccupationTitle(1, "Architectural, Engineering, and Related Services", 54, 5413)
-    ARCHITECTURAL_SERVICES = LkOccupationTitle(1, "Architectural Services", 54, 541310)
-    LANDSCAPE_ARCHITECTURAL_SERVICES = LkOccupationTitle(1, "Landscape Architectural Services", 54, 541320)
-    ENGINEERING_SERVICES = LkOccupationTitle(1, "Engineering Services", 54, 541330)
-    DRAFTING_SERVICES = LkOccupationTitle(1, "Drafting Services", 54, 541340)
-    BUILDING_INSPECTION_SERVICES = LkOccupationTitle(1, "Building Inspection Services", 54, 541350)
-    GEOPHYSICAL_SURVEYING_AND_MAPPING_SERVICES = LkOccupationTitle(1, "Geophysical Surveying and Mapping Services", 54, 541360)
-    SURVEYING_AND_MAPPING_EXCEPT_GEOPHYSICAL_SERVICES = LkOccupationTitle(1, "Surveying and Mapping (except Geophysical) Services", 54, 541370)
-    TESTING_LABORATORIES = LkOccupationTitle(1, "Testing Laboratories", 54, 541380)
-    SPECIALIZED_DESIGN_SERVICES = LkOccupationTitle(1, "Specialized Design Services", 54, 5414)
-    INTERIOR_DESIGN_SERVICES = LkOccupationTitle(1, "Interior Design Services", 54, 541410)
-    INDUSTRIAL_DESIGN_SERVICES = LkOccupationTitle(1, "Industrial Design Services", 54, 541420)
-    GRAPHIC_DESIGN_SERVICES = LkOccupationTitle(1, "Graphic Design Services", 54, 541430)
-    OTHER_SPECIALIZED_DESIGN_SERVICES = LkOccupationTitle(1, "Other Specialized Design Services", 54, 541490)
-    COMPUTER_SYSTEMS_DESIGN_AND_RELATED_SERVICES = LkOccupationTitle(1, "Computer Systems Design and Related Services", 54, 5415)
-    CUSTOM_COMPUTER_PROGRAMMING_SERVICES = LkOccupationTitle(1, "Custom Computer Programming Services", 54, 541511)
-    COMPUTER_SYSTEMS_DESIGN_SERVICES = LkOccupationTitle(1, "Computer Systems Design Services", 54, 541512)
-    COMPUTER_FACILITIES_MANAGEMENT_SERVICES = LkOccupationTitle(1, "Computer Facilities Management Services", 54, 541513)
-    OTHER_COMPUTER_RELATED_SERVICES = LkOccupationTitle(1, "Other Computer Related Services", 54, 541519)
-    MANAGEMENT_SCIENTIFIC_AND_TECHNICAL_CONSULTING_SERVICES = LkOccupationTitle(1, "Management, Scientific, and Technical Consulting Services", 54, 5416)
-    ADMINISTRATIVE_MANAGEMENT_AND_GENERAL_MANAGEMENT_CONSULTING_SERVICES = LkOccupationTitle(1, "Administrative Management and General Management Consulting Services", 54, 541611)
-    HUMAN_RESOURCES_CONSULTING_SERVICES = LkOccupationTitle(1, "Human Resources Consulting Services", 54, 541612)
-    MARKETING_CONSULTING_SERVICES = LkOccupationTitle(1, "Marketing Consulting Services", 54, 541613)
-    PROCESS_PHYSICAL_DISTRIBUTION_AND_LOGISTICS_CONSULTING_SERVICES = LkOccupationTitle(1, "Process, Physical Distribution, and Logistics Consulting Services", 54, 541614)
-    OTHER_MANAGEMENT_CONSULTING_SERVICES = LkOccupationTitle(1, "Other Management Consulting Services", 54, 541618)
-    ENVIRONMENTAL_CONSULTING_SERVICES = LkOccupationTitle(1, "Environmental Consulting Services", 54, 541620)
-    OTHER_SCIENTIFIC_AND_TECHNICAL_CONSULTING_SERVICES = LkOccupationTitle(1, "Other Scientific and Technical Consulting Services", 54, 541690)
-    SCIENTIFIC_RESEARCH_AND_DEVELOPMENT_SERVICES = LkOccupationTitle(1, "Scientific Research and Development Services", 54, 5417)
-    RESEARCH_AND_DEVELOPMENT_IN_NANOTECHNOLOGY = LkOccupationTitle(1, "Research and Development in Nanotechnology", 54, 541713)
-    RESEARCH_AND_DEVELOPMENT_IN_BIOTECHNOLOGY_EXCEPT_NANOBIOTECHNOLOGY = LkOccupationTitle(1, "Research and Development in Biotechnology (except Nanobiotechnology)", 54, 541714)
-    RESEARCH_AND_DEVELOPMENT_IN_THE_PHYSICAL_ENGINEERING_AND_LIFE_SCIENCES_EXCEPT_NANOTECHNOLOGY_AND_BIOTECHNOLOGY = LkOccupationTitle(1, "Research and Development in the Physical, Engineering, and Life Sciences (except Nanotechnology and Biotechnology)", 54, 541715)
-    RESEARCH_AND_DEVELOPMENT_IN_THE_SOCIAL_SCIENCES_AND_HUMANITIES = LkOccupationTitle(1, "Research and Development in the Social Sciences and Humanities", 54, 541720)
-    ADVERTISING_PUBLIC_RELATIONS_AND_RELATED_SERVICES = LkOccupationTitle(1, "Advertising, Public Relations, and Related Services", 54, 5418)
-    ADVERTISING_AGENCIES = LkOccupationTitle(1, "Advertising Agencies", 54, 541810)
-    PUBLIC_RELATIONS_AGENCIES = LkOccupationTitle(1, "Public Relations Agencies", 54, 541820)
-    MEDIA_BUYING_AGENCIES = LkOccupationTitle(1, "Media Buying Agencies", 54, 541830)
-    MEDIA_REPRESENTATIVES = LkOccupationTitle(1, "Media Representatives", 54, 541840)
-    OUTDOOR_ADVERTISING = LkOccupationTitle(1, "Outdoor Advertising", 54, 541850)
-    DIRECT_MAIL_ADVERTISING = LkOccupationTitle(1, "Direct Mail Advertising", 54, 541860)
-    ADVERTISING_MATERIAL_DISTRIBUTION_SERVICES = LkOccupationTitle(1, "Advertising Material Distribution Services", 54, 541870)
-    OTHER_SERVICES_RELATED_TO_ADVERTISING = LkOccupationTitle(1, "Other Services Related to Advertising", 54, 541890)
-    OTHER_PROFESSIONAL_SCIENTIFIC_AND_TECHNICAL_SERVICES = LkOccupationTitle(1, "Other Professional, Scientific, and Technical Services", 54, 5419)
-    MARKETING_RESEARCH_AND_PUBLIC_OPINION_POLLING = LkOccupationTitle(1, "Marketing Research and Public Opinion Polling", 54, 541910)
-    PHOTOGRAPHY_STUDIOS_PORTRAIT = LkOccupationTitle(1, "Photography Studios, Portrait", 54, 541921)
-    COMMERCIAL_PHOTOGRAPHY = LkOccupationTitle(1, "Commercial Photography", 54, 541922)
-    TRANSLATION_AND_INTERPRETATION_SERVICES = LkOccupationTitle(1, "Translation and Interpretation Services", 54, 541930)
-    VETERINARY_SERVICES = LkOccupationTitle(1, "Veterinary Services", 54, 541940)
-    ALL_OTHER_PROFESSIONAL_SCIENTIFIC_AND_TECHNICAL_SERVICES = LkOccupationTitle(1, "All Other Professional, Scientific, and Technical Services", 54, 541990)
-    MANAGEMENT_OF_COMPANIES_AND_ENTERPRISES = LkOccupationTitle(1, "Management of Companies and Enterprises", 55, 5511)
-    OFFICES_OF_BANK_HOLDING_COMPANIES = LkOccupationTitle(1, "Offices of Bank Holding Companies", 55, 551111)
-    OFFICES_OF_OTHER_HOLDING_COMPANIES = LkOccupationTitle(1, "Offices of Other Holding Companies", 55, 551112)
-    CORPORATE_SUBSIDIARY_AND_REGIONAL_MANAGING_OFFICES = LkOccupationTitle(1, "Corporate, Subsidiary, and Regional Managing Offices", 55, 551114)
-    OFFICE_ADMINISTRATIVE_SERVICES = LkOccupationTitle(1, "Office Administrative Services", 56, 5611)
-    OFFICE_ADMINISTRATIVE_SERVICES = LkOccupationTitle(1, "Office Administrative Services", 56, 561110)
-    FACILITIES_SUPPORT_SERVICES = LkOccupationTitle(1, "Facilities Support Services", 56, 5612)
-    FACILITIES_SUPPORT_SERVICES = LkOccupationTitle(1, "Facilities Support Services", 56, 561210)
-    EMPLOYMENT_SERVICES = LkOccupationTitle(1, "Employment Services", 56, 5613)
-    EMPLOYMENT_PLACEMENT_AGENCIES = LkOccupationTitle(1, "Employment Placement Agencies", 56, 561311)
-    EXECUTIVE_SEARCH_SERVICES = LkOccupationTitle(1, "Executive Search Services", 56, 561312)
-    TEMPORARY_HELP_SERVICES = LkOccupationTitle(1, "Temporary Help Services", 56, 561320)
-    PROFESSIONAL_EMPLOYER_ORGANIZATIONS = LkOccupationTitle(1, "Professional Employer Organizations", 56, 561330)
-    BUSINESS_SUPPORT_SERVICES = LkOccupationTitle(1, "Business Support Services", 56, 5614)
-    DOCUMENT_PREPARATION_SERVICES = LkOccupationTitle(1, "Document Preparation Services", 56, 561410)
-    TELEPHONE_ANSWERING_SERVICES = LkOccupationTitle(1, "Telephone Answering Services", 56, 561421)
-    TELEMARKETING_BUREAUS_AND_OTHER_CONTACT_CENTERS = LkOccupationTitle(1, "Telemarketing Bureaus and Other Contact Centers", 56, 561422)
-    PRIVATE_MAIL_CENTERS = LkOccupationTitle(1, "Private Mail Centers", 56, 561431)
-    OTHER_BUSINESS_SERVICE_CENTERS_INCLUDING_COPY_SHOPS = LkOccupationTitle(1, "Other Business Service Centers (including Copy Shops)", 56, 561439)
-    COLLECTION_AGENCIES = LkOccupationTitle(1, "Collection Agencies", 56, 561440)
-    CREDIT_BUREAUS = LkOccupationTitle(1, "Credit Bureaus", 56, 561450)
-    REPOSSESSION_SERVICES = LkOccupationTitle(1, "Repossession Services", 56, 561491)
-    COURT_REPORTING_AND_STENOTYPE_SERVICES = LkOccupationTitle(1, "Court Reporting and Stenotype Services", 56, 561492)
-    ALL_OTHER_BUSINESS_SUPPORT_SERVICES = LkOccupationTitle(1, "All Other Business Support Services", 56, 561499)
-    TRAVEL_ARRANGEMENT_AND_RESERVATION_SERVICES = LkOccupationTitle(1, "Travel Arrangement and Reservation Services", 56, 5615)
-    TRAVEL_AGENCIES = LkOccupationTitle(1, "Travel Agencies", 56, 561510)
-    TOUR_OPERATORS = LkOccupationTitle(1, "Tour Operators", 56, 561520)
-    CONVENTION_AND_VISITORS_BUREAUS = LkOccupationTitle(1, "Convention and Visitors Bureaus", 56, 561591)
-    ALL_OTHER_TRAVEL_ARRANGEMENT_AND_RESERVATION_SERVICES = LkOccupationTitle(1, "All Other Travel Arrangement and Reservation Services", 56, 561599)
-    INVESTIGATION_AND_SECURITY_SERVICES = LkOccupationTitle(1, "Investigation and Security Services", 56, 5616)
-    INVESTIGATION_SERVICES = LkOccupationTitle(1, "Investigation Services", 56, 561611)
-    SECURITY_GUARDS_AND_PATROL_SERVICES = LkOccupationTitle(1, "Security Guards and Patrol Services", 56, 561612)
-    ARMORED_CAR_SERVICES = LkOccupationTitle(1, "Armored Car Services", 56, 561613)
-    SECURITY_SYSTEMS_SERVICES_EXCEPT_LOCKSMITHS = LkOccupationTitle(1, "Security Systems Services (except Locksmiths)", 56, 561621)
-    LOCKSMITHS = LkOccupationTitle(1, "Locksmiths", 56, 561622)
-    SERVICES_TO_BUILDINGS_AND_DWELLINGS = LkOccupationTitle(1, "Services to Buildings and Dwellings", 56, 5617)
-    EXTERMINATING_AND_PEST_CONTROL_SERVICES = LkOccupationTitle(1, "Exterminating and Pest Control Services", 56, 561710)
-    JANITORIAL_SERVICES = LkOccupationTitle(1, "Janitorial Services", 56, 561720)
-    LANDSCAPING_SERVICES = LkOccupationTitle(1, "Landscaping Services", 56, 561730)
-    CARPET_AND_UPHOLSTERY_CLEANING_SERVICES = LkOccupationTitle(1, "Carpet and Upholstery Cleaning Services", 56, 561740)
-    OTHER_SERVICES_TO_BUILDINGS_AND_DWELLINGS = LkOccupationTitle(1, "Other Services to Buildings and Dwellings", 56, 561790)
-    OTHER_SUPPORT_SERVICES = LkOccupationTitle(1, "Other Support Services", 56, 5619)
-    PACKAGING_AND_LABELING_SERVICES = LkOccupationTitle(1, "Packaging and Labeling Services", 56, 561910)
-    CONVENTION_AND_TRADE_SHOW_ORGANIZERS = LkOccupationTitle(1, "Convention and Trade Show Organizers", 56, 561920)
-    ALL_OTHER_SUPPORT_SERVICES = LkOccupationTitle(1, "All Other Support Services", 56, 561990)
-    WASTE_COLLECTION = LkOccupationTitle(1, "Waste Collection", 56, 5621)
-    SOLID_WASTE_COLLECTION = LkOccupationTitle(1, "Solid Waste Collection", 56, 562111)
-    HAZARDOUS_WASTE_COLLECTION = LkOccupationTitle(1, "Hazardous Waste Collection", 56, 562112)
-    OTHER_WASTE_COLLECTION = LkOccupationTitle(1, "Other Waste Collection", 56, 562119)
-    WASTE_TREATMENT_AND_DISPOSAL = LkOccupationTitle(1, "Waste Treatment and Disposal", 56, 5622)
-    HAZARDOUS_WASTE_TREATMENT_AND_DISPOSAL = LkOccupationTitle(1, "Hazardous Waste Treatment and Disposal", 56, 562211)
-    SOLID_WASTE_LANDFILL = LkOccupationTitle(1, "Solid Waste Landfill", 56, 562212)
-    SOLID_WASTE_COMBUSTORS_AND_INCINERATORS = LkOccupationTitle(1, "Solid Waste Combustors and Incinerators", 56, 562213)
-    OTHER_NONHAZARDOUS_WASTE_TREATMENT_AND_DISPOSAL = LkOccupationTitle(1, "Other Nonhazardous Waste Treatment and Disposal", 56, 562219)
-    REMEDIATION_AND_OTHER_WASTE_MANAGEMENT_SERVICES = LkOccupationTitle(1, "Remediation and Other Waste Management Services", 56, 5629)
-    REMEDIATION_SERVICES = LkOccupationTitle(1, "Remediation Services", 56, 562910)
-    MATERIALS_RECOVERY_FACILITIES = LkOccupationTitle(1, "Materials Recovery Facilities", 56, 562920)
-    SEPTIC_TANK_AND_RELATED_SERVICES = LkOccupationTitle(1, "Septic Tank and Related Services", 56, 562991)
-    ALL_OTHER_MISCELLANEOUS_WASTE_MANAGEMENT_SERVICES = LkOccupationTitle(1, "All Other Miscellaneous Waste Management Services", 56, 562998)
-    ELEMENTARY_AND_SECONDARY_SCHOOLS = LkOccupationTitle(1, "Elementary and Secondary Schools", 61, 6111)
-    ELEMENTARY_AND_SECONDARY_SCHOOLS = LkOccupationTitle(1, "Elementary and Secondary Schools", 61, 611110)
-    JUNIOR_COLLEGES = LkOccupationTitle(1, "Junior Colleges", 61, 6112)
-    JUNIOR_COLLEGES = LkOccupationTitle(1, "Junior Colleges", 61, 611210)
-    COLLEGES_UNIVERSITIES_AND_PROFESSIONAL_SCHOOLS = LkOccupationTitle(1, "Colleges, Universities, and Professional Schools", 61, 6113)
-    COLLEGES_UNIVERSITIES_AND_PROFESSIONAL_SCHOOLS = LkOccupationTitle(1, "Colleges, Universities, and Professional Schools", 61, 611310)
-    BUSINESS_SCHOOLS_AND_COMPUTER_AND_MANAGEMENT_TRAINING = LkOccupationTitle(1, "Business Schools and Computer and Management Training", 61, 6114)
-    BUSINESS_AND_SECRETARIAL_SCHOOLS = LkOccupationTitle(1, "Business and Secretarial Schools", 61, 611410)
-    COMPUTER_TRAINING = LkOccupationTitle(1, "Computer Training", 61, 611420)
-    PROFESSIONAL_AND_MANAGEMENT_DEVELOPMENT_TRAINING = LkOccupationTitle(1, "Professional and Management Development Training", 61, 611430)
-    TECHNICAL_AND_TRADE_SCHOOLS = LkOccupationTitle(1, "Technical and Trade Schools", 61, 6115)
-    COSMETOLOGY_AND_BARBER_SCHOOLS = LkOccupationTitle(1, "Cosmetology and Barber Schools", 61, 611511)
-    FLIGHT_TRAINING = LkOccupationTitle(1, "Flight Training", 61, 611512)
-    APPRENTICESHIP_TRAINING = LkOccupationTitle(1, "Apprenticeship Training", 61, 611513)
-    OTHER_TECHNICAL_AND_TRADE_SCHOOLS = LkOccupationTitle(1, "Other Technical and Trade Schools", 61, 611519)
-    OTHER_SCHOOLS_AND_INSTRUCTION = LkOccupationTitle(1, "Other Schools and Instruction", 61, 6116)
-    FINE_ARTS_SCHOOLS = LkOccupationTitle(1, "Fine Arts Schools", 61, 611610)
-    SPORTS_AND_RECREATION_INSTRUCTION = LkOccupationTitle(1, "Sports and Recreation Instruction", 61, 611620)
-    LANGUAGE_SCHOOLS = LkOccupationTitle(1, "Language Schools", 61, 611630)
-    EXAM_PREPARATION_AND_TUTORING = LkOccupationTitle(1, "Exam Preparation and Tutoring", 61, 611691)
-    AUTOMOBILE_DRIVING_SCHOOLS = LkOccupationTitle(1, "Automobile Driving Schools", 61, 611692)
-    ALL_OTHER_MISCELLANEOUS_SCHOOLS_AND_INSTRUCTION = LkOccupationTitle(1, "All Other Miscellaneous Schools and Instruction", 61, 611699)
-    EDUCATIONAL_SUPPORT_SERVICES = LkOccupationTitle(1, "Educational Support Services", 61, 6117)
-    EDUCATIONAL_SUPPORT_SERVICES = LkOccupationTitle(1, "Educational Support Services", 61, 611710)
-    OFFICES_OF_PHYSICIANS = LkOccupationTitle(1, "Offices of Physicians", 62, 6211)
-    OFFICES_OF_PHYSICIANS_EXCEPT_MENTAL_HEALTH_SPECIALISTS = LkOccupationTitle(1, "Offices of Physicians (except Mental Health Specialists)", 62, 621111)
-    OFFICES_OF_PHYSICIANS_MENTAL_HEALTH_SPECIALISTS = LkOccupationTitle(1, "Offices of Physicians, Mental Health Specialists", 62, 621112)
-    OFFICES_OF_DENTISTS = LkOccupationTitle(1, "Offices of Dentists", 62, 6212)
-    OFFICES_OF_DENTISTS = LkOccupationTitle(1, "Offices of Dentists", 62, 621210)
-    OFFICES_OF_OTHER_HEALTH_PRACTITIONERS = LkOccupationTitle(1, "Offices of Other Health Practitioners", 62, 6213)
-    OFFICES_OF_CHIROPRACTORS = LkOccupationTitle(1, "Offices of Chiropractors", 62, 621310)
-    OFFICES_OF_OPTOMETRISTS = LkOccupationTitle(1, "Offices of Optometrists", 62, 621320)
-    OFFICES_OF_MENTAL_HEALTH_PRACTITIONERS_EXCEPT_PHYSICIANS = LkOccupationTitle(1, "Offices of Mental Health Practitioners (except Physicians)", 62, 621330)
-    OFFICES_OF_PHYSICAL_OCCUPATIONAL_AND_SPEECH_THERAPISTS_AND_AUDIOLOGISTS = LkOccupationTitle(1, "Offices of Physical, Occupational and Speech Therapists, and Audiologists", 62, 621340)
-    OFFICES_OF_PODIATRISTS = LkOccupationTitle(1, "Offices of Podiatrists", 62, 621391)
-    OFFICES_OF_ALL_OTHER_MISCELLANEOUS_HEALTH_PRACTITIONERS = LkOccupationTitle(1, "Offices of All Other Miscellaneous Health Practitioners", 62, 621399)
-    OUTPATIENT_CARE_CENTERS = LkOccupationTitle(1, "Outpatient Care Centers", 62, 6214)
-    FAMILY_PLANNING_CENTERS = LkOccupationTitle(1, "Family Planning Centers", 62, 621410)
-    OUTPATIENT_MENTAL_HEALTH_AND_SUBSTANCE_ABUSE_CENTERS = LkOccupationTitle(1, "Outpatient Mental Health and Substance Abuse Centers", 62, 621420)
-    HMO_MEDICAL_CENTERS = LkOccupationTitle(1, "HMO Medical Centers", 62, 621491)
-    KIDNEY_DIALYSIS_CENTERS = LkOccupationTitle(1, "Kidney Dialysis Centers", 62, 621492)
-    FREESTANDING_AMBULATORY_SURGICAL_AND_EMERGENCY_CENTERS = LkOccupationTitle(1, "Freestanding Ambulatory Surgical and Emergency Centers", 62, 621493)
-    ALL_OTHER_OUTPATIENT_CARE_CENTERS = LkOccupationTitle(1, "All Other Outpatient Care Centers", 62, 621498)
-    MEDICAL_AND_DIAGNOSTIC_LABORATORIES = LkOccupationTitle(1, "Medical and Diagnostic Laboratories", 62, 6215)
-    MEDICAL_LABORATORIES = LkOccupationTitle(1, "Medical Laboratories", 62, 621511)
-    DIAGNOSTIC_IMAGING_CENTERS = LkOccupationTitle(1, "Diagnostic Imaging Centers", 62, 621512)
-    HOME_HEALTH_CARE_SERVICES = LkOccupationTitle(1, "Home Health Care Services", 62, 6216)
-    HOME_HEALTH_CARE_SERVICES = LkOccupationTitle(1, "Home Health Care Services", 62, 621610)
-    OTHER_AMBULATORY_HEALTH_CARE_SERVICES = LkOccupationTitle(1, "Other Ambulatory Health Care Services", 62, 6219)
-    AMBULANCE_SERVICES = LkOccupationTitle(1, "Ambulance Services", 62, 621910)
-    BLOOD_AND_ORGAN_BANKS = LkOccupationTitle(1, "Blood and Organ Banks", 62, 621991)
-    ALL_OTHER_MISCELLANEOUS_AMBULATORY_HEALTH_CARE_SERVICES = LkOccupationTitle(1, "All Other Miscellaneous Ambulatory Health Care Services", 62, 621999)
-    GENERAL_MEDICAL_AND_SURGICAL_HOSPITALS = LkOccupationTitle(1, "General Medical and Surgical Hospitals", 62, 6221)
-    GENERAL_MEDICAL_AND_SURGICAL_HOSPITALS = LkOccupationTitle(1, "General Medical and Surgical Hospitals", 62, 622110)
-    PSYCHIATRIC_AND_SUBSTANCE_ABUSE_HOSPITALS = LkOccupationTitle(1, "Psychiatric and Substance Abuse Hospitals", 62, 6222)
-    PSYCHIATRIC_AND_SUBSTANCE_ABUSE_HOSPITALS = LkOccupationTitle(1, "Psychiatric and Substance Abuse Hospitals", 62, 622210)
-    SPECIALTY_EXCEPT_PSYCHIATRIC_AND_SUBSTANCE_ABUSE_HOSPITALS = LkOccupationTitle(1, "Specialty (except Psychiatric and Substance Abuse) Hospitals", 62, 6223)
-    SPECIALTY_EXCEPT_PSYCHIATRIC_AND_SUBSTANCE_ABUSE_HOSPITALS = LkOccupationTitle(1, "Specialty (except Psychiatric and Substance Abuse) Hospitals", 62, 622310)
-    NURSING_CARE_FACILITIES_SKILLED_NURSING_FACILITIES = LkOccupationTitle(1, "Nursing Care Facilities (Skilled Nursing Facilities)", 62, 6231)
-    NURSING_CARE_FACILITIES_SKILLED_NURSING_FACILITIES = LkOccupationTitle(1, "Nursing Care Facilities (Skilled Nursing Facilities)", 62, 623110)
-    RESIDENTIAL_INTELLECTUAL_AND_DEVELOPMENTAL_DISABILITY_MENTAL_HEALTH_AND_SUBSTANCE_ABUSE_FACILITIES = LkOccupationTitle(1, "Residential Intellectual and Developmental Disability, Mental Health, and Substance Abuse Facilities", 62, 6232)
-    RESIDENTIAL_INTELLECTUAL_AND_DEVELOPMENTAL_DISABILITY_FACILITIES = LkOccupationTitle(1, "Residential Intellectual and Developmental Disability Facilities", 62, 623210)
-    RESIDENTIAL_MENTAL_HEALTH_AND_SUBSTANCE_ABUSE_FACILITIES = LkOccupationTitle(1, "Residential Mental Health and Substance Abuse Facilities", 62, 623220)
-    CONTINUING_CARE_RETIREMENT_COMMUNITIES_AND_ASSISTED_LIVING_FACILITIES_FOR_THE_ELDERLY = LkOccupationTitle(1, "Continuing Care Retirement Communities and Assisted Living Facilities for the Elderly028", 62, 6233)
-    CONTINUING_CARE_RETIREMENT_COMMUNITIES = LkOccupationTitle(1, "Continuing Care Retirement Communities", 62, 623311)
-    ASSISTED_LIVING_FACILITIES_FOR_THE_ELDERLY = LkOccupationTitle(1, "Assisted Living Facilities for the Elderly", 62, 623312)
-    OTHER_RESIDENTIAL_CARE_FACILITIES = LkOccupationTitle(1, "Other Residential Care Facilities", 62, 6239)
-    OTHER_RESIDENTIAL_CARE_FACILITIES = LkOccupationTitle(1, "Other Residential Care Facilities", 62, 623990)
-    INDIVIDUAL_AND_FAMILY_SERVICES = LkOccupationTitle(1, "Individual and Family Services", 62, 6241)
-    CHILD_AND_YOUTH_SERVICES = LkOccupationTitle(1, "Child and Youth Services", 62, 624110)
-    SERVICES_FOR_THE_ELDERLY_AND_PERSONS_WITH_DISABILITIES = LkOccupationTitle(1, "Services for the Elderly and Persons with Disabilities", 62, 624120)
-    OTHER_INDIVIDUAL_AND_FAMILY_SERVICES = LkOccupationTitle(1, "Other Individual and Family Services", 62, 624190)
-    COMMUNITY_FOOD_AND_HOUSING_AND_EMERGENCY_AND_OTHER_RELIEF_SERVICES = LkOccupationTitle(1, "Community Food and Housing, and Emergency and Other Relief Services", 62, 6242)
-    COMMUNITY_FOOD_SERVICES = LkOccupationTitle(1, "Community Food Services", 62, 624210)
-    TEMPORARY_SHELTERS = LkOccupationTitle(1, "Temporary Shelters", 62, 624221)
-    OTHER_COMMUNITY_HOUSING_SERVICES = LkOccupationTitle(1, "Other Community Housing Services", 62, 624229)
-    EMERGENCY_AND_OTHER_RELIEF_SERVICES = LkOccupationTitle(1, "Emergency and Other Relief Services", 62, 624230)
-    VOCATIONAL_REHABILITATION_SERVICES = LkOccupationTitle(1, "Vocational Rehabilitation Services", 62, 6243)
-    VOCATIONAL_REHABILITATION_SERVICES = LkOccupationTitle(1, "Vocational Rehabilitation Services", 62, 624310)
-    CHILD_DAY_CARE_SERVICES = LkOccupationTitle(1, "Child Day Care Services", 62, 6244)
-    CHILD_DAY_CARE_SERVICES = LkOccupationTitle(1, "Child Day Care Services", 62, 624410)
-    PERFORMING_ARTS_COMPANIES = LkOccupationTitle(1, "Performing Arts Companies", 71, 7111)
-    THEATER_COMPANIES_AND_DINNER_THEATERS = LkOccupationTitle(1, "Theater Companies and Dinner Theaters", 71, 711110)
-    DANCE_COMPANIES = LkOccupationTitle(1, "Dance Companies", 71, 711120)
-    MUSICAL_GROUPS_AND_ARTISTS = LkOccupationTitle(1, "Musical Groups and Artists", 71, 711130)
-    OTHER_PERFORMING_ARTS_COMPANIES = LkOccupationTitle(1, "Other Performing Arts Companies", 71, 711190)
-    SPECTATOR_SPORTS = LkOccupationTitle(1, "Spectator Sports", 71, 7112)
-    SPORTS_TEAMS_AND_CLUBS = LkOccupationTitle(1, "Sports Teams and Clubs", 71, 711211)
-    RACETRACKS = LkOccupationTitle(1, "Racetracks", 71, 711212)
-    OTHER_SPECTATOR_SPORTS = LkOccupationTitle(1, "Other Spectator Sports", 71, 711219)
-    PROMOTERS_OF_PERFORMING_ARTS_SPORTS_AND_SIMILAR_EVENTS = LkOccupationTitle(1, "Promoters of Performing Arts, Sports, and Similar Events", 71, 7113)
-    PROMOTERS_OF_PERFORMING_ARTS_SPORTS_AND_SIMILAR_EVENTS_WITH_FACILITIES = LkOccupationTitle(1, "Promoters of Performing Arts, Sports, and Similar Events with Facilities", 71, 711310)
-    PROMOTERS_OF_PERFORMING_ARTS_SPORTS_AND_SIMILAR_EVENTS_WITHOUT_FACILITIES = LkOccupationTitle(1, "Promoters of Performing Arts, Sports, and Similar Events without Facilities", 71, 711320)
-    AGENTS_AND_MANAGERS_FOR_ARTISTS_ATHLETES_ENTERTAINERS_AND_OTHER_PUBLIC_FIGURES = LkOccupationTitle(1, "Agents and Managers for Artists, Athletes, Entertainers, and Other Public Figures", 71, 7114)
-    AGENTS_AND_MANAGERS_FOR_ARTISTS_ATHLETES_ENTERTAINERS_AND_OTHER_PUBLIC_FIGURES = LkOccupationTitle(1, "Agents and Managers for Artists, Athletes, Entertainers, and Other Public Figures", 71, 711410)
-    INDEPENDENT_ARTISTS_WRITERS_AND_PERFORMERS = LkOccupationTitle(1, "Independent Artists, Writers, and Performers", 71, 7115)
-    INDEPENDENT_ARTISTS_WRITERS_AND_PERFORMERS = LkOccupationTitle(1, "Independent Artists, Writers, and Performers", 71, 711510)
-    MUSEUMS_HISTORICAL_SITES_AND_SIMILAR_INSTITUTIONS = LkOccupationTitle(1, "Museums, Historical Sites, and Similar Institutions", 71, 7121)
-    MUSEUMS = LkOccupationTitle(1, "Museums", 71, 712110)
-    HISTORICAL_SITES = LkOccupationTitle(1, "Historical Sites", 71, 712120)
-    ZOOS_AND_BOTANICAL_GARDENS = LkOccupationTitle(1, "Zoos and Botanical Gardens", 71, 712130)
-    NATURE_PARKS_AND_OTHER_SIMILAR_INSTITUTIONS = LkOccupationTitle(1, "Nature Parks and Other Similar Institutions", 71, 712190)
-    AMUSEMENT_PARKS_AND_ARCADES = LkOccupationTitle(1, "Amusement Parks and Arcades", 71, 7131)
-    AMUSEMENT_AND_THEME_PARKS = LkOccupationTitle(1, "Amusement and Theme Parks", 71, 713110)
-    AMUSEMENT_ARCADES = LkOccupationTitle(1, "Amusement Arcades", 71, 713120)
-    GAMBLING_INDUSTRIES = LkOccupationTitle(1, "Gambling Industries", 71, 7132)
-    CASINOS_EXCEPT_CASINO_HOTELS = LkOccupationTitle(1, "Casinos (except Casino Hotels)", 71, 713210)
-    OTHER_GAMBLING_INDUSTRIES = LkOccupationTitle(1, "Other Gambling Industries", 71, 713290)
-    OTHER_AMUSEMENT_AND_RECREATION_INDUSTRIES = LkOccupationTitle(1, "Other Amusement and Recreation Industries", 71, 7139)
-    GOLF_COURSES_AND_COUNTRY_CLUBS = LkOccupationTitle(1, "Golf Courses and Country Clubs", 71, 713910)
-    SKIING_FACILITIES = LkOccupationTitle(1, "Skiing Facilities", 71, 713920)
-    MARINAS = LkOccupationTitle(1, "Marinas", 71, 713930)
-    FITNESS_AND_RECREATIONAL_SPORTS_CENTERS = LkOccupationTitle(1, "Fitness and Recreational Sports Centers", 71, 713940)
-    BOWLING_CENTERS = LkOccupationTitle(1, "Bowling Centers", 71, 713950)
-    ALL_OTHER_AMUSEMENT_AND_RECREATION_INDUSTRIES = LkOccupationTitle(1, "All Other Amusement and Recreation Industries", 71, 713990)
-    TRAVELER_ACCOMMODATION = LkOccupationTitle(1, "Traveler Accommodation", 72, 7211)
-    HOTELS_EXCEPT_CASINO_HOTELS_AND_MOTELS = LkOccupationTitle(1, "Hotels (except Casino Hotels) and Motels", 72, 721110)
-    CASINO_HOTELS = LkOccupationTitle(1, "Casino Hotels", 72, 721120)
-    BEDANDBREAKFAST_INNS = LkOccupationTitle(1, "Bed-and-Breakfast Inns", 72, 721191)
-    ALL_OTHER_TRAVELER_ACCOMMODATION = LkOccupationTitle(1, "All Other Traveler Accommodation", 72, 721199)
-    RV_RECREATIONAL_VEHICLE_PARKS_AND_RECREATIONAL_CAMPS = LkOccupationTitle(1, "RV (Recreational Vehicle) Parks and Recreational Camps", 72, 7212)
-    RV_RECREATIONAL_VEHICLE_PARKS_AND_CAMPGROUNDS = LkOccupationTitle(1, "RV (Recreational Vehicle) Parks and Campgrounds", 72, 721211)
-    RECREATIONAL_AND_VACATION_CAMPS_EXCEPT_CAMPGROUNDS = LkOccupationTitle(1, "Recreational and Vacation Camps (except Campgrounds)", 72, 721214)
-    ROOMING_AND_BOARDING_HOUSES_DORMITORIES_AND_WORKERS_CAMPS = LkOccupationTitle(1, "Rooming and Boarding Houses, Dormitories, and Workers' Camps", 72, 7213)
-    ROOMING_AND_BOARDING_HOUSES_DORMITORIES_AND_WORKERS_CAMPS = LkOccupationTitle(1, "Rooming and Boarding Houses, Dormitories, and Workers' Camps", 72, 721310)
-    SPECIAL_FOOD_SERVICES = LkOccupationTitle(1, "Special Food Services", 72, 7223)
-    FOOD_SERVICE_CONTRACTORS = LkOccupationTitle(1, "Food Service Contractors", 72, 722310)
-    CATERERS = LkOccupationTitle(1, "Caterers", 72, 722320)
-    MOBILE_FOOD_SERVICES = LkOccupationTitle(1, "Mobile Food Services", 72, 722330)
-    DRINKING_PLACES_ALCOHOLIC_BEVERAGES = LkOccupationTitle(1, "Drinking Places (Alcoholic Beverages)", 72, 7224)
-    DRINKING_PLACES_ALCOHOLIC_BEVERAGES = LkOccupationTitle(1, "Drinking Places (Alcoholic Beverages)", 72, 722410)
-    RESTAURANTS_AND_OTHER_EATING_PLACES = LkOccupationTitle(1, "Restaurants and Other Eating Places", 72, 7225)
-    FULLSERVICE_RESTAURANTS = LkOccupationTitle(1, "Full-Service Restaurants", 72, 722511)
-    LIMITEDSERVICE_RESTAURANTS = LkOccupationTitle(1, "Limited-Service Restaurants", 72, 722513)
-    CAFETERIAS_GRILL_BUFFETS_AND_BUFFETS = LkOccupationTitle(1, "Cafeterias, Grill Buffets, and Buffets", 72, 722514)
-    SNACK_AND_NONALCOHOLIC_BEVERAGE_BARS = LkOccupationTitle(1, "Snack and Nonalcoholic Beverage Bars", 72, 722515)
-    AUTOMOTIVE_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Automotive Repair and Maintenance", 81, 8111)
-    GENERAL_AUTOMOTIVE_REPAIR = LkOccupationTitle(1, "General Automotive Repair", 81, 811111)
-    AUTOMOTIVE_EXHAUST_SYSTEM_REPAIR = LkOccupationTitle(1, "Automotive Exhaust System Repair", 81, 811112)
-    AUTOMOTIVE_TRANSMISSION_REPAIR = LkOccupationTitle(1, "Automotive Transmission Repair", 81, 811113)
-    OTHER_AUTOMOTIVE_MECHANICAL_AND_ELECTRICAL_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Other Automotive Mechanical and Electrical Repair and Maintenance", 81, 811118)
-    AUTOMOTIVE_BODY_PAINT_AND_INTERIOR_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Automotive Body, Paint, and Interior Repair and Maintenance", 81, 811121)
-    AUTOMOTIVE_GLASS_REPLACEMENT_SHOPS = LkOccupationTitle(1, "Automotive Glass Replacement Shops", 81, 811122)
-    AUTOMOTIVE_OIL_CHANGE_AND_LUBRICATION_SHOPS = LkOccupationTitle(1, "Automotive Oil Change and Lubrication Shops", 81, 811191)
-    CAR_WASHES = LkOccupationTitle(1, "Car Washes", 81, 811192)
-    ALL_OTHER_AUTOMOTIVE_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "All Other Automotive Repair and Maintenance", 81, 811198)
-    ELECTRONIC_AND_PRECISION_EQUIPMENT_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Electronic and Precision Equipment Repair and Maintenance", 81, 8112)
-    CONSUMER_ELECTRONICS_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Consumer Electronics Repair and Maintenance", 81, 811211)
-    COMPUTER_AND_OFFICE_MACHINE_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Computer and Office Machine Repair and Maintenance", 81, 811212)
-    COMMUNICATION_EQUIPMENT_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Communication Equipment Repair and Maintenance", 81, 811213)
-    OTHER_ELECTRONIC_AND_PRECISION_EQUIPMENT_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Other Electronic and Precision Equipment Repair and Maintenance", 81, 811219)
-    COMMERCIAL_AND_INDUSTRIAL_MACHINERY_AND_EQUIPMENT_EXCEPT_AUTOMOTIVE_AND_ELECTRONIC_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Commercial and Industrial Machinery and Equipment (except Automotive and Electronic) Repair and Maintenance", 81, 8113)
-    COMMERCIAL_AND_INDUSTRIAL_MACHINERY_AND_EQUIPMENT_EXCEPT_AUTOMOTIVE_AND_ELECTRONIC_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Commercial and Industrial Machinery and Equipment (except Automotive and Electronic) Repair and Maintenance", 81, 811310)
-    PERSONAL_AND_HOUSEHOLD_GOODS_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Personal and Household Goods Repair and Maintenance", 81, 8114)
-    HOME_AND_GARDEN_EQUIPMENT_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Home and Garden Equipment Repair and Maintenance", 81, 811411)
-    APPLIANCE_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Appliance Repair and Maintenance", 81, 811412)
-    REUPHOLSTERY_AND_FURNITURE_REPAIR = LkOccupationTitle(1, "Reupholstery and Furniture Repair", 81, 811420)
-    FOOTWEAR_AND_LEATHER_GOODS_REPAIR = LkOccupationTitle(1, "Footwear and Leather Goods Repair", 81, 811430)
-    OTHER_PERSONAL_AND_HOUSEHOLD_GOODS_REPAIR_AND_MAINTENANCE = LkOccupationTitle(1, "Other Personal and Household Goods Repair and Maintenance", 81, 811490)
-    PERSONAL_CARE_SERVICES = LkOccupationTitle(1, "Personal Care Services", 81, 8121)
-    BARBER_SHOPS = LkOccupationTitle(1, "Barber Shops", 81, 812111)
-    BEAUTY_SALONS = LkOccupationTitle(1, "Beauty Salons", 81, 812112)
-    NAIL_SALONS = LkOccupationTitle(1, "Nail Salons", 81, 812113)
-    DIET_AND_WEIGHT_REDUCING_CENTERS = LkOccupationTitle(1, "Diet and Weight Reducing Centers", 81, 812191)
-    OTHER_PERSONAL_CARE_SERVICES = LkOccupationTitle(1, "Other Personal Care Services", 81, 812199)
-    DEATH_CARE_SERVICES = LkOccupationTitle(1, "Death Care Services", 81, 8122)
-    FUNERAL_HOMES_AND_FUNERAL_SERVICES = LkOccupationTitle(1, "Funeral Homes and Funeral Services", 81, 812210)
-    CEMETERIES_AND_CREMATORIES = LkOccupationTitle(1, "Cemeteries and Crematories", 81, 812220)
-    DRYCLEANING_AND_LAUNDRY_SERVICES = LkOccupationTitle(1, "Drycleaning and Laundry Services", 81, 8123)
-    COINOPERATED_LAUNDRIES_AND_DRYCLEANERS = LkOccupationTitle(1, "Coin-Operated Laundries and Drycleaners", 81, 812310)
-    DRYCLEANING_AND_LAUNDRY_SERVICES_EXCEPT_COINOPERATED = LkOccupationTitle(1, "Drycleaning and Laundry Services (except Coin-Operated)", 81, 812320)
-    LINEN_SUPPLY = LkOccupationTitle(1, "Linen Supply", 81, 812331)
-    INDUSTRIAL_LAUNDERERS = LkOccupationTitle(1, "Industrial Launderers", 81, 812332)
-    OTHER_PERSONAL_SERVICES = LkOccupationTitle(1, "Other Personal Services", 81, 8129)
-    PET_CARE_EXCEPT_VETERINARY_SERVICES = LkOccupationTitle(1, "Pet Care (except Veterinary) Services", 81, 812910)
-    PHOTOFINISHING_LABORATORIES_EXCEPT_ONEHOUR = LkOccupationTitle(1, "Photofinishing Laboratories (except One-Hour)", 81, 812921)
-    ONEHOUR_PHOTOFINISHING = LkOccupationTitle(1, "One-Hour Photofinishing", 81, 812922)
-    PARKING_LOTS_AND_GARAGES = LkOccupationTitle(1, "Parking Lots and Garages", 81, 812930)
-    ALL_OTHER_PERSONAL_SERVICES = LkOccupationTitle(1, "All Other Personal Services", 81, 812990)
-    RELIGIOUS_ORGANIZATIONS = LkOccupationTitle(1, "Religious Organizations", 81, 8131)
-    RELIGIOUS_ORGANIZATIONS = LkOccupationTitle(1, "Religious Organizations", 81, 813110)
-    GRANTMAKING_AND_GIVING_SERVICES = LkOccupationTitle(1, "Grantmaking and Giving Services", 81, 8132)
-    GRANTMAKING_FOUNDATIONS = LkOccupationTitle(1, "Grantmaking Foundations", 81, 813211)
-    VOLUNTARY_HEALTH_ORGANIZATIONS = LkOccupationTitle(1, "Voluntary Health Organizations", 81, 813212)
-    OTHER_GRANTMAKING_AND_GIVING_SERVICES = LkOccupationTitle(1, "Other Grantmaking and Giving Services", 81, 813219)
-    SOCIAL_ADVOCACY_ORGANIZATIONS = LkOccupationTitle(1, "Social Advocacy Organizations", 81, 8133)
-    HUMAN_RIGHTS_ORGANIZATIONS = LkOccupationTitle(1, "Human Rights Organizations", 81, 813311)
-    ENVIRONMENT_CONSERVATION_AND_WILDLIFE_ORGANIZATIONS = LkOccupationTitle(1, "Environment, Conservation and Wildlife Organizations", 81, 813312)
-    OTHER_SOCIAL_ADVOCACY_ORGANIZATIONS = LkOccupationTitle(1, "Other Social Advocacy Organizations", 81, 813319)
-    CIVIC_AND_SOCIAL_ORGANIZATIONS = LkOccupationTitle(1, "Civic and Social Organizations", 81, 8134)
-    CIVIC_AND_SOCIAL_ORGANIZATIONS = LkOccupationTitle(1, "Civic and Social Organizations", 81, 813410)
-    BUSINESS_PROFESSIONAL_LABOR_POLITICAL_AND_SIMILAR_ORGANIZATIONS = LkOccupationTitle(1, "Business, Professional, Labor, Political, and Similar Organizations", 81, 8139)
-    BUSINESS_ASSOCIATIONS = LkOccupationTitle(1, "Business Associations", 81, 813910)
-    PROFESSIONAL_ORGANIZATIONS = LkOccupationTitle(1, "Professional Organizations", 81, 813920)
-    LABOR_UNIONS_AND_SIMILAR_LABOR_ORGANIZATIONS = LkOccupationTitle(1, "Labor Unions and Similar Labor Organizations", 81, 813930)
-    POLITICAL_ORGANIZATIONS = LkOccupationTitle(1, "Political Organizations", 81, 813940)
-    OTHER_SIMILAR_ORGANIZATIONS_EXCEPT_BUSINESS_PROFESSIONAL_LABOR_AND_POLITICAL_ORGANIZATIONS = LkOccupationTitle(1, "Other Similar Organizations (except Business, Professional, Labor, and Political Organizations)", 81, 813990)
-    PRIVATE_HOUSEHOLDS = LkOccupationTitle(1, "Private Households", 81, 8141)
-    PRIVATE_HOUSEHOLDS = LkOccupationTitle(1, "Private Households", 81, 814110)
-    EXECUTIVE_LEGISLATIVE_AND_OTHER_GENERAL_GOVERNMENT_SUPPORT = LkOccupationTitle(1, "Executive, Legislative, and Other General Government Support", 92, 9211)
-    EXECUTIVE_OFFICES = LkOccupationTitle(1, "Executive Offices", 92, 921110)
-    LEGISLATIVE_BODIES = LkOccupationTitle(1, "Legislative Bodies", 92, 921120)
-    PUBLIC_FINANCE_ACTIVITIES = LkOccupationTitle(1, "Public Finance Activities", 92, 921130)
-    EXECUTIVE_AND_LEGISLATIVE_OFFICES_COMBINED = LkOccupationTitle(1, "Executive and Legislative Offices, Combined", 92, 921140)
-    AMERICAN_INDIAN_AND_ALASKA_NATIVE_TRIBAL_GOVERNMENTS = LkOccupationTitle(1, "American Indian and Alaska Native Tribal Governments", 92, 921150)
-    OTHER_GENERAL_GOVERNMENT_SUPPORT = LkOccupationTitle(1, "Other General Government Support", 92, 921190)
-    JUSTICE_PUBLIC_ORDER_AND_SAFETY_ACTIVITIES = LkOccupationTitle(1, "Justice, Public Order, and Safety Activities", 92, 9221)
-    COURTS = LkOccupationTitle(1, "Courts", 92, 922110)
-    POLICE_PROTECTION = LkOccupationTitle(1, "Police Protection", 92, 922120)
-    LEGAL_COUNSEL_AND_PROSECUTION = LkOccupationTitle(1, "Legal Counsel and Prosecution", 92, 922130)
-    CORRECTIONAL_INSTITUTIONS = LkOccupationTitle(1, "Correctional Institutions", 92, 922140)
-    PAROLE_OFFICES_AND_PROBATION_OFFICES = LkOccupationTitle(1, "Parole Offices and Probation Offices", 92, 922150)
-    FIRE_PROTECTION = LkOccupationTitle(1, "Fire Protection", 92, 922160)
-    OTHER_JUSTICE_PUBLIC_ORDER_AND_SAFETY_ACTIVITIES = LkOccupationTitle(1, "Other Justice, Public Order, and Safety Activities", 92, 922190)
-    ADMINISTRATION_OF_HUMAN_RESOURCE_PROGRAMS = LkOccupationTitle(1, "Administration of Human Resource Programs", 92, 9231)
-    ADMINISTRATION_OF_EDUCATION_PROGRAMS = LkOccupationTitle(1, "Administration of Education Programs", 92, 923110)
-    ADMINISTRATION_OF_PUBLIC_HEALTH_PROGRAMS = LkOccupationTitle(1, "Administration of Public Health Programs", 92, 923120)
-    ADMINISTRATION_OF_HUMAN_RESOURCE_PROGRAMS_EXCEPT_EDUCATION_PUBLIC_HEALTH_AND_VETERANS_AFFAIRS_PROGRAMS = LkOccupationTitle(1, "Administration of Human Resource Programs (except Education, Public Health, and Veterans' Affairs Programs)", 92, 923130)
-    ADMINISTRATION_OF_VETERANS_AFFAIRS = LkOccupationTitle(1, "Administration of Veterans' Affairs", 92, 923140)
-    ADMINISTRATION_OF_ENVIRONMENTAL_QUALITY_PROGRAMS = LkOccupationTitle(1, "Administration of Environmental Quality Programs", 92, 9241)
-    ADMINISTRATION_OF_AIR_AND_WATER_RESOURCE_AND_SOLID_WASTE_MANAGEMENT_PROGRAMS = LkOccupationTitle(1, "Administration of Air and Water Resource and Solid Waste Management Programs", 92, 924110)
-    ADMINISTRATION_OF_CONSERVATION_PROGRAMS = LkOccupationTitle(1, "Administration of Conservation Programs", 92, 924120)
-    ADMINISTRATION_OF_HOUSING_PROGRAMS_URBAN_PLANNING_AND_COMMUNITY_DEVELOPMENT = LkOccupationTitle(1, "Administration of Housing Programs, Urban Planning, and Community Development", 92, 9251)
-    ADMINISTRATION_OF_HOUSING_PROGRAMS = LkOccupationTitle(1, "Administration of Housing Programs", 92, 925110)
-    ADMINISTRATION_OF_URBAN_PLANNING_AND_COMMUNITY_AND_RURAL_DEVELOPMENT = LkOccupationTitle(1, "Administration of Urban Planning and Community and Rural Development", 92, 925120)
-    ADMINISTRATION_OF_ECONOMIC_PROGRAMS = LkOccupationTitle(1, "Administration of Economic Programs", 92, 9261)
-    ADMINISTRATION_OF_GENERAL_ECONOMIC_PROGRAMS = LkOccupationTitle(1, "Administration of General Economic Programs", 92, 926110)
-    REGULATION_AND_ADMINISTRATION_OF_TRANSPORTATION_PROGRAMS = LkOccupationTitle(1, "Regulation and Administration of Transportation Programs", 92, 926120)
-    REGULATION_AND_ADMINISTRATION_OF_COMMUNICATIONS_ELECTRIC_GAS_AND_OTHER_UTILITIES = LkOccupationTitle(1, "Regulation and Administration of Communications, Electric, Gas, and Other Utilities", 92, 926130)
-    REGULATION_OF_AGRICULTURAL_MARKETING_AND_COMMODITIES = LkOccupationTitle(1, "Regulation of Agricultural Marketing and Commodities", 92, 926140)
-    REGULATION_LICENSING_AND_INSPECTION_OF_MISCELLANEOUS_COMMERCIAL_SECTORS = LkOccupationTitle(1, "Regulation, Licensing, and Inspection of Miscellaneous Commercial Sectors", 92, 926150)
-    SPACE_RESEARCH_AND_TECHNOLOGY = LkOccupationTitle(1, "Space Research and Technology", 92, 9271)
-    SPACE_RESEARCH_AND_TECHNOLOGY = LkOccupationTitle(1, "Space Research and Technology", 92, 927110)
-    NATIONAL_SECURITY_AND_INTERNATIONAL_AFFAIRS = LkOccupationTitle(1, "National Security and International Affairs", 92, 9281)
-    NATIONAL_SECURITY = LkOccupationTitle(1, "National Security", 92, 928110)
-    INTERNATIONAL_AFFAIRS = LkOccupationTitle(1, "International Affairs", 92, 928120)
+    column_names = (
+        "occupation_title_id",
+        "occupation_id",
+        "occupation_title_code",
+        "occupation_title_description",
+    )
+
+    OILSEED_AND_GRAIN_FARMING = LkOccupationTitle(1, 1, 1111, "Oilseed and Grain Farming")
+    SOYBEAN_FARMING = LkOccupationTitle(2, 1, 111110, "Soybean Farming")
+    OILSEED_EXCEPT_SOYBEAN_FARMING = LkOccupationTitle(
+        3, 1, 111120, "Oilseed (except Soybean) Farming"
+    )
+    
+    DRY_PEA_AND_BEAN_FARMING = LkOccupationTitle(4, 1, 111130, "Dry Pea and Bean Farming")
+    WHEAT_FARMING = LkOccupationTitle(5, 1, 111140, "Wheat Farming")
+    CORN_FARMING = LkOccupationTitle(6, 1, 111150, "Corn Farming")
+    RICE_FARMING = LkOccupationTitle(7, 1, 111160, "Rice Farming")
+    OILSEED_AND_GRAIN_COMBINATION_FARMING = LkOccupationTitle(
+        8, 1, 111191, "Oilseed and Grain Combination Farming"
+    )
+    ALL_OTHER_GRAIN_FARMING = LkOccupationTitle(9, 1, 111199, "All Other Grain Farming")
+    VEGETABLE_AND_MELON_FARMING = LkOccupationTitle(10, 1, 1112, "Vegetable and Melon Farming")
+    POTATO_FARMING = LkOccupationTitle(11, 1, 111211, "Potato Farming")
+    OTHER_VEGETABLE_EXCEPT_POTATO_AND_MELON_FARMING = LkOccupationTitle(
+        12, 1, 111219, "Other Vegetable (except Potato) and Melon Farming"
+    )
+    FRUIT_AND_TREE_NUT_FARMING = LkOccupationTitle(13, 1, 1113, "Fruit and Tree Nut Farming")
+    ORANGE_GROVES = LkOccupationTitle(14, 1, 111310, "Orange Groves")
+    CITRUS_EXCEPT_ORANGE_GROVES = LkOccupationTitle(15, 1, 111320, "Citrus (except Orange) Groves")
+    APPLE_ORCHARDS = LkOccupationTitle(16, 1, 111331, "Apple Orchards")
+    GRAPE_VINEYARDS = LkOccupationTitle(17, 1, 111332, "Grape Vineyards")
+    STRAWBERRY_FARMING = LkOccupationTitle(18, 1, 111333, "Strawberry Farming")
+    BERRY_EXCEPT_STRAWBERRY_FARMING = LkOccupationTitle(
+        19, 1, 111334, "Berry (except Strawberry) Farming"
+    )
+    TREE_NUT_FARMING = LkOccupationTitle(20, 1, 111335, "Tree Nut Farming")
+    FRUIT_AND_TREE_NUT_COMBINATION_FARMING = LkOccupationTitle(
+        21, 1, 111336, "Fruit and Tree Nut Combination Farming"
+    )
+    OTHER_NONCITRUS_FRUIT_FARMING = LkOccupationTitle(
+        22, 1, 111339, "Other Noncitrus Fruit Farming"
+    )
+    GREENHOUSE_NURSERY_AND_FLORICULTURE_PRODUCTION = LkOccupationTitle(
+        23, 1, 1114, "Greenhouse, Nursery, and Floriculture Production"
+    )
+    MUSHROOM_PRODUCTION = LkOccupationTitle(24, 1, 111411, "Mushroom Production")
+    OTHER_FOOD_CROPS_GROWN_UNDER_COVER = LkOccupationTitle(
+        25, 1, 111419, "Other Food Crops Grown Under Cover"
+    )
+    NURSERY_AND_TREE_PRODUCTION = LkOccupationTitle(26, 1, 111421, "Nursery and Tree Production")
+    FLORICULTURE_PRODUCTION = LkOccupationTitle(27, 1, 111422, "Floriculture Production")
+    OTHER_CROP_FARMING = LkOccupationTitle(28, 1, 1119, "Other Crop Farming")
+    TOBACCO_FARMING = LkOccupationTitle(29, 1, 111910, "Tobacco Farming")
+    COTTON_FARMING = LkOccupationTitle(30, 1, 111920, "Cotton Farming")
+    SUGARCANE_FARMING = LkOccupationTitle(31, 1, 111930, "Sugarcane Farming")
+    HAY_FARMING = LkOccupationTitle(32, 1, 111940, "Hay Farming")
+    SUGAR_BEET_FARMING = LkOccupationTitle(33, 1, 111991, "Sugar Beet Farming")
+    PEANUT_FARMING = LkOccupationTitle(34, 1, 111992, "Peanut Farming")
+    ALL_OTHER_MISCELLANEOUS_CROP_FARMING = LkOccupationTitle(
+        35, 1, 111998, "All Other Miscellaneous Crop Farming"
+    )
+    CATTLE_RANCHING_AND_FARMING = LkOccupationTitle(36, 1, 1121, "Cattle Ranching and Farming")
+    BEEF_CATTLE_RANCHING_AND_FARMING = LkOccupationTitle(
+        37, 1, 112111, "Beef Cattle Ranching and Farming"
+    )
+    CATTLE_FEEDLOTS = LkOccupationTitle(38, 1, 112112, "Cattle Feedlots")
+    DAIRY_CATTLE_AND_MILK_PRODUCTION = LkOccupationTitle(
+        39, 1, 112120, "Dairy Cattle and Milk Production"
+    )
+    DUAL_PURPOSE_CATTLE_RANCHING_AND_FARMING = LkOccupationTitle(
+        40, 1, 112130, "Dual-Purpose Cattle Ranching and Farming"
+    )
+    HOG_AND_PIG_FARMING_4 = LkOccupationTitle(41, 1, 1122, "Hog and Pig Farming")
+    HOG_AND_PIG_FARMING = LkOccupationTitle(42, 1, 112210, "Hog and Pig Farming")
+    POULTRY_AND_EGG_PRODUCTION = LkOccupationTitle(43, 1, 1123, "Poultry and Egg Production")
+    CHICKEN_EGG_PRODUCTION = LkOccupationTitle(44, 1, 112310, "Chicken Egg Production")
+    BROILERS_AND_OTHER_MEAT_TYPE_CHICKEN_PRODUCTION = LkOccupationTitle(
+        45, 1, 112320, "Broilers and Other Meat Type Chicken Production"
+    )
+    TURKEY_PRODUCTION = LkOccupationTitle(46, 1, 112330, "Turkey Production")
+    POULTRY_HATCHERIES = LkOccupationTitle(47, 1, 112340, "Poultry Hatcheries")
+    OTHER_POULTRY_PRODUCTION = LkOccupationTitle(48, 1, 112390, "Other Poultry Production")
+    SHEEP_AND_GOAT_FARMING = LkOccupationTitle(49, 1, 1124, "Sheep and Goat Farming")
+    SHEEP_FARMING = LkOccupationTitle(50, 1, 112410, "Sheep Farming")
+    GOAT_FARMING = LkOccupationTitle(51, 1, 112420, "Goat Farming")
+    AQUACULTURE = LkOccupationTitle(52, 1, 1125, "Aquaculture")
+    FINFISH_FARMING_AND_FISH_HATCHERIES = LkOccupationTitle(
+        53, 1, 112511, "Finfish Farming and Fish Hatcheries"
+    )
+    SHELLFISH_FARMING = LkOccupationTitle(54, 1, 112512, "Shellfish Farming")
+    OTHER_AQUACULTURE = LkOccupationTitle(55, 1, 112519, "Other Aquaculture")
+    OTHER_ANIMAL_PRODUCTION = LkOccupationTitle(56, 1, 1129, "Other Animal Production")
+    APICULTURE = LkOccupationTitle(57, 1, 112910, "Apiculture")
+    HORSES_AND_OTHER_EQUINE_PRODUCTION = LkOccupationTitle(
+        58, 1, 112920, "Horses and Other Equine Production"
+    )
+    FUR_BEARING_ANIMAL_AND_RABBIT_PRODUCTION = LkOccupationTitle(
+        59, 1, 112930, "Fur-Bearing Animal and Rabbit Production"
+    )
+    ALL_OTHER_ANIMAL_PRODUCTION = LkOccupationTitle(60, 1, 112990, "All Other Animal Production")
+    TIMBER_TRACT_OPERATIONS_4 = LkOccupationTitle(61, 1, 1131, "Timber Tract Operations")
+    TIMBER_TRACT_OPERATIONS = LkOccupationTitle(62, 1, 113110, "Timber Tract Operations")
+    FOREST_NURSERIES_AND_GATHERING_OF_FOREST_PRODUCTS_4 = LkOccupationTitle(
+        63, 1, 1132, "Forest Nurseries and Gathering of Forest Products"
+    )
+    FOREST_NURSERIES_AND_GATHERING_OF_FOREST_PRODUCTS = LkOccupationTitle(
+        64, 1, 113210, "Forest Nurseries and Gathering of Forest Products"
+    )
+    LOGGING_4 = LkOccupationTitle(65, 1, 1133, "Logging")
+    LOGGING = LkOccupationTitle(66, 1, 113310, "Logging")
+    FISHING = LkOccupationTitle(67, 1, 1141, "Fishing")
+    FINFISH_FISHING = LkOccupationTitle(68, 1, 114111, "Finfish Fishing")
+    SHELLFISH_FISHING = LkOccupationTitle(69, 1, 114112, "Shellfish Fishing")
+    OTHER_MARINE_FISHING = LkOccupationTitle(70, 1, 114119, "Other Marine Fishing")
+    HUNTING_AND_TRAPPING_4 = LkOccupationTitle(71, 1, 1142, "Hunting and Trapping")
+    HUNTING_AND_TRAPPING = LkOccupationTitle(72, 1, 114210, "Hunting and Trapping")
+    SUPPORT_ACTIVITIES_FOR_CROP_PRODUCTION = LkOccupationTitle(
+        73, 1, 1151, "Support Activities for Crop Production"
+    )
+    COTTON_GINNING = LkOccupationTitle(74, 1, 115111, "Cotton Ginning")
+    SOIL_PREPARATION_PLANTING_AND_CULTIVATING = LkOccupationTitle(
+        75, 1, 115112, "Soil Preparation, Planting, and Cultivating"
+    )
+    CROP_HARVESTING_PRIMARILY_BY_MACHINE = LkOccupationTitle(
+        76, 1, 115113, "Crop Harvesting, Primarily by Machine"
+    )
+    POSTHARVEST_CROP_ACTIVITIES_EXCEPT_COTTON_GINNING = LkOccupationTitle(
+        77, 1, 115114, "Postharvest Crop Activities (except Cotton Ginning)"
+    )
+    FARM_LABOR_CONTRACTORS_AND_CREW_LEADERS = LkOccupationTitle(
+        78, 1, 115115, "Farm Labor Contractors and Crew Leaders"
+    )
+    FARM_MANAGEMENT_SERVICES = LkOccupationTitle(79, 1, 115116, "Farm Management Services")
+    SUPPORT_ACTIVITIES_FOR_ANIMAL_PRODUCTION_4 = LkOccupationTitle(
+        80, 1, 1152, "Support Activities for Animal Production"
+    )
+    SUPPORT_ACTIVITIES_FOR_ANIMAL_PRODUCTION = LkOccupationTitle(
+        81, 1, 115210, "Support Activities for Animal Production"
+    )
+    SUPPORT_ACTIVITIES_FOR_FORESTRY_4 = LkOccupationTitle(
+        82, 1, 1153, "Support Activities for Forestry"
+    )
+    SUPPORT_ACTIVITIES_FOR_FORESTRY = LkOccupationTitle(
+        83, 1, 115310, "Support Activities for Forestry"
+    )
+    OIL_AND_GAS_EXTRACTION = LkOccupationTitle(84, 2, 2111, "Oil and Gas Extraction")
+    CRUDE_PETROLEUM_EXTRACTION = LkOccupationTitle(85, 2, 211120, "Crude Petroleum Extraction")
+    NATURAL_GAS_EXTRACTION = LkOccupationTitle(86, 2, 211130, "Natural Gas Extraction")
+    COAL_MINING = LkOccupationTitle(87, 2, 2121, "Coal Mining")
+    BITUMINOUS_COAL_AND_LIGNITE_SURFACE_MINING = LkOccupationTitle(
+        88, 2, 212111, "Bituminous Coal and Lignite Surface Mining"
+    )
+    BITUMINOUS_COAL_UNDERGROUND_MINING = LkOccupationTitle(
+        89, 2, 212112, "Bituminous Coal Underground Mining"
+    )
+    ANTHRACITE_MINING = LkOccupationTitle(90, 2, 212113, "Anthracite Mining")
+    METAL_ORE_MINING = LkOccupationTitle(91, 2, 2122, "Metal Ore Mining")
+    IRON_ORE_MINING = LkOccupationTitle(92, 2, 212210, "Iron Ore Mining")
+    GOLD_ORE_MINING = LkOccupationTitle(93, 2, 212221, "Gold Ore Mining")
+    SILVER_ORE_MINING = LkOccupationTitle(94, 2, 212222, "Silver Ore Mining")
+    COPPER_NICKEL_LEAD_AND_ZINC_MINING = LkOccupationTitle(
+        95, 2, 212230, "Copper, Nickel, Lead, and Zinc Mining"
+    )
+    URANIUM_RADIUM_VANADIUM_ORE_MINING = LkOccupationTitle(
+        96, 2, 212291, "Uranium-Radium-Vanadium Ore Mining"
+    )
+    ALL_OTHER_METAL_ORE_MINING = LkOccupationTitle(97, 2, 212299, "All Other Metal Ore Mining")
+    NONMETALLIC_MINERAL_MINING_AND_QUARRYING = LkOccupationTitle(
+        98, 2, 2123, "Nonmetallic Mineral Mining and Quarrying"
+    )
+    DIMENSION_STONE_MINING_AND_QUARRYING = LkOccupationTitle(
+        99, 2, 212311, "Dimension Stone Mining and Quarrying"
+    )
+    CRUSHED_AND_BROKEN_LIMESTONE_MINING_AND_QUARRYING = LkOccupationTitle(
+        100, 2, 212312, "Crushed and Broken Limestone Mining and Quarrying"
+    )
+    CRUSHED_AND_BROKEN_GRANITE_MINING_AND_QUARRYING = LkOccupationTitle(
+        101, 2, 212313, "Crushed and Broken Granite Mining and Quarrying"
+    )
+    OTHER_CRUSHED_AND_BROKEN_STONE_MINING_AND_QUARRYING = LkOccupationTitle(
+        102, 2, 212319, "Other Crushed and Broken Stone Mining and Quarrying"
+    )
+    CONSTRUCTION_SAND_AND_GRAVEL_MINING = LkOccupationTitle(
+        103, 2, 212321, "Construction Sand and Gravel Mining"
+    )
+    INDUSTRIAL_SAND_MINING = LkOccupationTitle(104, 2, 212322, "Industrial Sand Mining")
+    KAOLIN_AND_BALL_CLAY_MINING = LkOccupationTitle(105, 2, 212324, "Kaolin and Ball Clay Mining")
+    CLAY_AND_CERAMIC_AND_REFRACTORY_MINERALS_MINING = LkOccupationTitle(
+        106, 2, 212325, "Clay and Ceramic and Refractory Minerals Mining"
+    )
+    POTASH_SODA_AND_BORATE_MINERAL_MINING = LkOccupationTitle(
+        107, 2, 212391, "Potash, Soda, and Borate Mineral Mining"
+    )
+    PHOSPHATE_ROCK_MINING = LkOccupationTitle(108, 2, 212392, "Phosphate Rock Mining")
+    OTHER_CHEMICAL_AND_FERTILIZER_MINERAL_MINING = LkOccupationTitle(
+        109, 2, 212393, "Other Chemical and Fertilizer Mineral Mining"
+    )
+    ALL_OTHER_NONMETALLIC_MINERAL_MINING = LkOccupationTitle(
+        110, 2, 212399, "All Other Nonmetallic Mineral Mining"
+    )
+    SUPPORT_ACTIVITIES_FOR_MINING = LkOccupationTitle(
+        111, 2, 2131, "Support Activities for Mining"
+    )
+    DRILLING_OIL_AND_GAS_WELLS = LkOccupationTitle(112, 2, 213111, "Drilling Oil and Gas Wells")
+    SUPPORT_ACTIVITIES_FOR_OIL_AND_GAS_OPERATIONS = LkOccupationTitle(
+        113, 2, 213112, "Support Activities for Oil and Gas Operations"
+    )
+    SUPPORT_ACTIVITIES_FOR_COAL_MINING = LkOccupationTitle(
+        114, 2, 213113, "Support Activities for Coal Mining"
+    )
+    SUPPORT_ACTIVITIES_FOR_METAL_MINING = LkOccupationTitle(
+        115, 2, 213114, "Support Activities for Metal Mining"
+    )
+    SUPPORT_ACTIVITIES_FOR_NONMETALLIC_MINERALS_EXCEPT_FUELS_MINING = LkOccupationTitle(
+        116, 2, 213115, "Support Activities for Nonmetallic Minerals (except Fuels) Mining"
+    )
+    ELECTRIC_POWER_GENERATION_TRANSMISSION_AND_DISTRIBUTION = LkOccupationTitle(
+        117, 3, 2211, "Electric Power Generation, Transmission and Distribution"
+    )
+    HYDROELECTRIC_POWER_GENERATION = LkOccupationTitle(
+        118, 3, 221111, "Hydroelectric Power Generation"
+    )
+    FOSSIL_FUEL_ELECTRIC_POWER_GENERATION = LkOccupationTitle(
+        119, 3, 221112, "Fossil Fuel Electric Power Generation"
+    )
+    NUCLEAR_ELECTRIC_POWER_GENERATION = LkOccupationTitle(
+        120, 3, 221113, "Nuclear Electric Power Generation"
+    )
+    SOLAR_ELECTRIC_POWER_GENERATION = LkOccupationTitle(
+        121, 3, 221114, "Solar Electric Power Generation"
+    )
+    WIND_ELECTRIC_POWER_GENERATION = LkOccupationTitle(
+        122, 3, 221115, "Wind Electric Power Generation"
+    )
+    GEOTHERMAL_ELECTRIC_POWER_GENERATION = LkOccupationTitle(
+        123, 3, 221116, "Geothermal Electric Power Generation"
+    )
+    BIOMASS_ELECTRIC_POWER_GENERATION = LkOccupationTitle(
+        124, 3, 221117, "Biomass Electric Power Generation"
+    )
+    OTHER_ELECTRIC_POWER_GENERATION = LkOccupationTitle(
+        125, 3, 221118, "Other Electric Power Generation"
+    )
+    ELECTRIC_BULK_POWER_TRANSMISSION_AND_CONTROL = LkOccupationTitle(
+        126, 3, 221121, "Electric Bulk Power Transmission and Control"
+    )
+    ELECTRIC_POWER_DISTRIBUTION = LkOccupationTitle(127, 3, 221122, "Electric Power Distribution")
+    NATURAL_GAS_DISTRIBUTION_4 = LkOccupationTitle(128, 3, 2212, "Natural Gas Distribution")
+    NATURAL_GAS_DISTRIBUTION = LkOccupationTitle(129, 3, 221210, "Natural Gas Distribution")
+    WATER_SEWAGE_AND_OTHER_SYSTEMS = LkOccupationTitle(
+        130, 3, 2213, "Water, Sewage and Other Systems"
+    )
+    WATER_SUPPLY_AND_IRRIGATION_SYSTEMS = LkOccupationTitle(
+        131, 3, 221310, "Water Supply and Irrigation Systems"
+    )
+    SEWAGE_TREATMENT_FACILITIES = LkOccupationTitle(132, 3, 221320, "Sewage Treatment Facilities")
+    STEAM_AND_AIR_CONDITIONING_SUPPLY = LkOccupationTitle(
+        133, 3, 221330, "Steam and Air-Conditioning Supply"
+    )
+    RESIDENTIAL_BUILDING_CONSTRUCTION = LkOccupationTitle(
+        134, 4, 2361, "Residential Building Construction"
+    )
+    NEW_SINGLE_FAMILY_HOUSING_CONSTRUCTION_EXCEPT_FOR_SALE_BUILDERS = LkOccupationTitle(
+        135, 4, 236115, "New Single-Family Housing Construction (except For-Sale Builders)"
+    )
+    NEW_MULTIFAMILY_HOUSING_CONSTRUCTION_EXCEPT_FOR_SALE_BUILDERS = LkOccupationTitle(
+        136, 4, 236116, "New Multifamily Housing Construction (except For-Sale Builders)"
+    )
+    NEW_HOUSING_FOR_SALE_BUILDERS = LkOccupationTitle(
+        137, 4, 236117, "New Housing For-Sale Builders"
+    )
+    RESIDENTIAL_REMODELERS = LkOccupationTitle(138, 4, 236118, "Residential Remodelers")
+    NONRESIDENTIAL_BUILDING_CONSTRUCTION = LkOccupationTitle(
+        139, 4, 2362, "Nonresidential Building Construction"
+    )
+    INDUSTRIAL_BUILDING_CONSTRUCTION = LkOccupationTitle(
+        140, 4, 236210, "Industrial Building Construction"
+    )
+    COMMERCIAL_AND_INSTITUTIONAL_BUILDING_CONSTRUCTION = LkOccupationTitle(
+        141, 4, 236220, "Commercial and Institutional Building Construction"
+    )
+    UTILITY_SYSTEM_CONSTRUCTION = LkOccupationTitle(142, 4, 2371, "Utility System Construction")
+    WATER_AND_SEWER_LINE_AND_RELATED_STRUCTURES_CONSTRUCTION = LkOccupationTitle(
+        143, 4, 237110, "Water and Sewer Line and Related Structures Construction"
+    )
+    OIL_AND_GAS_PIPELINE_AND_RELATED_STRUCTURES_CONSTRUCTION = LkOccupationTitle(
+        144, 4, 237120, "Oil and Gas Pipeline and Related Structures Construction"
+    )
+    POWER_AND_COMMUNICATION_LINE_AND_RELATED_STRUCTURES_CONSTRUCTION = LkOccupationTitle(
+        145, 4, 237130, "Power and Communication Line and Related Structures Construction"
+    )
+    LAND_SUBDIVISION_4 = LkOccupationTitle(146, 4, 2372, "Land Subdivision")
+    LAND_SUBDIVISION = LkOccupationTitle(147, 4, 237210, "Land Subdivision")
+    HIGHWAY_STREET_AND_BRIDGE_CONSTRUCTION_4 = LkOccupationTitle(
+        148, 4, 2373, "Highway, Street, and Bridge Construction"
+    )
+    HIGHWAY_STREET_AND_BRIDGE_CONSTRUCTION = LkOccupationTitle(
+        149, 4, 237310, "Highway, Street, and Bridge Construction"
+    )
+    OTHER_HEAVY_AND_CIVIL_ENGINEERING_CONSTRUCTION_4 = LkOccupationTitle(
+        150, 4, 2379, "Other Heavy and Civil Engineering Construction"
+    )
+    OTHER_HEAVY_AND_CIVIL_ENGINEERING_CONSTRUCTION = LkOccupationTitle(
+        151, 4, 237990, "Other Heavy and Civil Engineering Construction"
+    )
+    FOUNDATION_STRUCTURE_AND_BUILDING_EXTERIOR_CONTRACTORS = LkOccupationTitle(
+        152, 4, 2381, "Foundation, Structure, and Building Exterior Contractors"
+    )
+    POURED_CONCRETE_FOUNDATION_AND_STRUCTURE_CONTRACTORS = LkOccupationTitle(
+        153, 4, 238110, "Poured Concrete Foundation and Structure Contractors"
+    )
+    STRUCTURAL_STEEL_AND_PRECAST_CONCRETE_CONTRACTORS = LkOccupationTitle(
+        154, 4, 238120, "Structural Steel and Precast Concrete Contractors"
+    )
+    FRAMING_CONTRACTORS = LkOccupationTitle(155, 4, 238130, "Framing Contractors")
+    MASONRY_CONTRACTORS = LkOccupationTitle(156, 4, 238140, "Masonry Contractors")
+    GLASS_AND_GLAZING_CONTRACTORS = LkOccupationTitle(
+        157, 4, 238150, "Glass and Glazing Contractors"
+    )
+    ROOFING_CONTRACTORS = LkOccupationTitle(158, 4, 238160, "Roofing Contractors")
+    SIDING_CONTRACTORS = LkOccupationTitle(159, 4, 238170, "Siding Contractors")
+    OTHER_FOUNDATION_STRUCTURE_AND_BUILDING_EXTERIOR_CONTRACTORS = LkOccupationTitle(
+        160, 4, 238190, "Other Foundation, Structure, and Building Exterior Contractors"
+    )
+    BUILDING_EQUIPMENT_CONTRACTORS = LkOccupationTitle(
+        161, 4, 2382, "Building Equipment Contractors"
+    )
+    ELECTRICAL_CONTRACTORS_AND_OTHER_WIRING_INSTALLATION_CONTRACTORS = LkOccupationTitle(
+        162, 4, 238210, "Electrical Contractors and Other Wiring Installation Contractors"
+    )
+    PLUMBING_HEATING_AND_AIR_CONDITIONING_CONTRACTORS = LkOccupationTitle(
+        163, 4, 238220, "Plumbing, Heating, and Air-Conditioning Contractors"
+    )
+    OTHER_BUILDING_EQUIPMENT_CONTRACTORS = LkOccupationTitle(
+        164, 4, 238290, "Other Building Equipment Contractors"
+    )
+    BUILDING_FINISHING_CONTRACTORS = LkOccupationTitle(
+        165, 4, 2383, "Building Finishing Contractors"
+    )
+    DRYWALL_AND_INSULATION_CONTRACTORS = LkOccupationTitle(
+        166, 4, 238310, "Drywall and Insulation Contractors"
+    )
+    PAINTING_AND_WALL_COVERING_CONTRACTORS = LkOccupationTitle(
+        167, 4, 238320, "Painting and Wall Covering Contractors"
+    )
+    FLOORING_CONTRACTORS = LkOccupationTitle(168, 4, 238330, "Flooring Contractors")
+    TILE_AND_TERRAZZO_CONTRACTORS = LkOccupationTitle(
+        169, 4, 238340, "Tile and Terrazzo Contractors"
+    )
+    FINISH_CARPENTRY_CONTRACTORS = LkOccupationTitle(
+        170, 4, 238350, "Finish Carpentry Contractors"
+    )
+    OTHER_BUILDING_FINISHING_CONTRACTORS = LkOccupationTitle(
+        171, 4, 238390, "Other Building Finishing Contractors"
+    )
+    OTHER_SPECIALTY_TRADE_CONTRACTORS = LkOccupationTitle(
+        172, 4, 2389, "Other Specialty Trade Contractors"
+    )
+    SITE_PREPARATION_CONTRACTORS = LkOccupationTitle(
+        173, 4, 238910, "Site Preparation Contractors"
+    )
+    ALL_OTHER_SPECIALTY_TRADE_CONTRACTORS = LkOccupationTitle(
+        174, 4, 238990, "All Other Specialty Trade Contractors"
+    )
+    ANIMAL_FOOD_MANUFACTURING = LkOccupationTitle(175, 5, 3111, "Animal Food Manufacturing")
+    DOG_AND_CAT_FOOD_MANUFACTURING = LkOccupationTitle(
+        176, 5, 311111, "Dog and Cat Food Manufacturing"
+    )
+    OTHER_ANIMAL_FOOD_MANUFACTURING = LkOccupationTitle(
+        177, 5, 311119, "Other Animal Food Manufacturing"
+    )
+    GRAIN_AND_OILSEED_MILLING = LkOccupationTitle(178, 5, 3112, "Grain and Oilseed Milling")
+    FLOUR_MILLING = LkOccupationTitle(179, 5, 311211, "Flour Milling")
+    RICE_MILLING = LkOccupationTitle(180, 5, 311212, "Rice Milling")
+    MALT_MANUFACTURING = LkOccupationTitle(181, 5, 311213, "Malt Manufacturing")
+    WET_CORN_MILLING = LkOccupationTitle(182, 5, 311221, "Wet Corn Milling")
+    SOYBEAN_AND_OTHER_OILSEED_PROCESSING = LkOccupationTitle(
+        183, 5, 311224, "Soybean and Other Oilseed Processing"
+    )
+    FATS_AND_OILS_REFINING_AND_BLENDING = LkOccupationTitle(
+        184, 5, 311225, "Fats and Oils Refining and Blending"
+    )
+    BREAKFAST_CEREAL_MANUFACTURING = LkOccupationTitle(
+        185, 5, 311230, "Breakfast Cereal Manufacturing"
+    )
+    SUGAR_AND_CONFECTIONERY_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        186, 5, 3113, "Sugar and Confectionery Product Manufacturing"
+    )
+    BEET_SUGAR_MANUFACTURING = LkOccupationTitle(187, 5, 311313, "Beet Sugar Manufacturing")
+    CANE_SUGAR_MANUFACTURING = LkOccupationTitle(188, 5, 311314, "Cane Sugar Manufacturing")
+    NONCHOCOLATE_CONFECTIONERY_MANUFACTURING = LkOccupationTitle(
+        189, 5, 311340, "Nonchocolate Confectionery Manufacturing"
+    )
+    CHOCOLATE_AND_CONFECTIONERY_MANUFACTURING_FROM_CACAO_BEANS = LkOccupationTitle(
+        190, 5, 311351, "Chocolate and Confectionery Manufacturing from Cacao Beans"
+    )
+    CONFECTIONERY_MANUFACTURING_FROM_PURCHASED_CHOCOLATE = LkOccupationTitle(
+        191, 5, 311352, "Confectionery Manufacturing from Purchased Chocolate"
+    )
+    FRUIT_AND_VEGETABLE_PRESERVING_AND_SPECIALTY_FOOD_MANUFACTURING = LkOccupationTitle(
+        192, 5, 3114, "Fruit and Vegetable Preserving and Specialty Food Manufacturing"
+    )
+    FROZEN_FRUIT_JUICE_AND_VEGETABLE_MANUFACTURING = LkOccupationTitle(
+        193, 5, 311411, "Frozen Fruit, Juice, and Vegetable Manufacturing"
+    )
+    FROZEN_SPECIALTY_FOOD_MANUFACTURING = LkOccupationTitle(
+        194, 5, 311412, "Frozen Specialty Food Manufacturing"
+    )
+    FRUIT_AND_VEGETABLE_CANNING = LkOccupationTitle(195, 5, 311421, "Fruit and Vegetable Canning")
+    SPECIALTY_CANNING = LkOccupationTitle(196, 5, 311422, "Specialty Canning")
+    DRIED_AND_DEHYDRATED_FOOD_MANUFACTURING = LkOccupationTitle(
+        197, 5, 311423, "Dried and Dehydrated Food Manufacturing"
+    )
+    DAIRY_PRODUCT_MANUFACTURING = LkOccupationTitle(198, 5, 3115, "Dairy Product Manufacturing")
+    FLUID_MILK_MANUFACTURING = LkOccupationTitle(199, 5, 311511, "Fluid Milk Manufacturing")
+    CREAMERY_BUTTER_MANUFACTURING = LkOccupationTitle(
+        200, 5, 311512, "Creamery Butter Manufacturing"
+    )
+    CHEESE_MANUFACTURING = LkOccupationTitle(201, 5, 311513, "Cheese Manufacturing")
+    DRY_CONDENSED_AND_EVAPORATED_DAIRY_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        202, 5, 311514, "Dry, Condensed, and Evaporated Dairy Product Manufacturing"
+    )
+    ICE_CREAM_AND_FROZEN_DESSERT_MANUFACTURING = LkOccupationTitle(
+        203, 5, 311520, "Ice Cream and Frozen Dessert Manufacturing"
+    )
+    ANIMAL_SLAUGHTERING_AND_PROCESSING = LkOccupationTitle(
+        204, 5, 3116, "Animal Slaughtering and Processing"
+    )
+    ANIMAL_EXCEPT_POULTRY_SLAUGHTERING = LkOccupationTitle(
+        205, 5, 311611, "Animal (except Poultry) Slaughtering"
+    )
+    MEAT_PROCESSED_FROM_CARCASSES = LkOccupationTitle(
+        206, 5, 311612, "Meat Processed from Carcasses"
+    )
+    RENDERING_AND_MEAT_BYPRODUCT_PROCESSING = LkOccupationTitle(
+        207, 5, 311613, "Rendering and Meat Byproduct Processing"
+    )
+    POULTRY_PROCESSING = LkOccupationTitle(208, 5, 311615, "Poultry Processing")
+    SEAFOOD_PRODUCT_PREPARATION_AND_PACKAGING_4 = LkOccupationTitle(
+        209, 5, 3117, "Seafood Product Preparation and Packaging"
+    )
+    SEAFOOD_PRODUCT_PREPARATION_AND_PACKAGING = LkOccupationTitle(
+        210, 5, 311710, "Seafood Product Preparation and Packaging"
+    )
+    BAKERIES_AND_TORTILLA_MANUFACTURING = LkOccupationTitle(
+        211, 5, 3118, "Bakeries and Tortilla Manufacturing"
+    )
+    RETAIL_BAKERIES = LkOccupationTitle(212, 5, 311811, "Retail Bakeries")
+    COMMERCIAL_BAKERIES = LkOccupationTitle(213, 5, 311812, "Commercial Bakeries")
+    FROZEN_CAKES_PIES_AND_OTHER_PASTRIES_MANUFACTURING = LkOccupationTitle(
+        214, 5, 311813, "Frozen Cakes, Pies, and Other Pastries Manufacturing"
+    )
+    COOKIE_AND_CRACKER_MANUFACTURING = LkOccupationTitle(
+        215, 5, 311821, "Cookie and Cracker Manufacturing"
+    )
+    DRY_PASTA_DOUGH_AND_FLOUR_MIXES_MANUFACTURING_FROM_PURCHASED_FLOUR = LkOccupationTitle(
+        216, 5, 311824, "Dry Pasta, Dough, and Flour Mixes Manufacturing from Purchased Flour"
+    )
+    TORTILLA_MANUFACTURING = LkOccupationTitle(217, 5, 311830, "Tortilla Manufacturing")
+    OTHER_FOOD_MANUFACTURING = LkOccupationTitle(218, 5, 3119, "Other Food Manufacturing")
+    ROASTED_NUTS_AND_PEANUT_BUTTER_MANUFACTURING = LkOccupationTitle(
+        219, 5, 311911, "Roasted Nuts and Peanut Butter Manufacturing"
+    )
+    OTHER_SNACK_FOOD_MANUFACTURING = LkOccupationTitle(
+        220, 5, 311919, "Other Snack Food Manufacturing"
+    )
+    COFFEE_AND_TEA_MANUFACTURING = LkOccupationTitle(
+        221, 5, 311920, "Coffee and Tea Manufacturing"
+    )
+    FLAVORING_SYRUP_AND_CONCENTRATE_MANUFACTURING = LkOccupationTitle(
+        222, 5, 311930, "Flavoring Syrup and Concentrate Manufacturing"
+    )
+    MAYONNAISE_DRESSING_AND_OTHER_PREPARED_SAUCE_MANUFACTURING = LkOccupationTitle(
+        223, 5, 311941, "Mayonnaise, Dressing, and Other Prepared Sauce Manufacturing"
+    )
+    SPICE_AND_EXTRACT_MANUFACTURING = LkOccupationTitle(
+        224, 5, 311942, "Spice and Extract Manufacturing"
+    )
+    PERISHABLE_PREPARED_FOOD_MANUFACTURING = LkOccupationTitle(
+        225, 5, 311991, "Perishable Prepared Food Manufacturing"
+    )
+    ALL_OTHER_MISCELLANEOUS_FOOD_MANUFACTURING = LkOccupationTitle(
+        226, 5, 311999, "All Other Miscellaneous Food Manufacturing"
+    )
+    BEVERAGE_MANUFACTURING = LkOccupationTitle(227, 5, 3121, "Beverage Manufacturing")
+    SOFT_DRINK_MANUFACTURING = LkOccupationTitle(228, 5, 312111, "Soft Drink Manufacturing")
+    BOTTLED_WATER_MANUFACTURING = LkOccupationTitle(229, 5, 312112, "Bottled Water Manufacturing")
+    ICE_MANUFACTURING = LkOccupationTitle(230, 5, 312113, "Ice Manufacturing")
+    BREWERIES = LkOccupationTitle(231, 5, 312120, "Breweries")
+    WINERIES = LkOccupationTitle(232, 5, 312130, "Wineries")
+    DISTILLERIES = LkOccupationTitle(233, 5, 312140, "Distilleries")
+    TOBACCO_MANUFACTURING_4 = LkOccupationTitle(234, 5, 3122, "Tobacco Manufacturing")
+    TOBACCO_MANUFACTURING = LkOccupationTitle(235, 5, 312230, "Tobacco Manufacturing")
+    FIBER_YARN_AND_THREAD_MILLS_4 = LkOccupationTitle(236, 5, 3131, "Fiber, Yarn, and Thread Mills")
+    FIBER_YARN_AND_THREAD_MILLS = LkOccupationTitle(
+        237, 5, 313110, "Fiber, Yarn, and Thread Mills"
+    )
+    FABRIC_MILLS = LkOccupationTitle(238, 5, 3132, "Fabric Mills")
+    BROADWOVEN_FABRIC_MILLS = LkOccupationTitle(239, 5, 313210, "Broadwoven Fabric Mills")
+    NARROW_FABRIC_MILLS_AND_SCHIFFLI_MACHINE_EMBROIDERY = LkOccupationTitle(
+        240, 5, 313220, "Narrow Fabric Mills and Schiffli Machine Embroidery"
+    )
+    NONWOVEN_FABRIC_MILLS = LkOccupationTitle(241, 5, 313230, "Nonwoven Fabric Mills")
+    KNIT_FABRIC_MILLS = LkOccupationTitle(242, 5, 313240, "Knit Fabric Mills")
+    TEXTILE_AND_FABRIC_FINISHING_AND_FABRIC_COATING_MILLS = LkOccupationTitle(
+        243, 5, 3133, "Textile and Fabric Finishing and Fabric Coating Mills"
+    )
+    TEXTILE_AND_FABRIC_FINISHING_MILLS = LkOccupationTitle(
+        244, 5, 313310, "Textile and Fabric Finishing Mills"
+    )
+    FABRIC_COATING_MILLS = LkOccupationTitle(245, 5, 313320, "Fabric Coating Mills")
+    TEXTILE_FURNISHINGS_MILLS = LkOccupationTitle(246, 5, 3141, "Textile Furnishings Mills")
+    CARPET_AND_RUG_MILLS = LkOccupationTitle(247, 5, 314110, "Carpet and Rug Mills")
+    CURTAIN_AND_LINEN_MILLS = LkOccupationTitle(248, 5, 314120, "Curtain and Linen Mills")
+    OTHER_TEXTILE_PRODUCT_MILLS = LkOccupationTitle(249, 5, 3149, "Other Textile Product Mills")
+    TEXTILE_BAG_AND_CANVAS_MILLS = LkOccupationTitle(
+        250, 5, 314910, "Textile Bag and Canvas Mills"
+    )
+    ROPE_CORDAGE_TWINE_TIRE_CORD_AND_TIRE_FABRIC_MILLS = LkOccupationTitle(
+        251, 5, 314994, "Rope, Cordage, Twine, Tire Cord, and Tire Fabric Mills"
+    )
+    ALL_OTHER_MISCELLANEOUS_TEXTILE_PRODUCT_MILLS = LkOccupationTitle(
+        252, 5, 314999, "All Other Miscellaneous Textile Product Mills"
+    )
+    APPAREL_KNITTING_MILLS = LkOccupationTitle(253, 5, 3151, "Apparel Knitting Mills")
+    HOSIERY_AND_SOCK_MILLS = LkOccupationTitle(254, 5, 315110, "Hosiery and Sock Mills")
+    OTHER_APPAREL_KNITTING_MILLS = LkOccupationTitle(
+        255, 5, 315190, "Other Apparel Knitting Mills"
+    )
+    CUT_AND_SEW_APPAREL_MANUFACTURING = LkOccupationTitle(
+        256, 5, 3152, "Cut and Sew Apparel Manufacturing"
+    )
+    CUT_AND_SEW_APPAREL_CONTRACTORS = LkOccupationTitle(
+        257, 5, 315210, "Cut and Sew Apparel Contractors"
+    )
+    MEN_S_AND_BOYS_CUT_AND_SEW_APPAREL_MANUFACTURING = LkOccupationTitle(
+        258, 5, 315220, "Men's and Boys' Cut and Sew Apparel Manufacturing"
+    )
+    WOMEN_S_GIRLS_AND_INFANTS_CUT_AND_SEW_APPAREL_MANUFACTURING = LkOccupationTitle(
+        259, 5, 315240, "Women's, Girls', and Infants' Cut and Sew Apparel Manufacturing"
+    )
+    OTHER_CUT_AND_SEW_APPAREL_MANUFACTURING = LkOccupationTitle(
+        260, 5, 315280, "Other Cut and Sew Apparel Manufacturing"
+    )
+    APPAREL_ACCESSORIES_AND_OTHER_APPAREL_MANUFACTURING_4 = LkOccupationTitle(
+        261, 5, 3159, "Apparel Accessories and Other Apparel Manufacturing"
+    )
+    APPAREL_ACCESSORIES_AND_OTHER_APPAREL_MANUFACTURING = LkOccupationTitle(
+        262, 5, 315990, "Apparel Accessories and Other Apparel Manufacturing"
+    )
+    LEATHER_AND_HIDE_TANNING_AND_FINISHING_4 = LkOccupationTitle(
+        263, 5, 3161, "Leather and Hide Tanning and Finishing"
+    )
+    LEATHER_AND_HIDE_TANNING_AND_FINISHING = LkOccupationTitle(
+        264, 5, 316110, "Leather and Hide Tanning and Finishing"
+    )
+    FOOTWEAR_MANUFACTURING_4 = LkOccupationTitle(265, 5, 3162, "Footwear Manufacturing")
+    FOOTWEAR_MANUFACTURING = LkOccupationTitle(266, 5, 316210, "Footwear Manufacturing")
+    OTHER_LEATHER_AND_ALLIED_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        267, 5, 3169, "Other Leather and Allied Product Manufacturing"
+    )
+    WOMEN_S_HANDBAG_AND_PURSE_MANUFACTURING = LkOccupationTitle(
+        268, 5, 316992, "Women's Handbag and Purse Manufacturing"
+    )
+    ALL_OTHER_LEATHER_GOOD_AND_ALLIED_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        269, 5, 316998, "All Other Leather Good and Allied Product Manufacturing"
+    )
+    SAWMILLS_AND_WOOD_PRESERVATION = LkOccupationTitle(
+        270, 5, 3211, "Sawmills and Wood Preservation"
+    )
+    SAWMILLS = LkOccupationTitle(271, 5, 321113, "Sawmills")
+    WOOD_PRESERVATION = LkOccupationTitle(272, 5, 321114, "Wood Preservation")
+    VENEER_PLYWOOD_AND_ENGINEERED_WOOD_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        273, 5, 3212, "Veneer, Plywood, and Engineered Wood Product Manufacturing"
+    )
+    HARDWOOD_VENEER_AND_PLYWOOD_MANUFACTURING = LkOccupationTitle(
+        274, 5, 321211, "Hardwood Veneer and Plywood Manufacturing"
+    )
+    SOFTWOOD_VENEER_AND_PLYWOOD_MANUFACTURING = LkOccupationTitle(
+        275, 5, 321212, "Softwood Veneer and Plywood Manufacturing"
+    )
+    ENGINEERED_WOOD_MEMBER_EXCEPT_TRUSS_MANUFACTURING = LkOccupationTitle(
+        276, 5, 321213, "Engineered Wood Member (except Truss) Manufacturing"
+    )
+    TRUSS_MANUFACTURING = LkOccupationTitle(277, 5, 321214, "Truss Manufacturing")
+    RECONSTITUTED_WOOD_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        278, 5, 321219, "Reconstituted Wood Product Manufacturing"
+    )
+    OTHER_WOOD_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        279, 5, 3219, "Other Wood Product Manufacturing"
+    )
+    WOOD_WINDOW_AND_DOOR_MANUFACTURING = LkOccupationTitle(
+        280, 5, 321911, "Wood Window and Door Manufacturing"
+    )
+    CUT_STOCK_RESAWING_LUMBER_AND_PLANING = LkOccupationTitle(
+        281, 5, 321912, "Cut Stock, Resawing Lumber, and Planing"
+    )
+    OTHER_MILLWORK_INCLUDING_FLOORING = LkOccupationTitle(
+        282, 5, 321918, "Other Millwork (including Flooring)"
+    )
+    WOOD_CONTAINER_AND_PALLET_MANUFACTURING = LkOccupationTitle(
+        283, 5, 321920, "Wood Container and Pallet Manufacturing"
+    )
+    MANUFACTURED_HOME_MOBILE_HOME_MANUFACTURING = LkOccupationTitle(
+        284, 5, 321991, "Manufactured Home (Mobile Home) Manufacturing"
+    )
+    PREFABRICATED_WOOD_BUILDING_MANUFACTURING = LkOccupationTitle(
+        285, 5, 321992, "Prefabricated Wood Building Manufacturing"
+    )
+    ALL_OTHER_MISCELLANEOUS_WOOD_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        286, 5, 321999, "All Other Miscellaneous Wood Product Manufacturing"
+    )
+    PULP_PAPER_AND_PAPERBOARD_MILLS = LkOccupationTitle(
+        287, 5, 3221, "Pulp, Paper, and Paperboard Mills"
+    )
+    PULP_MILLS = LkOccupationTitle(288, 5, 322110, "Pulp Mills")
+    PAPER_EXCEPT_NEWSPRINT_MILLS = LkOccupationTitle(
+        289, 5, 322121, "Paper (except Newsprint) Mills"
+    )
+    NEWSPRINT_MILLS = LkOccupationTitle(290, 5, 322122, "Newsprint Mills")
+    PAPERBOARD_MILLS = LkOccupationTitle(291, 5, 322130, "Paperboard Mills")
+    CONVERTED_PAPER_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        292, 5, 3222, "Converted Paper Product Manufacturing"
+    )
+    CORRUGATED_AND_SOLID_FIBER_BOX_MANUFACTURING = LkOccupationTitle(
+        293, 5, 322211, "Corrugated and Solid Fiber Box Manufacturing"
+    )
+    FOLDING_PAPERBOARD_BOX_MANUFACTURING = LkOccupationTitle(
+        294, 5, 322212, "Folding Paperboard Box Manufacturing"
+    )
+    OTHER_PAPERBOARD_CONTAINER_MANUFACTURING = LkOccupationTitle(
+        295, 5, 322219, "Other Paperboard Container Manufacturing"
+    )
+    PAPER_BAG_AND_COATED_AND_TREATED_PAPER_MANUFACTURING = LkOccupationTitle(
+        296, 5, 322220, "Paper Bag and Coated and Treated Paper Manufacturing"
+    )
+    STATIONERY_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        297, 5, 322230, "Stationery Product Manufacturing"
+    )
+    SANITARY_PAPER_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        298, 5, 322291, "Sanitary Paper Product Manufacturing"
+    )
+    ALL_OTHER_CONVERTED_PAPER_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        299, 5, 322299, "All Other Converted Paper Product Manufacturing"
+    )
+    PRINTING_AND_RELATED_SUPPORT_ACTIVITIES = LkOccupationTitle(
+        300, 5, 3231, "Printing and Related Support Activities"
+    )
+    COMMERCIAL_PRINTING_EXCEPT_SCREEN_AND_BOOKS = LkOccupationTitle(
+        301, 5, 323111, "Commercial Printing (except Screen and Books)"
+    )
+    COMMERCIAL_SCREEN_PRINTING = LkOccupationTitle(302, 5, 323113, "Commercial Screen Printing")
+    BOOKS_PRINTING = LkOccupationTitle(303, 5, 323117, "Books Printing")
+    SUPPORT_ACTIVITIES_FOR_PRINTING = LkOccupationTitle(
+        304, 5, 323120, "Support Activities for Printing"
+    )
+    PETROLEUM_AND_COAL_PRODUCTS_MANUFACTURING = LkOccupationTitle(
+        305, 5, 3241, "Petroleum and Coal Products Manufacturing"
+    )
+    PETROLEUM_REFINERIES = LkOccupationTitle(306, 5, 324110, "Petroleum Refineries")
+    ASPHALT_PAVING_MIXTURE_AND_BLOCK_MANUFACTURING = LkOccupationTitle(
+        307, 5, 324121, "Asphalt Paving Mixture and Block Manufacturing"
+    )
+    ASPHALT_SHINGLE_AND_COATING_MATERIALS_MANUFACTURING = LkOccupationTitle(
+        308, 5, 324122, "Asphalt Shingle and Coating Materials Manufacturing"
+    )
+    PETROLEUM_LUBRICATING_OIL_AND_GREASE_MANUFACTURING = LkOccupationTitle(
+        309, 5, 324191, "Petroleum Lubricating Oil and Grease Manufacturing"
+    )
+    ALL_OTHER_PETROLEUM_AND_COAL_PRODUCTS_MANUFACTURING = LkOccupationTitle(
+        310, 5, 324199, "All Other Petroleum and Coal Products Manufacturing"
+    )
+    BASIC_CHEMICAL_MANUFACTURING = LkOccupationTitle(311, 5, 3251, "Basic Chemical Manufacturing")
+    PETROCHEMICAL_MANUFACTURING = LkOccupationTitle(312, 5, 325110, "Petrochemical Manufacturing")
+    INDUSTRIAL_GAS_MANUFACTURING = LkOccupationTitle(
+        313, 5, 325120, "Industrial Gas Manufacturing"
+    )
+    SYNTHETIC_DYE_AND_PIGMENT_MANUFACTURING = LkOccupationTitle(
+        314, 5, 325130, "Synthetic Dye and Pigment Manufacturing"
+    )
+    OTHER_BASIC_INORGANIC_CHEMICAL_MANUFACTURING = LkOccupationTitle(
+        315, 5, 325180, "Other Basic Inorganic Chemical Manufacturing"
+    )
+    ETHYL_ALCOHOL_MANUFACTURING = LkOccupationTitle(316, 5, 325193, "Ethyl Alcohol Manufacturing")
+    CYCLIC_CRUDE_INTERMEDIATE_AND_GUM_AND_WOOD_CHEMICAL_MANUFACTURING = LkOccupationTitle(
+        317, 5, 325194, "Cyclic Crude, Intermediate, and Gum and Wood Chemical Manufacturing"
+    )
+    ALL_OTHER_BASIC_ORGANIC_CHEMICAL_MANUFACTURING = LkOccupationTitle(
+        318, 5, 325199, "All Other Basic Organic Chemical Manufacturing"
+    )
+    RESIN_SYNTHETIC_RUBBER_AND_ARTIFICIAL_AND_SYNTHETIC_FIBERS_AND_FILAMENTS_MANUFACTURING = LkOccupationTitle(
+        319,
+        5,
+        3252,
+        "Resin, Synthetic Rubber, and Artificial and Synthetic Fibers and Filaments Manufacturing",
+    )
+    PLASTICS_MATERIAL_AND_RESIN_MANUFACTURING = LkOccupationTitle(
+        320, 5, 325211, "Plastics Material and Resin Manufacturing"
+    )
+    SYNTHETIC_RUBBER_MANUFACTURING = LkOccupationTitle(
+        321, 5, 325212, "Synthetic Rubber Manufacturing"
+    )
+    ARTIFICIAL_AND_SYNTHETIC_FIBERS_AND_FILAMENTS_MANUFACTURING = LkOccupationTitle(
+        322, 5, 325220, "Artificial and Synthetic Fibers and Filaments Manufacturing"
+    )
+    PESTICIDE_FERTILIZER_AND_OTHER_AGRICULTURAL_CHEMICAL_MANUFACTURING = LkOccupationTitle(
+        323, 5, 3253, "Pesticide, Fertilizer, and Other Agricultural Chemical Manufacturing"
+    )
+    NITROGENOUS_FERTILIZER_MANUFACTURING = LkOccupationTitle(
+        324, 5, 325311, "Nitrogenous Fertilizer Manufacturing"
+    )
+    PHOSPHATIC_FERTILIZER_MANUFACTURING = LkOccupationTitle(
+        325, 5, 325312, "Phosphatic Fertilizer Manufacturing"
+    )
+    FERTILIZER_MIXING_ONLY_MANUFACTURING = LkOccupationTitle(
+        326, 5, 325314, "Fertilizer (Mixing Only) Manufacturing"
+    )
+    PESTICIDE_AND_OTHER_AGRICULTURAL_CHEMICAL_MANUFACTURING = LkOccupationTitle(
+        327, 5, 325320, "Pesticide and Other Agricultural Chemical Manufacturing"
+    )
+    PHARMACEUTICAL_AND_MEDICINE_MANUFACTURING = LkOccupationTitle(
+        328, 5, 3254, "Pharmaceutical and Medicine Manufacturing"
+    )
+    MEDICINAL_AND_BOTANICAL_MANUFACTURING = LkOccupationTitle(
+        329, 5, 325411, "Medicinal and Botanical Manufacturing"
+    )
+    PHARMACEUTICAL_PREPARATION_MANUFACTURING = LkOccupationTitle(
+        330, 5, 325412, "Pharmaceutical Preparation Manufacturing"
+    )
+    IN_VITRO_DIAGNOSTIC_SUBSTANCE_MANUFACTURING = LkOccupationTitle(
+        331, 5, 325413, "In-Vitro Diagnostic Substance Manufacturing"
+    )
+    BIOLOGICAL_PRODUCT_EXCEPT_DIAGNOSTIC_MANUFACTURING = LkOccupationTitle(
+        332, 5, 325414, "Biological Product (except Diagnostic) Manufacturing"
+    )
+    PAINT_COATING_AND_ADHESIVE_MANUFACTURING = LkOccupationTitle(
+        333, 5, 3255, "Paint, Coating, and Adhesive Manufacturing"
+    )
+    PAINT_AND_COATING_MANUFACTURING = LkOccupationTitle(
+        334, 5, 325510, "Paint and Coating Manufacturing"
+    )
+    ADHESIVE_MANUFACTURING = LkOccupationTitle(335, 5, 325520, "Adhesive Manufacturing")
+    SOAP_CLEANING_COMPOUND_AND_TOILET_PREPARATION_MANUFACTURING = LkOccupationTitle(
+        336, 5, 3256, "Soap, Cleaning Compound, and Toilet Preparation Manufacturing"
+    )
+    SOAP_AND_OTHER_DETERGENT_MANUFACTURING = LkOccupationTitle(
+        337, 5, 325611, "Soap and Other Detergent Manufacturing"
+    )
+    POLISH_AND_OTHER_SANITATION_GOOD_MANUFACTURING = LkOccupationTitle(
+        338, 5, 325612, "Polish and Other Sanitation Good Manufacturing"
+    )
+    SURFACE_ACTIVE_AGENT_MANUFACTURING = LkOccupationTitle(
+        339, 5, 325613, "Surface Active Agent Manufacturing"
+    )
+    TOILET_PREPARATION_MANUFACTURING = LkOccupationTitle(
+        340, 5, 325620, "Toilet Preparation Manufacturing"
+    )
+    OTHER_CHEMICAL_PRODUCT_AND_PREPARATION_MANUFACTURING = LkOccupationTitle(
+        341, 5, 3259, "Other Chemical Product and Preparation Manufacturing"
+    )
+    PRINTING_INK_MANUFACTURING = LkOccupationTitle(342, 5, 325910, "Printing Ink Manufacturing")
+    EXPLOSIVES_MANUFACTURING = LkOccupationTitle(343, 5, 325920, "Explosives Manufacturing")
+    CUSTOM_COMPOUNDING_OF_PURCHASED_RESINS = LkOccupationTitle(
+        344, 5, 325991, "Custom Compounding of Purchased Resins"
+    )
+    PHOTOGRAPHIC_FILM_PAPER_PLATE_AND_CHEMICAL_MANUFACTURING = LkOccupationTitle(
+        345, 5, 325992, "Photographic Film, Paper, Plate, and Chemical Manufacturing"
+    )
+    ALL_OTHER_MISCELLANEOUS_CHEMICAL_PRODUCT_AND_PREPARATION_MANUFACTURING = LkOccupationTitle(
+        346, 5, 325998, "All Other Miscellaneous Chemical Product and Preparation Manufacturing"
+    )
+    PLASTICS_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        347, 5, 3261, "Plastics Product Manufacturing"
+    )
+    PLASTICS_BAG_AND_POUCH_MANUFACTURING = LkOccupationTitle(
+        348, 5, 326111, "Plastics Bag and Pouch Manufacturing"
+    )
+    PLASTICS_PACKAGING_FILM_AND_SHEET_INCLUDING_LAMINATED_MANUFACTURING = LkOccupationTitle(
+        349, 5, 326112, "Plastics Packaging Film and Sheet (including Laminated) Manufacturing"
+    )
+    UNLAMINATED_PLASTICS_FILM_AND_SHEET_EXCEPT_PACKAGING_MANUFACTURING = LkOccupationTitle(
+        350, 5, 326113, "Unlaminated Plastics Film and Sheet (except Packaging) Manufacturing"
+    )
+    UNLAMINATED_PLASTICS_PROFILE_SHAPE_MANUFACTURING = LkOccupationTitle(
+        351, 5, 326121, "Unlaminated Plastics Profile Shape Manufacturing"
+    )
+    PLASTICS_PIPE_AND_PIPE_FITTING_MANUFACTURING = LkOccupationTitle(
+        352, 5, 326122, "Plastics Pipe and Pipe Fitting Manufacturing"
+    )
+    LAMINATED_PLASTICS_PLATE_SHEET_EXCEPT_PACKAGING_AND_SHAPE_MANUFACTURING = LkOccupationTitle(
+        353,
+        5,
+        326130,
+        "Laminated Plastics Plate, Sheet (except Packaging), and Shape Manufacturing",
+    )
+    POLYSTYRENE_FOAM_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        354, 5, 326140, "Polystyrene Foam Product Manufacturing"
+    )
+    URETHANE_AND_OTHER_FOAM_PRODUCT_EXCEPT_POLYSTYRENE_MANUFACTURING = LkOccupationTitle(
+        355, 5, 326150, "Urethane and Other Foam Product (except Polystyrene) Manufacturing"
+    )
+    PLASTICS_BOTTLE_MANUFACTURING = LkOccupationTitle(
+        356, 5, 326160, "Plastics Bottle Manufacturing"
+    )
+    PLASTICS_PLUMBING_FIXTURE_MANUFACTURING = LkOccupationTitle(
+        357, 5, 326191, "Plastics Plumbing Fixture Manufacturing"
+    )
+    ALL_OTHER_PLASTICS_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        358, 5, 326199, "All Other Plastics Product Manufacturing"
+    )
+    RUBBER_PRODUCT_MANUFACTURING = LkOccupationTitle(359, 5, 3262, "Rubber Product Manufacturing")
+    TIRE_MANUFACTURING_EXCEPT_RETREADING = LkOccupationTitle(
+        360, 5, 326211, "Tire Manufacturing (except Retreading)"
+    )
+    TIRE_RETREADING = LkOccupationTitle(361, 5, 326212, "Tire Retreading")
+    RUBBER_AND_PLASTICS_HOSES_AND_BELTING_MANUFACTURING = LkOccupationTitle(
+        362, 5, 326220, "Rubber and Plastics Hoses and Belting Manufacturing"
+    )
+    RUBBER_PRODUCT_MANUFACTURING_FOR_MECHANICAL_USE = LkOccupationTitle(
+        363, 5, 326291, "Rubber Product Manufacturing for Mechanical Use"
+    )
+    ALL_OTHER_RUBBER_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        364, 5, 326299, "All Other Rubber Product Manufacturing"
+    )
+    CLAY_PRODUCT_AND_REFRACTORY_MANUFACTURING = LkOccupationTitle(
+        365, 5, 3271, "Clay Product and Refractory Manufacturing"
+    )
+    POTTERY_CERAMICS_AND_PLUMBING_FIXTURE_MANUFACTURING = LkOccupationTitle(
+        366, 5, 327110, "Pottery, Ceramics, and Plumbing Fixture Manufacturing"
+    )
+    CLAY_BUILDING_MATERIAL_AND_REFRACTORIES_MANUFACTURING = LkOccupationTitle(
+        367, 5, 327120, "Clay Building Material and Refractories Manufacturing"
+    )
+    GLASS_AND_GLASS_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        368, 5, 3272, "Glass and Glass Product Manufacturing"
+    )
+    FLAT_GLASS_MANUFACTURING = LkOccupationTitle(369, 5, 327211, "Flat Glass Manufacturing")
+    OTHER_PRESSED_AND_BLOWN_GLASS_AND_GLASSWARE_MANUFACTURING = LkOccupationTitle(
+        370, 5, 327212, "Other Pressed and Blown Glass and Glassware Manufacturing"
+    )
+    GLASS_CONTAINER_MANUFACTURING = LkOccupationTitle(
+        371, 5, 327213, "Glass Container Manufacturing"
+    )
+    GLASS_PRODUCT_MANUFACTURING_MADE_OF_PURCHASED_GLASS = LkOccupationTitle(
+        372, 5, 327215, "Glass Product Manufacturing Made of Purchased Glass"
+    )
+    CEMENT_AND_CONCRETE_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        373, 5, 3273, "Cement and Concrete Product Manufacturing"
+    )
+    CEMENT_MANUFACTURING = LkOccupationTitle(374, 5, 327310, "Cement Manufacturing")
+    READY_MIX_CONCRETE_MANUFACTURING = LkOccupationTitle(
+        375, 5, 327320, "Ready-Mix Concrete Manufacturing"
+    )
+    CONCRETE_BLOCK_AND_BRICK_MANUFACTURING = LkOccupationTitle(
+        376, 5, 327331, "Concrete Block and Brick Manufacturing"
+    )
+    CONCRETE_PIPE_MANUFACTURING = LkOccupationTitle(377, 5, 327332, "Concrete Pipe Manufacturing")
+    OTHER_CONCRETE_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        378, 5, 327390, "Other Concrete Product Manufacturing"
+    )
+    LIME_AND_GYPSUM_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        379, 5, 3274, "Lime and Gypsum Product Manufacturing"
+    )
+    LIME_MANUFACTURING = LkOccupationTitle(380, 5, 327410, "Lime Manufacturing")
+    GYPSUM_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        381, 5, 327420, "Gypsum Product Manufacturing"
+    )
+    OTHER_NONMETALLIC_MINERAL_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        382, 5, 3279, "Other Nonmetallic Mineral Product Manufacturing"
+    )
+    ABRASIVE_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        383, 5, 327910, "Abrasive Product Manufacturing"
+    )
+    CUT_STONE_AND_STONE_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        384, 5, 327991, "Cut Stone and Stone Product Manufacturing"
+    )
+    GROUND_OR_TREATED_MINERAL_AND_EARTH_MANUFACTURING = LkOccupationTitle(
+        385, 5, 327992, "Ground or Treated Mineral and Earth Manufacturing"
+    )
+    MINERAL_WOOL_MANUFACTURING = LkOccupationTitle(386, 5, 327993, "Mineral Wool Manufacturing")
+    ALL_OTHER_MISCELLANEOUS_NONMETALLIC_MINERAL_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        387, 5, 327999, "All Other Miscellaneous Nonmetallic Mineral Product Manufacturing"
+    )
+    IRON_AND_STEEL_MILLS_AND_FERROALLOY_MANUFACTURING_4 = LkOccupationTitle(
+        388, 5, 3311, "Iron and Steel Mills and Ferroalloy Manufacturing"
+    )
+    IRON_AND_STEEL_MILLS_AND_FERROALLOY_MANUFACTURING = LkOccupationTitle(
+        389, 5, 331110, "Iron and Steel Mills and Ferroalloy Manufacturing"
+    )
+    STEEL_PRODUCT_MANUFACTURING_FROM_PURCHASED_STEEL = LkOccupationTitle(
+        390, 5, 3312, "Steel Product Manufacturing from Purchased Steel"
+    )
+    IRON_AND_STEEL_PIPE_AND_TUBE_MANUFACTURING_FROM_PURCHASED_STEEL = LkOccupationTitle(
+        391, 5, 331210, "Iron and Steel Pipe and Tube Manufacturing from Purchased Steel"
+    )
+    ROLLED_STEEL_SHAPE_MANUFACTURING = LkOccupationTitle(
+        392, 5, 331221, "Rolled Steel Shape Manufacturing"
+    )
+    STEEL_WIRE_DRAWING = LkOccupationTitle(393, 5, 331222, "Steel Wire Drawing")
+    ALUMINA_AND_ALUMINUM_PRODUCTION_AND_PROCESSING = LkOccupationTitle(
+        394, 5, 3313, "Alumina and Aluminum Production and Processing"
+    )
+    ALUMINA_REFINING_AND_PRIMARY_ALUMINUM_PRODUCTION = LkOccupationTitle(
+        395, 5, 331313, "Alumina Refining and Primary Aluminum Production"
+    )
+    SECONDARY_SMELTING_AND_ALLOYING_OF_ALUMINUM = LkOccupationTitle(
+        396, 5, 331314, "Secondary Smelting and Alloying of Aluminum"
+    )
+    ALUMINUM_SHEET_PLATE_AND_FOIL_MANUFACTURING = LkOccupationTitle(
+        397, 5, 331315, "Aluminum Sheet, Plate, and Foil Manufacturing"
+    )
+    OTHER_ALUMINUM_ROLLING_DRAWING_AND_EXTRUDING = LkOccupationTitle(
+        398, 5, 331318, "Other Aluminum Rolling, Drawing, and Extruding"
+    )
+    NONFERROUS_METAL_EXCEPT_ALUMINUM_PRODUCTION_AND_PROCESSING = LkOccupationTitle(
+        399, 5, 3314, "Nonferrous Metal (except Aluminum) Production and Processing"
+    )
+    NONFERROUS_METAL_EXCEPT_ALUMINUM_SMELTING_AND_REFINING = LkOccupationTitle(
+        400, 5, 331410, "Nonferrous Metal (except Aluminum) Smelting and Refining"
+    )
+    COPPER_ROLLING_DRAWING_EXTRUDING_AND_ALLOYING = LkOccupationTitle(
+        401, 5, 331420, "Copper Rolling, Drawing, Extruding, and Alloying"
+    )
+    NONFERROUS_METAL_EXCEPT_COPPER_AND_ALUMINUM_ROLLING_DRAWING_AND_EXTRUDING = LkOccupationTitle(
+        402,
+        5,
+        331491,
+        "Nonferrous Metal (except Copper and Aluminum) Rolling, Drawing, and Extruding",
+    )
+    SECONDARY_SMELTING_REFINING_AND_ALLOYING_OF_NONFERROUS_METAL_EXCEPT_COPPER_AND_ALUMINUM = LkOccupationTitle(
+        403,
+        5,
+        331492,
+        "Secondary Smelting, Refining, and Alloying of Nonferrous Metal (except Copper and Aluminum)",
+    )
+    FOUNDRIES = LkOccupationTitle(404, 5, 3315, "Foundries")
+    IRON_FOUNDRIES = LkOccupationTitle(405, 5, 331511, "Iron Foundries")
+    STEEL_INVESTMENT_FOUNDRIES = LkOccupationTitle(406, 5, 331512, "Steel Investment Foundries")
+    STEEL_FOUNDRIES_EXCEPT_INVESTMENT = LkOccupationTitle(
+        407, 5, 331513, "Steel Foundries (except Investment)"
+    )
+    NONFERROUS_METAL_DIE_CASTING_FOUNDRIES = LkOccupationTitle(
+        408, 5, 331523, "Nonferrous Metal Die-Casting Foundries"
+    )
+    ALUMINUM_FOUNDRIES_EXCEPT_DIE_CASTING = LkOccupationTitle(
+        409, 5, 331524, "Aluminum Foundries (except Die-Casting)"
+    )
+    OTHER_NONFERROUS_METAL_FOUNDRIES_EXCEPT_DIE_CASTING = LkOccupationTitle(
+        410, 5, 331529, "Other Nonferrous Metal Foundries (except Die-Casting)"
+    )
+    FORGING_AND_STAMPING = LkOccupationTitle(411, 5, 3321, "Forging and Stamping")
+    IRON_AND_STEEL_FORGING = LkOccupationTitle(412, 5, 332111, "Iron and Steel Forging")
+    NONFERROUS_FORGING = LkOccupationTitle(413, 5, 332112, "Nonferrous Forging")
+    CUSTOM_ROLL_FORMING = LkOccupationTitle(414, 5, 332114, "Custom Roll Forming")
+    POWDER_METALLURGY_PART_MANUFACTURING = LkOccupationTitle(
+        415, 5, 332117, "Powder Metallurgy Part Manufacturing"
+    )
+    METAL_CROWN_CLOSURE_AND_OTHER_METAL_STAMPING_EXCEPT_AUTOMOTIVE = LkOccupationTitle(
+        416, 5, 332119, "Metal Crown, Closure, and Other Metal Stamping (except Automotive)"
+    )
+    CUTLERY_AND_HANDTOOL_MANUFACTURING = LkOccupationTitle(
+        417, 5, 3322, "Cutlery and Handtool Manufacturing"
+    )
+    METAL_KITCHEN_COOKWARE_UTENSIL_CUTLERY_AND_FLATWARE_EXCEPT_PRECIOUS_MANUFACTURING_273 = LkOccupationTitle(
+        418,
+        5,
+        332215,
+        "Metal Kitchen Cookware, Utensil, Cutlery, and Flatware (except Precious) Manufacturing273",
+    )
+    SAW_BLADE_AND_HANDTOOL_MANUFACTURING = LkOccupationTitle(
+        419, 5, 332216, "Saw Blade and Handtool Manufacturing"
+    )
+    ARCHITECTURAL_AND_STRUCTURAL_METALS_MANUFACTURING = LkOccupationTitle(
+        420, 5, 3323, "Architectural and Structural Metals Manufacturing"
+    )
+    PREFABRICATED_METAL_BUILDING_AND_COMPONENT_MANUFACTURING = LkOccupationTitle(
+        421, 5, 332311, "Prefabricated Metal Building and Component Manufacturing"
+    )
+    FABRICATED_STRUCTURAL_METAL_MANUFACTURING = LkOccupationTitle(
+        422, 5, 332312, "Fabricated Structural Metal Manufacturing"
+    )
+    PLATE_WORK_MANUFACTURING = LkOccupationTitle(423, 5, 332313, "Plate Work Manufacturing")
+    METAL_WINDOW_AND_DOOR_MANUFACTURING = LkOccupationTitle(
+        424, 5, 332321, "Metal Window and Door Manufacturing"
+    )
+    SHEET_METAL_WORK_MANUFACTURING = LkOccupationTitle(
+        425, 5, 332322, "Sheet Metal Work Manufacturing"
+    )
+    ORNAMENTAL_AND_ARCHITECTURAL_METAL_WORK_MANUFACTURING = LkOccupationTitle(
+        426, 5, 332323, "Ornamental and Architectural Metal Work Manufacturing"
+    )
+    BOILER_TANK_AND_SHIPPING_CONTAINER_MANUFACTURING = LkOccupationTitle(
+        427, 5, 3324, "Boiler, Tank, and Shipping Container Manufacturing"
+    )
+    POWER_BOILER_AND_HEAT_EXCHANGER_MANUFACTURING = LkOccupationTitle(
+        428, 5, 332410, "Power Boiler and Heat Exchanger Manufacturing"
+    )
+    METAL_TANK_HEAVY_GAUGE_MANUFACTURING = LkOccupationTitle(
+        429, 5, 332420, "Metal Tank (Heavy Gauge) Manufacturing"
+    )
+    METAL_CAN_MANUFACTURING = LkOccupationTitle(430, 5, 332431, "Metal Can Manufacturing")
+    OTHER_METAL_CONTAINER_MANUFACTURING = LkOccupationTitle(
+        431, 5, 332439, "Other Metal Container Manufacturing"
+    )
+    HARDWARE_MANUFACTURING_4 = LkOccupationTitle(432, 5, 3325, "Hardware Manufacturing")
+    HARDWARE_MANUFACTURING = LkOccupationTitle(433, 5, 332510, "Hardware Manufacturing")
+    SPRING_AND_WIRE_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        434, 5, 3326, "Spring and Wire Product Manufacturing"
+    )
+    SPRING_MANUFACTURING = LkOccupationTitle(435, 5, 332613, "Spring Manufacturing")
+    OTHER_FABRICATED_WIRE_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        436, 5, 332618, "Other Fabricated Wire Product Manufacturing"
+    )
+    MACHINE_SHOPS_TURNED_PRODUCT_AND_SCREW_NUT_AND_BOLT_MANUFACTURING = LkOccupationTitle(
+        437, 5, 3327, "Machine Shops; Turned Product; and Screw, Nut, and Bolt Manufacturing"
+    )
+    MACHINE_SHOPS = LkOccupationTitle(438, 5, 332710, "Machine Shops")
+    PRECISION_TURNED_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        439, 5, 332721, "Precision Turned Product Manufacturing"
+    )
+    BOLT_NUT_SCREW_RIVET_AND_WASHER_MANUFACTURING = LkOccupationTitle(
+        440, 5, 332722, "Bolt, Nut, Screw, Rivet, and Washer Manufacturing"
+    )
+    COATING_ENGRAVING_HEAT_TREATING_AND_ALLIED_ACTIVITIES = LkOccupationTitle(
+        441, 5, 3328, "Coating, Engraving, Heat Treating, and Allied Activities"
+    )
+    METAL_HEAT_TREATING = LkOccupationTitle(442, 5, 332811, "Metal Heat Treating")
+    METAL_COATING_ENGRAVING_EXCEPT_JEWELRY_AND_SILVERWARE_AND_ALLIED_SERVICES_TO_MANUFACTURERS = LkOccupationTitle(
+        443,
+        5,
+        332812,
+        "Metal Coating, Engraving (except Jewelry and Silverware), and Allied Services to Manufacturers",
+    )
+    ELECTROPLATING_PLATING_POLISHING_ANODIZING_AND_COLORING = LkOccupationTitle(
+        444, 5, 332813, "Electroplating, Plating, Polishing, Anodizing, and Coloring"
+    )
+    OTHER_FABRICATED_METAL_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        445, 5, 3329, "Other Fabricated Metal Product Manufacturing"
+    )
+    INDUSTRIAL_VALVE_MANUFACTURING = LkOccupationTitle(
+        446, 5, 332911, "Industrial Valve Manufacturing"
+    )
+    FLUID_POWER_VALVE_AND_HOSE_FITTING_MANUFACTURING = LkOccupationTitle(
+        447, 5, 332912, "Fluid Power Valve and Hose Fitting Manufacturing"
+    )
+    PLUMBING_FIXTURE_FITTING_AND_TRIM_MANUFACTURING = LkOccupationTitle(
+        448, 5, 332913, "Plumbing Fixture Fitting and Trim Manufacturing"
+    )
+    OTHER_METAL_VALVE_AND_PIPE_FITTING_MANUFACTURING = LkOccupationTitle(
+        449, 5, 332919, "Other Metal Valve and Pipe Fitting Manufacturing"
+    )
+    BALL_AND_ROLLER_BEARING_MANUFACTURING = LkOccupationTitle(
+        450, 5, 332991, "Ball and Roller Bearing Manufacturing"
+    )
+    SMALL_ARMS_AMMUNITION_MANUFACTURING = LkOccupationTitle(
+        451, 5, 332992, "Small Arms Ammunition Manufacturing"
+    )
+    AMMUNITION_EXCEPT_SMALL_ARMS_MANUFACTURING = LkOccupationTitle(
+        452, 5, 332993, "Ammunition (except Small Arms) Manufacturing"
+    )
+    SMALL_ARMS_ORDNANCE_AND_ORDNANCE_ACCESSORIES_MANUFACTURING = LkOccupationTitle(
+        453, 5, 332994, "Small Arms, Ordnance, and Ordnance Accessories Manufacturing"
+    )
+    FABRICATED_PIPE_AND_PIPE_FITTING_MANUFACTURING = LkOccupationTitle(
+        454, 5, 332996, "Fabricated Pipe and Pipe Fitting Manufacturing"
+    )
+    ALL_OTHER_MISCELLANEOUS_FABRICATED_METAL_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        455, 5, 332999, "All Other Miscellaneous Fabricated Metal Product Manufacturing"
+    )
+    AGRICULTURE_CONSTRUCTION_AND_MINING_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        456, 5, 3331, "Agriculture, Construction, and Mining Machinery Manufacturing"
+    )
+    FARM_MACHINERY_AND_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        457, 5, 333111, "Farm Machinery and Equipment Manufacturing"
+    )
+    LAWN_AND_GARDEN_TRACTOR_AND_HOME_LAWN_AND_GARDEN_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        458, 5, 333112, "Lawn and Garden Tractor and Home Lawn and Garden Equipment Manufacturing"
+    )
+    CONSTRUCTION_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        459, 5, 333120, "Construction Machinery Manufacturing"
+    )
+    MINING_MACHINERY_AND_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        460, 5, 333131, "Mining Machinery and Equipment Manufacturing"
+    )
+    OIL_AND_GAS_FIELD_MACHINERY_AND_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        461, 5, 333132, "Oil and Gas Field Machinery and Equipment Manufacturing"
+    )
+    INDUSTRIAL_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        462, 5, 3332, "Industrial Machinery Manufacturing"
+    )
+    FOOD_PRODUCT_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        463, 5, 333241, "Food Product Machinery Manufacturing"
+    )
+    SEMICONDUCTOR_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        464, 5, 333242, "Semiconductor Machinery Manufacturing"
+    )
+    SAWMILL_WOODWORKING_AND_PAPER_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        465, 5, 333243, "Sawmill, Woodworking, and Paper Machinery Manufacturing"
+    )
+    PRINTING_MACHINERY_AND_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        466, 5, 333244, "Printing Machinery and Equipment Manufacturing"
+    )
+    OTHER_INDUSTRIAL_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        467, 5, 333249, "Other Industrial Machinery Manufacturing"
+    )
+    COMMERCIAL_AND_SERVICE_INDUSTRY_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        468, 5, 3333, "Commercial and Service Industry Machinery Manufacturing"
+    )
+    OPTICAL_INSTRUMENT_AND_LENS_MANUFACTURING = LkOccupationTitle(
+        469, 5, 333314, "Optical Instrument and Lens Manufacturing"
+    )
+    PHOTOGRAPHIC_AND_PHOTOCOPYING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        470, 5, 333316, "Photographic and Photocopying Equipment Manufacturing"
+    )
+    OTHER_COMMERCIAL_AND_SERVICE_INDUSTRY_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        471, 5, 333318, "Other Commercial and Service Industry Machinery Manufacturing"
+    )
+    VENTILATION_HEATING_AIR_CONDITIONING_AND_COMMERCIAL_REFRIGERATION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        472,
+        5,
+        3334,
+        "Ventilation, Heating, Air-Conditioning, and Commercial Refrigeration Equipment Manufacturing",
+    )
+    INDUSTRIAL_AND_COMMERCIAL_FAN_AND_BLOWER_AND_AIR_PURIFICATION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        473,
+        5,
+        333413,
+        "Industrial and Commercial Fan and Blower and Air Purification Equipment Manufacturing",
+    )
+    HEATING_EQUIPMENT_EXCEPT_WARM_AIR_FURNACES_MANUFACTURING = LkOccupationTitle(
+        474, 5, 333414, "Heating Equipment (except Warm Air Furnaces) Manufacturing"
+    )
+    AIR_CONDITIONING_AND_WARM_AIR_HEATING_EQUIPMENT_AND_COMMERCIAL_AND_INDUSTRIAL_REFRIGERATION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        475,
+        5,
+        333415,
+        "Air-Conditioning and Warm Air Heating Equipment and Commercial and Industrial Refrigeration Equipment Manufacturing",
+    )
+    METALWORKING_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        476, 5, 3335, "Metalworking Machinery Manufacturing"
+    )
+    INDUSTRIAL_MOLD_MANUFACTURING = LkOccupationTitle(
+        477, 5, 333511, "Industrial Mold Manufacturing"
+    )
+    SPECIAL_DIE_AND_TOOL_DIE_SET_JIG_AND_FIXTURE_MANUFACTURING = LkOccupationTitle(
+        478, 5, 333514, "Special Die and Tool, Die Set, Jig, and Fixture Manufacturing"
+    )
+    CUTTING_TOOL_AND_MACHINE_TOOL_ACCESSORY_MANUFACTURING = LkOccupationTitle(
+        479, 5, 333515, "Cutting Tool and Machine Tool Accessory Manufacturing"
+    )
+    MACHINE_TOOL_MANUFACTURING = LkOccupationTitle(480, 5, 333517, "Machine Tool Manufacturing")
+    ROLLING_MILL_AND_OTHER_METALWORKING_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        481, 5, 333519, "Rolling Mill and Other Metalworking Machinery Manufacturing"
+    )
+    ENGINE_TURBINE_AND_POWER_TRANSMISSION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        482, 5, 3336, "Engine, Turbine, and Power Transmission Equipment Manufacturing"
+    )
+    TURBINE_AND_TURBINE_GENERATOR_SET_UNITS_MANUFACTURING = LkOccupationTitle(
+        483, 5, 333611, "Turbine and Turbine Generator Set Units Manufacturing"
+    )
+    SPEED_CHANGER_INDUSTRIAL_HIGH_SPEED_DRIVE_AND_GEAR_MANUFACTURING = LkOccupationTitle(
+        484, 5, 333612, "Speed Changer, Industrial High-Speed Drive, and Gear Manufacturing"
+    )
+    MECHANICAL_POWER_TRANSMISSION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        485, 5, 333613, "Mechanical Power Transmission Equipment Manufacturing"
+    )
+    OTHER_ENGINE_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        486, 5, 333618, "Other Engine Equipment Manufacturing"
+    )
+    OTHER_GENERAL_PURPOSE_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        487, 5, 3339, "Other General Purpose Machinery Manufacturing"
+    )
+    AIR_AND_GAS_COMPRESSOR_MANUFACTURING = LkOccupationTitle(
+        488, 5, 333912, "Air and Gas Compressor Manufacturing"
+    )
+    MEASURING_DISPENSING_AND_OTHER_PUMPING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        489, 5, 333914, "Measuring, Dispensing, and Other Pumping Equipment Manufacturing"
+    )
+    ELEVATOR_AND_MOVING_STAIRWAY_MANUFACTURING = LkOccupationTitle(
+        490, 5, 333921, "Elevator and Moving Stairway Manufacturing"
+    )
+    CONVEYOR_AND_CONVEYING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        491, 5, 333922, "Conveyor and Conveying Equipment Manufacturing"
+    )
+    OVERHEAD_TRAVELING_CRANE_HOIST_AND_MONORAIL_SYSTEM_MANUFACTURING = LkOccupationTitle(
+        492, 5, 333923, "Overhead Traveling Crane, Hoist, and Monorail System Manufacturing"
+    )
+    INDUSTRIAL_TRUCK_TRACTOR_TRAILER_AND_STACKER_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        493, 5, 333924, "Industrial Truck, Tractor, Trailer, and Stacker Machinery Manufacturing"
+    )
+    POWER_DRIVEN_HANDTOOL_MANUFACTURING = LkOccupationTitle(
+        494, 5, 333991, "Power-Driven Handtool Manufacturing"
+    )
+    WELDING_AND_SOLDERING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        495, 5, 333992, "Welding and Soldering Equipment Manufacturing"
+    )
+    PACKAGING_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        496, 5, 333993, "Packaging Machinery Manufacturing"
+    )
+    INDUSTRIAL_PROCESS_FURNACE_AND_OVEN_MANUFACTURING = LkOccupationTitle(
+        497, 5, 333994, "Industrial Process Furnace and Oven Manufacturing"
+    )
+    FLUID_POWER_CYLINDER_AND_ACTUATOR_MANUFACTURING = LkOccupationTitle(
+        498, 5, 333995, "Fluid Power Cylinder and Actuator Manufacturing"
+    )
+    FLUID_POWER_PUMP_AND_MOTOR_MANUFACTURING = LkOccupationTitle(
+        499, 5, 333996, "Fluid Power Pump and Motor Manufacturing"
+    )
+    SCALE_AND_BALANCE_MANUFACTURING = LkOccupationTitle(
+        500, 5, 333997, "Scale and Balance Manufacturing"
+    )
+    ALL_OTHER_MISCELLANEOUS_GENERAL_PURPOSE_MACHINERY_MANUFACTURING = LkOccupationTitle(
+        501, 5, 333999, "All Other Miscellaneous General Purpose Machinery Manufacturing"
+    )
+    COMPUTER_AND_PERIPHERAL_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        502, 5, 3341, "Computer and Peripheral Equipment Manufacturing"
+    )
+    ELECTRONIC_COMPUTER_MANUFACTURING = LkOccupationTitle(
+        503, 5, 334111, "Electronic Computer Manufacturing"
+    )
+    COMPUTER_STORAGE_DEVICE_MANUFACTURING = LkOccupationTitle(
+        504, 5, 334112, "Computer Storage Device Manufacturing"
+    )
+    COMPUTER_TERMINAL_AND_OTHER_COMPUTER_PERIPHERAL_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        505, 5, 334118, "Computer Terminal and Other Computer Peripheral Equipment Manufacturing"
+    )
+    COMMUNICATIONS_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        506, 5, 3342, "Communications Equipment Manufacturing"
+    )
+    TELEPHONE_APPARATUS_MANUFACTURING = LkOccupationTitle(
+        507, 5, 334210, "Telephone Apparatus Manufacturing"
+    )
+    RADIO_AND_TELEVISION_BROADCASTING_AND_WIRELESS_COMMUNICATIONS_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        508,
+        5,
+        334220,
+        "Radio and Television Broadcasting and Wireless Communications Equipment Manufacturing",
+    )
+    OTHER_COMMUNICATIONS_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        509, 5, 334290, "Other Communications Equipment Manufacturing"
+    )
+    AUDIO_AND_VIDEO_EQUIPMENT_MANUFACTURING_4 = LkOccupationTitle(
+        510, 5, 3343, "Audio and Video Equipment Manufacturing"
+    )
+    AUDIO_AND_VIDEO_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        511, 5, 334310, "Audio and Video Equipment Manufacturing"
+    )
+    SEMICONDUCTOR_AND_OTHER_ELECTRONIC_COMPONENT_MANUFACTURING = LkOccupationTitle(
+        512, 5, 3344, "Semiconductor and Other Electronic Component Manufacturing"
+    )
+    BARE_PRINTED_CIRCUIT_BOARD_MANUFACTURING = LkOccupationTitle(
+        513, 5, 334412, "Bare Printed Circuit Board Manufacturing"
+    )
+    SEMICONDUCTOR_AND_RELATED_DEVICE_MANUFACTURING = LkOccupationTitle(
+        514, 5, 334413, "Semiconductor and Related Device Manufacturing"
+    )
+    CAPACITOR_RESISTOR_COIL_TRANSFORMER_AND_OTHER_INDUCTOR_MANUFACTURING = LkOccupationTitle(
+        515, 5, 334416, "Capacitor, Resistor, Coil, Transformer, and Other Inductor Manufacturing"
+    )
+    ELECTRONIC_CONNECTOR_MANUFACTURING = LkOccupationTitle(
+        516, 5, 334417, "Electronic Connector Manufacturing"
+    )
+    PRINTED_CIRCUIT_ASSEMBLY_ELECTRONIC_ASSEMBLY_MANUFACTURING = LkOccupationTitle(
+        517, 5, 334418, "Printed Circuit Assembly (Electronic Assembly) Manufacturing"
+    )
+    OTHER_ELECTRONIC_COMPONENT_MANUFACTURING = LkOccupationTitle(
+        518, 5, 334419, "Other Electronic Component Manufacturing"
+    )
+    NAVIGATIONAL_MEASURING_ELECTROMEDICAL_AND_CONTROL_INSTRUMENTS_MANUFACTURING = LkOccupationTitle(
+        519,
+        5,
+        3345,
+        "Navigational, Measuring, Electromedical, and Control Instruments Manufacturing",
+    )
+    ELECTROMEDICAL_AND_ELECTROTHERAPEUTIC_APPARATUS_MANUFACTURING = LkOccupationTitle(
+        520, 5, 334510, "Electromedical and Electrotherapeutic Apparatus Manufacturing"
+    )
+    SEARCH_DETECTION_NAVIGATION_GUIDANCE_AERONAUTICAL_AND_NAUTICAL_SYSTEM_AND_INSTRUMENT_MANUFACTURING = LkOccupationTitle(
+        521,
+        5,
+        334511,
+        "Search, Detection, Navigation, Guidance, Aeronautical, and Nautical System and Instrument Manufacturing",
+    )
+    AUTOMATIC_ENVIRONMENTAL_CONTROL_MANUFACTURING_FOR_RESIDENTIAL_COMMERCIAL_AND_APPLIANCE_USE = LkOccupationTitle(
+        522,
+        5,
+        334512,
+        "Automatic Environmental Control Manufacturing for Residential, Commercial, and Appliance Use",
+    )
+    INSTRUMENTS_AND_RELATED_PRODUCTS_MANUFACTURING_FOR_MEASURING_DISPLAYING_AND_CONTROLLING_INDUSTRIAL_PROCESS_VARIABLES = LkOccupationTitle(
+        523,
+        5,
+        334513,
+        "Instruments and Related Products Manufacturing for Measuring, Displaying, and Controlling Industrial Process Variables",
+    )
+    TOTALIZING_FLUID_METER_AND_COUNTING_DEVICE_MANUFACTURING = LkOccupationTitle(
+        524, 5, 334514, "Totalizing Fluid Meter and Counting Device Manufacturing"
+    )
+    INSTRUMENT_MANUFACTURING_FOR_MEASURING_AND_TESTING_ELECTRICITY_AND_ELECTRICAL_SIGNALS_832 = LkOccupationTitle(
+        525,
+        5,
+        334515,
+        "Instrument Manufacturing for Measuring and Testing Electricity and Electrical Signals832",
+    )
+    ANALYTICAL_LABORATORY_INSTRUMENT_MANUFACTURING = LkOccupationTitle(
+        526, 5, 334516, "Analytical Laboratory Instrument Manufacturing"
+    )
+    IRRADIATION_APPARATUS_MANUFACTURING = LkOccupationTitle(
+        527, 5, 334517, "Irradiation Apparatus Manufacturing"
+    )
+    OTHER_MEASURING_AND_CONTROLLING_DEVICE_MANUFACTURING = LkOccupationTitle(
+        528, 5, 334519, "Other Measuring and Controlling Device Manufacturing"
+    )
+    MANUFACTURING_AND_REPRODUCING_MAGNETIC_AND_OPTICAL_MEDIA = LkOccupationTitle(
+        529, 5, 3346, "Manufacturing and Reproducing Magnetic and Optical Media"
+    )
+    BLANK_MAGNETIC_AND_OPTICAL_RECORDING_MEDIA_MANUFACTURING = LkOccupationTitle(
+        530, 5, 334613, "Blank Magnetic and Optical Recording Media Manufacturing"
+    )
+    SOFTWARE_AND_OTHER_PRERECORDED_COMPACT_DISC_TAPE_AND_RECORD_REPRODUCING = LkOccupationTitle(
+        531, 5, 334614, "Software and Other Prerecorded Compact Disc, Tape, and Record Reproducing"
+    )
+    ELECTRIC_LIGHTING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        532, 5, 3351, "Electric Lighting Equipment Manufacturing"
+    )
+    ELECTRIC_LAMP_BULB_AND_PART_MANUFACTURING = LkOccupationTitle(
+        533, 5, 335110, "Electric Lamp Bulb and Part Manufacturing"
+    )
+    RESIDENTIAL_ELECTRIC_LIGHTING_FIXTURE_MANUFACTURING = LkOccupationTitle(
+        534, 5, 335121, "Residential Electric Lighting Fixture Manufacturing"
+    )
+    COMMERCIAL_INDUSTRIAL_AND_INSTITUTIONAL_ELECTRIC_LIGHTING_FIXTURE_MANUFACTURING = LkOccupationTitle(
+        535,
+        5,
+        335122,
+        "Commercial, Industrial, and Institutional Electric Lighting Fixture Manufacturing",
+    )
+    OTHER_LIGHTING_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        536, 5, 335129, "Other Lighting Equipment Manufacturing"
+    )
+    HOUSEHOLD_APPLIANCE_MANUFACTURING = LkOccupationTitle(
+        537, 5, 3352, "Household Appliance Manufacturing"
+    )
+    SMALL_ELECTRICAL_APPLIANCE_MANUFACTURING = LkOccupationTitle(
+        538, 5, 335210, "Small Electrical Appliance Manufacturing"
+    )
+    MAJOR_HOUSEHOLD_APPLIANCE_MANUFACTURING = LkOccupationTitle(
+        539, 5, 335220, "Major Household Appliance Manufacturing"
+    )
+    ELECTRICAL_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        540, 5, 3353, "Electrical Equipment Manufacturing"
+    )
+    POWER_DISTRIBUTION_AND_SPECIALTY_TRANSFORMER_MANUFACTURING = LkOccupationTitle(
+        541, 5, 335311, "Power, Distribution, and Specialty Transformer Manufacturing"
+    )
+    MOTOR_AND_GENERATOR_MANUFACTURING = LkOccupationTitle(
+        542, 5, 335312, "Motor and Generator Manufacturing"
+    )
+    SWITCHGEAR_AND_SWITCHBOARD_APPARATUS_MANUFACTURING = LkOccupationTitle(
+        543, 5, 335313, "Switchgear and Switchboard Apparatus Manufacturing"
+    )
+    RELAY_AND_INDUSTRIAL_CONTROL_MANUFACTURING = LkOccupationTitle(
+        544, 5, 335314, "Relay and Industrial Control Manufacturing"
+    )
+    OTHER_ELECTRICAL_EQUIPMENT_AND_COMPONENT_MANUFACTURING = LkOccupationTitle(
+        545, 5, 3359, "Other Electrical Equipment and Component Manufacturing"
+    )
+    STORAGE_BATTERY_MANUFACTURING = LkOccupationTitle(
+        546, 5, 335911, "Storage Battery Manufacturing"
+    )
+    PRIMARY_BATTERY_MANUFACTURING = LkOccupationTitle(
+        547, 5, 335912, "Primary Battery Manufacturing"
+    )
+    FIBER_OPTIC_CABLE_MANUFACTURING = LkOccupationTitle(
+        548, 5, 335921, "Fiber Optic Cable Manufacturing"
+    )
+    OTHER_COMMUNICATION_AND_ENERGY_WIRE_MANUFACTURING = LkOccupationTitle(
+        549, 5, 335929, "Other Communication and Energy Wire Manufacturing"
+    )
+    CURRENT_CARRYING_WIRING_DEVICE_MANUFACTURING = LkOccupationTitle(
+        550, 5, 335931, "Current-Carrying Wiring Device Manufacturing"
+    )
+    NONCURRENT_CARRYING_WIRING_DEVICE_MANUFACTURING = LkOccupationTitle(
+        551, 5, 335932, "Noncurrent-Carrying Wiring Device Manufacturing"
+    )
+    CARBON_AND_GRAPHITE_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        552, 5, 335991, "Carbon and Graphite Product Manufacturing"
+    )
+    ALL_OTHER_MISCELLANEOUS_ELECTRICAL_EQUIPMENT_AND_COMPONENT_MANUFACTURING = LkOccupationTitle(
+        553, 5, 335999, "All Other Miscellaneous Electrical Equipment and Component Manufacturing"
+    )
+    MOTOR_VEHICLE_MANUFACTURING = LkOccupationTitle(554, 5, 3361, "Motor Vehicle Manufacturing")
+    AUTOMOBILE_MANUFACTURING = LkOccupationTitle(555, 5, 336111, "Automobile Manufacturing")
+    LIGHT_TRUCK_AND_UTILITY_VEHICLE_MANUFACTURING = LkOccupationTitle(
+        556, 5, 336112, "Light Truck and Utility Vehicle Manufacturing"
+    )
+    HEAVY_DUTY_TRUCK_MANUFACTURING = LkOccupationTitle(
+        557, 5, 336120, "Heavy Duty Truck Manufacturing"
+    )
+    MOTOR_VEHICLE_BODY_AND_TRAILER_MANUFACTURING = LkOccupationTitle(
+        558, 5, 3362, "Motor Vehicle Body and Trailer Manufacturing"
+    )
+    MOTOR_VEHICLE_BODY_MANUFACTURING = LkOccupationTitle(
+        559, 5, 336211, "Motor Vehicle Body Manufacturing"
+    )
+    TRUCK_TRAILER_MANUFACTURING = LkOccupationTitle(560, 5, 336212, "Truck Trailer Manufacturing")
+    MOTOR_HOME_MANUFACTURING = LkOccupationTitle(561, 5, 336213, "Motor Home Manufacturing")
+    TRAVEL_TRAILER_AND_CAMPER_MANUFACTURING = LkOccupationTitle(
+        562, 5, 336214, "Travel Trailer and Camper Manufacturing"
+    )
+    MOTOR_VEHICLE_PARTS_MANUFACTURING = LkOccupationTitle(
+        563, 5, 3363, "Motor Vehicle Parts Manufacturing"
+    )
+    MOTOR_VEHICLE_GASOLINE_ENGINE_AND_ENGINE_PARTS_MANUFACTURING = LkOccupationTitle(
+        564, 5, 336310, "Motor Vehicle Gasoline Engine and Engine Parts Manufacturing"
+    )
+    MOTOR_VEHICLE_ELECTRICAL_AND_ELECTRONIC_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        565, 5, 336320, "Motor Vehicle Electrical and Electronic Equipment Manufacturing"
+    )
+    MOTOR_VEHICLE_STEERING_AND_SUSPENSION_COMPONENTS_EXCEPT_SPRING_MANUFACTURING = LkOccupationTitle(
+        566,
+        5,
+        336330,
+        "Motor Vehicle Steering and Suspension Components (except Spring) Manufacturing",
+    )
+    MOTOR_VEHICLE_BRAKE_SYSTEM_MANUFACTURING = LkOccupationTitle(
+        567, 5, 336340, "Motor Vehicle Brake System Manufacturing"
+    )
+    MOTOR_VEHICLE_TRANSMISSION_AND_POWER_TRAIN_PARTS_MANUFACTURING = LkOccupationTitle(
+        568, 5, 336350, "Motor Vehicle Transmission and Power Train Parts Manufacturing"
+    )
+    MOTOR_VEHICLE_SEATING_AND_INTERIOR_TRIM_MANUFACTURING = LkOccupationTitle(
+        569, 5, 336360, "Motor Vehicle Seating and Interior Trim Manufacturing"
+    )
+    MOTOR_VEHICLE_METAL_STAMPING = LkOccupationTitle(
+        570, 5, 336370, "Motor Vehicle Metal Stamping"
+    )
+    OTHER_MOTOR_VEHICLE_PARTS_MANUFACTURING = LkOccupationTitle(
+        571, 5, 336390, "Other Motor Vehicle Parts Manufacturing"
+    )
+    AEROSPACE_PRODUCT_AND_PARTS_MANUFACTURING = LkOccupationTitle(
+        572, 5, 3364, "Aerospace Product and Parts Manufacturing"
+    )
+    AIRCRAFT_MANUFACTURING = LkOccupationTitle(573, 5, 336411, "Aircraft Manufacturing")
+    AIRCRAFT_ENGINE_AND_ENGINE_PARTS_MANUFACTURING = LkOccupationTitle(
+        574, 5, 336412, "Aircraft Engine and Engine Parts Manufacturing"
+    )
+    OTHER_AIRCRAFT_PARTS_AND_AUXILIARY_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        575, 5, 336413, "Other Aircraft Parts and Auxiliary Equipment Manufacturing"
+    )
+    GUIDED_MISSILE_AND_SPACE_VEHICLE_MANUFACTURING = LkOccupationTitle(
+        576, 5, 336414, "Guided Missile and Space Vehicle Manufacturing"
+    )
+    GUIDED_MISSILE_AND_SPACE_VEHICLE_PROPULSION_UNIT_AND_PROPULSION_UNIT_PARTS_MANUFACTURING = LkOccupationTitle(
+        577,
+        5,
+        336415,
+        "Guided Missile and Space Vehicle Propulsion Unit and Propulsion Unit Parts Manufacturing",
+    )
+    OTHER_GUIDED_MISSILE_AND_SPACE_VEHICLE_PARTS_AND_AUXILIARY_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        578,
+        5,
+        336419,
+        "Other Guided Missile and Space Vehicle Parts and Auxiliary Equipment Manufacturing",
+    )
+    RAILROAD_ROLLING_STOCK_MANUFACTURING_4 = LkOccupationTitle(
+        579, 5, 3365, "Railroad Rolling Stock Manufacturing"
+    )
+    RAILROAD_ROLLING_STOCK_MANUFACTURING = LkOccupationTitle(
+        580, 5, 336510, "Railroad Rolling Stock Manufacturing"
+    )
+    SHIP_AND_BOAT_BUILDING = LkOccupationTitle(581, 5, 3366, "Ship and Boat Building")
+    SHIP_BUILDING_AND_REPAIRING = LkOccupationTitle(582, 5, 336611, "Ship Building and Repairing")
+    BOAT_BUILDING = LkOccupationTitle(583, 5, 336612, "Boat Building")
+    OTHER_TRANSPORTATION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        584, 5, 3369, "Other Transportation Equipment Manufacturing"
+    )
+    MOTORCYCLE_BICYCLE_AND_PARTS_MANUFACTURING = LkOccupationTitle(
+        585, 5, 336991, "Motorcycle, Bicycle, and Parts Manufacturing"
+    )
+    MILITARY_ARMORED_VEHICLE_TANK_AND_TANK_COMPONENT_MANUFACTURING = LkOccupationTitle(
+        586, 5, 336992, "Military Armored Vehicle, Tank, and Tank Component Manufacturing"
+    )
+    ALL_OTHER_TRANSPORTATION_EQUIPMENT_MANUFACTURING = LkOccupationTitle(
+        587, 5, 336999, "All Other Transportation Equipment Manufacturing"
+    )
+    HOUSEHOLD_AND_INSTITUTIONAL_FURNITURE_AND_KITCHEN_CABINET_MANUFACTURING = LkOccupationTitle(
+        588, 5, 3371, "Household and Institutional Furniture and Kitchen Cabinet Manufacturing"
+    )
+    WOOD_KITCHEN_CABINET_AND_COUNTERTOP_MANUFACTURING = LkOccupationTitle(
+        589, 5, 337110, "Wood Kitchen Cabinet and Countertop Manufacturing"
+    )
+    UPHOLSTERED_HOUSEHOLD_FURNITURE_MANUFACTURING = LkOccupationTitle(
+        590, 5, 337121, "Upholstered Household Furniture Manufacturing"
+    )
+    NONUPHOLSTERED_WOOD_HOUSEHOLD_FURNITURE_MANUFACTURING = LkOccupationTitle(
+        591, 5, 337122, "Nonupholstered Wood Household Furniture Manufacturing"
+    )
+    METAL_HOUSEHOLD_FURNITURE_MANUFACTURING = LkOccupationTitle(
+        592, 5, 337124, "Metal Household Furniture Manufacturing"
+    )
+    HOUSEHOLD_FURNITURE_EXCEPT_WOOD_AND_METAL_MANUFACTURING = LkOccupationTitle(
+        593, 5, 337125, "Household Furniture (except Wood and Metal) Manufacturing"
+    )
+    INSTITUTIONAL_FURNITURE_MANUFACTURING = LkOccupationTitle(
+        594, 5, 337127, "Institutional Furniture Manufacturing"
+    )
+    OFFICE_FURNITURE_INCLUDING_FIXTURES_MANUFACTURING = LkOccupationTitle(
+        595, 5, 3372, "Office Furniture (including Fixtures) Manufacturing"
+    )
+    WOOD_OFFICE_FURNITURE_MANUFACTURING = LkOccupationTitle(
+        596, 5, 337211, "Wood Office Furniture Manufacturing"
+    )
+    CUSTOM_ARCHITECTURAL_WOODWORK_AND_MILLWORK_MANUFACTURING = LkOccupationTitle(
+        597, 5, 337212, "Custom Architectural Woodwork and Millwork Manufacturing"
+    )
+    OFFICE_FURNITURE_EXCEPT_WOOD_MANUFACTURING = LkOccupationTitle(
+        598, 5, 337214, "Office Furniture (except Wood) Manufacturing"
+    )
+    SHOWCASE_PARTITION_SHELVING_AND_LOCKER_MANUFACTURING = LkOccupationTitle(
+        599, 5, 337215, "Showcase, Partition, Shelving, and Locker Manufacturing"
+    )
+    OTHER_FURNITURE_RELATED_PRODUCT_MANUFACTURING = LkOccupationTitle(
+        600, 5, 3379, "Other Furniture Related Product Manufacturing"
+    )
+    MATTRESS_MANUFACTURING = LkOccupationTitle(601, 5, 337910, "Mattress Manufacturing")
+    BLIND_AND_SHADE_MANUFACTURING = LkOccupationTitle(
+        602, 5, 337920, "Blind and Shade Manufacturing"
+    )
+    MEDICAL_EQUIPMENT_AND_SUPPLIES_MANUFACTURING = LkOccupationTitle(
+        603, 5, 3391, "Medical Equipment and Supplies Manufacturing"
+    )
+    SURGICAL_AND_MEDICAL_INSTRUMENT_MANUFACTURING = LkOccupationTitle(
+        604, 5, 339112, "Surgical and Medical Instrument Manufacturing"
+    )
+    SURGICAL_APPLIANCE_AND_SUPPLIES_MANUFACTURING = LkOccupationTitle(
+        605, 5, 339113, "Surgical Appliance and Supplies Manufacturing"
+    )
+    DENTAL_EQUIPMENT_AND_SUPPLIES_MANUFACTURING = LkOccupationTitle(
+        606, 5, 339114, "Dental Equipment and Supplies Manufacturing"
+    )
+    OPHTHALMIC_GOODS_MANUFACTURING = LkOccupationTitle(
+        607, 5, 339115, "Ophthalmic Goods Manufacturing"
+    )
+    DENTAL_LABORATORIES = LkOccupationTitle(608, 5, 339116, "Dental Laboratories")
+    OTHER_MISCELLANEOUS_MANUFACTURING = LkOccupationTitle(
+        609, 5, 3399, "Other Miscellaneous Manufacturing"
+    )
+    JEWELRY_AND_SILVERWARE_MANUFACTURING = LkOccupationTitle(
+        610, 5, 339910, "Jewelry and Silverware Manufacturing"
+    )
+    SPORTING_AND_ATHLETIC_GOODS_MANUFACTURING = LkOccupationTitle(
+        611, 5, 339920, "Sporting and Athletic Goods Manufacturing"
+    )
+    DOLL_TOY_AND_GAME_MANUFACTURING = LkOccupationTitle(
+        612, 5, 339930, "Doll, Toy, and Game Manufacturing"
+    )
+    OFFICE_SUPPLIES_EXCEPT_PAPER_MANUFACTURING = LkOccupationTitle(
+        613, 5, 339940, "Office Supplies (except Paper) Manufacturing"
+    )
+    SIGN_MANUFACTURING = LkOccupationTitle(614, 5, 339950, "Sign Manufacturing")
+    GASKET_PACKING_AND_SEALING_DEVICE_MANUFACTURING = LkOccupationTitle(
+        615, 5, 339991, "Gasket, Packing, and Sealing Device Manufacturing"
+    )
+    MUSICAL_INSTRUMENT_MANUFACTURING = LkOccupationTitle(
+        616, 5, 339992, "Musical Instrument Manufacturing"
+    )
+    FASTENER_BUTTON_NEEDLE_AND_PIN_MANUFACTURING = LkOccupationTitle(
+        617, 5, 339993, "Fastener, Button, Needle, and Pin Manufacturing"
+    )
+    BROOM_BRUSH_AND_MOP_MANUFACTURING = LkOccupationTitle(
+        618, 5, 339994, "Broom, Brush, and Mop Manufacturing"
+    )
+    BURIAL_CASKET_MANUFACTURING = LkOccupationTitle(619, 5, 339995, "Burial Casket Manufacturing")
+    ALL_OTHER_MISCELLANEOUS_MANUFACTURING = LkOccupationTitle(
+        620, 5, 339999, "All Other Miscellaneous Manufacturing"
+    )
+    MOTOR_VEHICLE_AND_MOTOR_VEHICLE_PARTS_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        621, 6, 4231, "Motor Vehicle and Motor Vehicle Parts and Supplies Merchant Wholesalers"
+    )
+    AUTOMOBILE_AND_OTHER_MOTOR_VEHICLE_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        622, 6, 423110, "Automobile and Other Motor Vehicle Merchant Wholesalers"
+    )
+    MOTOR_VEHICLE_SUPPLIES_AND_NEW_PARTS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        623, 6, 423120, "Motor Vehicle Supplies and New Parts Merchant Wholesalers"
+    )
+    TIRE_AND_TUBE_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        624, 6, 423130, "Tire and Tube Merchant Wholesalers"
+    )
+    MOTOR_VEHICLE_PARTS_USED_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        625, 6, 423140, "Motor Vehicle Parts (Used) Merchant Wholesalers"
+    )
+    FURNITURE_AND_HOME_FURNISHING_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        626, 6, 4232, "Furniture and Home Furnishing Merchant Wholesalers"
+    )
+    FURNITURE_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        627, 6, 423210, "Furniture Merchant Wholesalers"
+    )
+    HOME_FURNISHING_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        628, 6, 423220, "Home Furnishing Merchant Wholesalers"
+    )
+    LUMBER_AND_OTHER_CONSTRUCTION_MATERIALS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        629, 6, 4233, "Lumber and Other Construction Materials Merchant Wholesalers"
+    )
+    LUMBER_PLYWOOD_MILLWORK_AND_WOOD_PANEL_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        630, 6, 423310, "Lumber, Plywood, Millwork, and Wood Panel Merchant Wholesalers"
+    )
+    BRICK_STONE_AND_RELATED_CONSTRUCTION_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        631, 6, 423320, "Brick, Stone, and Related Construction Material Merchant Wholesalers"
+    )
+    ROOFING_SIDING_AND_INSULATION_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        632, 6, 423330, "Roofing, Siding, and Insulation Material Merchant Wholesalers"
+    )
+    OTHER_CONSTRUCTION_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        633, 6, 423390, "Other Construction Material Merchant Wholesalers"
+    )
+    PROFESSIONAL_AND_COMMERCIAL_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        634, 6, 4234, "Professional and Commercial Equipment and Supplies Merchant Wholesalers"
+    )
+    PHOTOGRAPHIC_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        635, 6, 423410, "Photographic Equipment and Supplies Merchant Wholesalers"
+    )
+    OFFICE_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        636, 6, 423420, "Office Equipment Merchant Wholesalers"
+    )
+    COMPUTER_AND_COMPUTER_PERIPHERAL_EQUIPMENT_AND_SOFTWARE_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        637,
+        6,
+        423430,
+        "Computer and Computer Peripheral Equipment and Software Merchant Wholesalers",
+    )
+    OTHER_COMMERCIAL_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        638, 6, 423440, "Other Commercial Equipment Merchant Wholesalers"
+    )
+    MEDICAL_DENTAL_AND_HOSPITAL_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        639, 6, 423450, "Medical, Dental, and Hospital Equipment and Supplies Merchant Wholesalers"
+    )
+    OPHTHALMIC_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        640, 6, 423460, "Ophthalmic Goods Merchant Wholesalers"
+    )
+    OTHER_PROFESSIONAL_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        641, 6, 423490, "Other Professional Equipment and Supplies Merchant Wholesalers"
+    )
+    METAL_AND_MINERAL_EXCEPT_PETROLEUM_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        642, 6, 4235, "Metal and Mineral (except Petroleum) Merchant Wholesalers"
+    )
+    METAL_SERVICE_CENTERS_AND_OTHER_METAL_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        643, 6, 423510, "Metal Service Centers and Other Metal Merchant Wholesalers"
+    )
+    COAL_AND_OTHER_MINERAL_AND_ORE_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        644, 6, 423520, "Coal and Other Mineral and Ore Merchant Wholesalers"
+    )
+    HOUSEHOLD_APPLIANCES_AND_ELECTRICAL_AND_ELECTRONIC_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        645,
+        6,
+        4236,
+        "Household Appliances and Electrical and Electronic Goods Merchant Wholesalers",
+    )
+    ELECTRICAL_APPARATUS_AND_EQUIPMENT_WIRING_SUPPLIES_AND_RELATED_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        646,
+        6,
+        423610,
+        "Electrical Apparatus and Equipment, Wiring Supplies, and Related Equipment Merchant Wholesalers",
+    )
+    HOUSEHOLD_APPLIANCES_ELECTRIC_HOUSEWARES_AND_CONSUMER_ELECTRONICS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        647,
+        6,
+        423620,
+        "Household Appliances, Electric Housewares, and Consumer Electronics Merchant Wholesalers",
+    )
+    OTHER_ELECTRONIC_PARTS_AND_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        648, 6, 423690, "Other Electronic Parts and Equipment Merchant Wholesalers"
+    )
+    HARDWARE_AND_PLUMBING_AND_HEATING_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        649,
+        6,
+        4237,
+        "Hardware, and Plumbing and Heating Equipment and Supplies Merchant Wholesalers",
+    )
+    HARDWARE_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        650, 6, 423710, "Hardware Merchant Wholesalers"
+    )
+    PLUMBING_AND_HEATING_EQUIPMENT_AND_SUPPLIES_HYDRONICS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        651,
+        6,
+        423720,
+        "Plumbing and Heating Equipment and Supplies (Hydronics) Merchant Wholesalers",
+    )
+    WARM_AIR_HEATING_AND_AIR_CONDITIONING_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        652,
+        6,
+        423730,
+        "Warm Air Heating and Air-Conditioning Equipment and Supplies Merchant Wholesalers",
+    )
+    REFRIGERATION_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        653, 6, 423740, "Refrigeration Equipment and Supplies Merchant Wholesalers"
+    )
+    MACHINERY_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        654, 6, 4238, "Machinery, Equipment, and Supplies Merchant Wholesalers"
+    )
+    CONSTRUCTION_AND_MINING_EXCEPT_OIL_WELL_MACHINERY_AND_EQUIPMENT_MERCHANT_WHOLESALERS_220 = LkOccupationTitle(
+        655,
+        6,
+        423810,
+        "Construction and Mining (except Oil Well) Machinery and Equipment Merchant Wholesalers220",
+    )
+    FARM_AND_GARDEN_MACHINERY_AND_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        656, 6, 423820, "Farm and Garden Machinery and Equipment Merchant Wholesalers"
+    )
+    INDUSTRIAL_MACHINERY_AND_EQUIPMENT_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        657, 6, 423830, "Industrial Machinery and Equipment Merchant Wholesalers"
+    )
+    INDUSTRIAL_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        658, 6, 423840, "Industrial Supplies Merchant Wholesalers"
+    )
+    SERVICE_ESTABLISHMENT_EQUIPMENT_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        659, 6, 423850, "Service Establishment Equipment and Supplies Merchant Wholesalers"
+    )
+    TRANSPORTATION_EQUIPMENT_AND_SUPPLIES_EXCEPT_MOTOR_VEHICLE_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        660,
+        6,
+        423860,
+        "Transportation Equipment and Supplies (except Motor Vehicle) Merchant Wholesalers",
+    )
+    MISCELLANEOUS_DURABLE_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        661, 6, 4239, "Miscellaneous Durable Goods Merchant Wholesalers"
+    )
+    SPORTING_AND_RECREATIONAL_GOODS_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        662, 6, 423910, "Sporting and Recreational Goods and Supplies Merchant Wholesalers"
+    )
+    TOY_AND_HOBBY_GOODS_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        663, 6, 423920, "Toy and Hobby Goods and Supplies Merchant Wholesalers"
+    )
+    RECYCLABLE_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        664, 6, 423930, "Recyclable Material Merchant Wholesalers"
+    )
+    JEWELRY_WATCH_PRECIOUS_STONE_AND_PRECIOUS_METAL_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        665, 6, 423940, "Jewelry, Watch, Precious Stone, and Precious Metal Merchant Wholesalers"
+    )
+    OTHER_MISCELLANEOUS_DURABLE_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        666, 6, 423990, "Other Miscellaneous Durable Goods Merchant Wholesalers"
+    )
+    PAPER_AND_PAPER_PRODUCT_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        667, 6, 4241, "Paper and Paper Product Merchant Wholesalers"
+    )
+    PRINTING_AND_WRITING_PAPER_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        668, 6, 424110, "Printing and Writing Paper Merchant Wholesalers"
+    )
+    STATIONERY_AND_OFFICE_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        669, 6, 424120, "Stationery and Office Supplies Merchant Wholesalers"
+    )
+    INDUSTRIAL_AND_PERSONAL_SERVICE_PAPER_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        670, 6, 424130, "Industrial and Personal Service Paper Merchant Wholesalers"
+    )
+    DRUGS_AND_DRUGGISTS_SUNDRIES_MERCHANT_WHOLESALERS_4 = LkOccupationTitle(
+        671, 6, 4242, "Drugs and Druggists' Sundries Merchant Wholesalers"
+    )
+    DRUGS_AND_DRUGGISTS_SUNDRIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        672, 6, 424210, "Drugs and Druggists' Sundries Merchant Wholesalers"
+    )
+    APPAREL_PIECE_GOODS_AND_NOTIONS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        673, 6, 4243, "Apparel, Piece Goods, and Notions Merchant Wholesalers"
+    )
+    PIECE_GOODS_NOTIONS_AND_OTHER_DRY_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        674, 6, 424310, "Piece Goods, Notions, and Other Dry Goods Merchant Wholesalers"
+    )
+    MEN_S_AND_BOYS_CLOTHING_AND_FURNISHINGS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        675, 6, 424320, "Men's and Boys' Clothing and Furnishings Merchant Wholesalers"
+    )
+    WOMEN_S_CHILDREN_S_AND_INFANTS_CLOTHING_AND_ACCESSORIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        676,
+        6,
+        424330,
+        "Women's, Children's, and Infants' Clothing and Accessories Merchant Wholesalers",
+    )
+    FOOTWEAR_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        677, 6, 424340, "Footwear Merchant Wholesalers"
+    )
+    GROCERY_AND_RELATED_PRODUCT_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        678, 6, 4244, "Grocery and Related Product Merchant Wholesalers"
+    )
+    GENERAL_LINE_GROCERY_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        679, 6, 424410, "General Line Grocery Merchant Wholesalers"
+    )
+    PACKAGED_FROZEN_FOOD_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        680, 6, 424420, "Packaged Frozen Food Merchant Wholesalers"
+    )
+    DAIRY_PRODUCT_EXCEPT_DRIED_OR_CANNED_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        681, 6, 424430, "Dairy Product (except Dried or Canned) Merchant Wholesalers"
+    )
+    POULTRY_AND_POULTRY_PRODUCT_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        682, 6, 424440, "Poultry and Poultry Product Merchant Wholesalers"
+    )
+    CONFECTIONERY_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        683, 6, 424450, "Confectionery Merchant Wholesalers"
+    )
+    FISH_AND_SEAFOOD_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        684, 6, 424460, "Fish and Seafood Merchant Wholesalers"
+    )
+    MEAT_AND_MEAT_PRODUCT_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        685, 6, 424470, "Meat and Meat Product Merchant Wholesalers"
+    )
+    FRESH_FRUIT_AND_VEGETABLE_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        686, 6, 424480, "Fresh Fruit and Vegetable Merchant Wholesalers"
+    )
+    OTHER_GROCERY_AND_RELATED_PRODUCTS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        687, 6, 424490, "Other Grocery and Related Products Merchant Wholesalers"
+    )
+    FARM_PRODUCT_RAW_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        688, 6, 4245, "Farm Product Raw Material Merchant Wholesalers"
+    )
+    GRAIN_AND_FIELD_BEAN_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        689, 6, 424510, "Grain and Field Bean Merchant Wholesalers"
+    )
+    LIVESTOCK_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        690, 6, 424520, "Livestock Merchant Wholesalers"
+    )
+    OTHER_FARM_PRODUCT_RAW_MATERIAL_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        691, 6, 424590, "Other Farm Product Raw Material Merchant Wholesalers"
+    )
+    CHEMICAL_AND_ALLIED_PRODUCTS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        692, 6, 4246, "Chemical and Allied Products Merchant Wholesalers"
+    )
+    PLASTICS_MATERIALS_AND_BASIC_FORMS_AND_SHAPES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        693, 6, 424610, "Plastics Materials and Basic Forms and Shapes Merchant Wholesalers"
+    )
+    OTHER_CHEMICAL_AND_ALLIED_PRODUCTS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        694, 6, 424690, "Other Chemical and Allied Products Merchant Wholesalers"
+    )
+    PETROLEUM_AND_PETROLEUM_PRODUCTS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        695, 6, 4247, "Petroleum and Petroleum Products Merchant Wholesalers"
+    )
+    PETROLEUM_BULK_STATIONS_AND_TERMINALS = LkOccupationTitle(
+        696, 6, 424710, "Petroleum Bulk Stations and Terminals"
+    )
+    PETROLEUM_AND_PETROLEUM_PRODUCTS_MERCHANT_WHOLESALERS_EXCEPT_BULK_STATIONS_AND_TERMINALS = LkOccupationTitle(
+        697,
+        6,
+        424720,
+        "Petroleum and Petroleum Products Merchant Wholesalers (except Bulk Stations and Terminals)",
+    )
+    BEER_WINE_AND_DISTILLED_ALCOHOLIC_BEVERAGE_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        698, 6, 4248, "Beer, Wine, and Distilled Alcoholic Beverage Merchant Wholesalers"
+    )
+    BEER_AND_ALE_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        699, 6, 424810, "Beer and Ale Merchant Wholesalers"
+    )
+    WINE_AND_DISTILLED_ALCOHOLIC_BEVERAGE_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        700, 6, 424820, "Wine and Distilled Alcoholic Beverage Merchant Wholesalers"
+    )
+    MISCELLANEOUS_NONDURABLE_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        701, 6, 4249, "Miscellaneous Nondurable Goods Merchant Wholesalers"
+    )
+    FARM_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        702, 6, 424910, "Farm Supplies Merchant Wholesalers"
+    )
+    BOOK_PERIODICAL_AND_NEWSPAPER_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        703, 6, 424920, "Book, Periodical, and Newspaper Merchant Wholesalers"
+    )
+    FLOWER_NURSERY_STOCK_AND_FLORISTS_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        704, 6, 424930, "Flower, Nursery Stock, and Florists' Supplies Merchant Wholesalers"
+    )
+    TOBACCO_AND_TOBACCO_PRODUCT_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        705, 6, 424940, "Tobacco and Tobacco Product Merchant Wholesalers"
+    )
+    PAINT_VARNISH_AND_SUPPLIES_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        706, 6, 424950, "Paint, Varnish, and Supplies Merchant Wholesalers"
+    )
+    OTHER_MISCELLANEOUS_NONDURABLE_GOODS_MERCHANT_WHOLESALERS = LkOccupationTitle(
+        707, 6, 424990, "Other Miscellaneous Nondurable Goods Merchant Wholesalers"
+    )
+    WHOLESALE_ELECTRONIC_MARKETS_AND_AGENTS_AND_BROKERS = LkOccupationTitle(
+        708, 6, 4251, "Wholesale Electronic Markets and Agents and Brokers"
+    )
+    BUSINESS_TO_BUSINESS_ELECTRONIC_MARKETS = LkOccupationTitle(
+        709, 6, 425110, "Business to Business Electronic Markets"
+    )
+    WHOLESALE_TRADE_AGENTS_AND_BROKERS = LkOccupationTitle(
+        710, 6, 425120, "Wholesale Trade Agents and Brokers"
+    )
+    AUTOMOBILE_DEALERS = LkOccupationTitle(711, 7, 4411, "Automobile Dealers")
+    NEW_CAR_DEALERS = LkOccupationTitle(712, 7, 441110, "New Car Dealers")
+    USED_CAR_DEALERS = LkOccupationTitle(713, 7, 441120, "Used Car Dealers")
+    OTHER_MOTOR_VEHICLE_DEALERS = LkOccupationTitle(714, 7, 4412, "Other Motor Vehicle Dealers")
+    RECREATIONAL_VEHICLE_DEALERS = LkOccupationTitle(
+        715, 7, 441210, "Recreational Vehicle Dealers"
+    )
+    BOAT_DEALERS = LkOccupationTitle(716, 7, 441222, "Boat Dealers")
+    MOTORCYCLE_ATV_AND_ALL_OTHER_MOTOR_VEHICLE_DEALERS = LkOccupationTitle(
+        717, 7, 441228, "Motorcycle, ATV, and All Other Motor Vehicle Dealers"
+    )
+    AUTOMOTIVE_PARTS_ACCESSORIES_AND_TIRE_STORES = LkOccupationTitle(
+        718, 7, 4413, "Automotive Parts, Accessories, and Tire Stores"
+    )
+    AUTOMOTIVE_PARTS_AND_ACCESSORIES_STORES = LkOccupationTitle(
+        719, 7, 441310, "Automotive Parts and Accessories Stores"
+    )
+    TIRE_DEALERS = LkOccupationTitle(720, 7, 441320, "Tire Dealers")
+    FURNITURE_STORES_4 = LkOccupationTitle(721, 7, 4421, "Furniture Stores")
+    FURNITURE_STORES = LkOccupationTitle(722, 7, 442110, "Furniture Stores")
+    HOME_FURNISHINGS_STORES = LkOccupationTitle(723, 7, 4422, "Home Furnishings Stores")
+    FLOOR_COVERING_STORES = LkOccupationTitle(724, 7, 442210, "Floor Covering Stores")
+    WINDOW_TREATMENT_STORES = LkOccupationTitle(725, 7, 442291, "Window Treatment Stores")
+    ALL_OTHER_HOME_FURNISHINGS_STORES = LkOccupationTitle(
+        726, 7, 442299, "All Other Home Furnishings Stores"
+    )
+    ELECTRONICS_AND_APPLIANCE_STORES = LkOccupationTitle(
+        727, 7, 4431, "Electronics and Appliance Stores"
+    )
+    HOUSEHOLD_APPLIANCE_STORES = LkOccupationTitle(728, 7, 443141, "Household Appliance Stores")
+    ELECTRONICS_STORES = LkOccupationTitle(729, 7, 443142, "Electronics Stores")
+    BUILDING_MATERIAL_AND_SUPPLIES_DEALERS = LkOccupationTitle(
+        730, 7, 4441, "Building Material and Supplies Dealers"
+    )
+    HOME_CENTERS = LkOccupationTitle(731, 7, 444110, "Home Centers")
+    PAINT_AND_WALLPAPER_STORES = LkOccupationTitle(732, 7, 444120, "Paint and Wallpaper Stores")
+    HARDWARE_STORES = LkOccupationTitle(733, 7, 444130, "Hardware Stores")
+    OTHER_BUILDING_MATERIAL_DEALERS = LkOccupationTitle(
+        734, 7, 444190, "Other Building Material Dealers"
+    )
+    LAWN_AND_GARDEN_EQUIPMENT_AND_SUPPLIES_STORES = LkOccupationTitle(
+        735, 7, 4442, "Lawn and Garden Equipment and Supplies Stores"
+    )
+    OUTDOOR_POWER_EQUIPMENT_STORES = LkOccupationTitle(
+        736, 7, 444210, "Outdoor Power Equipment Stores"
+    )
+    NURSERY_GARDEN_CENTER_AND_FARM_SUPPLY_STORES = LkOccupationTitle(
+        737, 7, 444220, "Nursery, Garden Center, and Farm Supply Stores"
+    )
+    GROCERY_STORES = LkOccupationTitle(738, 7, 4451, "Grocery Stores")
+    SUPERMARKETS_AND_OTHER_GROCERY_EXCEPT_CONVENIENCE_STORES = LkOccupationTitle(
+        739, 7, 445110, "Supermarkets and Other Grocery (except Convenience) Stores"
+    )
+    CONVENIENCE_STORES = LkOccupationTitle(740, 7, 445120, "Convenience Stores")
+    SPECIALTY_FOOD_STORES = LkOccupationTitle(741, 7, 4452, "Specialty Food Stores")
+    MEAT_MARKETS = LkOccupationTitle(742, 7, 445210, "Meat Markets")
+    FISH_AND_SEAFOOD_MARKETS = LkOccupationTitle(743, 7, 445220, "Fish and Seafood Markets")
+    FRUIT_AND_VEGETABLE_MARKETS = LkOccupationTitle(744, 7, 445230, "Fruit and Vegetable Markets")
+    BAKED_GOODS_STORES = LkOccupationTitle(745, 7, 445291, "Baked Goods Stores")
+    CONFECTIONERY_AND_NUT_STORES = LkOccupationTitle(
+        746, 7, 445292, "Confectionery and Nut Stores"
+    )
+    ALL_OTHER_SPECIALTY_FOOD_STORES = LkOccupationTitle(
+        747, 7, 445299, "All Other Specialty Food Stores"
+    )
+    BEER_WINE_AND_LIQUOR_STORES_4 = LkOccupationTitle(748, 7, 4453, "Beer, Wine, and Liquor Stores")
+    BEER_WINE_AND_LIQUOR_STORES = LkOccupationTitle(
+        749, 7, 445310, "Beer, Wine, and Liquor Stores"
+    )
+    HEALTH_AND_PERSONAL_CARE_STORES = LkOccupationTitle(
+        750, 7, 4461, "Health and Personal Care Stores"
+    )
+    PHARMACIES_AND_DRUG_STORES = LkOccupationTitle(751, 7, 446110, "Pharmacies and Drug Stores")
+    COSMETICS_BEAUTY_SUPPLIES_AND_PERFUME_STORES = LkOccupationTitle(
+        752, 7, 446120, "Cosmetics, Beauty Supplies, and Perfume Stores"
+    )
+    OPTICAL_GOODS_STORES = LkOccupationTitle(753, 7, 446130, "Optical Goods Stores")
+    FOOD_HEALTH_SUPPLEMENT_STORES = LkOccupationTitle(
+        754, 7, 446191, "Food (Health) Supplement Stores"
+    )
+    ALL_OTHER_HEALTH_AND_PERSONAL_CARE_STORES = LkOccupationTitle(
+        755, 7, 446199, "All Other Health and Personal Care Stores"
+    )
+    GASOLINE_STATIONS = LkOccupationTitle(756, 7, 4471, "Gasoline Stations")
+    GASOLINE_STATIONS_WITH_CONVENIENCE_STORES = LkOccupationTitle(
+        757, 7, 447110, "Gasoline Stations with Convenience Stores"
+    )
+    OTHER_GASOLINE_STATIONS = LkOccupationTitle(758, 7, 447190, "Other Gasoline Stations")
+    CLOTHING_STORES = LkOccupationTitle(759, 7, 4481, "Clothing Stores")
+    MEN_S_CLOTHING_STORES = LkOccupationTitle(760, 7, 448110, "Men's Clothing Stores")
+    WOMEN_S_CLOTHING_STORES = LkOccupationTitle(761, 7, 448120, "Women's Clothing Stores")
+    CHILDREN_S_AND_INFANTS_CLOTHING_STORES = LkOccupationTitle(
+        762, 7, 448130, "Children's and Infants' Clothing Stores"
+    )
+    FAMILY_CLOTHING_STORES = LkOccupationTitle(763, 7, 448140, "Family Clothing Stores")
+    CLOTHING_ACCESSORIES_STORES = LkOccupationTitle(764, 7, 448150, "Clothing Accessories Stores")
+    OTHER_CLOTHING_STORES = LkOccupationTitle(765, 7, 448190, "Other Clothing Stores")
+    SHOE_STORES_4 = LkOccupationTitle(766, 7, 4482, "Shoe Stores")
+    SHOE_STORES = LkOccupationTitle(767, 7, 448210, "Shoe Stores")
+    JEWELRY_LUGGAGE_AND_LEATHER_GOODS_STORES = LkOccupationTitle(
+        768, 7, 4483, "Jewelry, Luggage, and Leather Goods Stores"
+    )
+    JEWELRY_STORES = LkOccupationTitle(769, 7, 448310, "Jewelry Stores")
+    LUGGAGE_AND_LEATHER_GOODS_STORES = LkOccupationTitle(
+        770, 7, 448320, "Luggage and Leather Goods Stores"
+    )
+    SPORTING_GOODS_HOBBY_AND_MUSICAL_INSTRUMENT_STORES = LkOccupationTitle(
+        771, 7, 4511, "Sporting Goods, Hobby, and Musical Instrument Stores"
+    )
+    SPORTING_GOODS_STORES = LkOccupationTitle(772, 7, 451110, "Sporting Goods Stores")
+    HOBBY_TOY_AND_GAME_STORES = LkOccupationTitle(773, 7, 451120, "Hobby, Toy, and Game Stores")
+    SEWING_NEEDLEWORK_AND_PIECE_GOODS_STORES = LkOccupationTitle(
+        774, 7, 451130, "Sewing, Needlework, and Piece Goods Stores"
+    )
+    MUSICAL_INSTRUMENT_AND_SUPPLIES_STORES = LkOccupationTitle(
+        775, 7, 451140, "Musical Instrument and Supplies Stores"
+    )
+    BOOK_STORES_AND_NEWS_DEALERS = LkOccupationTitle(776, 7, 4512, "Book Stores and News Dealers")
+    BOOK_STORES = LkOccupationTitle(777, 7, 451211, "Book Stores")
+    NEWS_DEALERS_AND_NEWSSTANDS = LkOccupationTitle(778, 7, 451212, "News Dealers and Newsstands")
+    DEPARTMENT_STORES_4 = LkOccupationTitle(779, 7, 4522, "Department Stores")
+    DEPARTMENT_STORES = LkOccupationTitle(780, 7, 452210, "Department Stores")
+    GENERAL_MERCHANDISE_STORES_INCLUDING_WAREHOUSE_CLUBS_AND_SUPERCENTERS = LkOccupationTitle(
+        781, 7, 4523, "General Merchandise Stores, including Warehouse Clubs and Supercenters"
+    )
+    WAREHOUSE_CLUBS_AND_SUPERCENTERS = LkOccupationTitle(
+        782, 7, 452311, "Warehouse Clubs and Supercenters"
+    )
+    ALL_OTHER_GENERAL_MERCHANDISE_STORES = LkOccupationTitle(
+        783, 7, 452319, "All Other General Merchandise Stores"
+    )
+    FLORISTS_4 = LkOccupationTitle(784, 7, 4531, "Florists")
+    FLORISTS = LkOccupationTitle(785, 7, 453110, "Florists")
+    OFFICE_SUPPLIES_STATIONERY_AND_GIFT_STORES = LkOccupationTitle(
+        786, 7, 4532, "Office Supplies, Stationery, and Gift Stores"
+    )
+    OFFICE_SUPPLIES_AND_STATIONERY_STORES = LkOccupationTitle(
+        787, 7, 453210, "Office Supplies and Stationery Stores"
+    )
+    GIFT_NOVELTY_AND_SOUVENIR_STORES = LkOccupationTitle(
+        788, 7, 453220, "Gift, Novelty, and Souvenir Stores"
+    )
+    USED_MERCHANDISE_STORES_4 = LkOccupationTitle(789, 7, 4533, "Used Merchandise Stores")
+    USED_MERCHANDISE_STORES = LkOccupationTitle(790, 7, 453310, "Used Merchandise Stores")
+    OTHER_MISCELLANEOUS_STORE_RETAILERS = LkOccupationTitle(
+        791, 7, 4539, "Other Miscellaneous Store Retailers"
+    )
+    PET_AND_PET_SUPPLIES_STORES = LkOccupationTitle(792, 7, 453910, "Pet and Pet Supplies Stores")
+    ART_DEALERS = LkOccupationTitle(793, 7, 453920, "Art Dealers")
+    MANUFACTURED_MOBILE_HOME_DEALERS = LkOccupationTitle(
+        794, 7, 453930, "Manufactured (Mobile) Home Dealers"
+    )
+    TOBACCO_STORES = LkOccupationTitle(795, 7, 453991, "Tobacco Stores")
+    ALL_OTHER_MISCELLANEOUS_STORE_RETAILERS_EXCEPT_TOBACCO_STORES = LkOccupationTitle(
+        796, 7, 453998, "All Other Miscellaneous Store Retailers (except Tobacco Stores)"
+    )
+    ELECTRONIC_SHOPPING_AND_MAIL_ORDER_HOUSES_4 = LkOccupationTitle(
+        797, 7, 4541, "Electronic Shopping and Mail-Order Houses"
+    )
+    ELECTRONIC_SHOPPING_AND_MAIL_ORDER_HOUSES = LkOccupationTitle(
+        798, 7, 454110, "Electronic Shopping and Mail-Order Houses"
+    )
+    VENDING_MACHINE_OPERATORS_4 = LkOccupationTitle(799, 7, 4542, "Vending Machine Operators")
+    VENDING_MACHINE_OPERATORS = LkOccupationTitle(800, 7, 454210, "Vending Machine Operators")
+    DIRECT_SELLING_ESTABLISHMENTS = LkOccupationTitle(
+        801, 7, 4543, "Direct Selling Establishments"
+    )
+    FUEL_DEALERS = LkOccupationTitle(802, 7, 454310, "Fuel Dealers")
+    OTHER_DIRECT_SELLING_ESTABLISHMENTS = LkOccupationTitle(
+        803, 7, 454390, "Other Direct Selling Establishments"
+    )
+    SCHEDULED_AIR_TRANSPORTATION = LkOccupationTitle(804, 8, 4811, "Scheduled Air Transportation")
+    SCHEDULED_PASSENGER_AIR_TRANSPORTATION = LkOccupationTitle(
+        805, 8, 481111, "Scheduled Passenger Air Transportation"
+    )
+    SCHEDULED_FREIGHT_AIR_TRANSPORTATION = LkOccupationTitle(
+        806, 8, 481112, "Scheduled Freight Air Transportation"
+    )
+    NONSCHEDULED_AIR_TRANSPORTATION = LkOccupationTitle(
+        807, 8, 4812, "Nonscheduled Air Transportation"
+    )
+    NONSCHEDULED_CHARTERED_PASSENGER_AIR_TRANSPORTATION = LkOccupationTitle(
+        808, 8, 481211, "Nonscheduled Chartered Passenger Air Transportation"
+    )
+    NONSCHEDULED_CHARTERED_FREIGHT_AIR_TRANSPORTATION = LkOccupationTitle(
+        809, 8, 481212, "Nonscheduled Chartered Freight Air Transportation"
+    )
+    OTHER_NONSCHEDULED_AIR_TRANSPORTATION = LkOccupationTitle(
+        810, 8, 481219, "Other Nonscheduled Air Transportation"
+    )
+    RAIL_TRANSPORTATION = LkOccupationTitle(811, 8, 4821, "Rail Transportation")
+    LINE_HAUL_RAILROADS = LkOccupationTitle(812, 8, 482111, "Line-Haul Railroads")
+    SHORT_LINE_RAILROADS = LkOccupationTitle(813, 8, 482112, "Short Line Railroads")
+    DEEP_SEA_COASTAL_AND_GREAT_LAKES_WATER_TRANSPORTATION = LkOccupationTitle(
+        814, 8, 4831, "Deep Sea, Coastal, and Great Lakes Water Transportation"
+    )
+    DEEP_SEA_FREIGHT_TRANSPORTATION = LkOccupationTitle(
+        815, 8, 483111, "Deep Sea Freight Transportation"
+    )
+    DEEP_SEA_PASSENGER_TRANSPORTATION = LkOccupationTitle(
+        816, 8, 483112, "Deep Sea Passenger Transportation"
+    )
+    COASTAL_AND_GREAT_LAKES_FREIGHT_TRANSPORTATION = LkOccupationTitle(
+        817, 8, 483113, "Coastal and Great Lakes Freight Transportation"
+    )
+    COASTAL_AND_GREAT_LAKES_PASSENGER_TRANSPORTATION = LkOccupationTitle(
+        818, 8, 483114, "Coastal and Great Lakes Passenger Transportation"
+    )
+    INLAND_WATER_TRANSPORTATION = LkOccupationTitle(819, 8, 4832, "Inland Water Transportation")
+    INLAND_WATER_FREIGHT_TRANSPORTATION = LkOccupationTitle(
+        820, 8, 483211, "Inland Water Freight Transportation"
+    )
+    INLAND_WATER_PASSENGER_TRANSPORTATION = LkOccupationTitle(
+        821, 8, 483212, "Inland Water Passenger Transportation"
+    )
+    GENERAL_FREIGHT_TRUCKING = LkOccupationTitle(822, 8, 4841, "General Freight Trucking")
+    GENERAL_FREIGHT_TRUCKING_LOCAL = LkOccupationTitle(
+        823, 8, 484110, "General Freight Trucking, Local"
+    )
+    GENERAL_FREIGHT_TRUCKING_LONG_DISTANCE_TRUCKLOAD = LkOccupationTitle(
+        824, 8, 484121, "General Freight Trucking, Long-Distance, Truckload"
+    )
+    GENERAL_FREIGHT_TRUCKING_LONG_DISTANCE_LESS_THAN_TRUCKLOAD = LkOccupationTitle(
+        825, 8, 484122, "General Freight Trucking, Long-Distance, Less Than Truckload"
+    )
+    SPECIALIZED_FREIGHT_TRUCKING = LkOccupationTitle(826, 8, 4842, "Specialized Freight Trucking")
+    USED_HOUSEHOLD_AND_OFFICE_GOODS_MOVING = LkOccupationTitle(
+        827, 8, 484210, "Used Household and Office Goods Moving"
+    )
+    SPECIALIZED_FREIGHT_EXCEPT_USED_GOODS_TRUCKING_LOCAL = LkOccupationTitle(
+        828, 8, 484220, "Specialized Freight (except Used Goods) Trucking, Local"
+    )
+    SPECIALIZED_FREIGHT_EXCEPT_USED_GOODS_TRUCKING_LONG_DISTANCE = LkOccupationTitle(
+        829, 8, 484230, "Specialized Freight (except Used Goods) Trucking, Long-Distance"
+    )
+    URBAN_TRANSIT_SYSTEMS = LkOccupationTitle(830, 8, 4851, "Urban Transit Systems")
+    MIXED_MODE_TRANSIT_SYSTEMS = LkOccupationTitle(831, 8, 485111, "Mixed Mode Transit Systems")
+    COMMUTER_RAIL_SYSTEMS = LkOccupationTitle(832, 8, 485112, "Commuter Rail Systems")
+    BUS_AND_OTHER_MOTOR_VEHICLE_TRANSIT_SYSTEMS = LkOccupationTitle(
+        833, 8, 485113, "Bus and Other Motor Vehicle Transit Systems"
+    )
+    OTHER_URBAN_TRANSIT_SYSTEMS = LkOccupationTitle(834, 8, 485119, "Other Urban Transit Systems")
+    INTERURBAN_AND_RURAL_BUS_TRANSPORTATION_4 = LkOccupationTitle(
+        835, 8, 4852, "Interurban and Rural Bus Transportation"
+    )
+    INTERURBAN_AND_RURAL_BUS_TRANSPORTATION = LkOccupationTitle(
+        836, 8, 485210, "Interurban and Rural Bus Transportation"
+    )
+    TAXI_AND_LIMOUSINE_SERVICE = LkOccupationTitle(837, 8, 4853, "Taxi and Limousine Service")
+    TAXI_SERVICE = LkOccupationTitle(838, 8, 485310, "Taxi Service")
+    LIMOUSINE_SERVICE = LkOccupationTitle(839, 8, 485320, "Limousine Service")
+    SCHOOL_AND_EMPLOYEE_BUS_TRANSPORTATION_4 = LkOccupationTitle(
+        840, 8, 4854, "School and Employee Bus Transportation"
+    )
+    SCHOOL_AND_EMPLOYEE_BUS_TRANSPORTATION = LkOccupationTitle(
+        841, 8, 485410, "School and Employee Bus Transportation"
+    )
+    CHARTER_BUS_INDUSTRY_4 = LkOccupationTitle(842, 8, 4855, "Charter Bus Industry")
+    CHARTER_BUS_INDUSTRY = LkOccupationTitle(843, 8, 485510, "Charter Bus Industry")
+    OTHER_TRANSIT_AND_GROUND_PASSENGER_TRANSPORTATION = LkOccupationTitle(
+        844, 8, 4859, "Other Transit and Ground Passenger Transportation"
+    )
+    SPECIAL_NEEDS_TRANSPORTATION = LkOccupationTitle(
+        845, 8, 485991, "Special Needs Transportation"
+    )
+    ALL_OTHER_TRANSIT_AND_GROUND_PASSENGER_TRANSPORTATION = LkOccupationTitle(
+        846, 8, 485999, "All Other Transit and Ground Passenger Transportation"
+    )
+    PIPELINE_TRANSPORTATION_OF_CRUDE_OIL_4 = LkOccupationTitle(
+        847, 8, 4861, "Pipeline Transportation of Crude Oil"
+    )
+    PIPELINE_TRANSPORTATION_OF_CRUDE_OIL = LkOccupationTitle(
+        848, 8, 486110, "Pipeline Transportation of Crude Oil"
+    )
+    PIPELINE_TRANSPORTATION_OF_NATURAL_GAS_4 = LkOccupationTitle(
+        849, 8, 4862, "Pipeline Transportation of Natural Gas"
+    )
+    PIPELINE_TRANSPORTATION_OF_NATURAL_GAS = LkOccupationTitle(
+        850, 8, 486210, "Pipeline Transportation of Natural Gas"
+    )
+    OTHER_PIPELINE_TRANSPORTATION = LkOccupationTitle(
+        851, 8, 4869, "Other Pipeline Transportation"
+    )
+    PIPELINE_TRANSPORTATION_OF_REFINED_PETROLEUM_PRODUCTS = LkOccupationTitle(
+        852, 8, 486910, "Pipeline Transportation of Refined Petroleum Products"
+    )
+    ALL_OTHER_PIPELINE_TRANSPORTATION = LkOccupationTitle(
+        853, 8, 486990, "All Other Pipeline Transportation"
+    )
+    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_LAND_4 = LkOccupationTitle(
+        854, 8, 4871, "Scenic and Sightseeing Transportation, Land"
+    )
+    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_LAND = LkOccupationTitle(
+        855, 8, 487110, "Scenic and Sightseeing Transportation, Land"
+    )
+    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_WATER_4 = LkOccupationTitle(
+        856, 8, 4872, "Scenic and Sightseeing Transportation, Water"
+    )
+    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_WATER = LkOccupationTitle(
+        857, 8, 487210, "Scenic and Sightseeing Transportation, Water"
+    )
+    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_OTHER_4 = LkOccupationTitle(
+        858, 8, 4879, "Scenic and Sightseeing Transportation, Other"
+    )
+    SCENIC_AND_SIGHTSEEING_TRANSPORTATION_OTHER = LkOccupationTitle(
+        859, 8, 487990, "Scenic and Sightseeing Transportation, Other"
+    )
+    SUPPORT_ACTIVITIES_FOR_AIR_TRANSPORTATION = LkOccupationTitle(
+        860, 8, 4881, "Support Activities for Air Transportation"
+    )
+    AIR_TRAFFIC_CONTROL = LkOccupationTitle(861, 8, 488111, "Air Traffic Control")
+    OTHER_AIRPORT_OPERATIONS = LkOccupationTitle(862, 8, 488119, "Other Airport Operations")
+    OTHER_SUPPORT_ACTIVITIES_FOR_AIR_TRANSPORTATION = LkOccupationTitle(
+        863, 8, 488190, "Other Support Activities for Air Transportation"
+    )
+    SUPPORT_ACTIVITIES_FOR_RAIL_TRANSPORTATION_4 = LkOccupationTitle(
+        864, 8, 4882, "Support Activities for Rail Transportation"
+    )
+    SUPPORT_ACTIVITIES_FOR_RAIL_TRANSPORTATION = LkOccupationTitle(
+        865, 8, 488210, "Support Activities for Rail Transportation"
+    )
+    SUPPORT_ACTIVITIES_FOR_WATER_TRANSPORTATION = LkOccupationTitle(
+        866, 8, 4883, "Support Activities for Water Transportation"
+    )
+    PORT_AND_HARBOR_OPERATIONS = LkOccupationTitle(867, 8, 488310, "Port and Harbor Operations")
+    MARINE_CARGO_HANDLING = LkOccupationTitle(868, 8, 488320, "Marine Cargo Handling")
+    NAVIGATIONAL_SERVICES_TO_SHIPPING = LkOccupationTitle(
+        869, 8, 488330, "Navigational Services to Shipping"
+    )
+    OTHER_SUPPORT_ACTIVITIES_FOR_WATER_TRANSPORTATION = LkOccupationTitle(
+        870, 8, 488390, "Other Support Activities for Water Transportation"
+    )
+    SUPPORT_ACTIVITIES_FOR_ROAD_TRANSPORTATION = LkOccupationTitle(
+        871, 8, 4884, "Support Activities for Road Transportation"
+    )
+    MOTOR_VEHICLE_TOWING = LkOccupationTitle(872, 8, 488410, "Motor Vehicle Towing")
+    OTHER_SUPPORT_ACTIVITIES_FOR_ROAD_TRANSPORTATION = LkOccupationTitle(
+        873, 8, 488490, "Other Support Activities for Road Transportation"
+    )
+    FREIGHT_TRANSPORTATION_ARRANGEMENT_4 = LkOccupationTitle(
+        874, 8, 4885, "Freight Transportation Arrangement"
+    )
+    FREIGHT_TRANSPORTATION_ARRANGEMENT = LkOccupationTitle(
+        875, 8, 488510, "Freight Transportation Arrangement"
+    )
+    OTHER_SUPPORT_ACTIVITIES_FOR_TRANSPORTATION = LkOccupationTitle(
+        876, 8, 4889, "Other Support Activities for Transportation"
+    )
+    PACKING_AND_CRATING = LkOccupationTitle(877, 8, 488991, "Packing and Crating")
+    ALL_OTHER_SUPPORT_ACTIVITIES_FOR_TRANSPORTATION = LkOccupationTitle(
+        878, 8, 488999, "All Other Support Activities for Transportation"
+    )
+    POSTAL_SERVICE_4 = LkOccupationTitle(879, 8, 4911, "Postal Service")
+    POSTAL_SERVICE = LkOccupationTitle(880, 8, 491110, "Postal Service")
+    COURIERS_AND_EXPRESS_DELIVERY_SERVICES_4 = LkOccupationTitle(
+        881, 8, 4921, "Couriers and Express Delivery Services"
+    )
+    COURIERS_AND_EXPRESS_DELIVERY_SERVICES = LkOccupationTitle(
+        882, 8, 492110, "Couriers and Express Delivery Services"
+    )
+    LOCAL_MESSENGERS_AND_LOCAL_DELIVERY_4 = LkOccupationTitle(
+        883, 8, 4922, "Local Messengers and Local Delivery"
+    )
+    LOCAL_MESSENGERS_AND_LOCAL_DELIVERY = LkOccupationTitle(
+        884, 8, 492210, "Local Messengers and Local Delivery"
+    )
+    WAREHOUSING_AND_STORAGE = LkOccupationTitle(885, 8, 4931, "Warehousing and Storage")
+    GENERAL_WAREHOUSING_AND_STORAGE = LkOccupationTitle(
+        886, 8, 493110, "General Warehousing and Storage"
+    )
+    REFRIGERATED_WAREHOUSING_AND_STORAGE = LkOccupationTitle(
+        887, 8, 493120, "Refrigerated Warehousing and Storage"
+    )
+    FARM_PRODUCT_WAREHOUSING_AND_STORAGE = LkOccupationTitle(
+        888, 8, 493130, "Farm Product Warehousing and Storage"
+    )
+    OTHER_WAREHOUSING_AND_STORAGE = LkOccupationTitle(
+        889, 8, 493190, "Other Warehousing and Storage"
+    )
+    NEWSPAPER_PERIODICAL_BOOK_AND_DIRECTORY_PUBLISHERS = LkOccupationTitle(
+        890, 9, 5111, "Newspaper, Periodical, Book, and Directory Publishers"
+    )
+    NEWSPAPER_PUBLISHERS = LkOccupationTitle(891, 9, 511110, "Newspaper Publishers")
+    PERIODICAL_PUBLISHERS = LkOccupationTitle(892, 9, 511120, "Periodical Publishers")
+    BOOK_PUBLISHERS = LkOccupationTitle(893, 9, 511130, "Book Publishers")
+    DIRECTORY_AND_MAILING_LIST_PUBLISHERS = LkOccupationTitle(
+        894, 9, 511140, "Directory and Mailing List Publishers"
+    )
+    GREETING_CARD_PUBLISHERS = LkOccupationTitle(895, 9, 511191, "Greeting Card Publishers")
+    ALL_OTHER_PUBLISHERS = LkOccupationTitle(896, 9, 511199, "All Other Publishers")
+    SOFTWARE_PUBLISHERS_4 = LkOccupationTitle(897, 9, 5112, "Software Publishers")
+    SOFTWARE_PUBLISHERS = LkOccupationTitle(898, 9, 511210, "Software Publishers")
+    MOTION_PICTURE_AND_VIDEO_INDUSTRIES = LkOccupationTitle(
+        899, 9, 5121, "Motion Picture and Video Industries"
+    )
+    MOTION_PICTURE_AND_VIDEO_PRODUCTION = LkOccupationTitle(
+        900, 9, 512110, "Motion Picture and Video Production"
+    )
+    MOTION_PICTURE_AND_VIDEO_DISTRIBUTION = LkOccupationTitle(
+        901, 9, 512120, "Motion Picture and Video Distribution"
+    )
+    MOTION_PICTURE_THEATERS_EXCEPT_DRIVE_INS = LkOccupationTitle(
+        902, 9, 512131, "Motion Picture Theaters (except Drive-Ins)"
+    )
+    DRIVE_IN_MOTION_PICTURE_THEATERS = LkOccupationTitle(
+        903, 9, 512132, "Drive-In Motion Picture Theaters"
+    )
+    TELEPRODUCTION_AND_OTHER_POSTPRODUCTION_SERVICES = LkOccupationTitle(
+        904, 9, 512191, "Teleproduction and Other Postproduction Services"
+    )
+    OTHER_MOTION_PICTURE_AND_VIDEO_INDUSTRIES = LkOccupationTitle(
+        905, 9, 512199, "Other Motion Picture and Video Industries"
+    )
+    SOUND_RECORDING_INDUSTRIES = LkOccupationTitle(906, 9, 5122, "Sound Recording Industries")
+    MUSIC_PUBLISHERS = LkOccupationTitle(907, 9, 512230, "Music Publishers")
+    SOUND_RECORDING_STUDIOS = LkOccupationTitle(908, 9, 512240, "Sound Recording Studios")
+    RECORD_PRODUCTION_AND_DISTRIBUTION = LkOccupationTitle(
+        909, 9, 512250, "Record Production and Distribution"
+    )
+    OTHER_SOUND_RECORDING_INDUSTRIES = LkOccupationTitle(
+        910, 9, 512290, "Other Sound Recording Industries"
+    )
+    RADIO_AND_TELEVISION_BROADCASTING = LkOccupationTitle(
+        911, 9, 5151, "Radio and Television Broadcasting"
+    )
+    RADIO_NETWORKS = LkOccupationTitle(912, 9, 515111, "Radio Networks")
+    RADIO_STATIONS = LkOccupationTitle(913, 9, 515112, "Radio Stations")
+    TELEVISION_BROADCASTING = LkOccupationTitle(914, 9, 515120, "Television Broadcasting")
+    CABLE_AND_OTHER_SUBSCRIPTION_PROGRAMMING_4 = LkOccupationTitle(
+        915, 9, 5152, "Cable and Other Subscription Programming"
+    )
+    CABLE_AND_OTHER_SUBSCRIPTION_PROGRAMMING = LkOccupationTitle(
+        916, 9, 515210, "Cable and Other Subscription Programming"
+    )
+    WIRED_AND_WIRELESS_TELECOMMUNICATIONS_CARRIERS = LkOccupationTitle(
+        917, 9, 5173, "Wired and Wireless Telecommunications Carriers"
+    )
+    WIRED_TELECOMMUNICATIONS_CARRIERS = LkOccupationTitle(
+        918, 9, 517311, "Wired Telecommunications Carriers"
+    )
+    WIRELESS_TELECOMMUNICATIONS_CARRIERS_EXCEPT_SATELLITE = LkOccupationTitle(
+        919, 9, 517312, "Wireless Telecommunications Carriers (except Satellite)"
+    )
+    SATELLITE_TELECOMMUNICATIONS_4 = LkOccupationTitle(920, 9, 5174, "Satellite Telecommunications")
+    SATELLITE_TELECOMMUNICATIONS = LkOccupationTitle(
+        921, 9, 517410, "Satellite Telecommunications"
+    )
+    OTHER_TELECOMMUNICATIONS = LkOccupationTitle(922, 9, 5179, "Other Telecommunications")
+    TELECOMMUNICATIONS_RESELLERS = LkOccupationTitle(
+        923, 9, 517911, "Telecommunications Resellers"
+    )
+    ALL_OTHER_TELECOMMUNICATIONS = LkOccupationTitle(
+        924, 9, 517919, "All Other Telecommunications"
+    )
+    DATA_PROCESSING_HOSTING_AND_RELATED_SERVICES_4 = LkOccupationTitle(
+        925, 9, 5182, "Data Processing, Hosting, and Related Services"
+    )
+    DATA_PROCESSING_HOSTING_AND_RELATED_SERVICES = LkOccupationTitle(
+        926, 9, 518210, "Data Processing, Hosting, and Related Services"
+    )
+    OTHER_INFORMATION_SERVICES = LkOccupationTitle(927, 9, 5191, "Other Information Services")
+    NEWS_SYNDICATES = LkOccupationTitle(928, 9, 519110, "News Syndicates")
+    LIBRARIES_AND_ARCHIVES = LkOccupationTitle(929, 9, 519120, "Libraries and Archives")
+    INTERNET_PUBLISHING_AND_BROADCASTING_AND_WEB_SEARCH_PORTALS = LkOccupationTitle(
+        930, 9, 519130, "Internet Publishing and Broadcasting and Web Search Portals"
+    )
+    ALL_OTHER_INFORMATION_SERVICES = LkOccupationTitle(
+        931, 9, 519190, "All Other Information Services"
+    )
+    MONETARY_AUTHORITIES_CENTRAL_BANK_4 = LkOccupationTitle(
+        932, 10, 5211, "Monetary Authorities-Central Bank"
+    )
+    MONETARY_AUTHORITIES_CENTRAL_BANK = LkOccupationTitle(
+        933, 10, 521110, "Monetary Authorities-Central Bank"
+    )
+    DEPOSITORY_CREDIT_INTERMEDIATION = LkOccupationTitle(
+        934, 10, 5221, "Depository Credit Intermediation"
+    )
+    COMMERCIAL_BANKING = LkOccupationTitle(935, 10, 522110, "Commercial Banking")
+    SAVINGS_INSTITUTIONS = LkOccupationTitle(936, 10, 522120, "Savings Institutions")
+    CREDIT_UNIONS = LkOccupationTitle(937, 10, 522130, "Credit Unions")
+    OTHER_DEPOSITORY_CREDIT_INTERMEDIATION = LkOccupationTitle(
+        938, 10, 522190, "Other Depository Credit Intermediation"
+    )
+    NONDEPOSITORY_CREDIT_INTERMEDIATION = LkOccupationTitle(
+        939, 10, 5222, "Nondepository Credit Intermediation"
+    )
+    CREDIT_CARD_ISSUING = LkOccupationTitle(940, 10, 522210, "Credit Card Issuing")
+    SALES_FINANCING = LkOccupationTitle(941, 10, 522220, "Sales Financing")
+    CONSUMER_LENDING = LkOccupationTitle(942, 10, 522291, "Consumer Lending")
+    REAL_ESTATE_CREDIT = LkOccupationTitle(943, 10, 522292, "Real Estate Credit")
+    INTERNATIONAL_TRADE_FINANCING = LkOccupationTitle(
+        944, 10, 522293, "International Trade Financing"
+    )
+    SECONDARY_MARKET_FINANCING = LkOccupationTitle(945, 10, 522294, "Secondary Market Financing")
+    ALL_OTHER_NONDEPOSITORY_CREDIT_INTERMEDIATION = LkOccupationTitle(
+        946, 10, 522298, "All Other Nondepository Credit Intermediation"
+    )
+    ACTIVITIES_RELATED_TO_CREDIT_INTERMEDIATION = LkOccupationTitle(
+        947, 10, 5223, "Activities Related to Credit Intermediation"
+    )
+    MORTGAGE_AND_NONMORTGAGE_LOAN_BROKERS = LkOccupationTitle(
+        948, 10, 522310, "Mortgage and Nonmortgage Loan Brokers"
+    )
+    FINANCIAL_TRANSACTIONS_PROCESSING_RESERVE_AND_CLEARINGHOUSE_ACTIVITIES = LkOccupationTitle(
+        949, 10, 522320, "Financial Transactions Processing, Reserve, and Clearinghouse Activities"
+    )
+    OTHER_ACTIVITIES_RELATED_TO_CREDIT_INTERMEDIATION = LkOccupationTitle(
+        950, 10, 522390, "Other Activities Related to Credit Intermediation"
+    )
+    SECURITIES_AND_COMMODITY_CONTRACTS_INTERMEDIATION_AND_BROKERAGE = LkOccupationTitle(
+        951, 10, 5231, "Securities and Commodity Contracts Intermediation and Brokerage"
+    )
+    INVESTMENT_BANKING_AND_SECURITIES_DEALING = LkOccupationTitle(
+        952, 10, 523110, "Investment Banking and Securities Dealing"
+    )
+    SECURITIES_BROKERAGE = LkOccupationTitle(953, 10, 523120, "Securities Brokerage")
+    COMMODITY_CONTRACTS_DEALING = LkOccupationTitle(954, 10, 523130, "Commodity Contracts Dealing")
+    COMMODITY_CONTRACTS_BROKERAGE = LkOccupationTitle(
+        955, 10, 523140, "Commodity Contracts Brokerage"
+    )
+    SECURITIES_AND_COMMODITY_EXCHANGES_4 = LkOccupationTitle(
+        956, 10, 5232, "Securities and Commodity Exchanges"
+    )
+    SECURITIES_AND_COMMODITY_EXCHANGES = LkOccupationTitle(
+        957, 10, 523210, "Securities and Commodity Exchanges"
+    )
+    OTHER_FINANCIAL_INVESTMENT_ACTIVITIES = LkOccupationTitle(
+        958, 10, 5239, "Other Financial Investment Activities"
+    )
+    MISCELLANEOUS_INTERMEDIATION = LkOccupationTitle(
+        959, 10, 523910, "Miscellaneous Intermediation"
+    )
+    PORTFOLIO_MANAGEMENT = LkOccupationTitle(960, 10, 523920, "Portfolio Management")
+    INVESTMENT_ADVICE = LkOccupationTitle(961, 10, 523930, "Investment Advice")
+    TRUST_FIDUCIARY_AND_CUSTODY_ACTIVITIES = LkOccupationTitle(
+        962, 10, 523991, "Trust, Fiduciary, and Custody Activities"
+    )
+    MISCELLANEOUS_FINANCIAL_INVESTMENT_ACTIVITIES = LkOccupationTitle(
+        963, 10, 523999, "Miscellaneous Financial Investment Activities"
+    )
+    INSURANCE_CARRIERS = LkOccupationTitle(964, 10, 5241, "Insurance Carriers")
+    DIRECT_LIFE_INSURANCE_CARRIERS = LkOccupationTitle(
+        965, 10, 524113, "Direct Life Insurance Carriers"
+    )
+    DIRECT_HEALTH_AND_MEDICAL_INSURANCE_CARRIERS = LkOccupationTitle(
+        966, 10, 524114, "Direct Health and Medical Insurance Carriers"
+    )
+    DIRECT_PROPERTY_AND_CASUALTY_INSURANCE_CARRIERS = LkOccupationTitle(
+        967, 10, 524126, "Direct Property and Casualty Insurance Carriers"
+    )
+    DIRECT_TITLE_INSURANCE_CARRIERS = LkOccupationTitle(
+        968, 10, 524127, "Direct Title Insurance Carriers"
+    )
+    OTHER_DIRECT_INSURANCE_EXCEPT_LIFE_HEALTH_AND_MEDICAL_CARRIERS = LkOccupationTitle(
+        969, 10, 524128, "Other Direct Insurance (except Life, Health, and Medical) Carriers"
+    )
+    REINSURANCE_CARRIERS = LkOccupationTitle(970, 10, 524130, "Reinsurance Carriers")
+    AGENCIES_BROKERAGES_AND_OTHER_INSURANCE_RELATED_ACTIVITIES = LkOccupationTitle(
+        971, 10, 5242, "Agencies, Brokerages, and Other Insurance Related Activities"
+    )
+    INSURANCE_AGENCIES_AND_BROKERAGES = LkOccupationTitle(
+        972, 10, 524210, "Insurance Agencies and Brokerages"
+    )
+    CLAIMS_ADJUSTING = LkOccupationTitle(973, 10, 524291, "Claims Adjusting")
+    THIRD_PARTY_ADMINISTRATION_OF_INSURANCE_AND_PENSION_FUNDS = LkOccupationTitle(
+        974, 10, 524292, "Third Party Administration of Insurance and Pension Funds"
+    )
+    ALL_OTHER_INSURANCE_RELATED_ACTIVITIES = LkOccupationTitle(
+        975, 10, 524298, "All Other Insurance Related Activities"
+    )
+    INSURANCE_AND_EMPLOYEE_BENEFIT_FUNDS = LkOccupationTitle(
+        976, 10, 5251, "Insurance and Employee Benefit Funds"
+    )
+    PENSION_FUNDS = LkOccupationTitle(977, 10, 525110, "Pension Funds")
+    HEALTH_AND_WELFARE_FUNDS = LkOccupationTitle(978, 10, 525120, "Health and Welfare Funds")
+    OTHER_INSURANCE_FUNDS = LkOccupationTitle(979, 10, 525190, "Other Insurance Funds")
+    OTHER_INVESTMENT_POOLS_AND_FUNDS = LkOccupationTitle(
+        980, 10, 5259, "Other Investment Pools and Funds"
+    )
+    OPEN_END_INVESTMENT_FUNDS = LkOccupationTitle(981, 10, 525910, "Open-End Investment Funds")
+    TRUSTS_ESTATES_AND_AGENCY_ACCOUNTS = LkOccupationTitle(
+        982, 10, 525920, "Trusts, Estates, and Agency Accounts"
+    )
+    OTHER_FINANCIAL_VEHICLES = LkOccupationTitle(983, 10, 525990, "Other Financial Vehicles")
+    LESSORS_OF_REAL_ESTATE = LkOccupationTitle(984, 11, 5311, "Lessors of Real Estate")
+    LESSORS_OF_RESIDENTIAL_BUILDINGS_AND_DWELLINGS = LkOccupationTitle(
+        985, 11, 531110, "Lessors of Residential Buildings and Dwellings"
+    )
+    LESSORS_OF_NONRESIDENTIAL_BUILDINGS_EXCEPT_MINIWAREHOUSES = LkOccupationTitle(
+        986, 11, 531120, "Lessors of Nonresidential Buildings (except Miniwarehouses)"
+    )
+    LESSORS_OF_MINIWAREHOUSES_AND_SELF_STORAGE_UNITS = LkOccupationTitle(
+        987, 11, 531130, "Lessors of Miniwarehouses and Self-Storage Units"
+    )
+    LESSORS_OF_OTHER_REAL_ESTATE_PROPERTY = LkOccupationTitle(
+        988, 11, 531190, "Lessors of Other Real Estate Property"
+    )
+    OFFICES_OF_REAL_ESTATE_AGENTS_AND_BROKERS_4 = LkOccupationTitle(
+        989, 11, 5312, "Offices of Real Estate Agents and Brokers"
+    )
+    OFFICES_OF_REAL_ESTATE_AGENTS_AND_BROKERS = LkOccupationTitle(
+        990, 11, 531210, "Offices of Real Estate Agents and Brokers"
+    )
+    ACTIVITIES_RELATED_TO_REAL_ESTATE = LkOccupationTitle(
+        991, 11, 5313, "Activities Related to Real Estate"
+    )
+    RESIDENTIAL_PROPERTY_MANAGERS = LkOccupationTitle(
+        992, 11, 531311, "Residential Property Managers"
+    )
+    NONRESIDENTIAL_PROPERTY_MANAGERS = LkOccupationTitle(
+        993, 11, 531312, "Nonresidential Property Managers"
+    )
+    OFFICES_OF_REAL_ESTATE_APPRAISERS = LkOccupationTitle(
+        994, 11, 531320, "Offices of Real Estate Appraisers"
+    )
+    OTHER_ACTIVITIES_RELATED_TO_REAL_ESTATE = LkOccupationTitle(
+        995, 11, 531390, "Other Activities Related to Real Estate"
+    )
+    AUTOMOTIVE_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(
+        996, 11, 5321, "Automotive Equipment Rental and Leasing"
+    )
+    PASSENGER_CAR_RENTAL = LkOccupationTitle(997, 11, 532111, "Passenger Car Rental")
+    PASSENGER_CAR_LEASING = LkOccupationTitle(998, 11, 532112, "Passenger Car Leasing")
+    TRUCK_UTILITY_TRAILER_AND_RV_RECREATIONAL_VEHICLE_RENTAL_AND_LEASING = LkOccupationTitle(
+        999, 11, 532120, "Truck, Utility Trailer, and RV (Recreational Vehicle) Rental and Leasing"
+    )
+    CONSUMER_GOODS_RENTAL = LkOccupationTitle(1000, 11, 5322, "Consumer Goods Rental")
+    CONSUMER_ELECTRONICS_AND_APPLIANCES_RENTAL = LkOccupationTitle(
+        1001, 11, 532210, "Consumer Electronics and Appliances Rental"
+    )
+    FORMAL_WEAR_AND_COSTUME_RENTAL = LkOccupationTitle(
+        1002, 11, 532281, "Formal Wear and Costume Rental"
+    )
+    VIDEO_TAPE_AND_DISC_RENTAL = LkOccupationTitle(1003, 11, 532282, "Video Tape and Disc Rental")
+    HOME_HEALTH_EQUIPMENT_RENTAL = LkOccupationTitle(
+        1004, 11, 532283, "Home Health Equipment Rental"
+    )
+    RECREATIONAL_GOODS_RENTAL = LkOccupationTitle(1005, 11, 532284, "Recreational Goods Rental")
+    ALL_OTHER_CONSUMER_GOODS_RENTAL = LkOccupationTitle(
+        1006, 11, 532289, "All Other Consumer Goods Rental"
+    )
+    GENERAL_RENTAL_CENTERS_4 = LkOccupationTitle(1007, 11, 5323, "General Rental Centers")
+    GENERAL_RENTAL_CENTERS = LkOccupationTitle(1008, 11, 532310, "General Rental Centers")
+    COMMERCIAL_AND_INDUSTRIAL_MACHINERY_AND_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(
+        1009, 11, 5324, "Commercial and Industrial Machinery and Equipment Rental and Leasing"
+    )
+    COMMERCIAL_AIR_RAIL_AND_WATER_TRANSPORTATION_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(
+        1010,
+        11,
+        532411,
+        "Commercial Air, Rail, and Water Transportation Equipment Rental and Leasing",
+    )
+    CONSTRUCTION_MINING_AND_FORESTRY_MACHINERY_AND_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(
+        1011,
+        11,
+        532412,
+        "Construction, Mining, and Forestry Machinery and Equipment Rental and Leasing",
+    )
+    OFFICE_MACHINERY_AND_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(
+        1012, 11, 532420, "Office Machinery and Equipment Rental and Leasing"
+    )
+    OTHER_COMMERCIAL_AND_INDUSTRIAL_MACHINERY_AND_EQUIPMENT_RENTAL_AND_LEASING = LkOccupationTitle(
+        1013,
+        11,
+        532490,
+        "Other Commercial and Industrial Machinery and Equipment Rental and Leasing",
+    )
+    LESSORS_OF_NONFINANCIAL_INTANGIBLE_ASSETS_EXCEPT_COPYRIGHTED_WORKS_4 = LkOccupationTitle(
+        1014, 11, 5331, "Lessors of Nonfinancial Intangible Assets (except Copyrighted Works)"
+    )
+    LESSORS_OF_NONFINANCIAL_INTANGIBLE_ASSETS_EXCEPT_COPYRIGHTED_WORKS = LkOccupationTitle(
+        1015, 11, 533110, "Lessors of Nonfinancial Intangible Assets (except Copyrighted Works)"
+    )
+    LEGAL_SERVICES = LkOccupationTitle(1016, 12, 5411, "Legal Services")
+    OFFICES_OF_LAWYERS = LkOccupationTitle(1017, 12, 541110, "Offices of Lawyers")
+    OFFICES_OF_NOTARIES = LkOccupationTitle(1018, 12, 541120, "Offices of Notaries")
+    TITLE_ABSTRACT_AND_SETTLEMENT_OFFICES = LkOccupationTitle(
+        1019, 12, 541191, "Title Abstract and Settlement Offices"
+    )
+    ALL_OTHER_LEGAL_SERVICES = LkOccupationTitle(1020, 12, 541199, "All Other Legal Services")
+    ACCOUNTING_TAX_PREPARATION_BOOKKEEPING_AND_PAYROLL_SERVICES = LkOccupationTitle(
+        1021, 12, 5412, "Accounting, Tax Preparation, Bookkeeping, and Payroll Services"
+    )
+    OFFICES_OF_CERTIFIED_PUBLIC_ACCOUNTANTS = LkOccupationTitle(
+        1022, 12, 541211, "Offices of Certified Public Accountants"
+    )
+    TAX_PREPARATION_SERVICES = LkOccupationTitle(1023, 12, 541213, "Tax Preparation Services")
+    PAYROLL_SERVICES = LkOccupationTitle(1024, 12, 541214, "Payroll Services")
+    OTHER_ACCOUNTING_SERVICES = LkOccupationTitle(1025, 12, 541219, "Other Accounting Services")
+    ARCHITECTURAL_ENGINEERING_AND_RELATED_SERVICES = LkOccupationTitle(
+        1026, 12, 5413, "Architectural, Engineering, and Related Services"
+    )
+    ARCHITECTURAL_SERVICES = LkOccupationTitle(1027, 12, 541310, "Architectural Services")
+    LANDSCAPE_ARCHITECTURAL_SERVICES = LkOccupationTitle(
+        1028, 12, 541320, "Landscape Architectural Services"
+    )
+    ENGINEERING_SERVICES = LkOccupationTitle(1029, 12, 541330, "Engineering Services")
+    DRAFTING_SERVICES = LkOccupationTitle(1030, 12, 541340, "Drafting Services")
+    BUILDING_INSPECTION_SERVICES = LkOccupationTitle(
+        1031, 12, 541350, "Building Inspection Services"
+    )
+    GEOPHYSICAL_SURVEYING_AND_MAPPING_SERVICES = LkOccupationTitle(
+        1032, 12, 541360, "Geophysical Surveying and Mapping Services"
+    )
+    SURVEYING_AND_MAPPING_EXCEPT_GEOPHYSICAL_SERVICES = LkOccupationTitle(
+        1033, 12, 541370, "Surveying and Mapping (except Geophysical) Services"
+    )
+    TESTING_LABORATORIES = LkOccupationTitle(1034, 12, 541380, "Testing Laboratories")
+    SPECIALIZED_DESIGN_SERVICES = LkOccupationTitle(1035, 12, 5414, "Specialized Design Services")
+    INTERIOR_DESIGN_SERVICES = LkOccupationTitle(1036, 12, 541410, "Interior Design Services")
+    INDUSTRIAL_DESIGN_SERVICES = LkOccupationTitle(1037, 12, 541420, "Industrial Design Services")
+    GRAPHIC_DESIGN_SERVICES = LkOccupationTitle(1038, 12, 541430, "Graphic Design Services")
+    OTHER_SPECIALIZED_DESIGN_SERVICES = LkOccupationTitle(
+        1039, 12, 541490, "Other Specialized Design Services"
+    )
+    COMPUTER_SYSTEMS_DESIGN_AND_RELATED_SERVICES = LkOccupationTitle(
+        1040, 12, 5415, "Computer Systems Design and Related Services"
+    )
+    CUSTOM_COMPUTER_PROGRAMMING_SERVICES = LkOccupationTitle(
+        1041, 12, 541511, "Custom Computer Programming Services"
+    )
+    COMPUTER_SYSTEMS_DESIGN_SERVICES = LkOccupationTitle(
+        1042, 12, 541512, "Computer Systems Design Services"
+    )
+    COMPUTER_FACILITIES_MANAGEMENT_SERVICES = LkOccupationTitle(
+        1043, 12, 541513, "Computer Facilities Management Services"
+    )
+    OTHER_COMPUTER_RELATED_SERVICES = LkOccupationTitle(
+        1044, 12, 541519, "Other Computer Related Services"
+    )
+    MANAGEMENT_SCIENTIFIC_AND_TECHNICAL_CONSULTING_SERVICES = LkOccupationTitle(
+        1045, 12, 5416, "Management, Scientific, and Technical Consulting Services"
+    )
+    ADMINISTRATIVE_MANAGEMENT_AND_GENERAL_MANAGEMENT_CONSULTING_SERVICES = LkOccupationTitle(
+        1046, 12, 541611, "Administrative Management and General Management Consulting Services"
+    )
+    HUMAN_RESOURCES_CONSULTING_SERVICES = LkOccupationTitle(
+        1047, 12, 541612, "Human Resources Consulting Services"
+    )
+    MARKETING_CONSULTING_SERVICES = LkOccupationTitle(
+        1048, 12, 541613, "Marketing Consulting Services"
+    )
+    PROCESS_PHYSICAL_DISTRIBUTION_AND_LOGISTICS_CONSULTING_SERVICES = LkOccupationTitle(
+        1049, 12, 541614, "Process, Physical Distribution, and Logistics Consulting Services"
+    )
+    OTHER_MANAGEMENT_CONSULTING_SERVICES = LkOccupationTitle(
+        1050, 12, 541618, "Other Management Consulting Services"
+    )
+    ENVIRONMENTAL_CONSULTING_SERVICES = LkOccupationTitle(
+        1051, 12, 541620, "Environmental Consulting Services"
+    )
+    OTHER_SCIENTIFIC_AND_TECHNICAL_CONSULTING_SERVICES = LkOccupationTitle(
+        1052, 12, 541690, "Other Scientific and Technical Consulting Services"
+    )
+    SCIENTIFIC_RESEARCH_AND_DEVELOPMENT_SERVICES = LkOccupationTitle(
+        1053, 12, 5417, "Scientific Research and Development Services"
+    )
+    RESEARCH_AND_DEVELOPMENT_IN_NANOTECHNOLOGY = LkOccupationTitle(
+        1054, 12, 541713, "Research and Development in Nanotechnology"
+    )
+    RESEARCH_AND_DEVELOPMENT_IN_BIOTECHNOLOGY_EXCEPT_NANOBIOTECHNOLOGY = LkOccupationTitle(
+        1055, 12, 541714, "Research and Development in Biotechnology (except Nanobiotechnology)"
+    )
+    RESEARCH_AND_DEVELOPMENT_IN_THE_PHYSICAL_ENGINEERING_AND_LIFE_SCIENCES_EXCEPT_NANOTECHNOLOGY_AND_BIOTECHNOLOGY = LkOccupationTitle(
+        1056,
+        12,
+        541715,
+        "Research and Development in the Physical, Engineering, and Life Sciences (except Nanotechnology and Biotechnology)",
+    )
+    RESEARCH_AND_DEVELOPMENT_IN_THE_SOCIAL_SCIENCES_AND_HUMANITIES = LkOccupationTitle(
+        1057, 12, 541720, "Research and Development in the Social Sciences and Humanities"
+    )
+    ADVERTISING_PUBLIC_RELATIONS_AND_RELATED_SERVICES = LkOccupationTitle(
+        1058, 12, 5418, "Advertising, Public Relations, and Related Services"
+    )
+    ADVERTISING_AGENCIES = LkOccupationTitle(1059, 12, 541810, "Advertising Agencies")
+    PUBLIC_RELATIONS_AGENCIES = LkOccupationTitle(1060, 12, 541820, "Public Relations Agencies")
+    MEDIA_BUYING_AGENCIES = LkOccupationTitle(1061, 12, 541830, "Media Buying Agencies")
+    MEDIA_REPRESENTATIVES = LkOccupationTitle(1062, 12, 541840, "Media Representatives")
+    OUTDOOR_ADVERTISING = LkOccupationTitle(1063, 12, 541850, "Outdoor Advertising")
+    DIRECT_MAIL_ADVERTISING = LkOccupationTitle(1064, 12, 541860, "Direct Mail Advertising")
+    ADVERTISING_MATERIAL_DISTRIBUTION_SERVICES = LkOccupationTitle(
+        1065, 12, 541870, "Advertising Material Distribution Services"
+    )
+    OTHER_SERVICES_RELATED_TO_ADVERTISING = LkOccupationTitle(
+        1066, 12, 541890, "Other Services Related to Advertising"
+    )
+    OTHER_PROFESSIONAL_SCIENTIFIC_AND_TECHNICAL_SERVICES = LkOccupationTitle(
+        1067, 12, 5419, "Other Professional, Scientific, and Technical Services"
+    )
+    MARKETING_RESEARCH_AND_PUBLIC_OPINION_POLLING = LkOccupationTitle(
+        1068, 12, 541910, "Marketing Research and Public Opinion Polling"
+    )
+    PHOTOGRAPHY_STUDIOS_PORTRAIT = LkOccupationTitle(
+        1069, 12, 541921, "Photography Studios, Portrait"
+    )
+    COMMERCIAL_PHOTOGRAPHY = LkOccupationTitle(1070, 12, 541922, "Commercial Photography")
+    TRANSLATION_AND_INTERPRETATION_SERVICES = LkOccupationTitle(
+        1071, 12, 541930, "Translation and Interpretation Services"
+    )
+    VETERINARY_SERVICES = LkOccupationTitle(1072, 12, 541940, "Veterinary Services")
+    ALL_OTHER_PROFESSIONAL_SCIENTIFIC_AND_TECHNICAL_SERVICES = LkOccupationTitle(
+        1073, 12, 541990, "All Other Professional, Scientific, and Technical Services"
+    )
+    MANAGEMENT_OF_COMPANIES_AND_ENTERPRISES = LkOccupationTitle(
+        1074, 13, 5511, "Management of Companies and Enterprises"
+    )
+    OFFICES_OF_BANK_HOLDING_COMPANIES = LkOccupationTitle(
+        1075, 13, 551111, "Offices of Bank Holding Companies"
+    )
+    OFFICES_OF_OTHER_HOLDING_COMPANIES = LkOccupationTitle(
+        1076, 13, 551112, "Offices of Other Holding Companies"
+    )
+    CORPORATE_SUBSIDIARY_AND_REGIONAL_MANAGING_OFFICES = LkOccupationTitle(
+        1077, 13, 551114, "Corporate, Subsidiary, and Regional Managing Offices"
+    )
+    OFFICE_ADMINISTRATIVE_SERVICES_4 = LkOccupationTitle(
+        1078, 14, 5611, "Office Administrative Services"
+    )
+    OFFICE_ADMINISTRATIVE_SERVICES = LkOccupationTitle(
+        1079, 14, 561110, "Office Administrative Services"
+    )
+    FACILITIES_SUPPORT_SERVICES_4 = LkOccupationTitle(1080, 14, 5612, "Facilities Support Services")
+    FACILITIES_SUPPORT_SERVICES = LkOccupationTitle(1081, 14, 561210, "Facilities Support Services")
+    EMPLOYMENT_SERVICES = LkOccupationTitle(1082, 14, 5613, "Employment Services")
+    EMPLOYMENT_PLACEMENT_AGENCIES = LkOccupationTitle(
+        1083, 14, 561311, "Employment Placement Agencies"
+    )
+    EXECUTIVE_SEARCH_SERVICES = LkOccupationTitle(1084, 14, 561312, "Executive Search Services")
+    TEMPORARY_HELP_SERVICES = LkOccupationTitle(1085, 14, 561320, "Temporary Help Services")
+    PROFESSIONAL_EMPLOYER_ORGANIZATIONS = LkOccupationTitle(
+        1086, 14, 561330, "Professional Employer Organizations"
+    )
+    BUSINESS_SUPPORT_SERVICES = LkOccupationTitle(1087, 14, 5614, "Business Support Services")
+    DOCUMENT_PREPARATION_SERVICES = LkOccupationTitle(
+        1088, 14, 561410, "Document Preparation Services"
+    )
+    TELEPHONE_ANSWERING_SERVICES = LkOccupationTitle(
+        1089, 14, 561421, "Telephone Answering Services"
+    )
+    TELEMARKETING_BUREAUS_AND_OTHER_CONTACT_CENTERS = LkOccupationTitle(
+        1090, 14, 561422, "Telemarketing Bureaus and Other Contact Centers"
+    )
+    PRIVATE_MAIL_CENTERS = LkOccupationTitle(1091, 14, 561431, "Private Mail Centers")
+    OTHER_BUSINESS_SERVICE_CENTERS_INCLUDING_COPY_SHOPS = LkOccupationTitle(
+        1092, 14, 561439, "Other Business Service Centers (including Copy Shops)"
+    )
+    COLLECTION_AGENCIES = LkOccupationTitle(1093, 14, 561440, "Collection Agencies")
+    CREDIT_BUREAUS = LkOccupationTitle(1094, 14, 561450, "Credit Bureaus")
+    REPOSSESSION_SERVICES = LkOccupationTitle(1095, 14, 561491, "Repossession Services")
+    COURT_REPORTING_AND_STENOTYPE_SERVICES = LkOccupationTitle(
+        1096, 14, 561492, "Court Reporting and Stenotype Services"
+    )
+    ALL_OTHER_BUSINESS_SUPPORT_SERVICES = LkOccupationTitle(
+        1097, 14, 561499, "All Other Business Support Services"
+    )
+    TRAVEL_ARRANGEMENT_AND_RESERVATION_SERVICES = LkOccupationTitle(
+        1098, 14, 5615, "Travel Arrangement and Reservation Services"
+    )
+    TRAVEL_AGENCIES = LkOccupationTitle(1099, 14, 561510, "Travel Agencies")
+    TOUR_OPERATORS = LkOccupationTitle(1100, 14, 561520, "Tour Operators")
+    CONVENTION_AND_VISITORS_BUREAUS = LkOccupationTitle(
+        1101, 14, 561591, "Convention and Visitors Bureaus"
+    )
+    ALL_OTHER_TRAVEL_ARRANGEMENT_AND_RESERVATION_SERVICES = LkOccupationTitle(
+        1102, 14, 561599, "All Other Travel Arrangement and Reservation Services"
+    )
+    INVESTIGATION_AND_SECURITY_SERVICES = LkOccupationTitle(
+        1103, 14, 5616, "Investigation and Security Services"
+    )
+    INVESTIGATION_SERVICES = LkOccupationTitle(1104, 14, 561611, "Investigation Services")
+    SECURITY_GUARDS_AND_PATROL_SERVICES = LkOccupationTitle(
+        1105, 14, 561612, "Security Guards and Patrol Services"
+    )
+    ARMORED_CAR_SERVICES = LkOccupationTitle(1106, 14, 561613, "Armored Car Services")
+    SECURITY_SYSTEMS_SERVICES_EXCEPT_LOCKSMITHS = LkOccupationTitle(
+        1107, 14, 561621, "Security Systems Services (except Locksmiths)"
+    )
+    LOCKSMITHS = LkOccupationTitle(1108, 14, 561622, "Locksmiths")
+    SERVICES_TO_BUILDINGS_AND_DWELLINGS = LkOccupationTitle(
+        1109, 14, 5617, "Services to Buildings and Dwellings"
+    )
+    EXTERMINATING_AND_PEST_CONTROL_SERVICES = LkOccupationTitle(
+        1110, 14, 561710, "Exterminating and Pest Control Services"
+    )
+    JANITORIAL_SERVICES = LkOccupationTitle(1111, 14, 561720, "Janitorial Services")
+    LANDSCAPING_SERVICES = LkOccupationTitle(1112, 14, 561730, "Landscaping Services")
+    CARPET_AND_UPHOLSTERY_CLEANING_SERVICES = LkOccupationTitle(
+        1113, 14, 561740, "Carpet and Upholstery Cleaning Services"
+    )
+    OTHER_SERVICES_TO_BUILDINGS_AND_DWELLINGS = LkOccupationTitle(
+        1114, 14, 561790, "Other Services to Buildings and Dwellings"
+    )
+    OTHER_SUPPORT_SERVICES = LkOccupationTitle(1115, 14, 5619, "Other Support Services")
+    PACKAGING_AND_LABELING_SERVICES = LkOccupationTitle(
+        1116, 14, 561910, "Packaging and Labeling Services"
+    )
+    CONVENTION_AND_TRADE_SHOW_ORGANIZERS = LkOccupationTitle(
+        1117, 14, 561920, "Convention and Trade Show Organizers"
+    )
+    ALL_OTHER_SUPPORT_SERVICES = LkOccupationTitle(1118, 14, 561990, "All Other Support Services")
+    WASTE_COLLECTION = LkOccupationTitle(1119, 14, 5621, "Waste Collection")
+    SOLID_WASTE_COLLECTION = LkOccupationTitle(1120, 14, 562111, "Solid Waste Collection")
+    HAZARDOUS_WASTE_COLLECTION = LkOccupationTitle(1121, 14, 562112, "Hazardous Waste Collection")
+    OTHER_WASTE_COLLECTION = LkOccupationTitle(1122, 14, 562119, "Other Waste Collection")
+    WASTE_TREATMENT_AND_DISPOSAL = LkOccupationTitle(1123, 14, 5622, "Waste Treatment and Disposal")
+    HAZARDOUS_WASTE_TREATMENT_AND_DISPOSAL = LkOccupationTitle(
+        1124, 14, 562211, "Hazardous Waste Treatment and Disposal"
+    )
+    SOLID_WASTE_LANDFILL = LkOccupationTitle(1125, 14, 562212, "Solid Waste Landfill")
+    SOLID_WASTE_COMBUSTORS_AND_INCINERATORS = LkOccupationTitle(
+        1126, 14, 562213, "Solid Waste Combustors and Incinerators"
+    )
+    OTHER_NONHAZARDOUS_WASTE_TREATMENT_AND_DISPOSAL = LkOccupationTitle(
+        1127, 14, 562219, "Other Nonhazardous Waste Treatment and Disposal"
+    )
+    REMEDIATION_AND_OTHER_WASTE_MANAGEMENT_SERVICES = LkOccupationTitle(
+        1128, 14, 5629, "Remediation and Other Waste Management Services"
+    )
+    REMEDIATION_SERVICES = LkOccupationTitle(1129, 14, 562910, "Remediation Services")
+    MATERIALS_RECOVERY_FACILITIES = LkOccupationTitle(
+        1130, 14, 562920, "Materials Recovery Facilities"
+    )
+    SEPTIC_TANK_AND_RELATED_SERVICES = LkOccupationTitle(
+        1131, 14, 562991, "Septic Tank and Related Services"
+    )
+    ALL_OTHER_MISCELLANEOUS_WASTE_MANAGEMENT_SERVICES = LkOccupationTitle(
+        1132, 14, 562998, "All Other Miscellaneous Waste Management Services"
+    )
+    ELEMENTARY_AND_SECONDARY_SCHOOLS_4 = LkOccupationTitle(
+        1133, 15, 6111, "Elementary and Secondary Schools"
+    )
+    ELEMENTARY_AND_SECONDARY_SCHOOLS = LkOccupationTitle(
+        1134, 15, 611110, "Elementary and Secondary Schools"
+    )
+    JUNIOR_COLLEGES_4 = LkOccupationTitle(1135, 15, 6112, "Junior Colleges")
+    JUNIOR_COLLEGES = LkOccupationTitle(1136, 15, 611210, "Junior Colleges")
+    COLLEGES_UNIVERSITIES_AND_PROFESSIONAL_SCHOOLS_4 = LkOccupationTitle(
+        1137, 15, 6113, "Colleges, Universities, and Professional Schools"
+    )
+    COLLEGES_UNIVERSITIES_AND_PROFESSIONAL_SCHOOLS = LkOccupationTitle(
+        1138, 15, 611310, "Colleges, Universities, and Professional Schools"
+    )
+    BUSINESS_SCHOOLS_AND_COMPUTER_AND_MANAGEMENT_TRAINING = LkOccupationTitle(
+        1139, 15, 6114, "Business Schools and Computer and Management Training"
+    )
+    BUSINESS_AND_SECRETARIAL_SCHOOLS = LkOccupationTitle(
+        1140, 15, 611410, "Business and Secretarial Schools"
+    )
+    COMPUTER_TRAINING = LkOccupationTitle(1141, 15, 611420, "Computer Training")
+    PROFESSIONAL_AND_MANAGEMENT_DEVELOPMENT_TRAINING = LkOccupationTitle(
+        1142, 15, 611430, "Professional and Management Development Training"
+    )
+    TECHNICAL_AND_TRADE_SCHOOLS = LkOccupationTitle(1143, 15, 6115, "Technical and Trade Schools")
+    COSMETOLOGY_AND_BARBER_SCHOOLS = LkOccupationTitle(
+        1144, 15, 611511, "Cosmetology and Barber Schools"
+    )
+    FLIGHT_TRAINING = LkOccupationTitle(1145, 15, 611512, "Flight Training")
+    APPRENTICESHIP_TRAINING = LkOccupationTitle(1146, 15, 611513, "Apprenticeship Training")
+    OTHER_TECHNICAL_AND_TRADE_SCHOOLS = LkOccupationTitle(
+        1147, 15, 611519, "Other Technical and Trade Schools"
+    )
+    OTHER_SCHOOLS_AND_INSTRUCTION = LkOccupationTitle(
+        1148, 15, 6116, "Other Schools and Instruction"
+    )
+    FINE_ARTS_SCHOOLS = LkOccupationTitle(1149, 15, 611610, "Fine Arts Schools")
+    SPORTS_AND_RECREATION_INSTRUCTION = LkOccupationTitle(
+        1150, 15, 611620, "Sports and Recreation Instruction"
+    )
+    LANGUAGE_SCHOOLS = LkOccupationTitle(1151, 15, 611630, "Language Schools")
+    EXAM_PREPARATION_AND_TUTORING = LkOccupationTitle(
+        1152, 15, 611691, "Exam Preparation and Tutoring"
+    )
+    AUTOMOBILE_DRIVING_SCHOOLS = LkOccupationTitle(1153, 15, 611692, "Automobile Driving Schools")
+    ALL_OTHER_MISCELLANEOUS_SCHOOLS_AND_INSTRUCTION = LkOccupationTitle(
+        1154, 15, 611699, "All Other Miscellaneous Schools and Instruction"
+    )
+    EDUCATIONAL_SUPPORT_SERVICES_4 = LkOccupationTitle(1155, 15, 6117, "Educational Support Services")
+    EDUCATIONAL_SUPPORT_SERVICES = LkOccupationTitle(
+        1156, 15, 611710, "Educational Support Services"
+    )
+    OFFICES_OF_PHYSICIANS = LkOccupationTitle(1157, 16, 6211, "Offices of Physicians")
+    OFFICES_OF_PHYSICIANS_EXCEPT_MENTAL_HEALTH_SPECIALISTS = LkOccupationTitle(
+        1158, 16, 621111, "Offices of Physicians (except Mental Health Specialists)"
+    )
+    OFFICES_OF_PHYSICIANS_MENTAL_HEALTH_SPECIALISTS = LkOccupationTitle(
+        1159, 16, 621112, "Offices of Physicians, Mental Health Specialists"
+    )
+    OFFICES_OF_DENTISTS_4 = LkOccupationTitle(1160, 16, 6212, "Offices of Dentists")
+    OFFICES_OF_DENTISTS = LkOccupationTitle(1161, 16, 621210, "Offices of Dentists")
+    OFFICES_OF_OTHER_HEALTH_PRACTITIONERS = LkOccupationTitle(
+        1162, 16, 6213, "Offices of Other Health Practitioners"
+    )
+    OFFICES_OF_CHIROPRACTORS = LkOccupationTitle(1163, 16, 621310, "Offices of Chiropractors")
+    OFFICES_OF_OPTOMETRISTS = LkOccupationTitle(1164, 16, 621320, "Offices of Optometrists")
+    OFFICES_OF_MENTAL_HEALTH_PRACTITIONERS_EXCEPT_PHYSICIANS = LkOccupationTitle(
+        1165, 16, 621330, "Offices of Mental Health Practitioners (except Physicians)"
+    )
+    OFFICES_OF_PHYSICAL_OCCUPATIONAL_AND_SPEECH_THERAPISTS_AND_AUDIOLOGISTS = LkOccupationTitle(
+        1166,
+        16,
+        621340,
+        "Offices of Physical, Occupational and Speech Therapists, and Audiologists",
+    )
+    OFFICES_OF_PODIATRISTS = LkOccupationTitle(1167, 16, 621391, "Offices of Podiatrists")
+    OFFICES_OF_ALL_OTHER_MISCELLANEOUS_HEALTH_PRACTITIONERS = LkOccupationTitle(
+        1168, 16, 621399, "Offices of All Other Miscellaneous Health Practitioners"
+    )
+    OUTPATIENT_CARE_CENTERS = LkOccupationTitle(1169, 16, 6214, "Outpatient Care Centers")
+    FAMILY_PLANNING_CENTERS = LkOccupationTitle(1170, 16, 621410, "Family Planning Centers")
+    OUTPATIENT_MENTAL_HEALTH_AND_SUBSTANCE_ABUSE_CENTERS = LkOccupationTitle(
+        1171, 16, 621420, "Outpatient Mental Health and Substance Abuse Centers"
+    )
+    HMO_MEDICAL_CENTERS = LkOccupationTitle(1172, 16, 621491, "HMO Medical Centers")
+    KIDNEY_DIALYSIS_CENTERS = LkOccupationTitle(1173, 16, 621492, "Kidney Dialysis Centers")
+    FREESTANDING_AMBULATORY_SURGICAL_AND_EMERGENCY_CENTERS = LkOccupationTitle(
+        1174, 16, 621493, "Freestanding Ambulatory Surgical and Emergency Centers"
+    )
+    ALL_OTHER_OUTPATIENT_CARE_CENTERS = LkOccupationTitle(
+        1175, 16, 621498, "All Other Outpatient Care Centers"
+    )
+    MEDICAL_AND_DIAGNOSTIC_LABORATORIES = LkOccupationTitle(
+        1176, 16, 6215, "Medical and Diagnostic Laboratories"
+    )
+    MEDICAL_LABORATORIES = LkOccupationTitle(1177, 16, 621511, "Medical Laboratories")
+    DIAGNOSTIC_IMAGING_CENTERS = LkOccupationTitle(1178, 16, 621512, "Diagnostic Imaging Centers")
+    HOME_HEALTH_CARE_SERVICES_4 = LkOccupationTitle(1179, 16, 6216, "Home Health Care Services")
+    HOME_HEALTH_CARE_SERVICES = LkOccupationTitle(1180, 16, 621610, "Home Health Care Services")
+    OTHER_AMBULATORY_HEALTH_CARE_SERVICES = LkOccupationTitle(
+        1181, 16, 6219, "Other Ambulatory Health Care Services"
+    )
+    AMBULANCE_SERVICES = LkOccupationTitle(1182, 16, 621910, "Ambulance Services")
+    BLOOD_AND_ORGAN_BANKS = LkOccupationTitle(1183, 16, 621991, "Blood and Organ Banks")
+    ALL_OTHER_MISCELLANEOUS_AMBULATORY_HEALTH_CARE_SERVICES = LkOccupationTitle(
+        1184, 16, 621999, "All Other Miscellaneous Ambulatory Health Care Services"
+    )
+    GENERAL_MEDICAL_AND_SURGICAL_HOSPITALS_4 = LkOccupationTitle(
+        1185, 16, 6221, "General Medical and Surgical Hospitals"
+    )
+    GENERAL_MEDICAL_AND_SURGICAL_HOSPITALS = LkOccupationTitle(
+        1186, 16, 622110, "General Medical and Surgical Hospitals"
+    )
+    PSYCHIATRIC_AND_SUBSTANCE_ABUSE_HOSPITALS_4 = LkOccupationTitle(
+        1187, 16, 6222, "Psychiatric and Substance Abuse Hospitals"
+    )
+    PSYCHIATRIC_AND_SUBSTANCE_ABUSE_HOSPITALS = LkOccupationTitle(
+        1188, 16, 622210, "Psychiatric and Substance Abuse Hospitals"
+    )
+    SPECIALTY_EXCEPT_PSYCHIATRIC_AND_SUBSTANCE_ABUSE_HOSPITALS_4 = LkOccupationTitle(
+        1189, 16, 6223, "Specialty (except Psychiatric and Substance Abuse) Hospitals"
+    )
+    SPECIALTY_EXCEPT_PSYCHIATRIC_AND_SUBSTANCE_ABUSE_HOSPITALS = LkOccupationTitle(
+        1190, 16, 622310, "Specialty (except Psychiatric and Substance Abuse) Hospitals"
+    )
+    NURSING_CARE_FACILITIES_SKILLED_NURSING_FACILITIES_4 = LkOccupationTitle(
+        1191, 16, 6231, "Nursing Care Facilities (Skilled Nursing Facilities)"
+    )
+    NURSING_CARE_FACILITIES_SKILLED_NURSING_FACILITIES = LkOccupationTitle(
+        1192, 16, 623110, "Nursing Care Facilities (Skilled Nursing Facilities)"
+    )
+    RESIDENTIAL_INTELLECTUAL_AND_DEVELOPMENTAL_DISABILITY_MENTAL_HEALTH_AND_SUBSTANCE_ABUSE_FACILITIES = LkOccupationTitle(
+        1193,
+        16,
+        6232,
+        "Residential Intellectual and Developmental Disability, Mental Health, and Substance Abuse Facilities",
+    )
+    RESIDENTIAL_INTELLECTUAL_AND_DEVELOPMENTAL_DISABILITY_FACILITIES = LkOccupationTitle(
+        1194, 16, 623210, "Residential Intellectual and Developmental Disability Facilities"
+    )
+    RESIDENTIAL_MENTAL_HEALTH_AND_SUBSTANCE_ABUSE_FACILITIES = LkOccupationTitle(
+        1195, 16, 623220, "Residential Mental Health and Substance Abuse Facilities"
+    )
+    CONTINUING_CARE_RETIREMENT_COMMUNITIES_AND_ASSISTED_LIVING_FACILITIES_FOR_THE_ELDERLY = LkOccupationTitle(
+        1196,
+        16,
+        6233,
+        "Continuing Care Retirement Communities and Assisted Living Facilities for the Elderly",
+    )
+    CONTINUING_CARE_RETIREMENT_COMMUNITIES = LkOccupationTitle(
+        1197, 16, 623311, "Continuing Care Retirement Communities"
+    )
+    ASSISTED_LIVING_FACILITIES_FOR_THE_ELDERLY = LkOccupationTitle(
+        1198, 16, 623312, "Assisted Living Facilities for the Elderly"
+    )
+    OTHER_RESIDENTIAL_CARE_FACILITIES_4 = LkOccupationTitle(
+        1199, 16, 6239, "Other Residential Care Facilities"
+    )
+    OTHER_RESIDENTIAL_CARE_FACILITIES = LkOccupationTitle(
+        1200, 16, 623990, "Other Residential Care Facilities"
+    )
+    INDIVIDUAL_AND_FAMILY_SERVICES = LkOccupationTitle(
+        1201, 16, 6241, "Individual and Family Services"
+    )
+    CHILD_AND_YOUTH_SERVICES = LkOccupationTitle(1202, 16, 624110, "Child and Youth Services")
+    SERVICES_FOR_THE_ELDERLY_AND_PERSONS_WITH_DISABILITIES = LkOccupationTitle(
+        1203, 16, 624120, "Services for the Elderly and Persons with Disabilities"
+    )
+    OTHER_INDIVIDUAL_AND_FAMILY_SERVICES = LkOccupationTitle(
+        1204, 16, 624190, "Other Individual and Family Services"
+    )
+    COMMUNITY_FOOD_AND_HOUSING_AND_EMERGENCY_AND_OTHER_RELIEF_SERVICES = LkOccupationTitle(
+        1205, 16, 6242, "Community Food and Housing, and Emergency and Other Relief Services"
+    )
+    COMMUNITY_FOOD_SERVICES = LkOccupationTitle(1206, 16, 624210, "Community Food Services")
+    TEMPORARY_SHELTERS = LkOccupationTitle(1207, 16, 624221, "Temporary Shelters")
+    OTHER_COMMUNITY_HOUSING_SERVICES = LkOccupationTitle(
+        1208, 16, 624229, "Other Community Housing Services"
+    )
+    EMERGENCY_AND_OTHER_RELIEF_SERVICES = LkOccupationTitle(
+        1209, 16, 624230, "Emergency and Other Relief Services"
+    )
+    VOCATIONAL_REHABILITATION_SERVICES_4 = LkOccupationTitle(
+        1210, 16, 6243, "Vocational Rehabilitation Services"
+    )
+    VOCATIONAL_REHABILITATION_SERVICES = LkOccupationTitle(
+        1211, 16, 624310, "Vocational Rehabilitation Services"
+    )
+    CHILD_DAY_CARE_SERVICES_4 = LkOccupationTitle(1212, 16, 6244, "Child Day Care Services")
+    CHILD_DAY_CARE_SERVICES = LkOccupationTitle(1213, 16, 624410, "Child Day Care Services")
+    PERFORMING_ARTS_COMPANIES = LkOccupationTitle(1214, 17, 7111, "Performing Arts Companies")
+    THEATER_COMPANIES_AND_DINNER_THEATERS = LkOccupationTitle(
+        1215, 17, 711110, "Theater Companies and Dinner Theaters"
+    )
+    DANCE_COMPANIES = LkOccupationTitle(1216, 17, 711120, "Dance Companies")
+    MUSICAL_GROUPS_AND_ARTISTS = LkOccupationTitle(1217, 17, 711130, "Musical Groups and Artists")
+    OTHER_PERFORMING_ARTS_COMPANIES = LkOccupationTitle(
+        1218, 17, 711190, "Other Performing Arts Companies"
+    )
+    SPECTATOR_SPORTS = LkOccupationTitle(1219, 17, 7112, "Spectator Sports")
+    SPORTS_TEAMS_AND_CLUBS = LkOccupationTitle(1220, 17, 711211, "Sports Teams and Clubs")
+    RACETRACKS = LkOccupationTitle(1221, 17, 711212, "Racetracks")
+    OTHER_SPECTATOR_SPORTS = LkOccupationTitle(1222, 17, 711219, "Other Spectator Sports")
+    PROMOTERS_OF_PERFORMING_ARTS_SPORTS_AND_SIMILAR_EVENTS = LkOccupationTitle(
+        1223, 17, 7113, "Promoters of Performing Arts, Sports, and Similar Events"
+    )
+    PROMOTERS_OF_PERFORMING_ARTS_SPORTS_AND_SIMILAR_EVENTS_WITH_FACILITIES = LkOccupationTitle(
+        1224, 17, 711310, "Promoters of Performing Arts, Sports, and Similar Events with Facilities"
+    )
+    PROMOTERS_OF_PERFORMING_ARTS_SPORTS_AND_SIMILAR_EVENTS_WITHOUT_FACILITIES = LkOccupationTitle(
+        1225,
+        17,
+        711320,
+        "Promoters of Performing Arts, Sports, and Similar Events without Facilities",
+    )
+    AGENTS_AND_MANAGERS_FOR_ARTISTS_ATHLETES_ENTERTAINERS_AND_OTHER_PUBLIC_FIGURES_4 = LkOccupationTitle(
+        1226,
+        17,
+        7114,
+        "Agents and Managers for Artists, Athletes, Entertainers, and Other Public Figures",
+    )
+    AGENTS_AND_MANAGERS_FOR_ARTISTS_ATHLETES_ENTERTAINERS_AND_OTHER_PUBLIC_FIGURES = LkOccupationTitle(
+        1227,
+        17,
+        711410,
+        "Agents and Managers for Artists, Athletes, Entertainers, and Other Public Figures",
+    )
+    INDEPENDENT_ARTISTS_WRITERS_AND_PERFORMERS_4 = LkOccupationTitle(
+        1228, 17, 7115, "Independent Artists, Writers, and Performers"
+    )
+    INDEPENDENT_ARTISTS_WRITERS_AND_PERFORMERS = LkOccupationTitle(
+        1229, 17, 711510, "Independent Artists, Writers, and Performers"
+    )
+    MUSEUMS_HISTORICAL_SITES_AND_SIMILAR_INSTITUTIONS = LkOccupationTitle(
+        1230, 17, 7121, "Museums, Historical Sites, and Similar Institutions"
+    )
+    MUSEUMS = LkOccupationTitle(1231, 17, 712110, "Museums")
+    HISTORICAL_SITES = LkOccupationTitle(1232, 17, 712120, "Historical Sites")
+    ZOOS_AND_BOTANICAL_GARDENS = LkOccupationTitle(1233, 17, 712130, "Zoos and Botanical Gardens")
+    NATURE_PARKS_AND_OTHER_SIMILAR_INSTITUTIONS = LkOccupationTitle(
+        1234, 17, 712190, "Nature Parks and Other Similar Institutions"
+    )
+    AMUSEMENT_PARKS_AND_ARCADES = LkOccupationTitle(1235, 17, 7131, "Amusement Parks and Arcades")
+    AMUSEMENT_AND_THEME_PARKS = LkOccupationTitle(1236, 17, 713110, "Amusement and Theme Parks")
+    AMUSEMENT_ARCADES = LkOccupationTitle(1237, 17, 713120, "Amusement Arcades")
+    GAMBLING_INDUSTRIES = LkOccupationTitle(1238, 17, 7132, "Gambling Industries")
+    CASINOS_EXCEPT_CASINO_HOTELS = LkOccupationTitle(
+        1239, 17, 713210, "Casinos (except Casino Hotels)"
+    )
+    OTHER_GAMBLING_INDUSTRIES = LkOccupationTitle(1240, 17, 713290, "Other Gambling Industries")
+    OTHER_AMUSEMENT_AND_RECREATION_INDUSTRIES = LkOccupationTitle(
+        1241, 17, 7139, "Other Amusement and Recreation Industries"
+    )
+    GOLF_COURSES_AND_COUNTRY_CLUBS = LkOccupationTitle(
+        1242, 17, 713910, "Golf Courses and Country Clubs"
+    )
+    SKIING_FACILITIES = LkOccupationTitle(1243, 17, 713920, "Skiing Facilities")
+    MARINAS = LkOccupationTitle(1244, 17, 713930, "Marinas")
+    FITNESS_AND_RECREATIONAL_SPORTS_CENTERS = LkOccupationTitle(
+        1245, 17, 713940, "Fitness and Recreational Sports Centers"
+    )
+    BOWLING_CENTERS = LkOccupationTitle(1246, 17, 713950, "Bowling Centers")
+    ALL_OTHER_AMUSEMENT_AND_RECREATION_INDUSTRIES = LkOccupationTitle(
+        1247, 17, 713990, "All Other Amusement and Recreation Industries"
+    )
+    TRAVELER_ACCOMMODATION = LkOccupationTitle(1248, 18, 7211, "Traveler Accommodation")
+    HOTELS_EXCEPT_CASINO_HOTELS_AND_MOTELS = LkOccupationTitle(
+        1249, 18, 721110, "Hotels (except Casino Hotels) and Motels"
+    )
+    CASINO_HOTELS = LkOccupationTitle(1250, 18, 721120, "Casino Hotels")
+    BED_AND_BREAKFAST_INNS = LkOccupationTitle(1251, 18, 721191, "Bed-and-Breakfast Inns")
+    ALL_OTHER_TRAVELER_ACCOMMODATION = LkOccupationTitle(
+        1252, 18, 721199, "All Other Traveler Accommodation"
+    )
+    RV_RECREATIONAL_VEHICLE_PARKS_AND_RECREATIONAL_CAMPS = LkOccupationTitle(
+        1253, 18, 7212, "RV (Recreational Vehicle) Parks and Recreational Camps"
+    )
+    RV_RECREATIONAL_VEHICLE_PARKS_AND_CAMPGROUNDS = LkOccupationTitle(
+        1254, 18, 721211, "RV (Recreational Vehicle) Parks and Campgrounds"
+    )
+    RECREATIONAL_AND_VACATION_CAMPS_EXCEPT_CAMPGROUNDS = LkOccupationTitle(
+        1255, 18, 721214, "Recreational and Vacation Camps (except Campgrounds)"
+    )
+    ROOMING_AND_BOARDING_HOUSES_DORMITORIES_AND_WORKERS_CAMPS_4 = LkOccupationTitle(
+        1256, 18, 7213, "Rooming and Boarding Houses, Dormitories, and Workers' Camps"
+    )
+    ROOMING_AND_BOARDING_HOUSES_DORMITORIES_AND_WORKERS_CAMPS = LkOccupationTitle(
+        1257, 18, 721310, "Rooming and Boarding Houses, Dormitories, and Workers' Camps"
+    )
+    SPECIAL_FOOD_SERVICES = LkOccupationTitle(1258, 18, 7223, "Special Food Services")
+    FOOD_SERVICE_CONTRACTORS = LkOccupationTitle(1259, 18, 722310, "Food Service Contractors")
+    CATERERS = LkOccupationTitle(1260, 18, 722320, "Caterers")
+    MOBILE_FOOD_SERVICES = LkOccupationTitle(1261, 18, 722330, "Mobile Food Services")
+    DRINKING_PLACES_ALCOHOLIC_BEVERAGES_4 = LkOccupationTitle(
+        1262, 18, 7224, "Drinking Places (Alcoholic Beverages)"
+    )
+    DRINKING_PLACES_ALCOHOLIC_BEVERAGES = LkOccupationTitle(
+        1263, 18, 722410, "Drinking Places (Alcoholic Beverages)"
+    )
+    RESTAURANTS_AND_OTHER_EATING_PLACES = LkOccupationTitle(
+        1264, 18, 7225, "Restaurants and Other Eating Places"
+    )
+    FULL_SERVICE_RESTAURANTS = LkOccupationTitle(1265, 18, 722511, "Full-Service Restaurants")
+    LIMITED_SERVICE_RESTAURANTS = LkOccupationTitle(1266, 18, 722513, "Limited-Service Restaurants")
+    CAFETERIAS_GRILL_BUFFETS_AND_BUFFETS = LkOccupationTitle(
+        1267, 18, 722514, "Cafeterias, Grill Buffets, and Buffets"
+    )
+    SNACK_AND_NONALCOHOLIC_BEVERAGE_BARS = LkOccupationTitle(
+        1268, 18, 722515, "Snack and Nonalcoholic Beverage Bars"
+    )
+    AUTOMOTIVE_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1269, 19, 8111, "Automotive Repair and Maintenance"
+    )
+    GENERAL_AUTOMOTIVE_REPAIR = LkOccupationTitle(1270, 19, 811111, "General Automotive Repair")
+    AUTOMOTIVE_EXHAUST_SYSTEM_REPAIR = LkOccupationTitle(
+        1271, 19, 811112, "Automotive Exhaust System Repair"
+    )
+    AUTOMOTIVE_TRANSMISSION_REPAIR = LkOccupationTitle(
+        1272, 19, 811113, "Automotive Transmission Repair"
+    )
+    OTHER_AUTOMOTIVE_MECHANICAL_AND_ELECTRICAL_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1273, 19, 811118, "Other Automotive Mechanical and Electrical Repair and Maintenance"
+    )
+    AUTOMOTIVE_BODY_PAINT_AND_INTERIOR_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1274, 19, 811121, "Automotive Body, Paint, and Interior Repair and Maintenance"
+    )
+    AUTOMOTIVE_GLASS_REPLACEMENT_SHOPS = LkOccupationTitle(
+        1275, 19, 811122, "Automotive Glass Replacement Shops"
+    )
+    AUTOMOTIVE_OIL_CHANGE_AND_LUBRICATION_SHOPS = LkOccupationTitle(
+        1276, 19, 811191, "Automotive Oil Change and Lubrication Shops"
+    )
+    CAR_WASHES = LkOccupationTitle(1277, 19, 811192, "Car Washes")
+    ALL_OTHER_AUTOMOTIVE_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1278, 19, 811198, "All Other Automotive Repair and Maintenance"
+    )
+    ELECTRONIC_AND_PRECISION_EQUIPMENT_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1279, 19, 8112, "Electronic and Precision Equipment Repair and Maintenance"
+    )
+    CONSUMER_ELECTRONICS_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1280, 19, 811211, "Consumer Electronics Repair and Maintenance"
+    )
+    COMPUTER_AND_OFFICE_MACHINE_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1281, 19, 811212, "Computer and Office Machine Repair and Maintenance"
+    )
+    COMMUNICATION_EQUIPMENT_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1282, 19, 811213, "Communication Equipment Repair and Maintenance"
+    )
+    OTHER_ELECTRONIC_AND_PRECISION_EQUIPMENT_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1283, 19, 811219, "Other Electronic and Precision Equipment Repair and Maintenance"
+    )
+    COMMERCIAL_AND_INDUSTRIAL_MACHINERY_AND_EQUIPMENT_EXCEPT_AUTOMOTIVE_AND_ELECTRONIC_REPAIR_AND_MAINTENANCE_4 = LkOccupationTitle(
+        1284,
+        19,
+        8113,
+        "Commercial and Industrial Machinery and Equipment (except Automotive and Electronic) Repair and Maintenance",
+    )
+    COMMERCIAL_AND_INDUSTRIAL_MACHINERY_AND_EQUIPMENT_EXCEPT_AUTOMOTIVE_AND_ELECTRONIC_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1285,
+        19,
+        811310,
+        "Commercial and Industrial Machinery and Equipment (except Automotive and Electronic) Repair and Maintenance",
+    )
+    PERSONAL_AND_HOUSEHOLD_GOODS_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1286, 19, 8114, "Personal and Household Goods Repair and Maintenance"
+    )
+    HOME_AND_GARDEN_EQUIPMENT_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1287, 19, 811411, "Home and Garden Equipment Repair and Maintenance"
+    )
+    APPLIANCE_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1288, 19, 811412, "Appliance Repair and Maintenance"
+    )
+    REUPHOLSTERY_AND_FURNITURE_REPAIR = LkOccupationTitle(
+        1289, 19, 811420, "Reupholstery and Furniture Repair"
+    )
+    FOOTWEAR_AND_LEATHER_GOODS_REPAIR = LkOccupationTitle(
+        1290, 19, 811430, "Footwear and Leather Goods Repair"
+    )
+    OTHER_PERSONAL_AND_HOUSEHOLD_GOODS_REPAIR_AND_MAINTENANCE = LkOccupationTitle(
+        1291, 19, 811490, "Other Personal and Household Goods Repair and Maintenance"
+    )
+    PERSONAL_CARE_SERVICES = LkOccupationTitle(1292, 19, 8121, "Personal Care Services")
+    BARBER_SHOPS = LkOccupationTitle(1293, 19, 812111, "Barber Shops")
+    BEAUTY_SALONS = LkOccupationTitle(1294, 19, 812112, "Beauty Salons")
+    NAIL_SALONS = LkOccupationTitle(1295, 19, 812113, "Nail Salons")
+    DIET_AND_WEIGHT_REDUCING_CENTERS = LkOccupationTitle(
+        1296, 19, 812191, "Diet and Weight Reducing Centers"
+    )
+    OTHER_PERSONAL_CARE_SERVICES = LkOccupationTitle(
+        1297, 19, 812199, "Other Personal Care Services"
+    )
+    DEATH_CARE_SERVICES = LkOccupationTitle(1298, 19, 8122, "Death Care Services")
+    FUNERAL_HOMES_AND_FUNERAL_SERVICES = LkOccupationTitle(
+        1299, 19, 812210, "Funeral Homes and Funeral Services"
+    )
+    CEMETERIES_AND_CREMATORIES = LkOccupationTitle(1300, 19, 812220, "Cemeteries and Crematories")
+    DRYCLEANING_AND_LAUNDRY_SERVICES = LkOccupationTitle(
+        1301, 19, 8123, "Drycleaning and Laundry Services"
+    )
+    COIN_OPERATED_LAUNDRIES_AND_DRYCLEANERS = LkOccupationTitle(
+        1302, 19, 812310, "Coin-Operated Laundries and Drycleaners"
+    )
+    DRYCLEANING_AND_LAUNDRY_SERVICES_EXCEPT_COIN_OPERATED = LkOccupationTitle(
+        1303, 19, 812320, "Drycleaning and Laundry Services (except Coin-Operated)"
+    )
+    LINEN_SUPPLY = LkOccupationTitle(1304, 19, 812331, "Linen Supply")
+    INDUSTRIAL_LAUNDERERS = LkOccupationTitle(1305, 19, 812332, "Industrial Launderers")
+    OTHER_PERSONAL_SERVICES = LkOccupationTitle(1306, 19, 8129, "Other Personal Services")
+    PET_CARE_EXCEPT_VETERINARY_SERVICES = LkOccupationTitle(
+        1307, 19, 812910, "Pet Care (except Veterinary) Services"
+    )
+    PHOTOFINISHING_LABORATORIES_EXCEPT_ONE_HOUR = LkOccupationTitle(
+        1308, 19, 812921, "Photofinishing Laboratories (except One-Hour)"
+    )
+    ONE_HOUR_PHOTOFINISHING = LkOccupationTitle(1309, 19, 812922, "One-Hour Photofinishing")
+    PARKING_LOTS_AND_GARAGES = LkOccupationTitle(1310, 19, 812930, "Parking Lots and Garages")
+    ALL_OTHER_PERSONAL_SERVICES = LkOccupationTitle(1311, 19, 812990, "All Other Personal Services")
+    RELIGIOUS_ORGANIZATIONS_4 = LkOccupationTitle(1312, 19, 8131, "Religious Organizations")
+    RELIGIOUS_ORGANIZATIONS = LkOccupationTitle(1313, 19, 813110, "Religious Organizations")
+    GRANTMAKING_AND_GIVING_SERVICES = LkOccupationTitle(
+        1314, 19, 8132, "Grantmaking and Giving Services"
+    )
+    GRANTMAKING_FOUNDATIONS = LkOccupationTitle(1315, 19, 813211, "Grantmaking Foundations")
+    VOLUNTARY_HEALTH_ORGANIZATIONS = LkOccupationTitle(
+        1316, 19, 813212, "Voluntary Health Organizations"
+    )
+    OTHER_GRANTMAKING_AND_GIVING_SERVICES = LkOccupationTitle(
+        1317, 19, 813219, "Other Grantmaking and Giving Services"
+    )
+    SOCIAL_ADVOCACY_ORGANIZATIONS = LkOccupationTitle(
+        1318, 19, 8133, "Social Advocacy Organizations"
+    )
+    HUMAN_RIGHTS_ORGANIZATIONS = LkOccupationTitle(1319, 19, 813311, "Human Rights Organizations")
+    ENVIRONMENT_CONSERVATION_AND_WILDLIFE_ORGANIZATIONS = LkOccupationTitle(
+        1320, 19, 813312, "Environment, Conservation and Wildlife Organizations"
+    )
+    OTHER_SOCIAL_ADVOCACY_ORGANIZATIONS = LkOccupationTitle(
+        1321, 19, 813319, "Other Social Advocacy Organizations"
+    )
+    CIVIC_AND_SOCIAL_ORGANIZATIONS_4 = LkOccupationTitle(
+        1322, 19, 8134, "Civic and Social Organizations"
+    )
+    CIVIC_AND_SOCIAL_ORGANIZATIONS = LkOccupationTitle(
+        1323, 19, 813410, "Civic and Social Organizations"
+    )
+    BUSINESS_PROFESSIONAL_LABOR_POLITICAL_AND_SIMILAR_ORGANIZATIONS = LkOccupationTitle(
+        1324, 19, 8139, "Business, Professional, Labor, Political, and Similar Organizations"
+    )
+    BUSINESS_ASSOCIATIONS = LkOccupationTitle(1325, 19, 813910, "Business Associations")
+    PROFESSIONAL_ORGANIZATIONS = LkOccupationTitle(1326, 19, 813920, "Professional Organizations")
+    LABOR_UNIONS_AND_SIMILAR_LABOR_ORGANIZATIONS = LkOccupationTitle(
+        1327, 19, 813930, "Labor Unions and Similar Labor Organizations"
+    )
+    OTHER_SIMILAR_ORGANIZATIONS_EXCEPT_BUSINESS_PROFESSIONAL_LABOR_AND_POLITICAL_ORGANIZATIONS = LkOccupationTitle(
+        1328,
+        19,
+        813990,
+        "Other Similar Organizations (except Business, Professional, Labor, and Political Organizations)",
+    )
+    PRIVATE_HOUSEHOLDS_4 = LkOccupationTitle(1329, 19, 8141, "Private Households")
+    PRIVATE_HOUSEHOLDS = LkOccupationTitle(1330, 19, 814110, "Private Households")
+    EXECUTIVE_LEGISLATIVE_AND_OTHER_GENERAL_GOVERNMENT_SUPPORT = LkOccupationTitle(
+        1331, 20, 9211, "Executive, Legislative, and Other General Government Support"
+    )
+    EXECUTIVE_OFFICES = LkOccupationTitle(1332, 20, 921110, "Executive Offices")
+    LEGISLATIVE_BODIES = LkOccupationTitle(1333, 20, 921120, "Legislative Bodies")
+    PUBLIC_FINANCE_ACTIVITIES = LkOccupationTitle(1334, 20, 921130, "Public Finance Activities")
+    EXECUTIVE_AND_LEGISLATIVE_OFFICES_COMBINED = LkOccupationTitle(
+        1335, 20, 921140, "Executive and Legislative Offices, Combined"
+    )
+    AMERICAN_INDIAN_AND_ALASKA_NATIVE_TRIBAL_GOVERNMENTS = LkOccupationTitle(
+        1336, 20, 921150, "American Indian and Alaska Native Tribal Governments"
+    )
+    OTHER_GENERAL_GOVERNMENT_SUPPORT = LkOccupationTitle(
+        1337, 20, 921190, "Other General Government Support"
+    )
+    JUSTICE_PUBLIC_ORDER_AND_SAFETY_ACTIVITIES = LkOccupationTitle(
+        1338, 20, 9221, "Justice, Public Order, and Safety Activities"
+    )
+    COURTS = LkOccupationTitle(1339, 20, 922110, "Courts")
+    POLICE_PROTECTION = LkOccupationTitle(1340, 20, 922120, "Police Protection")
+    LEGAL_COUNSEL_AND_PROSECUTION = LkOccupationTitle(
+        1341, 20, 922130, "Legal Counsel and Prosecution"
+    )
+    CORRECTIONAL_INSTITUTIONS = LkOccupationTitle(1342, 20, 922140, "Correctional Institutions")
+    PAROLE_OFFICES_AND_PROBATION_OFFICES = LkOccupationTitle(
+        1343, 20, 922150, "Parole Offices and Probation Offices"
+    )
+    FIRE_PROTECTION = LkOccupationTitle(1344, 20, 922160, "Fire Protection")
+    OTHER_JUSTICE_PUBLIC_ORDER_AND_SAFETY_ACTIVITIES = LkOccupationTitle(
+        1345, 20, 922190, "Other Justice, Public Order, and Safety Activities"
+    )
+    ADMINISTRATION_OF_HUMAN_RESOURCE_PROGRAMS = LkOccupationTitle(
+        1346, 20, 9231, "Administration of Human Resource Programs"
+    )
+    ADMINISTRATION_OF_EDUCATION_PROGRAMS = LkOccupationTitle(
+        1347, 20, 923110, "Administration of Education Programs"
+    )
+    ADMINISTRATION_OF_HUMAN_RESOURCE_PROGRAMS_EXCEPT_EDUCATION_PUBLIC_HEALTH_AND_VETERANS_AFFAIRS_PROGRAMS = LkOccupationTitle(
+        1348,
+        20,
+        923130,
+        "Administration of Human Resource Programs (except Education, Public Health, and Veterans' Affairs Programs)",
+    )
+    ADMINISTRATION_OF_VETERANS_AFFAIRS = LkOccupationTitle(
+        1349, 20, 923140, "Administration of Veterans' Affairs"
+    )
+    ADMINISTRATION_OF_ENVIRONMENTAL_QUALITY_PROGRAMS = LkOccupationTitle(
+        1350, 20, 9241, "Administration of Environmental Quality Programs"
+    )
+    ADMINISTRATION_OF_AIR_AND_WATER_RESOURCE_AND_SOLID_WASTE_MANAGEMENT_PROGRAMS = LkOccupationTitle(
+        1351,
+        20,
+        924110,
+        "Administration of Air and Water Resource and Solid Waste Management Programs",
+    )
+    ADMINISTRATION_OF_CONSERVATION_PROGRAMS = LkOccupationTitle(
+        1352, 20, 924120, "Administration of Conservation Programs"
+    )
+    ADMINISTRATION_OF_HOUSING_PROGRAMS_URBAN_PLANNING_AND_COMMUNITY_DEVELOPMENT = LkOccupationTitle(
+        1353,
+        20,
+        9251,
+        "Administration of Housing Programs, Urban Planning, and Community Development",
+    )
+    ADMINISTRATION_OF_HOUSING_PROGRAMS = LkOccupationTitle(
+        1354, 20, 925110, "Administration of Housing Programs"
+    )
+    ADMINISTRATION_OF_URBAN_PLANNING_AND_COMMUNITY_AND_RURAL_DEVELOPMENT = LkOccupationTitle(
+        1355, 20, 925120, "Administration of Urban Planning and Community and Rural Development"
+    )
+    ADMINISTRATION_OF_ECONOMIC_PROGRAMS = LkOccupationTitle(
+        1356, 20, 9261, "Administration of Economic Programs"
+    )
+    ADMINISTRATION_OF_GENERAL_ECONOMIC_PROGRAMS = LkOccupationTitle(
+        1357, 20, 926110, "Administration of General Economic Programs"
+    )
+    REGULATION_AND_ADMINISTRATION_OF_TRANSPORTATION_PROGRAMS = LkOccupationTitle(
+        1358, 20, 926120, "Regulation and Administration of Transportation Programs"
+    )
+    REGULATION_AND_ADMINISTRATION_OF_COMMUNICATIONS_ELECTRIC_GAS_AND_OTHER_UTILITIES = LkOccupationTitle(
+        1359,
+        20,
+        926130,
+        "Regulation and Administration of Communications, Electric, Gas, and Other Utilities",
+    )
+    REGULATION_OF_AGRICULTURAL_MARKETING_AND_COMMODITIES = LkOccupationTitle(
+        1360, 20, 926140, "Regulation of Agricultural Marketing and Commodities"
+    )
+    REGULATION_LICENSING_AND_INSPECTION_OF_MISCELLANEOUS_COMMERCIAL_SECTORS = LkOccupationTitle(
+        1361,
+        20,
+        926150,
+        "Regulation, Licensing, and Inspection of Miscellaneous Commercial Sectors",
+    )
+    SPACE_RESEARCH_AND_TECHNOLOGY_4 = LkOccupationTitle(
+        1362, 20, 9271, "Space Research and Technology"
+    )
+    SPACE_RESEARCH_AND_TECHNOLOGY = LkOccupationTitle(
+        1363, 20, 927110, "Space Research and Technology"
+    )
+    NATIONAL_SECURITY_AND_INTERNATIONAL_AFFAIRS = LkOccupationTitle(
+        1364, 20, 9281, "National Security and International Affairs"
+    )
+    NATIONAL_SECURITY = LkOccupationTitle(1365, 20, 928110, "National Security")
+    INTERNATIONAL_AFFAIRS = LkOccupationTitle(1366, 20, 928120, "International Affairs")
+
 
 class EducationLevel(LookupTable):
     model = LkEducationLevel
@@ -3514,6 +5529,7 @@ def sync_lookup_tables(db_session):
     MaritalStatus.sync_to_database(db_session)
     Gender.sync_to_database(db_session)
     Occupation.sync_to_database(db_session)
+    OccupationTitle.sync_to_database(db_session)
     Role.sync_to_database(db_session)
     PaymentMethod.sync_to_database(db_session)
     BankAccountType.sync_to_database(db_session)
