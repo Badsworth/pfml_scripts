@@ -9,13 +9,7 @@ from freezegun import freeze_time
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import (
-    Payment,
-    PaymentMethod,
-    ReferenceFile,
-    ReferenceFileType,
-    State,
-)
+from massgov.pfml.db.models.employees import Payment, ReferenceFile, ReferenceFileType, State
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
@@ -118,10 +112,6 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
 
 
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
-    check_description = (
-        _format_check_memo(payment) if payment.disb_method == PaymentMethod.CHECK else ""
-    )
-
     assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment.claim)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.claim.employee.first_name
@@ -155,7 +145,7 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
         == payment.claim.fineos_absence_status.absence_status_description
     )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision] == payment.leave_request_decision
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.check_description] == check_description
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.check_description] == _format_check_memo(payment)
 
 
 def validate_address_columns(row: PaymentAuditCSV, payment: Payment):

@@ -32,6 +32,7 @@ describe("Request for More Information (notifications/notices)", () => {
       // Request for additional Info in Fineos
       cy.get<string>("@fineos_absence_id").then((fineos_absence_id) => {
         fineos.visitClaim(fineos_absence_id);
+        fineos.assertClaimStatus("Adjudication");
         fineos.additionalEvidenceRequest(fineos_absence_id);
         fineos.triggerNoticeRelease("Request for more Information");
       });

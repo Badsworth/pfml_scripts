@@ -12,6 +12,8 @@ from massgov.pfml.db.models.applications import (
     LeaveReason,
     LeaveReasonQualifier,
     LkDayOfWeek,
+    RelationshipQualifier,
+    RelationshipToCaregiver,
 )
 from massgov.pfml.db.models.employees import (
     AddressType,
@@ -23,6 +25,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    CaringLeaveMetadataFactory,
     ClaimFactory,
     ContinuousLeavePeriodFactory,
     PaymentPreferenceFactory,
@@ -536,6 +539,151 @@ def test_build_bonding_date_reflexive_question_foster(user):
     assert reflexive_question.reflexiveQuestionDetails[0].dateValue == date(2021, 2, 9)
 
 
+def test_build_caring_leave_reflexive_question_age_capacity(user):
+    # Child relationship uses the "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions" field name
+
+    caring_leave_metadata = CaringLeaveMetadataFactory.create(
+        relationship_to_caregiver_id=RelationshipToCaregiver.CHILD.relationship_to_caregiver_id,
+    )
+    application = ApplicationFactory.create(user=user, caring_leave_metadata=caring_leave_metadata)
+    application.leave_reason_id = LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+
+    reflexive_question = fineos_actions.build_caring_leave_reflexive_question(application)
+
+    assert (
+        reflexive_question.reflexiveQuestionDetails[0].fieldName
+        == "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions.firstName"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[1].fieldName
+        == "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions.middleInital"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[2].fieldName
+        == "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions.lastName"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[3].fieldName
+        == "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions.dateOfBirth"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[0].stringValue
+        == caring_leave_metadata.family_member_first_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[1].stringValue
+        == caring_leave_metadata.family_member_middle_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[2].stringValue
+        == caring_leave_metadata.family_member_last_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[3].dateValue
+        == caring_leave_metadata.family_member_date_of_birth
+    )
+
+
+def test_build_caring_leave_reflexive_question_family_member_details(user):
+    # Grandchild, Grandparent, Inlaw, Parent, and Spouse relationships use the "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions" field name
+    relationship_ids = [
+        RelationshipToCaregiver.GRANDCHILD.relationship_to_caregiver_id,
+        RelationshipToCaregiver.GRANDPARENT.relationship_to_caregiver_id,
+        RelationshipToCaregiver.INLAW.relationship_to_caregiver_id,
+        RelationshipToCaregiver.PARENT.relationship_to_caregiver_id,
+        RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_id,
+    ]
+
+    for relationship_id in relationship_ids:
+        caring_leave_metadata = CaringLeaveMetadataFactory.create(
+            relationship_to_caregiver_id=relationship_id,
+        )
+        application = ApplicationFactory.create(
+            user=user, caring_leave_metadata=caring_leave_metadata
+        )
+        application.leave_reason_id = LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+
+        reflexive_question = fineos_actions.build_caring_leave_reflexive_question(application)
+
+        assert (
+            reflexive_question.reflexiveQuestionDetails[0].fieldName
+            == "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions.firstName"
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[1].fieldName
+            == "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions.middleInital"
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[2].fieldName
+            == "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions.lastName"
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[3].fieldName
+            == "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions.dateOfBirth"
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[0].stringValue
+            == caring_leave_metadata.family_member_first_name
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[1].stringValue
+            == caring_leave_metadata.family_member_middle_name
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[2].stringValue
+            == caring_leave_metadata.family_member_last_name
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[3].dateValue
+            == caring_leave_metadata.family_member_date_of_birth
+        )
+
+
+def test_build_caring_leave_reflexive_question_family_member_sibling(user):
+    # Sibling relationship uses the "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions" field name
+
+    caring_leave_metadata = CaringLeaveMetadataFactory.create(
+        relationship_to_caregiver_id=RelationshipToCaregiver.SIBLING.relationship_to_caregiver_id,
+    )
+    application = ApplicationFactory.create(user=user, caring_leave_metadata=caring_leave_metadata)
+    application.leave_reason_id = LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+
+    reflexive_question = fineos_actions.build_caring_leave_reflexive_question(application)
+
+    assert (
+        reflexive_question.reflexiveQuestionDetails[0].fieldName
+        == "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions.firstName"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[1].fieldName
+        == "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions.middleInital"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[2].fieldName
+        == "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions.lastName"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[3].fieldName
+        == "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions.dateOfBirth"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[0].stringValue
+        == caring_leave_metadata.family_member_first_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[1].stringValue
+        == caring_leave_metadata.family_member_middle_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[2].stringValue
+        == caring_leave_metadata.family_member_last_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[3].dateValue
+        == caring_leave_metadata.family_member_date_of_birth
+    )
+
+
 def test_build_customer_model_no_mass_id(user):
     application = ApplicationFactory.create(user=user)
     customer_model = fineos_actions.build_customer_model(application, user)
@@ -698,6 +846,9 @@ def test_determine_absence_notification_reason(user, test_db_session):
     )
 
     application = ApplicationFactory.create(
+        caring_leave_metadata=CaringLeaveMetadataFactory.create(
+            relationship_to_caregiver_id=RelationshipToCaregiver.SIBLING.relationship_to_caregiver_id
+        ),
         user=user,
         leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
@@ -709,4 +860,86 @@ def test_determine_absence_notification_reason(user, test_db_session):
     assert (
         absence_case.notificationReason
         == fineos_actions.LeaveNotificationReason.CARING_FOR_A_FAMILY_MEMBER
+    )
+
+
+def test_determine_relationship_qualifiers(user, test_db_session):
+    # Relationships that use the BIOLOGICAL qualifier
+    biological_qualifier_relationships = [
+        RelationshipToCaregiver.PARENT,
+        RelationshipToCaregiver.CHILD,
+        RelationshipToCaregiver.GRANDPARENT,
+        RelationshipToCaregiver.GRANDCHILD,
+        RelationshipToCaregiver.SIBLING,
+    ]
+
+    for relationship in biological_qualifier_relationships:
+        caring_leave_metatadata = CaringLeaveMetadataFactory.create(
+            relationship_to_caregiver_id=relationship.relationship_to_caregiver_id
+        )
+        application = ApplicationFactory.create(
+            caring_leave_metadata=caring_leave_metatadata,
+            user=user,
+            leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+            leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
+        )
+        absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
+            application
+        )
+        assert (
+            absence_case.primaryRelationship == relationship.relationship_to_caregiver_description
+        )
+        assert (
+            absence_case.primaryRelQualifier1
+            == RelationshipQualifier.BIOLOGICAL.relationship_qualifier_description
+        )
+        assert absence_case.primaryRelQualifier2 is None
+
+    # INLAW relationship
+    caring_leave_metatadata = CaringLeaveMetadataFactory.create(
+        relationship_to_caregiver_id=RelationshipToCaregiver.INLAW.relationship_to_caregiver_id
+    )
+    application = ApplicationFactory.create(
+        caring_leave_metadata=caring_leave_metatadata,
+        user=user,
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+        leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
+    )
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
+        application
+    )
+    assert (
+        absence_case.primaryRelationship
+        == RelationshipToCaregiver.INLAW.relationship_to_caregiver_description
+    )
+    assert (
+        absence_case.primaryRelQualifier1
+        == RelationshipQualifier.PARENT_IN_LAW.relationship_qualifier_description
+    )
+    assert absence_case.primaryRelQualifier2 is None
+
+    # SPOUSE relationship
+    caring_leave_metatadata = CaringLeaveMetadataFactory.create(
+        relationship_to_caregiver_id=RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_id
+    )
+    application = ApplicationFactory.create(
+        caring_leave_metadata=caring_leave_metatadata,
+        user=user,
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+        leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
+    )
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
+        application
+    )
+    assert (
+        absence_case.primaryRelationship
+        == RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_description
+    )
+    assert (
+        absence_case.primaryRelQualifier1
+        == RelationshipQualifier.LEGALLY_MARRIED.relationship_qualifier_description
+    )
+    assert (
+        absence_case.primaryRelQualifier2
+        == RelationshipQualifier.UNDISCLOSED.relationship_qualifier_description
     )

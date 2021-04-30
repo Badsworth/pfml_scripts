@@ -19,6 +19,7 @@ class EmployerResponse(PydanticBaseModel):
 
 class UserLeaveAdminResponse(PydanticBaseModel):
     employer: EmployerResponse
+    has_fineos_registration: bool
     verified: bool
 
 

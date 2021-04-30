@@ -64,7 +64,7 @@ jobs:
   get-test-state:
     name: Finalize test state
     needs: [test]
-    if: always() && github.ref == "refs/heads/main"
+    if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       test-state: ${{ steps.test-state.outputs.test-state }}

@@ -592,6 +592,9 @@ class RelationshipQualifier(LookupTable):
     CUSTODIAL_PARENT = LkRelationshipQualifier(4, "Custodial Parent")
     LEGAL_GAURDIAN = LkRelationshipQualifier(5, "Legal Guardian")
     STEP_PARENT = LkRelationshipQualifier(6, "Step Parent")
+    LEGALLY_MARRIED = LkRelationshipQualifier(7, "Legally Married")
+    UNDISCLOSED = LkRelationshipQualifier(8, "Undisclosed")
+    PARENT_IN_LAW = LkRelationshipQualifier(9, "Parent-In-Law")
 
 
 class NotificationMethod(LookupTable):

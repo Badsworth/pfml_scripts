@@ -27,10 +27,12 @@ const verificationScenarios = {
       ],
     }),
   },
-  "Single verified employer": {
+  "Single verified employer, not registered in FINEOS": {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
+          employer_fein: "82-9471234",
+          has_fineos_registration: false,
           has_verification_data: true,
           verified: true,
         }),

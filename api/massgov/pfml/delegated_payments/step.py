@@ -1,5 +1,6 @@
 import abc
 import collections
+import enum
 from typing import Any, Dict, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -15,6 +16,9 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
     db_session: db.Session
     log_entry_db_session: db.Session
 
+    class Metrics(str, enum.Enum):
+        pass
+
     def __init__(self, db_session: db.Session, log_entry_db_session: db.Session) -> None:
         self.db_session = db_session
         self.log_entry_db_session = log_entry_db_session
@@ -22,6 +26,8 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
     def run(self) -> None:
         with LogEntry(self.log_entry_db_session, self.__class__.__name__) as log_entry:
             self.log_entry = log_entry
+
+            self.initialize_metrics()
 
             logger.info(
                 "Running step %s with batch ID %i",
@@ -67,6 +73,10 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         if not self.log_entry:
             return None
         return self.log_entry.import_log.import_log_id
+
+    def initialize_metrics(self) -> None:
+        zero_metrics_dict = {metric.value: 0 for metric in self.Metrics}
+        self.set_metrics(zero_metrics_dict)
 
     def set_metrics(self, metrics: Any) -> None:
         if not self.log_entry:

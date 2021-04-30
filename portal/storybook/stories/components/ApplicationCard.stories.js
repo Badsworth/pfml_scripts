@@ -26,6 +26,7 @@ export default {
           "Completed",
           "Future Newborn + No cert",
           "Future Adoption + No cert",
+          "Caregiver + No cert",
           "Approved",
           "Denied",
         ],
@@ -84,6 +85,18 @@ export const Story = ({ claim, documents, ...args }) => {
       .completed()
       .bondingAdoptionLeaveReason()
       .hasFutureChild()
+      .create();
+    attachedDocuments = [
+      new Document({
+        created_at: "2021-01-15",
+        document_type: DocumentType.identityVerification,
+        fineos_document_id: "a",
+      }),
+    ];
+  } else if (claim === "Caregiver + No cert") {
+    claimAttrs = new MockClaimBuilder()
+      .completed()
+      .caringLeaveReason()
       .create();
     attachedDocuments = [
       new Document({

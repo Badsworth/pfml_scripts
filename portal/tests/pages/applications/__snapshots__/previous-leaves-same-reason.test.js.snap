@@ -5,11 +5,26 @@ exports[`PreviousLeavesSameReason renders the page 1`] = `
   onSave={[Function]}
   title="Other leave, income, and benefits"
 >
-  <Heading
-    level="2"
-    size="1"
-  >
-    Did you take any other leave between January 1, 2021– for the same reason as you are applying for paid leave now?
-  </Heading>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    label="Did you take any other leave between January 1, 2021– for the same reason as you are applying for paid leave now?"
+    name="has_previous_leaves_same_reason"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
 </QuestionPage>
 `;

@@ -664,8 +664,8 @@ const shared = {
   leavePeriodMedicalAlert:
     "You will need a completed Certification of a Serious Health Condition form for this section.",
   leaveReasonActiveDutyFamily: "Active duty",
-  leaveReasonBonding: "Family leave",
-  leaveReasonCare: "Caring leave",
+  leaveReasonBonding: "Bond with a child",
+  leaveReasonCare: "Care for a family member",
   leaveReasonMedical: "Medical leave",
   leaveReasonServiceMemberFamily: "Military family",
   maximumReducedLeaveMinutes:
@@ -849,8 +849,24 @@ const pages = {
       "I agree that I am a new parent by one of the routes listed and can provide certification to support this relationship.",
   },
   claimsCaringLeaveAttestation: {
-    title: "Confirm that you are an eligible caregiver",
+    lead:
+      "This paid leave applies to caregivers with an <eligible-relationship-link>eligible family relationship</eligible-relationship-link>.",
     submitApplicationButton: "$t(shared.submitApplicationButton)",
+    title: "Confirm that you are an eligible caregiver",
+    truthAttestation_child:
+      "I agree that I have an eligible relationship with my child who is experiencing a serious health condition and needs my care.",
+    truthAttestation_grandchild:
+      "I agree that I have an eligible relationship with my grandchild who is experiencing a serious health condition and needs my care.",
+    truthAttestation_grandparent:
+      "I agree that I have an eligible relationship with my grandparent who is experiencing a serious health condition and needs my care.",
+    truthAttestation_inlaw:
+      "I agree that I have an eligible relationship with a parent of my spouse or domestic partner who is experiencing a serious health condition and needs my care.",
+    truthAttestation_parent:
+      "I agree that I have an eligible relationship with my parent who is experiencing a serious health condition and needs my care.",
+    truthAttestation_sibling:
+      "I agree that I have an eligible relationship with my sibling who is experiencing a serious health condition and needs my care.",
+    truthAttestation_spouse:
+      "I agree that I have an eligible relationship with my spouse or domestic partner who is experiencing a serious health condition and needs my care.",
   },
   claimsChecklist: {
     backButtonLabel: "Back to applications",
@@ -885,7 +901,7 @@ const pages = {
       "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p>",
     // TODO (CP-1983) Merge leaveDetails and leaveDetailsWithCaring when showCaringLeave feature flag is not needed
     stepHTMLDescription_leaveDetailsWithCaring:
-      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship for Caregiver leave<caregiver-relationship-link/>.</p>",
+      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship<caregiver-relationship-link/>.</p>",
     stepHTMLDescription_medical:
       "<p>You need to provide your completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_otherLeave:
@@ -1269,6 +1285,19 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReason: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    detailsLabel: "What counts as a qualifying reason?",
+    hintHeader:
+      "Answer yes if you took paid or unpaid leave for a qualifying reason that is not the reason you are applying for paid leave now. The following are qualifying reasons:",
+    hintList: [
+      "You had a serious health condition, including illness, injury, or pregnancy.",
+      "If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.",
+      "You bonded with your child after birth or placement.",
+      "You needed to manage family affairs while a family member is on active duty in the armed forces.",
+      "You needed to care for a family member who serves in the armed forces.",
+      "You needed to care for a family member with a serious health condition.",
+    ],
     sectionLabel:
       "Did you take leave between January 1, 2021–{{leaveStartDate}} for a different qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -1278,6 +1307,8 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesSameReason: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
     sectionLabel:
       "Did you take any other leave between January 1, 2021–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -1760,6 +1791,10 @@ const pages = {
     tableColHeading_fineos_absence_id: "Application ID",
     tableColHeading_status: "Status",
     title: "Dashboard",
+    unavailableClaimsBody:
+      "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the <learn-more-link>verification process</learn-more-link>.",
+    unavailableClaimsTitle:
+      "Your applications are not accessible at the moment",
     verificationBody:
       "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
     verificationInstructions:

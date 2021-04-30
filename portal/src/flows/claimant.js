@@ -66,6 +66,10 @@ export const guards = {
   hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
   hasIntermittentLeavePeriods: ({ claim }) =>
     claim.has_intermittent_leave_periods === true,
+  hasPreviousLeavesOtherReason: ({ claim }) =>
+    claim.has_previous_leaves_other_reason === true,
+  hasPreviousLeavesSameReason: ({ claim }) =>
+    claim.has_previous_leaves_same_reason === true,
   hasReducedScheduleLeavePeriods: ({ claim }) =>
     claim.has_reduced_schedule_leave_periods === true,
   hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
@@ -358,7 +362,15 @@ export default {
         fields: previousLeavesSameReasonFields,
       },
       on: {
-        CONTINUE: routes.applications.previousLeavesSameReasonDetails,
+        CONTINUE: [
+          {
+            target: routes.applications.previousLeavesSameReasonDetails,
+            cond: "hasPreviousLeavesSameReason",
+          },
+          {
+            target: routes.applications.previousLeavesOtherReason,
+          },
+        ],
       },
     },
     [routes.applications.previousLeavesSameReasonDetails]: {
@@ -376,7 +388,13 @@ export default {
         fields: previousLeavesOtherReasonFields,
       },
       on: {
-        CONTINUE: routes.applications.previousLeavesOtherReasonDetails,
+        CONTINUE: [
+          {
+            target: routes.applications.previousLeavesOtherReasonDetails,
+            cond: "hasPreviousLeavesOtherReason",
+          },
+          { target: routes.applications.concurrentLeaves },
+        ],
       },
     },
     [routes.applications.previousLeavesOtherReasonDetails]: {

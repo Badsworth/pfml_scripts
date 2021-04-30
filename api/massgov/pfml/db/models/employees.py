@@ -862,8 +862,14 @@ class UserLeaveAdministrator(Base):
     verification = relationship(Verification)
 
     @typed_hybrid_property
+    def has_fineos_registration(self) -> bool:
+        """Indicates whether the leave admin exists in Fineos yet, signalling if Fineos
+        API calls can be called on behalf of this leave admin yet"""
+        return bool(self.fineos_web_id)
+
+    @typed_hybrid_property
     def verified(self) -> bool:
-        return self.verification_id is not None
+        return bool(self.verification_id)
 
 
 class WagesAndContributions(Base):

@@ -1,3 +1,4 @@
+import enum
 import re
 from typing import Any, Dict, List, Optional, Tuple, cast
 
@@ -51,13 +52,23 @@ class Constants:
 
 
 class AddressValidationStep(Step):
+    class Metrics(str, enum.Enum):
+        INVALID_EXPERIAN_FORMAT = "invalid_experian_format"
+        INVALID_EXPERIAN_RESPONSE = "invalid_experian_response"
+        MULTIPLE_EXPERIAN_MATCHES = "multiple_experian_matches"
+        NO_EXPERIAN_MATCH_COUNT = "no_experian_match_count"
+        PREVIOUSLY_VALIDATED_MATCH_COUNT = "previously_validated_match_count"
+        VALID_EXPERIAN_FORMAT = "valid_experian_format"
+        VALIDATED_ADDRESS_COUNT = "validated_address_count"
+        VERIFIED_EXPERIAN_MATCH = "verified_experian_match"
+
     def run_step(self) -> None:
         experian_client = _get_experian_client()
 
         payments = _get_payments_awaiting_address_validation(self.db_session)
         for payment in payments:
             self._validate_address_for_payment(payment, experian_client)
-            self.increment("validated_address_count")
+            self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
 
         self.db_session.commit()
         return None
@@ -77,7 +88,7 @@ class AddressValidationStep(Step):
                 ),
                 db_session=self.db_session,
             )
-            self.increment("previously_validated_match_count")
+            self.increment(self.Metrics.PREVIOUSLY_VALIDATED_MATCH_COUNT)
 
             return None
 
@@ -109,25 +120,25 @@ class AddressValidationStep(Step):
                 outcome=state_log_util.build_outcome(Constants.MESSAGE_INVALID_EXPERIAN_RESPONSE),
                 db_session=self.db_session,
             )
-            self.increment("invalid_experian_response")
+            self.increment(self.Metrics.INVALID_EXPERIAN_RESPONSE)
             return None
 
         result = response.result
 
         # Exactly one response
         if result.confidence == Confidence.VERIFIED_MATCH:
-            self.increment("verified_experian_match")
+            self.increment(self.Metrics.VERIFIED_EXPERIAN_MATCH)
 
             formatted_address = _formatted_address_for_match(experian_client, address, result)
             if formatted_address is None:
                 end_state = Constants.ERROR_STATE
                 message = Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE
-                self.increment("invalid_experian_format")
+                self.increment(self.Metrics.INVALID_EXPERIAN_FORMAT)
             else:
                 address_pair.experian_address = formatted_address
                 end_state = Constants.SUCCESS_STATE
                 message = Constants.MESSAGE_VALID_ADDRESS
-                self.increment("valid_experian_format")
+                self.increment(self.Metrics.VALID_EXPERIAN_FORMAT)
             _create_end_state_by_payment_type(
                 payment=payment,
                 address=address,
@@ -140,7 +151,7 @@ class AddressValidationStep(Step):
 
         # Multiple responses
         if result.confidence == Confidence.MULTIPLE_MATCHES:
-            self.increment("multiple_experian_matches")
+            self.increment(self.Metrics.MULTIPLE_EXPERIAN_MATCHES)
 
             end_state, message = _get_end_state_and_message_for_multiple_matches(
                 result, experian_client, address_pair
@@ -156,7 +167,7 @@ class AddressValidationStep(Step):
             return
 
         # Zero responses
-        self.increment("no_experian_match_count")
+        self.increment(self.Metrics.NO_EXPERIAN_MATCH_COUNT)
         _create_end_state_by_payment_type(
             payment=payment,
             address=address,

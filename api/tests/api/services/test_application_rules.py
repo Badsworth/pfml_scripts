@@ -1844,7 +1844,7 @@ def test_other_leave_feature_flagged_rules():
             message="has_previous_leaves is required",
             type=IssueType.required,
         )
-        in issues
+        not in issues
     )
 
 

@@ -173,6 +173,7 @@ def test_verification_successful_for_valid_data(
             "employer_dba": employer.employer_dba,
             "employer_fein": f"**-***{employer.employer_fein[5:]}",
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": True,
             "has_verification_data": True,
         }

@@ -23,6 +23,7 @@ class ScenarioName(Enum):
         "HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
     )
     HAPPY_PENDING_LEAVE_REQUEST_DECISION = "HAPPY_PENDING_LEAVE_REQUEST_DECISION"
+    HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION = "HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION"
 
     HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
     HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN = (
@@ -183,6 +184,10 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
         leave_request_decision="Pending",
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+        leave_request_decision="In Review",
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,

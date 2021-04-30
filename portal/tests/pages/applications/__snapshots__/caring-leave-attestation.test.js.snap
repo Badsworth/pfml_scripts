@@ -11,11 +11,22 @@ exports[`CaringLeaveAttestation renders the page 1`] = `
     <Title>
       Confirm that you are an eligible caregiver
     </Title>
+    <Trans
+      components={
+        Object {
+          "eligible-relationship-link": <a />,
+        }
+      }
+      i18nKey="pages.claimsCaringLeaveAttestation.lead"
+    />
     <Alert
       className="measure-6"
       noIcon={true}
       state="info"
     >
+      <p>
+        I agree that I have an eligible relationship with my child who is experiencing a serious health condition and needs my care.
+      </p>
       <Button
         type="submit"
       >

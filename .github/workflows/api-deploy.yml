@@ -566,7 +566,7 @@ jobs:
           TF_CLI_ARGS: ''
         run: |
           CLUSTER_ID=$(terraform output ecs_cluster_arn | sed s/\"//g | cut -d/ -f2)
-          SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | cut -d/ -f2)
+          SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | rev | cut -d/ -f1 | rev)
 
           # Wait for ECS service to be stable, and run it twice to allow for
           # abnormally long deploys (up to 20 minutes.)
@@ -581,9 +581,8 @@ jobs:
             if [[ ${result_code} -eq 0 ]]; then
               break
             elif [[ "${result_msg}" =~ "MISSING" ]]; then
-              # This happens sometimes when the script runs too quickly after terraform apply.
-              # Sleep for a little bit and try again without considering it a retry.
-              sleep 5
+              echo "ECS Cluster \"${CLUSTER_ID}\" or service \"${SVC_ID}\" does not exist"
+              exit 1
             else
               failures=$((failures+=1))
             fi

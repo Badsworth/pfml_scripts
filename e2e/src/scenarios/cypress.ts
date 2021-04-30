@@ -46,21 +46,7 @@ export const BHAP1INEL: ScenarioSpecification = {
     },
   },
 };
-export const BHAP8: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "eligible" },
-  claim: {
-    label: "BHAP8",
-    shortClaim: true,
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
-    docs: {
-      HCP: {},
-      MASSID: {},
-    },
-    work_pattern_spec: "standard",
-    reduced_leave_spec: "0,240,240,240,240,240,0",
-  },
-};
+
 export const BHAP9: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -75,6 +61,7 @@ export const BHAP9: ScenarioSpecification = {
     has_intermittent_leave_periods: true,
   },
 };
+
 export const BGBM1: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -101,6 +88,7 @@ export const MHAP1: ScenarioSpecification = {
     },
   },
 };
+
 export const MHAP4: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -115,49 +103,43 @@ export const MHAP4: ScenarioSpecification = {
 };
 
 const mostRecentSunday = startOfWeek(new Date());
-export const Jill: ScenarioSpecification = {
+export const MRAP30: ScenarioSpecification = {
   employee: {
     wages: 30000,
     mass_id: true,
   },
   claim: {
-    label: "Jill",
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    label: "MRAP30",
+    reason: "Serious Health Condition - Employee",
     docs: {
       MASSID: {},
-      FOSTERPLACEMENT: {},
+      HCP: {},
     },
-    employerResponse: {
-      hours_worked_per_week: 40,
-      employer_decision: "Approve",
-      fraud: "No",
-    },
+    work_pattern_spec: "standard",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
     // This scenario requires a 2 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
+    metadata: { expected_weekly_payment: "230.77" },
   },
 };
 
-export const Dave: ScenarioSpecification = {
+export const BCAP90: ScenarioSpecification = {
   employee: {
     wages: 90000,
     mass_id: true,
   },
   claim: {
-    label: "Dave",
-    reason: "Serious Health Condition - Employee",
+    label: "BCAP90",
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: {
       MASSID: {},
       HCP: {},
     },
-    employerResponse: {
-      hours_worked_per_week: 36,
-      employer_decision: "Approve",
-      fraud: "No",
-    },
     // This scenario requires a 2 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
+    metadata: { expected_weekly_payment: "850.00" },
   },
 };
 
