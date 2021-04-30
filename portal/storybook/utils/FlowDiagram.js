@@ -1,5 +1,50 @@
-import { camelCase, get } from "lodash";
+import React, { useEffect, useState } from "react";
+import { camelCase, get, uniqueId } from "lodash";
+import PropTypes from "prop-types";
 import mermaid from "mermaid";
+
+/**
+ * Convert the XState representation of our flow into an SVG flowchart
+ * @returns {React.Component}
+ */
+const FlowDiagram = ({ direction = "TB", ...props }) => {
+  const { states } = props;
+  const maxWidth = props.maxWidth || "100%";
+  const id = uniqueId("flow");
+
+  const [svg, setSvg] = useState();
+  useEffect(() => {
+    stateMachineToSvg(states, { direction })
+      .then((svgOutput) => {
+        setSvg(svgOutput);
+      })
+      .catch(console.error);
+  }, [direction, states, setSvg]);
+
+  if (!svg) return <p>Loading</p>;
+
+  return (
+    <React.Fragment>
+      <style>{`#${id} svg { height: auto; width: auto; max-width: ${maxWidth} !important; }`}</style>
+      <div
+        id={id}
+        style={{
+          border: "1px solid #eee",
+          overflow: "auto",
+        }}
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    </React.Fragment>
+  );
+};
+
+FlowDiagram.propTypes = {
+  direction: PropTypes.oneOf(["TB", "LR"]),
+  maxWidth: PropTypes.string,
+  states: PropTypes.object.isRequired,
+};
+
+export default FlowDiagram;
 
 // Hopefully enough colors to cover the number of potential state node groups
 const fills = [
@@ -101,10 +146,11 @@ function mermaidTransitionGroup(states, fill) {
 
   for (const route in states) {
     const node = states[route];
-    const events = node.on;
+    // Our state nodes currently have one or the other, but not both. It's either a transient state or not.
+    const events = node.always ? { "*": true } : node.on;
 
     for (const eventName in events) {
-      const action = events[eventName];
+      const action = eventName === "*" ? node.always : events[eventName];
 
       if (typeof action === "string") {
         const nextRoute = action;
@@ -115,13 +161,19 @@ function mermaidTransitionGroup(states, fill) {
       }
 
       // Conditional routes
-      action.forEach((conditionalAction) => {
+      action.forEach((conditionalAction, index) => {
         const nextRoute = conditionalAction.target;
         const condition = conditionalAction.cond;
 
         if (condition) {
           return mermaidOutput.push(
-            mermaidTransition(fill, route, nextRoute, eventName, condition)
+            mermaidTransition(
+              fill,
+              route,
+              nextRoute,
+              eventName,
+              `[${index + 1}] ${condition}`
+            )
           );
         }
 
@@ -145,7 +197,7 @@ function mermaidTransitionGroup(states, fill) {
  * @returns {string}
  */
 function mermaidTransition(fill, from, to, event, condition) {
-  event = condition ? `${event} - ${condition}` : event;
+  event = condition ? `"${event}\n${condition}"` : event;
 
   // Use dotted arrows for specific transitions
   const arrow = to === "/applications/checklist" ? "-.->" : "-->";
