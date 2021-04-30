@@ -790,7 +790,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         if NAICS_occupation:
             additional_data_set.additional_data.append(
-                models.AdditionalData(name="AdditionalEmploymentCategory", value=NAICS_occupation)
+                models.AdditionalData(name="EEOCcategory", value=NAICS_occupation)
             )
 
         # Put the XML object together properly.
