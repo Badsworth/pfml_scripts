@@ -94,7 +94,7 @@ jobs:
         run: make db-create-users
 
       - name: test with coverage
-        run: make test-coverage args="tests/${{ matrix.test_dirs }} --ignore=tests/api/payments/"
+        run: make test-coverage args="tests/${{ matrix.test_dirs }} --ignore=tests/api/payments/ --ignore=tests/api/test_applications.py"
 
   # Special handling for tests/api/payments to distribute test runtimes more evenly.
   test-api-payments:
@@ -121,6 +121,32 @@ jobs:
 
       - name: test with coverage
         run: make test-coverage args=tests/api/payments/
+
+  # Special handling for tests/api/test_applications.py to distribute test runtimes more evenly.
+  test-api-applications:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build container
+        run: make build
+
+      - name: test for multi-headed migration situation
+        run: make test args="tests/db/test_migrations.py::test_only_single_head_revision_in_migrations"
+
+      - name: start db
+        run: make start-db
+
+      - name: run migrations
+        run: make db-upgrade
+
+      - name: create database users
+        run: make db-create-users
+
+      - name: test with coverage
+        run: make test-coverage args=tests/api/test_applications.py
 
   # Check we can build a release
   build-release:
