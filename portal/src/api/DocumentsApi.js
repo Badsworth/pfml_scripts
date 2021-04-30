@@ -103,7 +103,8 @@ export default class DocumentsApi extends BaseApi {
     assert(document);
     const { application_id, content_type, fineos_document_id } = document;
     const subPath = `${application_id}/documents/${fineos_document_id}`;
-    const url = createRequestUrl(this.basePath, subPath);
+    const method = "GET";
+    const url = createRequestUrl(method, this.basePath, subPath);
     const authHeader = await getAuthorizationHeader();
 
     const headers = {
@@ -113,7 +114,7 @@ export default class DocumentsApi extends BaseApi {
 
     let blob, response;
     try {
-      response = await fetch(url, { headers, method: "GET" });
+      response = await fetch(url, { headers, method });
       blob = await response.blob();
     } catch (error) {
       handleError(error);

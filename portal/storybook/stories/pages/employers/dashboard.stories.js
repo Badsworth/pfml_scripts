@@ -3,6 +3,7 @@ import User, { UserLeaveAdministrator } from "src/models/User";
 import ClaimCollection from "src/models/ClaimCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
 import { DateTime } from "luxon";
+import PaginationMeta from "src/models/PaginationMeta";
 import React from "react";
 import faker from "faker";
 import routes from "src/routes";
@@ -100,6 +101,12 @@ export default {
         options: ["Has claims", "No claims"],
       },
     },
+    total_pages: {
+      defaultValue: 3,
+      control: {
+        type: "number",
+      },
+    },
     verification: {
       defaultValue: Object.keys(verificationScenarios)[0],
       control: {
@@ -113,6 +120,8 @@ export default {
 export const Default = (args) => {
   const { user } = verificationScenarios[args.verification];
   const hasMultipleEmployers = user.user_leave_administrators.length > 1;
+  const hasNoClaims = args.claims === "No claims";
+
   const claims =
     args.claims === "No claims"
       ? []
@@ -157,6 +166,16 @@ export const Default = (args) => {
     <Dashboard
       appLogic={appLogic}
       claims={new ClaimCollection(claims)}
+      paginationMeta={
+        new PaginationMeta({
+          page_offset: 1,
+          page_size: 25,
+          total_pages: hasNoClaims ? 1 : args.total_pages,
+          total_records: hasNoClaims ? 0 : args.total_pages * 25,
+          order_by: "created_at",
+          order_direction: "asc",
+        })
+      }
       user={user}
     />
   );

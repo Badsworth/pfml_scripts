@@ -2310,7 +2310,7 @@ const components = {
     nextLabel: "Next",
     previousLabel: "Previous",
     summary:
-      "Viewing {{firstRecordIndex}} - {{lastRecordIndex}} of {{totalRecords}} results",
+      "Viewing {{firstRecordNumber}} – {{lastRecordNumber}} of {{totalRecords}} results",
   },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",

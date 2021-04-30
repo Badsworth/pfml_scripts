@@ -92,6 +92,25 @@ describe("BaseApi", () => {
     );
   });
 
+  it("sends a GET request with params to the API", async () => {
+    expect.assertions();
+    const method = "GET";
+
+    await testsApi.request(method, "users", {
+      page_offset: 1,
+      order_by: "name",
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${process.env.apiUrl}/api/users?page_offset=1&order_by=name`,
+      {
+        body: null,
+        method,
+        headers: expect.any(Object),
+      }
+    );
+  });
+
   it("sends a POST request to the API", async () => {
     expect.assertions();
     const method = "POST";
@@ -276,7 +295,10 @@ describe("BaseApi", () => {
       expect.assertions();
 
       global.fetch = jest.fn().mockResolvedValue({
-        json: jest.fn().mockResolvedValue({ data: { mock_response: true } }),
+        json: jest.fn().mockResolvedValue({
+          data: { mock_response: true },
+          meta: { method: "GET", resource: "/v1/users/current" },
+        }),
         status: 200,
         ok: true,
       });
@@ -286,6 +308,10 @@ describe("BaseApi", () => {
               Object {
                 "data": Object {
                   "mock_response": true,
+                },
+                "meta": Object {
+                  "method": "GET",
+                  "resource": "/v1/users/current",
                 },
                 "warnings": Array [],
               }
