@@ -15,6 +15,7 @@ import {
   EmploymentStatus,
   WorkPatternType,
 } from "../models/BenefitsApplication";
+
 import { ClaimSteps } from "../models/Step";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
@@ -99,6 +100,12 @@ export default {
       meta: {},
       on: {
         CREATE_CLAIM: routes.applications.checklist,
+      },
+    },
+    [routes.applications.occupation]: {
+      meta: {},
+      on: {
+        CONTINUE: routes.applications.getReady,
       },
     },
     [routes.user.consentToDataSharing]: {

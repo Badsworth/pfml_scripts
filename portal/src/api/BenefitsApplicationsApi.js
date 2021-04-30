@@ -165,4 +165,6 @@ export default class BenefitsApplicationsApi extends BaseApi {
       warnings,
     };
   };
+
+  // @todo: occupations and occupation titles
 }

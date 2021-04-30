@@ -8,6 +8,7 @@ const routes = {
     applications: "/applications",
     claims: "/claims",
     employers: "/employers",
+    occupations: "/occupations",
     users: "/users",
   },
   applications: {
@@ -33,6 +34,7 @@ const routes = {
     leaveReason: "/applications/leave-reason",
     name: "/applications/name",
     notifiedEmployer: "/applications/notified-employer",
+    occupation: "/applications/occupation",
     otherIncomes: "/applications/other-incomes",
     otherIncomesDetails: "/applications/other-incomes-details",
     paymentMethod: "/applications/payment-method",

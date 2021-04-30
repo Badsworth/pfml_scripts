@@ -3,6 +3,7 @@
  * @file Benefits application model and enum values
  */
 import { compact, get, isNil, merge, sum, sumBy, zip, zipObject } from "lodash";
+
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import BaseModel from "./BaseModel";
 import { DateTime } from "luxon";
@@ -36,6 +37,9 @@ class BenefitsApplication extends BaseBenefitsApplication {
       // address object. See Address model
       mailing_address: null, // default value to null
       mass_id: null,
+      // See Occupation model
+      occupation_id: null,
+      occupation_title_id: null,
       // array of OtherIncome objects. See the OtherIncome model
       other_incomes: [],
       other_incomes_awaiting_approval: null,
