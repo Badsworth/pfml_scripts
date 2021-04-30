@@ -1379,6 +1379,8 @@ components:
         employer_dba:
           type: string
           example: "The Super Store"
+        has_fineos_registration:
+          type: boolean
         verified:
           type: boolean
 

@@ -285,6 +285,7 @@ def test_users_get(client, employer_user, employer_auth_token, test_db_session):
             "employer_dba": employer.employer_dba,
             "employer_fein": f"**-***{employer.employer_fein[5:]}",
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": False,
         }
@@ -343,6 +344,7 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
             "employer_dba": employer.employer_dba,
             "employer_fein": f"**-***{employer.employer_fein[5:]}",
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": False,
         }
@@ -462,6 +464,7 @@ def test_has_verification_data_flag(client, employer_user, employer_auth_token, 
             "employer_dba": employer.employer_dba,
             "employer_fein": f"**-***{employer.employer_fein[5:]}",
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": True,
         }
@@ -492,6 +495,7 @@ def test_has_verification_data_flag_old_data(
             "employer_dba": employer.employer_dba,
             "employer_fein": f"**-***{employer.employer_fein[5:]}",
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": False,
         }
