@@ -604,9 +604,9 @@ jobs:
           env_variable_name: "slackbot_token"
 
       - name: Post to Slack
-        id: post-to-slack
+        id: post-start-slack
         run: |
-          echo "Slackbot message reply TS is ${{ needs.start-comms-slack.outputs.message-ts }}"
+           echo "Slackbot message reply TS is ${{ needs.finish-comms-slack.outputs.message-ts }}"
 
           optional_threadts = ""
           if [[ -z "${{ needs.start-comms-slack.outputs.message-ts }}" ]]; then
