@@ -27,44 +27,6 @@ from massgov.pfml.util.users import register_user
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-
-def users_get_occupations_list(user_id):
-    industries = None
-    with app.db_session() as db_session:
-        u = get_or_404(db_session, User, user_id)
-
-        industries = db_session.query(LkOccupation).all()
-
-    data = [OccupationResponse.from_orm(industry).dict() for industry in industries]
-
-    ensure(READ, u)
-    return response_util.success_response(
-        message="Successfully retrieved occupations list", data=data,
-    ).to_api_response()
-
-
-def users_get_occupation_titles_list(user_id, occupation_id):
-    job_titles = None
-    with app.db_session() as db_session:
-        u = get_or_404(db_session, User, user_id)
-
-        job_titles = (
-            db_session.query(LkOccupationTitle)
-            .filter(
-                LkOccupationTitle.occupation_id == int(occupation_id)
-            )
-            .all()
-        )
-
-    data = [OccupationTitleResponse.from_orm(title).dict() for title in job_titles if title.occupation_title_code > 100000]
-
-    ensure(READ, u)
-    return response_util.success_response(
-        message="Successfully occupation titles list",
-        data=data,
-    ).to_api_response()
-
-
 def users_post():
     """Create a new user account"""
     body = UserCreateRequest.parse_obj(connexion.request.json)

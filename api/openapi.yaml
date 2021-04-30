@@ -1046,7 +1046,7 @@ paths:
       tags:
         - Occupations
       summary: Retrieve a list of available occupations to choose from
-      operationId: massgov.pfml.api.users.users_get_occupations_list
+      operationId: massgov.pfml.api.occupations.occupations
       responses:
         "200":
           description: A successful request returns a 200 status code and a list of occupation objects.
@@ -1062,7 +1062,7 @@ paths:
       tags:
         - Occupations
       summary: Retrieve a list of available occupation titles to choose from
-      operationId: massgov.pfml.api.users.users_get_occupation_titles_list
+      operationId: massgov.pfml.api.occupations.occupation_titles
       parameters:
         - name: occupation_id
           in: path
