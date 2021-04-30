@@ -1,5 +1,6 @@
 import io
 import re
+import uuid
 import threading
 from datetime import date, timedelta
 
@@ -10,7 +11,7 @@ import massgov.pfml.fineos
 import massgov.pfml.fineos.mock_client as fineos_mock
 from massgov.pfml.api.services import fineos_actions
 from massgov.pfml.db.models.applications import (
-    Application,
+    Application, FINEOSWebIdExt,
     LeaveReason,
     LeaveReasonQualifier,
     LkDayOfWeek,
@@ -168,46 +169,29 @@ def test_register_employee_two_simultaneously(test_db_session, test_db_other_ses
     t1.join()
     t2.join()
 
-def test_register_employee_triggers_rollback_on_fineos_error(test_db_session, test_db_other_session, reraise):
+def test_register_employee_triggers_rollback_on_fineos_error(test_db_session, reraise):
     employer_fein = "179892886"
     employee_ssn = "784569632"
-    lock_thread_1 = threading.Lock()
-    lock_thread_2 = threading.Lock()
-    lock_thread_1.acquire()
-    lock_thread_2.acquire()
 
-    # Thread 1
-    def register_employee_1st_request():
-        with reraise:
-            lock_thread_2.release()  # [A] Release thread 2 at [C] below
-            lock_thread_1.acquire()  # [B] Block until thread 2 reaches [D]
-            fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-            fineos_actions.register_employee(
-                fineos_client, employee_ssn, employer_fein, test_db_session
-            )
-            test_db_session.commit()
+    # We could do this in a similar fashion to the threading example
+    # but for slight readability, this inserts the record that we expect
+    # _not_ to exist.
+    record = FINEOSWebIdExt()
+    record.employee_tax_identifier = employee_ssn
+    record.employer_fein = employer_fein
+    record.fineos_web_id = "pfml_api_a_id"
+    test_db_session.add(record)
+    test_db_session.commit()
 
-    # Thread 2
-    def register_employee_2nd_request():
-        with reraise:
-            lock_thread_2.acquire()  # [C] Block here until thread 1 reaches [A]
-            lock_thread_1.release()  # [D] Release thread 1 at [B]
-            fineos_client_2 = massgov.pfml.fineos.MockFINEOSClient()
-            fineos_actions.register_employee(
-                fineos_client_2, employee_ssn, employer_fein, test_db_other_session
-            )
-            test_db_other_session.commit()
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+    # with pytest.raises(sqlalchemy.exc.IntegrityError) as exc_info:
+    r1 = fineos_actions.register_employee(fineos_client, employee_ssn, employer_fein, test_db_session)
+    r2 = fineos_actions.register_employee(fineos_client, employee_ssn, employer_fein, test_db_session)
+    print(r1)
+    print(r2)
+    assert False
 
-    t1 = threading.Thread(target=register_employee_1st_request)
-    t2 = threading.Thread(target=register_employee_2nd_request)
-    t1.start()
-    t2.start()
-
-    with pytest.raises(sqlalchemy.exc.IntegrityError) as exc_info:
-        t1.join()
-        t2.join()
-
-    assert exc_info.errisinstance(sqlalchemy.exc.IntegrityError)
+    # assert exc_info.errisinstance(sqlalchemy.exc.IntegrityError)
 
 
 def test_determine_absence_period_status_cont(user, test_db_session):
