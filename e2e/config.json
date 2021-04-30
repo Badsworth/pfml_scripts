@@ -66,6 +66,19 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-04-14.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
+  "cps-preview": {
+    "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
+    "API_BASEURL": "https://paidleave-api-cps-preview.eol.mass.gov/api/v1",
+    "FINEOS_BASEURL": "https://dt3-claims-webapp.masspfml.fineos.com/",
+    "PORTAL_USERNAME": "joe+pfml+default@lastcallmedia.com",
+    "FINEOS_USERNAME": "CONTENT",
+    "COGNITO_POOL": "us-east-1_1OVYp4aZo",
+    "COGNITO_CLIENTID": "59oeobfn0759c8166pjh381joc",
+    "TESTMAIL_NAMESPACE": "gqzap",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-04-14.json",
+    "EMPLOYERS_FILE": "./employers/e2e-2021-04-14.json",
+    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
+  },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
     "COGNITO_POOL": "us-east-1_HpL4XslLg",

@@ -90,8 +90,8 @@ export default class AuthenticationManager {
 
       if (exists) {
         e.code = "UsernameExistsException";
-        throw e;
       }
+      throw e;
     }
   }
 
