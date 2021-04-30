@@ -432,7 +432,7 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
     label="Leave type"
     level="4"
   >
-    Caring leave
+    Care for a family member
   </ReviewRow>
   <ReviewRow
     label="Family member's relationship"
