@@ -11,11 +11,11 @@ const setup = (claimAttrs = {}) => {
     wrapper,
   } = renderWithAppLogic(PreviousLeavesSameReason, { claimAttrs });
 
-  const { changeField, submitForm } = simulateEvents(wrapper);
+  const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
 
   return {
     appLogic,
-    changeField,
+    changeRadioGroup,
     claim,
     submitForm,
     wrapper,
@@ -30,10 +30,9 @@ describe("PreviousLeavesSameReason", () => {
   });
 
   it("submits form with has_previous_leaves_same_reason value", async () => {
-    const { appLogic, claim, wrapper } = setup();
+    const { appLogic, changeRadioGroup, claim, submitForm } = setup();
     const spy = jest.spyOn(appLogic.benefitsApplications, "update");
 
-    const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
     await changeRadioGroup("has_previous_leaves_same_reason", "true");
     await submitForm();
     expect(spy).toHaveBeenCalledWith(claim.application_id, {
@@ -42,12 +41,11 @@ describe("PreviousLeavesSameReason", () => {
   });
 
   it("sets previous_leaves_same_reason to null when has_previous_leaves_same_reason is false and previous_leaves exist", async () => {
-    const { appLogic, claim, wrapper } = setup({
+    const { appLogic, changeRadioGroup, claim, submitForm } = setup({
       previous_leaves_same_reason: [new PreviousLeave()],
     });
     const spy = jest.spyOn(appLogic.benefitsApplications, "update");
 
-    const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
     await changeRadioGroup("has_previous_leaves_same_reason", "false");
     await submitForm();
     expect(spy).toHaveBeenCalledWith(claim.application_id, {
@@ -57,12 +55,11 @@ describe("PreviousLeavesSameReason", () => {
   });
 
   it("does not set previous_leaves_same_reason to null when has_previous_leaves_same_reason is false but previous_leaves do not exist", async () => {
-    const { appLogic, claim, wrapper } = setup({
+    const { appLogic, changeRadioGroup, claim, submitForm } = setup({
       previous_leaves_same_reason: [],
     });
     const spy = jest.spyOn(appLogic.benefitsApplications, "update");
 
-    const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
     await changeRadioGroup("has_previous_leaves_same_reason", "false");
     await submitForm();
     expect(spy).toHaveBeenCalledWith(claim.application_id, {

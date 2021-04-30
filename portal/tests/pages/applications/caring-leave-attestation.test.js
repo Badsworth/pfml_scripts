@@ -1,9 +1,19 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import {
+  MockClaimBuilder,
+  renderWithAppLogic,
+  simulateEvents,
+} from "../../test-utils";
 import CaringLeaveAttestation from "../../../src/pages/applications/caring-leave-attestation";
 
 const setup = () => {
   const { appLogic, claim, wrapper } = renderWithAppLogic(
-    CaringLeaveAttestation
+    CaringLeaveAttestation,
+    {
+      claimAttrs: new MockClaimBuilder()
+        .part1Complete()
+        .caringLeaveReason()
+        .create(),
+    }
   );
 
   const { submitForm } = simulateEvents(wrapper);
