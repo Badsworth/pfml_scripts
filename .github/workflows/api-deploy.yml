@@ -202,8 +202,6 @@ jobs:
     needs: [update-the-deploy-branch, deploy-info]
     if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test    
     runs-on: ubuntu-latest
-    outputs:
-      message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -715,6 +713,8 @@ jobs:
   finish-comms-github:
     name: Finish deploy comms (GitHub)
     needs: [start-comms-github, deploy-info, postdeploy-info]
+    outputs:
+      message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
     runs-on: ubuntu-latest
     if: always() && needs.start-comms-github.result == 'success'
     steps:
@@ -843,24 +843,9 @@ jobs:
           # Limit to "stable" suite for any environment but test.
           only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
 
-  # get-test-deploy-state:
-  #   name: Finalize Test Deploy State
-  #   needs: [end-to-end]
-  #   if: always()
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     test-state: ${{ steps.test-state.outputs.test-state }}
-  #   steps:
-  #       # https://github.com/technote-space/workflow-conclusion-action
-  #       # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
-  #     - uses: technote-space/workflow-conclusion-action@v2
-  #     - name: Set test-state value
-  #       id: test-state
-  #       run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
-
   post-e2e-failures-to-slack:
     name: Post E2E failures to Slack
-    needs: [start-comms-slack, end-to-end]
+    needs: [finish-comms-slack, end-to-end]
     if: always() && 
       (
         (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
@@ -887,25 +872,18 @@ jobs:
         run: |
           echo "Slackbot message reply TS is ${{ needs.start-comms-slack.outputs.message-ts }}"
 
+          optional_threadts = ""
           if [[ -z "${{ needs.start-comms-slack.outputs.message-ts }}" ]]; then
-            SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-            -H 'Content-Type: application/json;charset=utf-8' \
-            --data '{
-              "channel": "${{ env.deploys_channel }}",
-              "attachments": [{
-                "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
-                "color": "danger"
-              }]
-            }' https://slack.com/api/chat.postMessage)
-          else
-            SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-            -H 'Content-Type: application/json;charset=utf-8' \
-            --data '{
-              "channel": "${{ env.deploys_channel }}",
-              "thread_ts": "${{ needs.start-comms-slack.outputs.message-ts }}",
-              "attachments": [{
-                "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
-                "color": "danger"
-              }]
-            }' https://slack.com/api/chat.postMessage)
+            optional_threadts = "\"thread_ts\": \"${{ needs.start-comms-slack.outputs.message-ts }}\","
           fi
+          
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            ${optional_threadts}
+            "attachments": [{
+              "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)

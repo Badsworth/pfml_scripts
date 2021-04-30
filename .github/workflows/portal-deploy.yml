@@ -178,7 +178,6 @@ jobs:
     needs: [update-the-deploy-branch, deploy-info]
     outputs:
       version_link: ${{ steps.create_version_link.outputs.version_link }}
-      message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
     if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test
     runs-on: ubuntu-latest
     steps:
@@ -462,6 +461,8 @@ jobs:
   finish-comms-slack:
     name: Finish deploy comms (Slack)
     needs: [start-comms-slack, deploy-info, postdeploy-info]
+    output: 
+      message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
     runs-on: ubuntu-latest
     # Notifies if there's a failure on auto-deploys to test
     if: always() && 
@@ -580,10 +581,9 @@ jobs:
 
   post-e2e-failures-to-slack:
     name: Post E2E failures to Slack
-    needs: [start-comms-slack, end-to-end]
+    needs: [finish-comms-slack, end-to-end]
     if: always() && 
       (
-        (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
         (needs.end-to-end.conclusion == 'failure' || needs.end-to-end.conclusion == 'timed_out')
       )
     runs-on: ubuntu-latest
@@ -604,28 +604,22 @@ jobs:
           env_variable_name: "slackbot_token"
 
       - name: Post to Slack
+        id: post-to-slack
         run: |
           echo "Slackbot message reply TS is ${{ needs.start-comms-slack.outputs.message-ts }}"
 
+          optional_threadts = ""
           if [[ -z "${{ needs.start-comms-slack.outputs.message-ts }}" ]]; then
-            SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-            -H 'Content-Type: application/json;charset=utf-8' \
-            --data '{
-              "channel": "${{ env.deploys_channel }}",
-              "attachments": [{
-                "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
-                "color": "danger"
-              }]
-            }' https://slack.com/api/chat.postMessage)
-          else
-            SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-            -H 'Content-Type: application/json;charset=utf-8' \
-            --data '{
-              "channel": "${{ env.deploys_channel }}",
-              "thread_ts": "${{ needs.start-comms-slack.outputs.message-ts }}",
-              "attachments": [{
-                "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
-                "color": "danger"
-              }]
-            }' https://slack.com/api/chat.postMessage)
+            optional_threadts = "\"thread_ts\": \"${{ needs.start-comms-slack.outputs.message-ts }}\","
           fi
+          
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            ${optional_threadts}
+            "attachments": [{
+              "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)
