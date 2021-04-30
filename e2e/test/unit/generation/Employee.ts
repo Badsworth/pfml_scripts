@@ -1,9 +1,11 @@
+import dataDirectory from "./../../../src/generation/DataDirectory";
 import { describe, it, expect } from "@jest/globals";
 import EmployerPool from "../../../src/generation/Employer";
 import EmployeePool, {
   EmployeeGenerator,
   WageSpecification,
 } from "../../../src/generation/Employee";
+import fs from "fs";
 
 const wageTests: [WageSpecification, number, number][] = [
   ["ineligible", 0, 5399],
@@ -13,6 +15,8 @@ const wageTests: [WageSpecification, number, number][] = [
   ["low", 5400, 30000],
   [10000, 10000, 10000],
 ];
+
+const EMPLOYEE_TEST_DIR = "/employee_unit_test";
 
 describe("EmployeeGenerator", () => {
   const employerPool = EmployerPool.generate(1);
@@ -68,6 +72,13 @@ describe("EmployeeGenerator", () => {
 });
 
 describe("EmployeePool", () => {
+  const storage = dataDirectory(EMPLOYEE_TEST_DIR);
+  // before/after used to remove create/remove directory to test the persisitence of used employees
+  beforeAll(async () => await storage.prepare());
+  afterAll(async () => {
+    await fs.promises.rmdir(storage.dir, { recursive: true });
+  });
+
   const employerPool = EmployerPool.generate(1);
 
   it("generate() should generate an employee pool", () => {
@@ -131,5 +142,17 @@ describe("EmployeePool", () => {
       "No employee is left matching the specification"
     );
     expect(pool.pick({ metadata: { prenoted: true } })).toEqual(expectEmployee);
+  });
+
+  it("will persist used employees when saved after pick(s) have been performed", async () => {
+    const pool = EmployeePool.generate(1, employerPool, {});
+    const employee = await pool.pick({});
+    await pool.save(storage.employees, storage.usedEmployees);
+    const refreshedPool = await EmployeePool.load(
+      storage.employees,
+      storage.usedEmployees
+    );
+    expect(refreshedPool.used.size).toBe(1);
+    expect(refreshedPool.used.has(employee.ssn)).toBe(true);
   });
 });

@@ -29,7 +29,10 @@ const pipelineP = promisify(pipeline);
 (async () => {
   const storage = dataDirectory("payments-2021-04-02");
   // Load employees that were generated elsewhere.
-  const employees = await EmployeePool.load(storage.employees);
+  const employees = await EmployeePool.load(
+    storage.employees,
+    storage.usedEmployees
+  );
 
   // Write a CSV description of the scenarios we're using for human consumption.
   await pipelineP(
