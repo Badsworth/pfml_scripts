@@ -216,7 +216,6 @@ export function handleError(error) {
   // Request failed to send or something failed while parsing the response
   // Log the JS error to support troubleshooting
   console.error(error);
-  tracker.noticeError(error);
   throw new NetworkError(error.message);
 }
 
