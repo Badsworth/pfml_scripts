@@ -9,6 +9,7 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
+    ClaimType,
     Flow,
     Payment,
     PaymentMethod,
@@ -17,7 +18,7 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
-from massgov.pfml.db.models.factories import PaymentFactory
+from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import PaymentAuditCSV
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     PaymentAuditData,
@@ -79,7 +80,10 @@ def test_parse_payment_rejects_file(tmp_path, test_db_session, payment_rejects_s
 
 
 def test_rejects_column_validation(test_db_session, payment_rejects_step):
-    payment = PaymentFactory.create(disb_method_id=PaymentMethod.ACH.payment_method_id)
+    claim = ClaimFactory.create(claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id)
+    payment = PaymentFactory.create(
+        disb_method_id=PaymentMethod.ACH.payment_method_id, claim=claim,
+    )
     state_log_util.create_finished_state_log(
         payment,
         State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
