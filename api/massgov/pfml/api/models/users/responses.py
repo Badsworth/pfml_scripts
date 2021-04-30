@@ -44,12 +44,3 @@ class OccupationTitleResponse(PydanticBaseModel):
     occupation_id: int
     occupation_title_code: int
     occupation_title_description: str
-
-
-# @todo: temp classes to debug
-class OccupationsResponse(PydanticBaseModel):
-    occupations: List[OccupationResponse]
-
-
-class OccupationTitlesResponse(PydanticBaseModel):
-    occupation_titles: List[OccupationTitleResponse]

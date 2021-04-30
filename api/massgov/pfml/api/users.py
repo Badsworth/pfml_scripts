@@ -10,9 +10,7 @@ from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
 from massgov.pfml.api.models.users.responses import (
     OccupationResponse,
-    OccupationsResponse,
     OccupationTitleResponse,
-    OccupationTitlesResponse,
     UserLeaveAdminResponse,
     UserResponse,
 )
@@ -37,8 +35,7 @@ def users_get_occupations_list(user_id):
 
         industries = db_session.query(LkOccupation).all()
 
-    # @todo: not responding properly
-    data = OccupationResponse.from_orm(industries).dict()
+    data = [OccupationResponse.from_orm(industry).dict() for industry in industries]
 
     ensure(READ, u)
     return response_util.success_response(
@@ -54,17 +51,17 @@ def users_get_occupation_titles_list(user_id, occupation_id):
         job_titles = (
             db_session.query(LkOccupationTitle)
             .filter(
-                LkOccupationTitle.occupation_id is int(occupation_id)
-                and LkOccupationTitle.occupation_title_code > 9999
+                LkOccupationTitle.occupation_id == int(occupation_id)
             )
             .all()
         )
 
-    # @todo: not responding properly
+    data = [OccupationTitleResponse.from_orm(title).dict() for title in job_titles if title.occupation_title_code > 100000]
+
     ensure(READ, u)
     return response_util.success_response(
         message="Successfully occupation titles list",
-        data=OccupationTitlesResponse.from_orm(job_titles).dict(),
+        data=data,
     ).to_api_response()
 
 
