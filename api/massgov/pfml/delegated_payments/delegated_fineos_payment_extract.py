@@ -433,7 +433,7 @@ class PaymentData:
             def leave_request_decision_validator(
                 leave_request_decision: str,
             ) -> Optional[payments_util.ValidationReason]:
-                if leave_request_decision not in ["Pending", "Approved"]:
+                if leave_request_decision not in ["In Review", "Pending", "Approved"]:
                     if count_incrementer is not None:
                         count_incrementer("not_pending_or_approved_leave_request_count")
                     return payments_util.ValidationReason.INVALID_VALUE
@@ -791,6 +791,12 @@ class PaymentExtractStep(Step):
             )
             self.increment(self.Metrics.CLAIMANT_MISMATCH_COUNT)
             return None, None
+
+        if claim and not claim.claim_type_id:
+            payment_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_IN_DB,
+                f"Claim {payment_data.absence_case_number} exists, but does not have a claim type associated with it.",
+            )
 
         return employee, claim
 

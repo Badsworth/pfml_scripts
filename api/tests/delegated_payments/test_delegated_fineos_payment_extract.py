@@ -14,6 +14,7 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     AddressType,
     BankAccountType,
+    ClaimType,
     Employee,
     EmployeeAddress,
     EmployeeLog,
@@ -95,6 +96,7 @@ def add_db_records(
     tin,
     absence_case_id,
     add_claim=True,
+    add_claim_type=True,
     add_address=True,
     add_eft=True,
     add_payment=False,
@@ -123,7 +125,10 @@ def add_db_records(
             employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
 
         if add_claim:
-            claim = ClaimFactory.create(fineos_absence_id=absence_case_id, employee=employee)
+            claim_type_id = ClaimType.FAMILY_LEAVE.claim_type_id if add_claim_type else None
+            claim = ClaimFactory.create(
+                fineos_absence_id=absence_case_id, employee=employee, claim_type_id=claim_type_id
+            )
 
             # Payment needs to be attached to a claim
             if add_payment:
@@ -142,6 +147,7 @@ def add_db_records_from_fineos_data(
     db_session,
     fineos_data,
     add_claim=True,
+    add_claim_type=True,
     add_address=True,
     add_eft=True,
     add_payment=False,
@@ -155,6 +161,7 @@ def add_db_records_from_fineos_data(
         c_value=fineos_data.c_value,
         i_value=fineos_data.i_value,
         add_claim=add_claim,
+        add_claim_type=add_claim_type,
         add_address=add_address,
         add_eft=add_eft,
         add_payment=add_payment,
@@ -802,6 +809,50 @@ def test_process_extract_data_existing_payment(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_data_claim_exists_without_leave_type(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    payment_extract_step,
+    test_db_session,
+    tmp_path,
+    monkeypatch,
+    create_triggers,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+
+    # Create a basic payment
+    fineos_data = FineosPaymentData()
+    # Create a claim without the claim type
+    add_db_records_from_fineos_data(test_db_session, fineos_data, add_claim_type=False)
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 1
+
+    payment_extract_step.run()
+
+    payment = test_db_session.query(Payment).one_or_none()
+    assert payment
+    assert payment.claim
+
+    assert len(payment.state_logs) == 1
+    state_log = payment.state_logs[0]
+    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+
+    assert state_log.outcome["message"] == "Error processing payment record"
+    validation_issues = state_log.outcome["validation_container"]["validation_issues"]
+    assert len(validation_issues) == 1
+    assert validation_issues[0] == {
+        "reason": "MissingInDB",
+        "details": "Claim ABS-4720 exists, but does not have a claim type associated with it.",
+    }
+
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_minimal_viable_payment(
     mock_s3_bucket,
     set_exporter_env_vars,
@@ -902,14 +953,20 @@ def test_process_extract_data_leave_request_decision_validation(
 
     approved_record = FineosPaymentData(leave_request_decision="Approved")
     pending_record = FineosPaymentData(leave_request_decision="Pending")
+    in_review_record = FineosPaymentData(leave_request_decision="In Review")
     rejected_record = FineosPaymentData(leave_request_decision="Rejected")
 
     # setup both payments in DB
     add_db_records_from_fineos_data(test_db_session, approved_record)
     add_db_records_from_fineos_data(test_db_session, pending_record)
+    add_db_records_from_fineos_data(test_db_session, in_review_record)
     add_db_records_from_fineos_data(test_db_session, rejected_record)
 
-    upload_fineos_data(tmp_path, mock_s3_bucket, [approved_record, pending_record, rejected_record])
+    upload_fineos_data(
+        tmp_path,
+        mock_s3_bucket,
+        [approved_record, pending_record, in_review_record, rejected_record],
+    )
 
     # We deliberately do no DB setup, there will not be any prior employee or claim
     payment_extract_step.run()
@@ -944,6 +1001,21 @@ def test_process_extract_data_leave_request_decision_validation(
         == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
     )
 
+    in_review_payment = (
+        test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == in_review_record.c_value,
+            Payment.fineos_pei_i_value == in_review_record.i_value,
+        )
+        .one_or_none()
+    )
+    assert in_review_payment
+    assert len(in_review_payment.state_logs) == 1
+    assert (
+        in_review_payment.state_logs[0].end_state_id
+        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+    )
+
     rejected_payment = (
         test_db_session.query(Payment)
         .filter(
@@ -961,7 +1033,7 @@ def test_process_extract_data_leave_request_decision_validation(
 
     import_log_report = json.loads(rejected_payment.fineos_extract_import_log.report)
     assert import_log_report["not_pending_or_approved_leave_request_count"] == 1
-    assert import_log_report["standard_valid_payment_count"] == 2
+    assert import_log_report["standard_valid_payment_count"] == 3
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
