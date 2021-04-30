@@ -582,10 +582,7 @@ jobs:
   post-e2e-failures-to-slack:
     name: Post E2E failures to Slack
     needs: [finish-comms-slack, end-to-end]
-    if: always() && 
-      (
-        (needs.end-to-end.conclusion == 'failure' || needs.end-to-end.conclusion == 'timed_out')
-      )
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
