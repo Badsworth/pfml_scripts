@@ -493,8 +493,8 @@ export function intermittentClaimAdjudicationFlow(
 
 // This is being used for Sally hours to allow us to see payment being made.
 export function submitIntermittentActualHours(
-  timeSpanHoursStart: number,
-  timeSpanHoursEnd: number
+  timeSpanHoursStart: string,
+  timeSpanHoursEnd: string
 ): void {
   cy.contains("span[class='LinkText']", "Record Actual").click({ force: true });
   wait();
