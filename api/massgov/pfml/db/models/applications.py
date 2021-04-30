@@ -309,6 +309,7 @@ class Application(Base):
     employer = relationship(Employer)
     employee = relationship(Employee)
     occupation = relationship(LkOccupation)
+    # @todo: occupation titles
     leave_type = relationship(LkLeaveType)
     leave_reason = relationship(LkLeaveReason)
     leave_reason_qualifier = relationship(LkLeaveReasonQualifier)

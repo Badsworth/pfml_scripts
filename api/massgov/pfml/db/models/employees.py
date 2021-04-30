@@ -481,7 +481,7 @@ class Employee(Base):
     marital_status_id = Column(Integer, ForeignKey("lk_marital_status.marital_status_id"))
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
-    occupation_title_id = Column(Integer, ForeignKey("lk_occupation_title.occupation_title_id"))
+    # @todo: this broke dor imports, occupation_title_id = Column(Integer, ForeignKey("lk_occupation_title.occupation_title_id"), nullable=True)
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
     mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), index=True)

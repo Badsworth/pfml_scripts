@@ -118,62 +118,6 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
-  /users/{user_id}/industries:
-    get:
-      tags:
-        - Users
-        - Occupations
-      summary: Retrieve a list of available occupations to choose from
-      operationId: massgov.pfml.api.users.users_get_occupations_list
-      parameters:
-        - name: user_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-          description: ID of User to authenticate
-          required: true
-      responses:
-        "200":
-          description: A successful request returns a 200 status code and a list of occupation objects.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OccupationResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  /users/{user_id}/industries/{occupation_id}:
-    get:
-      tags:
-        - Users
-        - Occupations
-      summary: Retrieve a list of available occupation titles to choose from
-      operationId: massgov.pfml.api.users.users_get_occupation_titles_list
-      parameters:
-        - name: user_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-          description: ID of User to authenticate
-          required: true
-        - name: occupation_id
-          in: path
-          schema:
-            type: integer
-          description: ID of a valid occupation category in LkOccupation
-          required: true
-      responses:
-        "200":
-          description: A successful request returns a 200 status code and a list of occupation title objects.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OccupationTitleResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-          
   /employees/{employee_id}:
     get:
       tags:
@@ -254,7 +198,6 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/EmployeeSearchRequest"
 
-
   /employers/add:
     post:
       tags:
@@ -298,7 +241,6 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/ErrorResponse"
 
-
   /employers/withholding/{employer_id}:
     get:
       summary: Retrieves the last withholding date for the FEIN specified
@@ -331,7 +273,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
 
   /claims/{fineos_absence_id}:
     get:
@@ -443,7 +384,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
 
   /employers/claims/{fineos_absence_id}/documents:
     get:
@@ -1100,6 +1040,45 @@ paths:
           $ref: "#/components/responses/BadRequest"
       requestBody:
         $ref: "#/components/requestBodies/VerificationRequest"
+
+  /occupations:
+    get:
+      tags:
+        - Occupations
+      summary: Retrieve a list of available occupations to choose from
+      operationId: massgov.pfml.api.users.users_get_occupations_list
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a list of occupation objects.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OccupationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /occupations/{occupation_id}/titles:
+    get:
+      tags:
+        - Occupations
+      summary: Retrieve a list of available occupation titles to choose from
+      operationId: massgov.pfml.api.users.users_get_occupation_titles_list
+      parameters:
+        - name: occupation_id
+          in: path
+          schema:
+            type: integer
+          description: ID of a valid occupation category in LkOccupation
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a list of occupation title objects.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OccupationTitleResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
 tags:
   - name: Test Endpoints
