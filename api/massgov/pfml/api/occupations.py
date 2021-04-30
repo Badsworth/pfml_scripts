@@ -1,10 +1,7 @@
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.api.models.users.responses import (
-    OccupationResponse,
-    OccupationTitleResponse,
-)
+from massgov.pfml.api.models.users.responses import OccupationResponse, OccupationTitleResponse
 from massgov.pfml.db.models.employees import LkOccupation, LkOccupationTitle
 
 logger = logging.get_logger(__name__)
@@ -34,16 +31,17 @@ def occupation_titles(occupation_id):
 
         job_titles = (
             db_session.query(LkOccupationTitle)
-            .filter(
-                LkOccupationTitle.occupation_id == int(occupation_id)
-            )
+            .filter(LkOccupationTitle.occupation_id == int(occupation_id))
             .all()
         )
 
-    data = [OccupationTitleResponse.from_orm(title).dict() for title in job_titles if title.occupation_title_code > 100000]
+    data = [
+        OccupationTitleResponse.from_orm(title).dict()
+        for title in job_titles
+        if title.occupation_title_code > 100000
+    ]
 
     # ensure(READ, u)
     return response_util.success_response(
-        message="Successfully occupation titles list",
-        data=data,
+        message="Successfully occupation titles list", data=data,
     ).to_api_response()
