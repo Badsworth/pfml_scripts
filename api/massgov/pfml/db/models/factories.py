@@ -384,7 +384,7 @@ class PaymentFactory(BaseFactory):
     # matter what number it is, so picking a static number is fine.
     fineos_pei_c_value = "9000"
     # The I value is unique for all payments and should be a string, not an int.
-    fineos_pei_i_value = factory.Faker("numerify", text="####")
+    fineos_pei_i_value = factory.Sequence(lambda n: "%d" % n)
 
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
