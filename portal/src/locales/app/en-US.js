@@ -1167,6 +1167,9 @@ const pages = {
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsOccupation: {
+    notListed: "Not listed",
+    selectCategory: "Select an industry category",
+    selectOption: "Select a title",
     title: "Occupation",
   },
   claimsOtherIncomes: {

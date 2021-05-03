@@ -1,7 +1,9 @@
 import { NotFoundError, ValidationError } from "../errors";
 import { useMemo, useState } from "react";
+
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
+import OccupationsApi from "../api/OccupationsApi";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import routes from "../routes";
 import useCollectionState from "./useCollectionState";
@@ -26,6 +28,8 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   const claimsApi = useMemo(() => new BenefitsApplicationsApi({ user }), [
     user,
   ]);
+
+  const occupationsApi = useMemo(() => new OccupationsApi({ user }), [user]);
 
   // Cache the validation warnings associated with each claim. Primarily
   // used for controlling the status of Checklist steps.
@@ -271,6 +275,14 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     }
   };
 
+  const getOccupations = async () => {
+    return await occupationsApi.getAll();
+  };
+
+  const getOccupationTitles = async (occupation_id) => {
+    return await occupationsApi.getTitlesById(parseInt(occupation_id));
+  };
+
   return {
     benefitsApplications,
     complete,
@@ -283,6 +295,8 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     submit,
     submitPaymentPreference,
     warningsLists,
+    getOccupations,
+    getOccupationTitles,
   };
 };
 

@@ -5,7 +5,7 @@
 
 import BaseModel from "./BaseModel";
 
-export class Occupation extends BaseModel {
+export default class Occupation extends BaseModel {
   get defaults() {
     return {
       occupation_code: null,

@@ -23,21 +23,17 @@ export default class OccupationsApi extends BaseApi {
    */
   getAll = async () => {
     let { data } = await this.request("GET");
-    data = data.map((d) => new Occupation(...d));
-    return Promise.resolve({
-      occupations: data,
-    });
+    data = data.map((d) => new Occupation(d));
+    return Promise.resolve(data);
   };
 
   /**
    * Get the full list of occupation titles of an occupation category id
    * @returns {Promise<OccupationTitlesApiResult>}
    */
-  getOccupationTitles = async (occupation_id) => {
-    let { data } = await this.request("GET", occupation_id, "titles");
-    data = data.map((d) => new OccupationTitle(...d));
-    return Promise.resolve({
-      occupation_titles: data,
-    });
+  getTitlesById = async (occupation_id) => {
+    let { data } = await this.request("GET", `${occupation_id}/titles`);
+    data = data.map((d) => new OccupationTitle(d));
+    return Promise.resolve(data);
   };
 }
