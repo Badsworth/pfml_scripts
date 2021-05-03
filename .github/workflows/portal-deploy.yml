@@ -465,11 +465,7 @@ jobs:
     outputs: 
       message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
     # Notifies if there's a failure on auto-deploys to test
-    if: always() && 
-        (
-          (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
-          (needs.postdeploy-info.outputs.deploy-state == 'timed_out' || needs.postdeploy-info.outputs.deploy-state == 'failure')
-        )
+    if: always()
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -605,9 +601,9 @@ jobs:
         run: |
           echo "Slackbot message reply TS is ${{ needs.finish-comms-slack.outputs.message-ts }}"
 
-          optional_threadts = ""
+          optional_threadts=""
           if [[ -z "${{ needs.start-comms-slack.outputs.message-ts }}" ]]; then
-            optional_threadts = "\"thread_ts\": \"${{ needs.start-comms-slack.outputs.message-ts }}\","
+            optional_threadts="\"thread_ts\": \"${{ needs.start-comms-slack.outputs.message-ts }}\","
           fi
           
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
