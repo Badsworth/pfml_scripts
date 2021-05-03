@@ -79,6 +79,10 @@ describe("Approval (notifications/notices)", () => {
           }
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           portal.login(getLeaveAdminCredentials(claim.employer_fein));
+          portal.selectClaimFromEmployerDashboard(
+            submission.fineos_absence_id,
+            "--"
+          );
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,

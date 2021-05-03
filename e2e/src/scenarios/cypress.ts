@@ -62,13 +62,14 @@ export const BHAP9: ScenarioSpecification = {
   },
 };
 
-export const BGBM1: ScenarioSpecification = {
+export const MCAP_NODOC: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
-    label: "BGBM1",
+    label: "MCAP_NODOC",
     shortClaim: true,
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    work_pattern_spec: "0,315,315,315,315,315,0",
     docs: {
       // Missing HCP.
       MASSID: {},

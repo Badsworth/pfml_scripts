@@ -28,6 +28,7 @@ export function before(): void {
       claimantAuthThroughApi: true,
       employerShowAddOrganization: true,
       employerShowVerifications: true,
+      employerShowDashboard: true,
     }),
     { log: true }
   );
@@ -809,19 +810,29 @@ export function completeIntermittentLeaveDetails(
   cy.contains("button", "Save and continue").click();
 }
 
-export function respondToLeaveAdminRequest(
-  fineosAbsenceId: string,
-  suspectFraud: boolean,
-  gaveNotice: boolean,
-  approval: boolean
-): void {
+export function checkHoursPerWeekLeaveAdmin(hwpw: number): void {
+  cy.get("#employer-review-form").should((textArea) => {
+    expect(
+      textArea,
+      `Hours worked per week should be: ${hwpw} hours`
+    ).contain.text(String(hwpw));
+  });
+}
+
+export function vistActionRequiredERFormPage(fineosAbsenceId: string): void {
   cy.visit(
     `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
   );
   cy.contains("Are you the right person to respond to this application?");
   cy.contains("Yes").click();
   cy.contains("Agree and submit").click();
+}
 
+export function respondToLeaveAdminRequest(
+  suspectFraud: boolean,
+  gaveNotice: boolean,
+  approval: boolean
+): void {
   cy.contains(
     "fieldset",
     "Do you have any reason to suspect this is fraud?"
@@ -998,4 +1009,31 @@ export function assertZeroWithholdings(): void {
     "p",
     "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. "
   );
+}
+
+export function selectClaimFromEmployerDashboard(
+  fineosAbsenceId: string,
+  status: "Approved" | "Denied" | "Closed" | "--"
+): void {
+  cy.get('a[href="/employers/dashboard"]').first().click();
+
+  cy.get("tr")
+    .contains(fineosAbsenceId)
+    .parent()
+    .parent()
+    .contains('td[data-label="Status"]', status);
+  // TODO: once ALL environments include links to the applications, we should uncomment and make an assertion that the link exists
+  // .siblings()
+  // .contains(
+  //   `a[href="/employers/applications/new-application?absence_id=${fineosAbsenceId}"]`
+  // )
+}
+
+export function assertUnverifiedEmployerDashboard(): void {
+  cy.contains("Verify your account");
+  cy.contains("You have not verified any organizations.");
+}
+
+export function goToEmployerDashboard(): void {
+  cy.get('a[href="/employers/dashboard/"]').first().click();
 }

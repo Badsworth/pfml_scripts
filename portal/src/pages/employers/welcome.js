@@ -112,6 +112,13 @@ export const Welcome = ({ appLogic, user }) => {
                     rel="noopener"
                   />
                 ),
+                "caregiver-certification-form-link": (
+                  <a
+                    href={routes.external.massgov.caregiverCertificationForm}
+                    target="_blank"
+                    rel="noopener"
+                  />
+                ),
               }}
             />
           </p>

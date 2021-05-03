@@ -1,9 +1,202 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Success renders content tailored to Caring Leave 1`] = `
+<Fragment>
+  <Title>
+    You submitted your application
+  </Title>
+  <p
+    className="margin-bottom-5"
+  >
+    <Trans
+      i18nKey="pages.claimsSuccess.claimantApplicationId"
+      values={
+        Object {
+          "absence_id": "NTN-111-ABS-01",
+        }
+      }
+    />
+  </p>
+  <div
+    className="measure-6"
+  >
+    <Heading
+      level="2"
+    >
+      <SvgIconPhone
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
+      We may need more information from you
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
+          "li": <li />,
+          "reductions-employer-benefits-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+          />,
+          "reductions-overview-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+          />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+    />
+    <Heading
+      level="2"
+    >
+      <SvgIconCalendar
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
+      What happens next
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "caringLeave",
+        }
+      }
+    />
+    <UserFeedback
+      url="https://www.mass.gov/paidleave-claimant-feedback"
+    />
+    <ButtonLink
+      className="margin-top-4"
+      href="/applications"
+    >
+      Return to applications
+    </ButtonLink>
+  </div>
+</Fragment>
+`;
+
+exports[`Success renders content tailored to Caring Leave 2`] = `
+Array [
+  "Your application ID is ",
+  <strong
+    key="strong-1"
+  >
+    NTN-111-ABS-01
+  </strong>,
+]
+`;
+
+exports[`Success renders content tailored to Caring Leave 3`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Call the Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     if you’ll receive:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Any 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+        key="1"
+      >
+        benefits from your employer
+      </a>
+       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+    </li>
+    <li
+      key="1"
+    >
+      Income from 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        key="1"
+      >
+        any other sources
+      </a>
+       during your leave
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Success renders content tailored to Caring Leave 4`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+  <li
+    key="0"
+  >
+    Your employer has 10 business days to provide feedback on your application.
+  </li>
+   
+  <li
+    key="2"
+  >
+    We’ll confirm your eligibility and make sure that your documents are valid.
+  </li>
+   
+  <li
+    key="4"
+  >
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.
+  </li>
+  <li
+    key="5"
+  >
+    Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.
+  </li>
+  <li
+    key="6"
+  >
+    If you need to end your leave early, you must call the DFML Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+    .
+  </li>
+</ul>
+`;
+
 exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
 <Fragment>
   <Title>
-    You submitted your family leave application
+    You submitted your application
   </Title>
   <p
     className="margin-bottom-5"
@@ -185,7 +378,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 4`] = `
 exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`] = `
 <Fragment>
   <Title>
-    You submitted your family leave application
+    You submitted your application
   </Title>
   <p
     className="margin-bottom-5"
@@ -401,7 +594,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 5`
 exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`] = `
 <Fragment>
   <Title>
-    You submitted your family leave application
+    You submitted your application
   </Title>
   <p
     className="margin-bottom-5"
@@ -667,7 +860,7 @@ Array [
 exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
 <Fragment>
   <Title>
-    You submitted your family leave application
+    You submitted your application
   </Title>
   <p
     className="margin-bottom-5"
@@ -899,7 +1092,7 @@ Array [
 exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
 <Fragment>
   <Title>
-    You submitted your medical leave application
+    You submitted your application
   </Title>
   <p
     className="margin-bottom-5"
@@ -1081,7 +1274,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 4`] = `
 exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
 <Fragment>
   <Title>
-    You submitted your medical leave application
+    You submitted your application
   </Title>
   <p
     className="margin-bottom-5"
@@ -1313,7 +1506,7 @@ Array [
 exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 1`] = `
 <Fragment>
   <Title>
-    You submitted your medical leave application
+    You submitted your application
   </Title>
   <p
     className="margin-bottom-5"

@@ -154,10 +154,6 @@ const errors = {
       required:
         "Select yes if you will receive income from any other sources during your leave.",
     },
-    has_previous_leaves: {
-      required:
-        "Select yes if you have taken paid or unpaid leave since January 1, 2021 for a qualifying reason.",
-    },
     has_reduced_schedule_leave_periods: {
       required: "Select Yes if you are working a reduced schedule.",
     },
@@ -395,28 +391,6 @@ const errors = {
         required: "Select a number type.",
       },
     },
-    previous_leaves: {
-      is_for_current_employer: {
-        required: "Select yes if your leave is from this employer.",
-      },
-      leave_end_date: {
-        format:
-          "Date your leave ended must include a valid month, day, and year.",
-        invalid_date_range:
-          "Date your leave ends must be on or after the date your leave began.",
-        minimum: "Leave end date must be after December 31, 2020",
-        required: "Enter the date your leave ended.",
-      },
-      leave_reason: {
-        required: "Select the qualifying reason for your leave.",
-      },
-      leave_start_date: {
-        format:
-          "Date your leave began must include a valid month, day, and year.",
-        minimum: "Leave start date must be after December 31, 2020",
-        required: "Enter the date your leave began.",
-      },
-    },
     residential_address: {
       city: {
         required: "Enter a city for your residential address.",
@@ -518,18 +492,6 @@ const errors = {
     },
     outstanding_information_request_required:
       "This application has already been reviewed.",
-    previous_leaves: {
-      leave_start_date: {
-        format: "Start date must include a valid month, day, and year.",
-        invalid_previous_leave_start_date:
-          "Paid leave cannot be taken before January 1, 2021. Enter a date after December 31, 2020.",
-      },
-      leave_end_date: {
-        format: "End date must include a valid month, day, and year.",
-        minimum:
-          "Last day of leave must be on or after the first day of leave.",
-      },
-    },
     unauthorized_leave_admin:
       "Sorry, you do not have permission to view that page. To access it, you need to <add-org-link>add that organization</add-org-link> to your account.",
     withholding_amount: {
@@ -1551,6 +1513,8 @@ const pages = {
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
     adjudicationProcess_bondingNewbornFuture:
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
+    adjudicationProcess_caringLeave:
+      "<ul><li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>If you need to end your leave early, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</li></ul>",
     adjudicationProcess_medicalPregnantFuture:
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>When your leave begins, call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to tell us. Then we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
     claimantApplicationId:
@@ -1572,9 +1536,7 @@ const pages = {
     reportReductionsHeading: "We may need more information from you",
     reportReductionsProcess:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> if you’ll receive:</p><ul><li>Any <reductions-employer-benefits-link>benefits from your employer</reductions-employer-benefits-link> that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from <reductions-overview-link>any other sources</reductions-overview-link> during your leave</li></ul>",
-    title: "You submitted your leave application",
-    title_bonding: "You submitted your family leave application",
-    title_medical: "You submitted your medical leave application",
+    title: "You submitted your application",
   },
   claimsUploadCertification: {
     addAnotherFileButton: "Choose another file",
@@ -1858,7 +1820,7 @@ const pages = {
       "When you log into your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
     viewApplicationsTitle: "View all applications",
     viewFormsBody:
-      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process.",
+      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process. For leave to care for a family member you can download the <caregiver-certification-form-link>Certification to Care for a Family Member</caregiver-certification-form-link> during the review process. ",
     viewFormsTitle: "View forms and notices online",
     welcomeBody:
       "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.",

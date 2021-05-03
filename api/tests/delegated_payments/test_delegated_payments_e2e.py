@@ -339,6 +339,7 @@ def test_e2e_pub_payments(
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[
+                ScenarioName.CLAIM_NOT_ID_PROOFED,
                 ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
                 ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
                 ScenarioName.PUB_ACH_PRENOTE_RETURN,
