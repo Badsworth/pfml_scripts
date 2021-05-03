@@ -809,19 +809,29 @@ export function completeIntermittentLeaveDetails(
   cy.contains("button", "Save and continue").click();
 }
 
-export function respondToLeaveAdminRequest(
-  fineosAbsenceId: string,
-  suspectFraud: boolean,
-  gaveNotice: boolean,
-  approval: boolean
-): void {
+export function checkHoursPerWeekLeaveAdmin(hwpw: number): void {
+  cy.get("#employer-review-form").should((textArea) => {
+    expect(
+      textArea,
+      `Hours worked per week should be: ${hwpw} hours`
+    ).contain.text(String(hwpw));
+  });
+}
+
+export function vistActionRequiredERFormPage(fineosAbsenceId: string): void {
   cy.visit(
     `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
   );
   cy.contains("Are you the right person to respond to this application?");
   cy.contains("Yes").click();
   cy.contains("Agree and submit").click();
+}
 
+export function respondToLeaveAdminRequest(
+  suspectFraud: boolean,
+  gaveNotice: boolean,
+  approval: boolean
+): void {
   cy.contains(
     "fieldset",
     "Do you have any reason to suspect this is fraud?"

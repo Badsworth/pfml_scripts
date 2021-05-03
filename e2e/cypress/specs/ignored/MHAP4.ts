@@ -22,12 +22,8 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
         }
 
         portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
-        portal.respondToLeaveAdminRequest(
-          response.fineos_absence_id,
-          false,
-          true,
-          true
-        );
+        portal.vistActionRequiredERFormPage(response.fineos_absence_id);
+        portal.respondToLeaveAdminRequest(false, true, true);
       });
     });
     cy.wait(1000);

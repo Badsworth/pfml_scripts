@@ -39,12 +39,8 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
         portal.login(
           getLeaveAdminCredentials(claim.claim.employer_fein as string)
         );
-        portal.respondToLeaveAdminRequest(
-          submission.fineos_absence_id,
-          false,
-          true,
-          true
-        );
+        portal.vistActionRequiredERFormPage(submission.fineos_absence_id);
+        portal.respondToLeaveAdminRequest(false, true, true);
       });
     });
   });
