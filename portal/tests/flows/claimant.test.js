@@ -6,6 +6,7 @@ import BenefitsApplication, {
 import { Machine, assign } from "xstate";
 import claimFlowStates, { guards } from "../../src/flows/claimant";
 import { get, merge } from "lodash";
+
 import LeaveReason from "../../src/models/LeaveReason";
 import User from "../../src/models/User";
 import { createModel } from "@xstate/test";
@@ -172,6 +173,11 @@ const machineTests = {
     },
   },
   [routes.applications.employmentStatus]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.occupation]: {
     meta: {
       test: () => {},
     },

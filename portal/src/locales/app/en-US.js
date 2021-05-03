@@ -1166,6 +1166,11 @@ const pages = {
       "Have you told your employer that you are taking$t(chars.nbsp)leave?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
+  claimsOccupation: {
+    occupation_label: "What industry is your current job?",
+    occupation_title_label: "What sub-industry is your current job?",
+    title: "$t(shared.claimsEmploymentInfoTitle)",
+  },
   claimsOtherIncomes: {
     choiceNo: "$t(shared.choiceNo)",
     choicePendingOtherIncomes: "$t(shared.choicePendingOtherIncomes)",

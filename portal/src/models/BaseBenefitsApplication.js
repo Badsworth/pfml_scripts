@@ -1,5 +1,6 @@
 /* eslint sort-keys: ["error", "asc"] */
 import { compact, get, map } from "lodash";
+
 import Address from "./Address";
 import BaseModel from "./BaseModel";
 import LeaveReason from "./LeaveReason";
@@ -31,6 +32,8 @@ class BaseBenefitsApplication extends BaseModel {
         reduced_schedule_leave_periods: null,
       },
       middle_name: null,
+      occupation: null,
+      occupation_title: null,
       // array of PreviousLeave objects. See the PreviousLeave model
       previous_leaves: [],
       residential_address: new Address(),

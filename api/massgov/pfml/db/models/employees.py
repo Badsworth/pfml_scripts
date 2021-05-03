@@ -931,7 +931,7 @@ class EmployeeOccupation(Base):
     worksite_id = Column(Text)
     occupation_qualifier = Column(Text)
 
-    employee = relationship("Employee", back_populactes="employee_occupations")
+    employee = relationship("Employee", back_populates="employee_occupations")
     employer = relationship("Employer", back_populates="employer_occupations")
 
 

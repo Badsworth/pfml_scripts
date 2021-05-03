@@ -15,6 +15,7 @@ import {
   EmploymentStatus,
   WorkPatternType,
 } from "../models/BenefitsApplication";
+
 import { ClaimSteps } from "../models/Step";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
@@ -33,6 +34,7 @@ import { fields as leavePeriodReducedScheduleFields } from "../pages/application
 import { fields as leaveReasonFields } from "../pages/applications/leave-reason";
 import { fields as nameFields } from "../pages/applications/name";
 import { fields as notifiedEmployerFields } from "../pages/applications/notified-employer";
+import { fields as occupationFields } from "../pages/applications/occupation";
 import { fields as otherIncomesDetailsFields } from "../pages/applications/other-incomes-details";
 import { fields as otherIncomesFields } from "../pages/applications/other-incomes";
 import { fields as paymentMethodFields } from "../pages/applications/payment-method";
@@ -446,7 +448,13 @@ export default {
         fields: notifiedEmployerFields,
       },
       on: {
-        CONTINUE: routes.applications.workPatternType,
+        CONTINUE: routes.applications.gender,
+      },
+    },
+    [routes.applications.occupation]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: occupationFields,
       },
     },
     [routes.applications.paymentMethod]: {
