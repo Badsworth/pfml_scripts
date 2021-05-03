@@ -5,7 +5,7 @@ import BaseApi from "./BaseApi";
 import routes from "../routes";
 
 /**
- * @typedef {{ occupations: [Occupation] }} UsersApiResult
+ * @typedef {{ occupations: [Occupation] }} OccupationsApiResult
  * @property {[Occupation]} [occupations] - A successful request will contain a list of occupations
  */
 export default class OccupationsApi extends BaseApi {
@@ -22,7 +22,7 @@ export default class OccupationsApi extends BaseApi {
    * @returns {Promise<OccupationsApiResult>}
    */
   getAll = async () => {
-    let { data } = await this.request("GET", "all");
+    let { data } = await this.request("GET");
     data = data.map((d) => new Occupation(...d));
     return Promise.resolve({
       occupations: data,

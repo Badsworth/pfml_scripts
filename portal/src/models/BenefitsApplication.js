@@ -39,6 +39,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
       mass_id: null,
       // See Occupation model
       occupation_id: null,
+      occupation_title_custom: null,
       occupation_title_id: null,
       // array of OtherIncome objects. See the OtherIncome model
       other_incomes: [],
