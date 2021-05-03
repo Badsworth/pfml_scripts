@@ -409,7 +409,7 @@ def test_e2e_pub_payments(
                 "cancellation_count": 1,
                 "overpayment_count": 3,
                 "employer_reimbursement_count": 1,
-                "errored_payment_count": 7,  # See DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT state check above
+                "errored_payment_count": 8,  # See DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT state check above
             },
         )
 
