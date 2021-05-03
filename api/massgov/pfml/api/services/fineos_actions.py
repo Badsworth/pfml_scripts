@@ -706,10 +706,11 @@ def update_occupation_details(
     employment_status_label = None
     if application.employment_status:
         employment_status_label = application.employment_status.fineos_label
-
-    NAICS_occupation = "Educational Services"
-    # if application.occupation.occupation_description:
-    #     NAICS_occupation = application.occupation.occupation_description
+ 
+    # Updates both the customer and the claim occupation details in FINEOS
+    NAICS_occupation = None
+    if application.occupation.occupation_description:
+        NAICS_occupation = application.occupation.occupation_description
 
     fineos_client.update_occupation(
         occupation_id, employment_status_label, application.hours_worked_per_week, NAICS_occupation
