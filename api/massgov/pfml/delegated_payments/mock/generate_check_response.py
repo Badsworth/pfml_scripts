@@ -128,12 +128,6 @@ class PubCheckResponseGenerator:
         ):
             raise Exception("Invalid check response scenario")
 
-        check_number = (
-            "0"
-            if scenario_descriptor.pub_ach_return_invalid_check_number
-            else str(payment.check.check_number)
-        )
-
         check_response_data_common = CheckResponseData(
             begin_date=str(payment.period_start_date.strftime("%m/%d/%Y"))
             if payment.period_start_date
@@ -148,7 +142,7 @@ class PubCheckResponseGenerator:
             bank_name="PEOPLES UNITED BANK",
             bfc_code="CLMNT",
             payee_id=employee.employee_id,
-            check_number=check_number,
+            check_number=str(payment.check.check_number),
             payee_name=_format_employee_name_for_ez_check(employee),
         )
 

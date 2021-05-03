@@ -1,3 +1,4 @@
+import enum
 import os
 import tempfile
 import uuid
@@ -86,6 +87,19 @@ class ExtractData:
 
 
 class ClaimantExtractStep(Step):
+    class Metrics(str, enum.Enum):
+        CLAIM_NOT_FOUND_COUNT = "claim_not_found_count"
+        EFT_FOUND_COUNT = "eft_found_count"
+        EFT_REJECTED_COUNT = "eft_rejected_count"
+        EMPLOYEE_FEED_RECORD_COUNT = "employee_feed_record_count"
+        EMPLOYEE_NOT_FOUND_COUNT = "employee_not_found_count"
+        ERRORED_CLAIMANT_COUNT = "errored_claimant_count"
+        EVIDENCE_NOT_ID_PROOFED_COUNT = "evidence_not_id_proofed_count"
+        NEW_EFT_COUNT = "new_eft_count"
+        PROCESSED_REQUESTED_ABSENCE_COUNT = "processed_requested_absence_count"
+        VALID_CLAIMANT_COUNT = "valid_claimant_count"
+        VBI_REQUESTED_ABSENCE_SOM_RECORD_COUNT = "vbi_requested_absence_som_record_count"
+
     def run_step(self) -> None:
         self.process_claimant_extract_data()
 
@@ -194,7 +208,7 @@ class ClaimantExtractStep(Step):
                 lower_key_record, FineosExtractEmployeeFeed, ref_file, self.get_import_log_id()
             )
             self.db_session.add(employee_feed_record)
-            self.increment("employee_feed_record_count")
+            self.increment(self.Metrics.EMPLOYEE_FEED_RECORD_COUNT)
 
         extract_data.employee_feed.indexed_data = employee_indexed_data
 
@@ -216,7 +230,7 @@ class ClaimantExtractStep(Step):
                 self.get_import_log_id(),
             )
             self.db_session.add(vbi_requested_absence_som_record)
-            self.increment("vbi_requested_absence_som_record_count")
+            self.increment(self.Metrics.VBI_REQUESTED_ABSENCE_SOM_RECORD_COUNT)
 
         extract_data.requested_absence_info.indexed_data = requested_absence_indexed_data
 
@@ -228,7 +242,7 @@ class ClaimantExtractStep(Step):
         requested_absences = extract_data.requested_absence_info.indexed_data.values()
         updated_employee_ids = set()
         for requested_absence in requested_absences:
-            self.increment("processed_requested_absence_count")
+            self.increment(self.Metrics.PROCESSED_REQUESTED_ABSENCE_COUNT)
             absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
             # TODO should we skip if absence case id is None?
             if absence_case_id is not None:
@@ -245,7 +259,7 @@ class ClaimantExtractStep(Step):
                         absence_case_id,
                         extra={"absence_case_id": absence_case_id},
                     )
-                    self.increment("evidence_not_id_proofed_count")
+                    self.increment(self.Metrics.EVIDENCE_NOT_ID_PROOFED_COUNT)
                 continue
 
             employee_pfml_entry = None
@@ -316,7 +330,7 @@ class ClaimantExtractStep(Step):
             )
             # Note that this claim might not get made if there are
             # validation issues found for the claimant
-            self.increment("claim_not_found_count")
+            self.increment(self.Metrics.CLAIM_NOT_FOUND_COUNT)
         else:
             logger.info(
                 "Found existing claim for absence_case_id: %s",
@@ -423,7 +437,7 @@ class ClaimantExtractStep(Step):
                     "fineos_customer_number": fineos_customer_number,
                 },
             )
-            self.increment("employee_not_found_count")
+            self.increment(self.Metrics.EMPLOYEE_NOT_FOUND_COUNT)
             return None
 
         employee_tax_identifier = payments_util.validate_csv_input(
@@ -459,7 +473,7 @@ class ClaimantExtractStep(Step):
 
         # Assumption is we should not be creating employees in the PFML DB through this extract.
         if employee_pfml_entry is None:
-            logger.exception(
+            logger.warning(
                 f"Employee in employee file with customer nbr {fineos_customer_number} not found in PFML DB.",
             )
             return None
@@ -566,7 +580,7 @@ class ClaimantExtractStep(Step):
             # but do need to add an error to the report if the EFT
             # information is invalid
             if existing_eft:
-                self.increment("eft_found_count")
+                self.increment(self.Metrics.EFT_FOUND_COUNT)
                 logger.info(
                     "Found existing EFT info for claimant in prenote state %s",
                     existing_eft.prenote_state.prenote_state_description,
@@ -580,10 +594,10 @@ class ClaimantExtractStep(Step):
                         payments_util.ValidationReason.EFT_PRENOTE_REJECTED,
                         "EFT prenote was rejected - cannot pay with this account info",
                     )
-                    self.increment("eft_rejected_count")
+                    self.increment(self.Metrics.EFT_REJECTED_COUNT)
 
             else:
-                self.increment("new_eft_count")
+                self.increment(self.Metrics.NEW_EFT_COUNT)
                 # This EFT info is new, it needs to be linked to the employee
                 # and added to the EFT prenoting flow
                 logger.info(
@@ -685,7 +699,7 @@ class ClaimantExtractStep(Step):
                 ),
                 db_session=self.db_session,
             )
-            self.increment("errored_claimant_count")
+            self.increment(self.Metrics.ERRORED_CLAIMANT_COUNT)
 
         else:
             state_log_util.create_finished_state_log(
@@ -697,7 +711,7 @@ class ClaimantExtractStep(Step):
                 ),
                 db_session=self.db_session,
             )
-            self.increment("valid_claimant_count")
+            self.increment(self.Metrics.VALID_CLAIMANT_COUNT)
 
     # TODO move to payments_util
     def move_files_from_received_to_processed(self, extract_data: ExtractData) -> None:

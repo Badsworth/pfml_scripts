@@ -32,9 +32,9 @@
         <tbody>
             {% for entry in data %}
                 <tr>
-                    <td><a href="batch/{{ entry.import_log_id }}">{{ entry.import_log_id }}</a></td>
+                    <td><a href="{{ base_url }}batch/{{ entry.import_log_id }}">{{ entry.import_log_id }}</a></td>
                     <td>{{ entry.start.strftime("%Y-%m-%d %H:%M:%S") if entry.start }}</td>
-                    <td>{{ entry.source }}</td>
+                    <td><a href="{{ base_url }}batch/{{ entry.source }}">{{ entry.source }}</a></td>
                     <td>{{ entry.import_type }}</td>
                     <td>{{ entry.status }}</td>
                     <td title="{{ entry.end.strftime('%Y-%m-%d %H:%M:%S') if entry.end }}">{{

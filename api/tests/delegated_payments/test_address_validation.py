@@ -274,6 +274,52 @@ def test_run_step_no_database_changes_on_exception(
     )
 
 
+def test_run_step_experian_exception(
+    initialize_factories_session, test_db_session, test_db_other_session
+):
+    client = MockClient()
+
+    valid_check_payments = _set_up_payments(
+        client, test_db_session, fake.random_int(min=5, max=11), Confidence.VERIFIED_MATCH
+    )
+    eft_payments_with_multiple_matching_addresses = _set_up_payments(
+        client,
+        test_db_session,
+        fake.random_int(min=4, max=7),
+        Confidence.MULTIPLE_MATCHES,
+        PaymentMethod.ACH.payment_method_id,
+    )
+    # Commit the various experian_address_pair.experian_address = None changes to the database.
+    test_db_session.commit()
+
+    with mock.patch(
+        "massgov.pfml.delegated_payments.address_validation._experian_response_for_address",
+        side_effect=Exception("Example error"),
+    ), mock.patch(
+        "massgov.pfml.delegated_payments.address_validation._get_experian_client",
+        return_value=client,
+    ):
+        AddressValidationStep(
+            db_session=test_db_session, log_entry_db_session=test_db_other_session
+        ).run()
+
+    # Despite having valid addresses, these payments failed because Experian threw an exception
+    _assert_payment_state_log_outcome(
+        test_db_other_session,
+        valid_check_payments,
+        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+        Constants.UNKNOWN,
+    )
+
+    # EFT payments will always pass even if Experian throws an exception
+    _assert_payment_state_log_outcome(
+        test_db_other_session,
+        eft_payments_with_multiple_matching_addresses,
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+        Constants.UNKNOWN,
+    )
+
+
 def test_run_step_state_log_outcome_field(
     initialize_factories_session, test_db_session, test_db_other_session
 ):

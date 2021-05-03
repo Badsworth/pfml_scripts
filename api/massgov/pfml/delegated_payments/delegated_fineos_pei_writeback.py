@@ -1,6 +1,7 @@
 import csv
 import dataclasses
 import datetime
+import enum
 import os
 import uuid
 from dataclasses import dataclass
@@ -81,6 +82,17 @@ REQUIRED_FIELDS_FOR_DISBURSED_PAYMENT = [
 
 
 class FineosPeiWritebackStep(Step):
+    class Metrics(str, enum.Enum):
+        CANCELLED_PAYMENT_COUNT = "cancelled_payment_count"
+        CHECK_PAYMENT_COUNT = "check_payment_count"
+        EFT_PAYMENT_COUNT = "eft_payment_count"
+        EMPLOYER_REIMBURSEMENT_PAYMENT_COUNT = "employer_reimbursement_payment_count"
+        ERRORED_PAYMENT_WRITEBACK_ITEMS_COUNT = "errored_payment_writeback_items_count"
+        OVERPAYMENT_COUNT = "overpayment_count"
+        PAYMENT_WRITEBACK_TWO_ITEMS_COUNT = "payment_writeback_two_items_count"
+        WRITEBACK_RECORD_COUNT = "writeback_record_count"
+        ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
+
     def run_step(self) -> None:
         # TODO - we need a way to have this distinguish between
         #        writeback #1 and #2 - for now only #1 can be run
@@ -115,7 +127,7 @@ class FineosPeiWritebackStep(Step):
             zero_dollar_payment_count,
             State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
-        self.set_metrics(zero_dollar_payment_count=zero_dollar_payment_count)
+        self.set_metrics({self.Metrics.ZERO_DOLLAR_PAYMENT_COUNT: zero_dollar_payment_count})
 
         overpayment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK,
@@ -129,7 +141,7 @@ class FineosPeiWritebackStep(Step):
             overpayment_count,
             State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
-        self.set_metrics(overpayment_count=overpayment_count)
+        self.set_metrics({self.Metrics.OVERPAYMENT_COUNT: overpayment_count})
 
         check_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
@@ -143,7 +155,7 @@ class FineosPeiWritebackStep(Step):
             check_payment_count,
             State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_description,
         )
-        self.set_metrics(check_payment_count=check_payment_count)
+        self.set_metrics({self.Metrics.CHECK_PAYMENT_COUNT: check_payment_count})
 
         eft_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
@@ -157,7 +169,7 @@ class FineosPeiWritebackStep(Step):
             eft_payment_count,
             State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_description,
         )
-        self.set_metrics(eft_payment_count=eft_payment_count)
+        self.set_metrics({self.Metrics.EFT_PAYMENT_COUNT: eft_payment_count})
 
         cancelled_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK,
@@ -171,7 +183,7 @@ class FineosPeiWritebackStep(Step):
             cancelled_payment_count,
             State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
-        self.set_metrics(cancelled_payment_count=cancelled_payment_count)
+        self.set_metrics({self.Metrics.CANCELLED_PAYMENT_COUNT: cancelled_payment_count})
 
         employer_reimbursement_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK,
@@ -185,7 +197,11 @@ class FineosPeiWritebackStep(Step):
             employer_reimbursement_payment_count,
             State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
-        self.set_metrics(employer_reimbursement_payment_count=employer_reimbursement_payment_count)
+        self.set_metrics(
+            {
+                self.Metrics.EMPLOYER_REIMBURSEMENT_PAYMENT_COUNT: employer_reimbursement_payment_count
+            }
+        )
 
         errored_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.ADD_TO_ERRORED_PEI_WRITEBACK,
@@ -201,9 +217,10 @@ class FineosPeiWritebackStep(Step):
             State.ADD_TO_ERRORED_PEI_WRITEBACK.state_description,
         )
         self.set_metrics(
-            errored_payment_writeback_items_count=errored_payment_writeback_items_count
+            {
+                self.Metrics.ERRORED_PAYMENT_WRITEBACK_ITEMS_COUNT: errored_payment_writeback_items_count
+            }
         )
-
         payment_writeback_two_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK,
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK,
@@ -217,7 +234,9 @@ class FineosPeiWritebackStep(Step):
             payment_writeback_two_items_count,
             State.ADD_TO_ERRORED_PEI_WRITEBACK.state_description,
         )
-        self.set_metrics(payment_writeback_two_items_count=payment_writeback_two_items_count)
+        self.set_metrics(
+            {self.Metrics.PAYMENT_WRITEBACK_TWO_ITEMS_COUNT: payment_writeback_two_items_count}
+        )
 
         # TODO: Add disbursed payments to this writeback using the same pattern as above but with a
         # writeback_record_converter of _disbursed_payment_to_pei_writeback_record.
@@ -267,7 +286,7 @@ class FineosPeiWritebackStep(Step):
                         ),
                     )
                 )
-                self.increment("writeback_record_count")
+                self.increment(self.Metrics.WRITEBACK_RECORD_COUNT)
             except Exception:
                 logger.exception(
                     "Error adding payment to list of writeback records",

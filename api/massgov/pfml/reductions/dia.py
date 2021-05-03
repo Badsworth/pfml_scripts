@@ -339,8 +339,8 @@ def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> None:
     for row in rows:
         db_data = _convert_dict_with_csv_keys_to_db_keys(row)
         if len(_get_matching_dia_reduction_payments(db_data, db_session)) == 0:
-            dua_reduction_payment = DiaReductionPayment(**db_data)
-            db_session.add(dua_reduction_payment)
+            dia_reduction_payment = DiaReductionPayment(**db_data)
+            db_session.add(dia_reduction_payment)
 
 
 def _load_dia_payment_from_reference_file(

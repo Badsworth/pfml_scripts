@@ -332,7 +332,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component: ["formstack_import", "cognito_pre_signup", "cognito_post_confirmation"]
+        component: ["cognito_pre_signup", "cognito_post_confirmation"]
 
     env:
       infra-working-dir: ./api/lambdas
@@ -489,7 +489,6 @@ jobs:
 
     env:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      TF_VAR_formstack_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_release_version: ${{ github.event.inputs.version || 'main' }}
@@ -564,7 +563,7 @@ jobs:
           TF_CLI_ARGS: ''
         run: |
           CLUSTER_ID=$(terraform output ecs_cluster_arn | sed s/\"//g | cut -d/ -f2)
-          SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | cut -d/ -f2)
+          SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | rev | cut -d/ -f1 | rev)
 
           # Wait for ECS service to be stable, and run it twice to allow for
           # abnormally long deploys (up to 20 minutes.)
@@ -572,16 +571,15 @@ jobs:
 
           while [[ $failures -lt 2 ]]; do
             set +e -x
-            result_msg=$(aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
+            result_msg=$(aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID 2>&1)
             result_code=$?
             set -e +x
 
             if [[ ${result_code} -eq 0 ]]; then
               break
             elif [[ "${result_msg}" =~ "MISSING" ]]; then
-              # This happens sometimes when the script runs too quickly after terraform apply.
-              # Sleep for a little bit and try again without considering it a retry.
-              sleep 5
+              echo "ECS Cluster \"${CLUSTER_ID}\" or service \"${SVC_ID}\" does not exist"
+              exit 1
             else
               failures=$((failures+=1))
             fi

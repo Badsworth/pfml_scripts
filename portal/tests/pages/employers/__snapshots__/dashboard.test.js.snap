@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Employer dashboard renders a 'no results' message in the table if no claims are present 1`] = `
+exports[`Employer dashboard renders a 'no results' message in the table, and no pagination components when no claims are present 1`] = `
 <tr>
   <td
     colSpan={5}
@@ -10,7 +10,22 @@ exports[`Employer dashboard renders a 'no results' message in the table if no cl
 </tr>
 `;
 
-exports[`Employer dashboard renders a table of claims 1`] = `
+exports[`Employer dashboard renders a banner if there are any employers not registered in FINEOS 2`] = `
+Array [
+  "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the ",
+  <a
+    href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    verification process
+  </a>,
+  ".",
+]
+`;
+
+exports[`Employer dashboard renders a table of claims with links if employer is registered in FINEOS 1`] = `
 <tr
   key="NTN-111-ABS-01"
 >
@@ -63,7 +78,7 @@ exports[`Employer dashboard renders a table of claims 1`] = `
 </tr>
 `;
 
-exports[`Employer dashboard renders a table of claims 2`] = `
+exports[`Employer dashboard renders a table of claims with links if employer is registered in FINEOS 2`] = `
 <thead>
   <tr>
     <th
@@ -98,7 +113,7 @@ exports[`Employer dashboard renders a table of claims 2`] = `
       <TooltipIcon
         position="bottom"
       >
-        The date a new application for leave was started
+        When an employee started a new leave application
       </TooltipIcon>
     </th>
     <th
@@ -111,18 +126,73 @@ exports[`Employer dashboard renders a table of claims 2`] = `
 </thead>
 `;
 
-exports[`Employer dashboard renders the page 1`] = `
+exports[`Employer dashboard renders claim rows without links if employer is not registered in FINEOS 1`] = `
+<tr
+  key="NTN-111-ABS-01"
+>
+  <th
+    data-label="Employee name"
+    scope="row"
+  >
+    Jane Doe
+  </th>
+  <td
+    data-label="Application ID"
+    key="fineos_absence_id"
+  >
+    NTN-111-ABS-01
+  </td>
+  <td
+    data-label="Employer ID number"
+    key="employer_fein"
+  >
+    **-***0002
+  </td>
+  <td
+    data-label="Application start date"
+    key="created_at"
+  >
+    1/15/2021
+  </td>
+  <td
+    data-label="Status"
+    key="status"
+  >
+    <AbsenceCaseStatusTag
+      status="Approved"
+    />
+  </td>
+</tr>
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 1`] = `
 <Title>
   Dashboard
 </Title>
 `;
 
-exports[`Employer dashboard renders the page 2`] = `
+exports[`Employer dashboard renders the page with expected content and pagination components 2`] = `
 <p
   className="margin-bottom-4"
 >
   Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.
 </p>
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 3`] = `
+<PaginationSummary
+  pageOffset={1}
+  pageSize={25}
+  totalRecords={75}
+/>
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 4`] = `
+<PaginationNavigation
+  onClick={[Function]}
+  pageOffset={1}
+  totalPages={3}
+/>
 `;
 
 exports[`Employer dashboard when employerShowVerifications flag is enabled renders instructions if there are no verified employers 1`] = `

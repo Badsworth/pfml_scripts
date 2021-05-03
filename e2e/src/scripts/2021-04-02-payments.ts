@@ -4,7 +4,6 @@ import { submit, PostSubmitCallback } from "./util";
 import ClaimSubmissionTracker from "../submission/ClaimStateTracker";
 import SubmittedClaimIndex from "../submission/writers/SubmittedClaimIndex";
 import path from "path";
-import { getFineosBaseUrl } from "../util/common";
 import {
   approveClaim,
   withFineosBrowser,
@@ -30,7 +29,10 @@ const pipelineP = promisify(pipeline);
 (async () => {
   const storage = dataDirectory("payments-2021-04-02");
   // Load employees that were generated elsewhere.
-  const employees = await EmployeePool.load(storage.employees);
+  const employees = await EmployeePool.load(
+    storage.employees,
+    storage.usedEmployees
+  );
 
   // Write a CSV description of the scenarios we're using for human consumption.
   await pipelineP(
@@ -69,7 +71,7 @@ const pipelineP = promisify(pipeline);
     const { metadata } = claim;
     if (metadata && "postSubmit" in metadata) {
       // Open a puppeteer browser for the duration of this callback.
-      await withFineosBrowser(getFineosBaseUrl(), async (page) => {
+      await withFineosBrowser(async (page) => {
         const { fineos_absence_id } = response;
         if (!fineos_absence_id)
           throw new Error(

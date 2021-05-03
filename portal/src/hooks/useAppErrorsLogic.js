@@ -5,6 +5,7 @@ import {
   DocumentsLoadError,
   DocumentsUploadError,
   LeaveAdminForbiddenError,
+  NetworkError,
   ValidationError,
 } from "../errors";
 import AppErrorInfo from "../models/AppErrorInfo";
@@ -209,6 +210,11 @@ const useAppErrorsLogic = ({ portalFlow }) => {
     // we should avoid tracking the entire error in New Relic
     if (error instanceof ApiRequestError) {
       tracker.trackEvent("ApiRequestError", {
+        errorMessage: error.message,
+        errorName: error.name,
+      });
+    } else if (error instanceof NetworkError) {
+      tracker.trackEvent("NetworkError", {
         errorMessage: error.message,
         errorName: error.name,
       });

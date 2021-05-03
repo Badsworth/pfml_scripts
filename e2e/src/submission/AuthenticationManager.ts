@@ -14,6 +14,7 @@ import {
   postEmployersVerifications,
   UserResponse,
   postUsers,
+  UserCreateRequest,
 } from "../api";
 
 export default class AuthenticationManager {
@@ -53,7 +54,7 @@ export default class AuthenticationManager {
   }
 
   async registerClaimant(username: string, password: string): Promise<void> {
-    const cognitoUser = await this.registerUser(username, password, "Employer");
+    const cognitoUser = await this.registerUser(username, password, "Claimant");
     // Wait for code.
     await this.verifyCognitoAccount(cognitoUser, username);
     // Agree to terms and conditions.
@@ -89,8 +90,8 @@ export default class AuthenticationManager {
 
       if (exists) {
         e.code = "UsernameExistsException";
-        throw e;
       }
+      throw e;
     }
   }
 
@@ -157,23 +158,21 @@ export default class AuthenticationManager {
     username: string,
     password: string,
     role: "Employer" | "Claimant",
-    fein?: string
+    employer_fein?: string
   ): Promise<CognitoUser> {
-    await postUsers(
-      {
-        email_address: username,
-        password,
-        role: {
-          role_description: role,
-        },
-        user_leave_administrator: {
-          employer_fein: fein,
-        },
+    const data: UserCreateRequest = {
+      email_address: username,
+      password,
+      role: {
+        role_description: role,
       },
-      {
-        baseUrl: this.apiBaseUrl,
-      }
-    );
+    };
+    if (employer_fein) {
+      data.user_leave_administrator = { employer_fein };
+    }
+    await postUsers(data, {
+      baseUrl: this.apiBaseUrl,
+    });
 
     const details = new AuthenticationDetails({
       Username: username,

@@ -1,5 +1,6 @@
 import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
+import PaginationMeta from "../../src/models/PaginationMeta";
 import React from "react";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -25,7 +26,6 @@ describe("withClaims", () => {
 
   it("shows spinner when claims aren't loaded yet", () => {
     const appLogic = useAppLogic();
-    appLogic.claims.hasLoadedAll = false;
 
     const { wrapper } = setup(appLogic);
 
@@ -40,7 +40,7 @@ describe("withClaims", () => {
     ]);
     const appLogic = useAppLogic();
     appLogic.claims.claims = claimsCollection;
-    appLogic.claims.hasLoadedAll = true;
+    appLogic.claims.paginationMeta = new PaginationMeta({ page_offset: 1 });
 
     const { wrapper } = setup(appLogic);
     const pageProps = wrapper.find("PageComponent").props();
@@ -49,23 +49,22 @@ describe("withClaims", () => {
     expect(pageProps.claims).toBe(claimsCollection);
   });
 
-  it("makes request with 0 as page index if value is not provided", () => {
+  it("makes request with 1 as page index if value is not provided", () => {
     const appLogic = useAppLogic();
-    appLogic.claims.hasLoadedAll = false;
-    const query = { page: null };
+    const query = { page_offset: null };
 
     setup(appLogic, query);
 
-    expect(appLogic.claims.loadAll).toHaveBeenCalledWith(0);
+    expect(appLogic.claims.loadPage).toHaveBeenCalledWith(1);
   });
 
-  it("makes request with zero-based page index if value is provided", () => {
+  it("makes request with page_offset query param if it's different from the current page", () => {
     const appLogic = useAppLogic();
-    appLogic.claims.hasLoadedAll = false;
-    const query = { page: "3" };
+    appLogic.claims.paginationMeta = new PaginationMeta({ page_offset: 2 });
+    const query = { page_offset: "3" };
 
     setup(appLogic, query);
 
-    expect(appLogic.claims.loadAll).toHaveBeenCalledWith(2);
+    expect(appLogic.claims.loadPage).toHaveBeenCalledWith(3);
   });
 });

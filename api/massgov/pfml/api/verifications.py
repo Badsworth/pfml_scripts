@@ -13,7 +13,7 @@ from massgov.pfml.db.models.employees import (
     User,
     UserLeaveAdministrator,
 )
-from massgov.pfml.db.models.verifications import Verification
+from massgov.pfml.db.models.verifications import Verification, VerificationType
 
 logger = logging.get_logger(__name__)
 
@@ -100,7 +100,9 @@ def verifications():
                 data=verification_request.dict(exclude_none=True),
             ).to_api_response()
 
-        verification = Verification()
+        verification = Verification(
+            verification_type_id=VerificationType.PFML_WITHHOLDING.verification_type_id
+        )
 
         verification_metadata = {
             "request_body": body,

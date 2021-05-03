@@ -44,23 +44,22 @@ data "aws_ecs_cluster" "cps-preview" {
 module "api" {
   source = "../../template"
 
-  environment_name                     = local.environment_name
-  service_app_count                    = 2
-  service_max_app_count                = 10
-  service_docker_tag                   = local.service_docker_tag
-  service_ecs_cluster_arn              = data.aws_ecs_cluster.cps-preview.arn
-  vpc_id                               = data.aws_vpc.vpc.id
-  vpc_app_subnet_ids                   = data.aws_subnet_ids.vpc_app.ids
-  vpc_db_subnet_ids                    = data.aws_subnet_ids.vpc_db.ids
-  postgres_version                     = "12.4"
-  postgres_parameter_group_family      = "postgres12"
-  nlb_name                             = "${local.vpc}-nlb"
-  nlb_port                             = 3505
-  cors_origins                         = []
-  formstack_import_lambda_build_s3_key = local.formstack_lambda_artifact_s3_key
-  enforce_leave_admin_verification     = "0"
-  enable_application_fraud_check       = "0"
-  release_version                      = var.release_version
+  environment_name                 = local.environment_name
+  service_app_count                = 2
+  service_max_app_count            = 10
+  service_docker_tag               = local.service_docker_tag
+  service_ecs_cluster_arn          = data.aws_ecs_cluster.cps-preview.arn
+  vpc_id                           = data.aws_vpc.vpc.id
+  vpc_app_subnet_ids               = data.aws_subnet_ids.vpc_app.ids
+  vpc_db_subnet_ids                = data.aws_subnet_ids.vpc_db.ids
+  postgres_version                 = "12.4"
+  postgres_parameter_group_family  = "postgres12"
+  nlb_name                         = "${local.vpc}-nlb"
+  nlb_port                         = 3505
+  cors_origins                     = []
+  enforce_leave_admin_verification = "0"
+  enable_application_fraud_check   = "0"
+  release_version                  = var.release_version
 
   cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_1OVYp4aZo"
   cognito_user_pool_id        = "us-east-1_1OVYp4aZo"
@@ -78,18 +77,17 @@ module "api" {
   rmv_check_mock_success            = "1"
 
   # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url          = ""
-  fineos_client_customer_api_url                      = ""
-  fineos_client_group_client_api_url                  = ""
-  fineos_client_wscomposer_api_url                    = ""
-  fineos_client_wscomposer_user_id                    = ""
-  fineos_client_oauth2_url                            = ""
-  fineos_import_employee_updates_input_directory_path = null
-  fineos_aws_iam_role_arn                             = null
-  fineos_aws_iam_role_external_id                     = null
+  fineos_client_integration_services_api_url          = "https://dt3-api.masspfml.fineos.com/integration-services/"
+  fineos_client_customer_api_url                      = "https://dt3-api.masspfml.fineos.com/customerapi/"
+  fineos_client_group_client_api_url                  = "https://dt3-api.masspfml.fineos.com/groupclientapi/"
+  fineos_client_wscomposer_api_url                    = "https://dt2-api.masspfml.fineos.com/integration-services/wscomposer/"
+  fineos_client_oauth2_url                            = "https://dt2-api.masspfml.fineos.com/oauth2/token"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/DT3/dataexports"
+  fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
+  fineos_aws_iam_role_external_id                     = "12345"
 
   # TODO: This value is provided by FINEOS over Interchange.
-  fineos_client_oauth2_client_id = ""
+  fineos_client_oauth2_client_id = "2gptm2870hlo9ouq70poib8d5g"
 
   # TODO: Connect to ServiceNow.
   service_now_base_url = "https://savilinxstage.servicenowservices.com"

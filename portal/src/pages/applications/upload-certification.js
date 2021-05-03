@@ -48,11 +48,15 @@ export const UploadCertification = (props) => {
       [ReasonQualifier.adoption]: "bonding_adopt_foster",
       [ReasonQualifier.fosterCare]: "bonding_adopt_foster",
     },
+    [LeaveReason.care]: "care",
     [LeaveReason.medical]: "medical",
   };
   let leadTextContext;
   switch (claimReason) {
     case LeaveReason.medical:
+      leadTextContext = conditionalContext[claimReason];
+      break;
+    case LeaveReason.care:
       leadTextContext = conditionalContext[claimReason];
       break;
     case LeaveReason.bonding:
@@ -115,6 +119,13 @@ export const UploadCertification = (props) => {
                 target="_blank"
                 rel="noopener"
                 href={routes.external.massgov.healthcareProviderForm}
+              />
+            ),
+            "caregiver-certification-form-link": (
+              <a
+                target="_blank"
+                rel="noopener"
+                href={routes.external.massgov.caregiverCertificationForm}
               />
             ),
           }}

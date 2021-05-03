@@ -448,7 +448,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
     if require_other_leaves_fields:
         # TODO (CP-1674): Move these rules into the "always required" set once the
         # X-FF-Require-Other-Leaves header is obsolete.
-        for field in ["has_employer_benefits", "has_other_incomes", "has_previous_leaves"]:
+        for field in ["has_employer_benefits", "has_other_incomes"]:
             val = deepgetattr(application, field)
             if val is None:
                 issues.append(

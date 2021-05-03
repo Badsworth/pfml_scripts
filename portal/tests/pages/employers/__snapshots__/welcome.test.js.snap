@@ -124,7 +124,7 @@ exports[`Employer welcome renders page 1`] = `
           components={
             Object {
               "healthcare-provider-form-link": <a
-                href="https://www.mass.gov/hcp-form"
+                href="https://www.mass.gov/medical-leave-form"
                 rel="noopener"
                 target="_blank"
               />,
@@ -175,7 +175,7 @@ exports[`Employer welcome renders page 2`] = `
 Array [
   "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the ",
   <a
-    href="https://www.mass.gov/hcp-form"
+    href="https://www.mass.gov/medical-leave-form"
     key="1"
     rel="noopener"
     target="_blank"

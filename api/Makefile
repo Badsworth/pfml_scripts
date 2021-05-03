@@ -230,11 +230,11 @@ init-db: ## Initialize local DB
 init-db: start-db db-upgrade db-create-users
 
 jwks.json: ## Generate a local JSON Web Key Set to use for local API Authentication
-	$(PY_RUN_CMD) bin/create-jwks.py > $@
+	$(PY_RUN_CMD) python3 -W ignore bin/create-jwks.py > $@
 
 jwt: ## Generate a JSON Web Token for $auth_id signed by locally generated JWKS
 jwt: jwks.json
-	$(PY_RUN_CMD) bin/create-jwt.py ./jwks.json $(auth_id)
+	$(PY_RUN_CMD) python3 -W ignore bin/create-jwt.py ./jwks.json $(auth_id)
 
 # A flake8 output format that is compatible with GitHub Actions to annotate PRs. A full repository path must be output
 # so the path is prefixed with `api/`.

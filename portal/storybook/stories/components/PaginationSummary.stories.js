@@ -5,7 +5,7 @@ export default {
   title: "Components/PaginationSummary",
   component: PaginationSummary,
   args: {
-    pageIndex: 0,
+    pageOffset: 1,
     pageSize: 25,
     totalPages: 4,
     totalRecords: 100,

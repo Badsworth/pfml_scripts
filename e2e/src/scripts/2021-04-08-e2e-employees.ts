@@ -4,10 +4,13 @@ import EmployeePool from "../generation/Employee";
 import DOR from "../generation/writers/DOR";
 import EmployeeIndex from "../generation/writers/EmployeeIndex";
 import EmployerIndex from "../generation/writers/EmployerIndex";
+import { format } from "date-fns";
 
 (async () => {
+  const date = format(new Date(), "yyyy-MM-dd");
+
   // Prepare a "data directory" to save the generated data to disk.
-  const storage = dataDirectory("e2e-2021-04-14");
+  const storage = dataDirectory(`e2e-${date}`);
   await storage.prepare();
 
   // Generate 2 employers that will have employees assigned to them.
@@ -55,6 +58,10 @@ import EmployerIndex from "../generation/writers/EmployerIndex";
   );
   // Write an employee "index" file for human consumption.
   await EmployeeIndex.write(employeePool, storage.dir + "/employees.csv");
+
+  // Additionally save the JSON files to the employers/employees directory at the top level.
+  await employeePool.save(`employees/e2e-${date}.json`);
+  await employerPool.save(`employers/e2e-${date}.json`);
 })().catch((e) => {
   console.error(e);
   process.exit(1);

@@ -6,6 +6,7 @@ import json
 
 import flask
 import jose
+import newrelic.agent
 import requests
 from jose import jwt
 from sentry_sdk import set_user
@@ -62,6 +63,8 @@ def decode_cognito_token(token):
             flask.g.current_user = user
 
             set_user({"id": user.user_id, "email": user.email_address})
+            newrelic.agent.add_custom_parameter("current_user.user_id", user.user_id)
+            newrelic.agent.add_custom_parameter("current_user.auth_id", user.active_directory_id)
 
             # Read attributes for logging, so that db calls are not made during logging.
             flask.g.current_user_user_id = str(user.user_id)
@@ -75,6 +78,6 @@ def decode_cognito_token(token):
         raise Unauthorized
     except (NoResultFound, MultipleResultsFound) as e:
         logger.exception(
-            "user query failed: %s", type(e), extra={"current_user.auth_id": auth_id, "error": e,}
+            "user query failed: %s", type(e), extra={"current_user.auth_id": auth_id, "error": e,},
         )
         raise Unauthorized

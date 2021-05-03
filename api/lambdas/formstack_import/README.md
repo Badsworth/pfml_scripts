@@ -1,1 +1,0 @@
-Please refer to the general the shared README at `api/lambdas' for shared build and release commands.

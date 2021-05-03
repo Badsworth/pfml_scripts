@@ -21,6 +21,8 @@ class BenefitsApplication extends BaseBenefitsApplication {
       has_mailing_address: null,
       has_other_incomes: null,
       has_previous_leaves: null,
+      has_previous_leaves_other_reason: null,
+      has_previous_leaves_same_reason: null,
       has_reduced_schedule_leave_periods: null,
       has_state_id: null,
       has_submitted_payment_preference: null,
@@ -46,6 +48,8 @@ class BenefitsApplication extends BaseBenefitsApplication {
         phone_number: null,
         phone_type: null, // PhoneType
       },
+      previous_leaves_other_reason: [],
+      previous_leaves_same_reason: [],
       work_pattern: null,
     });
   }
@@ -172,7 +176,6 @@ export class IntermittentLeavePeriod extends BaseModel {
 export class CaringLeaveMetadata extends BaseModel {
   get defaults() {
     return {
-      caring_leave_metadata_id: null,
       family_member_date_of_birth: null,
       family_member_first_name: null,
       family_member_last_name: null,

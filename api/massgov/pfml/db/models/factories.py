@@ -295,7 +295,8 @@ class VerificationFactory(BaseFactory):
     created_at = Generators.UtcNow
     updated_at = Generators.UtcNow
     verification_id = Generators.UuidObj
-    verification_type_id = None
+    verification_type = factory.SubFactory(VerificationTypeFactory, __sequence=100)
+    verification_type_id = factory.LazyAttribute(lambda w: w.verification_type.verification_type_id)
     verification_metadata = factory.Faker("json")
 
 
@@ -383,7 +384,7 @@ class PaymentFactory(BaseFactory):
     # matter what number it is, so picking a static number is fine.
     fineos_pei_c_value = "9000"
     # The I value is unique for all payments and should be a string, not an int.
-    fineos_pei_i_value = factory.Faker("numerify", text="####")
+    fineos_pei_i_value = factory.Sequence(lambda n: "%d" % n)
 
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
@@ -757,7 +758,7 @@ class DiaReductionPaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.DiaReductionPayment
 
-    absence_case_id = Generators.FineosAbsenceId
+    fineos_customer_number = factory.Faker("numerify", text="####")
     board_no = factory.Faker("uuid4")
     event_id = factory.Faker("uuid4")
     event_description = "PC"
@@ -771,3 +772,13 @@ class DiaReductionPaymentFactory(BaseFactory):
     end_date = factory.Faker("date_object")
     weekly_amount = 400.00
     award_created_date = factory.Faker("date_object")
+
+
+class CaringLeaveMetadataFactory(BaseFactory):
+    class Meta:
+        model = application_models.CaringLeaveMetadata
+
+    family_member_first_name = factory.Faker("first_name")
+    family_member_middle_name = factory.Faker("first_name")
+    family_member_last_name = factory.Faker("last_name")
+    family_member_date_of_birth = factory.Faker("date_object")

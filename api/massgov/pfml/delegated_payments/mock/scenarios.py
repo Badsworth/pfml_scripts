@@ -23,6 +23,7 @@ class ScenarioName(Enum):
         "HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
     )
     HAPPY_PENDING_LEAVE_REQUEST_DECISION = "HAPPY_PENDING_LEAVE_REQUEST_DECISION"
+    HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION = "HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION"
 
     HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
     HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN = (
@@ -37,6 +38,7 @@ class ScenarioName(Enum):
     CANCELLATION_PAYMENT = "CANCELLATION_PAYMENT"
     OVERPAYMENT_PAYMENT_POSITIVE = "OVERPAYMENT_PAYMENT_POSITIVE"
     OVERPAYMENT_PAYMENT_NEGATIVE = "OVERPAYMENT_PAYMENT_NEGATIVE"
+    OVERPAYMENT_MISSING_NON_VPEI_RECORDS = "OVERPAYMENT_MISSING_NON_VPEI_RECORDS"
     EMPLOYER_REIMBURSEMENT_PAYMENT = "EMPLOYER_REIMBURSEMENT_PAYMENT"
 
     # Prenote
@@ -65,9 +67,6 @@ class ScenarioName(Enum):
 
     PUB_ACH_FAMILY_RETURN = "PUB_ACH_FAMILY_RETURN"
     PUB_ACH_FAMILY_NOTIFICATION = "PUB_ACH_FAMILY_NOTIFICATION"
-    PUB_ACH_FAMILY_RETURN_INVALID_ID = "PUB_ACH_FAMILY_RETURN_INVALID_ID"
-    PUB_ACH_FAMILY_RETURN_INVALID_EFT_PRENOTE_ID = "PUB_ACH_FAMILY_RETURN_INVALID_EFT_PRENOTE_ID"
-    PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID = "PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID"
 
     PUB_ACH_MEDICAL_RETURN = "PUB_ACH_MEDICAL_RETURN"
     PUB_ACH_MEDICAL_NOTIFICATION = "PUB_ACH_MEDICAL_NOTIFICATION"
@@ -103,16 +102,13 @@ class ScenarioDescriptor:
 
     negative_payment_amount: bool = False
 
+    include_non_vpei_records: bool = True
+
     # ACH Returns
     # https://lwd.atlassian.net/wiki/spaces/API/pages/1333364105/PUB+ACH+Return+File+Format
 
     pub_ach_response_return: bool = False
     pub_ach_return_reason_code: str = "RO1"
-    pub_ach_return_invalid_id: bool = False
-    pub_ach_return_invalid_payment_id: bool = False
-
-    pub_ach_return_invalid_check_number: bool = False
-    pub_ach_return_invalid_eft_prenote_id: bool = False
 
     pub_ach_response_change_notification: bool = False
     pub_ach_notification_reason_code: str = "CO1"
@@ -152,6 +148,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         negative_payment_amount=True,
     ),
     ScenarioDescriptor(
+        scenario_name=ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
+        payment_transaction_type=PaymentTransactionType.OVERPAYMENT,
+        include_non_vpei_records=False,
+    ),
+    ScenarioDescriptor(
         scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     ),
@@ -186,6 +187,10 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         leave_request_decision="Pending",
     ),
     ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+        leave_request_decision="In Review",
+    ),
+    ScenarioDescriptor(
         scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
         leave_request_decision="Rejected",
     ),
@@ -206,28 +211,6 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
         pub_ach_response_change_notification=True,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_ID,
-        pub_ach_response_return=True,
-        pub_ach_return_invalid_id=True,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_EFT_PRENOTE_ID,
-        pub_ach_response_return=True,
-        pub_ach_return_invalid_eft_prenote_id=True,
-        prenoted=False,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID,
-        pub_ach_response_return=True,
-        pub_ach_return_invalid_payment_id=True,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.CHECK_PAYMENT_CHECK_NUMBER_NOT_FOUND,
-        pub_ach_response_return=True,
-        payment_method=PaymentMethod.CHECK,
-        pub_ach_return_invalid_check_number=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_RETURN,

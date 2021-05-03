@@ -12,11 +12,10 @@ function SSO(): void {
     const deserializedCookies: Record<string, string>[] = JSON.parse(
       cookiesJson
     );
-    // There's no way we can stop the redirection from Fineos -> SSO login.
-    // What we _can_ do is set the login cookies so that when that request is made,
-    // it bounces back immediately with a HTTP redirect instead of showing the login page.
-    const noSecure = deserializedCookies.filter((cookie) =>
-      cookie.domain.match(/login\.microsoftonline/)
+    // Filter out any cookies that will fail to be set. Those are ones where secure: false
+    // and sameSite: "None"
+    const noSecure = deserializedCookies.filter(
+      (cookie) => !(!cookie.secure && cookie.sameSite === "None")
     );
     for (const cookie_info of noSecure) {
       cy.setCookie(cookie_info.name, cookie_info.value, cookie_info);
@@ -70,7 +69,7 @@ export function visitClaim(claimId: string): void {
   cy.labelled("Case Number").type(claimId);
   cy.labelled("Case Type").select("Absence Case");
   cy.get('input[type="submit"][value="Search"]').click();
-  assertOnClaimPage(claimId);
+  assertAbsenceCaseNumber(claimId);
 }
 
 export function denyClaim(reason: string): void {
@@ -91,7 +90,7 @@ export function denyClaim(reason: string): void {
 /**
  * Called from the claim page, asserts that the claim status is an expected value.
  */
-function assertClaimStatus(expected: string) {
+export function assertClaimStatus(expected: string): void {
   cy.get(".key-info-bar .status dd").should((statusElement) => {
     expect(statusElement, `Absence case should be ${expected}`).to.contain.text(
       expected
@@ -137,9 +136,16 @@ function assertHasDocument(name: string) {
   });
 }
 
-export function assertOnClaimPage(claimNumber: string): void {
-  cy.get("[id*='processPhaseEnum']").should("contain.text", "Adjudication");
-  cy.get(".case_pageheader_title").contains(claimNumber);
+/**
+ * Called from the claim page, asserts Absence Case is the expected value.
+ */
+export function assertAbsenceCaseNumber(claimNumber: string): void {
+  cy.get(".case_pageheader_title").should((statusElement) => {
+    expect(
+      statusElement,
+      `Absence Case ID should be: ${claimNumber}`
+    ).to.contain.text(claimNumber);
+  });
 }
 
 export function assertOnClaimantPage(
@@ -327,7 +333,8 @@ export function createNotification(
 }
 
 export function additionalEvidenceRequest(claimNumber: string): void {
-  assertOnClaimPage(claimNumber as string);
+  assertClaimStatus("Adjudication");
+  assertAbsenceCaseNumber(claimNumber as string);
   cy.get("input[type='submit'][value='Adjudicate']").click();
   onTab("Evidence");
   cy.get("input[type='submit'][value='Additional Information']").click();
@@ -411,11 +418,10 @@ export function intermittentFillAbsencePeriod(claimNumber: string): void {
   });
   cy.get(
     "input[name*='unspecifiedCertificationEpisodicPeriodDetailsWidget_un99_episodeDuration']"
-  ).type("{selectall}5{enter}", { force: true });
+  ).type("{selectall}5");
+  clickBottomWidgetButton("OK");
   wait();
-  cy.get(
-    "input[name*='certificationEpisodicLeaveEntitlementWidget_un94_applyChanges']"
-  ).click();
+  cy.get("input[type='button'][value='Apply']").click();
   cy.get("#PopupContainer").within(() => {
     cy.get("input[value='Yes']").click();
   });
@@ -426,6 +432,7 @@ export function claimAdjudicationFlow(
   ERresponse = false
 ): void {
   visitClaim(claimNumber);
+  assertClaimStatus("Adjudication");
   onTab("Tasks");
   assertHasTask("Certification Review");
   assertHasTask("ID Review");
@@ -462,7 +469,7 @@ export function intermittentClaimAdjudicationFlow(
     assertClaimHasLeaveAdminResponse(true);
     clickBottomWidgetButton("Close");
   }
-  assertOnClaimPage(claimNumber);
+  assertClaimStatus("Adjudication");
   cy.get("input[type='submit'][value='Adjudicate']").click();
   checkStatus(claimNumber, "Eligibility", "Met");
   markEvidence(claimNumber, "MHAP1", "State managed Paid Leave Confirmation");
@@ -486,8 +493,8 @@ export function intermittentClaimAdjudicationFlow(
 
 // This is being used for Sally hours to allow us to see payment being made.
 export function submitIntermittentActualHours(
-  timeSpanHoursStart: number,
-  timeSpanHoursEnd: number
+  timeSpanHoursStart: string,
+  timeSpanHoursEnd: string
 ): void {
   cy.contains("span[class='LinkText']", "Record Actual").click({ force: true });
   wait();
@@ -536,7 +543,7 @@ export function submitIntermittentActualHours(
 
 export function claimAdjudicationMailedDoc(claimNumber: string): void {
   visitClaim(claimNumber);
-  assertOnClaimPage(claimNumber);
+  assertClaimStatus("Adjudication");
   onTab("Documents");
   // Assert ID Doc is present
   findDocument("MA ID");

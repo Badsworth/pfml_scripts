@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UploadCertification after documents have been loaded when leave reason is Bonding leave renders page with bonding leave content 1`] = `
+exports[`UploadCertification before any documents have been loaded renders page with bonding leave content when leave reason is Bonding leave 1`] = `
 <Heading
   level="2"
   size="1"
@@ -9,27 +9,33 @@ exports[`UploadCertification after documents have been loaded when leave reason 
 </Heading>
 `;
 
-exports[`UploadCertification after documents have been loaded when leave reason is Bonding leave renders page with bonding leave content 2`] = `"You need to upload one of the following documents to confirm your child’s date of birth:"`;
+exports[`UploadCertification before any documents have been loaded renders page with bonding leave content when leave reason is Bonding leave 2`] = `"You need to upload one of the following documents to confirm your child’s date of birth:"`;
 
-exports[`UploadCertification after documents have been loaded when leave reason is Medical leave renders a FileCardList 1`] = `
-<FileCardList
-  addAnotherFileButtonText="Choose another file"
-  addFirstFileButtonText="Choose files"
-  documents={Array []}
-  fileErrors={Array []}
-  fileHeadingPrefix="File"
-  onChange={[Function]}
-  onRemoveTempFile={[Function]}
-  tempFiles={
-    TempFileCollection {
-      "items": Array [],
-      "itemsById": Object {},
-    }
-  }
-/>
+exports[`UploadCertification before any documents have been loaded renders page with caregiver leave contentwhen leave reason is caregiver leave 1`] = `
+<Heading
+  level="2"
+  size="1"
+>
+  Upload your Caregiver Certification Form
+</Heading>
 `;
 
-exports[`UploadCertification after documents have been loaded when leave reason is Medical leave renders page with medical leave content 1`] = `
+exports[`UploadCertification before any documents have been loaded renders page with caregiver leave contentwhen leave reason is caregiver leave 2`] = `
+Array [
+  "You need to upload a completed ",
+  <a
+    href="https://www.mass.gov/family-caring-form"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    Caregiver Certification Form
+  </a>,
+  " to prove that you need to take leave to care for a family member with a serious medical condition.",
+]
+`;
+
+exports[`UploadCertification before any documents have been loaded renders page with medical leave content 1`] = `
 <Heading
   level="2"
   size="1"
@@ -38,11 +44,11 @@ exports[`UploadCertification after documents have been loaded when leave reason 
 </Heading>
 `;
 
-exports[`UploadCertification after documents have been loaded when leave reason is Medical leave renders page with medical leave content 2`] = `
+exports[`UploadCertification before any documents have been loaded renders page with medical leave content 2`] = `
 Array [
   "You need to upload a completed ",
   <a
-    href="https://www.mass.gov/hcp-form"
+    href="https://www.mass.gov/medical-leave-form"
     key="1"
     rel="noopener"
     target="_blank"

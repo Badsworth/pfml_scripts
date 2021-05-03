@@ -9,6 +9,7 @@ export interface DataDirectory {
   employees: string;
   claims: string;
   state: string;
+  usedEmployees: string;
   prepare(): Promise<void>;
   join(...parts: string[]): string;
   dorFile(prefix: string): string;
@@ -26,6 +27,7 @@ export default function directory(
     documents: documents,
     employers: path.join(dir, "employers.json"),
     employees: path.join(dir, "employees.json"),
+    usedEmployees: path.join(dir, "used_employees.json"),
     claims: path.join(dir, "claims.ndjson"),
     state: path.join(dir, "state.json"),
     async prepare(): Promise<void> {

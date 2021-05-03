@@ -62,7 +62,7 @@ class Configuration:
         )
         parser.add_argument(
             "--commit",
-            help="Including this parameter will prevent the state logs from actually being modified.",
+            help="Setting this argument will disable dry run (default mode).",
             action="store_true",
         )
         args = parser.parse_args(input_args)

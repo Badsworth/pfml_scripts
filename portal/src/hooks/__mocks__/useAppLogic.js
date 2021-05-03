@@ -5,6 +5,7 @@ import BenefitsApplicationCollection from "../../models/BenefitsApplicationColle
 import ClaimCollection from "../../models/ClaimCollection";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
+import PaginationMeta from "../../models/PaginationMeta";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
@@ -43,8 +44,8 @@ export default jest.fn(() => ({
   },
   claims: {
     claims: new ClaimCollection(),
-    hasLoadedAll: true,
-    loadAll: jest.fn(),
+    paginationMeta: new PaginationMeta(),
+    loadPage: jest.fn(),
   },
   clearErrors: jest.fn(),
   documents: {
@@ -99,6 +100,7 @@ export default jest.fn(() => ({
           employer_dba: "Book Bindings 'R Us",
           employer_fein: "**-***1823",
           employer_id: "dda903f-f093f-ff900",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: false,
         }),
@@ -107,6 +109,7 @@ export default jest.fn(() => ({
           employer_dba: "Knitting Castle",
           employer_fein: "**-***3443",
           employer_id: "dda930f-93jfk-iej08",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
@@ -115,6 +118,7 @@ export default jest.fn(() => ({
           employer_dba: "Tomato Touchdown",
           employer_fein: "**-***7192",
           employer_id: "io19fj9-00jjf-uiw3r",
+          has_fineos_registration: true,
           has_verification_data: false,
           verified: false,
         }),

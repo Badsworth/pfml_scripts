@@ -139,7 +139,7 @@ export type EmployeePickSpec = {
 };
 
 export default class EmployeePool implements Iterable<Employee> {
-  used: Set<Employee>;
+  used: Set<string>;
 
   /**
    * Generate a new pool.
@@ -158,11 +158,19 @@ export default class EmployeePool implements Iterable<Employee> {
   /**
    * Load a pool from a JSON file.
    */
-  static async load(filename: string): Promise<EmployeePool> {
+  static async load(
+    filename: string,
+    usedFileName?: string
+  ): Promise<EmployeePool> {
     // Do not use streams here. Interestingly, the perf/memory usage of this was tested,
     // and raw read/parse is faster and more efficient than the streams equivalent. ¯\_(ツ)_/¯
+    let used = [];
     const raw = await fs.promises.readFile(filename, "utf-8");
-    return new this(JSON.parse(raw));
+    if (usedFileName) {
+      const contents = await fs.promises.readFile(usedFileName, "utf-8");
+      used = JSON.parse(contents);
+    }
+    return new this(JSON.parse(raw), used);
   }
 
   /**
@@ -174,20 +182,28 @@ export default class EmployeePool implements Iterable<Employee> {
     return new this(pools.map((p) => p.employees).flat(1));
   }
 
-  constructor(private employees: Employee[]) {
-    this.used = new Set<Employee>();
+  constructor(private employees: Employee[], used?: string[]) {
+    this.used = new Set<string>(used);
   }
 
   /**
    * Save the pool to JSON format.
    */
-  async save(filename: string): Promise<void> {
+  async save(filename: string, usedFileName?: string): Promise<void> {
     // Use streams for memory efficiency.
     await pipelineP(
       Readable.from(this.employees),
       JSONStream.stringify(),
       fs.createWriteStream(filename)
     );
+
+    if (usedFileName) {
+      await pipelineP(
+        Readable.from(this.used),
+        JSONStream.stringify(),
+        fs.createWriteStream(usedFileName)
+      );
+    }
   }
 
   [Symbol.iterator](): Iterator<Employee> {
@@ -263,12 +279,12 @@ export default class EmployeePool implements Iterable<Employee> {
   pick(spec: EmployeePickSpec): Employee {
     const finder = this._createFinder(spec);
     const employee = shuffle(this.employees).find((employee) => {
-      return !this.used.has(employee) && finder(employee);
+      return !this.used.has(employee.ssn) && finder(employee);
     });
     // Track employee usage.
     if (employee) {
       // Track the employee's usage.
-      this.used.add(employee);
+      this.used.add(employee.ssn);
       return employee;
     }
     throw new Error(
