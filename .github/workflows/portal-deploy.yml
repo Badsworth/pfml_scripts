@@ -513,6 +513,7 @@ jobs:
           fi
 
       - name: Post to Slack
+        id: post-start-slack
         run: |
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
           -H 'Content-Type: application/json;charset=utf-8' \
