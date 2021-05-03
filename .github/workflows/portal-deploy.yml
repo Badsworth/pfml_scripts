@@ -539,7 +539,7 @@ jobs:
             ]
           }' https://slack.com/api/chat.postMessage)
 
-          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq '.ts')
+          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq -r '.ts')
           echo $MESSAGE_TS
           echo "::set-output name=message-ts::$MESSAGE_TS"
 
