@@ -170,6 +170,8 @@ def log_report_to_newrelic(import_log: ImportLog) -> None:
             "job.id": import_log.import_log_id,
             "job.data_source": import_log.source,
             "job.job_type": import_log.import_type,
+            "job.start": import_log.start if import_log.start else None,
+            "job.end": import_log.end if import_log.end else None,
         }
     )
     massgov.pfml.util.newrelic.events.log_newrelic_event(report_with_metadata)

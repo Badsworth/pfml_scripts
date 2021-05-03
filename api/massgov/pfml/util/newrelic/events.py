@@ -55,14 +55,18 @@ def generate_etl_report(report):
     The Events API accepts only int/float/str as data types. The presence of any other data rejects the entire event.
     :return: dict: The generated report, suitably enriched.
     """
-    task_duration = (
-        (
+
+    task_duration = None
+    # Some tasks report start/end in their report object; others only have it as a first class attr of ImportLog.
+    # Account for both, or just use None if neither format is present.
+    if {"end", "start"} <= report.keys():
+        task_duration = (
             datetime.fromisoformat(report["end"]) - datetime.fromisoformat(report["start"])
-        ).total_seconds()
-        * 1000
-        if {"end", "start"} <= report.keys()
-        else None
-    )
+        ).total_seconds() * 1000
+    elif {"job.start", "job.end"} <= report.keys():
+        task_duration = (
+            datetime.fromisoformat(report["job.end"]) - datetime.fromisoformat(report["job.start"])
+        ).total_seconds() * 1000
 
     formatted_report = {
         k: (v if type(v) in (int, float, str) else str(v)) for k, v in report.items()
