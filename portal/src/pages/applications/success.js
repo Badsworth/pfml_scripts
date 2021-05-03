@@ -9,13 +9,11 @@ import {
 import Alert from "../../components/Alert";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
-import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../components/UserFeedback";
-import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -34,7 +32,6 @@ export const Success = (props) => {
     fill: "currentColor",
   };
 
-  const reason = get(claim, "leave_details.reason");
   const reason_qualifier = get(claim, "leave_details.reason_qualifier");
   const pregnant_or_recent_birth = get(
     claim,
@@ -70,17 +67,15 @@ export const Success = (props) => {
       reason_qualifier === ReasonQualifier.fosterCare)
   ) {
     claimContext = "bondingAdoptFosterFuture";
+  } else if (claim.isCaringLeave) {
+    claimContext = "caringLeave";
   } else {
     claimContext = "leaveNotInFuture";
   }
 
   return (
     <React.Fragment>
-      <Title>
-        {t("pages.claimsSuccess.title", {
-          context: findKeyByValue(LeaveReason, reason),
-        })}
-      </Title>
+      <Title>{t("pages.claimsSuccess.title")}</Title>
 
       <p className="margin-bottom-5">
         <Trans
@@ -90,7 +85,7 @@ export const Success = (props) => {
       </p>
 
       <div className="measure-6">
-        {claimContext !== "leaveNotInFuture" && (
+        {!["leaveNotInFuture", "caringLeave"].includes(claimContext) && (
           <Alert state="warning" autoWidth>
             <Trans
               i18nKey="pages.claimsSuccess.proofRequired"

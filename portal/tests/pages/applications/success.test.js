@@ -48,6 +48,11 @@ describe("Success", () => {
       .hasFutureChild()
       .absenceId()
       .create(),
+    "Caring Leave": new MockClaimBuilder()
+      .continuous({ start_date: "2020-01-01" })
+      .caringLeaveReason()
+      .absenceId()
+      .create(),
   };
 
   Object.keys(variations).forEach((variation) => {
