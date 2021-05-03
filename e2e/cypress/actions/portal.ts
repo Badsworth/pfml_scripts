@@ -28,6 +28,7 @@ export function before(): void {
       claimantAuthThroughApi: true,
       employerShowAddOrganization: true,
       employerShowVerifications: true,
+      employerShowDashboard: true,
     }),
     { log: true }
   );
@@ -1008,4 +1009,31 @@ export function assertZeroWithholdings(): void {
     "p",
     "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. "
   );
+}
+
+export function selectClaimFromEmployerDashboard(
+  fineosAbsenceId: string,
+  status: "Approved" | "Denied" | "Closed" | "--"
+): void {
+  cy.get('a[href="/employers/dashboard"]').first().click();
+
+  cy.get("tr")
+    .contains(fineosAbsenceId)
+    .parent()
+    .parent()
+    .contains('td[data-label="Status"]', status);
+  // TODO: once ALL environments include links to the applications, we should uncomment and make an assertion that the link exists
+  // .siblings()
+  // .contains(
+  //   `a[href="/employers/applications/new-application?absence_id=${fineosAbsenceId}"]`
+  // )
+}
+
+export function assertUnverifiedEmployerDashboard(): void {
+  cy.contains("Verify your account");
+  cy.contains("You have not verified any organizations.");
+}
+
+export function goToEmployerDashboard(): void {
+  cy.get('a[href="/employers/dashboard/"]').first().click();
 }

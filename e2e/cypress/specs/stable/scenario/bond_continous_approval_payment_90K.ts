@@ -2,6 +2,7 @@ import { fineos, portal } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 
+//
 describe("Submit bonding application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest = it("As a claimant, I should be able to submit a continous bonding application through the portal", () => {
     portal.before();
@@ -38,6 +39,10 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
       cy.unstash<Submission>("submission").then((submission) => {
         portal.login(
           getLeaveAdminCredentials(claim.claim.employer_fein as string)
+        );
+        portal.selectClaimFromEmployerDashboard(
+          submission.fineos_absence_id,
+          "--"
         );
         portal.vistActionRequiredERFormPage(submission.fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, true);

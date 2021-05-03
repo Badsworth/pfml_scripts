@@ -13,6 +13,8 @@ describe("Leave Admin Self-Registration", () => {
         portal.assertLoggedIn();
         cy.wait(1000);
         cy.get('button[type="submit"]').contains("Agree and continue").click();
+        portal.goToEmployerDashboard();
+        portal.assertUnverifiedEmployerDashboard();
         const withholding =
           employer.withholdings[employer.withholdings.length - 1];
         if (!withholding)
