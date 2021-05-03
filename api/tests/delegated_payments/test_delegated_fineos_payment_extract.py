@@ -97,6 +97,7 @@ def add_db_records(
     absence_case_id,
     add_claim=True,
     add_claim_type=True,
+    is_id_proofed=True,
     add_address=True,
     add_eft=True,
     add_payment=False,
@@ -127,7 +128,10 @@ def add_db_records(
         if add_claim:
             claim_type_id = ClaimType.FAMILY_LEAVE.claim_type_id if add_claim_type else None
             claim = ClaimFactory.create(
-                fineos_absence_id=absence_case_id, employee=employee, claim_type_id=claim_type_id
+                fineos_absence_id=absence_case_id,
+                employee=employee,
+                claim_type_id=claim_type_id,
+                is_id_proofed=is_id_proofed,
             )
 
             # Payment needs to be attached to a claim
@@ -148,6 +152,7 @@ def add_db_records_from_fineos_data(
     fineos_data,
     add_claim=True,
     add_claim_type=True,
+    is_id_proofed=True,
     add_address=True,
     add_eft=True,
     add_payment=False,
@@ -162,6 +167,7 @@ def add_db_records_from_fineos_data(
         i_value=fineos_data.i_value,
         add_claim=add_claim,
         add_claim_type=add_claim_type,
+        is_id_proofed=is_id_proofed,
         add_address=add_address,
         add_eft=add_eft,
         add_payment=add_payment,
@@ -1034,6 +1040,49 @@ def test_process_extract_data_leave_request_decision_validation(
     import_log_report = json.loads(rejected_payment.fineos_extract_import_log.report)
     assert import_log_report["not_pending_or_approved_leave_request_count"] == 1
     assert import_log_report["standard_valid_payment_count"] == 3
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_not_id_proofed(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    test_db_session,
+    payment_extract_step,
+    tmp_path,
+    initialize_factories_session,
+    monkeypatch,
+    create_triggers,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    datasets = []
+    # This tests that a payment with a claim missing ID proofing with be rejected
+
+    standard_payment_data = FineosPaymentData()
+    add_db_records_from_fineos_data(test_db_session, standard_payment_data, is_id_proofed=False)
+    datasets.append(standard_payment_data)
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, datasets)
+
+    # Run the extract process
+    payment_extract_step.run()
+
+    standard_payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == standard_payment_data.i_value)
+        .one_or_none()
+    )
+    assert len(standard_payment.state_logs) == 1
+
+    assert (
+        standard_payment.state_logs[0].end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+    )
+    issues = standard_payment.state_logs[0].outcome["validation_container"]["validation_issues"]
+    assert len(issues) == 1
+    assert issues[0] == {
+        "reason": "ClaimNotIdProofed",
+        "details": f"Claim {standard_payment_data.absence_case_number} has not been ID proofed",
+    }
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time

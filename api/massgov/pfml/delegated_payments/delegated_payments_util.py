@@ -149,6 +149,7 @@ class ValidationReason(str, Enum):
     EFT_PRENOTE_PENDING = "EFTPending"
     EFT_PRENOTE_REJECTED = "EFTRejected"
     CLAIMANT_MISMATCH = "ClaimantMismatch"
+    CLAIM_NOT_ID_PROOFED = "ClaimNotIdProofed"
 
 
 @dataclass(frozen=True, eq=True)
