@@ -30,7 +30,7 @@ export const AppOccupation = (props) => {
     // @todo: If the radio buttons are disabled, hard-code the field so that validations pass
   }
 
-  const { formState, getField, updateFields /* , clearField */ } = useFormState(
+  const { formState, getField, updateFields, clearField } = useFormState(
     initialFormState
   );
   const occupation_id = getField("occupation_id");
@@ -88,9 +88,9 @@ export const AppOccupation = (props) => {
           })
         ),
       ]);
-      updateFields({ occupation_title_custom: "" });
+      clearField("occupation_title_custom");
     } else {
-      updateFields({ occupation_title_id: 0 });
+      clearField("occupation_title_id");
     }
     // updates occupation category
     updateFields({ [name]: value });
@@ -128,6 +128,7 @@ export const AppOccupation = (props) => {
         {...getFunctionalInputProps("occupation_title_custom")}
         label="Custom occupation title"
         smallLabel
+        maxLength="255"
         disabled={parseInt(occupation_id) !== -1}
       />
     </QuestionPage>

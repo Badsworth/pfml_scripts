@@ -89,7 +89,6 @@ InputText.propTypes = {
    */
   autoComplete: PropTypes.string,
   /**
-  /**
    * HTML input `disabled` attribute
    */
   disabled: PropTypes.bool,

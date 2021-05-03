@@ -79,7 +79,7 @@ Dropdown.propTypes = {
     })
   ).isRequired,
   /**
-   * Whether the select is not ready to receive user input
+   * HTML input `disabled` attribute
    */
   disabled: PropTypes.bool,
   /**
