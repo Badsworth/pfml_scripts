@@ -45,7 +45,7 @@ env:
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   version: ${{ github.event.inputs.version || 'main' }}
   deployment_env: ${{ github.event.inputs.deployment_env || 'test' }}
-  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
+  deploys_channel: "@kevin" #mass-pfml-deploys-shared
   nodeVersion: 15.x
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   terraformVersion: 0.14.7
