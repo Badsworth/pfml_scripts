@@ -283,6 +283,7 @@ def test_e2e_pub_payments(
             scenario_names=[
                 ScenarioName.PUB_ACH_FAMILY_RETURN,
                 ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_ID,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
@@ -377,8 +378,8 @@ def test_e2e_pub_payments(
         audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)
 
         assert len(audit_report_parsed_csv_rows) == (
-            len(stage_1_happy_path_scenarios) + 1 + 4 + 3
-        )  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks
+            len(stage_1_happy_path_scenarios) + 1 + 5 + 3 + 1 + 1
+        )  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks + invalid prenote ID + invalid payment ID
 
         payments = get_payments_in_end_state(
             test_db_session, State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
@@ -402,12 +403,12 @@ def test_e2e_pub_payments(
             {
                 "processed_payment_count": len(SCENARIO_DESCRIPTORS),
                 "not_pending_or_approved_leave_request_count": 1,
-                "approved_prenote_count": 10,
+                "approved_prenote_count": 12,
                 "zero_dollar_payment_count": 1,
                 "cancellation_count": 1,
                 "overpayment_count": 3,
                 "employer_reimbursement_count": 1,
-                "errored_payment_count": 6,  # See DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT state check above
+                "errored_payment_count": 7,  # See DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT state check above
             },
         )
 
@@ -416,8 +417,8 @@ def test_e2e_pub_payments(
             "PaymentAuditReportStep",
             {
                 "payment_sampled_for_audit_count": (
-                    len(stage_1_happy_path_scenarios) + 1 + 4 + 3
-                ),  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks
+                    len(stage_1_happy_path_scenarios) + 1 + 5 + 3 + 1 + 1
+                ),  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks + check_not_found + invalid_payment_id
             },
         )
 
@@ -643,17 +644,17 @@ def test_e2e_pub_payments(
         assert_metrics(
             test_db_other_session,
             "PaymentRejectsStep",
-            {"rejected_payment_count": 1, "accepted_payment_count": 17},
+            {"rejected_payment_count": 1, "accepted_payment_count": 20},
         )
 
         assert_metrics(
             test_db_other_session,
             "PaymentMethodsSplitStep",
-            {"ach_payment_count": 9, "check_payment_count": 8},
+            {"ach_payment_count": 11, "check_payment_count": 9},
         )
 
         assert_metrics(
-            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 23,},
+            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 26,},
         )
 
         assert_metrics(
@@ -714,6 +715,14 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
             ],
             end_state=State.ERRORED_PEI_WRITEBACK_SENT,
+            db_session=test_db_session,
+        )
+
+        # Unchanged
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_ID,],
+            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
             db_session=test_db_session,
         )
 
@@ -788,8 +797,8 @@ def test_e2e_pub_payments(
 
         # == PubError TODO adjust as metric based scenarios below are added
         assert len(test_db_session.query(PubError).all()) == (
-            2 + 2 + 2 + 3
-        )  # eft_prenote_unexpected_state_count + payment_complete_with_change_count + payment_rejected_count + payment_failed_by_check
+            2 + 2 + 2 + 3 + 1 + 1 + 1
+        )  # eft_prenote_unexpected_state_count + payment_complete_with_change_count + payment_rejected_count + payment_failed_by_check + unknown_id_format_count + invalid_check_number + invalid_eft_id
 
         # == Metrics
         assert_metrics(
@@ -797,26 +806,26 @@ def test_e2e_pub_payments(
             "ProcessNachaReturnFileStep",
             {
                 "warning_count": 0,
-                "ach_return_count": 3,
+                "ach_return_count": 6,
                 "change_notification_count": 3,
-                "eft_prenote_count": 2,
-                "payment_count": 4,
-                "unknown_id_format_count": 0,  # TODO add scenario (PUB-174)
-                "eft_prenote_id_not_found_count": 0,  # TODO add scenario (PUB-174)
-                "eft_prenote_unexpected_state_count": 0,
-                "eft_prenote_already_approved_count": 2,  # TODO validate
-                "eft_prenote_rejected_count": 0,  # TODO add scenario (PUB-174)
-                "payment_id_not_found_count": 0,  # TODO add scenario (PUB-174)
+                "eft_prenote_count": 3,
+                "payment_count": 5,
+                "unknown_id_format_count": 1,
+                "eft_prenote_id_not_found_count": 0,
+                "eft_prenote_unexpected_state_count": 1,
+                "eft_prenote_already_approved_count": 1,
+                "eft_prenote_rejected_count": 1,  # TODO add scenario
+                "payment_id_not_found_count": 1,
                 "payment_rejected_count": 2,  # Both prenotes
-                "payment_already_rejected_count": 0,  # TODO add scenario (PUB-174)
+                "payment_already_rejected_count": 0,  # TODO add scenario
                 "payment_unexpected_state_count": 0,
                 "payment_complete_with_change_count": 2,  # TODO validate
-                "payment_already_complete_count": 0,  # TODO add scenario? (PUB-174)
-                "payment_notification_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
+                "payment_already_complete_count": 0,  # TODO add scenario?
+                "payment_notification_unexpected_state_count": 0,  # TODO add scenario
             },
         )
 
-        # Outstanding check response (processed first by file name alphabetical order)
+        # Outstanding check response
         assert_metrics(
             test_db_other_session,
             "ProcessCheckReturnFileStep",
@@ -826,27 +835,27 @@ def test_e2e_pub_payments(
                 "payment_complete_by_paid_check": 0,
                 "payment_still_outstanding": 2,
                 "payment_failed_by_check": 3,
-                "check_number_not_found_count": 0,  # TODO add scenario  (PUB-174)
-                "payment_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
+                "check_number_not_found_count": 0,
+                "payment_unexpected_state_count": 0,  # TODO add scenario
             },
-            log_report_index=1,  # second when sorted by import log id desc order
+            log_report_index=1,  # second when sorted in start time desc order
             description="Outstanding check responses",
         )
 
-        # Positive pay check response (processed second by file name alphabetical order)
+        # Positive pay check response
         assert_metrics(
             test_db_other_session,
             "ProcessCheckReturnFileStep",
             {
                 "warning_count": 0,
-                "check_payment_count": 3,
+                "check_payment_count": 4,
                 "payment_complete_by_paid_check": 3,
                 "payment_still_outstanding": 0,
                 "payment_failed_by_check": 0,
-                "check_number_not_found_count": 0,  # TODO add scenario (PUB-174)
-                "payment_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
+                "check_number_not_found_count": 1,  # TODO add scenario
+                "payment_unexpected_state_count": 0,  # TODO add scenario
             },
-            log_report_index=0,  # first when sorted by import log id desc order
+            log_report_index=0,  # first when sorted in start time desc order
             description="Positive pay check responses",
         )
 
