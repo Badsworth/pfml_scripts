@@ -465,7 +465,7 @@ jobs:
     outputs: 
       message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
     # Notifies if there's a failure on auto-deploys to test
-    if: always()
+    if: always() && 'test' == 'false'
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
