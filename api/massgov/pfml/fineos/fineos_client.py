@@ -793,6 +793,16 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 models.AdditionalData(name="EEOCcategory", value=NAICS_occupation)
             )
 
+        # @todo: AdditionalData name
+        # if NAICS_occupation_title:
+        #     additional_data_set.additional_data.append(
+        #         models.AdditionalData(name="employment-title", value=NAICS_occupation)
+        #     )
+        # if NAICS_occupation_custom:
+        #     additional_data_set.additional_data.append(
+        #         models.AdditionalData(name="jobtitle", value=NAICS_occupation)
+        #     )
+
         # Put the XML object together properly.
         service_data = models.OccupationDetailUpdateData()
         service_data.additional_data_set = additional_data_set
