@@ -31,8 +31,6 @@ class BaseBenefitsApplication extends BaseModel {
         reduced_schedule_leave_periods: null,
       },
       middle_name: null,
-      // array of PreviousLeave objects. See the PreviousLeave model
-      previous_leaves: [],
       residential_address: new Address(),
       status: null,
       tax_identifier: null,

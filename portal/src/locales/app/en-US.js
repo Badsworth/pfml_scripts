@@ -154,10 +154,6 @@ const errors = {
       required:
         "Select yes if you will receive income from any other sources during your leave.",
     },
-    has_previous_leaves: {
-      required:
-        "Select yes if you have taken paid or unpaid leave since January 1, 2021 for a qualifying reason.",
-    },
     has_reduced_schedule_leave_periods: {
       required: "Select Yes if you are working a reduced schedule.",
     },
@@ -395,28 +391,6 @@ const errors = {
         required: "Select a number type.",
       },
     },
-    previous_leaves: {
-      is_for_current_employer: {
-        required: "Select yes if your leave is from this employer.",
-      },
-      leave_end_date: {
-        format:
-          "Date your leave ended must include a valid month, day, and year.",
-        invalid_date_range:
-          "Date your leave ends must be on or after the date your leave began.",
-        minimum: "Leave end date must be after December 31, 2020",
-        required: "Enter the date your leave ended.",
-      },
-      leave_reason: {
-        required: "Select the qualifying reason for your leave.",
-      },
-      leave_start_date: {
-        format:
-          "Date your leave began must include a valid month, day, and year.",
-        minimum: "Leave start date must be after December 31, 2020",
-        required: "Enter the date your leave began.",
-      },
-    },
     residential_address: {
       city: {
         required: "Enter a city for your residential address.",
@@ -518,18 +492,6 @@ const errors = {
     },
     outstanding_information_request_required:
       "This application has already been reviewed.",
-    previous_leaves: {
-      leave_start_date: {
-        format: "Start date must include a valid month, day, and year.",
-        invalid_previous_leave_start_date:
-          "Paid leave cannot be taken before January 1, 2021. Enter a date after December 31, 2020.",
-      },
-      leave_end_date: {
-        format: "End date must include a valid month, day, and year.",
-        minimum:
-          "Last day of leave must be on or after the first day of leave.",
-      },
-    },
     unauthorized_leave_admin:
       "Sorry, you do not have permission to view that page. To access it, you need to <add-org-link>add that organization</add-org-link> to your account.",
     withholding_amount: {

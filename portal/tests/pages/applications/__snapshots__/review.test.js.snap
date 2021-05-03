@@ -224,13 +224,6 @@ exports[`Final Review Page when the claim is complete renders Review page with f
     >
       No
     </ReviewRow>
-    <ReviewRow
-      editText="Edit"
-      label="Previous paid or unpaid leave?"
-      level="3"
-    >
-      No
-    </ReviewRow>
   </div>
   <Heading
     level="2"
@@ -487,13 +480,6 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
     </ReviewRow>
     <ReviewRow
       label="Other sources of income?"
-      level="4"
-    >
-      No
-    </ReviewRow>
-    <ReviewRow
-      editText="Edit"
-      label="Previous paid or unpaid leave?"
       level="4"
     >
       No
@@ -816,13 +802,6 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     >
       No
     </ReviewRow>
-    <ReviewRow
-      editText="Edit"
-      label="Previous paid or unpaid leave?"
-      level="4"
-    >
-      No
-    </ReviewRow>
   </div>
   <div
     className="margin-top-6 margin-bottom-2"
@@ -848,20 +827,6 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     Submit Part 1
   </Button>
 </div>
-`;
-
-exports[`PreviousLeaveList renders review info for a previous leave entry 1`] = `
-<ReviewRow
-  key="0"
-  label="Previous leave 1"
-  level="4"
->
-  Did not take leave from this employer
-  <br />
-  Leave was for a pregnancy
-  <br />
-  1/1/2021 – 2/1/2021
-</ReviewRow>
 `;
 
 exports[`Reduced leave renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed 1`] = `
