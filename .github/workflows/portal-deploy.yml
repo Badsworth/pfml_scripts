@@ -611,7 +611,7 @@ jobs:
           -H 'Content-Type: application/json;charset=utf-8' \
           --data '{
             "channel": "${{ env.deploys_channel }}",
-            ${optional_threadts}
+            '"${optional_threadts}"'
             "attachments": [{
               "title": "E2E Test failed (<${{ env.workflow_self_link }}|build logs>)",
               "color": "danger"
