@@ -12,11 +12,11 @@ exports[`ConsentToDataSharing shows the correct content for non-employers 1`] = 
   <p
     className="margin-bottom-2"
   >
-    The information you provide on this website will be used to administer the Paid Family and Medical Leave (PFML) program.
+    The information you provide on this website will be used to administer the Paid Family and Medical Leave program.
   </p>
   <Accordion>
     <AccordionItem
-      heading="Applying for PFML"
+      heading="Applying for benefits"
     >
       <p>
         We need this information to:
@@ -49,7 +49,7 @@ exports[`ConsentToDataSharing shows the correct content for non-employers 1`] = 
       </p>
     </AccordionItem>
     <AccordionItem
-      heading="Full user agreements"
+      heading="Read the full user agreements"
     >
       <p>
         <Trans
@@ -97,7 +97,7 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
   <p
     className="margin-bottom-2"
   >
-    The information you provide on this website will be used to administer the Paid Family and Medical Leave (PFML) program.
+    The information you provide on this website will be used to administer the Paid Family and Medical Leave program.
   </p>
   <Accordion>
     <AccordionItem
@@ -139,7 +139,7 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
       </p>
     </AccordionItem>
     <AccordionItem
-      heading="Full user agreements"
+      heading="Read the full user agreements"
     >
       <p>
         <Trans
