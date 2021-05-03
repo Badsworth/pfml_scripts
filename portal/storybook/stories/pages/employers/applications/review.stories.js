@@ -27,7 +27,7 @@ export default {
       defaultValue: "Medical",
       control: {
         type: "radio",
-        options: ["Bonding", "Medical"],
+        options: ["Bonding", "Medical", "Care"],
       },
     },
     errorTypes: {
@@ -66,6 +66,9 @@ export const Default = (args) => {
       break;
     case "Medical":
       claim = claim.medicalLeaveReason();
+      break;
+    case "Care":
+      claim = claim.caringLeaveReason();
       break;
   }
 
