@@ -782,21 +782,36 @@ class PaymentExtractStep(Step):
             self.increment(self.Metrics.CLAIM_NOT_FOUND_COUNT)
             return None, None
 
-        if claim and employee and claim.employee_id != employee.employee_id:
+        # Perform various validations on the claim. We require
+        # A claim to be ID Proofed
+        # A claim to have a claim type
+        # The employee we fetched above to already be connected to the claim
+        if claim:
+            # TODO - ask Mass about non-standard payments
+            if not claim.is_id_proofed:
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.CLAIM_NOT_ID_PROOFED,
+                    f"Claim {payment_data.absence_case_number} has not been ID proofed",
+                )
+
+            # If no claim type, we can't process downstream as this information
+            # is necessary when creating NACHA and check records for PUB
+            if not claim.claim_type_id:
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_IN_DB,
+                    f"Claim {payment_data.absence_case_number} exists, but does not have a claim type associated with it.",
+                )
+
             # If the employee we found does not match what is already attached
             # to the claim, we can't accept the payment.
-            payment_data.validation_container.add_validation_issue(
-                payments_util.ValidationReason.CLAIMANT_MISMATCH,
-                f"Claimant {claim.employee_id} is attached to claim {claim.fineos_absence_id}, but claimant {employee.employee_id} was found.",
-            )
-            self.increment(self.Metrics.CLAIMANT_MISMATCH_COUNT)
-            return None, None
+            if employee and claim.employee_id != employee.employee_id:
 
-        if claim and not claim.claim_type_id:
-            payment_data.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_IN_DB,
-                f"Claim {payment_data.absence_case_number} exists, but does not have a claim type associated with it.",
-            )
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.CLAIMANT_MISMATCH,
+                    f"Claimant {claim.employee_id} is attached to claim {claim.fineos_absence_id}, but claimant {employee.employee_id} was found.",
+                )
+                self.increment(self.Metrics.CLAIMANT_MISMATCH_COUNT)
+                return None, None
 
         return employee, claim
 

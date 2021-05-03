@@ -1,11 +1,11 @@
-import { portal, fineos } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
-import { Submission } from "../../../../src/types";
+import { portal, fineos } from "../../actions";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
+import { Submission } from "../../../src/types";
 
-describe("Submit medical application via the web portal: Adjudication Approval & payment checking", () => {
-  const submissionTest = it("As a claimant, I should be able to submit a reduced medical application through the portal", () => {
+describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
+  const submissionTest = it("As a claimant, I should be able to submit a intermittent bonding application through the portal", () => {
     portal.before();
-    cy.task("generateClaim", "MRAP30").then((claim) => {
+    cy.task("generateClaim", "BIAP60").then((claim) => {
       cy.stash("claim", claim);
       const application: ApplicationRequestBody = claim.claim;
       const paymentPreference = claim.paymentPreference;
@@ -50,20 +50,43 @@ describe("Submit medical application via the web portal: Adjudication Approval &
   });
 
   it(
-    "CSR rep will approve reduced medical application",
+    "CSR rep will approve intermittent bonding application",
     { baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();
       cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {
-        fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);
+        fineos.intermittentClaimAdjudicationFlow(
+          submission.fineos_absence_id,
+          true
+        );
       });
     }
   );
 
   it(
-    "Should be able to confirm the weekly payment amount for a reduced schedule",
+    "CSR rep will record actual hours reported by employee",
+    { baseUrl: getFineosBaseUrl() },
+    () => {
+      cy.dependsOnPreviousPass();
+      fineos.before();
+      cy.visit("/");
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          fineos.visitClaim(submission.fineos_absence_id);
+          fineos.assertClaimStatus("Approved");
+          fineos.submitIntermittentActualHours(
+            claim.metadata?.spanHoursStart as string,
+            claim.metadata?.spanHoursEnd as string
+          );
+        });
+      });
+    }
+  );
+
+  it(
+    "Should be able to confirm the weekly payment amount for a intermittent schedule",
     { baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();
@@ -75,7 +98,7 @@ describe("Submit medical application via the web portal: Adjudication Approval &
           fineos.checkPaymentPreference(claim);
           fineos.visitClaim(submission.fineos_absence_id);
           fineos.assertClaimStatus("Approved");
-          fineos.getPaymentAmount().then((amount) => {
+          fineos.getIntermittentPaymentAmount().then((amount) => {
             expect(
               amount,
               `Maximum weekly payment should be: $${claim.metadata?.expected_weekly_payment}`

@@ -5,6 +5,7 @@ import BenefitsApplicationCollection from "../../models/BenefitsApplicationColle
 import ClaimCollection from "../../models/ClaimCollection";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
+import PaginationMeta from "../../models/PaginationMeta";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
@@ -43,8 +44,8 @@ export default jest.fn(() => ({
   },
   claims: {
     claims: new ClaimCollection(),
-    hasLoadedAll: true,
-    loadAll: jest.fn(),
+    paginationMeta: new PaginationMeta(),
+    loadPage: jest.fn(),
   },
   clearErrors: jest.fn(),
   documents: {

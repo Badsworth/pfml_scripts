@@ -6,6 +6,23 @@ import useAppLogic from "../../src/hooks/useAppLogic";
 
 jest.mock("../../src/services/tracker");
 
+const mockPaginatedFetch = (mockResponseData = []) => {
+  const mockPaginationMeta = {
+    page_offset: 1,
+    page_size: 25,
+    total_pages: 3,
+    total_records: 75,
+    order_by: "created_at",
+    order_direction: "asc",
+  };
+  mockFetch({
+    response: {
+      data: mockResponseData,
+      meta: { paging: { ...mockPaginationMeta } },
+    },
+  });
+};
+
 describe("useClaimsLogic", () => {
   function setup() {
     const { result: appLogic } = renderHook(() => useAppLogic());
@@ -22,7 +39,7 @@ describe("useClaimsLogic", () => {
     expect(appLogic.current.claims.claims.items).toHaveLength(0);
   });
 
-  describe("loadAll", () => {
+  describe("loadPage", () => {
     it("gets claims from API", async () => {
       const mockResponseData = [
         {
@@ -32,15 +49,11 @@ describe("useClaimsLogic", () => {
           fineos_absence_id: "abs-2",
         },
       ];
-      mockFetch({
-        response: {
-          data: mockResponseData,
-        },
-      });
+      mockPaginatedFetch(mockResponseData);
       const { appLogic } = setup();
 
       await act(async () => {
-        await appLogic.current.claims.loadAll();
+        await appLogic.current.claims.loadPage();
       });
 
       expect(appLogic.current.claims.claims.items).toHaveLength(
@@ -54,13 +67,13 @@ describe("useClaimsLogic", () => {
 
       await act(async () => {
         // this should make an API request since ALL claims haven't been loaded yet
-        mockFetch();
-        await appLogic.current.claims.loadAll();
+        mockPaginatedFetch();
+        await appLogic.current.claims.loadPage();
         expect(global.fetch).toHaveBeenCalled();
 
         // but this shouldn't, since we've already loaded all claims
-        mockFetch();
-        await appLogic.current.claims.loadAll();
+        mockPaginatedFetch();
+        await appLogic.current.claims.loadPage();
         expect(global.fetch).not.toHaveBeenCalled();
       });
     });
@@ -75,7 +88,7 @@ describe("useClaimsLogic", () => {
       });
 
       await act(async () => {
-        await appLogic.current.claims.loadAll();
+        await appLogic.current.claims.loadPage();
       });
 
       expect(appLogic.current.appErrors.items).toHaveLength(0);
@@ -90,7 +103,7 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       await act(async () => {
-        await appLogic.current.claims.loadAll();
+        await appLogic.current.claims.loadPage();
       });
 
       expect(appLogic.current.appErrors.items[0].name).toEqual(

@@ -147,6 +147,7 @@ def create_claim(
     claim_type: LkClaimType,
     absence_status: LkAbsenceStatus,
     fineos_absence_id: str,
+    is_id_proofed: bool,
 ) -> Claim:
     return ClaimFactory.create(
         employer=employer,
@@ -154,6 +155,7 @@ def create_claim(
         claim_type_id=claim_type.claim_type_id,
         fineos_absence_status_id=absence_status.absence_status_id,
         fineos_absence_id=fineos_absence_id,
+        is_id_proofed=is_id_proofed,
     )
 
 
@@ -198,6 +200,7 @@ def generate_scenario_data_in_db(
         claim_type=scenario_descriptor.claim_type,
         fineos_absence_id=absence_case_id,
         absence_status=AbsenceStatus.APPROVED,
+        is_id_proofed=scenario_descriptor.is_id_proofed,
     )
 
     return ScenarioData(

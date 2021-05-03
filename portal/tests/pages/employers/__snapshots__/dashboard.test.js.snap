@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Employer dashboard renders a 'no results' message in the table if no claims are present 1`] = `
+exports[`Employer dashboard renders a 'no results' message in the table, and no pagination components when no claims are present 1`] = `
 <tr>
   <td
     colSpan={5}
@@ -165,18 +165,34 @@ exports[`Employer dashboard renders claim rows without links if employer is not 
 </tr>
 `;
 
-exports[`Employer dashboard renders the page 1`] = `
+exports[`Employer dashboard renders the page with expected content and pagination components 1`] = `
 <Title>
   Dashboard
 </Title>
 `;
 
-exports[`Employer dashboard renders the page 2`] = `
+exports[`Employer dashboard renders the page with expected content and pagination components 2`] = `
 <p
   className="margin-bottom-4"
 >
   Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.
 </p>
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 3`] = `
+<PaginationSummary
+  pageOffset={1}
+  pageSize={25}
+  totalRecords={75}
+/>
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 4`] = `
+<PaginationNavigation
+  onClick={[Function]}
+  pageOffset={1}
+  totalPages={3}
+/>
 `;
 
 exports[`Employer dashboard when employerShowVerifications flag is enabled renders instructions if there are no verified employers 1`] = `

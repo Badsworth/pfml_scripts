@@ -123,6 +123,11 @@ exports[`Employer welcome renders page 1`] = `
         <Trans
           components={
             Object {
+              "caregiver-certification-form-link": <a
+                href="https://www.mass.gov/family-caring-form"
+                rel="noopener"
+                target="_blank"
+              />,
               "healthcare-provider-form-link": <a
                 href="https://www.mass.gov/medical-leave-form"
                 rel="noopener"
@@ -182,7 +187,16 @@ Array [
   >
     Certification of a Serious Health Condition form
   </a>,
-  " during the review process.",
+  " during the review process. For leave to care for a family member you can download the ",
+  <a
+    href="https://www.mass.gov/family-caring-form"
+    key="3"
+    rel="noopener"
+    target="_blank"
+  >
+    Certification to Care for a Family Member
+  </a>,
+  " during the review process. ",
 ]
 `;
 

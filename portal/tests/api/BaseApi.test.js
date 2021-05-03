@@ -13,7 +13,6 @@ import {
 } from "../../src/errors";
 import { Auth } from "@aws-amplify/auth";
 import BaseApi from "../../src/api/BaseApi";
-import tracker from "../../src/services/tracker";
 
 jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
@@ -89,6 +88,25 @@ describe("BaseApi", () => {
       expect.objectContaining({
         method,
       })
+    );
+  });
+
+  it("sends a GET request with params to the API", async () => {
+    expect.assertions();
+    const method = "GET";
+
+    await testsApi.request(method, "users", {
+      page_offset: 1,
+      order_by: "name",
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${process.env.apiUrl}/api/users?page_offset=1&order_by=name`,
+      {
+        body: null,
+        method,
+        headers: expect.any(Object),
+      }
     );
   });
 
@@ -276,7 +294,10 @@ describe("BaseApi", () => {
       expect.assertions();
 
       global.fetch = jest.fn().mockResolvedValue({
-        json: jest.fn().mockResolvedValue({ data: { mock_response: true } }),
+        json: jest.fn().mockResolvedValue({
+          data: { mock_response: true },
+          meta: { method: "GET", resource: "/v1/users/current" },
+        }),
         status: 200,
         ok: true,
       });
@@ -286,6 +307,10 @@ describe("BaseApi", () => {
               Object {
                 "data": Object {
                   "mock_response": true,
+                },
+                "meta": Object {
+                  "method": "GET",
+                  "resource": "/v1/users/current",
                 },
                 "warnings": Array [],
               }
@@ -470,34 +495,6 @@ describe("BaseApi", () => {
       await expect(testsApi.request("GET", "users")).resolves.toEqual(
         expect.objectContaining(response)
       );
-    });
-
-    describe("due to a network issue", () => {
-      it("throws NetworkError", async () => {
-        expect.assertions();
-
-        global.fetch = jest
-          .fn()
-          .mockRejectedValue(TypeError("Network failure"));
-
-        await expect(testsApi.request("GET", "users")).rejects.toThrow(
-          NetworkError
-        );
-      });
-
-      it("sends error to New Relic", async () => {
-        expect.assertions();
-
-        global.fetch = jest
-          .fn()
-          .mockRejectedValue(TypeError("Network failure"));
-
-        try {
-          await testsApi.request("GET", "users");
-        } catch (error) {}
-
-        expect(tracker.noticeError).toHaveBeenCalledWith(expect.any(Error));
-      });
     });
 
     it("throws AuthSessionMissingError when Cognito session fails to be retrieved", async () => {

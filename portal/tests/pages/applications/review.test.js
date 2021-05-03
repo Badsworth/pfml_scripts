@@ -16,7 +16,6 @@ import Review, {
   EmployerBenefitList,
   OtherIncomeList,
   OtherLeaveEntry,
-  PreviousLeaveList,
 } from "../../../src/pages/applications/review";
 import { DateTime } from "luxon";
 import React from "react";
@@ -110,7 +109,6 @@ describe("Final Review Page", () => {
 
   it("conditionally renders Other Leave section based on presence of Yes/No fields", () => {
     const claimAttrs = new MockClaimBuilder().complete().create();
-    claimAttrs.has_previous_leaves = false;
     claimAttrs.has_other_incomes = false;
     claimAttrs.has_employer_benefits = false;
 
@@ -123,7 +121,6 @@ describe("Final Review Page", () => {
     expect(wrapper.exists("[data-test='other-leave']")).toBe(true);
 
     // But doesn't render when null
-    delete claimAttrs.has_previous_leaves;
     delete claimAttrs.has_other_incomes;
     delete claimAttrs.has_employer_benefits;
 
@@ -538,23 +535,6 @@ describe("OtherIncomeList", () => {
 
       expect(wrapper).toMatchSnapshot();
     });
-  });
-});
-
-describe("PreviousLeaveList", () => {
-  it("renders review info for a previous leave entry", () => {
-    const claim = new MockClaimBuilder()
-      .previousLeavePregnancyFromOtherEmployer()
-      .create();
-
-    const wrapper = shallow(
-      <PreviousLeaveList
-        previous_leaves={claim.previous_leaves}
-        reviewRowLevel="4"
-      />
-    );
-
-    expect(wrapper).toMatchSnapshot();
   });
 });
 

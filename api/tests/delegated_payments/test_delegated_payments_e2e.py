@@ -23,6 +23,8 @@ from massgov.pfml.db.models.employees import (
     LkState,
     Payment,
     PubError,
+    ReferenceFile,
+    ReferenceFileType,
     State,
 )
 from massgov.pfml.db.models.payments import (
@@ -129,7 +131,6 @@ def test_e2e_pub_payments(
     create_triggers,
 ):
     # TODO Validate error and warning logs
-    # TODO Validate reference files
     # TODO make metric count numbers more readable (use variables etc), check diffs in state
 
     # ========================================================================
@@ -205,6 +206,35 @@ def test_e2e_pub_payments(
 
         # == Validate created rows
 
+        assert_ref_file(
+            f"{s3_config.pfml_fineos_extract_archive_path}processed/2021-05-01-08-00-00-payment-extract",
+            ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
+            test_db_session,
+        )
+
+        assert_ref_file(
+            f"{s3_config.pfml_error_reports_archive_path}/sent/2021-05-01/2021-05-01-15-00-00-Payment-Audit-Report.csv",
+            ReferenceFileType.DELEGATED_PAYMENT_AUDIT_REPORT,
+            test_db_session,
+        )
+
+        assert_ref_file(
+            f"{s3_config.pfml_error_reports_archive_path}/sent/2021-05-01/2021-05-01-15-00-00-claimant-extract-error-report.csv",
+            ReferenceFileType.DELEGATED_PAYMENT_REPORT_FILE,
+            test_db_session,
+        )
+
+        assert_ref_file(
+            f"{s3_config.pfml_error_reports_archive_path}/sent/2021-05-01/2021-05-01-15-00-00-payment-extract-error-report.csv",
+            ReferenceFileType.DELEGATED_PAYMENT_REPORT_FILE,
+            test_db_session,
+        )
+
+        assert_ref_file(
+            f"{s3_config.pfml_error_reports_archive_path}/sent/2021-05-01/2021-05-01-15-00-00-address-error-report.csv",
+            ReferenceFileType.DELEGATED_PAYMENT_REPORT_FILE,
+            test_db_session,
+        )
         # TODO claimant rows - PUB-165
 
         # Payments
@@ -308,6 +338,7 @@ def test_e2e_pub_payments(
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[
+                ScenarioName.CLAIM_NOT_ID_PROOFED,
                 ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
                 ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
                 ScenarioName.PUB_ACH_PRENOTE_RETURN,
@@ -377,7 +408,7 @@ def test_e2e_pub_payments(
                 "cancellation_count": 1,
                 "overpayment_count": 3,
                 "employer_reimbursement_count": 1,
-                "errored_payment_count": 6,  # See DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT state check above
+                "errored_payment_count": 7,  # See DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT state check above
             },
         )
 
@@ -422,6 +453,43 @@ def test_e2e_pub_payments(
             log_entry_db_session=test_db_other_session,
             config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
         )
+
+        assert_ref_file(
+            f"{s3_config.pfml_payment_rejects_archive_path}/processed/2021-05-02/Payment-Rejects.csv",
+            ReferenceFileType.DELEGATED_PAYMENT_REJECTS,
+            test_db_session,
+        )
+
+        assert_ref_file(
+            f"{s3_config.pfml_pub_check_archive_path}/sent/2021-05-02/2021-05-02-10-00-00-EOLWD-DFML-EZ-CHECK.csv",
+            ReferenceFileType.PUB_EZ_CHECK,
+            test_db_session,
+        )
+
+        assert_ref_file(
+            f"{s3_config.pfml_pub_check_archive_path}/sent/2021-05-02/2021-05-02-10-00-00-EOLWD-DFML-POSITIVE-PAY.txt",
+            ReferenceFileType.PUB_POSITIVE_PAYMENT,
+            test_db_session,
+        )
+
+        assert_ref_file(
+            f"{s3_config.pfml_pub_ach_archive_path}/sent/2021-05-02/2021-05-02-10-00-00-EOLWD-DFML-NACHA",
+            ReferenceFileType.PUB_NACHA,
+            test_db_session,
+        )
+
+        assert_ref_file(
+            f"{s3_config.pfml_fineos_writeback_archive_path}sent/2021-05-02/2021-05-02-10-00-00-pei_writeback.csv",
+            ReferenceFileType.PEI_WRITEBACK,
+            test_db_session,
+        )
+
+        for report_name in CREATE_PUB_FILES_REPORTS:
+            assert_ref_file(
+                f"{s3_config.pfml_error_reports_archive_path}/sent/2021-05-02/2021-05-02-10-00-00-{report_name.value}.csv",
+                ReferenceFileType.DELEGATED_PAYMENT_REPORT_FILE,
+                test_db_session,
+            )
 
         # == Validate payments state logs
 
@@ -973,3 +1041,14 @@ def generate_rejects_file(test_dataset: TestDataSet, audit_file_path: str, rejec
 
     csv_output.writerows(parsed_audit_rows)
     csv_file.close()
+
+
+def assert_ref_file(file_path: str, ref_file_type: ReferenceFileType, db_session: db.Session):
+    found = (
+        db_session.query(ReferenceFile)
+        .filter(ReferenceFile.file_location == file_path)
+        .filter(ReferenceFile.reference_file_type_id == ref_file_type.reference_file_type_id)
+        .one_or_none()
+    )
+
+    assert found is not None

@@ -154,10 +154,6 @@ const errors = {
       required:
         "Select yes if you will receive income from any other sources during your leave.",
     },
-    has_previous_leaves: {
-      required:
-        "Select yes if you have taken paid or unpaid leave since January 1, 2021 for a qualifying reason.",
-    },
     has_reduced_schedule_leave_periods: {
       required: "Select Yes if you are working a reduced schedule.",
     },
@@ -395,28 +391,6 @@ const errors = {
         required: "Select a number type.",
       },
     },
-    previous_leaves: {
-      is_for_current_employer: {
-        required: "Select yes if your leave is from this employer.",
-      },
-      leave_end_date: {
-        format:
-          "Date your leave ended must include a valid month, day, and year.",
-        invalid_date_range:
-          "Date your leave ends must be on or after the date your leave began.",
-        minimum: "Leave end date must be after December 31, 2020",
-        required: "Enter the date your leave ended.",
-      },
-      leave_reason: {
-        required: "Select the qualifying reason for your leave.",
-      },
-      leave_start_date: {
-        format:
-          "Date your leave began must include a valid month, day, and year.",
-        minimum: "Leave start date must be after December 31, 2020",
-        required: "Enter the date your leave began.",
-      },
-    },
     residential_address: {
       city: {
         required: "Enter a city for your residential address.",
@@ -518,18 +492,6 @@ const errors = {
     },
     outstanding_information_request_required:
       "This application has already been reviewed.",
-    previous_leaves: {
-      leave_start_date: {
-        format: "Start date must include a valid month, day, and year.",
-        invalid_previous_leave_start_date:
-          "Paid leave cannot be taken before January 1, 2021. Enter a date after December 31, 2020.",
-      },
-      leave_end_date: {
-        format: "End date must include a valid month, day, and year.",
-        minimum:
-          "Last day of leave must be on or after the first day of leave.",
-      },
-    },
     unauthorized_leave_admin:
       "Sorry, you do not have permission to view that page. To access it, you need to <add-org-link>add that organization</add-org-link> to your account.",
     withholding_amount: {
@@ -1141,12 +1103,10 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsLeaveReason: {
-    activeDutyFamilyLeaveHint: "Family leave",
     activeDutyFamilyLeaveLabel:
       "I need to manage family affairs while a family member is on active duty in the armed forces.",
     alertBody:
       "<p>To apply for the following paid benefits:</p><ul><li>Paid family leave to care for a family member who serves in the armed forces</li><li>Paid family leave to manage family affairs when a family member is on active duty in the armed forces</li></ul><p>Call the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p>",
-    bondingLeaveHint: "Family leave",
     bondingLeaveLabel:
       "I need to bond with my child after birth, adoption, or foster placement.",
     bondingTypeAdoptionLabel: "Adoption",
@@ -1158,13 +1118,10 @@ const pages = {
     bondingTypeMultipleBirthsDetailsSummary:
       "Leave is determined based on benefit year (365 days from the start of the first week you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child. <multiple-births-link>Learn more about taking leave for multiple childbirths or placements</multiple-births-link>.",
     bondingTypeNewbornLabel: "Birth",
-    caringLeaveHint: "Family leave",
     caringLeaveLabel: "I need to care for my family member",
-    medicalLeaveHint: "Medical leave",
     medicalLeaveLabel: "I can’t work due to an illness, injury, or pregnancy.",
     sectionHint: "You can only request one leave at a time.",
     sectionLabel: "Why do you need to take leave?",
-    serviceMemberFamilyLeaveHint: "Family leave",
     serviceMemberFamilyLeaveLabel:
       "I need to care for a family member who serves in the armed forces.",
     title: "$t(shared.claimsLeaveDetailsTitle)",
@@ -1556,6 +1513,8 @@ const pages = {
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
     adjudicationProcess_bondingNewbornFuture:
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
+    adjudicationProcess_caringLeave:
+      "<ul><li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>If you need to end your leave early, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</li></ul>",
     adjudicationProcess_medicalPregnantFuture:
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>When your leave begins, call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to tell us. Then we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
     claimantApplicationId:
@@ -1577,9 +1536,7 @@ const pages = {
     reportReductionsHeading: "We may need more information from you",
     reportReductionsProcess:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> if you’ll receive:</p><ul><li>Any <reductions-employer-benefits-link>benefits from your employer</reductions-employer-benefits-link> that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from <reductions-overview-link>any other sources</reductions-overview-link> during your leave</li></ul>",
-    title: "You submitted your leave application",
-    title_bonding: "You submitted your family leave application",
-    title_medical: "You submitted your medical leave application",
+    title: "You submitted your application",
   },
   claimsUploadCertification: {
     addAnotherFileButton: "Choose another file",
@@ -1742,7 +1699,7 @@ const pages = {
     lead_decision:
       "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
     lead_pending:
-      "This application is being reviewed by the Department. It was either reviewed by an administrator on your team or the review deadline has passed. No action is required of you.<br /><br />After we make a decision, you'll receive an email with a direct link for more details.",
+      "No action is required of you.<br /><br />When the application progresses you'll receive an email with a direct link for more details.",
     leaveDetailsLabel: "$t(shared.claimsLeaveDetailsTitle)",
     leaveDurationLabel: "$t(shared.claimsLeaveDurationTitle)",
     leaveDurationLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
@@ -1863,7 +1820,7 @@ const pages = {
       "When you log into your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
     viewApplicationsTitle: "View all applications",
     viewFormsBody:
-      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process.",
+      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process. For leave to care for a family member you can download the <caregiver-certification-form-link>Certification to Care for a Family Member</caregiver-certification-form-link> during the review process. ",
     viewFormsTitle: "View forms and notices online",
     welcomeBody:
       "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.",
@@ -1918,7 +1875,7 @@ const pages = {
       "By continuing, I am indicating that I have read and understood the above user agreements. I give the Department of Family and Medical Leave permission to collect, share, and use my information consistent with the terms of the agreements linked$t(chars.nbsp)above.",
     applicationUsage: "",
     applicationUsageHeading_employer: "Reviewing paid leave applications",
-    applicationUsageHeading_user: "Applying for PFML",
+    applicationUsageHeading_user: "Applying for benefits",
     applicationUsageIntro: "We need this information to:",
     applicationUsageList_employer: [
       "Check eligibility for coverage",
@@ -1939,10 +1896,12 @@ const pages = {
     dataUsageHeading: "How we use your data",
     fullUserAgreementBody:
       "To find out more about how the Commonwealth might use the information you share with the Department of Family and Medical Leave, please read the <informed-consent-link>DFML Informed Consent Agreement</informed-consent-link> and the <privacy-policy-link>Privacy Policy for Mass.gov</privacy-policy-link>.",
-    fullUserAgreementHeading: "Full user agreements",
+    fullUserAgreementHeading: "Read the full user agreements",
     intro:
-      "The information you provide on this website will be used to administer the Paid Family and Medical Leave (PFML) program.",
+      "The information you provide on this website will be used to administer the Paid Family and Medical Leave program.",
     title: "How this website uses your information",
+    updatedMessage:
+      "To continue using this website, you must agree to the terms of the user agreements updated as of July$t(chars.nbsp)1,$t(chars.nbsp)2021.",
   },
 };
 
@@ -2310,7 +2269,7 @@ const components = {
     nextLabel: "Next",
     previousLabel: "Previous",
     summary:
-      "Viewing {{firstRecordIndex}} - {{lastRecordIndex}} of {{totalRecords}} results",
+      "Viewing {{firstRecordNumber}} – {{lastRecordNumber}} of {{totalRecords}} results",
   },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",

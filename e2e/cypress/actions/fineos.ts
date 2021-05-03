@@ -493,8 +493,8 @@ export function intermittentClaimAdjudicationFlow(
 
 // This is being used for Sally hours to allow us to see payment being made.
 export function submitIntermittentActualHours(
-  timeSpanHoursStart: number,
-  timeSpanHoursEnd: number
+  timeSpanHoursStart: string,
+  timeSpanHoursEnd: string
 ): void {
   cy.contains("span[class='LinkText']", "Record Actual").click({ force: true });
   wait();
@@ -541,6 +541,22 @@ export function submitIntermittentActualHours(
   });
 }
 
+export function mailedDocumentMarkEvidenceRecieved(claimNumber: string): void {
+  visitClaim(claimNumber);
+  assertClaimStatus("Adjudication");
+  onTab("Documents");
+  findDocument("MA ID");
+  uploadDocument("HCP", "State Managed");
+  onTab("Documents");
+  findDocument("HCP");
+  onTab("Absence Hub");
+  cy.get('input[type="submit"][value="Adjudicate"]').click();
+  markEvidence(claimNumber, "BGBM1", "State managed Paid Leave Confirmation");
+  markEvidence(claimNumber, "BGBM1", "Identification Proof");
+  checkStatus(claimNumber, "Evidence", "Satisfied");
+  clickBottomWidgetButton();
+}
+
 export function claimAdjudicationMailedDoc(claimNumber: string): void {
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
@@ -566,6 +582,28 @@ export function claimAdjudicationMailedDoc(claimNumber: string): void {
   assertPlanStatus("Availability", "Time Available");
   assertPlanStatus("Restriction", "Passed");
   assertPlanStatus("Protocols", "Passed");
+}
+
+export function checkHoursWorkedPerWeek(
+  claimNumber: string,
+  hours_worked_per_week: number
+): void {
+  visitClaim(claimNumber);
+  assertClaimStatus("Adjudication");
+  cy.get('input[type="submit"][value="Adjudicate"]').click();
+  onTab("Request Information");
+  wait();
+  cy.contains(".TabStrip td", "Employment Information").click();
+  wait();
+  cy.labelled("Hours worked per week").should((input) => {
+    expect(
+      input,
+      `Hours worked per week should be: ${hours_worked_per_week} hours`
+    )
+      .attr("value")
+      .equal(String(hours_worked_per_week));
+  });
+  clickBottomWidgetButton("OK");
 }
 
 export function addBondingLeaveFlow(timeStamp: Date): void {

@@ -2,9 +2,9 @@ import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
 import ClaimCollection from "../../models/ClaimCollection";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
-// TODO (EMPLOYER-859): Render component when pagination metadata is available
-// import PaginationNavigation from "../../components/PaginationNavigation";
-// import PaginationSummary from "../../components/PaginationSummary";
+import PaginationMeta from "../../models/PaginationMeta";
+import PaginationNavigation from "../../components/PaginationNavigation";
+import PaginationSummary from "../../components/PaginationSummary";
 import PropTypes from "prop-types";
 import React from "react";
 import Table from "../../components/Table";
@@ -20,7 +20,7 @@ import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
 
 export const Dashboard = (props) => {
-  const { appLogic, user } = props;
+  const { appLogic, paginationMeta, user } = props;
   const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
   const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
   const { t } = useTranslation();
@@ -57,9 +57,12 @@ export const Dashboard = (props) => {
     .filter(([columnKey, isVisible]) => isVisible)
     .map(([columnKey, isVisible]) => columnKey);
 
-  /* TODO (EMPLOYER-859): Implement API call to take in page index */
-  // const getUpdatedRecords = (pageIndex) => {
-  // };
+  const handlePaginationNavigationClick = (pageOffset) => {
+    appLogic.portalFlow.goTo(appLogic.portalFlow.pathname, {
+      // Update the query param, which triggers a fetch of the new page
+      page_offset: pageOffset,
+    });
+  };
 
   return (
     <React.Fragment>
@@ -106,10 +109,13 @@ export const Dashboard = (props) => {
       <p className="margin-bottom-4">
         {t("pages.employersDashboard.instructions")}
       </p>
-      {/* TODO (EMPLOYER-859): Render component when pagination metadata is available  */}
-      {/* <PaginationSummary
-        pageIndex={pageIndex} pageSize={pageSize} totalPages={totalPages} totalRecords={totalRecords}
-      /> */}
+      {paginationMeta.total_records > 0 && (
+        <PaginationSummary
+          pageOffset={paginationMeta.page_offset}
+          pageSize={paginationMeta.page_size}
+          totalRecords={paginationMeta.total_records}
+        />
+      )}
       <Table className="width-full tablet:width-auto" responsive scrollable>
         <thead>
           <tr>
@@ -152,8 +158,13 @@ export const Dashboard = (props) => {
           )}
         </tbody>
       </Table>
-      {/* TODO (EMPLOYER-859): Render component when pagination metadata is available  */}
-      {/* {totalPages > 1 && <PaginationWidget pageIndex={pageIndex} totalPages={totalPages} onClick={getUpdatedRecords} />} */}
+      {paginationMeta.total_pages > 1 && (
+        <PaginationNavigation
+          pageOffset={paginationMeta.page_offset}
+          totalPages={paginationMeta.total_pages}
+          onClick={handlePaginationNavigationClick}
+        />
+      )}
     </React.Fragment>
   );
 };
@@ -167,6 +178,7 @@ Dashboard.propTypes = {
     }).isRequired,
   }).isRequired,
   claims: PropTypes.instanceOf(ClaimCollection),
+  paginationMeta: PropTypes.instanceOf(PaginationMeta),
   user: PropTypes.instanceOf(User).isRequired,
 };
 
