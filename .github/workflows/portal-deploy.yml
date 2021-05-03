@@ -602,8 +602,8 @@ jobs:
           echo "Slackbot message reply TS is ${{ needs.finish-comms-slack.outputs.message-ts }}"
 
           optional_threadts=""
-          if [[ -z "${{ needs.start-comms-slack.outputs.message-ts }}" ]]; then
-            optional_threadts="\"thread_ts\": \"${{ needs.start-comms-slack.outputs.message-ts }}\","
+          if [[ -z "${{ needs.finish-comms-slack.outputs.message-ts }}" ]]; then
+            optional_threadts="\"thread_ts\": \"${{ needs.finish-comms-slack.outputs.message-ts }}\","
           fi
           
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
