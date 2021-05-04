@@ -1932,6 +1932,11 @@ components:
             - Approval Notice
             - Request for More information
             - Denial Notice
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
           example: "Passport"
         name:
           type: string
@@ -2024,6 +2029,11 @@ components:
             - Request for More information
             - Denial Notice
             - Employer Response Additional Documentation
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
           example: "Denial Notice"
         content_type:
           type: string
@@ -2068,6 +2078,11 @@ components:
             - Driver's License Other State
             - Identification Proof
             - State managed Paid Leave Confirmation
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
           example: "Passport"
         content_type:
           type: string

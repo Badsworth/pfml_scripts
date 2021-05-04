@@ -705,6 +705,12 @@ class DocumentType(LookupTable):
     REQUEST_FOR_MORE_INFORMATION = LkDocumentType(7, "Request for More Information")
     DENIAL_NOTICE = LkDocumentType(8, "Denial Notice")
 
+    OWN_SERIOUS_HEALTH_CONDITION_FORM = LkDocumentType(9, "Own serious health condition form")
+    PREGNANCY_MATERNITY_FORM = LkDocumentType(10, "Pregnancy/Maternity form")
+    CHILD_BONDING_EVIDENCE_FORM = LkDocumentType(11, "Child bonding evidence form")
+    CARE_FOR_A_FAMILY_MEMBER_FORM = LkDocumentType(12, "Care for a family member form")
+    MILITARY_EXIGENCY_FORM = LkDocumentType(13, "Military exigency form")
+
 
 class ContentType(LookupTable):
     model = LkContentType

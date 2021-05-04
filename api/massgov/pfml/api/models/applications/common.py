@@ -392,6 +392,11 @@ class DocumentType(str, LookupEnum):
     approval_notice = "Approval Notice"
     request_for_more_information = "Request for More Information"
     denial_notice = "Denial Notice"
+    own_serious_health_condition_form = "Own serious health condition form"
+    pregnancy_maternity_form = "Pregnancy/Maternity form"
+    child_bonding_evidence_form = "Child bonding evidence form"
+    care_for_a_family_member_form = "Care for a family member form"
+    military_exigency_form = "Military exigency form"
 
     @classmethod
     def get_lookup_model(cls):
