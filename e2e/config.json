@@ -50,7 +50,7 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-04-30.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-04-30.json",
     "LST_EMPLOYEES_FILE": "./employees/lst-2021-02-24.employees.json",
-    "LST_EMPLOYERS_FILE": "./employers/lst-2021-02-24.json",
+    "LST_EMPLOYERS_FILE": "./employers/lst-2021-05-03.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "uat": {

@@ -5,7 +5,12 @@ import { exec } from "child_process";
 import { LSTScenario } from "../../flood/config";
 import configs from "../../../config.json";
 
-export const presetNames = ["base", "basePlus", "basePlusSpikes"] as const;
+export const presetNames = [
+  "base",
+  "basePlus",
+  "basePlusSpikes",
+  "leaveAdmin",
+] as const;
 export type PresetName = typeof presetNames[number];
 export type Presets = {
   // Uses "mapped type" for key definition.
