@@ -92,7 +92,7 @@ def test_ctr_process_errors(
 
 
 def test_ctr_process_outbound_vendor_return(
-    initialize_factories_session, mock_s3_bucket, set_exporter_env_vars, test_db_session
+    initialize_factories_session, mock_s3_bucket, set_exporter_env_vars, test_db_session, tmp_path
 ):
     scenario_list = [
         scenario_generator.ScenarioNameWithCount(scenario_generator.ScenarioName.SCENARIO_A, 1),
@@ -102,7 +102,7 @@ def test_ctr_process_outbound_vendor_return(
         scenario_list, ssn_id_base=526000029, fein_id_base=626000029
     )
     scenario_data_list = fineos_extract_generator.generate(
-        scenario_config, "mock_fineos_payments_input_files"
+        scenario_config, tmp_path
     )
 
     for scenario_data in scenario_data_list:
