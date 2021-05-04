@@ -651,7 +651,7 @@ const shared = {
   otherIncomeEntryPrefix: "Income",
   otherIncomeType_jonesAct: "Jones Act benefits",
   otherIncomeType_otherEmployer:
-    "Earnings from another employer or through self-employment",
+    "Earnings or benefits from another employer, or through self-employment",
   otherIncomeType_railroadRetirement: "Railroad Retirement benefits",
   otherIncomeType_retirementDisability:
     "Disability benefits under a governmental retirement$t(chars.nbsp)plan",
@@ -1162,7 +1162,7 @@ const pages = {
       "Disability benefits under a governmental retirement plan such as STRS or PERS",
       "Jones Act benefits",
       "Railroad Retirement benefits",
-      "Earnings from another employer or through self-employment",
+      "Earnings or benefits from another employer, or through self-employment",
     ],
     sectionLabel:
       "Will you receive income from any other sources during your leave dates for paid$t(chars.nbsp)leave?",
@@ -1178,12 +1178,14 @@ const pages = {
     amountLabel: "Amount",
     amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
-    endDateLabel: "When will you stop receiving this income?",
+    endDateLabel:
+      "What is the last day of your leave that this income will pay you for?",
     limitMessage: "You can only add up to 3 incomes",
     removeButton: "Remove income",
     sectionLabel:
       "Tell us about your other sources of income$t(chars.nbsp)during your leave dates for paid$t(chars.nbsp)leave.",
-    startDateLabel: "When will you start receiving this income?",
+    startDateLabel:
+      "What is the first day of your leave that this income will pay you for?",
     title: "$t(shared.claimsOtherLeaveTitle)",
     typeChoiceLabel_jonesAct: "$t(shared.otherIncomeType_jonesAct)",
     typeChoiceLabel_otherEmployer: "$t(shared.otherIncomeType_otherEmployer)",

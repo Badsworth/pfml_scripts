@@ -567,7 +567,7 @@ Array [
     key="6"
     label="Income 7"
     reviewRowLevel="4"
-    type="Earnings from another employer or through self-employment"
+    type="Earnings or benefits from another employer, or through self-employment"
   />,
 ]
 `;
@@ -579,7 +579,7 @@ exports[`OtherIncomeList when amount fields are missing doesn't render missing d
   key="0"
   label="Income 1"
   reviewRowLevel="4"
-  type="Earnings from another employer or through self-employment"
+  type="Earnings or benefits from another employer, or through self-employment"
 />
 `;
 

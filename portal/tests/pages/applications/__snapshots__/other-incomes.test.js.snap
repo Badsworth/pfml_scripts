@@ -56,7 +56,7 @@ exports[`OtherIncomes renders the page 1`] = `
             Railroad Retirement benefits
           </li>
           <li>
-            Earnings from another employer or through self-employment
+            Earnings or benefits from another employer, or through self-employment
           </li>
         </ul>
       </React.Fragment>
