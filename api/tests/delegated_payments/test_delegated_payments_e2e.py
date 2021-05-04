@@ -798,7 +798,7 @@ def test_e2e_pub_payments(
 
         # == PubError TODO adjust as metric based scenarios below are added
         assert len(test_db_session.query(PubError).all()) == (
-            2 + 2 + 2 + 3 + 1 + 1 + 1
+            2 + 2 + 2 + 3 + 1 + 1 + 1 + 1
         )  # eft_prenote_unexpected_state_count + payment_complete_with_change_count + payment_rejected_count + payment_failed_by_check + unknown_id_format_count + invalid_check_number + invalid_eft_id
 
         # == Metrics
@@ -812,13 +812,13 @@ def test_e2e_pub_payments(
                 "eft_prenote_count": 3,
                 "payment_count": 5,
                 "unknown_id_format_count": 1,
-                "eft_prenote_id_not_found_count": 0,
+                "eft_prenote_id_not_found_count": 1,
                 "eft_prenote_unexpected_state_count": 1,
                 "eft_prenote_already_approved_count": 1,
-                "eft_prenote_rejected_count": 1,  # TODO add scenario
+                "eft_prenote_rejected_count": 0,  # TODO add scenario
                 "payment_id_not_found_count": 1,
                 "payment_rejected_count": 2,  # Both prenotes
-                "payment_already_rejected_count": 0,  # TODO add scenario
+                "payment_already_rejected_count": 0,
                 "payment_unexpected_state_count": 0,
                 "payment_complete_with_change_count": 2,  # TODO validate
                 "payment_already_complete_count": 0,  # TODO add scenario?
@@ -853,10 +853,10 @@ def test_e2e_pub_payments(
                 "payment_complete_by_paid_check": 3,
                 "payment_still_outstanding": 0,
                 "payment_failed_by_check": 0,
-                "check_number_not_found_count": 1,  # TODO add scenario
-                "payment_unexpected_state_count": 0,  # TODO add scenario
+                "check_number_not_found_count": 1,
+                "payment_unexpected_state_count": 0,
             },
-            log_report_index=0,  # first when sorted in start time desc order
+            log_report_index=0,  # first when sorted by import log id desc order
             description="Positive pay check responses",
         )
 
