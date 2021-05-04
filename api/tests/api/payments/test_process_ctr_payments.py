@@ -101,9 +101,7 @@ def test_ctr_process_outbound_vendor_return(
     scenario_config = scenario_generator.ScenarioDataConfig(
         scenario_list, ssn_id_base=526000029, fein_id_base=626000029
     )
-    scenario_data_list = fineos_extract_generator.generate(
-        scenario_config, tmp_path
-    )
+    scenario_data_list = fineos_extract_generator.generate(scenario_config, tmp_path)
 
     for scenario_data in scenario_data_list:
         state_log_util.create_finished_state_log(
