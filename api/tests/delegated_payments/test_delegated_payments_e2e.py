@@ -814,15 +814,15 @@ def test_e2e_pub_payments(
                 "unknown_id_format_count": 1,
                 "eft_prenote_id_not_found_count": 1,
                 "eft_prenote_unexpected_state_count": 1,
-                "eft_prenote_already_approved_count": 1,
+                "eft_prenote_already_approved_count": 1,  # TODO validate
                 "eft_prenote_rejected_count": 0,  # TODO add scenario
                 "payment_id_not_found_count": 1,
                 "payment_rejected_count": 2,  # Both prenotes
                 "payment_already_rejected_count": 0,
                 "payment_unexpected_state_count": 0,
                 "payment_complete_with_change_count": 2,  # TODO validate
-                "payment_already_complete_count": 0,  # TODO add scenario?
-                "payment_notification_unexpected_state_count": 0,  # TODO add scenario
+                "payment_already_complete_count": 0,
+                "payment_notification_unexpected_state_count": 0,
             },
         )
 
