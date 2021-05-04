@@ -1,16 +1,12 @@
 locals {
-  domains = {
-    (var.environment_name) = "paidleave-${var.environment_name}.mass.gov"
-    "prod"                 = "paidleave.mass.gov"
-  }
-  cert_domain = var.enable_pretty_domain ? module.constants.cert_domains[var.environment_name] : null
-  domain      = lookup(local.domains, var.environment_name)
+  cert_domain = lookup(module.constants.cert_domains, var.environment_name)
+  domain      = lookup(module.constants.domains, var.environment_name)
 }
 
 // NOTE: These must be requested through the AWS Console instead of terraform in order
 //       to properly do an MX lookup for the EOTSS emails that need to receive the validation requests.
 //
-// These should have the following SANs based on the domain name:
+// These should have the following SANs based on the domain name, e.g.:
 //
 // domain_name: paidleave.mass.gov
 // SANS: paidleave-api.mass.gov
@@ -21,9 +17,7 @@ locals {
 //       paidleave-api-stage.mass.gov
 //
 data "aws_acm_certificate" "domain" {
-  count = var.enable_pretty_domain ? 1 : 0
-  # you cannot lookup certs by a SAN, so we lookup based on the first domain
-  # as specified in the infra/pfml-aws/acm.tf file.
+  count       = local.cert_domain == null ? 0 : 1
   domain      = local.cert_domain
   statuses    = ["ISSUED"]
   most_recent = true

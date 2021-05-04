@@ -21,6 +21,7 @@
     "build:training": "BUILD_ENV=training npm run build",
     "build:uat": "BUILD_ENV=uat npm run build",
     "build:breakfix": "BUILD_ENV=breakfix npm run build",
+    "build:cps-preview": "BUILD_ENV=cps-preview npm run build",
     "generate-claims-page-stories": "node ./bin/generate-claims-page-stories.js",
     "start": "next start",
     "test": "NODE_ENV=test jest --ci --coverage",
