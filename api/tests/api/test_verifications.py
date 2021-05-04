@@ -11,6 +11,7 @@ from massgov.pfml.db.models.factories import (
     VerificationFactory,
 )
 from massgov.pfml.db.models.verifications import Verification, VerificationType
+from massgov.pfml.util.strings import format_fein
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -171,7 +172,7 @@ def test_verification_successful_for_valid_data(
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_fein": format_fein(employer.employer_fein),
             "employer_id": str(employer.employer_id),
             "has_fineos_registration": True,
             "verified": True,

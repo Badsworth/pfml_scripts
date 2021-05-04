@@ -17,7 +17,7 @@ from massgov.pfml.db.models.employees import (
     UserLeaveAdministrator,
 )
 from massgov.pfml.util import feature_gate
-from massgov.pfml.util.strings import mask_fein, sanitize_fein
+from massgov.pfml.util.strings import format_fein, sanitize_fein
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -130,7 +130,7 @@ def employer_add_fein() -> flask.Response:
         response_data = {
             "employer_dba": employer.employer_dba,
             "employer_id": employer.employer_id,
-            "employer_fein": mask_fein(employer.employer_fein),
+            "employer_fein": format_fein(employer.employer_fein),
         }
 
         return response_util.success_response(
