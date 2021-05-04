@@ -32,6 +32,11 @@ export default {
         SEND_CODE: routes.auth.resetPassword,
       },
     },
+    [routes.employers.organizations]: {
+      on: {
+        BACK: routes.employers.dashboard,
+      },
+    },
     [routes.employers.review]: {
       on: {
         CONTINUE: routes.employers.success,

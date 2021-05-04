@@ -21,6 +21,7 @@ export const Index = ({ appLogic }) => {
   } = appLogic.users.user;
   const showVerifications = isFeatureEnabled("employerShowVerifications");
   const showAddOrganization = isFeatureEnabled("employerShowAddOrganization");
+  const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
 
   const nearFutureAvailabilityContext = showAddOrganization
     ? "inviteMembers"
@@ -28,7 +29,14 @@ export const Index = ({ appLogic }) => {
 
   return (
     <React.Fragment>
-      <BackButton />
+      {shouldShowDashboard ? (
+        <BackButton
+          label={t("pages.employersDashboard.backToDashboardLabel")}
+          href={appLogic.portalFlow.getNextPageRoute("BACK")}
+        />
+      ) : (
+        <BackButton />
+      )}
       <Title>{t("pages.employersOrganizations.title")}</Title>
       {showVerifications && hasVerifiableEmployer && (
         <Alert
@@ -90,6 +98,9 @@ export const Index = ({ appLogic }) => {
 
 Index.propTypes = {
   appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
+    }).isRequired,
     users: PropTypes.shape({
       user: PropTypes.instanceOf(User).isRequired,
     }).isRequired,

@@ -1765,6 +1765,7 @@ const pages = {
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
+    backToDashboardLabel: "Back to Dashboard",
     instructions:
       "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
