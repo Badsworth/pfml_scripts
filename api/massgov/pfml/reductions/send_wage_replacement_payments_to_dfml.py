@@ -28,7 +28,7 @@ class Configuration:
             "--steps",
             nargs="+",
             choices=ALLOWED_VALUES,
-            default=[DUA],
+            default=[ALL],
             help="Indicate which agency, DIA or DUA, to create reports for",
         )
 

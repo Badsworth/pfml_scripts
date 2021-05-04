@@ -21,12 +21,12 @@ class Configuration:
     send_dua_list: bool
 
     def __init__(self, input_args: List[str]):
-        parser = argparse.ArgumentParser(description="Send claimant list to agency")
+        parser = argparse.ArgumentParser(description="Send claimant list to agencies")
         parser.add_argument(
             "--steps",
             nargs="+",
             choices=ALLOWED_VALUES,
-            default=[DUA],
+            default=[ALL],
             help="Indicate which agency, DIA or DUA, to create claimant list for",
         )
 

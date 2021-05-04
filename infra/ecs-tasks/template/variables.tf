@@ -283,7 +283,7 @@ variable "enable_reductions_retrieve_payment_lists_from_agencies_schedule" {
 variable "enable_reductions_send_wage_replacement_payments_to_dfml_schedule" {
   description = "Enable scheduling for 'reductions-send-wage-replacement-payments-to-dfml' ECS task"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "payment_audit_report_outbound_folder_path" {
