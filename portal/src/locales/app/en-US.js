@@ -1262,8 +1262,29 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReasonDetails: {
+    addButton: "Add another leave",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hoursLabel: "$t(shared.hoursLabel)",
+    isForCurrentEmployerHint:
+      "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, we'll give this employer a chance to review information from your application. We won't share any information about leave you took from other employers.",
+    isForCurrentEmployerLabel:
+      "Did you take leave from this employer? EIN:$t(chars.nbsp){{ein}}",
+    leaveEndDateLabel: "What was the last day of this leave?",
+    leaveMinutesHint: "What was the total number of hours you took off?",
+    leaveMinutesLabel:
+      "Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours.",
+    leaveStartDateLabel: "What was the first day of this leave?",
+    limitMessage: "You can only add up to {{limit}} leaves",
+    minutesLabel: "$t(shared.minutesLabel)",
+    previousLeaveEntryPrefix: "$t(shared.previousLeaveEntryPrefix)",
+    removeButton: "Remove leave",
     sectionLabel: "Tell us about your previous time off",
     title: "$t(shared.claimsOtherLeaveTitle)",
+    workedPerWeekMinutesHint:
+      "Enter the number of hours you would have worked each week, if you were not on leave. If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
+    workedPerWeekMinutesLabel:
+      "How many hours would you have worked this week if you did not take this leave?",
   },
   claimsPreviousLeavesSameReason: {
     choiceNo: "$t(shared.choiceNo)",
