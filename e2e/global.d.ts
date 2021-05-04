@@ -18,6 +18,7 @@ type Result = import("pdf-parse").Result;
 type DehydratedClaim = import("./src/generation/Claim").DehydratedClaim;
 type Employer = import("./src/generation/Employer").Employer;
 type EmployerPickSpec = import("./src/generation/Employer").EmployerPickSpec;
+type pdf = import("pdf-parse").Result
 
 declare namespace Cypress {
   interface Cypress {
@@ -40,7 +41,9 @@ declare namespace Cypress {
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(event: "completeSSOLoginFineos"): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
-    task(event: "noticeReader", noticeType: string): Chainable<Result>;
+    task(event: "getParsedPDF", filename: string): Promise<pdf>;
+    task(event: "deleteDownloadFolder", folderName: string): Chainable<true>;
+    task(event: "getNoticeFileName", folderName: string, options: Partial<Cypress.TypeOptions>): Promise<string[]>
 
     // Supplying multiple forms of submitClaimToAPI seems to be necessary to provide typing for
     // both forms.

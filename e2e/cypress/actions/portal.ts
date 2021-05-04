@@ -13,6 +13,8 @@ import {
   extractDebugInfoFromBody,
   extractDebugInfoFromHeaders,
 } from "../../src/errors";
+import path from "path";
+import { email } from ".";
 
 export function before(): void {
   // Set the feature flag necessary to see the portal.
@@ -51,6 +53,8 @@ export function before(): void {
   cy.intercept("**/new-relic.js", (req) => {
     req.reply("console.log('Fake New Relic script loaded');");
   });
+
+  deleteDownloadsFolder();
 }
 
 export function onPage(page: string): void {
@@ -124,6 +128,60 @@ export function waitForClaimSubmission(): Cypress.Chainable<{
       { log: false }
     );
   });
+}
+
+/**
+ * Delete the downloads folder to mitigate any file conflicts
+ */
+export function deleteDownloadsFolder(): void {
+  cy.task("deleteDownloadFolder", Cypress.config("downloadsFolder"));
+}
+
+/**
+ * Downloads Legal Notice based on type
+ *
+ * Also does basic assertion on contents of legal notice doc
+ */
+export function downloadLegalNotice(
+  noticeType: string,
+  claim_id: string,
+  expectedNumPages: number
+): void {
+  const downloadsFolder = Cypress.config("downloadsFolder");
+  cy.task("getNoticeFileName", downloadsFolder, { timeout: 20000 }).then(
+    (filename) => {
+      expect(
+        filename.length,
+        "downloads folder should contain only one file"
+      ).to.equal(1);
+      expect(
+        filename[0],
+        `Expect filename to contain text ${noticeType}`
+      ).to.include(noticeType);
+      expect(
+        path.extname(filename[0]),
+        "Expect file extension to be a PDF"
+      ).to.equal(".pdf");
+
+      cy.task("getParsedPDF", path.join(downloadsFolder, filename[0])).then(
+        (pdf) => {
+          const application_id_from_notice = email.getTextBetween(
+            pdf.text,
+            "Application ID:",
+            "\n"
+          );
+          expect(
+            pdf.numpages,
+            `This legal notice .pdf file should have ${pdf.numpages} pages`
+          ).to.equal(expectedNumPages);
+          expect(
+            application_id_from_notice,
+            `The claim_id within the legal notice should be: ${application_id_from_notice}`
+          ).to.equal(claim_id);
+        }
+      );
+    }
+  );
 }
 
 export function login(credentials: Credentials): void {
@@ -870,17 +928,12 @@ export function checkNoticeForLeaveAdmin(
   switch (noticeType) {
     case "approval":
       cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("a", "Approval notice").should("be.visible");
+      cy.contains("a", "Approval notice").should("be.visible").click();
       break;
 
     case "denial":
       cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("a", "Denial notice").should("be.visible");
-      break;
-
-    case "request for info":
-      cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("a", "Request for more information").should("be.visible");
+      cy.contains("a", "Denial notice").should("be.visible").click();
       break;
 
     default:
