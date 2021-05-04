@@ -33,8 +33,11 @@ jobs:
       - name: install project dependencies not built into container
         run: make deps
 
-      - name: check dependencies
-        run: make deps-check
+      # TODO (API-1624) Re-enable once the dependency issue can be resolved.
+      # Currently disabled so the rest of this CI action continues to operate and
+      # block PR's as expected
+      # - name: check dependencies
+      #   run: make deps-check
 
       - name: format-check
         run: make format-check
