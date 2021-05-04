@@ -541,7 +541,7 @@ const errors = {
 
 const shared = {
   absenceCaseStatus_approved: "Approved",
-  absenceCaseStatus_completed: "Completed",
+  absenceCaseStatus_closed: "Closed",
   absenceCaseStatus_denied: "Denied",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
@@ -1910,8 +1910,8 @@ const pages = {
 const components = {
   absenceCaseStatusTag: {
     status_approved: "$t(shared.absenceCaseStatus_approved)",
-    status_closed: "$t(shared.absenceCaseStatus_completed)",
-    status_completed: "$t(shared.absenceCaseStatus_completed)",
+    status_closed: "$t(shared.absenceCaseStatus_closed)",
+    status_completed: "$t(shared.absenceCaseStatus_closed)",
     status_declined: "$t(shared.absenceCaseStatus_denied)",
   },
   amendButton: {
