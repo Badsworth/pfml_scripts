@@ -125,7 +125,7 @@ PreviousLeavesOtherReasonDetails.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
-const PreviousLeaveDetailsCard = (props) => {
+export const PreviousLeaveDetailsCard = (props) => {
   const { t } = useTranslation();
   const {
     claim: { employer_fein },

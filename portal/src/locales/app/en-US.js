@@ -1276,9 +1276,9 @@ const pages = {
     isForCurrentEmployerLabel:
       "Did you take leave from this employer? EIN:$t(chars.nbsp){{ein}}",
     leaveEndDateLabel: "What was the last day of this leave?",
-    leaveMinutesHint: "What was the total number of hours you took off?",
-    leaveMinutesLabel:
+    leaveMinutesHint:
       "Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours.",
+    leaveMinutesLabel: "What was the total number of hours you took off?",
     leaveStartDateLabel: "What was the first day of this leave?",
     limitMessage: "You can only add up to {{limit}} leaves",
     minutesLabel: "$t(shared.minutesLabel)",
