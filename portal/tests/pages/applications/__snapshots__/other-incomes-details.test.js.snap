@@ -125,7 +125,7 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
 exports[`OtherIncomesDetails when the user's claim has no other incomes renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Other leave, income, and benefits"
+  title="Other leave, benefits, and income"
 >
   <Heading
     level="2"
@@ -166,7 +166,7 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
 exports[`OtherIncomesDetails when the user's claim has other incomes renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Other leave, income, and benefits"
+  title="Other leave, benefits, and income"
 >
   <Heading
     level="2"

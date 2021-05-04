@@ -3,7 +3,7 @@
 exports[`OtherIncomes renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Other leave, income, and benefits"
+  title="Other leave, benefits, and income"
 >
   <InputChoiceGroup
     choices={

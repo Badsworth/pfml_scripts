@@ -581,7 +581,7 @@ const shared = {
   claimsEmploymentInfoTitle: "Employment information",
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
-  claimsOtherLeaveTitle: "Other leave, income, and benefits",
+  claimsOtherLeaveTitle: "Other leave, benefits, and income",
   claimsVerifyIdTitle: "Your identification",
   contactCenterAddress:
     "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01842",
@@ -892,7 +892,7 @@ const pages = {
     stepListTitle_3: "Upload your documents",
     stepTitle_employerInformation: "Enter employment information",
     stepTitle_leaveDetails: "Enter leave details",
-    stepTitle_otherLeave: "Report other leave, income, and benefits",
+    stepTitle_otherLeave: "Report other leave, benefits, and income",
     stepTitle_payment: "Add payment information",
     stepTitle_reviewAndConfirm: "Review and confirm",
     stepTitle_uploadCertification: "Upload leave certification documents",
