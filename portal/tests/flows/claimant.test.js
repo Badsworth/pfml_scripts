@@ -159,7 +159,7 @@ const machineTests = {
       },
     },
   },
-  [routes.applications.previousLeaves]: {
+  [routes.applications.previousLeavesIntro]: {
     meta: {
       test: () => {},
     },
@@ -180,6 +180,11 @@ const machineTests = {
     },
   },
   [routes.applications.previousLeavesOtherReasonDetails]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.concurrentLeavesIntro]: {
     meta: {
       test: () => {},
     },

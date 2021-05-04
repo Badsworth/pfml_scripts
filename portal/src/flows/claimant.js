@@ -85,7 +85,7 @@ export const guards = {
 const checklistEvents = {
   VERIFY_ID: routes.applications.name,
   LEAVE_DETAILS: routes.applications.leaveReason,
-  OTHER_LEAVE: routes.applications.previousLeaves,
+  OTHER_LEAVE: routes.applications.previousLeavesIntro,
   EMPLOYER_INFORMATION: routes.applications.employmentStatus,
   PAYMENT: routes.applications.paymentMethod,
   UPLOAD_CERTIFICATION: routes.applications.uploadCertification,
@@ -348,7 +348,7 @@ export default {
         CONTINUE: routes.applications.checklist,
       },
     },
-    [routes.applications.previousLeaves]: {
+    [routes.applications.previousLeavesIntro]: {
       meta: {
         step: ClaimSteps.otherLeave,
       },
@@ -393,7 +393,7 @@ export default {
             target: routes.applications.previousLeavesOtherReasonDetails,
             cond: "hasPreviousLeavesOtherReason",
           },
-          { target: routes.applications.concurrentLeaves },
+          { target: routes.applications.concurrentLeavesIntro },
         ],
       },
     },
@@ -401,6 +401,14 @@ export default {
       meta: {
         step: ClaimSteps.otherLeave,
         fields: previousLeavesOtherReasonDetailsFields,
+      },
+      on: {
+        CONTINUE: routes.applications.concurrentLeavesIntro,
+      },
+    },
+    [routes.applications.concurrentLeavesIntro]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
       },
       on: {
         CONTINUE: routes.applications.concurrentLeaves,

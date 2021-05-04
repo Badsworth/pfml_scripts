@@ -6,9 +6,7 @@ import React from "react";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const fields = [];
-
-export const PreviousLeaves = (props) => {
+export const PreviousLeavesIntro = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
 
@@ -18,20 +16,20 @@ export const PreviousLeaves = (props) => {
 
   return (
     <QuestionPage
-      title={t("pages.claimsPreviousLeaves.title")}
+      title={t("pages.claimsPreviousLeavesIntro.title")}
       onSave={handleSave}
     >
       <Heading level="2" size="1">
-        {t("pages.claimsPreviousLeaves.sectionLabel")}
+        {t("pages.claimsPreviousLeavesIntro.sectionLabel")}
       </Heading>
     </QuestionPage>
   );
 };
 
-PreviousLeaves.propTypes = {
+PreviousLeavesIntro.propTypes = {
   appLogic: PropTypes.object.isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   query: PropTypes.object.isRequired,
 };
 
-export default withBenefitsApplication(PreviousLeaves);
+export default withBenefitsApplication(PreviousLeavesIntro);

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PreviousLeaves renders the page 1`] = `
+exports[`ConcurrentLeavesIntroIntro renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Other leave, benefits, and income"
@@ -9,7 +9,7 @@ exports[`PreviousLeaves renders the page 1`] = `
     level="2"
     size="1"
   >
-    Tell us about your previous leave.
+    Tell us about the accrued paid leave you'll use during your PFML leave.
   </Heading>
 </QuestionPage>
 `;

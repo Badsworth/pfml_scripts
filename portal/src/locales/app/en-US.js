@@ -911,6 +911,11 @@ const pages = {
       "Tell us about the accrued paid leave you'll use during your PFML leave",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
+  claimsConcurrentLeavesIntro: {
+    sectionLabel:
+      "Tell us about the accrued paid leave you'll use during your PFML leave.",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
   claimsDateOfBirth: {
     sectionLabel: "What’s your date of birth?",
     title: "$t(shared.claimsVerifyIdTitle)",
@@ -1239,7 +1244,7 @@ const pages = {
     sectionLabel: "What’s your phone number?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
-  claimsPreviousLeaves: {
+  claimsPreviousLeavesIntro: {
     sectionLabel: "Tell us about your previous leave.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
