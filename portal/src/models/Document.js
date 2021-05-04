@@ -3,6 +3,7 @@
  * @file Document (AKA File) model and enum values
  */
 import BaseModel from "./BaseModel";
+import LeaveReason from "./LeaveReason";
 
 class Document extends BaseModel {
   get defaults() {
@@ -25,6 +26,13 @@ class Document extends BaseModel {
  */
 export const DocumentType = {
   approvalNotice: "Approval Notice",
+  certification: {
+    [LeaveReason.care]: "Care for a family member form",
+    [LeaveReason.bonding]: "Child bonding evidence form",
+    [LeaveReason.medical]: "Own serious health condition form",
+    [LeaveReason.pregnancy]: "Pregnancy/Maternity form",
+    medicalCertification: "State managed Paid Leave Confirmation", // TODO (CP-2029): Remove this legacy type once claims filed before 7/1/2021 are adjudicated
+  },
   denialNotice: "Denial Notice",
   identityVerification: "Identification Proof",
   medicalCertification: "State managed Paid Leave Confirmation",

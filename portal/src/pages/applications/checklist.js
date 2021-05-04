@@ -40,10 +40,9 @@ export const Checklist = (props) => {
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
   ]);
-  const certificationDocuments = findDocumentsByTypes(
-    documents,
-    [DocumentType.medicalCertification] // TODO (CP-962): Set based on leaveReason
-  );
+  const certificationDocuments = findDocumentsByTypes(documents, [
+    DocumentType.certification.medicalCertification,
+  ]);
 
   const partOneSubmitted = query["part-one-submitted"];
   const paymentPrefSubmitted = query["payment-pref-submitted"];

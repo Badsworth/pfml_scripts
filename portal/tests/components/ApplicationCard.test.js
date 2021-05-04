@@ -209,7 +209,7 @@ describe("ApplicationCard", () => {
         new Document({
           application_id: claim.application_id,
           created_at: "2020-12-01",
-          document_type: DocumentType.medicalCertification,
+          document_type: DocumentType.certification.medicalCertification,
           fineos_document_id: "mock-document-6",
         }),
       ];

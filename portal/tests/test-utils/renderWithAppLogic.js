@@ -11,6 +11,7 @@ import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import testHook from "./testHook";
 import useAppLogic from "../../src/hooks/useAppLogic";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * Render a component, automatically setting its appLogic and query props
@@ -26,7 +27,7 @@ import useAppLogic from "../../src/hooks/useAppLogic";
  * @param {object} [options.userAttrs] - Additional attributes to set on the User
  * @param {boolean} [options.hasDocumentsUploadError] - Additional attributs to set errors for uploading documents
  * @param {boolean} [options.hasLoadedClaimDocuments] - Additional attributes to indicate document loading is finished
- * @param {boolean} [options.hasUploadedCertificationDocuments] - Additional attributes to set certification documents
+ * @param {object} [options.hasUploadedCertificationDocuments] - Additional attributes to set certification documents
  * @param {boolean} [options.hasUploadedIdDocuments] - Additional attributes to set id documents
  * @param {boolean} [options.hasLoadingDocumentsError] - Additional attributs to set errors for loading documents
  * @param {boolean} [options.hasLegalNotices] - Create legal notices for claim
@@ -85,7 +86,7 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
     appLogic.documents.documents = appLogic.documents.documents.addItem(
       new Document({
         application_id: "mock_application_id",
-        fineos_document_id: 1,
+        fineos_document_id: uuidv4(),
         document_type: DocumentType.identityVerification,
         created_at: "2020-11-26",
       })
@@ -93,14 +94,21 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
   }
 
   if (options.hasUploadedCertificationDocuments) {
-    appLogic.documents.documents = appLogic.documents.documents.addItem(
-      new Document({
-        application_id: "mock_application_id",
-        fineos_document_id: 2,
-        document_type: DocumentType.medicalCertification,
-        created_at: "2020-11-26",
-      })
-    );
+    const {
+      document_type = DocumentType.certification.medicalCertification,
+      numberOfDocs = 1,
+    } = options.hasUploadedCertificationDocuments;
+
+    for (let i = 0; i < numberOfDocs; i++) {
+      appLogic.documents.documents = appLogic.documents.documents.addItem(
+        new Document({
+          application_id: "mock_application_id",
+          fineos_document_id: uuidv4(),
+          document_type,
+          created_at: "2020-11-26",
+        })
+      );
+    }
   }
 
   if (options.hasLoadingDocumentsError) {

@@ -1,5 +1,5 @@
+import Document, { DocumentType } from "../../src/models/Document";
 import { makeFile, testHook } from "../test-utils";
-import Document from "../../src/models/Document";
 import FileCard from "../../src/components/FileCard";
 import FileCardList from "../../src/components/FileCardList";
 import React from "react";
@@ -250,13 +250,13 @@ describe("FileCardList", () => {
     let newDoc1, newDoc2;
     beforeEach(() => {
       newDoc1 = new Document({
-        document_type: DocumentType.medicalCertification,
+        document_type: DocumentType.certification.medicalCertification,
         application_id: mock_application_id,
         fineos_document_id: "testId1",
         created_at: "2020-11-26",
       });
       newDoc2 = new Document({
-        document_type: DocumentType.medicalCertification,
+        document_type: DocumentType.certification.medicalCertification,
         application_id: mock_application_id,
         fineos_document_id: "testId2",
         created_at: "2020-11-26",
