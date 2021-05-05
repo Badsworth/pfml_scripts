@@ -1279,6 +1279,17 @@ const pages = {
     leaveMinutesHint:
       "Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours.",
     leaveMinutesLabel: "What was the total number of hours you took off?",
+    leaveReasonChoice_activeDutyFamily:
+      "Managing family affairs while a family member was on active duty in the armed forces",
+    leaveReasonChoice_bonding: "Bonding with my child after birth or placement",
+    leaveReasonChoice_care: "Caring for a family member",
+    leaveReasonChoice_medical: "An illness or injury",
+    leaveReasonChoice_pregnancy: "Pregnancy",
+    leaveReasonChoice_serviceMemberFamily:
+      "Caring for a family member who served in the armed forces",
+    leaveReasonHint:
+      "If you didn’t take leave for one of these reasons, go back to the previous screen and select No.",
+    leaveReasonLabel: "Why did you need to take this leave?",
     leaveStartDateLabel: "What was the first day of this leave?",
     limitMessage: "You can only add up to {{limit}} leaves",
     minutesLabel: "$t(shared.minutesLabel)",
@@ -1289,7 +1300,7 @@ const pages = {
     workedPerWeekMinutesHint:
       "Enter the number of hours you would have worked each week, if you were not on leave. If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
     workedPerWeekMinutesLabel:
-      "How many hours would you have worked this week if you did not take this leave?",
+      "How many hours would you have worked per week if you did not take this leave?",
   },
   claimsPreviousLeavesSameReason: {
     choiceNo: "$t(shared.choiceNo)",
