@@ -1472,6 +1472,20 @@ def test_e2e_pub_payments_delayed_scenarios(
             db_session=test_db_session,
         )
 
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,],
+            end_state=State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+            db_session=test_db_session,
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.INVALID_ADDRESS_FIXED,],
+            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+            db_session=test_db_session,
+        )
+
     # ===============================================================================
     # [Day 2 - Before 5:00 PM] Payment Integrity Team returns Payment Rejects File
     # ===============================================================================
@@ -1501,9 +1515,7 @@ def test_e2e_pub_payments_delayed_scenarios(
     # [Day 2 - 7:00 PM] Generate FINEOS extract files
     # ===============================================================================
     with freeze_time("2021-05-02 19:00:00"):
-        generate_fineos_extract_files(test_dataset.scenario_dataset)
-
-    # TODO Scenarios to fix validation errors for address
+        generate_fineos_extract_files(test_dataset.scenario_dataset, round=2)
 
     # ===============================================================================
     # [Day 2 - 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
@@ -1516,7 +1528,11 @@ def test_e2e_pub_payments_delayed_scenarios(
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,],
+            scenario_names=[
+                ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
+                ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,
+                ScenarioName.INVALID_ADDRESS_FIXED,
+            ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=test_db_session,
         )
@@ -1607,7 +1623,7 @@ def generate_test_dataset(scenario_descriptors: List[ScenarioDescriptor]) -> Tes
     return TestDataSet(scenario_dataset)
 
 
-def generate_fineos_extract_files(scenario_dataset: List[ScenarioData]):
+def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: int = 1):
     s3_config = payments_config.get_s3_config()
 
     fineos_data_export_path = s3_config.fineos_data_export_path
@@ -1615,7 +1631,7 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData]):
     # TODO generate claimant extract files - PUB-165
 
     generate_payment_extract_files(
-        scenario_dataset, fineos_data_export_path, payments_util.get_now()
+        scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=round
     )
 
     # TODO Confirm expected claimant files were generated - PUB-165

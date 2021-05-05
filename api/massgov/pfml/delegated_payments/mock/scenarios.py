@@ -52,8 +52,12 @@ class ScenarioName(Enum):
     CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
         "CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
     )
+    CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED = (
+        "CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED"
+    )
 
     # Automated Validation Rules (TODO add more validation issue scenarios)
+    INVALID_ADDRESS_FIXED = "INVALID_ADDRESS_FIXED"
     REJECTED_LEAVE_REQUEST_DECISION = "REJECTED_LEAVE_REQUEST_DECISION"
     PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
 
@@ -98,11 +102,16 @@ class ScenarioDescriptor:
     no_prior_eft_account: bool = False
     prenoted: bool = True  # TODO add all prenote states
 
+    invalid_address: bool = False
+    invalid_address_fixed: bool = False
+
     # prior_verified_address: bool = False TODO add when available
     fineos_extract_address_valid: bool = True
+    fineos_extract_address_valid_after_fix: bool = False
     fineos_extract_address_multiple_matches: bool = False
 
     leave_request_decision: str = "Approved"
+
     is_audit_approved: bool = True
     is_audit_approved_delayed: bool = False
 
@@ -276,9 +285,22 @@ SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {
 
 DELAYED_SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
+        scenario_name=ScenarioName.INVALID_ADDRESS_FIXED,
+        payment_method=PaymentMethod.CHECK,
+        invalid_address=True,
+        invalid_address_fixed=True,
+    ),
+    ScenarioDescriptor(
         scenario_name=ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
         is_audit_approved=False,
         is_audit_approved_delayed=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,
+        payment_method=PaymentMethod.CHECK,
+        fineos_extract_address_valid=False,
+        fineos_extract_address_valid_after_fix=True,
+        pub_check_response=False,
     ),
 ]
 
