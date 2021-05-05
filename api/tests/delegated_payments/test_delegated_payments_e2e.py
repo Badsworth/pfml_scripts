@@ -131,7 +131,6 @@ def test_e2e_pub_payments(
     create_triggers,
 ):
     # TODO Validate error and warning logs
-    # TODO make metric count numbers more readable (use variables etc), check diffs in state
 
     # ========================================================================
     # Configuration / Setup
@@ -376,10 +375,28 @@ def test_e2e_pub_payments(
         )
 
         audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)
-
-        assert len(audit_report_parsed_csv_rows) == (
-            len(stage_1_happy_path_scenarios) + 1 + 4 + 3
-        )  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks
+        assert len(audit_report_parsed_csv_rows) == len(
+            [
+                ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                ScenarioName.PUB_ACH_FAMILY_RETURN,
+                ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                ScenarioName.AUDIT_REJECTED,
+            ]
+        )
 
         payments = get_payments_in_end_state(
             test_db_session, State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
@@ -397,18 +414,212 @@ def test_e2e_pub_payments(
         )
 
         # == Validate metrics
+        assert_metrics(test_db_other_session, "StateCleanupStep", {"audit_state_cleanup_count": 0})
+
+        assert_metrics(
+            test_db_other_session,
+            "ClaimantExtractStep",
+            {
+                "claim_not_found_count": 0,
+                "eft_found_count": 0,
+                "eft_rejected_count": 0,
+                "employee_feed_record_count": 0,
+                "employee_not_found_count": 0,
+                "errored_claimant_count": 0,
+                "evidence_not_id_proofed_count": 0,
+                "new_eft_count": 0,
+                "processed_requested_absence_count": 0,
+                "valid_claimant_count": 0,
+                "vbi_requested_absence_som_record_count": 0,
+            },
+        )
+
         assert_metrics(
             test_db_other_session,
             "PaymentExtractStep",
             {
+                "active_payment_error_count": 0,
+                "already_active_payment_count": 0,
+                "approved_prenote_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                    ]
+                ),
+                "cancellation_count": len([ScenarioName.CANCELLATION_PAYMENT]),
+                "claim_details_record_count": len(SCENARIO_DESCRIPTORS),
+                "claim_not_found_count": 0,
+                "claimant_mismatch_count": 0,
+                "eft_found_count": len(
+                    [
+                        ScenarioName.AUDIT_REJECTED,
+                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                    ]
+                ),
+                "employee_missing_in_db_count": 0,
+                "employer_reimbursement_count": len([ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT]),
+                "errored_payment_count": len(
+                    [
+                        ScenarioName.CLAIM_NOT_ID_PROOFED,
+                        ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                        ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
+                        ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
+                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                    ]
+                ),
+                "new_eft_count": len([ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE]),
+                "not_approved_prenote_count": len(
+                    [
+                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                    ]
+                ),
+                "not_pending_or_approved_leave_request_count": len(
+                    [ScenarioName.REJECTED_LEAVE_REQUEST_DECISION]
+                ),
+                "overpayment_count": len(
+                    [
+                        ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
+                        ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
+                        ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
+                    ]
+                ),
+                "payment_details_record_count": len(SCENARIO_DESCRIPTORS),
+                "pei_record_count": len(SCENARIO_DESCRIPTORS),
+                "prenote_past_waiting_period_approved_count": 0,
                 "processed_payment_count": len(SCENARIO_DESCRIPTORS),
-                "not_pending_or_approved_leave_request_count": 1,
-                "approved_prenote_count": 10,
-                "zero_dollar_payment_count": 1,
-                "cancellation_count": 1,
-                "overpayment_count": 3,
-                "employer_reimbursement_count": 1,
-                "errored_payment_count": 7,  # See DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT state check above
+                "requested_absence_record_count": len(SCENARIO_DESCRIPTORS),
+                "standard_valid_payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.AUDIT_REJECTED,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                    ]
+                ),
+                "tax_identifier_missing_in_db_count": len(
+                    [ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB]
+                ),
+                "zero_dollar_payment_count": len([ScenarioName.ZERO_DOLLAR_PAYMENT]),
+            },
+        )
+
+        assert_metrics(
+            test_db_other_session,
+            "AddressValidationStep",
+            {
+                "invalid_experian_format": 0,
+                "invalid_experian_response": 0,
+                "multiple_experian_matches": len(
+                    [ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN]
+                ),
+                "no_experian_match_count": len(
+                    [
+                        ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                    ]
+                ),
+                "previously_validated_match_count": 0,
+                "valid_experian_format": len(
+                    [
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.AUDIT_REJECTED,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                    ]
+                ),
+                "validated_address_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.AUDIT_REJECTED,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                    ]
+                ),
+                "verified_experian_match": len(
+                    [
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.AUDIT_REJECTED,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                    ]
+                ),
             },
         )
 
@@ -416,19 +627,83 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "PaymentAuditReportStep",
             {
-                "payment_sampled_for_audit_count": (
-                    len(stage_1_happy_path_scenarios) + 1 + 4 + 3
-                ),  # happy path + audit_rejected + non_prenote_pub_returns + outstanding_rejected_checks
+                "payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.AUDIT_REJECTED,
+                    ]
+                ),
+                "payment_sampled_for_audit_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.AUDIT_REJECTED,
+                    ]
+                ),
+                "sampled_payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.AUDIT_REJECTED,
+                    ]
+                ),
             },
         )
 
         assert_metrics(
             test_db_other_session,
             "ReportStep",
-            {"report_generated_count": len(PROCESS_FINEOS_EXTRACT_REPORTS)},
+            {
+                "report_error_count": 0,
+                "report_generated_count": len(PROCESS_FINEOS_EXTRACT_REPORTS),
+            },
         )
-
-        # TODO validate metrics for other steps when available
 
     # ===============================================================================
     # [Day 2 - 12:00 PM] Payment Integrity Team returns Payment Rejects File
@@ -501,14 +776,7 @@ def test_e2e_pub_payments(
                 ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
                 ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
                 ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-            ],
-            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
-            db_session=test_db_session,
-        )
-
-        assert_payment_state_for_scenarios(
-            test_dataset=test_dataset,
-            scenario_names=[
+                ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
                 ScenarioName.PUB_ACH_FAMILY_RETURN,
                 ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
@@ -643,24 +911,241 @@ def test_e2e_pub_payments(
         # == Metrics
         assert_metrics(
             test_db_other_session,
+            "PickupResponseFilesStep",
+            {
+                "Payment-Audit-Report_file_moved_count": 0,
+                "EOLWD-DFML-POSITIVE-PAY_file_moved_count": 0,
+                "EOLWD-DFML-NACHA_file_moved_count": 0,
+            },
+        )
+
+        assert_metrics(
+            test_db_other_session,
             "PaymentRejectsStep",
-            {"rejected_payment_count": 1, "accepted_payment_count": 17},
+            {
+                "accepted_payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                    ]
+                ),
+                "parsed_rows_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.AUDIT_REJECTED,
+                    ]
+                ),
+                "payment_state_log_missing_count": 0,
+                "payment_state_log_not_in_audit_response_pending_count": 0,
+                "rejected_payment_count": len([ScenarioName.AUDIT_REJECTED]),
+                "state_logs_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.AUDIT_REJECTED,
+                    ]
+                ),
+            },
         )
 
         assert_metrics(
             test_db_other_session,
             "PaymentMethodsSplitStep",
-            {"ach_payment_count": 9, "check_payment_count": 8},
-        )
-
-        assert_metrics(
-            test_db_other_session, "FineosPeiWritebackStep", {"writeback_record_count": 23,},
+            {
+                "ach_payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                    ]
+                ),
+                "check_payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                    ]
+                ),
+                "payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                    ]
+                ),
+            },
         )
 
         assert_metrics(
             test_db_other_session,
+            "TransactionFileCreatorStep",
+            {
+                "ach_payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                    ]
+                ),
+                "ach_prenote_count": len([ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE]),
+            },
+        )
+
+        assert_metrics(
+            test_db_other_session,
+            "FineosPeiWritebackStep",
+            {
+                "cancelled_payment_count": len([ScenarioName.CANCELLATION_PAYMENT]),
+                "check_payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                    ]
+                ),
+                "eft_payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                    ]
+                ),
+                "employer_reimbursement_payment_count": len(
+                    [ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT]
+                ),
+                "errored_payment_writeback_items_count": 0,
+                "overpayment_count": len(
+                    [
+                        ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
+                        ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
+                        ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
+                    ]
+                ),
+                "payment_writeback_two_items_count": 0,
+                "writeback_record_count": len(
+                    [
+                        ScenarioName.CANCELLATION_PAYMENT,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
+                        ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
+                        ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
+                        ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
+                        ScenarioName.ZERO_DOLLAR_PAYMENT,
+                    ]
+                ),
+                "zero_dollar_payment_count": len([ScenarioName.ZERO_DOLLAR_PAYMENT]),
+            },
+        )
+
+        # ReportStep
+        assert_metrics(
+            test_db_other_session,
             "ReportStep",
-            {"report_generated_count": len(CREATE_PUB_FILES_REPORTS)},
+            {"report_error_count": 0, "report_generated_count": len(CREATE_PUB_FILES_REPORTS),},
         )
 
         # TODO file transaction metrics when available
@@ -763,11 +1248,8 @@ def test_e2e_pub_payments(
             date_folder,
             payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
         )
-        assert_files(
-            pub_ach_response_processed_folder,
-            [payments_util.Constants.FILE_NAME_PUB_NACHA],
-            timestamp_prefix,
-        )
+        nacha_filenames = [payments_util.Constants.FILE_NAME_PUB_NACHA]
+        assert_files(pub_ach_response_processed_folder, nacha_filenames, timestamp_prefix)
 
         # processed check return files
         pub_check_response_processed_folder = os.path.join(
@@ -781,39 +1263,93 @@ def test_e2e_pub_payments(
         outstanding_check_response_file = (
             f"Outstanding-{payments_util.Constants.FILE_NAME_PUB_POSITIVE_PAY}.csv"
         )
-        assert_files(
-            pub_check_response_processed_folder,
-            [positive_pay_check_response_file, outstanding_check_response_file],
-            timestamp_prefix,
-        )
+        positive_pay_filenames = [positive_pay_check_response_file, outstanding_check_response_file]
+        assert_files(pub_check_response_processed_folder, positive_pay_filenames, timestamp_prefix)
 
         # == PubError TODO adjust as metric based scenarios below are added
-        assert len(test_db_session.query(PubError).all()) == (
-            2 + 2 + 2 + 3
-        )  # eft_prenote_unexpected_state_count + payment_complete_with_change_count + payment_rejected_count + payment_failed_by_check
+        assert len(test_db_session.query(PubError).all()) == len(
+            [
+                ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                ScenarioName.PUB_ACH_FAMILY_RETURN,
+                ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+            ]
+        )
 
         # == Metrics
+
+        assert_metrics(
+            test_db_other_session,
+            "PickupResponseFilesStep",
+            {
+                "Payment-Audit-Report_file_moved_count": 0,
+                "EOLWD-DFML-POSITIVE-PAY_file_moved_count": len(positive_pay_filenames),
+                "EOLWD-DFML-NACHA_file_moved_count": len(nacha_filenames),
+            },
+        )
+
         assert_metrics(
             test_db_other_session,
             "ProcessNachaReturnFileStep",
             {
-                "warning_count": 0,
-                "ach_return_count": 3,
-                "change_notification_count": 3,
-                "eft_prenote_count": 2,
-                "payment_count": 4,
-                "unknown_id_format_count": 0,  # TODO add scenario (PUB-174)
+                "ach_return_count": len(
+                    [
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                    ]
+                ),
+                "change_notification_count": len(
+                    [
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                    ]
+                ),
+                "eft_prenote_already_approved_count": len(
+                    [
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                    ]
+                ),  # TODO validate
+                "eft_prenote_count": len(
+                    [
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                    ]
+                ),
                 "eft_prenote_id_not_found_count": 0,  # TODO add scenario (PUB-174)
-                "eft_prenote_unexpected_state_count": 0,
-                "eft_prenote_already_approved_count": 2,  # TODO validate
                 "eft_prenote_rejected_count": 0,  # TODO add scenario (PUB-174)
-                "payment_id_not_found_count": 0,  # TODO add scenario (PUB-174)
-                "payment_rejected_count": 2,  # Both prenotes
-                "payment_already_rejected_count": 0,  # TODO add scenario (PUB-174)
-                "payment_unexpected_state_count": 0,
-                "payment_complete_with_change_count": 2,  # TODO validate
+                "eft_prenote_unexpected_state_count": 0,
                 "payment_already_complete_count": 0,  # TODO add scenario? (PUB-174)
+                "payment_complete_with_change_count": len(
+                    [ScenarioName.PUB_ACH_FAMILY_RETURN, ScenarioName.PUB_ACH_MEDICAL_RETURN,]
+                ),  # TODO validate
+                "payment_count": len(
+                    [
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                    ]
+                ),
+                "payment_id_not_found_count": 0,  # TODO add scenario (PUB-174)
+                "payment_already_rejected_count": 0,  # TODO add scenario (PUB-174)
                 "payment_notification_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
+                "payment_rejected_count": len(
+                    [
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                    ]
+                ),
+                "payment_unexpected_state_count": 0,
+                "unknown_id_format_count": 0,  # TODO add scenario (PUB-174)
+                "warning_count": 0,
             },
         )
 
@@ -822,13 +1358,32 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ProcessCheckReturnFileStep",
             {
-                "warning_count": 0,
-                "check_payment_count": 5,
-                "payment_complete_by_paid_check": 0,
-                "payment_still_outstanding": 2,
-                "payment_failed_by_check": 3,
                 "check_number_not_found_count": 0,  # TODO add scenario  (PUB-174)
+                "check_payment_count": len(
+                    [
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                    ]
+                ),
+                "payment_complete_by_paid_check": 0,
+                "payment_failed_by_check": len(
+                    [
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                    ]
+                ),
+                "payment_still_outstanding": len(
+                    [
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                    ]
+                ),
                 "payment_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
+                "warning_count": 0,
             },
             log_report_index=1,  # second when sorted by import log id desc order
             description="Outstanding check responses",
@@ -839,16 +1394,78 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ProcessCheckReturnFileStep",
             {
-                "warning_count": 0,
-                "check_payment_count": 3,
-                "payment_complete_by_paid_check": 3,
-                "payment_still_outstanding": 0,
-                "payment_failed_by_check": 0,
                 "check_number_not_found_count": 0,  # TODO add scenario (PUB-174)
+                "check_payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                    ]
+                ),
+                "payment_complete_by_paid_check": len(
+                    [
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                    ]
+                ),
+                "payment_failed_by_check": 0,
+                "payment_still_outstanding": 0,
                 "payment_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
+                "warning_count": 0,
             },
             log_report_index=0,  # first when sorted by import log id desc order
             description="Positive pay check responses",
+        )
+
+        assert_metrics(
+            test_db_other_session,
+            "FineosPeiWritebackStep",
+            {
+                "cancelled_payment_count": 0,
+                "check_payment_count": 0,
+                "eft_payment_count": 0,
+                "employer_reimbursement_payment_count": 0,
+                "errored_payment_writeback_items_count": len(
+                    [
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                    ]
+                ),
+                "overpayment_count": 0,
+                "payment_writeback_two_items_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                    ]
+                ),
+                "writeback_record_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                    ]
+                ),
+                "zero_dollar_payment_count": 0,
+            },
+        )
+
+        assert_metrics(
+            test_db_other_session,
+            "ReportStep",
+            {
+                "report_error_count": 0,
+                "report_generated_count": len([PROCESS_PUB_RESPONSES_REPORTS]),
+            },
         )
 
         # == Reports

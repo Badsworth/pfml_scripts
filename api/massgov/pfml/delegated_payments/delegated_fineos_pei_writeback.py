@@ -209,7 +209,6 @@ class FineosPeiWritebackStep(Step):
             writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
             transaction_status=ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS,
         )
-
         errored_payment_writeback_items_count = len(errored_payment_writeback_items)
         logger.info(
             "Found %i extracted writeback items in state: %s",
@@ -221,13 +220,13 @@ class FineosPeiWritebackStep(Step):
                 self.Metrics.ERRORED_PAYMENT_WRITEBACK_ITEMS_COUNT: errored_payment_writeback_items_count
             }
         )
+
         payment_writeback_two_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK,
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK,
             writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
             transaction_status=POSTED_WRITEBACK_RECORD_TRANSACTION_STATUS,
         )
-
         payment_writeback_two_items_count = len(payment_writeback_two_items)
         logger.info(
             "Found %i extracted writeback items in state: %s",
