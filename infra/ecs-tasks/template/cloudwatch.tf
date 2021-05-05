@@ -214,7 +214,7 @@ module "reductions_dia_send_claimant_lists_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_reductions_send_claimant_lists_to_agencies_schedule
 
-  task_name           = "reductions-send-claimant-lists"
+  task_name           = "reductions-dia-send-claimant-lists"
   schedule_expression = "cron(0 8 ? * MON-FRI *)"
   environment_name    = var.environment_name
 
@@ -246,7 +246,7 @@ module "reductions_dua_send_claimant_lists_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_reductions_send_claimant_lists_to_agencies_schedule
 
-  task_name           = "reductions-send-claimant-lists"
+  task_name           = "reductions-dua-send-claimant-lists"
   schedule_expression = "cron(0 8 * * ? *)"
   environment_name    = var.environment_name
 

@@ -435,7 +435,9 @@ class PaymentData:
             ) -> Optional[payments_util.ValidationReason]:
                 if leave_request_decision not in ["In Review", "Pending", "Approved"]:
                     if count_incrementer is not None:
-                        count_incrementer("not_pending_or_approved_leave_request_count")
+                        count_incrementer(
+                            PaymentExtractStep.Metrics.NOT_PENDING_OR_APPROVED_LEAVE_REQUEST_COUNT
+                        )
                     return payments_util.ValidationReason.INVALID_VALUE
                 return None
 
@@ -519,6 +521,7 @@ class PaymentExtractStep(Step):
         ERRORED_PAYMENT_COUNT = "errored_payment_count"
         NEW_EFT_COUNT = "new_eft_count"
         NOT_APPROVED_PRENOTE_COUNT = "not_approved_prenote_count"
+        NOT_PENDING_OR_APPROVED_LEAVE_REQUEST_COUNT = "not_pending_or_approved_leave_request_count"
         OVERPAYMENT_COUNT = "overpayment_count"
         PAYMENT_DETAILS_RECORD_COUNT = "payment_details_record_count"
         PEI_RECORD_COUNT = "pei_record_count"

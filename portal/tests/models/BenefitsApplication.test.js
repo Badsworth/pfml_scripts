@@ -132,9 +132,15 @@ describe("Claim", () => {
           expect(day.minutes).toEqual(660);
         });
 
-        workPattern2.work_pattern_days.forEach((day) => {
-          expect(day.minutes).toEqual(670);
-        });
+        expect(map(workPattern2.work_pattern_days, "minutes")).toEqual([
+          675,
+          675,
+          675,
+          675,
+          670,
+          660,
+          660,
+        ]);
       });
 
       it("returns week with 0 minutes when 0 minutes are provided", () => {
@@ -145,17 +151,17 @@ describe("Claim", () => {
         });
       });
 
-      it("adds a minute to each day until there is no remainder when minutes are not a multiple of 7", () => {
+      it("divides minutes in increments of 15 and adds remainders to the next day", () => {
         const workPattern = WorkPattern.createWithWeek(77 * 60 + 18); // 77 hours and 18 minutes
 
         expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
+          675,
           663,
-          663,
-          663,
-          663,
-          662,
-          662,
-          662,
+          660,
+          660,
+          660,
+          660,
+          660,
         ]);
       });
 
@@ -172,7 +178,15 @@ describe("Claim", () => {
       it("totals minutes worked across all work pattern days", () => {
         const workPattern = WorkPattern.createWithWeek(70 * 60 + 4); // 70 hours and 4 minutes
 
-        expect(workPattern.minutesWorkedPerWeek).toEqual(70 * 60 + 4);
+        expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
+          604,
+          600,
+          600,
+          600,
+          600,
+          600,
+          600,
+        ]);
       });
 
       it("returns null if work_pattern_days are empty", () => {

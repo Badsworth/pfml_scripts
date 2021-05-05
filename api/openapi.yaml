@@ -1632,9 +1632,12 @@ components:
           minimum: 0
         type:
           type: string
+          nullable: true
           enum:
             - other_reason
             - same_reason
+            # TODO (CP-2123): Remove when we remove references to previous_leaves
+            - deprecated
 
     ApplicationRequestBody:
       allOf:
