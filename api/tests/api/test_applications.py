@@ -4470,9 +4470,15 @@ def test_other_income_delete_other_users_application(client, user, auth_token, t
 def test_previous_leave_delete(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
 
-    application.previous_leaves = [PreviousLeaveFactory.create(application_id=application.application_id,)]
-    application.previous_leaves_other_reason = [PreviousLeaveOtherReasonFactory.create(application_id=application.application_id),]
-    application.previous_leaves_same_reason = [PreviousLeaveSameReasonFactory.create(application_id=application.application_id),]
+    application.previous_leaves = [
+        PreviousLeaveFactory.create(application_id=application.application_id,)
+    ]
+    application.previous_leaves_other_reason = [
+        PreviousLeaveOtherReasonFactory.create(application_id=application.application_id),
+    ]
+    application.previous_leaves_same_reason = [
+        PreviousLeaveSameReasonFactory.create(application_id=application.application_id),
+    ]
     test_db_session.add(application)
     test_db_session.commit()
 
@@ -4490,7 +4496,8 @@ def test_previous_leave_delete(client, user, auth_token, test_db_session):
 
     response = client.delete(
         "/v1/applications/{}/previous_leaves/{}".format(
-            application.application_id, application.previous_leaves_other_reason[0].previous_leave_id
+            application.application_id,
+            application.previous_leaves_other_reason[0].previous_leave_id,
         ),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
