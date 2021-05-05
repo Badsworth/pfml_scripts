@@ -1,10 +1,10 @@
 import { renderWithAppLogic, simulateEvents } from "../../test-utils";
-import PreviousLeaves from "../../../src/pages/applications/previous-leaves";
+import PreviousLeavesIntro from "../../../src/pages/applications/previous-leaves-intro";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
 const setup = (claimAttrs = {}) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(PreviousLeaves, {
+  const { appLogic, claim, wrapper } = renderWithAppLogic(PreviousLeavesIntro, {
     claimAttrs,
   });
 
@@ -18,7 +18,7 @@ const setup = (claimAttrs = {}) => {
   };
 };
 
-describe("PreviousLeaves", () => {
+describe("PreviousLeavesIntro", () => {
   it("renders the page", () => {
     const { wrapper } = setup();
 

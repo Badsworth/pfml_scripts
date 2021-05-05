@@ -66,7 +66,7 @@ export const UploadCertification = (props) => {
 
   const certificationDocuments = findDocumentsByTypes(
     documents,
-    [DocumentType.medicalCertification] // TODO (CP-962): Set based on leaveReason
+    [DocumentType.certification.medicalCertification] // TODO (CP-962): Set based on leaveReason
   );
 
   const handleSave = async () => {
@@ -79,7 +79,7 @@ export const UploadCertification = (props) => {
     const uploadPromises = appLogic.documents.attach(
       claim.application_id,
       files.items,
-      DocumentType.medicalCertification, // TODO (CP-962): set based on leave reason
+      DocumentType.certification.medicalCertification, // TODO (CP-962): set based on leave reason
       query.additionalDoc === "true"
     );
 

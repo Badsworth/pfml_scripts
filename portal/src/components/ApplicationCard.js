@@ -307,7 +307,7 @@ function ApplicationActions(props) {
   const certificationDocs = findDocumentsByTypes(
     documents,
     // This enum is used because for MVP all certs will have the same doc type
-    [DocumentType.medicalCertification]
+    [DocumentType.certification.medicalCertification]
   );
   const hasDenialNotice =
     findDocumentsByTypes(documents, [DocumentType.denialNotice]).length > 0;

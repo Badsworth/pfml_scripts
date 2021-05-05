@@ -27,6 +27,7 @@ import OtherIncome, {
 import Address from "../../src/models/Address";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import LeaveReason from "../../src/models/LeaveReason";
+import PreviousLeave from "../../src/models/PreviousLeave";
 import { set } from "lodash";
 
 export class BaseMockClaimBuilder {
@@ -458,6 +459,17 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   employed() {
     set(this.claimAttrs, "employment_status", EmploymentStatus.employed);
     super.employed();
+    return this;
+  }
+
+  /**
+   *
+   * @returns {MockClaimBuilder}
+   */
+  previousLeavesOtherReason(attrs = [{}]) {
+    set(this.claimAttrs, "has_previous_leaves_other_reason", true);
+    const previousLeaves = attrs.map((attr) => new PreviousLeave(attr));
+    set(this.claimAttrs, "previous_leaves_other_reason", previousLeaves);
     return this;
   }
 

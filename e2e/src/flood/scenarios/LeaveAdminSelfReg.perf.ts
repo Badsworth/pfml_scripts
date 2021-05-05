@@ -2,6 +2,12 @@ import { StepFunction, TestData, Browser, step, By } from "@flood/element";
 import * as Cfg from "../config";
 import * as Util from "../helpers";
 
+type EmployerData = {
+  name: string;
+  fein: string;
+  withholdings: number[];
+};
+
 let emailVerifier: Util.TestMailVerificationFetcher;
 let username: string;
 let password: string;
@@ -19,6 +25,7 @@ export const steps: Cfg.StoredStep[] = [
           pfmlTerriyay: true,
           claimantShowAuth: true,
           employerShowSelfRegistrationForm: true,
+          employerAuthThroughApi: true,
         }),
         url: await Cfg.PortalBaseUrl,
       });
@@ -50,7 +57,7 @@ export const steps: Cfg.StoredStep[] = [
       );
       await browser.type(
         employerIdInput,
-        data.claim.employer_fein ?? "84-7847847"
+        ((data as unknown) as EmployerData).fein
       );
 
       const createAccountButton = await Util.waitForElement(
@@ -103,6 +110,28 @@ export const steps: Cfg.StoredStep[] = [
       );
       await browser.click(termsButton);
       await Util.waitForElement(browser, By.visibleText("Log out"));
+    },
+  },
+  {
+    time: 15000,
+    name: "Verify Employer Account",
+    test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
+      const { withholdings, name } = (data as unknown) as EmployerData;
+      const withholding = withholdings.pop();
+      if (typeof withholding !== "number") {
+        throw new Error("No withholdings given");
+      }
+      await browser.click(By.linkText("Your organizations"));
+      await browser.click(By.linkText(name));
+      await browser.type(
+        By.nameAttr("withholdingAmount"),
+        withholding.toString()
+      );
+      await browser.click(Util.byButtonText("Submit"));
+      await browser.findElement(
+        By.visibleText("Thanks for verifying your paid leave contributions")
+      );
+      await browser.click(Util.byButtonText("Continue"));
     },
   },
 ];

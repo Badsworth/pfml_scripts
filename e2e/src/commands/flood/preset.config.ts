@@ -29,6 +29,17 @@ export default function (env: Util.EnvironmentName): Util.Presets {
     eligible: 100,
   };
   const floodPresets: Util.Presets = {
+    leaveAdmin: [
+      {
+        ...floodDefaults,
+        name: "Leave Admin Registration/Verification",
+        threads: 400,
+        duration: 60,
+        rampup: 30,
+        bundleDir: "LeaveAdminSelfRegistration",
+        scenario: "LeaveAdminSelfRegistration",
+      },
+    ],
     base: [
       {
         ...floodDefaults,

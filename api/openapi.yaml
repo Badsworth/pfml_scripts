@@ -1622,6 +1622,19 @@ components:
             - Military caregiver
             - Military exigency family
             - Unknown
+        worked_per_week_minutes:
+          type: integer
+          nullable: true
+          minimum: 0
+        leave_minutes:
+          type: integer
+          nullable: true
+          minimum: 0
+        type:
+          type: string
+          enum:
+            - other_reason
+            - same_reason
 
     ApplicationRequestBody:
       allOf:
@@ -1740,7 +1753,25 @@ components:
               type: boolean
               nullable: true
               example: false
+            has_previous_leaves_other_reason:
+              type: boolean
+              nullable: true
+            has_previous_leaves_same_reason:
+              type: boolean
+              nullable: true
             previous_leaves:
+              nullable: true
+              type: array
+              items:
+                $ref: "#/components/schemas/PreviousLeave"
+              maxItems: 6
+            previous_leaves_other_reason:
+              nullable: true
+              type: array
+              items:
+                $ref: "#/components/schemas/PreviousLeave"
+              maxItems: 6
+            previous_leaves_same_reason:
               nullable: true
               type: array
               items:
@@ -1913,7 +1944,21 @@ components:
           type: boolean
           nullable: true
           example: false
+        has_previous_leaves_other_reason:
+          type: boolean
+          nullable: true
+        has_previous_leaves_same_reason:
+          type: boolean
+          nullable: true
         previous_leaves:
+          type: array
+          items:
+            $ref: "#/components/schemas/PreviousLeave"
+        previous_leaves_other_reason:
+          type: array
+          items:
+            $ref: "#/components/schemas/PreviousLeave"
+        previous_leaves_same_reason:
           type: array
           items:
             $ref: "#/components/schemas/PreviousLeave"
@@ -1932,6 +1977,11 @@ components:
             - Approval Notice
             - Request for More information
             - Denial Notice
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
           example: "Passport"
         name:
           type: string
@@ -2024,6 +2074,11 @@ components:
             - Request for More information
             - Denial Notice
             - Employer Response Additional Documentation
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
           example: "Denial Notice"
         content_type:
           type: string
@@ -2068,6 +2123,11 @@ components:
             - Driver's License Other State
             - Identification Proof
             - State managed Paid Leave Confirmation
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
           example: "Passport"
         content_type:
           type: string
@@ -2536,6 +2596,9 @@ components:
             - Permanent disability insurance
             - Family or medical leave insurance
             - Unknown
+        is_full_salary_continuous:
+          type: boolean
+          nullable: true
 
 
     OtherIncome:

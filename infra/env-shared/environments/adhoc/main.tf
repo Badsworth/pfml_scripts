@@ -56,10 +56,9 @@ module "pfml" {
   environment_name   = terraform.workspace == "default" ? null : terraform.workspace
   is_adhoc_workspace = true
 
-  nlb_name             = "${local.vpc}-nlb"
-  nlb_vpc_link_name    = "${local.vpc}-nlb-vpc-link"
-  nlb_port             = 80
-  enable_pretty_domain = false
+  nlb_name          = "${local.vpc}-nlb"
+  nlb_vpc_link_name = "${local.vpc}-nlb-vpc-link"
+  nlb_port          = 80
 
   # AWS WAF ACL settings
   enable_regional_rate_based_acl = true

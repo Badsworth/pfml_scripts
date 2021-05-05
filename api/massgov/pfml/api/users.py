@@ -17,7 +17,6 @@ from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.db.models.employees import Employer, Role, User
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
-from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_user
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -153,7 +152,7 @@ def normalize_user_leave_admin_response(
     leave_admin_dict = dict(leave_admin_response)
     return {
         "employer_dba": leave_admin_dict["employer"]["employer_dba"],
-        "employer_fein": mask_fein(leave_admin_dict["employer"]["employer_fein"]),
+        "employer_fein": leave_admin_dict["employer"]["employer_fein"],
         "employer_id": leave_admin_dict["employer"]["employer_id"],
         "has_fineos_registration": leave_admin_dict["has_fineos_registration"],
         "verified": leave_admin_dict["verified"],

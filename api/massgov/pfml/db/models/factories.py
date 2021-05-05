@@ -614,7 +614,8 @@ class OtherIncomeFactory(BaseFactory):
 
 class PreviousLeaveFactory(BaseFactory):
     class Meta:
-        model = application_models.PreviousLeave
+        # TODO (CP-2123): Change to application_models.PreviousLeave when we remove previous_leaves
+        model = application_models.PreviousLeaveDeprecated
 
     # application_id must be passed into the create() call
     leave_reason_id = (
@@ -627,6 +628,19 @@ class PreviousLeaveFactory(BaseFactory):
     leave_end_date = factory.Faker(
         "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
     )
+
+    worked_per_week_minutes = random.randint(600, 2400)
+    leave_minutes = random.randint(600, 2400)
+
+
+class PreviousLeaveOtherReasonFactory(PreviousLeaveFactory):
+    class Meta:
+        model = application_models.PreviousLeaveOtherReason
+
+
+class PreviousLeaveSameReasonFactory(PreviousLeaveFactory):
+    class Meta:
+        model = application_models.PreviousLeaveSameReason
 
 
 class StateMetricFactory(BaseFactory):

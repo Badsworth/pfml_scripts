@@ -96,7 +96,7 @@ function getDocuments(documentation) {
     application_id: "mock-application-id",
     content_type: "application/pdf",
     created_at: "2020-01-02",
-    document_type: DocumentType.medicalCertification,
+    document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: 202020,
     name: "Your Document",
   };

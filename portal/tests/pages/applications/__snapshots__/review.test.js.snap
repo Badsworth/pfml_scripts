@@ -210,7 +210,7 @@ exports[`Final Review Page when the claim is complete renders Review page with f
       editText="Edit"
       level="2"
     >
-      Other leave, income, and benefits
+      Other leave, benefits, and income
     </ReviewHeading>
     <ReviewRow
       label="Employer-sponsored benefits?"
@@ -470,7 +470,7 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
       editText="Edit"
       level="3"
     >
-      Other leave, income, and benefits
+      Other leave, benefits, and income
     </ReviewHeading>
     <ReviewRow
       label="Employer-sponsored benefits?"
@@ -567,7 +567,7 @@ Array [
     key="6"
     label="Income 7"
     reviewRowLevel="4"
-    type="Earnings from another employer or through self-employment"
+    type="Earnings or benefits from another employer, or through self-employment"
   />,
 ]
 `;
@@ -579,7 +579,7 @@ exports[`OtherIncomeList when amount fields are missing doesn't render missing d
   key="0"
   label="Income 1"
   reviewRowLevel="4"
-  type="Earnings from another employer or through self-employment"
+  type="Earnings or benefits from another employer, or through self-employment"
 />
 `;
 
@@ -788,7 +788,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
       editText="Edit"
       level="3"
     >
-      Other leave, income, and benefits
+      Other leave, benefits, and income
     </ReviewHeading>
     <ReviewRow
       label="Employer-sponsored benefits?"

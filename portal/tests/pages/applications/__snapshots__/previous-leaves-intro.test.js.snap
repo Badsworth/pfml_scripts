@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PreviousLeaves renders the page 1`] = `
+exports[`PreviousLeavesIntro renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Other leave, income, and benefits"
+  title="Other leave, benefits, and income"
 >
   <Heading
     level="2"

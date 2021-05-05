@@ -18,6 +18,8 @@ import Review, {
   OtherLeaveEntry,
 } from "../../../src/pages/applications/review";
 import { DateTime } from "luxon";
+import { DocumentType } from "../../../src/models/Document";
+import LeaveReason from "../../../src/models/LeaveReason";
 import React from "react";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
@@ -198,14 +200,92 @@ describe("Payment Information", () => {
 });
 
 describe("Upload Document", () => {
-  it("renders the correct number of documents", () => {
+  it("renders the correct number of certification documents when there are no documents", () => {
     const { wrapper } = renderWithAppLogic(Review, {
       claimAttrs: new MockClaimBuilder().complete().create(),
       diveLevels,
       hasLoadedClaimDocuments: true,
     });
+
     expect(wrapper.exists("Spinner")).toBe(false);
-    expect(wrapper.find({ label: "Number of files uploaded" })).toHaveLength(2);
+    expect(wrapper.find("[data-test='certification-doc-count']"))
+      .toMatchInlineSnapshot(`
+      <ReviewRow
+        data-test="certification-doc-count"
+        label="Number of files uploaded"
+        level="3"
+      >
+        0
+      </ReviewRow>
+    `);
+  });
+
+  it("renders filtered documents when the document type matches the leave reason with Caring Leave feature flag enabled", () => {
+    // When the feature flag is enabled, the component should render the number of documents with a DocType that match the leave reason
+    // In this test case, the feature flag is enabled, and the claim has documents with DocTypes that don't match the leave reason,
+    // so the component should render 0 documents attached
+
+    // create a claim with matching leave reason and doc types
+    process.env.featureFlags = {
+      showCaringLeaveType: true,
+    };
+
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder()
+        .medicalLeaveReason()
+        .complete()
+        .create(),
+      diveLevels,
+      hasLoadedClaimDocuments: true,
+      hasUploadedCertificationDocuments: {
+        document_type: DocumentType.certification[LeaveReason.medical],
+        numberOfDocs: 3,
+      },
+    });
+
+    expect(wrapper.exists("Spinner")).toBe(false);
+    expect(wrapper.find("[data-test='certification-doc-count']"))
+      .toMatchInlineSnapshot(`
+      <ReviewRow
+        data-test="certification-doc-count"
+        label="Number of files uploaded"
+        level="3"
+      >
+        3
+      </ReviewRow>
+    `);
+  });
+
+  it("renders filtered documents when the document type doesn't match the leave reason when the caring leave feature flag is enabled", () => {
+    process.env.featureFlags = {
+      showCaringLeaveType: true,
+    };
+
+    // create a claim with mismatched leave reason and doc types
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder()
+        .medicalLeaveReason()
+        .complete()
+        .create(),
+      diveLevels,
+      hasLoadedClaimDocuments: true,
+      hasUploadedCertificationDocuments: {
+        document_type: DocumentType.certification[LeaveReason.bonding],
+        numberOfDocs: 2,
+      },
+    });
+
+    expect(wrapper.exists("Spinner")).toBe(false);
+    expect(wrapper.find("[data-test='certification-doc-count']"))
+      .toMatchInlineSnapshot(`
+      <ReviewRow
+        data-test="certification-doc-count"
+        label="Number of files uploaded"
+        level="3"
+      >
+        0
+      </ReviewRow>
+    `);
   });
 
   it("renders Alert when there is an error for loading documents", () => {

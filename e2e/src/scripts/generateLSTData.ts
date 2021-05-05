@@ -11,6 +11,7 @@ import { factory as EnvFactory } from "../config";
 import EmployeePool from "../generation/Employee";
 import ClaimPool, { GeneratedClaim } from "../generation/Claim";
 import { LSTDataConfig } from "../commands/flood/common";
+import EmployerPool, { Employer } from "../generation/Employer";
 
 const pipelineP = promisify(pipeline);
 
@@ -20,17 +21,13 @@ const pipelineP = promisify(pipeline);
  * @param num
  */
 function* generateLASRS(
-  employeePool: EmployeePool,
+  employerPool: EmployerPool,
   num: number
-): Iterable<DummyScenarioObject> {
+): Iterable<DummyScenarioObject & Employer> {
   for (let i = 0; i < num; i++) {
-    const employee = employeePool.pick({ mass_id: true });
-    const occupation = employee.occupations[0];
     yield {
-      scenario: "LeaveAdminSelfReg",
-      claim: {
-        employer_fein: occupation.fein,
-      },
+      scenario: "LeaveAdminSelfRegistration",
+      ...employerPool.pick(),
     };
   }
 }
@@ -67,6 +64,9 @@ async function generateLSTData(
   );
   await storage.prepare();
   // Generate a pool of employees.
+  const employerPool: EmployerPool = await EmployerPool.load(
+    config("LST_EMPLOYERS_FILE")
+  );
   const employeePool: EmployeePool = await EmployeePool.load(
     config("LST_EMPLOYEES_FILE")
   );
@@ -105,7 +105,7 @@ async function generateLSTData(
         }
         break;
       case "LeaveAdminSelfRegistration":
-        pools.push(generateLASRS(employeePool, recordsOfScenario));
+        pools.push(generateLASRS(employerPool, recordsOfScenario));
         break;
       case "SavilinxAgent":
         pools.push(generateAgents(recordsOfScenario));

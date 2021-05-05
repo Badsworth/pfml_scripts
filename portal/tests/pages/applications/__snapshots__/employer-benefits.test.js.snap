@@ -3,7 +3,7 @@
 exports[`EmployerBenefits when the claim contains employer benefits data renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Other leave, income, and benefits"
+  title="Other leave, benefits, and income"
 >
   <InputChoiceGroup
     choices={
@@ -59,7 +59,7 @@ exports[`EmployerBenefits when the claim contains employer benefits data renders
 exports[`EmployerBenefits when the claim does not contain employer benefits data renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Other leave, income, and benefits"
+  title="Other leave, benefits, and income"
 >
   <InputChoiceGroup
     choices={

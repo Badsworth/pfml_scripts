@@ -214,12 +214,12 @@ def test_copy_to_sftp_and_archive_s3_files(
     s3_bucket_uri = f"s3://{mock_s3_bucket}"
     source_directory_path = "reductions/dia/outbound"
     archive_directory_path = "reductions/dia/archive"
-    moveit_dia_inbound_path = "/DFML/DIA/Inbound"
+    moveit_dia_outbound_path = "/DFML/DIA/Inbound"
 
     monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
     monkeypatch.setenv("S3_DIA_OUTBOUND_DIRECTORY_PATH", source_directory_path)
     monkeypatch.setenv("S3_DIA_ARCHIVE_DIRECTORY_PATH", archive_directory_path)
-    monkeypatch.setenv("MOVEIT_DIA_INBOUND_PATH", moveit_dia_inbound_path)
+    monkeypatch.setenv("MOVEIT_DIA_OUTBOUND_PATH", moveit_dia_outbound_path)
 
     filenames = []
     file_count = random.randint(1, 8)
@@ -248,7 +248,7 @@ def test_copy_to_sftp_and_archive_s3_files(
     assert len(file_util.list_files(s3_archive_directory_uri)) == len(filenames)
 
     # Get files in the MoveIt server and s3 archive directory.
-    files_in_moveit = mock_sftp_client.listdir(moveit_dia_inbound_path)
+    files_in_moveit = mock_sftp_client.listdir(moveit_dia_outbound_path)
     files_in_s3_archive_dir = file_util.list_files(s3_archive_directory_uri)
 
     # Confirm that we've moved every ReferenceFile, created a StateLog record, and updated the db.
@@ -428,7 +428,7 @@ def test_download_payment_list_if_none_today(
 
     monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
     monkeypatch.setenv("S3_DIA_PENDING_DIRECTORY_PATH", s3_dest_path)
-    monkeypatch.setenv("MOVEIT_DIA_OUTBOUND_PATH", moveit_pickup_path)
+    monkeypatch.setenv("MOVEIT_DIA_INBOUND_PATH", moveit_pickup_path)
     monkeypatch.setenv("MOVEIT_DIA_ARCHIVE_PATH", moveit_archive_path)
 
     full_s3_dest_path = os.path.join(s3_bucket_uri, s3_dest_path)

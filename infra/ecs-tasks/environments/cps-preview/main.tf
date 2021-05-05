@@ -39,7 +39,7 @@ module "tasks" {
   fineos_client_integration_services_api_url          = "https://dt3-api.masspfml.fineos.com/integration-services/"
   fineos_client_customer_api_url                      = "https://dt3-api.masspfml.fineos.com/customerapi/"
   fineos_client_group_client_api_url                  = "https://dt3-api.masspfml.fineos.com/groupclientapi/"
-  fineos_client_wscomposer_api_url                    = "https://dt2-api.masspfml.fineos.com/integration-services/wscomposer/"
+  fineos_client_wscomposer_api_url                    = "https://dt3-api.masspfml.fineos.com/integration-services/wscomposer/"
   fineos_client_oauth2_url                            = "https://dt3-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                      = "2gptm2870hlo9ouq70poib8d5g"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
@@ -85,7 +85,7 @@ module "tasks" {
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-cps-preview-agency-transfer/audit/sent"
 
   enable_recurring_payments_schedule = false
-  enable_register_admins_job         = false
+  enable_register_admins_job         = true
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 }

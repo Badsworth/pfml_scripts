@@ -90,4 +90,18 @@ describe("Employer welcome", () => {
       .find("Trans")
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
+
+  it("renders caring leave form link when showCaringLeaveType is true", () => {
+    process.env.featureFlags = { showCaringLeaveType: true };
+    testHook(() => {
+      appLogic = useAppLogic();
+    });
+
+    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
+    expect(
+      wrapper
+        .find(`Trans[i18nKey="pages.employersWelcome.viewFormsBody"]`)
+        .dive()
+    ).toMatchSnapshot();
+  });
 });

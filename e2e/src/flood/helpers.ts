@@ -64,6 +64,14 @@ export const labelled = async (
   return waitForElement(browser, By.id(inputId));
 };
 
+export function byButtonText(text: string): Locator {
+  return By.js((text) => {
+    // @ts-ignore
+    const buttons = [...document.querySelectorAll("button")];
+    return buttons.find((button) => button.innerText.match(text));
+  }, text);
+}
+
 export const waitForElement = async (
   browser: Browser,
   locator: Locator

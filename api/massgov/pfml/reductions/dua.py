@@ -101,7 +101,7 @@ def copy_claimant_list_to_moveit(db_session: db.Session) -> None:
         s3_bucket_uri=s3_config.s3_bucket_uri,
         source_dir=s3_config.s3_dua_outbound_directory_path,
         archive_dir=s3_config.s3_dua_archive_directory_path,
-        dest_dir=moveit_config.moveit_dua_inbound_path,
+        dest_dir=moveit_config.moveit_dua_outbound_path,
         sftp_uri=moveit_config.moveit_sftp_uri,
         ssh_key_password=moveit_config.moveit_ssh_key_password,
         ssh_key=moveit_config.moveit_ssh_key,
@@ -295,7 +295,7 @@ def download_payment_list_from_moveit(db_session: db.Session) -> None:
 
     transfer_config = SftpS3TransferConfig(
         s3_bucket_uri=s3_config.s3_bucket_uri,
-        source_dir=moveit_config.moveit_dua_outbound_path,
+        source_dir=moveit_config.moveit_dua_inbound_path,
         archive_dir=moveit_config.moveit_dua_archive_path,
         dest_dir=s3_config.s3_dua_pending_directory_path,
         sftp_uri=moveit_config.moveit_sftp_uri,

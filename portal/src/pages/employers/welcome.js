@@ -33,6 +33,7 @@ export const Welcome = ({ appLogic, user }) => {
   const shouldShowNewsBanner = isFeatureEnabled("employerShowNewsBanner");
   const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
   const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
+  const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
 
   return (
     <React.Fragment>
@@ -119,6 +120,9 @@ export const Welcome = ({ appLogic, user }) => {
                     rel="noopener"
                   />
                 ),
+              }}
+              tOptions={{
+                context: shouldShowCaringLeave ? "caring" : undefined,
               }}
             />
           </p>

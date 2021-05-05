@@ -83,9 +83,21 @@ export const Review = (props) => {
     claim.application_id
   );
 
+  const documentFilters = [DocumentType.certification.medicalCertification];
+
+  // TODO (CP-1989): Remove showCaringLeaveType feature flag
+  const showCaringLeaveType = isFeatureEnabled("showCaringLeaveType");
+  if (showCaringLeaveType) {
+    if (claim.leave_details && claim.leave_details.reason) {
+      documentFilters.push(
+        DocumentType.certification[claim.leave_details.reason]
+      );
+    }
+  }
+
   const certificationDocuments = findDocumentsByTypes(
     documents,
-    [DocumentType.medicalCertification] // TODO (CP-962): Set based on leaveReason
+    documentFilters
   );
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
@@ -699,6 +711,7 @@ export const Review = (props) => {
                     })}
                   </ReviewHeading>
                   <ReviewRow
+                    data-test="certification-doc-count"
                     label={t("pages.claimsReview.numberOfFilesLabel")}
                     level={reviewRowLevel}
                   >

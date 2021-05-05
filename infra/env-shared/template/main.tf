@@ -16,6 +16,6 @@ locals {
   #
   # For non-custom domain names, we're relying on the API Gateway-provided URL
   # which serves the API under the "/<env_name>" subpath.
-  forwarded_path = var.enable_pretty_domain ? "'/api/'" : "'/${var.environment_name}/api/'"
+  forwarded_path = local.cert_domain == null ? "'/${var.environment_name}/api/'" : "'/api/'"
   constants_env  = var.is_adhoc_workspace ? "adhoc" : var.environment_name
 }

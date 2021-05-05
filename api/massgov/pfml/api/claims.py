@@ -315,8 +315,8 @@ def get_claims() -> flask.Response:
 
     with PaginationAPIContext(Claim, request=flask.request) as pagination_context:
         with app.db_session() as db_session:
-            # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims) so if
-            # something changes there it probably needs to be changed here
+            # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims)
+            # so if something changes there it probably needs to be changed here
             if current_user and current_user.employers:
                 verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
                     feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,

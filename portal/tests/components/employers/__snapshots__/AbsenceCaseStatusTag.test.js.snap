@@ -7,23 +7,23 @@ exports[`AbsenceCaseStatusTag renders the component with error state and mapped 
 />
 `;
 
+exports[`AbsenceCaseStatusTag renders the component with inactive state and mapped status for 'Completed' 1`] = `
+<Tag
+  label="Closed"
+  state="inactive"
+/>
+`;
+
+exports[`AbsenceCaseStatusTag renders the component with inactive state for 'Closed' 1`] = `
+<Tag
+  label="Closed"
+  state="inactive"
+/>
+`;
+
 exports[`AbsenceCaseStatusTag renders the component with success state for 'Approved' 1`] = `
 <Tag
   label="Approved"
   state="success"
-/>
-`;
-
-exports[`AbsenceCaseStatusTag renders the component with warning state and mapped status for 'Closed' 1`] = `
-<Tag
-  label="Completed"
-  state="warning"
-/>
-`;
-
-exports[`AbsenceCaseStatusTag renders the component with warning state and mapped status for 'Completed' 1`] = `
-<Tag
-  label="Completed"
-  state="warning"
 />
 `;

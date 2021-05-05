@@ -204,4 +204,19 @@ describe("Index", () => {
       });
     });
   });
+
+  describe('when "employerShowDashboard" is enabled', () => {
+    it("has a back button to the dashboard", () => {
+      process.env.featureFlags = { employerShowDashboard: true };
+      ({ wrapper } = renderWithAppLogic(Index, {
+        diveLevels: 1,
+      }));
+
+      expect(wrapper.find("BackButton")).toMatchInlineSnapshot(`
+        <BackButton
+          label="Back to Dashboard"
+        />
+      `);
+    });
+  });
 });

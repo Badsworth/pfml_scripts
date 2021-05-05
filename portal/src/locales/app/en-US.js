@@ -541,7 +541,7 @@ const errors = {
 
 const shared = {
   absenceCaseStatus_approved: "Approved",
-  absenceCaseStatus_completed: "Completed",
+  absenceCaseStatus_closed: "Closed",
   absenceCaseStatus_denied: "Denied",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
@@ -581,7 +581,7 @@ const shared = {
   claimsEmploymentInfoTitle: "Employment information",
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
-  claimsOtherLeaveTitle: "Other leave, income, and benefits",
+  claimsOtherLeaveTitle: "Other leave, benefits, and income",
   claimsVerifyIdTitle: "Your identification",
   contactCenterAddress:
     "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01842",
@@ -651,7 +651,7 @@ const shared = {
   otherIncomeEntryPrefix: "Income",
   otherIncomeType_jonesAct: "Jones Act benefits",
   otherIncomeType_otherEmployer:
-    "Earnings from another employer or through self-employment",
+    "Earnings or benefits from another employer, or through self-employment",
   otherIncomeType_railroadRetirement: "Railroad Retirement benefits",
   otherIncomeType_retirementDisability:
     "Disability benefits under a governmental retirement$t(chars.nbsp)plan",
@@ -892,7 +892,7 @@ const pages = {
     stepListTitle_3: "Upload your documents",
     stepTitle_employerInformation: "Enter employment information",
     stepTitle_leaveDetails: "Enter leave details",
-    stepTitle_otherLeave: "Report other leave, income, and benefits",
+    stepTitle_otherLeave: "Report other leave, benefits, and income",
     stepTitle_payment: "Add payment information",
     stepTitle_reviewAndConfirm: "Review and confirm",
     stepTitle_uploadCertification: "Upload leave certification documents",
@@ -909,6 +909,11 @@ const pages = {
   claimsConcurrentLeavesDetails: {
     sectionLabel:
       "Tell us about the accrued paid leave you'll use during your PFML leave",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
+  claimsConcurrentLeavesIntro: {
+    sectionLabel:
+      "Tell us about the accrued paid leave you'll use during your PFML leave.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsDateOfBirth: {
@@ -1162,7 +1167,7 @@ const pages = {
       "Disability benefits under a governmental retirement plan such as STRS or PERS",
       "Jones Act benefits",
       "Railroad Retirement benefits",
-      "Earnings from another employer or through self-employment",
+      "Earnings or benefits from another employer, or through self-employment",
     ],
     sectionLabel:
       "Will you receive income from any other sources during your leave dates for paid$t(chars.nbsp)leave?",
@@ -1178,12 +1183,14 @@ const pages = {
     amountLabel: "Amount",
     amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
-    endDateLabel: "When will you stop receiving this income?",
+    endDateLabel:
+      "What is the last day of your leave that this income will pay you for?",
     limitMessage: "You can only add up to 3 incomes",
     removeButton: "Remove income",
     sectionLabel:
       "Tell us about your other sources of income$t(chars.nbsp)during your leave dates for paid$t(chars.nbsp)leave.",
-    startDateLabel: "When will you start receiving this income?",
+    startDateLabel:
+      "What is the first day of your leave that this income will pay you for?",
     title: "$t(shared.claimsOtherLeaveTitle)",
     typeChoiceLabel_jonesAct: "$t(shared.otherIncomeType_jonesAct)",
     typeChoiceLabel_otherEmployer: "$t(shared.otherIncomeType_otherEmployer)",
@@ -1237,7 +1244,7 @@ const pages = {
     sectionLabel: "What’s your phone number?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
-  claimsPreviousLeaves: {
+  claimsPreviousLeavesIntro: {
     sectionLabel: "Tell us about your previous leave.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
@@ -1260,8 +1267,29 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReasonDetails: {
+    addButton: "Add another leave",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hoursLabel: "$t(shared.hoursLabel)",
+    isForCurrentEmployerHint:
+      "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, we'll give this employer a chance to review information from your application. We won't share any information about leave you took from other employers.",
+    isForCurrentEmployerLabel:
+      "Did you take leave from this employer? EIN:$t(chars.nbsp){{ein}}",
+    leaveEndDateLabel: "What was the last day of this leave?",
+    leaveMinutesHint:
+      "Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours.",
+    leaveMinutesLabel: "What was the total number of hours you took off?",
+    leaveStartDateLabel: "What was the first day of this leave?",
+    limitMessage: "You can only add up to {{limit}} leaves",
+    minutesLabel: "$t(shared.minutesLabel)",
+    previousLeaveEntryPrefix: "$t(shared.previousLeaveEntryPrefix)",
+    removeButton: "Remove leave",
     sectionLabel: "Tell us about your previous time off",
     title: "$t(shared.claimsOtherLeaveTitle)",
+    workedPerWeekMinutesHint:
+      "Enter the number of hours you would have worked each week, if you were not on leave. If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
+    workedPerWeekMinutesLabel:
+      "How many hours would you have worked this week if you did not take this leave?",
   },
   claimsPreviousLeavesSameReason: {
     choiceNo: "$t(shared.choiceNo)",
@@ -1737,6 +1765,7 @@ const pages = {
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
+    backToDashboardLabel: "Back to Dashboard",
     instructions:
       "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
@@ -1820,6 +1849,8 @@ const pages = {
       "When you log into your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
     viewApplicationsTitle: "View all applications",
     viewFormsBody:
+      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process. ",
+    viewFormsBody_caring:
       "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process. For leave to care for a family member you can download the <caregiver-certification-form-link>Certification to Care for a Family Member</caregiver-certification-form-link> during the review process. ",
     viewFormsTitle: "View forms and notices online",
     welcomeBody:
@@ -1908,8 +1939,8 @@ const pages = {
 const components = {
   absenceCaseStatusTag: {
     status_approved: "$t(shared.absenceCaseStatus_approved)",
-    status_closed: "$t(shared.absenceCaseStatus_completed)",
-    status_completed: "$t(shared.absenceCaseStatus_completed)",
+    status_closed: "$t(shared.absenceCaseStatus_closed)",
+    status_completed: "$t(shared.absenceCaseStatus_closed)",
     status_declined: "$t(shared.absenceCaseStatus_denied)",
   },
   amendButton: {

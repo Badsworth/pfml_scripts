@@ -1206,8 +1206,18 @@ class TestGetClaimsEndpoint:
             verification=test_verification,
         )
         test_db_session.add(link)
-        test_db_session.commit()
 
+        other_employer = EmployerFactory.create()
+        other_employee = EmployeeFactory.create()
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=other_employer,
+                employee=other_employee,
+                fineos_absence_status_id=1,
+                claim_type_id=1,
+            )
+
+        test_db_session.commit()
         scenarios = [
             {
                 "tag": "Request without paging parameters uses default values",

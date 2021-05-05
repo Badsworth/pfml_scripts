@@ -17,6 +17,7 @@ const routes = {
     checklist: "/applications/checklist",
     concurrentLeaves: "/applications/concurrent-leaves",
     concurrentLeavesDetails: "/applications/concurrent-leaves-details",
+    concurrentLeavesIntro: "/applications/concurrent-leaves-intro",
     dashboard: "/dashboard",
     dateOfBirth: "/applications/date-of-birth",
     dateOfChild: "/applications/date-of-child",
@@ -39,7 +40,7 @@ const routes = {
     otherIncomesDetails: "/applications/other-incomes-details",
     paymentMethod: "/applications/payment-method",
     phoneNumber: "/applications/phone-number",
-    previousLeaves: "/applications/previous-leaves",
+    previousLeavesIntro: "/applications/previous-leaves-intro",
     previousLeavesOtherReason: "/applications/previous-leaves-other-reason",
     previousLeavesOtherReasonDetails:
       "/applications/previous-leaves-other-reason-details",

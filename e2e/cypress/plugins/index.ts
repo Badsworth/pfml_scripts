@@ -28,7 +28,6 @@ import { ApplicationResponse } from "../../src/api";
 
 import fs from "fs";
 import pdf from "pdf-parse";
-import { Result } from "pdf-parse";
 import TestMailClient, {
   Email,
   GetEmailsOpts,
@@ -38,6 +37,7 @@ import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
 import * as postSubmit from "../../src/submission/PostSubmit";
+import pRetry from "p-retry";
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
@@ -142,12 +142,28 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return ClaimGenerator.dehydrate(claim, "/tmp");
     },
 
-    async noticeReader(noticeType: string): Promise<Result> {
-      const PDFdataBuffer = fs.readFileSync(
-        `./cypress/downloads-notices/${noticeType} Notice.pdf`
-      );
+    async getParsedPDF(filename: string): Promise<pdf.Result> {
+      return pdf(fs.readFileSync(filename));
+    },
 
-      return pdf(PDFdataBuffer) as Promise<Result>;
+    async getNoticeFileName(downloadsFolder): Promise<string[]> {
+      /*
+       *  Retrying here in case the download folder isn't present yet
+       *  using this to avoid any arbitrary waits after downloading
+       *
+       *  Returns array of filenames in the downloads folder
+       */
+      return await pRetry(
+        async () => {
+          return fs.readdirSync(downloadsFolder);
+        },
+        { maxTimeout: 5000 }
+      );
+    },
+
+    async deleteDownloadFolder(folderName): Promise<true> {
+      await fs.promises.rmdir(folderName, { maxRetries: 5, recursive: true });
+      return true;
     },
 
     syslog(arg: unknown | unknown[]): null {
@@ -164,18 +180,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     webpackOptions: require("../../webpack.config.ts"),
   };
   on("file:preprocessor", webpackPreprocessor(options));
-
-  on("before:browser:launch", (browser, options) => {
-    const downloadDirectory = path.join(__dirname, "..", "downloads-notices");
-
-    if (browser.family === "chromium" && browser.name !== "electron") {
-      options.preferences.default["download"] = {
-        default_directory: downloadDirectory,
-      };
-
-      return options;
-    }
-  });
 
   return {
     baseUrl: config("PORTAL_BASEURL"),

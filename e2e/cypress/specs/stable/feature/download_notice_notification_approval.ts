@@ -3,6 +3,10 @@ import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 
 describe("Approval (notifications/notices)", () => {
+  after(() => {
+    portal.deleteDownloadsFolder();
+  });
+
   const credentials: Credentials = {
     username: Cypress.env("E2E_PORTAL_USERNAME"),
     password: Cypress.env("E2E_PORTAL_PASSWORD"),
@@ -15,7 +19,7 @@ describe("Approval (notifications/notices)", () => {
       fineos.before();
       cy.visit("/");
       // Submit a claim via the API, including Employer Response.
-      cy.task("generateClaim", "BHAP1ER").then((claim) => {
+      cy.task("generateClaim", "REDUCED_ER").then((claim) => {
         cy.stash("claim", claim.claim);
         cy.task("submitClaimToAPI", {
           ...claim,
@@ -38,10 +42,10 @@ describe("Approval (notifications/notices)", () => {
   );
 
   it(
-    "Should generate a legal notice that the claimant can view",
+    "Should generate a legal notice (Approval) that the claimant can view",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([submit]);
+      // cy.dependsOnPreviousPass([submit]);
       portal.before();
       cy.visit("/");
       portal.login(credentials);
@@ -59,14 +63,15 @@ describe("Approval (notifications/notices)", () => {
 
         cy.visit("/applications");
         cy.contains("article", submission.fineos_absence_id).within(() => {
-          cy.contains("a", "Approval notice").should("be.visible");
+          cy.contains("a", "Approval notice").should("be.visible").click();
         });
+        portal.downloadLegalNotice("Approval", submission.fineos_absence_id, 4);
       });
     }
   );
 
   it(
-    "Should generate a legal notice that the Leave Administrator can view",
+    "Should generate a legal notice (Approval) that the Leave Administrator can view",
     { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit]);
@@ -87,6 +92,11 @@ describe("Approval (notifications/notices)", () => {
             submission.fineos_absence_id,
             employeeFullName,
             "approval"
+          );
+          portal.downloadLegalNotice(
+            "Approval",
+            submission.fineos_absence_id,
+            4
           );
         });
       });

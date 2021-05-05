@@ -3,7 +3,6 @@ import React from "react";
 import classnames from "classnames";
 
 const Tag = ({ label, state }) => {
-  // TODO (EMPLOYER-421) consider other states.
   const classes = classnames(
     "usa-tag",
     "display-inline-block",
@@ -19,6 +18,8 @@ const Tag = ({ label, state }) => {
       "bg-warning-lighter": state === "warning",
       "text-error": state === "error",
       "bg-error-lighter": state === "error",
+      "text-base-darker": state === "inactive",
+      "bg-base-lightest": state === "inactive",
     }
   );
 
@@ -27,8 +28,8 @@ const Tag = ({ label, state }) => {
 
 Tag.propTypes = {
   label: PropTypes.string.isRequired,
-  // TODO (EMPLOYER-421) consider other states.
-  state: PropTypes.oneOf(["success", "warning", "error"]).isRequired,
+  state: PropTypes.oneOf(["success", "warning", "error", "inactive"])
+    .isRequired,
 };
 
 export default Tag;

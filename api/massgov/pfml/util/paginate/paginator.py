@@ -1,12 +1,10 @@
 import math
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, List
 
 import flask
 from sqlalchemy import func
-from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import Query
-from sqlalchemy.orm.attributes import InstrumentedAttribute
 from werkzeug.exceptions import BadRequest
 
 DEFAULT_PAGE_OFFSET = 1
@@ -20,10 +18,7 @@ class OrderDirection(str, Enum):
 
 class PaginationAPIContext:
     def __init__(
-        self,
-        entity: Any,
-        request: flask.Request,
-        primary_key: Optional[InstrumentedAttribute] = None,
+        self, entity: Any, request: flask.Request,
     ):
         page_size = request.args.get("page_size", default=DEFAULT_PAGE_SIZE, type=int)
         page_offset = request.args.get("page_offset", default=DEFAULT_PAGE_OFFSET, type=int)
@@ -41,13 +36,11 @@ class PaginationAPIContext:
         else:
             order_key = order_key.desc()
 
-        self.entity = entity
         self.page_size = page_size
         self.page_offset = page_offset
         self.order_by = order_by
         self.order_direction = order_direction
         self.order_key = order_key
-        self.primary_key = primary_key
 
     def __enter__(self):
         return self
@@ -77,14 +70,8 @@ class Page:
 
 class Paginator:
     def __init__(
-        self,
-        entity: Any,
-        query_set: Query,
-        page_size: int = DEFAULT_PAGE_SIZE,
-        page_offset: int = 1,
-        primary_key: Optional[InstrumentedAttribute] = None,
+        self, query_set: Query, page_size: int = DEFAULT_PAGE_SIZE, page_offset: int = 1,
     ):
-        self.entity = entity
         self.query_set = query_set
 
         if page_size <= 0:
@@ -96,8 +83,6 @@ class Paginator:
         if not page_offset or page_offset < 1:
             page_offset = DEFAULT_PAGE_SIZE
         self.page_offset = page_offset
-
-        self.primary_key = primary_key
 
     def __iter__(self):
         return self
@@ -124,12 +109,10 @@ class Paginator:
         if self._total_records >= 0:
             return self._total_records
 
-        if self.primary_key is None:
-            primary_key = inspect(self.entity).primary_key[0]
-        else:
-            primary_key = self.primary_key
-
-        self._total_records = self.query_set.session.query(func.count(primary_key)).scalar()
+        total_records_query = self.query_set.order_by(None).statement.with_only_columns(
+            [func.count()]
+        )
+        self._total_records = self.query_set.session.execute(total_records_query).scalar()
         return self._total_records
 
     @property
@@ -138,5 +121,5 @@ class Paginator:
 
 
 def page_for_api_context(context: PaginationAPIContext, query: Query) -> Page:
-    paginator = Paginator(context.entity, query, page_size=context.page_size)
+    paginator = Paginator(query, page_size=context.page_size)
     return paginator.page_at(page_offset=context.page_offset)

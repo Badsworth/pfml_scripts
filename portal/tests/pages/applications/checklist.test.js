@@ -1,5 +1,6 @@
 import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import Checklist from "../../../src/pages/applications/checklist";
+import { DocumentType } from "../../../src/models/Document";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
 
@@ -171,7 +172,9 @@ describe("Checklist", () => {
       diveLevels,
       hasLoadedClaimDocuments: true,
       hasUploadedIdDocuments: true,
-      hasUploadedCertificationDocuments: true,
+      hasUploadedCertificationDocuments: {
+        document_type: DocumentType.certification.medicalCertification,
+      },
       warningsLists: {
         [claim.application_id]: [],
       },
@@ -283,7 +286,9 @@ describe("Checklist", () => {
         claimAttrs: claim,
         diveLevels,
         hasLoadedClaimDocuments: true,
-        hasUploadedCertificationDocuments: true,
+        hasUploadedCertificationDocuments: {
+          document_type: DocumentType.certification.medicalCertification,
+        },
         warningsLists: {
           [claim.application_id]: [],
         },
