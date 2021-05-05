@@ -83,19 +83,23 @@ def upgrade(context):
         employee_id = tax_identifier_ids_to_employees[tax_identifier_id]
         bulk_update_params.append({'claim_id': claim_id, 'employee_id': employee_id})
 
-    batch_size = 500
+    batch_size = 5
     total_batches = math.ceil(len(bulk_update_params) / batch_size)
     current_batch = 0
 
+    from massgov.pfml.db.models.employees import Claim
     while current_batch < total_batches:
+        session = sa.orm.Session(bind=connection)
+        session.bulk_update_mappings(
+            Claim,
+            bulk_update_params[current_batch * batch_size: (current_batch + 1) * batch_size],
+        )
+        current_batch += 1
+        """
         try:
-            connection.bulk_update_mappings(bulk_update_params[current_batch * batch_size: (current_batch + 1) * batch_size])
         except:
             pass
-        finally:
-            current_batch += 1
-
-    pass
+        finally:"""
     # ### end Alembic commands ###
 
 

@@ -21,6 +21,7 @@ depends_on = None
 
 def upgrade():
     connection = op.get_bind()
+
     applications = sa.Table(
         "application",
         sa.MetaData(),
@@ -41,37 +42,43 @@ def upgrade():
         sa.Column("tax_identifier_id", postgresql.UUID(as_uuid=True), nullable=False),
     )
 
-    null_employee_claims = connection.execute(
-        sa.select([claims.c.claim_id]).where(claims.c.employee_id is None)
-    ).fetchall()
-    connection.execute(sa.select([claims.c.claim_id])).fetchall()
+    null_employee_claims = connection.execute(sa.select([claims.c.claim_id]).where(claims.c.employee_id==None)).fetchall()
+    null_employee_claim_ids = set([row.claim_id for row in null_employee_claims])
+
     applications_claims_and_tax_identifier_ids = connection.execute(
         sa.select([
             applications.c.application_id,
             applications.c.claim_id,
             applications.c.tax_identifier_id,
-        ]).where(applications.c.claim_id in set(null_employee_claims))
+        ]).where(applications.c.claim_id.in_(null_employee_claim_ids))
     ).fetchall()
 
-    tax_identifier_ids_to_application_and_claim_ids = [
-        {
-            row[2]: [row[0], row[1]]
-        } for row in applications_claims_and_tax_identifier_ids
-    ]
+    tax_identifier_ids_to_claim_ids = {
+        row.tax_identifier_id: row.claim_id
+        for row in applications_claims_and_tax_identifier_ids
+    }
 
-    tax_identifier_ids_to_employees = connection.execute(
+    tax_identifier_ids = set(
+        [row.tax_identifier_id for row in applications_claims_and_tax_identifier_ids]
+    )
+
+    tax_identifier_ids_to_employees_results = connection.execute(
         sa.select([
             employees.c.tax_identifier_id, employees.c.employee_id
         ]).where(
-            employees.c.tax_identifier_id in
-            set(tax_identifier_ids_to_application_and_claim_ids.keys())
+            employees.c.tax_identifier_id.in_(tax_identifier_ids)
         )
     ).fetchall()
 
+    tax_identifier_ids_to_employees = {
+        row.tax_identifier_id: row.employee_id
+        for row in tax_identifier_ids_to_employees_results
+    }
+
     bulk_update_params = []
 
-    for tax_identifier_id in tax_identifier_ids_to_application_and_claim_ids:
-        claim_id = tax_identifier_ids_to_application_and_claim_ids[tax_identifier_id][1]
+    for tax_identifier_id in tax_identifier_ids_to_employees:
+        claim_id = tax_identifier_ids_to_claim_ids[tax_identifier_id]
         employee_id = tax_identifier_ids_to_employees[tax_identifier_id]
         bulk_update_params.append({'claim_id': claim_id, 'employee_id': employee_id})
 
@@ -79,6 +86,16 @@ def upgrade():
     total_batches = math.ceil(len(bulk_update_params) / batch_size)
     current_batch = 0
 
+    from massgov.pfml.db.models.employees import Claim
+    while current_batch < total_batches:
+        session = sa.orm.Session(bind=connection)
+        session.bulk_update_mappings(
+            Claim,
+            bulk_update_params[current_batch * batch_size: (current_batch + 1) * batch_size],
+        )
+        current_batch += 1
+
+    """
     while current_batch < total_batches:
         try:
             connection.bulk_update_mappings(bulk_update_params[current_batch * batch_size: (current_batch + 1) * batch_size])
@@ -86,8 +103,7 @@ def upgrade():
             pass
         finally:
             current_batch += 1
-
-    pass
+    """
     # ### end Alembic commands ###
 
 
