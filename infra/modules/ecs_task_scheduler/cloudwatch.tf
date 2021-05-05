@@ -1,7 +1,7 @@
 resource "aws_cloudwatch_event_target" "task" {
   rule      = aws_cloudwatch_event_rule.scheduled_rule.name
   arn       = var.cluster_arn
-  target_id = "${var.task_name}_${module.constants.environment_shorthand[var.environment_name]}_cloudwatch_event_target"
+  target_id = "${var.schedule_name}_${module.constants.environment_shorthand[var.environment_name]}_cloudwatch_event_target"
   role_arn  = aws_iam_role.scheduler.arn
 
   ecs_target {
@@ -21,8 +21,8 @@ resource "aws_cloudwatch_event_target" "task" {
 }
 
 resource "aws_cloudwatch_event_rule" "scheduled_rule" {
-  name        = "${var.task_name}_${var.environment_name}_schedule"
-  description = "Fires the ${var.task_name} task in ${var.environment_name} on a schedule"
+  name        = "${var.schedule_name}_${var.environment_name}_schedule"
+  description = "The ${var.schedule_name} schedule in ${var.environment_name}"
 
   is_enabled          = var.is_enabled
   schedule_expression = var.schedule_expression

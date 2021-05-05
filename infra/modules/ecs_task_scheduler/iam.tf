@@ -1,5 +1,5 @@
 resource "aws_iam_role" "scheduler" {
-  name               = "${var.task_name}-${var.environment_name}-scheduler"
+  name               = "${var.schedule_name}-${var.environment_name}-scheduler"
   assume_role_policy = data.aws_iam_policy_document.cloudwatch_events_assume_role_policy.json
 }
 
@@ -15,7 +15,7 @@ data "aws_iam_policy_document" "cloudwatch_events_assume_role_policy" {
 }
 
 resource "aws_iam_role_policy" "scheduler_role_policy" {
-  name   = "${var.task_name}-${var.environment_name}-scheduler-role-policy"
+  name   = "${var.schedule_name}-${var.environment_name}-scheduler-role-policy"
   role   = aws_iam_role.scheduler.id
   policy = data.aws_iam_policy_document.scheduler_role_policy.json
 }

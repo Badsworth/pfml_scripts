@@ -39,8 +39,8 @@ variable "schedule_expression" {
   type        = string
 }
 
-variable "task_name" {
-  description = "Name of the task"
+variable "schedule_name" {
+  description = "Name of the schedule"
   type        = string
 }
 

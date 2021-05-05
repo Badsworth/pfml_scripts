@@ -44,7 +44,7 @@ module "register_leave_admins_with_fineos_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_register_admins_job
 
-  task_name           = "register-leave-admins-with-fineos"
+  schedule_name       = "register-leave-admins-with-fineos"
   schedule_expression = "rate(15 minutes)"
   environment_name    = var.environment_name
 
@@ -64,7 +64,7 @@ module "payments_payment_voucher_plus_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_recurring_payments_schedule
 
-  task_name           = "payments-payment-voucher-plus"
+  schedule_name       = "payments-payment-voucher-plus"
   schedule_expression = "cron(0 8 ? * MON-FRI *)"
   environment_name    = var.environment_name
 
@@ -84,7 +84,7 @@ module "fineos_bucket_tool_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name           = "fineos-data-export-tool"
+  schedule_name       = "fineos-data-export-tool"
   schedule_expression = "cron(0 8 * * ? *)"
   environment_name    = var.environment_name
 
@@ -121,7 +121,7 @@ module "import_fineos_to_warehouse" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name           = "import-fineos-to-warehouse"
+  schedule_name       = "import-fineos-to-warehouse"
   schedule_expression = "cron(0 3 * * ? *)"
   environment_name    = var.environment_name
 
@@ -141,7 +141,7 @@ module "fineos_error_extract_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name           = "fineos-error-extract-tool"
+  schedule_name       = "fineos-error-extract-tool"
   schedule_expression = "cron(0 13 * * ? *)"
   environment_name    = var.environment_name
 
@@ -178,7 +178,7 @@ module "export_leave_admins_created_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name           = "export-leave-admins-created"
+  schedule_name       = "export-leave-admins-created"
   schedule_expression = "rate(24 hours)"
   environment_name    = var.environment_name
 
@@ -214,7 +214,7 @@ module "reductions_dia_send_claimant_lists_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_reductions_send_claimant_lists_to_agencies_schedule
 
-  task_name           = "reductions-dia-send-claimant-lists"
+  schedule_name       = "reductions-dia-send-claimant-lists"
   schedule_expression = "cron(0 8 ? * MON-FRI *)"
   environment_name    = var.environment_name
 
@@ -246,7 +246,7 @@ module "reductions_dua_send_claimant_lists_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_reductions_send_claimant_lists_to_agencies_schedule
 
-  task_name           = "reductions-dua-send-claimant-lists"
+  schedule_name       = "reductions-dua-send-claimant-lists"
   schedule_expression = "cron(0 8 * * ? *)"
   environment_name    = var.environment_name
 
@@ -278,7 +278,7 @@ module "reductions_retrieve_payment_listsscheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_reductions_retrieve_payment_lists_from_agencies_schedule
 
-  task_name           = "reductions-retrieve-payment-lists"
+  schedule_name       = "reductions-retrieve-payment-lists"
   schedule_expression = "cron(0/15 8-23,0 * * ? *)"
   environment_name    = var.environment_name
 
@@ -296,7 +296,7 @@ module "reductions-send-wage-replacement-payments-to-dfml" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_reductions_send_wage_replacement_payments_to_dfml_schedule
 
-  task_name           = "reductions-send-wage-replacement"
+  schedule_name       = "reductions-send-wage-replacement"
   schedule_expression = "cron(0 14 ? * MON-FRI *)"
   environment_name    = var.environment_name
 
@@ -314,7 +314,7 @@ module "pub-payments-process-fineos" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_pub_automation_fineos
 
-  task_name           = "pub-payments-process-fineos"
+  schedule_name       = "pub-payments-process-fineos"
   schedule_expression = "cron(0 15 * * ? *)"
   environment_name    = var.environment_name
 
