@@ -47,7 +47,7 @@ exports[`EmployerBenefits when the claim contains employer benefits data renders
         </ul>
       </React.Fragment>
     }
-    label="Will you use any employer-sponsored benefits during your leave dates for paid leave?"
+    label="Will you use any employer-sponsored benefits from this employer during your PFML leave?"
     name="has_employer_benefits"
     onChange={[Function]}
     type="radio"
@@ -103,7 +103,7 @@ exports[`EmployerBenefits when the claim does not contain employer benefits data
         </ul>
       </React.Fragment>
     }
-    label="Will you use any employer-sponsored benefits during your leave dates for paid leave?"
+    label="Will you use any employer-sponsored benefits from this employer during your PFML leave?"
     name="has_employer_benefits"
     onChange={[Function]}
     type="radio"

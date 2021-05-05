@@ -908,7 +908,7 @@ const pages = {
   },
   claimsConcurrentLeavesDetails: {
     sectionLabel:
-      "Tell us about the accrued paid leave you'll use during your PFML leave",
+      "Will you use accrued paid leave from this employer? EIN: {{employer_fein}}",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsConcurrentLeavesIntro: {
@@ -931,7 +931,7 @@ const pages = {
       "Family or medical leave insurance, such as a maternity leave policy",
     ],
     sectionLabel:
-      "Will you use any employer-sponsored benefits during your leave dates for paid leave?",
+      "Will you use any employer-sponsored benefits from this employer during your PFML leave?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsEmployerBenefitsDetails: {
