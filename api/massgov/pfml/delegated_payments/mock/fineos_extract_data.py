@@ -342,6 +342,8 @@ def generate_payment_extract_files(
         # Auto generated: c_value, i_value, leave_request_id
         fineos_payments_data = FineosPaymentData(
             generate_defaults=True,
+            c_value=scenario_data.payment_c_value,
+            i_value=scenario_data.payment_i_value,
             include_claim_details=scenario_descriptor.include_non_vpei_records,
             include_payment_details=scenario_descriptor.include_non_vpei_records,
             include_requested_absence=scenario_descriptor.include_non_vpei_records,
@@ -365,9 +367,6 @@ def generate_payment_extract_files(
             event_reason=event_reason,
             payee_identifier=payee_identifier,
         )
-
-        scenario_data.payment_c_value = fineos_payments_data.c_value
-        scenario_data.payment_i_value = fineos_payments_data.i_value
 
         fineos_payments_dataset.append(fineos_payments_data)
 

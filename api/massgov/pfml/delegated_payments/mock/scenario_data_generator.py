@@ -2,6 +2,8 @@ import uuid
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+import faker
+
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
@@ -34,6 +36,9 @@ from massgov.pfml.experian.physical_address.client.mock import MockClient
 from massgov.pfml.experian.physical_address.client.models import Confidence
 
 logger = logging.get_logger(__name__)
+
+fake = faker.Faker()
+fake.seed_instance(1212)
 
 
 # == Constants ==
@@ -241,6 +246,9 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
                     fineos_notification_id=fineos_notification_id,
                     fineos_customer_number=fineos_customer_number,
                 )
+
+                scenario_data.payment_c_value = "7326"
+                scenario_data.payment_i_value = str(fake.unique.random_int())
 
                 scenario_dataset.append(scenario_data)
 

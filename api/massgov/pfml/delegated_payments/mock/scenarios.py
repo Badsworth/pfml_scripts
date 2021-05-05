@@ -63,6 +63,7 @@ class ScenarioName(Enum):
 
     # Audit
     AUDIT_REJECTED = "AUDIT_REJECTED"
+    AUDIT_REJECTED_THEN_ACCEPTED = "AUDIT_REJECTED_THEN_ACCEPTED"
 
     # Returns
     PUB_ACH_PRENOTE_RETURN = "PUB_ACH_PRENOTE_RETURN"
@@ -103,6 +104,7 @@ class ScenarioDescriptor:
 
     leave_request_decision: str = "Approved"
     is_audit_approved: bool = True
+    is_audit_approved_delayed: bool = False
 
     negative_payment_amount: bool = False
 
@@ -272,6 +274,22 @@ SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {
     s.scenario_name: s for s in SCENARIO_DESCRIPTORS
 }
 
+DELAYED_SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
+        is_audit_approved=False,
+        is_audit_approved_delayed=True,
+    ),
+]
+
+DELAYED_SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {
+    s.scenario_name: s for s in DELAYED_SCENARIO_DESCRIPTORS
+}
+
 
 def get_scenario_by_name(scenario_name: ScenarioName) -> Optional[ScenarioDescriptor]:
-    return SCENARIO_DESCRIPTORS_BY_NAME[scenario_name]
+    scenario_descriptor = SCENARIO_DESCRIPTORS_BY_NAME.get(scenario_name)
+    if scenario_descriptor is None:
+        scenario_descriptor = DELAYED_SCENARIO_DESCRIPTORS_BY_NAME.get(scenario_name)
+
+    return scenario_descriptor
