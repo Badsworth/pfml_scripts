@@ -22,7 +22,8 @@ export const CaringLeaveAttestation = (props) => {
     "leave_details.caring_leave_metadata.relationship_to_caregiver"
   );
 
-  const handleSubmit = () => {
+  const handleSubmit = (event) => {
+    event.preventDefault();
     appLogic.portalFlow.goToNextPage({ claim }, query);
   };
 
