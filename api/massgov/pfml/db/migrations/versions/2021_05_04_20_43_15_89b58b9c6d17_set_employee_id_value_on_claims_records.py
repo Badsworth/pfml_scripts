@@ -5,6 +5,8 @@ Revises: a113c523fedf
 Create Date: 2021-05-04 20:43:15.784837
 
 """
+import math
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
@@ -42,7 +44,7 @@ def upgrade():
     null_employee_claims = connection.execute(
         sa.select([claims.c.claim_id]).where(claims.c.employee_id is None)
     ).fetchall()
-
+    connection.execute(sa.select([claims.c.claim_id])).fetchall()
     applications_claims_and_tax_identifier_ids = connection.execute(
         sa.select([
             applications.c.application_id,
