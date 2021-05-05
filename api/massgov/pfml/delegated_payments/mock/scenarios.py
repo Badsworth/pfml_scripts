@@ -46,6 +46,8 @@ class ScenarioName(Enum):
 
     # Prenote
     NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE = "NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE"
+
+    # TODO not a real scenario - remove
     EFT_ACCOUNT_NOT_PRENOTED = "EFT_ACCOUNT_NOT_PRENOTED"
 
     # Address Verification
