@@ -36,7 +36,16 @@ from massgov.pfml.db.models.applications import (
     RelationshipQualifier,
     RelationshipToCaregiver,
 )
-from massgov.pfml.db.models.employees import Address, Claim, Country, Employer, PaymentMethod, User
+from massgov.pfml.db.models.employees import (
+    Address,
+    Claim,
+    Country,
+    Employee,
+    Employer,
+    PaymentMethod,
+    TaxIdentifier,
+    User,
+)
 from massgov.pfml.fineos.exception import FINEOSNotFound
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
@@ -140,11 +149,10 @@ def send_to_fineos(
     customer = build_customer_model(application, current_user)
     absence_case = build_absence_case(application)
     contact_details = build_contact_details(application)
+    tax_identifier = application.tax_identifier.tax_identifier
 
     # Create the FINEOS client.
     fineos = massgov.pfml.fineos.create_client()
-
-    tax_identifier = application.tax_identifier.tax_identifier
 
     fineos_user_id = register_employee(
         fineos, tax_identifier, application.employer_fein, db_session
@@ -153,21 +161,50 @@ def send_to_fineos(
     fineos.update_customer_details(fineos_user_id, customer)
     new_case = fineos.start_absence(fineos_user_id, absence_case)
 
+    employee = (
+        db_session.query(Employee)
+        .join(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier == tax_identifier)
+        .one_or_none()
+    )
     employer = (
         db_session.query(Employer)
         .filter(Employer.employer_fein == application.employer_fein)
         .one_or_none()
     )
 
+    # Create a claim here since it's the earliest place we can
+    # begin surfacing the claim information to leave admins,
+    # and most importantly the Claim is how the Application
+    # references the fineos_absence_id, which is shown to
+    # the Claimant once they have an absence case created
     new_claim = Claim(
         fineos_absence_id=new_case.absenceId,
         fineos_notification_id=new_case.notificationCaseId,
         absence_period_start_date=new_case.startDate,
         absence_period_end_date=new_case.endDate,
-        employee_id=application.employee_id,
     )
+    if employee:
+        new_claim.employee = employee
+    else:
+        logger.warning(
+            "Did not find Employee to associate to Claim.",
+            extra={
+                "application.absence_case_id": new_case.absenceId,
+                "application.application_id": application.application_id,
+            },
+        )
     if employer:
         new_claim.employer = employer
+    else:
+        logger.warning(
+            "Did not find Employer to associate to Claim.",
+            extra={
+                "application.absence_case_id": new_case.absenceId,
+                "application.application_id": application.application_id,
+            },
+        )
+
     if application.leave_type_id:
         new_claim.claim_type_id = application.leave_type.absence_to_claim_type
 
@@ -361,7 +398,7 @@ def build_contact_details(
 def build_customer_address(
     application_address: Address,
 ) -> massgov.pfml.fineos.models.customer_api.CustomerAddress:
-    """ Convert an application's address into a FINEOS API CustomerAddress model."""
+    """Convert an application's address into a FINEOS API CustomerAddress model."""
     # Note: In the FINEOS model:
     # - addressLine1 = Address Line 1
     # - addressLine2 = Address Line 2

@@ -268,6 +268,8 @@ class Application(Base):
     nickname = Column(Text)
     requestor = Column(Integer)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), nullable=True, unique=True)
+    # TODO (EMPLOYER-1213) Remove employee_id and employer_id from Application table.
+    # We store these on the Claim instead.
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True)
     has_mailing_address = Column(Boolean)
