@@ -6,6 +6,7 @@ import sqlalchemy as sa
 from alembic.operations import Operations
 from alembic.migration import MigrationContext
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql.expression import bindparam
 
 from massgov.pfml.db import create_engine, get_config
 
@@ -77,22 +78,26 @@ def upgrade(context):
     }
 
     bulk_update_params = []
-
     for tax_identifier_id in tax_identifier_ids_to_employees:
         claim_id = tax_identifier_ids_to_claim_ids[tax_identifier_id]
         employee_id = tax_identifier_ids_to_employees[tax_identifier_id]
-        bulk_update_params.append({'claim_id': claim_id, 'employee_id': employee_id})
+        bulk_update_params.append({'_claim_id': claim_id, 'employee_id': employee_id})
 
     batch_size = 5
     total_batches = math.ceil(len(bulk_update_params) / batch_size)
     current_batch = 0
 
-    from massgov.pfml.db.models.employees import Claim
+    stmt = claims.update(). \
+        where(claims.c.claim_id == bindparam('_claim_id')).values(
+        {
+            'employee_id': bindparam('employee_id'),
+        }
+    )
+
     while current_batch < total_batches:
-        session = sa.orm.Session(bind=connection)
-        session.bulk_update_mappings(
-            Claim,
-            bulk_update_params[current_batch * batch_size: (current_batch + 1) * batch_size],
+        connection.execute(
+            stmt,
+            bulk_update_params[current_batch * batch_size: (current_batch + 1) * batch_size]
         )
         current_batch += 1
         """
