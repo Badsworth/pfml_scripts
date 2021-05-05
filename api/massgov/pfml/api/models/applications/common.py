@@ -369,6 +369,7 @@ class EmployerBenefit(PydanticBaseModel):
     benefit_end_date: Optional[date]
     benefit_amount_dollars: Optional[Decimal]
     benefit_amount_frequency: Optional[AmountFrequency]
+    is_full_salary_continuous: Optional[bool]
 
 
 class OtherIncome(PydanticBaseModel):

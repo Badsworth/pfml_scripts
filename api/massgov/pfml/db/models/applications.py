@@ -231,8 +231,31 @@ class PreviousLeave(Base):
         Integer,
         ForeignKey("lk_previous_leave_qualifying_reason.previous_leave_qualifying_reason_id"),
     )
+    worked_per_week_minutes = Column(Integer)
+    leave_minutes = Column(Integer)
     leave_reason = relationship(LkPreviousLeaveQualifyingReason)
+    type = Column(Text)
+
+    __mapper_args__ = {"polymorphic_on": type, "polymorphic_identity": "previous_leave"}
+
+
+# TODO (CP-2123): Remove this class when we remove references to previous_leaves
+class PreviousLeaveDeprecated(PreviousLeave):
     application = relationship("Application", back_populates="previous_leaves")
+    __mapper_args__ = {"polymorphic_identity": "deprecated"}
+
+
+# The Application model will have references to previous_leaves for both other and same reasons
+# In order for sqlalchemy to distinguish between the 2, we are making PreviousLeave polymorphic
+# https://docs.sqlalchemy.org/en/14/orm/inheritance.html#single-table-inheritance
+class PreviousLeaveOtherReason(PreviousLeave):
+    application = relationship("Application", back_populates="previous_leaves_other_reason")
+    __mapper_args__ = {"polymorphic_identity": "other_reason"}
+
+
+class PreviousLeaveSameReason(PreviousLeave):
+    application = relationship("Application", back_populates="previous_leaves_same_reason")
+    __mapper_args__ = {"polymorphic_identity": "same_reason"}
 
 
 class Application(Base):
@@ -302,6 +325,8 @@ class Application(Base):
     caring_leave_metadata_id = Column(
         UUID(as_uuid=True), ForeignKey("caring_leave_metadata.caring_leave_metadata_id")
     )
+    has_previous_leaves_same_reason = Column(Boolean)
+    has_previous_leaves_other_reason = Column(Boolean)
 
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
@@ -339,7 +364,15 @@ class Application(Base):
     )
     employer_benefits = relationship("EmployerBenefit", back_populates="application", uselist=True)
     other_incomes = relationship("OtherIncome", back_populates="application", uselist=True)
-    previous_leaves = relationship("PreviousLeave", back_populates="application", uselist=True)
+    previous_leaves = relationship(
+        "PreviousLeaveDeprecated", back_populates="application", uselist=True
+    )
+    previous_leaves_other_reason = relationship(
+        "PreviousLeaveOtherReason", back_populates="application", uselist=True,
+    )
+    previous_leaves_same_reason = relationship(
+        "PreviousLeaveSameReason", back_populates="application", uselist=True,
+    )
 
 
 class CaringLeaveMetadata(Base):
@@ -447,6 +480,7 @@ class EmployerBenefit(Base):
     benefit_amount_frequency_id = Column(
         Integer, ForeignKey("lk_amount_frequency.amount_frequency_id")
     )
+    is_full_salary_continuous = Column(Boolean)
 
     application = relationship(Application, back_populates="employer_benefits")
     benefit_type = relationship(LkEmployerBenefitType)
