@@ -31,6 +31,7 @@ export function before(): void {
       employerShowAddOrganization: true,
       employerShowVerifications: true,
       employerShowDashboard: true,
+      showCaringLeaveType: true,
     }),
     { log: true }
   );
@@ -335,6 +336,7 @@ export function selectClaimType(application: ApplicationRequestBody): void {
       "I need to bond with my child after birth, adoption, or foster placement.",
     "Pregnancy/Maternity":
       "I can’t work due to an illness, injury, or pregnancy.",
+    // "Care for a Family Member": "I need to care for my family member",
   };
   cy.contains(reasonMap[reason]).click();
   if (reasonQualifier) {
@@ -963,6 +965,9 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
     reason === "Pregnancy/Maternity"
   ) {
     answerPregnancyQuestion(application);
+    // } else if (reason === "") {
+    //   answerCaringLeaveQuestions(application);
+    // }
   } else {
     enterBondingDateInfo(application);
   }
@@ -980,9 +985,56 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   if (reason === "Child Bonding") {
     confirmEligibleParent();
   }
+  // else if (reason === "Care for a Family Member") {
+  //   confirmEligibleCargiver();
+  // }
   onPage("review");
   confirmInfo();
 }
+
+export function confirmEligibleCargiver(): void {
+  // workaround for errors when running in cypress
+  // the form makes a post request to cloudfront so we want to prevent this from running
+  // todo: before merging remove - a PR for this fix will be made by the claimant portal team
+  cy.get('form[class="usa-form"').then(($form) =>
+    $form.on("submit", (e) => e.preventDefault())
+  );
+
+  cy.contains("I understand and agree").click({ force: true });
+}
+
+// export function answerCaringLeaveQuestions(
+//   application: ApplicationRequestBody
+// ): void {
+//   cy.contains("I am caring for my sibling.").click();
+//   cy.contains("Save and continue").click();
+//   cy.get(
+//     'input[name="leave_details.caring_leave_metadata.family_member_first_name"'
+//   ).type(
+//     application.leave_details?.caring_leave_metadata
+//       ?.family_member_first_name || ""
+//   );
+//   cy.get(
+//     'input[name="leave_details.caring_leave_metadata.family_member_last_name"'
+//   ).type(
+//     application.leave_details?.caring_leave_metadata?.family_member_last_name ||
+//       ""
+//   );
+//   cy.contains("Save and continue").click();
+//   if (application.leave_details?.caring_leave_metadata) {
+//     const familyMemberDOB = new Date(
+//       application.leave_details?.caring_leave_metadata?.family_member_date_of_birth
+//     );
+//     cy.labelled("Month").type(
+//       (familyMemberDOB.getMonth() + 1).toString() as string
+//     );
+//     cy.labelled("Day").type(familyMemberDOB.getUTCDate().toString() as string);
+//     cy.labelled("Year").type(
+//       familyMemberDOB.getUTCFullYear().toString() as string
+//     );
+//   }
+//   cy.contains("Save and continue").click();
+// }
 
 export function submitPartsTwoThreeNoLeaveCert(
   paymentPreference: PaymentPreferenceRequestBody
