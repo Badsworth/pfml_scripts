@@ -205,8 +205,8 @@ def send_to_fineos(
             },
         )
 
-    if application.leave_type_id:
-        new_claim.claim_type_id = application.leave_type.absence_to_claim_type
+    if application.leave_reason_id:
+        new_claim.claim_type_id = application.leave_reason.absence_to_claim_type
 
     application.claim = new_claim
 

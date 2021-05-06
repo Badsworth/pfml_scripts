@@ -160,7 +160,7 @@ def test_e2e_pub_payments(
     # [Day 1 - Between 7:00 - 9:00 PM] Generate FINEOS vendor extract files
     # ===============================================================================
 
-    with freeze_time("2021-05-01 20:00:00"):
+    with freeze_time("2021-05-01 20:00:00", tz_offset=5):
         fineos_timestamp_prefix = get_current_timestamp_prefix()
 
         generate_fineos_extract_files(test_dataset.scenario_dataset)
@@ -169,7 +169,7 @@ def test_e2e_pub_payments(
     # [Day 1 - After 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
     # ===============================================================================
 
-    with freeze_time("2021-05-01 21:30:00"):
+    with freeze_time("2021-05-01 21:30:00", tz_offset=5):
         # == Run the task
         process_fineos_extracts(
             test_dataset, mock_experian_client, test_db_session, test_db_other_session
@@ -671,14 +671,14 @@ def test_e2e_pub_payments(
     # [Day 2 - Before 5:00 PM] Payment Integrity Team returns Payment Rejects File
     # ===============================================================================
 
-    with freeze_time("2021-05-02 14:00:00"):
+    with freeze_time("2021-05-02 14:00:00", tz_offset=5):
         generate_rejects_file(test_dataset)
 
     # ==============================================================================================
     # [Day 2 - Between 5:00 - 7:00 PM PM] Run the PUB Processing ECS task - Rejects, PUB Transaction Files, Writeback
     # ==============================================================================================
 
-    with freeze_time("2021-05-02 18:00:00"):
+    with freeze_time("2021-05-02 18:00:00", tz_offset=5):
         # == Run the task
         run_process_pub_payments_ecs_task(
             db_session=test_db_session,
@@ -1106,14 +1106,14 @@ def test_e2e_pub_payments(
     # [Day 3 - 9:00 AM] PUB sends ACH and Check response files
     # ===============================================================================
 
-    with freeze_time("2021-05-03 09:00:00"):
+    with freeze_time("2021-05-03 09:00:00", tz_offset=5):
         generate_pub_returns(test_dataset)
 
     # ==============================================================================================
     # [Day 3 - 11:00 AM] Run the PUB Response ECS task - response, writeback, reports
     # ==============================================================================================
 
-    with freeze_time("2021-05-03 11:00:00"):
+    with freeze_time("2021-05-03 11:00:00", tz_offset=5):
 
         # == Run the task
         run_process_pub_responses_ecs_task(
@@ -1419,9 +1419,35 @@ def test_e2e_pub_payments(
             test_db_session,
         )
 
-    # TODO new extract to work with same payments (maybe reuse the same extract with name updated)
-    # - prenotes should move along
-    # - all others should error since they are already processed
+    # ===============================================================================
+    # [Day 9 - 7:00 PM] Generate FINEOS extract files
+    # ===============================================================================
+    with freeze_time("2021-05-09 18:00:00", tz_offset=5):
+        generate_fineos_extract_files(test_dataset.scenario_dataset)
+
+    # ===============================================================================
+    # [Day 9 - 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
+    # ===============================================================================
+
+    with freeze_time("2021-05-09 21:30:00", tz_offset=5):
+        process_fineos_extracts(
+            test_dataset, mock_experian_client, test_db_session, test_db_other_session
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,],
+            end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+            db_session=test_db_session,
+        )
+
+        # validate other scenarios that have reached an end state are erroring out
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=stage_1_happy_path_scenarios,
+            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+            db_session=test_db_session,
+        )
 
 
 def test_e2e_pub_payments_delayed_scenarios(
@@ -1453,14 +1479,14 @@ def test_e2e_pub_payments_delayed_scenarios(
     # [Day 1 - Between 7:00 - 9:00 PM] Generate FINEOS extract files
     # ===============================================================================
 
-    with freeze_time("2021-05-01 20:00:00"):
+    with freeze_time("2021-05-01 20:00:00", tz_offset=5):
         generate_fineos_extract_files(test_dataset.scenario_dataset)
 
     # ===============================================================================
     # [Day 1 - After 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
     # ===============================================================================
 
-    with freeze_time("2021-05-01 21:30:00"):
+    with freeze_time("2021-05-01 21:30:00", tz_offset=5):
         process_fineos_extracts(
             test_dataset, mock_experian_client, test_db_session, test_db_other_session
         )
@@ -1472,18 +1498,32 @@ def test_e2e_pub_payments_delayed_scenarios(
             db_session=test_db_session,
         )
 
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,],
+            end_state=State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+            db_session=test_db_session,
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.INVALID_ADDRESS_FIXED,],
+            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+            db_session=test_db_session,
+        )
+
     # ===============================================================================
     # [Day 2 - Before 5:00 PM] Payment Integrity Team returns Payment Rejects File
     # ===============================================================================
 
-    with freeze_time("2021-05-02 14:00:00"):
+    with freeze_time("2021-05-02 14:00:00", tz_offset=5):
         generate_rejects_file(test_dataset, round=1)
 
     # ============================================================================================================
     # [Day 2 - Between 5:00 - 7:00 PM] Run the PUB Processing ECS task - Rejects, PUB Transaction Files, Writeback
     # ============================================================================================================
 
-    with freeze_time("2021-05-02 18:00:00"):
+    with freeze_time("2021-05-02 18:00:00", tz_offset=5):
         run_process_pub_payments_ecs_task(
             db_session=test_db_session,
             log_entry_db_session=test_db_other_session,
@@ -1500,23 +1540,25 @@ def test_e2e_pub_payments_delayed_scenarios(
     # ===============================================================================
     # [Day 2 - 7:00 PM] Generate FINEOS extract files
     # ===============================================================================
-    with freeze_time("2021-05-02 19:00:00"):
-        generate_fineos_extract_files(test_dataset.scenario_dataset)
-
-    # TODO Scenarios to fix validation errors for address
+    with freeze_time("2021-05-02 19:00:00", tz_offset=5):
+        generate_fineos_extract_files(test_dataset.scenario_dataset, round=2)
 
     # ===============================================================================
     # [Day 2 - 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
     # ===============================================================================
 
-    with freeze_time("2021-05-02 21:00:00"):
+    with freeze_time("2021-05-02 21:00:00", tz_offset=5):
         process_fineos_extracts(
             test_dataset, mock_experian_client, test_db_session, test_db_other_session
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,],
+            scenario_names=[
+                ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
+                ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,
+                ScenarioName.INVALID_ADDRESS_FIXED,
+            ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=test_db_session,
         )
@@ -1525,14 +1567,14 @@ def test_e2e_pub_payments_delayed_scenarios(
     # [Day 3 - 9:00 AM] PUB sends ACH and Check response files
     # ===============================================================================
 
-    # with freeze_time("2021-05-03 09:00:00"):
+    # with freeze_time("2021-05-03 09:00:00", tz_offset=5):
     #     generate_pub_returns(test_dataset)
 
     # ==============================================================================================
     # [Day 3 - 11:00 AM] Run the PUB Response ECS task - response, writeback, reports
     # ==============================================================================================
 
-    # with freeze_time("2021-05-03 11:00:00"):
+    # with freeze_time("2021-05-03 11:00:00", tz_offset=5):
 
     #     # == Run the task
     #     run_process_pub_responses_ecs_task(
@@ -1545,14 +1587,14 @@ def test_e2e_pub_payments_delayed_scenarios(
     # [Day 3 - Before 5:00 PM] Payment Integrity Team returns Payment Rejects File
     # ===============================================================================
 
-    with freeze_time("2021-05-03 14:00:00"):
+    with freeze_time("2021-05-03 14:00:00", tz_offset=5):
         generate_rejects_file(test_dataset, round=2)
 
     # ============================================================================================================
     # [Day 3 - Between 5:00 - 7:00 PM] Run the PUB Processing ECS task - Rejects, PUB Transaction Files, Writeback
     # ============================================================================================================
 
-    with freeze_time("2021-05-03 18:00:00"):
+    with freeze_time("2021-05-03 18:00:00", tz_offset=5):
         run_process_pub_payments_ecs_task(
             db_session=test_db_session,
             log_entry_db_session=test_db_other_session,
@@ -1569,14 +1611,14 @@ def test_e2e_pub_payments_delayed_scenarios(
     # ===============================================================================
     # [Day 3 - 7:00 PM] Generate FINEOS extract files
     # ===============================================================================
-    with freeze_time("2021-05-03 18:00:00"):
+    with freeze_time("2021-05-03 18:00:00", tz_offset=5):
         generate_fineos_extract_files(test_dataset.scenario_dataset)
 
     # ===============================================================================
     # [Day 3 - 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
     # ===============================================================================
 
-    with freeze_time("2021-05-03 21:30:00"):
+    with freeze_time("2021-05-03 21:30:00", tz_offset=5):
         process_fineos_extracts(
             test_dataset, mock_experian_client, test_db_session, test_db_other_session
         )
@@ -1607,7 +1649,7 @@ def generate_test_dataset(scenario_descriptors: List[ScenarioDescriptor]) -> Tes
     return TestDataSet(scenario_dataset)
 
 
-def generate_fineos_extract_files(scenario_dataset: List[ScenarioData]):
+def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: int = 1):
     s3_config = payments_config.get_s3_config()
 
     fineos_data_export_path = s3_config.fineos_data_export_path
@@ -1615,7 +1657,7 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData]):
     # TODO generate claimant extract files - PUB-165
 
     generate_payment_extract_files(
-        scenario_dataset, fineos_data_export_path, payments_util.get_now()
+        scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=round
     )
 
     # TODO Confirm expected claimant files were generated - PUB-165

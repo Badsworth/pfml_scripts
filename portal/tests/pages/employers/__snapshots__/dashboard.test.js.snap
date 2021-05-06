@@ -31,6 +31,7 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
 >
   <th
     data-label="Employee name"
+    data-test="employee_name"
     scope="row"
   >
     <a
@@ -132,6 +133,7 @@ exports[`Employer dashboard renders claim rows without links if employer is not 
 >
   <th
     data-label="Employee name"
+    data-test="employee_name"
     scope="row"
   >
     Jane Doe

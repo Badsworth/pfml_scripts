@@ -11,6 +11,7 @@ export const fields = [];
 export const ConcurrentLeavesDetails = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
+  const employer_fein = claim.employer_fein;
 
   const handleSave = () => {
     appLogic.portalFlow.goToNextPage({ claim }, query);
@@ -22,7 +23,9 @@ export const ConcurrentLeavesDetails = (props) => {
       onSave={handleSave}
     >
       <Heading level="2" size="1">
-        {t("pages.claimsConcurrentLeavesDetails.sectionLabel")}
+        {t("pages.claimsConcurrentLeavesDetails.sectionLabel", {
+          employer_fein,
+        })}
       </Heading>
     </QuestionPage>
   );

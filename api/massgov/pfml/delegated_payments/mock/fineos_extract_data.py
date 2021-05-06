@@ -13,8 +13,9 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import PaymentMethod, PaymentTransactionType
 from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     INVALID_ADDRESS,
+    MATCH_ADDRESS,
     MULTI_MATCH_ADDRESS,
-    VALID_ADDRESS,
+    NO_MATCH_ADDRESS,
     ScenarioData,
 )
 
@@ -281,7 +282,10 @@ def create_fineos_payment_extract_files(
 
 
 def generate_payment_extract_files(
-    scenario_dataset: List[ScenarioData], folder_path: str, date_of_extract: datetime
+    scenario_dataset: List[ScenarioData],
+    folder_path: str,
+    date_of_extract: datetime,
+    round: int = 1,
 ) -> None:
     # create the scenario based fineos data for the extract
     fineos_payments_dataset: List[FineosPaymentData] = []
@@ -333,10 +337,17 @@ def generate_payment_extract_files(
         # TODO Unknown
 
         if scenario_descriptor.fineos_extract_address_valid:
-            mock_address = VALID_ADDRESS
+            mock_address = MATCH_ADDRESS
         elif scenario_descriptor.fineos_extract_address_multiple_matches:
             mock_address = MULTI_MATCH_ADDRESS
         else:
+            if scenario_descriptor.fineos_extract_address_valid_after_fix and round > 1:
+                mock_address = MATCH_ADDRESS
+            else:
+                mock_address = NO_MATCH_ADDRESS
+
+        fix_address = scenario_descriptor.invalid_address_fixed and round > 1
+        if scenario_descriptor.invalid_address and (not fix_address):
             mock_address = INVALID_ADDRESS
 
         # Auto generated: c_value, i_value, leave_request_id

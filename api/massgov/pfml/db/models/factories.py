@@ -416,6 +416,14 @@ class PhoneFactory(BaseFactory):
     phone_type_id = application_models.PhoneType.CELL.phone_type_id
 
 
+class LeaveReasonFactory(BaseFactory):
+    class Meta:
+        model = application_models.LkLeaveReason
+
+    leave_reason_id = None
+    leave_reason_description = None
+
+
 class ApplicationFactory(BaseFactory):
     class Meta:
         model = application_models.Application
@@ -469,7 +477,6 @@ class ApplicationFactory(BaseFactory):
     relationship_to_caregiver_id = None
     relationship_qualifier_id = None
     employer_notification_method_id = None
-    leave_type_id = None
     leave_reason_id = (
         application_models.LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
     )

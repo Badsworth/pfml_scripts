@@ -25,6 +25,25 @@ const verifiableUserLeaveAdministrator = new UserLeaveAdministrator({
   verified: false,
 });
 
+const getClaims = (leaveAdmin) => {
+  return [
+    new Claim({
+      created_at: "2021-01-15",
+      employee: new ClaimEmployee({
+        first_name: "Jane",
+        middle_name: null,
+        last_name: "Doe",
+      }),
+      employer: new ClaimEmployer({
+        employer_dba: leaveAdmin.employer_dba,
+        employer_fein: leaveAdmin.employer_fein,
+      }),
+      fineos_absence_id: "NTN-111-ABS-01",
+      fineos_absence_status: "Approved",
+    }),
+  ];
+};
+
 const setup = (claims = [], userAttrs = {}, paginationMeta = {}) => {
   let appLogic;
   // Need to set an accurate pathname so portalFlow can return the correct links to route to
@@ -64,25 +83,6 @@ const setup = (claims = [], userAttrs = {}, paginationMeta = {}) => {
 };
 
 describe("Employer dashboard", () => {
-  const getClaims = (leaveAdmin) => {
-    return [
-      new Claim({
-        created_at: "2021-01-15",
-        employee: new ClaimEmployee({
-          first_name: "Jane",
-          middle_name: null,
-          last_name: "Doe",
-        }),
-        employer: new ClaimEmployer({
-          employer_dba: leaveAdmin.employer_dba,
-          employer_fein: leaveAdmin.employer_fein,
-        }),
-        fineos_absence_id: "NTN-111-ABS-01",
-        fineos_absence_status: "Approved",
-      }),
-    ];
-  };
-
   beforeEach(() => {
     process.env.featureFlags = { employerShowDashboard: true };
   });
@@ -144,6 +144,24 @@ describe("Employer dashboard", () => {
 
     expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
     expect(wrapper.find("ClaimTableRows").dive().find("a")).toHaveLength(0);
+  });
+
+  it("allows Claim.employee to be null", () => {
+    let claims = getClaims(verifiedUserLeaveAdministrator);
+    claims = claims.map((claim) => {
+      claim.employee = null;
+      return claim;
+    });
+
+    const { wrapper } = setup(claims);
+
+    expect(
+      wrapper
+        .find("ClaimTableRows")
+        .dive()
+        .find('[data-test="employee_name"]')
+        .text()
+    ).toBe("--");
   });
 
   it("does not render Employer DBA when user has only one Employer associated", () => {
