@@ -312,3 +312,19 @@ variable "enable_pub_automation_process_returns" {
   description = "Enable scheduling for pub automation return processing task"
   default     = false
 }
+variable "dor_fineos_etl_definition" {
+  description = "Step function definition for DOR FINEOS ETL"
+  type        = string
+  default     = <<-END
+    {
+      "StartAt": "nothing",
+      "States": {"nothing": {"Type": "Pass", "End": true}}
+    }
+    END
+}
+
+variable "dor_fineos_etl_schedule_expression" {
+  description = "EventBridge schedule for DOR FINEOS ETL"
+  type        = string
+  default     = "cron(30 4 * * ? *)"
+}
