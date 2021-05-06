@@ -196,7 +196,8 @@ export const steps: Cfg.StoredStep[] = [
         );
         await browser.selectByText(
           relationshipSelect,
-          leave_details?.relationship_to_caregiver ?? "Child"
+          leave_details?.caring_leave_metadata?.relationship_to_caregiver ??
+            "Child"
         );
         await browser.wait(1000);
 
@@ -207,7 +208,7 @@ export const steps: Cfg.StoredStep[] = [
           )
         );
         const relQualifier1 =
-          leave_details?.relationship_qualifier ??
+          leave_details?.caring_leave_metadata?.relationship_to_caregiver ??
           leave_details?.reason_qualifier === "Foster Care"
             ? "Foster"
             : leave_details?.reason_qualifier === "Adoption"
