@@ -19,6 +19,7 @@ import StepList from "../../components/StepList";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
+import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
@@ -37,12 +38,12 @@ export const Checklist = (props) => {
     appErrors,
     claim.application_id
   );
+
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
   ]);
-  const certificationDocuments = findDocumentsByTypes(documents, [
-    DocumentType.certification.medicalCertification,
-  ]);
+
+  const certificationDocuments = findDocumentsByLeaveReason(documents, claim);
 
   const partOneSubmitted = query["part-one-submitted"];
   const paymentPrefSubmitted = query["payment-pref-submitted"];
