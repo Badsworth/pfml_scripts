@@ -686,6 +686,71 @@ def test_e2e_pub_payments(
             config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
         )
 
+        assert_ref_file(
+            f"{s3_config.pfml_payment_rejects_archive_path}/processed/2021-05-02/Payment-Rejects.csv",
+            ReferenceFileType.DELEGATED_PAYMENT_REJECTS,
+            test_db_session,
+        )
+
+        assert_ref_file(
+            f"{s3_config.pfml_pub_check_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-EZ-CHECK.csv",
+            ReferenceFileType.PUB_EZ_CHECK,
+            test_db_session,
+        )
+
+        positive_pay_ez_check_payments = get_payments_in_end_state(
+            test_db_session, State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT
+        )
+        ez_check_file_contents = file_util.read_file(
+            f"{s3_config.pfml_pub_check_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-EZ-CHECK.csv"
+        )
+
+        for payment in positive_pay_ez_check_payments:
+            assert ez_check_file_contents.index(payment.claim.fineos_absence_id) != -1
+
+        assert_ref_file(
+            f"{s3_config.pfml_pub_check_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-POSITIVE-PAY.txt",
+            ReferenceFileType.PUB_POSITIVE_PAYMENT,
+            test_db_session,
+        )
+
+        positive_pay_file_contents = file_util.read_file(
+            f"{s3_config.pfml_pub_check_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-POSITIVE-PAY.txt",
+        )
+
+        for payment in positive_pay_ez_check_payments:
+            assert positive_pay_file_contents.index(str(payment.check.check_number)) != -1
+
+        assert_ref_file(
+            f"{s3_config.pfml_pub_ach_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-NACHA",
+            ReferenceFileType.PUB_NACHA,
+            test_db_session,
+        )
+
+        ach_file_contents = file_util.read_file(
+            f"{s3_config.pfml_pub_ach_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-NACHA",
+        )
+
+        ach_payments = get_payments_in_end_state(
+            test_db_session, State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT
+        )
+
+        for payment in ach_payments:
+            assert ach_file_contents.index(payment.pub_eft.account_nbr) != -1
+
+        assert_ref_file(
+            f"{s3_config.pfml_fineos_writeback_archive_path}sent/2021-05-02/2021-05-02-19-00-00-pei_writeback.csv",
+            ReferenceFileType.PEI_WRITEBACK,
+            test_db_session,
+        )
+
+        for report_name in CREATE_PUB_FILES_REPORTS:
+            assert_ref_file(
+                f"{s3_config.pfml_error_reports_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-{report_name.value}.csv",
+                ReferenceFileType.DELEGATED_PAYMENT_REPORT_FILE,
+                test_db_session,
+            )
+
         # == Validate payments state logs
 
         # End State
