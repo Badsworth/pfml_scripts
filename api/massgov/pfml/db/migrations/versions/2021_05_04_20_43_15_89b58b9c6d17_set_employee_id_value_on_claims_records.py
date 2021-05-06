@@ -43,7 +43,7 @@ def upgrade():
     )
 
     null_employee_claims = connection.execute(
-        sa.select([claims.c.claim_id]).where(claims.c.employee_id == None)
+        sa.select([claims.c.claim_id]).where(claims.c.employee_id == None)  # noqa: E711
     ).fetchall()
     null_employee_claim_ids = set([row.claim_id for row in null_employee_claims])
 
