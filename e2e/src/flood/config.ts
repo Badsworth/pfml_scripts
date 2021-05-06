@@ -23,11 +23,8 @@ export const globalElementSettings: TestSettings = {
   clearCookies: true,
 };
 
-export const dataBaseUrl = config("E2E_FLOOD_DATA_BASEURL");
-export const documentUrl = "forms/hcp-real.pdf";
 export const PortalBaseUrl = config("E2E_PORTAL_BASEURL");
 export const APIBaseUrl = config("E2E_API_BASEURL");
-export const floodToken = config("E2E_FLOOD_API_TOKEN");
 
 export type LSTStepFunction = (
   browser: Browser,
@@ -82,10 +79,6 @@ export const agentActions: AgentActions = {
 };
 
 export type StandardDocumentType = DocumentUploadRequest["document_type"];
-export const standardDocuments: StandardDocumentType[] = [
-  "State managed Paid Leave Confirmation",
-  "Identification Proof",
-];
 
 export enum ClaimType {
   ACCIDENT = 1, // "Accident or treatment required for an injury"

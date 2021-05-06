@@ -5,7 +5,6 @@ import assert from "assert";
 
 let fineosId: string;
 let claimType: Cfg.ClaimType;
-const isMain = require.main === module;
 
 export const settings = {
   ...Cfg.globalElementSettings,
@@ -489,9 +488,7 @@ export const steps: Cfg.StoredStep[] = [
           browser,
           By.css("#uploadpath")
         );
-        await uploadInput.uploadFile(
-          `${isMain ? "../../../" : ""}${Cfg.documentUrl}`
-        );
+        await uploadInput.uploadFile("forms/hcp-real.pdf");
         const uploadOkButton = await Util.waitForElement(
           browser,
           By.css("input[type='submit'][value='OK']")
@@ -546,9 +543,9 @@ async function fillContinuousLeavePeriods(
 }
 
 export default async (): Promise<void> => {
-  TestData.fromJSON<Cfg.LSTSimClaim>(
-    `../${await Cfg.dataBaseUrl}/claims.json`
-  ).filter((line) => line.scenario === scenario);
+  TestData.fromJSON<Cfg.LSTSimClaim>(`../data/claims.json`).filter(
+    (line) => line.scenario === scenario
+  );
 
   steps.forEach((action) => {
     step(action.name, action.test as StepFunction<unknown>);

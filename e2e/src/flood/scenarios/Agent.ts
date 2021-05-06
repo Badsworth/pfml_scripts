@@ -155,9 +155,9 @@ export default (
   return {
     steps,
     default: async (): Promise<void> => {
-      TestData.fromJSON<Cfg.LSTSimClaim>(
-        `../${await Cfg.dataBaseUrl}/claims.json`
-      ).filter((line) => line.scenario === scenario);
+      TestData.fromJSON<Cfg.LSTSimClaim>(`../data/claims.json`).filter(
+        (line) => line.scenario === scenario
+      );
 
       steps.forEach((action) => {
         step(action.name, action.test as StepFunction<unknown>);

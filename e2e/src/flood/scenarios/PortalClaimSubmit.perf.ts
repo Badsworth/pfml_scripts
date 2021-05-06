@@ -101,9 +101,9 @@ export const steps: Cfg.StoredStep[] = [
 ];
 
 export default async (): Promise<void> => {
-  TestData.fromJSON<Cfg.LSTSimClaim>(
-    `../${await Cfg.dataBaseUrl}/claims.json`
-  ).filter((line) => line.scenario === scenario);
+  TestData.fromJSON<Cfg.LSTSimClaim>(`../data/claims.json`).filter(
+    (line) => line.scenario === scenario
+  );
 
   steps.forEach((action) => {
     step(action.name, action.test as StepFunction<unknown>);
@@ -462,7 +462,7 @@ async function uploadDocuments(
   data: Cfg.LSTSimClaim
 ): Promise<void> {
   for (const document of data.documents) {
-    const data = await readFile(Cfg.documentUrl);
+    const data = await readFile("forms/hcp-real.pdf");
     const name = `${document.document_type}.pdf`;
     const res = await fetchFormData(
       browser,
