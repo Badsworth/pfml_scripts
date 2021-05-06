@@ -1,14 +1,16 @@
-import { fineos, email } from "../../../../actions";
-import { extractLeavePeriod } from "../../../../../src/util/claims";
-import { getFineosBaseUrl } from "../../../../config";
-import { Submission } from "../../../../../src/types";
+import { fineos, email } from "../../actions";
+import { extractLeavePeriod } from "../../../src/util/claims";
+import { getFineosBaseUrl } from "../../config";
+import { Submission } from "../../../src/types";
+import { ApplicationRequestBody } from "../../../src/api";
 
-describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
+describe("Create a new continuous leave, bonding claim in FINEOS", () => {
   const submit = it(
     "Should be able to create a claim",
     { baseUrl: getFineosBaseUrl() },
     () => {
       fineos.before();
+
       cy.visit("/");
       cy.task("generateClaim", "BHAP1").then((claim) => {
         cy.stash("claim", claim.claim);
@@ -19,7 +21,6 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
         ) {
           throw new Error("Claim is missing a first name, last name, or SSN.");
         }
-
         fineos.searchClaimantSSN(claim.claim.tax_identifier);
         fineos.clickBottomWidgetButton("OK");
         fineos.assertOnClaimantPage(
@@ -30,8 +31,8 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
         fineos.createNotification(
           startDate,
           endDate,
-          "military care leave",
-          claim.claim.hours_worked_per_week ?? 40
+          "bonding claim",
+          claim.claim
         );
         cy.get("a[name*='CaseMapWidget']")
           .invoke("text")
@@ -46,6 +47,7 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
       });
     }
   );
+
   it(
     "I should receive an 'application started' notification",
     { retries: 0 },
@@ -60,13 +62,12 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
             "application started",
             submission.fineos_absence_id
           );
-          cy.log(subject);
           email
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                messageWildcard: submission.fineos_absence_id,
                 subject: subject,
+                messageWildcard: submission.fineos_absence_id,
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
