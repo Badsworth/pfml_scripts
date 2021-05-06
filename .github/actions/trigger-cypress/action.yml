@@ -27,6 +27,7 @@ runs:
   using: "composite"
   steps:
     - run: |
+        set -e
         if [ -z "${{ inputs.github_branch }}" ]; then
           # Capture the reference we need to trigger for. If we're inside a PR for any reason,
           # this will be $GITHUB_HEAD_REF. Otherwise, extract the branch name from $GITHUB_REF.
@@ -69,7 +70,7 @@ runs:
 
         echo "Workflow running at: https://github.com/${{ github.repository }}/actions/runs/${RUN_ID}"
 
-        if ['${{ inputs.wait_for_results }}' == 'true']; then
+        if [ '${{ inputs.wait_for_results }}' == 'true' ]; then echo "Yep"; else echo "Nope;" fi;
           # Wait for up to 20 minutes for this workflow to complete by looping with a 10s delay. We hope it will
           # never take this long to run the tests, but a timeout would not be helpful.
           for i in {1..120}; do
@@ -99,7 +100,7 @@ runs:
 
           echo "::error::Timeout while waiting for workflow to complete"
           exit 1
-        else 
+        else
           echo "Not waiting for test to complete"
         fi
       shell: bash
