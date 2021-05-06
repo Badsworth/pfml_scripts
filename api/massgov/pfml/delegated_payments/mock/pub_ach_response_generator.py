@@ -72,20 +72,18 @@ class PubACHResponseGenerator:
         is_return = scenario_descriptor.prenoted
         is_prenote = not is_return
 
-        if payment.pub_individual_id and (
-            scenario_descriptor.pub_ach_return_invalid_eft_prenote_id
-            or scenario_descriptor.pub_ach_return_invalid_payment_id
-        ):
+        pub_individual_id = payment.pub_individual_id                
+        if scenario_descriptor.pub_ach_return_payment_id_not_found:
             pub_individual_id = (
-                payment.pub_individual_id * 10
+                payment.pub_individual_id * 100
             )  # We might want to consider a different approach for this to avoid an overlap if we add a lot of scenarios. Maybe make it negative?
-        elif payment.pub_individual_id:
-            pub_individual_id = payment.pub_individual_id
 
         trans_code = get_trans_code(payment.pub_eft.bank_account_type_id, is_prenote, is_return)
 
         id_prefix = "E" if is_prenote else "P"
-        id_prefix = "X" + id_prefix if scenario_descriptor.pub_ach_return_invalid_id else id_prefix
+        
+        invlaid_format = scenario_descriptor.pub_ach_return_invalid_payment_id_format or scenario_descriptor.pub_ach_return_invalid_prenote_payment_id_format
+        id_prefix = "X" + id_prefix if invlaid_format else id_prefix
 
         if scenario_descriptor.pub_ach_response_return:
             return_type = 99
