@@ -214,6 +214,7 @@ const ClaimTableRows = (props) => {
       { absence_id: get(claim, "fineos_absence_id") }
     );
     const employerFein = get(claim, "employer.employer_fein");
+    const fullName = get(claim, "employee.fullName", "--");
     const isEmployerRegisteredInFineos = user.isEmployerRegisteredInFineos(
       employerFein
     );
@@ -231,9 +232,9 @@ const ClaimTableRows = (props) => {
       case "employee_name":
         // TODO (EMPLOYER-1178) Use <Link> for client-side navigation
         return isEmployerRegisteredInFineos ? (
-          <a href={claimRoute}>{get(claim, "employee.fullName")}</a>
+          <a href={claimRoute}>{fullName}</a>
         ) : (
-          get(claim, "employee.fullName")
+          fullName
         );
       case "employer_dba":
         return get(claim, "employer.employer_dba");
@@ -255,6 +256,7 @@ const ClaimTableRows = (props) => {
         data-label={t("pages.employersDashboard.tableColHeading", {
           context: tableColumnKeys[0],
         })}
+        data-test={tableColumnKeys[0]}
       >
         {getValueForColumn(claim, tableColumnKeys[0])}
       </th>
