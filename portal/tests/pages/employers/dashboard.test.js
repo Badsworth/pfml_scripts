@@ -97,6 +97,7 @@ describe("Employer dashboard", () => {
       .find("Trans")
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
 
+    expect(wrapper.find("Details")).toMatchSnapshot();
     expect(wrapper.find("PaginationSummary")).toMatchSnapshot();
     expect(wrapper.find("PaginationNavigation")).toMatchSnapshot();
   });

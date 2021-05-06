@@ -1781,6 +1781,15 @@ const pages = {
       "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
     startDateTooltip: "When an employee started a new leave application",
+    statusDescription_approved:
+      "<strong>Approved:</strong> DFML has approved this leave request.",
+    statusDescription_closed:
+      "<strong>Closed:</strong> The leave has passed and no action can be taken.",
+    statusDescription_denied:
+      "<strong>Denied:</strong> DFML has denied this leave request.",
+    statusDescription_none:
+      "<strong>“--” or no status:</strong> This leave request may require action from you; otherwise, it is awaiting a decision from DFML.",
+    statusDescriptionsLabel: "Status descriptions",
     tableColHeading_created_at: "Application start date",
     tableColHeading_employee_name: "Employee name",
     tableColHeading_employer_dba: "Organization",

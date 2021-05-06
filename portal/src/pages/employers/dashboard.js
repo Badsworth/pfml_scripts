@@ -1,6 +1,7 @@
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
 import ClaimCollection from "../../models/ClaimCollection";
+import Details from "../../components/Details";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
@@ -106,9 +107,27 @@ export const Dashboard = (props) => {
           </p>
         </Alert>
       )}
-      <p className="margin-bottom-4">
-        {t("pages.employersDashboard.instructions")}
-      </p>
+      <section className="margin-bottom-4">
+        <p className="margin-y-2">
+          {t("pages.employersDashboard.instructions")}
+        </p>
+        <Details label={t("pages.employersDashboard.statusDescriptionsLabel")}>
+          <ul className="usa-list">
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_none" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
+            </li>
+          </ul>
+        </Details>
+      </section>
       {paginationMeta.total_records > 0 && (
         <PaginationSummary
           pageOffset={paginationMeta.page_offset}
