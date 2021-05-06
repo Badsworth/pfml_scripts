@@ -17,20 +17,26 @@ const verificationScenarios = {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
+          employer_fein: "65-3746025",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
         createUserLeaveAdministrator({
+          employer_fein: "82-9471234",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
       ],
     }),
   },
-  "Single verified employer": {
+  "Single verified employer, not registered in FINEOS": {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
+          employer_fein: "82-9471234",
+          has_fineos_registration: false,
           has_verification_data: true,
           verified: true,
         }),
@@ -61,10 +67,14 @@ const verificationScenarios = {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
+          employer_fein: "65-3746025",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
         createUserLeaveAdministrator({
+          employer_fein: "82-9471234",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: false,
         }),
@@ -75,10 +85,14 @@ const verificationScenarios = {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
+          employer_fein: "65-3746025",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
         createUserLeaveAdministrator({
+          employer_fein: "82-9471234",
+          has_fineos_registration: true,
           has_verification_data: false,
           verified: false,
         }),
@@ -129,7 +143,7 @@ export const Default = (args) => {
                   ? faker.company.companyName()
                   : "Dunder-Mifflin",
                 employer_fein: hasMultipleEmployers
-                  ? faker.finance.routingNumber().replace(/(\d\d)/, "$1-")
+                  ? faker.helpers.randomize(["65-3746025", "82-9471234"])
                   : "82-9471234",
               }),
             })
@@ -137,6 +151,7 @@ export const Default = (args) => {
 
   const appLogic = {
     portalFlow: {
+      getNextPageRoute: () => {},
       goTo: () => {},
       pathname: routes.employers.dashboard,
     },

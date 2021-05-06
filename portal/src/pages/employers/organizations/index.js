@@ -22,6 +22,10 @@ export const Index = ({ appLogic }) => {
   const showVerifications = isFeatureEnabled("employerShowVerifications");
   const showAddOrganization = isFeatureEnabled("employerShowAddOrganization");
 
+  const nearFutureAvailabilityContext = showAddOrganization
+    ? "inviteMembers"
+    : "addOrganization";
+
   return (
     <React.Fragment>
       <BackButton />
@@ -41,7 +45,11 @@ export const Index = ({ appLogic }) => {
           </p>
         </Alert>
       )}
-      <p>{t("pages.employersOrganizations.nearFutureAvailability")}</p>
+      <p data-test="future-availability-message">
+        {t("pages.employersOrganizations.nearFutureAvailability", {
+          context: nearFutureAvailabilityContext,
+        })}
+      </p>
 
       <Table responsive className="width-full">
         <thead>

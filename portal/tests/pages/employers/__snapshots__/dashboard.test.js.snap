@@ -10,7 +10,22 @@ exports[`Employer dashboard renders a 'no results' message in the table if no cl
 </tr>
 `;
 
-exports[`Employer dashboard renders a table of claims 1`] = `
+exports[`Employer dashboard renders a banner if there are any employers not registered in FINEOS 2`] = `
+Array [
+  "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the ",
+  <a
+    href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    verification process
+  </a>,
+  ".",
+]
+`;
+
+exports[`Employer dashboard renders a table of claims with links if employer is registered in FINEOS 1`] = `
 <tr
   key="NTN-111-ABS-01"
 >
@@ -47,7 +62,7 @@ exports[`Employer dashboard renders a table of claims 1`] = `
     12-3456789
   </td>
   <td
-    data-label="Date filed"
+    data-label="Application start date"
     key="created_at"
   >
     1/15/2021
@@ -59,6 +74,133 @@ exports[`Employer dashboard renders a table of claims 1`] = `
     --
   </td>
 </tr>
+`;
+
+exports[`Employer dashboard renders a table of claims with links if employer is registered in FINEOS 2`] = `
+<thead>
+  <tr>
+    <th
+      key="employee_name"
+      scope="col"
+    >
+      Employee name
+    </th>
+    <th
+      key="fineos_absence_id"
+      scope="col"
+    >
+      Application ID
+    </th>
+    <th
+      key="employer_dba"
+      scope="col"
+    >
+      Organization
+    </th>
+    <th
+      key="employer_fein"
+      scope="col"
+    >
+      Employer ID number
+    </th>
+    <th
+      key="created_at"
+      scope="col"
+    >
+      Application start date
+      <TooltipIcon
+        position="bottom"
+      >
+        When an employee started a new leave application
+      </TooltipIcon>
+    </th>
+    <th
+      key="status"
+      scope="col"
+    >
+      Status
+    </th>
+  </tr>
+</thead>
+`;
+
+exports[`Employer dashboard renders claim rows without links if employer is not registered in FINEOS 1`] = `
+<tr
+  key="NTN-111-ABS-01"
+>
+  <th
+    data-label="Employee name"
+    scope="row"
+  >
+    Jane Doe
+  </th>
+  <td
+    data-label="Application ID"
+    key="fineos_absence_id"
+  >
+    NTN-111-ABS-01
+  </td>
+  <td
+    data-label="Employer ID number"
+    key="employer_fein"
+  >
+    **-***0002
+  </td>
+  <td
+    data-label="Application start date"
+    key="created_at"
+  >
+    1/15/2021
+  </td>
+  <td
+    data-label="Status"
+    key="status"
+  >
+    --
+  </td>
+</tr>
+`;
+
+exports[`Employer dashboard renders claim rows without links if employer is not registered in FINEOS 2`] = `
+<thead>
+  <tr>
+    <th
+      key="employee_name"
+      scope="col"
+    >
+      Employee name
+    </th>
+    <th
+      key="fineos_absence_id"
+      scope="col"
+    >
+      Application ID
+    </th>
+    <th
+      key="employer_fein"
+      scope="col"
+    >
+      Employer ID number
+    </th>
+    <th
+      key="created_at"
+      scope="col"
+    >
+      Application start date
+      <TooltipIcon
+        position="bottom"
+      >
+        When an employee started a new leave application
+      </TooltipIcon>
+    </th>
+    <th
+      key="status"
+      scope="col"
+    >
+      Status
+    </th>
+  </tr>
+</thead>
 `;
 
 exports[`Employer dashboard renders the page 1`] = `

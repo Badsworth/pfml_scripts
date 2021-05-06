@@ -1,5 +1,6 @@
 import Document, { DocumentType } from "../../../models/Document";
 import React, { useEffect } from "react";
+import { AbsenceCaseStatus } from "../../../models/Claim";
 import BackButton from "../../../components/BackButton";
 import DocumentCollection from "../../../models/DocumentCollection";
 import EmployerClaim from "../../../models/EmployerClaim";
@@ -67,8 +68,10 @@ export const Status = (props) => {
         <Trans
           i18nKey="pages.employersClaimsStatus.lead"
           tOptions={{
-            context:
-              getDisplayState(claim.status) === "warning" ? "pending" : "",
+            context: findKeyByValue(AbsenceCaseStatus, claim.status)
+              ? "decision"
+              : // Pending claims refer to applications that are partially submitted (Part 1 only), awaiting employer response, or awaiting adjudication
+                "pending",
           }}
           components={{
             "dfml-regulations-link": (

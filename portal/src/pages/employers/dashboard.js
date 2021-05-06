@@ -8,6 +8,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Table from "../../components/Table";
 import Title from "../../components/Title";
+import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
@@ -28,6 +29,10 @@ export const Dashboard = (props) => {
   }
 
   const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
+  // Leave admins not registered in Fineos won't be able to access associated claim data from Fineos.
+  // We use this flag to communicate this to the user.
+  const hasEmployerNotRegisteredInFineos =
+    user.hasEmployerNotRegisteredInFineos;
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const showVerificationRowInPlaceOfClaims =
     shouldShowVerifications && hasOnlyUnverifiedEmployers;
@@ -59,6 +64,27 @@ export const Dashboard = (props) => {
     <React.Fragment>
       <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
       <Title>{t("pages.employersDashboard.title")}</Title>
+      {hasEmployerNotRegisteredInFineos && (
+        <Alert
+          state="info"
+          heading={t("pages.employersDashboard.unavailableClaimsTitle")}
+        >
+          <p>
+            <Trans
+              i18nKey="pages.employersDashboard.unavailableClaimsBody"
+              components={{
+                "learn-more-link": (
+                  <a
+                    href={routes.external.massgov.employerAccount}
+                    target="_blank"
+                    rel="noopener"
+                  />
+                ),
+              }}
+            />
+          </p>
+        </Alert>
+      )}
       {shouldShowVerifications && hasVerifiableEmployer && (
         <Alert
           state="warning"
@@ -91,6 +117,11 @@ export const Dashboard = (props) => {
                 {t("pages.employersDashboard.tableColHeading", {
                   context: columnKey,
                 })}
+                {columnKey === "created_at" && (
+                  <TooltipIcon position="bottom">
+                    {t("pages.employersDashboard.startDateTooltip")}
+                  </TooltipIcon>
+                )}
               </th>
             ))}
           </tr>
@@ -115,6 +146,7 @@ export const Dashboard = (props) => {
               appLogic={props.appLogic}
               claims={props.claims}
               tableColumnKeys={tableColumnKeys}
+              user={user}
             />
           )}
         </tbody>
@@ -142,7 +174,7 @@ Dashboard.propTypes = {
  * no claim data exists
  */
 const ClaimTableRows = (props) => {
-  const { appLogic, claims, tableColumnKeys } = props;
+  const { appLogic, claims, tableColumnKeys, user } = props;
   const { t } = useTranslation();
 
   if (claims.isEmpty) {
@@ -168,20 +200,32 @@ const ClaimTableRows = (props) => {
       {},
       { absence_id: get(claim, "fineos_absence_id") }
     );
+    const employerFein = get(claim, "employer.employer_fein");
+    const isEmployerRegisteredInFineos = user.isEmployerRegisteredInFineos(
+      employerFein
+    );
 
     switch (columnKey) {
       case "created_at":
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
         // TODO (EMPLOYER-1178) Use <Link> for client-side navigation
-        return <a href={claimRoute}>{get(claim, columnKey)}</a>;
+        return isEmployerRegisteredInFineos ? (
+          <a href={claimRoute}>{get(claim, columnKey)}</a>
+        ) : (
+          get(claim, columnKey)
+        );
       case "employee_name":
         // TODO (EMPLOYER-1178) Use <Link> for client-side navigation
-        return <a href={claimRoute}>{get(claim, "employee.fullName")}</a>;
+        return isEmployerRegisteredInFineos ? (
+          <a href={claimRoute}>{get(claim, "employee.fullName")}</a>
+        ) : (
+          get(claim, "employee.fullName")
+        );
       case "employer_dba":
         return get(claim, "employer.employer_dba");
       case "employer_fein":
-        return get(claim, "employer.employer_fein");
+        return employerFein;
       case "status":
         // TODO (EMPLOYER-1125): Render a <Tag> for the status
         return "--";
@@ -218,6 +262,7 @@ ClaimTableRows.propTypes = {
   appLogic: Dashboard.propTypes.appLogic,
   claims: Dashboard.propTypes.claims,
   tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withClaims(Dashboard);

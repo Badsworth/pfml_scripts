@@ -76,4 +76,17 @@ export class ClaimEmployer extends BaseModel {
   }
 }
 
+/**
+ * Enums for `claim.fineos_absence_status` field
+ * This is the subset of potential values returned by the API that we show to the user.
+ * We currently ignore other potential values like "Adjudication", "Intake In Progress", "Unknown"
+ * @enum {string}
+ */
+export const AbsenceCaseStatus = {
+  approved: "Approved",
+  closed: "Closed",
+  completed: "Completed",
+  declined: "Declined",
+};
+
 export default Claim;

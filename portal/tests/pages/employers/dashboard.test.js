@@ -11,6 +11,7 @@ const verifiedUserLeaveAdministrator = new UserLeaveAdministrator({
   employer_dba: "Work Inc",
   employer_fein: "12-3456789",
   employer_id: "mock-employer-id-1",
+  has_fineos_registration: true,
   has_verification_data: true,
   verified: true,
 });
@@ -18,6 +19,7 @@ const verifiableUserLeaveAdministrator = new UserLeaveAdministrator({
   employer_dba: "Book Bindings 'R Us",
   employer_fein: "**-***0002",
   employer_id: "mock-employer-id-2",
+  has_fineos_registration: false,
   has_verification_data: true,
   verified: false,
 });
@@ -53,6 +55,25 @@ const setup = (claims = [], userAttrs = {}) => {
 };
 
 describe("Employer dashboard", () => {
+  const getClaims = (leaveAdmin) => {
+    return [
+      new Claim({
+        created_at: "2021-01-15",
+        employee: new ClaimEmployee({
+          first_name: "Jane",
+          middle_name: null,
+          last_name: "Doe",
+        }),
+        employer: new ClaimEmployer({
+          employer_dba: leaveAdmin.employer_dba,
+          employer_fein: leaveAdmin.employer_fein,
+        }),
+        fineos_absence_id: "NTN-111-ABS-01",
+        fineos_absence_status: "Approved",
+      }),
+    ];
+  };
+
   beforeEach(() => {
     process.env.featureFlags = { employerShowDashboard: true };
   });
@@ -68,22 +89,23 @@ describe("Employer dashboard", () => {
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
-  it("renders a table of claims", () => {
-    const claims = [
-      new Claim({
-        created_at: "2021-01-15",
-        employee: new ClaimEmployee({
-          first_name: "Jane",
-          middle_name: null,
-          last_name: "Doe",
-        }),
-        employer: new ClaimEmployer({
-          employer_dba: verifiedUserLeaveAdministrator.employer_dba,
-          employer_fein: verifiedUserLeaveAdministrator.employer_fein,
-        }),
-        fineos_absence_id: "NTN-111-ABS-01",
-      }),
-    ];
+  it("renders a banner if there are any employers not registered in FINEOS", () => {
+    const { wrapper } = setup([], {
+      user_leave_administrators: [
+        // Mix of registered and pending
+        verifiedUserLeaveAdministrator,
+        verifiableUserLeaveAdministrator,
+      ],
+    });
+
+    expect(wrapper.find("Alert").prop("heading")).toMatchInlineSnapshot(
+      `"Your applications are not accessible at the moment"`
+    );
+    expect(wrapper.find("Alert").dive().find("Trans").dive()).toMatchSnapshot();
+  });
+
+  it("renders a table of claims with links if employer is registered in FINEOS", () => {
+    const claims = getClaims(verifiedUserLeaveAdministrator);
     const userAttrs = {
       // Set multiple employers so the table shows all possible columns
       user_leave_administrators: [
@@ -91,9 +113,25 @@ describe("Employer dashboard", () => {
         verifiableUserLeaveAdministrator,
       ],
     };
+
     const { wrapper } = setup(claims, userAttrs);
 
     expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
+    expect(wrapper.find("thead")).toMatchSnapshot();
+    expect(wrapper.find("ClaimTableRows").dive().find("a")).toHaveLength(2);
+  });
+
+  it("renders claim rows without links if employer is not registered in FINEOS", () => {
+    const claims = getClaims(verifiableUserLeaveAdministrator);
+
+    const userAttrs = {
+      user_leave_administrators: [verifiableUserLeaveAdministrator],
+    };
+
+    const { wrapper } = setup(claims, userAttrs);
+
+    expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
+    expect(wrapper.find("thead")).toMatchSnapshot();
   });
 
   it("does not render Employer DBA when user has only one Employer associated", () => {
