@@ -26,6 +26,7 @@ from massgov.pfml.db.models.applications import (
     FINEOSWebIdExt,
     LeaveReason,
     LeaveReasonQualifier,
+    NoClaimTypeForAbsenceType,
     Phone,
     RelationshipQualifier,
     RelationshipToCaregiver,
@@ -44,6 +45,7 @@ from massgov.pfml.db.models.factories import (
     EmployerBenefitFactory,
     EmployerFactory,
     IntermittentLeavePeriodFactory,
+    LeaveReasonFactory,
     OtherIncomeFactory,
     PreviousLeaveFactory,
     PreviousLeaveOtherReasonFactory,
@@ -4738,7 +4740,8 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
     application.has_continuous_leave_periods = True
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    application.leave_type_id = 1
+    application.leave_reason_id = 4
+    application.leave_reason_qualifier_id = 7
 
     test_db_session.commit()
     client.post(
@@ -4756,7 +4759,16 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
     assert submitted_application.claim.employer is not None
     assert submitted_application.claim.absence_period_start_date == startDate
     assert submitted_application.claim.absence_period_end_date == endDate
-    assert submitted_application.claim.claim_type_id == 1
+    assert submitted_application.claim.claim_type_id == 2
+
+
+def test_submit_app_with_leave_reason_id_not_in_map(client, user, auth_token, test_db_session):
+
+    with pytest.raises(NoClaimTypeForAbsenceType):
+        new_leave_reason = LeaveReasonFactory.create(
+            leave_reason_id=999, leave_reason_description="New reason"
+        )
+        new_leave_reason.absence_to_claim_type
 
 
 def test_application_patch_caring_leave_metadata(client, user, auth_token, test_db_session):

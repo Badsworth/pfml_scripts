@@ -440,6 +440,7 @@ class ExperianAddressPair(Base):
 class Employee(Base):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    # TODO (EMPLOYER-1238): Enforce uniqueness of tax_identifier_id
     tax_identifier_id = Column(
         UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True
     )

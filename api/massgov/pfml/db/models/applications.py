@@ -40,6 +40,10 @@ from .common import StrEnum
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
+class NoClaimTypeForAbsenceType(Exception):
+    pass
+
+
 class LkEmploymentStatus(Base):
     __tablename__ = "lk_employment_status"
     employment_status_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -56,20 +60,28 @@ class LkLeaveReason(Base):
     __tablename__ = "lk_leave_reason"
     leave_reason_id = Column(Integer, primary_key=True, autoincrement=True)
     leave_reason_description = Column(Text)
+    _map = None
 
     def __init__(self, leave_reason_id, leave_reason_description):
         self.leave_reason_id = leave_reason_id
         self.leave_reason_description = leave_reason_description
 
+    @classmethod
+    def generate_map(cls):
+        return {
+            LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id: ClaimType.FAMILY_LEAVE.claim_type_id,
+            LeaveReason.PREGNANCY_MATERNITY.leave_reason_id: ClaimType.FAMILY_LEAVE.claim_type_id,
+            LeaveReason.CHILD_BONDING.leave_reason_id: ClaimType.FAMILY_LEAVE.claim_type_id,
+            LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
+        }
 
-class LkLeaveReasonQualifier(Base):
-    __tablename__ = "lk_leave_reason_qualifier"
-    leave_reason_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
-    leave_reason_qualifier_description = Column(Text)
-
-    def __init__(self, leave_reason_qualifier_id, leave_reason_qualifier_description):
-        self.leave_reason_qualifier_id = leave_reason_qualifier_id
-        self.leave_reason_qualifier_description = leave_reason_qualifier_description
+    @hybrid_property
+    def absence_to_claim_type(self) -> int:
+        if not self._map:
+            self._map = self.generate_map()
+        if self.leave_reason_id not in self._map:
+            raise NoClaimTypeForAbsenceType(f"{self.leave_reason_id} not in the lookup table")
+        return self._map[self.leave_reason_id]
 
 
 class LkLeaveType(Base):
@@ -81,15 +93,15 @@ class LkLeaveType(Base):
         self.leave_type_id = leave_type_id
         self.leave_type_description = leave_type_description
 
-    @hybrid_property
-    def absence_to_claim_type(self) -> int:
-        _map = {
-            LeaveType.BONDING_LEAVE.leave_type_id: ClaimType.FAMILY_LEAVE.claim_type_id,
-            LeaveType.MEDICAL_LEAVE.leave_type_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
-            LeaveType.ACCIDENT.leave_type_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
-            LeaveType.MILITARY.leave_type_id: ClaimType.MILITARY_LEAVE.claim_type_id,
-        }
-        return _map[self.leave_type_id]
+
+class LkLeaveReasonQualifier(Base):
+    __tablename__ = "lk_leave_reason_qualifier"
+    leave_reason_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
+    leave_reason_qualifier_description = Column(Text)
+
+    def __init__(self, leave_reason_qualifier_id, leave_reason_qualifier_description):
+        self.leave_reason_qualifier_id = leave_reason_qualifier_id
+        self.leave_reason_qualifier_description = leave_reason_qualifier_description
 
 
 class LkRelationshipToCaregiver(Base):
@@ -268,6 +280,8 @@ class Application(Base):
     nickname = Column(Text)
     requestor = Column(Integer)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), nullable=True, unique=True)
+    # TODO (EMPLOYER-1213) Remove employee_id and employer_id from Application table.
+    # We store these on the Claim instead.
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True)
     has_mailing_address = Column(Boolean)

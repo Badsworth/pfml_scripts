@@ -85,5 +85,9 @@ module "tasks" {
   enable_recurring_payments_schedule = true
   enable_register_admins_job         = true
 
+  enable_reductions_send_claimant_lists_to_agencies_schedule        = true
+  enable_reductions_retrieve_payment_lists_from_agencies_schedule   = true
+  enable_reductions_send_wage_replacement_payments_to_dfml_schedule = true
+
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com", "EOL-DL-DFML-ITSUPPORT@MassMail.State.MA.US"]
 }

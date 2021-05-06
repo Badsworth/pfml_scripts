@@ -271,19 +271,19 @@ variable "enable_sentry" {
 variable "enable_reductions_send_claimant_lists_to_agencies_schedule" {
   description = "Enable scheduling for 'reductions-send-claimant-lists-to-agencies' ECS task"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_reductions_retrieve_payment_lists_from_agencies_schedule" {
   description = "Enable scheduling for 'reductions-retrieve-payment-lists-from-agencies' ECS task"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_reductions_send_wage_replacement_payments_to_dfml_schedule" {
   description = "Enable scheduling for 'reductions-send-wage-replacement-payments-to-dfml' ECS task"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "payment_audit_report_outbound_folder_path" {

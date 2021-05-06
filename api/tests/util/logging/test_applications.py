@@ -47,7 +47,6 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.has_submitted_payment_preference": None,
         "application.leave_reason": "Serious Health Condition - Employee",
         "application.leave_reason_qualifier": None,
-        "application.leave_type": None,
         "application.num_employer_benefits": "1",
         "application.num_other_incomes": "1",
         "application.num_previous_leaves": "1",

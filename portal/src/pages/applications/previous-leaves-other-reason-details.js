@@ -1,10 +1,10 @@
+import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import { get, pick } from "lodash";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import InputHours from "../../components/InputHours";
-import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -50,10 +50,7 @@ export const PreviousLeavesOtherReasonDetails = (props) => {
   );
 
   const handleSave = () => {
-    appLogic.benefitsApplications.update(
-      { claim: claim.application_id },
-      formState
-    );
+    appLogic.benefitsApplications.update(claim.application_id, formState);
   };
 
   const handleAddClick = () => {
@@ -79,7 +76,7 @@ export const PreviousLeavesOtherReasonDetails = (props) => {
 
   const render = (_entry, index) => {
     return (
-      <PreviousLeaveDetailsCard
+      <PreviousLeavesOtherReasonDetailsCard
         claim={claim}
         index={index}
         getFunctionalInputProps={getFunctionalInputProps}
@@ -125,7 +122,7 @@ PreviousLeavesOtherReasonDetails.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
-export const PreviousLeaveDetailsCard = (props) => {
+export const PreviousLeavesOtherReasonDetailsCard = (props) => {
   const { t } = useTranslation();
   const {
     claim: { employer_fein },
@@ -135,6 +132,55 @@ export const PreviousLeaveDetailsCard = (props) => {
 
   return (
     <React.Fragment>
+      <InputChoiceGroup
+        {...getFunctionalInputProps(
+          `previous_leaves_other_reason[${index}].leave_reason`
+        )}
+        smallLabel
+        label={t(
+          "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonLabel"
+        )}
+        hint={t("pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonHint")}
+        type="radio"
+        choices={[
+          {
+            label: t(
+              "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_medical"
+            ),
+            value: PreviousLeaveReason.medical,
+          },
+          {
+            label: t(
+              "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_pregnancy"
+            ),
+            value: PreviousLeaveReason.pregnancy,
+          },
+          {
+            label: t(
+              "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_bonding"
+            ),
+            value: PreviousLeaveReason.bonding,
+          },
+          {
+            label: t(
+              "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_care"
+            ),
+            value: PreviousLeaveReason.care,
+          },
+          {
+            label: t(
+              "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_activeDutyFamily"
+            ),
+            value: PreviousLeaveReason.activeDutyFamily,
+          },
+          {
+            label: t(
+              "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_serviceMemberFamily"
+            ),
+            value: PreviousLeaveReason.serviceMemberFamily,
+          },
+        ]}
+      />
       <InputChoiceGroup
         {...getFunctionalInputProps(
           `previous_leaves_other_reason[${index}].is_for_current_employer`
@@ -169,6 +215,7 @@ export const PreviousLeaveDetailsCard = (props) => {
         label={t(
           "pages.claimsPreviousLeavesOtherReasonDetails.leaveStartDateLabel"
         )}
+        example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -181,6 +228,7 @@ export const PreviousLeaveDetailsCard = (props) => {
         label={t(
           "pages.claimsPreviousLeavesOtherReasonDetails.leaveEndDateLabel"
         )}
+        example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -229,7 +277,7 @@ export const PreviousLeaveDetailsCard = (props) => {
   );
 };
 
-PreviousLeaveDetailsCard.propTypes = {
+PreviousLeavesOtherReasonDetailsCard.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   getFunctionalInputProps: PropTypes.func.isRequired,
   index: PropTypes.number.isRequired,

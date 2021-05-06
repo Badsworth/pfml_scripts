@@ -1,6 +1,6 @@
 locals {
   domain_raw = lookup(module.constants.domains, var.environment_name)
-  domain     = var.environment_name == "prod" ? local.domain_raw : format("%s/?_ff=pfmlTerriyay:true", local.domain_raw)
+  domain     = var.environment_name == "prod" ? format("https://%s", local.domain_raw) : format("https://%s/?_ff=pfmlTerriyay:true", local.domain_raw)
 }
 
 resource "newrelic_synthetics_monitor" "portal_ping" {

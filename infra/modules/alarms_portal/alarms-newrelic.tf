@@ -188,11 +188,11 @@ module "newrelic_alerts_cognito" {
 
   name  = each.value.name
   query = <<-NRQL
-    SELECT percentage(count(*), WHERE httpResponseCode >= 400) 
+    SELECT percentage(count(*), WHERE httpResponseCode >= 400)
       * clamp_max(floor(uniqueCount(session) / 3), 1)
     FROM AjaxRequest
     WHERE browserInteractionName = 'fetch: cognito ${each.value.interaction_name}'
-      AND hostname = 'cognito-idp.us-east-1.amazonaws.com' 
+      AND hostname = 'cognito-idp.us-east-1.amazonaws.com'
       AND environment = '${var.environment_name}'
       ${lookup(each.value, "extra", "")}
   NRQL
@@ -235,7 +235,7 @@ module "newrelic_alerts_application_post" {
       * clamp_max(floor(uniqueCount(user.auth_id) / 3), 1)
     FROM AjaxRequest
     WHERE httpMethod = 'POST'
-      AND groupedRequestUrl LIKE '%/applications/*/${each.value.request_url}' 
+      AND groupedRequestUrl LIKE '%/applications/*/${each.value.request_url}'
       AND environment = '${var.environment_name}'
   NRQL
 }
@@ -264,13 +264,14 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
     query = <<-NRQL
       SELECT (
         filter(
-          count(errorMessage), 
+          count(errorMessage),
           WHERE errorMessage != 'undefined is not an object (evaluating \'ceCurrentVideo.currentTime\')'
             AND errorClass != 'NetworkError'
             AND errorMessage != 'Failed to fetch'
             AND errorMessage != 'cancelled'
             AND errorMessage != 'Network error'
             AND errorMessage NOT LIKE '%network connection%'
+            AND environment != 'development'
         ) / ${local.js_error_total_count}
       ) * clamp_max(floor(${local.js_error_uniq_count} / ${local.js_error_min_uniq_per_window}), 1)
       FROM JavaScriptError, BrowserInteraction

@@ -2,6 +2,8 @@ import uuid
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+import faker
+
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
@@ -35,10 +37,13 @@ from massgov.pfml.experian.physical_address.client.models import Confidence
 
 logger = logging.get_logger(__name__)
 
+fake = faker.Faker()
+fake.seed_instance(1212)
+
 
 # == Constants ==
 
-VALID_ADDRESS = {
+MATCH_ADDRESS = {
     "line_1": "20 South Ave",
     "line_2": "",
     "city": "Burlington",
@@ -54,11 +59,19 @@ MULTI_MATCH_ADDRESS = {
     "zip": "01803",
 }
 
-INVALID_ADDRESS = {
+NO_MATCH_ADDRESS = {
     "line_1": "123 Main St",
     "line_2": "",
     "city": "Burlington",
     "state": "MA",
+    "zip": "01803",
+}
+
+INVALID_ADDRESS = {
+    "line_1": "20 South Ave",
+    "line_2": "",
+    "city": "Burlington",
+    "state": "XA",
     "zip": "01803",
 }
 
@@ -110,11 +123,11 @@ def get_mock_address_client() -> MockClient:
     client = MockClient(fallback_confidence=Confidence.NO_MATCHES)
 
     # add valid address
-    valid_address = parse_address(VALID_ADDRESS)
+    valid_address = parse_address(MATCH_ADDRESS)
     client.add_mock_address_response(valid_address, Confidence.VERIFIED_MATCH)
 
     # add no match address
-    invalid_address = parse_address(INVALID_ADDRESS)
+    invalid_address = parse_address(NO_MATCH_ADDRESS)
     client.add_mock_address_response(invalid_address, Confidence.NO_MATCHES)
 
     # add multi match address
@@ -241,6 +254,9 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
                     fineos_notification_id=fineos_notification_id,
                     fineos_customer_number=fineos_customer_number,
                 )
+
+                scenario_data.payment_c_value = "7326"
+                scenario_data.payment_i_value = str(fake.unique.random_int())
 
                 scenario_dataset.append(scenario_data)
 

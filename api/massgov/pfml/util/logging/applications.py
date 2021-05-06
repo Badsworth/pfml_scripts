@@ -55,7 +55,6 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
     attributes_to_log = [
         "application_id",
         "employer_id",
-        "leave_type",
         "has_state_id",
         "has_continuous_leave_periods",
         "has_employer_benefits",
