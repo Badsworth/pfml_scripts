@@ -41,9 +41,6 @@ class ScenarioName(Enum):
     OVERPAYMENT_MISSING_NON_VPEI_RECORDS = "OVERPAYMENT_MISSING_NON_VPEI_RECORDS"
     EMPLOYER_REIMBURSEMENT_PAYMENT = "EMPLOYER_REIMBURSEMENT_PAYMENT"
 
-    # Payment Extract Validation
-    CLAIM_NOT_ID_PROOFED = "CLAIM_NOT_ID_PROOFED"
-
     # Prenote
     NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE = "NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE"
 
@@ -63,9 +60,9 @@ class ScenarioName(Enum):
     REJECTED_LEAVE_REQUEST_DECISION = "REJECTED_LEAVE_REQUEST_DECISION"
     PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
 
-    # TODO CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB - PUB-165
+    CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
+    CLAIM_NOT_ID_PROOFED = "CLAIM_NOT_ID_PROOFED"
     # TODO CLAIM_DOES_NOT_EXIST - PUB-165
-    # TODO CLAIM_EXISTS_BUT_NOT_ID_PROOFED = PUB-165
 
     # Audit
     AUDIT_REJECTED = "AUDIT_REJECTED"
@@ -100,8 +97,10 @@ class ScenarioName(Enum):
 class ScenarioDescriptor:
     scenario_name: ScenarioName
 
-    # general payment options
-    employee_missing_in_db: bool = False
+    employee_in_payment_extract_missing_in_db: bool = False
+
+    # missing claim
+    missing_claim: bool = False
 
     claim_type: LkClaimType = ClaimType.FAMILY_LEAVE
     is_id_proofed: bool = True  # TODO - when claimant extract is file generation is ready, make this set the ID proofing field
@@ -195,7 +194,9 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         no_prior_eft_account=True,
         prenoted=False,
     ),
-    ScenarioDescriptor(scenario_name=ScenarioName.CLAIM_NOT_ID_PROOFED, is_id_proofed=False),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.CLAIM_NOT_ID_PROOFED, missing_claim=True, is_id_proofed=False
+    ),
     ScenarioDescriptor(scenario_name=ScenarioName.EFT_ACCOUNT_NOT_PRENOTED, prenoted=False),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
@@ -215,7 +216,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
-        employee_missing_in_db=True,
+        employee_in_payment_extract_missing_in_db=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,

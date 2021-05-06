@@ -38,7 +38,9 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
 )
 from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import CiIndex
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
+    FINEOS_CLAIMANT_EXPORT_FILES,
     FINEOS_PAYMENT_EXTRACT_FILES,
+    generate_claimant_data_files,
     generate_payment_extract_files,
 )
 from massgov.pfml.delegated_payments.mock.generate_check_response import PubCheckResponseGenerator
@@ -390,17 +392,17 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ClaimantExtractStep",
             {
-                "claim_not_found_count": 0,
+                "claim_not_found_count": len([ScenarioName.CLAIM_NOT_ID_PROOFED]),
                 "eft_found_count": 0,
                 "eft_rejected_count": 0,
-                "employee_feed_record_count": 0,
+                "employee_feed_record_count": len(SCENARIO_DESCRIPTORS),
                 "employee_not_found_count": 0,
                 "errored_claimant_count": 0,
                 "evidence_not_id_proofed_count": 0,
                 "new_eft_count": 0,
-                "processed_requested_absence_count": 0,
+                "processed_requested_absence_count": len(SCENARIO_DESCRIPTORS),
                 "valid_claimant_count": 0,
-                "vbi_requested_absence_som_record_count": 0,
+                "vbi_requested_absence_som_record_count": len(SCENARIO_DESCRIPTORS),
             },
         )
 
@@ -450,7 +452,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                     ]
                 ),
-                "employee_missing_in_db_count": 0,
+                "employee_in_payment_extract_missing_in_db_count": 0,
                 "employer_reimbursement_count": len([ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT]),
                 "errored_payment_count": len(
                     [
@@ -1814,16 +1816,19 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: i
 
     fineos_data_export_path = s3_config.fineos_data_export_path
 
-    # TODO generate claimant extract files - PUB-165
+    # claimant extract
+    generate_claimant_data_files(scenario_dataset, fineos_data_export_path, payments_util.get_now())
 
+    # Confirm expected claimant files were generated
+    fineos_extract_date_prefix = get_current_timestamp_prefix()
+    assert_files(fineos_data_export_path, FINEOS_CLAIMANT_EXPORT_FILES, fineos_extract_date_prefix)
+
+    # payment extract
     generate_payment_extract_files(
         scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=round
     )
 
-    # TODO Confirm expected claimant files were generated - PUB-165
-
     # Confirm expected payment files were generated
-    fineos_extract_date_prefix = get_current_timestamp_prefix()
     assert_files(fineos_data_export_path, FINEOS_PAYMENT_EXTRACT_FILES, fineos_extract_date_prefix)
 
 

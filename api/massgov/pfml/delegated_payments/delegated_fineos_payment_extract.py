@@ -516,7 +516,7 @@ class PaymentExtractStep(Step):
         CLAIM_NOT_FOUND_COUNT = "claim_not_found_count"
         CLAIMANT_MISMATCH_COUNT = "claimant_mismatch_count"
         EFT_FOUND_COUNT = "eft_found_count"
-        EMPLOYEE_MISSING_IN_DB_COUNT = "employee_missing_in_db_count"
+        EMPLOYEE_MISSING_IN_DB_COUNT = "employee_in_payment_extract_missing_in_db_count"
         EMPLOYER_REIMBURSEMENT_COUNT = "employer_reimbursement_count"
         ERRORED_PAYMENT_COUNT = "errored_payment_count"
         NEW_EFT_COUNT = "new_eft_count"
