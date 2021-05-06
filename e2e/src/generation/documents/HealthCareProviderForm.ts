@@ -14,7 +14,7 @@ export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
   get documentType(): DocumentType {
-    return "State managed Paid Leave Confirmation";
+    return "Own serious health condition form";
   }
   get documentSource(): string {
     return this.path("hcp-real.pdf");

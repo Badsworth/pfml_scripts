@@ -15,7 +15,7 @@ export default class AdoptionCertificate extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
   get documentType(): DocumentType {
-    return "State managed Paid Leave Confirmation";
+    return "Child bonding evidence form";
   }
   get documentSource(): string {
     return this.path("foster-adopt-cert.pdf");
