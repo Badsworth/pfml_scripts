@@ -1073,9 +1073,14 @@ def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> b
         == claim_query.fineos_absence_status.absence_status_description
     )
     assert (
+        claim_response["claim_status"]
+        == claim_query.fineos_absence_status.absence_status_description
+    )
+    assert (
         claim_response["claim_type"]["claim_type_description"]
         == claim_query.claim_type.claim_type_description
     )
+    assert claim_response["claim_type_description"] == claim_query.claim_type.claim_type_description
 
 
 class TestGetClaimEndpoint:
