@@ -67,4 +67,4 @@ def test_update_import_log_entry(test_db_session):
 }"""
     )
     assert entry.start == datetime.datetime(2020, 11, 20, 21, 0, 1, tzinfo=datetime.timezone.utc)
-    assert entry.end == datetime.datetime(2020, 11, 20, 21, 0, 21, tzinfo=datetime.timezone.utc)
+    assert entry.end == datetime.datetime(2020, 11, 20, 21, 0, 11, tzinfo=datetime.timezone.utc)

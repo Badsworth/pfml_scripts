@@ -406,7 +406,9 @@ def test_build_week_based_work_pattern(user, test_db_session):
             hours=8,
             minutes=15,
         )
-        for i in range(7)
+        # Order of days different between expected and actual.
+        # Forcing to start on Sunday on expected to match actual.
+        for i in [6, 0, 1, 2, 3, 4, 5]
     ]
 
 

@@ -14,6 +14,7 @@ import flask_cors
 import newrelic.api.time_trace
 from flask import Flask, current_app, g
 from sentry_sdk import set_context
+from sqlalchemy.orm import Session
 
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
@@ -32,7 +33,9 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def create_app(
-    config: Optional[AppConfig] = None, check_migrations_current: bool = True
+    config: Optional[AppConfig] = None,
+    check_migrations_current: bool = True,
+    db_session_factory: Optional[Session] = None,
 ) -> connexion.FlaskApp:
     logger.info("Creating API Application...")
 
@@ -40,9 +43,10 @@ def create_app(
         config = get_config()
 
     # Initialize the db
-    db_session_factory = db.init(
-        config.db, sync_lookups=True, check_migrations_current=check_migrations_current
-    )
+    if db_session_factory is None:
+        db_session_factory = db.init(
+            config.db, sync_lookups=True, check_migrations_current=check_migrations_current
+        )
 
     # Enable mock responses for unimplemented paths.
     resolver = connexion.mock.MockResolver(mock_all=False)

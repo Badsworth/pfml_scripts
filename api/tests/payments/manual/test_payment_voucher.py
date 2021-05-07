@@ -157,7 +157,7 @@ class ScenarioOutput:
             case_status = payment.claim.fineos_absence_status.absence_status_description
 
         if self.scenario_data.employer:
-            employer_id = self.scenario_data.employer.fineos_employer_id
+            employer_id = str(self.scenario_data.employer.fineos_employer_id)
 
         if payment.period_start_date:
             payment_period_start_date = payment.period_start_date.isoformat()

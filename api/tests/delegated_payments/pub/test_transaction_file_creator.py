@@ -133,10 +133,9 @@ def test_ach_file_creation(
 
 
 def test_check_file_creation(
-    transaction_file_step: TransactionFileCreatorStep,
-    test_db_session,
-    test_db_other_session,
-    initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
+    local_initialize_factories_session,
     tmp_path,
     monkeypatch,
 ):
@@ -159,9 +158,12 @@ def test_check_file_creation(
     # Stock the database with a handful of check payments in the correct state to be picked up.
     payments = []
     for _i in range(fake.random_int(min=6, max=15)):
-        payments.append(_random_valid_check_payment_with_state_log(test_db_session))
+        payments.append(_random_valid_check_payment_with_state_log(local_test_db_session))
 
     # generate the check files
+    transaction_file_step = TransactionFileCreatorStep(
+        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+    )
     transaction_file_step.run_step()
 
     # Validate the EZ Check File was created properly
@@ -170,7 +172,7 @@ def test_check_file_creation(
     assert len(ez_check_file.records) == len(payments)
 
     ref_file = (
-        test_db_session.query(ReferenceFile)
+        local_test_db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.PUB_EZ_CHECK.reference_file_type_id
@@ -198,7 +200,7 @@ def test_check_file_creation(
     assert len(positive_pay_file.entries) == len(payments)
 
     ref_file = (
-        test_db_session.query(ReferenceFile)
+        local_test_db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.PUB_POSITIVE_PAYMENT.reference_file_type_id
@@ -225,7 +227,7 @@ def test_check_file_creation(
     # Confirm that we updated the state log for each payment.
     for payment in payments:
         assert (
-            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            local_test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
             .filter(
                 StateLog.end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id
             )

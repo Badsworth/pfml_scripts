@@ -131,14 +131,17 @@ class TestDataSet:
 
 
 def test_e2e_pub_payments(
-    test_db_session,
-    test_db_other_session,
-    initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
+    local_initialize_factories_session,
     monkeypatch,
     set_exporter_env_vars,
     caplog,
-    create_triggers,
+    local_create_triggers,
 ):
+    test_db_session = local_test_db_session
+    test_db_other_session = local_test_db_other_session
+
     # TODO Validate error and warning logs
 
     # ========================================================================
@@ -1613,13 +1616,13 @@ def test_e2e_pub_payments(
 
 
 def test_e2e_pub_payments_delayed_scenarios(
-    test_db_session,
-    test_db_other_session,
-    initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
+    local_initialize_factories_session,
     monkeypatch,
     set_exporter_env_vars,
     caplog,
-    create_triggers,
+    local_create_triggers,
 ):
     # ========================================================================
     # Configuration / Setup
@@ -1650,28 +1653,28 @@ def test_e2e_pub_payments_delayed_scenarios(
 
     with freeze_time("2021-05-01 21:30:00", tz_offset=5):
         process_fineos_extracts(
-            test_dataset, mock_experian_client, test_db_session, test_db_other_session
+            test_dataset, mock_experian_client, local_test_db_session, local_test_db_other_session
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,],
             end_state=State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.INVALID_ADDRESS_FIXED,],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
     # ===============================================================================
@@ -1687,8 +1690,8 @@ def test_e2e_pub_payments_delayed_scenarios(
 
     with freeze_time("2021-05-02 18:00:00", tz_offset=5):
         run_process_pub_payments_ecs_task(
-            db_session=test_db_session,
-            log_entry_db_session=test_db_other_session,
+            db_session=local_test_db_session,
+            log_entry_db_session=local_test_db_other_session,
             config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
         )
 
@@ -1696,7 +1699,7 @@ def test_e2e_pub_payments_delayed_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
     # ===============================================================================
@@ -1711,7 +1714,7 @@ def test_e2e_pub_payments_delayed_scenarios(
 
     with freeze_time("2021-05-02 21:00:00", tz_offset=5):
         process_fineos_extracts(
-            test_dataset, mock_experian_client, test_db_session, test_db_other_session
+            test_dataset, mock_experian_client, local_test_db_session, local_test_db_other_session
         )
 
         assert_payment_state_for_scenarios(
@@ -1722,7 +1725,7 @@ def test_e2e_pub_payments_delayed_scenarios(
                 ScenarioName.INVALID_ADDRESS_FIXED,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
     # ===============================================================================
@@ -1758,8 +1761,8 @@ def test_e2e_pub_payments_delayed_scenarios(
 
     with freeze_time("2021-05-03 18:00:00", tz_offset=5):
         run_process_pub_payments_ecs_task(
-            db_session=test_db_session,
-            log_entry_db_session=test_db_other_session,
+            db_session=local_test_db_session,
+            log_entry_db_session=local_test_db_other_session,
             config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
         )
 
@@ -1767,7 +1770,7 @@ def test_e2e_pub_payments_delayed_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED],
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
     # ===============================================================================
@@ -1782,14 +1785,14 @@ def test_e2e_pub_payments_delayed_scenarios(
 
     with freeze_time("2021-05-03 21:30:00", tz_offset=5):
         process_fineos_extracts(
-            test_dataset, mock_experian_client, test_db_session, test_db_other_session
+            test_dataset, mock_experian_client, local_test_db_session, local_test_db_other_session
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
     # TODO Scenario: Day 6 Prenote Rejection

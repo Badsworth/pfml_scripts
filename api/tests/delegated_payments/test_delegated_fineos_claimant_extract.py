@@ -52,6 +52,15 @@ def claimant_extract_step(initialize_factories_session, test_db_session, test_db
 
 
 @pytest.fixture
+def local_claimant_extract_step(
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
+):
+    return claimant_extract.ClaimantExtractStep(
+        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+    )
+
+
+@pytest.fixture
 def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
     requested_absence_file_name = "2020-12-21-19-20-42-VBI_REQUESTEDABSENCE_SOM.csv"
     content_line_one = '"NOTIFICATION_CASENUMBER","ABSENCE_CASENUMBER","ABSENCE_CASETYPENAME","ABSENCE_CASESTATUS","ABSENCE_CASEOWNER","ABSENCE_CASECREATIONDATE","ABSENCE_CASELASTUPDATEDATE","ABSENCE_INTAKESOURCE","ABSENCE_NOTIFIEDBY","EMPLOYEE_CUSTOMERNO","EMPLOYEE_MANAGER_CUSTOMERNO","EMPLOYEE_ADDTL_MNGR_CUSTOMERNO","EMPLOYER_CUSTOMERNO","EMPLOYER_NAME","EMPLOYMENT_CLASSID","EMPLOYMENT_INDEXID","LEAVEREQUEST_ID","LEAVEREQUEST_NOTIFICATIONDATE","LEAVEREQUEST_LASTUPDATEDATE","LEAVEREQUEST_ORIGINALREQUEST","LEAVEREQUEST_EVIDENCERESULTTYPE","LEAVEREQUEST_DECISION","LEAVEREQUEST_DIAGNOSIS","ABSENCEREASON_CLASSID","ABSENCEREASON_INDEXID","ABSENCEREASON_NAME","ABSENCEREASON_QUALIFIER1","ABSENCEREASON_QUALIFIER2","ABSENCEREASON_COVERAGE","PRIMARY_RELATIONSHIP_NAME","PRIMARY_RELATIONSHIP_QUAL1","PRIMARY_RELATIONSHIP_QUAL2","PRIMARY_RELATIONSHIP_COVER","SECONDARY_RELATIONSHIP_NAME","SECONDARY_RELATIONSHIP_QUAL1","SECONDARY_RELATIONSHIP_QUAL2","SECONDARY_RELATIONSHIP_COVER","ABSENCEPERIOD_CLASSID","ABSENCEPERIOD_INDEXID","ABSENCEPERIOD_TYPE","ABSENCEPERIOD_STATUS","ABSENCEPERIOD_START","ABSENCEPERIOD_END","EPISODE_FREQUENCY_COUNT","EPISODE_FREQUENCY_PERIOD","EPISODIC_FREQUENCY_PERIOD_UNIT","EPISODE_DURATION","EPISODIC_DURATION_UNIT"'
@@ -91,12 +100,12 @@ def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
 
 
 def test_run_step_happy_path(
-    claimant_extract_step,
-    test_db_session,
+    local_claimant_extract_step,
+    local_test_db_session,
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-12-20")
 
@@ -104,15 +113,17 @@ def test_run_step_happy_path(
     employee = EmployeeFactory(tax_identifier=tax_identifier)
     EmployerFactory(fineos_employer_id=96)
 
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 1
 
-    claimant_extract_step.run()
+    local_claimant_extract_step.run()
 
     # Requested absences file artifact above has three records but only one with the
     # LEAVEREQUEST_EVIDENCERESULTTYPE != Satisfied
     claims: List[Claim] = (
-        test_db_session.query(Claim).filter(Claim.fineos_absence_id == "NTN-1308-ABS-01").all()
+        local_test_db_session.query(Claim)
+        .filter(Claim.fineos_absence_id == "NTN-1308-ABS-01")
+        .all()
     )
 
     assert len(claims) == 1
@@ -132,7 +143,7 @@ def test_run_step_happy_path(
     assert claim.is_id_proofed is True
 
     updated_employee = (
-        test_db_session.query(Employee)
+        local_test_db_session.query(Employee)
         .filter(Employee.tax_identifier_id == tax_identifier.tax_identifier_id)
         .one_or_none()
     )
@@ -154,7 +165,7 @@ def test_run_step_happy_path(
     assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.PENDING_PRE_PUB.prenote_state_id
 
     # Confirm StateLogs
-    state_logs = test_db_session.query(StateLog).all()
+    state_logs = local_test_db_session.query(StateLog).all()
 
     updated_employee_state_log_count = 2
 
@@ -171,22 +182,22 @@ def test_run_step_happy_path(
         assert state_log.import_log_id == 1
 
     # Confirm metrics added to import log
-    import_log = test_db_session.query(ImportLog).first()
+    import_log = local_test_db_session.query(ImportLog).first()
     import_log_report = json.loads(import_log.report)
     assert import_log_report["evidence_not_id_proofed_count"] == 3
     assert import_log_report["valid_claimant_count"] == 1
 
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
 
 def test_run_step_existing_approved_eft_info(
-    claimant_extract_step,
-    test_db_session,
+    local_claimant_extract_step,
+    local_test_db_session,
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     # Very similar to the happy path test, but EFT info has already been
     # previously approved and we do not need to start the prenoting process
@@ -207,13 +218,13 @@ def test_run_step_existing_approved_eft_info(
 
     EmployerFactory(fineos_employer_id=96)
 
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 1
 
-    claimant_extract_step.run()
+    local_claimant_extract_step.run()
 
     updated_employee = (
-        test_db_session.query(Employee)
+        local_test_db_session.query(Employee)
         .filter(Employee.tax_identifier_id == tax_identifier.tax_identifier_id)
         .one_or_none()
     )
@@ -234,12 +245,12 @@ def test_run_step_existing_approved_eft_info(
 
 
 def test_run_step_existing_rejected_eft_info(
-    claimant_extract_step,
-    test_db_session,
+    local_claimant_extract_step,
+    local_test_db_session,
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     # Very similar to the happy path test, but EFT info has already been
     # previously rejected and thus it goes into an error state instead
@@ -261,13 +272,13 @@ def test_run_step_existing_rejected_eft_info(
 
     EmployerFactory(fineos_employer_id=96)
 
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 1
 
-    claimant_extract_step.run()
+    local_claimant_extract_step.run()
 
     updated_employee = (
-        test_db_session.query(Employee)
+        local_test_db_session.query(Employee)
         .filter(Employee.tax_identifier_id == tax_identifier.tax_identifier_id)
         .one_or_none()
     )
@@ -294,32 +305,32 @@ def test_run_step_existing_rejected_eft_info(
 
 
 def test_run_step_no_employee(
-    claimant_extract_step,
-    test_db_session,
+    local_claimant_extract_step,
+    local_test_db_session,
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-12-20")
 
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
-    claimant_extract_step.run()
+    local_claimant_extract_step.run()
 
     claim: Optional[Claim] = (
-        test_db_session.query(Claim)
+        local_test_db_session.query(Claim)
         .filter(Claim.fineos_absence_id == "NTN-1308-ABS-01")
         .one_or_none()
     )
 
     assert claim is None
 
-    state_logs = test_db_session.query(StateLog).all()
+    state_logs = local_test_db_session.query(StateLog).all()
     assert len(state_logs) == 0
 
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
 

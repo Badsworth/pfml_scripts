@@ -90,9 +90,9 @@ def test_process_identify_mmars_status_add_to_vcm(
 
 
 def test_process_identify_mmars_status_unexpected_internal_exception_for_state_log(
-    test_db_session, initialize_factories_session, mocker, mock_data_mart_client
+    local_test_db_session, local_initialize_factories_session, mocker, mock_data_mart_client
 ):
-    state_logs = [create_identify_mmars_status_state_log(test_db_session) for _ in range(2)]
+    state_logs = [create_identify_mmars_status_state_log(local_test_db_session) for _ in range(2)]
 
     def mock_get_vendor_info(vendor_tin):
         if vendor_tin == state_logs[0].employee.tax_identifier.tax_identifier:
@@ -102,24 +102,24 @@ def test_process_identify_mmars_status_unexpected_internal_exception_for_state_l
 
     mock_data_mart_client.get_vendor_info = mocker.Mock(wraps=mock_get_vendor_info)
 
-    state_log_count_before = test_db_session.query(StateLog).count()
+    state_log_count_before = local_test_db_session.query(StateLog).count()
     assert state_log_count_before == 2
 
     # run process
-    identify_mmars_status.process(test_db_session, mock_data_mart_client)
+    identify_mmars_status.process(local_test_db_session, mock_data_mart_client)
 
     # we do not want to test things that are not committed, so close the session
     # so the asserts below are against only the data that exists in the DB
-    test_db_session.close()
+    local_test_db_session.close()
 
-    state_log_count_after = test_db_session.query(StateLog).count()
+    state_log_count_after = local_test_db_session.query(StateLog).count()
     assert state_log_count_after == 4
 
     # first employee should be in same state as start due to exception
     new_state_log_for_failed = state_log_util.get_latest_state_log_in_end_state(
         associated_model=state_logs[0].employee,
         end_state=State.IDENTIFY_MMARS_STATUS,
-        db_session=test_db_session,
+        db_session=local_test_db_session,
     )
 
     assert new_state_log_for_failed
@@ -131,7 +131,7 @@ def test_process_identify_mmars_status_unexpected_internal_exception_for_state_l
     new_state_log_for_success = state_log_util.get_latest_state_log_in_end_state(
         associated_model=state_logs[1].employee,
         end_state=State.ADD_TO_VCC,
-        db_session=test_db_session,
+        db_session=local_test_db_session,
     )
 
     assert new_state_log_for_success
@@ -140,9 +140,13 @@ def test_process_identify_mmars_status_unexpected_internal_exception_for_state_l
 
 
 def test_process_identify_mmars_status_success(
-    test_db_session, mocker, initialize_factories_session, mock_data_mart_client,
+    local_test_db_session, mocker, local_initialize_factories_session, mock_data_mart_client,
 ):
-    state_log = create_identify_mmars_status_state_log(test_db_session)
+    state_log = create_identify_mmars_status_state_log(local_test_db_session)
     run_test_process_success_no_pending_payment(
-        test_db_session, mock_data_mart_client, mocker, state_log, identify_mmars_status.process
+        local_test_db_session,
+        mock_data_mart_client,
+        mocker,
+        state_log,
+        identify_mmars_status.process,
     )
