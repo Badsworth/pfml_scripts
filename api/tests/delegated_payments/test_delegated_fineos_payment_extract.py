@@ -870,7 +870,7 @@ def test_process_extract_data_claim_exists_without_leave_type(
     assert len(validation_issues) == 1
     assert validation_issues[0] == {
         "reason": "MissingInDB",
-        "details": "Claim ABS-4720 exists, but does not have a claim type associated with it.",
+        "details": f"Claim {fineos_data.absence_case_number} exists, but does not have a claim type associated with it.",
     }
 
     employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
