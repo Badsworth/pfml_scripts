@@ -425,12 +425,14 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             chequeDetails=payment_preference.chequeDetails,
         )
 
+    # @todo: figure out if this needs to be changed due to recent migration
     def update_occupation(
         self,
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
         NAICS_occupation: Optional[str],
+        job_title: Optional[str],
     ) -> None:
         _capture_call(
             "update_occupation",
@@ -439,6 +441,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             hours_worked_per_week=hours_worked_per_week,
             occupation_id=occupation_id,
             NAICS_occupation=NAICS_occupation,
+            job_title=job_title,
         )
 
     def upload_document(
@@ -589,6 +592,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             fineos_document_id=fineos_document_id,
         )
 
+    # @todo: figure out if this needs to be changed due to recent migration
     def get_week_based_work_pattern(
         self, user_id: str, occupation_id: Union[str, int],
     ) -> models.customer_api.WeekBasedWorkPattern:
@@ -610,6 +614,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         else:
             return week_based_work_pattern
 
+    # @todo: figure out if this needs to be changed due to recent migration
     def update_week_based_work_pattern(
         self,
         user_id: str,

@@ -263,8 +263,12 @@ class Application(Base):
     has_reduced_schedule_leave_periods = Column(Boolean)
     has_state_id = Column(Boolean)
     mass_id = Column(Text)
+
+    # Application's occupation
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
+    job_title = Column(Text)
     hours_worked_per_week = Column(Numeric)
+
     relationship_to_caregiver_id = Column(
         Integer, ForeignKey("lk_relationship_to_caregiver.relationship_to_caregiver_id")
     )
@@ -309,7 +313,6 @@ class Application(Base):
     employer = relationship(Employer)
     employee = relationship(Employee)
     occupation = relationship(LkOccupation)
-    # @todo: occupation titles
     leave_type = relationship(LkLeaveType)
     leave_reason = relationship(LkLeaveReason)
     leave_reason_qualifier = relationship(LkLeaveReasonQualifier)

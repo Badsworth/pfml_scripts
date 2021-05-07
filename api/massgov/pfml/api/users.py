@@ -8,10 +8,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
-from massgov.pfml.api.models.users.responses import (
-    UserLeaveAdminResponse,
-    UserResponse,
-)
+from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
 from massgov.pfml.api.services.user_rules import (
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,

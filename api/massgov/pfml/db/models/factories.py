@@ -420,6 +420,7 @@ class OccupationFactory(BaseFactory):
         model = employee_models.Occupation
 
     occupation_id = None
+    occupation_code = None
     occupation_description = None
 
 
@@ -473,6 +474,8 @@ class ApplicationFactory(BaseFactory):
     # Lookups
     occupation = factory.SubFactory(OccupationFactory)
     occupation_id = factory.LazyAttribute(lambda o: o.occupation.occupation_id)
+    job_title = None
+
     employment_status_id = None
     relationship_to_caregiver_id = None
     relationship_qualifier_id = None

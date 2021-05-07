@@ -279,10 +279,6 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     return await occupationsApi.getAll();
   };
 
-  const getOccupationTitles = async (occupation_id) => {
-    return await occupationsApi.getTitlesById(parseInt(occupation_id));
-  };
-
   return {
     benefitsApplications,
     complete,
@@ -296,7 +292,6 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     submitPaymentPreference,
     warningsLists,
     getOccupations,
-    getOccupationTitles,
   };
 };
 

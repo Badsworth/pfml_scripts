@@ -25,6 +25,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
       has_reduced_schedule_leave_periods: null,
       has_state_id: null,
       has_submitted_payment_preference: null,
+      job_title: null,
       leave_details: {
         caring_leave_metadata: null,
         child_birth_date: null,
@@ -39,8 +40,6 @@ class BenefitsApplication extends BaseBenefitsApplication {
       mass_id: null,
       // See Occupation model
       occupation_id: null,
-      occupation_title_custom: null,
-      occupation_title_id: null,
       // array of OtherIncome objects. See the OtherIncome model
       other_incomes: [],
       other_incomes_awaiting_approval: null,

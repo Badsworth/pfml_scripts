@@ -14,14 +14,3 @@ export default class Occupation extends BaseModel {
     };
   }
 }
-
-export class OccupationTitle extends BaseModel {
-  get defaults() {
-    return {
-      occupation_id: null,
-      occupation_title_code: null,
-      occupation_title_description: null,
-      occupation_title_id: null,
-    };
-  }
-}

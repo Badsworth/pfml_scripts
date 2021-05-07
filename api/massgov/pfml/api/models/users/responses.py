@@ -37,10 +37,3 @@ class OccupationResponse(PydanticBaseModel):
     occupation_id: int
     occupation_code: int
     occupation_description: str
-
-
-class OccupationTitleResponse(PydanticBaseModel):
-    occupation_title_id: int
-    occupation_id: int
-    occupation_title_code: int
-    occupation_title_description: str

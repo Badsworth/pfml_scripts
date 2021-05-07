@@ -1,7 +1,6 @@
-/* eslint-disable jsdoc/require-returns */
-import Occupation, { OccupationTitle } from "../models/Occupation";
-
 import BaseApi from "./BaseApi";
+/* eslint-disable jsdoc/require-returns */
+import Occupation from "../models/Occupation";
 import routes from "../routes";
 
 /**
@@ -24,16 +23,6 @@ export default class OccupationsApi extends BaseApi {
   getAll = async () => {
     let { data } = await this.request("GET");
     data = data.map((d) => new Occupation(d));
-    return Promise.resolve(data);
-  };
-
-  /**
-   * Get the full list of occupation titles of an occupation category id
-   * @returns {Promise<OccupationTitlesApiResult>}
-   */
-  getTitlesById = async (occupation_id) => {
-    let { data } = await this.request("GET", `${occupation_id}/titles`);
-    data = data.map((d) => new OccupationTitle(d));
     return Promise.resolve(data);
   };
 }
