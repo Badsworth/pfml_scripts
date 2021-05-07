@@ -323,7 +323,6 @@ module "unexpected_validation_violations" {
         OR issueType LIKE 'value_error%'
       )
       AND issueField NOT LIKE 'employer_benefits[%].benefit_amount_frequency'
-      AND issueField NOT LIKE 'OCOrganisation[%].CustomerNo'
     FACET issueType, issueField
   NRQL
 }
