@@ -518,6 +518,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 "request for more information",
                 "denial notice",
                 "employer response additional documentation",
+                "care for a family member form",
             ]
             allowed_documents = [
                 mock_document(absence_id, document_type=document_type)

@@ -34,6 +34,7 @@ DOWNLOADABLE_DOC_TYPES = [
     "request for more information",
     "denial notice",
     "employer response additional documentation",
+    "care for a family member form",
 ]
 
 logger = logging.get_logger(__name__)
