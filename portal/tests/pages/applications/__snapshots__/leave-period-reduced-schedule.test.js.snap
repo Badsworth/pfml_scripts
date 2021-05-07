@@ -153,7 +153,7 @@ exports[`LeavePeriodReducedSchedule renders the page with medical leave content 
         },
       ]
     }
-    hint="Refer to Question 26 in the Certification of a Serious Health Condition form (page 7)."
+    hint="Your answer must match Question 26 in the Certification of a Serious Health Condition form."
     label="Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?"
     name="has_reduced_schedule_leave_periods"
     onChange={[Function]}
@@ -222,6 +222,6 @@ Array [
   <br
     key="br-2"
   />,
-  "Refer to Question 32 in the Certification of a Serious Health Condition form (page 8).",
+  "Your answer must match Question 32 in the Certification of a Serious Health Condition form .",
 ]
 `;
