@@ -608,7 +608,7 @@ jobs:
     needs: [finish-comms-slack, end-to-end]
     if: always() && 
       (
-        (needs.end-to-end.conclusion == 'failure' || needs.end-to-end.conclusion == 'timed_out')
+        (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
       )
     runs-on: ubuntu-latest
     steps:
