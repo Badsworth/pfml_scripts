@@ -260,9 +260,7 @@ const ClaimTableRows = (props) => {
       case "employer_fein":
         return employerFein;
       case "status":
-        return (
-          <AbsenceCaseStatusTag status={get(claim, "fineos_absence_status")} />
-        );
+        return <AbsenceCaseStatusTag status={get(claim, "claim_status")} />;
       default:
         return "";
     }

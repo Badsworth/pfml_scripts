@@ -39,7 +39,7 @@ const getClaims = (leaveAdmin) => {
         employer_fein: leaveAdmin.employer_fein,
       }),
       fineos_absence_id: "NTN-111-ABS-01",
-      fineos_absence_status: "Approved",
+      claim_status: "Approved",
     }),
   ];
 };
