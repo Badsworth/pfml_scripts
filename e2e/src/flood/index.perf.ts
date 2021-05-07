@@ -6,7 +6,6 @@ import {
   step,
 } from "@flood/element";
 import * as Cfg from "./config";
-import * as Util from "./helpers";
 import scenarios from "./scenarios";
 
 export const settings: TestSettings = {
@@ -36,8 +35,7 @@ export default async (): Promise<void> => {
   });
   // Loops through all scenarios and defines the steps for each.
   Object.entries(scenarios).forEach(([scenario, steps]) => {
-    const realTimeSteps = steps.map(Util.simulateRealTime);
-    realTimeSteps.forEach((stepDef) => {
+    steps.forEach((stepDef) => {
       const stepName = `${scenario}: ${stepDef.name}`;
       step.if(
         () => curr === scenario,

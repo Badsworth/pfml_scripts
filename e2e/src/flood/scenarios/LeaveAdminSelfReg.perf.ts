@@ -23,7 +23,6 @@ export const settings = Cfg.globalElementSettings;
 export const scenario: Cfg.LSTScenario = "LeaveAdminSelfRegistration";
 export const steps: Cfg.StoredStep[] = [
   {
-    time: 15000,
     name: "Go to Employer Registration",
     test: async (browser: Browser): Promise<void> => {
       await browser.page.setCookie({
@@ -49,7 +48,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Register new employer",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // create email verifier and user credentials
@@ -77,7 +75,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Verify new employer's email",
     test: async (browser: Browser): Promise<void> => {
       const code = await emailVerifier.getVerificationCodeForUser(username);
@@ -100,7 +97,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Login with new employer account",
     test: async (browser: Browser): Promise<void> => {
       const emailInput = await Util.labelled(browser, "Email address");
@@ -122,7 +118,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Verify Employer Account",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       const { withholdings, name } = (data as unknown) as EmployerData;

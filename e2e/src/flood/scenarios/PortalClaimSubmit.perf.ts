@@ -13,7 +13,6 @@ export const scenario: Cfg.LSTScenario = "PortalClaimSubmit";
 
 export const steps: Cfg.StoredStep[] = [
   {
-    time: 15000,
     name: "Register a new account",
     test: async (browser: Browser): Promise<void> => {
       await setFeatureFlags(browser);
@@ -28,7 +27,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Login with new account",
     test: async (browser: Browser): Promise<void> => {
       authToken = await login(
@@ -39,12 +37,10 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Create new application",
     test: createApplication,
   },
   {
-    time: 15000,
     name: "Update application",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // Attempt at simulating portal's consequent small patch requests
@@ -61,22 +57,18 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Submit application",
     test: submitApplication,
   },
   {
-    time: 15000,
     name: "Upload documents",
     test: uploadDocuments,
   },
   {
-    time: 15000,
     name: "Complete application",
     test: completeApplication,
   },
   {
-    time: 35000,
     name: "Point of Contact fills employer response",
     options: { waitTimeout: 300000 },
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
@@ -87,7 +79,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 0,
     name: "Assign tasks to specific Agent",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // we don't want to run this step on a real Flood
@@ -174,7 +165,6 @@ async function login(
 
 function employerResponse(fineosId: string): Cfg.StoredStep {
   return {
-    time: 0,
     name: `Point of Contact responds to "${fineosId}"`,
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       await setFeatureFlags(browser);

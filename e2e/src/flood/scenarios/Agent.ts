@@ -51,12 +51,10 @@ export default (
 
   const steps: Cfg.StoredStep[] = [
     {
-      time: 0,
       name: "Login into fineos",
       test: tryLogin,
     },
     {
-      time: 0,
       name: "Do task",
       test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
         // navigate to tasks list and find next task type

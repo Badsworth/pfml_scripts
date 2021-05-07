@@ -33,7 +33,6 @@ export type LSTStepFunction = (
 
 export type StoredStep = {
   name: string;
-  time: number;
   options?: StepOptions;
   test: LSTStepFunction;
 };

@@ -14,14 +14,12 @@ export const settings = {
 export const scenario: Cfg.LSTScenario = "FineosClaimSubmit";
 export const steps: Cfg.StoredStep[] = [
   {
-    time: 15000,
     name: "Login into fineos",
     test: async (browser: Browser): Promise<void> => {
       await browser.visit(await Cfg.getFineosBaseUrl("SAVILINX"));
     },
   },
   {
-    time: 15000,
     name: "Search for a party",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       const { claim } = data;
@@ -54,7 +52,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Fill out Notification Details",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       const { claim } = data;
@@ -88,7 +85,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Fill out Occupation Details",
     test: async (browser: Browser): Promise<void> => {
       const nextButton = await Util.waitForElement(
@@ -99,7 +95,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Fill out Notification Options",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       const {
@@ -136,7 +131,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Fill out Reason for Absence",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       const { claim } = data;
@@ -224,7 +218,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Fill out Dates of Absence",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       const { claim } = data;
@@ -251,7 +244,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Fill out Work Absence Details",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       const { claim } = data;
@@ -343,7 +335,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Fill out Additional Absence Details",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       const { claim } = data;
@@ -420,7 +411,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Complete Wrap up section",
     test: async (browser: Browser): Promise<void> => {
       const nextButton = await Util.waitForElement(
@@ -439,7 +429,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Upload documents",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       const { documents } = data;
@@ -498,7 +487,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 0,
     name: "Assign tasks to specific Agent",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       if (!ENV.FLOOD_LOAD_TEST) {
