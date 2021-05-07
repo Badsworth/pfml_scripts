@@ -46,6 +46,7 @@ class PaymentVoucherCSV:
     payment_event_type: Optional[str]
     vcm_flag: str
     absence_case_creation_date: Optional[str]
+    absence_reason_name: Optional[str]
 
     # fields mostly to be populated manually by team using the voucher file for
     # actually processing the payments
@@ -99,6 +100,7 @@ PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     payment_event_type="FINEOS PEI event type",
     vcm_flag="Has Pending VCM",
     absence_case_creation_date="Absence case creation date",
+    absence_reason_name="Absence reason name",
     good_to_pay_from_prior_batch="Good to pay from prior batch",
     had_a_payment_in_a_prior_batch_by_vc_code="Had a payment in a prior batch (by VC Code)",
     inv="Inv # Exists on the VALID payments sent to EOLFIN/ MMARS nnnnn",

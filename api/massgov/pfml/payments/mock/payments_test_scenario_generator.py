@@ -10,6 +10,7 @@ from typing import Dict, List, Optional
 import faker
 
 import massgov.pfml.util.logging as logging
+from massgov.pfml.db.models.applications import LeaveReason
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     BankAccountType,
@@ -631,6 +632,7 @@ class ScenarioData:
     leave_request_decision: str
     payment_event_type: str
     absence_case_creation_date: str
+    absence_reason_name: str
 
     def __repr__(self):
         return (
@@ -802,8 +804,24 @@ def generate_scenario_data_db(
             leave_request_id = ""
             leave_request_decision = ""
             absence_case_creation_date = ""
+            absence_reason_name = ""
         else:
             absence_case_creation_date = fake.date_time()
+            if (
+                scenario_descriptor.leave_type.claim_type_id
+                == ClaimType.MEDICAL_LEAVE.claim_type_id
+            ):
+                absence_reason_name = (
+                    LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_description
+                )
+            else:
+                absence_reason_name = random.choice(
+                    [
+                        LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_description,
+                        LeaveReason.PREGNANCY_MATERNITY.leave_reason_description,
+                        LeaveReason.CHILD_BONDING.leave_reason_description,
+                    ]
+                )
 
         if (
             scenario_descriptor.missing_from_vbi_requestedabsence_som
@@ -827,6 +845,7 @@ def generate_scenario_data_db(
         leave_request_decision=leave_request_decision,
         payment_event_type=payment_event_type,
         absence_case_creation_date=absence_case_creation_date,
+        absence_reason_name=absence_reason_name,
     )
 
 

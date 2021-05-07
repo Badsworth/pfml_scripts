@@ -227,6 +227,7 @@ class ScenarioOutput:
             "payment_event_type": self.scenario_data.payment_event_type,
             "vcm_flag": "Yes",  # This should be overridden as needed
             "absence_case_creation_date": absence_case_creation_date,
+            "absence_reason_name": self.scenario_data.absence_reason_name,
             "claimants_that_have_zero_or_credit_value": (
                 "1" if payment.amount is not None and float(payment.amount) <= 0 else ""
             ),
