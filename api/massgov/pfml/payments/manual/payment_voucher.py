@@ -477,8 +477,12 @@ def write_row_to_output(
         has_errors = True
 
     # Process fields from VBI_REQUESTEDABSENCE.csv.
+    # Note: Using VBI_REQUESTEDABSENCE.csv is the most accurate source when attempting to
+    # get data at the leave request level of granularity because we are indexing this
+    # extract by leave_request_id.
     leave_request_id: Optional[str] = ""
     leave_request_decision: Optional[str] = ""
+    absence_case_creation_date: Optional[str] = ""
     if (
         payment_data.leave_request_id is not None
         and payment_data.leave_request_id in voucher_extract_data.vbi_requested_absence.indexed_data
@@ -488,9 +492,10 @@ def write_row_to_output(
         ]
         leave_request_id = payment_data.leave_request_id
         leave_request_decision = vbi_requested_absence.get("LEAVEREQUEST_DECISION")
+        absence_case_creation_date = vbi_requested_absence.get("ABSENCE_CASECREATIONDATE")
     else:
         logger.warning(
-            "Leave request id missing from vpeiclaimdetails.csv and/or leave request id not found in VBI_REQUESTEDABSENCE.csv; cannot set leave_request_id, leave_request_decision",
+            "Leave request id missing from vpeiclaimdetails.csv and/or leave request id not found in VBI_REQUESTEDABSENCE.csv; cannot set leave_request_id, leave_request_decision, absence_case_creation_date",
             extra=extra,
         )
         has_errors = True
@@ -582,6 +587,7 @@ def write_row_to_output(
         leave_request_decision=leave_request_decision,
         payment_event_type=payment_data.payment_event_type,
         vcm_flag=vcm_flag,
+        absence_case_creation_date=absence_case_creation_date,
         good_to_pay_from_prior_batch="",
         had_a_payment_in_a_prior_batch_by_vc_code="",
         inv="",

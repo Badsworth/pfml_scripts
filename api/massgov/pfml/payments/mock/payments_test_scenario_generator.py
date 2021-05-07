@@ -630,6 +630,7 @@ class ScenarioData:
     leave_request_id: str
     leave_request_decision: str
     payment_event_type: str
+    absence_case_creation_date: str
 
     def __repr__(self):
         return (
@@ -800,6 +801,9 @@ def generate_scenario_data_db(
         ):
             leave_request_id = ""
             leave_request_decision = ""
+            absence_case_creation_date = ""
+        else:
+            absence_case_creation_date = fake.date_time()
 
         if (
             scenario_descriptor.missing_from_vbi_requestedabsence_som
@@ -822,6 +826,7 @@ def generate_scenario_data_db(
         leave_request_id=leave_request_id,
         leave_request_decision=leave_request_decision,
         payment_event_type=payment_event_type,
+        absence_case_creation_date=absence_case_creation_date,
     )
 
 

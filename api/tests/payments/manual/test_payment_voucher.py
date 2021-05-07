@@ -141,6 +141,7 @@ class ScenarioOutput:
         payment_period_end_date = ""
         vendor_invoice_date = ""
         vendor_invoice_number = ""
+        absence_case_creation_date = ""
 
         # Override with values if they are accessible.
         try:
@@ -178,6 +179,11 @@ class ScenarioOutput:
         if payment.claim.fineos_absence_id:
             vendor_invoice_number = gax.get_vendor_invoice_number(
                 payment.claim.fineos_absence_id, payment.fineos_pei_i_value
+            )
+
+        if self.scenario_data.absence_case_creation_date:
+            absence_case_creation_date = self.scenario_data.absence_case_creation_date.strftime(
+                "%Y-%m-%d %H:%M:%S"
             )
 
         # Construct and return the dictionary.
@@ -220,6 +226,7 @@ class ScenarioOutput:
             "leave_request_decision": self.scenario_data.leave_request_decision,
             "payment_event_type": self.scenario_data.payment_event_type,
             "vcm_flag": "Yes",  # This should be overridden as needed
+            "absence_case_creation_date": absence_case_creation_date,
             "claimants_that_have_zero_or_credit_value": (
                 "1" if payment.amount is not None and float(payment.amount) <= 0 else ""
             ),
