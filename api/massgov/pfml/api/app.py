@@ -88,6 +88,9 @@ def create_app(
         g.db = db_session_factory
         g.start_time = time.monotonic()
         massgov.pfml.util.logging.access.access_log_start(flask.request)
+        newrelic.agent.add_custom_parameter(
+            "api_release_version", os.environ.get("RELEASE_VERSION")
+        )
 
     @flask_app.teardown_request
     def close_db(exception=None):
