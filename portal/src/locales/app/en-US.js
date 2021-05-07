@@ -1769,6 +1769,7 @@ const pages = {
   },
   employersClaimsSuccess: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
+    backToDashboardLabel: "Back to Dashboard",
     instructions_processingApplication:
       "We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email with a direct link to details about the decision.",
     instructions_reimbursement:
@@ -1776,7 +1777,6 @@ const pages = {
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
-    backToDashboardLabel: "Back to Dashboard",
     instructions:
       "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
@@ -1809,6 +1809,7 @@ const pages = {
   },
   employersOrganizations: {
     addOrganizationButton: "Add organization",
+    backToDashboardLabel: "Back to Dashboard",
     einTableHeader: "Employer ID number (EIN)",
     nearFutureAvailability_addOrganization:
       "You'll be able to add more organizations to your account in the near future.",
@@ -1817,7 +1818,12 @@ const pages = {
     organizationsTableHeader: "Organization",
     title: "Your organizations",
     verificationBlocked: "Verification blocked",
+    verificationBody:
+      "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
+    verificationInstructions:
+      "You have not verified any organizations. <your-organizations-link>Complete this process</your-organizations-link> to review applications.",
     verificationRequired: "Verification required",
+    verificationTitle: "Verify your account",
   },
   employersOrganizationsAddOrganization: {
     continueButton: "Continue",
