@@ -5,12 +5,16 @@
 #
 # State machine for daily DOR FINEOS ETL.
 #
+data "aws_ecs_cluster" "stage" {
+  cluster_name = "stage"
+}
+
 locals {
   dor_fineos_etl_definition = templatefile("${path.module}/step_function/dor_fineos_etl.json",
     {
       app_name              = "pfml-api"
       cluster_arn           = data.aws_ecs_cluster.stage.arn
-      environment_name      = local.environment_name
+      environment_name      = "stage"
       security_group        = data.aws_security_group.tasks.id
       subnet_1              = tolist(data.aws_subnet_ids.vpc_app.ids)[0]
       subnet_2              = tolist(data.aws_subnet_ids.vpc_app.ids)[1]
@@ -27,5 +31,5 @@ data "aws_security_group" "tasks" {
 
 # This is defined in ecs-tasks/template/sns.tf and referenced by name here.
 data "aws_sns_topic" "task_failure" {
-  name = "mass-pfml-${local.environment_name}-task-failure"
+  name = "mass-pfml-stage-task-failure"
 }

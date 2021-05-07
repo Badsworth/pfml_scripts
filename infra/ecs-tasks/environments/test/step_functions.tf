@@ -6,7 +6,6 @@
 # State machine for daily DOR FINEOS ETL.
 #
 
-# make a file for this
 data "aws_ecs_cluster" "test" {
   cluster_name = "test"
 }
