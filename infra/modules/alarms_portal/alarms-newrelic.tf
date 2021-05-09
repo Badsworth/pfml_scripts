@@ -252,8 +252,8 @@ locals {
 }
 
 resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
-  # WARN: JavaScriptError percentage (errors/pageView) above 2% within the last 10 minutes, and at least 5 sessions active
-  # CRIT: JavaScriptError percentage (errors/pageView) above 5% within the last 10 minutes, and at least 5 sessions active
+  # WARN: JavaScriptError percentage (errors/pageView) above 5% within the last 10 minutes, and at least 5 sessions active
+  # CRIT: JavaScriptError percentage (errors/pageView) above 10% within the last 10 minutes, and at least 5 sessions active
   policy_id      = newrelic_alert_policy.portal_alerts.id
   name           = "JavaScriptErrors too high"
   type           = "static"
@@ -285,17 +285,17 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
   aggregation_window           = 300   # calculate every 5 minutes e.g. TIMESERIES 5 MINUTES
 
   warning {
-    # Warn if two 5-minute periods have error rate > 2%
+    # Warn if two 5-minute periods have error rate > 5%
     threshold_duration    = 600
-    threshold             = 0.02
+    threshold             = 0.05
     operator              = "above"
     threshold_occurrences = "ALL"
   }
 
   critical {
-    # Set the alarm off if two 5-minute periods have error rate > 5%
+    # Set the alarm off if two 5-minute periods have error rate > 10%
     threshold_duration    = 600
-    threshold             = 0.05
+    threshold             = 0.10
     operator              = "above"
     threshold_occurrences = "ALL"
   }
