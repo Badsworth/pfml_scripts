@@ -462,17 +462,9 @@ class ClaimantExtractStep(Step):
         return None
 
     def create_or_update_claim(self, claimant_data: ClaimantData) -> Claim:
-        try:
-            claim_pfml: Optional[Claim] = self.db_session.query(Claim).filter(
-                Claim.fineos_absence_id == claimant_data.absence_case_id
-            ).one_or_none()
-        except SQLAlchemyError as e:
-            logger.exception(
-                "Unexpected error %s with one_or_none when querying for claim",
-                type(e),
-                extra=claimant_data.get_traceable_details(),
-            )
-            raise
+        claim_pfml: Optional[Claim] = self.db_session.query(Claim).filter(
+            Claim.fineos_absence_id == claimant_data.absence_case_id
+        ).one_or_none()
 
         if claim_pfml is None:
             claim_pfml = Claim(claim_id=uuid.uuid4())
