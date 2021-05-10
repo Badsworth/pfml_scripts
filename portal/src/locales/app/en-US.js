@@ -2335,8 +2335,8 @@ const components = {
   },
   newsBanner: {
     body:
-      "In the future, we'll ask you to verify your paid leave contributions to secure your account. <learn-more-link>Learn what you need to do to prepare.</learn-more-link>",
-    header: "Account verification is coming soon",
+      "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be <learn-more-link>adding more features</learn-more-link> to the dashboard so you can easily find and manage paid leave applications.",
+    header: "We're making it easier to manage paid leave application",
   },
   pagination: {
     nextLabel: "Next",

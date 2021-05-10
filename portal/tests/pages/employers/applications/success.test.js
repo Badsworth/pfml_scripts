@@ -28,4 +28,16 @@ describe("Success", () => {
       expect(wrapper.find("BackButton")).toMatchSnapshot();
     });
   });
+
+  describe("when news banner feature flag is enabled", () => {
+    it("renders banner", () => {
+      process.env.featureFlags = { employerShowNewsBanner: true };
+      ({ wrapper } = renderWithAppLogic(Success, {
+        diveLevels: 1,
+        props: { query },
+      }));
+
+      expect(wrapper.find("NewsBanner").exists()).toEqual(true);
+    });
+  });
 });
