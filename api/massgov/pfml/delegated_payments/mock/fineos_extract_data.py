@@ -146,11 +146,6 @@ class FineosClaimantData(FineosData):
         self.account_nbr = self.get_value("account_nbr", ssn)
         self.ssn = self.get_value("ssn", ssn)
         self.default_payment_pref = self.get_value("default_payment_pref", "Y")
-        self.post_code = self.get_value("zip_code", fake.postcode())
-        self.sort_code = self.get_value("sort_code", "623546789")
-        self.account_nbr = self.get_value("ssn", fake.ssn().replace("-", ""))
-        self.natinsno = self.get_value("ssn", fake.ssn().replace("-", ""))
-        self.default_payment_pref = self.get_value("department_pref", "Y")
         self.customer_number = self.get_value("customer_number", fake.ssn().replace("-", ""))
 
         absence_num = str(fake.unique.random_int())
@@ -216,7 +211,7 @@ class FineosPaymentData(FineosData):
         include_requested_absence=True,
         **kwargs,
     ):
-        self.generate_defaults = generate_defaults
+        super().__init__(generate_defaults, **kwargs)
         self.include_vpei = include_vpei
         self.include_claim_details = include_claim_details
         self.include_payment_details = include_payment_details
