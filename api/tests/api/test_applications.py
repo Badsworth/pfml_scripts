@@ -26,6 +26,7 @@ from massgov.pfml.db.models.applications import (
     FINEOSWebIdExt,
     LeaveReason,
     LeaveReasonQualifier,
+    NoClaimTypeForAbsenceType,
     Phone,
     RelationshipQualifier,
     RelationshipToCaregiver,
@@ -44,6 +45,7 @@ from massgov.pfml.db.models.factories import (
     EmployerBenefitFactory,
     EmployerFactory,
     IntermittentLeavePeriodFactory,
+    LeaveReasonFactory,
     OtherIncomeFactory,
     PreviousLeaveFactory,
     PreviousLeaveOtherReasonFactory,
@@ -281,7 +283,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
 
     assert response.status_code == 200
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     # Formatted fields are saved as unformatted (i.e. no dashes)
     assert application.tax_identifier
@@ -383,7 +385,7 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
     assert response.status_code == 200
 
     # Verify values in the DB are updated and not masked
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.tax_identifier.tax_identifier == "123456789"
     assert application.mass_id == "123456789"
     assert application.date_of_birth.isoformat() == "1970-01-01"
@@ -487,7 +489,7 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
     assert response.status_code == 200
 
     # Nothing in the DB value was actually updated to the masked value
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.tax_identifier.tax_identifier == "123456789"
     assert application.mass_id == "123456789"
     assert application.date_of_birth.isoformat() == "1970-01-01"
@@ -613,7 +615,7 @@ def test_application_patch_has_mailing_address(client, user, auth_token, test_db
     assert response_body.get("data").get("has_mailing_address") is True
     assert response_body.get("data").get("mailing_address")["line_1"] == "*******"
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.has_mailing_address is True
     assert application.mailing_address.address_line_one == "123 Foo St."
 
@@ -638,7 +640,7 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
         json=update_request_body,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("mailing_address")["city"] == "Chicago"
@@ -663,7 +665,7 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
         json=update_request_body,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("mailing_address")["city"] == "Chicago"
@@ -680,7 +682,7 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
         json=update_request_body_dob,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     response_body_new_update = response_new_update.get_json()
     assert response_body_new_update.get("data").get("mailing_address")["city"] == "Chicago"
     assert response_body_new_update.get("data").get("mailing_address")["line_1"] == "*******"
@@ -694,7 +696,7 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
         json=update_request_body,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("mailing_address") is None
@@ -721,7 +723,7 @@ def test_application_patch_residential_address(client, user, auth_token, test_db
         json=update_request_body,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("residential_address")["city"] == "Chicago"
@@ -745,7 +747,7 @@ def test_application_patch_residential_address(client, user, auth_token, test_db
         json=update_request_body,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("residential_address")["city"] == "Chicago"
@@ -762,7 +764,7 @@ def test_application_patch_residential_address(client, user, auth_token, test_db
         json=update_request_body,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("residential_address") is None
@@ -786,7 +788,7 @@ def test_application_patch_residential_address_null_values(
         json=update_request_body,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("residential_address") == {}
@@ -807,7 +809,7 @@ def test_application_patch_residential_address_null_values(
         json=update_request_body,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("residential_address").get("state") is None
@@ -894,7 +896,7 @@ def test_application_patch_phone(client, user, auth_token, test_db_session):
         json=update_request_body,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
     response_phone = response_body.get("data").get("phone")
@@ -915,7 +917,7 @@ def test_application_patch_phone(client, user, auth_token, test_db_session):
         json=update_request_body,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.phone.phone_number == "+12404871234"
     assert application.phone.phone_type_id == 3  # Phone
     response_body = response.get_json()
@@ -933,7 +935,7 @@ def test_application_patch_phone(client, user, auth_token, test_db_session):
         json=update_request_body_dob,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.phone.phone_number == "+12404871234"
     assert application.phone.phone_type_id == 3  # Phone
     response_body_new_update = response_new_update.get_json()
@@ -953,7 +955,7 @@ def test_application_patch_phone(client, user, auth_token, test_db_session):
         json=update_request_masked_phone_number,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.phone.phone_number == "+12404871234"
     assert application.phone.phone_type_id == 1  # Cell
     response_body_new_update = response_new_update.get_json()
@@ -977,7 +979,7 @@ def test_application_patch_phone_validation(client, user, auth_token, test_db_se
         json=update_request_body,
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     response_body = response.get_json()
     error = response_body.get("errors")[0]
     assert response.status_code == 400
@@ -997,7 +999,7 @@ def test_application_unauthorized_patch(client, user, auth_token, test_db_sessio
 
     tests.api.validate_error_response(response, 403)
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.last_name == "Smith"
 
 
@@ -1016,7 +1018,7 @@ def test_application_patch_fineos_forbidden(
 
     assert response.status_code == 403
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.last_name == "Smith"
 
 
@@ -1034,7 +1036,7 @@ def test_application_patch_employee_ssn(client, user, auth_token, test_db_sessio
     assert response.status_code == 200
     assert response.get_json()["data"]["tax_identifier"] == "***-**-6789"
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.tax_identifier
     assert application.tax_identifier.tax_identifier == "123456789"
 
@@ -1051,7 +1053,7 @@ def test_application_patch_masked_tax_id_has_no_effect(client, user, auth_token,
 
     tests.api.validate_error_response(response, 400)
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.tax_identifier
     assert application.tax_identifier.tax_identifier == tax_identifier_before
 
@@ -1150,7 +1152,7 @@ def test_application_patch_has_future_child_date(client, user, auth_token, test_
     assert response_leave_details
     assert response_leave_details.get("has_future_child_date") is True
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.has_future_child_date is True
 
 
@@ -1305,7 +1307,7 @@ def test_application_patch_update_leave_reason_and_delete_leave_reason_qualifier
     updated_leave_reason_qualifier = updated_leave_details.get("reason_qualifier")
     assert updated_leave_reason_qualifier is None
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.leave_reason_qualifier is None
 
 
@@ -1457,7 +1459,7 @@ def test_application_patch_update_leave_period_belonging_to_other_application_bl
     tests.api.validate_error_response(response, 403)
 
     # assert existing leave period has not changed
-    test_db_session.refresh(leave_period)
+    # test_db_session.refresh(leave_period)
     assert leave_period.application_id == application_1.application_id
     assert leave_period.start_date == date(2021, 6, 11)
 
@@ -1713,7 +1715,7 @@ def test_application_patch_add_empty_array_for_employer_benefits(
         headers={"Authorization": f"Bearer {auth_token}"},
         json={"employer_benefits": []},
     )
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert response.status_code == 200
     assert len(application.employer_benefits) == 0
 
@@ -1744,7 +1746,7 @@ def test_application_patch_add_empty_employer_benefits(client, user, auth_token,
             ]
         },
     )
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
 
@@ -1790,7 +1792,7 @@ def test_application_patch_replace_existing_employer_benefits(
         },
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
 
@@ -1839,7 +1841,7 @@ def test_application_patch_employer_benefit_exceed_limit(client, user, auth_toke
     )
 
     assert response.status_code == 400
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.employer_benefits == existing_benefits
 
 
@@ -1907,7 +1909,7 @@ def test_application_patch_add_empty_array_for_other_incomes(
         headers={"Authorization": f"Bearer {auth_token}"},
         json={"other_incomes": []},
     )
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
     assert len(application.other_incomes) == 0
@@ -1939,7 +1941,7 @@ def test_application_patch_add_empty_other_income(client, user, auth_token, test
         },
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
     warnings = response.get_json().get("warnings")
@@ -1983,7 +1985,7 @@ def test_application_patch_replace_existing_other_incomes(
         },
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert response.status_code == 200
 
     response_body = response.get_json().get("data")
@@ -2029,7 +2031,7 @@ def test_application_patch_other_income_exceed_limit(client, user, auth_token, t
     )
 
     assert response.status_code == 400
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.other_incomes == existing_incomes
 
 
@@ -2150,7 +2152,7 @@ def test_application_patch_add_empty_array_for_previous_leaves(
             "previous_leaves_same_reason": [],
         },
     )
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
     assert len(application.previous_leaves) == 0
@@ -2209,7 +2211,7 @@ def test_application_patch_add_empty_previous_leaves(client, user, auth_token, t
         },
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
 
@@ -2282,7 +2284,7 @@ def test_application_patch_replace_existing_previous_leave(
         },
     )
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
 
@@ -2352,7 +2354,7 @@ def test_application_patch_previous_leave_exceed_limit(client, user, auth_token,
     )
 
     assert response.status_code == 400
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.previous_leaves == existing_leaves
 
     assert application.previous_leaves_other_reason == existing_leaves_other_reason
@@ -2396,7 +2398,7 @@ def test_application_patch_date_of_birth_after_1900_over_14(
     dob = response_body.get("date_of_birth")
     assert dob == f"****{test_date_str[4:]}"
 
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.date_of_birth.isoformat() == test_date_str
 
 
@@ -2744,7 +2746,7 @@ def test_application_patch_keys_not_in_body_retain_existing_value(
     assert response.status_code == 200
 
     # ensure the existing field still has it's existing value
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.first_name == "Foo"
 
     # for extra measure
@@ -2779,7 +2781,7 @@ def test_application_patch_key_set_to_null_does_null_field(
     assert response.status_code == 200
 
     # ensure it's null in the db
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.first_name is None
 
     # for extra measure
@@ -4250,7 +4252,7 @@ def test_application_complete_mark_document_received_fineos(
 
     # Refresh the db session because the application object was manipulated by another session
     # in the logic we executed as a result of the POST request above.
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
     assert application.completed_time
 
     client_function_calls = (
@@ -4470,9 +4472,15 @@ def test_other_income_delete_other_users_application(client, user, auth_token, t
 def test_previous_leave_delete(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
 
-    application.previous_leaves = [PreviousLeaveFactory.create(application_id=application.application_id,)]
-    application.previous_leaves_other_reason = [PreviousLeaveOtherReasonFactory.create(application_id=application.application_id),]
-    application.previous_leaves_same_reason = [PreviousLeaveSameReasonFactory.create(application_id=application.application_id),]
+    application.previous_leaves = [
+        PreviousLeaveFactory.create(application_id=application.application_id,)
+    ]
+    application.previous_leaves_other_reason = [
+        PreviousLeaveOtherReasonFactory.create(application_id=application.application_id),
+    ]
+    application.previous_leaves_same_reason = [
+        PreviousLeaveSameReasonFactory.create(application_id=application.application_id),
+    ]
     test_db_session.add(application)
     test_db_session.commit()
 
@@ -4490,7 +4498,8 @@ def test_previous_leave_delete(client, user, auth_token, test_db_session):
 
     response = client.delete(
         "/v1/applications/{}/previous_leaves/{}".format(
-            application.application_id, application.previous_leaves_other_reason[0].previous_leave_id
+            application.application_id,
+            application.previous_leaves_other_reason[0].previous_leave_id,
         ),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
@@ -4609,7 +4618,7 @@ def test_application_patch_null_benefits(
     )
 
     response_body = response.get_json().get("data")
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
     assert len(response_body.get("employer_benefits")) == 0
@@ -4627,7 +4636,7 @@ def test_application_patch_null_benefits(
     )
 
     response_body = response.get_json().get("data")
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
     assert len(response_body.get("other_incomes")) == 0
@@ -4645,7 +4654,7 @@ def test_application_patch_null_benefits(
     )
 
     response_body = response.get_json().get("data")
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
     assert len(response_body.get("previous_leaves")) == 0
@@ -4670,7 +4679,7 @@ def test_application_patch_benefits_empty_arrays(
     )
 
     response_body = response.get_json().get("data")
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
     assert len(response_body.get("employer_benefits")) == 0
@@ -4688,7 +4697,7 @@ def test_application_patch_benefits_empty_arrays(
     )
 
     response_body = response.get_json().get("data")
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
     assert len(response_body.get("other_incomes")) == 0
@@ -4706,7 +4715,7 @@ def test_application_patch_benefits_empty_arrays(
     )
 
     response_body = response.get_json().get("data")
-    test_db_session.refresh(application)
+    # test_db_session.refresh(application)
 
     assert response.status_code == 200
     assert len(response_body.get("previous_leaves")) == 0
@@ -4731,7 +4740,8 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
     application.has_continuous_leave_periods = True
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    application.leave_type_id = 1
+    application.leave_reason_id = 4
+    application.leave_reason_qualifier_id = 7
 
     test_db_session.commit()
     client.post(
@@ -4749,7 +4759,16 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
     assert submitted_application.claim.employer is not None
     assert submitted_application.claim.absence_period_start_date == startDate
     assert submitted_application.claim.absence_period_end_date == endDate
-    assert submitted_application.claim.claim_type_id == 1
+    assert submitted_application.claim.claim_type_id == 2
+
+
+def test_submit_app_with_leave_reason_id_not_in_map(client, user, auth_token, test_db_session):
+
+    with pytest.raises(NoClaimTypeForAbsenceType):
+        new_leave_reason = LeaveReasonFactory.create(
+            leave_reason_id=999, leave_reason_description="New reason"
+        )
+        new_leave_reason.absence_to_claim_type
 
 
 def test_application_patch_caring_leave_metadata(client, user, auth_token, test_db_session):

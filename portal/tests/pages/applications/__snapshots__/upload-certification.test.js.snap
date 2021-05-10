@@ -16,7 +16,7 @@ exports[`UploadCertification before any documents have been loaded renders page 
   level="2"
   size="1"
 >
-  Upload your Caregiver Certification Form
+  Upload your Certification to Care for a Family Member
 </Heading>
 `;
 
@@ -29,7 +29,7 @@ Array [
     rel="noopener"
     target="_blank"
   >
-    Caregiver Certification Form
+    Certification to Care for a Family Member
   </a>,
   " to prove that you need to take leave to care for a family member with a serious medical condition.",
 ]

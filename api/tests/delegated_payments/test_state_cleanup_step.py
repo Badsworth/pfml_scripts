@@ -70,6 +70,8 @@ def test_cleanup_states(state_cleanup_step, test_db_session):
 
 
 def test_cleanup_states_rollback(state_cleanup_step, test_db_session):
+    test_db_session.begin_nested()
+
     for _ in range(5):
         for audit_state in payments_util.Constants.REJECT_FILE_PENDING_STATES:
             create_payment_in_state(audit_state, test_db_session)
@@ -86,6 +88,7 @@ def test_cleanup_states_rollback(state_cleanup_step, test_db_session):
         db_session=test_db_session,
     )
     test_db_session.commit()  # It will rollback to this DB state
+    test_db_session.begin_nested()
 
     state_log_counts = state_log_util.get_state_counts(test_db_session)
     total_state_logs = test_db_session.query(StateLog).count()

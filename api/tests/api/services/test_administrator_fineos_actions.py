@@ -5,6 +5,7 @@ import pytest
 
 import massgov.pfml.fineos.mock_client
 from massgov.pfml.api.services.administrator_fineos_actions import (
+    EFORM_TYPES,
     get_claim_as_leave_admin,
     get_leave_details,
     register_leave_admin_with_fineos,
@@ -230,6 +231,34 @@ def mock_fineos_period_decisions(period_decisions):
     return mock_fineos_client_period_decisions(period_decisions)
 
 
+@pytest.fixture
+def mock_fineos_other_leaves_eform_both_versions(period_decisions):
+    def mock_eform_summary(*args, **kwargs):
+        return [
+            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_LEAVES"]),
+            group_client_api.EFormSummary(eformId=12354, eformType=EFORM_TYPES["OTHER_LEAVES_V2"]),
+        ]
+
+    mock_client = create_client()
+    mock_client.get_eform_summary = mock_eform_summary
+
+    return mock_client
+
+
+@pytest.fixture
+def mock_fineos_other_income_eform_both_versions(period_decisions):
+    def mock_eform_summary(*args, **kwargs):
+        return [
+            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_INCOME"]),
+            group_client_api.EFormSummary(eformId=12354, eformType=EFORM_TYPES["OTHER_INCOME_V2"]),
+        ]
+
+    mock_client = create_client()
+    mock_client.get_eform_summary = mock_eform_summary
+
+    return mock_client
+
+
 def test_create_leave_admin_request_payload():
     create_or_update_request = CreateOrUpdateLeaveAdmin(
         fineos_web_id="testID",
@@ -369,3 +398,51 @@ def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, initialize_fact
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions_no_plan
     )
     assert leave_details.status == "Known"
+
+
+@pytest.mark.integration
+def test_get_claim_eform_type_contains_neither_version(
+    mock_fineos_period_decisions, initialize_factories_session
+):
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details = get_claim_as_leave_admin(
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
+    )
+    assert leave_details.contains_version_one_eforms is False
+    assert leave_details.contains_version_two_eforms is False
+
+
+@pytest.mark.integration
+def test_get_claim_other_leaves_eform_type_contains_both_versions(
+    mock_fineos_other_leaves_eform_both_versions, initialize_factories_session
+):
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details = get_claim_as_leave_admin(
+        fineos_user_id,
+        absence_id,
+        employer,
+        fineos_client=mock_fineos_other_leaves_eform_both_versions,
+    )
+    assert leave_details.contains_version_one_eforms is True
+    assert leave_details.contains_version_two_eforms is True
+
+
+@pytest.mark.integration
+def test_get_claim_other_income_eform_type_contains_both_versions(
+    mock_fineos_other_income_eform_both_versions, initialize_factories_session
+):
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details = get_claim_as_leave_admin(
+        fineos_user_id,
+        absence_id,
+        employer,
+        fineos_client=mock_fineos_other_income_eform_both_versions,
+    )
+    assert leave_details.contains_version_one_eforms is True
+    assert leave_details.contains_version_two_eforms is True

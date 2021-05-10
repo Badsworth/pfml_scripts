@@ -962,7 +962,7 @@ def test_get_fineos_vendor_customer_numbers_from_reference_file(initialize_facto
     assert len(data) == 2
     for d in data:
         assert {"fineos_customer_number", "ctr_vendor_customer_code"} == set(d.keys())
-        assert d["fineos_customer_number"] in [111, 222]
+        assert d["fineos_customer_number"] in ["111", "222"]
         assert d["ctr_vendor_customer_code"] in [
             employee1.ctr_vendor_customer_code,
             employee2.ctr_vendor_customer_code,
@@ -1034,6 +1034,8 @@ def test_move_reference_file_db_failure(
     # Test DB failure
     # insert a ReferenceFile already containing the error path, forcing a unique key error
     ReferenceFileFactory(file_location=ref_file.file_location.replace(TEST_SRC_DIR, TEST_DEST_DIR))
+    test_db_session.commit()
+    test_db_session.begin_nested()
     with pytest.raises(SQLAlchemyError):
         move_reference_file(test_db_session, ref_file, TEST_SRC_DIR, TEST_DEST_DIR)
 
@@ -1047,7 +1049,7 @@ def test_move_reference_file_db_failure(
 
     # reference_file.file_location should not be changed in the db
     # test_db_session.refresh(ref_file)
-    test_db_session.flush()
+    # test_db_session.flush()
     assert ref_file.file_location == os.path.join(src_path, TEST_FILENAME)
 
 

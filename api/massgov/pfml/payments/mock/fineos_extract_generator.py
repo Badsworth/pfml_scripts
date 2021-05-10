@@ -107,6 +107,8 @@ REQUESTED_ABSENCE_FIELD_NAMES = [
     "ABSENCE_CASENUMBER",
     "LEAVEREQUEST_ID",
     "LEAVEREQUEST_DECISION",
+    "ABSENCE_CASECREATIONDATE",
+    "ABSENCEREASON_NAME",
 ]
 EMPLOYEE_FEED_FIELD_NAMES = [
     "C",
@@ -405,6 +407,10 @@ def _generate_fineos_vendor_rows_for_scenario(
             requested_absence_row["ABSENCE_CASENUMBER"] = claim.fineos_absence_id
             requested_absence_row["LEAVEREQUEST_ID"] = scenario_data.leave_request_id
             requested_absence_row["LEAVEREQUEST_DECISION"] = scenario_data.leave_request_decision
+            requested_absence_row[
+                "ABSENCE_CASECREATIONDATE"
+            ] = scenario_data.absence_case_creation_date
+            requested_absence_row["ABSENCEREASON_NAME"] = scenario_data.absence_reason_name
             requested_absence_csv_writer.writerow(requested_absence_row)
 
     # Employee Feed file

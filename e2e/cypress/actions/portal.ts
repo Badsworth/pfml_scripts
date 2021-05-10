@@ -335,6 +335,7 @@ export function selectClaimType(application: ApplicationRequestBody): void {
       "I need to bond with my child after birth, adoption, or foster placement.",
     "Pregnancy/Maternity":
       "I can’t work due to an illness, injury, or pregnancy.",
+    "Care for a Family Member": "",
   };
   cy.contains(reasonMap[reason]).click();
   if (reasonQualifier) {

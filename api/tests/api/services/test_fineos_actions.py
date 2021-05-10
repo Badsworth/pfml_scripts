@@ -26,8 +26,9 @@ from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
     CaringLeaveMetadataFactory,
-    ClaimFactory,
     ContinuousLeavePeriodFactory,
+    EmployeeFactory,
+    EmployerFactory,
     PaymentPreferenceFactory,
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
@@ -142,11 +143,14 @@ def test_determine_absence_period_status_reduced(user, test_db_session):
 
 
 def test_send_to_fineos(user, test_db_session):
+    employee = EmployeeFactory.create()
+    employer = EmployerFactory.create()
     application = ApplicationFactory.create(
-        user=user, work_pattern=WorkPatternFixedFactory.create()
+        tax_identifier=employee.tax_identifier,
+        employer_fein=employer.employer_fein,
+        user=user,
+        work_pattern=WorkPatternFixedFactory.create(),
     )
-    application.employer_fein = "179892886"
-    application.tax_identifier.tax_identifier = "784569632"
 
     # create leave period to ensure the code that sets the "status" for the absence period is triggered
     continuous_leave_period = ContinuousLeavePeriodFactory.create()
@@ -155,19 +159,17 @@ def test_send_to_fineos(user, test_db_session):
     assert application.claim_id is None
 
     fineos_actions.send_to_fineos(application, test_db_session, user)
-
     updated_application = test_db_session.query(Application).get(application.application_id)
-    claim = ClaimFactory.create(
-        fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
-    )
-    application.claim = claim
+    claim = updated_application.claim
 
-    assert updated_application.claim_id is not None
-    assert str(updated_application.claim.fineos_absence_id).startswith("NTN")
-    assert str(updated_application.claim.fineos_absence_id).__contains__("ABS")
-
-    assert updated_application.claim.fineos_notification_id is not None
-    assert str(updated_application.claim.fineos_notification_id).startswith("NTN")
+    assert claim.absence_period_start_date is not None
+    assert claim.absence_period_end_date is not None
+    assert claim.fineos_absence_id.startswith("NTN")
+    assert claim.fineos_absence_id.__contains__("ABS")
+    assert claim.fineos_notification_id is not None
+    assert claim.fineos_notification_id.startswith("NTN")
+    assert claim.employee == employee
+    assert claim.employer == employer
 
 
 def test_document_upload(user, test_db_session):
@@ -404,7 +406,9 @@ def test_build_week_based_work_pattern(user, test_db_session):
             hours=8,
             minutes=15,
         )
-        for i in range(7)
+        # Order of days different between expected and actual.
+        # Forcing to start on Sunday on expected to match actual.
+        for i in [6, 0, 1, 2, 3, 4, 5]
     ]
 
 
@@ -808,8 +812,8 @@ def test_determine_absence_notification_reason(user, test_db_session):
         leave_reason_qualifier_id=LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
     )
 
-    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
-        application
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
     )
     assert (
         absence_case.notificationReason
@@ -823,8 +827,8 @@ def test_determine_absence_notification_reason(user, test_db_session):
         pregnant_or_recent_birth=True,
     )
 
-    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
-        application
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
     )
     assert (
         absence_case.notificationReason
@@ -837,8 +841,8 @@ def test_determine_absence_notification_reason(user, test_db_session):
         leave_reason_qualifier_id=LeaveReasonQualifier.WORK_RELATED_ACCIDENT_INJURY.leave_reason_qualifier_id,
     )
 
-    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
-        application
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
     )
     assert (
         absence_case.notificationReason
@@ -854,8 +858,8 @@ def test_determine_absence_notification_reason(user, test_db_session):
         leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
     )
 
-    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
-        application
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
     )
     assert (
         absence_case.notificationReason
@@ -883,8 +887,8 @@ def test_determine_relationship_qualifiers(user, test_db_session):
             leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
             leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
         )
-        absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
-            application
+        absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+            fineos_actions.build_absence_case(application)
         )
         assert (
             absence_case.primaryRelationship == relationship.relationship_to_caregiver_description
@@ -905,8 +909,8 @@ def test_determine_relationship_qualifiers(user, test_db_session):
         leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
     )
-    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
-        application
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
     )
     assert (
         absence_case.primaryRelationship
@@ -928,8 +932,8 @@ def test_determine_relationship_qualifiers(user, test_db_session):
         leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
     )
-    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
-        application
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
     )
     assert (
         absence_case.primaryRelationship

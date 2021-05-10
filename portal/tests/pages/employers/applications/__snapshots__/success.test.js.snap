@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Success renders Success page 1`] = `
+exports[`Success renders Success page with back button to dashboard 1`] = `
 <Fragment>
   <Title>
     Thanks for reviewing the application
@@ -34,4 +34,11 @@ exports[`Success renders Success page 1`] = `
     url="https://www.mass.gov/paidleave-employer-feedback"
   />
 </Fragment>
+`;
+
+exports[`Success when dashboard feature flag is enabled renders back button to dashboard 1`] = `
+<BackButton
+  href="/employers/dashboard"
+  label="Back to Dashboard"
+/>
 `;

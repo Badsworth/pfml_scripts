@@ -117,6 +117,7 @@ def applications_start():
 
     with app.db_session() as db_session:
         db_session.add(application)
+        db_session.commit()
 
     log_attributes = get_application_log_attributes(application)
     logger.info("applications_start success", extra=log_attributes)

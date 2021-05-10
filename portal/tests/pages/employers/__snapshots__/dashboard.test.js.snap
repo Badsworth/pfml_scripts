@@ -10,7 +10,7 @@ exports[`Employer dashboard renders a 'no results' message in the table, and no 
 </tr>
 `;
 
-exports[`Employer dashboard renders a banner if there are any employers not registered in FINEOS 2`] = `
+exports[`Employer dashboard renders a banner if there are any verified employers that are not registered in FINEOS 2`] = `
 Array [
   "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the ",
   <a
@@ -31,6 +31,7 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
 >
   <th
     data-label="Employee name"
+    data-test="employee_name"
     scope="row"
   >
     <a
@@ -132,6 +133,7 @@ exports[`Employer dashboard renders claim rows without links if employer is not 
 >
   <th
     data-label="Employee name"
+    data-test="employee_name"
     scope="row"
   >
     Jane Doe
@@ -173,13 +175,88 @@ exports[`Employer dashboard renders the page with expected content and paginatio
 
 exports[`Employer dashboard renders the page with expected content and pagination components 2`] = `
 <p
-  className="margin-bottom-4"
+  className="margin-y-2"
 >
   Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.
 </p>
 `;
 
 exports[`Employer dashboard renders the page with expected content and pagination components 3`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    “--” or no status:
+  </strong>,
+  " This leave request may require action from you; otherwise, it is awaiting a decision from DFML.",
+]
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 4`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Approved:
+  </strong>,
+  " DFML has approved this leave request.",
+]
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 5`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Closed:
+  </strong>,
+  " The leave has passed and no action can be taken.",
+]
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 6`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Denied:
+  </strong>,
+  " DFML has denied this leave request.",
+]
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 7`] = `
+<Details
+  label="Status descriptions"
+>
+  <ul
+    className="usa-list"
+  >
+    <li>
+      <Trans
+        i18nKey="pages.employersDashboard.statusDescription_none"
+      />
+    </li>
+    <li>
+      <Trans
+        i18nKey="pages.employersDashboard.statusDescription_approved"
+      />
+    </li>
+    <li>
+      <Trans
+        i18nKey="pages.employersDashboard.statusDescription_closed"
+      />
+    </li>
+    <li>
+      <Trans
+        i18nKey="pages.employersDashboard.statusDescription_denied"
+      />
+    </li>
+  </ul>
+</Details>
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 8`] = `
 <PaginationSummary
   pageOffset={1}
   pageSize={25}
@@ -187,7 +264,7 @@ exports[`Employer dashboard renders the page with expected content and paginatio
 />
 `;
 
-exports[`Employer dashboard renders the page with expected content and pagination components 4`] = `
+exports[`Employer dashboard renders the page with expected content and pagination components 9`] = `
 <PaginationNavigation
   onClick={[Function]}
   pageOffset={1}

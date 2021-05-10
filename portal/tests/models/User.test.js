@@ -152,8 +152,8 @@ describe("User", () => {
     });
   });
 
-  describe("#hasEmployerNotRegisteredInFineos", () => {
-    it("returns true if there is a single employer not registered in FINEOS", () => {
+  describe("#hasVerifiedEmployerNotRegisteredInFineos", () => {
+    it("returns true if there is an employer not registered in FINEOS and verified", () => {
       const user = new User({
         user_leave_administrators: [
           VERIFIED_REGISTERED_WITH_DATA,
@@ -161,30 +161,23 @@ describe("User", () => {
         ],
       });
 
-      expect(user.hasEmployerNotRegisteredInFineos).toEqual(true);
+      expect(user.hasVerifiedEmployerNotRegisteredInFineos).toEqual(true);
     });
 
-    it("returns true if there are multiple employers not registered in FINEOS", () => {
+    it("returns false if there is an employer not registered in FINEOS and not verified", () => {
       const user = new User({
-        user_leave_administrators: [
-          VERIFIED_REGISTERED_WITH_DATA,
-          VERIFIED_PENDING_WITHOUT_DATA,
-          UNVERIFIED_PENDING_WITH_DATA,
-        ],
+        user_leave_administrators: [UNVERIFIED_PENDING_WITH_DATA],
       });
 
-      expect(user.hasEmployerNotRegisteredInFineos).toEqual(true);
+      expect(user.hasVerifiedEmployerNotRegisteredInFineos).toEqual(false);
     });
 
-    it("returns false if all employers are registered in FINEOS", () => {
+    it("returns false if an employer is registered in FINEOS and verified", () => {
       const user = new User({
-        user_leave_administrators: [
-          VERIFIED_REGISTERED_WITH_DATA,
-          UNVERIFIED_REGISTERED_WITHOUT_DATA,
-        ],
+        user_leave_administrators: [VERIFIED_REGISTERED_WITH_DATA],
       });
 
-      expect(user.hasEmployerNotRegisteredInFineos).toEqual(false);
+      expect(user.hasVerifiedEmployerNotRegisteredInFineos).toEqual(false);
     });
 
     it("returns false if `has_fineos_registration` is null", () => {
@@ -201,7 +194,7 @@ describe("User", () => {
         ],
       });
 
-      expect(user.hasEmployerNotRegisteredInFineos).toEqual(false);
+      expect(user.hasVerifiedEmployerNotRegisteredInFineos).toEqual(false);
     });
   });
 

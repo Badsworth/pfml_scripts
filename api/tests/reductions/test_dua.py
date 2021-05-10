@@ -330,7 +330,7 @@ def test_load_new_rows_from_file_dua_example(dua_reduction_payment_unique_index,
 )
 @pytest.mark.integration
 def test_load_new_rows_from_file_error(
-    dua_reduction_payment_unique_index, test_db_session, test_db_other_session, headers, csv_rows
+    dua_reduction_payment_unique_index, test_db_session, headers, csv_rows
 ):
     # Write to the csv_file directly instead of through a csv.DictWriter or similar so that we can
     # insert invalid rows into the file.
@@ -344,13 +344,12 @@ def test_load_new_rows_from_file_error(
     csv_file.seek(0)
 
     with pytest.raises(Exception):
-        dua._load_new_rows_from_file(csv_file, test_db_session)
+        with test_db_session.begin_nested():
+            dua._load_new_rows_from_file(csv_file, test_db_session)
 
     # We do not expect any rows to be added to the database when _load_new_rows_from_file() fails.
-    # Use test_db_other_session because test_db_session ends up in a fuss after it fails to add
-    # the rows within dua._load_new_rows_from_file()
     assert (
-        test_db_other_session.query(
+        test_db_session.query(
             sqlalchemy.func.count(DuaReductionPayment.dua_reduction_payment_id)
         ).scalar()
         == 0
@@ -475,7 +474,7 @@ def test_load_dua_payment_from_reference_file_success(
 
 @pytest.mark.integration
 def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
-    dua_reduction_payment_unique_index, test_db_session, test_db_other_session, mock_s3_bucket
+    dua_reduction_payment_unique_index, test_db_session, mock_s3_bucket
 ):
     # Create the ReferenceFile.
     filename = _random_csv_filename()
@@ -493,14 +492,13 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
     _create_dua_payment_list_reference_file("", dest_filepath)
 
     with pytest.raises(sqlalchemy.exc.IntegrityError):
-        dua._load_dua_payment_from_reference_file(ref_file, archive_directory, test_db_session)
+        with test_db_session.begin_nested():
+            dua._load_dua_payment_from_reference_file(ref_file, archive_directory, test_db_session)
 
     # Expect no rows in the database after because the reference_file.file_location conflict will
-    # prevent the datbase from committing the changes.
-    # Use test_db_other_session because test_db_session ends up in a fuss after it hits the
-    # IntegrityError.
+    # prevent the database from committing the changes.
     assert (
-        test_db_other_session.query(
+        test_db_session.query(
             sqlalchemy.func.count(DuaReductionPayment.dua_reduction_payment_id)
         ).scalar()
         == 0
@@ -508,9 +506,7 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
 
     # Expect no StateLog to have been created.
     assert (
-        test_db_other_session.query(
-            sqlalchemy.func.count(LatestStateLog.latest_state_log_id)
-        ).scalar()
+        test_db_session.query(sqlalchemy.func.count(LatestStateLog.latest_state_log_id)).scalar()
         == 0
     )
 
@@ -519,7 +515,6 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
 def test_copy_to_sftp_and_archive_s3_files(
     initialize_factories_session,
     test_db_session,
-    test_db_other_session,
     mock_s3_bucket,
     mock_sftp_client,
     setup_mock_sftp_client,
@@ -579,10 +574,8 @@ def test_copy_to_sftp_and_archive_s3_files(
         assert filename in files_in_s3_archive_dir
         assert filename in files_in_moveit
 
-        # Use test_db_other_session so we query against the database instead of just the in-memory
-        # cache of test_db_session.
         assert (
-            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
             .filter(StateLog.end_state_id == State.DUA_CLAIMANT_LIST_SUBMITTED.state_id)
             .filter(StateLog.reference_file_id == ref_file.reference_file_id)
             .scalar()
@@ -809,7 +802,6 @@ def test_payment_list_has_been_downloaded_today(
 def test_download_payment_list_if_none_today(
     initialize_factories_session,
     test_db_session,
-    test_db_other_session,
     mock_s3_bucket,
     mock_sftp_client,
     setup_mock_sftp_client,
@@ -853,7 +845,7 @@ def test_download_payment_list_if_none_today(
     assert len(files_in_s3) == moveit_file_count
 
     assert (
-        test_db_other_session.query(sqlalchemy.func.count(ReferenceFile.reference_file_id))
+        test_db_session.query(sqlalchemy.func.count(ReferenceFile.reference_file_id))
         .filter(
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.DUA_PAYMENT_LIST.reference_file_type_id
@@ -863,7 +855,7 @@ def test_download_payment_list_if_none_today(
     )
 
     assert (
-        test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
         .filter(StateLog.end_state_id == State.DUA_PAYMENT_LIST_SAVED_TO_S3.state_id)
         .scalar()
         == moveit_file_count
@@ -887,7 +879,7 @@ def test_download_payment_list_if_none_today(
         )
 
         assert (
-            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
             .filter(StateLog.end_state_id == State.DUA_PAYMENT_LIST_SAVED_TO_S3.state_id)
             .filter(StateLog.reference_file_id == ref_file.reference_file_id)
             .scalar()

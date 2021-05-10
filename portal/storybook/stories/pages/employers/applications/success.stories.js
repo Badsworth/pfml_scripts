@@ -10,5 +10,10 @@ export const Default = () => {
   const query = {
     absence_id: "NTN-111-ABS-01",
   };
-  return <Success query={query} />;
+  const appLogic = {
+    portalFlow: {
+      getNextPageRoute: () => {},
+    },
+  };
+  return <Success query={query} appLogic={appLogic} />;
 };

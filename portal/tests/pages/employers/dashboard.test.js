@@ -25,6 +25,25 @@ const verifiableUserLeaveAdministrator = new UserLeaveAdministrator({
   verified: false,
 });
 
+const getClaims = (leaveAdmin) => {
+  return [
+    new Claim({
+      created_at: "2021-01-15",
+      employee: new ClaimEmployee({
+        first_name: "Jane",
+        middle_name: null,
+        last_name: "Doe",
+      }),
+      employer: new ClaimEmployer({
+        employer_dba: leaveAdmin.employer_dba,
+        employer_fein: leaveAdmin.employer_fein,
+      }),
+      fineos_absence_id: "NTN-111-ABS-01",
+      claim_status: "Approved",
+    }),
+  ];
+};
+
 const setup = (claims = [], userAttrs = {}, paginationMeta = {}) => {
   let appLogic;
   // Need to set an accurate pathname so portalFlow can return the correct links to route to
@@ -64,25 +83,6 @@ const setup = (claims = [], userAttrs = {}, paginationMeta = {}) => {
 };
 
 describe("Employer dashboard", () => {
-  const getClaims = (leaveAdmin) => {
-    return [
-      new Claim({
-        created_at: "2021-01-15",
-        employee: new ClaimEmployee({
-          first_name: "Jane",
-          middle_name: null,
-          last_name: "Doe",
-        }),
-        employer: new ClaimEmployer({
-          employer_dba: leaveAdmin.employer_dba,
-          employer_fein: leaveAdmin.employer_fein,
-        }),
-        fineos_absence_id: "NTN-111-ABS-01",
-        fineos_absence_status: "Approved",
-      }),
-    ];
-  };
-
   beforeEach(() => {
     process.env.featureFlags = { employerShowDashboard: true };
   });
@@ -97,16 +97,22 @@ describe("Employer dashboard", () => {
       .find("Trans")
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
 
+    expect(wrapper.find("Details")).toMatchSnapshot();
     expect(wrapper.find("PaginationSummary")).toMatchSnapshot();
     expect(wrapper.find("PaginationNavigation")).toMatchSnapshot();
   });
 
-  it("renders a banner if there are any employers not registered in FINEOS", () => {
+  it("renders a banner if there are any verified employers that are not registered in FINEOS", () => {
     const { wrapper } = setup([], {
       user_leave_administrators: [
-        // Mix of registered and pending
-        verifiedUserLeaveAdministrator,
-        verifiableUserLeaveAdministrator,
+        new UserLeaveAdministrator({
+          employer_dba: "Work Inc",
+          employer_fein: "12-3456789",
+          employer_id: "mock-employer-id-1",
+          has_fineos_registration: false,
+          has_verification_data: true,
+          verified: true,
+        }),
       ],
     });
 
@@ -114,6 +120,14 @@ describe("Employer dashboard", () => {
       `"Your applications are not accessible at the moment"`
     );
     expect(wrapper.find("Alert").dive().find("Trans").dive()).toMatchSnapshot();
+  });
+
+  it("does not render a banner if there are any unverified employers that are not registered in FINEOS", () => {
+    const { wrapper } = setup([], {
+      user_leave_administrators: [verifiableUserLeaveAdministrator],
+    });
+
+    expect(wrapper.find("Alert").exists()).toEqual(false);
   });
 
   it("renders a table of claims with links if employer is registered in FINEOS", () => {
@@ -144,6 +158,24 @@ describe("Employer dashboard", () => {
 
     expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
     expect(wrapper.find("ClaimTableRows").dive().find("a")).toHaveLength(0);
+  });
+
+  it("allows Claim.employee to be null", () => {
+    let claims = getClaims(verifiedUserLeaveAdministrator);
+    claims = claims.map((claim) => {
+      claim.employee = null;
+      return claim;
+    });
+
+    const { wrapper } = setup(claims);
+
+    expect(
+      wrapper
+        .find("ClaimTableRows")
+        .dive()
+        .find('[data-test="employee_name"]')
+        .text()
+    ).toBe("--");
   });
 
   it("does not render Employer DBA when user has only one Employer associated", () => {

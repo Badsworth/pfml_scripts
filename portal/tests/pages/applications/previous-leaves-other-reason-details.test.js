@@ -8,7 +8,7 @@ import PreviousLeave, {
   PreviousLeaveReason,
 } from "../../../src/models/PreviousLeave";
 import PreviousLeavesOtherReasonDetails, {
-  PreviousLeaveDetailsCard,
+  PreviousLeavesOtherReasonDetailsCard,
 } from "../../../src/pages/applications/previous-leaves-other-reason-details";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
@@ -43,7 +43,7 @@ const previousLeaveData = {
   is_for_same_reason_as_leave_reason: null,
   leave_end_date: "2021-06-11",
   leave_minutes: 840,
-  leave_reason: null,
+  leave_reason: PreviousLeaveReason.medical,
   leave_start_date: "2021-05-06",
   previous_leave_id: null,
   worked_per_week_minutes: 1920,
@@ -56,12 +56,16 @@ const setPreviousLeaveFields = (wrapper, previousLeave) => {
     .find("RepeatableFieldsetCard")
     .first()
     .dive()
-    .find("PreviousLeaveDetailsCard")
+    .find("PreviousLeavesOtherReasonDetailsCard")
     .first()
     .dive();
 
   const { changeRadioGroup, changeField } = simulateEvents(
     otherPreviousLeaveDetailsCard
+  );
+  changeRadioGroup(
+    "previous_leaves_other_reason[0].leave_reason",
+    previousLeave.leave_reason
   );
   changeRadioGroup(
     "previous_leaves_other_reason[0].is_for_current_employer",
@@ -111,19 +115,19 @@ const createClaimWithPreviousLeaves = () =>
     .previousLeavesOtherReason([
       {
         leave_end_date: "2021-01-26",
-        leave_minutes: 25,
+        leave_minutes: 1500,
         leave_reason: PreviousLeaveReason.care,
         leave_start_date: "2021-01-01",
         previous_leave_id: 89,
-        worked_per_week_minutes: 40,
+        worked_per_week_minutes: 2400,
       },
       {
         leave_end_date: "2020-12-13",
-        leave_minutes: 20,
+        leave_minutes: 1200,
         leave_reason: PreviousLeaveReason.bonding,
         leave_start_date: "2020-11-21",
         previous_leave_id: 9,
-        worked_per_week_minutes: 40,
+        worked_per_week_minutes: 2400,
       },
     ])
     .create();
@@ -235,7 +239,7 @@ describe("PreviousLeavesOtherReasonDetails", () => {
   });
 });
 
-describe("PreviousLeaveDetailsCard", () => {
+describe("PreviousLeavesOtherReasonDetailsCard", () => {
   it("renders the component", () => {
     const claim = new MockClaimBuilder().continuous().create();
     const index = 0;
@@ -250,7 +254,7 @@ describe("PreviousLeaveDetailsCard", () => {
     });
 
     const wrapper = shallow(
-      <PreviousLeaveDetailsCard
+      <PreviousLeavesOtherReasonDetailsCard
         claim={claim}
         getFunctionalInputProps={getFunctionalInputProps}
         index={index}
