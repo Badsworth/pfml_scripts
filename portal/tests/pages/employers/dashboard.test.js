@@ -102,12 +102,17 @@ describe("Employer dashboard", () => {
     expect(wrapper.find("PaginationNavigation")).toMatchSnapshot();
   });
 
-  it("renders a banner if there are any employers not registered in FINEOS", () => {
+  it("renders a banner if there are any verified employers that are not registered in FINEOS", () => {
     const { wrapper } = setup([], {
       user_leave_administrators: [
-        // Mix of registered and pending
-        verifiedUserLeaveAdministrator,
-        verifiableUserLeaveAdministrator,
+        new UserLeaveAdministrator({
+          employer_dba: "Work Inc",
+          employer_fein: "12-3456789",
+          employer_id: "mock-employer-id-1",
+          has_fineos_registration: false,
+          has_verification_data: true,
+          verified: true,
+        }),
       ],
     });
 
@@ -115,6 +120,14 @@ describe("Employer dashboard", () => {
       `"Your applications are not accessible at the moment"`
     );
     expect(wrapper.find("Alert").dive().find("Trans").dive()).toMatchSnapshot();
+  });
+
+  it("does not render a banner if there are any unverified employers that are not registered in FINEOS", () => {
+    const { wrapper } = setup([], {
+      user_leave_administrators: [verifiableUserLeaveAdministrator],
+    });
+
+    expect(wrapper.find("Alert").exists()).toEqual(false);
   });
 
   it("renders a table of claims with links if employer is registered in FINEOS", () => {

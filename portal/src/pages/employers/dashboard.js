@@ -33,8 +33,8 @@ export const Dashboard = (props) => {
   const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
   // Leave admins not registered in Fineos won't be able to access associated claim data from Fineos.
   // We use this flag to communicate this to the user.
-  const hasEmployerNotRegisteredInFineos =
-    user.hasEmployerNotRegisteredInFineos;
+  const hasVerifiedEmployerNotRegisteredInFineos =
+    user.hasVerifiedEmployerNotRegisteredInFineos;
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const showVerificationRowInPlaceOfClaims =
     shouldShowVerifications && hasOnlyUnverifiedEmployers;
@@ -69,7 +69,7 @@ export const Dashboard = (props) => {
     <React.Fragment>
       <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
       <Title>{t("pages.employersDashboard.title")}</Title>
-      {hasEmployerNotRegisteredInFineos && (
+      {hasVerifiedEmployerNotRegisteredInFineos && (
         <Alert
           state="info"
           heading={t("pages.employersDashboard.unavailableClaimsTitle")}
