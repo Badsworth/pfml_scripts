@@ -991,13 +991,6 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
 }
 
 export function confirmEligibleCargiver(): void {
-  // workaround for errors when running in cypress
-  // the form makes a post request to cloudfront so we want to prevent this from running
-  // todo: before merging remove - a PR for this fix will be made by the claimant portal team
-  cy.get('form[class="usa-form"').then(($form) =>
-    $form.on("submit", (e) => e.preventDefault())
-  );
-
   cy.contains("I understand and agree").click({ force: true });
 }
 
