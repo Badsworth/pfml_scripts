@@ -1915,15 +1915,16 @@ const pages = {
       "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p>",
     stepThreeHeading: "3. Apply",
     stepTwoBondingLeaveBody:
-      "For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.<p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
-    stepTwoBondingLeaveSubhead: "Bond with your child",
+      "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
+    stepTwoBondingLeaveSubhead: "To bond with a child",
     stepTwoCaringLeaveBody:
-      "The health care provider of the person you're caring for must complete the <caregiver-certification-form-link>Caregiver Certification Form</caregiver-certification-form-link>.</p>",
-    stepTwoCaringLeaveSubhead: "Care for a family member",
+      "<p>The health care provider of the person you're caring for must complete the <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link>.</p>",
+    stepTwoCaringLeaveSubhead:
+      "To care for a family member with a serious health condition",
     stepTwoFamilyLeaveSubhead: "Family leave",
     stepTwoHeading: "2. Get documentation that supports your leave request",
     stepTwoMedicalLeaveBody:
-      "Your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.",
+      "<p>Your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p>",
     stepTwoMedicalLeaveSubhead: "Medical leave",
     title: "Get ready to apply",
   },
