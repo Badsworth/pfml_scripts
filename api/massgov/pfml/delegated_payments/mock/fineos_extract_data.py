@@ -126,6 +126,9 @@ class FineosClaimantData(FineosData):
     ):
         super().__init__(generate_defaults, **kwargs)
 
+        self.include_employee_feed = include_employee_feed
+        self.include_absence_case = include_absence_case
+
         self.c_value = self.get_value("c_value", "7526")
         self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
 
@@ -159,37 +162,41 @@ class FineosClaimantData(FineosData):
 
     def get_employee_feed_record(self):
         employee_feed_record = OrderedDict()
-        employee_feed_record["C"] = self.c_value
-        employee_feed_record["I"] = self.i_value
-        employee_feed_record["DEFPAYMENTPREF"] = self.default_payment_pref
-        employee_feed_record["CUSTOMERNO"] = self.customer_number
-        employee_feed_record["NATINSNO"] = self.ssn
-        employee_feed_record["DATEOFBIRTH"] = self.date_of_birth
-        employee_feed_record["PAYMENTMETHOD"] = self.payment_method
-        employee_feed_record["ADDRESS1"] = self.address_1
-        employee_feed_record["ADDRESS2"] = self.address_2
-        employee_feed_record["ADDRESS4"] = self.city
-        employee_feed_record["ADDRESS6"] = self.state
-        employee_feed_record["POSTCODE"] = self.post_code
-        employee_feed_record["SORTCODE"] = self.routing_nbr
-        employee_feed_record["ACCOUNTNO"] = self.account_nbr
-        employee_feed_record["ACCOUNTTYPE"] = self.account_type
+        if self.include_employee_feed:
+            employee_feed_record["C"] = self.c_value
+            employee_feed_record["I"] = self.i_value
+            employee_feed_record["DEFPAYMENTPREF"] = self.default_payment_pref
+            employee_feed_record["CUSTOMERNO"] = self.customer_number
+            employee_feed_record["NATINSNO"] = self.ssn
+            employee_feed_record["DATEOFBIRTH"] = self.date_of_birth
+            employee_feed_record["PAYMENTMETHOD"] = self.payment_method
+            employee_feed_record["ADDRESS1"] = self.address_1
+            employee_feed_record["ADDRESS2"] = self.address_2
+            employee_feed_record["ADDRESS4"] = self.city
+            employee_feed_record["ADDRESS6"] = self.state
+            employee_feed_record["POSTCODE"] = self.post_code
+            employee_feed_record["SORTCODE"] = self.routing_nbr
+            employee_feed_record["ACCOUNTNO"] = self.account_nbr
+            employee_feed_record["ACCOUNTTYPE"] = self.account_type
 
         return employee_feed_record
 
     def get_requested_absence_record(self):
         requested_absence_record = OrderedDict()
-        requested_absence_record["ABSENCE_CASENUMBER"] = self.absence_case_number
-        requested_absence_record["ABSENCEREASON_COVERAGE"] = self.leave_type
-        requested_absence_record["NOTIFICATION_CASENUMBER"] = self.notification_number
-        requested_absence_record["ABSENCE_CASESTATUS"] = self.absence_case_status
-        requested_absence_record["LEAVEREQUEST_EVIDENCERESULTTYPE"] = self.leave_request_evidence
-        requested_absence_record["ABSENCEPERIOD_START"] = self.leave_request_start
-        requested_absence_record["ABSENCEPERIOD_END"] = self.leave_request_end
-        requested_absence_record["EMPLOYEE_CUSTOMERNO"] = self.customer_number
-        requested_absence_record[
-            "EMPLOYER_CUSTOMERNO"
-        ] = None  # TODO - not doing anything with this yet
+        if self.include_absence_case:
+            requested_absence_record["ABSENCE_CASENUMBER"] = self.absence_case_number
+            requested_absence_record["ABSENCEREASON_COVERAGE"] = self.leave_type
+            requested_absence_record["NOTIFICATION_CASENUMBER"] = self.notification_number
+            requested_absence_record["ABSENCE_CASESTATUS"] = self.absence_case_status
+            requested_absence_record[
+                "LEAVEREQUEST_EVIDENCERESULTTYPE"
+            ] = self.leave_request_evidence
+            requested_absence_record["ABSENCEPERIOD_START"] = self.leave_request_start
+            requested_absence_record["ABSENCEPERIOD_END"] = self.leave_request_end
+            requested_absence_record["EMPLOYEE_CUSTOMERNO"] = self.customer_number
+            requested_absence_record[
+                "EMPLOYER_CUSTOMERNO"
+            ] = None  # TODO - not doing anything with this yet
 
         return requested_absence_record
 
