@@ -1,3 +1,4 @@
+import { ApplicationRequestBody, ReducedScheduleLeavePeriods } from "_api";
 import { format, addMonths, addDays, startOfWeek, subDays } from "date-fns";
 
 /**
@@ -263,66 +264,121 @@ export function createNotification(
   startDate: Date,
   endDate: Date,
   claimType?: string,
-  hours_worked_per_week?: number
+  application?: ApplicationRequestBody
 ): void {
   const clickNext = (timeout?: number) =>
     cy.get('#navButtons input[value="Next "]', { timeout }).first().click();
   cy.contains("span", "Create Notification").click();
   clickNext();
   cy.labelled("Hours worked per week").type(
-    `{selectall}{backspace}${hours_worked_per_week}`
+    `{selectall}{backspace}${application?.hours_worked_per_week}`
   );
   clickNext();
-  // @todo: Make claim type dynamic.
-  if (claimType === "military care leave") {
-    cy.contains("div", "Out of work for another reason")
-      .prev()
-      .find("input")
+  switch (claimType) {
+    case "military":
+      cy.contains("div", "Out of work for another reason")
+        .prev()
+        .find("input")
+        .click();
+      clickNext();
+      cy.labelled("Absence relates to").select("Family");
+      wait();
+      cy.labelled("Absence reason").select("Military Caregiver", {});
+      break;
+
+    case "bonding":
+      cy.contains(
+        "div",
+        "Bonding with a new child (adoption/ foster care/ newborn)"
+      )
+        .prev()
+        .find("input")
+        .click();
+      clickNext();
+      cy.labelled("Qualifier 1").select("Foster Care");
+      break;
+
+    case "caring":
+      // @Reminder
+      // Implement once available
+      break;
+
+    default:
+      throw new Error("ClaimType not found");
+  }
+  clickNext(5000);
+
+  const {
+    has_continuous_leave_periods,
+    has_intermittent_leave_periods,
+    has_reduced_schedule_leave_periods,
+  } = application as ApplicationRequestBody;
+
+  if (has_continuous_leave_periods) {
+    cy.contains("div.toggle-guidance-row", "One or more fixed time off periods")
+      .find("span.slider")
       .click();
     clickNext();
-    cy.labelled("Absence relates to").select("Family");
+    cy.labelled("Absence status").select("Estimated");
     wait();
-    cy.labelled("Absence reason").select("Military Caregiver", {});
-  } else {
-    cy.contains(
-      "div",
-      "Bonding with a new child (adoption/ foster care/ newborn)"
-    )
-      .prev()
-      .find("input")
+    cy.labelled("Absence start date").type(
+      `${format(startDate, "MM/dd/yyyy")}{enter}`
+    );
+    wait();
+    cy.labelled("Absence end date").type(
+      `${format(endDate, "MM/dd/yyyy")}{enter}`
+    );
+    wait();
+  }
+
+  if (has_intermittent_leave_periods) {
+    cy.contains("div.toggle-guidance-row", "Episodic / leave as needed")
+      .find("span.slider")
+      .click();
+    // @ToDo
+    // Implement any actions/flows for episodic
+  }
+
+  if (has_reduced_schedule_leave_periods) {
+    cy.contains("div.toggle-guidance-row", "Reduced work schedule")
+      .find("span.slider")
       .click();
     clickNext();
-    cy.labelled("Qualifier 1").select("Foster Care");
+    cy.labelled("Absence status").select("Estimated");
+    wait();
+    cy.labelled("Absence start date").type(
+      `${format(startDate, "MM/dd/yyyy")}{enter}`
+    );
+    wait();
+    cy.labelled("Absence end date").type(
+      `${format(endDate, "MM/dd/yyyy")}{enter}`
+    );
+    wait();
+    enterReducedWorkHours(
+      application?.leave_details
+        ?.reduced_schedule_leave_periods as ReducedScheduleLeavePeriods[]
+    );
+    wait();
+    cy.get(
+      '#reducedScheduleAbsencePeriodDetailsQuickAddWidget input[value="Add"]'
+    ).click();
   }
 
   clickNext(5000);
-  cy.contains("div.toggle-guidance-row", "One or more fixed time off periods")
-    .find("span.slider")
-    .click();
-
-  clickNext();
-  cy.labelled("Absence status").select("Estimated");
-
-  wait();
-  cy.labelled("Absence start date").type(
-    `${format(startDate, "MM/dd/yyyy")}{enter}`
-  );
-  wait();
-  cy.labelled("Absence end date").type(
-    `${format(endDate, "MM/dd/yyyy")}{enter}`
-  );
-  wait();
-  cy.get(
-    '#timeOffAbsencePeriodDetailsQuickAddWidget input[value="Add"]'
-  ).click();
-
-  clickNext(5000);
-  cy.labelled("Work Pattern Type").select("Fixed");
-  wait();
-
+  if (application?.work_pattern?.work_pattern_type !== "Rotating") {
+    cy.labelled("Work Pattern Type").select(
+      application?.work_pattern?.work_pattern_type as string
+    );
+    wait();
+  } else {
+    // @Reminder: If needed add more dynamic options such as
+    // 3 weeks Rotating (currently not needed)
+    cy.labelled("Work Pattern Type").select("2 weeks Rotating");
+    wait();
+  }
   cy.labelled("Standard Work Week").click();
   clickNext();
-  if (claimType === "military care leave") {
+  if (claimType === "military") {
     cy.labelled("Military Caregiver Description").type(
       "I am a parent military caregiver."
     );
@@ -330,6 +386,27 @@ export function createNotification(
   clickNext(20000);
   cy.contains("div", "Thank you. Your notification has been submitted.");
   clickNext(20000);
+}
+
+export function enterReducedWorkHours(
+  leave_details: ReducedScheduleLeavePeriods[]
+): void {
+  const hrs = (minutes: number | null | undefined) => {
+    return minutes ? Math.round(minutes / 60) : 0;
+  };
+  const weekdayInfo = [
+    { hours: hrs(leave_details[0].sunday_off_minutes) },
+    { hours: hrs(leave_details[0].monday_off_minutes) },
+    { hours: hrs(leave_details[0].tuesday_off_minutes) },
+    { hours: hrs(leave_details[0].wednesday_off_minutes) },
+    { hours: hrs(leave_details[0].thursday_off_minutes) },
+    { hours: hrs(leave_details[0].friday_off_minutes) },
+    { hours: hrs(leave_details[0].saturday_off_minutes) },
+  ];
+
+  cy.get("input[name*='_hours']").each((input, index) => {
+    cy.wrap(input).type(weekdayInfo[index].hours.toString());
+  });
 }
 
 export function additionalEvidenceRequest(claimNumber: string): void {

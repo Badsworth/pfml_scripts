@@ -53,6 +53,21 @@ export const REDUCED_ER: ScenarioSpecification = {
   },
 };
 
+export const MIL_RED: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "MIL_RED",
+    shortClaim: true,
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+  },
+};
+
 export const BHAP1INEL: ScenarioSpecification = {
   employee: { mass_id: true, wages: "ineligible" },
   claim: {
@@ -85,7 +100,7 @@ export const BHAP9: ScenarioSpecification = {
 export const MED_INTER_INEL: ScenarioSpecification = {
   employee: { mass_id: true, wages: "ineligible" },
   claim: {
-    label: "MED_INTER_EL",
+    label: "MED_INTER_INEL",
     shortClaim: true,
     reason: "Serious Health Condition - Employee",
     docs: {

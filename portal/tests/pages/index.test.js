@@ -17,11 +17,12 @@ describe("Index", () => {
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
-  it("does not render employer information when employerShowSelfRegistrationForm is true", () => {
+  it("does show employer information when employerShowSelfRegistrationForm is true", () => {
     process.env.featureFlags = { employerShowSelfRegistrationForm: true };
     const { wrapper } = renderWithAppLogic(Index, {
       diveLevels: 0,
     });
+
     expect(wrapper).toMatchSnapshot();
     wrapper
       .find("Trans")

@@ -3,6 +3,7 @@ import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const mockClaims = {
   bonding: new MockClaimBuilder().bondingBirthLeaveReason().create(),
+  caring: new MockClaimBuilder().caringLeaveReason().create(),
   medical: new MockClaimBuilder().medicalLeaveReason().create(),
 };
 

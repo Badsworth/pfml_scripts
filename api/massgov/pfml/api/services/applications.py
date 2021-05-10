@@ -403,7 +403,6 @@ def update_from_request(
     for leave_schedule in leave_schedules:
         db_session.add(leave_schedule)
 
-    db_session.flush()
     db_session.commit()
     db_session.refresh(application)
     if application.work_pattern is not None:
@@ -513,9 +512,12 @@ def update_leave_schedule(
     if leave_schedule is None or len(leave_schedule) == 0:
         # Leave periods are removed by sending a PATCH request with an
         # empty array (or null value) for that category of leave.
-        db_session.query(leave_cls).filter(
-            leave_cls.application_id == application.application_id
-        ).delete(synchronize_session="fetch")
+        if leave_cls == ContinuousLeavePeriod:
+            application.continuous_leave_periods = []
+        elif leave_cls == IntermittentLeavePeriod:
+            application.intermittent_leave_periods = []
+        elif leave_cls == ReducedScheduleLeavePeriod:
+            application.reduced_schedule_leave_periods = []
 
         return None
 

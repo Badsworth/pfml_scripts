@@ -369,7 +369,7 @@ def test_users_patch(client, user, auth_token, test_db_session):
     assert response.status_code == 200
     assert response_body.get("data")["consented_to_data_sharing"] is True
 
-    test_db_session.refresh(user)
+    # test_db_session.refresh(user)
     assert user.consented_to_data_sharing is True
 
 
@@ -386,7 +386,7 @@ def test_users_unauthorized_patch(client, user, auth_token, test_db_session):
 
     tests.api.validate_error_response(response, 403)
 
-    test_db_session.refresh(user_2)
+    # test_db_session.refresh(user_2)
     assert user_2.consented_to_data_sharing is False
 
 

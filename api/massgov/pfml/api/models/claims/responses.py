@@ -10,20 +10,13 @@ from massgov.pfml.api.models.claims.common import (
     LeaveDetails,
     PreviousLeave,
 )
+from massgov.pfml.db.models.employees import Claim
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FEINFormattedStr,
     MaskedDateStr,
     MaskedTaxIdFormattedStr,
 )
-
-
-class FineosAbsenceStatusResponse(PydanticBaseModel):
-    absence_status_description: str
-
-
-class ClaimTypeResponse(PydanticBaseModel):
-    claim_type_description: str
 
 
 class EmployerResponse(PydanticBaseModel):
@@ -38,6 +31,14 @@ class EmployeeResponse(PydanticBaseModel):
     other_name: Optional[str]
 
 
+class FineosAbsenceStatusResponse(PydanticBaseModel):
+    absence_status_description: str
+
+
+class ClaimTypeResponse(PydanticBaseModel):
+    claim_type_description: str
+
+
 class ClaimResponse(PydanticBaseModel):
     fineos_absence_id: Optional[str]
     employer: Optional[EmployerResponse]
@@ -46,8 +47,19 @@ class ClaimResponse(PydanticBaseModel):
     absence_period_start_date: Optional[date]
     absence_period_end_date: Optional[date]
     fineos_absence_status: Optional[FineosAbsenceStatusResponse]
+    claim_status: Optional[str]
     claim_type: Optional[ClaimTypeResponse]
+    claim_type_description: Optional[str]
     created_at: Optional[date]
+
+    @classmethod
+    def from_orm(cls, claim: Claim) -> "ClaimResponse":
+        claim_response = super().from_orm(claim)
+        if claim.fineos_absence_status:
+            claim_response.claim_status = claim.fineos_absence_status.absence_status_description
+        if claim.claim_type:
+            claim_response.claim_type_description = claim.claim_type.claim_type_description
+        return claim_response
 
 
 class ClaimReviewResponse(PydanticBaseModel):
@@ -68,6 +80,8 @@ class ClaimReviewResponse(PydanticBaseModel):
     follow_up_date: Optional[date]
     is_reviewable: Optional[bool]
     status: Optional[str]
+    contains_version_one_eforms: Optional[bool]
+    contains_version_two_eforms: Optional[bool]
 
 
 class DocumentResponse(PydanticBaseModel):

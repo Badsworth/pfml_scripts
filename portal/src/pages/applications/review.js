@@ -40,6 +40,7 @@ import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import claimantConfigs from "../../flows/claimant";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
+import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
@@ -83,22 +84,7 @@ export const Review = (props) => {
     claim.application_id
   );
 
-  const documentFilters = [DocumentType.certification.medicalCertification];
-
-  // TODO (CP-1989): Remove showCaringLeaveType feature flag
-  const showCaringLeaveType = isFeatureEnabled("showCaringLeaveType");
-  if (showCaringLeaveType) {
-    if (claim.leave_details && claim.leave_details.reason) {
-      documentFilters.push(
-        DocumentType.certification[claim.leave_details.reason]
-      );
-    }
-  }
-
-  const certificationDocuments = findDocumentsByTypes(
-    documents,
-    documentFilters
-  );
+  const certificationDocuments = findDocumentsByLeaveReason(documents, claim);
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
   ]);

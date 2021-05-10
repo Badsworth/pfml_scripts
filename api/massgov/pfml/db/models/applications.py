@@ -368,13 +368,22 @@ class Application(Base):
     #
     # https://github.com/dropbox/sqlalchemy-stubs/issues/152
     continuous_leave_periods = relationship(
-        "ContinuousLeavePeriod", back_populates="application", uselist=True
+        "ContinuousLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     intermittent_leave_periods = relationship(
-        "IntermittentLeavePeriod", back_populates="application", uselist=True
+        "IntermittentLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     reduced_schedule_leave_periods = relationship(
-        "ReducedScheduleLeavePeriod", back_populates="application", uselist=True
+        "ReducedScheduleLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     employer_benefits = relationship("EmployerBenefit", back_populates="application", uselist=True)
     other_incomes = relationship("OtherIncome", back_populates="application", uselist=True)

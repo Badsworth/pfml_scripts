@@ -162,12 +162,11 @@ def test_user_active_directory_id_uniqueness(test_db_session, claimant_event_dic
 def test_leave_admin_handler(test_db_session, leave_admin_event_dict, logging_fix):
     import massgov.pfml.cognito_post_confirmation_lambda.main as main
 
-    employer = Employer(
-        employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id="93"
-    )
+    employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
 
     test_db_session.add(employer)
     test_db_session.commit()
+    employer_id = employer.employer_id
 
     main.db_session_raw = test_db_session
 
@@ -195,13 +194,11 @@ def test_leave_admin_handler(test_db_session, leave_admin_event_dict, logging_fi
     )
     assert created_leave_admin
     assert created_leave_admin.fineos_web_id is None
-    assert created_leave_admin.employer_id == employer.employer_id
+    assert created_leave_admin.employer_id == employer_id
 
 
 def test_leave_admin_create(test_db_session):
-    employer = Employer(
-        employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id="93"
-    )
+    employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
 
     test_db_session.add(employer)
     test_db_session.commit()
@@ -226,9 +223,7 @@ def test_leave_admin_create(test_db_session):
 
 
 def test_register_fineos_updates_ula_record(test_db_session):
-    employer = Employer(
-        employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id="93"
-    )
+    employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
 
     test_db_session.add(employer)
     test_db_session.commit()
@@ -282,9 +277,7 @@ def test_register_fineos_updates_ula_record(test_db_session):
 def test_leave_admin_create_existing_user(test_db_session, caplog, leave_admin_event_dict):
     """ Tests that the branch to create a user is skipped if exists """
 
-    employer = Employer(
-        employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id="93"
-    )
+    employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
     existing_user = User(
         active_directory_id="604fd58c-adda-4dbf-ad9e-ee4952c11866", email_address="user@example.com"
     )

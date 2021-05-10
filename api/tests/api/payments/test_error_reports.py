@@ -323,6 +323,8 @@ def test_send_ctr_payments_errors_empty_db(
 def test_send_fineos_payments_errors(
     test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
 ):
+    test_db_session.begin_nested()
+
     s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
     # Setup for cps_payment_export_report
     setup_state_log_in_end_state(
@@ -357,6 +359,7 @@ def test_send_fineos_payments_errors(
         ),
     )
     test_db_session.commit()
+    test_db_session.begin_nested()
 
     error_reports._send_fineos_payments_errors(test_db_session)
 
@@ -417,6 +420,7 @@ def test_vendor_extract_error_report_step(
     set_exporter_env_vars,
     test_db_other_session,
 ):
+    test_db_session.begin_nested()
     # Verify that the VendorExtractErrorReportStep.run_step() is functionally equivalent
     # to send_fineos_payments_errors() for just the vendor report.
     s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
@@ -444,6 +448,7 @@ def test_vendor_extract_error_report_step(
         ),
     )
     test_db_session.commit()
+    test_db_session.begin_nested()
 
     error_reports.VendorExtractErrorReportStep(
         db_session=test_db_session, log_entry_db_session=test_db_other_session
@@ -489,7 +494,7 @@ def test_vendor_extract_error_report_step(
 
 @freeze_time("2020-01-01 12:00:00")
 def test_send_ctr_payments_errors_simple_reports(
-    test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
+    local_test_db_session, local_initialize_factories_session, mock_ses, set_exporter_env_vars
 ):
     s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
     # In the interest of keeping this single test at only 200 lines,
@@ -499,7 +504,7 @@ def test_send_ctr_payments_errors_simple_reports(
     setup_state_log_in_end_state(
         state_log_util.AssociatedClass.PAYMENT,
         end_state=State.ADD_TO_GAX_ERROR_REPORT,
-        test_db_session=test_db_session,
+        test_db_session=local_test_db_session,
         additional_params=AdditionalParams(
             fineos_customer_num="000000000",
             fineos_absence_id="NTN-00-ABS-00",
@@ -511,7 +516,7 @@ def test_send_ctr_payments_errors_simple_reports(
     setup_state_log_in_end_state(
         state_log_util.AssociatedClass.EMPLOYEE,
         end_state=State.ADD_TO_VCC_ERROR_REPORT,
-        test_db_session=test_db_session,
+        test_db_session=local_test_db_session,
         additional_params=AdditionalParams(
             fineos_customer_num="000000001",
             fineos_absence_id="NTN-01-ABS-01",
@@ -523,7 +528,7 @@ def test_send_ctr_payments_errors_simple_reports(
     setup_state_log_in_end_state(
         state_log_util.AssociatedClass.EMPLOYEE,
         end_state=State.ADD_TO_VCC_ERROR_REPORT,
-        test_db_session=test_db_session,
+        test_db_session=local_test_db_session,
         additional_params=AdditionalParams(
             fineos_customer_num="000000002",
             fineos_absence_id="NTN-02-ABS-02",
@@ -536,7 +541,7 @@ def test_send_ctr_payments_errors_simple_reports(
     setup_state_log_in_end_state(
         state_log_util.AssociatedClass.EMPLOYEE,
         end_state=State.ADD_TO_VCM_REPORT,
-        test_db_session=test_db_session,
+        test_db_session=local_test_db_session,
         additional_params=AdditionalParams(
             fineos_customer_num="000000003",
             fineos_absence_id="NTN-03-ABS-03",
@@ -548,7 +553,7 @@ def test_send_ctr_payments_errors_simple_reports(
     setup_state_log_in_end_state(
         state_log_util.AssociatedClass.EMPLOYEE,
         end_state=State.ADD_TO_VCM_REPORT,
-        test_db_session=test_db_session,
+        test_db_session=local_test_db_session,
         additional_params=AdditionalParams(
             fineos_customer_num="000000004",
             fineos_absence_id="NTN-04-ABS-04",
@@ -560,7 +565,7 @@ def test_send_ctr_payments_errors_simple_reports(
     setup_state_log_in_end_state(
         state_log_util.AssociatedClass.EMPLOYEE,
         end_state=State.VCM_REPORT_SENT,
-        test_db_session=test_db_session,
+        test_db_session=local_test_db_session,
         additional_params=AdditionalParams(
             fineos_customer_num="000000007",
             fineos_absence_id="NTN-07-ABS-07",
@@ -573,7 +578,7 @@ def test_send_ctr_payments_errors_simple_reports(
     setup_state_log_in_end_state(
         state_log_util.AssociatedClass.EMPLOYEE,
         end_state=State.ADD_TO_EFT_ERROR_REPORT,
-        test_db_session=test_db_session,
+        test_db_session=local_test_db_session,
         additional_params=AdditionalParams(
             fineos_customer_num="000000005",
             fineos_absence_id="NTN-05-ABS-05",
@@ -585,7 +590,7 @@ def test_send_ctr_payments_errors_simple_reports(
     setup_state_log_in_end_state(
         state_log_util.AssociatedClass.EMPLOYEE,
         end_state=State.ADD_TO_EFT_ERROR_REPORT,
-        test_db_session=test_db_session,
+        test_db_session=local_test_db_session,
         additional_params=AdditionalParams(
             fineos_customer_num="000000006",
             fineos_absence_id="NTN-06-ABS-06",
@@ -593,10 +598,10 @@ def test_send_ctr_payments_errors_simple_reports(
             add_claim_payment_for_employee=True,  # It will find payment/claim data
         ),
     )
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     # Finally call the method after all that setup
-    error_reports._send_ctr_payments_errors(test_db_session)
+    error_reports._send_ctr_payments_errors(local_test_db_session)
 
     file_names = file_util.list_files(s3_prefix, recursive=True)
     assert len(file_names) == 4
@@ -688,11 +693,11 @@ def test_send_ctr_payments_errors_simple_reports(
     # 8 prior states created in setup_state_log_in_end_state
     #   4 additional created when we add_claim_payment_for_employee=True and created an additional payment state log
     # the 8 records created to move the payment/employee state logs to the next state.
-    state_logs = test_db_session.query(StateLog).all()
+    state_logs = local_test_db_session.query(StateLog).all()
     assert len(state_logs) == 28
-    test_db_session.rollback()
+    local_test_db_session.rollback()
     # the 8 created as part of processing no longer exist
-    rolled_back_state_logs = test_db_session.query(StateLog).all()
+    rolled_back_state_logs = local_test_db_session.query(StateLog).all()
     assert len(rolled_back_state_logs) == 20
 
 
@@ -700,6 +705,8 @@ def test_send_ctr_payments_errors_simple_reports(
 def test_send_ctr_payments_errors_eft_pending(
     test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
 ):
+    test_db_session.begin_nested()
+
     # Setup for VCM Report
     setup_state_log_in_end_state(
         state_log_util.AssociatedClass.EMPLOYEE,

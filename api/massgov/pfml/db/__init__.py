@@ -149,6 +149,7 @@ def session_scope(session: Session, close: bool = False) -> Generator[Session, N
     See https://docs.sqlalchemy.org/en/13/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it
     """
 
+    session.begin_nested()
     try:
         yield session
         session.commit()

@@ -38,7 +38,9 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
 )
 from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import CiIndex
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
+    FINEOS_CLAIMANT_EXPORT_FILES,
     FINEOS_PAYMENT_EXTRACT_FILES,
+    generate_claimant_data_files,
     generate_payment_extract_files,
 )
 from massgov.pfml.delegated_payments.mock.generate_check_response import PubCheckResponseGenerator
@@ -129,14 +131,17 @@ class TestDataSet:
 
 
 def test_e2e_pub_payments(
-    test_db_session,
-    test_db_other_session,
-    initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
+    local_initialize_factories_session,
     monkeypatch,
     set_exporter_env_vars,
     caplog,
-    create_triggers,
+    local_create_triggers,
 ):
+    test_db_session = local_test_db_session
+    test_db_other_session = local_test_db_other_session
+
     # TODO Validate error and warning logs
 
     # ========================================================================
@@ -230,12 +235,16 @@ def test_e2e_pub_payments(
             scenario_names=[
                 ScenarioName.PUB_ACH_FAMILY_RETURN,
                 ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                 ScenarioName.AUDIT_REJECTED,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=test_db_session,
@@ -292,6 +301,7 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                 ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
                 ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
+                ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
             ],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
             db_session=test_db_session,
@@ -343,6 +353,9 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                 ScenarioName.AUDIT_REJECTED,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
             ]
         )
 
@@ -382,17 +395,17 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ClaimantExtractStep",
             {
-                "claim_not_found_count": 0,
+                "claim_not_found_count": len([ScenarioName.CLAIM_NOT_ID_PROOFED]),
                 "eft_found_count": 0,
                 "eft_rejected_count": 0,
-                "employee_feed_record_count": 0,
+                "employee_feed_record_count": len(SCENARIO_DESCRIPTORS),
                 "employee_not_found_count": 0,
                 "errored_claimant_count": 0,
                 "evidence_not_id_proofed_count": 0,
                 "new_eft_count": 0,
-                "processed_requested_absence_count": 0,
+                "processed_requested_absence_count": len(SCENARIO_DESCRIPTORS),
                 "valid_claimant_count": 0,
-                "vbi_requested_absence_som_record_count": 0,
+                "vbi_requested_absence_som_record_count": len(SCENARIO_DESCRIPTORS),
             },
         )
 
@@ -414,6 +427,8 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
                         ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
                         ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
                     ]
                 ),
                 "cancellation_count": len([ScenarioName.CANCELLATION_PAYMENT]),
@@ -435,9 +450,12 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                         ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                     ]
                 ),
-                "employee_missing_in_db_count": 0,
+                "employee_in_payment_extract_missing_in_db_count": 0,
                 "employer_reimbursement_count": len([ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT]),
                 "errored_payment_count": len(
                     [
@@ -448,6 +466,7 @@ def test_e2e_pub_payments(
                         ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
                         ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
                         ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
                     ]
                 ),
                 "new_eft_count": len([ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE]),
@@ -456,6 +475,7 @@ def test_e2e_pub_payments(
                         ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
                         ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                         ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
                     ]
                 ),
                 "not_pending_or_approved_leave_request_count": len(
@@ -494,6 +514,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
                 "tax_identifier_missing_in_db_count": len(
@@ -537,6 +560,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
                 "validated_address_count": len(
@@ -560,6 +586,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
                 "verified_experian_match": len(
@@ -580,6 +609,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
             },
@@ -609,6 +641,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                         ScenarioName.AUDIT_REJECTED,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
                 "payment_sampled_for_audit_count": len(
@@ -631,6 +666,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                         ScenarioName.AUDIT_REJECTED,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
                 "sampled_payment_count": len(
@@ -653,6 +691,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                         ScenarioName.AUDIT_REJECTED,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
             },
@@ -686,6 +727,71 @@ def test_e2e_pub_payments(
             config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
         )
 
+        assert_ref_file(
+            f"{s3_config.pfml_payment_rejects_archive_path}/processed/2021-05-02/Payment-Rejects.csv",
+            ReferenceFileType.DELEGATED_PAYMENT_REJECTS,
+            test_db_session,
+        )
+
+        assert_ref_file(
+            f"{s3_config.pfml_pub_check_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-EZ-CHECK.csv",
+            ReferenceFileType.PUB_EZ_CHECK,
+            test_db_session,
+        )
+
+        positive_pay_ez_check_payments = get_payments_in_end_state(
+            test_db_session, State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT
+        )
+        ez_check_file_contents = file_util.read_file(
+            f"{s3_config.pfml_pub_check_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-EZ-CHECK.csv"
+        )
+
+        for payment in positive_pay_ez_check_payments:
+            assert ez_check_file_contents.index(payment.claim.fineos_absence_id) != -1
+
+        assert_ref_file(
+            f"{s3_config.pfml_pub_check_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-POSITIVE-PAY.txt",
+            ReferenceFileType.PUB_POSITIVE_PAYMENT,
+            test_db_session,
+        )
+
+        positive_pay_file_contents = file_util.read_file(
+            f"{s3_config.pfml_pub_check_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-POSITIVE-PAY.txt",
+        )
+
+        for payment in positive_pay_ez_check_payments:
+            assert positive_pay_file_contents.index(str(payment.check.check_number)) != -1
+
+        assert_ref_file(
+            f"{s3_config.pfml_pub_ach_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-NACHA",
+            ReferenceFileType.PUB_NACHA,
+            test_db_session,
+        )
+
+        ach_file_contents = file_util.read_file(
+            f"{s3_config.pfml_pub_ach_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-EOLWD-DFML-NACHA",
+        )
+
+        ach_payments = get_payments_in_end_state(
+            test_db_session, State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT
+        )
+
+        for payment in ach_payments:
+            assert ach_file_contents.index(payment.pub_eft.account_nbr) != -1
+
+        assert_ref_file(
+            f"{s3_config.pfml_fineos_writeback_archive_path}sent/2021-05-02/2021-05-02-19-00-00-pei_writeback.csv",
+            ReferenceFileType.PEI_WRITEBACK,
+            test_db_session,
+        )
+
+        for report_name in CREATE_PUB_FILES_REPORTS:
+            assert_ref_file(
+                f"{s3_config.pfml_error_reports_archive_path}/sent/2021-05-02/2021-05-02-19-00-00-{report_name.value}.csv",
+                ReferenceFileType.DELEGATED_PAYMENT_REPORT_FILE,
+                test_db_session,
+            )
+
         # == Validate payments state logs
 
         # End State
@@ -701,6 +807,8 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
             ],
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
             db_session=test_db_session,
@@ -718,6 +826,7 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
             ],
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT,
             db_session=test_db_session,
@@ -894,6 +1003,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
                 "parsed_rows_count": len(
@@ -916,6 +1028,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                         ScenarioName.AUDIT_REJECTED,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
                 "payment_state_log_missing_count": 0,
@@ -941,6 +1056,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                         ScenarioName.AUDIT_REJECTED,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
             },
@@ -961,6 +1079,8 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
                     ]
                 ),
                 "check_payment_count": len(
@@ -973,6 +1093,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
                 "payment_count": len(
@@ -994,6 +1115,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
             },
@@ -1014,6 +1138,8 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
                     ]
                 ),
                 "ach_prenote_count": len([ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE]),
@@ -1035,6 +1161,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
                 "eft_payment_count": len(
@@ -1048,6 +1175,8 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
                     ]
                 ),
                 "employer_reimbursement_payment_count": len(
@@ -1087,6 +1216,9 @@ def test_e2e_pub_payments(
                         ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
                         ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
                         ScenarioName.ZERO_DOLLAR_PAYMENT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
                 "zero_dollar_payment_count": len([ScenarioName.ZERO_DOLLAR_PAYMENT]),
@@ -1150,8 +1282,20 @@ def test_e2e_pub_payments(
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[
+                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+            ],
+            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+            db_session=test_db_session,
+        )
+
+        # Unchanged
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[
                 ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
                 ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
             ],
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT,
             db_session=test_db_session,
@@ -1209,7 +1353,7 @@ def test_e2e_pub_payments(
         positive_pay_filenames = [positive_pay_check_response_file, outstanding_check_response_file]
         assert_files(pub_check_response_processed_folder, positive_pay_filenames, timestamp_prefix)
 
-        # == PubError TODO adjust as metric based scenarios below are added
+        # == PubError adjust as metric based scenarios below are added
         assert len(test_db_session.query(PubError).all()) == len(
             [
                 ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
@@ -1218,9 +1362,13 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_PRENOTE_RETURN,
                 ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
             ]
         )
 
@@ -1245,6 +1393,9 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
                     ]
                 ),
                 "change_notification_count": len(
@@ -1266,24 +1417,30 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                     ]
                 ),
-                "eft_prenote_id_not_found_count": 0,  # TODO add scenario (PUB-174)
-                "eft_prenote_rejected_count": 0,  # TODO add scenario (PUB-174)
+                "eft_prenote_id_not_found_count": 0,  # TODO add scenario
+                "eft_prenote_rejected_count": 0,
                 "eft_prenote_unexpected_state_count": 0,
-                "payment_already_complete_count": 0,  # TODO add scenario? (PUB-174)
+                "payment_already_complete_count": 0,  # TODO add scenario or check this on later days
                 "payment_complete_with_change_count": len(
-                    [ScenarioName.PUB_ACH_FAMILY_RETURN, ScenarioName.PUB_ACH_MEDICAL_RETURN,]
-                ),  # TODO validate
+                    [
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                    ]
+                ),
                 "payment_count": len(
                     [
                         ScenarioName.PUB_ACH_FAMILY_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
                     ]
                 ),
-                "payment_id_not_found_count": 0,  # TODO add scenario (PUB-174)
-                "payment_already_rejected_count": 0,  # TODO add scenario (PUB-174)
-                "payment_notification_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
+                "payment_id_not_found_count": len(
+                    [ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND]
+                ),
+                "payment_already_rejected_count": 0,  # TODO add scenario or check this on later days
+                "payment_notification_unexpected_state_count": 0,
                 "payment_rejected_count": len(
                     [
                         ScenarioName.PUB_ACH_PRENOTE_RETURN,
@@ -1291,17 +1448,22 @@ def test_e2e_pub_payments(
                     ]
                 ),
                 "payment_unexpected_state_count": 0,
-                "unknown_id_format_count": 0,  # TODO add scenario (PUB-174)
+                "unknown_id_format_count": len(
+                    [
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                    ]
+                ),
                 "warning_count": 0,
             },
         )
 
-        # Outstanding check response (processed first by file name alphabetical order)
+        # Outstanding check response
         assert_metrics(
             test_db_other_session,
             "ProcessCheckReturnFileStep",
             {
-                "check_number_not_found_count": 0,  # TODO add scenario  (PUB-174)
+                "check_number_not_found_count": 0,
                 "check_payment_count": len(
                     [
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
@@ -1325,24 +1487,27 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
                     ]
                 ),
-                "payment_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
+                "payment_unexpected_state_count": 0,
                 "warning_count": 0,
             },
-            log_report_index=1,  # second when sorted by import log id desc order
+            log_report_index=1,  # second when sorted in start time desc order
             description="Outstanding check responses",
         )
 
-        # Positive pay check response (processed second by file name alphabetical order)
+        # Positive pay check response
         assert_metrics(
             test_db_other_session,
             "ProcessCheckReturnFileStep",
             {
-                "check_number_not_found_count": 0,  # TODO add scenario (PUB-174)
+                "check_number_not_found_count": len(
+                    [ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND]
+                ),
                 "check_payment_count": len(
                     [
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                         ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
                 ),
                 "payment_complete_by_paid_check": len(
@@ -1354,7 +1519,7 @@ def test_e2e_pub_payments(
                 ),
                 "payment_failed_by_check": 0,
                 "payment_still_outstanding": 0,
-                "payment_unexpected_state_count": 0,  # TODO add scenario (PUB-174)
+                "payment_unexpected_state_count": 0,
                 "warning_count": 0,
             },
             log_report_index=0,  # first when sorted by import log id desc order
@@ -1451,13 +1616,13 @@ def test_e2e_pub_payments(
 
 
 def test_e2e_pub_payments_delayed_scenarios(
-    test_db_session,
-    test_db_other_session,
-    initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
+    local_initialize_factories_session,
     monkeypatch,
     set_exporter_env_vars,
     caplog,
-    create_triggers,
+    local_create_triggers,
 ):
     # ========================================================================
     # Configuration / Setup
@@ -1488,28 +1653,28 @@ def test_e2e_pub_payments_delayed_scenarios(
 
     with freeze_time("2021-05-01 21:30:00", tz_offset=5):
         process_fineos_extracts(
-            test_dataset, mock_experian_client, test_db_session, test_db_other_session
+            test_dataset, mock_experian_client, local_test_db_session, local_test_db_other_session
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,],
             end_state=State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.INVALID_ADDRESS_FIXED,],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
     # ===============================================================================
@@ -1525,8 +1690,8 @@ def test_e2e_pub_payments_delayed_scenarios(
 
     with freeze_time("2021-05-02 18:00:00", tz_offset=5):
         run_process_pub_payments_ecs_task(
-            db_session=test_db_session,
-            log_entry_db_session=test_db_other_session,
+            db_session=local_test_db_session,
+            log_entry_db_session=local_test_db_other_session,
             config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
         )
 
@@ -1534,7 +1699,7 @@ def test_e2e_pub_payments_delayed_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
     # ===============================================================================
@@ -1549,7 +1714,7 @@ def test_e2e_pub_payments_delayed_scenarios(
 
     with freeze_time("2021-05-02 21:00:00", tz_offset=5):
         process_fineos_extracts(
-            test_dataset, mock_experian_client, test_db_session, test_db_other_session
+            test_dataset, mock_experian_client, local_test_db_session, local_test_db_other_session
         )
 
         assert_payment_state_for_scenarios(
@@ -1560,7 +1725,7 @@ def test_e2e_pub_payments_delayed_scenarios(
                 ScenarioName.INVALID_ADDRESS_FIXED,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
     # ===============================================================================
@@ -1596,8 +1761,8 @@ def test_e2e_pub_payments_delayed_scenarios(
 
     with freeze_time("2021-05-03 18:00:00", tz_offset=5):
         run_process_pub_payments_ecs_task(
-            db_session=test_db_session,
-            log_entry_db_session=test_db_other_session,
+            db_session=local_test_db_session,
+            log_entry_db_session=local_test_db_other_session,
             config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
         )
 
@@ -1605,7 +1770,7 @@ def test_e2e_pub_payments_delayed_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED],
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
     # ===============================================================================
@@ -1620,14 +1785,14 @@ def test_e2e_pub_payments_delayed_scenarios(
 
     with freeze_time("2021-05-03 21:30:00", tz_offset=5):
         process_fineos_extracts(
-            test_dataset, mock_experian_client, test_db_session, test_db_other_session
+            test_dataset, mock_experian_client, local_test_db_session, local_test_db_other_session
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
-            db_session=test_db_session,
+            db_session=local_test_db_session,
         )
 
     # TODO Scenario: Day 6 Prenote Rejection
@@ -1654,16 +1819,19 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: i
 
     fineos_data_export_path = s3_config.fineos_data_export_path
 
-    # TODO generate claimant extract files - PUB-165
+    # claimant extract
+    generate_claimant_data_files(scenario_dataset, fineos_data_export_path, payments_util.get_now())
 
+    # Confirm expected claimant files were generated
+    fineos_extract_date_prefix = get_current_timestamp_prefix()
+    assert_files(fineos_data_export_path, FINEOS_CLAIMANT_EXPORT_FILES, fineos_extract_date_prefix)
+
+    # payment extract
     generate_payment_extract_files(
         scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=round
     )
 
-    # TODO Confirm expected claimant files were generated - PUB-165
-
     # Confirm expected payment files were generated
-    fineos_extract_date_prefix = get_current_timestamp_prefix()
     assert_files(fineos_data_export_path, FINEOS_PAYMENT_EXTRACT_FILES, fineos_extract_date_prefix)
 
 

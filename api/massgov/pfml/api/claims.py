@@ -185,18 +185,32 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     with app.db_session() as db_session:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
-        claim = get_claim_as_leave_admin(
+        claim_review_response = get_claim_as_leave_admin(
             user_leave_admin.fineos_web_id, fineos_absence_id, employer  # type: ignore
         )
-        if claim is None:
+
+        if claim_review_response is None:
             raise NotFound(
                 description="Could not fetch Claim from FINEOS with given absence ID {}".format(
                     fineos_absence_id
                 )
             )
 
+        claim_from_db = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .one_or_none()
+        )
+
+        if claim_from_db and claim_from_db.fineos_absence_status:
+            claim_review_response.status = (
+                claim_from_db.fineos_absence_status.absence_status_description
+            )
+
         return response_util.success_response(
-            message="Successfully retrieved claim", data=claim.dict(), status_code=200
+            message="Successfully retrieved claim",
+            data=claim_review_response.dict(),
+            status_code=200,
         ).to_api_response()
 
 

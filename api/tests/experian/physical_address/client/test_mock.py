@@ -49,7 +49,7 @@ def test_search_and_format_fallback_verified_match():
     assert len(client.format_responses) == 1
 
 
-def test_search_and_format_fallback_multiple_matches():
+def test_search_and_format_fallback_multiple_matches(local_initialize_factories_session):
     client = MockClient(fallback_confidence=Confidence.MULTIPLE_MATCHES, multiple_count=5)
     assert len(client.search_responses) == 0
     assert len(client.format_responses) == 0
@@ -124,7 +124,7 @@ def test_format_not_initialized_for_response():
         client.format("fake_key")
 
 
-def test_experian_search_request_to_address():
+def test_experian_search_request_to_address(local_initialize_factories_session):
     # If the address contains all 5 parts
     full_address = experian_search_request_to_address("line_one,line_two,city,MA,zip")
     assert full_address.address_line_one == "line_one"

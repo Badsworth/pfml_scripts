@@ -41,12 +41,13 @@ class User extends BaseModel {
   }
 
   /**
-   * Determines whether user_leave_administrators has at least one employer NOT registered in FINEOS
+   * Determines whether user_leave_administrators has at least one verified employer NOT registered in FINEOS
    * @returns {boolean}
    */
-  get hasEmployerNotRegisteredInFineos() {
+  get hasVerifiedEmployerNotRegisteredInFineos() {
     return this.user_leave_administrators.some(
-      (employer) => employer.has_fineos_registration === false
+      (employer) =>
+        employer.has_fineos_registration === false && employer.verified === true
     );
   }
 
