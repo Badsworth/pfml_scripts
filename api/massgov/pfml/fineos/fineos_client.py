@@ -796,7 +796,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             )
 
         # @todo: check that job title field works
-        if job_title:
+        if job_title: # jobDesc
             additional_data_set.additional_data.append(
                 models.AdditionalData(name="jobTitle", value=job_title)
             )

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Dropdown from "../../components/Dropdown";
+import Fieldset from "../../components/Fieldset";
+import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -64,20 +66,32 @@ export const AppOccupation = (props) => {
   }, []);
 
   return (
-    <QuestionPage title={t("pages.claimsOccupation.title")} onSave={handleSave}>
-      <Dropdown
-        {...getFunctionalInputProps(`occupation_id`)}
-        choices={occupations}
-        label="Industry"
-        hideEmptyChoice
-        smallLabel
-      />
-      <InputText
-        {...getFunctionalInputProps("job_title")}
-        label="Job title"
-        smallLabel
-        maxLength="255"
-      />
+    <QuestionPage
+      title={t("$t(shared.claimsVerifyIdTitle)")}
+      onSave={handleSave}
+    >
+      <Fieldset>
+        <FormLabel
+          component="legend"
+          hint="This data helps us understand who is accessing our program to ensure it is built for everyone. Your answer will not be shared with your employer."
+        >
+          What is your current occupation?
+        </FormLabel>
+
+        <Dropdown
+          {...getFunctionalInputProps(`occupation_id`)}
+          choices={occupations}
+          label="Industry"
+          hideEmptyChoice
+          smallLabel
+        />
+        <InputText
+          {...getFunctionalInputProps("job_title")}
+          label="Job title"
+          smallLabel
+          maxLength="255"
+        />
+      </Fieldset>
     </QuestionPage>
   );
 };

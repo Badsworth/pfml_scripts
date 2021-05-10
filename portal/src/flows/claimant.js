@@ -80,7 +80,7 @@ const checklistEvents = {
   VERIFY_ID: routes.applications.name,
   LEAVE_DETAILS: routes.applications.leaveReason,
   OTHER_LEAVE: routes.applications.employerBenefits,
-  EMPLOYER_INFORMATION: routes.applications.employmentStatus,
+  EMPLOYER_INFORMATION: routes.applications.occupation,
   PAYMENT: routes.applications.paymentMethod,
   UPLOAD_CERTIFICATION: routes.applications.uploadCertification,
   UPLOAD_ID: routes.applications.uploadId,
@@ -105,7 +105,7 @@ export default {
     [routes.applications.occupation]: {
       meta: {},
       on: {
-        CONTINUE: routes.applications.getReady,
+        CONTINUE: routes.applications.employmentStatus,
       },
     },
     [routes.user.consentToDataSharing]: {
