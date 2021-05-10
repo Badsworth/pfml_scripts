@@ -53,7 +53,7 @@ services:
       - DB_PASSWORD=secret123
       - DB_NESSUS_PASSWORD=nessussecret123
       - CORS_ORIGINS=http://localhost:3000
-      - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
+      - COGNITO_USER_POOL_KEYS_URL=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HpL4XslLg/.well-known/jwks.json
       # Stage Cognito resource
       - COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
       - COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8

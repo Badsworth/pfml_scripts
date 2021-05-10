@@ -44,7 +44,8 @@ from massgov.pfml.db.models.applications import (
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, AddressType, GeoState, LkAddressType
+from massgov.pfml.db.models.employees import Address, AddressType, GeoState, LkAddressType, Gender
+
 from massgov.pfml.util.pydantic.types import Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -322,7 +323,7 @@ def update_from_request(
     # set keys, LookupEnum handling, alias/map field names, etc.
     for key in body.__fields_set__:
         value = getattr(body, key)
-
+        logger.warning(f'value {value}')
         if key in ("leave_details", "employee_ssn", "tax_identifier"):
             continue
 
@@ -360,13 +361,19 @@ def update_from_request(
         if key == "phone":
             add_or_update_phone(db_session, body.phone, application)
             continue
-
+        if key == "gender":
+            key = "gender_id"
+            value = (Gender.get_id(value) if value else None)
         if isinstance(value, LookupEnum):
+            logger.warning("IS instance of lookup enum")
             lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
 
             if lookup_model:
                 value = lookup_model
-
+        logger.warning(f'hello application {application}')
+        logger.warning(f'hello key {key}')
+        logger.warning(f'hello value {value}')
+        # this is the sticking point
         setattr(application, key, value)
 
     leave_schedules = update_leave_details(db_session, body, application)
@@ -387,7 +394,7 @@ def update_from_request(
     db_session.refresh(application)
     if application.work_pattern is not None:
         db_session.refresh(application.work_pattern)
-
+    
     return application
 
 
@@ -829,6 +836,38 @@ def add_or_update_phone(
 
     db_session.add(application.phone)
 
+# def add_or_update_gender(
+#     db_session: db.Session, phone: Optional[apps_common_io.Phone], application: Application,
+# ) -> None:
+#     if not phone:
+#         return
+
+#     int_code = phone.int_code
+#     phone_number = phone.phone_number
+#     internationalized_phone_number = None
+
+#     # If the phone number wasn't removed during the masked value check, convert it to E.164
+#     if phone_number:
+#         parsed_phone_number = phonenumbers.parse(f"+{int_code}{phone_number}")
+#         internationalized_phone_number = phonenumbers.format_number(
+#             parsed_phone_number, phonenumbers.PhoneNumberFormat.E164
+#         )
+
+#     # If Phone exists, update with what we have, otherwise, create a new Phone
+#     # if process_masked_phone_number did not remove the phone_number field, update the db
+#     if not application.phone:
+#         application.phone = Phone()
+
+#     application.phone.phone_type_id = (
+#         PhoneType.get_id(phone.phone_type) if phone.phone_type else None
+#     )
+#     if internationalized_phone_number:
+#         # This check is here because if the phone_number was removed by de-masking, this value would still be None
+#         # As a result, this field can't be set to None, because there is ambiguity in whether a None is intentional or
+#         # the result of de-masking. Investigate making fields like this nullable in TODO (CP-1530)
+#         application.phone.phone_number = internationalized_phone_number
+
+#     db_session.add(application.phone)
 
 def get_or_add_tax_identifier(
     db_session: db.Session, body: ApplicationRequestBody

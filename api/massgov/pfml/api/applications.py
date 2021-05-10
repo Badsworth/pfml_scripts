@@ -130,7 +130,7 @@ def applications_start():
 
 def applications_update(application_id):
     body = connexion.request.json
-
+    logger.warning(f'body {body}')
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 

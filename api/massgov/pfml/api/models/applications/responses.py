@@ -16,6 +16,7 @@ from massgov.pfml.api.models.applications.common import (
     OtherIncome,
     PaymentMethod,
     WorkPattern,
+    Gender
 )
 from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
@@ -46,6 +47,7 @@ class ApplicationResponse(PydanticBaseModel):
     last_name: Optional[str]
     date_of_birth: Optional[MaskedDateStr]
     gender_id: Optional[int]
+    gender: Optional[Gender]
     has_continuous_leave_periods: Optional[bool]
     has_intermittent_leave_periods: Optional[bool]
     has_reduced_schedule_leave_periods: Optional[bool]

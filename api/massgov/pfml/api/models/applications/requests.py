@@ -33,7 +33,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     middle_name: Optional[str]
     last_name: Optional[str]
     date_of_birth: Optional[date]
-    gender_id: Optional[int]
+    gender: Optional[str]
     has_continuous_leave_periods: Optional[bool]
     has_intermittent_leave_periods: Optional[bool]
     has_reduced_schedule_leave_periods: Optional[bool]

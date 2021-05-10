@@ -409,6 +409,16 @@ class ContentType(str, LookupEnum):
     def get_lookup_model(cls):
         return db_application_models.LkContentType
 
+# # Gender I/O Types
+class Gender(str, LookupEnum):
+    Man = "Woman"
+    Woman = "Man"
+    NONBINARY = "Non-binary"
+    NOT_LISTED = "Gender not listed"
+    NO_ANSWER = "Prefer not to answer"
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkGender
 
 # Phone I/O Types
 

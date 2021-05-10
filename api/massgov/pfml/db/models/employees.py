@@ -1587,7 +1587,7 @@ class Gender(LookupTable):
     column_names = ("gender_id", "gender_description", "fineos_gender_description")
     WOMAN = LkGender(1, "Woman", "Female")
     MAN = LkGender(2, "Man", "Male")
-    NONBINARY = LkGender(3, "Nonbinary", "Neutral")
+    NONBINARY = LkGender(3, "Non-binary", "Neutral")
     NOT_LISTED = LkGender(4, "Gender not listed", "Unknown")
 
 
