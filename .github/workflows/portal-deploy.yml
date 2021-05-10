@@ -637,7 +637,7 @@ jobs:
             "channel": "${{ env.deploys_channel }}",
             "thread_ts": "${{ needs.finish-comms-slack.outputs.message-ts }}",
             "attachments": [{
-              "title": "E2E Test failed in ${{ github.event.inputs.deployment_env }} (<${{ env.workflow_self_link }}|build logs>)",
+              "title": "E2E Test failed in ${{ github.event.inputs.deployment_env || 'test' }} (<${{ env.workflow_self_link }}|build logs>)",
               "color": "danger"
             }]
           }' https://slack.com/api/chat.postMessage)
