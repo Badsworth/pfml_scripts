@@ -116,7 +116,9 @@ const flagsConfig = {
   },
   prod: {
     employerAuthThroughApi: true,
-    employerShowNewsBanner: true,
+    employerShowAddOrganization: true,
+    employerShowSelfRegistrationForm: true,
+    employerShowVerifications: true,
     pfmlTerriyay: true,
   },
 };
