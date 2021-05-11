@@ -88,14 +88,14 @@ const flagsConfig = {
   test: {
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowNewsBanner: false,
+    employerShowNewsBanner: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
   stage: {
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowNewsBanner: false,
+    employerShowNewsBanner: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
@@ -106,7 +106,7 @@ const flagsConfig = {
   performance: {
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowNewsBanner: false,
+    employerShowNewsBanner: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
