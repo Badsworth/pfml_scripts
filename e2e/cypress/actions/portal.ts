@@ -1,18 +1,19 @@
-import { Credentials } from "../../src/types";
 import {
   ApplicationResponse,
-  WorkPattern,
   IntermittentLeavePeriods,
-  WorkPatternDay,
-  ReducedScheduleLeavePeriods,
   PaymentPreference,
   PaymentPreferenceRequestBody,
+  ReducedScheduleLeavePeriods,
+  WorkPattern,
+  WorkPatternDay,
 } from "../../src/api";
-import { inFieldset } from "./common";
 import {
   extractDebugInfoFromBody,
   extractDebugInfoFromHeaders,
 } from "../../src/errors";
+
+import { Credentials } from "../../src/types";
+import { inFieldset } from "./common";
 
 export function before(): void {
   // Set the feature flag necessary to see the portal.
@@ -433,6 +434,22 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Enter employment information"
+
+  // Occupation
+  cy.contains(
+    "fieldset",
+    "What is your current occupation?"
+  ).within(() => {
+    cy.labelled(
+      "Industry"
+    ).select("Other Services (except Public Administration)", { force: true });
+    cy.labelled(
+      "Job title"
+    ).type("QA & E2E Testing");
+  })
+  cy.contains("button", "Save and continue").click();
+
+  // Employment Status
   if (application.employment_status === "Employed") {
     cy.labelled(
       "What is your employer’s Employer Identification Number (EIN)?"
@@ -638,7 +655,7 @@ export function addPaymentInfo(
       };
       cy.contains(
         paymentInfoLabel[
-          payment_method as "Debit" | "Check" | "Elec Funds Transfer"
+        payment_method as "Debit" | "Check" | "Elec Funds Transfer"
         ]
       ).click();
     }
