@@ -45,10 +45,7 @@ class User extends BaseModel {
    * @returns {boolean}
    */
   get hasVerifiedEmployerNotRegisteredInFineos() {
-    return this.user_leave_administrators.some(
-      (employer) =>
-        employer.has_fineos_registration === false && employer.verified === true
-    );
+    return !!this.getVerifiedEmployersNotRegisteredInFineos().length;
   }
 
   /**
@@ -77,6 +74,17 @@ class User extends BaseModel {
         this.isVerifiableEmployer(employer)
       );
     });
+  }
+
+  /**
+   * Returns list of verified employers that are not registered in FINEOS
+   * @returns {UserLeaveAdministrator[]}
+   */
+  getVerifiedEmployersNotRegisteredInFineos() {
+    return this.user_leave_administrators.filter(
+      (employer) =>
+        employer.has_fineos_registration === false && employer.verified === true
+    );
   }
 
   /**

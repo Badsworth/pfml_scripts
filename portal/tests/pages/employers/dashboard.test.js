@@ -117,9 +117,36 @@ describe("Employer dashboard", () => {
     });
 
     expect(wrapper.find("Alert").prop("heading")).toMatchInlineSnapshot(
-      `"Your applications are not accessible at the moment"`
+      `"Your applications are not accessible right now for: 12-3456789"`
     );
     expect(wrapper.find("Alert").dive().find("Trans").dive()).toMatchSnapshot();
+  });
+
+  it("renders a banner with multiple EINs if there are multiple verified employers that are not registered in FINEOS", () => {
+    const { wrapper } = setup([], {
+      user_leave_administrators: [
+        new UserLeaveAdministrator({
+          employer_dba: "Work Inc",
+          employer_fein: "12-3456789",
+          employer_id: "mock-employer-id-1",
+          has_fineos_registration: false,
+          has_verification_data: true,
+          verified: true,
+        }),
+        new UserLeaveAdministrator({
+          employer_dba: "Work Co",
+          employer_fein: "00-3456789",
+          employer_id: "mock-employer-id-2",
+          has_fineos_registration: false,
+          has_verification_data: true,
+          verified: true,
+        }),
+      ],
+    });
+
+    expect(wrapper.find("Alert").prop("heading")).toMatchInlineSnapshot(
+      `"Your applications are not accessible right now for: 12-3456789, 00-3456789"`
+    );
   });
 
   it("does not render a banner if there are any unverified employers that are not registered in FINEOS", () => {

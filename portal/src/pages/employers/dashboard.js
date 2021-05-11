@@ -65,6 +65,11 @@ export const Dashboard = (props) => {
     });
   };
 
+  const getCommaDelimitedEmployerEINs = () => {
+    const employers = user.getVerifiedEmployersNotRegisteredInFineos();
+    return employers.map((employer) => employer.employer_fein).join(", ");
+  };
+
   return (
     <React.Fragment>
       <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
@@ -72,7 +77,9 @@ export const Dashboard = (props) => {
       {hasVerifiedEmployerNotRegisteredInFineos && (
         <Alert
           state="info"
-          heading={t("pages.employersDashboard.unavailableClaimsTitle")}
+          heading={t("pages.employersDashboard.unavailableClaimsTitle", {
+            employers: getCommaDelimitedEmployerEINs(),
+          })}
         >
           <p>
             <Trans
