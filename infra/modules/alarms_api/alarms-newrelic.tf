@@ -140,7 +140,7 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
 }
 
 resource "newrelic_alert_condition" "api_response_time" {
-  # WARN: Average response time above 250ms for at least ten minutes
+  # WARN: Average response time above 750ms for at least ten minutes
   # CRIT: Average response time above 2½sec for at least ten minutes
   policy_id       = newrelic_alert_policy.api_alerts.id
   name            = "API response time too high"
@@ -154,7 +154,7 @@ resource "newrelic_alert_condition" "api_response_time" {
     time_function = "all" # e.g. "for at least..."
     duration      = 10    # units: minutes
     operator      = "above"
-    threshold     = 0.25 # units: seconds
+    threshold     = 0.75 # units: seconds
   }
 
   term {
@@ -523,58 +523,69 @@ resource "newrelic_nrql_alert_condition" "servicenow_5xx_rate" {
 # ----------------------------------------------------------------------------------------------------------------------
 # Alarms relating to problems in the payments pipeline
 
-resource "newrelic_nrql_alert_condition" "payments_errors_from_fineos" {
-  count                        = (var.environment_name == "prod") ? 1 : 0
-  name                         = "Errors encountered by the payments-fineos-process task"
-  type                         = "static"
-  value_function               = "single_value"
-  enabled                      = true
-  policy_id                    = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
-  violation_time_limit_seconds = 86400 # 24 hours
+module "payments_errors_from_fineos" {
+  count  = (var.environment_name == "prod") ? 1 : 0
+  source = "../newrelic_single_error_alarm"
 
-  nrql {
-    evaluation_offset = 3
-    query             = <<-NRQL
-      SELECT count(*) FROM Log
-      WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
+  enabled   = true
+  name      = "Errors encountered by the payments-fineos-process task"
+  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
+
+  nrql = <<-NRQL
+    SELECT count(*) FROM Log
+    WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
       AND aws.logStream LIKE 'prod/payments-fineos-process/%'
       AND levelname = 'ERROR'
-    NRQL
-  }
-
-  critical {
-    threshold             = 0
-    threshold_duration    = 120
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
+  NRQL
 }
 
-resource "newrelic_nrql_alert_condition" "payments_errors_from_comptroller" {
-  count                        = (var.environment_name == "prod") ? 1 : 0
-  name                         = "Errors encountered by the payments-ctr-process task"
-  type                         = "static"
-  value_function               = "single_value"
-  enabled                      = true
-  policy_id                    = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
-  violation_time_limit_seconds = 86400 # 24 hours
+module "payments_errors_from_comptroller" {
+  count  = (var.environment_name == "prod") ? 1 : 0
+  source = "../newrelic_single_error_alarm"
 
-  nrql {
-    evaluation_offset = 3
-    query             = <<-NRQL
-      SELECT count(*) FROM Log
-      WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
+  enabled   = true
+  name      = "Errors encountered by the payments-ctr-process task"
+  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
+
+  nrql = <<-NRQL
+    SELECT count(*) FROM Log
+    WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
       AND aws.logStream LIKE 'prod/payments-ctr-process/%'
       AND levelname = 'ERROR'
     NRQL
-  }
+}
 
-  critical {
-    threshold             = 0
-    threshold_duration    = 120
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
+# ----------------------------------------------------------------------------------------------------------------------
+# Alarms relating to problems in the PUB delegated payments pipeline
+
+module "pub_delegated_payments_errors" {
+  count  = (var.environment_name == "prod") ? 1 : 0
+  source = "../newrelic_single_error_alarm"
+
+  enabled   = true
+  name      = "Errors encountered by a PUB delegated payments ECS task"
+  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
+
+  nrql = <<-NRQL
+    SELECT count(*) FROM Log
+    WHERE aws.logGroup = 'service/pfml-api-${var.environment_name}/ecs-tasks'
+      AND aws.logStream LIKE '${var.environment_name}/pub-payments%'
+      AND levelname = 'ERROR'
+  NRQL
+}
+
+module "pub_delegated_payments_ecs_task_failures" {
+  source    = "../newrelic_single_error_alarm"
+  policy_id = newrelic_alert_policy.api_alerts.id
+
+  enabled = true
+  name    = "PUB delegated payments ECS task failed"
+  nrql    = <<-NRQL
+    SELECT count(*) FROM Log
+    WHERE aws.logGroup = 'service/pfml-api-${var.environment_name}/ecs-tasks'
+      AND aws.logStream LIKE '${var.environment_name}/pub-payments%'
+      AND message LIKE 'Traceback%'
+  NRQL
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -705,4 +716,22 @@ module "newrelic_alert_info_request-errors" {
           ) FROM Log
           WHERE method in ('GET', 'PATCH') AND path LIKE '/v1/employers/claims/%/review' and aws.logGroup like '%${var.environment_name}' and status_code IS NOT NULL
     NRQL
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Alarms related to unexpected startup issues
+
+module "unexpected_import_error" {
+  source = "../newrelic_single_error_alarm"
+
+  enabled   = true
+  name      = "Unexpected import error"
+  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
+
+  nrql = <<-NRQL
+    SELECT count(*) FROM Log
+    WHERE message LIKE '%Unable to import module%'
+      AND aws.logGroup NOT LIKE '%formstack-import%'
+      AND aws.logGroup LIKE '%${var.environment_name}%'
+  NRQL
 }

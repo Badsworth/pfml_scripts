@@ -295,7 +295,8 @@ class VerificationFactory(BaseFactory):
     created_at = Generators.UtcNow
     updated_at = Generators.UtcNow
     verification_id = Generators.UuidObj
-    verification_type_id = None
+    verification_type = factory.SubFactory(VerificationTypeFactory, __sequence=100)
+    verification_type_id = factory.LazyAttribute(lambda w: w.verification_type.verification_type_id)
     verification_metadata = factory.Faker("json")
 
 
@@ -383,7 +384,7 @@ class PaymentFactory(BaseFactory):
     # matter what number it is, so picking a static number is fine.
     fineos_pei_c_value = "9000"
     # The I value is unique for all payments and should be a string, not an int.
-    fineos_pei_i_value = factory.Faker("numerify", text="####")
+    fineos_pei_i_value = factory.Sequence(lambda n: "%d" % n)
 
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
@@ -413,6 +414,14 @@ class PhoneFactory(BaseFactory):
 
     phone_number = "+12404879945"
     phone_type_id = application_models.PhoneType.CELL.phone_type_id
+
+
+class LeaveReasonFactory(BaseFactory):
+    class Meta:
+        model = application_models.LkLeaveReason
+
+    leave_reason_id = None
+    leave_reason_description = None
 
 
 class ApplicationFactory(BaseFactory):
@@ -470,7 +479,6 @@ class ApplicationFactory(BaseFactory):
     relationship_to_caregiver_id = None
     relationship_qualifier_id = None
     employer_notification_method_id = None
-    leave_type_id = None
     leave_reason_id = (
         application_models.LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
     )
@@ -615,7 +623,8 @@ class OtherIncomeFactory(BaseFactory):
 
 class PreviousLeaveFactory(BaseFactory):
     class Meta:
-        model = application_models.PreviousLeave
+        # TODO (CP-2123): Change to application_models.PreviousLeave when we remove previous_leaves
+        model = application_models.PreviousLeaveDeprecated
 
     # application_id must be passed into the create() call
     leave_reason_id = (
@@ -628,6 +637,19 @@ class PreviousLeaveFactory(BaseFactory):
     leave_end_date = factory.Faker(
         "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
     )
+
+    worked_per_week_minutes = random.randint(600, 2400)
+    leave_minutes = random.randint(600, 2400)
+
+
+class PreviousLeaveOtherReasonFactory(PreviousLeaveFactory):
+    class Meta:
+        model = application_models.PreviousLeaveOtherReason
+
+
+class PreviousLeaveSameReasonFactory(PreviousLeaveFactory):
+    class Meta:
+        model = application_models.PreviousLeaveSameReason
 
 
 class StateMetricFactory(BaseFactory):
@@ -687,6 +709,11 @@ class WorkPatternFixedFactory(BaseFactory):
         lambda w: [
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
+                minutes=8 * 60 + 15,
+            ),
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.MONDAY.day_of_week_id,
                 minutes=8 * 60 + 15,
             ),
@@ -715,11 +742,6 @@ class WorkPatternFixedFactory(BaseFactory):
                 day_of_week_id=application_models.DayOfWeek.SATURDAY.day_of_week_id,
                 minutes=8 * 60 + 15,
             ),
-            application_models.WorkPatternDay(
-                work_pattern_id=w.work_pattern_id,
-                day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
-                minutes=8 * 60 + 15,
-            ),
         ]
     )
 
@@ -744,7 +766,7 @@ class DuaReductionPaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.DuaReductionPayment
 
-    absence_case_id = Generators.FineosAbsenceId
+    fineos_customer_number = factory.Faker("numerify", text="####")
     employer_fein = Generators.Fein
     payment_date = factory.Faker("date_object")
     request_week_begin_date = factory.Faker("date_object")
@@ -759,7 +781,7 @@ class DiaReductionPaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.DiaReductionPayment
 
-    absence_case_id = Generators.FineosAbsenceId
+    fineos_customer_number = factory.Faker("numerify", text="####")
     board_no = factory.Faker("uuid4")
     event_id = factory.Faker("uuid4")
     event_description = "PC"
@@ -773,3 +795,13 @@ class DiaReductionPaymentFactory(BaseFactory):
     end_date = factory.Faker("date_object")
     weekly_amount = 400.00
     award_created_date = factory.Faker("date_object")
+
+
+class CaringLeaveMetadataFactory(BaseFactory):
+    class Meta:
+        model = application_models.CaringLeaveMetadata
+
+    family_member_first_name = factory.Faker("first_name")
+    family_member_middle_name = factory.Faker("first_name")
+    family_member_last_name = factory.Faker("last_name")
+    family_member_date_of_birth = factory.Faker("date_object")

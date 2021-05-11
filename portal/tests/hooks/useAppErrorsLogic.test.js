@@ -109,8 +109,11 @@ describe("useAppErrorsLogic", () => {
           appErrorsLogic.catchError(error);
         });
 
-        expect(tracker.noticeError).toHaveBeenCalledWith(error);
-        expect(tracker.trackEvent).not.toHaveBeenCalled();
+        expect(tracker.noticeError).not.toHaveBeenCalled();
+        expect(tracker.trackEvent).toHaveBeenCalledWith("NetworkError", {
+          errorMessage: error.message,
+          errorName: error.name,
+        });
       });
     });
 

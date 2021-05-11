@@ -7,7 +7,7 @@ import tests.api
 from massgov.pfml.db.models.employees import EmployerQuarterlyContribution, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
 from massgov.pfml.util import feature_gate
-from massgov.pfml.util.strings import mask_fein
+from massgov.pfml.util.strings import format_fein
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -44,7 +44,7 @@ def test_employers_receive_201_from_add_fein(
     response_data = response.get_json()["data"]
     assert response.status_code == 201
     assert response_data["employer_dba"] == employer_to_add.employer_dba
-    assert response_data["employer_fein"] == mask_fein(employer_to_add.employer_fein)
+    assert response_data["employer_fein"] == format_fein(employer_to_add.employer_fein)
     assert type(response_data["employer_id"]) is str
 
 
@@ -117,7 +117,7 @@ class TestVerificationEnforcement:
         response_data = response.get_json()["data"]
         assert response.status_code == 201
         assert response_data["employer_dba"] == employer_to_add.employer_dba
-        assert response_data["employer_fein"] == mask_fein(employer_to_add.employer_fein)
+        assert response_data["employer_fein"] == format_fein(employer_to_add.employer_fein)
         assert type(response_data["employer_id"]) is str
 
     def test_employers_receive_201_if_no_withholding_data_and_no_enforcement(

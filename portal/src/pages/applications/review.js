@@ -20,7 +20,6 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../models/OtherIncome";
-import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get, isUndefined } from "lodash";
 
@@ -42,6 +41,7 @@ import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import claimantConfigs from "../../flows/claimant";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
+import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
@@ -85,10 +85,7 @@ export const Review = (props) => {
     claim.application_id
   );
 
-  const certificationDocuments = findDocumentsByTypes(
-    documents,
-    [DocumentType.medicalCertification] // TODO (CP-962): Set based on leaveReason
-  );
+  const certificationDocuments = findDocumentsByLeaveReason(documents, claim);
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
   ]);
@@ -538,8 +535,7 @@ export const Review = (props) => {
       {/* OTHER LEAVE */}
       {/* Conditionally showing this section since it was added after launch, so some claims may not have this section yet. */}
       {(get(claim, "has_employer_benefits") !== null ||
-        get(claim, "has_other_incomes") !== null ||
-        get(claim, "has_previous_leaves") !== null) && (
+        get(claim, "has_other_incomes") !== null) && (
         <div data-test="other-leave">
           <ReviewHeading
             editHref={getStepEditHref(ClaimSteps.otherLeave)}
@@ -583,22 +579,6 @@ export const Review = (props) => {
           {get(claim, "has_other_incomes") && (
             <OtherIncomeList
               entries={get(claim, "other_incomes")}
-              reviewRowLevel={reviewRowLevel}
-            />
-          )}
-          <ReviewRow
-            level={reviewRowLevel}
-            label={t("pages.claimsReview.previousLeaveLabel")}
-            editText={t("pages.claimsReview.editLink")}
-          >
-            {get(claim, "has_previous_leaves") === true
-              ? t("pages.claimsReview.otherLeaveChoiceYes")
-              : t("pages.claimsReview.otherLeaveChoiceNo")}
-          </ReviewRow>
-
-          {get(claim, "has_previous_leaves") && (
-            <PreviousLeaveList
-              previous_leaves={get(claim, "previous_leaves")}
               reviewRowLevel={reviewRowLevel}
             />
           )}
@@ -724,6 +704,7 @@ export const Review = (props) => {
                     })}
                   </ReviewHeading>
                   <ReviewRow
+                    data-test="certification-doc-count"
                     label={t("pages.claimsReview.numberOfFilesLabel")}
                     level={reviewRowLevel}
                   >
@@ -865,53 +846,6 @@ export const OtherIncomeList = (props) => {
 
 OtherIncomeList.propTypes = {
   entries: PropTypes.arrayOf(PropTypes.instanceOf(OtherIncome)).isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
-
-/*
- * Helper component for rendering an array of PreviousLeave
- * objects.
- */
-export const PreviousLeaveList = (props) => {
-  const { t } = useTranslation();
-  const { previous_leaves, reviewRowLevel } = props;
-
-  return previous_leaves.map((previousLeave, index) => {
-    return (
-      <ReviewRow
-        key={index}
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.previousLeaveEntryLabel", {
-          count: index + 1,
-        })}
-      >
-        {t("pages.claimsReview.previousLeaveFromCurrentEmployer", {
-          context: previousLeave.is_for_current_employer ? "yes" : "no",
-        })}
-
-        <br />
-
-        {t("pages.claimsReview.previousLeaveReason", {
-          context: findKeyByValue(
-            PreviousLeaveReason,
-            previousLeave.leave_reason
-          ),
-        })}
-
-        <br />
-
-        {formatDateRange(
-          previousLeave.leave_start_date,
-          previousLeave.leave_end_date
-        )}
-      </ReviewRow>
-    );
-  });
-};
-
-PreviousLeaveList.propTypes = {
-  previous_leaves: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave))
-    .isRequired,
   reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
 };
 

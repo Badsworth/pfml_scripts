@@ -7,7 +7,8 @@ import useAppLogic from "../../src/hooks/useAppLogic";
 
 describe("useAppLogic", () => {
   it("returns app state and getter and setter methods", () => {
-    let appErrors,
+    let _appErrorsLogic,
+      appErrors,
       auth,
       benefitsApplications,
       catchError,
@@ -24,6 +25,7 @@ describe("useAppLogic", () => {
     testHook(() => {
       ({
         appErrors,
+        _appErrorsLogic,
         auth,
         catchError,
         claims,
@@ -41,6 +43,7 @@ describe("useAppLogic", () => {
 
     expect(appErrors).toBeInstanceOf(AppErrorInfoCollection);
     expect(appErrors.items).toHaveLength(0);
+    expect(_appErrorsLogic).toEqual(expect.anything());
     expect(auth).toEqual(expect.anything());
     expect(catchError).toBeInstanceOf(Function);
     expect(benefitsApplications.benefitsApplications).toBeInstanceOf(
@@ -54,8 +57,7 @@ describe("useAppLogic", () => {
     expect(benefitsApplications.create).toBeInstanceOf(Function);
     expect(benefitsApplications.update).toBeInstanceOf(Function);
     expect(claims.claims).toBeInstanceOf(ClaimCollection);
-    expect(claims.hasLoadedAll).toEqual(expect.any(Boolean));
-    expect(claims.loadAll).toBeInstanceOf(Function);
+    expect(claims.loadPage).toBeInstanceOf(Function);
     expect(users.updateUser).toBeInstanceOf(Function);
     expect(setAppErrors).toBeInstanceOf(Function);
     expect(benefitsApplications.submit).toBeInstanceOf(Function);

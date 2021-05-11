@@ -3,37 +3,31 @@ import React from "react";
 import { useTranslation } from "../locales/i18n";
 
 const PaginationSummary = (props) => {
-  const { pageIndex, pageSize, totalPages, totalRecords } = props;
+  const { pageOffset, pageSize, totalRecords } = props;
   const { t } = useTranslation();
 
-  const getFirstRecordIndex = () => {
-    return pageSize * pageIndex + 1;
-  };
-
-  const getLastRecordIndex = () => {
-    const remainder = totalRecords % pageSize;
-    const isLastPage = pageIndex + 1 === totalPages;
-    return remainder !== 0 && isLastPage
+  const firstRecordNumber = pageSize * (pageOffset - 1) + 1;
+  const maxRecordNumberForPage = firstRecordNumber + pageSize - 1;
+  const lastRecordNumber =
+    maxRecordNumberForPage > totalRecords
       ? totalRecords
-      : pageSize * (pageIndex + 1);
-  };
+      : maxRecordNumberForPage;
 
   return (
-    <p className="padding-x-2">
+    <p>
       {t("components.pagination.summary", {
-        firstRecordIndex: getFirstRecordIndex(),
-        lastRecordIndex: getLastRecordIndex(),
-        totalRecords,
+        firstRecordNumber: Number(firstRecordNumber).toLocaleString(),
+        lastRecordNumber: Number(lastRecordNumber).toLocaleString(),
+        totalRecords: Number(totalRecords).toLocaleString(),
       })}
     </p>
   );
 };
 
 PaginationSummary.propTypes = {
-  /** Zero-based index representing the current page */
-  pageIndex: PropTypes.number.isRequired,
+  /** Current page number */
+  pageOffset: PropTypes.number.isRequired,
   pageSize: PropTypes.number.isRequired,
-  totalPages: PropTypes.number.isRequired,
   totalRecords: PropTypes.number.isRequired,
 };
 

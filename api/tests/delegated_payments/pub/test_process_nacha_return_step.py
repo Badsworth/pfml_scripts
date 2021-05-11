@@ -44,7 +44,11 @@ def process_nacha_file_step(test_db_session, initialize_factories_session, test_
 
 
 def test_process_nacha_return_file_step_full(
-    test_db_session, monkeypatch, tmp_path, initialize_factories_session, test_db_other_session
+    local_test_db_session,
+    monkeypatch,
+    tmp_path,
+    local_initialize_factories_session,
+    local_test_db_other_session,
 ):
     # Note: see ach_return_small.ach to understand this test. That file contains a mix of prenote
     # and payment returns, with some being ACH Returns (errors) and some Change Notifications.
@@ -61,14 +65,14 @@ def test_process_nacha_return_file_step_full(
     file_util.copy_file(source_file_path, destination_file_path)
 
     # Add prenotes 0 to 39 to database. These correspond to E0 to E39 ids in return file.
-    pub_efts = [pub_eft_pending_with_pub_factory(i, test_db_session) for i in range(40)]
+    pub_efts = [pub_eft_pending_with_pub_factory(i, local_test_db_session) for i in range(40)]
 
     # Add payments 40 to 79 to the database. These correspond to P40 to P79 ids in return file.
-    payments = [payment_sent_to_pub_factory(i, test_db_session) for i in range(40, 80)]
+    payments = [payment_sent_to_pub_factory(i, local_test_db_session) for i in range(40, 80)]
 
     # Run step.
     process_nacha_file_step = process_nacha_return_step.ProcessNachaReturnFileStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
+        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
     assert process_nacha_file_step.have_more_files_to_process() is True
     process_nacha_file_step.run()
@@ -85,7 +89,7 @@ def test_process_nacha_return_file_step_full(
             assert pub_eft.prenote_state_id == PrenoteState.PENDING_WITH_PUB.prenote_state_id
 
     # Test updates to reference_file table.
-    reference_file = test_db_session.query(ReferenceFile).one()
+    reference_file = local_test_db_session.query(ReferenceFile).one()
     assert (
         reference_file.reference_file_type_id
         == ReferenceFileType.PUB_ACH_RETURN.reference_file_type_id
@@ -100,7 +104,7 @@ def test_process_nacha_return_file_step_full(
     prenote_sent = massgov.pfml.api.util.state_log_util.get_all_latest_state_logs_in_end_state(
         massgov.pfml.api.util.state_log_util.AssociatedClass.EMPLOYEE,
         State.DELEGATED_EFT_PRENOTE_SENT,
-        test_db_session,
+        local_test_db_session,
     )
     assert len(prenote_sent) == 40
 
@@ -112,9 +116,9 @@ def test_process_nacha_return_file_step_full(
         75: (State.DELEGATED_PAYMENT_COMPLETE, "C05", 13, "22"),
     }
     for payment in payments:
-        test_db_session.refresh(payment)
+        local_test_db_session.refresh(payment)
         payment_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_session
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_session
         )
         state_id = payment_state_log.end_state.state_id
         if payment.pub_individual_id in expected_states:
@@ -152,7 +156,7 @@ def test_process_nacha_return_file_step_full(
     }
     assert expected_metrics.items() <= process_nacha_file_step.log_entry.metrics.items()
 
-    pub_errors = test_db_session.query(PubError).all()
+    pub_errors = local_test_db_session.query(PubError).all()
     pub_error_count = Counter(p.pub_error_type_id for p in pub_errors)
 
     # TODO test for metrics and PubError entry (account for in PUB-127):
@@ -174,6 +178,7 @@ def test_process_nacha_return_file_step_full(
 
     assert pub_error_count[PubErrorType.ACH_RETURN.pub_error_type_id] == (
         expected_metrics["payment_id_not_found_count"]
+        + expected_metrics["payment_rejected_count"]
         # expected_metrics["unknown_id_format_count"] # TODO
         # expected_metrics["payment_unexpected_state_count"] # TODO
     )

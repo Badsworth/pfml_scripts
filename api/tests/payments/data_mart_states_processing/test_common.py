@@ -192,7 +192,7 @@ def test_query_data_mart_for_issues_and_updates_core_sets_vendor_customer_code_o
     assert employee.ctr_vendor_customer_code == "BAR"
 
 
-def test_query_data_mart_for_issues_and_updates_core_sets_ctr_address_only_if_none_and_matching(
+def test_query_data_mart_for_issues_and_updates_core_validate_ctr_address(
     mock_data_mart_client, mocker, complete_vendor_info_address,
 ):
     address_mismatch_issue = payments_util.ValidationIssue(
@@ -200,8 +200,10 @@ def test_query_data_mart_for_issues_and_updates_core_sets_ctr_address_only_if_no
     )
 
     employee = EmployeeFactory.build(ctr_address_pair=CtrAddressPairFactory.build())
+    ctr_address_before = AddressFactory.build()
+    employee.ctr_address_pair.ctr_address = ctr_address_before
 
-    # If we get address info that does not match the FINEOS address, it should
+    # If we get address info that does not match the CTR address, it should
     # not be saved.
     mismatching_vendor_info = complete_vendor_info_address
     mismatching_vendor_info.address_id = "FOO"
@@ -214,27 +216,45 @@ def test_query_data_mart_for_issues_and_updates_core_sets_ctr_address_only_if_no
     )
 
     assert issues_and_updates.employee_updates is False
-    assert employee.ctr_address_pair.ctr_address is None
+    assert employee.ctr_address_pair.ctr_address == ctr_address_before
     assert address_mismatch_issue in issues_and_updates.issues.validation_issues
 
-    # If we wipe that out and try from None with an address that matches the existing,
-    # we should save the address and see no validation issue
-    employee.ctr_address_pair.ctr_address = None
-
+    # We wipe that out. If there is no existing CTR address, it should not be saved.
     matching_vendor_info = create_complete_valid_matching_vendor_info_for_employee(employee)
+    employee.ctr_address_pair.ctr_address = None
 
     mock_data_mart_client.get_vendor_info.return_value = matching_vendor_info
     mocker.patch.object(
         common,
         "make_db_address_from_mmars_data",
-        return_value=employee.ctr_address_pair.fineos_address,
+        return_value=employee.ctr_address_pair.ctr_address,
     )
 
     issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
-    assert issues_and_updates.employee_updates is True
+    assert issues_and_updates.employee_updates is False
+    assert employee.ctr_address_pair.ctr_address is None
+    assert address_mismatch_issue in issues_and_updates.issues.validation_issues
+
+    # We wipe that out. If there is an existing CTR address and it does match, then
+    # there should be no validation issues.
+    employee.ctr_address_pair.ctr_address = AddressFactory.build()
+    matching_vendor_info = create_complete_valid_matching_vendor_info_for_employee(employee)
+
+    mock_data_mart_client.get_vendor_info.return_value = matching_vendor_info
+    mocker.patch.object(
+        common,
+        "make_db_address_from_mmars_data",
+        return_value=employee.ctr_address_pair.ctr_address,
+    )
+
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
+        mock_data_mart_client, employee, employee.tax_identifier
+    )
+
+    assert issues_and_updates.employee_updates is False
     assert employee.ctr_address_pair.ctr_address is not None
     assert address_mismatch_issue not in issues_and_updates.issues.validation_issues
 
@@ -300,9 +320,7 @@ def test_query_data_mart_for_issues_and_updates_core_no_issues_all_updates_saved
         eft=EftFactory.build(),
         ctr_address_pair=CtrAddressPairFactory.build(),
     )
-
-    # ensure there's no address for the comptroller representation
-    employee.ctr_address_pair.ctr_address = None
+    employee.ctr_address_pair.ctr_address = AddressFactory.build()
 
     vendor_info = create_complete_valid_matching_vendor_info_for_employee(employee)
     vendor_info.vendor_customer_code = "FOO"
@@ -320,7 +338,7 @@ def test_query_data_mart_for_issues_and_updates_core_no_issues_all_updates_saved
     assert employee.ctr_vendor_customer_code == vendor_info.vendor_customer_code
     assert employee.ctr_address_pair.ctr_address is not None
     assert payments_util.is_same_address(
-        employee.ctr_address_pair.fineos_address, employee.ctr_address_pair.ctr_address
+        employee.ctr_address_pair.ctr_address, common.make_db_address_from_mmars_data(vendor_info)
     )
 
 

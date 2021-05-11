@@ -6,7 +6,9 @@ exports[`Index renders the page 1`] = `
   <Title>
     Your organizations
   </Title>
-  <p>
+  <p
+    data-test="future-availability-message"
+  >
     You'll be able to add more organizations to your account in the near future.
   </p>
   <Table
@@ -35,6 +37,7 @@ exports[`Index renders the page 1`] = `
             "employer_dba": "Book Bindings 'R Us",
             "employer_fein": "**-***1823",
             "employer_id": "dda903f-f093f-ff900",
+            "has_fineos_registration": true,
             "has_verification_data": true,
             "verified": false,
           }
@@ -47,6 +50,7 @@ exports[`Index renders the page 1`] = `
             "employer_dba": "Knitting Castle",
             "employer_fein": "**-***3443",
             "employer_id": "dda930f-93jfk-iej08",
+            "has_fineos_registration": true,
             "has_verification_data": true,
             "verified": true,
           }
@@ -59,6 +63,7 @@ exports[`Index renders the page 1`] = `
             "employer_dba": "Tomato Touchdown",
             "employer_fein": "**-***7192",
             "employer_id": "io19fj9-00jjf-uiw3r",
+            "has_fineos_registration": true,
             "has_verification_data": false,
             "verified": false,
           }

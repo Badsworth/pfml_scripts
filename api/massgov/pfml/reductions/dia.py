@@ -178,7 +178,7 @@ def upload_claimant_list_to_moveit(db_session: db.Session) -> None:
         s3_bucket_uri=s3_config.s3_bucket_uri,
         source_dir=s3_config.s3_dia_outbound_directory_path,
         archive_dir=s3_config.s3_dia_archive_directory_path,
-        dest_dir=moveit_config.moveit_dia_inbound_path,
+        dest_dir=moveit_config.moveit_dia_outbound_path,
         sftp_uri=moveit_config.moveit_sftp_uri,
         ssh_key_password=moveit_config.moveit_ssh_key_password,
         ssh_key=moveit_config.moveit_ssh_key,
@@ -258,7 +258,7 @@ def download_payment_list_from_moveit(db_session: db.Session) -> None:
 
     transfer_config = SftpS3TransferConfig(
         s3_bucket_uri=s3_config.s3_bucket_uri,
-        source_dir=moveit_config.moveit_dia_outbound_path,
+        source_dir=moveit_config.moveit_dia_inbound_path,
         archive_dir=moveit_config.moveit_dia_archive_path,
         dest_dir=s3_config.s3_dia_pending_directory_path,
         sftp_uri=moveit_config.moveit_sftp_uri,
@@ -339,8 +339,8 @@ def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> None:
     for row in rows:
         db_data = _convert_dict_with_csv_keys_to_db_keys(row)
         if len(_get_matching_dia_reduction_payments(db_data, db_session)) == 0:
-            dua_reduction_payment = DiaReductionPayment(**db_data)
-            db_session.add(dua_reduction_payment)
+            dia_reduction_payment = DiaReductionPayment(**db_data)
+            db_session.add(dia_reduction_payment)
 
 
 def _load_dia_payment_from_reference_file(

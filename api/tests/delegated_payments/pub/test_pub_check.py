@@ -101,7 +101,10 @@ def test_create_check_file_eligible_payment_error(
 
 
 def test_create_check_file_success(
-    initialize_factories_session, monkeypatch, test_db_session, test_db_other_session,
+    local_initialize_factories_session,
+    monkeypatch,
+    local_test_db_session,
+    local_test_db_other_session,
 ):
     account_number = str(fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999))
     routing_number = str(fake.random_int(min=10_000_000_000, max=99_999_999_999))
@@ -112,12 +115,12 @@ def test_create_check_file_success(
 
     payments = []
     for _i in range(fake.random_int(min=3, max=8)):
-        payments.append(_random_valid_check_payment_with_state_log(test_db_session))
+        payments.append(_random_valid_check_payment_with_state_log(local_test_db_session))
 
-    ez_check_file, positive_pay_file = pub_check.create_check_file(test_db_session)
+    ez_check_file, positive_pay_file = pub_check.create_check_file(local_test_db_session)
 
     # Explicitly commit the changes to the database since we expect the calling code to do it.
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     assert isinstance(ez_check_file, EzCheckFile)
     assert isinstance(positive_pay_file, CheckIssueFile)
@@ -126,7 +129,7 @@ def test_create_check_file_success(
     # Confirm that we updated the state log for each payment.
     for i, payment in enumerate(payments):
         assert (
-            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            local_test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
             .filter(
                 StateLog.end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id
             )

@@ -91,10 +91,10 @@ export const ReducedLeaveSchedule = (props) => {
     );
   };
 
-  const contentReasonContext = {
-    [LeaveReason.bonding]: "bonding",
-    [LeaveReason.medical]: "medical",
-  }[claim.leave_details.reason];
+  const contentReasonContext = findKeyByValue(
+    LeaveReason,
+    claim.leave_details.reason
+  );
 
   const contentScheduleTypeContext = findKeyByValue(
     WorkPatternType,

@@ -103,6 +103,7 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
           "documents"
         )
       );
+      return;
     }
 
     const uploadPromises = filesWithUniqueId.map(async (fileWithUniqueId) => {

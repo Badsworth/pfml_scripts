@@ -35,6 +35,13 @@ def init(app, dashboard_password):
             entry = db_session.query(ImportLog).get(batch_id)
         return flask.render_template("dashboard_batch_id.html", entry=entry, now=utcnow())
 
+    @app.route("/dashboard/<key>/batch/<batch_name>")
+    def dashboard_batch_name(key, batch_name):
+        if not secrets.compare_digest(key, dashboard_password):
+            raise NotFound
+        entries = import_jobs_get(batch_name)
+        return flask.render_template("dashboards.html", data=entries, now=utcnow(), base_url="../")
+
 
 class ImportLogResponse(PydanticBaseModel):
     import_log_id: int
@@ -46,11 +53,12 @@ class ImportLogResponse(PydanticBaseModel):
     end: Optional[datetime]
 
 
-def import_jobs_get():
+def import_jobs_get(source=None):
     with massgov.pfml.api.app.db_session() as db_session:
-        import_logs = (
-            db_session.query(ImportLog).order_by(ImportLog.import_log_id.desc()).limit(1000)
-        )
+        query = db_session.query(ImportLog)
+        if source is not None:
+            query = query.filter(ImportLog.source == source)
+        import_logs = query.order_by(ImportLog.import_log_id.desc()).limit(1000)
 
     import_logs_response = list(
         map(lambda import_log: ImportLogResponse.from_orm(import_log).dict(), import_logs,)

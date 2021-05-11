@@ -23,7 +23,7 @@ describe("ConsentToDataSharing", () => {
 
   it("shows the correct content for non-employers", () => {
     expect(wrapper.find("AccordionItem").at(0).prop("heading")).toEqual(
-      "Applying for PFML"
+      "Applying for benefits"
     );
     expect(wrapper).toMatchSnapshot();
   });

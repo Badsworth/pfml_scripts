@@ -155,18 +155,6 @@ export function createClaimFromArgs(args) {
       break;
   }
 
-  switch (args["Previous leave"]) {
-    case "Medical leave from current employer":
-      claim = claim.previousLeaveMedicalFromCurrentEmployer();
-      break;
-    case "Pregnancy leave from other employer":
-      claim = claim.previousLeavePregnancyFromOtherEmployer();
-      break;
-    default:
-      claim = claim.noPreviousLeave();
-      break;
-  }
-
   if (args.Payment === "deposit") {
     claim = claim.directDeposit();
   } else {

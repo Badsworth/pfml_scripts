@@ -19,13 +19,13 @@ describe("AbsenceCaseStatusTag", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("renders the component with warning state and mapped status for 'Closed'", () => {
+  it("renders the component with inactive state for 'Closed'", () => {
     const wrapper = renderComponent("Closed");
 
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("renders the component with warning state and mapped status for 'Completed'", () => {
+  it("renders the component with inactive state and mapped status for 'Completed'", () => {
     const wrapper = renderComponent("Completed");
 
     expect(wrapper).toMatchSnapshot();

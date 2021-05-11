@@ -65,7 +65,7 @@ class LogEntry:
         For example:
             with LogEntry(...) as log_entry:
                 ...
-                log_entry.set_metrics(total=100)
+                log_entry.set_metrics({"total": 100})
                 ...
                 log_entry.increment("ok")
 
@@ -102,9 +102,9 @@ class LogEntry:
         # Continue propagating the exception after this method.
         return False
 
-    def set_metrics(self, **metrics):
+    def set_metrics(self, metrics):
         """Set name/value pairs in the report. Commits to database at time intervals."""
-        self.metrics.update(metrics)
+        self.metrics.update(**metrics)
         self._commit_metrics()
 
     def increment(self, name):
@@ -170,6 +170,8 @@ def log_report_to_newrelic(import_log: ImportLog) -> None:
             "job.id": import_log.import_log_id,
             "job.data_source": import_log.source,
             "job.job_type": import_log.import_type,
+            "job.start": import_log.start.isoformat() if import_log.start else None,
+            "job.end": import_log.end.isoformat() if import_log.end else None,
         }
     )
     massgov.pfml.util.newrelic.events.log_newrelic_event(report_with_metadata)

@@ -36,16 +36,16 @@ module "tasks" {
   cognito_user_pool_id = "us-east-1_1OVYp4aZo"
 
   # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url          = ""
-  fineos_client_customer_api_url                      = ""
-  fineos_client_group_client_api_url                  = ""
-  fineos_client_wscomposer_api_url                    = ""
-  fineos_client_oauth2_url                            = ""
-  fineos_client_oauth2_client_id                      = ""
-  fineos_aws_iam_role_arn                             = ""
-  fineos_aws_iam_role_external_id                     = ""
-  fineos_eligibility_feed_output_directory_path       = ""
-  fineos_import_employee_updates_input_directory_path = ""
+  fineos_client_integration_services_api_url          = "https://dt3-api.masspfml.fineos.com/integration-services/"
+  fineos_client_customer_api_url                      = "https://dt3-api.masspfml.fineos.com/customerapi/"
+  fineos_client_group_client_api_url                  = "https://dt3-api.masspfml.fineos.com/groupclientapi/"
+  fineos_client_wscomposer_api_url                    = "https://dt3-api.masspfml.fineos.com/integration-services/wscomposer/"
+  fineos_client_oauth2_url                            = "https://dt3-api.masspfml.fineos.com/oauth2/token"
+  fineos_client_oauth2_client_id                      = "2gptm2870hlo9ouq70poib8d5g"
+  fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
+  fineos_aws_iam_role_external_id                     = "12345"
+  fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/DT3"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/DT3/dataexports"
 
   # These can be kept blank.
   eolwd_moveit_sftp_uri    = ""
@@ -70,9 +70,9 @@ module "tasks" {
   ctr_data_mart_username = ""
 
   # TODO: Values from FINEOS.
-  fineos_data_export_path  = ""
-  fineos_data_import_path  = ""
-  fineos_error_export_path = ""
+  fineos_data_export_path  = "s3://fin-somdev-data-export/DT3/dataexports"
+  fineos_data_import_path  = "s3://fin-somdev-data-import/DT3/peiupdate"
+  fineos_error_export_path = "s3://fin-somdev-data-export/DT3/errorExtracts"
 
   pfml_fineos_inbound_path  = "s3://massgov-pfml-cps-preview-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path = "s3://massgov-pfml-cps-preview-agency-transfer/cps/outbound"
@@ -85,7 +85,7 @@ module "tasks" {
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-cps-preview-agency-transfer/audit/sent"
 
   enable_recurring_payments_schedule = false
-  enable_register_admins_job         = false
+  enable_register_admins_job         = true
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 }

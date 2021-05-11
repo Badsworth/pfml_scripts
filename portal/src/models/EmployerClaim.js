@@ -16,6 +16,8 @@ class EmployerClaim extends BaseBenefitsApplication {
       employer_id: null,
       follow_up_date: null,
       is_reviewable: null,
+      // array of PreviousLeave objects. See the PreviousLeave model
+      previous_leaves: [],
     });
   }
 }

@@ -51,8 +51,14 @@ data "aws_iam_policy_document" "allow_task_trigger" {
   }
 }
 
+# Managed policy, granting permission to upload logs to CloudWatch
 resource "aws_iam_role_policy_attachment" "task_trigger_basic_execution" {
-  role = aws_iam_role.task_trigger.name
-  # Managed policy, granting permission to upload logs to CloudWatch
+  role       = aws_iam_role.task_trigger.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Grant access to launch lambdas in VPCs
+resource "aws_iam_role_policy_attachment" "task_trigger_vpc_execution" {
+  role       = aws_iam_role.task_trigger.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }

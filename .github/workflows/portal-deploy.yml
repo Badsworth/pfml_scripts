@@ -178,7 +178,7 @@ jobs:
     needs: [update-the-deploy-branch, deploy-info]
     outputs:
       version_link: ${{ steps.create_version_link.outputs.version_link }}
-    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test
+    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || (!contains(github.event.inputs.deployment_env || 'test', 'test' ) && !contains(github.event.inputs.deployment_env || 'test', 'cps-preview') )}} # Mutes notifications for auto-deploys to test    
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -288,6 +288,29 @@ jobs:
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         -H "Accept: application/vnd.github.v3+json" \
                         -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "performance", "version": "${{ env.version }}" } }'
+          echo "Done."
+
+  extra-cps-preview-deploy:
+    if: contains(github.event.inputs.deployment_env || 'test', 'test') && contains(github.event.inputs.version || 'main', 'main')
+    name: (test) Extra cps-preview deploy
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      - name: Start a cps-preview deploy
+        env:
+          GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          WORKFLOW_NAME: "portal-deploy.yml"
+        run: |
+          echo "*** An API test deploy is now in progress. Enqueuing an extra deployment to cps-preview... ***"
+          curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
+                        -H "Authorization: Bearer $GITHUB_TOKEN" \
+                        -H "Accept: application/vnd.github.v3+json" \
+                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "cps-preview", "version": "${{ env.version }}" } }'
           echo "Done."
 
   deploy:
@@ -462,6 +485,8 @@ jobs:
     name: Finish deploy comms (Slack)
     needs: [start-comms-slack, deploy-info, postdeploy-info]
     runs-on: ubuntu-latest
+    outputs: 
+      message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
     # Notifies if there's a failure on auto-deploys to test
     if: always() && 
         (
@@ -515,6 +540,7 @@ jobs:
           fi
 
       - name: Post to Slack
+        id: post-start-slack
         run: |
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
           -H 'Content-Type: application/json;charset=utf-8' \
@@ -539,6 +565,10 @@ jobs:
               }
             ]
           }' https://slack.com/api/chat.postMessage)
+
+          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq -r '.ts')
+          echo $MESSAGE_TS
+          echo "::set-output name=message-ts::$MESSAGE_TS"
 
   end-to-end:
     name: End-to-End Test Deployment
@@ -572,3 +602,42 @@ jobs:
           github_branch: ${{ steps.determine_e2e_ref.outputs.e2e_ref }}
           # Limit to "stable" suite for any environment but test.
           only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
+
+  post-e2e-failures-to-slack:
+    name: Post E2E failures to Slack
+    needs: [finish-comms-slack, end-to-end]
+    if: always() && 
+      (
+        (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Post to Slack
+        run: |
+          echo "Slackbot message reply TS is ${{ needs.finish-comms-slack.outputs.message-ts }}"
+          
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "thread_ts": "${{ needs.finish-comms-slack.outputs.message-ts }}",
+            "attachments": [{
+              "title": "E2E Test failed in ${{ github.event.inputs.deployment_env || 'test' }} (<${{ env.workflow_self_link }}|build logs>)",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)

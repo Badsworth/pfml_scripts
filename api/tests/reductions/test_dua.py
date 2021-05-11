@@ -29,6 +29,8 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
     DuaReductionPaymentFactory,
+    EmployeeFactory,
+    EmployeeWithFineosNumberFactory,
     ReferenceFileFactory,
 )
 from massgov.pfml.payments.payments_util import get_now
@@ -84,9 +86,9 @@ def _get_valid_dua_payment_data() -> Dict[str, Any]:
     end_date = _random_date_in_past_year()
     begin_date = end_date - timedelta(days=365)  # Doesn't need to be exact. We don't check it.
 
-    # Make sure Case ID and FEIN are unique for each returned dict.
+    # Make sure customer number and FEIN are unique for each returned dict.
     return {
-        "absence_case_id": "NTN-{}-ABS-01".format(fake.unique.random_int(min=1000, max=9999)),
+        "fineos_customer_number": str(fake.unique.random_int(min=1000, max=9999)),
         "employer_fein": str(fake.unique.random_int(min=100_000, max=999_999)),
         "payment_date": _random_date_in_past_year(),
         "request_week_begin_date": _random_date_in_past_year(),
@@ -330,7 +332,7 @@ def test_load_new_rows_from_file_dua_example(dua_reduction_payment_unique_index,
 )
 @pytest.mark.integration
 def test_load_new_rows_from_file_error(
-    dua_reduction_payment_unique_index, test_db_session, test_db_other_session, headers, csv_rows
+    dua_reduction_payment_unique_index, test_db_session, headers, csv_rows
 ):
     # Write to the csv_file directly instead of through a csv.DictWriter or similar so that we can
     # insert invalid rows into the file.
@@ -344,13 +346,12 @@ def test_load_new_rows_from_file_error(
     csv_file.seek(0)
 
     with pytest.raises(Exception):
-        dua._load_new_rows_from_file(csv_file, test_db_session)
+        with test_db_session.begin_nested():
+            dua._load_new_rows_from_file(csv_file, test_db_session)
 
     # We do not expect any rows to be added to the database when _load_new_rows_from_file() fails.
-    # Use test_db_other_session because test_db_session ends up in a fuss after it fails to add
-    # the rows within dua._load_new_rows_from_file()
     assert (
-        test_db_other_session.query(
+        test_db_session.query(
             sqlalchemy.func.count(DuaReductionPayment.dua_reduction_payment_id)
         ).scalar()
         == 0
@@ -475,7 +476,7 @@ def test_load_dua_payment_from_reference_file_success(
 
 @pytest.mark.integration
 def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
-    dua_reduction_payment_unique_index, test_db_session, test_db_other_session, mock_s3_bucket
+    dua_reduction_payment_unique_index, test_db_session, mock_s3_bucket
 ):
     # Create the ReferenceFile.
     filename = _random_csv_filename()
@@ -493,14 +494,13 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
     _create_dua_payment_list_reference_file("", dest_filepath)
 
     with pytest.raises(sqlalchemy.exc.IntegrityError):
-        dua._load_dua_payment_from_reference_file(ref_file, archive_directory, test_db_session)
+        with test_db_session.begin_nested():
+            dua._load_dua_payment_from_reference_file(ref_file, archive_directory, test_db_session)
 
     # Expect no rows in the database after because the reference_file.file_location conflict will
-    # prevent the datbase from committing the changes.
-    # Use test_db_other_session because test_db_session ends up in a fuss after it hits the
-    # IntegrityError.
+    # prevent the database from committing the changes.
     assert (
-        test_db_other_session.query(
+        test_db_session.query(
             sqlalchemy.func.count(DuaReductionPayment.dua_reduction_payment_id)
         ).scalar()
         == 0
@@ -508,9 +508,7 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
 
     # Expect no StateLog to have been created.
     assert (
-        test_db_other_session.query(
-            sqlalchemy.func.count(LatestStateLog.latest_state_log_id)
-        ).scalar()
+        test_db_session.query(sqlalchemy.func.count(LatestStateLog.latest_state_log_id)).scalar()
         == 0
     )
 
@@ -519,7 +517,6 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
 def test_copy_to_sftp_and_archive_s3_files(
     initialize_factories_session,
     test_db_session,
-    test_db_other_session,
     mock_s3_bucket,
     mock_sftp_client,
     setup_mock_sftp_client,
@@ -529,12 +526,12 @@ def test_copy_to_sftp_and_archive_s3_files(
     s3_bucket_uri = f"s3://{mock_s3_bucket}"
     source_directory_path = "reductions/dua/outbound"
     archive_directory_path = "reductions/dua/archive"
-    moveit_dua_inbound_path = "/DFML/DUA/Inbound"
+    moveit_dua_outbound_path = "/DFML/DUA/Inbound"
 
     monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
     monkeypatch.setenv("S3_DUA_OUTBOUND_DIRECTORY_PATH", source_directory_path)
     monkeypatch.setenv("S3_DUA_ARCHIVE_DIRECTORY_PATH", archive_directory_path)
-    monkeypatch.setenv("MOVEIT_DUA_INBOUND_PATH", moveit_dua_inbound_path)
+    monkeypatch.setenv("MOVEIT_DUA_OUTBOUND_PATH", moveit_dua_outbound_path)
 
     filenames = []
     file_count = random.randint(1, 8)
@@ -563,7 +560,7 @@ def test_copy_to_sftp_and_archive_s3_files(
     assert len(file_util.list_files(s3_archive_directory_uri)) == len(filenames)
 
     # Get files in the MoveIt server and s3 archive directory.
-    files_in_moveit = mock_sftp_client.listdir(moveit_dua_inbound_path)
+    files_in_moveit = mock_sftp_client.listdir(moveit_dua_outbound_path)
     files_in_s3_archive_dir = file_util.list_files(s3_archive_directory_uri)
 
     # Confirm that we've moved every ReferenceFile, created a StateLog record, and updated the db.
@@ -579,10 +576,8 @@ def test_copy_to_sftp_and_archive_s3_files(
         assert filename in files_in_s3_archive_dir
         assert filename in files_in_moveit
 
-        # Use test_db_other_session so we query against the database instead of just the in-memory
-        # cache of test_db_session.
         assert (
-            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
             .filter(StateLog.end_state_id == State.DUA_CLAIMANT_LIST_SUBMITTED.state_id)
             .filter(StateLog.reference_file_id == ref_file.reference_file_id)
             .scalar()
@@ -599,55 +594,34 @@ def test_copy_to_sftp_and_archive_s3_files(
         5,
     ),
 )
-def test_format_claims_for_dua_claimant_list_expected_structure_is_generated(claims_count):
-    claims = ClaimFactory.build_batch(size=claims_count)
+def test_format_claimants_for_dua_claimant_list_expected_structure_is_generated(claims_count):
+    employees = EmployeeWithFineosNumberFactory.build_batch(size=claims_count)
 
-    formatted_rows = dua._format_claims_for_dua_claimant_list(claims)
+    formatted_rows = dua._format_claimants_for_dua_claimant_list(employees)
     expected_rows = [
         {
-            dua.Constants.CASE_ID_FIELD: claim.fineos_absence_id,
+            dua.Constants.CASE_ID_FIELD: employee.fineos_customer_number,
             dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
-            dua.Constants.SSN_FIELD: claim.employee.tax_identifier.tax_identifier.replace("-", ""),
+            dua.Constants.SSN_FIELD: employee.tax_identifier.tax_identifier.replace("-", ""),
         }
-        for claim in claims
+        for employee in employees
     ]
 
-    assert len(formatted_rows) == len(claims)
+    assert len(formatted_rows) == len(employees)
     assert formatted_rows == expected_rows
 
 
-def test_format_claims_for_dua_claimant_list_expected_structure_with_missing_employee_is_generated():
-    claims = ClaimFactory.build_batch(size=3)
-    claims[0].employee = None
-    expected_rows = [
-        {
-            dua.Constants.CASE_ID_FIELD: claim.fineos_absence_id,
-            dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
-            dua.Constants.SSN_FIELD: claim.employee.tax_identifier.tax_identifier.replace("-", ""),
-        }
-        for claim in claims[1:]
-    ]
+def test_format_claimants_for_dua_claimant_list_null_fineos_customer_number_id():
+    employees_no_fineos_id = EmployeeFactory.build_batch(size=3, fineos_customer_number=None)
+    employees_no_tax_id = EmployeeFactory.build_batch(
+        size=3, tax_identifier=None, tax_identifier_id=None
+    )
 
-    formatted_rows = dua._format_claims_for_dua_claimant_list(claims)
+    employees = employees_no_fineos_id + employees_no_tax_id
 
-    assert len(formatted_rows) == len(claims) - 1
-    assert formatted_rows == expected_rows
+    formatted_rows = dua._format_claimants_for_dua_claimant_list(employees)
 
-
-def test_format_claims_for_dua_claimant_list_null_absence_id():
-    claims = ClaimFactory.build_batch(size=3, fineos_absence_id=None)
-
-    formatted_rows = dua._format_claims_for_dua_claimant_list(claims)
-
-    assert len(formatted_rows) == len(claims)
-
-    for i, row in enumerate(formatted_rows):
-        claim = claims[i]
-        assert row == {
-            dua.Constants.CASE_ID_FIELD: None,
-            dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
-            dua.Constants.SSN_FIELD: claim.employee.tax_identifier.tax_identifier.replace("-", ""),
-        }
+    assert len(formatted_rows) == 0
 
 
 @pytest.mark.parametrize(
@@ -671,6 +645,7 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
 
     claims = ClaimFactory.create_batch(
         size=claims_count,
+        employee=factory.SubFactory(EmployeeWithFineosNumberFactory),
         fineos_absence_status_id=factory.Iterator(reductions_common.OUTBOUND_STATUSES),
     )
 
@@ -734,7 +709,7 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
         # data aren't misaligned. A parser can unintentionally give a false positive here.
         assert csv_line == ",".join(
             [
-                claim.fineos_absence_id,
+                claim.employee.fineos_customer_number,
                 claim.employee.tax_identifier.tax_identifier.replace("-", ""),
                 dua.Constants.TEMPORARY_BENEFIT_START_DATE,
             ]
@@ -809,7 +784,6 @@ def test_payment_list_has_been_downloaded_today(
 def test_download_payment_list_if_none_today(
     initialize_factories_session,
     test_db_session,
-    test_db_other_session,
     mock_s3_bucket,
     mock_sftp_client,
     setup_mock_sftp_client,
@@ -824,7 +798,7 @@ def test_download_payment_list_if_none_today(
 
     monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
     monkeypatch.setenv("S3_DUA_PENDING_DIRECTORY_PATH", s3_dest_path)
-    monkeypatch.setenv("MOVEIT_DUA_OUTBOUND_PATH", moveit_pickup_path)
+    monkeypatch.setenv("MOVEIT_DUA_INBOUND_PATH", moveit_pickup_path)
     monkeypatch.setenv("MOVEIT_DUA_ARCHIVE_PATH", moveit_archive_path)
 
     full_s3_dest_path = os.path.join(s3_bucket_uri, s3_dest_path)
@@ -853,7 +827,7 @@ def test_download_payment_list_if_none_today(
     assert len(files_in_s3) == moveit_file_count
 
     assert (
-        test_db_other_session.query(sqlalchemy.func.count(ReferenceFile.reference_file_id))
+        test_db_session.query(sqlalchemy.func.count(ReferenceFile.reference_file_id))
         .filter(
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.DUA_PAYMENT_LIST.reference_file_type_id
@@ -863,7 +837,7 @@ def test_download_payment_list_if_none_today(
     )
 
     assert (
-        test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
         .filter(StateLog.end_state_id == State.DUA_PAYMENT_LIST_SAVED_TO_S3.state_id)
         .scalar()
         == moveit_file_count
@@ -887,7 +861,7 @@ def test_download_payment_list_if_none_today(
         )
 
         assert (
-            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
             .filter(StateLog.end_state_id == State.DUA_PAYMENT_LIST_SAVED_TO_S3.state_id)
             .filter(StateLog.reference_file_id == ref_file.reference_file_id)
             .scalar()

@@ -23,13 +23,11 @@ import {
   getVerificationFetcher,
   getLeaveAdminCredentials,
 } from "../../src/util/common";
-import { getFineosBaseUrl } from "../../src/util/common";
 import { Credentials } from "../../src/types";
 import { ApplicationResponse } from "../../src/api";
 
 import fs from "fs";
 import pdf from "pdf-parse";
-import { Result } from "pdf-parse";
 import TestMailClient, {
   Email,
   GetEmailsOpts,
@@ -39,6 +37,7 @@ import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
 import * as postSubmit from "../../src/submission/PostSubmit";
+import pRetry from "p-retry";
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
@@ -59,6 +58,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     getAuthVerification: (toAddress: string) => {
       return verificationFetcher.getVerificationCodeForUser(toAddress);
     },
+
     getEmails(opts: GetEmailsOpts): Promise<Email[]> {
       const client = new TestMailClient(
         config("TESTMAIL_APIKEY"),
@@ -66,10 +66,12 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       );
       return client.getEmails(opts);
     },
+
     generateCredentials,
     async pickEmployer(spec: EmployerPickSpec): Promise<Employer> {
       return (await getEmployerPool()).pick(spec);
     },
+
     async registerClaimant(options: Credentials): Promise<true> {
       await authenticator.registerClaimant(options.username, options.password);
       return true;
@@ -85,6 +87,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       );
       return true;
     },
+
     async submitClaimToAPI(
       application: DehydratedClaim & {
         credentials?: Credentials;
@@ -109,17 +112,14 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     },
 
     async completeSSOLoginFineos(): Promise<string> {
-      let cookiesJson = "";
-      await postSubmit.withFineosBrowser(getFineosBaseUrl(), async (page) => {
-        await page.fill('input[name="loginfmt"]', config("SSO_USERNAME"));
-        await page.click("text=Next");
-        await page.fill('input[name="passwd"]', config("SSO_PASSWORD"));
-        await page.click('input[type="submit"]');
-        await page.click("text=No");
-        const cookies = await page.context().cookies();
-        cookiesJson = JSON.stringify(cookies);
-      });
-      return cookiesJson;
+      return postSubmit.withFineosBrowser(
+        async (page) => {
+          const cookies = await page.context().cookies();
+          return JSON.stringify(cookies);
+        },
+        false,
+        path.join(__dirname, "..", "screenshots")
+      );
     },
 
     waitForClaimDocuments: documentWaiter.waitForClaimDocuments.bind(
@@ -141,13 +141,31 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       // sent to the browser using Cypress.
       return ClaimGenerator.dehydrate(claim, "/tmp");
     },
-    async noticeReader(noticeType: string): Promise<Result> {
-      const PDFdataBuffer = fs.readFileSync(
-        `./cypress/downloads-notices/${noticeType} Notice.pdf`
-      );
 
-      return pdf(PDFdataBuffer) as Promise<Result>;
+    async getParsedPDF(filename: string): Promise<pdf.Result> {
+      return pdf(fs.readFileSync(filename));
     },
+
+    async getNoticeFileName(downloadsFolder): Promise<string[]> {
+      /*
+       *  Retrying here in case the download folder isn't present yet
+       *  using this to avoid any arbitrary waits after downloading
+       *
+       *  Returns array of filenames in the downloads folder
+       */
+      return await pRetry(
+        async () => {
+          return fs.readdirSync(downloadsFolder);
+        },
+        { maxTimeout: 5000 }
+      );
+    },
+
+    async deleteDownloadFolder(folderName): Promise<true> {
+      await fs.promises.rmdir(folderName, { maxRetries: 5, recursive: true });
+      return true;
+    },
+
     syslog(arg: unknown | unknown[]): null {
       if (Array.isArray(arg)) {
         console.log(...arg);
@@ -162,18 +180,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     webpackOptions: require("../../webpack.config.ts"),
   };
   on("file:preprocessor", webpackPreprocessor(options));
-
-  on("before:browser:launch", (browser, options) => {
-    const downloadDirectory = path.join(__dirname, "..", "downloads-notices");
-
-    if (browser.family === "chromium" && browser.name !== "electron") {
-      options.preferences.default["download"] = {
-        default_directory: downloadDirectory,
-      };
-
-      return options;
-    }
-  });
 
   return {
     baseUrl: config("PORTAL_BASEURL"),

@@ -67,6 +67,7 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "ec2:DescribePrefixLists",
 
       # Allow teams to configure Lambda ENIs.
+      "ec2:CreateNetworkInterface",
       "ec2:DeleteNetworkInterface",
       "ec2:DescribeNetworkInterfaces",
       "ec2:DetachNetworkInterface",

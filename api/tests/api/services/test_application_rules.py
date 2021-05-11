@@ -23,7 +23,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReason,
     LeaveReasonQualifier,
     OtherIncome,
-    PreviousLeave,
+    PreviousLeaveDeprecated,
     WorkPatternDay,
 )
 from massgov.pfml.db.models.employees import PaymentMethod
@@ -1844,7 +1844,7 @@ def test_other_leave_feature_flagged_rules():
             message="has_previous_leaves is required",
             type=IssueType.required,
         )
-        in issues
+        not in issues
     )
 
 
@@ -2103,7 +2103,7 @@ def test_previous_leave_no_issues():
 
 
 def test_previous_leave_missing_fields():
-    test_app = ApplicationFactory.build(previous_leaves=[PreviousLeave()])
+    test_app = ApplicationFactory.build(previous_leaves=[PreviousLeaveDeprecated()])
     issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(

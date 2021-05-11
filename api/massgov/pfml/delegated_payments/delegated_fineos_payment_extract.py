@@ -1,4 +1,5 @@
 import csv
+import enum
 import os
 import pathlib
 import tempfile
@@ -76,7 +77,7 @@ expected_file_names = [
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
-    ["Overpayment", "Overpayment Actual Recovery"]
+    ["Overpayment", "Overpayment Actual Recovery", "Overpayment Recovery"]
 )  # There may be multiple types needed here, need to test further to know
 PAYMENT_OUT_TRANSACTION_TYPE = "PaymentOut"
 AUTO_ALT_EVENT_REASON = "Automatic Alternate Payment"
@@ -197,35 +198,13 @@ class PaymentData:
         self.i_value = index.i
 
         #######################################
-        # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED
+        # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED FOR ALL PAYMENTS
         #######################################
-
-        # Find the record in the other datasets.
-        payment_details = extract_data.payment_details.indexed_data.get(index)
-        claim_details = extract_data.claim_details.indexed_data.get(index)
-        if not payment_details:
-            self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_DATASET, "payment_details"
-            )
-        if not claim_details:
-            self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_DATASET, "claim_details"
-            )
 
         # Grab every value we might need out of the datasets
         self.tin = payments_util.validate_csv_input(
             "PAYEESOCNUMBE", pei_record, self.validation_container, True
         )
-        if claim_details:
-            self.process_claim_details(claim_details, extract_data, count_incrementer)
-        else:
-            # We require the absence case number, if claim details doesn't exist
-            # we want to set the validation issue manually here
-            self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
-            )
-
-        self.payment_amount = self.get_payment_amount(pei_record)
 
         self.payee_identifier = payments_util.validate_csv_input(
             "PAYEEIDENTIFI", pei_record, self.validation_container, True
@@ -248,8 +227,7 @@ class PaymentData:
             custom_validator_func=self.payment_period_date_validator,
         )
 
-        if payment_details:
-            self.aggregate_payment_details(payment_details)
+        self.payment_amount = self.get_payment_amount(pei_record)
 
         self.payment_transaction_type = self.get_payment_transaction_type()
         # We only want to do specific checks if it is a standard payment
@@ -259,6 +237,34 @@ class PaymentData:
             self.payment_transaction_type.payment_transaction_type_id
             == PaymentTransactionType.STANDARD.payment_transaction_type_id
         )
+
+        #######################################
+        # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED FOR STANDARD PAYMENTS
+        #######################################
+
+        # Find the record in the other datasets.
+        payment_details = extract_data.payment_details.indexed_data.get(index)
+        claim_details = extract_data.claim_details.indexed_data.get(index)
+        if not payment_details and self.is_standard_payment:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_DATASET, "payment_details"
+            )
+        if not claim_details and self.is_standard_payment:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_DATASET, "claim_details"
+            )
+
+        if claim_details:
+            self.process_claim_details(claim_details, extract_data, count_incrementer)
+        elif self.is_standard_payment:
+            # We require the absence case number, if claim details doesn't exist
+            # we want to set the validation issue manually here
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
+            )
+
+        if payment_details:
+            self.aggregate_payment_details(payment_details)
 
         self.raw_payment_method = payments_util.validate_csv_input(
             "PAYMENTMETHOD",
@@ -274,7 +280,7 @@ class PaymentData:
         )
 
         #######################################
-        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR CHECKS + standard payment
+        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR CHECKS + STANDARD PAYMENT
         #######################################
 
         # Address values are only required if we are paying by check
@@ -313,7 +319,7 @@ class PaymentData:
         )
 
         #######################################
-        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR EFT + standard payment
+        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR EFT + STANDARD PAYMENT
         #######################################
 
         # These are only required if payment_method is for EFT
@@ -411,10 +417,10 @@ class PaymentData:
         count_incrementer: Optional[Callable[[str], None]] = None,
     ) -> None:
         self.absence_case_number = payments_util.validate_csv_input(
-            "ABSENCECASENU", claim_details, self.validation_container, True
+            "ABSENCECASENU", claim_details, self.validation_container, self.is_standard_payment
         )
         self.leave_request_id = payments_util.validate_csv_input(
-            "LEAVEREQUESTI", claim_details, self.validation_container, True
+            "LEAVEREQUESTI", claim_details, self.validation_container, self.is_standard_payment
         )
 
         requested_absence = None
@@ -427,9 +433,11 @@ class PaymentData:
             def leave_request_decision_validator(
                 leave_request_decision: str,
             ) -> Optional[payments_util.ValidationReason]:
-                if leave_request_decision not in ["Pending", "Approved"]:
+                if leave_request_decision not in ["In Review", "Pending", "Approved"]:
                     if count_incrementer is not None:
-                        count_incrementer("not_pending_or_approved_leave_request_count")
+                        count_incrementer(
+                            PaymentExtractStep.Metrics.NOT_PENDING_OR_APPROVED_LEAVE_REQUEST_COUNT
+                        )
                     return payments_util.ValidationReason.INVALID_VALUE
                 return None
 
@@ -437,11 +445,11 @@ class PaymentData:
                 "LEAVEREQUEST_DECISION",
                 requested_absence,
                 self.validation_container,
-                True,
+                self.is_standard_payment,
                 custom_validator_func=leave_request_decision_validator,
             )
 
-        else:
+        elif self.is_standard_payment:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISMATCHED_DATA,
                 f"Payment leave request ID not found in requested absence file: {self.leave_request_id}",
@@ -461,14 +469,14 @@ class PaymentData:
                 "PAYMENTSTARTP",
                 payment_detail_row,
                 self.validation_container,
-                True,
+                self.is_standard_payment,
                 custom_validator_func=self.payment_period_date_validator,
             )
             row_end_period = payments_util.validate_csv_input(
                 "PAYMENTENDPER",
                 payment_detail_row,
                 self.validation_container,
-                True,
+                self.is_standard_payment,
                 custom_validator_func=self.payment_period_date_validator,
             )
             if row_start_period is not None:
@@ -499,6 +507,31 @@ class PaymentData:
 
 
 class PaymentExtractStep(Step):
+    class Metrics(str, enum.Enum):
+        ACTIVE_PAYMENT_ERROR_COUNT = "active_payment_error_count"
+        ALREADY_ACTIVE_PAYMENT_COUNT = "already_active_payment_count"
+        APPROVED_PRENOTE_COUNT = "approved_prenote_count"
+        CANCELLATION_COUNT = "cancellation_count"
+        CLAIM_DETAILS_RECORD_COUNT = "claim_details_record_count"
+        CLAIM_NOT_FOUND_COUNT = "claim_not_found_count"
+        CLAIMANT_MISMATCH_COUNT = "claimant_mismatch_count"
+        EFT_FOUND_COUNT = "eft_found_count"
+        EMPLOYEE_MISSING_IN_DB_COUNT = "employee_in_payment_extract_missing_in_db_count"
+        EMPLOYER_REIMBURSEMENT_COUNT = "employer_reimbursement_count"
+        ERRORED_PAYMENT_COUNT = "errored_payment_count"
+        NEW_EFT_COUNT = "new_eft_count"
+        NOT_APPROVED_PRENOTE_COUNT = "not_approved_prenote_count"
+        NOT_PENDING_OR_APPROVED_LEAVE_REQUEST_COUNT = "not_pending_or_approved_leave_request_count"
+        OVERPAYMENT_COUNT = "overpayment_count"
+        PAYMENT_DETAILS_RECORD_COUNT = "payment_details_record_count"
+        PEI_RECORD_COUNT = "pei_record_count"
+        PRENOTE_PAST_WAITING_PERIOD_APPROVED_COUNT = "prenote_past_waiting_period_approved_count"
+        PROCESSED_PAYMENT_COUNT = "processed_payment_count"
+        REQUESTED_ABSENCE_RECORD_COUNT = "requested_absence_record_count"
+        STANDARD_VALID_PAYMENT_COUNT = "standard_valid_payment_count"
+        TAX_IDENTIFIER_MISSING_IN_DB_COUNT = "tax_identifier_missing_in_db_count"
+        ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
+
     def run_step(self):
         with tempfile.TemporaryDirectory() as download_directory:
             self.process_extract_data(pathlib.Path(download_directory))
@@ -540,7 +573,7 @@ class PaymentExtractStep(Step):
                 active_state.end_state.state_description,
                 active_state.payment.payment_id,
             )
-            self.increment("already_active_payment_count")
+            self.increment(self.Metrics.ALREADY_ACTIVE_PAYMENT_COUNT)
             return active_state.end_state
 
         return None
@@ -573,7 +606,7 @@ class PaymentExtractStep(Step):
                 lower_key_record, FineosExtractVpei, ref_file, self.get_import_log_id()
             )
             self.db_session.add(vpei_record)
-            self.increment("pei_record_count")
+            self.increment(self.Metrics.PEI_RECORD_COUNT)
 
             logger.debug("indexed pei file row with CI: %s, %s", record["C"], record["I"])
 
@@ -584,8 +617,6 @@ class PaymentExtractStep(Step):
         # claim details needs to be indexed on PECLASSID and PEINDEXID
         # which point to the vpei.C and vpei.I columns
         for record in payment_details:
-            self.increment("payment_details_record_count")
-
             index = CiIndex(record["PECLASSID"], record["PEINDEXID"])
             if index not in extract_data.payment_details.indexed_data:
                 extract_data.payment_details.indexed_data[index] = []
@@ -596,7 +627,7 @@ class PaymentExtractStep(Step):
                 lower_key_record, FineosExtractVpeiClaimDetails, ref_file, self.get_import_log_id()
             )
             self.db_session.add(claim_details_record)
-            self.increment("payment_details_record_count")
+            self.increment(self.Metrics.PAYMENT_DETAILS_RECORD_COUNT)
             logger.debug(
                 "indexed payment details file row with CI: %s, %s",
                 record["PECLASSID"],
@@ -622,7 +653,7 @@ class PaymentExtractStep(Step):
                 self.get_import_log_id(),
             )
             self.db_session.add(payment_details_record)
-            self.increment("claim_details_record_count")
+            self.increment(self.Metrics.CLAIM_DETAILS_RECORD_COUNT)
             logger.debug(
                 "indexed claim details file row with CI: %s, %s",
                 record["PECLASSID"],
@@ -645,7 +676,7 @@ class PaymentExtractStep(Step):
                 self.get_import_log_id(),
             )
             self.db_session.add(requested_absence_record)
-            self.increment("requested_absence_record_count")
+            self.increment(self.Metrics.REQUESTED_ABSENCE_RECORD_COUNT)
 
         logger.info("Successfully downloaded and indexed payment extract data files.")
 
@@ -711,9 +742,10 @@ class PaymentExtractStep(Step):
                     .one_or_none()
                 )
                 if not tax_identifier:
-                    self.increment("tax_identifier_missing_in_db_count")
+                    self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
                     payment_data.validation_container.add_validation_issue(
-                        payments_util.ValidationReason.MISSING_IN_DB, "tax_identifier"
+                        payments_util.ValidationReason.MISSING_IN_DB,
+                        f"tax_identifier: {payment_data.tin}",
                     )
                 else:
                     employee = (
@@ -723,9 +755,10 @@ class PaymentExtractStep(Step):
                     )
 
                     if not employee:
-                        self.increment("employee_missing_in_db_count")
+                        self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
                         payment_data.validation_container.add_validation_issue(
-                            payments_util.ValidationReason.MISSING_IN_DB, "employee"
+                            payments_util.ValidationReason.MISSING_IN_DB,
+                            f"employee: {payment_data.tin}",
                         )
 
             claim = (
@@ -746,20 +779,42 @@ class PaymentExtractStep(Step):
         # it's less of a concern to us.
         if not claim and payment_data.is_standard_payment:
             payment_data.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_IN_DB, "claim"
+                payments_util.ValidationReason.MISSING_IN_DB,
+                f"claim: {payment_data.absence_case_number}",
             )
-            self.increment("claim_not_found_count")
+            self.increment(self.Metrics.CLAIM_NOT_FOUND_COUNT)
             return None, None
 
-        if claim and employee and claim.employee_id != employee.employee_id:
+        # Perform various validations on the claim. We require
+        # A claim to be ID Proofed
+        # A claim to have a claim type
+        # The employee we fetched above to already be connected to the claim
+        if claim:
+            # TODO - ask Mass about non-standard payments
+            if not claim.is_id_proofed:
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.CLAIM_NOT_ID_PROOFED,
+                    f"Claim {payment_data.absence_case_number} has not been ID proofed",
+                )
+
+            # If no claim type, we can't process downstream as this information
+            # is necessary when creating NACHA and check records for PUB
+            if not claim.claim_type_id:
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_IN_DB,
+                    f"Claim {payment_data.absence_case_number} exists, but does not have a claim type associated with it.",
+                )
+
             # If the employee we found does not match what is already attached
             # to the claim, we can't accept the payment.
-            payment_data.validation_container.add_validation_issue(
-                payments_util.ValidationReason.CLAIMANT_MISMATCH,
-                f"Claimant {claim.employee_id} is attached to claim {claim.fineos_absence_id}, but claimant {employee.employee_id} was found.",
-            )
-            self.increment("claimant_mismatch_count")
-            return None, None
+            if employee and claim.employee_id != employee.employee_id:
+
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.CLAIMANT_MISMATCH,
+                    f"Claimant {claim.employee_id} is attached to claim {claim.fineos_absence_id}, but claimant {employee.employee_id} was found.",
+                )
+                self.increment(self.Metrics.CLAIMANT_MISMATCH_COUNT)
+                return None, None
 
         return employee, claim
 
@@ -877,10 +932,10 @@ class PaymentExtractStep(Step):
         # need to error the payment.
         active_state = self.get_active_payment_state(payment)
         if active_state:
-            self.increment("active_payment_error_count")
+            self.increment(self.Metrics.ACTIVE_PAYMENT_ERROR_COUNT)
             validation_container.add_validation_issue(
                 payments_util.ValidationReason.RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED,
-                f"We received a payment that is already being processed. It is currently in state {active_state.state_description}.",
+                f"We received a payment that is already being processed. It is currently in state [{active_state.state_description}].",
             )
 
         self.db_session.add(payment)
@@ -934,7 +989,7 @@ class PaymentExtractStep(Step):
         extra["employee_id"] = employee.employee_id
         if existing_eft:
             extra["pub_eft_id"] = existing_eft.pub_eft_id
-            self.increment("eft_found_count")
+            self.increment(self.Metrics.EFT_FOUND_COUNT)
             logger.info(
                 "Found existing EFT info for claimant in prenote state %s",
                 existing_eft.prenote_state.prenote_state_description,
@@ -942,16 +997,16 @@ class PaymentExtractStep(Step):
             )
 
             if PrenoteState.APPROVED.prenote_state_id == existing_eft.prenote_state_id:
-                self.increment("approved_prenote_count")
+                self.increment(self.Metrics.APPROVED_PRENOTE_COUNT)
             elif (
                 (PrenoteState.PENDING_WITH_PUB.prenote_state_id == existing_eft.prenote_state_id)
                 and existing_eft.prenote_sent_at
                 and (get_now() - existing_eft.prenote_sent_at).days
                 >= PRENOTE_PRENDING_WAITING_PERIOD
             ):
-                self.increment("prenote_past_waiting_period_approved_count")
+                self.increment(self.Metrics.PRENOTE_PAST_WAITING_PERIOD_APPROVED_COUNT)
             else:
-                self.increment("not_approved_prenote_count")
+                self.increment(self.Metrics.NOT_APPROVED_PRENOTE_COUNT)
                 reason = (
                     payments_util.ValidationReason.EFT_PRENOTE_REJECTED
                     if existing_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id
@@ -986,7 +1041,7 @@ class PaymentExtractStep(Step):
                 payments_util.ValidationReason.EFT_PRENOTE_PENDING,
                 "New EFT info found, prenote required",
             )
-            self.increment("new_eft_count")
+            self.increment(self.Metrics.NEW_EFT_COUNT)
 
             state_log_util.create_finished_state_log(
                 end_state=State.DELEGATED_EFT_SEND_PRENOTE,
@@ -1072,7 +1127,7 @@ class PaymentExtractStep(Step):
         if payment_data.validation_container.has_validation_issues():
             end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
             message = "Error processing payment record"
-            self.increment("errored_payment_count")
+            self.increment(self.Metrics.ERRORED_PAYMENT_COUNT)
 
         # Employer reimbursements are added to the FINEOS writeback + a report
         elif (
@@ -1083,7 +1138,7 @@ class PaymentExtractStep(Step):
                 State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT
             )
             message = "Employer reimbursement added to pending state for FINEOS writeback"
-            self.increment("employer_reimbursement_count")
+            self.increment(self.Metrics.EMPLOYER_REIMBURSEMENT_COUNT)
 
         # Zero dollar payments are added to the FINEOS writeback + a report
         elif (
@@ -1092,7 +1147,7 @@ class PaymentExtractStep(Step):
         ):
             end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
             message = "Zero dollar payment added to pending state for FINEOS writeback"
-            self.increment("zero_dollar_payment_count")
+            self.increment(self.Metrics.ZERO_DOLLAR_PAYMENT_COUNT)
 
         # Overpayments are added to to the FINEOS writeback + a report
         elif (
@@ -1101,7 +1156,7 @@ class PaymentExtractStep(Step):
         ):
             end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
             message = "Overpayment payment added to pending state for FINEOS writeback"
-            self.increment("overpayment_count")
+            self.increment(self.Metrics.OVERPAYMENT_COUNT)
 
         # Cancellations are added to the FINEOS writeback + a report
         elif (
@@ -1110,12 +1165,12 @@ class PaymentExtractStep(Step):
         ):
             end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
             message = "Cancellation payment added to pending state for FINEOS writeback"
-            self.increment("cancellation_count")
+            self.increment(self.Metrics.CANCELLATION_COUNT)
 
         else:
             end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
             message = "Success"
-            self.increment("standard_valid_payment_count")
+            self.increment(self.Metrics.STANDARD_VALID_PAYMENT_COUNT)
 
         state_log_util.create_finished_state_log(
             end_state=end_state,
@@ -1133,7 +1188,7 @@ class PaymentExtractStep(Step):
 
         for index, record in extract_data.pei.indexed_data.items():
             try:
-                self.increment("processed_payment_count")
+                self.increment(self.Metrics.PROCESSED_PAYMENT_COUNT)
                 # Construct a payment data object for easier organization of the many params
                 payment_data = PaymentData(
                     extract_data, index, record, count_incrementer=self.increment

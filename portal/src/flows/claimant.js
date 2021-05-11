@@ -18,6 +18,8 @@ import {
 
 import { ClaimSteps } from "../models/Step";
 import { fields as addressFields } from "../pages/applications/address";
+import { fields as concurrentLeavesDetailsFields } from "../pages/applications/concurrent-leaves-details";
+import { fields as concurrentLeavesFields } from "../pages/applications/concurrent-leaves";
 import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/applications/date-of-child";
 import { fields as employerBenefitsDetailsFields } from "../pages/applications/employer-benefits-details";
@@ -38,8 +40,10 @@ import { fields as otherIncomesDetailsFields } from "../pages/applications/other
 import { fields as otherIncomesFields } from "../pages/applications/other-incomes";
 import { fields as paymentMethodFields } from "../pages/applications/payment-method";
 import { fields as phoneNumberFields } from "../pages/applications/phone-number";
-import { fields as previousLeavesDetailsFields } from "../pages/applications/previous-leaves-details";
-import { fields as previousLeavesFields } from "../pages/applications/previous-leaves";
+import { fields as previousLeavesOtherReasonDetailsFields } from "../pages/applications/previous-leaves-other-reason-details";
+import { fields as previousLeavesOtherReasonFields } from "../pages/applications/previous-leaves-other-reason";
+import { fields as previousLeavesSameReasonDetailsFields } from "../pages/applications/previous-leaves-same-reason-details";
+import { fields as previousLeavesSameReasonFields } from "../pages/applications/previous-leaves-same-reason";
 import { fields as reasonPregnancyFields } from "../pages/applications/reason-pregnancy";
 import { fields as reducedLeaveScheduleFields } from "../pages/applications/reduced-leave-schedule";
 import routes from "../routes";
@@ -63,10 +67,13 @@ export const guards = {
   hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
   hasIntermittentLeavePeriods: ({ claim }) =>
     claim.has_intermittent_leave_periods === true,
+  hasPreviousLeavesOtherReason: ({ claim }) =>
+    claim.has_previous_leaves_other_reason === true,
+  hasPreviousLeavesSameReason: ({ claim }) =>
+    claim.has_previous_leaves_same_reason === true,
   hasReducedScheduleLeavePeriods: ({ claim }) =>
     claim.has_reduced_schedule_leave_periods === true,
   hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
-  hasPreviousLeaves: ({ claim }) => claim.has_previous_leaves === true,
   isFixedWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
@@ -79,7 +86,7 @@ export const guards = {
 const checklistEvents = {
   VERIFY_ID: routes.applications.name,
   LEAVE_DETAILS: routes.applications.leaveReason,
-  OTHER_LEAVE: routes.applications.employerBenefits,
+  OTHER_LEAVE: routes.applications.previousLeavesIntro,
   EMPLOYER_INFORMATION: routes.applications.occupation,
   PAYMENT: routes.applications.paymentMethod,
   UPLOAD_CERTIFICATION: routes.applications.uploadCertification,
@@ -348,6 +355,90 @@ export default {
         CONTINUE: routes.applications.checklist,
       },
     },
+    [routes.applications.previousLeavesIntro]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+      },
+      on: {
+        CONTINUE: routes.applications.previousLeavesSameReason,
+      },
+    },
+    [routes.applications.previousLeavesSameReason]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: previousLeavesSameReasonFields,
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.previousLeavesSameReasonDetails,
+            cond: "hasPreviousLeavesSameReason",
+          },
+          {
+            target: routes.applications.previousLeavesOtherReason,
+          },
+        ],
+      },
+    },
+    [routes.applications.previousLeavesSameReasonDetails]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: previousLeavesSameReasonDetailsFields,
+      },
+      on: {
+        CONTINUE: routes.applications.previousLeavesOtherReason,
+      },
+    },
+    [routes.applications.previousLeavesOtherReason]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: previousLeavesOtherReasonFields,
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.previousLeavesOtherReasonDetails,
+            cond: "hasPreviousLeavesOtherReason",
+          },
+          { target: routes.applications.concurrentLeavesIntro },
+        ],
+      },
+    },
+    [routes.applications.previousLeavesOtherReasonDetails]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: previousLeavesOtherReasonDetailsFields,
+      },
+      on: {
+        CONTINUE: routes.applications.concurrentLeavesIntro,
+      },
+    },
+    [routes.applications.concurrentLeavesIntro]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+      },
+      on: {
+        CONTINUE: routes.applications.concurrentLeaves,
+      },
+    },
+    [routes.applications.concurrentLeaves]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: concurrentLeavesFields,
+      },
+      on: {
+        CONTINUE: routes.applications.concurrentLeavesDetails,
+      },
+    },
+    [routes.applications.concurrentLeavesDetails]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: concurrentLeavesDetailsFields,
+      },
+      on: {
+        CONTINUE: routes.applications.employerBenefits,
+      },
+    },
     [routes.applications.employerBenefits]: {
       meta: {
         step: ClaimSteps.otherLeave,
@@ -386,7 +477,7 @@ export default {
             cond: "hasOtherIncomes",
           },
           {
-            target: routes.applications.previousLeaves,
+            target: routes.applications.checklist,
           },
         ],
       },
@@ -395,32 +486,6 @@ export default {
       meta: {
         step: ClaimSteps.otherLeave,
         fields: otherIncomesDetailsFields,
-      },
-      on: {
-        CONTINUE: routes.applications.previousLeaves,
-      },
-    },
-    [routes.applications.previousLeaves]: {
-      meta: {
-        step: ClaimSteps.otherLeave,
-        fields: previousLeavesFields,
-      },
-      on: {
-        CONTINUE: [
-          {
-            target: routes.applications.previousLeavesDetails,
-            cond: "hasPreviousLeaves",
-          },
-          {
-            target: routes.applications.checklist,
-          },
-        ],
-      },
-    },
-    [routes.applications.previousLeavesDetails]: {
-      meta: {
-        step: ClaimSteps.otherLeave,
-        fields: previousLeavesDetailsFields,
       },
       on: {
         CONTINUE: routes.applications.checklist,

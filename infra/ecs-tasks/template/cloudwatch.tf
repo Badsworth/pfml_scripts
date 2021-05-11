@@ -59,13 +59,13 @@ module "register_leave_admins_with_fineos_scheduler" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Run payments-payment-voucher-plus at 12am EST (1am EDT) (5am UTC)
+# Run payments-payment-voucher-plus at 3am EST (4am EDT) (8am UTC)
 module "payments_payment_voucher_plus_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_recurring_payments_schedule
 
   task_name           = "payments-payment-voucher-plus"
-  schedule_expression = "cron(0 5 ? * MON-FRI *)"
+  schedule_expression = "cron(0 8 ? * MON-FRI *)"
   environment_name    = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
@@ -210,11 +210,43 @@ module "export_leave_admins_created_scheduler" {
 }
 
 
-module "reductions_send_claimant_lists_scheduler" {
+module "reductions_dia_send_claimant_lists_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_reductions_send_claimant_lists_to_agencies_schedule
 
-  task_name           = "reductions-send-claimant-lists"
+  task_name           = "reductions-dia-send-claimant-lists"
+  schedule_expression = "cron(0 8 ? * MON-FRI *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-send-claimant-lists"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-send-claimant-lists"].family
+  ecs_task_executor_role     = aws_iam_role.reductions_workflow_execution_role.arn
+  ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "reductions-send-claimant-lists",
+        "command": [
+          "reductions-send-claimant-lists-to-agencies",
+          "--steps=DIA"
+        ]
+      }
+    ]
+  }
+  JSON
+}
+
+module "reductions_dua_send_claimant_lists_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_reductions_send_claimant_lists_to_agencies_schedule
+
+  task_name           = "reductions-dua-send-claimant-lists"
   schedule_expression = "cron(0 8 * * ? *)"
   environment_name    = var.environment_name
 
@@ -226,6 +258,20 @@ module "reductions_send_claimant_lists_scheduler" {
   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-send-claimant-lists"].family
   ecs_task_executor_role     = aws_iam_role.reductions_workflow_execution_role.arn
   ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "reductions-send-claimant-lists",
+        "command": [
+          "reductions-send-claimant-lists-to-agencies",
+          "--steps=DUA"
+        ]
+      }
+    ]
+  }
+  JSON
 }
 
 module "reductions_retrieve_payment_listsscheduler" {
@@ -251,7 +297,7 @@ module "reductions-send-wage-replacement-payments-to-dfml" {
   is_enabled = var.enable_reductions_send_wage_replacement_payments_to_dfml_schedule
 
   task_name           = "reductions-send-wage-replacement"
-  schedule_expression = "cron(0 15 * * ? *)"
+  schedule_expression = "cron(0 14 ? * MON-FRI *)"
   environment_name    = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn

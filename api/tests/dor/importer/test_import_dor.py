@@ -235,33 +235,18 @@ def test_employer_address(test_db_session):
     invalid_country_employer = (
         test_db_session.query(Employer)
         .filter(Employer.account_key == employer_invalid_country["account_key"])
-        .one_or_none()
+        .one()
     )
-    invalid_country_employer_id = invalid_country_employer.employer_id
-
-    # confirm invald employer has a NULL country id
-    persisted_employer_address_invalid_country = dor_persistence_util.get_employer_address(
-        test_db_session, invalid_country_employer_id
-    )
-    persisted_address_invalid_country = dor_persistence_util.get_address(
-        test_db_session, persisted_employer_address_invalid_country.address_id
-    )
-    assert persisted_address_invalid_country.country_id is None
+    assert invalid_country_employer.addresses[0].address.country_id is None
 
     # confirm expected columns are now updated
-    invalid_country_employer = (
+    valid_country_employer = (
         test_db_session.query(Employer)
         .filter(Employer.account_key == employer_international_address["account_key"])
         .one_or_none()
     )
-    employer_id = invalid_country_employer.employer_id
+    persisted_address = valid_country_employer.addresses[0].address
 
-    persisted_employer_address = dor_persistence_util.get_employer_address(
-        test_db_session, employer_id
-    )
-    persisted_address = dor_persistence_util.get_address(
-        test_db_session, persisted_employer_address.address_id
-    )
     assert persisted_address.geo_state_id is None
     assert (
         persisted_address.geo_state_text == employer_international_address["employer_address_state"]

@@ -13,15 +13,19 @@ from werkzeug.exceptions import (
 )
 
 from massgov.pfml.api.validation.exceptions import PaymentRequired, ValidationErrorDetail
+from massgov.pfml.util.paginate.paginator import Page, PaginationAPIContext
+from massgov.pfml.util.pydantic import Serializer
 
 
 # == response data structures ==
 @dataclass
 class PagingMetaData:
-    offset: int
-    limit: int
-    count: int
-    total: int
+    page_offset: int
+    page_size: int
+    total_records: int
+    total_pages: int
+    order_by: str
+    order_direction: str
 
 
 @dataclass
@@ -188,9 +192,7 @@ def validation_issue(exception: ValidationErrorDetail) -> Issue:
     )
 
 
-# == response utilties ==
-
-
+# == response utilities ==
 def success_response(
     message: str,
     data: Union[None, Dict, List[Dict]] = None,
@@ -198,6 +200,32 @@ def success_response(
     status_code: int = 200,
 ) -> Response:
     return Response(status_code=status_code, message=message, data=data, warnings=warnings)
+
+
+def paginated_success_response(
+    message: str,
+    context: PaginationAPIContext,
+    page: Page,
+    serializer: Serializer,
+    warnings: Optional[List[Issue]] = None,
+    status_code: int = 200,
+) -> Response:
+    paging_meta = PagingMetaData(
+        total_records=page.total_records,
+        total_pages=page.total_pages,
+        page_offset=context.page_offset,
+        page_size=context.page_size,
+        order_by=context.order_by,
+        order_direction=context.order_direction,
+    )
+
+    # resource and method values are injected in Metadata.to_api_response function
+    meta = MetaData(paging=paging_meta, method="", resource="")
+    data = [serializer.serialize(value) for value in page.values]
+
+    return Response(
+        status_code=status_code, message=message, data=data, warnings=warnings, meta=meta
+    )
 
 
 def error_response(

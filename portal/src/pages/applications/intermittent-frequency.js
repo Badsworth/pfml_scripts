@@ -9,6 +9,8 @@ import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputNumber from "../../components/InputNumber";
+import Lead from "../../components/Lead";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -81,20 +83,35 @@ export const IntermittentFrequency = (props) => {
     updateFields,
   });
 
+  const contentContext = findKeyByValue(
+    LeaveReason,
+    claim.leave_details.reason
+  );
+
   return (
     <QuestionPage
       title={t("pages.claimsIntermittentFrequency.title")}
       onSave={handleSave}
     >
-      {claim.isMedicalLeave && (
+      {(claim.isMedicalLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
-          {t("pages.claimsIntermittentFrequency.medicalAlert")}
+          {t("pages.claimsIntermittentFrequency.needDocumentAlert", {
+            context: contentContext,
+          })}
         </Alert>
       )}
 
       <Heading level="2" size="1">
         {t("pages.claimsIntermittentFrequency.sectionLabel")}
       </Heading>
+
+      {(claim.isMedicalLeave || claim.isCaringLeave) && (
+        <Lead>
+          {t("pages.claimsIntermittentFrequency.frequencyHint", {
+            context: contentContext,
+          })}
+        </Lead>
+      )}
 
       <InputChoiceGroup
         {...getFunctionalInputProps(
@@ -138,11 +155,6 @@ export const IntermittentFrequency = (props) => {
           },
         ]}
         label={t("pages.claimsIntermittentFrequency.frequencyBasisLabel")}
-        hint={
-          claim.isMedicalLeave
-            ? t("pages.claimsIntermittentFrequency.frequencyBasisHint_medical")
-            : null // could use `context` if another leave type needs hint text
-        }
         type="radio"
         smallLabel
       />
@@ -162,11 +174,6 @@ export const IntermittentFrequency = (props) => {
                       leavePeriod.frequency_interval_basis
                     ),
             })}
-            hint={
-              claim.isMedicalLeave
-                ? t("pages.claimsIntermittentFrequency.frequencyHint_medical")
-                : null // could use `context` if another leave type needs hint text
-            }
             width="small"
             smallLabel
           />
@@ -193,11 +200,6 @@ export const IntermittentFrequency = (props) => {
             },
           ]}
           label={t("pages.claimsIntermittentFrequency.durationBasisLabel")}
-          hint={
-            claim.isMedicalLeave
-              ? t("pages.claimsIntermittentFrequency.durationBasisHint_medical")
-              : null // could use `context` if another leave type needs hint text
-          }
           type="radio"
           smallLabel
         />
@@ -210,11 +212,6 @@ export const IntermittentFrequency = (props) => {
           label={t("pages.claimsIntermittentFrequency.durationLabel", {
             context: findKeyByValue(DurationBasis, leavePeriod.duration_basis),
           })}
-          hint={
-            claim.isMedicalLeave
-              ? t("pages.claimsIntermittentFrequency.durationHint_medical")
-              : null // could use `context` if another leave type needs hint text
-          }
           width="small"
           smallLabel
         />

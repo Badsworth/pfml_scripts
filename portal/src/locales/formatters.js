@@ -18,6 +18,8 @@ import convertMinutesToHours from "../utils/convertMinutesToHours";
 export default function (value, format, locale) {
   if (format === "currency") {
     return formatCurrency(value, locale);
+  } else if (format === "ein") {
+    return formatEmployerFein(value);
   } else if (format === "hoursMinutesDuration") {
     return formatHoursMinutesDuration(value, locale);
   }
@@ -36,6 +38,16 @@ function formatCurrency(value, locale) {
     style: "currency",
     currency: "USD",
   }).format(value);
+}
+
+/**
+ * Formats an EIN returned from the server to utilize a non-breaking hyphen
+ * so that the entire EIN is always displayed on the same line if possible.
+ * @param {string} value - the string to be formatted
+ * @returns {string} formatted value
+ */
+function formatEmployerFein(value) {
+  return value.replace("-", "‑");
 }
 
 /**

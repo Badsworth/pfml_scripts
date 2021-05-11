@@ -119,16 +119,12 @@ def query_data_mart_for_issues_and_updates_core(
                 f"Employee does not have an existing ctr_address_pair. Employee ID: {employee.employee_id}"
             )
 
-        if not payments_util.is_same_address(
-            mmars_address, employee.ctr_address_pair.fineos_address
+        if employee.ctr_address_pair.ctr_address is None or not payments_util.is_same_address(
+            mmars_address, employee.ctr_address_pair.ctr_address
         ):
             result.issues.add_validation_issue(
                 payments_util.ValidationReason.MISMATCHED_DATA, "Vendor address does not match"
             )
-        else:
-            if employee.ctr_address_pair.ctr_address is None:
-                employee.ctr_address_pair.ctr_address = mmars_address
-                result.employee_updates = True
 
     return result
 

@@ -26,7 +26,10 @@ describe("IntermittentFrequency", () => {
 
   it("renders the page", () => {
     const { wrapper } = renderWithAppLogic(IntermittentFrequency, {
-      claimAttrs: new MockClaimBuilder().intermittent().create(),
+      claimAttrs: new MockClaimBuilder()
+        .intermittent()
+        .medicalLeaveReason()
+        .create(),
     });
 
     expect(wrapper).toMatchSnapshot();
@@ -136,7 +139,13 @@ describe("IntermittentFrequency", () => {
     });
   });
 
-  it("displays Alert about having medical form when claim is for Medical leave", () => {
+  it("displays Alert about having form when claim is Medical or Caring leave", () => {
+    const { wrapper: caringWrapper } = renderWithAppLogic(
+      IntermittentFrequency,
+      {
+        claimAttrs: new MockClaimBuilder().caringLeaveReason().create(),
+      }
+    );
     const { wrapper: medicalWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
@@ -149,14 +158,13 @@ describe("IntermittentFrequency", () => {
         claimAttrs: new MockClaimBuilder().bondingBirthLeaveReason().create(),
       }
     );
-    const alert = medicalWrapper.find("Alert");
 
-    expect(alert.exists()).toBe(true);
-    expect(alert).toMatchSnapshot();
+    expect(medicalWrapper.find("Alert")).toMatchSnapshot();
+    expect(caringWrapper.find("Alert")).toMatchSnapshot();
     expect(bondingWrapper.find("Alert").exists()).toBe(false);
   });
 
-  it("displays hint text with medical form context when claim is for Medical leave", () => {
+  it("displays Lead text with form context when claim is for Medical or Caring leave", () => {
     expect.assertions();
 
     const { wrapper: medicalWrapper } = renderWithAppLogic(
@@ -178,18 +186,19 @@ describe("IntermittentFrequency", () => {
       }
     );
 
-    const fieldFinder = (nodeWrapper) =>
-      ["InputNumber", "InputChoiceGroup"].includes(nodeWrapper.name());
-    const medicalWrapperFields = medicalWrapper.findWhere(fieldFinder);
-    const bondingWrapperFields = bondingWrapper.findWhere(fieldFinder);
+    const { wrapper: caringWrapper } = renderWithAppLogic(
+      IntermittentFrequency,
+      {
+        claimAttrs: new MockClaimBuilder()
+          .caringLeaveReason()
+          .intermittent()
+          .create(),
+      }
+    );
 
-    medicalWrapperFields.forEach((field) => {
-      expect(field.prop("hint")).toMatchSnapshot();
-    });
-
-    bondingWrapperFields.forEach((field) => {
-      expect(field.prop("hint")).toBeNull();
-    });
+    expect(bondingWrapper.find("Lead").exists()).toBe(false);
+    expect(caringWrapper.find("Lead")).toMatchSnapshot();
+    expect(medicalWrapper.find("Lead")).toMatchSnapshot();
   });
 
   describe("frequency_basis change handler", () => {

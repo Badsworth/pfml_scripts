@@ -22,7 +22,8 @@ on:
         default: "main"
         description: |
           --------------------------------------
-          ⬇️ Tag or branch to be deployed.
+
+                    ⬇️ Tag or branch to be deployed.
       extraUatDeploy:
         required: false
         default: "true"
@@ -199,7 +200,7 @@ jobs:
   start-comms-slack:
     name: Start deploy comms (Slack)
     needs: [update-the-deploy-branch, deploy-info]
-    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test    
+    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || (!contains(github.event.inputs.deployment_env || 'test', 'test' ) && !contains(github.event.inputs.deployment_env || 'test', 'cps-preview') )}} # Mutes notifications for auto-deploys to test    
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -235,12 +236,13 @@ jobs:
               "title": "API ${{ needs.deploy-info.outputs.api-env }} deployment #${{ github.run_number }} was started\n${{ needs.deploy-info.outputs.subtitle }}",
               "color": "warning",
               "fields": [
-                { "title": "started by", "value": "`${{ github.actor }}`", "short": true },
-                { "title": "releasing", "value": "`${{ env.version }}`", "short": true },
-                { "title": "commit details", "value": "`${{ env.commit_details }}`" }
+                { "title": "started by", "value": "*${{ github.actor }}*", "short": true },
+                { "title": "releasing", "value": "*${{ env.version }}*", "short": true },
+                { "title": "commit details", "value": "*${{ env.commit_details }}*" }
               ]
             }]
           }' https://slack.com/api/chat.postMessage)
+
 
   extra-uat-deploy:
     if: contains(github.event.inputs.deployment_env, 'stage') && github.event.inputs.extraUatDeploy == 'true'
@@ -288,6 +290,29 @@ jobs:
                         -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "performance", "version": "${{ env.version }}" } }'
           echo "Done."
 
+  extra-cps-preview-deploy:
+    if: contains(github.event.inputs.deployment_env || 'test', 'test') && contains(github.event.inputs.version || 'main', 'main')
+    name: (test) Extra cps-preview deploy
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      - name: Start a cps-preview deploy
+        env:
+          GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          WORKFLOW_NAME: "api-deploy.yml"
+        run: |
+          echo "*** An API test deploy is now in progress. Enqueuing an extra deployment to cps-preview... ***"
+          curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
+                        -H "Authorization: Bearer $GITHUB_TOKEN" \
+                        -H "Accept: application/vnd.github.v3+json" \
+                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "cps-preview", "version": "${{ env.version }}" } }'
+          echo "Done."
+
   api-build:
     name: Build docker image
     needs: update-the-deploy-branch
@@ -332,7 +357,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component: ["formstack_import", "cognito_pre_signup", "cognito_post_confirmation"]
+        component: ["cognito_pre_signup", "cognito_post_confirmation"]
 
     env:
       infra-working-dir: ./api/lambdas
@@ -489,7 +514,6 @@ jobs:
 
     env:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      TF_VAR_formstack_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_release_version: ${{ github.event.inputs.version || 'main' }}
@@ -498,7 +522,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-
+        
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -520,8 +544,8 @@ jobs:
 
       # Temporary step to ensure the existing RDS log group gets imported into the state.
       # This is necessary to prevent terraform from running into a duplicate-log-group error.
-      #
-      # (TODO: Remove in INFRA-386 after rollout)
+      # #
+      # # (TODO: Remove in INFRA-386 after rollout)
       - name: (temp) Fix RDS log group state
         # Clear out global lock timeout for "terraform state show""
         env:
@@ -564,12 +588,37 @@ jobs:
           TF_CLI_ARGS: ''
         run: |
           CLUSTER_ID=$(terraform output ecs_cluster_arn | sed s/\"//g | cut -d/ -f2)
-          SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | cut -d/ -f2)
+          SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | rev | cut -d/ -f1 | rev)
 
           # Wait for ECS service to be stable, and run it twice to allow for
           # abnormally long deploys (up to 20 minutes.)
-          (aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID ||
-           aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
+          failures=0
+
+          while [[ $failures -lt 2 ]]; do
+            set +e -x
+            result_msg=$(aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID 2>&1)
+            result_code=$?
+            set -e +x
+
+            if [[ ${result_code} -eq 0 ]]; then
+              break
+            elif [[ "${result_msg}" =~ "MISSING" ]]; then
+              echo "ECS Cluster \"${CLUSTER_ID}\" or service \"${SVC_ID}\" does not exist"
+              exit 1
+            else
+              failures=$((failures+=1))
+            fi
+          done
+
+          if [[ $failures -ge 2 ]]; then
+            echo "ECS service failed to stabilize within 20 minutes."
+            echo "Please check the ECS service at https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters/${{ needs.deploy-info.outputs.api-env }}/services/pfml-api-${{ needs.deploy-info.outputs.api-env }}/events"
+            echo "If the service stabilizes, you do not need to re-deploy. For lower environments you should run the E2E test job manually."
+            echo
+            echo "More info: https://lwd.atlassian.net/wiki/spaces/DD/pages/786694343/API+General+Runbook"
+            exit 1
+          fi
+
         working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
   update-newrelic:
@@ -686,6 +735,8 @@ jobs:
     name: Finish deploy comms (GitHub)
     needs: [start-comms-github, deploy-info, postdeploy-info]
     runs-on: ubuntu-latest
+    outputs:
+      message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
     if: always() && needs.start-comms-github.result == 'success'
     steps:
       - uses: chrnorm/deployment-status@releases/v1
@@ -762,6 +813,7 @@ jobs:
           fi
 
       - name: Post to Slack
+        id: post-to-slack
         run: |
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
           -H 'Content-Type: application/json;charset=utf-8' \
@@ -776,6 +828,10 @@ jobs:
               ]
             }]
           }' https://slack.com/api/chat.postMessage)
+
+          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq -r '.ts')
+          echo $MESSAGE_TS
+          echo "::set-output name=message-ts::$MESSAGE_TS"
 
   end-to-end:
     name: End-to-End Test Deployment
@@ -808,3 +864,42 @@ jobs:
           github_branch: ${{ steps.determine_e2e_ref.outputs.e2e_ref }}
           # Limit to "stable" suite for any environment but test.
           only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
+
+  post-e2e-failures-to-slack:
+    name: Post E2E failures to Slack
+    needs: [finish-comms-slack, end-to-end]
+    if: always() && 
+      (
+        (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Post to Slack
+        run: |
+          echo "Slackbot message reply TS is ${{ needs.finish-comms-slack.outputs.message-ts }}"
+          
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "thread_ts": "${{ needs.finish-comms-slack.outputs.message-ts }}",
+            "attachments": [{
+              "title": "E2E Test failed in ${{ github.event.inputs.deployment_env || 'test' }} (<${{ env.workflow_self_link }}|build logs>)",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)

@@ -2,13 +2,13 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.data_mart as data_mart
 import massgov.pfml.payments.payments_util as payments_util
 from massgov.pfml.db.models.employees import Country, Employee, GeoState, State, StateLog
-from massgov.pfml.db.models.factories import CtrAddressPairFactory, EftFactory
+from massgov.pfml.db.models.factories import AddressFactory, CtrAddressPairFactory, EftFactory
 
 
 def create_complete_valid_matching_vendor_info_for_employee(
     employee: Employee,
 ) -> data_mart.VendorInfoResult:
-    addr = employee.ctr_address_pair.fineos_address
+    addr = employee.ctr_address_pair.ctr_address
 
     return data_mart.VendorInfoResult(
         vendor_customer_code=employee.ctr_vendor_customer_code,
@@ -40,6 +40,7 @@ def run_test_process_success_no_pending_payment(
 
     if employee.ctr_address_pair is None:
         employee.ctr_address_pair = CtrAddressPairFactory.create()
+        employee.ctr_address_pair.ctr_address = AddressFactory.create()
 
     mock_data_mart_client.get_vendor_info.return_value = create_complete_valid_matching_vendor_info_for_employee(
         employee

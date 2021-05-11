@@ -39,6 +39,15 @@ def fineos_pei_writeback_step(initialize_factories_session, test_db_session, tes
     )
 
 
+@pytest.fixture
+def local_fineos_pei_writeback_step(
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
+):
+    return writeback.FineosPeiWritebackStep(
+        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+    )
+
+
 def _generate_payment(payment_method: LkPaymentMethod = PaymentMethod.ACH) -> Payment:
     payment = PaymentFactory.create(
         fineos_pei_c_value=str(fake.random_int(min=1000, max=9999)),
@@ -135,9 +144,9 @@ def _generate_errored_payment(test_db_session: db.Session) -> Payment:
     ids=["state_payments"],
 )
 def test_process_payments_for_writeback(
-    fineos_pei_writeback_step,
-    test_db_session,
-    test_db_other_session,
+    local_fineos_pei_writeback_step,
+    local_test_db_session,
+    local_test_db_other_session,
     mock_s3_bucket,
     monkeypatch,
     zero_dollar_payment_count,
@@ -158,34 +167,36 @@ def test_process_payments_for_writeback(
     # for the writeback.
     for _i in range(fake.random_int(min=2, max=7)):
         _generate_payment_and_state(
-            test_db_session, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
+            local_test_db_session, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
         )
 
     zero_dollar_payments = []
     for _i in range(zero_dollar_payment_count):
-        zero_dollar_payments.append(_generate_zero_dollar_payment(test_db_session))
+        zero_dollar_payments.append(_generate_zero_dollar_payment(local_test_db_session))
 
     overpayments = []
     for _i in range(overpayment_count):
-        overpayments.append(_generate_overpayment(test_db_session))
+        overpayments.append(_generate_overpayment(local_test_db_session))
 
     accepted_check_payments = []
     for _i in range(accepted_payment_count):
         accepted_check_payments.append(
-            _generate_accepted_payment(test_db_session, PaymentMethod.CHECK)
+            _generate_accepted_payment(local_test_db_session, PaymentMethod.CHECK)
         )
 
     accepted_eft_payments = []
     for _i in range(accepted_payment_count):
-        accepted_eft_payments.append(_generate_accepted_payment(test_db_session, PaymentMethod.ACH))
+        accepted_eft_payments.append(
+            _generate_accepted_payment(local_test_db_session, PaymentMethod.ACH)
+        )
 
     cancelled_payments = []
     for _i in range(cancelled_payment_count):
-        cancelled_payments.append(_generate_cancelled_payment(test_db_session))
+        cancelled_payments.append(_generate_cancelled_payment(local_test_db_session))
 
     errored_payments = []
     for _i in range(errored_payment_count):
-        errored_payments.append(_generate_errored_payment(test_db_session))
+        errored_payments.append(_generate_errored_payment(local_test_db_session))
 
     all_payments = (
         zero_dollar_payments
@@ -196,10 +207,10 @@ def test_process_payments_for_writeback(
         + errored_payments
     )
 
-    fineos_pei_writeback_step.process_payments_for_writeback()
+    local_fineos_pei_writeback_step.process_payments_for_writeback()
 
     reference_files = (
-        test_db_other_session.query(ReferenceFile)
+        local_test_db_other_session.query(ReferenceFile)
         .filter(
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.PEI_WRITEBACK.reference_file_type_id
@@ -214,7 +225,7 @@ def test_process_payments_for_writeback(
     assert ref_file.file_location.endswith(writeback.WRITEBACK_FILE_SUFFIX)
     assert (
         ref_file
-        == test_db_other_session.query(StateLog)
+        == local_test_db_other_session.query(StateLog)
         .filter(StateLog.end_state_id == State.PEI_WRITEBACK_SENT.state_id)
         .one_or_none()
         .reference_file
@@ -223,7 +234,7 @@ def test_process_payments_for_writeback(
     # Expect there to be a single PaymentReferenceFile linking the payment and the reference file.
     for payment in all_payments:
         payment_reference_files = (
-            test_db_other_session.query(PaymentReferenceFile)
+            local_test_db_other_session.query(PaymentReferenceFile)
             .filter(PaymentReferenceFile.reference_file_id == ref_file.reference_file_id)
             .filter(PaymentReferenceFile.payment_id == payment.payment_id)
             .all()
@@ -233,7 +244,7 @@ def test_process_payments_for_writeback(
     # Each payment transitioned to the correct state.
     for payment in zero_dollar_payments:
         state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_other_session
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_other_session
         )
         assert (
             state_log.end_state_id
@@ -242,7 +253,7 @@ def test_process_payments_for_writeback(
 
     for payment in overpayments:
         state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_other_session
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_other_session
         )
         assert (
             state_log.end_state_id
@@ -253,7 +264,7 @@ def test_process_payments_for_writeback(
     for payment in accepted_check_payments:
         accepted_check_payments_i_values.append(payment.fineos_pei_i_value)
         state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_other_session
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_other_session
         )
         assert (
             state_log.end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT.state_id
@@ -263,13 +274,13 @@ def test_process_payments_for_writeback(
     for payment in accepted_eft_payments:
         accepted_eft_payments_i_values.append(payment.fineos_pei_i_value)
         state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_other_session
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_other_session
         )
         assert state_log.end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_id
 
     for payment in cancelled_payments:
         state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_other_session
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_other_session
         )
         assert (
             state_log.end_state_id
@@ -280,7 +291,7 @@ def test_process_payments_for_writeback(
     for payment in errored_payments:
         errored_payments_i_values.append(payment.fineos_pei_i_value)
         state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_other_session
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_other_session
         )
         assert state_log.end_state_id == State.ERRORED_PEI_WRITEBACK_SENT.state_id
 

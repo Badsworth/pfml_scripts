@@ -398,7 +398,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def get_eform(
         self, user_id: str, absence_id: str, eform_id: str
     ) -> models.group_client_api.EForm:
-        return models.group_client_api.EForm(eformId=12345)
+        return models.group_client_api.EForm(eformId=12345, eformAttributes=[])
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         _capture_call("create_eform", user_id, eform=eform, absence_id=absence_id)
@@ -522,6 +522,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 "request for more information",
                 "denial notice",
                 "employer response additional documentation",
+                "care for a family member form",
             ]
             allowed_documents = [
                 mock_document(absence_id, document_type=document_type)

@@ -16,6 +16,9 @@ const routes = {
     bondingLeaveAttestation: "/applications/bonding-leave-attestation",
     caringLeaveAttestation: "/applications/caring-leave-attestation",
     checklist: "/applications/checklist",
+    concurrentLeaves: "/applications/concurrent-leaves",
+    concurrentLeavesDetails: "/applications/concurrent-leaves-details",
+    concurrentLeavesIntro: "/applications/concurrent-leaves-intro",
     dashboard: "/dashboard",
     dateOfBirth: "/applications/date-of-birth",
     dateOfChild: "/applications/date-of-child",
@@ -39,8 +42,13 @@ const routes = {
     otherIncomesDetails: "/applications/other-incomes-details",
     paymentMethod: "/applications/payment-method",
     phoneNumber: "/applications/phone-number",
-    previousLeaves: "/applications/previous-leaves",
-    previousLeavesDetails: "/applications/previous-leaves-details",
+    previousLeavesIntro: "/applications/previous-leaves-intro",
+    previousLeavesOtherReason: "/applications/previous-leaves-other-reason",
+    previousLeavesOtherReasonDetails:
+      "/applications/previous-leaves-other-reason-details",
+    previousLeavesSameReason: "/applications/previous-leaves-same-reason",
+    previousLeavesSameReasonDetails:
+      "/applications/previous-leaves-same-reason-details",
     reasonPregnancy: "/applications/reason-pregnancy",
     reducedLeaveSchedule: "/applications/reduced-leave-schedule",
     review: "/applications/review",
@@ -97,7 +105,7 @@ const routes = {
       calculateReductions:
         "https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits#-calculate-any-reductions-",
       // caregiver routes to be updated upon DFML confirmation
-      caregiverCertificationForm: "https://www.mass.gov/hcp-form",
+      caregiverCertificationForm: "https://www.mass.gov/family-caring-form",
       caregiverRelationship:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-",
       consentAgreement:
@@ -111,6 +119,8 @@ const routes = {
         "https://www.mass.gov/pfml-acute-claimant",
       employerAccount:
         "https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications",
+      // EMPLOYER-1186: Update with actual link
+      employerDashboard: "https://www.mass.gov",
       employerReimbursements:
         "https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits",
       employersGuide:
@@ -119,7 +129,7 @@ const routes = {
         "https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein",
       feedbackClaimant: "https://www.mass.gov/paidleave-claimant-feedback",
       feedbackEmployer: "https://www.mass.gov/paidleave-employer-feedback",
-      healthcareProviderForm: "https://www.mass.gov/hcp-form",
+      healthcareProviderForm: "https://www.mass.gov/medical-leave-form",
       howToApplyPaidLeave:
         "https://www.mass.gov/guides/what-is-paid-family-and-medical-leave#-how-can-i-apply-for-paid-leave-massachusetts-benefits",
       identityProof:

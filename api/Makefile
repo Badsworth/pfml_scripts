@@ -230,11 +230,11 @@ init-db: ## Initialize local DB
 init-db: start-db db-upgrade db-create-users
 
 jwks.json: ## Generate a local JSON Web Key Set to use for local API Authentication
-	$(PY_RUN_CMD) bin/create-jwks.py > $@
+	$(PY_RUN_CMD) python3 -W ignore bin/create-jwks.py > $@
 
 jwt: ## Generate a JSON Web Token for $auth_id signed by locally generated JWKS
 jwt: jwks.json
-	$(PY_RUN_CMD) bin/create-jwt.py ./jwks.json $(auth_id)
+	$(PY_RUN_CMD) python3 -W ignore bin/create-jwt.py ./jwks.json $(auth_id)
 
 # A flake8 output format that is compatible with GitHub Actions to annotate PRs. A full repository path must be output
 # so the path is prefixed with `api/`.
@@ -449,17 +449,17 @@ API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../.github/wo
 release-notes: refs=origin/deploy/api/stage..origin/main
 release-notes: ## Generate API release notes for $refs (defaults between stage and test)
 	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
-	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA|PUB)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
+	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
 	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
 
 release-list: refs=origin/deploy/api/stage..origin/main
 release-list: ## Generate comma-separated list of ticket ids for $refs
 	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
-	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA|PUB)-[0-9]+' | \
-	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA|PUB)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
+	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+' | \
+	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
 
 
-API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat)
+API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat deploy/api/breakfix deploy/api/cps-preview)
 where-ticket: ## Search release branches for $ticket
 	@for b in $(API_RELEASE_BRANCHES); do echo "## $$b ##"; \
 		git --no-pager log --oneline --decorate --grep=$(ticket) $$b; \

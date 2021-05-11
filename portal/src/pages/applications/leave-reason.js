@@ -50,14 +50,12 @@ export const LeaveReason = (props) => {
 
   const choiceMedical = {
     checked: reason === LeaveReasonEnum.medical,
-    hint: t("pages.claimsLeaveReason.medicalLeaveHint"),
     label: t("pages.claimsLeaveReason.medicalLeaveLabel"),
     value: LeaveReasonEnum.medical,
   };
 
   const choiceBonding = {
     checked: reason === LeaveReasonEnum.bonding,
-    hint: t("pages.claimsLeaveReason.bondingLeaveHint"),
     label: t("pages.claimsLeaveReason.bondingLeaveLabel"),
     value: LeaveReasonEnum.bonding,
   };
@@ -66,7 +64,6 @@ export const LeaveReason = (props) => {
     // TODO (CP-515): We need to more accurately map this Family Leave option to signify that
     // this is active duty family leave, as opposed to another family leave type.
     checked: reason === LeaveReasonEnum.activeDutyFamily,
-    hint: t("pages.claimsLeaveReason.activeDutyFamilyLeaveHint"),
     label: t("pages.claimsLeaveReason.activeDutyFamilyLeaveLabel"),
     value: LeaveReasonEnum.activeDutyFamily,
   };
@@ -75,14 +72,12 @@ export const LeaveReason = (props) => {
     // TODO (CP-515): We need to more accurately map this Family Leave option to signify that
     // this is family leave to care for a service member, as opposed to another family leave type.
     checked: reason === LeaveReasonEnum.serviceMemberFamily,
-    hint: t("pages.claimsLeaveReason.serviceMemberFamilyLeaveHint"),
     label: t("pages.claimsLeaveReason.serviceMemberFamilyLeaveLabel"),
     value: LeaveReasonEnum.serviceMemberFamily,
   };
 
   const choiceCaringLeave = {
     checked: reason === LeaveReasonEnum.care,
-    hint: t("pages.claimsLeaveReason.caringLeaveHint"),
     label: t("pages.claimsLeaveReason.caringLeaveLabel"),
     value: LeaveReasonEnum.care,
   };

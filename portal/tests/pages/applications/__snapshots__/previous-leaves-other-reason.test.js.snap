@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviousLeavesOtherReason renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other leave, benefits, and income"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    hint={
+      <React.Fragment>
+        <p>
+          Answer yes if you took paid or unpaid leave for a qualifying reason that is not the reason you are applying for paid leave now. The following are qualifying reasons:
+        </p>
+        <ul
+          className="usa-list"
+        >
+          <li>
+            You had a serious health condition, including illness, injury, or pregnancy.
+          </li>
+          <li>
+            If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.
+          </li>
+          <li>
+            You bonded with your child after birth or placement.
+          </li>
+          <li>
+            You needed to manage family affairs while a family member is on active duty in the armed forces.
+          </li>
+          <li>
+            You needed to care for a family member who serves in the armed forces.
+          </li>
+          <li>
+            You needed to care for a family member with a serious health condition.
+          </li>
+        </ul>
+      </React.Fragment>
+    }
+    label="Did you take leave between January 1, 2021– for a different qualifying reason?"
+    name="has_previous_leaves_other_reason"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
+</QuestionPage>
+`;

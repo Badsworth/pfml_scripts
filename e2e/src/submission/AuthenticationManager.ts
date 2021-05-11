@@ -2,7 +2,6 @@ import {
   AuthenticationDetails,
   ClientMetadata,
   CognitoUser,
-  CognitoUserAttribute,
   CognitoUserPool,
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
@@ -14,6 +13,8 @@ import {
   patchUsersByUser_id,
   postEmployersVerifications,
   UserResponse,
+  postUsers,
+  UserCreateRequest,
 } from "../api";
 
 export default class AuthenticationManager {
@@ -53,9 +54,7 @@ export default class AuthenticationManager {
   }
 
   async registerClaimant(username: string, password: string): Promise<void> {
-    const cognitoUser = await this.registerCognitoUser(username, password, [
-      new CognitoUserAttribute({ Name: "email", Value: username }),
-    ]);
+    const cognitoUser = await this.registerUser(username, password, "Claimant");
     // Wait for code.
     await this.verifyCognitoAccount(cognitoUser, username);
     // Agree to terms and conditions.
@@ -69,17 +68,31 @@ export default class AuthenticationManager {
     fein: string
   ): Promise<void> {
     const metadata = { ein: fein };
-    const cognitoUser = await this.registerCognitoUser(
-      username,
-      password,
-      [new CognitoUserAttribute({ Name: "email", Value: username })],
-      metadata
-    );
-    // Wait for code.
-    await this.verifyCognitoAccount(cognitoUser, username, metadata);
-    // Agree to terms and conditions.
-    const session = await this.authenticate(username, password);
-    await this.consentToDataSharing(session);
+
+    try {
+      const cognitoUser = await this.registerUser(
+        username,
+        password,
+        "Employer",
+        fein
+      );
+      // Wait for code.
+      await this.verifyCognitoAccount(cognitoUser, username, metadata);
+
+      // // Agree to terms and conditions.
+      const session = await this.authenticate(username, password);
+      await this.consentToDataSharing(session);
+    } catch (e) {
+      const exists = e.data?.errors?.every(
+        (error: { field: string; message: string; type: string }) =>
+          error.type === "exists"
+      );
+
+      if (exists) {
+        e.code = "UsernameExistsException";
+      }
+      throw e;
+    }
   }
 
   async resetPassword(
@@ -141,32 +154,37 @@ export default class AuthenticationManager {
     return access_token;
   }
 
-  private registerCognitoUser(
+  private async registerUser(
     username: string,
     password: string,
-    attributes: CognitoUserAttribute[],
-    clientMetadata?: ClientMetadata
+    role: "Employer" | "Claimant",
+    employer_fein?: string
   ): Promise<CognitoUser> {
-    return new Promise((resolve, reject) => {
-      this.pool.signUp(
-        username,
-        password,
-        attributes,
-        [],
-        async (err, result) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          if (!result?.user) {
-            reject("Unable to create user for unknown reason");
-            return;
-          }
-          resolve(result.user);
-        },
-        clientMetadata
-      );
+    const data: UserCreateRequest = {
+      email_address: username,
+      password,
+      role: {
+        role_description: role,
+      },
+    };
+    if (employer_fein) {
+      data.user_leave_administrator = { employer_fein };
+    }
+    await postUsers(data, {
+      baseUrl: this.apiBaseUrl,
     });
+
+    const details = new AuthenticationDetails({
+      Username: username,
+      Password: password,
+    });
+
+    const cognitoUser = new CognitoUser({
+      Username: details.getUsername(),
+      Pool: this.pool,
+    });
+
+    return cognitoUser;
   }
 
   private async verifyCognitoAccount(

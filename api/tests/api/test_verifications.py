@@ -10,7 +10,8 @@ from massgov.pfml.db.models.factories import (
     EmployerQuarterlyContributionFactory,
     VerificationFactory,
 )
-from massgov.pfml.db.models.verifications import Verification
+from massgov.pfml.db.models.verifications import Verification, VerificationType
+from massgov.pfml.util.strings import format_fein
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -156,6 +157,10 @@ def test_verification_successful_for_valid_data(
     assert user_leave_administrator.verification_id == verification.verification_id
     assert "Successfully verified user." in caplog.text
 
+    assert (
+        verification.verification_type_id == VerificationType.PFML_WITHHOLDING.verification_type_id
+    )
+
     assert response.status_code == 201
     response_body = response.get_json()
     assert response_body.get("data")["user_id"] == str(employer_user.user_id)
@@ -167,8 +172,9 @@ def test_verification_successful_for_valid_data(
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_fein": format_fein(employer.employer_fein),
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": True,
             "has_verification_data": True,
         }
@@ -198,3 +204,19 @@ def test_error_if_users_been_verified(
 
     assert response.status_code == 409
     tests.api.validate_error_response(response, 409, message="User has already been verified.")
+
+
+def test_manual_verification(client, test_db_session):
+    # Just a test to ensure we have a "MANUAL" type for Verifications
+
+    model = Verification(verification_type_id=VerificationType.MANUAL.verification_type_id)
+    model.verification_metadata = {"testing": "manual verification test"}
+    test_db_session.add(model)
+    test_db_session.commit()
+
+    manual_verifications = (
+        test_db_session.query(Verification)
+        .filter(Verification.verification_type_id == VerificationType.MANUAL.verification_type_id)
+        .all()
+    )
+    assert len(manual_verifications) == 1

@@ -1,3 +1,4 @@
+import enum
 import os
 import pathlib
 import tempfile
@@ -22,6 +23,10 @@ logger = logging.get_logger(__name__)
 
 class ReportStep(Step):
     report_names: Iterable[ReportName]
+
+    class Metrics(str, enum.Enum):
+        REPORT_ERROR_COUNT = "report_error_count"
+        REPORT_GENERATED_COUNT = "report_generated_count"
 
     def __init__(
         self,
@@ -49,7 +54,7 @@ class ReportStep(Step):
                 report: Optional[Report] = get_report_by_name(report_name)
 
                 if report is None:
-                    self.increment("report_error_count")
+                    self.increment(self.Metrics.REPORT_ERROR_COUNT)
                     logger.error("Could not find configuration for report: %s", report_name.value)
                     continue
 
@@ -58,9 +63,9 @@ class ReportStep(Step):
                         outbound_path, archive_path, report.report_name.value, report.sql_command,
                     )
                     generated_reports.append(report.report_name.value)
-                    self.increment("report_generated_count")
+                    self.increment(self.Metrics.REPORT_GENERATED_COUNT)
                 except Exception:
-                    self.increment("report_error_count")
+                    self.increment(self.Metrics.REPORT_ERROR_COUNT)
                     logger.exception("Error generating report: %s", report_name.value)
                     self.db_session.rollback()
 

@@ -4,6 +4,7 @@
 # To run this locally, use `make pub-payments-process-pub-returns`.
 #
 
+import enum
 import re
 import uuid
 from typing import Optional, Sequence, TextIO, cast
@@ -36,6 +37,25 @@ PAYMENT_ID_PATTERN = re.compile(r"^P([1-9][0-9]*)$")
 
 class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathStep):
     """Process an ACH return file received from the bank."""
+
+    class Metrics(str, enum.Enum):
+        ACH_RETURN_COUNT = "ach_return_count"
+        CHANGE_NOTIFICATION_COUNT = "change_notification_count"
+        EFT_PRENOTE_ALREADY_APPROVED_COUNT = "eft_prenote_already_approved_count"
+        EFT_PRENOTE_COUNT = "eft_prenote_count"
+        EFT_PRENOTE_ID_NOT_FOUND_COUNT = "eft_prenote_id_not_found_count"
+        EFT_PRENOTE_REJECTED_COUNT = "eft_prenote_rejected_count"
+        EFT_PRENOTE_UNEXPECTED_STATE_COUNT = "eft_prenote_unexpected_state_count"
+        PAYMENT_ALREADY_COMPLETE_COUNT = "payment_already_complete_count"
+        PAYMENT_COMPLETE_WITH_CHANGE_COUNT = "payment_complete_with_change_count"
+        PAYMENT_COUNT = "payment_count"
+        PAYMENT_ID_NOT_FOUND_COUNT = "payment_id_not_found_count"
+        PAYMENT_ALREADY_REJECTED_COUNT = "payment_already_rejected_count"
+        PAYMENT_NOTIFICATION_UNEXPECTED_STATE_COUNT = "payment_notification_unexpected_state_count"
+        PAYMENT_REJECTED_COUNT = "payment_rejected_count"
+        PAYMENT_UNEXPECTED_STATE_COUNT = "payment_unexpected_state_count"
+        UNKNOWN_ID_FORMAT_COUNT = "unknown_id_format_count"
+        WARNING_COUNT = "warning_count"
 
     def __init__(
         self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session,
@@ -75,7 +95,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
         for warning in ach_reader.get_warnings():
             logger.warning("ACH Warning: %s", warning.warning, extra=warning.get_details_for_log())
-            self.increment("warning_count")
+            self.increment(self.Metrics.WARNING_COUNT)
 
             self.add_pub_error(
                 pub_error_type=PubErrorType.ACH_WARNING,
@@ -92,14 +112,14 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         """Process each ACH return record."""
         for ach_return in ach_returns:
             self.process_single_ach_return(ach_return)
-            self.increment("ach_return_count")
+            self.increment(self.Metrics.ACH_RETURN_COUNT)
 
     def process_change_notifications(
         self, change_notifications: Sequence[reader.ACHChangeNotification]
     ) -> None:
         for change_notification in change_notifications:
             self.process_single_ach_return(change_notification)
-            self.increment("change_notification_count")
+            self.increment(self.Metrics.CHANGE_NOTIFICATION_COUNT)
 
     def process_single_ach_return(self, ach_return: reader.ACHReturn) -> None:
         """Determine if the ACH return record is prenote or payment and process it."""
@@ -114,16 +134,16 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
         if pub_individual_id := parse_eft_prenote_pub_individual_id(ach_return.id_number):
             self.process_eft_prenote_return(pub_individual_id, ach_return)
-            self.increment("eft_prenote_count")
+            self.increment(self.Metrics.EFT_PRENOTE_COUNT)
         elif pub_individual_id := parse_payment_pub_individual_id(ach_return.id_number):
             self.process_payment_return(pub_individual_id, ach_return)
-            self.increment("payment_count")
+            self.increment(self.Metrics.PAYMENT_COUNT)
         else:
             logger.warning(
                 "ACH Return: id number not in known PFML formats",
                 extra=ach_return.get_details_for_log(),
             )
-            self.increment("unknown_id_format_count")
+            self.increment(self.Metrics.UNKNOWN_ID_FORMAT_COUNT)
 
             self.add_pub_error(
                 pub_error_type=PubErrorType.ACH_RETURN,
@@ -147,7 +167,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             logger.warning(
                 "Prenote: id number not in pub_eft table", extra=ach_return.get_details_for_log(),
             )
-            self.increment("eft_prenote_id_not_found_count")
+            self.increment(self.Metrics.EFT_PRENOTE_ID_NOT_FOUND_COUNT)
 
             self.add_pub_error(
                 pub_error_type=PubErrorType.ACH_PRENOTE,
@@ -168,7 +188,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             logger.warning(
                 f"Prenote: {message}", extra=ach_return.get_details_for_log(),
             )
-            self.increment("eft_prenote_unexpected_state_count")
+            self.increment(self.Metrics.EFT_PRENOTE_UNEXPECTED_STATE_COUNT)
 
             self.add_pub_error(
                 pub_error_type=PubErrorType.ACH_PRENOTE,
@@ -186,7 +206,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             logger.warning(
                 f"Prenote: {message}", extra=ach_return.get_details_for_log(),
             )
-            self.increment("eft_prenote_already_approved_count")
+            self.increment(self.Metrics.EFT_PRENOTE_ALREADY_APPROVED_COUNT)
 
             self.add_pub_error(
                 pub_error_type=PubErrorType.ACH_PRENOTE,
@@ -205,7 +225,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         if ach_return.is_change_notification():
             change_notification = cast(reader.ACHChangeNotification, ach_return)
             logger.info("change notification %s", change_notification.addenda_information)
-        self.increment("eft_prenote_rejected_count")
+        self.increment(self.Metrics.EFT_PRENOTE_REJECTED_COUNT)
 
     def process_payment_return(self, pub_individual_id: int, ach_return: reader.ACHReturn) -> None:
         """Get a payment from the database and process it as rejected or paid with change."""
@@ -219,7 +239,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 "ACH Return: id number not in payment table",
                 extra=ach_return.get_details_for_log(),
             )
-            self.increment("payment_id_not_found_count")
+            self.increment(self.Metrics.PAYMENT_ID_NOT_FOUND_COUNT)
 
             self.add_pub_error(
                 pub_error_type=PubErrorType.ACH_RETURN,
@@ -263,7 +283,17 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 ),
                 self.db_session,
             )
-            self.increment("payment_rejected_count")
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_RETURN,
+                message="Payment rejected by PUB",
+                line_number=ach_return.line_number,
+                raw_data=ach_return.raw_record.data,
+                type_code=ach_return.raw_record.type_code.value,
+                details=ach_return.get_details_for_error(),
+                payment=payment,
+            )
+
+            self.increment(self.Metrics.PAYMENT_REJECTED_COUNT)
         elif end_state_id in {
             State.ADD_TO_ERRORED_PEI_WRITEBACK.state_id,
             State.ERRORED_PEI_WRITEBACK_SENT.state_id,
@@ -277,7 +307,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                     "payments.payment_id": payment.payment_id,
                 },
             )
-            self.increment("payment_already_rejected_count")
+            self.increment(self.Metrics.PAYMENT_ALREADY_REJECTED_COUNT)
         else:
             # The latest state for this payment is not compatible with receiving an ACH return.
             details = {
@@ -288,7 +318,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             logger.error(
                 "ACH Return: unexpected state for payment", extra=details,
             )
-            self.increment("payment_unexpected_state_count")
+            self.increment(self.Metrics.PAYMENT_UNEXPECTED_STATE_COUNT)
 
             self.add_pub_error(
                 pub_error_type=PubErrorType.ACH_RETURN,
@@ -330,7 +360,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 "ACH Notification: Payment complete with change notification",
                 extra=change_notification.get_details_for_log(),
             )
-            self.increment("payment_complete_with_change_count")
+            self.increment(self.Metrics.PAYMENT_COMPLETE_WITH_CHANGE_COUNT)
 
             self.add_pub_error(
                 pub_error_type=PubErrorType.ACH_SUCCESS_WITH_NOTIFICATION,
@@ -351,7 +381,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                     "payments.payment_id": payment.payment_id,
                 },
             )
-            self.increment("payment_already_complete_count")
+            self.increment(self.Metrics.PAYMENT_ALREADY_COMPLETE_COUNT)
         else:
             # The latest state for this payment is not compatible with receiving an ACH change
             # notification.
@@ -363,7 +393,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             logger.error(
                 "ACH Notification: unexpected state for payment", extra=details,
             )
-            self.increment("payment_notification_unexpected_state_count")
+            self.increment(self.Metrics.PAYMENT_NOTIFICATION_UNEXPECTED_STATE_COUNT)
 
             self.add_pub_error(
                 pub_error_type=PubErrorType.ACH_NOTIFICATION,

@@ -1,7 +1,7 @@
 import EmployerPool, { Employer } from "../generation/Employer";
 import EmployeePool from "../generation/Employee";
 import DOR from "../generation/writers/DOR";
-import { dataDirectory } from "./util";
+import dataDirectory from "../generation/DataDirectory";
 import path from "path";
 import multipipe from "multipipe";
 import stringify from "csv-stringify";

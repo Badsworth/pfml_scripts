@@ -27,10 +27,6 @@ const AmendableEmployerBenefit = ({ appErrors, employerBenefit, onChange }) => {
     false
   );
 
-  const isFrequencyUnknown =
-    employerBenefit.benefit_amount_frequency === "Unknown" ||
-    !employerBenefit.benefit_amount_frequency;
-
   /**
    * Update amendment state and sends to `review.js` (dates, dollars, frequency)
    * For benefit amount dollars, sets invalid input to 0
@@ -62,9 +58,10 @@ const AmendableEmployerBenefit = ({ appErrors, employerBenefit, onChange }) => {
       benefit_amount_frequency,
     } = employerBenefit;
     return t("components.employersEmployerBenefits.amountPerFrequency", {
-      context: isFrequencyUnknown
-        ? null
-        : findKeyByValue(EmployerBenefitFrequency, benefit_amount_frequency),
+      context: findKeyByValue(
+        EmployerBenefitFrequency,
+        benefit_amount_frequency
+      ),
       amount: benefit_amount_dollars,
     });
   };
@@ -76,25 +73,14 @@ const AmendableEmployerBenefit = ({ appErrors, employerBenefit, onChange }) => {
    * @returns {Array}
    */
   const getAllBenefitFrequencies = () => {
-    const unknownFrequency = isFrequencyUnknown
-      ? [
-          {
-            label: t("components.employersEmployerBenefits.amountFrequency"),
-            value: "Unknown",
-          },
-        ]
-      : [];
-    const frequencies = Object.values(EmployerBenefitFrequency).map(
-      (frequency) => {
-        return {
-          label: t("components.employersEmployerBenefits.amountFrequency", {
-            context: findKeyByValue(EmployerBenefitFrequency, frequency),
-          }),
-          value: frequency,
-        };
-      }
-    );
-    return unknownFrequency.concat(frequencies);
+    return Object.values(EmployerBenefitFrequency).map((frequency) => {
+      return {
+        label: t("components.employersEmployerBenefits.amountFrequency", {
+          context: findKeyByValue(EmployerBenefitFrequency, frequency),
+        }),
+        value: frequency,
+      };
+    });
   };
 
   const startDateErrMsg = appErrors.fieldErrorMessage(
@@ -114,14 +100,7 @@ const AmendableEmployerBenefit = ({ appErrors, employerBenefit, onChange }) => {
           )}
         </th>
         <td>{employerBenefit.benefit_type}</td>
-        <td>
-          {getBenefitAmountByType()}
-          {amendment.benefit_amount_frequency === "Unknown" && (
-            <span className="usa-error-message display-inline-block text-normal padding-left-1">
-              {t("components.employersEmployerBenefits.frequencyHelperText")}
-            </span>
-          )}
-        </td>
+        <td>{getBenefitAmountByType()}</td>
         <td>
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
         </td>

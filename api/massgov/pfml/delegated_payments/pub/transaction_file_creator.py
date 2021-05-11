@@ -1,3 +1,4 @@
+import enum
 from typing import List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -31,6 +32,10 @@ class TransactionFileCreatorStep(Step):
     check_file: Optional[EzCheckFile] = None
     positive_pay_file: Optional[CheckIssueFile] = None
     ach_file: Optional[NachaFile] = None
+
+    class Metrics(str, enum.Enum):
+        ACH_PAYMENT_COUNT = "ach_payment_count"
+        ACH_PRENOTE_COUNT = "ach_prenote_count"
 
     def run_step(self) -> None:
         try:
@@ -76,7 +81,7 @@ class TransactionFileCreatorStep(Step):
 
         # transition eft states for employee
         for employee_with_eft in employees_with_efts:
-            self.increment("ach_prenote_count")
+            self.increment(self.Metrics.ACH_PRENOTE_COUNT)
             employee: Employee = employee_with_eft[0]
             eft: PubEft = employee_with_eft[1]
 
@@ -111,7 +116,7 @@ class TransactionFileCreatorStep(Step):
 
         # transition states
         for payment in payments:
-            self.increment("ach_payment_count")
+            self.increment(self.Metrics.ACH_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
                 associated_model=payment,
                 end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
