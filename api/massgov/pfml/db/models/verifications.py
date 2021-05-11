@@ -31,16 +31,19 @@ class VerificationType(LookupTable):
     column_names = ("verification_type_id", "verification_type_description")
 
     VERIFICATION_CODE = LkVerificationType(1, "Verification Code")
+    MANUAL = LkVerificationType(2, "Manual Verification")
+    PFML_WITHHOLDING = LkVerificationType(3, "PFML Withholding")
 
 
 class Verification(Base):
     """ Stores a record of a Verification that occurred for association with a Role;
-        Initial verification_type is `Verification Code`
     """
 
     __tablename__ = "verification"
     verification_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    verification_type_id = Column(Integer, ForeignKey("lk_verification_type.verification_type_id"))
+    verification_type_id = Column(
+        Integer, ForeignKey("lk_verification_type.verification_type_id"), nullable=False
+    )
     verification_type = relationship("LkVerificationType")
     verification_metadata = Column(JSONB)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)

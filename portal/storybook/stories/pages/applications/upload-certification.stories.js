@@ -7,6 +7,7 @@ const mockClaims = {
   "Bonding: adoption/foster": new MockClaimBuilder()
     .bondingAdoptionLeaveReason()
     .create(),
+  "Caring leave": new MockClaimBuilder().caringLeaveReason().create(),
 };
 
 const { config, DefaultStory } = generateClaimPageStory(

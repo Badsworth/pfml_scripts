@@ -1,3 +1,4 @@
+import { SubjectOptions } from "types";
 import { GetEmailsOpts } from "../../src/submission/TestMailClient";
 
 /**
@@ -23,7 +24,7 @@ export function getEmails(
 
 export const getNotificationSubject = function (
   employeeName: string,
-  notificationType: string,
+  notificationType: SubjectOptions,
   caseNumber?: string
 ): string {
   const notificationSubjects: { [key: string]: string } = {

@@ -35,13 +35,11 @@ exports[`LeaveReasonPage renders the page for caring leave and does not show rea
       Array [
         Object {
           "checked": false,
-          "hint": "Medical leave",
           "label": "I can’t work due to an illness, injury, or pregnancy.",
           "value": "Serious Health Condition - Employee",
         },
         Object {
           "checked": false,
-          "hint": "Family leave",
           "label": "I need to bond with my child after birth, adoption, or foster placement.",
           "value": "Child Bonding",
         },
@@ -185,13 +183,11 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
       Array [
         Object {
           "checked": true,
-          "hint": "Medical leave",
           "label": "I can’t work due to an illness, injury, or pregnancy.",
           "value": "Serious Health Condition - Employee",
         },
         Object {
           "checked": false,
-          "hint": "Family leave",
           "label": "I need to bond with my child after birth, adoption, or foster placement.",
           "value": "Child Bonding",
         },

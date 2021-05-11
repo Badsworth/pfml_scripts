@@ -13,9 +13,9 @@ import massgov.pfml.db as db
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
-    Claim,
     DuaReductionPayment,
     DuaReductionPaymentReferenceFile,
+    Employee,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -26,7 +26,7 @@ from massgov.pfml.payments.sftp_s3_transfer import (
     copy_from_sftp_to_s3_and_archive_files,
     copy_to_sftp_and_archive_s3_files,
 )
-from massgov.pfml.reductions.common import get_claims_for_outbound
+from massgov.pfml.reductions.common import get_claimants_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.files import create_csv_from_list, upload_to_s3
 
@@ -45,6 +45,12 @@ class Constants:
     PAYMENT_LIST_FILENAME_TIME_FORMAT = "%Y%m%d%H%M"
     PAYMENT_REPORT_TIME_FORMAT = "%m/%d/%Y"
 
+    # Originally we sent DUA one row per absence case and this CASE_ID field
+    # held the absence case id.
+    #
+    # But we switched to sending one row per claimant (as they may have multiple
+    # cases over time), so the field has been repurposed to hold the customer
+    # number to avoid DUA needing to change anything on their end.
     CASE_ID_FIELD = "CASE_ID"
     EMPR_FEIN_FIELD = "EMPR_FEIN"
     WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD = "PAYMENT_DATE"
@@ -69,7 +75,7 @@ class Constants:
     ]
 
     DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
-        CASE_ID_FIELD: "absence_case_id",
+        CASE_ID_FIELD: "fineos_customer_number",
         WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: "payment_date",
         RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD: "request_week_begin_date",
         WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD: "gross_payment_amount_cents",
@@ -81,7 +87,7 @@ class Constants:
     }
 
     DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
-        CASE_ID_FIELD: "absence_case_id",
+        CASE_ID_FIELD: "fineos_customer_number",
         EMPR_FEIN_FIELD: "employer_fein",
         WARRANT_DT_FIELD: "payment_date",
         RQST_WK_DT_FIELD: "request_week_begin_date",
@@ -101,7 +107,7 @@ def copy_claimant_list_to_moveit(db_session: db.Session) -> None:
         s3_bucket_uri=s3_config.s3_bucket_uri,
         source_dir=s3_config.s3_dua_outbound_directory_path,
         archive_dir=s3_config.s3_dua_archive_directory_path,
-        dest_dir=moveit_config.moveit_dua_inbound_path,
+        dest_dir=moveit_config.moveit_dua_outbound_path,
         sftp_uri=moveit_config.moveit_sftp_uri,
         ssh_key_password=moveit_config.moveit_ssh_key_password,
         ssh_key=moveit_config.moveit_ssh_key,
@@ -120,42 +126,50 @@ def copy_claimant_list_to_moveit(db_session: db.Session) -> None:
     db_session.commit()
 
 
-def _format_claims_for_dua_claimant_list(claims: List[Claim]) -> List[Dict]:
-    claims_info = []
+def _format_claimants_for_dua_claimant_list(claimants: List[Employee]) -> List[Dict[str, str]]:
+    claimants_info = []
 
-    for claim in claims:
-        employee = claim.employee
-        if employee is not None:
-            _info = {
-                Constants.CASE_ID_FIELD: claim.fineos_absence_id,
-                Constants.SSN_FIELD: (
-                    employee.tax_identifier.tax_identifier.replace("-", "")
-                    if employee.tax_identifier
-                    else ""
-                ),
-                Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
-            }
+    for employee in claimants:
+        fineos_customer_number = employee.fineos_customer_number
+        tax_id = employee.tax_identifier
 
-            claims_info.append(_info)
+        if not (fineos_customer_number and tax_id):
+            logger.warning(
+                "Employee missing required information. Skipping.",
+                extra={
+                    "employee_id": employee.employee_id,
+                    "has_fineos_customer_number": bool(fineos_customer_number),
+                    "has_tax_id": bool(tax_id),
+                },
+            )
+            continue
 
-    return claims_info
+        info = {
+            Constants.CASE_ID_FIELD: fineos_customer_number,
+            Constants.SSN_FIELD: tax_id.tax_identifier.replace("-", ""),
+            Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
+        }
+
+        claimants_info.append(info)
+
+    return claimants_info
 
 
-def _get_claims_info_csv_path(claims: List[Dict]) -> pathlib.Path:
+def _get_claimants_info_csv_path(claimants: List[Dict]) -> pathlib.Path:
     file_name = Constants.CLAIMANT_LIST_FILENAME_PREFIX + get_now().strftime(
         Constants.CLAIMANT_LIST_FILENAME_TIME_FORMAT
     )
-    return file_util.create_csv_from_list(claims, Constants.CLAIMANT_LIST_FIELDS, file_name)
+    return file_util.create_csv_from_list(claimants, Constants.CLAIMANT_LIST_FIELDS, file_name)
 
 
 def create_list_of_claimants(db_session: db.Session) -> None:
     config = get_s3_config()
 
-    claims = get_claims_for_outbound(db_session)
+    claimants = get_claimants_for_outbound(db_session)
 
-    dua_claimant_info = _format_claims_for_dua_claimant_list(claims)
+    dua_claimant_info = _format_claimants_for_dua_claimant_list(claimants)
 
-    claimant_info_path = _get_claims_info_csv_path(dua_claimant_info)
+    claimant_info_path = _get_claimants_info_csv_path(dua_claimant_info)
 
     s3_dest = os.path.join(
         config.s3_bucket_uri, config.s3_dua_outbound_directory_path, claimant_info_path.name
@@ -295,7 +309,7 @@ def download_payment_list_from_moveit(db_session: db.Session) -> None:
 
     transfer_config = SftpS3TransferConfig(
         s3_bucket_uri=s3_config.s3_bucket_uri,
-        source_dir=moveit_config.moveit_dua_outbound_path,
+        source_dir=moveit_config.moveit_dua_inbound_path,
         archive_dir=moveit_config.moveit_dua_archive_path,
         dest_dir=s3_config.s3_dua_pending_directory_path,
         sftp_uri=moveit_config.moveit_sftp_uri,
@@ -369,7 +383,7 @@ def _format_reduction_payments_for_report(
     payments = []
     for payment in reduction_payments:
         info = {
-            Constants.CASE_ID_FIELD: payment.absence_case_id,
+            Constants.CASE_ID_FIELD: payment.fineos_customer_number,
             Constants.WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: _format_date_for_report(
                 payment.payment_date
             ),

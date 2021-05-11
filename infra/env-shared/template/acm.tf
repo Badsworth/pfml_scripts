@@ -1,5 +1,6 @@
 locals {
-  api_domain = var.environment_name == "prod" ? "paidleave-api.mass.gov" : "paidleave-api-${var.environment_name}.mass.gov"
+  api_domain  = lookup(module.constants.api_domains, local.constants_env)
+  cert_domain = lookup(module.constants.cert_domains, local.constants_env)
 }
 
 // NOTE: These must be requested through the AWS Console instead of terraform in order
@@ -21,21 +22,21 @@ locals {
 //       paidleave-api-training.mass.gov
 //
 data "aws_acm_certificate" "domain" {
-  count       = var.enable_pretty_domain ? 1 : 0
+  count       = local.cert_domain == null ? 0 : 1
   domain      = module.constants.cert_domains[local.constants_env]
   statuses    = ["ISSUED"]
   most_recent = true
 }
 
 resource "aws_api_gateway_domain_name" "domain_name" {
-  count           = var.enable_pretty_domain ? 1 : 0
+  count           = local.cert_domain == null ? 0 : 1
   certificate_arn = data.aws_acm_certificate.domain[0].arn
   domain_name     = local.api_domain
   security_policy = "TLS_1_2"
 }
 
 resource "aws_api_gateway_base_path_mapping" "stage_mapping" {
-  count       = var.enable_pretty_domain ? 1 : 0
+  count       = local.cert_domain == null ? 0 : 1
   stage_name  = var.environment_name
   api_id      = aws_api_gateway_rest_api.pfml.id
   domain_name = aws_api_gateway_domain_name.domain_name[0].domain_name

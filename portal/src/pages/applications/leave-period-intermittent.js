@@ -12,6 +12,7 @@ import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
+import findKeyByValue from "../../utils/findKeyByValue";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -74,10 +75,10 @@ export const LeavePeriodIntermittent = (props) => {
     );
   };
 
-  const contentContext = {
-    [LeaveReason.bonding]: "bonding",
-    [LeaveReason.medical]: "medical",
-  }[claim.leave_details.reason];
+  const contentContext = findKeyByValue(
+    LeaveReason,
+    claim.leave_details.reason
+  );
 
   const hasOtherLeavePeriodTypes =
     claim.isContinuous || claim.isReducedSchedule;
@@ -93,9 +94,11 @@ export const LeavePeriodIntermittent = (props) => {
       title={t("pages.claimsLeavePeriodIntermittent.title")}
       onSave={handleSave}
     >
-      {claim.isMedicalLeave && (
+      {(claim.isMedicalLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
-          {t("pages.claimsLeavePeriodIntermittent.medicalAlert")}
+          {t("pages.claimsLeavePeriodIntermittent.needDocumentAlert", {
+            context: contentContext,
+          })}
         </Alert>
       )}
 
@@ -157,6 +160,7 @@ export const LeavePeriodIntermittent = (props) => {
             tOptions={{ context: contentContext }}
           />
         </Lead>
+
         {claim.isBondingLeave && (
           <div className="measure-6">
             <Details

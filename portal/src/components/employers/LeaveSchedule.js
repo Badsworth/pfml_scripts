@@ -43,7 +43,7 @@ const LeaveSchedule = ({ appLogic, claim }) => {
   // only HCP forms should be shown
   const allDocuments = documents ? documents.items : [];
   const medicalDocuments = findDocumentsByTypes(allDocuments, [
-    DocumentType.medicalCertification,
+    DocumentType.certification.medicalCertification,
   ]);
 
   const buildContext = () => {

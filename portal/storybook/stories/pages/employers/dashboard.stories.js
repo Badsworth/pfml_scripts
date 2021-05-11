@@ -3,6 +3,7 @@ import User, { UserLeaveAdministrator } from "src/models/User";
 import ClaimCollection from "src/models/ClaimCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
 import { DateTime } from "luxon";
+import PaginationMeta from "src/models/PaginationMeta";
 import React from "react";
 import faker from "faker";
 import routes from "src/routes";
@@ -17,20 +18,26 @@ const verificationScenarios = {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
+          employer_fein: "65-3746025",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
         createUserLeaveAdministrator({
+          employer_fein: "82-9471234",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
       ],
     }),
   },
-  "Single verified employer": {
+  "Single verified employer, not registered in FINEOS": {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
+          employer_fein: "82-9471234",
+          has_fineos_registration: false,
           has_verification_data: true,
           verified: true,
         }),
@@ -61,10 +68,14 @@ const verificationScenarios = {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
+          employer_fein: "65-3746025",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
         createUserLeaveAdministrator({
+          employer_fein: "82-9471234",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: false,
         }),
@@ -75,10 +86,14 @@ const verificationScenarios = {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
+          employer_fein: "65-3746025",
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
         createUserLeaveAdministrator({
+          employer_fein: "82-9471234",
+          has_fineos_registration: true,
           has_verification_data: false,
           verified: false,
         }),
@@ -98,6 +113,12 @@ export default {
         options: ["Has claims", "No claims"],
       },
     },
+    total_pages: {
+      defaultValue: 3,
+      control: {
+        type: "number",
+      },
+    },
     verification: {
       defaultValue: Object.keys(verificationScenarios)[0],
       control: {
@@ -111,6 +132,8 @@ export default {
 export const Default = (args) => {
   const { user } = verificationScenarios[args.verification];
   const hasMultipleEmployers = user.user_leave_administrators.length > 1;
+  const hasNoClaims = args.claims === "No claims";
+
   const claims =
     args.claims === "No claims"
       ? []
@@ -120,7 +143,7 @@ export const Default = (args) => {
             new Claim({
               created_at: DateTime.local().minus({ days: num }).toISODate(),
               fineos_absence_id: `NTN-101-ABS-${num}`,
-              fineos_absence_status: faker.helpers.randomize([
+              claim_status: faker.helpers.randomize([
                 "Approved",
                 "Declined",
                 "Closed",
@@ -137,7 +160,7 @@ export const Default = (args) => {
                   ? faker.company.companyName()
                   : "Dunder-Mifflin",
                 employer_fein: hasMultipleEmployers
-                  ? faker.finance.routingNumber().replace(/(\d\d)/, "$1-")
+                  ? faker.helpers.randomize(["65-3746025", "82-9471234"])
                   : "82-9471234",
               }),
             })
@@ -155,6 +178,16 @@ export const Default = (args) => {
     <Dashboard
       appLogic={appLogic}
       claims={new ClaimCollection(claims)}
+      paginationMeta={
+        new PaginationMeta({
+          page_offset: 1,
+          page_size: 25,
+          total_pages: hasNoClaims ? 1 : args.total_pages,
+          total_records: hasNoClaims ? 0 : args.total_pages * 25,
+          order_by: "created_at",
+          order_direction: "asc",
+        })
+      }
       user={user}
     />
   );

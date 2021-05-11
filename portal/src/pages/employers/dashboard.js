@@ -1,10 +1,11 @@
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
 import ClaimCollection from "../../models/ClaimCollection";
+import Details from "../../components/Details";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
-// TODO (EMPLOYER-859): Render component when pagination metadata is available
-// import PaginationNavigation from "../../components/PaginationNavigation";
-// import PaginationSummary from "../../components/PaginationSummary";
+import PaginationMeta from "../../models/PaginationMeta";
+import PaginationNavigation from "../../components/PaginationNavigation";
+import PaginationSummary from "../../components/PaginationSummary";
 import PropTypes from "prop-types";
 import React from "react";
 import Table from "../../components/Table";
@@ -20,7 +21,7 @@ import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
 
 export const Dashboard = (props) => {
-  const { appLogic, user } = props;
+  const { appLogic, paginationMeta, user } = props;
   const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
   const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
   const { t } = useTranslation();
@@ -30,6 +31,10 @@ export const Dashboard = (props) => {
   }
 
   const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
+  // Leave admins not registered in Fineos won't be able to access associated claim data from Fineos.
+  // We use this flag to communicate this to the user.
+  const hasVerifiedEmployerNotRegisteredInFineos =
+    user.hasVerifiedEmployerNotRegisteredInFineos;
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const showVerificationRowInPlaceOfClaims =
     shouldShowVerifications && hasOnlyUnverifiedEmployers;
@@ -53,14 +58,45 @@ export const Dashboard = (props) => {
     .filter(([columnKey, isVisible]) => isVisible)
     .map(([columnKey, isVisible]) => columnKey);
 
-  /* TODO (EMPLOYER-859): Implement API call to take in page index */
-  // const getUpdatedRecords = (pageIndex) => {
-  // };
+  const handlePaginationNavigationClick = (pageOffset) => {
+    appLogic.portalFlow.goTo(appLogic.portalFlow.pathname, {
+      // Update the query param, which triggers a fetch of the new page
+      page_offset: pageOffset,
+    });
+  };
+
+  const getCommaDelimitedEmployerEINs = () => {
+    const employers = user.getVerifiedEmployersNotRegisteredInFineos();
+    return employers.map((employer) => employer.employer_fein).join(", ");
+  };
 
   return (
     <React.Fragment>
       <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
       <Title>{t("pages.employersDashboard.title")}</Title>
+      {hasVerifiedEmployerNotRegisteredInFineos && (
+        <Alert
+          state="info"
+          heading={t("pages.employersDashboard.unavailableClaimsTitle", {
+            employers: getCommaDelimitedEmployerEINs(),
+          })}
+        >
+          <p>
+            <Trans
+              i18nKey="pages.employersDashboard.unavailableClaimsBody"
+              components={{
+                "learn-more-link": (
+                  <a
+                    href={routes.external.massgov.employerAccount}
+                    target="_blank"
+                    rel="noopener"
+                  />
+                ),
+              }}
+            />
+          </p>
+        </Alert>
+      )}
       {shouldShowVerifications && hasVerifiableEmployer && (
         <Alert
           state="warning"
@@ -78,13 +114,34 @@ export const Dashboard = (props) => {
           </p>
         </Alert>
       )}
-      <p className="margin-bottom-4">
-        {t("pages.employersDashboard.instructions")}
-      </p>
-      {/* TODO (EMPLOYER-859): Render component when pagination metadata is available  */}
-      {/* <PaginationSummary
-        pageIndex={pageIndex} pageSize={pageSize} totalPages={totalPages} totalRecords={totalRecords}
-      /> */}
+      <section className="margin-bottom-4">
+        <p className="margin-y-2">
+          {t("pages.employersDashboard.instructions")}
+        </p>
+        <Details label={t("pages.employersDashboard.statusDescriptionsLabel")}>
+          <ul className="usa-list">
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_none" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
+            </li>
+          </ul>
+        </Details>
+      </section>
+      {paginationMeta.total_records > 0 && (
+        <PaginationSummary
+          pageOffset={paginationMeta.page_offset}
+          pageSize={paginationMeta.page_size}
+          totalRecords={paginationMeta.total_records}
+        />
+      )}
       <Table className="width-full tablet:width-auto" responsive scrollable>
         <thead>
           <tr>
@@ -122,12 +179,18 @@ export const Dashboard = (props) => {
               appLogic={props.appLogic}
               claims={props.claims}
               tableColumnKeys={tableColumnKeys}
+              user={user}
             />
           )}
         </tbody>
       </Table>
-      {/* TODO (EMPLOYER-859): Render component when pagination metadata is available  */}
-      {/* {totalPages > 1 && <PaginationWidget pageIndex={pageIndex} totalPages={totalPages} onClick={getUpdatedRecords} />} */}
+      {paginationMeta.total_pages > 1 && (
+        <PaginationNavigation
+          pageOffset={paginationMeta.page_offset}
+          totalPages={paginationMeta.total_pages}
+          onClick={handlePaginationNavigationClick}
+        />
+      )}
     </React.Fragment>
   );
 };
@@ -141,6 +204,7 @@ Dashboard.propTypes = {
     }).isRequired,
   }).isRequired,
   claims: PropTypes.instanceOf(ClaimCollection),
+  paginationMeta: PropTypes.instanceOf(PaginationMeta),
   user: PropTypes.instanceOf(User).isRequired,
 };
 
@@ -149,7 +213,7 @@ Dashboard.propTypes = {
  * no claim data exists
  */
 const ClaimTableRows = (props) => {
-  const { appLogic, claims, tableColumnKeys } = props;
+  const { appLogic, claims, tableColumnKeys, user } = props;
   const { t } = useTranslation();
 
   if (claims.isEmpty) {
@@ -175,24 +239,35 @@ const ClaimTableRows = (props) => {
       {},
       { absence_id: get(claim, "fineos_absence_id") }
     );
+    const employerFein = get(claim, "employer.employer_fein");
+    const fullName = get(claim, "employee.fullName", "--");
+    const isEmployerRegisteredInFineos = user.isEmployerRegisteredInFineos(
+      employerFein
+    );
 
     switch (columnKey) {
       case "created_at":
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
         // TODO (EMPLOYER-1178) Use <Link> for client-side navigation
-        return <a href={claimRoute}>{get(claim, columnKey)}</a>;
+        return isEmployerRegisteredInFineos ? (
+          <a href={claimRoute}>{get(claim, columnKey)}</a>
+        ) : (
+          get(claim, columnKey)
+        );
       case "employee_name":
         // TODO (EMPLOYER-1178) Use <Link> for client-side navigation
-        return <a href={claimRoute}>{get(claim, "employee.fullName")}</a>;
+        return isEmployerRegisteredInFineos ? (
+          <a href={claimRoute}>{fullName}</a>
+        ) : (
+          fullName
+        );
       case "employer_dba":
         return get(claim, "employer.employer_dba");
       case "employer_fein":
-        return get(claim, "employer.employer_fein");
+        return employerFein;
       case "status":
-        return (
-          <AbsenceCaseStatusTag status={get(claim, "fineos_absence_status")} />
-        );
+        return <AbsenceCaseStatusTag status={get(claim, "claim_status")} />;
       default:
         return "";
     }
@@ -205,6 +280,7 @@ const ClaimTableRows = (props) => {
         data-label={t("pages.employersDashboard.tableColHeading", {
           context: tableColumnKeys[0],
         })}
+        data-test={tableColumnKeys[0]}
       >
         {getValueForColumn(claim, tableColumnKeys[0])}
       </th>
@@ -226,6 +302,7 @@ ClaimTableRows.propTypes = {
   appLogic: Dashboard.propTypes.appLogic,
   claims: Dashboard.propTypes.claims,
   tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withClaims(Dashboard);

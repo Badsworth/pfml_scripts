@@ -1,6 +1,19 @@
-import { StepFunction, TestData, Browser, step, By } from "@flood/element";
+import {
+  StepFunction,
+  TestData,
+  Browser,
+  step,
+  By,
+  Until,
+} from "@flood/element";
 import * as Cfg from "../config";
 import * as Util from "../helpers";
+
+type EmployerData = {
+  name: string;
+  fein: string;
+  withholdings: number[];
+};
 
 let emailVerifier: Util.TestMailVerificationFetcher;
 let username: string;
@@ -10,7 +23,6 @@ export const settings = Cfg.globalElementSettings;
 export const scenario: Cfg.LSTScenario = "LeaveAdminSelfRegistration";
 export const steps: Cfg.StoredStep[] = [
   {
-    time: 15000,
     name: "Go to Employer Registration",
     test: async (browser: Browser): Promise<void> => {
       await browser.page.setCookie({
@@ -19,6 +31,9 @@ export const steps: Cfg.StoredStep[] = [
           pfmlTerriyay: true,
           claimantShowAuth: true,
           employerShowSelfRegistrationForm: true,
+          employerAuthThroughApi: true,
+          employerShowAddOrganization: true,
+          employerShowVerifications: true,
         }),
         url: await Cfg.PortalBaseUrl,
       });
@@ -33,7 +48,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Register new employer",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // create email verifier and user credentials
@@ -50,7 +64,7 @@ export const steps: Cfg.StoredStep[] = [
       );
       await browser.type(
         employerIdInput,
-        data.claim.employer_fein ?? "84-7847847"
+        ((data as unknown) as EmployerData).fein
       );
 
       const createAccountButton = await Util.waitForElement(
@@ -61,7 +75,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Verify new employer's email",
     test: async (browser: Browser): Promise<void> => {
       const code = await emailVerifier.getVerificationCodeForUser(username);
@@ -84,7 +97,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Login with new employer account",
     test: async (browser: Browser): Promise<void> => {
       const emailInput = await Util.labelled(browser, "Email address");
@@ -105,12 +117,39 @@ export const steps: Cfg.StoredStep[] = [
       await Util.waitForElement(browser, By.visibleText("Log out"));
     },
   },
+  {
+    name: "Verify Employer Account",
+    test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
+      const { withholdings, name } = (data as unknown) as EmployerData;
+      const withholding = withholdings.pop();
+      if (typeof withholding !== "number") {
+        throw new Error("No withholdings given");
+      }
+      await browser.click(By.linkText("Your organizations"));
+      await Util.waitForElement(browser, By.linkText(name)).then((elm) => {
+        return elm.click();
+      });
+
+      await Util.waitForElement(browser, By.nameAttr("withholdingAmount"));
+      await browser.type(
+        By.nameAttr("withholdingAmount"),
+        withholding.toString()
+      );
+      await browser.click(Util.byButtonText("Submit"));
+      await browser.wait(
+        Until.elementIsVisible(
+          By.visibleText("Thanks for verifying your paid leave contributions")
+        )
+      );
+      await browser.click(Util.byButtonText("Continue"));
+    },
+  },
 ];
 
 export default async (): Promise<void> => {
-  TestData.fromJSON<Cfg.LSTSimClaim>(
-    `../${await Cfg.dataBaseUrl}/claims.json`
-  ).filter((line) => line.scenario === scenario);
+  TestData.fromJSON<Cfg.LSTSimClaim>(`../data/claims.json`).filter(
+    (line) => line.scenario === scenario
+  );
 
   steps.forEach((action) => {
     step(action.name, action.test as StepFunction<unknown>);

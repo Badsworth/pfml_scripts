@@ -16,9 +16,10 @@ import Review, {
   EmployerBenefitList,
   OtherIncomeList,
   OtherLeaveEntry,
-  PreviousLeaveList,
 } from "../../../src/pages/applications/review";
 import { DateTime } from "luxon";
+import { DocumentType } from "../../../src/models/Document";
+import LeaveReason from "../../../src/models/LeaveReason";
 import React from "react";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
@@ -110,7 +111,6 @@ describe("Final Review Page", () => {
 
   it("conditionally renders Other Leave section based on presence of Yes/No fields", () => {
     const claimAttrs = new MockClaimBuilder().complete().create();
-    claimAttrs.has_previous_leaves = false;
     claimAttrs.has_other_incomes = false;
     claimAttrs.has_employer_benefits = false;
 
@@ -123,7 +123,6 @@ describe("Final Review Page", () => {
     expect(wrapper.exists("[data-test='other-leave']")).toBe(true);
 
     // But doesn't render when null
-    delete claimAttrs.has_previous_leaves;
     delete claimAttrs.has_other_incomes;
     delete claimAttrs.has_employer_benefits;
 
@@ -201,14 +200,95 @@ describe("Payment Information", () => {
 });
 
 describe("Upload Document", () => {
-  it("renders the correct number of documents", () => {
+  it("renders the correct number of certification documents when there are no documents", () => {
     const { wrapper } = renderWithAppLogic(Review, {
       claimAttrs: new MockClaimBuilder().complete().create(),
       diveLevels,
       hasLoadedClaimDocuments: true,
     });
+
     expect(wrapper.exists("Spinner")).toBe(false);
-    expect(wrapper.find({ label: "Number of files uploaded" })).toHaveLength(2);
+    expect(wrapper.find("[data-test='certification-doc-count']"))
+      .toMatchInlineSnapshot(`
+      <ReviewRow
+        data-test="certification-doc-count"
+        label="Number of files uploaded"
+        level="3"
+      >
+        0
+      </ReviewRow>
+    `);
+  });
+
+  it("renders filtered documents when the document type matches the leave reason with Caring Leave feature flag enabled", () => {
+    // When the feature flag is enabled, the component should render the number of documents with a DocType that match the leave reason
+    // In this test case, the feature flag is enabled, and the claim has documents with DocTypes that match the leave reason,
+    // so the component should render 3 documents attached
+
+    // create a claim with matching leave reason and doc types
+    process.env.featureFlags = {
+      showCaringLeaveType: true,
+    };
+
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder()
+        .medicalLeaveReason()
+        .complete()
+        .create(),
+      diveLevels,
+      hasLoadedClaimDocuments: true,
+      hasUploadedCertificationDocuments: {
+        document_type: DocumentType.certification[LeaveReason.medical],
+        numberOfDocs: 3,
+      },
+    });
+
+    expect(wrapper.exists("Spinner")).toBe(false);
+    expect(wrapper.find("[data-test='certification-doc-count']"))
+      .toMatchInlineSnapshot(`
+      <ReviewRow
+        data-test="certification-doc-count"
+        label="Number of files uploaded"
+        level="3"
+      >
+        3
+      </ReviewRow>
+    `);
+  });
+
+  it("renders filtered documents when the document type doesn't match the leave reason when the caring leave feature flag is enabled", () => {
+    // When the feature flag is enabled, the component should render the number of documents with a DocType that match the leave reason
+    // In this test case, the feature flag is enabled, and the claim has documents with DocTypes that don't match the leave reason,
+    // so the component should render 0 documents attached
+    process.env.featureFlags = {
+      showCaringLeaveType: true,
+    };
+
+    // create a claim with mismatched leave reason and doc types
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder()
+        .medicalLeaveReason()
+        .complete()
+        .create(),
+      diveLevels,
+      hasLoadedClaimDocuments: true,
+      hasUploadedCertificationDocuments: {
+        document_type: DocumentType.certification[LeaveReason.bonding],
+        numberOfDocs: 2,
+      },
+    });
+
+    expect(wrapper.exists("Spinner")).toBe(false);
+    expect(wrapper.find("[data-test='certification-doc-count']"))
+      .toMatchInlineSnapshot(`
+      <ReviewRow
+        data-test="certification-doc-count"
+        label="Number of files uploaded"
+        level="3"
+      >
+        0
+      </ReviewRow>
+    `);
   });
 
   it("renders Alert when there is an error for loading documents", () => {
@@ -538,23 +618,6 @@ describe("OtherIncomeList", () => {
 
       expect(wrapper).toMatchSnapshot();
     });
-  });
-});
-
-describe("PreviousLeaveList", () => {
-  it("renders review info for a previous leave entry", () => {
-    const claim = new MockClaimBuilder()
-      .previousLeavePregnancyFromOtherEmployer()
-      .create();
-
-    const wrapper = shallow(
-      <PreviousLeaveList
-        previous_leaves={claim.previous_leaves}
-        reviewRowLevel="4"
-      />
-    );
-
-    expect(wrapper).toMatchSnapshot();
   });
 });
 

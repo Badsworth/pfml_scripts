@@ -7,6 +7,7 @@ import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
@@ -34,6 +35,12 @@ export const ConsentToDataSharing = (props) => {
       <Title>{t("pages.userConsentToDataSharing.title")}</Title>
       <p className="margin-bottom-2">
         {t("pages.userConsentToDataSharing.intro")}
+        {
+          // Caring leave type is behind a feature flag until 7/1 launch
+          // TODO (CP-1989): Remove showCaringLeaveType feature flag and combine .updatedMessage into .intro
+          isFeatureEnabled("showCaringLeaveType") &&
+            " " + t("pages.userConsentToDataSharing.updatedMessage")
+        }
       </p>
 
       <Accordion>

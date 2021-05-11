@@ -22,7 +22,7 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture(params=["env_var", "feature_gate", "disabled"])
-def test_verification(request, monkeypatch):
+def test_verification(request, monkeypatch, initialize_factories_session):
     # This checks that all tests work _both_ with
     # 1. Verification disabled and no verification record AND
     # 2. Verification enabled and verification record
@@ -1073,9 +1073,14 @@ def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> b
         == claim_query.fineos_absence_status.absence_status_description
     )
     assert (
+        claim_response["claim_status"]
+        == claim_query.fineos_absence_status.absence_status_description
+    )
+    assert (
         claim_response["claim_type"]["claim_type_description"]
         == claim_query.claim_type.claim_type_description
     )
+    assert claim_response["claim_type_description"] == claim_query.claim_type.claim_type_description
 
 
 class TestGetClaimEndpoint:
@@ -1187,6 +1192,140 @@ class TestGetClaimsEndpoint:
         assert len(claim_data) == len(generated_claims)
         for i in range(3):
             assert_claim_response_equal_to_claim_query(claim_data[i], generated_claims[2 - i])
+
+    def test_get_claims_paginated_as_leave_admin(
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        employee = EmployeeFactory.create()
+
+        for _ in range(30):
+            ClaimFactory.create(
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+
+        other_employer = EmployerFactory.create()
+        other_employee = EmployeeFactory.create()
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=other_employer,
+                employee=other_employee,
+                fineos_absence_status_id=1,
+                claim_type_id=1,
+            )
+
+        test_db_session.commit()
+        scenarios = [
+            {
+                "tag": "Request without paging parameters uses default values",
+                "request": {},
+                "paging": {
+                    "page_size": 25,
+                    "page_offset": 1,
+                    "total_pages": 2,
+                    "total_records": 30,
+                    "order_direction": "descending",
+                    "order_by": "created_at",
+                },
+                "status_code": 200,
+            },
+            {
+                "tag": "Use page_size value specified in query parameter",
+                "request": {"page_size": 10},
+                "paging": {
+                    "page_size": 10,
+                    "page_offset": 1,
+                    "total_pages": 3,
+                    "total_records": 30,
+                    "order_direction": "descending",
+                    "order_by": "created_at",
+                },
+                "status_code": 200,
+            },
+            {
+                "tag": "page_size must be greater than 0",
+                "request": {"page_size": 0},
+                "paging": {},
+                "status_code": 400,
+            },
+            {
+                "tag": "page_size value larger than total number of records succeeds",
+                "request": {"page_size": 100},
+                "paging": {
+                    "page_size": 100,
+                    "page_offset": 1,
+                    "total_pages": 1,
+                    "total_records": 30,
+                    "order_direction": "descending",
+                    "order_by": "created_at",
+                },
+                "status_code": 200,
+            },
+            {
+                "tag": "order_by and order_direction params are respected",
+                "request": {"order_direction": "ascending", "order_by": "claim_id"},
+                "paging": {
+                    "page_size": 25,
+                    "page_offset": 1,
+                    "total_pages": 2,
+                    "total_records": 30,
+                    "order_direction": "ascending",
+                    "order_by": "claim_id",
+                },
+                "status_code": 200,
+            },
+            {
+                "tag": "Unrecognized order_by parameter defaults to created_at",
+                "request": {"order_by": "dogecoin"},
+                "paging": {},
+                "status_code": 400,
+            },
+            {
+                "tag": "Unrecognized order_direction parameter returns 400",
+                "request": {"order_direction": "stonks"},
+                "paging": {},
+                "status_code": 400,
+            },
+        ]
+
+        for scenario in scenarios:
+            tag = scenario["tag"]
+            print(f"Running test for pagination scenario: {tag}")
+
+            query_string = "&".join(
+                [f"{key}={value}" for key, value in scenario["request"].items()]
+            )
+            response = client.get(
+                f"/v1/claims?{query_string}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+
+            assert (
+                response.status_code == scenario["status_code"]
+            ), f"tag:{tag}\nUnexpected response status code {response.status_code}"
+
+            if scenario["status_code"] != 200:
+                # Do not validate response structure for scenarios where an error response is expected
+                continue
+
+            response_body = response.get_json()
+            actual_page_metadata = response_body["meta"]["paging"]
+            expected_page_metadata = scenario["paging"]
+
+            for key, expected_value in expected_page_metadata.items():
+                actual_value = actual_page_metadata[key]
+                if actual_page_metadata[key] != expected_value:
+                    raise AssertionError(
+                        f"tag: {tag}\n{key} value was '{actual_value}', not expected {expected_value}"
+                    )
 
     def test_get_claims_as_claimant(self, client, auth_token, user):
         employer = EmployerFactory.create()

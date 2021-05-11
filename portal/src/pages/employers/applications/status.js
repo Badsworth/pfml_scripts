@@ -62,7 +62,8 @@ export const Status = (props) => {
           tOptions={{
             context: findKeyByValue(AbsenceCaseStatus, claim.status)
               ? "decision"
-              : "pending",
+              : // Pending claims refer to applications that are partially submitted (Part 1 only), awaiting employer response, or awaiting adjudication
+                "pending",
           }}
           components={{
             "dfml-regulations-link": (

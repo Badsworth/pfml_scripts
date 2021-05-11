@@ -154,10 +154,6 @@ const errors = {
       required:
         "Select yes if you will receive income from any other sources during your leave.",
     },
-    has_previous_leaves: {
-      required:
-        "Select yes if you have taken paid or unpaid leave since January 1, 2021 for a qualifying reason.",
-    },
     has_reduced_schedule_leave_periods: {
       required: "Select Yes if you are working a reduced schedule.",
     },
@@ -395,28 +391,6 @@ const errors = {
         required: "Select a number type.",
       },
     },
-    previous_leaves: {
-      is_for_current_employer: {
-        required: "Select yes if your leave is from this employer.",
-      },
-      leave_end_date: {
-        format:
-          "Date your leave ended must include a valid month, day, and year.",
-        invalid_date_range:
-          "Date your leave ends must be on or after the date your leave began.",
-        minimum: "Leave end date must be after December 31, 2020",
-        required: "Enter the date your leave ended.",
-      },
-      leave_reason: {
-        required: "Select the qualifying reason for your leave.",
-      },
-      leave_start_date: {
-        format:
-          "Date your leave began must include a valid month, day, and year.",
-        minimum: "Leave start date must be after December 31, 2020",
-        required: "Enter the date your leave began.",
-      },
-    },
     residential_address: {
       city: {
         required: "Enter a city for your residential address.",
@@ -492,10 +466,6 @@ const errors = {
         "$t(shared.ein.employer_verification_data_required)",
     },
     employer_benefits: {
-      benefit_amount_frequency: {
-        enum:
-          "Select a frequency (daily, weekly, monthly, or all at once) for each employer benefit.",
-      },
       benefit_end_date: {
         format: "End date must include a valid month, day, and year.",
         minimum:
@@ -522,18 +492,6 @@ const errors = {
     },
     outstanding_information_request_required:
       "This application has already been reviewed.",
-    previous_leaves: {
-      leave_start_date: {
-        format: "Start date must include a valid month, day, and year.",
-        invalid_previous_leave_start_date:
-          "Paid leave cannot be taken before January 1, 2021. Enter a date after December 31, 2020.",
-      },
-      leave_end_date: {
-        format: "End date must include a valid month, day, and year.",
-        minimum:
-          "Last day of leave must be on or after the first day of leave.",
-      },
-    },
     unauthorized_leave_admin:
       "Sorry, you do not have permission to view that page. To access it, you need to <add-org-link>add that organization</add-org-link> to your account.",
     withholding_amount: {
@@ -583,17 +541,19 @@ const errors = {
 
 const shared = {
   absenceCaseStatus_approved: "Approved",
-  absenceCaseStatus_completed: "Completed",
+  absenceCaseStatus_closed: "Closed",
   absenceCaseStatus_denied: "Denied",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequency_daily: "Daily",
   amountFrequency_inTotal: "All at once",
   amountFrequency_monthly: "Monthly",
+  amountFrequency_unknown: "Unknown",
   amountFrequency_weekly: "Weekly",
   amountPerFrequency_daily: "{{amount, currency}} per day",
   amountPerFrequency_inTotal: "{{amount, currency}} all at once",
   amountPerFrequency_monthly: "{{amount, currency}} per month",
+  amountPerFrequency_unknown: "{{amount, currency}} (frequency unknown)",
   amountPerFrequency_weekly: "{{amount, currency}} per week",
   auth: {
     emailError_exists: "An account with the given email already exists",
@@ -609,6 +569,7 @@ const shared = {
     "Do you work in an acute care hospital or the teaching hospital of the University of Massachusetts Medical School?",
   bondingRegsLeavePeriodDetailsSummary:
     "If you had a child join your family in 2020, you may be eligible for paid leave anytime in 2021. <emergency-bonding-regs-worker-link>Learn more about emergency Covid-19 regulations for hospital workers.</emergency-bonding-regs-worker-link>",
+  caregiverCertificationForm: "Certification to Care for a Family Member",
   choiceNo: "No",
   choicePendingOtherIncomes:
     "I’ve applied for another benefit that hasn’t been approved$t(chars.nbsp)yet.",
@@ -619,7 +580,7 @@ const shared = {
   claimsEmploymentInfoTitle: "Employment information",
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
-  claimsOtherLeaveTitle: "Other leave, income, and benefits",
+  claimsOtherLeaveTitle: "Other leave, benefits, and income",
   claimsVerifyIdTitle: "Your identification",
   contactCenterAddress:
     "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01842",
@@ -661,11 +622,13 @@ const shared = {
   fileUpload_fileHeadingPrefix: "File",
   filesUploaded: "Number of files uploaded",
   hoursLabel: "Hours",
+  leavePeriodCaringAlert:
+    "You will need a completed $t(shared.caregiverCertificationForm) for this section.",
   leavePeriodMedicalAlert:
     "You will need a completed Certification of a Serious Health Condition form for this section.",
   leaveReasonActiveDutyFamily: "Active duty",
-  leaveReasonBonding: "Family leave",
-  leaveReasonCare: "Caring leave",
+  leaveReasonBonding: "Bond with a child",
+  leaveReasonCare: "Care for a family member",
   leaveReasonMedical: "Medical leave",
   leaveReasonServiceMemberFamily: "Military family",
   maximumReducedLeaveMinutes:
@@ -689,7 +652,7 @@ const shared = {
   otherIncomeEntryPrefix: "Income",
   otherIncomeType_jonesAct: "Jones Act benefits",
   otherIncomeType_otherEmployer:
-    "Earnings from another employer or through self-employment",
+    "Earnings or benefits from another employer, or through self-employment",
   otherIncomeType_railroadRetirement: "Railroad Retirement benefits",
   otherIncomeType_retirementDisability:
     "Disability benefits under a governmental retirement$t(chars.nbsp)plan",
@@ -849,8 +812,24 @@ const pages = {
       "I agree that I am a new parent by one of the routes listed and can provide certification to support this relationship.",
   },
   claimsCaringLeaveAttestation: {
-    title: "Confirm that you are an eligible caregiver",
+    lead:
+      "This paid leave applies to caregivers with an <eligible-relationship-link>eligible family relationship</eligible-relationship-link>.",
     submitApplicationButton: "$t(shared.submitApplicationButton)",
+    title: "Confirm that you are an eligible caregiver",
+    truthAttestation_child:
+      "I agree that I have an eligible relationship with my child who is experiencing a serious health condition and needs my care.",
+    truthAttestation_grandchild:
+      "I agree that I have an eligible relationship with my grandchild who is experiencing a serious health condition and needs my care.",
+    truthAttestation_grandparent:
+      "I agree that I have an eligible relationship with my grandparent who is experiencing a serious health condition and needs my care.",
+    truthAttestation_inlaw:
+      "I agree that I have an eligible relationship with a parent of my spouse or domestic partner who is experiencing a serious health condition and needs my care.",
+    truthAttestation_parent:
+      "I agree that I have an eligible relationship with my parent who is experiencing a serious health condition and needs my care.",
+    truthAttestation_sibling:
+      "I agree that I have an eligible relationship with my sibling who is experiencing a serious health condition and needs my care.",
+    truthAttestation_spouse:
+      "I agree that I have an eligible relationship with my spouse or domestic partner who is experiencing a serious health condition and needs my care.",
   },
   claimsChecklist: {
     backButtonLabel: "Back to applications",
@@ -878,14 +857,14 @@ const pages = {
     stepHTMLDescription_bondingNewbornFuture:
       "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.",
     stepHTMLDescription_care:
-      "<p>You need to provide your completed <caregiver-certification-form-link>Caregiver Certification Form</caregiver-certification-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
+      "<p>You need to provide your completed <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
       "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p>",
     // TODO (CP-1983) Merge leaveDetails and leaveDetailsWithCaring when showCaringLeave feature flag is not needed
     stepHTMLDescription_leaveDetailsWithCaring:
-      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>Caregiver Certification Form</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship for Caregiver leave<caregiver-relationship-link/>.</p>",
+      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship<caregiver-relationship-link/>.</p>",
     stepHTMLDescription_medical:
       "<p>You need to provide your completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_otherLeave:
@@ -914,7 +893,7 @@ const pages = {
     stepListTitle_3: "Upload your documents",
     stepTitle_employerInformation: "Enter employment information",
     stepTitle_leaveDetails: "Enter leave details",
-    stepTitle_otherLeave: "Report other leave, income, and benefits",
+    stepTitle_otherLeave: "Report other leave, benefits, and income",
     stepTitle_payment: "Add payment information",
     stepTitle_reviewAndConfirm: "Review and confirm",
     stepTitle_uploadCertification: "Upload leave certification documents",
@@ -922,6 +901,21 @@ const pages = {
     stepTitle_verifyId: "Verify your identification",
     submitButton: "Review and submit application",
     title: "Checklist: Create a new application",
+  },
+  claimsConcurrentLeaves: {
+    sectionLabel:
+      "Will you use any employer-sponsored accrued paid leave during your PFML leave?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
+  claimsConcurrentLeavesDetails: {
+    sectionLabel:
+      "Will you use accrued paid leave from this employer? EIN: {{employer_fein, ein}}",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
+  claimsConcurrentLeavesIntro: {
+    sectionLabel:
+      "Tell us about the accrued paid leave you'll use during your PFML leave.",
+    title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsDateOfBirth: {
     sectionLabel: "What’s your date of birth?",
@@ -938,7 +932,7 @@ const pages = {
       "Family or medical leave insurance, such as a maternity leave policy",
     ],
     sectionLabel:
-      "Will you use any employer-sponsored benefits during your leave dates for paid leave?",
+      "Will you use any employer-sponsored benefits from this employer during your PFML leave?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsEmployerBenefitsDetails: {
@@ -947,6 +941,7 @@ const pages = {
     amountFrequency_daily: "$t(shared.amountFrequency_daily)",
     amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
     amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
+    amountFrequency_unknown: "$t(shared.amountFrequency_unknown)",
     amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
     amountLabel: "Amount",
     amountLegend: "How much will you receive?",
@@ -1017,27 +1012,24 @@ const pages = {
   claimsIntermittentFrequency: {
     durationBasisChoice_days: "At least a day",
     durationBasisChoice_hours: "Less than a full work day",
-    durationBasisHint_medical:
-      "Refer to Question 36 in the Certification of a Serious Health Condition form (page 8).",
     durationBasisLabel: "How long will an absence typically last?",
-    durationHint_medical:
-      "Refer to Question 36 in the Certification of a Serious Health Condition form (page 8).",
     durationLabel_days: "How many days of work will you miss per absence?",
     durationLabel_hours: "How many hours of work will you miss per absence?",
     frequencyBasisChoice_irregular: "Irregular over the next 6 months",
     frequencyBasisChoice_months: "At least once a month",
     frequencyBasisChoice_weeks: "At least once a week",
-    frequencyBasisHint_medical:
-      "Refer to Question 35 in the Certification of a Serious Health Condition form (page 8).",
     frequencyBasisLabel:
       "How often might you need to be absent from work (frequency interval)?",
+    frequencyHint_care:
+      "Your answers must match Questions # and # in the completed $t(shared.caregiverCertificationForm).",
     frequencyHint_medical:
-      "Refer to Question 35 in the Certification of a Serious Health Condition form (page 8).",
+      "Your answers must match Questions 35 and 36 in the Certification of a Serious Health Condition form.",
     frequencyLabel_irregular:
       "Estimate how many absences over the next 6 months.",
     frequencyLabel_months: "Estimate how many absences per month.",
     frequencyLabel_weeks: "Estimate how many absences per week.",
-    medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
+    needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
+    needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
     sectionLabel:
       "Tell us the estimated frequency and duration of your intermittent$t(chars.nbsp)leave.",
     title: "$t(shared.claimsLeaveDetailsTitle)",
@@ -1050,16 +1042,21 @@ const pages = {
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
+    datesLead_care:
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question # of the $t(shared.caregiverCertificationForm).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Refer to Question 29 in the Certification of a Serious Health Condition form (page 7).",
+      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 29 in the Certification of a Serious Health Condition form.",
     datesSectionLabel:
       "Enter the start and end dates for your continuous leave.",
     endDateLabel: "Last day of leave",
+    hasLeaveHint_care:
+      "Your answer must match Question # in the completed $t(shared.caregiverCertificationForm).",
     hasLeaveHint_medical:
-      "Refer to Question 26 in the Certification of a Serious Health Condition form (page 7).",
+      "Your answer must match Question 26 in the Certification of a Serious Health Condition form.",
     hasLeaveLabel:
       "Do you need to take off work completely for a period of time (continuous leave)?",
-    medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
+    needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
+    needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
     startDateLabel: "First day of leave",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
@@ -1071,8 +1068,10 @@ const pages = {
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
+    datesLead_care:
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question # of the $t(shared.caregiverCertificationForm).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Refer to Question 34 in the Certification of a Serious Health Condition form (page 8).",
+      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 34 in the Certification of a Serious Health Condition form.",
     datesSectionLabel:
       "Enter the start and end dates for your intermittent leave.",
     endDateLabel: "Last day of leave",
@@ -1080,13 +1079,16 @@ const pages = {
       "Last day of leave or re$t(chars.nbhyphen)evaluation date",
     hasLeaveHint_bonding:
       "For example, you need to take time off for: <ul><li>Court dates for your foster child</li><li>Social worker visits</li><li>Gaps in your childcare</li></ul>",
+    hasLeaveHint_care:
+      "Your answer must match Question # in the completed $t(shared.caregiverCertificationForm).",
     hasLeaveHint_medical:
-      "Refer to Question 26 in the Certification of a Serious Health Condition form (page 7).",
+      "Your answer must match Question 26 in the Certification of a Serious Health Condition form.",
     hasLeaveLabel:
       "Do you need to take off work in uneven blocks of time (intermittent leave)?",
     hybridLeaveWarning:
       "You have to create a separate application for intermittent leave.",
-    medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
+    needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
+    needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
     startDateLabel: "First day of leave",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
@@ -1098,28 +1100,31 @@ const pages = {
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
+    datesLead_care:
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question # of the $t(shared.caregiverCertificationForm).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Refer to Question 32 in the Certification of a Serious Health Condition form (page 8).",
+      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 32 in the Certification of a Serious Health Condition form .",
     datesSectionLabel:
       "Enter the start and end dates for your reduced leave schedule.",
     endDateLabel: "Last day of leave",
     endDateLabel_medical:
       "Last day of leave or re$t(chars.nbhyphen)evaluation date",
+    hasLeaveHint_care:
+      "Your answer must match Question # in the completed $t(shared.caregiverCertificationForm).",
     hasLeaveHint_medical:
-      "Refer to Question 26 in the Certification of a Serious Health Condition form (page 7).",
+      "Your answer must match Question 26 in the Certification of a Serious Health Condition form.",
     hasLeaveLabel:
       "Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?",
-    medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
+    needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
+    needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
     startDateLabel: "First day of leave",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsLeaveReason: {
-    activeDutyFamilyLeaveHint: "Family leave",
     activeDutyFamilyLeaveLabel:
       "I need to manage family affairs while a family member is on active duty in the armed forces.",
     alertBody:
       "<p>To apply for the following paid benefits:</p><ul><li>Paid family leave to care for a family member who serves in the armed forces</li><li>Paid family leave to manage family affairs when a family member is on active duty in the armed forces</li></ul><p>Call the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p>",
-    bondingLeaveHint: "Family leave",
     bondingLeaveLabel:
       "I need to bond with my child after birth, adoption, or foster placement.",
     bondingTypeAdoptionLabel: "Adoption",
@@ -1131,13 +1136,10 @@ const pages = {
     bondingTypeMultipleBirthsDetailsSummary:
       "Leave is determined based on benefit year (365 days from the start of the first week you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child. <multiple-births-link>Learn more about taking leave for multiple childbirths or placements</multiple-births-link>.",
     bondingTypeNewbornLabel: "Birth",
-    caringLeaveHint: "Family leave",
     caringLeaveLabel: "I need to care for my family member",
-    medicalLeaveHint: "Medical leave",
     medicalLeaveLabel: "I can’t work due to an illness, injury, or pregnancy.",
     sectionHint: "You can only request one leave at a time.",
     sectionLabel: "Why do you need to take leave?",
-    serviceMemberFamilyLeaveHint: "Family leave",
     serviceMemberFamilyLeaveLabel:
       "I need to care for a family member who serves in the armed forces.",
     title: "$t(shared.claimsLeaveDetailsTitle)",
@@ -1178,7 +1180,7 @@ const pages = {
       "Disability benefits under a governmental retirement plan such as STRS or PERS",
       "Jones Act benefits",
       "Railroad Retirement benefits",
-      "Earnings from another employer or through self-employment",
+      "Earnings or benefits from another employer, or through self-employment",
     ],
     sectionLabel:
       "Will you receive income from any other sources during your leave dates for paid$t(chars.nbsp)leave?",
@@ -1194,12 +1196,14 @@ const pages = {
     amountLabel: "Amount",
     amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
-    endDateLabel: "When will you stop receiving this income?",
+    endDateLabel:
+      "What is the last day of your leave that this income will pay you for?",
     limitMessage: "You can only add up to 3 incomes",
     removeButton: "Remove income",
     sectionLabel:
       "Tell us about your other sources of income$t(chars.nbsp)during your leave dates for paid$t(chars.nbsp)leave.",
-    startDateLabel: "When will you start receiving this income?",
+    startDateLabel:
+      "What is the first day of your leave that this income will pay you for?",
     title: "$t(shared.claimsOtherLeaveTitle)",
     typeChoiceLabel_jonesAct: "$t(shared.otherIncomeType_jonesAct)",
     typeChoiceLabel_otherEmployer: "$t(shared.otherIncomeType_otherEmployer)",
@@ -1253,26 +1257,41 @@ const pages = {
     sectionLabel: "What’s your phone number?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
-  claimsPreviousLeaves: {
-    choiceNo: "$t(shared.choiceNo)",
-    choiceYes: "$t(shared.choiceYes)",
-    detailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",
-    hintHeader:
-      "The following are qualifying reasons for taking paid or unpaid leave:",
-    hintList:
-      "<li>You had a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy. If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.</li><li>You bonded with your child after birth or placement.</li><li>You needed to manage family affairs while a family member is on active duty in the armed forces.</li><li>You needed to care for a family member who serves in the armed forces.</li><li>You needed to care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>.</li>",
-    sectionLabel:
-      "Have you taken paid or unpaid leave since January 1, 2021 for a qualifying reason?",
+  claimsPreviousLeavesIntro: {
+    sectionLabel: "Tell us about your previous leave.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
-  claimsPreviousLeavesDetails: {
+  claimsPreviousLeavesOtherReason: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    detailsLabel: "What counts as a qualifying reason?",
+    hintHeader:
+      "Answer yes if you took paid or unpaid leave for a qualifying reason that is not the reason you are applying for paid leave now. The following are qualifying reasons:",
+    hintList: [
+      "You had a serious health condition, including illness, injury, or pregnancy.",
+      "If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.",
+      "You bonded with your child after birth or placement.",
+      "You needed to manage family affairs while a family member is on active duty in the armed forces.",
+      "You needed to care for a family member who serves in the armed forces.",
+      "You needed to care for a family member with a serious health condition.",
+    ],
+    sectionLabel:
+      "Did you take leave between January 1, 2021–{{leaveStartDate}} for a different qualifying reason?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
+  claimsPreviousLeavesOtherReasonDetails: {
     addButton: "Add another leave",
-    cardHeadingPrefix: "$t(shared.previousLeaveEntryPrefix)",
-    currentEmployerChoice_no: "$t(shared.choiceNo)",
-    currentEmployerChoice_yes: "$t(shared.choiceYes)",
-    currentEmployerLabel:
-      "Did you take leave from this employer ({{employer_fein}})?",
-    endDateLabel: "When did your leave end?",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hoursLabel: "$t(shared.hoursLabel)",
+    isForCurrentEmployerHint:
+      "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, we'll give this employer a chance to review information from your application. We won't share any information about leave you took from other employers.",
+    isForCurrentEmployerLabel:
+      "Did you take leave from this employer? EIN:$t(chars.nbsp){{employer_fein, ein}}",
+    leaveEndDateLabel: "What was the last day of this leave?",
+    leaveMinutesHint:
+      "Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours.",
+    leaveMinutesLabel: "What was the total number of hours you took off?",
     leaveReasonChoice_activeDutyFamily:
       "Managing family affairs while a family member was on active duty in the armed forces",
     leaveReasonChoice_bonding: "Bonding with my child after birth or placement",
@@ -1280,13 +1299,31 @@ const pages = {
     leaveReasonChoice_medical: "An illness or injury",
     leaveReasonChoice_pregnancy: "Pregnancy",
     leaveReasonChoice_serviceMemberFamily:
-      "Caring for a family member who serves in the armed forces",
-    leaveReasonLabel: "What was the qualifying reason for your leave?",
-    limitMessage: "You can only add up to 6 leaves",
+      "Caring for a family member who served in the armed forces",
+    leaveReasonHint:
+      "If you didn’t take leave for one of these reasons, go back to the previous screen and select No.",
+    leaveReasonLabel: "Why did you need to take this leave?",
+    leaveStartDateLabel: "What was the first day of this leave?",
+    limitMessage: "You can only add up to {{limit}} leaves",
+    minutesLabel: "$t(shared.minutesLabel)",
+    previousLeaveEntryPrefix: "$t(shared.previousLeaveEntryPrefix)",
     removeButton: "Remove leave",
+    sectionLabel: "Tell us about your previous time off",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+    workedPerWeekMinutesHint:
+      "Enter the number of hours you would have worked each week, if you were not on leave. If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
+    workedPerWeekMinutesLabel:
+      "How many hours would you have worked per week if you did not take this leave?",
+  },
+  claimsPreviousLeavesSameReason: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
     sectionLabel:
-      "Tell us about previous paid or unpaid leave since January 1, 2021",
-    startDateLabel: "When did your leave begin?",
+      "Did you take any other leave between January 1, 2021–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
+  claimsPreviousLeavesSameReasonDetails: {
+    sectionLabel: "Tell us about your previous time off",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsReasonPregnancy: {
@@ -1528,6 +1565,8 @@ const pages = {
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
     adjudicationProcess_bondingNewbornFuture:
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
+    adjudicationProcess_caringLeave:
+      "<ul><li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>If you need to end your leave early, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</li></ul>",
     adjudicationProcess_medicalPregnantFuture:
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>When your leave begins, call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to tell us. Then we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
     claimantApplicationId:
@@ -1549,9 +1588,7 @@ const pages = {
     reportReductionsHeading: "We may need more information from you",
     reportReductionsProcess:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> if you’ll receive:</p><ul><li>Any <reductions-employer-benefits-link>benefits from your employer</reductions-employer-benefits-link> that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from <reductions-overview-link>any other sources</reductions-overview-link> during your leave</li></ul>",
-    title: "You submitted your leave application",
-    title_bonding: "You submitted your family leave application",
-    title_medical: "You submitted your medical leave application",
+    title: "You submitted your application",
   },
   claimsUploadCertification: {
     addAnotherFileButton: "Choose another file",
@@ -1568,12 +1605,15 @@ const pages = {
       "You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.",
     lead_bonding_newborn:
       "You need to upload one of the following documents to confirm your child’s date of birth:",
+    lead_care:
+      "You need to upload a completed <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link> to prove that you need to take leave to care for a family member with a serious medical condition.",
     lead_medical:
       "You need to upload a completed <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link> to prove that you need to take medical leave.",
     sectionLabel_bonding: "Upload your documentation",
+    sectionLabel_care: "Upload your $t(shared.caregiverCertificationForm)",
     sectionLabel_medical:
       "Upload your Certification of a Serious Health Condition",
-    title: "$t(shared.claimsLeaveDetailsTitle)",
+    title: "Upload certification",
   },
   claimsUploadDocsOptions: {
     certLabel_bonding_adopt_foster: "Proof of placement",
@@ -1711,7 +1751,7 @@ const pages = {
     lead_decision:
       "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
     lead_pending:
-      "This application is being reviewed by the Department. It was either reviewed by an administrator on your team or the review deadline has passed. No action is required of you.<br /><br />After we make a decision, you'll receive an email with a direct link for more details.",
+      "No action is required of you.<br /><br />When the application progresses you'll receive an email with a direct link for more details.",
     leaveDetailsLabel: "$t(shared.claimsLeaveDetailsTitle)",
     leaveDurationLabel: "$t(shared.claimsLeaveDurationTitle)",
     leaveDurationLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
@@ -1742,6 +1782,7 @@ const pages = {
   },
   employersClaimsSuccess: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
+    backToDashboardLabel: "Back to Dashboard",
     instructions_processingApplication:
       "We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email with a direct link to details about the decision.",
     instructions_reimbursement:
@@ -1752,7 +1793,16 @@ const pages = {
     instructions:
       "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
-    startDateTooltip: "The date a new application for leave was started",
+    startDateTooltip: "When an employee started a new leave application",
+    statusDescription_approved:
+      "<strong>Approved:</strong> DFML has approved this leave request.",
+    statusDescription_closed:
+      "<strong>Closed:</strong> The leave has passed and no action can be taken.",
+    statusDescription_denied:
+      "<strong>Denied:</strong> DFML has denied this leave request.",
+    statusDescription_none:
+      "<strong>“--” or no status:</strong> This leave request may require action from you; otherwise, it is awaiting a decision from DFML.",
+    statusDescriptionsLabel: "Status descriptions",
     tableColHeading_created_at: "Application start date",
     tableColHeading_employee_name: "Employee name",
     tableColHeading_employer_dba: "Organization",
@@ -1760,6 +1810,10 @@ const pages = {
     tableColHeading_fineos_absence_id: "Application ID",
     tableColHeading_status: "Status",
     title: "Dashboard",
+    unavailableClaimsBody:
+      "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the <learn-more-link>verification process</learn-more-link>.",
+    unavailableClaimsTitle:
+      "Your applications are not accessible right now for: {{employers}}",
     verificationBody:
       "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
     verificationInstructions:
@@ -1768,13 +1822,21 @@ const pages = {
   },
   employersOrganizations: {
     addOrganizationButton: "Add organization",
+    backToDashboardLabel: "Back to Dashboard",
     einTableHeader: "Employer ID number (EIN)",
-    nearFutureAvailability:
+    nearFutureAvailability_addOrganization:
       "You'll be able to add more organizations to your account in the near future.",
+    nearFutureAvailability_inviteMembers:
+      "You can manage leave for these organizations. In the future, you’ll be able to invite other members of your team to review applications.",
     organizationsTableHeader: "Organization",
     title: "Your organizations",
     verificationBlocked: "Verification blocked",
+    verificationBody:
+      "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
+    verificationInstructions:
+      "You have not verified any organizations. <your-organizations-link>Complete this process</your-organizations-link> to review applications.",
     verificationRequired: "Verification required",
+    verificationTitle: "Verify your account",
   },
   employersOrganizationsAddOrganization: {
     continueButton: "Continue",
@@ -1826,7 +1888,9 @@ const pages = {
       "When you log into your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
     viewApplicationsTitle: "View all applications",
     viewFormsBody:
-      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process.",
+      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process. ",
+    viewFormsBody_caring:
+      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process. For leave to care for a family member you can download the <caregiver-certification-form-link>Certification to Care for a Family Member</caregiver-certification-form-link> during the review process. ",
     viewFormsTitle: "View forms and notices online",
     welcomeBody:
       "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.",
@@ -1837,6 +1901,8 @@ const pages = {
     alertOnline:
       "<p>If you are currently employed in Massachusetts but not self-employed, you can apply online or by phone for the following types of paid leave:</p><ul><li>Medical leave due to your own illness, injury, or pregnancy</li><li>Family leave to bond with your child after birth, adoption, or foster placement — whether you are applying before or after the child arrives</li></ul>",
     alertOnlineHeading: "Apply online",
+    alertOnline_caring:
+      "<p>If you are currently employed in Massachusetts but not self-employed, you can apply online or by phone for the following types of paid leave:</p><ul><li>Medical leave due to your own illness, injury, or pregnancy</li><li>Family leave to bond with your child after birth, adoption, or foster placement — whether you are applying before or after the child arrives</li><li>Family leave to care for a family member with a serious medical condition</li></ul>",
     alertPhone:
       "<p>Apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> if <strong>any</strong> of the following are true:</p><ul><li>You are self-employed or unemployed and you are applying for paid leave</li><li>You need paid family leave to care for a family member who serves in the armed forces</li><li>You need paid family leave to manage family affairs when a family member is on active duty in the armed forces</li></ul>",
     alertPhoneHeading: "Apply by phone",
@@ -1848,9 +1914,18 @@ const pages = {
     stepThree:
       "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p>",
     stepThreeHeading: "3. Apply",
-    stepTwo:
-      "<p>For medical leave your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
+    stepTwoBondingLeaveBody:
+      "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
+    stepTwoBondingLeaveSubhead: "To bond with a child",
+    stepTwoCaringLeaveBody:
+      "<p>The health care provider of the person you're caring for must complete the <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link>.</p>",
+    stepTwoCaringLeaveSubhead:
+      "To care for a family member with a serious health condition",
+    stepTwoFamilyLeaveSubhead: "Family leave",
     stepTwoHeading: "2. Get documentation that supports your leave request",
+    stepTwoMedicalLeaveBody:
+      "<p>Your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p>",
+    stepTwoMedicalLeaveSubhead: "Medical leave",
     title: "Get ready to apply",
   },
   index: {
@@ -1861,6 +1936,9 @@ const pages = {
     employerCardBody_contactCenter:
       "Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to create an employer account.",
     employerCardBody_massEmployer: "Are you a Massachusetts employer?",
+    employerCardBody_selfRegister:
+      "Register now so you can manage leave for your team.",
+    employerCreateAccountButton: "Create an employer account",
     employerHeading: "Employers",
     seoTitle: "Massachusetts Paid Family and Medical Leave",
     title:
@@ -1871,7 +1949,7 @@ const pages = {
       "By continuing, I am indicating that I have read and understood the above user agreements. I give the Department of Family and Medical Leave permission to collect, share, and use my information consistent with the terms of the agreements linked$t(chars.nbsp)above.",
     applicationUsage: "",
     applicationUsageHeading_employer: "Reviewing paid leave applications",
-    applicationUsageHeading_user: "Applying for PFML",
+    applicationUsageHeading_user: "Applying for benefits",
     applicationUsageIntro: "We need this information to:",
     applicationUsageList_employer: [
       "Check eligibility for coverage",
@@ -1892,18 +1970,20 @@ const pages = {
     dataUsageHeading: "How we use your data",
     fullUserAgreementBody:
       "To find out more about how the Commonwealth might use the information you share with the Department of Family and Medical Leave, please read the <informed-consent-link>DFML Informed Consent Agreement</informed-consent-link> and the <privacy-policy-link>Privacy Policy for Mass.gov</privacy-policy-link>.",
-    fullUserAgreementHeading: "Full user agreements",
+    fullUserAgreementHeading: "Read the full user agreements",
     intro:
-      "The information you provide on this website will be used to administer the Paid Family and Medical Leave (PFML) program.",
+      "The information you provide on this website will be used to administer the Paid Family and Medical Leave program.",
     title: "How this website uses your information",
+    updatedMessage:
+      "To continue using this website, you must agree to the terms of the user agreements updated as of July$t(chars.nbsp)1,$t(chars.nbsp)2021.",
   },
 };
 
 const components = {
   absenceCaseStatusTag: {
     status_approved: "$t(shared.absenceCaseStatus_approved)",
-    status_closed: "$t(shared.absenceCaseStatus_completed)",
-    status_completed: "$t(shared.absenceCaseStatus_completed)",
+    status_closed: "$t(shared.absenceCaseStatus_closed)",
+    status_completed: "$t(shared.absenceCaseStatus_closed)",
     status_declined: "$t(shared.absenceCaseStatus_denied)",
   },
   amendButton: {
@@ -2016,11 +2096,13 @@ const components = {
     amountFrequency_daily: "$t(shared.amountFrequency_daily)",
     amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
     amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
+    amountFrequency_unknown: "$t(shared.amountFrequency_unknown)",
     amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
     amountPerFrequency: "{{amount, currency}}",
     amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
     amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
     amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",
+    amountPerFrequency_unknown: "$t(shared.amountPerFrequency_unknown)",
     amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     benefitTypeLabel: "Benefit type",
     caption:
@@ -2028,7 +2110,6 @@ const components = {
     commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
-    frequencyHelperText: "[Needs review]",
     header: "Employer benefits",
     tableName: "Employer-sponsored benefit details",
   },
@@ -2255,14 +2336,14 @@ const components = {
   },
   newsBanner: {
     body:
-      "In the future, we'll ask you to verify your paid leave contributions to secure your account. <learn-more-link>Learn what you need to do to prepare.</learn-more-link>",
-    header: "Account verification is coming soon",
+      "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be <learn-more-link>adding more features</learn-more-link> to the dashboard so you can easily find and manage paid leave applications.",
+    header: "We're making it easier to manage paid leave application",
   },
   pagination: {
     nextLabel: "Next",
     previousLabel: "Previous",
     summary:
-      "Viewing {{firstRecordIndex}} - {{lastRecordIndex}} of {{totalRecords}} results",
+      "Viewing {{firstRecordNumber}} – {{lastRecordNumber}} of {{totalRecords}} results",
   },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",

@@ -442,6 +442,7 @@ class ExperianAddressPair(Base):
 class Employee(Base):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    # TODO (EMPLOYER-1238): Enforce uniqueness of tax_identifier_id
     tax_identifier_id = Column(
         UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True
     )
@@ -864,8 +865,14 @@ class UserLeaveAdministrator(Base):
     verification = relationship(Verification)
 
     @typed_hybrid_property
+    def has_fineos_registration(self) -> bool:
+        """Indicates whether the leave admin exists in Fineos yet, signalling if Fineos
+        API calls can be called on behalf of this leave admin yet"""
+        return bool(self.fineos_web_id)
+
+    @typed_hybrid_property
     def verified(self) -> bool:
-        return self.verification_id is not None
+        return bool(self.verification_id)
 
 
 class WagesAndContributions(Base):
@@ -1088,7 +1095,7 @@ class DuaReductionPayment(Base):
     __tablename__ = "dua_reduction_payment"
     dua_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
-    absence_case_id = Column(Text, nullable=False)
+    fineos_customer_number = Column(Text, nullable=False)
     employer_fein = Column(Text)
     payment_date = Column(Date)
     request_week_begin_date = Column(Date)
@@ -1684,6 +1691,7 @@ class State(LookupTable):
     DUA_REPORT_FOR_DFML_CREATED = LkState(
         6, "Create DUA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     )
+    # not used, see DUA_REDUCTIONS_REPORT_SENT
     DUA_REPORT_FOR_DFML_SUBMITTED = LkState(
         7, "Submit DUA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     )
@@ -2006,6 +2014,10 @@ class State(LookupTable):
     )
     DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK = LkState(
         161, "FINEOS Writeback #2 sent - Check", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DIA_REPORT_FOR_DFML_CREATED = LkState(
+        162, "Create DIA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     )
 
 

@@ -141,7 +141,7 @@ def test_all_reports(
     # validate expected report counts
     log_report = json.loads(step.log_entry.import_log.report)
     assert log_report["report_generated_count"] == len(REPORTS)
-    assert log_report.get("report_error_count") is None
+    assert log_report.get("report_error_count") == 0
 
     # validate generated files
     date_folder = "2021-01-15"

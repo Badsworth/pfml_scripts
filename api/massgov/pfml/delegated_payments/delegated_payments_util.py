@@ -131,6 +131,7 @@ class Regexes:
 class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
+    INVALID_DATASET = "InvalidDataset"
     MISSING_IN_DB = "MissingInDB"
     FIELD_TOO_SHORT = "FieldTooShort"
     FIELD_TOO_LONG = "FieldTooLong"
@@ -149,6 +150,7 @@ class ValidationReason(str, Enum):
     EFT_PRENOTE_PENDING = "EFTPending"
     EFT_PRENOTE_REJECTED = "EFTRejected"
     CLAIMANT_MISMATCH = "ClaimantMismatch"
+    CLAIM_NOT_ID_PROOFED = "ClaimNotIdProofed"
 
 
 @dataclass(frozen=True, eq=True)
@@ -251,7 +253,6 @@ def validate_csv_input(
     max_length: Optional[int] = None,
     custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
 ) -> Optional[str]:
-    # Don't write out the actual value in the messages, these can be SSNs, routing #s, and other PII
     value = data.get(key)
     if value == "Unknown":
         value = None  # Effectively treating "" and "Unknown" the same
@@ -275,8 +276,11 @@ def validate_csv_input(
                 validation_issues.append(reason)
 
     if required:
+
         for validation_issue in validation_issues:
-            errors.add_validation_issue(validation_issue, key)
+            # Any non-missing error types add the value to the error details
+            # Note that this means these reports will contain PII data
+            errors.add_validation_issue(validation_issue, f"{key}: {value}")
 
     # If any of the specific validations hit an error, don't return the value
     # This is true even if the field is not required as we may still use the field.

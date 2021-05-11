@@ -35,17 +35,4 @@ export default class OtherLeavesApi extends BaseApi {
       `${applicationId}/other_incomes/${otherIncomeId}`
     );
   };
-
-  /**
-   * Deletes an previous leave
-   * @param {string} applicationId ID of the Claim
-   * @param {string} previousLeaveId ID of the previous leave
-   * @throws {Error} if the request fails
-   */
-  removePreviousLeave = async (applicationId, previousLeaveId) => {
-    await this.request(
-      "DELETE",
-      `${applicationId}/previous_leaves/${previousLeaveId}`
-    );
-  };
 }

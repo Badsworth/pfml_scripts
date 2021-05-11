@@ -1,5 +1,6 @@
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
+import PaginationMeta from "../models/PaginationMeta";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
@@ -10,26 +11,23 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
   const { collection: claims, setCollection: setClaims } = useCollectionState(
     new ClaimCollection()
   );
-
-  // Track whether the loadAll method has been called. Checking that claims
-  // is set isn't sufficient, since it may only include a subset of claims
-  const [hasLoadedAll, setHasLoadedAll] = useState(false);
-
+  // Pagination info associated with the current collection of claims
+  const [paginationMeta, setPaginationMeta] = useState(new PaginationMeta());
   const claimsApi = new ClaimsApi();
 
   /**
-   * Load all claims for the authenticated user
-   * @param {number} page - zero-based page index
+   * Load a page of claims for the authenticated user
+   * @param {number} pageOffset - Page number to load
    */
-  const loadAll = async (page) => {
-    if (hasLoadedAll) return;
+  const loadPage = async (pageOffset = 1) => {
+    if (paginationMeta.page_offset === pageOffset) return;
     appErrorsLogic.clearErrors();
 
     try {
-      const { claims } = await claimsApi.getClaims(page);
+      const { claims, paginationMeta } = await claimsApi.getClaims(pageOffset);
 
       setClaims(claims);
-      setHasLoadedAll(true);
+      setPaginationMeta(paginationMeta);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -37,8 +35,8 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
 
   return {
     claims,
-    hasLoadedAll,
-    loadAll,
+    loadPage,
+    paginationMeta,
   };
 };
 

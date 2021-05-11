@@ -153,7 +153,7 @@ exports[`LeavePeriodContinuous renders the page with medical leave content 1`] =
         },
       ]
     }
-    hint="Refer to Question 26 in the Certification of a Serious Health Condition form (page 7)."
+    hint="Your answer must match Question 26 in the Certification of a Serious Health Condition form."
     label="Do you need to take off work completely for a period of time (continuous leave)?"
     name="has_continuous_leave_periods"
     onChange={[Function]}
@@ -222,6 +222,6 @@ Array [
   <br
     key="br-2"
   />,
-  "Refer to Question 29 in the Certification of a Serious Health Condition form (page 7).",
+  "Your answer must match Question 29 in the Certification of a Serious Health Condition form.",
 ]
 `;

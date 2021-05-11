@@ -11,6 +11,7 @@ import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import testHook from "./testHook";
 import useAppLogic from "../../src/hooks/useAppLogic";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * Render a component, automatically setting its appLogic and query props
@@ -24,8 +25,9 @@ import useAppLogic from "../../src/hooks/useAppLogic";
  * @param {object} [options.props] - Additional props to set on the PageComponent
  * @param {"mount"|"shallow"} [options.render] - Enzyme render method. Shallow renders by default.
  * @param {object} [options.userAttrs] - Additional attributes to set on the User
+ * @param {boolean} [options.hasDocumentsUploadError] - Additional attributs to set errors for uploading documents
  * @param {boolean} [options.hasLoadedClaimDocuments] - Additional attributes to indicate document loading is finished
- * @param {boolean} [options.hasUploadedCertificationDocuments] - Additional attributes to set certification documents
+ * @param {object} [options.hasUploadedCertificationDocuments] - Additional attributes to set certification documents
  * @param {boolean} [options.hasUploadedIdDocuments] - Additional attributes to set id documents
  * @param {boolean} [options.hasLoadingDocumentsError] - Additional attributs to set errors for loading documents
  * @param {boolean} [options.hasLegalNotices] - Create legal notices for claim
@@ -84,20 +86,29 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
     appLogic.documents.documents = appLogic.documents.documents.addItem(
       new Document({
         application_id: "mock_application_id",
-        fineos_document_id: 1,
+        fineos_document_id: uuidv4(),
         document_type: DocumentType.identityVerification,
+        created_at: "2020-11-26",
       })
     );
   }
 
   if (options.hasUploadedCertificationDocuments) {
-    appLogic.documents.documents = appLogic.documents.documents.addItem(
-      new Document({
-        application_id: "mock_application_id",
-        fineos_document_id: 2,
-        document_type: DocumentType.medicalCertification,
-      })
-    );
+    const {
+      document_type = DocumentType.certification.medicalCertification,
+      numberOfDocs = 1,
+    } = options.hasUploadedCertificationDocuments;
+
+    for (let i = 0; i < numberOfDocs; i++) {
+      appLogic.documents.documents = appLogic.documents.documents.addItem(
+        new Document({
+          application_id: "mock_application_id",
+          fineos_document_id: uuidv4(),
+          document_type,
+          created_at: "2020-11-26",
+        })
+      );
+    }
   }
 
   if (options.hasLoadingDocumentsError) {
@@ -118,6 +129,15 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
         fineos_document_id: 3,
       })
     );
+  }
+
+  if (options.hasDocumentsUploadError) {
+    appLogic.appErrors = new AppErrorInfoCollection([
+      new AppErrorInfo({
+        meta: { file_id: "mock_file_id" },
+        name: "DocumentsUploadError",
+      }),
+    ]);
   }
 
   options.mockAppLogic(appLogic);

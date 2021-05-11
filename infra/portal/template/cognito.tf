@@ -171,7 +171,7 @@ resource "aws_lambda_function" "cognito_custom_message" {
       NEW_RELIC_TRUSTED_ACCOUNT_KEY         = "1606654"        # EOLWD parent account
       NEW_RELIC_LAMBDA_HANDLER              = "lambda.handler" # the actual lambda entrypoint
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
-      PORTAL_DOMAIN                         = var.enable_pretty_domain ? module.constants.cert_domains[var.environment_name] : aws_cloudfront_distribution.portal_web_distribution.domain_name
+      PORTAL_DOMAIN                         = local.cert_domain == null ? aws_cloudfront_distribution.portal_web_distribution.domain_name : local.cert_domain
     }
   }
 

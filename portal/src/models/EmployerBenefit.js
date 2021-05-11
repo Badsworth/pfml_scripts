@@ -45,6 +45,9 @@ export const EmployerBenefitFrequency = {
   weekly: "Per Week",
   monthly: "Per Month",
   inTotal: "In Total",
+  // Unknown may be displayed to Leave Admins, but isn't
+  // an option we display to Claimants
+  unknown: "Unknown",
 };
 
 export default EmployerBenefit;

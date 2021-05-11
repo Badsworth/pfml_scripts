@@ -10,6 +10,7 @@ from massgov.pfml.db.models.employees import (
     ClaimType,
     Employee,
     Employer,
+    ExperianAddressPair,
     LkClaimType,
     Payment,
     PaymentMethod,
@@ -88,15 +89,24 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
     payment: Payment = payment_audit_data.payment
     claim: Claim = payment.claim
     employee: Employee = claim.employee
-    experian_address_pair = payment.experian_address_pair
-    address: Optional[
-        Address
-    ] = experian_address_pair.experian_address if experian_address_pair else None
+
+    address: Optional[Address] = None
+    experian_address_pair: Optional[ExperianAddressPair] = payment.experian_address_pair
+    experian_address: Optional[Address] = None
+    is_address_verified = "N"
+
+    if experian_address_pair:
+        experian_address = experian_address_pair.experian_address
+        address = (
+            experian_address
+            if experian_address is not None
+            else experian_address_pair.fineos_address
+        )
+        is_address_verified = "Y" if experian_address is not None else "N"
+
     employer: Employer = claim.employer
 
-    check_description = (
-        _format_check_memo(payment) if payment.disb_method == PaymentMethod.CHECK else ""
-    )
+    check_description = _format_check_memo(payment)
 
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
@@ -108,6 +118,7 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         city=address.city if address else None,
         state=address.geo_state.geo_state_description if address and address.geo_state else None,
         zip=address.zip_code if address else None,
+        is_address_verified=is_address_verified,
         payment_preference=get_payment_preference(payment),
         scheduled_payment_date=payment.payment_date.isoformat() if payment.payment_date else None,
         payment_period_start_date=payment.period_start_date.isoformat()

@@ -198,7 +198,6 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/EmployeeSearchRequest"
 
-
   /employers/add:
     post:
       tags:
@@ -242,7 +241,6 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/ErrorResponse"
 
-
   /employers/withholding/{employer_id}:
     get:
       summary: Retrieves the last withholding date for the FEIN specified
@@ -275,7 +273,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
 
   /claims/{fineos_absence_id}:
     get:
@@ -316,24 +313,10 @@ paths:
       tags:
         - Claims
       parameters:
-        - in: query
-          name: orderBy
-          schema:
-            type: string
-            example: "created_at"
-          description: "Field to order by"
-        - in: query
-          name: sortDirection
-          schema:
-            type: string
-            example: "ascending"
-          description: "Sort direction of ascending or descending"
-        - in: query
-          name: page
-          schema:
-            type: integer
-            example: 2
-          description: "Page to request"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/pageOffset"
+        - $ref: "#/components/parameters/orderBy"
+        - $ref: "#/components/parameters/orderDirection"
       responses:
         "200":
           description: The claim information.
@@ -387,7 +370,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
 
   /employers/claims/{fineos_absence_id}/documents:
     get:
@@ -1072,6 +1054,41 @@ components:
           tokenUrl: /api/v1/oauth2/token
           scopes: {}
 
+  parameters:
+    pageSize:
+      name: "page_size"
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 25
+    pageOffset:
+      name: "page_offset"
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 1
+    orderBy:
+      name: "order_by"
+      in: query
+      required: false
+      schema:
+        type: string
+        default: "created_at"
+    orderDirection:
+      name: "order_direction"
+      in: query
+      required: false
+      schema:
+        type: string
+        default: "descending"
+        enum: ["ascending", "descending"]
+
   requestBodies:
     UserUpdateRequest:
       content:
@@ -1197,7 +1214,6 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
 
-
   schemas:
     SuccessfulResponse:
       type: object
@@ -1255,14 +1271,18 @@ components:
         paging:
           type: object
           properties:
-            offset:
+            page_offset:
               type: integer
-            limit:
+            page_size:
               type: integer
-            count:
+            total_records:
               type: integer
-            total:
+            total_pages:
               type: integer
+            order_by:
+              type: string
+            order_direction:
+              type: string
       required: ["resource", "method"]
       additionalProperties: false
 
@@ -1359,6 +1379,8 @@ components:
         employer_dba:
           type: string
           example: "The Super Store"
+        has_fineos_registration:
+          type: boolean
         verified:
           type: boolean
 
@@ -1600,6 +1622,22 @@ components:
             - Military caregiver
             - Military exigency family
             - Unknown
+        worked_per_week_minutes:
+          type: integer
+          nullable: true
+          minimum: 0
+        leave_minutes:
+          type: integer
+          nullable: true
+          minimum: 0
+        type:
+          type: string
+          nullable: true
+          enum:
+            - other_reason
+            - same_reason
+            # TODO (CP-2123): Remove when we remove references to previous_leaves
+            - deprecated
 
     ApplicationRequestBody:
       allOf:
@@ -1727,7 +1765,25 @@ components:
               type: boolean
               nullable: true
               example: false
+            has_previous_leaves_other_reason:
+              type: boolean
+              nullable: true
+            has_previous_leaves_same_reason:
+              type: boolean
+              nullable: true
             previous_leaves:
+              nullable: true
+              type: array
+              items:
+                $ref: "#/components/schemas/PreviousLeave"
+              maxItems: 6
+            previous_leaves_other_reason:
+              nullable: true
+              type: array
+              items:
+                $ref: "#/components/schemas/PreviousLeave"
+              maxItems: 6
+            previous_leaves_same_reason:
               nullable: true
               type: array
               items:
@@ -1909,7 +1965,21 @@ components:
           type: boolean
           nullable: true
           example: false
+        has_previous_leaves_other_reason:
+          type: boolean
+          nullable: true
+        has_previous_leaves_same_reason:
+          type: boolean
+          nullable: true
         previous_leaves:
+          type: array
+          items:
+            $ref: "#/components/schemas/PreviousLeave"
+        previous_leaves_other_reason:
+          type: array
+          items:
+            $ref: "#/components/schemas/PreviousLeave"
+        previous_leaves_same_reason:
           type: array
           items:
             $ref: "#/components/schemas/PreviousLeave"
@@ -1928,6 +1998,11 @@ components:
             - Approval Notice
             - Request for More information
             - Denial Notice
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
           example: "Passport"
         name:
           type: string
@@ -2020,6 +2095,11 @@ components:
             - Request for More information
             - Denial Notice
             - Employer Response Additional Documentation
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
           example: "Denial Notice"
         content_type:
           type: string
@@ -2064,6 +2144,11 @@ components:
             - Driver's License Other State
             - Identification Proof
             - State managed Paid Leave Confirmation
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
           example: "Passport"
         content_type:
           type: string
@@ -2532,6 +2617,9 @@ components:
             - Permanent disability insurance
             - Family or medical leave insurance
             - Unknown
+        is_full_salary_continuous:
+          type: boolean
+          nullable: true
 
 
     OtherIncome:

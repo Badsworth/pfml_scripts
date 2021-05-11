@@ -186,8 +186,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
             },
         )
 
-        if isinstance(ex, requests.exceptions.Timeout) or isinstance(
-            ex, oauthlib.oauth2.TemporarilyUnavailableError
+        if isinstance(
+            ex,
+            (
+                requests.exceptions.Timeout,
+                oauthlib.oauth2.TemporarilyUnavailableError,
+                requests.exceptions.ConnectionError,
+            ),
         ):
             logger.warning("%s %s => %r", method, url, ex)
             raise exception.FINEOSFatalUnavailable(cause=ex)

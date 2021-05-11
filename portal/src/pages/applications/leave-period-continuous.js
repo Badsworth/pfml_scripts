@@ -12,6 +12,7 @@ import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
+import findKeyByValue from "../../utils/findKeyByValue";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -74,10 +75,10 @@ export const LeavePeriodContinuous = (props) => {
     );
   };
 
-  const contentContext = {
-    [LeaveReason.bonding]: "bonding",
-    [LeaveReason.medical]: "medical",
-  }[claim.leave_details.reason];
+  const contentContext = findKeyByValue(
+    LeaveReason,
+    claim.leave_details.reason
+  );
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -90,9 +91,11 @@ export const LeavePeriodContinuous = (props) => {
       title={t("pages.claimsLeavePeriodContinuous.title")}
       onSave={handleSave}
     >
-      {claim.isMedicalLeave && (
+      {(claim.isMedicalLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
-          {t("pages.claimsLeavePeriodContinuous.medicalAlert")}
+          {t("pages.claimsLeavePeriodContinuous.needDocumentAlert", {
+            context: contentContext,
+          })}
         </Alert>
       )}
 
@@ -111,9 +114,11 @@ export const LeavePeriodContinuous = (props) => {
           },
         ]}
         hint={
-          claim.isMedicalLeave
-            ? t("pages.claimsLeavePeriodContinuous.hasLeaveHint_medical")
-            : null // could use `context` if another leave type needs hint text
+          claim.isMedicalLeave || claim.isCaringLeave
+            ? t("pages.claimsLeavePeriodContinuous.hasLeaveHint", {
+                context: contentContext,
+              })
+            : null
         }
         label={t("pages.claimsLeavePeriodContinuous.hasLeaveLabel")}
         type="radio"
@@ -136,6 +141,7 @@ export const LeavePeriodContinuous = (props) => {
             tOptions={{ context: contentContext }}
           />
         </Lead>
+
         {claim.isBondingLeave && (
           <div className="measure-6">
             <Details

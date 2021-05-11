@@ -27,6 +27,7 @@ from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministr
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EmployerClaimReviewEFormBuilder
 from massgov.pfml.util import feature_gate
+from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -184,18 +185,32 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     with app.db_session() as db_session:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
-        claim = get_claim_as_leave_admin(
+        claim_review_response = get_claim_as_leave_admin(
             user_leave_admin.fineos_web_id, fineos_absence_id, employer  # type: ignore
         )
-        if claim is None:
+
+        if claim_review_response is None:
             raise NotFound(
                 description="Could not fetch Claim from FINEOS with given absence ID {}".format(
                     fineos_absence_id
                 )
             )
 
+        claim_from_db = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .one_or_none()
+        )
+
+        if claim_from_db and claim_from_db.fineos_absence_status:
+            claim_review_response.status = (
+                claim_from_db.fineos_absence_status.absence_status_description
+            )
+
         return response_util.success_response(
-            message="Successfully retrieved claim", data=claim.dict(), status_code=200
+            message="Successfully retrieved claim",
+            data=claim_review_response.dict(),
+            status_code=200,
         ).to_api_response()
 
 
@@ -311,41 +326,57 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
 
 def get_claims() -> flask.Response:
     current_user = app.current_user()
-    with app.db_session() as db_session:
-        # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims) so if something changes there,  it probably
-        # needs to be changed here
-        if current_user and current_user.employers:
-            verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
-                feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
-                user_email=current_user.email_address,
-            )
+    is_employer = can(READ, "EMPLOYER_API")
 
-            if verification_required:
-                employer_ids_list = [
-                    e.employer_id
-                    for e in current_user.employers
-                    if current_user.verified_employer(e)
-                ]
+    with PaginationAPIContext(Claim, request=flask.request) as pagination_context:
+        with app.db_session() as db_session:
+            # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims)
+            # so if something changes there it probably needs to be changed here
+            if is_employer and current_user and current_user.employers:
+                verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
+                    feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
+                    user_email=current_user.email_address,
+                )
+
+                if verification_required:
+                    employer_ids_list = [
+                        e.employer_id
+                        for e in current_user.employers
+                        if current_user.verified_employer(e)
+                    ]
+                else:
+                    employer_ids_list = [e.employer_id for e in current_user.employers]
+
+                query = (
+                    db_session.query(Claim)
+                    .order_by(pagination_context.order_key)
+                    .filter(Claim.employer_id.in_(employer_ids_list))
+                )
             else:
-                employer_ids_list = [e.employer_id for e in current_user.employers]
+                query = (
+                    db_session.query(Claim)
+                    .filter(Claim.application.has(Application.user_id == current_user.user_id))  # type: ignore
+                    .order_by(pagination_context.order_key)
+                )
 
-            claims = (
-                db_session.query(Claim)
-                .order_by(Claim.created_at.desc())
-                .filter(Claim.employer_id.in_(employer_ids_list))
-                .limit(25)
-                .all()
-            )
-        else:
-            claims = (
-                db_session.query(Claim)
-                .filter(Claim.application.has(Application.user_id == current_user.user_id))  # type: ignore
-                .order_by(Claim.created_at.desc())
-                .limit(25)
-                .all()
-            )
-    claims_response = [ClaimResponse.from_orm(claim).dict() for claim in claims]
+        page = page_for_api_context(pagination_context, query)
 
-    return response_util.success_response(
-        message="Successfully retrieved claims", data=claims_response, status_code=200,
+    logger.info(
+        "get_claims success",
+        extra={
+            "is_employer": str(is_employer),
+            "pagination.order_by": pagination_context.order_by,
+            "pagination.order_direction": pagination_context.order_direction,
+            "pagination.page_offset": pagination_context.page_offset,
+            "pagination.total_pages": page.total_pages,
+            "pagination.total_records": page.total_records,
+        },
+    )
+
+    return response_util.paginated_success_response(
+        message="Successfully retrieved claims",
+        serializer=ClaimResponse(),
+        page=page,
+        context=pagination_context,
+        status_code=200,
     ).to_api_response()

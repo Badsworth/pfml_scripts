@@ -808,11 +808,13 @@ def test_get_inf_data_as_plain_text(test_db_session):
         assert expected_line in inf_data_text
 
 
-def test_get_fineos_vendor_customer_numbers_from_reference_file(initialize_factories_session):
+def test_get_fineos_vendor_customer_numbers_from_reference_file(
+    test_db_session, initialize_factories_session
+):
     ctr_doc_identfier = CtrDocumentIdentifierFactory.create()
     ref_file = ReferenceFileFactory.create()
-    employee1 = EmployeeFactory.create(fineos_customer_number=111)
-    employee2 = EmployeeFactory.create(fineos_customer_number=222)
+    employee1 = EmployeeFactory.create(fineos_customer_number="111")
+    employee2 = EmployeeFactory.create(fineos_customer_number="222")
 
     EmployeeReferenceFileFactory(
         reference_file=ref_file, ctr_document_identifier=ctr_doc_identfier, employee=employee1
@@ -826,7 +828,7 @@ def test_get_fineos_vendor_customer_numbers_from_reference_file(initialize_facto
     assert len(data) == 2
     for d in data:
         assert {"fineos_customer_number", "ctr_vendor_customer_code"} == set(d.keys())
-        assert d["fineos_customer_number"] in [111, 222]
+        assert d["fineos_customer_number"] in ["111", "222"]
         assert d["ctr_vendor_customer_code"] in [
             employee1.ctr_vendor_customer_code,
             employee2.ctr_vendor_customer_code,
@@ -898,6 +900,7 @@ def test_move_reference_file_db_failure(
     # Test DB failure
     # insert a ReferenceFile already containing the error path, forcing a unique key error
     ReferenceFileFactory(file_location=ref_file.file_location.replace(TEST_SRC_DIR, TEST_DEST_DIR))
+    test_db_session.begin_nested()
     with pytest.raises(SQLAlchemyError):
         move_reference_file(test_db_session, ref_file, TEST_SRC_DIR, TEST_DEST_DIR)
 

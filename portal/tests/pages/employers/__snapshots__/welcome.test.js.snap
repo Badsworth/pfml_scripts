@@ -66,6 +66,30 @@ exports[`Employer welcome displays links to Organizations page when employerShow
 </ul>
 `;
 
+exports[`Employer welcome renders caring leave form link when showCaringLeaveType is true 1`] = `
+Array [
+  "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the ",
+  <a
+    href="https://www.mass.gov/medical-leave-form"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    Certification of a Serious Health Condition form
+  </a>,
+  " during the review process. For leave to care for a family member you can download the ",
+  <a
+    href="https://www.mass.gov/family-caring-form"
+    key="3"
+    rel="noopener"
+    target="_blank"
+  >
+    Certification to Care for a Family Member
+  </a>,
+  " during the review process. ",
+]
+`;
+
 exports[`Employer welcome renders page 1`] = `
 <Fragment>
   <div
@@ -123,14 +147,24 @@ exports[`Employer welcome renders page 1`] = `
         <Trans
           components={
             Object {
+              "caregiver-certification-form-link": <a
+                href="https://www.mass.gov/family-caring-form"
+                rel="noopener"
+                target="_blank"
+              />,
               "healthcare-provider-form-link": <a
-                href="https://www.mass.gov/hcp-form"
+                href="https://www.mass.gov/medical-leave-form"
                 rel="noopener"
                 target="_blank"
               />,
             }
           }
           i18nKey="pages.employersWelcome.viewFormsBody"
+          tOptions={
+            Object {
+              "context": undefined,
+            }
+          }
         />
       </p>
     </div>
@@ -175,14 +209,14 @@ exports[`Employer welcome renders page 2`] = `
 Array [
   "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the ",
   <a
-    href="https://www.mass.gov/hcp-form"
+    href="https://www.mass.gov/medical-leave-form"
     key="1"
     rel="noopener"
     target="_blank"
   >
     Certification of a Serious Health Condition form
   </a>,
-  " during the review process.",
+  " during the review process. ",
 ]
 `;
 

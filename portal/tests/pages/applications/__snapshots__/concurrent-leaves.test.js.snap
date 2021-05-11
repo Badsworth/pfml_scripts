@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConcurrentLeaves renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other leave, benefits, and income"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Will you use any employer-sponsored accrued paid leave during your PFML leave?
+  </Heading>
+</QuestionPage>
+`;

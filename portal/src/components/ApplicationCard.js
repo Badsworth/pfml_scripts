@@ -306,8 +306,11 @@ function ApplicationActions(props) {
 
   const certificationDocs = findDocumentsByTypes(
     documents,
-    // This enum is used because for MVP all certs will have the same doc type
-    [DocumentType.medicalCertification]
+    // TODO (CP-2029): Remove reference to `State managed Paid Leave Confirmation` (DocumentType.certification.medicalCertification) type when it's obsolete
+    [
+      DocumentType.certification.medicalCertification,
+      DocumentType.certification[LeaveReason.bonding],
+    ]
   );
   const hasDenialNotice =
     findDocumentsByTypes(documents, [DocumentType.denialNotice]).length > 0;

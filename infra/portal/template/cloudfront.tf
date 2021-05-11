@@ -46,7 +46,7 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
   is_ipv6_enabled     = true
   http_version        = "http2"
   default_root_object = "index.html"
-  aliases             = local.domain == null || !var.enable_pretty_domain ? null : [local.domain]
+  aliases             = local.domain == null ? null : [local.domain]
   price_class         = "PriceClass_100"
   retain_on_delete    = true
   # Terraform will exit as soon as it’s made all the updates
@@ -104,8 +104,8 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
   }
 
   viewer_certificate {
-    acm_certificate_arn            = var.enable_pretty_domain ? data.aws_acm_certificate.domain[0].arn : null
-    cloudfront_default_certificate = (var.enable_pretty_domain == false)
+    acm_certificate_arn            = local.cert_domain == null ? null : data.aws_acm_certificate.domain[0].arn
+    cloudfront_default_certificate = (local.cert_domain == null)
 
     # SNI is recommended
     # Associates alternate domain names with an IP address for each edge location
@@ -113,7 +113,7 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
     ssl_support_method = "sni-only"
 
     # If we're using cloudfront_default_certificate, TLSv1 must be specified.
-    minimum_protocol_version = var.enable_pretty_domain ? "TLSv1.2_2019" : "TLSv1"
+    minimum_protocol_version = local.cert_domain == null ? "TLSv1" : "TLSv1.2_2019"
   }
 
   restrictions {

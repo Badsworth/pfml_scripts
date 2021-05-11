@@ -51,12 +51,10 @@ export default (
 
   const steps: Cfg.StoredStep[] = [
     {
-      time: 0,
       name: "Login into fineos",
       test: tryLogin,
     },
     {
-      time: 0,
       name: "Do task",
       test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
         // navigate to tasks list and find next task type
@@ -155,9 +153,9 @@ export default (
   return {
     steps,
     default: async (): Promise<void> => {
-      TestData.fromJSON<Cfg.LSTSimClaim>(
-        `../${await Cfg.dataBaseUrl}/claims.json`
-      ).filter((line) => line.scenario === scenario);
+      TestData.fromJSON<Cfg.LSTSimClaim>(`../data/claims.json`).filter(
+        (line) => line.scenario === scenario
+      );
 
       steps.forEach((action) => {
         step(action.name, action.test as StepFunction<unknown>);

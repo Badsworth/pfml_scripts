@@ -33,6 +33,7 @@ export const Welcome = ({ appLogic, user }) => {
   const shouldShowNewsBanner = isFeatureEnabled("employerShowNewsBanner");
   const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
   const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
+  const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
 
   return (
     <React.Fragment>
@@ -112,6 +113,16 @@ export const Welcome = ({ appLogic, user }) => {
                     rel="noopener"
                   />
                 ),
+                "caregiver-certification-form-link": (
+                  <a
+                    href={routes.external.massgov.caregiverCertificationForm}
+                    target="_blank"
+                    rel="noopener"
+                  />
+                ),
+              }}
+              tOptions={{
+                context: shouldShowCaringLeave ? "caring" : undefined,
               }}
             />
           </p>

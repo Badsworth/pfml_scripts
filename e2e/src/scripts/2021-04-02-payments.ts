@@ -1,9 +1,9 @@
 import ClaimPool from "../generation/Claim";
-import { dataDirectory, submit, PostSubmitCallback } from "./util";
+import dataDirectory from "../generation/DataDirectory";
+import { submit, PostSubmitCallback } from "./util";
 import ClaimSubmissionTracker from "../submission/ClaimStateTracker";
 import SubmittedClaimIndex from "../submission/writers/SubmittedClaimIndex";
 import path from "path";
-import { getFineosBaseUrl } from "../util/common";
 import {
   approveClaim,
   withFineosBrowser,
@@ -28,14 +28,20 @@ const pipelineP = promisify(pipeline);
 
 (async () => {
   const storage = dataDirectory("payments-2021-04-02");
-  const employees = await EmployeePool.load(storage.employees);
+  // Load employees that were generated elsewhere.
+  const employees = await EmployeePool.load(
+    storage.employees,
+    storage.usedEmployees
+  );
 
+  // Write a CSV description of the scenarios we're using for human consumption.
   await pipelineP(
     describe(Object.values(scenarios)),
     fs.createWriteStream(storage.dir + "/scenarios.csv")
   );
 
-  // Generate a pool of claims. This could happen later, though!
+  // Attempt to load a claim pool if one has already been generated and saved.
+  // If we error out here, we go into generating and saving the pool.
   const claimPool = await ClaimPool.load(
     storage.claims,
     storage.documents
@@ -55,13 +61,17 @@ const pipelineP = promisify(pipeline);
     return ClaimPool.load(storage.claims, storage.documents);
   });
 
+  // Initialize a "tracker", which tracks which claims have been submitted, and prevents that submission from happening
+  // again. This allows us to start and stop the submission process as needed, picking up where we left off each time.
   const tracker = new ClaimSubmissionTracker(storage.state);
 
+  // Define a postSubmit handler, to be invoked following claim submission. In this case, we're hooking into the
+  // metadata on the claim to determine how to adjudicate the claim, then performing that action using Playwright.
   const postSubmit: PostSubmitCallback = async (claim, response) => {
     const { metadata } = claim;
     if (metadata && "postSubmit" in metadata) {
       // Open a puppeteer browser for the duration of this callback.
-      await withFineosBrowser(getFineosBaseUrl(), async (page) => {
+      await withFineosBrowser(async (page) => {
         const { fineos_absence_id } = response;
         if (!fineos_absence_id)
           throw new Error(
@@ -91,6 +101,8 @@ const pipelineP = promisify(pipeline);
     }
   };
 
+  // Perform submission.  Note: the `if (true)` clause here is just to help us easily enable/disable the submission
+  // action (for example if we just want to generate claims, but not submit them).
   if (true && claimPool) {
     // Finally, kick off submission submission.
     await submit(claimPool, tracker, postSubmit, 3);

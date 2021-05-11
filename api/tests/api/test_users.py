@@ -14,6 +14,7 @@ from massgov.pfml.db.models.factories import (
     UserFactory,
 )
 from massgov.pfml.util.aws.cognito import CognitoUserExistsValidationError
+from massgov.pfml.util.strings import format_fein
 
 fake = faker.Faker()
 
@@ -43,7 +44,7 @@ def valid_employer_creation_request_body(employer_for_new_user) -> Dict[str, Any
         "email_address": fake.email(domain="example.com"),
         "password": fake.password(length=12),
         "role": {"role_description": "Employer"},
-        "user_leave_administrator": {"employer_fein": "-".join([ein[:2], ein[2:9]]),},
+        "user_leave_administrator": {"employer_fein": format_fein(ein)},
     }
 
 
@@ -92,10 +93,7 @@ def test_users_post_employer(
     assert response_user.get("email_address") == email_address
     assert len(response_user.get("user_leave_administrators")) == 1
     # EIN is masked in response
-    assert (
-        response_user.get("user_leave_administrators")[0].get("employer_fein")
-        == f"**-***{employer_fein[6:]}"
-    )
+    assert response_user.get("user_leave_administrators")[0].get("employer_fein") == employer_fein
 
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
@@ -283,8 +281,9 @@ def test_users_get(client, employer_user, employer_auth_token, test_db_session):
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_fein": format_fein(employer.employer_fein),
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": False,
         }
@@ -341,8 +340,9 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_fein": format_fein(employer.employer_fein),
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": False,
         }
@@ -369,7 +369,7 @@ def test_users_patch(client, user, auth_token, test_db_session):
     assert response.status_code == 200
     assert response_body.get("data")["consented_to_data_sharing"] is True
 
-    test_db_session.refresh(user)
+    # test_db_session.refresh(user)
     assert user.consented_to_data_sharing is True
 
 
@@ -386,7 +386,7 @@ def test_users_unauthorized_patch(client, user, auth_token, test_db_session):
 
     tests.api.validate_error_response(response, 403)
 
-    test_db_session.refresh(user_2)
+    # test_db_session.refresh(user_2)
     assert user_2.consented_to_data_sharing is False
 
 
@@ -460,8 +460,9 @@ def test_has_verification_data_flag(client, employer_user, employer_auth_token, 
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_fein": format_fein(employer.employer_fein),
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": True,
         }
@@ -490,8 +491,9 @@ def test_has_verification_data_flag_old_data(
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_fein": format_fein(employer.employer_fein),
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": False,
         }

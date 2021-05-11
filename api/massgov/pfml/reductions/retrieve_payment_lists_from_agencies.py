@@ -21,13 +21,15 @@ class Configuration:
     get_dua_list: bool
 
     def __init__(self, input_args: List[str]):
-        parser = argparse.ArgumentParser(description="Send claimant list to agency")
+        parser = argparse.ArgumentParser(
+            description="Retrieve and process payment files from agencies"
+        )
         parser.add_argument(
             "--steps",
             nargs="+",
             choices=ALLOWED_VALUES,
-            default=[DUA],
-            help="Indicate which agency, DIA or DUA, to create claimant list for",
+            default=[ALL],
+            help="Indicate which agency, DIA or DUA, to grab files for",
         )
 
         args = parser.parse_args(input_args)

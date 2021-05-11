@@ -1,5 +1,5 @@
 from re import Pattern
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Literal, Optional, Type, Union
 
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_number
@@ -37,15 +37,17 @@ from massgov.pfml.db.models.applications import (
     Phone,
     PhoneType,
     PreviousLeave,
+    PreviousLeaveDeprecated,
+    PreviousLeaveOtherReason,
     PreviousLeaveQualifyingReason,
+    PreviousLeaveSameReason,
     ReducedScheduleLeavePeriod,
     TaxIdentifier,
     WorkPattern,
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, AddressType, GeoState, LkAddressType, Gender
-
+from massgov.pfml.db.models.employees import Address, AddressType, Gender, GeoState, LkAddressType
 from massgov.pfml.util.pydantic.types import Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -351,7 +353,25 @@ def update_from_request(
             continue
 
         if key == "previous_leaves":
-            set_previous_leaves(db_session, body.previous_leaves, application)
+            set_previous_leaves(db_session, body.previous_leaves, application, "previous_leaves")
+            continue
+
+        if key == "previous_leaves_other_reason":
+            set_previous_leaves(
+                db_session,
+                body.previous_leaves_other_reason,
+                application,
+                "previous_leaves_other_reason",
+            )
+            continue
+
+        if key == "previous_leaves_same_reason":
+            set_previous_leaves(
+                db_session,
+                body.previous_leaves_same_reason,
+                application,
+                "previous_leaves_same_reason",
+            )
             continue
 
         if key == "application_nickname":
@@ -362,7 +382,7 @@ def update_from_request(
             continue
         if key == "gender":
             key = "gender_id"
-            value = (Gender.get_id(value) if value else None)
+            value = Gender.get_id(value) if value else None
         if isinstance(value, LookupEnum):
             lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
 
@@ -383,12 +403,11 @@ def update_from_request(
     for leave_schedule in leave_schedules:
         db_session.add(leave_schedule)
 
-    db_session.flush()
     db_session.commit()
     db_session.refresh(application)
     if application.work_pattern is not None:
         db_session.refresh(application.work_pattern)
-    
+
     return application
 
 
@@ -493,9 +512,12 @@ def update_leave_schedule(
     if leave_schedule is None or len(leave_schedule) == 0:
         # Leave periods are removed by sending a PATCH request with an
         # empty array (or null value) for that category of leave.
-        db_session.query(leave_cls).filter(
-            leave_cls.application_id == application.application_id
-        ).delete(synchronize_session="fetch")
+        if leave_cls == ContinuousLeavePeriod:
+            application.continuous_leave_periods = []
+        elif leave_cls == IntermittentLeavePeriod:
+            application.intermittent_leave_periods = []
+        elif leave_cls == ReducedScheduleLeavePeriod:
+            application.reduced_schedule_leave_periods = []
 
         return None
 
@@ -709,6 +731,7 @@ def set_employer_benefits(
             benefit_start_date=api_employer_benefit.benefit_start_date,
             benefit_end_date=api_employer_benefit.benefit_end_date,
             benefit_amount_dollars=api_employer_benefit.benefit_amount_dollars,
+            is_full_salary_continuous=api_employer_benefit.is_full_salary_continuous,
         )
 
         if api_employer_benefit.benefit_type:
@@ -759,26 +782,35 @@ def set_previous_leaves(
     db_session: db.Session,
     api_previous_leaves: Optional[List[claims_common_io.PreviousLeave]],
     application: Application,
+    # TODO (CP-2123): Remove 'previous_leaves' literal when we remove references to previous_leaves
+    type: Literal["previous_leaves_same_reason", "previous_leaves_other_reason", "previous_leaves"],
 ) -> None:
+    previous_leave_type = {
+        "previous_leaves_same_reason": PreviousLeaveSameReason,
+        "previous_leaves_other_reason": PreviousLeaveOtherReason,
+        # TODO (CP-2123): Remove references to previous_leaves
+        "previous_leaves": PreviousLeaveDeprecated,
+    }[type]
 
-    if application.previous_leaves:
-        delete_application_other_benefits(PreviousLeave, application, db_session)
+    if getattr(application, type):
+        delete_application_other_benefits(previous_leave_type, application, db_session)
 
     if not api_previous_leaves:
         return
 
     for api_previous_leave in api_previous_leaves:
-        new_previous_leave = PreviousLeave(
+        new_previous_leave = previous_leave_type(
             application_id=application.application_id,
             leave_start_date=api_previous_leave.leave_start_date,
             leave_end_date=api_previous_leave.leave_end_date,
             is_for_current_employer=api_previous_leave.is_for_current_employer,
+            worked_per_week_minutes=api_previous_leave.worked_per_week_minutes,
+            leave_minutes=api_previous_leave.leave_minutes,
         )
         if api_previous_leave.leave_reason:
             new_previous_leave.leave_reason_id = PreviousLeaveQualifyingReason.get_id(
                 api_previous_leave.leave_reason
             )
-
         db_session.add(new_previous_leave)
 
 
@@ -829,6 +861,7 @@ def add_or_update_phone(
         application.phone.phone_number = internationalized_phone_number
 
     db_session.add(application.phone)
+
 
 def get_or_add_tax_identifier(
     db_session: db.Session, body: ApplicationRequestBody

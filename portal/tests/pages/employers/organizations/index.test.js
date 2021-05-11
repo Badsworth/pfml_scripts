@@ -3,6 +3,7 @@ import Index from "../../../../src/pages/employers/organizations";
 import React from "react";
 import { UserLeaveAdministrator } from "../../../../src/models/User";
 import routeWithParams from "../../../../src/utils/routeWithParams";
+import routes from "../../../../src/routes";
 import { shallow } from "enzyme";
 import useAppLogic from "../../../../src/hooks/useAppLogic";
 
@@ -20,7 +21,10 @@ describe("Index", () => {
   };
 
   beforeEach(() => {
-    process.env.featureFlags = { employerShowVerifications: false };
+    process.env.featureFlags = {
+      employerShowAddOrganization: false,
+      employerShowVerifications: false,
+    };
     renderPage();
   });
 
@@ -51,11 +55,22 @@ describe("Index", () => {
   describe('when "employerShowAddOrganization" feature flag is enabled', () => {
     beforeEach(() => {
       process.env.featureFlags = { employerShowAddOrganization: true };
+      wrapper = shallow(<Index appLogic={appLogic} />).dive();
+    });
+
+    it("shows the correct future availability statement", () => {
+      const futureAvaiabilityMessage = wrapper.find(
+        '[data-test="future-availability-message"]'
+      );
+      expect(futureAvaiabilityMessage.text()).toContain(
+        "You can manage leave for these organizations."
+      );
     });
 
     it("displays a button linked to Add Organization page", () => {
-      wrapper = shallow(<Index appLogic={appLogic} />).dive();
-      expect(wrapper.find("ButtonLink").exists()).toBe(true);
+      const button = wrapper.find("ButtonLink");
+      expect(button.exists()).toBe(true);
+      expect(button.prop("href")).toBe(routes.employers.addOrganization);
     });
   });
 
@@ -187,6 +202,21 @@ describe("Index", () => {
         expect(verifiedRow.find("a").exists()).toBe(false);
         expect(verificationBlockedRow.find("a").exists()).toBe(false);
       });
+    });
+  });
+
+  describe('when "employerShowDashboard" is enabled', () => {
+    it("has a back button to the dashboard", () => {
+      process.env.featureFlags = { employerShowDashboard: true };
+      ({ wrapper } = renderWithAppLogic(Index, {
+        diveLevels: 1,
+      }));
+
+      expect(wrapper.find("BackButton")).toMatchInlineSnapshot(`
+        <BackButton
+          label="Back to Dashboard"
+        />
+      `);
     });
   });
 });

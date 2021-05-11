@@ -34,7 +34,7 @@ export const DefaultStory = (args) => {
           document_type: DocumentType.identityVerification,
         }),
         new Document({
-          document_type: DocumentType.medicalCertification,
+          document_type: DocumentType.certification.medicalCertification,
         }),
       ]),
     },

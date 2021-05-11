@@ -22,3 +22,12 @@ export type Submission = {
   fineos_absence_id: string;
   timestamp_from: number;
 };
+
+export type SubjectOptions =
+  | "application started"
+  | "employer response"
+  | "denial (employer)"
+  | "approval (employer)"
+  | "denial (claimant)"
+  | "approval (claimant)"
+  | "request for additional info";

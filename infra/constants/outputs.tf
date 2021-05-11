@@ -81,16 +81,44 @@ output "nonprod_admin_roles" {
   ]
 }
 
+# Mapping of environments to pretty domains
+output "domains" {
+  value = {
+    "test"        = "paidleave-test.mass.gov",
+    "stage"       = "paidleave-stage.mass.gov",
+    "performance" = "paidleave-performance.mass.gov",
+    "training"    = "paidleave-training.mass.gov",
+    "breakfix"    = "paidleave-breakfix.eol.mass.gov",
+    "cps-preview" = "paidleave-cps-preview.eol.mass.gov",
+    "uat"         = "paidleave-uat.mass.gov",
+    "prod"        = "paidleave.mass.gov"
+  }
+}
+
+output "api_domains" {
+  value = {
+    "test"        = "paidleave-api-test.mass.gov",
+    "stage"       = "paidleave-api-stage.mass.gov",
+    "performance" = "paidleave-api-performance.mass.gov",
+    "training"    = "paidleave-api-training.mass.gov",
+    "breakfix"    = "paidleave-api-breakfix.eol.mass.gov",
+    "cps-preview" = "paidleave-api-cps-preview.eol.mass.gov",
+    "uat"         = "paidleave-api-uat.mass.gov",
+    "prod"        = "paidleave-api.mass.gov"
+  }
+}
+
+# Mapping of environments to certificate domain lookups
 output "cert_domains" {
   # you cannot lookup certs by a SAN, so we lookup based on the first domain
-  # as specified in the infra/pfml-aws/acm.tf file.
+  # that is specified in the certificate.
   value = {
     "test"        = "paidleave-test.mass.gov",
     "stage"       = "paidleave-test.mass.gov",
     "performance" = "paidleave-performance.mass.gov",
     "training"    = "paidleave-performance.mass.gov",
-    "breakfix"    = "paidleave-breakfix.mass.gov",
-    "cps-preview" = "paidleave-breakfix.mass.gov",
+    "breakfix"    = "paidleave-breakfix.eol.mass.gov",
+    "cps-preview" = "paidleave-breakfix.eol.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
     "prod"        = "paidleave.mass.gov"
   }
