@@ -76,7 +76,7 @@ def test_error_if_withholding_data_not_in_db(
     assert "Employer has no quarterly contribution data." in caplog.text
 
 
-def test_error_if_withholding_amount_is_incorrect(
+def test_error_if_withholding_amount_is_outside_threshold(
     caplog,
     client,
     employer_auth_token,
@@ -137,6 +137,78 @@ def test_verification_successful_for_valid_data(
     verifications_body[
         "withholding_amount"
     ] = employer_quarterly_contribution.employer_total_pfml_contribution
+    verifications_body["withholding_quarter"] = employer_quarterly_contribution.filing_period
+
+    response = client.post(
+        "/v1/employers/verifications",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=verifications_body,
+    )
+
+    verification = test_db_session.query(Verification).first()
+    user_leave_administrator = (
+        test_db_session.query(UserLeaveAdministrator)
+        .filter(
+            UserLeaveAdministrator.user_leave_administrator_id == link.user_leave_administrator_id
+        )
+        .one_or_none()
+    )
+    assert user_leave_administrator.employer_id == employer_quarterly_contribution.employer_id
+    assert user_leave_administrator.verification_id == verification.verification_id
+    assert "Successfully verified user." in caplog.text
+
+    assert (
+        verification.verification_type_id == VerificationType.PFML_WITHHOLDING.verification_type_id
+    )
+
+    assert response.status_code == 201
+    response_body = response.get_json()
+    assert response_body.get("data")["user_id"] == str(employer_user.user_id)
+    assert response_body.get("data")["roles"] == [
+        {"role_description": "Employer", "role_id": 3},
+    ]
+
+    employer = employer_quarterly_contribution.employer
+    assert response_body.get("data")["user_leave_administrators"] == [
+        {
+            "employer_dba": employer.employer_dba,
+            "employer_fein": format_fein(employer.employer_fein),
+            "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
+            "verified": True,
+            "has_verification_data": True,
+        }
+    ]
+
+
+def test_verification_successful_for_data_within_threshold(
+    caplog,
+    client,
+    employer_auth_token,
+    test_db_session,
+    employer_quarterly_contribution,
+    employer_user,
+):
+    caplog.set_level(logging.INFO)  # noqa: B1
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer_quarterly_contribution.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+
+    # Must be at least 1 day ago for employer.has_verification_data to be True
+    employer_quarterly_contribution.filing_period = (datetime.now() - timedelta(1)).strftime(
+        "%Y-%m-%d"
+    )
+
+    test_db_session.add(link)
+    test_db_session.add(employer_quarterly_contribution)
+    test_db_session.commit()
+
+    verifications_body["employer_id"] = employer_quarterly_contribution.employer_id
+    verifications_body["withholding_amount"] = (
+        employer_quarterly_contribution.employer_total_pfml_contribution - 0.01
+    )
     verifications_body["withholding_quarter"] = employer_quarterly_contribution.filing_period
 
     response = client.post(
