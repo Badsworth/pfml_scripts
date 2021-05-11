@@ -542,36 +542,6 @@ jobs:
         run: terraform init
         working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      # Temporary step to ensure the existing RDS log group gets imported into the state.
-      # This is necessary to prevent terraform from running into a duplicate-log-group error.
-      # #
-      # # (TODO: Remove in INFRA-386 after rollout)
-      - name: (temp) Fix RDS log group state
-        # Clear out global lock timeout for "terraform state show""
-        env:
-          TF_CLI_ARGS: ''
-        run: |
-          needs_new=$(git grep aws/rds/instance/massgov-pfml-.*/postgresql ../../template/rds.tf || true)
-          is_new=$(terraform state show module.api.aws_cloudwatch_log_group.postgresql | { grep massgov-pfml- || true; })
-
-          if [[ -z "$needs_new" ]] && ! [[ -z "$is_new" ]]; then
-            echo "Importing old format massgov_pfml_"
-            prefix=massgov_pfml_
-          elif ! [[ -z "$needs_new" ]] && [[ -z "$is_new" ]]; then
-            echo "Importing new format massgov-pfml-"
-            prefix=massgov-pfml-
-          else
-            echo "No imports needed."
-          fi
-
-          if ! [ -z $prefix ]; then
-            terraform state rm -lock-timeout=120s module.api.aws_cloudwatch_log_group.postgresql
-            terraform import -lock-timeout=120s \
-              module.api.aws_cloudwatch_log_group.postgresql \
-              /aws/rds/instance/${prefix}${{ needs.deploy-info.outputs.api-env }}/postgresql
-          fi
-        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
-
       - name: Terraform Plan with new docker image
         id: terraform_plan
         run: terraform plan -out=plan.tfplan
