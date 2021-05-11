@@ -311,12 +311,14 @@ class ClaimantData:
 class ClaimantExtractStep(Step):
     class Metrics(str, enum.Enum):
         CLAIM_NOT_FOUND_COUNT = "claim_not_found_count"
+        CLAIM_PROCESSED_COUNT = "claim_processed_count"
         EFT_FOUND_COUNT = "eft_found_count"
         EFT_REJECTED_COUNT = "eft_rejected_count"
         EMPLOYEE_FEED_RECORD_COUNT = "employee_feed_record_count"
         EMPLOYEE_NOT_FOUND_IN_FEED_COUNT = "employee_not_found_in_feed_count"
         EMPLOYEE_NOT_FOUND_IN_DATABASE_COUNT = "employee_not_found_in_database_count"
         EMPLOYEE_PROCESSED_MULTIPLE_TIMES = "employee_processed_multiple_times"
+        ERRORED_CLAIM_COUNT = "errored_claim_count"
         ERRORED_CLAIMANT_COUNT = "errored_claimant_count"
         EVIDENCE_NOT_ID_PROOFED_COUNT = "evidence_not_id_proofed_count"
         NEW_EFT_COUNT = "new_eft_count"
@@ -513,9 +515,7 @@ class ClaimantExtractStep(Step):
                     absence_case_id,
                     extra=claimant_data.get_traceable_details(),
                 )
-                # TODO: Add some logging that indicates that we errored while trying to create
-                # a claim.
-
+                self.increment(self.Metrics.ERRORED_CLAIM_COUNT)
                 continue
 
             try:
@@ -564,8 +564,6 @@ class ClaimantExtractStep(Step):
                 claimant_data.absence_case_id,
                 extra=claimant_data.get_traceable_details(),
             )
-            # Note that this claim might not get made if there are
-            # validation issues found for the claimant
             self.increment(self.Metrics.CLAIM_NOT_FOUND_COUNT)
         else:
             logger.info(
@@ -609,6 +607,7 @@ class ClaimantExtractStep(Step):
         # Return claim, we want to create this even if the employee
         # has issues or there were some validation issues
         self.db_session.add(claim_pfml)
+        self.increment(self.Metrics.CLAIM_PROCESSED_COUNT)
 
         return claim_pfml
 
