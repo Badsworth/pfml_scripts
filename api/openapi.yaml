@@ -1741,6 +1741,10 @@ components:
               example: "Employed"
             occupation:
               $ref: "#/components/schemas/Occupation"
+            job_title:
+              type: string
+              nullable: true
+              example: "Full Stack Developer"
             leave_details:
               $ref: "#/components/schemas/ApplicationLeaveDetails"
             work_pattern:
@@ -1882,6 +1886,10 @@ components:
           nullable: true
         occupation:
           $ref: "#/components/schemas/Occupation"
+        job_title:
+          type: string
+          nullable: true
+          example: "Full Stack Developer"
         hours_worked_per_week:
           type: number
           nullable: true

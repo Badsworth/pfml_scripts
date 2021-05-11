@@ -52,6 +52,7 @@ class ApplicationResponse(PydanticBaseModel):
     has_submitted_payment_preference: Optional[bool]
     mass_id: Optional[MaskedMassIdStr]
     occupation: Optional[Occupation]
+    job_title: Optional[str]
     hours_worked_per_week: Optional[Decimal]
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[MaskedApplicationLeaveDetails]

@@ -39,6 +39,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     has_state_id: Optional[bool]
     mass_id: Optional[MassIdStr]
     occupation: Optional[Occupation]
+    job_title: Optional[str]
     hours_worked_per_week: Optional[Decimal]
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]

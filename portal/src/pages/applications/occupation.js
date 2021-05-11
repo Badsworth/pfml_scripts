@@ -14,7 +14,7 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const fields = ["claim.occupation_id", "claim.job_title"];
+export const fields = ["claim.occupation", "claim.job_title"];
 
 export const AppOccupation = (props) => {
   const { appLogic, claim } = props;
@@ -39,24 +39,16 @@ export const AppOccupation = (props) => {
     updateFields,
   });
 
-  const occupationDefaults = [
-    {
-      label: t("pages.claimsOccupation.selectCategory"),
-      value: 0,
-    },
-  ];
-  const [occupations, setOccupations] = useState(occupationDefaults);
+  const [occupations, setOccupations] = useState([]);
 
   const populateOccupations = async () => {
-    setOccupations([
-      ...occupationDefaults.filter((d) => d.value !== -1),
-      ...(await appLogic.benefitsApplications.getOccupations()).map(
-        (occupation) => ({
-          label: occupation.occupation_description,
-          value: occupation.occupation_id,
-        })
-      ),
-    ]);
+    const occupationOptions = await appLogic.benefitsApplications.getOccupations();
+    setOccupations(
+      occupationOptions.map((occupation) => ({
+        label: occupation.occupation_description,
+        value: occupation.occupation_description,
+      }))
+    );
   };
 
   useEffect(() => {
@@ -67,7 +59,7 @@ export const AppOccupation = (props) => {
 
   return (
     <QuestionPage
-      title={t("$t(shared.claimsVerifyIdTitle)")}
+      title={t("pages.claimsEmploymentStatus.title")}
       onSave={handleSave}
     >
       <Fieldset>
@@ -79,10 +71,9 @@ export const AppOccupation = (props) => {
         </FormLabel>
 
         <Dropdown
-          {...getFunctionalInputProps(`occupation_id`)}
+          {...getFunctionalInputProps(`occupation`)}
           choices={occupations}
           label="Industry"
-          hideEmptyChoice
           smallLabel
         />
         <InputText
