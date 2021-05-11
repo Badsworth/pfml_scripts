@@ -1,8 +1,8 @@
-import { MockClaimBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const mockClaims = {
-  employed: new MockClaimBuilder().employed().create(),
+  employed: new MockBenefitsApplicationBuilder().employed().create(),
 };
 
 const { config, DefaultStory } = generateClaimPageStory(

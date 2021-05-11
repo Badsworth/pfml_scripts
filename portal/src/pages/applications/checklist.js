@@ -43,7 +43,10 @@ export const Checklist = (props) => {
     DocumentType.identityVerification,
   ]);
 
-  const certificationDocuments = findDocumentsByLeaveReason(documents, claim);
+  const certificationDocuments = findDocumentsByLeaveReason(
+    documents,
+    get(claim, "leave_details.reason")
+  );
 
   const partOneSubmitted = query["part-one-submitted"];
   const paymentPrefSubmitted = query["payment-pref-submitted"];

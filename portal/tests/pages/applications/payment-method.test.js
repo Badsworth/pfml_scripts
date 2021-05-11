@@ -3,7 +3,7 @@ import {
   PaymentPreferenceMethod,
 } from "../../../src/models/PaymentPreference";
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -12,7 +12,7 @@ import PaymentMethod from "../../../src/pages/applications/payment-method";
 jest.mock("../../../src/hooks/useAppLogic");
 
 const setup = (payment_type) => {
-  let claim = new MockClaimBuilder();
+  let claim = new MockBenefitsApplicationBuilder();
 
   if (payment_type === PaymentPreferenceMethod.check) {
     claim.check();

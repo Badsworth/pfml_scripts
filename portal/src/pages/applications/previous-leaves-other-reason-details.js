@@ -188,9 +188,7 @@ export const PreviousLeavesOtherReasonDetailsCard = (props) => {
         smallLabel
         label={t(
           "pages.claimsPreviousLeavesOtherReasonDetails.isForCurrentEmployerLabel",
-          {
-            ein: employer_fein,
-          }
+          { employer_fein }
         )}
         hint={t(
           "pages.claimsPreviousLeavesOtherReasonDetails.isForCurrentEmployerHint"

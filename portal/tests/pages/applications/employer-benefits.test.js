@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -9,8 +9,11 @@ jest.mock("../../../src/hooks/useAppLogic");
 
 const setup = (options = { hasEmployerBenefits: true }) => {
   const claim = options.hasEmployerBenefits
-    ? new MockClaimBuilder().continuous().employerBenefit().create()
-    : new MockClaimBuilder().continuous().create();
+    ? new MockBenefitsApplicationBuilder()
+        .continuous()
+        .employerBenefit()
+        .create()
+    : new MockBenefitsApplicationBuilder().continuous().create();
 
   const { appLogic, wrapper } = renderWithAppLogic(EmployerBenefits, {
     claimAttrs: claim,

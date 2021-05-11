@@ -139,7 +139,7 @@ exports[`PreviousLeavesOtherReasonDetailsCard renders the component 1`] = `
       ]
     }
     hint="This is the same Employer Identification Number you entered earlier in your application. After you submit your application, we'll give this employer a chance to review information from your application. We won't share any information about leave you took from other employers."
-    label="Did you take leave from this employer? EIN: "
+    label="Did you take leave from this employer? EIN: 12‑3456789"
     name="previous_leaves_other_reason[0].is_for_current_employer"
     onChange={[Function]}
     smallLabel={true}

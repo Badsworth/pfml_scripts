@@ -131,6 +131,7 @@ class Regexes:
 class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
+    INVALID_DATASET = "InvalidDataset"
     MISSING_IN_DB = "MissingInDB"
     FIELD_TOO_SHORT = "FieldTooShort"
     FIELD_TOO_LONG = "FieldTooLong"

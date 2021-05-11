@@ -5,7 +5,7 @@ import {
   WorkPatternType,
 } from "../../../src/models/BenefitsApplication";
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -13,7 +13,7 @@ import ScheduleVariable from "../../../src/pages/applications/schedule-variable"
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const defaultClaim = new MockClaimBuilder()
+const defaultClaim = new MockBenefitsApplicationBuilder()
   .continuous()
   .workPattern({
     work_pattern_days: [],
@@ -67,7 +67,7 @@ describe("ScheduleVariable", () => {
   it("submits updated data when user changes their answer", async () => {
     const initialWorkPattern = WorkPattern.createWithWeek(60 * 7); // 1 hour each day
     const { appLogic, claim, changeField, submitForm } = setup(
-      new MockClaimBuilder()
+      new MockBenefitsApplicationBuilder()
         .continuous()
         .workPattern({
           work_pattern_days: initialWorkPattern.work_pattern_days,
@@ -95,7 +95,7 @@ describe("ScheduleVariable", () => {
   it("submits data when user doesn't change their answers", async () => {
     const initialWorkPattern = WorkPattern.createWithWeek(60 * 7); // 1 hour each day
     const { appLogic, claim, submitForm } = setup(
-      new MockClaimBuilder()
+      new MockBenefitsApplicationBuilder()
         .continuous()
         .workPattern({
           work_pattern_days: initialWorkPattern.work_pattern_days,

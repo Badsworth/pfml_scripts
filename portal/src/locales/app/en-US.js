@@ -83,12 +83,10 @@ const errors = {
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   claims: {
     date_of_birth: {
-      format: "Date of birth must include a valid month, day, and year.",
+      format: "Your date of birth must include a valid month, day, and year.",
       invalid_age: "The person taking leave must be at least 14 years old.",
-      invalid_year_range: `Date of birth year must be on or after ${
-        new Date().getFullYear() - 100
-      }.`,
-      required: "Enter a date of birth.",
+      invalid_year_range: "Your date of birth must include a valid year.",
+      required: "Enter your date of birth.",
     },
     employer_benefits: {
       benefit_amount_dollars: {
@@ -173,17 +171,21 @@ const errors = {
     leave_details: {
       caring_leave_metadata: {
         family_member_date_of_birth: {
-          format: "Date of birth must include a valid month, day, and year.",
-          required: "Enter a date of birth.",
+          format:
+            "Your family member’s date of birth must include a valid month, day, and year.",
+          invalid_year_range:
+            "Your family member’s date of birth must include a valid year.",
+          required: "Enter your family member’s date of birth.",
         },
         family_member_first_name: {
-          required: "Enter a family member's first name.",
+          required: "Enter your family member's first name.",
         },
         family_member_last_name: {
-          required: "Enter a family member's last name.",
+          required: "Enter your family member's last name.",
         },
         relationship_to_caregiver: {
-          required: "Please choose your relationship with the family member.",
+          required:
+            "Select your relationship with the family member you are caring for.",
         },
       },
       child_birth_date: {
@@ -909,7 +911,7 @@ const pages = {
   },
   claimsConcurrentLeavesDetails: {
     sectionLabel:
-      "Will you use accrued paid leave from this employer? EIN: {{employer_fein}}",
+      "Will you use accrued paid leave from this employer? EIN: {{employer_fein, ein}}",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsConcurrentLeavesIntro: {
@@ -1287,7 +1289,7 @@ const pages = {
     isForCurrentEmployerHint:
       "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, we'll give this employer a chance to review information from your application. We won't share any information about leave you took from other employers.",
     isForCurrentEmployerLabel:
-      "Did you take leave from this employer? EIN:$t(chars.nbsp){{ein}}",
+      "Did you take leave from this employer? EIN:$t(chars.nbsp){{employer_fein, ein}}",
     leaveEndDateLabel: "What was the last day of this leave?",
     leaveMinutesHint:
       "Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours.",
@@ -1813,7 +1815,7 @@ const pages = {
     unavailableClaimsBody:
       "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the <learn-more-link>verification process</learn-more-link>.",
     unavailableClaimsTitle:
-      "Your applications are not accessible at the moment",
+      "Your applications are not accessible right now for: {{employers}}",
     verificationBody:
       "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
     verificationInstructions:
@@ -1915,15 +1917,16 @@ const pages = {
       "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p>",
     stepThreeHeading: "3. Apply",
     stepTwoBondingLeaveBody:
-      "For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.<p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
-    stepTwoBondingLeaveSubhead: "Bond with your child",
+      "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
+    stepTwoBondingLeaveSubhead: "To bond with a child",
     stepTwoCaringLeaveBody:
-      "The health care provider of the person you're caring for must complete the <caregiver-certification-form-link>Caregiver Certification Form</caregiver-certification-form-link>.</p>",
-    stepTwoCaringLeaveSubhead: "Care for a family member",
+      "<p>The health care provider of the person you're caring for must complete the <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link>.</p>",
+    stepTwoCaringLeaveSubhead:
+      "To care for a family member with a serious health condition",
     stepTwoFamilyLeaveSubhead: "Family leave",
     stepTwoHeading: "2. Get documentation that supports your leave request",
     stepTwoMedicalLeaveBody:
-      "Your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.",
+      "<p>Your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p>",
     stepTwoMedicalLeaveSubhead: "Medical leave",
     title: "Get ready to apply",
   },
@@ -2334,8 +2337,9 @@ const components = {
     title: "We’re undergoing maintenance",
   },
   newsBanner: {
+    // TODO (EMPLOYER-1296): Add Mass.gov link to banner
     body:
-      "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be <learn-more-link>adding more features</learn-more-link> to the dashboard so you can easily find and manage paid leave applications.",
+      "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be adding more features to the dashboard so you can easily find and manage paid leave applications.",
     header: "We're making it easier to manage paid leave application",
   },
   pagination: {

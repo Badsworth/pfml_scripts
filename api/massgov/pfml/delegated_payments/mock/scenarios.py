@@ -4,9 +4,7 @@ from typing import Dict, List, Optional
 
 from massgov.pfml.db.models.employees import (
     BankAccountType,
-    ClaimType,
     LkBankAccountType,
-    LkClaimType,
     LkPaymentMethod,
     LkPaymentTransactionType,
     PaymentMethod,
@@ -102,7 +100,7 @@ class ScenarioDescriptor:
     # missing claim
     missing_claim: bool = False
 
-    claim_type: LkClaimType = ClaimType.FAMILY_LEAVE
+    claim_type: str = "Family"
     is_id_proofed: bool = True  # TODO - when claimant extract is file generation is ready, make this set the ID proofing field
 
     payment_method: LkPaymentMethod = PaymentMethod.ACH
@@ -155,8 +153,7 @@ class ScenarioDescriptor:
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-        claim_type=ClaimType.MEDICAL_LEAVE,
+        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED, claim_type="Employee",
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED),
     ScenarioDescriptor(
@@ -266,12 +263,12 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_RETURN,
-        claim_type=ClaimType.MEDICAL_LEAVE,
+        claim_type="Employee",
         pub_ach_response_return=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-        claim_type=ClaimType.MEDICAL_LEAVE,
+        claim_type="Employee",
         pub_ach_response_change_notification=True,
     ),
     ScenarioDescriptor(

@@ -88,7 +88,11 @@ PEI_FIELD_NAMES = [
 ]
 PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
 PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"]
-REQUESTED_ABSENCE_FIELD_NAMES = ["LEAVEREQUEST_DECISION", "LEAVEREQUEST_ID"]
+REQUESTED_ABSENCE_FIELD_NAMES = [
+    "LEAVEREQUEST_DECISION",
+    "LEAVEREQUEST_ID",
+    "ABSENCEREASON_COVERAGE",
+]
 
 FINEOS_CLAIMANT_EXPORT_FILES = [EMPLOYEE_FEED_FILE_NAME, REQUESTED_ABSENCE_SOM_FILE_NAME]
 FINEOS_PAYMENT_EXTRACT_FILES = [
@@ -126,6 +130,9 @@ class FineosClaimantData(FineosData):
     ):
         super().__init__(generate_defaults, **kwargs)
 
+        self.include_employee_feed = include_employee_feed
+        self.include_absence_case = include_absence_case
+
         self.c_value = self.get_value("c_value", "7526")
         self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
 
@@ -159,37 +166,41 @@ class FineosClaimantData(FineosData):
 
     def get_employee_feed_record(self):
         employee_feed_record = OrderedDict()
-        employee_feed_record["C"] = self.c_value
-        employee_feed_record["I"] = self.i_value
-        employee_feed_record["DEFPAYMENTPREF"] = self.default_payment_pref
-        employee_feed_record["CUSTOMERNO"] = self.customer_number
-        employee_feed_record["NATINSNO"] = self.ssn
-        employee_feed_record["DATEOFBIRTH"] = self.date_of_birth
-        employee_feed_record["PAYMENTMETHOD"] = self.payment_method
-        employee_feed_record["ADDRESS1"] = self.address_1
-        employee_feed_record["ADDRESS2"] = self.address_2
-        employee_feed_record["ADDRESS4"] = self.city
-        employee_feed_record["ADDRESS6"] = self.state
-        employee_feed_record["POSTCODE"] = self.post_code
-        employee_feed_record["SORTCODE"] = self.routing_nbr
-        employee_feed_record["ACCOUNTNO"] = self.account_nbr
-        employee_feed_record["ACCOUNTTYPE"] = self.account_type
+        if self.include_employee_feed:
+            employee_feed_record["C"] = self.c_value
+            employee_feed_record["I"] = self.i_value
+            employee_feed_record["DEFPAYMENTPREF"] = self.default_payment_pref
+            employee_feed_record["CUSTOMERNO"] = self.customer_number
+            employee_feed_record["NATINSNO"] = self.ssn
+            employee_feed_record["DATEOFBIRTH"] = self.date_of_birth
+            employee_feed_record["PAYMENTMETHOD"] = self.payment_method
+            employee_feed_record["ADDRESS1"] = self.address_1
+            employee_feed_record["ADDRESS2"] = self.address_2
+            employee_feed_record["ADDRESS4"] = self.city
+            employee_feed_record["ADDRESS6"] = self.state
+            employee_feed_record["POSTCODE"] = self.post_code
+            employee_feed_record["SORTCODE"] = self.routing_nbr
+            employee_feed_record["ACCOUNTNO"] = self.account_nbr
+            employee_feed_record["ACCOUNTTYPE"] = self.account_type
 
         return employee_feed_record
 
     def get_requested_absence_record(self):
         requested_absence_record = OrderedDict()
-        requested_absence_record["ABSENCE_CASENUMBER"] = self.absence_case_number
-        requested_absence_record["ABSENCEREASON_COVERAGE"] = self.leave_type
-        requested_absence_record["NOTIFICATION_CASENUMBER"] = self.notification_number
-        requested_absence_record["ABSENCE_CASESTATUS"] = self.absence_case_status
-        requested_absence_record["LEAVEREQUEST_EVIDENCERESULTTYPE"] = self.leave_request_evidence
-        requested_absence_record["ABSENCEPERIOD_START"] = self.leave_request_start
-        requested_absence_record["ABSENCEPERIOD_END"] = self.leave_request_end
-        requested_absence_record["EMPLOYEE_CUSTOMERNO"] = self.customer_number
-        requested_absence_record[
-            "EMPLOYER_CUSTOMERNO"
-        ] = None  # TODO - not doing anything with this yet
+        if self.include_absence_case:
+            requested_absence_record["ABSENCE_CASENUMBER"] = self.absence_case_number
+            requested_absence_record["ABSENCEREASON_COVERAGE"] = self.leave_type
+            requested_absence_record["NOTIFICATION_CASENUMBER"] = self.notification_number
+            requested_absence_record["ABSENCE_CASESTATUS"] = self.absence_case_status
+            requested_absence_record[
+                "LEAVEREQUEST_EVIDENCERESULTTYPE"
+            ] = self.leave_request_evidence
+            requested_absence_record["ABSENCEPERIOD_START"] = self.leave_request_start
+            requested_absence_record["ABSENCEPERIOD_END"] = self.leave_request_end
+            requested_absence_record["EMPLOYEE_CUSTOMERNO"] = self.customer_number
+            requested_absence_record[
+                "EMPLOYER_CUSTOMERNO"
+            ] = None  # TODO - not doing anything with this yet
 
         return requested_absence_record
 
@@ -223,6 +234,8 @@ class FineosPaymentData(FineosData):
         self.absence_case_number = self.get_value(
             "absence_case_number", f"ABS-{fake.unique.random_int()}"
         )
+
+        self.claim_type = self.get_value("claim_type", "Family")
 
         ssn = fake.ssn().replace("-", "")
         self.tin = self.get_value("tin", ssn)
@@ -298,6 +311,8 @@ class FineosPaymentData(FineosData):
         if self.include_requested_absence:
             requested_absence_record["LEAVEREQUEST_DECISION"] = self.leave_request_decision
             requested_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id
+            requested_absence_record["ABSENCEREASON_COVERAGE"] = self.claim_type
+
         return requested_absence_record
 
 
@@ -401,6 +416,8 @@ def generate_payment_extract_files(
         payee_identifier = "Social Security Number"
         event_reason = "Automatic Main Payment"
 
+        claim_type = scenario_descriptor.claim_type
+
         if scenario_descriptor.payment_transaction_type == PaymentTransactionType.ZERO_DOLLAR:
             payment_amount = "0"
         elif scenario_descriptor.payment_transaction_type == PaymentTransactionType.OVERPAYMENT:
@@ -456,6 +473,7 @@ def generate_payment_extract_files(
             event_type=event_type,
             event_reason=event_reason,
             payee_identifier=payee_identifier,
+            claim_type=claim_type,
         )
 
         fineos_payments_dataset.append(fineos_payments_data)
@@ -544,7 +562,7 @@ def generate_claimant_data_files(
         leave_request_start = "2021-01-01 12:00:00"
         leave_request_end = "2021-04-01 12:00:00"
         notification_number = f"NTN-{absence_case_number}"
-        leave_type = claim.claim_type.claim_type_description
+        leave_type = scenario_descriptor.claim_type
 
         # Auto generated: c_value, i_value, leave_request_id
         fineos_payments_data = FineosClaimantData(

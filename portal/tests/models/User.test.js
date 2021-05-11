@@ -284,4 +284,50 @@ describe("User", () => {
       ).toEqual(false);
     });
   });
+
+  describe("#getVerifiedEmployersNotRegisteredInFineos", () => {
+    it("returns a single employer", () => {
+      const user = new User({
+        user_leave_administrators: [
+          VERIFIED_PENDING_WITHOUT_DATA,
+          VERIFIED_REGISTERED_WITH_DATA,
+        ],
+      });
+
+      expect(user.getVerifiedEmployersNotRegisteredInFineos()).toEqual([
+        VERIFIED_PENDING_WITHOUT_DATA,
+      ]);
+    });
+
+    it("returns multiple employers", () => {
+      const VERIFIED_PENDING_WITH_DATA = new UserLeaveAdministrator({
+        employer_dba: "Company X",
+        employer_fein: "99-999999",
+        employer_id: "007",
+        has_fineos_registration: false,
+        has_verification_data: true,
+        verified: true,
+      });
+      const user = new User({
+        user_leave_administrators: [
+          VERIFIED_PENDING_WITHOUT_DATA,
+          VERIFIED_PENDING_WITH_DATA,
+          VERIFIED_REGISTERED_WITH_DATA,
+        ],
+      });
+
+      expect(user.getVerifiedEmployersNotRegisteredInFineos()).toEqual([
+        VERIFIED_PENDING_WITHOUT_DATA,
+        VERIFIED_PENDING_WITH_DATA,
+      ]);
+    });
+
+    it("returns an empty array if there are no employers", () => {
+      const user = new User({
+        user_leave_administrators: [VERIFIED_REGISTERED_WITH_DATA],
+      });
+
+      expect(user.getVerifiedEmployersNotRegisteredInFineos()).toEqual([]);
+    });
+  });
 });

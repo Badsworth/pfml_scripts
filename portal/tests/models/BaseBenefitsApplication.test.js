@@ -1,10 +1,10 @@
 import Address from "../../src/models/Address";
 import BaseBenefitsApplication from "../../src/models/BaseBenefitsApplication";
-import { BaseMockClaimBuilder } from "../test-utils";
+import { BaseMockBenefitsApplicationBuilder } from "../test-utils";
 
 describe("BaseBenefitsApplication", () => {
   class TestClaim extends BaseBenefitsApplication {}
-  class MockTestClaimBuilder extends BaseMockClaimBuilder {
+  class MockTestClaimBuilder extends BaseMockBenefitsApplicationBuilder {
     constructor(middleName) {
       super();
       this.claimAttrs = {

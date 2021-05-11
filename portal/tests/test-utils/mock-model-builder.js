@@ -30,7 +30,7 @@ import LeaveReason from "../../src/models/LeaveReason";
 import PreviousLeave from "../../src/models/PreviousLeave";
 import { set } from "lodash";
 
-export class BaseMockClaimBuilder {
+export class BaseMockBenefitsApplicationBuilder {
   employed() {
     set(this.claimAttrs, "employer_fein", "12-3456789");
     set(this.claimAttrs, "leave_details.employer_notified", true);
@@ -44,7 +44,7 @@ export class BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {BaseMockClaimBuilder}
+   * @returns {BaseMockBenefitsApplicationBuilder}
    */
   absenceId() {
     set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
@@ -204,8 +204,8 @@ export class BaseMockClaimBuilder {
           ]
     );
 
-    if (this instanceof MockClaimBuilder) {
-      // only the MockClaimBuilder has this attr, MockEmployerClaimBuilder does not
+    if (this instanceof MockBenefitsApplicationBuilder) {
+      // only the MockBenefitsApplicationBuilder has this attr, MockEmployerClaimBuilder does not
       set(this.claimAttrs, "has_employer_benefits", true);
     }
 
@@ -220,7 +220,7 @@ export class BaseMockClaimBuilder {
  *    .completed()
  *    .create();
  */
-export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
+export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder {
   constructor(middleName = "") {
     super();
     this.claimAttrs = {
@@ -291,12 +291,12 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
  * the `create` function at the end to get the Claim object.
  * @class
  * @example
- *  new MockClaimBuilder()
+ *  new MockBenefitsApplicationBuilder()
  *    .continuous()
  *    .intermittent()
  *    .create();
  */
-export class MockClaimBuilder extends BaseMockClaimBuilder {
+export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationBuilder {
   constructor() {
     super();
     this.claimAttrs = {
@@ -306,7 +306,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   id(application_id) {
     set(this.claimAttrs, "application_id", application_id);
@@ -315,7 +315,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   /**
    * @param {object} [leavePeriodAttrs]
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   continuous(leavePeriodAttrs = {}) {
     set(this.claimAttrs, "has_continuous_leave_periods", true);
@@ -325,7 +325,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   /**
    * Sets payment method to paper check
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   check() {
     set(
@@ -338,7 +338,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   /**
    * Sets payment method to direct deposit
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   directDeposit() {
     set(
@@ -357,7 +357,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   hasOtherId() {
     set(this.claimAttrs, "has_state_id", false);
@@ -365,7 +365,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   hasStateId() {
     set(this.claimAttrs, "has_state_id", true);
@@ -375,7 +375,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   /**
    * @param {object} [leavePeriodAttrs]
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   intermittent(leavePeriodAttrs = {}) {
     set(this.claimAttrs, "has_intermittent_leave_periods", true);
@@ -385,7 +385,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   /**
    * @param {object} [leavePeriodAttrs]
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   reducedSchedule(leavePeriodAttrs = {}) {
     set(this.claimAttrs, "has_reduced_schedule_leave_periods", true);
@@ -400,7 +400,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   /**
    * @param {string} birthDate Child's birth date in ISO-8601 format. Defaults
    * to "2012-02-12"
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   bondingBirthLeaveReason(birthDate = "2012-02-12") {
     this.bondingLeaveReason();
@@ -416,7 +416,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   /**
    * @param {string} placementDate Child's placement date in ISO-8601 format. Defaults
    * to "2020-02-14"
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   bondingAdoptionLeaveReason(placementDate = "2012-02-14") {
     this.bondingLeaveReason();
@@ -432,7 +432,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   /**
    * @param {string} placementDate Child's placement date in ISO-8601 format. Defaults
    * to "2020-02-14"
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   bondingFosterCareLeaveReason(placementDate = "2012-02-14") {
     this.bondingLeaveReason();
@@ -446,7 +446,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   hasFutureChild() {
     set(this.claimAttrs, "leave_details.has_future_child_date", true);
@@ -454,7 +454,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   employed() {
     set(this.claimAttrs, "employment_status", EmploymentStatus.employed);
@@ -464,7 +464,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   /**
    *
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   previousLeavesOtherReason(attrs = [{}]) {
     set(this.claimAttrs, "has_previous_leaves_other_reason", true);
@@ -474,7 +474,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   noOtherLeave() {
     set(this.claimAttrs, "has_employer_benefits", false);
@@ -489,7 +489,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   notifiedEmployer() {
     set(this.claimAttrs, "leave_details.employer_notified", true);
@@ -502,7 +502,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   notNotifiedEmployer() {
     set(this.claimAttrs, "leave_details.employer_notified", false);
@@ -511,7 +511,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   pregnant() {
     set(this.claimAttrs, "leave_details.pregnant_or_recent_birth", true);
@@ -521,7 +521,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   /**
    * All required data is present but the claim hasn't been marked
    * as Completed yet in the API
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   complete() {
     this.submitted();
@@ -531,7 +531,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   /**
    * Claim has all required data and has been marked as completed in the API
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   completed() {
     this.complete();
@@ -544,7 +544,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
    * Part 1 steps are complete but not yet submitted to API
    * @param {object} [options]
    * @param {boolean} [options.excludeLeavePeriod]
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   part1Complete(options = {}) {
     this.verifiedId();
@@ -561,7 +561,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   /**
    * Part 1 steps are complete and submitted to API
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   submitted() {
     this.part1Complete();
@@ -573,7 +573,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   /**
    * Part 2 step is completed and submitted to API
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   paymentPrefSubmitted() {
     this.submitted();
@@ -585,7 +585,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   /**
    * @param {object} attrs Address object
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   address(attrs) {
     set(this.claimAttrs, "has_mailing_address", false);
@@ -595,7 +595,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   /**
    * @param {object} attrs Address object
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   mailingAddress(attrs) {
     set(this.claimAttrs, "has_mailing_address", true);
@@ -616,7 +616,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   verifiedId(middleName) {
     set(this.claimAttrs, "first_name", "Jane");
@@ -634,7 +634,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   workPattern(attrs = {}) {
     set(this.claimAttrs, "work_pattern", new WorkPattern(attrs));
@@ -643,7 +643,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   fixedWorkPattern() {
     set(
@@ -690,7 +690,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {MockClaimBuilder}
+   * @returns {MockBenefitsApplicationBuilder}
    */
   variableWorkPattern() {
     const workPattern = WorkPattern.createWithWeek(40 * 60, {

@@ -256,6 +256,10 @@ def build_payment(payment_method: LkPaymentMethod, claim_type: ClaimType = Claim
 
     claim = ClaimFactory.build(employee=employee, claim_type_id=claim_type.claim_type_id)
     payment = PaymentFactory.build(
-        claim=claim, pub_eft=pub_eft, disb_method_id=payment_method.payment_method_id
+        claim=claim,
+        pub_eft=pub_eft,
+        disb_method_id=payment_method.payment_method_id,
+        claim_type=claim_type,
+        claim_type_id=claim_type.claim_type_id,
     )
     return payment

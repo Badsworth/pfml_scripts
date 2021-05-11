@@ -813,8 +813,8 @@ def test_get_fineos_vendor_customer_numbers_from_reference_file(
 ):
     ctr_doc_identfier = CtrDocumentIdentifierFactory.create()
     ref_file = ReferenceFileFactory.create()
-    employee1 = EmployeeFactory.create(fineos_customer_number=111)
-    employee2 = EmployeeFactory.create(fineos_customer_number=222)
+    employee1 = EmployeeFactory.create(fineos_customer_number="111")
+    employee2 = EmployeeFactory.create(fineos_customer_number="222")
 
     EmployeeReferenceFileFactory(
         reference_file=ref_file, ctr_document_identifier=ctr_doc_identfier, employee=employee1

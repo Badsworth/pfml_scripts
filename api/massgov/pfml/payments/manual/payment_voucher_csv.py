@@ -11,8 +11,8 @@ from typing import Optional
 class PaymentVoucherCSV:
     """Manual payment voucher CSV format."""
 
-    leave_type: str
-    activity_code: str
+    leave_type: Optional[str]
+    activity_code: Optional[str]
     payment_doc_id_code: str
     payment_doc_id_dept: str
     doc_id: str
@@ -39,8 +39,8 @@ class PaymentVoucherCSV:
     c_value: str
     i_value: str
     fineos_customer_number_employee: Optional[str]
-    case_status: str
-    employer_id: str
+    case_status: Optional[str]
+    employer_id: Optional[str]
     leave_request_id: Optional[str]
     leave_request_decision: Optional[str]
     payment_event_type: Optional[str]

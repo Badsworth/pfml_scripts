@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -10,7 +10,9 @@ jest.mock("../../../src/hooks/useAppLogic");
 
 describe("LeavePeriodIntermittent", () => {
   it("renders the page with bonding leave content", () => {
-    const claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .bondingBirthLeaveReason()
+      .create();
 
     const { wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
       claimAttrs: claim,
@@ -23,7 +25,9 @@ describe("LeavePeriodIntermittent", () => {
   });
 
   it("renders the page with medical leave content", () => {
-    const claim = new MockClaimBuilder().medicalLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .medicalLeaveReason()
+      .create();
 
     const { wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
       claimAttrs: claim,
@@ -36,7 +40,9 @@ describe("LeavePeriodIntermittent", () => {
   });
 
   it("displays date fields when user indicates they have this leave period and no other leave period type", () => {
-    const claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .bondingBirthLeaveReason()
+      .create();
 
     const { wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
       claimAttrs: claim,
@@ -66,7 +72,9 @@ describe("LeavePeriodIntermittent", () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(
       LeavePeriodIntermittent,
       {
-        claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+        claimAttrs: new MockBenefitsApplicationBuilder()
+          .medicalLeaveReason()
+          .create(),
         render: "mount", // support useEffect
       }
     );
@@ -93,7 +101,7 @@ describe("LeavePeriodIntermittent", () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(
       LeavePeriodIntermittent,
       {
-        claimAttrs: new MockClaimBuilder()
+        claimAttrs: new MockBenefitsApplicationBuilder()
           .medicalLeaveReason()
           .continuous()
           .create(),
@@ -122,7 +130,7 @@ describe("LeavePeriodIntermittent", () => {
   });
 
   it("displays warning when user indicates they have this leave period and already have another leave period type", () => {
-    const claim = new MockClaimBuilder()
+    const claim = new MockBenefitsApplicationBuilder()
       .bondingBirthLeaveReason()
       .continuous()
       .create();
@@ -152,7 +160,7 @@ describe("LeavePeriodIntermittent", () => {
   });
 
   it("sends intermittent leave dates and ID to the api when the claim already has data", async () => {
-    const claim = new MockClaimBuilder().intermittent().create();
+    const claim = new MockBenefitsApplicationBuilder().intermittent().create();
     const {
       end_date,
       start_date,
@@ -181,7 +189,7 @@ describe("LeavePeriodIntermittent", () => {
   });
 
   it("sends intermittent leave dates and ID to the api when the user enters new data", async () => {
-    const claim = new MockClaimBuilder().create();
+    const claim = new MockBenefitsApplicationBuilder().create();
     const startDate = "2021-01-01";
     const endDate = "2021-03-01";
 

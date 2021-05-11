@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -7,12 +7,14 @@ import OtherIncomes from "../../../src/pages/applications/other-incomes";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const otherIncomeClaim = new MockClaimBuilder()
+const otherIncomeClaim = new MockBenefitsApplicationBuilder()
   .continuous()
   .otherIncome()
   .create();
 
-const setup = (claimAttrs = new MockClaimBuilder().continuous().create()) => {
+const setup = (
+  claimAttrs = new MockBenefitsApplicationBuilder().continuous().create()
+) => {
   const { appLogic, claim, wrapper } = renderWithAppLogic(OtherIncomes, {
     claimAttrs,
   });
@@ -34,7 +36,7 @@ describe("OtherIncomes", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  // MockClaimBuilder sets defaults for other_incomes_awaiting_approval to
+  // MockBenefitsApplicationBuilder sets defaults for other_incomes_awaiting_approval to
   // false and has_other_incomes to true. The following 3 tests ensure
   // that making a selection calls handleHasOtherIncomesChange() and updates
   // both fields to the expected values.

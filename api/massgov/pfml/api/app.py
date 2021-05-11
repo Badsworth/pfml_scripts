@@ -36,6 +36,7 @@ def create_app(
     config: Optional[AppConfig] = None,
     check_migrations_current: bool = True,
     db_session_factory: Optional[Session] = None,
+    do_close_db: bool = True,
 ) -> connexion.FlaskApp:
     logger.info("Creating API Application...")
 
@@ -94,6 +95,10 @@ def create_app(
 
     @flask_app.teardown_request
     def close_db(exception=None):
+        if not do_close_db:
+            logger.debug("Not closing DB session")
+            return
+
         try:
             logger.debug("Closing DB session")
             db = g.pop("db", None)

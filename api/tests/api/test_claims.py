@@ -1,4 +1,5 @@
 import copy
+import datetime
 
 import pytest
 from freezegun import freeze_time
@@ -14,6 +15,8 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     VerificationFactory,
 )
+from massgov.pfml.fineos import models
+from massgov.pfml.fineos.mock_client import MockFINEOSClient
 from massgov.pfml.util import feature_gate
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 
@@ -374,7 +377,7 @@ class TestGetClaimReview:
         assert response_data["employer_dba"] == "Acme Co"
         assert response_data["employer_fein"] == "99-9999999"
         assert response_data["employer_id"] == str(employer.employer_id)
-        assert response_data["is_reviewable"]
+        assert response_data["is_reviewable"] is False
         # The fields below are set in mock_client.py::mock_customer_info
         assert response_data["date_of_birth"] == "****-12-25"
         assert response_data["tax_identifier"] == "***-**-1234"
@@ -383,6 +386,59 @@ class TestGetClaimReview:
         assert response_data["residential_address"]["line_2"] == "Suite 3450"
         assert response_data["residential_address"]["state"] == "GA"
         assert response_data["residential_address"]["zip"] == "30303"
+
+    @freeze_time("2020-12-07")
+    def test_claims_is_reviewable_managed_requirement_status(
+        self,
+        client,
+        monkeypatch,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+    ):
+        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        def patched_managed_requirements(*args, **kwargs):
+            return [
+                models.group_client_api.ManagedRequirementDetails.parse_obj(
+                    {
+                        "managedReqId": 123,
+                        "category": "Fake Category",
+                        "type": "Employer Confirmation of Leave Data",
+                        "followUpDate": datetime.date(2021, 2, 1),
+                        "documentReceived": True,
+                        "creator": "Fake Creator",
+                        "status": "Open",
+                        "subjectPartyName": "Fake Name",
+                        "sourceOfInfoPartyName": "Fake Sourcee",
+                        "creationDate": datetime.date(2020, 1, 1),
+                        "dateSuppressed": datetime.date(2020, 3, 1),
+                    }
+                ),
+            ]
+
+        monkeypatch.setattr(
+            MockFINEOSClient, "get_managed_requirements", patched_managed_requirements,
+        )
+
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        response_data = response.get_json()["data"]
+        assert response.status_code == 200
+        assert response_data["is_reviewable"] is True
 
     @freeze_time("2020-12-07")
     def test_employers_with_int_hours_worked_per_week_receive_200_from_get_claim_review(
@@ -415,7 +471,7 @@ class TestGetClaimReview:
         assert response_data["hours_worked_per_week"] == 37
         assert response_data["employer_dba"] == "Acme Co"
         assert response_data["employer_fein"] == "99-9999999"
-        assert response_data["is_reviewable"]
+        assert response_data["is_reviewable"] is False
         # The fields below are set in mock_client.py::mock_customer_info
         assert response_data["date_of_birth"] == "****-12-25"
         assert response_data["tax_identifier"] == "***-**-1234"

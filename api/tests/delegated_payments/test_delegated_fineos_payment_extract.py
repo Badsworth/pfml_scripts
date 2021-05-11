@@ -114,6 +114,7 @@ def add_db_records(
     c_value=None,
     i_value=None,
     additional_payment_state=None,
+    claim_type=None,
 ):
     mailing_address = None
     experian_address_pair = None
@@ -135,7 +136,11 @@ def add_db_records(
             employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
 
         if add_claim:
-            claim_type_id = ClaimType.FAMILY_LEAVE.claim_type_id if add_claim_type else None
+            if not claim_type:
+                claim_type_id = ClaimType.FAMILY_LEAVE.claim_type_id if add_claim_type else None
+            else:
+                claim_type_id = ClaimType.MEDICAL_LEAVE.claim_type_id
+
             claim = ClaimFactory.create(
                 fineos_absence_id=absence_case_id,
                 employee=employee,
@@ -147,6 +152,7 @@ def add_db_records(
             if add_payment:
                 payment = PaymentFactory.create(
                     claim=claim,
+                    claim_type=claim.claim_type,
                     fineos_pei_c_value=c_value,
                     fineos_pei_i_value=i_value,
                     experian_address_pair=experian_address_pair,
@@ -834,50 +840,6 @@ def test_process_extract_data_existing_payment(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_extract_data_claim_exists_without_leave_type(
-    mock_s3_bucket,
-    set_exporter_env_vars,
-    local_payment_extract_step,
-    local_test_db_session,
-    tmp_path,
-    monkeypatch,
-    local_create_triggers,
-):
-    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-
-    # Create a basic payment
-    fineos_data = FineosPaymentData()
-    # Create a claim without the claim type
-    add_db_records_from_fineos_data(local_test_db_session, fineos_data, add_claim_type=False)
-
-    upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
-
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 1
-
-    local_payment_extract_step.run()
-
-    payment = local_test_db_session.query(Payment).one_or_none()
-    assert payment
-    assert payment.claim
-
-    assert len(payment.state_logs) == 1
-    state_log = payment.state_logs[0]
-    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
-
-    assert state_log.outcome["message"] == "Error processing payment record"
-    validation_issues = state_log.outcome["validation_container"]["validation_issues"]
-    assert len(validation_issues) == 1
-    assert validation_issues[0] == {
-        "reason": "MissingInDB",
-        "details": f"Claim {fineos_data.absence_case_number} exists, but does not have a claim type associated with it.",
-    }
-
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
-
-
-@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_minimal_viable_payment(
     mock_s3_bucket,
     set_exporter_env_vars,
@@ -976,6 +938,7 @@ def test_process_extract_data_leave_request_decision_validation(
     employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
+    medical_claim_type_record = FineosPaymentData(claim_type="Employee")
     approved_record = FineosPaymentData(leave_request_decision="Approved")
     pending_record = FineosPaymentData(leave_request_decision="Pending")
     in_review_record = FineosPaymentData(leave_request_decision="In Review")
@@ -986,11 +949,18 @@ def test_process_extract_data_leave_request_decision_validation(
     add_db_records_from_fineos_data(local_test_db_session, pending_record)
     add_db_records_from_fineos_data(local_test_db_session, in_review_record)
     add_db_records_from_fineos_data(local_test_db_session, rejected_record)
+    add_db_records_from_fineos_data(local_test_db_session, medical_claim_type_record)
 
     upload_fineos_data(
         tmp_path,
         mock_s3_bucket,
-        [approved_record, pending_record, in_review_record, rejected_record],
+        [
+            approved_record,
+            pending_record,
+            in_review_record,
+            rejected_record,
+            medical_claim_type_record,
+        ],
     )
 
     # We deliberately do no DB setup, there will not be any prior employee or claim
@@ -1056,9 +1026,25 @@ def test_process_extract_data_leave_request_decision_validation(
         == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
     )
 
+    medical_claim_type_record = (
+        local_test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == medical_claim_type_record.c_value,
+            Payment.fineos_pei_i_value == medical_claim_type_record.i_value,
+        )
+        .one_or_none()
+    )
+
+    assert medical_claim_type_record
+    assert len(medical_claim_type_record.state_logs) == 1
+    assert (
+        medical_claim_type_record.state_logs[0].end_state_id
+        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+    )
+
     import_log_report = json.loads(rejected_payment.fineos_extract_import_log.report)
     assert import_log_report["not_pending_or_approved_leave_request_count"] == 1
-    assert import_log_report["standard_valid_payment_count"] == 3
+    assert import_log_report["standard_valid_payment_count"] == 4
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
@@ -1287,7 +1273,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
     # note that the event reason for an overpayment is Unknown which is treated as
     # None in our approach, setting it here to make sure that doesn't cause a validation issue.
     overpayment_data = FineosPaymentData(
-        event_type="Overpayment",
+        event_type="Overpayment Adjustment",
         event_reason="Unknown",
         payment_method="Elec Funds Transfer",
         include_claim_details=False,
@@ -1429,6 +1415,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "AMOUNT_MONAMT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
             ValidationIssue(
                 ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
                 "Unknown payment scenario encountered. Payment Amount: None, Event Type: None, Event Reason: ",
@@ -1456,6 +1443,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1479,6 +1467,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD4"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD6"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1501,6 +1490,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKSORT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
         ]
     )
 
