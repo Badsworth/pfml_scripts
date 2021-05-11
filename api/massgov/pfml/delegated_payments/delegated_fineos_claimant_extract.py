@@ -314,10 +314,13 @@ class ClaimantExtractStep(Step):
         EFT_FOUND_COUNT = "eft_found_count"
         EFT_REJECTED_COUNT = "eft_rejected_count"
         EMPLOYEE_FEED_RECORD_COUNT = "employee_feed_record_count"
-        EMPLOYEE_NOT_FOUND_COUNT = "employee_not_found_count"
+        EMPLOYEE_NOT_FOUND_IN_FEED_COUNT = "employee_not_found_in_feed_count"
+        EMPLOYEE_NOT_FOUND_IN_DATABASE_COUNT = "employee_not_found_in_database_count"
+        EMPLOYEE_PROCESSED_MULTIPLE_TIMES = "employee_processed_multiple_times"
         ERRORED_CLAIMANT_COUNT = "errored_claimant_count"
         EVIDENCE_NOT_ID_PROOFED_COUNT = "evidence_not_id_proofed_count"
         NEW_EFT_COUNT = "new_eft_count"
+        PROCESSED_EMPLOYEE_COUNT = "processed_employee_count"
         PROCESSED_REQUESTED_ABSENCE_COUNT = "processed_requested_absence_count"
         VALID_CLAIMANT_COUNT = "valid_claimant_count"
         VBI_REQUESTED_ABSENCE_SOM_RECORD_COUNT = "vbi_requested_absence_som_record_count"
@@ -503,7 +506,19 @@ class ClaimantExtractStep(Step):
             try:
                 # Add / update entry on claim table
                 claim = self.create_or_update_claim(claimant_data)
+            except Exception as e:
+                logger.exception(
+                    "Unexpected error %s while processing claim: %s",
+                    type(e),
+                    absence_case_id,
+                    extra=claimant_data.get_traceable_details(),
+                )
+                # TODO: Add some logging that indicates that we errored while trying to create
+                # a claim.
 
+                continue
+
+            try:
                 # Update employee info
                 if claim is not None:
                     employee_pfml_entry = self.update_employee_info(claimant_data, claim)
@@ -514,6 +529,7 @@ class ClaimantExtractStep(Step):
                     absence_case_id,
                     extra=claimant_data.get_traceable_details(),
                 )
+                self.increment(self.Metrics.ERRORED_CLAIMANT_COUNT)
                 continue
 
             if employee_pfml_entry is not None:
@@ -528,6 +544,7 @@ class ClaimantExtractStep(Step):
                         "Skipping adding a reference file and state_log for employee %s",
                         employee_pfml_entry.employee_id,
                     )
+                    self.increment(self.Metrics.EMPLOYEE_PROCESSED_MULTIPLE_TIMES)
 
         logger.info(
             "Successfully processed claimant extract data into db: %s", extract_data.date_str
@@ -597,40 +614,41 @@ class ClaimantExtractStep(Step):
 
     def update_employee_info(self, claimant_data: ClaimantData, claim: Claim) -> Optional[Employee]:
         """Returns the employee if found and updates its info"""
+        self.increment(self.Metrics.PROCESSED_EMPLOYEE_COUNT)
 
         if not claimant_data.employee_tax_identifier:
-            self.increment(self.Metrics.EMPLOYEE_NOT_FOUND_COUNT)
+            self.increment(self.Metrics.EMPLOYEE_NOT_FOUND_IN_FEED_COUNT)
             return None
 
         employee_pfml_entry = None
-
-        if claimant_data.employee_tax_identifier is not None:
-            try:
-                tax_identifier_id = (
-                    self.db_session.query(TaxIdentifier.tax_identifier_id)
-                    .filter(TaxIdentifier.tax_identifier == claimant_data.employee_tax_identifier)
+        try:
+            tax_identifier_id = (
+                self.db_session.query(TaxIdentifier.tax_identifier_id)
+                .filter(TaxIdentifier.tax_identifier == claimant_data.employee_tax_identifier)
+                .one_or_none()
+            )
+            if tax_identifier_id is not None:
+                employee_pfml_entry = (
+                    self.db_session.query(Employee)
+                    .filter(Employee.tax_identifier_id == tax_identifier_id)
                     .one_or_none()
                 )
-                if tax_identifier_id is not None:
-                    employee_pfml_entry = (
-                        self.db_session.query(Employee)
-                        .filter(Employee.tax_identifier_id == tax_identifier_id)
-                        .one_or_none()
-                    )
 
-            except SQLAlchemyError as e:
-                logger.exception(
-                    "Unexpected error %s with one_or_none when querying for tin/employee",
-                    type(e),
-                    extra=claimant_data.get_traceable_details(),
-                )
-                raise
+        except SQLAlchemyError as e:
+            logger.exception(
+                "Unexpected error %s with one_or_none when querying for tin/employee",
+                type(e),
+                extra=claimant_data.get_traceable_details(),
+            )
+            raise
 
         # Assumption is we should not be creating employees in the PFML DB through this extract.
         if employee_pfml_entry is None:
             logger.warning(
                 f"Employee in employee file with customer nbr {claimant_data.fineos_customer_number} not found in PFML DB.",
             )
+
+            self.increment(self.Metrics.EMPLOYEE_NOT_FOUND_IN_DATABASE_COUNT)
             return None
 
         with fineos_log_tables_util.update_entity_and_remove_log_entry(
