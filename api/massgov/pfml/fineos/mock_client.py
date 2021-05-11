@@ -425,7 +425,6 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             chequeDetails=payment_preference.chequeDetails,
         )
 
-    # @todo: figure out if this needs to be changed due to recent migration
     def update_occupation(
         self,
         occupation_id: int,
@@ -592,7 +591,6 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             fineos_document_id=fineos_document_id,
         )
 
-    # @todo: figure out if this needs to be changed due to recent migration
     def get_week_based_work_pattern(
         self, user_id: str, occupation_id: Union[str, int],
     ) -> models.customer_api.WeekBasedWorkPattern:
@@ -614,7 +612,6 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         else:
             return week_based_work_pattern
 
-    # @todo: figure out if this needs to be changed due to recent migration
     def update_week_based_work_pattern(
         self,
         user_id: str,

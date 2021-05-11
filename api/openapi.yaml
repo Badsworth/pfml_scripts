@@ -241,6 +241,7 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/ErrorResponse"
 
+
   /employers/withholding/{employer_id}:
     get:
       summary: Retrieves the last withholding date for the FEIN specified
@@ -273,6 +274,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
 
   /claims/{fineos_absence_id}:
     get:
@@ -384,6 +386,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
 
   /employers/claims/{fineos_absence_id}/documents:
     get:

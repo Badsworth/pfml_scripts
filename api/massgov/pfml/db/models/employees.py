@@ -460,7 +460,6 @@ class Employee(Base):
     race_id = Column(Integer, ForeignKey("lk_race.race_id"))
     marital_status_id = Column(Integer, ForeignKey("lk_marital_status.marital_status_id"))
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
-    # @todo: figure out if this needs to be changed due to recent migration
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
@@ -896,7 +895,6 @@ class WagesAndContributions(Base):
 
 class EmployeeOccupation(Base):
     __tablename__ = "employee_occupation"
-    # @todo: figure out if this needs to be changed due to recent migration
     employee_occupation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     employee_id = Column(
         UUID(as_uuid=True), ForeignKey("employee.employee_id"), nullable=False, index=True
@@ -1601,24 +1599,24 @@ class Occupation(LookupTable):
         "occupation_description",
     )
 
-    # HEALTH_CARE = LkOccupation(1, "Health Care")
-    # SALES_CLERK = LkOccupation(2, "Sales Clerk")
-    # ADMINISTRATIVE = LkOccupation(3, "Administrative")
-    # ENGINEER = LkOccupation(4, "Engineer")
-
-    # NAICS Occupations -> https://www.naics.com/search/
+    # NAICS -> https://www.naics.com/search/
+    # These need to match the available NAICS Industry Title options 
+    # in FINEOS Occupation details
     AGRICULTURE_FORESTRY_FISHING_HUNTING = LkOccupation(
         1, 11, "Agriculture, Forestry, Fishing and Hunting"
     )
     MINING = LkOccupation(2, 21, "Mining")
     UTILITIES = LkOccupation(3, 22, "Utilities")
     CONSTRUCTION = LkOccupation(4, 23, "Construction")
-    MANUFACTURING = LkOccupation(5, 31, "Manufacturing")  # @todo: category code up to 33
+    # category code is in range 31 to 33
+    MANUFACTURING = LkOccupation(5, 31, "Manufacturing")
     WHOLESALE_TRADE = LkOccupation(6, 42, "Wholesale Trade")
-    RETAIL_TRADE = LkOccupation(7, 44, "Retail Trade")  # @todo: category code up to 45
+    # category code is in range 44 to 45
+    RETAIL_TRADE = LkOccupation(7, 44, "Retail Trade")
+    # category code is in range 48 to 49
     TRANSPORTATION_WAREHOUSING = LkOccupation(
         8, 48, "Transportation and Warehousing"
-    )  # @todo: category code up to 49
+    )
     INFORMATION = LkOccupation(9, 51, "Information")
     FINANCE_INSURANCE = LkOccupation(10, 52, "Finance and Insurance")
     REAL_ESTATE_RENTAL_LEASING = LkOccupation(11, 53, "Real Estate Rental and Leasing")

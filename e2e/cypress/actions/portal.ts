@@ -655,7 +655,7 @@ export function addPaymentInfo(
       };
       cy.contains(
         paymentInfoLabel[
-        payment_method as "Debit" | "Check" | "Elec Funds Transfer"
+          payment_method as "Debit" | "Check" | "Elec Funds Transfer"
         ]
       ).click();
     }

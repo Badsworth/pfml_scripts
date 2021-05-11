@@ -57,7 +57,6 @@ function InputText({ type = "text", ...props }) {
       ref={props.inputRef}
       type={type}
       value={props.value}
-      disabled={props.disabled ? "disabled" : false}
     />
   );
 
@@ -88,10 +87,6 @@ InputText.propTypes = {
    * HTML input `autocomplete` attribute
    */
   autoComplete: PropTypes.string,
-  /**
-   * HTML input `disabled` attribute
-   */
-  disabled: PropTypes.bool,
   /**
    * Localized error message. Setting this enables the error state styling.
    */
