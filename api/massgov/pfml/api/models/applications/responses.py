@@ -8,6 +8,7 @@ from pydantic import UUID4
 from massgov.pfml.api.models.applications.common import (
     EmployerBenefit,
     EmploymentStatus,
+    Gender,
     MaskedAddress,
     MaskedApplicationLeaveDetails,
     MaskedPaymentPreference,
@@ -16,7 +17,6 @@ from massgov.pfml.api.models.applications.common import (
     OtherIncome,
     PaymentMethod,
     WorkPattern,
-    Gender
 )
 from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document

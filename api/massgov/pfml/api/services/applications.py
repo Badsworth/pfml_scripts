@@ -47,8 +47,7 @@ from massgov.pfml.db.models.applications import (
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, AddressType, GeoState, LkAddressType, Gender
-
+from massgov.pfml.db.models.employees import Address, AddressType, Gender, GeoState, LkAddressType
 from massgov.pfml.util.pydantic.types import Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -383,7 +382,7 @@ def update_from_request(
             continue
         if key == "gender":
             key = "gender_id"
-            value = (Gender.get_id(value) if value else None)
+            value = Gender.get_id(value) if value else None
         if isinstance(value, LookupEnum):
             lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
 
@@ -408,7 +407,7 @@ def update_from_request(
     db_session.refresh(application)
     if application.work_pattern is not None:
         db_session.refresh(application.work_pattern)
-    
+
     return application
 
 
@@ -862,6 +861,7 @@ def add_or_update_phone(
         application.phone.phone_number = internationalized_phone_number
 
     db_session.add(application.phone)
+
 
 def get_or_add_tax_identifier(
     db_session: db.Session, body: ApplicationRequestBody

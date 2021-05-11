@@ -42,7 +42,7 @@ from massgov.pfml.db.models.employees import (
     Claim,
     Country,
     Employee,
-    Employer,    
+    Employer,
     Gender,
     LkGender,
     PaymentMethod,
