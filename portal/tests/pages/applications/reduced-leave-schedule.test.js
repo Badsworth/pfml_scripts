@@ -199,14 +199,14 @@ describe("ReducedLeaveSchedule", () => {
           leave_details: {
             reduced_schedule_leave_periods: [
               {
-                friday_off_minutes: 68,
+                friday_off_minutes: 60,
                 leave_period_id: "mock-leave-period-id",
-                monday_off_minutes: 69,
-                saturday_off_minutes: 68,
-                sunday_off_minutes: 69,
-                thursday_off_minutes: 68,
-                tuesday_off_minutes: 69,
-                wednesday_off_minutes: 69,
+                monday_off_minutes: 75,
+                saturday_off_minutes: 60,
+                sunday_off_minutes: 75,
+                thursday_off_minutes: 60,
+                tuesday_off_minutes: 75,
+                wednesday_off_minutes: 75,
               },
             ],
           },
@@ -218,14 +218,14 @@ describe("ReducedLeaveSchedule", () => {
       const leave_details = {
         reduced_schedule_leave_periods: [
           {
-            friday_off_minutes: 68,
+            friday_off_minutes: 60,
             leave_period_id: "mock-leave-period-id",
-            monday_off_minutes: 69,
-            saturday_off_minutes: 68,
-            sunday_off_minutes: 69,
-            thursday_off_minutes: 68,
-            tuesday_off_minutes: 69,
-            wednesday_off_minutes: 69,
+            monday_off_minutes: 75,
+            saturday_off_minutes: 60,
+            sunday_off_minutes: 75,
+            thursday_off_minutes: 60,
+            tuesday_off_minutes: 75,
+            wednesday_off_minutes: 75,
           },
         ],
       };
