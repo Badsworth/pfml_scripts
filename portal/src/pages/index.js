@@ -71,6 +71,28 @@ export const Index = (props) => {
               </div>
             </div>
           </article>
+          {showSelfRegistration && (
+            <article className="grid-col-12 mobile-lg:grid-col">
+              <div className="bg-base-lightest padding-3">
+                <Heading level="3">{t("pages.index.employerHeading")}</Heading>
+                <p>{t("pages.index.employerCardBody_selfRegister")}</p>
+                <ButtonLink
+                  href={routes.employers.createAccount}
+                  className="margin-top-3"
+                >
+                  {t("pages.index.employerCreateAccountButton")}
+                </ButtonLink>
+                <div className="margin-top-2 text-dark text-bold">
+                  {t("pages.authCreateAccount.haveAnAccountFooterLabel")}
+                  <Link href={routes.auth.login}>
+                    <a className="display-inline-block margin-left-1">
+                      {t("pages.authCreateAccount.logInFooterLink")}
+                    </a>
+                  </Link>
+                </div>
+              </div>
+            </article>
+          )}
           {!showSelfRegistration && (
             <article className="grid-col-12 mobile-lg:grid-col">
               <div className="bg-base-lightest padding-3">

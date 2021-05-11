@@ -60,7 +60,7 @@ describe("AmendableEmployerBenefit", () => {
     expect(wrapper.find("td").at(1).text()).toEqual("$1,000.00 per month");
   });
 
-  it("excludes frequency from benefit amount and displays helper text when frequency is 'Unknown'", () => {
+  it("renders information about unknown frequency when frequency is 'Unknown'", () => {
     const paidLeave = new EmployerBenefit({
       benefit_amount_dollars: 0,
       benefit_amount_frequency: "Unknown",
@@ -77,7 +77,9 @@ describe("AmendableEmployerBenefit", () => {
       />
     );
 
-    expect(wrapper.find("td").at(1).text()).toEqual("$0.00[Needs review]");
+    expect(wrapper.find("td").at(1).text()).toEqual(
+      "$0.00 (frequency unknown)"
+    );
   });
 
   it("renders an AmendmentForm if user clicks on AmendButton", () => {
@@ -179,36 +181,6 @@ describe("AmendableEmployerBenefit", () => {
     expect(wrapper.find(Dropdown).prop("value")).toEqual(
       EmployerBenefitFrequency.weekly
     );
-  });
-
-  it("hides 'Needs review' helper text if user selects a valid frequency value", () => {
-    const paidLeave = new EmployerBenefit({
-      benefit_amount_dollars: 1000,
-      benefit_amount_frequency: "Unknown",
-      benefit_end_date: "2021-03-01",
-      benefit_start_date: "2021-02-01",
-      benefit_type: EmployerBenefitType.paidLeave,
-      employer_benefit_id: 0,
-    });
-    const wrapper = shallow(
-      <AmendableEmployerBenefit
-        appErrors={appLogic.appErrors}
-        employerBenefit={paidLeave}
-        onChange={() => {}}
-      />
-    );
-
-    expect(wrapper.find("td").at(1).text()).toEqual("$1,000.00[Needs review]");
-
-    wrapper.find(AmendButton).simulate("click");
-    wrapper.find(Dropdown).simulate("change", {
-      target: {
-        value: EmployerBenefitFrequency.weekly,
-        employer_benefit_id: 1,
-      },
-    });
-
-    expect(wrapper.find("td").at(1).text()).toEqual("$1,000.00");
   });
 
   it("restores original value on cancel", () => {

@@ -9,14 +9,7 @@ from freezegun import freeze_time
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import (
-    Address,
-    Payment,
-    PaymentMethod,
-    ReferenceFile,
-    ReferenceFileType,
-    State,
-)
+from massgov.pfml.db.models.employees import Payment, ReferenceFile, ReferenceFileType, State
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
@@ -119,25 +112,13 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
 
 
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
-    address: Address = payment.experian_address_pair.experian_address
-
-    check_description = (
-        _format_check_memo(payment) if payment.disb_method == PaymentMethod.CHECK else ""
-    )
-
     assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment.claim)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.claim.employee.first_name
     assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.claim.employee.last_name
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1] == address.address_line_one
-    assert (
-        row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2] == ""
-        if address.address_line_two is None
-        else address.address_line_two
-    )
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.city] == address.city
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.state] == address.geo_state.geo_state_description
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.zip] == address.zip_code
+
+    validate_address_columns(row, payment)
+
     assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_preference] == get_payment_preference(payment)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date] == payment.payment_date.isoformat()
     assert (
@@ -164,7 +145,47 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
         == payment.claim.fineos_absence_status.absence_status_description
     )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision] == payment.leave_request_decision
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.check_description] == check_description
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.check_description] == _format_check_memo(payment)
+
+
+def validate_address_columns(row: PaymentAuditCSV, payment: Payment):
+    def validate_address_columns_helper(
+        address_line_one, address_line_two, city, state, zip_code, is_address_verified,
+    ):
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1] == address_line_one
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2] == address_line_two
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.city] == city
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.state] == state
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.zip] == zip_code
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.is_address_verified] == is_address_verified
+
+    address_pair = payment.experian_address_pair
+
+    if address_pair is None:
+        validate_address_columns_helper(
+            address_line_one="",
+            address_line_two="",
+            city="",
+            state="",
+            zip_code="",
+            is_address_verified="N",
+        )
+    else:
+        address = (
+            address_pair.experian_address
+            if address_pair.experian_address is not None
+            else address_pair.fineos_address
+        )
+        is_address_verified = "Y" if address_pair.experian_address is not None else "N"
+
+        validate_address_columns_helper(
+            address_line_one=address.address_line_one,
+            address_line_two="" if address.address_line_two is None else address.address_line_two,
+            city=address.city,
+            state=address.geo_state.geo_state_description,
+            zip_code=address.zip_code,
+            is_address_verified=is_address_verified,
+        )
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
@@ -183,6 +204,10 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
     payment_audit_scenario_data_set = generate_audit_report_dataset(
         DEFAULT_AUDIT_SCENARIO_DATA_SET, test_db_session
     )
+    payment_audit_scenario_data_set_by_payment_id = {
+        str(audit_scenario_data.payment_audit_data.payment.payment_id): audit_scenario_data
+        for audit_scenario_data in payment_audit_scenario_data_set
+    }
 
     # generate audit report
     payment_audit_report_step.run()
@@ -214,13 +239,15 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
 
     # Validate column values
     parsed_csv = csv.DictReader(open(audit_report_file_path))
+    parsed_csv_by_payment_id = {
+        row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id]: row for row in parsed_csv
+    }
 
-    index = 0
-    for row in parsed_csv:
-        audit_scenario_data = payment_audit_scenario_data_set[index]
+    for payment_id, row in parsed_csv_by_payment_id.items():
+        audit_scenario_data = payment_audit_scenario_data_set_by_payment_id.get(payment_id, None)
+        assert audit_scenario_data is not None
+
         validate_payment_audit_csv_row_by_payment_audit_data(row, audit_scenario_data)
-
-        index += 1
 
     # check reference file created for archive folder file
     assert (

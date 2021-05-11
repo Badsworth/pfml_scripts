@@ -22,7 +22,11 @@ class Claim extends BaseModel {
     return {
       absence_period_end_date: null,
       absence_period_start_date: null,
-      claim_type: null,
+      /**
+       * @type {AbsenceCaseStatus}
+       */
+      claim_status: null,
+      claim_type_description: null,
       created_at: null,
       /**
        * @type {ClaimEmployee}
@@ -33,10 +37,7 @@ class Claim extends BaseModel {
        */
       employer: null,
       fineos_absence_id: null,
-      /**
-       * @type {AbsenceCaseStatus}
-       */
-      fineos_absence_status: null,
+
       fineos_notification_id: null,
     };
   }
@@ -80,7 +81,7 @@ export class ClaimEmployer extends BaseModel {
 }
 
 /**
- * Enums for `claim.fineos_absence_status` field
+ * Enums for `claim.claim_status` field
  * This is the subset of potential values returned by the API that we show to the user.
  * We currently ignore other potential values like "Adjudication", "Intake In Progress", "Unknown"
  * @enum {string}

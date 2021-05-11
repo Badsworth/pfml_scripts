@@ -14,7 +14,6 @@ from massgov.pfml.db.models.employees import (
     EmployeeLog,
     EmployeeOccupation,
     Employer,
-    GeoState,
     TaxIdentifier,
     Title,
 )
@@ -34,22 +33,9 @@ pytestmark = pytest.mark.integration
 class SpecialTestException(Exception):
     """Exception only defined here for ensure mocked exception is bubbled up"""
 
-    pass
-
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
-
-
-@pytest.fixture
-def geo_state_lookup(test_db_session):
-    GeoState.sync_to_database(test_db_session)
-    return GeoState.get_instance(test_db_session, template=GeoState.MA)
-
-
-@pytest.fixture
-def address_model(initialize_factories_session, geo_state_lookup):
-    return AddressFactory.create(geo_state=geo_state_lookup)
 
 
 def test_employee_to_eligibility_feed_record(initialize_factories_session):
@@ -83,9 +69,7 @@ def test_employee_to_eligibility_feed_record(initialize_factories_session):
     assert eligibility_feed_record.employeeEarningFrequency is None
 
 
-def test_employee_to_eligibility_feed_record_with_itin(
-    test_db_session, initialize_factories_session
-):
+def test_employee_to_eligibility_feed_record_with_itin(initialize_factories_session):
     wages_and_contributions = WagesAndContributionsFactory.create()
     employee = wages_and_contributions.employee
     employer = wages_and_contributions.employer
@@ -99,9 +83,7 @@ def test_employee_to_eligibility_feed_record_with_itin(
     assert eligibility_feed_record.employeeNationalIDType == ef.NationalIdType.itin
 
 
-def test_employee_to_eligibility_feed_record_with_date_of_birth(
-    test_db_session, initialize_factories_session
-):
+def test_employee_to_eligibility_feed_record_with_date_of_birth(initialize_factories_session):
     wages_and_contributions = WagesAndContributionsFactory.create()
     employee = wages_and_contributions.employee
     employer = wages_and_contributions.employer
@@ -115,9 +97,7 @@ def test_employee_to_eligibility_feed_record_with_date_of_birth(
     assert eligibility_feed_record.employeeDateOfBirth == employee.date_of_birth
 
 
-def test_employee_to_eligibility_feed_record_with_date_of_death(
-    test_db_session, initialize_factories_session
-):
+def test_employee_to_eligibility_feed_record_with_date_of_death(initialize_factories_session):
     wages_and_contributions = WagesAndContributionsFactory.create()
     employee = wages_and_contributions.employee
     employer = wages_and_contributions.employer
@@ -131,15 +111,14 @@ def test_employee_to_eligibility_feed_record_with_date_of_death(
     assert eligibility_feed_record.employeeDateOfDeath == employee.date_of_death
 
 
-def test_employee_to_eligibility_feed_record_with_address(
-    initialize_factories_session, test_db_session, address_model
-):
+def test_employee_to_eligibility_feed_record_with_address(initialize_factories_session):
     wages_and_contributions = WagesAndContributionsFactory.create()
     employee = wages_and_contributions.employee
     employer = wages_and_contributions.employer
+    address = AddressFactory.create()
 
     employee.addresses = [
-        EmployeeAddress(employee_id=employee.employee_id, address_id=address_model.address_id)
+        EmployeeAddress(employee_id=employee.employee_id, address_id=address.address_id)
     ]
 
     eligibility_feed_record = ef.employee_to_eligibility_feed_record(
@@ -154,9 +133,7 @@ def test_employee_to_eligibility_feed_record_with_address(
     assert eligibility_feed_record.addressZipCode is None
 
 
-def test_employee_to_eligibility_feed_record_with_no_tax_identifier(
-    test_db_session, initialize_factories_session
-):
+def test_employee_to_eligibility_feed_record_with_no_tax_identifier(initialize_factories_session):
     wages_and_contributions = WagesAndContributionsFactory.create()
     employee = wages_and_contributions.employee
     employer = wages_and_contributions.employer
@@ -171,9 +148,7 @@ def test_employee_to_eligibility_feed_record_with_no_tax_identifier(
     assert eligibility_feed_record.employeeNationalIDType is None
 
 
-def test_employee_to_eligibility_feed_record_with_employee_title(
-    test_db_session, initialize_factories_session
-):
+def test_employee_to_eligibility_feed_record_with_employee_title(initialize_factories_session):
     wages_and_contributions = WagesAndContributionsFactory.create()
     employee = wages_and_contributions.employee
     employer = wages_and_contributions.employer
@@ -187,9 +162,7 @@ def test_employee_to_eligibility_feed_record_with_employee_title(
     assert eligibility_feed_record.employeeTitle == employee.title.title_description
 
 
-def test_employee_to_eligibility_feed_record_with_phone_numbers(
-    test_db_session, initialize_factories_session
-):
+def test_employee_to_eligibility_feed_record_with_phone_numbers(initialize_factories_session):
     wages_and_contributions = WagesAndContributionsFactory.create()
     employee = wages_and_contributions.employee
     employer = wages_and_contributions.employer
@@ -330,8 +303,8 @@ def create_csv_dict(updates=None):
     return csv_dict
 
 
-def test_default_state(test_db_session, initialize_factories_session):
-    wages_and_contributions = WagesAndContributionsFactory.create()
+def test_default_state():
+    wages_and_contributions = WagesAndContributionsFactory.build()
     employee = wages_and_contributions.employee
     efr = ef.EligibilityFeedRecord(
         employeeIdentifier=employee.employee_id,
@@ -341,13 +314,12 @@ def test_default_state(test_db_session, initialize_factories_session):
     assert efr.employmentWorkState == "MA"
 
 
-def test_write_employees_to_csv(
-    tmp_path, initialize_factories_session, test_db_session, address_model
-):
+def test_write_employees_to_csv(tmp_path, test_db_session, initialize_factories_session):
     employer = EmployerFactory.create()
     wages_for_single_employer_different_employees = WagesAndContributionsFactory.create_batch(
         size=2, employer=employer
     )
+    address = AddressFactory.create()
 
     fineos_employer_id = employer.employer_id
 
@@ -362,7 +334,7 @@ def test_write_employees_to_csv(
     employees_with_most_recent_wages[1][0].addresses = [
         EmployeeAddress(
             employee_id=employees_with_most_recent_wages[1][0].employee_id,
-            address_id=address_model.address_id,
+            address_id=address.address_id,
         )
     ]
 
@@ -489,7 +461,7 @@ def assert_employer_file_does_not_exists(directory, fineos_employer_id):
 def make_test_db():
     import massgov.pfml.db as db
 
-    return db.init()
+    return db.init(sync_lookups=False, check_migrations_current=False)
 
 
 def make_fineos_client():
@@ -511,7 +483,7 @@ def call_process_all_employers(monkeypatch, output_path):
 
 
 def test_process_all_employers_simple(
-    test_db_session, tmp_path, initialize_factories_session, monkeypatch
+    local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     WagesAndContributionsFactory.create()
 
@@ -532,7 +504,7 @@ def test_process_all_employers_simple(
 
 
 def test_process_all_employers_no_records(
-    test_db_session, tmp_path, initialize_factories_session, monkeypatch
+    local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
@@ -546,7 +518,7 @@ def test_process_all_employers_no_records(
 
 
 def test_process_all_employers_with_skip(
-    test_db_session, tmp_path, initialize_factories_session, monkeypatch
+    local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     WagesAndContributionsFactory.create()
 
@@ -567,7 +539,7 @@ def test_process_all_employers_with_skip(
 
 
 def test_process_all_employers_with_error(
-    test_db_session, tmp_path, initialize_factories_session, monkeypatch
+    local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     WagesAndContributionsFactory.create()
 
@@ -588,7 +560,7 @@ def test_process_all_employers_with_error(
 
 
 def test_process_all_employers_for_single_employee_different_employers(
-    test_db_session, tmp_path, initialize_factories_session, monkeypatch
+    local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     # wages_for_single_employee_different_employers
     WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
@@ -610,7 +582,7 @@ def test_process_all_employers_for_single_employee_different_employers(
 
 
 def test_process_all_employers_for_single_employer_different_employees(
-    test_db_session, tmp_path, initialize_factories_session, monkeypatch
+    local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     # wages_for_single_employer_different_employees
     WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
@@ -632,7 +604,7 @@ def test_process_all_employers_for_single_employer_different_employees(
 
 
 def test_process_all_employers_for_multiple_wages_for_single_employee_employer_pair(
-    test_db_session, tmp_path, initialize_factories_session, monkeypatch
+    local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     # multiple_wages_for_single_employee_employer_pair
     WagesAndContributionsFactory.create_batch(
@@ -656,7 +628,7 @@ def test_process_all_employers_for_multiple_wages_for_single_employee_employer_p
 
 
 def test_process_all_employers_skips_nonexistent_employer(
-    test_db_session, tmp_path, initialize_factories_session, monkeypatch
+    local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     # Set fineos_employer_id to None for 'missing' employer to skip employer.
     missing_employer_fein = "999999999"
@@ -688,7 +660,7 @@ def test_process_all_employers_skips_nonexistent_employer(
 
 
 def test_get_most_recent_employer_to_employee_info_for_single_employee_different_employers(
-    test_db_session, tmp_path, initialize_factories_session
+    local_test_db_session, local_initialize_factories_session, tmp_path,
 ):
     employee = EmployeeFactory.create()
 
@@ -714,7 +686,7 @@ def test_get_most_recent_employer_to_employee_info_for_single_employee_different
     most_recent_employer = most_recent_wages.employer.employer_id
 
     employer_id_to_employee_ids = ef.get_most_recent_employer_and_employee_log_employers_to_employee_info(
-        test_db_session, [employee.employee_id]
+        local_test_db_session, [employee.employee_id]
     )
 
     employer_id_set = {
@@ -727,7 +699,7 @@ def test_get_most_recent_employer_to_employee_info_for_single_employee_different
 
 
 def test_process_employee_updates_simple(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers
+    test_db_session, initialize_factories_session, tmp_path, create_triggers
 ):
     WagesAndContributionsFactory.create()
 
@@ -747,7 +719,7 @@ def test_process_employee_updates_simple(
 
 
 def test_process_employee_updates_for_single_employee_different_employers(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers
+    test_db_session, initialize_factories_session, tmp_path, create_triggers
 ):
     # wages_for_single_employee_different_employers
     WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
@@ -763,7 +735,7 @@ def test_process_employee_updates_for_single_employee_different_employers(
 
 
 def test_process_employee_updates_for_single_employer_different_employees(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers
+    test_db_session, initialize_factories_session, tmp_path, create_triggers
 ):
     # wages_for_single_employer_different_employees
     WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
@@ -784,7 +756,7 @@ def test_process_employee_updates_for_single_employer_different_employees(
 
 
 def test_process_employee_updates_for_multiple_wages_for_single_employee_employer_pair(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers
+    test_db_session, initialize_factories_session, tmp_path, create_triggers
 ):
     # multiple_wages_for_single_employee_employer_pair
     WagesAndContributionsFactory.create_batch(
@@ -807,7 +779,7 @@ def test_process_employee_updates_for_multiple_wages_for_single_employee_employe
 
 
 def test_process_employee_updates_skips_nonexistent_employer(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers
+    test_db_session, initialize_factories_session, tmp_path, create_triggers
 ):
     # Set fineos_employer_id to None for 'missing' employer to skip employer.
     missing_employer_fein = "999999999"
@@ -837,7 +809,7 @@ def test_process_employee_updates_skips_nonexistent_employer(
 
 
 def test_process_employee_updates_with_error(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers, monkeypatch
+    test_db_session, initialize_factories_session, tmp_path, create_triggers, monkeypatch
 ):
     WagesAndContributionsFactory.create()
 
@@ -860,7 +832,7 @@ def test_process_employee_updates_with_error(
 
 
 def test_process_employee_updates_with_error_continues_processing_other_employers(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers, monkeypatch
+    test_db_session, initialize_factories_session, tmp_path, create_triggers, monkeypatch
 ):
     wages = WagesAndContributionsFactory.create_batch(size=2)
 
@@ -895,7 +867,7 @@ def test_process_employee_updates_with_error_continues_processing_other_employer
 
 
 def test_process_employee_updates_with_recovery(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers, monkeypatch
+    test_db_session, initialize_factories_session, tmp_path, create_triggers, monkeypatch
 ):
     WagesAndContributionsFactory.create_batch(size=2, employer=EmployerFactory.create())
 
@@ -925,7 +897,7 @@ def test_process_employee_updates_with_recovery(
 
 
 def test_process_employee_updates_export_file_number_limit(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers, mocker
+    test_db_session, initialize_factories_session, tmp_path, create_triggers, mocker
 ):
     WagesAndContributionsFactory.create_batch(size=15)
 
@@ -953,7 +925,7 @@ def test_process_employee_updates_export_file_number_limit(
 
 
 def test_process_employee_updates_export_file_number_limit_mismatched_batch_size(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers, mocker
+    test_db_session, initialize_factories_session, tmp_path, create_triggers, mocker
 ):
     WagesAndContributionsFactory.create_batch(size=10)
 
@@ -981,7 +953,7 @@ def test_process_employee_updates_export_file_number_limit_mismatched_batch_size
 
 
 def test_process_employee_updates_export_file_number_limit_fewer_than_limit_exist(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers
+    test_db_session, initialize_factories_session, tmp_path, create_triggers
 ):
     WagesAndContributionsFactory.create_batch(size=2)
 
@@ -1005,7 +977,7 @@ def test_process_employee_updates_export_file_number_limit_fewer_than_limit_exis
 
 
 def test_process_employee_updates_export_file_number_limit_with_error_continues_processing_other_employers(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers, monkeypatch
+    test_db_session, initialize_factories_session, tmp_path, create_triggers, monkeypatch
 ):
     wages = WagesAndContributionsFactory.create_batch(size=5)
 

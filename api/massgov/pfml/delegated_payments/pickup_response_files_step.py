@@ -90,4 +90,4 @@ class PickupResponseFilesStep(Step):
             )
 
         file_count = {expected_file_name + "_file_moved_count": num_files_to_move}
-        self.set_metrics(**file_count)
+        self.set_metrics(file_count)

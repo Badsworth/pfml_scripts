@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviousLeavesSameReasonDetails renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other leave, benefits, and income"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Tell us about your previous time off
+  </Heading>
+</QuestionPage>
+`;

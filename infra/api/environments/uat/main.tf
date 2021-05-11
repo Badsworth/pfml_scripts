@@ -51,7 +51,6 @@ module "api" {
     "https://paidleave-api-uat.mass.gov",
     "https://0mv19lqx41.execute-api.us-east-1.amazonaws.com"
   ]
-  formstack_import_lambda_build_s3_key = local.formstack_lambda_artifact_s3_key
 
   cognito_user_pool_arn                            = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_29j6fKBDT"
   cognito_user_pool_id                             = "us-east-1_29j6fKBDT"
@@ -80,6 +79,6 @@ module "api" {
   fineos_aws_iam_role_external_id                     = "8jFBtjr4UA@"
   enable_application_fraud_check                      = "0"
   dor_fineos_etl_definition                           = local.dor_fineos_etl_definition
-  dor_fineos_etl_schedule_expression                  = "cron(0 4 * * ? *)" # Daily at 04:00 UTC [23:00 EST] [00:00 EDT]
+  dor_fineos_etl_schedule_expression                  = "cron(30 0 * * ? *)" # Daily at 00:30 UTC [19:30 EST] [20:30 EDT]
   release_version                                     = var.release_version
 }

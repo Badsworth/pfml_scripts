@@ -13,4 +13,5 @@ module.exports = {
   performance: merge({}, defaultEnvVariables, require("./performance")),
   uat: merge({}, defaultEnvVariables, require("./uat")),
   breakfix: merge({}, defaultEnvVariables, require("./breakfix")),
+  "cps-preview": merge({}, defaultEnvVariables, require("./cps-preview")),
 };

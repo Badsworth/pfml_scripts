@@ -12,11 +12,11 @@ const AbsenceCaseStatusTag = ({ status }) => {
   const getTagState = (status) => {
     const successState = ["Approved"];
     const errorState = ["Declined"];
-    const warningState = ["Closed", "Completed"];
+    const inactiveState = ["Closed", "Completed"];
 
     if (successState.includes(status)) return "success";
     if (errorState.includes(status)) return "error";
-    if (warningState.includes(status)) return "warning";
+    if (inactiveState.includes(status)) return "inactive";
   };
 
   return status && mappedStatus ? (

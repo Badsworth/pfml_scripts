@@ -1,13 +1,100 @@
-import { Argv } from "yargs";
+import { CommandModule } from "yargs";
+import presets from "./flood/preset.config";
+import { SystemWideArgs } from "../cli";
+import Bundler from "./flood/Bundler";
+import path from "path";
+import FloodClient from "./flood/FloodClient";
+import config from "../config";
+import { v4 as uuid } from "uuid";
+import * as fs from "fs";
+import delay from "delay";
 
-const command = "flood <command>";
-const describe = "Manage load-and-stress testing on Flood.io";
-const builder = (yargs: Argv): Argv =>
-  yargs.commandDir(`${__dirname}/flood`, {
-    extensions: ["js", "ts"],
-  });
-const handler = (): void => {
-  // Expected no-op.
+type PresetArgs = {
+  presetID: keyof typeof presets;
+  bundle?: boolean;
+  deploy?: boolean;
+} & SystemWideArgs;
+
+const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
+  command: "flood <presetID>",
+  describe: "Generates, bundles, or deploys Flood load tests.",
+  builder: (yargs) => {
+    return yargs
+      .positional("presetID", {
+        describe: "Preset name",
+        string: true,
+        choices: Object.keys(presets),
+        demandOption: true,
+      })
+      .options({
+        bundle: {
+          description: "Create a bundle file (zip archive) to upload to Flood.",
+          boolean: true,
+          default: false,
+        },
+        deploy: {
+          description: "Deploy load tests to Flood",
+          boolean: true,
+          default: false,
+        },
+      });
+  },
+  async handler(args) {
+    const { logger } = args;
+    const preset = presets[args.presetID];
+    if (!preset) {
+      throw new Error(`Unknown preset: ${args.presetID}`);
+    }
+    const deployments: (() => Promise<unknown>)[] = [];
+    const bundler = new Bundler(path.join(__dirname, "..", "flood"));
+    const client = new FloodClient(config("FLOOD_API_TOKEN"));
+
+    // Loop through all components and bundle.
+    for (const component of preset) {
+      logger.info(`Generating data for "${component.flood.name}"`);
+      await bundler.generateData(component.data.scenario, component.data.count);
+      logger.info(`Completed data generation for "${component.flood.name}"`);
+
+      if (args.bundle || args.deploy) {
+        const output = path.join(
+          __dirname,
+          "..",
+          "..",
+          "data",
+          "flood",
+          uuid()
+        );
+        await fs.promises.mkdir(output, { recursive: true });
+        logger.info(
+          `Bundling files for "${component.flood.name}" into ${output}`
+        );
+        const files = await bundler.bundle(output);
+        logger.debug(`Bundle files: ${files.join(", ")}`);
+
+        // Create a function that can be used to trigger deployment of this bundle later on.
+        const deploy = async () => {
+          // Some components shouldn't be triggered right away. For those, we wait for a specific time to pass
+          // before triggering.
+          await delay(component.delay ?? 0);
+          logger.info(`Starting deployment of "${component.flood.name}"`);
+          const response = await client.startFlood(
+            component.flood,
+            files.map((file) => fs.createReadStream(file))
+          );
+          logger.info(
+            `Flood launched as "${response.name}": ${response.permalink}`
+          );
+        };
+        deployments.push(deploy);
+      }
+    }
+
+    if (args.deploy && deployments.length > 0) {
+      await Promise.all(deployments.map((deployment) => deployment()));
+      logger.info("All tests have been triggered");
+    }
+  },
 };
 
+const { command, describe, builder, handler } = cmd;
 export { command, describe, builder, handler };

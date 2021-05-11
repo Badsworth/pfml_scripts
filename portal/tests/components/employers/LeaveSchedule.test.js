@@ -14,7 +14,7 @@ const DOCUMENTS = new DocumentCollection([
   new Document({
     content_type: "image/png",
     created_at: "2020-04-05",
-    document_type: DocumentType.medicalCertification,
+    document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: "fineos-id-4",
     name: "Medical cert doc",
   }),
@@ -28,7 +28,7 @@ const DOCUMENTS = new DocumentCollection([
   new Document({
     content_type: "application/pdf",
     created_at: "2020-02-01",
-    document_type: DocumentType.medicalCertification,
+    document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: "fineos-id-9",
     // intentionally omit name
   }),

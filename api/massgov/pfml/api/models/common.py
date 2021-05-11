@@ -54,3 +54,6 @@ class PreviousLeave(PydanticBaseModel):
     leave_end_date: Optional[date]
     leave_reason: Optional[PreviousLeaveQualifyingReason]
     previous_leave_id: Optional[UUID4]
+    worked_per_week_minutes: Optional[int]
+    leave_minutes: Optional[int]
+    type: Optional[str]

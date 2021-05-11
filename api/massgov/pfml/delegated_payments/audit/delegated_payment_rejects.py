@@ -1,4 +1,5 @@
 import csv
+import enum
 import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
@@ -107,6 +108,16 @@ def get_row(row: Dict[str, str], key: Optional[str]) -> Optional[str]:
 
 
 class PaymentRejectsStep(Step):
+    class Metrics(str, enum.Enum):
+        ACCEPTED_PAYMENT_COUNT = "accepted_payment_count"
+        PARSED_ROWS_COUNT = "parsed_rows_count"
+        PAYMENT_STATE_LOG_MISSING_COUNT = "payment_state_log_missing_count"
+        PAYMENT_STATE_LOG_NOT_IN_AUDIT_RESPONSE_PENDING_COUNT = (
+            "payment_state_log_not_in_audit_response_pending_count"
+        )
+        REJECTED_PAYMENT_COUNT = "rejected_payment_count"
+        STATE_LOGS_COUNT = "state_logs_count"
+
     def run_step(self) -> None:
         self.process_rejects()
 
@@ -127,6 +138,7 @@ class PaymentRejectsStep(Step):
                     city=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.city),
                     state=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.state),
                     zip=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.zip),
+                    is_address_verified=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.is_address_verified),
                     payment_preference=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.payment_preference),
                     scheduled_payment_date=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date
@@ -179,7 +191,7 @@ class PaymentRejectsStep(Step):
         )
 
         if payment_state_log is None:
-            self.increment("payment_state_log_missing_count")
+            self.increment(self.Metrics.PAYMENT_STATE_LOG_MISSING_COUNT)
             raise PaymentRejectsException(
                 f"No state log found for payment found in audit reject file: {payment.payment_id}"
             )
@@ -188,13 +200,13 @@ class PaymentRejectsStep(Step):
             payment_state_log.end_state_id
             != State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id
         ):
-            self.increment("payment_state_log_not_in_audit_response_pending_count")
+            self.increment(self.Metrics.PAYMENT_STATE_LOG_NOT_IN_AUDIT_RESPONSE_PENDING_COUNT)
             raise PaymentRejectsException(
                 f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description if payment_state_log.end_state else None}, payment_id: {payment.payment_id}"
             )
 
         if is_rejected_payment:
-            self.increment("rejected_payment_count")
+            self.increment(self.Metrics.REJECTED_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
                 payment,
                 State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
@@ -202,7 +214,7 @@ class PaymentRejectsStep(Step):
                 self.db_session,
             )
         else:
-            self.increment("accepted_payment_count")
+            self.increment(self.Metrics.ACCEPTED_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
                 payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, self.db_session
             )
@@ -211,6 +223,12 @@ class PaymentRejectsStep(Step):
         self, payment_rejects_rows: List[PaymentAuditCSV]
     ) -> None:
         for payment_rejects_row in payment_rejects_rows:
+            if payment_rejects_row.pfml_payment_id is None:
+                raise PaymentRejectsException("Missing payment id column in rejects file.")
+
+            if payment_rejects_row.rejected_by_program_integrity is None:
+                raise PaymentRejectsException("Missing rejection column in rejects file.")
+
             payment = (
                 self.db_session.query(Payment)
                 .filter(Payment.payment_id == payment_rejects_row.pfml_payment_id)
@@ -305,7 +323,7 @@ class PaymentRejectsStep(Step):
             payment_rejects_file_path,
         )
         parsed_rows_count = len(payment_rejects_rows)
-        self.set_metrics(parsed_rows_count=parsed_rows_count)
+        self.set_metrics({self.Metrics.PARSED_ROWS_COUNT: parsed_rows_count})
         logger.info("Parsed %i payment rejects rows", parsed_rows_count)
 
         # check if returned rows match expected number in our state log
@@ -315,7 +333,7 @@ class PaymentRejectsStep(Step):
             self.db_session,
         )
         state_log_count = len(state_logs)
-        self.set_metrics(state_logs_count=state_log_count)
+        self.set_metrics({self.Metrics.STATE_LOGS_COUNT: state_log_count})
 
         if state_log_count != parsed_rows_count:
             raise PaymentRejectsException(

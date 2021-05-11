@@ -1,101 +1,137 @@
-import * as Util from "./common";
-import { factory as EnvFactory } from "../../config";
+import { CreateFloodRequest } from "./FloodClient";
 
-export default function (env: Util.EnvironmentName): Util.Presets {
-  const config = EnvFactory(env);
-  const floodDefaults: Util.DeployLST = {
-    env,
-    token: config("FLOOD_API_TOKEN"),
-    startAfter: 0,
-    startFlood: true,
-    name: "Default run",
-    threads: 1,
-    duration: 15,
-    rampup: 0,
-    region: "us-east-1",
-    tool: "flood-chrome",
-    project: "PFML",
-    privacy: "public",
-    infrastructure: "demand",
-    instanceQuantity: 1,
-    instanceType: "m5.xlarge",
-    stopAfter: 180,
-    speed: parseFloat(config("SIMULATION_SPEED") || "0.1"),
-    generateData: true,
-    numRecords: 500,
-    bundleDir: "GHWorkflow",
-    scenario: "PortalClaimSubmit",
-    chance: 100,
-    eligible: 100,
+export type PresetComponent = {
+  // Specification of data to generate.
+  data: {
+    scenario: string;
+    count: number;
   };
-  const floodPresets: Util.Presets = {
-    base: [
-      {
-        ...floodDefaults,
+  // Flood configuration to use.
+  flood: CreateFloodRequest;
+  // MS to wait before starting.
+  delay?: number;
+};
+export type Preset = PresetComponent[];
+
+const milliseconds = (minutes: number) => minutes * 60000;
+const seconds = (minutes: number) => minutes * 60;
+
+const presets: Record<string, Preset> = {
+  leaveAdmin: [
+    {
+      flood: {
+        name: "Leave Admin Registration/Verification",
+        project: "PFML",
+        duration: seconds(60),
+        rampup: seconds(30),
+        // We want this to run at a concurrency of 400, and the thread count is *per-instance*, not overall. Each
+        // instance is hard capped at 50 threads, so we get to 400 by running 50*8.
+        threads: 50,
+        grid: {
+          instance_quantity: 8,
+        },
+      },
+      data: {
+        scenario: "LeaveAdminSelfRegistration",
+        count: 500,
+      },
+    },
+  ],
+  base: [
+    {
+      flood: {
         name: "Base Preset - Portal Claims Normal Traffic",
+        project: "PFML",
         threads: 6,
-        bundleDir: "BasePreset-Normal",
-        scenario: "PortalClaimSubmit",
+        duration: seconds(30),
       },
-    ],
-    basePlus: [
-      {
-        ...floodDefaults,
+      data: {
+        scenario: "PortalClaimSubmit",
+        count: 500,
+      },
+    },
+  ],
+  basePlus: [
+    {
+      flood: {
         name: "BasePlus Preset - Portal Claims Normal Traffic",
+        project: "PFML",
         threads: 6,
-        duration: 30,
-        bundleDir: "BasePlusPreset-Normal",
-        scenario: "PortalClaimSubmit",
+        duration: seconds(15),
       },
-      {
-        ...floodDefaults,
-        startAfter: 5,
+      data: {
+        scenario: "PortalClaimSubmit",
+        count: 500,
+      },
+    },
+    {
+      flood: {
         name: "BasePlus Preset - SavilinxAgent",
+        project: "PFML",
         threads: 40,
-        duration: 15,
-        rampup: 3,
-        bundleDir: "BasePlusPreset-Agents",
-        scenario: "SavilinxAgent",
+        duration: seconds(15),
       },
-    ],
-    basePlusSpikes: [
-      {
-        ...floodDefaults,
+      data: {
+        scenario: "PortalClaimSubmit",
+        count: 500,
+      },
+      delay: milliseconds(5),
+    },
+  ],
+  basePlusSpikes: [
+    {
+      flood: {
         name: "BasePlusSpikes Preset - Portal Claims Normal Traffic",
+        project: "PFML",
         threads: 6,
-        duration: 60,
-        bundleDir: "BasePlusSpikes-Normal",
-        scenario: "PortalClaimSubmit",
+        duration: seconds(60),
       },
-      {
-        ...floodDefaults,
-        startAfter: 5, // this flood will start after 5 minutes passed
+      data: {
+        scenario: "PortalClaimSubmit",
+        count: 500,
+      },
+    },
+    {
+      flood: {
         name: "BasePlusSpikes Preset - SavilinxAgent",
+        project: "PFML",
         threads: 40,
-        duration: 45,
-        rampup: 3,
-        bundleDir: "BasePlusSpikes-Agents",
+        duration: seconds(45),
+        rampup: seconds(3),
+      },
+      data: {
         scenario: "SavilinxAgent",
+        count: 500,
       },
-      {
-        ...floodDefaults,
+      delay: milliseconds(5), // Starts after 5 minutes.
+    },
+    {
+      flood: {
         name: "BasePlusSpikes Preset - Portal Claims 1st Spike",
-        startAfter: 10,
+        project: "PFML",
         threads: 20,
-        duration: 15,
-        bundleDir: "BasePlusSpikes-1st",
-        scenario: "PortalClaimSubmit",
+        duration: seconds(15),
       },
-      {
-        ...floodDefaults,
+      data: {
+        scenario: "PortalClaimSubmit",
+        count: 1000,
+      },
+      delay: milliseconds(10), // 10 minute delay.
+    },
+    {
+      flood: {
         name: "BasePlusSpikes Preset - Portal Claims 2nd Spike",
-        startAfter: 23,
+        project: "PFML",
         threads: 30,
-        duration: 15,
-        bundleDir: "BasePlusSpikes-2nd",
-        scenario: "PortalClaimSubmit",
+        duration: seconds(15),
       },
-    ],
-  };
-  return floodPresets;
-}
+      data: {
+        scenario: "PortalClaimSubmit",
+        count: 1000,
+      },
+      delay: milliseconds(23), // 23 minute delay.
+    },
+  ],
+};
+
+export default presets;

@@ -2,6 +2,7 @@ import { ClaimEmployee, ClaimEmployer } from "../../src/models/Claim";
 import { mockFetch, mockLoggedInAuthSession } from "../test-utils";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimsApi from "../../src/api/ClaimsApi";
+import PaginationMeta from "../../src/models/PaginationMeta";
 
 jest.mock("../../src/services/tracker");
 
@@ -11,14 +12,14 @@ describe("ClaimsApi", () => {
   });
 
   describe("getClaims", () => {
-    it("makes request to API", async () => {
+    it("makes request to API with default page index", async () => {
       mockFetch();
 
       const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims(0);
+      await claimsApi.getClaims();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/claims/?page=0`,
+        `${process.env.apiUrl}/claims?page_offset=1`,
         expect.objectContaining({
           headers: expect.any(Object),
           method: "GET",
@@ -30,10 +31,10 @@ describe("ClaimsApi", () => {
       mockFetch();
 
       const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims(1);
+      await claimsApi.getClaims(2);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/claims/?page=1`,
+        `${process.env.apiUrl}/claims?page_offset=2`,
         expect.objectContaining({
           headers: expect.any(Object),
           method: "GET",
@@ -41,7 +42,7 @@ describe("ClaimsApi", () => {
       );
     });
 
-    it("returns response as a ClaimCollection with employee/employer as model instances", async () => {
+    it("returns response as instances of ClaimCollection and PaginationMeta", async () => {
       const mockResponseData = [
         {
           fineos_absence_id: "abs-1",
@@ -61,17 +62,32 @@ describe("ClaimsApi", () => {
           employer: null,
         },
       ];
+      const mockPaginationMeta = {
+        page_offset: 1,
+        page_size: 25,
+        total_pages: 3,
+        total_records: 75,
+        order_by: "created_at",
+        order_direction: "asc",
+      };
 
       mockFetch({
         response: {
           data: mockResponseData,
+          meta: {
+            method: "GET",
+            paging: mockPaginationMeta,
+          },
         },
       });
 
       const claimsApi = new ClaimsApi();
-      const { claims } = await claimsApi.getClaims();
+      const { claims, paginationMeta } = await claimsApi.getClaims();
 
       expect(claims).toBeInstanceOf(ClaimCollection);
+      expect(paginationMeta).toBeInstanceOf(PaginationMeta);
+      expect({ ...paginationMeta }).toEqual(mockPaginationMeta);
+
       expect(claims.items).toHaveLength(2);
 
       expect(claims.getItem("abs-1").employee).toBeInstanceOf(ClaimEmployee);

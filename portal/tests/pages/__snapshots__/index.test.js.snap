@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Index does not render employer information when employerShowSelfRegistrationForm is true 1`] = `
+exports[`Index does show employer information when employerShowSelfRegistrationForm is true 1`] = `
 <Fragment>
   <div
     className="maxw-desktop"
@@ -69,12 +69,48 @@ exports[`Index does not render employer information when employerShowSelfRegistr
           </div>
         </div>
       </article>
+      <article
+        className="grid-col-12 mobile-lg:grid-col"
+      >
+        <div
+          className="bg-base-lightest padding-3"
+        >
+          <Heading
+            level="3"
+          >
+            Employers
+          </Heading>
+          <p>
+            Register now so you can manage leave for your team.
+          </p>
+          <ButtonLink
+            className="margin-top-3"
+            href="/employers/create-account"
+          >
+            Create an employer account
+          </ButtonLink>
+          <div
+            className="margin-top-2 text-dark text-bold"
+          >
+            Have an account?
+            <Link
+              href="/login"
+            >
+              <a
+                className="display-inline-block margin-left-1"
+              >
+                Log in
+              </a>
+            </Link>
+          </div>
+        </div>
+      </article>
     </div>
   </div>
 </Fragment>
 `;
 
-exports[`Index does not render employer information when employerShowSelfRegistrationForm is true 2`] = `
+exports[`Index does show employer information when employerShowSelfRegistrationForm is true 2`] = `
 Array [
   "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this ",
   <a

@@ -1,3 +1,4 @@
+import enum
 import os
 from typing import Iterable, List
 
@@ -30,6 +31,11 @@ class PaymentAuditError(Exception):
 
 
 class PaymentAuditReportStep(Step):
+    class Metrics(str, enum.Enum):
+        PAYMENT_COUNT = "payment_count"
+        PAYMENT_SAMPLED_FOR_AUDIT_COUNT = "payment_sampled_for_audit_count"
+        SAMPLED_PAYMENT_COUNT = "sampled_payment_count"
+
     def run_step(self) -> None:
         self.generate_audit_report()
 
@@ -42,8 +48,7 @@ class PaymentAuditReportStep(Step):
             self.db_session,
         )
         state_log_count = len(state_logs)
-
-        self.set_metrics(sampled_payment_count=state_log_count)
+        self.set_metrics({self.Metrics.SAMPLED_PAYMENT_COUNT: state_log_count})
 
         payments: List[Payment] = []
         for state_log in state_logs:
@@ -69,7 +74,7 @@ class PaymentAuditReportStep(Step):
             )
 
             payments.append(payment)
-            self.increment("payment_sampled_for_audit_count")
+            self.increment(self.Metrics.PAYMENT_SAMPLED_FOR_AUDIT_COUNT)
 
         logger.info("Done sampling payments for audit report: %i", len(payments))
 
@@ -112,7 +117,7 @@ class PaymentAuditReportStep(Step):
         payment_audit_data_set: List[PaymentAuditData] = []
 
         for payment in payments:
-            self.increment("payment_count")
+            self.increment(self.Metrics.PAYMENT_COUNT)
             # populate payment audit data by inspecting the currently sampled payment's history
             is_first_time_payment = False
             is_previously_errored_payment = False

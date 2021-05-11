@@ -16,7 +16,7 @@ import datetime
 import mimetypes
 import uuid
 from enum import Enum
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 import phonenumbers
 from werkzeug.exceptions import NotFound
@@ -41,10 +41,12 @@ from massgov.pfml.db.models.employees import (
     Address,
     Claim,
     Country,
-    Employer,
+    Employee,
+    Employer,    
     Gender,
     LkGender,
     PaymentMethod,
+    TaxIdentifier,
     User,
 )
 from massgov.pfml.fineos.exception import FINEOSNotFound
@@ -57,6 +59,17 @@ from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 
 logger = logging.get_logger(__name__)
+
+
+RELATIONSHIP_REFLEXIVE_FIELD_MAPPING = {
+    RelationshipToCaregiver.CHILD.relationship_to_caregiver_description: "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions",
+    RelationshipToCaregiver.GRANDCHILD.relationship_to_caregiver_description: "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions",
+    RelationshipToCaregiver.GRANDPARENT.relationship_to_caregiver_description: "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions",
+    RelationshipToCaregiver.INLAW.relationship_to_caregiver_description: "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions",
+    RelationshipToCaregiver.PARENT.relationship_to_caregiver_description: "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions",
+    RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_description: "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions",
+    RelationshipToCaregiver.SIBLING.relationship_to_caregiver_description: "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions",
+}
 
 
 class LeaveNotificationReason(str, Enum):
@@ -139,11 +152,10 @@ def send_to_fineos(
     customer = build_customer_model(application, current_user)
     absence_case = build_absence_case(application)
     contact_details = build_contact_details(application)
+    tax_identifier = application.tax_identifier.tax_identifier
 
     # Create the FINEOS client.
     fineos = massgov.pfml.fineos.create_client()
-
-    tax_identifier = application.tax_identifier.tax_identifier
 
     fineos_user_id = register_employee(
         fineos, tax_identifier, application.employer_fein, db_session
@@ -152,23 +164,52 @@ def send_to_fineos(
     fineos.update_customer_details(fineos_user_id, customer)
     new_case = fineos.start_absence(fineos_user_id, absence_case)
 
+    employee = (
+        db_session.query(Employee)
+        .join(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier == tax_identifier)
+        .one_or_none()
+    )
     employer = (
         db_session.query(Employer)
         .filter(Employer.employer_fein == application.employer_fein)
         .one_or_none()
     )
 
+    # Create a claim here since it's the earliest place we can
+    # begin surfacing the claim information to leave admins,
+    # and most importantly the Claim is how the Application
+    # references the fineos_absence_id, which is shown to
+    # the Claimant once they have an absence case created
     new_claim = Claim(
         fineos_absence_id=new_case.absenceId,
         fineos_notification_id=new_case.notificationCaseId,
         absence_period_start_date=new_case.startDate,
         absence_period_end_date=new_case.endDate,
-        employee_id=application.employee_id,
     )
+    if employee:
+        new_claim.employee = employee
+    else:
+        logger.warning(
+            "Did not find Employee to associate to Claim.",
+            extra={
+                "application.absence_case_id": new_case.absenceId,
+                "application.application_id": application.application_id,
+            },
+        )
     if employer:
         new_claim.employer = employer
-    if application.leave_type_id:
-        new_claim.claim_type_id = application.leave_type.absence_to_claim_type
+    else:
+        logger.warning(
+            "Did not find Employer to associate to Claim.",
+            extra={
+                "application.absence_case_id": new_case.absenceId,
+                "application.application_id": application.application_id,
+            },
+        )
+
+    if application.leave_reason_id:
+        new_claim.claim_type_id = application.leave_reason.absence_to_claim_type
 
     application.claim = new_claim
 
@@ -179,12 +220,21 @@ def send_to_fineos(
     if phone_numbers is not None and len(phone_numbers) > 0:
         application.phone.fineos_phone_id = phone_numbers[0].id
 
+    # Reflexive questions for bonding and caring leave
+    # "The reflexive questions allows to update additional information of an absence case leave request."
+    # Source - https://documentation.fineos.com/support/documentation/customer-swagger-21.1.html#operation/createReflexiveQuestions
     if application.leave_reason_qualifier_id in [
         LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
         LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
         LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
     ]:
         reflexive_question = build_bonding_date_reflexive_question(application)
+        fineos.update_reflexive_questions(
+            fineos_user_id, application.claim.fineos_absence_id, reflexive_question
+        )
+
+    if application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id:
+        reflexive_question = build_caring_leave_reflexive_question(application)
         fineos.update_reflexive_questions(
             fineos_user_id, application.claim.fineos_absence_id, reflexive_question
         )
@@ -368,7 +418,7 @@ def build_contact_details(
 def build_customer_address(
     application_address: Address,
 ) -> massgov.pfml.fineos.models.customer_api.CustomerAddress:
-    """ Convert an application's address into a FINEOS API CustomerAddress model."""
+    """Convert an application's address into a FINEOS API CustomerAddress model."""
     # Note: In the FINEOS model:
     # - addressLine1 = Address Line 1
     # - addressLine2 = Address Line 2
@@ -393,14 +443,10 @@ def determine_absence_period_status(application: Application) -> str:
     known = massgov.pfml.fineos.models.customer_api.AbsencePeriodStatus.KNOWN.value
     estimated = massgov.pfml.fineos.models.customer_api.AbsencePeriodStatus.ESTIMATED.value
 
-    pregnancy_maternity_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
-    serious_health_condition_reason_id = (
-        LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
-    )
-
     if application.leave_reason.leave_reason_id in [
-        pregnancy_maternity_reason_id,
-        serious_health_condition_reason_id,
+        LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+        LeaveReason.PREGNANCY_MATERNITY.leave_reason_id,
+        LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
     ]:
 
         return known
@@ -414,26 +460,12 @@ def determine_absence_period_status(application: Application) -> str:
     return absence_period_status
 
 
-def build_absence_case(
+def build_leave_periods(
     application: Application,
-) -> massgov.pfml.fineos.models.customer_api.AbsenceCase:
-    """Convert an Application to a FINEOS API AbsenceCase model."""
-    continuous_leave_periods = []
-
-    for leave_period in application.continuous_leave_periods:
-        # determine the status of the absence period
-        absence_period_status = determine_absence_period_status(application)
-
-        continuous_leave_periods.append(
-            massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
-                startDate=leave_period.start_date,
-                endDate=leave_period.end_date,
-                startDateFullDay=True,
-                endDateFullDay=True,
-                status=absence_period_status,
-            )
-        )
-
+) -> Tuple[
+    List[massgov.pfml.fineos.models.customer_api.ReducedScheduleLeavePeriod],
+    List[massgov.pfml.fineos.models.customer_api.EpisodicLeavePeriod],
+]:
     reduced_schedule_leave_periods = []
     for reduced_leave_period in application.reduced_schedule_leave_periods:
         [
@@ -496,6 +528,31 @@ def build_absence_case(
             )
         )
 
+    return reduced_schedule_leave_periods, intermittent_leave_periods
+
+
+def build_absence_case(
+    application: Application,
+) -> massgov.pfml.fineos.models.customer_api.AbsenceCase:
+    """Convert an Application to a FINEOS API AbsenceCase model."""
+    continuous_leave_periods = []
+
+    for leave_period in application.continuous_leave_periods:
+        # determine the status of the absence period
+        absence_period_status = determine_absence_period_status(application)
+
+        continuous_leave_periods.append(
+            massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
+                startDate=leave_period.start_date,
+                endDate=leave_period.end_date,
+                startDateFullDay=True,
+                endDateFullDay=True,
+                status=absence_period_status,
+            )
+        )
+
+    reduced_schedule_leave_periods, intermittent_leave_periods = build_leave_periods(application)
+
     # Leave Reason and Leave Reason Qualifier mapping.
     # Relationship and Relationship Qualifier mapping.
     reason = reason_qualifier_1 = reason_qualifier_2 = None
@@ -547,12 +604,43 @@ def build_absence_case(
                 RelationshipQualifier.BIOLOGICAL.relationship_qualifier_description
             )
 
-    # Care for a family member option is not exposed to the Portal yet. There is a ticket to
-    # implement this option in the future.
     elif application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id:
         reason = application.leave_reason.leave_reason_description
-        reason_qualifier_1 = application.leave_reason_qualifier.leave_reason_qualifier_description
+        reason_qualifier_1 = (
+            LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_description
+        )
         notification_reason = LeaveNotificationReason.CARING_FOR_A_FAMILY_MEMBER
+        primary_relationship = (
+            application.caring_leave_metadata.relationship_to_caregiver.relationship_to_caregiver_description
+        )
+
+        # Map relationship to qualifiers
+        # All relationships use BIOLOGICAL as qualifier_1 and have no qualifier_2 qualifier except:
+        # INLAW - uses PARENT_IN_LAW as qualifier_1 and has no qualifier_2
+        # SPOUSE - uses LEGALLY_MARRIED as qualifier_1 and UNDISCLOSED as qualifier_2 (this is the only relationship with a qualifier_2)
+        if (
+            application.caring_leave_metadata.relationship_to_caregiver_id
+            == RelationshipToCaregiver.INLAW.relationship_to_caregiver_id
+        ):
+            primary_rel_qualifier_1 = (
+                RelationshipQualifier.PARENT_IN_LAW.relationship_qualifier_description
+            )
+
+        elif (
+            application.caring_leave_metadata.relationship_to_caregiver_id
+            == RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_id
+        ):
+            primary_rel_qualifier_1 = (
+                RelationshipQualifier.LEGALLY_MARRIED.relationship_qualifier_description
+            )
+            primary_rel_qualifier_2 = (
+                RelationshipQualifier.UNDISCLOSED.relationship_qualifier_description
+            )
+
+        else:
+            primary_rel_qualifier_1 = (
+                RelationshipQualifier.BIOLOGICAL.relationship_qualifier_description
+            )
 
     else:
         raise ValueError("Invalid application.leave_reason")
@@ -623,6 +711,54 @@ def build_bonding_date_reflexive_question(
     reflexive_question = massgov.pfml.fineos.models.customer_api.AdditionalInformation(
         reflexiveQuestionLevel="reason", reflexiveQuestionDetails=[reflexive_details],
     )
+    return reflexive_question
+
+
+def build_caring_leave_reflexive_question(
+    application: Application,
+) -> massgov.pfml.fineos.models.customer_api.AdditionalInformation:
+    reflexive_question_field_name = RELATIONSHIP_REFLEXIVE_FIELD_MAPPING[
+        application.caring_leave_metadata.relationship_to_caregiver.relationship_to_caregiver_description
+    ]
+
+    caring_leave_metadata = application.caring_leave_metadata
+
+    reflexive_question_details = []
+    # first name
+    first_name_details = massgov.pfml.fineos.models.customer_api.Attribute(
+        fieldName=f"{reflexive_question_field_name}.firstName",
+        stringValue=caring_leave_metadata.family_member_first_name,
+    )
+    reflexive_question_details.append(first_name_details)
+
+    # middle name
+    if caring_leave_metadata.family_member_middle_name:
+        middle_name_details = massgov.pfml.fineos.models.customer_api.Attribute(
+            fieldName=f"{reflexive_question_field_name}.middleInital",  # FINEOS API calls this field middleInital (with incorrect spelling), though it will accept a middle name
+            stringValue=caring_leave_metadata.family_member_middle_name,
+        )
+        reflexive_question_details.append(middle_name_details)
+
+    # last name
+    last_name_name_details = massgov.pfml.fineos.models.customer_api.Attribute(
+        fieldName=f"{reflexive_question_field_name}.lastName",
+        stringValue=caring_leave_metadata.family_member_last_name,
+    )
+    reflexive_question_details.append(last_name_name_details)
+
+    # family member date of birth
+    if caring_leave_metadata.family_member_date_of_birth:
+        date_of_birth_details = massgov.pfml.fineos.models.customer_api.Attribute(
+            fieldName=f"{reflexive_question_field_name}.dateOfBirth",
+            dateValue=caring_leave_metadata.family_member_date_of_birth.isoformat(),
+        )
+        reflexive_question_details.append(date_of_birth_details)
+
+    reflexive_question = massgov.pfml.fineos.models.customer_api.AdditionalInformation(
+        reflexiveQuestionLevel="primary relationship",
+        reflexiveQuestionDetails=reflexive_question_details,
+    )
+
     return reflexive_question
 
 

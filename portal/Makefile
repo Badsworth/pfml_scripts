@@ -11,7 +11,7 @@ release-list: ## Generate comma-separated list of ticket ids for $refs
 	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+' | \
 	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
 
-PORTAL_RELEASE_BRANCHES := $(addprefix origin/, main deploy/portal/stage deploy/portal/prod deploy/portal/performance deploy/portal/training deploy/portal/uat)
+PORTAL_RELEASE_BRANCHES := $(addprefix origin/, main deploy/portal/stage deploy/portal/prod deploy/portal/performance deploy/portal/training deploy/portal/uat deploy/portal/breakfix deploy/portal/cps-preview)
 where-ticket: ## Search release branches for $ticket
 	@for b in $(PORTAL_RELEASE_BRANCHES); do echo "## $$b ##"; \
 		git --no-pager log --oneline --decorate --grep=$(ticket) $$b; \

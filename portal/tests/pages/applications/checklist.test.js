@@ -1,5 +1,7 @@
 import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import Checklist from "../../../src/pages/applications/checklist";
+import { DocumentType } from "../../../src/models/Document";
+import LeaveReason from "../../../src/models/LeaveReason";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
 
@@ -171,7 +173,9 @@ describe("Checklist", () => {
       diveLevels,
       hasLoadedClaimDocuments: true,
       hasUploadedIdDocuments: true,
-      hasUploadedCertificationDocuments: true,
+      hasUploadedCertificationDocuments: {
+        document_type: DocumentType.certification.medicalCertification,
+      },
       warningsLists: {
         [claim.application_id]: [],
       },
@@ -277,15 +281,72 @@ describe("Checklist", () => {
       expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
     });
 
-    it("renders certification doc step as completed", () => {
-      const claim = new MockClaimBuilder().complete().create();
+    it("renders certification doc step as completed when the document type matches the leave reason when Caring Leave feature flag is turned on", () => {
+      // When the feature flag is enabled, the component should mark this step as completed when there are documents with a DocType that match the leave reason
+      // In this test case, the feature flag is enabled, and the claim has documents with DocTypes that match the leave reason,
+      // so the component should render this step as completed
+
+      process.env.featureFlags = {
+        showCaringLeaveType: true,
+      };
+
+      const claim = new MockClaimBuilder()
+        .medicalLeaveReason()
+        .complete()
+        .create();
       const { wrapper } = renderWithAppLogic(Checklist, {
         claimAttrs: claim,
         diveLevels,
         hasLoadedClaimDocuments: true,
-        hasUploadedCertificationDocuments: true,
-        warningsLists: {
-          [claim.application_id]: [],
+        hasUploadedCertificationDocuments: {
+          document_type: DocumentType.certification[LeaveReason.medical],
+          numberOfDocs: 1,
+        },
+      });
+      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
+      expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
+    });
+
+    it("renders certification doc step as incomplete when the document type does not match the leave reason when Caring Leave feature flag is turned on", () => {
+      // When the feature flag is enabled, the component should mark this step as completed when there are documents with a DocType that match the leave reason
+      // In this test case, the feature flag is enabled, and the claim has documents with DocTypes that don't match the leave reason,
+      // so the component should render this step as incomplete
+
+      process.env.featureFlags = {
+        showCaringLeaveType: true,
+      };
+
+      const claim = new MockClaimBuilder()
+        .medicalLeaveReason()
+        .complete()
+        .create();
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: claim,
+        diveLevels,
+        hasLoadedClaimDocuments: true,
+        hasUploadedCertificationDocuments: {
+          document_type: DocumentType.certification[LeaveReason.care],
+          numberOfDocs: 1,
+        },
+      });
+      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
+      expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
+    });
+
+    // TODO (CP-2029): Remove this test once claims filed before 7/1/2021 are adjudicated and we don't use State managed Paid Leave Confirmation
+    it("renders certification doc step as complete when the Document Type is State managed Paid Leave Confirmation", () => {
+      // This is for the case of claims created prior to 7/1, until we can remove this doc type
+      const claim = new MockClaimBuilder()
+        .medicalLeaveReason()
+        .complete()
+        .create();
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: claim,
+        diveLevels,
+        hasLoadedClaimDocuments: true,
+        hasUploadedCertificationDocuments: {
+          document_type: DocumentType.certification.medicalCertification,
+          numberOfDocs: 1,
         },
       });
       expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);

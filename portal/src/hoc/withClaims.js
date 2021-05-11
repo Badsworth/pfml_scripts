@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import ClaimCollection from "../models/ClaimCollection";
+import PaginationMeta from "../models/PaginationMeta";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
@@ -24,16 +25,18 @@ const withClaims = (Component) => {
     assert(users.user);
 
     const claims = appLogic.claims.claims;
-    const shouldLoad = !appLogic.claims.hasLoadedAll;
+    const paginationMeta = appLogic.claims.paginationMeta;
+    const requestedPageOffset = query.page_offset
+      ? parseInt(query.page_offset)
+      : 1;
+    const shouldLoad = paginationMeta.page_offset !== requestedPageOffset;
 
     useEffect(() => {
       if (shouldLoad) {
-        const pageIndex = query && query.page ? parseInt(query.page) - 1 : 0;
-        appLogic.claims.loadAll(pageIndex);
+        appLogic.claims.loadPage(requestedPageOffset);
       }
-
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [shouldLoad]);
+    }, [shouldLoad, requestedPageOffset]);
 
     if (shouldLoad) {
       return (
@@ -43,7 +46,9 @@ const withClaims = (Component) => {
       );
     }
 
-    return <Component {...props} claims={claims} />;
+    return (
+      <Component {...props} claims={claims} paginationMeta={paginationMeta} />
+    );
   };
 
   ComponentWithClaims.propTypes = {
@@ -53,12 +58,12 @@ const withClaims = (Component) => {
       }).isRequired,
       claims: PropTypes.shape({
         claims: PropTypes.instanceOf(ClaimCollection),
-        hasLoadedAll: PropTypes.bool.isRequired,
-        loadAll: PropTypes.func.isRequired,
+        loadPage: PropTypes.func.isRequired,
+        paginationMeta: PropTypes.instanceOf(PaginationMeta),
       }).isRequired,
     }).isRequired,
     query: PropTypes.shape({
-      page: PropTypes.string,
+      page_offset: PropTypes.string,
     }),
   };
 

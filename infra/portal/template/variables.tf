@@ -27,12 +27,6 @@ variable "domain" {
   default     = ""
 }
 
-variable "enable_pretty_domain" {
-  description = "Set to false to disable ACM certificate lookup and domain configuration"
-  type        = bool
-  default     = true
-}
-
 variable "environment_name" {
   description = "Name of the environment (dev, sandbox, test, uat, stage, prod)"
   type        = string

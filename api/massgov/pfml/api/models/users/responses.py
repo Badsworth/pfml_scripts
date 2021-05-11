@@ -3,6 +3,7 @@ from typing import List
 from pydantic import UUID4, Field
 
 from massgov.pfml.util.pydantic import PydanticBaseModel
+from massgov.pfml.util.pydantic.types import FEINFormattedStr
 
 
 class RoleResponse(PydanticBaseModel):
@@ -12,13 +13,14 @@ class RoleResponse(PydanticBaseModel):
 
 class EmployerResponse(PydanticBaseModel):
     employer_dba: str
-    employer_fein: str
+    employer_fein: FEINFormattedStr
     employer_id: UUID4
     has_verification_data: bool
 
 
 class UserLeaveAdminResponse(PydanticBaseModel):
     employer: EmployerResponse
+    has_fineos_registration: bool
     verified: bool
 
 

@@ -151,7 +151,7 @@ def run_voucher_process(config: Configuration) -> None:
         with batch_log.LogEntry(
             db_session_raw, "Payment voucher"
         ) as log_entry, massgov.pfml.db.session_scope(db_session_raw) as db_session:
-            log_entry.set_metrics(**vars(config))
+            log_entry.set_metrics(vars(config))
             process_extracts_to_payment_voucher(
                 config.input_path,
                 config.output_path,
@@ -264,7 +264,7 @@ def process_payment_records(
     writeback_csv = writeback_csv_writer(writeback_file)
 
     if log_entry is not None:
-        log_entry.set_metrics(total=len(payment_extract_data.pei.indexed_data))
+        log_entry.set_metrics({"total": len(payment_extract_data.pei.indexed_data)})
 
     for ci_index, pei_record in massgov.pfml.util.logging.log_every(
         logger,
@@ -447,38 +447,18 @@ def write_row_to_output(
         )
         has_errors = True
 
-    # Process fields from VBI_REQUESTEDABSENCE_SOM.csv.
-    leave_type = ""
-    activity_code = ""
-    case_status = ""
-    employer_id = ""
-    if (
-        payment_data.absence_case_number is not None
-        and payment_data.absence_case_number
-        in vendor_extract_data.requested_absence_info.indexed_data
-    ):
-        requested_absence = vendor_extract_data.requested_absence_info.indexed_data[
-            payment_data.absence_case_number
-        ]
-        case_status = requested_absence["ABSENCE_CASESTATUS"]
-        employer_id = requested_absence["EMPLOYER_CUSTOMERNO"]
-
-        try:
-            leave_type = get_leave_type(requested_absence)
-            activity_code = get_activity_code(requested_absence)
-        except PaymentRowError as err:
-            logger.warning("%s", err, extra=extra)
-            has_errors = True
-    else:
-        logger.warning(
-            "Absence case missing and/or absence case not found in VBI_REQUESTEDABSENCE_SOM.csv; cannot set leave_type, activity_code, case_status, employer_id",
-            extra=extra,
-        )
-        has_errors = True
-
     # Process fields from VBI_REQUESTEDABSENCE.csv.
+    # Note: Using VBI_REQUESTEDABSENCE.csv is the most accurate source when attempting to
+    # get data at the leave request level of granularity because we are indexing this
+    # extract by leave_request_id.
     leave_request_id: Optional[str] = ""
     leave_request_decision: Optional[str] = ""
+    absence_case_creation_date: Optional[str] = ""
+    absence_reason_name: Optional[str] = ""
+    leave_type: Optional[str] = ""
+    activity_code: Optional[str] = ""
+    case_status: Optional[str] = ""
+    employer_id: Optional[str] = ""
     if (
         payment_data.leave_request_id is not None
         and payment_data.leave_request_id in voucher_extract_data.vbi_requested_absence.indexed_data
@@ -488,9 +468,21 @@ def write_row_to_output(
         ]
         leave_request_id = payment_data.leave_request_id
         leave_request_decision = vbi_requested_absence.get("LEAVEREQUEST_DECISION")
+        absence_case_creation_date = vbi_requested_absence.get("ABSENCE_CASECREATIONDATE")
+        absence_reason_name = vbi_requested_absence.get("ABSENCEREASON_NAME")
+        case_status = vbi_requested_absence.get("ABSENCE_CASESTATUS")
+        employer_id = vbi_requested_absence.get("EMPLOYER_CUSTOMERNO")
+
+        try:
+            leave_type = get_leave_type(vbi_requested_absence)
+            activity_code = get_activity_code(vbi_requested_absence)
+        except PaymentRowError as err:
+            logger.warning("%s", err, extra=extra)
+            has_errors = True
+
     else:
         logger.warning(
-            "Leave request id missing from vpeiclaimdetails.csv and/or leave request id not found in VBI_REQUESTEDABSENCE.csv; cannot set leave_request_id, leave_request_decision",
+            "Leave request id missing from vpeiclaimdetails.csv and/or leave request id not found in VBI_REQUESTEDABSENCE.csv; cannot set leave_request_id, leave_request_decision, absence_case_creation_date, absence_reason_name, leave_type, activity_code, case_status, employer_id",
             extra=extra,
         )
         has_errors = True
@@ -582,6 +574,8 @@ def write_row_to_output(
         leave_request_decision=leave_request_decision,
         payment_event_type=payment_data.payment_event_type,
         vcm_flag=vcm_flag,
+        absence_case_creation_date=absence_case_creation_date,
+        absence_reason_name=absence_reason_name,
         good_to_pay_from_prior_batch="",
         had_a_payment_in_a_prior_batch_by_vc_code="",
         inv="",
@@ -643,7 +637,7 @@ def write_writeback_row(
 
 
 def get_leave_type(absence_info):
-    reason_coverage = absence_info["ABSENCEREASON_COVERAGE"]
+    reason_coverage = absence_info.get("ABSENCEREASON_COVERAGE")
     if reason_coverage == "Family":
         return "PFMLFAMLFY2170030632"
     elif reason_coverage == "Employee":
@@ -652,7 +646,7 @@ def get_leave_type(absence_info):
 
 
 def get_activity_code(absence_info):
-    reason_coverage = absence_info["ABSENCEREASON_COVERAGE"]
+    reason_coverage = absence_info.get("ABSENCEREASON_COVERAGE")
     if reason_coverage == "Family":
         return "7246"
     elif reason_coverage == "Employee":

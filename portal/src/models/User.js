@@ -41,6 +41,14 @@ class User extends BaseModel {
   }
 
   /**
+   * Determines whether user_leave_administrators has at least one verified employer NOT registered in FINEOS
+   * @returns {boolean}
+   */
+  get hasVerifiedEmployerNotRegisteredInFineos() {
+    return !!this.getVerifiedEmployersNotRegisteredInFineos().length;
+  }
+
+  /**
    * Returns an unverifiable employer by employer id
    * @param {string} employerId
    * @returns {UserLeaveAdministrator}
@@ -69,6 +77,17 @@ class User extends BaseModel {
   }
 
   /**
+   * Returns list of verified employers that are not registered in FINEOS
+   * @returns {UserLeaveAdministrator[]}
+   */
+  getVerifiedEmployersNotRegisteredInFineos() {
+    return this.user_leave_administrators.filter(
+      (employer) =>
+        employer.has_fineos_registration === false && employer.verified === true
+    );
+  }
+
+  /**
    * Determines whether an employer is NOT verifiable (unverified and lacks verification data)
    * @param {UserLeaveAdministrator} employer
    * @returns {boolean}
@@ -84,6 +103,20 @@ class User extends BaseModel {
    */
   isVerifiableEmployer(employer) {
     return !employer.verified && employer.has_verification_data;
+  }
+
+  /**
+   * Determines whether an employer FEIN is registered in FINEOS
+   * @param {string} employerFein
+   * @returns {boolean}
+   */
+  isEmployerRegisteredInFineos(employerFein) {
+    return !!this.user_leave_administrators.find((employer) => {
+      return (
+        employerFein === employer.employer_fein &&
+        employer.has_fineos_registration
+      );
+    });
   }
 }
 
@@ -111,6 +144,7 @@ export class UserLeaveAdministrator extends BaseModel {
       employer_dba: null,
       employer_fein: null,
       employer_id: null,
+      has_fineos_registration: null,
       has_verification_data: null,
       verified: null,
     };

@@ -1,9 +1,6 @@
 locals {
-  domains = {
-    "${var.environment_name}" = "https://paidleave-${var.environment_name}.mass.gov/?_ff=pfmlTerriyay:true"
-    "prod"                    = "https://paidleave.mass.gov"
-  }
-  domain = lookup(local.domains, var.environment_name)
+  domain_raw = lookup(module.constants.domains, var.environment_name)
+  domain     = var.environment_name == "prod" ? format("https://%s", local.domain_raw) : format("https://%s/?_ff=pfmlTerriyay:true", local.domain_raw)
 }
 
 resource "newrelic_synthetics_monitor" "portal_ping" {

@@ -17,6 +17,7 @@ class PaymentAuditCSV(AbstractRecord):
     city: Optional[str]
     state: Optional[str]
     zip: Optional[str]
+    is_address_verified: Optional[str]
     payment_preference: Optional[str]
     scheduled_payment_date: Optional[str]
     payment_period_start_date: Optional[str]
@@ -48,6 +49,7 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     city="City",
     state="State",
     zip="Zip",
+    is_address_verified="Address Verified",
     payment_preference="Payment Preference",
     scheduled_payment_date="Scheduled Payment Date",
     payment_period_start_date="Payment Period Start",

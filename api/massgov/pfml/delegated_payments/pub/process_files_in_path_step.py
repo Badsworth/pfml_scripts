@@ -54,7 +54,7 @@ class ProcessFilesInPathStep(Step, metaclass=abc.ABCMeta):
         if s3_objects:
             file = s3_objects.pop(0)
             path = os.path.join(self.received_path, file)
-            self.set_metrics(input_path=path)
+            self.set_metrics({"input_path": path})
             self.process_file(path)
 
         self.more_files_to_process = s3_objects != []

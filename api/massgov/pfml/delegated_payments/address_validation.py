@@ -1,3 +1,4 @@
+import enum
 import re
 from typing import Any, Dict, List, Optional, Tuple, cast
 
@@ -36,6 +37,7 @@ class Constants:
     INPUT_ADDRESS_KEY = "input_address"
     OUTPUT_ADDRESS_KEY_PREFIX = "output_address_"
     PREVIOUSLY_VERIFIED = "Previously verified"
+    UNKNOWN = "Unknown"
 
     ERROR_STATE = State.PAYMENT_FAILED_ADDRESS_VALIDATION
     SUCCESS_STATE = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
@@ -46,16 +48,27 @@ class Constants:
     MESSAGE_VALID_ADDRESS = "Address validated by Experian"
     MESSAGE_VALID_MATCHING_ADDRESS = "Matching address validated by Experian"
     MESSAGE_INVALID_ADDRESS = "Address not valid in Experian"
+    MESSAGE_EXPERIAN_EXCEPTION_FORMAT = "An exception was thrown by Experian: {}"
 
 
 class AddressValidationStep(Step):
+    class Metrics(str, enum.Enum):
+        INVALID_EXPERIAN_FORMAT = "invalid_experian_format"
+        INVALID_EXPERIAN_RESPONSE = "invalid_experian_response"
+        MULTIPLE_EXPERIAN_MATCHES = "multiple_experian_matches"
+        NO_EXPERIAN_MATCH_COUNT = "no_experian_match_count"
+        PREVIOUSLY_VALIDATED_MATCH_COUNT = "previously_validated_match_count"
+        VALID_EXPERIAN_FORMAT = "valid_experian_format"
+        VALIDATED_ADDRESS_COUNT = "validated_address_count"
+        VERIFIED_EXPERIAN_MATCH = "verified_experian_match"
+
     def run_step(self) -> None:
         experian_client = _get_experian_client()
 
         payments = _get_payments_awaiting_address_validation(self.db_session)
         for payment in payments:
             self._validate_address_for_payment(payment, experian_client)
-            self.increment("validated_address_count")
+            self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
 
         self.db_session.commit()
         return None
@@ -75,13 +88,30 @@ class AddressValidationStep(Step):
                 ),
                 db_session=self.db_session,
             )
-            self.increment("previously_validated_match_count")
+            self.increment(self.Metrics.PREVIOUSLY_VALIDATED_MATCH_COUNT)
 
             return None
 
         # No response
         address = address_pair.fineos_address
-        response = _experian_response_for_address(experian_client, address)
+        try:
+            response = _experian_response_for_address(experian_client, address)
+        except Exception as e:
+            logger.exception(
+                "An exception occurred when querying the address for payment ID %s: %s"
+                % (payment.payment_id, type(e).__name__)
+            )
+
+            _create_end_state_by_payment_type(
+                payment=payment,
+                address=address,
+                address_validation_result=None,
+                end_state=Constants.ERROR_STATE,
+                message=Constants.MESSAGE_EXPERIAN_EXCEPTION_FORMAT.format(type(e).__name__),
+                db_session=self.db_session,
+            )
+            self.increment("experian_search_exception_count")
+            return None
 
         if response.result is None:
             state_log_util.create_finished_state_log(
@@ -90,25 +120,25 @@ class AddressValidationStep(Step):
                 outcome=state_log_util.build_outcome(Constants.MESSAGE_INVALID_EXPERIAN_RESPONSE),
                 db_session=self.db_session,
             )
-            self.increment("invalid_experian_response")
+            self.increment(self.Metrics.INVALID_EXPERIAN_RESPONSE)
             return None
 
         result = response.result
 
         # Exactly one response
         if result.confidence == Confidence.VERIFIED_MATCH:
-            self.increment("verified_experian_match")
+            self.increment(self.Metrics.VERIFIED_EXPERIAN_MATCH)
 
             formatted_address = _formatted_address_for_match(experian_client, address, result)
             if formatted_address is None:
                 end_state = Constants.ERROR_STATE
                 message = Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE
-                self.increment("invalid_experian_format")
+                self.increment(self.Metrics.INVALID_EXPERIAN_FORMAT)
             else:
                 address_pair.experian_address = formatted_address
                 end_state = Constants.SUCCESS_STATE
                 message = Constants.MESSAGE_VALID_ADDRESS
-                self.increment("valid_experian_format")
+                self.increment(self.Metrics.VALID_EXPERIAN_FORMAT)
             _create_end_state_by_payment_type(
                 payment=payment,
                 address=address,
@@ -121,7 +151,7 @@ class AddressValidationStep(Step):
 
         # Multiple responses
         if result.confidence == Confidence.MULTIPLE_MATCHES:
-            self.increment("multiple_experian_matches")
+            self.increment(self.Metrics.MULTIPLE_EXPERIAN_MATCHES)
 
             end_state, message = _get_end_state_and_message_for_multiple_matches(
                 result, experian_client, address_pair
@@ -137,7 +167,7 @@ class AddressValidationStep(Step):
             return
 
         # Zero responses
-        self.increment("no_experian_match_count")
+        self.increment(self.Metrics.NO_EXPERIAN_MATCH_COUNT)
         _create_end_state_by_payment_type(
             payment=payment,
             address=address,
@@ -151,7 +181,7 @@ class AddressValidationStep(Step):
 def _create_end_state_by_payment_type(
     payment: Payment,
     address: Address,
-    address_validation_result: AddressSearchV1Result,
+    address_validation_result: Optional[AddressSearchV1Result],
     end_state: LkState,
     message: str,
     db_session: db.Session,
@@ -206,7 +236,15 @@ def _formatted_address_for_match(
             )
             return None
 
-        return experian_format_response_to_address(client.format(key))
+        try:
+            return experian_format_response_to_address(client.format(key))
+        except Exception as e:
+            logger.exception(
+                "An exception occurred when querying for the format address for key %s: %s"
+                % (key, type(e).__name__)
+            )
+
+            return None
 
     logger.warning(
         "Experian /search endpoint did not include suggestions for Verified match",
@@ -216,13 +254,15 @@ def _formatted_address_for_match(
 
 
 def _outcome_for_search_result(
-    result: AddressSearchV1Result, msg: str, address: Address,
+    result: Optional[AddressSearchV1Result], msg: str, address: Address,
 ) -> Dict[str, Any]:
 
-    confidence_value = result.confidence.value if result.confidence else "Unknown"
+    confidence_value = (
+        result.confidence.value if result and result.confidence else Constants.UNKNOWN
+    )
     outcome: Dict[str, Any] = _build_experian_outcome(msg, address, confidence_value)
 
-    if result.suggestions is not None:
+    if result and result.suggestions is not None:
         for i, suggestion in enumerate(result.suggestions):
             # Start list of output addresses at 1.
             label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + str(1 + i)

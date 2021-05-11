@@ -9,7 +9,7 @@ exports[`AmendablePreviousLeave renders the component 1`] = `
       3/1/2020 – 3/6/2020
     </th>
     <td>
-      Family leave
+      Bond with a child
     </td>
     <td>
       <AmendButton
@@ -31,7 +31,7 @@ exports[`AmendablePreviousLeave renders the component 1`] = `
           <Heading
             level="4"
           >
-            Family leave
+            Bond with a child
           </Heading>
           <InputDate
             dayLabel="Day"

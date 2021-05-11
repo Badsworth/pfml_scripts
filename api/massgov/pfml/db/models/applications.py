@@ -41,6 +41,10 @@ from .common import StrEnum
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
+class NoClaimTypeForAbsenceType(Exception):
+    pass
+
+
 class LkEmploymentStatus(Base):
     __tablename__ = "lk_employment_status"
     employment_status_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -57,20 +61,28 @@ class LkLeaveReason(Base):
     __tablename__ = "lk_leave_reason"
     leave_reason_id = Column(Integer, primary_key=True, autoincrement=True)
     leave_reason_description = Column(Text)
+    _map = None
 
     def __init__(self, leave_reason_id, leave_reason_description):
         self.leave_reason_id = leave_reason_id
         self.leave_reason_description = leave_reason_description
 
+    @classmethod
+    def generate_map(cls):
+        return {
+            LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id: ClaimType.FAMILY_LEAVE.claim_type_id,
+            LeaveReason.PREGNANCY_MATERNITY.leave_reason_id: ClaimType.FAMILY_LEAVE.claim_type_id,
+            LeaveReason.CHILD_BONDING.leave_reason_id: ClaimType.FAMILY_LEAVE.claim_type_id,
+            LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
+        }
 
-class LkLeaveReasonQualifier(Base):
-    __tablename__ = "lk_leave_reason_qualifier"
-    leave_reason_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
-    leave_reason_qualifier_description = Column(Text)
-
-    def __init__(self, leave_reason_qualifier_id, leave_reason_qualifier_description):
-        self.leave_reason_qualifier_id = leave_reason_qualifier_id
-        self.leave_reason_qualifier_description = leave_reason_qualifier_description
+    @hybrid_property
+    def absence_to_claim_type(self) -> int:
+        if not self._map:
+            self._map = self.generate_map()
+        if self.leave_reason_id not in self._map:
+            raise NoClaimTypeForAbsenceType(f"{self.leave_reason_id} not in the lookup table")
+        return self._map[self.leave_reason_id]
 
 
 class LkLeaveType(Base):
@@ -82,15 +94,15 @@ class LkLeaveType(Base):
         self.leave_type_id = leave_type_id
         self.leave_type_description = leave_type_description
 
-    @hybrid_property
-    def absence_to_claim_type(self) -> int:
-        _map = {
-            LeaveType.BONDING_LEAVE.leave_type_id: ClaimType.FAMILY_LEAVE.claim_type_id,
-            LeaveType.MEDICAL_LEAVE.leave_type_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
-            LeaveType.ACCIDENT.leave_type_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
-            LeaveType.MILITARY.leave_type_id: ClaimType.MILITARY_LEAVE.claim_type_id,
-        }
-        return _map[self.leave_type_id]
+
+class LkLeaveReasonQualifier(Base):
+    __tablename__ = "lk_leave_reason_qualifier"
+    leave_reason_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
+    leave_reason_qualifier_description = Column(Text)
+
+    def __init__(self, leave_reason_qualifier_id, leave_reason_qualifier_description):
+        self.leave_reason_qualifier_id = leave_reason_qualifier_id
+        self.leave_reason_qualifier_description = leave_reason_qualifier_description
 
 
 class LkRelationshipToCaregiver(Base):
@@ -232,8 +244,31 @@ class PreviousLeave(Base):
         Integer,
         ForeignKey("lk_previous_leave_qualifying_reason.previous_leave_qualifying_reason_id"),
     )
+    worked_per_week_minutes = Column(Integer)
+    leave_minutes = Column(Integer)
     leave_reason = relationship(LkPreviousLeaveQualifyingReason)
+    type = Column(Text)
+
+    __mapper_args__ = {"polymorphic_on": type, "polymorphic_identity": "previous_leave"}
+
+
+# TODO (CP-2123): Remove this class when we remove references to previous_leaves
+class PreviousLeaveDeprecated(PreviousLeave):
     application = relationship("Application", back_populates="previous_leaves")
+    __mapper_args__ = {"polymorphic_identity": "deprecated"}
+
+
+# The Application model will have references to previous_leaves for both other and same reasons
+# In order for sqlalchemy to distinguish between the 2, we are making PreviousLeave polymorphic
+# https://docs.sqlalchemy.org/en/14/orm/inheritance.html#single-table-inheritance
+class PreviousLeaveOtherReason(PreviousLeave):
+    application = relationship("Application", back_populates="previous_leaves_other_reason")
+    __mapper_args__ = {"polymorphic_identity": "other_reason"}
+
+
+class PreviousLeaveSameReason(PreviousLeave):
+    application = relationship("Application", back_populates="previous_leaves_same_reason")
+    __mapper_args__ = {"polymorphic_identity": "same_reason"}
 
 
 class Application(Base):
@@ -246,6 +281,8 @@ class Application(Base):
     nickname = Column(Text)
     requestor = Column(Integer)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), nullable=True, unique=True)
+    # TODO (EMPLOYER-1213) Remove employee_id and employer_id from Application table.
+    # We store these on the Claim instead.
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True)
     has_mailing_address = Column(Boolean)
@@ -304,6 +341,8 @@ class Application(Base):
     caring_leave_metadata_id = Column(
         UUID(as_uuid=True), ForeignKey("caring_leave_metadata.caring_leave_metadata_id")
     )
+    has_previous_leaves_same_reason = Column(Boolean)
+    has_previous_leaves_other_reason = Column(Boolean)
 
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
@@ -332,17 +371,34 @@ class Application(Base):
     #
     # https://github.com/dropbox/sqlalchemy-stubs/issues/152
     continuous_leave_periods = relationship(
-        "ContinuousLeavePeriod", back_populates="application", uselist=True
+        "ContinuousLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     intermittent_leave_periods = relationship(
-        "IntermittentLeavePeriod", back_populates="application", uselist=True
+        "IntermittentLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     reduced_schedule_leave_periods = relationship(
-        "ReducedScheduleLeavePeriod", back_populates="application", uselist=True
+        "ReducedScheduleLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     employer_benefits = relationship("EmployerBenefit", back_populates="application", uselist=True)
     other_incomes = relationship("OtherIncome", back_populates="application", uselist=True)
-    previous_leaves = relationship("PreviousLeave", back_populates="application", uselist=True)
+    previous_leaves = relationship(
+        "PreviousLeaveDeprecated", back_populates="application", uselist=True
+    )
+    previous_leaves_other_reason = relationship(
+        "PreviousLeaveOtherReason", back_populates="application", uselist=True,
+    )
+    previous_leaves_same_reason = relationship(
+        "PreviousLeaveSameReason", back_populates="application", uselist=True,
+    )
 
 
 class CaringLeaveMetadata(Base):
@@ -450,6 +506,7 @@ class EmployerBenefit(Base):
     benefit_amount_frequency_id = Column(
         Integer, ForeignKey("lk_amount_frequency.amount_frequency_id")
     )
+    is_full_salary_continuous = Column(Boolean)
 
     application = relationship(Application, back_populates="employer_benefits")
     benefit_type = relationship(LkEmployerBenefitType)
@@ -595,6 +652,9 @@ class RelationshipQualifier(LookupTable):
     CUSTODIAL_PARENT = LkRelationshipQualifier(4, "Custodial Parent")
     LEGAL_GAURDIAN = LkRelationshipQualifier(5, "Legal Guardian")
     STEP_PARENT = LkRelationshipQualifier(6, "Step Parent")
+    LEGALLY_MARRIED = LkRelationshipQualifier(7, "Legally Married")
+    UNDISCLOSED = LkRelationshipQualifier(8, "Undisclosed")
+    PARENT_IN_LAW = LkRelationshipQualifier(9, "Parent-In-Law")
 
 
 class NotificationMethod(LookupTable):
@@ -704,6 +764,12 @@ class DocumentType(LookupTable):
     APPROVAL_NOTICE = LkDocumentType(6, "Approval Notice")
     REQUEST_FOR_MORE_INFORMATION = LkDocumentType(7, "Request for More Information")
     DENIAL_NOTICE = LkDocumentType(8, "Denial Notice")
+
+    OWN_SERIOUS_HEALTH_CONDITION_FORM = LkDocumentType(9, "Own serious health condition form")
+    PREGNANCY_MATERNITY_FORM = LkDocumentType(10, "Pregnancy/Maternity form")
+    CHILD_BONDING_EVIDENCE_FORM = LkDocumentType(11, "Child bonding evidence form")
+    CARE_FOR_A_FAMILY_MEMBER_FORM = LkDocumentType(12, "Care for a family member form")
+    MILITARY_EXIGENCY_FORM = LkDocumentType(13, "Military exigency form")
 
 
 class ContentType(LookupTable):

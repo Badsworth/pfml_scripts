@@ -4,6 +4,7 @@
 # To run this locally, use `make pub-payments-process-pub-returns`.
 #
 
+import enum
 import uuid
 from typing import Dict, Optional, Sequence, TextIO, Union
 
@@ -31,6 +32,15 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathStep):
     """Process a check payment return file received from the bank."""
+
+    class Metrics(str, enum.Enum):
+        CHECK_NUMBER_NOT_FOUND_COUNT = "check_number_not_found_count"
+        CHECK_PAYMENT_COUNT = "check_payment_count"
+        PAYMENT_COMPLETE_BY_PAID_CHECK = "payment_complete_by_paid_check"
+        PAYMENT_FAILED_BY_CHECK = "payment_failed_by_check"
+        PAYMENT_STILL_OUTSTANDING = "payment_still_outstanding"
+        PAYMENT_UNEXPECTED_STATE_COUNT = "payment_unexpected_state_count"
+        WARNING_COUNT = "warning_count"
 
     def __init__(
         self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session,
@@ -70,7 +80,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
         for line_error in check_reader.get_line_errors():
             logger.warning("line error: %s", line_error.warning)
-            self.increment("warning_count")
+            self.increment(self.Metrics.WARNING_COUNT)
             self.add_pub_error(
                 pub_error_type=PubErrorType.CHECK_PAYMENT_LINE_ERROR,
                 message=line_error.warning,
@@ -84,7 +94,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         """Process each check payment record."""
         for check_payment in check_payments:
             self.process_single_check_payment(check_payment)
-            self.increment("check_payment_count")
+            self.increment(self.Metrics.CHECK_PAYMENT_COUNT)
 
     def process_single_check_payment(self, check_payment: check_return.CheckPayment) -> None:
         """Get a check payment from the database and update its state."""
@@ -129,7 +139,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 "payments.check.status": check_payment.status,
             },
         )
-        self.increment("check_number_not_found_count")
+        self.increment(self.Metrics.CHECK_NUMBER_NOT_FOUND_COUNT)
         self.add_pub_error(
             pub_error_type=PubErrorType.CHECK_PAYMENT_ERROR,
             message="check number not in payment table",
@@ -159,7 +169,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         extra = extra_for_log(check_payment, payment)
         extra["payments.state"] = end_state_id
         logger.error("unexpected state for check payment", extra=extra)
-        self.increment("payment_unexpected_state_count")
+        self.increment(self.Metrics.PAYMENT_UNEXPECTED_STATE_COUNT)
         self.add_pub_error(
             pub_error_type=PubErrorType.CHECK_PAYMENT_ERROR,
             message="unexpected state for payment: %s (%s)" % (state_description, end_state_id),
@@ -189,7 +199,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         logger.info(
             "payment complete by paid check", extra=extra_for_log(check_payment, payment),
         )
-        self.increment("payment_complete_by_paid_check")
+        self.increment(self.Metrics.PAYMENT_COMPLETE_BY_PAID_CHECK)
 
     def outstanding_check_payment(
         self, payment: Payment, check_payment: check_return.CheckPayment
@@ -198,7 +208,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         logger.info(
             "check still outstanding, no state change", extra=extra_for_log(check_payment, payment),
         )
-        self.increment("payment_still_outstanding")
+        self.increment(self.Metrics.PAYMENT_STILL_OUTSTANDING)
 
     def reject_check_payment(
         self, payment: Payment, check_payment: check_return.CheckPayment
@@ -220,7 +230,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         logger.info(
             "payment failed by check", extra=extra_for_log(check_payment, payment),
         )
-        self.increment("payment_failed_by_check")
+        self.increment(self.Metrics.PAYMENT_FAILED_BY_CHECK)
         self.add_pub_error(
             pub_error_type=PubErrorType.CHECK_PAYMENT_FAILED,
             message="payment failed by check: %s" % check_payment.status.name,

@@ -93,20 +93,22 @@ PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "P
 PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"]
 
 REQUESTED_ABSENCE_SOM_FIELD_NAMES = [
-    "ABSENCEREASON_COVERAGE",
     "ABSENCE_CASENUMBER",
     "NOTIFICATION_CASENUMBER",
-    "ABSENCE_CASESTATUS",
     "ABSENCEPERIOD_START",
     "ABSENCEPERIOD_END",
     "LEAVEREQUEST_EVIDENCERESULTTYPE",
     "EMPLOYEE_CUSTOMERNO",
-    "EMPLOYER_CUSTOMERNO",
 ]
 REQUESTED_ABSENCE_FIELD_NAMES = [
     "ABSENCE_CASENUMBER",
     "LEAVEREQUEST_ID",
     "LEAVEREQUEST_DECISION",
+    "ABSENCE_CASECREATIONDATE",
+    "ABSENCEREASON_NAME",
+    "ABSENCE_CASESTATUS",
+    "EMPLOYER_CUSTOMERNO",
+    "ABSENCEREASON_COVERAGE",
 ]
 EMPLOYEE_FEED_FIELD_NAMES = [
     "C",
@@ -371,11 +373,6 @@ def _generate_fineos_vendor_rows_for_scenario(
             requested_absence_som_row["NOTIFICATION_CASENUMBER"] = (
                 claim.fineos_absence_id[:11] if claim.fineos_absence_id else ""
             )
-            requested_absence_som_row["ABSENCE_CASESTATUS"] = (
-                AbsenceStatus.ADJUDICATION.absence_status_description
-                if claim.fineos_absence_status_id is None
-                else claim.fineos_absence_status.absence_status_description
-            )
             requested_absence_som_row["ABSENCEPERIOD_START"] = absence_start.strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
@@ -385,26 +382,32 @@ def _generate_fineos_vendor_rows_for_scenario(
             requested_absence_som_row["LEAVEREQUEST_EVIDENCERESULTTYPE"] = (
                 "Not Satisfied" if not scenario_descriptor.evidence_satisfied else "Satisfied"
             )
-            requested_absence_som_row["ABSENCEREASON_COVERAGE"] = CLAIM_TYPE_TRANSLATION[
-                scenario_descriptor.leave_type.claim_type_description
-            ]
 
             requested_absence_som_row[
                 "EMPLOYEE_CUSTOMERNO"
             ] = scenario_data.employee_customer_number
 
-            if not scenario_descriptor.missing_from_vpeiclaimdetails:
-                requested_absence_som_row["EMPLOYER_CUSTOMERNO"] = employer.fineos_employer_id
-
             requested_absence_som_csv_writer.writerow(requested_absence_som_row)
 
         if not scenario_descriptor.missing_from_vbi_requestedabsence:
-            # A few fields are still needed from the unmodified version of
-            # VBI_REQUSTEDABSENCE.csv
             requested_absence_row = {}
             requested_absence_row["ABSENCE_CASENUMBER"] = claim.fineos_absence_id
             requested_absence_row["LEAVEREQUEST_ID"] = scenario_data.leave_request_id
             requested_absence_row["LEAVEREQUEST_DECISION"] = scenario_data.leave_request_decision
+            requested_absence_row[
+                "ABSENCE_CASECREATIONDATE"
+            ] = scenario_data.absence_case_creation_date
+            requested_absence_row["ABSENCEREASON_NAME"] = scenario_data.absence_reason_name
+            requested_absence_row["ABSENCE_CASESTATUS"] = (
+                AbsenceStatus.ADJUDICATION.absence_status_description
+                if claim.fineos_absence_status_id is None
+                else claim.fineos_absence_status.absence_status_description
+            )
+            if employer:
+                requested_absence_row["EMPLOYER_CUSTOMERNO"] = employer.fineos_employer_id
+            requested_absence_row["ABSENCEREASON_COVERAGE"] = CLAIM_TYPE_TRANSLATION[
+                scenario_descriptor.leave_type.claim_type_description
+            ]
             requested_absence_csv_writer.writerow(requested_absence_row)
 
     # Employee Feed file

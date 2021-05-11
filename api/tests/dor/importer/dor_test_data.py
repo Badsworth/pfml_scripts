@@ -44,7 +44,7 @@ employer_international_address["employer_address_state"] = "DX"
 employer_international_address["employer_address_country"] = "CAN"
 
 employer_invalid_country = copy.deepcopy(new_employer)
-employer_international_address["fein"] = "999999991"
+employer_invalid_country["fein"] = "999999991"
 employer_invalid_country["account_key"] = "00000000003"
 employer_invalid_country["employer_address_state"] = "MA"
 employer_invalid_country["employer_address_country"] = "UXU"

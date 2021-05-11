@@ -11,10 +11,12 @@ import os
 import uuid
 from datetime import datetime, timedelta
 
+import _pytest.monkeypatch
 import boto3
 import moto
 import pytest
 import sentry_sdk
+import sqlalchemy
 from jose import jwt
 
 import massgov.pfml.api.app
@@ -53,8 +55,10 @@ def app_cors(monkeypatch, test_db):
 
 
 @pytest.fixture
-def app(test_db, initialize_factories_session, set_auth_public_keys):
-    return massgov.pfml.api.app.create_app(check_migrations_current=False)
+def app(test_db_session, initialize_factories_session, set_auth_public_keys):
+    return massgov.pfml.api.app.create_app(
+        check_migrations_current=False, db_session_factory=test_db_session, do_close_db=False
+    )
 
 
 @pytest.fixture
@@ -343,40 +347,46 @@ def setup_mock_sftp_client(monkeypatch, mock_sftp_client):
     )
 
 
-@pytest.fixture
-def test_db_schema(monkeypatch):
+@pytest.fixture(scope="session")
+def test_db_schema(monkeypatch_session):
     """
     Create a test schema, if it doesn't already exist, and drop it after the
     test completes.
     """
     schema_name = f"api_test_{uuid.uuid4().int}"
 
-    monkeypatch.setenv("DB_SCHEMA", schema_name)
+    monkeypatch_session.setenv("DB_SCHEMA", schema_name)
 
-    import massgov.pfml.db as db
-    import massgov.pfml.db.config
+    db_schema_create(schema_name)
+    try:
+        yield schema_name
+    finally:
+        db_schema_drop(schema_name)
 
-    db_admin_config = massgov.pfml.db.config.get_config(prefer_admin=True)
 
+def db_schema_create(schema_name):
+    """Create a database schema."""
     db_config = massgov.pfml.db.config.get_config()
     db_test_user = db_config.username
-
-    def exec_sql_admin(sql):
-        engine = db.create_engine(db_admin_config)
-        with engine.connect() as connection:
-            connection.execute(sql)
 
     exec_sql_admin(f"CREATE SCHEMA IF NOT EXISTS {schema_name} AUTHORIZATION {db_test_user};")
     logger.info("create schema %s", schema_name)
 
-    try:
-        yield schema_name
-    finally:
-        exec_sql_admin(f"DROP SCHEMA {schema_name} CASCADE;")
-        logger.info("drop schema %s", schema_name)
+
+def db_schema_drop(schema_name):
+    """Drop a database schema."""
+    exec_sql_admin(f"DROP SCHEMA {schema_name} CASCADE;")
+    logger.info("drop schema %s", schema_name)
 
 
-@pytest.fixture
+def exec_sql_admin(sql):
+    db_admin_config = massgov.pfml.db.config.get_config(prefer_admin=True)
+    engine = massgov.pfml.db.create_engine(db_admin_config)
+    with engine.connect() as connection:
+        connection.execute(sql)
+
+
+@pytest.fixture(scope="session")
 def test_db(test_db_schema):
     """
     Creates a test schema, directly creating all tables with SQLAlchemy. Schema
@@ -392,6 +402,50 @@ def test_db(test_db_schema):
     engine = db.create_engine()
     Base.metadata.create_all(bind=engine)
 
+    db_session = db.init(sync_lookups=True)
+    db_session.close()
+    db_session.remove()
+
+    return engine
+
+
+Session = sqlalchemy.orm.sessionmaker()
+
+
+@pytest.fixture
+def test_db_session(test_db):
+    # Based on https://docs.sqlalchemy.org/en/13/orm/session_transaction.html#joining-a-session-into-an-external-transaction-such-as-for-test-suites
+    connection = test_db.connect()
+    trans = connection.begin()
+    session = Session(bind=connection)
+
+    session.begin_nested()
+
+    @sqlalchemy.event.listens_for(session, "after_transaction_end")
+    def restart_savepoint(session, transaction):
+        if transaction.nested and not transaction._parent.nested:
+            session.begin_nested()
+
+    yield session
+
+    session.close()
+    trans.rollback()
+    connection.close()
+
+
+@pytest.fixture
+def test_db_other_session(test_db):
+    # Based on https://docs.sqlalchemy.org/en/13/orm/session_transaction.html#joining-a-session-into-an-external-transaction-such-as-for-test-suites
+    connection = test_db.connect()
+    trans = connection.begin()
+    session = Session(bind=connection)
+
+    yield session
+
+    session.close()
+    trans.rollback()
+    connection.close()
+
 
 @pytest.fixture
 def initialize_factories_session(monkeypatch, test_db_session):
@@ -399,55 +453,118 @@ def initialize_factories_session(monkeypatch, test_db_session):
 
     import massgov.pfml.db.models.factories as factories
 
+    logger.info("set factories db_session to %s", test_db_session)
     factories.db_session = test_db_session
 
 
 @pytest.fixture
-def initialize_factories_session_via_migrations(test_db_session_via_migrations):
-    import massgov.pfml.db.models.factories as factories
+def local_test_db_schema(monkeypatch):
+    """
+    Create a test schema, if it doesn't already exist, and drop it after the
+    test completes.
+    """
+    schema_name = f"api_test_{uuid.uuid4().int}"
 
-    factories.db_session = test_db_session_via_migrations
+    monkeypatch.setenv("DB_SCHEMA", schema_name)
+
+    db_schema_create(schema_name)
+    try:
+        yield schema_name
+    finally:
+        db_schema_drop(schema_name)
 
 
 @pytest.fixture
-def test_db_via_migrations(test_db_schema, logging_fix):
+def local_test_db(local_test_db_schema):
+    """
+    Creates a test schema, directly creating all tables with SQLAlchemy. Schema
+    is dropped after the test completes.
+    """
+    import massgov.pfml.db as db
+    from massgov.pfml.db.models.base import Base
+
+    # not used directly, but loads models into Base
+    import massgov.pfml.db.models.employees as employees  # noqa: F401
+    import massgov.pfml.db.models.applications as applications  # noqa: F401
+
+    engine = db.create_engine()
+    Base.metadata.create_all(bind=engine)
+
+    db_session = db.init(sync_lookups=True, check_migrations_current=False)
+    db_session.close()
+    db_session.remove()
+
+    return engine
+
+
+@pytest.fixture
+def local_test_db_session(local_test_db):
+    import massgov.pfml.db as db
+
+    db_session = db.init(sync_lookups=False, check_migrations_current=False)
+
+    yield db_session
+
+    db_session.close()
+    db_session.remove()
+
+
+@pytest.fixture
+def local_test_db_other_session(local_test_db):
+    import massgov.pfml.db as db
+
+    db_session = db.init(sync_lookups=False, check_migrations_current=False)
+
+    yield db_session
+
+    db_session.close()
+    db_session.remove()
+
+
+@pytest.fixture
+def local_initialize_factories_session(monkeypatch, local_test_db_session):
+    monkeypatch.delenv("DB_FACTORIES_DISABLE_DB_ACCESS")
+    import massgov.pfml.db.models.factories as factories
+
+    logger.info("set factories db_session to %s", local_test_db_session)
+    factories.db_session = local_test_db_session
+
+
+@pytest.fixture
+def migrations_test_db_schema(monkeypatch):
+    """
+    Create a test schema, if it doesn't already exist, and drop it after the
+    test completes.
+    """
+    schema_name = f"api_test_{uuid.uuid4().int}"
+
+    monkeypatch.setenv("DB_SCHEMA", schema_name)
+
+    db_schema_create(schema_name)
+    try:
+        yield schema_name
+    finally:
+        db_schema_drop(schema_name)
+
+
+@pytest.fixture
+def test_db_via_migrations(migrations_test_db_schema, logging_fix):
     """
     Creates a test schema, runs migrations through Alembic. Schema is dropped
     after the test completes.
     """
     from alembic.config import Config
     from alembic import command
+    from pathlib import Path
 
     alembic_cfg = Config(
         os.path.join(os.path.dirname(__file__), "../massgov/pfml/db/migrations/alembic.ini")
     )
+    # Change directory location so the relative script_location in alembic config works.
+    os.chdir(Path(__file__).parent.parent)
     command.upgrade(alembic_cfg, "head")
 
-    return test_db_schema
-
-
-@pytest.fixture
-def test_db_session(test_db):
-    import massgov.pfml.db as db
-
-    db_session = db.init(sync_lookups=True, check_migrations_current=False)
-
-    yield db_session
-
-    db_session.close()
-    db_session.remove()
-
-
-@pytest.fixture
-def test_db_other_session(test_db):
-    import massgov.pfml.db as db
-
-    db_session = db.init(sync_lookups=True, check_migrations_current=False)
-
-    yield db_session
-
-    db_session.close()
-    db_session.remove()
+    return migrations_test_db_schema
 
 
 @pytest.fixture
@@ -463,8 +580,79 @@ def test_db_session_via_migrations(test_db_via_migrations):
 
 
 @pytest.fixture
+def initialize_factories_session_via_migrations(test_db_session_via_migrations):
+    import massgov.pfml.db.models.factories as factories
+
+    factories.db_session = test_db_session_via_migrations
+
+
+@pytest.fixture(scope="module")
+def module_persistent_db(monkeypatch_module, request):
+    import massgov.pfml.db as db
+    from massgov.pfml.db.models.base import Base
+
+    # not used directly, but loads models into Base
+    import massgov.pfml.db.models.employees as employees  # noqa: F401
+    import massgov.pfml.db.models.applications as applications  # noqa: F401
+
+    schema_name = f"api_test_persistent_{uuid.uuid4().int}"
+    logger.info("use persistent test db for module %s", request.module.__name__)
+
+    monkeypatch_module.setenv("DB_SCHEMA", schema_name)
+    db_schema_create(schema_name)
+
+    engine = db.create_engine()
+    Base.metadata.create_all(bind=engine)
+
+    create_triggers_on_connection(engine.connect())
+
+    db_session = db.init(sync_lookups=True)
+
+    try:
+        yield schema_name
+    finally:
+        db_session.close()
+        db_session.remove()
+        db_schema_drop(schema_name)
+
+
+@pytest.fixture
+def module_persistent_db_session(module_persistent_db, monkeypatch):
+    import massgov.pfml.db as db
+    import massgov.pfml.db.models.factories as factories
+
+    db_session = db.init(sync_lookups=False)
+
+    monkeypatch.delenv("DB_FACTORIES_DISABLE_DB_ACCESS")
+
+    logger.info("set factories db_session to %s", db_session)
+    factories.db_session = db_session
+
+    yield db_session
+
+    db_session.close()
+    db_session.remove()
+
+
+@pytest.fixture
 def mock_db_session(mocker):
     return mocker.patch("sqlalchemy.orm.Session", autospec=True)
+
+
+# From https://github.com/pytest-dev/pytest/issues/363
+@pytest.fixture(scope="session")
+def monkeypatch_session(request):
+    mpatch = _pytest.monkeypatch.MonkeyPatch()
+    yield mpatch
+    mpatch.undo()
+
+
+# From https://github.com/pytest-dev/pytest/issues/363
+@pytest.fixture(scope="module")
+def monkeypatch_module(request):
+    mpatch = _pytest.monkeypatch.MonkeyPatch()
+    yield mpatch
+    mpatch.undo()
 
 
 @pytest.fixture
@@ -489,16 +677,23 @@ def reset_aws_env_vars(monkeypatch):
 # once that fixture is fixed. The code here is functionally
 # equal to migration file:
 # 2020_10_20_15_46_57_2b4295929525_add_postgres_triggers_4_employer_employee.py
+@pytest.fixture(scope="session")
+def create_triggers(test_db):
+    with test_db.connect() as connection:
+        create_triggers_on_connection(connection)
+
+
 @pytest.fixture
-def create_triggers(initialize_factories_session):
-    import massgov.pfml.db as db
+def local_create_triggers(local_test_db):
+    with local_test_db.connect() as connection:
+        create_triggers_on_connection(connection)
 
-    engine = db.create_engine()
-    with engine.connect() as connection:
-        # Create postgres triggers not uploaded by test db
-        connection.execute('CREATE EXTENSION IF NOT EXISTS "pgcrypto";')
-        connection.execute(
-            "CREATE OR REPLACE FUNCTION audit_employee_func() RETURNS TRIGGER AS $$\
+
+def create_triggers_on_connection(connection):
+    # Create postgres triggers not uploaded by test db
+    connection.execute('CREATE EXTENSION IF NOT EXISTS "pgcrypto";')
+    connection.execute(
+        "CREATE OR REPLACE FUNCTION audit_employee_func() RETURNS TRIGGER AS $$\
                 DECLARE affected_record record;\
                 BEGIN\
                     IF (TG_OP = 'DELETE') THEN\
@@ -519,25 +714,25 @@ def create_triggers(initialize_factories_session):
                     RETURN NEW;\
                 END;\
             $$ LANGUAGE plpgsql;"
-        )
-        connection.execute(
-            "CREATE TRIGGER after_employee_insert AFTER INSERT ON employee\
+    )
+    connection.execute(
+        "CREATE TRIGGER after_employee_insert AFTER INSERT ON employee\
                 REFERENCING NEW TABLE AS new_table\
                 FOR EACH STATEMENT EXECUTE PROCEDURE audit_employee_func();"
-        )
-        connection.execute(
-            "CREATE TRIGGER after_employee_update AFTER UPDATE ON employee\
+    )
+    connection.execute(
+        "CREATE TRIGGER after_employee_update AFTER UPDATE ON employee\
                 REFERENCING OLD TABLE AS old_table NEW TABLE AS new_table\
                 FOR EACH STATEMENT EXECUTE PROCEDURE audit_employee_func();"
-        )
-        connection.execute(
-            "CREATE TRIGGER after_employee_delete AFTER DELETE ON employee\
+    )
+    connection.execute(
+        "CREATE TRIGGER after_employee_delete AFTER DELETE ON employee\
                 REFERENCING OLD TABLE AS old_table\
                 FOR EACH STATEMENT EXECUTE PROCEDURE audit_employee_func();"
-        )
+    )
 
-        connection.execute(
-            "CREATE OR REPLACE FUNCTION audit_employer_func() RETURNS TRIGGER AS $$\
+    connection.execute(
+        "CREATE OR REPLACE FUNCTION audit_employer_func() RETURNS TRIGGER AS $$\
                 DECLARE affected_record record;\
                 BEGIN\
                     IF (TG_OP = 'DELETE') THEN\
@@ -558,22 +753,22 @@ def create_triggers(initialize_factories_session):
                     RETURN NEW;\
                 END;\
             $$ LANGUAGE plpgsql;"
-        )
-        connection.execute(
-            "CREATE TRIGGER after_employer_insert AFTER INSERT ON employer\
+    )
+    connection.execute(
+        "CREATE TRIGGER after_employer_insert AFTER INSERT ON employer\
                 REFERENCING NEW TABLE AS new_table\
                 FOR EACH STATEMENT EXECUTE PROCEDURE audit_employer_func();"
-        )
-        connection.execute(
-            "CREATE TRIGGER after_employer_update AFTER UPDATE ON employer\
+    )
+    connection.execute(
+        "CREATE TRIGGER after_employer_update AFTER UPDATE ON employer\
                 REFERENCING OLD TABLE AS old_table NEW TABLE AS new_table\
                 FOR EACH STATEMENT EXECUTE PROCEDURE audit_employer_func();"
-        )
-        connection.execute(
-            "CREATE TRIGGER after_employer_delete AFTER DELETE ON employer\
+    )
+    connection.execute(
+        "CREATE TRIGGER after_employer_delete AFTER DELETE ON employer\
                 REFERENCING OLD TABLE AS old_table\
                 FOR EACH STATEMENT EXECUTE PROCEDURE audit_employer_func();"
-        )
+    )
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -602,8 +797,8 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 # This fixture was necessary at the time of this PR as
 # the test_db_via_migration was not working. Will refactor
 # once that fixture is fixed. The code here is functionally
-# equal to migration file:
-# 2021_01_29_15_51_16_14155f78d8e6_create_dua_reduction_payment_table.py
+# equal to index created in migration file:
+# 2021_04_27_17_07_38_a654bf03da3f_switch_dua_payment_data_to_use_fineos_.py
 @pytest.fixture
 def dua_reduction_payment_unique_index(initialize_factories_session):
     import massgov.pfml.db as db
@@ -613,7 +808,7 @@ def dua_reduction_payment_unique_index(initialize_factories_session):
         connection.execute(
             """
             create unique index on dua_reduction_payment (
-                absence_case_id,
+                fineos_customer_number,
                 coalesce(employer_fein, ''),
                 coalesce(payment_date, '1788-02-06'),
                 coalesce(request_week_begin_date, '1788-02-06'),

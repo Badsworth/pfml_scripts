@@ -91,14 +91,14 @@ Array [
 
 exports[`Status shows lead text for a claim that is pending 1`] = `
 Array [
-  "This application is being reviewed by the Department. It was either reviewed by an administrator on your team or the review deadline has passed. No action is required of you.",
+  "No action is required of you.",
   <br
     key="br-1"
   />,
   <br
     key="br-2"
   />,
-  "After we make a decision, you'll receive an email with a direct link for more details.",
+  "When the application progresses you'll receive an email with a direct link for more details.",
 ]
 `;
 

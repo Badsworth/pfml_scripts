@@ -111,8 +111,7 @@ export default async (
   // verify eligibility before continuing
   const isEligible = await Util.isFinanciallyEligible(browser);
   if (isEligible) {
-    const realTimeSteps = steps.map(Util.simulateRealTime);
-    for (const step of realTimeSteps) {
+    for (const step of steps) {
       if (breakStepFlow) {
         console.info(
           `A breaking condition was found therefore steps after '${
@@ -137,7 +136,6 @@ export default async (
 
 export const steps: Cfg.StoredStep[] = [
   {
-    time: 15000,
     name: "Review documents received",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // go to the documents tab
@@ -163,7 +161,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Approve evidence received",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // go to the absence hub tab
@@ -189,7 +186,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Close document review task",
     test: async (browser: Browser): Promise<void> => {
       // go to the tasks tab

@@ -87,7 +87,7 @@ The process is documented in [our docs folder](./docs/data.md).
 Load and Stress Testing
 -----------------------
 
-Documentation TBD.
+The process is documented in [our docs folder](./docs/LST.md).
 
 General Testing Methodology/Philosophy
 ----------------------

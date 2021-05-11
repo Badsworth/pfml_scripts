@@ -48,11 +48,15 @@ export const UploadCertification = (props) => {
       [ReasonQualifier.adoption]: "bonding_adopt_foster",
       [ReasonQualifier.fosterCare]: "bonding_adopt_foster",
     },
+    [LeaveReason.care]: "care",
     [LeaveReason.medical]: "medical",
   };
   let leadTextContext;
   switch (claimReason) {
     case LeaveReason.medical:
+      leadTextContext = conditionalContext[claimReason];
+      break;
+    case LeaveReason.care:
       leadTextContext = conditionalContext[claimReason];
       break;
     case LeaveReason.bonding:
@@ -62,7 +66,7 @@ export const UploadCertification = (props) => {
 
   const certificationDocuments = findDocumentsByTypes(
     documents,
-    [DocumentType.medicalCertification] // TODO (CP-962): Set based on leaveReason
+    [DocumentType.certification.medicalCertification] // TODO (CP-962): Set based on leaveReason
   );
 
   const handleSave = async () => {
@@ -75,7 +79,7 @@ export const UploadCertification = (props) => {
     const uploadPromises = appLogic.documents.attach(
       claim.application_id,
       files.items,
-      DocumentType.medicalCertification, // TODO (CP-962): set based on leave reason
+      DocumentType.certification.medicalCertification, // TODO (CP-962): set based on leave reason
       query.additionalDoc === "true"
     );
 
@@ -115,6 +119,13 @@ export const UploadCertification = (props) => {
                 target="_blank"
                 rel="noopener"
                 href={routes.external.massgov.healthcareProviderForm}
+              />
+            ),
+            "caregiver-certification-form-link": (
+              <a
+                target="_blank"
+                rel="noopener"
+                href={routes.external.massgov.caregiverCertificationForm}
               />
             ),
           }}

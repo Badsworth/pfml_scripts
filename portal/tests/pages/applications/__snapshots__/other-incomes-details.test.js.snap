@@ -37,7 +37,7 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
         },
         Object {
           "checked": false,
-          "label": "Earnings from another employer or through self-employment",
+          "label": "Earnings or benefits from another employer, or through self-employment",
           "value": "Earnings from another employment/self-employment",
         },
       ]
@@ -52,7 +52,7 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
   <InputDate
     dayLabel="Day"
     example="mm / dd / yyyy"
-    label="When will you start receiving this income?"
+    label="What is the first day of your leave that this income will pay you for?"
     monthLabel="Month"
     name="other_incomes[0].income_start_date"
     onChange={[Function]}
@@ -63,7 +63,7 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
   <InputDate
     dayLabel="Day"
     example="mm / dd / yyyy"
-    label="When will you stop receiving this income?"
+    label="What is the last day of your leave that this income will pay you for?"
     monthLabel="Month"
     name="other_incomes[0].income_end_date"
     onChange={[Function]}
@@ -125,7 +125,7 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
 exports[`OtherIncomesDetails when the user's claim has no other incomes renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Other leave, income, and benefits"
+  title="Other leave, benefits, and income"
 >
   <Heading
     level="2"
@@ -166,7 +166,7 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
 exports[`OtherIncomesDetails when the user's claim has other incomes renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Other leave, income, and benefits"
+  title="Other leave, benefits, and income"
 >
   <Heading
     level="2"

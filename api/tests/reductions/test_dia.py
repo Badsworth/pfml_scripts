@@ -202,9 +202,9 @@ def _get_loaded_payment_reference_file_in_s3(
 
 @pytest.mark.integration
 def test_copy_to_sftp_and_archive_s3_files(
-    initialize_factories_session,
-    test_db_session,
-    test_db_other_session,
+    local_initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
     mock_s3_bucket,
     mock_sftp_client,
     setup_mock_sftp_client,
@@ -214,12 +214,12 @@ def test_copy_to_sftp_and_archive_s3_files(
     s3_bucket_uri = f"s3://{mock_s3_bucket}"
     source_directory_path = "reductions/dia/outbound"
     archive_directory_path = "reductions/dia/archive"
-    moveit_dia_inbound_path = "/DFML/DIA/Inbound"
+    moveit_dia_outbound_path = "/DFML/DIA/Inbound"
 
     monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
     monkeypatch.setenv("S3_DIA_OUTBOUND_DIRECTORY_PATH", source_directory_path)
     monkeypatch.setenv("S3_DIA_ARCHIVE_DIRECTORY_PATH", archive_directory_path)
-    monkeypatch.setenv("MOVEIT_DIA_INBOUND_PATH", moveit_dia_inbound_path)
+    monkeypatch.setenv("MOVEIT_DIA_OUTBOUND_PATH", moveit_dia_outbound_path)
 
     filenames = []
     file_count = random.randint(1, 8)
@@ -234,21 +234,21 @@ def test_copy_to_sftp_and_archive_s3_files(
         filenames.append(filename)
 
     # Save the changes to the reference file types.
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     s3_source_directory_uri = os.path.join(s3_bucket_uri, source_directory_path)
     s3_archive_directory_uri = os.path.join(s3_bucket_uri, archive_directory_path)
     assert len(file_util.list_files(s3_source_directory_uri)) == len(filenames)
     assert len(file_util.list_files(s3_archive_directory_uri)) == 0
 
-    upload_claimant_list_to_moveit(test_db_session)
+    upload_claimant_list_to_moveit(local_test_db_session)
 
     # Expect to have moved all files from the source to the archive directory of S3.
     assert len(file_util.list_files(s3_source_directory_uri)) == 0
     assert len(file_util.list_files(s3_archive_directory_uri)) == len(filenames)
 
     # Get files in the MoveIt server and s3 archive directory.
-    files_in_moveit = mock_sftp_client.listdir(moveit_dia_inbound_path)
+    files_in_moveit = mock_sftp_client.listdir(moveit_dia_outbound_path)
     files_in_s3_archive_dir = file_util.list_files(s3_archive_directory_uri)
 
     # Confirm that we've moved every ReferenceFile, created a StateLog record, and updated the db.
@@ -256,7 +256,7 @@ def test_copy_to_sftp_and_archive_s3_files(
         file_loc = os.path.join(s3_archive_directory_uri, filename)
 
         ref_file = (
-            test_db_session.query(ReferenceFile)
+            local_test_db_session.query(ReferenceFile)
             .filter(ReferenceFile.file_location == file_loc)
             .one_or_none()
         )
@@ -267,7 +267,7 @@ def test_copy_to_sftp_and_archive_s3_files(
         # Use test_db_other_session so we query against the database instead of just the in-memory
         # cache of test_db_session.
         assert (
-            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            local_test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
             .filter(StateLog.end_state_id == State.DIA_CLAIMANT_LIST_SUBMITTED.state_id)
             .filter(StateLog.reference_file_id == ref_file.reference_file_id)
             .scalar()
@@ -411,9 +411,9 @@ def test_create_list_of_claimants_skips_claims_with_missing_data(
 )
 @pytest.mark.integration
 def test_download_payment_list_if_none_today(
-    initialize_factories_session,
-    test_db_session,
-    test_db_other_session,
+    local_initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
     mock_s3_bucket,
     mock_sftp_client,
     setup_mock_sftp_client,
@@ -428,7 +428,7 @@ def test_download_payment_list_if_none_today(
 
     monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
     monkeypatch.setenv("S3_DIA_PENDING_DIRECTORY_PATH", s3_dest_path)
-    monkeypatch.setenv("MOVEIT_DIA_OUTBOUND_PATH", moveit_pickup_path)
+    monkeypatch.setenv("MOVEIT_DIA_INBOUND_PATH", moveit_pickup_path)
     monkeypatch.setenv("MOVEIT_DIA_ARCHIVE_PATH", moveit_archive_path)
 
     full_s3_dest_path = os.path.join(s3_bucket_uri, s3_dest_path)
@@ -445,7 +445,7 @@ def test_download_payment_list_if_none_today(
     assert len(mock_sftp_client.listdir(moveit_archive_path)) == 0
     assert len(file_util.list_files(full_s3_dest_path)) == 0
 
-    download_payment_list_if_none_today(test_db_session)
+    download_payment_list_if_none_today(local_test_db_session)
 
     # Expect to have moved all files from the source to the archive directory of MoveIt.
     files_in_moveit_archive_dir = mock_sftp_client.listdir(moveit_archive_path)
@@ -457,7 +457,7 @@ def test_download_payment_list_if_none_today(
     assert len(files_in_s3) == moveit_file_count
 
     assert (
-        test_db_other_session.query(sqlalchemy.func.count(ReferenceFile.reference_file_id))
+        local_test_db_other_session.query(sqlalchemy.func.count(ReferenceFile.reference_file_id))
         .filter(
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.DIA_PAYMENT_LIST.reference_file_type_id
@@ -467,7 +467,7 @@ def test_download_payment_list_if_none_today(
     )
 
     assert (
-        test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        local_test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
         .filter(StateLog.end_state_id == State.DIA_PAYMENT_LIST_SAVED_TO_S3.state_id)
         .scalar()
         == moveit_file_count
@@ -481,7 +481,7 @@ def test_download_payment_list_if_none_today(
         file_loc = os.path.join(full_s3_dest_path, filename)
 
         ref_file = (
-            test_db_session.query(ReferenceFile)
+            local_test_db_session.query(ReferenceFile)
             .filter(ReferenceFile.file_location == file_loc)
             .one_or_none()
         )
@@ -491,7 +491,7 @@ def test_download_payment_list_if_none_today(
         )
 
         assert (
-            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            local_test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
             .filter(StateLog.end_state_id == State.DIA_PAYMENT_LIST_SAVED_TO_S3.state_id)
             .filter(StateLog.reference_file_id == ref_file.reference_file_id)
             .scalar()
@@ -629,10 +629,8 @@ def test_load_new_dia_payments_sucessfully(
 
 @pytest.mark.integration
 def test_load_new_dia_payments_handles_duplicates(
-    test_db_session_via_migrations, mock_s3_bucket, monkeypatch, initialize_factories_session
+    test_db_session, mock_s3_bucket, monkeypatch, initialize_factories_session
 ):
-    test_db_session = test_db_session_via_migrations
-
     source_directory_path = "reductions/dia/pending"
     archive_directory_path = "reductions/dia/archive"
 

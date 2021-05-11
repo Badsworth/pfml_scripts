@@ -13,6 +13,8 @@ import {
   extractDebugInfoFromBody,
   extractDebugInfoFromHeaders,
 } from "../../src/errors";
+import path from "path";
+import { email } from ".";
 
 export function before(): void {
   // Set the feature flag necessary to see the portal.
@@ -24,10 +26,11 @@ export function before(): void {
       claimantShowMedicalLeaveType: true,
       noMaintenance: true,
       employerShowSelfRegistrationForm: true,
-      claimantShowOtherLeaveStep: true,
+      claimantShowOtherLeaveStep: false,
       claimantAuthThroughApi: true,
       employerShowAddOrganization: true,
       employerShowVerifications: true,
+      employerShowDashboard: true,
     }),
     { log: true }
   );
@@ -50,6 +53,8 @@ export function before(): void {
   cy.intercept("**/new-relic.js", (req) => {
     req.reply("console.log('Fake New Relic script loaded');");
   });
+
+  deleteDownloadsFolder();
 }
 
 export function onPage(page: string): void {
@@ -123,6 +128,60 @@ export function waitForClaimSubmission(): Cypress.Chainable<{
       { log: false }
     );
   });
+}
+
+/**
+ * Delete the downloads folder to mitigate any file conflicts
+ */
+export function deleteDownloadsFolder(): void {
+  cy.task("deleteDownloadFolder", Cypress.config("downloadsFolder"));
+}
+
+/**
+ * Downloads Legal Notice based on type
+ *
+ * Also does basic assertion on contents of legal notice doc
+ */
+export function downloadLegalNotice(
+  noticeType: string,
+  claim_id: string,
+  expectedNumPages: number
+): void {
+  const downloadsFolder = Cypress.config("downloadsFolder");
+  cy.task("getNoticeFileName", downloadsFolder, { timeout: 20000 }).then(
+    (filename) => {
+      expect(
+        filename.length,
+        "downloads folder should contain only one file"
+      ).to.equal(1);
+      expect(
+        filename[0],
+        `Expect filename to contain text ${noticeType}`
+      ).to.include(noticeType);
+      expect(
+        path.extname(filename[0]),
+        "Expect file extension to be a PDF"
+      ).to.equal(".pdf");
+
+      cy.task("getParsedPDF", path.join(downloadsFolder, filename[0])).then(
+        (pdf) => {
+          const application_id_from_notice = email.getTextBetween(
+            pdf.text,
+            "Application ID:",
+            "\n"
+          );
+          expect(
+            pdf.numpages,
+            `This legal notice .pdf file should have ${pdf.numpages} pages`
+          ).to.equal(expectedNumPages);
+          expect(
+            application_id_from_notice,
+            `The claim_id within the legal notice should be: ${application_id_from_notice}`
+          ).to.equal(claim_id);
+        }
+      );
+    }
+  );
 }
 
 export function login(credentials: Credentials): void {
@@ -276,6 +335,7 @@ export function selectClaimType(application: ApplicationRequestBody): void {
       "I need to bond with my child after birth, adoption, or foster placement.",
     "Pregnancy/Maternity":
       "I can’t work due to an illness, injury, or pregnancy.",
+    "Care for a Family Member": "",
   };
   cy.contains(reasonMap[reason]).click();
   if (reasonQualifier) {
@@ -809,19 +869,29 @@ export function completeIntermittentLeaveDetails(
   cy.contains("button", "Save and continue").click();
 }
 
-export function respondToLeaveAdminRequest(
-  fineosAbsenceId: string,
-  suspectFraud: boolean,
-  gaveNotice: boolean,
-  approval: boolean
-): void {
+export function checkHoursPerWeekLeaveAdmin(hwpw: number): void {
+  cy.get("#employer-review-form").should((textArea) => {
+    expect(
+      textArea,
+      `Hours worked per week should be: ${hwpw} hours`
+    ).contain.text(String(hwpw));
+  });
+}
+
+export function vistActionRequiredERFormPage(fineosAbsenceId: string): void {
   cy.visit(
     `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
   );
   cy.contains("Are you the right person to respond to this application?");
   cy.contains("Yes").click();
   cy.contains("Agree and submit").click();
+}
 
+export function respondToLeaveAdminRequest(
+  suspectFraud: boolean,
+  gaveNotice: boolean,
+  approval: boolean
+): void {
   cy.contains(
     "fieldset",
     "Do you have any reason to suspect this is fraud?"
@@ -859,17 +929,12 @@ export function checkNoticeForLeaveAdmin(
   switch (noticeType) {
     case "approval":
       cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("a", "Approval notice").should("be.visible");
+      cy.contains("a", "Approval notice").should("be.visible").click();
       break;
 
     case "denial":
       cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("a", "Denial notice").should("be.visible");
-      break;
-
-    case "request for info":
-      cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("a", "Request for more information").should("be.visible");
+      cy.contains("a", "Denial notice").should("be.visible").click();
       break;
 
     default:
@@ -881,10 +946,7 @@ export function confirmEligibleParent(): void {
   cy.contains("button", "I understand and agree").click();
 }
 
-export function submitClaimPartOne(
-  application: ApplicationRequestBody,
-  otherLeave = false
-): void {
+export function submitClaimPartOne(application: ApplicationRequestBody): void {
   const reason = application.leave_details && application.leave_details.reason;
   const reasonQualifier =
     application.leave_details && application.leave_details.reason_qualifier;
@@ -912,7 +974,9 @@ export function submitClaimPartOne(
   answerReducedLeaveQuestion(application);
   answerIntermittentLeaveQuestion(application);
   onPage("checklist");
-  reportOtherLeave(application, otherLeave);
+  // @Reminder - This section is currenlty being removed
+  // Will return once development work is complete
+  // reportOtherLeave(application, otherLeave);
   clickChecklistButton("Review and confirm");
   if (reason === "Child Bonding") {
     confirmEligibleParent();
@@ -977,12 +1041,53 @@ export function addOrganization(fein: string, withholding: number): void {
   cy.get('a[href="/employers/organizations/add-organization/"').click();
   cy.get('input[name="ein"]').type(fein);
   cy.get('button[type="submit"').click();
-  cy.get('input[name="withholdingAmount"]').type(withholding.toString());
-  cy.get('button[type="submit"').click();
-  cy.contains("h1", "Thanks for verifying your paid leave contributions");
-  cy.contains("p", "Your account has been verified");
-  cy.contains("button", "Continue").click();
-  cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
-    "not.exist"
+  if (withholding !== 0) {
+    cy.get('input[name="withholdingAmount"]').type(withholding.toString());
+    cy.get('button[type="submit"').click();
+    cy.contains("h1", "Thanks for verifying your paid leave contributions");
+    cy.contains("p", "Your account has been verified");
+    cy.contains("button", "Continue").click();
+    cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
+      "not.exist"
+    );
+  } else {
+    assertZeroWithholdings();
+  }
+}
+
+/**
+ * Assertion for error message when adding employer with zero contributions.
+ */
+export function assertZeroWithholdings(): void {
+  cy.contains(
+    "p",
+    "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. "
   );
+}
+
+export function selectClaimFromEmployerDashboard(
+  fineosAbsenceId: string,
+  status: "Approved" | "Denied" | "Closed" | "--"
+): void {
+  cy.get('a[href="/employers/dashboard"]').first().click();
+
+  cy.get("tr")
+    .contains(fineosAbsenceId)
+    .parent()
+    .parent()
+    .contains('td[data-label="Status"]', status);
+  // TODO: once ALL environments include links to the applications, we should uncomment and make an assertion that the link exists
+  // .siblings()
+  // .contains(
+  //   `a[href="/employers/applications/new-application?absence_id=${fineosAbsenceId}"]`
+  // )
+}
+
+export function assertUnverifiedEmployerDashboard(): void {
+  cy.contains("Verify your account");
+  cy.contains("You have not verified any organizations.");
+}
+
+export function goToEmployerDashboard(): void {
+  cy.get('a[href="/employers/dashboard/"]').first().click();
 }

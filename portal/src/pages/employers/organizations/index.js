@@ -21,19 +21,31 @@ export const Index = ({ appLogic }) => {
   } = appLogic.users.user;
   const showVerifications = isFeatureEnabled("employerShowVerifications");
   const showAddOrganization = isFeatureEnabled("employerShowAddOrganization");
+  const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
+
+  const nearFutureAvailabilityContext = showAddOrganization
+    ? "inviteMembers"
+    : "addOrganization";
 
   return (
     <React.Fragment>
-      <BackButton />
+      {shouldShowDashboard ? (
+        <BackButton
+          label={t("pages.employersOrganizations.backToDashboardLabel")}
+          href={appLogic.portalFlow.getNextPageRoute("BACK")}
+        />
+      ) : (
+        <BackButton />
+      )}
       <Title>{t("pages.employersOrganizations.title")}</Title>
       {showVerifications && hasVerifiableEmployer && (
         <Alert
           state="warning"
-          heading={t("pages.employersDashboard.verificationTitle")}
+          heading={t("pages.employersOrganizations.verificationTitle")}
         >
           <p>
             <Trans
-              i18nKey="pages.employersDashboard.verificationBody"
+              i18nKey="pages.employersOrganizations.verificationBody"
               components={{
                 "your-organizations-link": <React.Fragment />,
               }}
@@ -41,7 +53,11 @@ export const Index = ({ appLogic }) => {
           </p>
         </Alert>
       )}
-      <p>{t("pages.employersOrganizations.nearFutureAvailability")}</p>
+      <p data-test="future-availability-message">
+        {t("pages.employersOrganizations.nearFutureAvailability", {
+          context: nearFutureAvailabilityContext,
+        })}
+      </p>
 
       <Table responsive className="width-full">
         <thead>
@@ -82,6 +98,9 @@ export const Index = ({ appLogic }) => {
 
 Index.propTypes = {
   appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
+    }).isRequired,
     users: PropTypes.shape({
       user: PropTypes.instanceOf(User).isRequired,
     }).isRequired,

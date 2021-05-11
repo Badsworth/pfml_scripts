@@ -37,9 +37,9 @@
 
       { "name": "MOVEIT_SFTP_URI", "value": "${eolwd_moveit_sftp_uri}" },
       { "name": "MOVEIT_DIA_ARCHIVE_PATH", "value": "/DFML/DIA/Archive" },
-      { "name": "MOVEIT_DIA_OUTBOUND_PATH", "value": "/DFML/DIA/Outbound" },
+      { "name": "MOVEIT_DIA_INBOUND_PATH", "value": "/DFML/DIA/Inbound" },
       { "name": "MOVEIT_DUA_ARCHIVE_PATH", "value": "/DFML/DUA/Archive" },
-      { "name": "MOVEIT_DUA_OUTBOUND_PATH", "value": "/DFML/DUA/Outbound" }
+      { "name": "MOVEIT_DUA_INBOUND_PATH", "value": "/DFML/DUA/Outbound" }
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },

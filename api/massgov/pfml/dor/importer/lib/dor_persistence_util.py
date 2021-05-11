@@ -97,7 +97,7 @@ def employer_dict_to_country_and_state_values(employer_info):
     country_id = None
     try:
         country_id = Country.get_id(employer_info["employer_address_country"])
-    except Exception:
+    except KeyError:
         logger.info("Country not found %s", employer_info["employer_address_country"])
 
     if Country.USA.country_id == country_id:

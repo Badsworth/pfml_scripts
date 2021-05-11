@@ -24,12 +24,10 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../src/models/OtherIncome";
-import PreviousLeave, {
-  PreviousLeaveReason,
-} from "../../src/models/PreviousLeave";
 import Address from "../../src/models/Address";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import LeaveReason from "../../src/models/LeaveReason";
+import PreviousLeave from "../../src/models/PreviousLeave";
 import { set } from "lodash";
 
 export class BaseMockClaimBuilder {
@@ -134,7 +132,7 @@ export class BaseMockClaimBuilder {
     return this;
   }
 
-  caringLeaveReason() {
+  caringLeaveReason(attrs = {}) {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.care);
     set(this.claimAttrs, "leave_details.caring_leave_metadata", {
       family_member_date_of_birth: "****-10-14",
@@ -142,6 +140,7 @@ export class BaseMockClaimBuilder {
       family_member_middle_name: "James",
       family_member_last_name: "Toggle",
       relationship_to_caregiver: "Child",
+      ...attrs,
     });
     return this;
   }
@@ -184,32 +183,6 @@ export class BaseMockClaimBuilder {
     ]);
     set(this.claimAttrs, "has_other_incomes", true);
     set(this.claimAttrs, "other_incomes_awaiting_approval", false);
-    return this;
-  }
-
-  previousLeavePregnancyFromOtherEmployer() {
-    set(this.claimAttrs, "previous_leaves", [
-      new PreviousLeave({
-        previous_leave_id: 1,
-        is_for_current_employer: false,
-        leave_end_date: "2021-02-01",
-        leave_reason: PreviousLeaveReason.pregnancy,
-        leave_start_date: "2021-01-01",
-      }),
-    ]);
-    return this;
-  }
-
-  previousLeaveMedicalFromCurrentEmployer() {
-    set(this.claimAttrs, "previous_leaves", [
-      new PreviousLeave({
-        previous_leave_id: 1,
-        is_for_current_employer: true,
-        leave_end_date: "2021-02-01",
-        leave_reason: PreviousLeaveReason.medical,
-        leave_start_date: "2021-01-01",
-      }),
-    ]);
     return this;
   }
 
@@ -274,7 +247,6 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
       this.continuous();
       this.reducedSchedule();
     }
-    this.previousLeavePregnancyFromOtherEmployer();
     this.employerBenefit();
     this.absenceId();
     set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
@@ -491,54 +463,28 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
+   *
+   * @returns {MockClaimBuilder}
+   */
+  previousLeavesOtherReason(attrs = [{}]) {
+    set(this.claimAttrs, "has_previous_leaves_other_reason", true);
+    const previousLeaves = attrs.map((attr) => new PreviousLeave(attr));
+    set(this.claimAttrs, "previous_leaves_other_reason", previousLeaves);
+    return this;
+  }
+
+  /**
    * @returns {MockClaimBuilder}
    */
   noOtherLeave() {
     set(this.claimAttrs, "has_employer_benefits", false);
     this.noOtherIncomes();
-    this.noPreviousLeave();
     return this;
   }
 
   noOtherIncomes() {
     set(this.claimAttrs, "has_other_incomes", false);
     set(this.claimAttrs, "other_incomes_awaiting_approval", false);
-    return this;
-  }
-
-  noPreviousLeave() {
-    set(this.claimAttrs, "has_previous_leaves", false);
-    return this;
-  }
-
-  previousLeave(attrs) {
-    set(
-      this.claimAttrs,
-      "previous_leaves",
-      attrs
-        ? attrs.map((attr) => new PreviousLeave(attr))
-        : [
-            new PreviousLeave({
-              previous_leave_id: 1,
-              is_for_current_employer: false,
-              leave_end_date: "2020-02-01",
-              leave_reason: PreviousLeaveReason.pregnancy,
-              leave_start_date: "2020-01-01",
-            }),
-          ]
-    );
-    return this;
-  }
-
-  previousLeavePregnancyFromOtherEmployer() {
-    super.previousLeavePregnancyFromOtherEmployer();
-    set(this.claimAttrs, "has_previous_leaves", true);
-    return this;
-  }
-
-  previousLeaveMedicalFromCurrentEmployer() {
-    super.previousLeaveMedicalFromCurrentEmployer();
-    set(this.claimAttrs, "has_previous_leaves", true);
     return this;
   }
 

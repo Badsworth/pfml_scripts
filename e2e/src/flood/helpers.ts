@@ -3,39 +3,6 @@ import * as Cfg from "./config";
 import { getFamilyLeavePlanProp } from "./tasks/ApproveClaim";
 import { actions } from "./scenarios/SavilinxAgent.perf";
 
-// This helper cannot be used directly in a global variable definitions
-// as it causes a compilation error when Element runs
-export function simulateRealTime(step: Cfg.StoredStep): Cfg.StoredStep {
-  const { time, name, test } = step;
-  return {
-    ...step,
-    test: async (browser: Browser, data: Cfg.LSTSimClaim) => {
-      // Start the timer
-      const start = Date.now();
-      // Adjust minimum runtime based on configuration
-      const minTime =
-        time * parseFloat(await Cfg.config("E2E_SIMULATION_SPEED"));
-      // Run the actual step's function
-      await test(browser, data);
-      // Stop the timer
-      const end = Date.now();
-      const stepRuntime = end - start;
-      // Time left after running the step function
-      // If it's below 0, then the step function went overtime
-      const waitTime = minTime - stepRuntime;
-      // wait for the remaining time left to simulate a real user's actions
-      if (waitTime > 0) {
-        await new Promise((resolve) => setTimeout(resolve, waitTime));
-      }
-      console.info(
-        `\n\nStep '${name}' finished in ${stepRuntime}ms with ${
-          waitTime > 0 ? "a wait " : "an over"
-        }time of ${Math.abs(minTime - stepRuntime)}ms\n\n`
-      );
-    },
-  };
-}
-
 export const formatDate = (d: string | null | undefined): string =>
   new Intl.DateTimeFormat("en-US", {
     month: "2-digit",
@@ -63,6 +30,14 @@ export const labelled = async (
   }
   return waitForElement(browser, By.id(inputId));
 };
+
+export function byButtonText(text: string): Locator {
+  return By.js((text) => {
+    // @ts-ignore
+    const buttons = [...document.querySelectorAll("button")];
+    return buttons.find((button) => button.innerText.match(text));
+  }, text);
+}
 
 export const waitForElement = async (
   browser: Browser,
@@ -273,7 +248,6 @@ export function assignTasks(
   agent: Cfg.FineosUserType = "SAVILINX"
 ): Cfg.StoredStep {
   return {
-    time: 0,
     name: `Assign ${fineosId}'s tasks to ${agent} Agent`,
     test: async (browser: Browser): Promise<void> => {
       if (search) {

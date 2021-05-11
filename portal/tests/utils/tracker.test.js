@@ -234,7 +234,7 @@ describe("tracker", () => {
 
         newrelic.interaction().setAttribute.mockClear();
         tracker.trackFetchRequest("/test-api-call");
-        expect(newrelic.interaction().setAttribute).toHaveBeenCalledTimes(2); // includes the environment setAttribute()
+        expect(newrelic.interaction().setAttribute).toHaveBeenCalledTimes(3); // includes the environment setAttribute()
         expect(newrelic.interaction().setAttribute).not.toHaveBeenCalledWith(
           "numberAttribute",
           numberAttribute
@@ -249,7 +249,7 @@ describe("tracker", () => {
         expect(newrelic.interaction().setAttribute).not.toHaveBeenCalled();
 
         tracker.trackFetchRequest("/test-api-call");
-        expect(newrelic.interaction().setAttribute).toHaveBeenCalledTimes(1); // just the environment setAttribute()
+        expect(newrelic.interaction().setAttribute).toHaveBeenCalledTimes(2); // just the environment setAttribute()
       });
     });
   });

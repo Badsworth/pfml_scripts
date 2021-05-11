@@ -16,7 +16,7 @@ import { Auth } from "@aws-amplify/auth";
 import tracker from "../services/tracker";
 
 /**
- * @typedef {Promise<{ data: object, errors: ?Array, warnings: ?Array }>} Response
+ * @typedef {Promise<{ data: object, errors: ?Array, meta: object, warnings: ?Array }>} Response
  * @property {object} data - API's JSON response
  * @property {Array} warnings - API's validation warnings, such as missing required fields. These are "warnings"
  *  because we expect some fields to be missing as the user proceeds page-by-page through the flow.
@@ -70,7 +70,7 @@ export default class BaseApi {
     method = method.toUpperCase();
     validateRequestMethod(method);
 
-    const url = createRequestUrl(this.basePath, subPath);
+    const url = createRequestUrl(method, this.basePath, subPath, body);
     const authHeader = excludeAuthHeader ? {} : await getAuthorizationHeader();
     const headers = {
       ...authHeader,
@@ -89,7 +89,7 @@ export default class BaseApi {
     }
 
     const response = await this.sendRequest(url, {
-      body: createRequestBody(body),
+      body: method === "GET" ? null : createRequestBody(body),
       headers,
       method,
     });
@@ -105,13 +105,13 @@ export default class BaseApi {
    * @throws {NetworkError}
    */
   async sendRequest(url, options) {
-    let data, errors, response, warnings;
+    let data, errors, meta, response, warnings;
 
     try {
       tracker.trackFetchRequest(url);
       response = await fetch(url, options);
 
-      ({ data, errors, warnings } = await response.json());
+      ({ data, errors, meta, warnings } = await response.json());
     } catch (error) {
       handleError(error);
     }
@@ -122,6 +122,7 @@ export default class BaseApi {
 
     return {
       data,
+      meta,
       // Guaranteeing warnings is always an array makes our code simpler
       warnings: formatIssues(warnings) || [],
     };
@@ -159,13 +160,24 @@ function createRequestBody(payload) {
 
 /**
  * Create the full URL for a given API path
- * @param {...string} paths - Relative api path
+ * @param {string} method - i.e GET, POST, etc
+ * @param {string} basePath - Root path of API resource without leading slash
+ * @param {string} subPath - relative path without a leading forward slash
+ * @param {object|FormData} [body] - request body
  * @returns {string} url
  */
-export function createRequestUrl(...paths) {
+export function createRequestUrl(method, basePath, subPath, body) {
   // Remove leading slash from apiPath if it has one
-  const cleanedPaths = compact(paths).map(removeLeadingSlash);
-  return [process.env.apiUrl, ...cleanedPaths].join("/");
+  const cleanedPaths = compact([basePath, subPath]).map(removeLeadingSlash);
+  let url = [process.env.apiUrl, ...cleanedPaths].join("/");
+
+  if (method === "GET" && body) {
+    // Append query string to URL
+    const params = new URLSearchParams(body).toString();
+    url = `${url}?${params}`;
+  }
+
+  return url;
 }
 
 /**
@@ -216,7 +228,6 @@ export function handleError(error) {
   // Request failed to send or something failed while parsing the response
   // Log the JS error to support troubleshooting
   console.error(error);
-  tracker.noticeError(error);
   throw new NetworkError(error.message);
 }
 

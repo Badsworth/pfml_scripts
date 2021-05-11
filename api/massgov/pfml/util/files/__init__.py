@@ -482,19 +482,19 @@ def create_csv_from_list(
     data: Iterable[Dict],
     fieldnames: Iterable[str],
     file_name: str,
-    folder_path: Optional[pathlib.Path] = None,
+    folder_path: Optional[str] = None,
 ) -> pathlib.Path:
     if not folder_path:
         directory = tempfile.mkdtemp()
-        csv_filepath = pathlib.Path(os.path.join(directory, f"{file_name}.csv"))
+        csv_filepath = os.path.join(directory, f"{file_name}.csv")
     else:
-        csv_filepath = pathlib.Path(os.path.join(folder_path, f"{file_name}.csv"))
+        csv_filepath = os.path.join(folder_path, f"{file_name}.csv")
 
-    with open(csv_filepath, mode="w") as csv_file:
+    with write_file(csv_filepath) as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames, extrasaction="ignore")
 
         writer.writeheader()
         for d in data:
             writer.writerow(d)
 
-    return csv_filepath
+    return pathlib.Path(csv_filepath)

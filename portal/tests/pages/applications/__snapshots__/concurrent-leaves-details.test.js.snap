@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConcurrentLeavesDetails renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other leave, benefits, and income"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Will you use accrued paid leave from this employer? EIN: 12‑3456789
+  </Heading>
+</QuestionPage>
+`;

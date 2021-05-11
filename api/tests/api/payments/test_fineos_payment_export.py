@@ -457,6 +457,7 @@ def test_process_extract_data_rollback(
     monkeypatch,
     create_triggers,
 ):
+    test_db_session.begin_nested()
     setup_process_tests(mock_s3_bucket, test_db_session)
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
@@ -471,6 +472,7 @@ def test_process_extract_data_rollback(
     monkeypatch.setattr(exporter, "move_files_from_received_to_processed", err_method)
 
     with pytest.raises(Exception, match="Fake Error"):
+        test_db_session.begin_nested()
         exporter.process_extract_data(tmp_path, test_db_session)
         # Make certain that there are no payments or state logs in the DB
         payments = test_db_session.query(Payment).all()

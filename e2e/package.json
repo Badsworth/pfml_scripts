@@ -62,12 +62,14 @@
   "dependencies": {
     "@flood/element": "^1.5.4",
     "@flood/element-cli": "^1.5.4",
+    "@types/archiver": "^5.1.0",
     "JSONStream": "^1.3.5",
     "abort-controller": "^3.0.0",
     "amazon-cognito-identity-js": "^4.4.0",
+    "archiver": "^5.3.0",
     "cross-fetch": "^3.0.6",
-    "csv": "^5.3.2",
-    "csv-stringify": "^5.5.1",
+    "csv": "^5.5.0",
+    "csv-stringify": "^5.6.2",
     "cypress": "^6.9.1",
     "cypress-file-upload": "^5.0.4",
     "date-fns": "^2.16.1",
@@ -90,7 +92,7 @@
     "ts-jest": "^26.5.4",
     "uuid": "^8.3.1",
     "winston": "^3.3.3",
-    "yargs": "^16.2.0"
+    "yargs": "^17.0.1"
   },
   "element": {
     "testMatch": [
