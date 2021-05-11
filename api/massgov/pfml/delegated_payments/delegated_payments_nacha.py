@@ -110,14 +110,14 @@ def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]) -
             name=f"{claim.employee.last_name} {claim.employee.first_name}",
         )
 
-        if claim.claim_type_id == ClaimType.FAMILY_LEAVE.claim_type_id:
+        if payment.claim_type_id == ClaimType.FAMILY_LEAVE.claim_type_id:
             family_leave_nacha_batch.add_entry(entry)
-        elif claim.claim_type_id == ClaimType.MEDICAL_LEAVE.claim_type_id:
+        elif payment.claim_type_id == ClaimType.MEDICAL_LEAVE.claim_type_id:
             medical_leave_nacha_batch.add_entry(entry)
         else:
             raise Exception(
-                "Invalid leave type for payment. Claim ID: %s - Claim Type: %s"
-                % (claim.claim_id, claim.claim_type_id)
+                "Invalid leave type for payment. Payment ID: %s - Claim Type: %s"
+                % (payment.payment_id, payment.claim_type_id)
             )
 
     if len(family_leave_nacha_batch.entries) > 0:

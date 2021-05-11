@@ -328,7 +328,10 @@ def create_payment_for_pub_transaction(db_session, payment_method: LkPaymentMeth
         employee=employee, claim_type_id=ClaimType.MEDICAL_LEAVE.claim_type_id
     )
     payment = PaymentFactory.create(
-        claim=claim, pub_eft=pub_eft, disb_method_id=payment_method.payment_method_id
+        claim=claim,
+        pub_eft=pub_eft,
+        disb_method_id=payment_method.payment_method_id,
+        claim_type_id=ClaimType.MEDICAL_LEAVE.claim_type_id,
     )
 
     state_log_util.create_finished_state_log(

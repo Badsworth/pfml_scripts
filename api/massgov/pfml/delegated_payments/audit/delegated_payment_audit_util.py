@@ -110,7 +110,7 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
 
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
-        leave_type=get_leave_type(claim),
+        leave_type=get_leave_type(payment),
         first_name=employee.first_name,
         last_name=employee.last_name,
         address_line_1=address.address_line_one if address else None,
@@ -160,10 +160,10 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
 bool_to_str = {None: "", True: "Y", False: "N"}
 
 
-def get_leave_type(claim: Claim) -> Optional[str]:
-    claim_type: LkClaimType = claim.claim_type
+def get_leave_type(payment: Payment) -> Optional[str]:
+    claim_type: LkClaimType = payment.claim_type
     if not claim_type:
-        return None
+        return ""
 
     if claim_type.claim_type_id == ClaimType.FAMILY_LEAVE.claim_type_id:
         return "Family"

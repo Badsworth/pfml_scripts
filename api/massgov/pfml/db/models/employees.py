@@ -609,6 +609,7 @@ class Payment(Base):
         index=True,
         server_default=payment_individual_id_seq.next_value(),
     )
+    claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
 
     created_at = Column(
         TIMESTAMP(timezone=True),
@@ -625,6 +626,7 @@ class Payment(Base):
     )
 
     claim = relationship(Claim)
+    claim_type = relationship(LkClaimType)
     payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
     pub_eft = relationship(PubEft)

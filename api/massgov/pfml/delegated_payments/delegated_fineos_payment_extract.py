@@ -179,6 +179,8 @@ class PaymentData:
     payment_date: Optional[str] = None
     payment_amount: Optional[Decimal] = None
 
+    claim_type_raw: Optional[str] = None
+
     routing_nbr: Optional[str] = None
     account_nbr: Optional[str] = None
     raw_account_type: Optional[str] = None
@@ -447,6 +449,10 @@ class PaymentData:
                 self.validation_container,
                 self.is_standard_payment,
                 custom_validator_func=leave_request_decision_validator,
+            )
+
+            self.claim_type_raw = payments_util.validate_csv_input(
+                "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
             )
 
         elif self.is_standard_payment:
@@ -797,14 +803,6 @@ class PaymentExtractStep(Step):
                     f"Claim {payment_data.absence_case_number} has not been ID proofed",
                 )
 
-            # If no claim type, we can't process downstream as this information
-            # is necessary when creating NACHA and check records for PUB
-            if not claim.claim_type_id:
-                payment_data.validation_container.add_validation_issue(
-                    payments_util.ValidationReason.MISSING_IN_DB,
-                    f"Claim {payment_data.absence_case_number} exists, but does not have a claim type associated with it.",
-                )
-
             # If the employee we found does not match what is already attached
             # to the claim, we can't accept the payment.
             if employee and claim.employee_id != employee.employee_id:
@@ -925,6 +923,15 @@ class PaymentExtractStep(Step):
         payment.fineos_extraction_date = payments_util.get_now().date()
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
+
+        if payment_data.claim_type_raw:
+            try:
+                claim_type_mapped = payments_util.get_mapped_claim_type(payment_data.claim_type_raw)
+                payment.claim_type_id = claim_type_mapped.claim_type_id
+            except ValueError:
+                validation_container.add_validation_issue(
+                    payments_util.ValidationReason.INVALID_VALUE, "ABSENCEREASON_COVERAGE"
+                )
 
         # If the payment is already being processed,
         # then FINEOS sent us a payment they should not have
