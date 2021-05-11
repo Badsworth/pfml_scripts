@@ -5,6 +5,8 @@ describe("Submit part one of a caring leave claim through the portal", () => {
     portal.before();
     cy.task("generateClaim", "CHAP1").then((claim) => {
       cy.stash("claim", claim);
+      const paymentPreference = claim.paymentPreference;
+
       const application: ApplicationRequestBody = claim.claim;
 
       const credentials: Credentials = {
@@ -17,6 +19,8 @@ describe("Submit part one of a caring leave claim through the portal", () => {
       // Submit Claim
       portal.startClaim();
       portal.submitClaimPartOne(application);
+      portal.waitForClaimSubmission();
+      portal.submitPartsTwoThreeNoLeaveCert(paymentPreference);
     });
   });
 });
