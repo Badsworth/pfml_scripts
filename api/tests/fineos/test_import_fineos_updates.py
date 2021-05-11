@@ -124,7 +124,7 @@ def emp_updates_path_name_fields_not_present(tmp_path):
 def test_fineos_updates_happy_path(
     test_db_session, initialize_factories_session, emp_updates_path, create_triggers
 ):
-    employee_one = EmployeeFactory(employee_id="4376896b-596c-4c86-a653-1915cf997a84", gender_id=1)
+    employee_one = EmployeeFactory(employee_id="4376896b-596c-4c86-a653-1915cf997a84", gender_id=Gender.WOMAN.gender_id)
     employee_two = EmployeeFactory(employee_id="cb2f2d72-ac68-4402-a82f-6e32edd086b3")
     employer = EmployerFactory(
         employer_id="4376896b-596c-4c86-a653-1915cf997a85",

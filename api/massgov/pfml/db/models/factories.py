@@ -464,7 +464,7 @@ class ApplicationFactory(BaseFactory):
     phone = factory.SubFactory(PhoneFactory)
 
     # Lookups
-    gender_id = 1
+    gender_id = None
     occupation_id = None
     employment_status_id = None
     relationship_to_caregiver_id = None
