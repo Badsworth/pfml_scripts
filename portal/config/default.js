@@ -19,9 +19,9 @@ module.exports = {
   },
   // Enable the maintenance page on these routes:
   // See docs/portal/maintenance-pages.md for details.
-  maintenancePageRoutes: ["/*"],
-  maintenanceStart: "2021-05-09T03:59:00-04:00",
-  maintenanceEnd: "2021-05-09T05:00:00-04:00",
+  maintenancePageRoutes: [],
+  maintenanceStart: null,
+  maintenanceEnd: null,
   newRelicAppId: null,
   sentryDsn:
     "https://3c7da99697784a3dab944dec622d1b50@o514801.ingest.sentry.io/5620266",
