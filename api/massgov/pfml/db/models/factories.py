@@ -764,7 +764,7 @@ class DuaReductionPaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.DuaReductionPayment
 
-    absence_case_id = Generators.FineosAbsenceId
+    fineos_customer_number = factory.Faker("numerify", text="####")
     employer_fein = Generators.Fein
     payment_date = factory.Faker("date_object")
     request_week_begin_date = factory.Faker("date_object")

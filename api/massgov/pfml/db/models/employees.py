@@ -1093,7 +1093,7 @@ class DuaReductionPayment(Base):
     __tablename__ = "dua_reduction_payment"
     dua_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
-    absence_case_id = Column(Text, nullable=False)
+    fineos_customer_number = Column(Text, nullable=False)
     employer_fein = Column(Text)
     payment_date = Column(Date)
     request_week_begin_date = Column(Date)
