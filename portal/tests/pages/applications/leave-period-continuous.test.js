@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -9,7 +9,9 @@ jest.mock("../../../src/hooks/useAppLogic");
 
 describe("LeavePeriodContinuous", () => {
   it("renders the page with bonding leave content", () => {
-    const claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .bondingBirthLeaveReason()
+      .create();
 
     const { wrapper } = renderWithAppLogic(LeavePeriodContinuous, {
       claimAttrs: claim,
@@ -22,7 +24,9 @@ describe("LeavePeriodContinuous", () => {
   });
 
   it("renders the page with medical leave content", () => {
-    const claim = new MockClaimBuilder().medicalLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .medicalLeaveReason()
+      .create();
 
     const { wrapper } = renderWithAppLogic(LeavePeriodContinuous, {
       claimAttrs: claim,
@@ -35,7 +39,9 @@ describe("LeavePeriodContinuous", () => {
   });
 
   it("displays date fields when user indicates they have this leave period", () => {
-    const claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .bondingBirthLeaveReason()
+      .create();
 
     const { wrapper } = renderWithAppLogic(LeavePeriodContinuous, {
       claimAttrs: claim,
@@ -51,7 +57,9 @@ describe("LeavePeriodContinuous", () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(
       LeavePeriodContinuous,
       {
-        claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+        claimAttrs: new MockBenefitsApplicationBuilder()
+          .medicalLeaveReason()
+          .create(),
         render: "mount", // support useEffect
       }
     );
@@ -75,7 +83,7 @@ describe("LeavePeriodContinuous", () => {
   });
 
   it("sends continuous leave dates and ID to the api when the claim has leave data", async () => {
-    const claim = new MockClaimBuilder().continuous().create();
+    const claim = new MockBenefitsApplicationBuilder().continuous().create();
     const {
       end_date,
       start_date,
@@ -103,7 +111,7 @@ describe("LeavePeriodContinuous", () => {
   it("sends continuous leave dates and ID to the api when the user enters leave data", async () => {
     const startDate = "2021-01-01";
     const endDate = "2021-03-01";
-    const claim = new MockClaimBuilder().create();
+    const claim = new MockBenefitsApplicationBuilder().create();
 
     const { appLogic, wrapper } = renderWithAppLogic(LeavePeriodContinuous, {
       claimAttrs: claim,

@@ -1,28 +1,28 @@
-import { MockClaimBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const mockClaims = {
-  Child: new MockClaimBuilder()
+  Child: new MockBenefitsApplicationBuilder()
     .caringLeaveReason({ relationship_to_caregiver: "Child" })
     .create(),
-  Grandchild: new MockClaimBuilder()
+  Grandchild: new MockBenefitsApplicationBuilder()
     .caringLeaveReason({ relationship_to_caregiver: "Grandchild" })
     .create(),
-  Grandparent: new MockClaimBuilder()
+  Grandparent: new MockBenefitsApplicationBuilder()
     .caringLeaveReason({ relationship_to_caregiver: "Grandparent" })
     .create(),
-  Inlaw: new MockClaimBuilder()
+  Inlaw: new MockBenefitsApplicationBuilder()
     .caringLeaveReason({ relationship_to_caregiver: "Inlaw" })
     .create(),
-  Parent: new MockClaimBuilder()
+  Parent: new MockBenefitsApplicationBuilder()
     .caringLeaveReason({ relationship_to_caregiver: "Parent" })
     .create(),
-  "Sibling - Brother/Sister": new MockClaimBuilder()
+  "Sibling - Brother/Sister": new MockBenefitsApplicationBuilder()
     .caringLeaveReason({
       relationship_to_caregiver: "Sibling - Brother/Sister",
     })
     .create(),
-  Spouse: new MockClaimBuilder()
+  Spouse: new MockBenefitsApplicationBuilder()
     .caringLeaveReason({ relationship_to_caregiver: "Spouse" })
     .create(),
 };

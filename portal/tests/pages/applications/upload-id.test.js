@@ -1,6 +1,6 @@
 import Document, { DocumentType } from "../../../src/models/Document";
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   makeFile,
   renderWithAppLogic,
   testHook,
@@ -68,7 +68,9 @@ describe("UploadId", () => {
 
     describe("when the user doesn't have a Mass ID", () => {
       it("renders the page with 'Other' ID content", () => {
-        claim = new MockClaimBuilder().medicalLeaveReason().create();
+        claim = new MockBenefitsApplicationBuilder()
+          .medicalLeaveReason()
+          .create();
         claim.has_state_id = false;
         appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
           [claim]
@@ -88,7 +90,9 @@ describe("UploadId", () => {
         }),
       ];
       beforeEach(() => {
-        claim = new MockClaimBuilder().medicalLeaveReason().create();
+        claim = new MockBenefitsApplicationBuilder()
+          .medicalLeaveReason()
+          .create();
         claim.has_state_id = true;
         appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
           [claim]
@@ -155,7 +159,7 @@ describe("UploadId", () => {
         });
 
         it("makes documents.attach request when no documents exist", async () => {
-          claim = new MockClaimBuilder().create();
+          claim = new MockBenefitsApplicationBuilder().create();
           render();
 
           // Add files to the page state
@@ -216,7 +220,9 @@ describe("UploadId", () => {
         });
 
         it("displays successfully uploaded files as unremovable file cards", async () => {
-          claim = new MockClaimBuilder().medicalLeaveReason().create();
+          claim = new MockBenefitsApplicationBuilder()
+            .medicalLeaveReason()
+            .create();
 
           const attachSpy = jest
             .spyOn(appLogic.documents, "attach")
@@ -307,7 +313,9 @@ describe("UploadId", () => {
         });
 
         it("displays unsucessfully uploaded files as removable file cards", async () => {
-          claim = new MockClaimBuilder().medicalLeaveReason().create();
+          claim = new MockBenefitsApplicationBuilder()
+            .medicalLeaveReason()
+            .create();
 
           const attachSpy = jest
             .spyOn(appLogic.documents, "attach")
@@ -393,7 +401,7 @@ describe("UploadId", () => {
       });
 
       it("redirects to the Applications page when the claim has been completed", async () => {
-        claim = new MockClaimBuilder().completed().create();
+        claim = new MockBenefitsApplicationBuilder().completed().create();
         appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
           [claim]
         );
@@ -435,7 +443,7 @@ describe("UploadId", () => {
         });
 
         it("makes API request when there are new files", async () => {
-          claim = new MockClaimBuilder().create();
+          claim = new MockBenefitsApplicationBuilder().create();
           appLogic.documents.documents = appLogic.documents.documents.addItem(
             new Document({
               document_type: DocumentType.identityVerification,
@@ -504,7 +512,7 @@ describe("UploadId", () => {
 
   it("When uploading additional docs", async () => {
     ({ appLogic, wrapper } = renderWithAppLogic(UploadId, {
-      claimAttrs: new MockClaimBuilder().create(),
+      claimAttrs: new MockBenefitsApplicationBuilder().create(),
       diveLevels,
       props: {
         query: { claim_id: claim.application_id, additionalDoc: "true" },

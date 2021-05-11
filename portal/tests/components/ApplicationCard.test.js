@@ -2,7 +2,7 @@ import Document, { DocumentType } from "../../src/models/Document";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "../../src/components/ApplicationCard";
-import { MockClaimBuilder } from "../test-utils";
+import { MockBenefitsApplicationBuilder } from "../test-utils";
 import React from "react";
 import { shallow } from "enzyme";
 
@@ -26,13 +26,13 @@ describe("ApplicationCard", () => {
   };
 
   it("uses generic text as the main heading", () => {
-    const wrapper = render(new MockClaimBuilder().create());
+    const wrapper = render(new MockBenefitsApplicationBuilder().create());
 
     expect(wrapper.find("header")).toMatchSnapshot();
   });
 
   it("renders empty div for details section when claim is empty", () => {
-    const wrapper = render(new MockClaimBuilder().create());
+    const wrapper = render(new MockBenefitsApplicationBuilder().create());
 
     expect(wrapper.find("ApplicationDetails").dive()).toMatchInlineSnapshot(
       `<div />`
@@ -40,33 +40,42 @@ describe("ApplicationCard", () => {
   });
 
   it("renders EIN", () => {
-    const wrapper = render(new MockClaimBuilder().employed().create());
+    const wrapper = render(
+      new MockBenefitsApplicationBuilder().employed().create()
+    );
 
     expect(wrapper.find("ApplicationDetails").dive()).toMatchSnapshot();
   });
 
   it("renders continuous and reduced schedule leave period date ranges", () => {
     const wrapper = render(
-      new MockClaimBuilder().reducedSchedule().continuous().create()
+      new MockBenefitsApplicationBuilder()
+        .reducedSchedule()
+        .continuous()
+        .create()
     );
 
     expect(wrapper.find("ApplicationDetails").dive()).toMatchSnapshot();
   });
 
   it("renders Intermittent leave period date range", () => {
-    const wrapper = render(new MockClaimBuilder().intermittent().create());
+    const wrapper = render(
+      new MockBenefitsApplicationBuilder().intermittent().create()
+    );
 
     expect(wrapper.find("ApplicationDetails").dive()).toMatchSnapshot();
   });
 
   it("does not render legal notices section when claim is not submitted", () => {
-    const wrapper = render(new MockClaimBuilder().create());
+    const wrapper = render(new MockBenefitsApplicationBuilder().create());
 
     expect(wrapper.find("LegalNotices").dive().isEmptyRender()).toBe(true);
   });
 
   describe("when the claim status is Submitted", () => {
-    const submittedClaim = new MockClaimBuilder().submitted().create();
+    const submittedClaim = new MockBenefitsApplicationBuilder()
+      .submitted()
+      .create();
 
     it("includes a link to complete the claim", () => {
       const wrapper = render(submittedClaim);
@@ -82,7 +91,9 @@ describe("ApplicationCard", () => {
     });
 
     it("renders legal notices text", () => {
-      const wrapper = render(new MockClaimBuilder().completed().create());
+      const wrapper = render(
+        new MockBenefitsApplicationBuilder().completed().create()
+      );
 
       expect(wrapper.find("LegalNotices").dive()).toMatchSnapshot();
     });
@@ -90,7 +101,9 @@ describe("ApplicationCard", () => {
 
   describe("when the claim status is Completed", () => {
     it("includes a button to upload additional documents", () => {
-      const wrapper = render(new MockClaimBuilder().completed().create());
+      const wrapper = render(
+        new MockBenefitsApplicationBuilder().completed().create()
+      );
       const actions = wrapper.find("ApplicationActions").dive();
 
       expect(actions.find("ButtonLink")).toMatchSnapshot();
@@ -98,7 +111,7 @@ describe("ApplicationCard", () => {
 
     it("renders instructions about reductions", () => {
       const wrapper = render(
-        new MockClaimBuilder()
+        new MockBenefitsApplicationBuilder()
           .completed()
           .bondingBirthLeaveReason()
           .hasFutureChild()
@@ -113,7 +126,7 @@ describe("ApplicationCard", () => {
     describe("when it's a bonding claim with no cert doc", () => {
       it("renders guidance to upload a birth cert doc for new birth", () => {
         const wrapper = render(
-          new MockClaimBuilder()
+          new MockBenefitsApplicationBuilder()
             .completed()
             .bondingBirthLeaveReason()
             .hasFutureChild()
@@ -128,7 +141,7 @@ describe("ApplicationCard", () => {
 
       it("renders guidance to upload an adoption cert doc for adoption", () => {
         const wrapper = render(
-          new MockClaimBuilder()
+          new MockBenefitsApplicationBuilder()
             .completed()
             .bondingAdoptionLeaveReason()
             .hasFutureChild()
@@ -145,7 +158,7 @@ describe("ApplicationCard", () => {
 
   describe("when there is a denial notice", () => {
     it("includes a button to upload additional documents", () => {
-      const claim = new MockClaimBuilder().submitted().create();
+      const claim = new MockBenefitsApplicationBuilder().submitted().create();
       const documents = [
         new Document({
           application_id: claim.application_id,
@@ -162,7 +175,7 @@ describe("ApplicationCard", () => {
     });
 
     it("does not include a link to complete the claim", () => {
-      const claim = new MockClaimBuilder().create();
+      const claim = new MockBenefitsApplicationBuilder().create();
       const documents = [
         new Document({
           application_id: claim.application_id,
@@ -183,7 +196,7 @@ describe("ApplicationCard", () => {
 
   describe("when there are legal notices", () => {
     it("displays legal notices and explains that notices download to the device", () => {
-      const claim = new MockClaimBuilder().submitted().create();
+      const claim = new MockBenefitsApplicationBuilder().submitted().create();
       const documents = [
         new Document({
           application_id: claim.application_id,
@@ -228,7 +241,7 @@ describe("ApplicationCard", () => {
 
     describe("when the user clicks on the download link", () => {
       it("calls documentsLogic.download", () => {
-        const claim = new MockClaimBuilder().completed().create();
+        const claim = new MockBenefitsApplicationBuilder().completed().create();
         const documents = [
           new Document({
             application_id: claim.application_id,
@@ -257,7 +270,7 @@ describe("ApplicationCard", () => {
   });
 
   it("renders Alert inside the component when there is an error loading documents", () => {
-    const claim = new MockClaimBuilder().completed().create();
+    const claim = new MockBenefitsApplicationBuilder().completed().create();
     const appLogic = {
       appErrors: new AppErrorInfoCollection([
         new AppErrorInfo({

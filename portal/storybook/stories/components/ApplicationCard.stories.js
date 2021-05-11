@@ -3,7 +3,7 @@ import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "src/components/ApplicationCard";
 import BenefitsApplication from "src/models/BenefitsApplication";
-import { MockClaimBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import React from "react";
 
 export default {
@@ -45,19 +45,22 @@ export const Story = ({ claim, documents, ...args }) => {
   const errors = [];
 
   if (claim === "Empty") {
-    claimAttrs = new MockClaimBuilder().create();
+    claimAttrs = new MockBenefitsApplicationBuilder().create();
   } else if (claim === "Hybrid leave") {
-    claimAttrs = new MockClaimBuilder()
+    claimAttrs = new MockBenefitsApplicationBuilder()
       .employed()
       .continuous()
       .reducedSchedule()
       .create();
   } else if (claim === "Intermittent leave") {
-    claimAttrs = new MockClaimBuilder().employed().intermittent().create();
+    claimAttrs = new MockBenefitsApplicationBuilder()
+      .employed()
+      .intermittent()
+      .create();
   } else if (claim === "Submitted") {
-    claimAttrs = new MockClaimBuilder().submitted().create();
+    claimAttrs = new MockBenefitsApplicationBuilder().submitted().create();
   } else if (claim === "Submitted + Denial notice") {
-    claimAttrs = new MockClaimBuilder().submitted().create();
+    claimAttrs = new MockBenefitsApplicationBuilder().submitted().create();
     attachedDocuments = [
       new Document({
         created_at: "2021-01-15",
@@ -66,9 +69,9 @@ export const Story = ({ claim, documents, ...args }) => {
       }),
     ];
   } else if (claim === "Completed") {
-    claimAttrs = new MockClaimBuilder().completed().create();
+    claimAttrs = new MockBenefitsApplicationBuilder().completed().create();
   } else if (claim === "Future Newborn + No cert") {
-    claimAttrs = new MockClaimBuilder()
+    claimAttrs = new MockBenefitsApplicationBuilder()
       .completed()
       .bondingBirthLeaveReason()
       .hasFutureChild()
@@ -81,7 +84,7 @@ export const Story = ({ claim, documents, ...args }) => {
       }),
     ];
   } else if (claim === "Future Adoption + No cert") {
-    claimAttrs = new MockClaimBuilder()
+    claimAttrs = new MockBenefitsApplicationBuilder()
       .completed()
       .bondingAdoptionLeaveReason()
       .hasFutureChild()
@@ -94,7 +97,7 @@ export const Story = ({ claim, documents, ...args }) => {
       }),
     ];
   } else if (claim === "Caregiver + No cert") {
-    claimAttrs = new MockClaimBuilder()
+    claimAttrs = new MockBenefitsApplicationBuilder()
       .completed()
       .caringLeaveReason()
       .create();
@@ -106,7 +109,7 @@ export const Story = ({ claim, documents, ...args }) => {
       }),
     ];
   } else if (claim === "Approved") {
-    claimAttrs = new MockClaimBuilder().completed().create();
+    claimAttrs = new MockBenefitsApplicationBuilder().completed().create();
     attachedDocuments = [
       new Document({
         created_at: "2021-01-15",
@@ -120,7 +123,7 @@ export const Story = ({ claim, documents, ...args }) => {
       }),
     ];
   } else if (claim === "Denied") {
-    claimAttrs = new MockClaimBuilder().completed().create();
+    claimAttrs = new MockBenefitsApplicationBuilder().completed().create();
     attachedDocuments = [
       new Document({
         created_at: "2021-01-15",

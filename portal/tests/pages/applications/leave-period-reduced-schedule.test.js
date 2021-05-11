@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -9,7 +9,9 @@ jest.mock("../../../src/hooks/useAppLogic");
 
 describe("LeavePeriodReducedSchedule", () => {
   it("renders the page with bonding leave content", () => {
-    const claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .bondingBirthLeaveReason()
+      .create();
 
     const { wrapper } = renderWithAppLogic(LeavePeriodReducedSchedule, {
       claimAttrs: claim,
@@ -22,7 +24,9 @@ describe("LeavePeriodReducedSchedule", () => {
   });
 
   it("renders the page with medical leave content", () => {
-    const claim = new MockClaimBuilder().medicalLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .medicalLeaveReason()
+      .create();
 
     const { wrapper } = renderWithAppLogic(LeavePeriodReducedSchedule, {
       claimAttrs: claim,
@@ -35,7 +39,9 @@ describe("LeavePeriodReducedSchedule", () => {
   });
 
   it("displays date fields when user indicates they have this leave period", () => {
-    const claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .bondingBirthLeaveReason()
+      .create();
 
     const { wrapper } = renderWithAppLogic(LeavePeriodReducedSchedule, {
       claimAttrs: claim,
@@ -51,7 +57,9 @@ describe("LeavePeriodReducedSchedule", () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(
       LeavePeriodReducedSchedule,
       {
-        claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+        claimAttrs: new MockBenefitsApplicationBuilder()
+          .medicalLeaveReason()
+          .create(),
         render: "mount", // support useEffect
       }
     );
@@ -75,7 +83,9 @@ describe("LeavePeriodReducedSchedule", () => {
   });
 
   it("sends reduced schedule leave dates and ID to the api when the claim already has data", async () => {
-    const claim = new MockClaimBuilder().reducedSchedule().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .reducedSchedule()
+      .create();
     const {
       end_date,
       start_date,
@@ -107,7 +117,7 @@ describe("LeavePeriodReducedSchedule", () => {
   });
 
   it("sends reduced schedule leave dates and ID to the api when the claim has newly entered data", async () => {
-    const claim = new MockClaimBuilder().create();
+    const claim = new MockBenefitsApplicationBuilder().create();
     const start_date = "2021-01-01";
     const end_date = "2021-03-01";
 
