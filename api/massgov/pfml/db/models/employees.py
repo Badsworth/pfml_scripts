@@ -1589,6 +1589,7 @@ class Gender(LookupTable):
     MAN = LkGender(2, "Man", "Male")
     NONBINARY = LkGender(3, "Non-binary", "Neutral")
     NOT_LISTED = LkGender(4, "Gender not listed", "Unknown")
+    NO_ANSWER = LkGender(5, "Prefer not to answer", "Not Provided")
 
 
 class Occupation(LookupTable):
