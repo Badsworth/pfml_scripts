@@ -1,5 +1,5 @@
-import Document, { DocumentType } from "../../models/Document";
 import React, { useEffect } from "react";
+import Document from "../../models/Document";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
 import IntermittentLeaveSchedule from "./IntermittentLeaveSchedule";
@@ -9,7 +9,7 @@ import ReviewRow from "../ReviewRow";
 import Table from "../Table";
 import { Trans } from "react-i18next";
 import download from "downloadjs";
-import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
+import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import routes from "../../routes";
@@ -42,12 +42,13 @@ const LeaveSchedule = ({ appLogic, claim }) => {
 
   // only HCP forms should be shown
   const allDocuments = documents ? documents.items : [];
-  const medicalDocuments = findDocumentsByTypes(allDocuments, [
-    DocumentType.certification.medicalCertification,
-  ]);
+  const certificationDocuments = findDocumentsByLeaveReason(
+    allDocuments,
+    get(claim, "leave_details.reason")
+  );
 
   const buildContext = () => {
-    const hasDocuments = !!medicalDocuments.length;
+    const hasDocuments = !!certificationDocuments.length;
     if (isIntermittent && hasDocuments) return "intermittentWithDocuments";
     if (!isIntermittent && hasDocuments) return "documents";
   };
@@ -151,7 +152,7 @@ const LeaveSchedule = ({ appLogic, claim }) => {
           )}
         </tbody>
       </Table>
-      {!!medicalDocuments.length && (
+      {!!certificationDocuments.length && (
         <ReviewRow
           level="3"
           label={t("components.employersLeaveSchedule.documentationLabel")}
@@ -169,7 +170,7 @@ const LeaveSchedule = ({ appLogic, claim }) => {
             }}
           />
           <p>
-            {medicalDocuments.map((document) => (
+            {certificationDocuments.map((document) => (
               <HcpDocumentItem
                 appLogic={appLogic}
                 absenceId={absenceId}
