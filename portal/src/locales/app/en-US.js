@@ -2337,8 +2337,9 @@ const components = {
     title: "We’re undergoing maintenance",
   },
   newsBanner: {
+    // TODO (EMPLOYER-1296): Add Mass.gov link to banner
     body:
-      "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be <learn-more-link>adding more features</learn-more-link> to the dashboard so you can easily find and manage paid leave applications.",
+      "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be adding more features to the dashboard so you can easily find and manage paid leave applications.",
     header: "We're making it easier to manage paid leave application",
   },
   pagination: {
