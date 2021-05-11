@@ -1287,7 +1287,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
     # note that the event reason for an overpayment is Unknown which is treated as
     # None in our approach, setting it here to make sure that doesn't cause a validation issue.
     overpayment_data = FineosPaymentData(
-        event_type="Overpayment",
+        event_type="Overpayment Adjustment",
         event_reason="Unknown",
         payment_method="Elec Funds Transfer",
         include_claim_details=False,

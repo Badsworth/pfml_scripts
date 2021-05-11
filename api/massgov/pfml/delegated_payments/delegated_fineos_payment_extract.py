@@ -77,8 +77,8 @@ expected_file_names = [
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
-    ["Overpayment", "Overpayment Actual Recovery", "Overpayment Recovery"]
-)  # There may be multiple types needed here, need to test further to know
+    ["Overpayment", "Overpayment Actual Recovery", "Overpayment Recovery", "Overpayment Adjustment"]
+)  # There are multiple types of overpayments
 PAYMENT_OUT_TRANSACTION_TYPE = "PaymentOut"
 AUTO_ALT_EVENT_REASON = "Automatic Alternate Payment"
 
