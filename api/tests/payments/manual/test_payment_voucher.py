@@ -26,9 +26,10 @@
 # SCENARIO_VOUCHER_I: missing entry in vpeiclaimdetails.csv and therefore missing:
 #                     absence case number, vendor invoice number, leave type, activity code, case status,
 #                     employer ID, leave request ID, leave request decision, check description
-# SCENARIO_VOUCHER_J: missing entry in VBI_REQUSTEDABSENCE.csv and therefore missing leave request ID and decision
-# SCENARIO_VOUCHER_K: missing entry in VBI_REQUESTEDABSENCE_SOM.csv and therefore missing:
-#                     leave type, activity code, case status, employer ID
+# SCENARIO_VOUCHER_J: missing entry in VBI_REQUSTEDABSENCE.csv and therefore missing:
+#                     leave request ID, leave request decision, leave type,
+#                     activity code, case status, employer ID
+# SCENARIO_VOUCHER_K: missing entry in VBI_REQUESTEDABSENCE_SOM.csv and therefore missing: Nothing!
 # SCENARIO_VOUCHER_L: missing entry in vpeipaymentdetails.csv and therefore missing:
 #                     payment period start date, payment period end date, check description, vendor invoice date
 #
@@ -107,10 +108,11 @@ class ScenarioOutput:
         self.payments = self.scenario_data.payments
 
         # Identify if there are errors.
+        # Note: missing_from_vbi_requestedabsence_som is no longer an error
+        # state for the payment voucher.
         possible_error_states = [
             "employee_not_in_db",
             "missing_from_vbi_requestedabsence",
-            "missing_from_vbi_requestedabsence_som",
             "missing_from_vpeiclaimdetails",
             "missing_from_vpeipaymentdetails",
             "missing_payment_start_date",

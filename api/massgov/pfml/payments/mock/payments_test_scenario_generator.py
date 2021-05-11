@@ -724,7 +724,7 @@ def generate_scenario_data_db(
             )
 
         if (
-            scenario_descriptor.missing_from_vbi_requestedabsence_som
+            scenario_descriptor.missing_from_vbi_requestedabsence
             or scenario_descriptor.missing_from_vpeiclaimdetails
         ):
             claim_type_id = None
@@ -732,7 +732,7 @@ def generate_scenario_data_db(
             claim_type_id = scenario_descriptor.leave_type.claim_type_id
 
         if (
-            scenario_descriptor.missing_from_vbi_requestedabsence_som
+            scenario_descriptor.missing_from_vbi_requestedabsence
             or scenario_descriptor.missing_from_vpeiclaimdetails
         ):
             fineos_absence_status_id = None
@@ -824,7 +824,7 @@ def generate_scenario_data_db(
                 )
 
         if (
-            scenario_descriptor.missing_from_vbi_requestedabsence_som
+            scenario_descriptor.missing_from_vbi_requestedabsence
             or scenario_descriptor.missing_from_vpeiclaimdetails
         ):
             employer = None
