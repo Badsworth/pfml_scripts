@@ -909,7 +909,7 @@ const pages = {
   },
   claimsConcurrentLeavesDetails: {
     sectionLabel:
-      "Will you use accrued paid leave from this employer? EIN: {{employer_fein}}",
+      "Will you use accrued paid leave from this employer? EIN: {{employer_fein, ein}}",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsConcurrentLeavesIntro: {
@@ -1287,7 +1287,7 @@ const pages = {
     isForCurrentEmployerHint:
       "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, we'll give this employer a chance to review information from your application. We won't share any information about leave you took from other employers.",
     isForCurrentEmployerLabel:
-      "Did you take leave from this employer? EIN:$t(chars.nbsp){{ein}}",
+      "Did you take leave from this employer? EIN:$t(chars.nbsp){{employer_fein, ein}}",
     leaveEndDateLabel: "What was the last day of this leave?",
     leaveMinutesHint:
       "Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours.",

@@ -17,7 +17,7 @@ import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps"
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const setup = (claimAttrs = {}) => {
+const setup = (claimAttrs = { employer_fein: "12-3456789" }) => {
   const claim = new MockClaimBuilder().continuous().create();
 
   const { appLogic, wrapper } = renderWithAppLogic(
@@ -111,6 +111,7 @@ const clickAddPreviousLeaveButton = async (wrapper) => {
 
 const createClaimWithPreviousLeaves = () =>
   new MockClaimBuilder()
+    .employed()
     .continuous()
     .previousLeavesOtherReason([
       {
@@ -241,7 +242,7 @@ describe("PreviousLeavesOtherReasonDetails", () => {
 
 describe("PreviousLeavesOtherReasonDetailsCard", () => {
   it("renders the component", () => {
-    const claim = new MockClaimBuilder().continuous().create();
+    const claim = new MockClaimBuilder().employed().continuous().create();
     const index = 0;
     let getFunctionalInputProps;
 
