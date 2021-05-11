@@ -14,7 +14,9 @@ const describeIf = (condition: boolean) =>
 
 let token: string;
 
-describeIf(config("ENVIRONMENT") === "stage")("ID Proofing Tests", () => {
+describeIf(
+  config("ENVIRONMENT") === "stage" || config("ENVIRONMENT") === "test"
+)("ID Proofing Tests", () => {
   beforeAll(async () => {
     const authenticator = getAuthManager();
 
