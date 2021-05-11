@@ -24,7 +24,9 @@ from massgov.pfml.util.pydantic.types import (
 
 
 class Occupation(str, LookupEnum):
-    # NAICS Occupations -> https://www.naics.com/search/
+    # NAICS -> https://www.naics.com/search/
+    # These need to match the available NAICS Industry Title options 
+    # in FINEOS Occupation details
     AGRICULTURE_FORESTRY_FISHING_AND_HUNTING = "Agriculture, Forestry, Fishing and Hunting"
     MINING = "Mining"
     UTILITIES = "Utilities"

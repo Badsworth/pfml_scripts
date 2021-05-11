@@ -198,6 +198,7 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/EmployeeSearchRequest"
 
+
   /employers/add:
     post:
       tags:

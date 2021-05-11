@@ -49,7 +49,6 @@ function Dropdown(props) {
         name={props.name}
         onChange={props.onChange}
         value={props.value}
-        disabled={props.disabled ? "disabled" : false}
       >
         {/* Include a blank initial option which will be chosen if no option has been selected yet */}
         {!props.hideEmptyChoice && (
@@ -78,10 +77,6 @@ Dropdown.propTypes = {
         .isRequired,
     })
   ).isRequired,
-  /**
-   * HTML input `disabled` attribute
-   */
-  disabled: PropTypes.bool,
   /**
    * Localized label for the initially selected option when no value is set
    */
