@@ -23,6 +23,7 @@ import OtherIncome, {
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get, isUndefined } from "lodash";
+
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
@@ -264,6 +265,12 @@ export const Review = (props) => {
             })}
           </ReviewRow>
         )}
+
+      {get(claim, "occupation") && (
+        <ReviewRow level={reviewRowLevel} label="Occupation">
+          {get(claim, "occupation")}, {get(claim, "job_title")}
+        </ReviewRow>
+      )}
 
       {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
         <ReviewRow

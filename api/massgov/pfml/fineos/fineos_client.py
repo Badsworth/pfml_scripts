@@ -790,15 +790,15 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 models.AdditionalData(name="EmploymentStatus", value=employment_status)
             )
 
-        if NAICS_occupation:
+        if NAICS_occupation is not None:
             additional_data_set.additional_data.append(
                 models.AdditionalData(name="EEOCcategory", value=NAICS_occupation)
             )
 
-        # @todo: check that job title field works
-        if job_title: # jobDesc
+        if job_title is not None:
+            # @todo: change name field to update jobTitle instead
             additional_data_set.additional_data.append(
-                models.AdditionalData(name="jobTitle", value=job_title)
+                models.AdditionalData(name="jobdescription", value=job_title)
             )
 
         # Put the XML object together properly.

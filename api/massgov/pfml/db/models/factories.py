@@ -414,6 +414,7 @@ class PhoneFactory(BaseFactory):
     phone_number = "+12404879945"
     phone_type_id = application_models.PhoneType.CELL.phone_type_id
 
+
 class ApplicationFactory(BaseFactory):
     class Meta:
         model = application_models.Application

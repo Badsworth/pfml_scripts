@@ -13,7 +13,9 @@ def occupations():
         # @todo: authentication!
         # u = get_or_404(db_session, User, user_id)
 
-        industries = db_session.query(LkOccupation).all()
+        industries = (
+            db_session.query(LkOccupation).order_by(LkOccupation.occupation_description.asc()).all()
+        )
 
     data = [OccupationResponse.from_orm(industry).dict() for industry in industries]
 
