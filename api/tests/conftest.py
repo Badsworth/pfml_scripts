@@ -57,7 +57,7 @@ def app_cors(monkeypatch, test_db):
 @pytest.fixture
 def app(test_db_session, initialize_factories_session, set_auth_public_keys):
     return massgov.pfml.api.app.create_app(
-        check_migrations_current=False, db_session_factory=test_db_session
+        check_migrations_current=False, db_session_factory=test_db_session, do_close_db=False
     )
 
 
@@ -418,6 +418,13 @@ def test_db_session(test_db):
     connection = test_db.connect()
     trans = connection.begin()
     session = Session(bind=connection)
+
+    session.begin_nested()
+
+    @sqlalchemy.event.listens_for(session, "after_transaction_end")
+    def restart_savepoint(session, transaction):
+        if transaction.nested and not transaction._parent.nested:
+            session.begin_nested()
 
     yield session
 

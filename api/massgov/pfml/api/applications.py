@@ -117,7 +117,6 @@ def applications_start():
 
     with app.db_session() as db_session:
         db_session.add(application)
-        db_session.commit()
 
     log_attributes = get_application_log_attributes(application)
     logger.info("applications_start success", extra=log_attributes)
@@ -638,6 +637,7 @@ def employer_benefit_delete(application_id: str, employer_benefit_id: str) -> Re
             )
 
         applications_service.remove_employer_benefit(db_session, existing_employer_benefit)
+        db_session.expire(existing_application, ["employer_benefits"])
 
     return response_util.success_response(
         message="EmployerBenefit removed.",
@@ -656,6 +656,7 @@ def other_income_delete(application_id: str, other_income_id: str) -> Response:
             raise NotFound(description=f"Could not find OtherIncome with ID {other_income_id}")
 
         applications_service.remove_other_income(db_session, existing_other_income)
+        db_session.expire(existing_application, ["other_incomes"])
 
     return response_util.success_response(
         message="OtherIncome removed.",
@@ -674,6 +675,10 @@ def previous_leave_delete(application_id: str, previous_leave_id: str) -> Respon
             raise NotFound(description=f"Could not find PreviousLeave with ID {previous_leave_id}")
 
         applications_service.remove_previous_leave(db_session, existing_previous_leave)
+        db_session.expire(
+            existing_application,
+            ["previous_leaves", "previous_leaves_other_reason", "previous_leaves_same_reason"],
+        )
 
     return response_util.success_response(
         message="PreviousLeave removed.",

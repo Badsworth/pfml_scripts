@@ -707,6 +707,11 @@ class WorkPatternFixedFactory(BaseFactory):
         lambda w: [
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
+                minutes=8 * 60 + 15,
+            ),
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.MONDAY.day_of_week_id,
                 minutes=8 * 60 + 15,
             ),
@@ -733,11 +738,6 @@ class WorkPatternFixedFactory(BaseFactory):
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.SATURDAY.day_of_week_id,
-                minutes=8 * 60 + 15,
-            ),
-            application_models.WorkPatternDay(
-                work_pattern_id=w.work_pattern_id,
-                day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
                 minutes=8 * 60 + 15,
             ),
         ]
