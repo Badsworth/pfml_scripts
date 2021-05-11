@@ -1735,7 +1735,7 @@ components:
               example: "Sales Clerk"
             gender:
               type: string
-              nullable: false
+              nullable: true
               enum:
                 - Woman
                 - Man
@@ -1910,7 +1910,7 @@ components:
           nullable: true
         gender:
           type: string
-          nullable: false
+          nullable: true
           enum:
             - Woman
             - Man
