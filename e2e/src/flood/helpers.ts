@@ -327,3 +327,28 @@ export function assignTasks(
     },
   };
 }
+
+export async function findClaimOnEmployerDashboard(
+  browser: Browser,
+  fineosAbsenceId: string
+): Promise<void> {
+  await (
+    await await waitForElement(browser, By.css(".ma__pagination__next"))
+  ).click();
+  const claimLink = await maybeFindElement(
+    browser,
+    By.visibleText(fineosAbsenceId)
+  );
+  /* if the claim link doesn't exist on the second page then go back to the first page.
+   this would be the case where there is a high volume of concurrent submissions against a single employer and the claim is no longer on the first page
+   */
+  if (!claimLink) {
+    await (
+      await await waitForElement(browser, By.css(".ma__pagination__prev"))
+    ).click();
+  }
+  await (
+    await waitForElement(browser, By.visibleText(fineosAbsenceId))
+  ).click();
+  await browser.waitForNavigation();
+}
