@@ -60,6 +60,18 @@ describe("ReducedLeaveSchedule", () => {
     expect(wrapper.find("Lead").find("Trans").dive()).toMatchSnapshot();
   });
 
+  it("renders lead with expected content when leave reason is Caring", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .caringLeaveReason()
+      .reducedSchedule()
+      .variableWorkPattern()
+      .create();
+
+    const { wrapper } = setup(claim);
+
+    expect(wrapper.find("Lead").find("Trans").dive()).toMatchSnapshot();
+  });
+
   describe("when work pattern is a fixed schedule", () => {
     it("renders section label with expected content", () => {
       const { wrapper } = setup(fixedWorkPatternClaim);

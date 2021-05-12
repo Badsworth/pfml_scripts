@@ -1346,10 +1346,13 @@ const pages = {
     inputHoursLabel_Wednesday: "Wednesday time off",
     inputHoursLabel_weekly: "Hours off per week",
     lead_bonding: "Enter 0 for days you won’t work a reduced schedule.",
+    lead_care:
+      "Enter 0 for days you won’t work a reduced schedule.<br /><br />Your answer must match Question # in the $t(shared.caregiverCertificationForm).",
     lead_medical:
-      "Enter 0 for days you won’t work a reduced schedule.<br /><br />Refer to Question 33 in the Certification of a Serious Health Condition form (page 8).",
-    medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
+      "Enter 0 for days you won’t work a reduced schedule.<br /><br />Your answer must match Question 33 in the Certification of a Serious Health Condition form.",
     minutesLabel: "$t(shared.minutesLabel)",
+    needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
+    needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
     sectionLabel:
       "How many hours will you take off while you are on a reduced leave schedule?",
     title: "$t(shared.claimsLeaveDetailsTitle)",

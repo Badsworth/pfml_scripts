@@ -120,9 +120,11 @@ export const ReducedLeaveSchedule = (props) => {
       title={t("pages.claimsReducedLeaveSchedule.title")}
       onSave={handleSave}
     >
-      {claim.isMedicalLeave && (
+      {(claim.isMedicalLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
-          {t("pages.claimsReducedLeaveSchedule.medicalAlert")}
+          {t("pages.claimsReducedLeaveSchedule.needDocumentAlert", {
+            context: contentReasonContext,
+          })}
         </Alert>
       )}
 
