@@ -54,6 +54,13 @@ from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
+ID_DOCS = [
+    DocumentType.PASSPORT.document_type_description,
+    DocumentType.DRIVERS_LICENSE_MASS.document_type_description,
+    DocumentType.DRIVERS_LICENSE_OTHER_STATE.document_type_description,
+    DocumentType.IDENTIFICATION_PROOF.document_type_description,
+]
+
 
 def application_get(application_id):
     with app.db_session() as db_session:
@@ -485,25 +492,27 @@ def document_upload(application_id, body, file):
         if document_details.description:
             file_description = document_details.description
 
-        # For now, if there are documents previously submitted for the application with the
-        # STATE_MANAGED_PAID_LEAVE_CONFIRMATION document type, that document type must also
-        # be used for subsequent documents uploaded to the application. If not, the document type
-        # from the request should be used instead.
-        existing_documents_with_old_doc_type = (
-            db_session.query(Document)
-            .filter(Document.application_id == existing_application.application_id)
-            .filter(
-                Document.document_type_id
-                == DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id
-            )
-        ).all()
+        document_type = document_details.document_type.value
 
-        if len(existing_documents_with_old_doc_type) > 0:
-            document_type = (
-                DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_description
-            )
-        else:
-            document_type = document_details.document_type.value
+        # TODO: (API-1647) Remove this logic once State manage Paid Leave Confirmation is obsolete
+        if document_type not in ID_DOCS:
+            # For now, if there are documents previously submitted for the application with the
+            # STATE_MANAGED_PAID_LEAVE_CONFIRMATION document type, that document type must also
+            # be used for subsequent documents uploaded to the application. If not, the document type
+            # from the request should be used instead. This logic is only relevant for non ID docs.
+            existing_documents_with_old_doc_type = (
+                db_session.query(Document)
+                .filter(Document.application_id == existing_application.application_id)
+                .filter(
+                    Document.document_type_id
+                    == DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id
+                )
+            ).all()
+
+            if len(existing_documents_with_old_doc_type) > 0:
+                document_type = (
+                    DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_description
+                )
 
         log_attributes = {
             **get_application_log_attributes(existing_application),
