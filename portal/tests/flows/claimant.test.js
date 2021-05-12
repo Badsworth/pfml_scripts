@@ -135,6 +135,11 @@ const machineTests = {
       },
     },
   },
+  [routes.applications.employerBenefitsIntro]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.applications.employerBenefits]: {
     meta: {
       test: () => {},

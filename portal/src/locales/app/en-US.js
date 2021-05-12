@@ -992,6 +992,11 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
     typeLabel: "What kind of benefit is it?",
   },
+  claimsEmployerBenefitsIntro: {
+    sectionLabel:
+      "Tell us about other benefits and income you will use during your paid leave from PFML.",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
   claimsEmploymentStatus: {
     alertBody:
       "<p>If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p><p>You can apply online if you’re currently employed in Massachusetts.</p>",
