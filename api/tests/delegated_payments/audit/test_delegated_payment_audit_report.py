@@ -113,7 +113,7 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
 
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
     assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment.claim)
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.claim.employee.first_name
     assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.claim.employee.last_name
 

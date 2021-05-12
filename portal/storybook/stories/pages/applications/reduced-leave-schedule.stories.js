@@ -1,20 +1,20 @@
-import { MockClaimBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const mockClaims = {
-  "Bonding (Fixed)": new MockClaimBuilder()
+  "Bonding (Fixed)": new MockBenefitsApplicationBuilder()
     .fixedWorkPattern()
     .bondingBirthLeaveReason()
     .create(),
-  "Bonding (Variable)": new MockClaimBuilder()
+  "Bonding (Variable)": new MockBenefitsApplicationBuilder()
     .variableWorkPattern()
     .bondingBirthLeaveReason()
     .create(),
-  "Medical (Fixed)": new MockClaimBuilder()
+  "Medical (Fixed)": new MockBenefitsApplicationBuilder()
     .fixedWorkPattern()
     .medicalLeaveReason()
     .create(),
-  "Medical (Variable)": new MockClaimBuilder()
+  "Medical (Variable)": new MockBenefitsApplicationBuilder()
     .variableWorkPattern()
     .medicalLeaveReason()
     .create(),

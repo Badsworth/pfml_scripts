@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   testHook,
 } from "../../test-utils";
@@ -54,8 +54,8 @@ describe("Applications", () => {
     beforeEach(() => {
       appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
         [
-          new MockClaimBuilder().create(),
-          new MockClaimBuilder().submitted().create(),
+          new MockBenefitsApplicationBuilder().create(),
+          new MockBenefitsApplicationBuilder().submitted().create(),
         ]
       );
       jest
@@ -82,7 +82,7 @@ describe("Applications", () => {
   describe("when applications have been completed", () => {
     beforeEach(() => {
       appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
-        [new MockClaimBuilder().completed().create()]
+        [new MockBenefitsApplicationBuilder().completed().create()]
       );
       render();
     });
@@ -106,9 +106,13 @@ describe("Applications", () => {
     let completedClaim, startedClaim, submittedClaim;
 
     beforeEach(() => {
-      startedClaim = new MockClaimBuilder().create();
-      submittedClaim = new MockClaimBuilder().submitted().create();
-      completedClaim = new MockClaimBuilder().completed().create();
+      startedClaim = new MockBenefitsApplicationBuilder().create();
+      submittedClaim = new MockBenefitsApplicationBuilder()
+        .submitted()
+        .create();
+      completedClaim = new MockBenefitsApplicationBuilder()
+        .completed()
+        .create();
       appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
         [startedClaim, submittedClaim, completedClaim]
       );
@@ -133,9 +137,9 @@ describe("Applications", () => {
   });
 
   describe("when multiple claims exist", () => {
-    const claim1 = new MockClaimBuilder().submitted().create();
+    const claim1 = new MockBenefitsApplicationBuilder().submitted().create();
     claim1.application_id = "claim1";
-    const claim2 = new MockClaimBuilder().submitted().create();
+    const claim2 = new MockBenefitsApplicationBuilder().submitted().create();
     claim2.application_id = "claim2";
 
     beforeEach(() => {

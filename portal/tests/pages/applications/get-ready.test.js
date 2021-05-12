@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   testHook,
 } from "../../test-utils";
@@ -48,7 +48,7 @@ describe("GetReady", () => {
   });
 
   it("shows link to applications when claims exist", () => {
-    const claims = [new MockClaimBuilder().create()];
+    const claims = [new MockBenefitsApplicationBuilder().create()];
     const { wrapper } = render({}, { claims });
 
     expect(wrapper.find("Link")).toMatchInlineSnapshot(`

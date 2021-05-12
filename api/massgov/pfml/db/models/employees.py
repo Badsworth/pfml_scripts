@@ -464,7 +464,9 @@ class Employee(Base):
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-    mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), index=True)
+    mailing_address_id = deferred(
+        Column(UUID(as_uuid=True).evaluates_none(), ForeignKey("address.address_id"), index=True,)
+    )
     payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     ctr_vendor_customer_code = Column(Text)
     ctr_address_pair_id = Column(
@@ -609,6 +611,7 @@ class Payment(Base):
         index=True,
         server_default=payment_individual_id_seq.next_value(),
     )
+    claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
 
     created_at = Column(
         TIMESTAMP(timezone=True),
@@ -625,6 +628,7 @@ class Payment(Base):
     )
 
     claim = relationship(Claim)
+    claim_type = relationship(LkClaimType)
     payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
     pub_eft = relationship(PubEft)

@@ -1,4 +1,4 @@
-import { MockClaimBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 
 /**
  * Storybook argTypes providing granular controls for
@@ -85,7 +85,7 @@ export const claimArgTypes = {
  * @returns {BenefitsApplication}
  */
 export function createClaimFromArgs(args) {
-  let claim = new MockClaimBuilder();
+  let claim = new MockBenefitsApplicationBuilder();
 
   if (args.Status === "Part 1 and 2 are submitted") {
     claim = claim.submitted();

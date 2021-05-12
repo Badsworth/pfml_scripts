@@ -7,32 +7,10 @@ exports[`NewsBanner renders the component 1`] = `
 >
   <p>
     <Trans
-      components={
-        Object {
-          "learn-more-link": <a
-            href="https://www.mass.gov"
-            rel="noopener"
-            target="_blank"
-          />,
-        }
-      }
       i18nKey="components.newsBanner.body"
     />
   </p>
 </Alert>
 `;
 
-exports[`NewsBanner renders the component 2`] = `
-Array [
-  "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be ",
-  <a
-    href="https://www.mass.gov"
-    key="1"
-    rel="noopener"
-    target="_blank"
-  >
-    adding more features
-  </a>,
-  " to the dashboard so you can easily find and manage paid leave applications.",
-]
-`;
+exports[`NewsBanner renders the component 2`] = `"Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be adding more features to the dashboard so you can easily find and manage paid leave applications."`;

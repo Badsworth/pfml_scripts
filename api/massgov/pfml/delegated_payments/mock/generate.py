@@ -127,6 +127,7 @@ class PaymentScenariosGenerator:
             disb_method_id=PaymentMethod.ACH.payment_method_id,
             pub_eft=pub_eft,
             claim=claim,
+            claim_type_id=claim.claim_type_id,
         )
         self.db_session.add(payment)
         self.db_session.commit()

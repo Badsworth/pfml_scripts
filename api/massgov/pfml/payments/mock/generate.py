@@ -80,9 +80,6 @@ class PaymentScenariosGenerator:
             # No payment scenario for this employee
             return
 
-        if employee.mailing_address is None:
-            employee.mailing_address = massgov.pfml.db.models.factories.AddressFactory()
-            self.db_session.commit()
         if employee.payment_method is None:
             if int(employee.tax_identifier.tax_identifier) % 3 == 0:
                 employee.payment_method_id = PaymentMethod.CHECK.payment_method_id

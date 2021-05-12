@@ -7,7 +7,7 @@ import IntermittentFrequency, {
   irregularOver6MonthsId,
 } from "../../../src/pages/applications/intermittent-frequency";
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -26,7 +26,7 @@ describe("IntermittentFrequency", () => {
 
   it("renders the page", () => {
     const { wrapper } = renderWithAppLogic(IntermittentFrequency, {
-      claimAttrs: new MockClaimBuilder()
+      claimAttrs: new MockBenefitsApplicationBuilder()
         .intermittent()
         .medicalLeaveReason()
         .create(),
@@ -143,19 +143,25 @@ describe("IntermittentFrequency", () => {
     const { wrapper: caringWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder().caringLeaveReason().create(),
+        claimAttrs: new MockBenefitsApplicationBuilder()
+          .caringLeaveReason()
+          .create(),
       }
     );
     const { wrapper: medicalWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+        claimAttrs: new MockBenefitsApplicationBuilder()
+          .medicalLeaveReason()
+          .create(),
       }
     );
     const { wrapper: bondingWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder().bondingBirthLeaveReason().create(),
+        claimAttrs: new MockBenefitsApplicationBuilder()
+          .bondingBirthLeaveReason()
+          .create(),
       }
     );
 
@@ -170,7 +176,7 @@ describe("IntermittentFrequency", () => {
     const { wrapper: medicalWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder()
+        claimAttrs: new MockBenefitsApplicationBuilder()
           .medicalLeaveReason()
           .intermittent()
           .create(),
@@ -179,7 +185,7 @@ describe("IntermittentFrequency", () => {
     const { wrapper: bondingWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder()
+        claimAttrs: new MockBenefitsApplicationBuilder()
           .bondingBirthLeaveReason()
           .intermittent()
           .create(),
@@ -189,7 +195,7 @@ describe("IntermittentFrequency", () => {
     const { wrapper: caringWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder()
+        claimAttrs: new MockBenefitsApplicationBuilder()
           .caringLeaveReason()
           .intermittent()
           .create(),
@@ -238,7 +244,7 @@ describe("IntermittentFrequency", () => {
   });
 
   it("sends the page's fields and the leave period ID to the API when the data is already on the claim", () => {
-    const claim = new MockClaimBuilder().intermittent().create();
+    const claim = new MockBenefitsApplicationBuilder().intermittent().create();
     const {
       duration,
       duration_basis,
@@ -274,7 +280,7 @@ describe("IntermittentFrequency", () => {
   });
 
   it("sends the page's fields and the leave period ID to the API when the data is newly entered", async () => {
-    const claim = new MockClaimBuilder().intermittent().create();
+    const claim = new MockBenefitsApplicationBuilder().intermittent().create();
 
     const frequency_interval_basis = FrequencyIntervalBasis.months;
     const frequency = 6;

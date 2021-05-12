@@ -3,19 +3,21 @@ import {
   WorkPattern,
 } from "../../src/models/BenefitsApplication";
 import { DateTime } from "luxon";
-import { MockClaimBuilder } from "../test-utils";
+import { MockBenefitsApplicationBuilder } from "../test-utils";
 import { map } from "lodash";
 
 describe("Claim", () => {
   let emptyClaim;
 
   beforeEach(() => {
-    emptyClaim = new MockClaimBuilder().create();
+    emptyClaim = new MockBenefitsApplicationBuilder().create();
   });
 
   describe("#isCompleted", () => {
     it("returns true when the Claim status is 'completed'", () => {
-      const completedClaim = new MockClaimBuilder().completed().create();
+      const completedClaim = new MockBenefitsApplicationBuilder()
+        .completed()
+        .create();
 
       expect(emptyClaim.isCompleted).toBe(false);
       expect(completedClaim.isCompleted).toBe(true);
@@ -24,7 +26,9 @@ describe("Claim", () => {
 
   describe("#isSubmitted", () => {
     it("returns true when the Claim status is 'submitted'", () => {
-      const submittedClaim = new MockClaimBuilder().submitted().create();
+      const submittedClaim = new MockBenefitsApplicationBuilder()
+        .submitted()
+        .create();
 
       expect(emptyClaim.isSubmitted).toBe(false);
       expect(submittedClaim.isSubmitted).toBe(true);
@@ -50,7 +54,7 @@ describe("Claim", () => {
     });
 
     it("returns true when hybrid leave start dates are in the future", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .continuous({ start_date: future })
         .reducedSchedule({ start_date: future })
         .create();
@@ -59,7 +63,7 @@ describe("Claim", () => {
     });
 
     it("returns false when one of the hybrid leave start dates is in the past", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .continuous({ start_date: past })
         .reducedSchedule({ start_date: future })
         .create();
@@ -68,7 +72,7 @@ describe("Claim", () => {
     });
 
     it("returns true when intermittent leave start dates are in the future", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .intermittent({ start_date: future })
         .create();
 
@@ -76,7 +80,7 @@ describe("Claim", () => {
     });
 
     it("returns false when continuous leave start date is in the past", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .continuous({ start_date: past })
         .create();
 
@@ -84,7 +88,7 @@ describe("Claim", () => {
     });
 
     it("returns false when continuous leave start date is the current day", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .continuous({ start_date: now })
         .create();
 
@@ -92,14 +96,14 @@ describe("Claim", () => {
     });
 
     it("returns false when there are no start dates", () => {
-      const claim = new MockClaimBuilder().create();
+      const claim = new MockBenefitsApplicationBuilder().create();
 
       expect(claim.isLeaveStartDateInFuture).toBe(false);
     });
   });
 
   it("#isMedicalLeave returns true when the Claim reason is medical", () => {
-    const claimWithReason = new MockClaimBuilder()
+    const claimWithReason = new MockBenefitsApplicationBuilder()
       .medicalLeaveReason()
       .create();
 

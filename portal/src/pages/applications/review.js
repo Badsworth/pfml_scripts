@@ -84,7 +84,10 @@ export const Review = (props) => {
     claim.application_id
   );
 
-  const certificationDocuments = findDocumentsByLeaveReason(documents, claim);
+  const certificationDocuments = findDocumentsByLeaveReason(
+    documents,
+    get(claim, "leave_details.reason")
+  );
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
   ]);

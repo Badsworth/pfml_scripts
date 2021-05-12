@@ -2,7 +2,7 @@ import { BadRequestError, NotFoundError } from "../../src/errors";
 import BenefitsApplication, {
   ClaimStatus,
 } from "../../src/models/BenefitsApplication";
-import { MockClaimBuilder, testHook } from "../test-utils";
+import { MockBenefitsApplicationBuilder, testHook } from "../test-utils";
 import {
   completeClaimMock,
   createClaimMock,
@@ -513,7 +513,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
         it("updates the local claim and warningsList if response only included warnings", async () => {
           mockRouter.pathname = routes.applications.name;
-          const claimResponse = new MockClaimBuilder()
+          const claimResponse = new MockBenefitsApplicationBuilder()
             .id(applicationId)
             .create();
           const last_name = "Updated from API";
@@ -547,7 +547,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
         it("does not update the local claim if response included any errors", async () => {
           mockRouter.pathname = routes.applications.name;
-          const claimResponse = new MockClaimBuilder()
+          const claimResponse = new MockBenefitsApplicationBuilder()
             .id(applicationId)
             .create();
           const last_name = "Name in API";
@@ -585,7 +585,9 @@ describe("useBenefitsApplicationsLogic", () => {
           });
 
           updateClaimMock.mockResolvedValueOnce({
-            claim: new MockClaimBuilder().id(applicationId).create(),
+            claim: new MockBenefitsApplicationBuilder()
+              .id(applicationId)
+              .create(),
             errors: [],
             warnings: [
               { field: "first_name", type: "required" },
@@ -617,7 +619,9 @@ describe("useBenefitsApplicationsLogic", () => {
           });
 
           updateClaimMock.mockResolvedValueOnce({
-            claim: new MockClaimBuilder().id(applicationId).create(),
+            claim: new MockBenefitsApplicationBuilder()
+              .id(applicationId)
+              .create(),
             errors: [],
             warnings: [
               { rule: "disallow_hybrid_intermittent_leave" },
@@ -748,8 +752,9 @@ describe("useBenefitsApplicationsLogic", () => {
 
     describe("submitPaymentPreference", () => {
       const paymentData = {
-        payment_preference: new MockClaimBuilder().directDeposit().create()
-          .payment_preference,
+        payment_preference: new MockBenefitsApplicationBuilder()
+          .directDeposit()
+          .create().payment_preference,
       };
 
       beforeEach(async () => {

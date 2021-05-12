@@ -83,12 +83,10 @@ const errors = {
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   claims: {
     date_of_birth: {
-      format: "Date of birth must include a valid month, day, and year.",
+      format: "Your date of birth must include a valid month, day, and year.",
       invalid_age: "The person taking leave must be at least 14 years old.",
-      invalid_year_range: `Date of birth year must be on or after ${
-        new Date().getFullYear() - 100
-      }.`,
-      required: "Enter a date of birth.",
+      invalid_year_range: "Your date of birth must include a valid year.",
+      required: "Enter your date of birth.",
     },
     employer_benefits: {
       benefit_amount_dollars: {
@@ -173,17 +171,21 @@ const errors = {
     leave_details: {
       caring_leave_metadata: {
         family_member_date_of_birth: {
-          format: "Date of birth must include a valid month, day, and year.",
-          required: "Enter a date of birth.",
+          format:
+            "Your family member’s date of birth must include a valid month, day, and year.",
+          invalid_year_range:
+            "Your family member’s date of birth must include a valid year.",
+          required: "Enter your family member’s date of birth.",
         },
         family_member_first_name: {
-          required: "Enter a family member's first name.",
+          required: "Enter your family member's first name.",
         },
         family_member_last_name: {
-          required: "Enter a family member's last name.",
+          required: "Enter your family member's last name.",
         },
         relationship_to_caregiver: {
-          required: "Please choose your relationship with the family member.",
+          required:
+            "Select your relationship with the family member you are caring for.",
         },
       },
       child_birth_date: {
@@ -2335,8 +2337,9 @@ const components = {
     title: "We’re undergoing maintenance",
   },
   newsBanner: {
+    // TODO (EMPLOYER-1296): Add Mass.gov link to banner
     body:
-      "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be <learn-more-link>adding more features</learn-more-link> to the dashboard so you can easily find and manage paid leave applications.",
+      "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be adding more features to the dashboard so you can easily find and manage paid leave applications.",
     header: "We're making it easier to manage paid leave application",
   },
   pagination: {

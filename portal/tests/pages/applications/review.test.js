@@ -7,7 +7,10 @@ import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
-import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
+import {
+  MockBenefitsApplicationBuilder,
+  renderWithAppLogic,
+} from "../../test-utils";
 import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
@@ -35,7 +38,7 @@ describe("Part 1 Review Page", () => {
     });
     it("renders Review page with Part 1 content and edit links", () => {
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: new MockClaimBuilder()
+        claimAttrs: new MockBenefitsApplicationBuilder()
           .part1Complete()
           .mailingAddress()
           .fixedWorkPattern()
@@ -49,7 +52,7 @@ describe("Part 1 Review Page", () => {
 
   it("does not render strings 'null', 'undefined', or missing translations", () => {
     const { wrapper } = renderWithAppLogic(Review, {
-      claimAttrs: new MockClaimBuilder().part1Complete().create(),
+      claimAttrs: new MockBenefitsApplicationBuilder().part1Complete().create(),
       diveLevels,
     });
 
@@ -62,7 +65,7 @@ describe("Part 1 Review Page", () => {
 
   it("submits the application when the user clicks Submit", () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(Review, {
-      claimAttrs: new MockClaimBuilder().part1Complete().create(),
+      claimAttrs: new MockBenefitsApplicationBuilder().part1Complete().create(),
       diveLevels,
     });
     const submitSpy = jest.spyOn(appLogic.benefitsApplications, "submit");
@@ -80,7 +83,7 @@ describe("Final Review Page", () => {
   describe("when the claim is complete", () => {
     beforeEach(() => {
       ({ appLogic, claim, wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: new MockClaimBuilder().complete().create(),
+        claimAttrs: new MockBenefitsApplicationBuilder().complete().create(),
         diveLevels,
       }));
     });
@@ -110,7 +113,7 @@ describe("Final Review Page", () => {
   });
 
   it("conditionally renders Other Leave section based on presence of Yes/No fields", () => {
-    const claimAttrs = new MockClaimBuilder().complete().create();
+    const claimAttrs = new MockBenefitsApplicationBuilder().complete().create();
     claimAttrs.has_other_incomes = false;
     claimAttrs.has_employer_benefits = false;
 
@@ -141,7 +144,7 @@ describe("Work patterns", () => {
 
     ["Fixed", "Variable"].forEach((work_pattern_type) => {
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: new MockClaimBuilder()
+        claimAttrs: new MockBenefitsApplicationBuilder()
           .part1Complete()
           .workPattern({ work_pattern_type })
           .create(),
@@ -156,7 +159,7 @@ describe("Work patterns", () => {
 
   it("shows work pattern days if work pattern type is fixed", () => {
     const { wrapper } = renderWithAppLogic(Review, {
-      claimAttrs: new MockClaimBuilder()
+      claimAttrs: new MockBenefitsApplicationBuilder()
         .part1Complete()
         .fixedWorkPattern()
         .create(),
@@ -173,7 +176,7 @@ describe("Work patterns", () => {
 
   it("shows average weekly hours if work pattern type is variable", () => {
     const { wrapper } = renderWithAppLogic(Review, {
-      claimAttrs: new MockClaimBuilder()
+      claimAttrs: new MockBenefitsApplicationBuilder()
         .part1Complete()
         .variableWorkPattern()
         .create(),
@@ -191,7 +194,10 @@ describe("Payment Information", () => {
   describe("When payment method is paper", () => {
     it("does not render 'Payment details' row", () => {
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: new MockClaimBuilder().complete().check().create(),
+        claimAttrs: new MockBenefitsApplicationBuilder()
+          .complete()
+          .check()
+          .create(),
         diveLevels,
       });
       expect(wrapper.find({ label: "Payment details" })).toHaveLength(0);
@@ -202,7 +208,7 @@ describe("Payment Information", () => {
 describe("Upload Document", () => {
   it("renders the correct number of certification documents when there are no documents", () => {
     const { wrapper } = renderWithAppLogic(Review, {
-      claimAttrs: new MockClaimBuilder().complete().create(),
+      claimAttrs: new MockBenefitsApplicationBuilder().complete().create(),
       diveLevels,
       hasLoadedClaimDocuments: true,
     });
@@ -231,7 +237,7 @@ describe("Upload Document", () => {
     };
 
     const { wrapper } = renderWithAppLogic(Review, {
-      claimAttrs: new MockClaimBuilder()
+      claimAttrs: new MockBenefitsApplicationBuilder()
         .medicalLeaveReason()
         .complete()
         .create(),
@@ -266,7 +272,7 @@ describe("Upload Document", () => {
 
     // create a claim with mismatched leave reason and doc types
     const { wrapper } = renderWithAppLogic(Review, {
-      claimAttrs: new MockClaimBuilder()
+      claimAttrs: new MockBenefitsApplicationBuilder()
         .medicalLeaveReason()
         .complete()
         .create(),
@@ -293,7 +299,7 @@ describe("Upload Document", () => {
 
   it("renders Alert when there is an error for loading documents", () => {
     const { wrapper } = renderWithAppLogic(Review, {
-      claimAttrs: new MockClaimBuilder().complete().create(),
+      claimAttrs: new MockBenefitsApplicationBuilder().complete().create(),
       diveLevels,
       hasLoadingDocumentsError: true,
     });
@@ -305,7 +311,7 @@ describe("Upload Document", () => {
   it("does not render certification document for bonding leave in advance", () => {
     const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
     const { wrapper } = renderWithAppLogic(Review, {
-      claimAttrs: new MockClaimBuilder()
+      claimAttrs: new MockBenefitsApplicationBuilder()
         .complete()
         .bondingBirthLeaveReason(futureDate)
         .hasFutureChild()
@@ -321,7 +327,7 @@ describe("Employer info", () => {
   describe("when claimant is not Employed", () => {
     it("does not render 'Notified employer' row or FEIN row", () => {
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: new MockClaimBuilder().complete().create(),
+        claimAttrs: new MockBenefitsApplicationBuilder().complete().create(),
         diveLevels,
       });
 
@@ -337,7 +343,7 @@ describe("Leave reason", () => {
 
   describe("When the reason is medical leave", () => {
     it("renders pregnancyOrRecentBirthLabel row", () => {
-      const claim = new MockClaimBuilder().completed().create();
+      const claim = new MockBenefitsApplicationBuilder().completed().create();
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: claim,
         diveLevels,
@@ -353,7 +359,7 @@ describe("Leave reason", () => {
 
   describe("When the reason is bonding leave", () => {
     it("renders family leave type row", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .completed()
         .bondingBirthLeaveReason()
         .create();
@@ -370,7 +376,7 @@ describe("Leave reason", () => {
 
   describe("When the reason is caring leave", () => {
     it("renders caring leave details", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .completed()
         .caringLeaveReason()
         .create();
@@ -385,7 +391,7 @@ describe("Leave reason", () => {
 
 describe("Reduced leave", () => {
   it("renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed", () => {
-    const claim = new MockClaimBuilder()
+    const claim = new MockBenefitsApplicationBuilder()
       .part1Complete()
       .fixedWorkPattern()
       .reducedSchedule()
@@ -400,7 +406,7 @@ describe("Reduced leave", () => {
   });
 
   it("renders total time for the reduced leave period when work pattern is Variable", () => {
-    const claim = new MockClaimBuilder()
+    const claim = new MockBenefitsApplicationBuilder()
       .part1Complete()
       .variableWorkPattern()
       .reducedSchedule()
@@ -448,7 +454,9 @@ describe("Intermittent leave frequency", () => {
     expect.assertions();
 
     intermittentLeavePeriodPermutations.forEach((intermittentLeavePeriod) => {
-      const claim = new MockClaimBuilder().part1Complete().create();
+      const claim = new MockBenefitsApplicationBuilder()
+        .part1Complete()
+        .create();
       claim.leave_details.intermittent_leave_periods = [
         intermittentLeavePeriod,
       ];
@@ -466,7 +474,7 @@ describe("Intermittent leave frequency", () => {
   });
 
   it("does not render the intermittent leave frequency when a claim has no intermittent leave", () => {
-    const claim = new MockClaimBuilder()
+    const claim = new MockBenefitsApplicationBuilder()
       .part1Complete({ excludeLeavePeriod: true })
       .create();
 
@@ -664,7 +672,7 @@ describe("OtherLeaveEntry", () => {
 
 describe("CaringLeave", () => {
   it("renders family member's relationship", () => {
-    const claim = new MockClaimBuilder()
+    const claim = new MockBenefitsApplicationBuilder()
       .part1Complete()
       .caringLeaveReason()
       .create();

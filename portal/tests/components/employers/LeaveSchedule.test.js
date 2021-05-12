@@ -1,11 +1,16 @@
 import Document, { DocumentType } from "../../../src/models/Document";
 import { MockEmployerClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import DocumentCollection from "../../../src/models/DocumentCollection";
+import LeaveReason from "../../../src/models/LeaveReason";
 import LeaveSchedule from "../../../src/components/employers/LeaveSchedule";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
 const COMPLETED_CLAIM = new MockEmployerClaimBuilder().completed().create();
+const CARING_LEAVE_CLAIM = new MockEmployerClaimBuilder()
+  .caringLeaveReason()
+  .absenceId()
+  .create();
 const INTERMITTENT_CLAIM = new MockEmployerClaimBuilder()
   .intermittent()
   .absenceId()
@@ -31,6 +36,13 @@ const DOCUMENTS = new DocumentCollection([
     document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: "fineos-id-9",
     // intentionally omit name
+  }),
+  new Document({
+    content_type: "application/pdf",
+    created_at: "2020-02-01",
+    document_type: DocumentType.certification[LeaveReason.care],
+    fineos_document_id: "fineos-id-10",
+    name: "Caring cert doc",
   }),
 ]);
 const DOCUMENTATION_HEADING_SELECTOR = 'ReviewRow[level="3"]';
@@ -227,6 +239,45 @@ describe("LeaveSchedule", () => {
 
     it("does not show the document section", () => {
       expect(wrapper.find(DOCUMENTATION_HEADING_SELECTOR).exists()).toBe(false);
+    });
+  });
+
+  describe("when the claim is a caring leave", () => {
+    function render() {
+      appLogic.employers.documents = DOCUMENTS;
+      ({ appLogic, wrapper } = renderWithAppLogic(LeaveSchedule, {
+        diveLevels: 0,
+        employerClaimAttrs: CARING_LEAVE_CLAIM,
+        props: {
+          appLogic,
+          absenceId: "NTN-111-ABS-01",
+          claim: CARING_LEAVE_CLAIM,
+        },
+      }));
+    }
+
+    it("shows only medical cert when feature flag is false", () => {
+      render();
+      const medicalDocuments = wrapper.find("HcpDocumentItem");
+      expect(medicalDocuments.length).toBe(2);
+      expect(medicalDocuments.map((node) => node.dive().text())).toEqual([
+        "Medical cert doc",
+        "Certification of a Serious Health Condition",
+      ]);
+    });
+
+    it("shows medical cert and caring cert when feature flag is true", () => {
+      process.env.featureFlags = {
+        showCaringLeaveType: true,
+      };
+      render();
+      const documents = wrapper.find("HcpDocumentItem");
+      expect(documents.length).toBe(3);
+      expect(documents.map((node) => node.dive().text())).toEqual([
+        "Medical cert doc",
+        "Certification of a Serious Health Condition",
+        "Caring cert doc",
+      ]);
     });
   });
 });

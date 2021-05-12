@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -9,7 +9,7 @@ const setup = () => {
   const { appLogic, claim, wrapper } = renderWithAppLogic(
     CaringLeaveAttestation,
     {
-      claimAttrs: new MockClaimBuilder()
+      claimAttrs: new MockBenefitsApplicationBuilder()
         .part1Complete()
         .caringLeaveReason()
         .create(),
