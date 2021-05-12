@@ -60,6 +60,7 @@ def _random_payment_with_state_log(
         amount=Decimal(fake.random_int(min=10, max=9_999)),
         disb_method_id=method.payment_method_id,
         experian_address_pair=address_pair,
+        claim_type=claim.claim_type,
     )
 
     state_log_util.create_finished_state_log(
@@ -262,7 +263,7 @@ def test_convert_payment_to_ez_check_record_unsupported_claimtype(
     initialize_factories_session, test_db_session
 ):
     claim = ClaimFactory(claim_type_id=ClaimType.MILITARY_LEAVE.claim_type_id)
-    payment_without_address = PaymentFactory(claim=claim)
+    payment_without_address = PaymentFactory(claim=claim, claim_type=claim.claim_type)
     with pytest.raises(pub_check.UnSupportedClaimTypeException):
         pub_check._convert_payment_to_ez_check_record(payment_without_address, 0)
 
@@ -270,7 +271,7 @@ def test_convert_payment_to_ez_check_record_unsupported_claimtype(
 def test_format_check_memo_success(initialize_factories_session, test_db_session):
     payment = _random_valid_check_payment_with_state_log(test_db_session)
     memo = pub_check._format_check_memo(payment)
-    claim_type = payment.claim.claim_type.claim_type_description
+    claim_type = payment.claim_type.claim_type_description
 
     pattern = "PFML {} Payment {}".format(claim_type, payment.claim.fineos_absence_id)
     assert re.search(pattern, memo)

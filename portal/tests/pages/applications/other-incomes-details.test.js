@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
   testHook,
@@ -21,7 +21,7 @@ import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps"
 jest.mock("../../../src/hooks/useAppLogic");
 
 const setup = (claimAttrs) => {
-  const claim = new MockClaimBuilder().continuous().create();
+  const claim = new MockBenefitsApplicationBuilder().continuous().create();
 
   const { appLogic, wrapper } = renderWithAppLogic(OtherIncomesDetails, {
     claimAttrs: claimAttrs || claim,
@@ -93,7 +93,7 @@ const clickAddIncomeButton = async (wrapper) => {
 };
 
 const createClaimWithIncomes = () =>
-  new MockClaimBuilder()
+  new MockBenefitsApplicationBuilder()
     .continuous()
     .otherIncome([
       {

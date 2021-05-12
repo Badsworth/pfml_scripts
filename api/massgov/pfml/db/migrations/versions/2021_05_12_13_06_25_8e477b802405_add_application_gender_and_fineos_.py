@@ -1,16 +1,16 @@
 """Add application gender and fineos gender description
 
-Revision ID: 4083e173c28e
-Revises: a654bf03da3f
-Create Date: 2021-05-11 19:50:54.825278
+Revision ID: 8e477b802405
+Revises: ec33b25714f2
+Create Date: 2021-05-12 13:06:25.989335
 
 """
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "4083e173c28e"
-down_revision = "a654bf03da3f"
+revision = "8e477b802405"
+down_revision = "ec33b25714f2"
 branch_labels = None
 depends_on = None
 

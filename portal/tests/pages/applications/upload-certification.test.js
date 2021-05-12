@@ -1,6 +1,6 @@
 import Document, { DocumentType } from "../../../src/models/Document";
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   makeFile,
   renderWithAppLogic,
   simulateEvents,
@@ -18,7 +18,9 @@ const diveLevels = 4;
 
 const setup = (props = {}) => {
   const { appLogic, claim, wrapper } = renderWithAppLogic(UploadCertification, {
-    claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+    claimAttrs: new MockBenefitsApplicationBuilder()
+      .medicalLeaveReason()
+      .create(),
     diveLevels,
     ...props,
   });
@@ -55,7 +57,9 @@ describe("UploadCertification", () => {
     });
 
     it("renders page with bonding leave content when leave reason is Bonding leave", () => {
-      const claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+      const claim = new MockBenefitsApplicationBuilder()
+        .bondingBirthLeaveReason()
+        .create();
       const { wrapper } = setup({ claimAttrs: claim });
       // Only take snapshots of the i18n content
       expect(wrapper.find("Heading")).toMatchSnapshot();
@@ -63,7 +67,9 @@ describe("UploadCertification", () => {
     });
 
     it("renders page with caregiver leave contentwhen leave reason is caregiver leave", () => {
-      const claim = new MockClaimBuilder().caringLeaveReason().create();
+      const claim = new MockBenefitsApplicationBuilder()
+        .caringLeaveReason()
+        .create();
       const { wrapper } = setup({ claimAttrs: claim });
       // Only take snapshots of the i18n content
       expect(wrapper.find("Heading")).toMatchSnapshot();
@@ -270,7 +276,9 @@ describe("UploadCertification", () => {
   });
 
   it("calls attach function with 'true' flag when there is additionalDoc flag in query", async () => {
-    const claim = new MockClaimBuilder().medicalLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .medicalLeaveReason()
+      .create();
     const { appLogic, submitForm } = setup({
       claimAttrs: claim,
       hasLoadedClaimDocuments: true,

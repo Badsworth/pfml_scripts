@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -32,9 +32,18 @@ describe("UploadDocsOptions", () => {
     expect.assertions();
 
     const claims = [
-      new MockClaimBuilder().medicalLeaveReason().completed().create(),
-      new MockClaimBuilder().bondingBirthLeaveReason().completed().create(),
-      new MockClaimBuilder().bondingAdoptionLeaveReason().completed().create(),
+      new MockBenefitsApplicationBuilder()
+        .medicalLeaveReason()
+        .completed()
+        .create(),
+      new MockBenefitsApplicationBuilder()
+        .bondingBirthLeaveReason()
+        .completed()
+        .create(),
+      new MockBenefitsApplicationBuilder()
+        .bondingAdoptionLeaveReason()
+        .completed()
+        .create(),
     ];
 
     claims.forEach((claim) => {
@@ -51,7 +60,7 @@ describe("UploadDocsOptions", () => {
 
   it("routes to next page when a user chooses to upload Mass ID", async () => {
     const { appLogic, changeRadioGroup, claim, submitForm } = setup(
-      new MockClaimBuilder().completed().create()
+      new MockBenefitsApplicationBuilder().completed().create()
     );
 
     changeRadioGroup("upload_docs_options", UploadType.mass_id);
@@ -67,7 +76,7 @@ describe("UploadDocsOptions", () => {
 
   it("routes to next page when a user chooses to upload non Mass ID", async () => {
     const { appLogic, changeRadioGroup, claim, submitForm } = setup(
-      new MockClaimBuilder().completed().create()
+      new MockBenefitsApplicationBuilder().completed().create()
     );
 
     changeRadioGroup("upload_docs_options", UploadType.non_mass_id);
@@ -83,7 +92,7 @@ describe("UploadDocsOptions", () => {
 
   it("routes to next page when a user chooses to upload a certification document", async () => {
     const { appLogic, changeRadioGroup, claim, submitForm } = setup(
-      new MockClaimBuilder().completed().create()
+      new MockBenefitsApplicationBuilder().completed().create()
     );
 
     changeRadioGroup("upload_docs_options", UploadType.certification);
@@ -99,7 +108,7 @@ describe("UploadDocsOptions", () => {
 
   it("shows a validation error when a user does not choose a doc type option", async () => {
     const { appLogic, submitForm } = setup(
-      new MockClaimBuilder().completed().create()
+      new MockBenefitsApplicationBuilder().completed().create()
     );
 
     await submitForm();

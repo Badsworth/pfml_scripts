@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -9,7 +9,7 @@ import { ReasonQualifier } from "../../../src/models/BenefitsApplication";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const setup = (claim = new MockClaimBuilder().create()) => {
+const setup = (claim = new MockBenefitsApplicationBuilder().create()) => {
   const { appLogic, wrapper } = renderWithAppLogic(LeaveReasonPage, {
     claimAttrs: claim,
   });
@@ -25,8 +25,12 @@ const setup = (claim = new MockClaimBuilder().create()) => {
   };
 };
 
-const medicalLeaveClaim = new MockClaimBuilder().medicalLeaveReason().create();
-const caringLeaveClaim = new MockClaimBuilder().caringLeaveReason().create();
+const medicalLeaveClaim = new MockBenefitsApplicationBuilder()
+  .medicalLeaveReason()
+  .create();
+const caringLeaveClaim = new MockBenefitsApplicationBuilder()
+  .caringLeaveReason()
+  .create();
 
 describe("LeaveReasonPage", () => {
   it("renders the page with all five reasons when type feature flags are enabled", () => {
@@ -168,7 +172,7 @@ describe("LeaveReasonPage", () => {
   });
 
   it("sets the radio values and calls claims.update with leave reason and reason qualifer when the claim already has data", async () => {
-    const bondingFosterCareClaim = new MockClaimBuilder()
+    const bondingFosterCareClaim = new MockBenefitsApplicationBuilder()
       .bondingFosterCareLeaveReason()
       .create();
 

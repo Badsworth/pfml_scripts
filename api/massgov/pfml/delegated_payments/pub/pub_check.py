@@ -213,13 +213,13 @@ def _convert_payment_to_check_issue_entry(payment: Payment) -> CheckIssueEntry:
 
 
 def _convert_payment_to_ez_check_record(payment: Payment, check_number: int) -> EzCheckRecord:
-    if payment.claim.claim_type.claim_type_id not in [
+    if payment.claim_type_id not in [
         ClaimType.FAMILY_LEAVE.claim_type_id,
         ClaimType.MEDICAL_LEAVE.claim_type_id,
     ]:
         raise UnSupportedClaimTypeException(
             "Expected claim type to be either family or medical. Found {}".format(
-                payment.claim.claim_type.claim_type_description
+                payment.claim_type.claim_type_description
             )
         )
 
@@ -250,7 +250,7 @@ def _format_check_memo(payment: Payment) -> str:
     start_date = cast(date, payment.period_start_date).strftime(Constants.EZ_CHECK_MEMO_DATE_FORMAT)
     end_date = cast(date, payment.period_end_date).strftime(Constants.EZ_CHECK_MEMO_DATE_FORMAT)
 
-    claim_type = payment.claim.claim_type.claim_type_description
+    claim_type = payment.claim_type.claim_type_description if payment.claim_type else ""
 
     return Constants.EZ_CHECK_MEMO_FORMAT.format(
         claim_type, payment.claim.fineos_absence_id, start_date, end_date

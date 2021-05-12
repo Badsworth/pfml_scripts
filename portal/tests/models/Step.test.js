@@ -1,5 +1,5 @@
 import BaseModel from "../../src/models/BaseModel";
-import { MockClaimBuilder } from "../test-utils";
+import { MockBenefitsApplicationBuilder } from "../test-utils";
 import Step from "../../src/models/Step";
 import claimantConfig from "../../src/flows/claimant";
 import { map } from "lodash";
@@ -312,7 +312,7 @@ describe("Step Model", () => {
     it("creates expected portal steps from machineConfigs", () => {
       const steps = Step.createClaimStepsFromMachine(
         claimantConfig,
-        { claim: new MockClaimBuilder().create() },
+        { claim: new MockBenefitsApplicationBuilder().create() },
         []
       );
 
@@ -334,7 +334,7 @@ describe("Step Model", () => {
 
       const steps = Step.createClaimStepsFromMachine(
         claimantConfig,
-        { claim: new MockClaimBuilder().create() },
+        { claim: new MockBenefitsApplicationBuilder().create() },
         []
       );
       const machinePages = map(claimantConfig.states, (value, key) => ({
@@ -354,7 +354,7 @@ describe("Step Model", () => {
     it("marks group 1 steps as uneditable when Claim is submitted", () => {
       const steps = Step.createClaimStepsFromMachine(
         claimantConfig,
-        { claim: new MockClaimBuilder().submitted().create() },
+        { claim: new MockBenefitsApplicationBuilder().submitted().create() },
         []
       );
 
@@ -367,7 +367,11 @@ describe("Step Model", () => {
     it("marks group 2 steps as uneditable when payment is submitted", () => {
       const steps = Step.createClaimStepsFromMachine(
         claimantConfig,
-        { claim: new MockClaimBuilder().paymentPrefSubmitted().create() },
+        {
+          claim: new MockBenefitsApplicationBuilder()
+            .paymentPrefSubmitted()
+            .create(),
+        },
         []
       );
 

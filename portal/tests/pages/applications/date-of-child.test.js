@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -39,7 +39,9 @@ describe("DateOfChild", () => {
   });
 
   it("shows the birth date input with hint text when the claim is for a newborn", () => {
-    const claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .bondingBirthLeaveReason()
+      .create();
     const { wrapper } = setup(claim);
 
     expect(wrapper.find({ name: child_birth_date }).exists()).toBeTruthy();
@@ -50,7 +52,9 @@ describe("DateOfChild", () => {
   });
 
   it("shows the correct input question when the claim is for an adoption", () => {
-    const claim = new MockClaimBuilder().bondingAdoptionLeaveReason().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .bondingAdoptionLeaveReason()
+      .create();
     const { wrapper } = setup(claim);
 
     expect(wrapper.find({ name: child_placement_date }).exists()).toBeTruthy();
@@ -73,7 +77,7 @@ describe("DateOfChild", () => {
     });
 
     it("sets has_future_child_date as true for future birth bonding leave when claim is already populated", async () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .bondingBirthLeaveReason(future)
         .create();
       const { appLogic, submitForm } = setup(claim);
@@ -93,7 +97,9 @@ describe("DateOfChild", () => {
     });
 
     it("sets has_future_child_date as true for future birth bonding leave when data is manually populated", async () => {
-      const claim = new MockClaimBuilder().bondingLeaveReason().create();
+      const claim = new MockBenefitsApplicationBuilder()
+        .bondingLeaveReason()
+        .create();
       claim.leave_details.reason_qualifier = ReasonQualifier.newBorn;
 
       const { appLogic, changeField, submitForm } = setup(claim);
@@ -115,7 +121,7 @@ describe("DateOfChild", () => {
     });
 
     it("sets has_future_child_date as true for future placement bonding leave when claim is already populated", async () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .bondingFosterCareLeaveReason(future)
         .create();
       const { appLogic, submitForm } = setup(claim);
@@ -135,7 +141,9 @@ describe("DateOfChild", () => {
     });
 
     it("sets has_future_child_date as true for future placement bonding leave when data is manually populated", async () => {
-      const claim = new MockClaimBuilder().bondingLeaveReason().create();
+      const claim = new MockBenefitsApplicationBuilder()
+        .bondingLeaveReason()
+        .create();
       claim.leave_details.reason_qualifier = ReasonQualifier.fosterCare;
 
       const { appLogic, changeField, submitForm } = setup(claim);
@@ -171,7 +179,7 @@ describe("DateOfChild", () => {
     });
 
     it("sets has_future_child_date as false for past birth bonding leave when claim is pre-populated", async () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .bondingBirthLeaveReason(past)
         .create();
       const { appLogic, submitForm } = setup(claim);
@@ -191,7 +199,9 @@ describe("DateOfChild", () => {
     });
 
     it("sets has_future_child_date as false for past birth bonding leave when data is manually populated", async () => {
-      const claim = new MockClaimBuilder().bondingLeaveReason().create();
+      const claim = new MockBenefitsApplicationBuilder()
+        .bondingLeaveReason()
+        .create();
       claim.leave_details.reason_qualifier = ReasonQualifier.newBorn;
 
       const { appLogic, changeField, submitForm } = setup(claim);
@@ -211,7 +221,7 @@ describe("DateOfChild", () => {
     });
 
     it("sets has_future_child_date as false for past placement bonding leave when claim is pre-populated", async () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .bondingFosterCareLeaveReason(past)
         .create();
       const { appLogic, submitForm } = setup(claim);
@@ -230,7 +240,9 @@ describe("DateOfChild", () => {
     });
 
     it("sets has_future_child_date as false for past placement bonding leave when data is manually populated", async () => {
-      const claim = new MockClaimBuilder().bondingLeaveReason().create();
+      const claim = new MockBenefitsApplicationBuilder()
+        .bondingLeaveReason()
+        .create();
       claim.leave_details.reason_qualifier = ReasonQualifier.fosterCare;
 
       const { appLogic, changeField, submitForm } = setup(claim);

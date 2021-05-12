@@ -1,4 +1,7 @@
-import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
+import {
+  MockBenefitsApplicationBuilder,
+  renderWithAppLogic,
+} from "../../test-utils";
 import { DateTime } from "luxon";
 import Success from "../../../src/pages/applications/success";
 
@@ -9,46 +12,46 @@ describe("Success", () => {
    * Output a snapshot for each of these claim variations
    */
   const variations = {
-    "Medical (Not pregnant)": new MockClaimBuilder()
+    "Medical (Not pregnant)": new MockBenefitsApplicationBuilder()
       .continuous({ start_date: "2020-01-01" })
       .medicalLeaveReason()
       .absenceId()
       .create(),
-    "Medical (Pregnant)": new MockClaimBuilder()
+    "Medical (Pregnant)": new MockBenefitsApplicationBuilder()
       .continuous({ start_date: "2020-01-01" })
       .medicalLeaveReason()
       .pregnant()
       .absenceId()
       .create(),
-    "Medical (Pregnant, applying in advance)": new MockClaimBuilder()
+    "Medical (Pregnant, applying in advance)": new MockBenefitsApplicationBuilder()
       .continuous({ start_date: futureDate })
       .medicalLeaveReason()
       .pregnant()
       .absenceId()
       .create(),
-    "Family (Bonding Newborn)": new MockClaimBuilder()
+    "Family (Bonding Newborn)": new MockBenefitsApplicationBuilder()
       .continuous({ start_date: "2020-01-01" })
       .bondingBirthLeaveReason()
       .absenceId()
       .create(),
-    "Family (Bonding Future Newborn)": new MockClaimBuilder()
+    "Family (Bonding Future Newborn)": new MockBenefitsApplicationBuilder()
       .completed()
       .bondingBirthLeaveReason(futureDate)
       .hasFutureChild()
       .absenceId()
       .create(),
-    "Family (Bonding Adoption)": new MockClaimBuilder()
+    "Family (Bonding Adoption)": new MockBenefitsApplicationBuilder()
       .continuous({ start_date: "2020-01-01" })
       .bondingAdoptionLeaveReason()
       .absenceId()
       .create(),
-    "Family (Bonding Future Adoption)": new MockClaimBuilder()
+    "Family (Bonding Future Adoption)": new MockBenefitsApplicationBuilder()
       .completed()
       .bondingAdoptionLeaveReason(futureDate)
       .hasFutureChild()
       .absenceId()
       .create(),
-    "Caring Leave": new MockClaimBuilder()
+    "Caring Leave": new MockBenefitsApplicationBuilder()
       .continuous({ start_date: "2020-01-01" })
       .caringLeaveReason()
       .absenceId()

@@ -57,3 +57,10 @@ class PreviousLeave(PydanticBaseModel):
     worked_per_week_minutes: Optional[int]
     leave_minutes: Optional[int]
     type: Optional[str]
+
+
+class ConcurrentLeave(PydanticBaseModel):
+    concurrent_leave_id: Optional[UUID4]
+    is_for_current_employer: Optional[bool]
+    leave_start_date: Optional[date]
+    leave_end_date: Optional[date]
