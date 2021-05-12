@@ -554,6 +554,7 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "AddressValidationStep",
             {
+                "experian_search_exception_count": 0,
                 "invalid_experian_format": 0,
                 "invalid_experian_response": 0,
                 "multiple_experian_matches": len(
