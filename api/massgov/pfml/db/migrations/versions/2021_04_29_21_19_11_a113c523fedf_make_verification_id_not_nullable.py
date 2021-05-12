@@ -15,7 +15,7 @@ from massgov.pfml.db.models.verifications import VerificationType  # noqa: F401
 
 # revision identifiers, used by Alembic.
 revision = "a113c523fedf"
-down_revision = "f179009904e7"
+down_revision = "7c2abdcf72de"
 branch_labels = None
 depends_on = None
 
