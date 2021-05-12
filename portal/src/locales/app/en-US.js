@@ -945,15 +945,16 @@ const pages = {
   claimsEmployerBenefits: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
-    hintHeader: "Employer-sponsored benefits you must report are:",
+    hintBody:
+      "<p>This does not include PFML benefits. You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.</p><p>If you won’t use these benefits from this employer, select No.</p>",
+    hintHeader: "The employer-sponsored benefits you must report are:",
     hintList: [
-      "Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off",
-      "Short-term disability insurance",
+      "Temporary disability insurance, for either short-term or long-term disability",
       "Permanent disability insurance",
-      "Family or medical leave insurance, such as a maternity leave policy",
+      "Family or medical leave benefits, such as a parental leave program",
     ],
     sectionLabel:
-      "Will you use any employer-sponsored benefits from this employer during your PFML leave?",
+      "Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsEmployerBenefitsDetails: {

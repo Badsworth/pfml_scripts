@@ -4,6 +4,7 @@ import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { Trans } from "react-i18next";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -15,6 +16,7 @@ export const fields = ["claim.has_employer_benefits"];
 export const EmployerBenefits = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
+  const employer_fein = claim.employer_fein;
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
@@ -70,6 +72,10 @@ export const EmployerBenefits = (props) => {
                 <li key={index}>{listItem}</li>
               ))}
             </ul>
+            <Trans
+              i18nKey="pages.claimsEmployerBenefits.hintBody"
+              tOptions={{ employer_fein }}
+            />
           </React.Fragment>
         }
       />
