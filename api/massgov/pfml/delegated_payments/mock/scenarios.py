@@ -31,6 +31,8 @@ class ScenarioName(Enum):
     HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING = "PUB_CHECK_FAMILY_RETURN_OUTSTANDING"
     HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE = "PUB_CHECK_FAMILY_RETURN_FUTURE"
 
+    HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP = "HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP"
+
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
     CANCELLATION_PAYMENT = "CANCELLATION_PAYMENT"
@@ -57,6 +59,7 @@ class ScenarioName(Enum):
     INVALID_ADDRESS_FIXED = "INVALID_ADDRESS_FIXED"
     REJECTED_LEAVE_REQUEST_DECISION = "REJECTED_LEAVE_REQUEST_DECISION"
     PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
+    SECOND_PAYMENT_FOR_PERIOD_OVER_CAP = "SECOND_PAYMENT_FOR_PERIOD_OVER_CAP"
 
     CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
     CLAIM_NOT_ID_PROOFED = "CLAIM_NOT_ID_PROOFED"
@@ -114,6 +117,9 @@ class ScenarioDescriptor:
     invalid_address: bool = False
     invalid_address_fixed: bool = False
 
+    # This adds a second payment that'll show up in round 2
+    has_additional_payment_in_period: bool = False
+
     # prior_verified_address: bool = False TODO add when available
     fineos_extract_address_valid: bool = True
     fineos_extract_address_valid_after_fix: bool = False
@@ -125,6 +131,7 @@ class ScenarioDescriptor:
     is_audit_approved_delayed: bool = False
 
     negative_payment_amount: bool = False
+    payment_close_to_cap: bool = False
 
     include_non_vpei_records: bool = True
 
@@ -339,6 +346,16 @@ DELAYED_SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         fineos_extract_address_valid=False,
         fineos_extract_address_valid_after_fix=True,
         pub_check_response=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
+        payment_close_to_cap=False,
+        has_additional_payment_in_period=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,
+        payment_close_to_cap=True,
+        has_additional_payment_in_period=True,
     ),
 ]
 

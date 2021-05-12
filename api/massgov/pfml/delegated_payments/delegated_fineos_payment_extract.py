@@ -1175,7 +1175,7 @@ class PaymentExtractStep(Step):
             self.increment(self.Metrics.CANCELLATION_COUNT)
 
         else:
-            end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
+            end_state = State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK
             message = "Success"
             self.increment(self.Metrics.STANDARD_VALID_PAYMENT_COUNT)
 

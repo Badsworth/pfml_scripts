@@ -3,8 +3,8 @@ import io
 import os
 from collections import OrderedDict
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import List
+from datetime import date, datetime, timedelta
+from typing import List, cast
 
 import faker
 
@@ -389,6 +389,8 @@ def generate_payment_extract_files(
         employee = scenario_data.employee
         claim = scenario_data.claim
 
+        prior_payment = scenario_data.payment if round > 1 else None
+
         if employee.tax_identifier is None:
             raise Exception("Expected employee with tin")
 
@@ -399,8 +401,18 @@ def generate_payment_extract_files(
         payment_method = scenario_descriptor.payment_method.payment_method_description
 
         payment_date = payments_util.get_now()
-        payment_start_period = payment_date
-        payment_end_period = payment_date + timedelta(days=15)
+
+        # This'll be a new payment based on different C/I values
+        if round > 1 and scenario_descriptor.has_additional_payment_in_period and prior_payment:
+            payment_start_period = cast(date, prior_payment.period_start_date)
+            payment_end_period = cast(date, prior_payment.period_end_date)
+            c_value = scenario_data.additional_payment_c_value
+            i_value = scenario_data.additional_payment_i_value
+        else:
+            payment_start_period = payment_date
+            payment_end_period = payment_date + timedelta(days=15)
+            c_value = scenario_data.payment_c_value
+            i_value = scenario_data.payment_i_value
 
         is_eft = scenario_descriptor.payment_method == PaymentMethod.ACH
         routing_nbr = ssn if is_eft else ""
@@ -411,7 +423,15 @@ def generate_payment_extract_files(
             else ""
         )
 
-        payment_amount = "-100.00" if scenario_descriptor.negative_payment_amount else "100.00"
+        if scenario_descriptor.payment_close_to_cap:
+            # The cap is $850.00
+            payment_amount = "800.00"
+        else:
+            payment_amount = "100.00"
+
+        if scenario_descriptor.negative_payment_amount:
+            payment_amount = "-" + payment_amount
+
         event_type = "PaymentOut"
         payee_identifier = "Social Security Number"
         event_reason = "Automatic Main Payment"
@@ -449,8 +469,8 @@ def generate_payment_extract_files(
         # Auto generated: c_value, i_value, leave_request_id
         fineos_payments_data = FineosPaymentData(
             generate_defaults=True,
-            c_value=scenario_data.payment_c_value,
-            i_value=scenario_data.payment_i_value,
+            c_value=c_value,
+            i_value=i_value,
             include_claim_details=scenario_descriptor.include_non_vpei_records,
             include_payment_details=scenario_descriptor.include_non_vpei_records,
             include_requested_absence=scenario_descriptor.include_non_vpei_records,

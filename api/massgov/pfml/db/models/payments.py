@@ -1,11 +1,17 @@
-from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, Text
+import datetime
+from decimal import Decimal
+
+from sqlalchemy import TIMESTAMP, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.functions import now as sqlnow
 
+import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import ReferenceFile
 
 from .base import Base, utc_timestamp_gen, uuid_gen
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class FineosExtractVpei(Base):
@@ -479,3 +485,31 @@ class FineosExtractEmployeeFeed(Base):
     )
 
     reference_file = relationship(ReferenceFile)
+
+
+class MaximumWeeklyBenefitAmount(Base):
+    # See regulations for how this is calculated:
+    # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
+    __tablename__ = "maximum_weekly_benefit_amount"
+
+    effective_date = Column(Date, primary_key=True, nullable=False)
+    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
+
+    def __init__(self, effective_date: datetime.date, maximum_weekly_benefit_amount: str):
+        """ Constructor takes metric as a string to maintain precision. """
+
+        self.effective_date = effective_date
+        self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
+
+
+def sync_maximum_weekly_benefit_amount(db_session):
+    maximum_weekly_benefit_amounts = [
+        MaximumWeeklyBenefitAmount(datetime.date(2020, 10, 1), "850.00"),
+    ]
+
+    for maximum_weekly_benefit_amount in maximum_weekly_benefit_amounts:
+        instance = db_session.merge(maximum_weekly_benefit_amount)
+        if db_session.is_modified(instance):
+            logger.info("updating maximum weekly benefit amount %r", instance)
+
+    db_session.commit()

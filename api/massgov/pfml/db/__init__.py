@@ -59,6 +59,7 @@ def init(
     if sync_lookups:
         massgov.pfml.db.models.init_lookup_tables(session_factory)
         massgov.pfml.db.models.applications.sync_state_metrics(session_factory)
+        massgov.pfml.db.models.payments.sync_maximum_weekly_benefit_amount(session_factory)
 
     if check_migrations_current:
         have_all_migrations_run(engine)

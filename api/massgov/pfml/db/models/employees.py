@@ -1807,6 +1807,10 @@ class State(LookupTable):
         Flow.DFML_DUA_REDUCTION_REPORT.flow_id,
     )
 
+    DIA_REPORT_FOR_DFML_CREATED = LkState(
+        162, "Create DIA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
+    )
+
     # ==============================
     # Delegated Payments States
     # https://lucid.app/lucidchart/edf54a33-1a3f-432d-82b7-157cf02667a4/edit?useCachedRole=false&shared=true&page=NnnYFBRiym9J#
@@ -2017,8 +2021,8 @@ class State(LookupTable):
         161, "FINEOS Writeback #2 sent - Check", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    DIA_REPORT_FOR_DFML_CREATED = LkState(
-        162, "Create DIA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
+    DELEGATED_PAYMENT_POST_PROCESSING_CHECK = LkState(
+        163, "Delegated payment post processing check", Flow.DELEGATED_PAYMENT.flow_id
     )
 
 
