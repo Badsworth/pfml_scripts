@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import BenefitsApplication from "../../models/BenefitsApplication";
-import Dropdown from "../../components/Dropdown";
+import ComboBox from "../../components/ComboBox";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
@@ -70,9 +70,10 @@ export const AppOccupation = (props) => {
           What is your current occupation?
         </FormLabel>
 
-        <Dropdown
-          {...getFunctionalInputProps(`occupation`)}
+        <ComboBox
+          {...getFunctionalInputProps("occupation")}
           choices={occupations}
+          updateField={(value) => updateFields({ occupation: value })}
           label="Industry"
           smallLabel
         />
