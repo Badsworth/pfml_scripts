@@ -1668,6 +1668,7 @@ const pages = {
   claimsUploadDocsOptions: {
     certLabel_bonding_adopt_foster: "Proof of placement",
     certLabel_bonding_newborn: "Proof of birth",
+    certLabel_care: "$t(shared.caregiverCertificationForm)",
     certLabel_medical: "Certification of a Serious Health Condition",
     nonStateIdLabel: "Different identification documentation",
     sectionHint:
