@@ -121,7 +121,7 @@ def test_run_step_happy_path(
 
     tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
     employee = EmployeeFactory(tax_identifier=tax_identifier)
-    EmployerFactory(fineos_employer_id=96)
+    employer = EmployerFactory(fineos_employer_id=96)
 
     employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 1
@@ -151,6 +151,7 @@ def test_run_step_happy_path(
     assert claim.absence_period_start_date == datetime.date(2021, 5, 13)
     assert claim.absence_period_end_date == datetime.date(2021, 7, 22)
     assert claim.is_id_proofed is True
+    assert claim.employer_id == employer.employer_id
 
     updated_employee = (
         local_test_db_session.query(Employee)
@@ -441,10 +442,8 @@ def test_create_or_update_claim_invalid_values(claimant_extract_step, test_db_se
     fineos_data = FineosClaimantData(generate_defaults=False, absence_case_number="NTN-001-ABS-01")
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
-    # There are not any validation issues because it's not ID proofed so
-    # the records gets skipped. Technically the full process won't ever
-    # get to to calling the below method, but this is just in case.
-    assert len(claimant_data.validation_container.validation_issues) == 6
+    # The number of required fields we pull out of the requested absence file
+    assert len(claimant_data.validation_container.validation_issues) == 7
 
     # The claim will be created, but with just an absence case number
     claim = claimant_extract_step.create_or_update_claim(claimant_data)
@@ -704,6 +703,9 @@ def test_run_step_validation_issues(
     tax_identifier = TaxIdentifierFactory(tax_identifier=fineos_data.ssn)
     employee_before = EmployeeFactory(tax_identifier=tax_identifier)
 
+    # Create the employer record
+    employer = EmployerFactory(fineos_employer_id=fineos_data.employer_customer_num)
+
     upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
 
     upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
@@ -738,6 +740,7 @@ def test_run_step_validation_issues(
     assert claim.absence_period_start_date is not None
     assert claim.absence_period_end_date is None  # Due to being empty
     assert claim.is_id_proofed
+    assert claim.employer_id == employer.employer_id
 
     # Verify the state logs and outcome
     assert len(employee.state_logs) == 1

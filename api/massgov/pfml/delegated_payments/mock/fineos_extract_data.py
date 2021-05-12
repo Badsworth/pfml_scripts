@@ -163,6 +163,9 @@ class FineosClaimantData(FineosData):
         self.leave_request_evidence = self.get_value("leave_request_evidence", "Satisfied")
         self.leave_request_start = self.get_value("leave_request_start", "2021-01-01 12:00:00")
         self.leave_request_end = self.get_value("leave_request_end", "2021-04-01 12:00:00")
+        self.employer_customer_num = self.get_value(
+            "employer_customer_num", str(fake.unique.random_int())
+        )
 
     def get_employee_feed_record(self):
         employee_feed_record = OrderedDict()
@@ -198,9 +201,7 @@ class FineosClaimantData(FineosData):
             requested_absence_record["ABSENCEPERIOD_START"] = self.leave_request_start
             requested_absence_record["ABSENCEPERIOD_END"] = self.leave_request_end
             requested_absence_record["EMPLOYEE_CUSTOMERNO"] = self.customer_number
-            requested_absence_record[
-                "EMPLOYER_CUSTOMERNO"
-            ] = None  # TODO - not doing anything with this yet
+            requested_absence_record["EMPLOYER_CUSTOMERNO"] = self.employer_customer_num
 
         return requested_absence_record
 
@@ -538,6 +539,7 @@ def generate_claimant_data_files(
         scenario_descriptor = scenario_data.scenario_descriptor
         employee = scenario_data.employee
         claim = scenario_data.claim
+        employer = scenario_data.employer
 
         if employee.tax_identifier is None:
             raise Exception("Expected employee with tin")
@@ -582,6 +584,7 @@ def generate_claimant_data_files(
         leave_request_start = "2021-01-01 12:00:00"
         leave_request_end = "2021-04-01 12:00:00"
         notification_number = f"NTN-{absence_case_number}"
+        fineos_employer_id = employer.fineos_employer_id
         leave_type = scenario_descriptor.claim_type
 
         # Auto generated: c_value, i_value, leave_request_id
@@ -607,6 +610,7 @@ def generate_claimant_data_files(
             leave_request_start=leave_request_start,
             leave_request_end=leave_request_end,
             notification_number=notification_number,
+            employer_customer_num=fineos_employer_id,
         )
 
         fineos_claimant_dataset.append(fineos_payments_data)

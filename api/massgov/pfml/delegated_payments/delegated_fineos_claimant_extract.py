@@ -20,6 +20,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeePubEftPair,
     EmployeeReferenceFile,
+    Employer,
     PaymentMethod,
     PrenoteState,
     PubEft,
@@ -106,6 +107,7 @@ class ClaimantData:
     absence_end_date: Optional[str] = None
 
     fineos_customer_number: Optional[str] = None
+    employer_customer_number: Optional[str] = None
     employee_tax_identifier: Optional[str] = None
     date_of_birth: Optional[str] = None
     payment_method: Optional[str] = None
@@ -173,6 +175,11 @@ class ClaimantData:
         # Note this should be identical regardless of absence case
         self.fineos_customer_number = payments_util.validate_csv_input(
             "EMPLOYEE_CUSTOMERNO", requested_absence, self.validation_container, True
+        )
+
+        # Note this should be identical regardless of absence case
+        self.employer_customer_number = payments_util.validate_csv_input(
+            "EMPLOYER_CUSTOMERNO", requested_absence, self.validation_container, True
         )
 
     def _process_employee_feed(self, extract_data: ExtractData) -> None:
@@ -328,6 +335,8 @@ class ClaimantExtractStep(Step):
         VBI_REQUESTED_ABSENCE_SOM_RECORD_COUNT = "vbi_requested_absence_som_record_count"
         NO_EMPLOYEE_FEED_RECORDS_FOUND_COUNT = "no_employee_feed_records_found_count"
         NO_DEFAULT_PAYMENT_PREFERENCE_COUNT = "no_default_payment_preference_count"
+        EMPLOYER_NOT_FOUND_COUNT = "employer_not_found_count"
+        EMPLOYER_FOUND_COUNT = "employer_found_count"
 
     def run_step(self) -> None:
         self.process_claimant_extract_data()
@@ -522,6 +531,7 @@ class ClaimantExtractStep(Step):
                 # Update employee info
                 if claim is not None:
                     employee_pfml_entry = self.update_employee_info(claimant_data, claim)
+                    self.attach_employer_to_claim(claimant_data, claim)
             except Exception as e:
                 logger.exception(
                     "Unexpected error %s while processing claimant: %s",
@@ -734,6 +744,39 @@ class ClaimantExtractStep(Step):
                     ),
                     db_session=self.db_session,
                 )
+
+    def attach_employer_to_claim(self, claimant_data: ClaimantData, claim: Claim) -> None:
+        if claimant_data.employer_customer_number is None:
+            return None
+
+        employer_pfml_entry = (
+            self.db_session.query(Employer)
+            .filter(Employer.fineos_employer_id == claimant_data.employer_customer_number)
+            .one_or_none()
+        )
+
+        if not employer_pfml_entry:
+            logger.warning(
+                "Employer %s not found in DB for claim %s",
+                claimant_data.employer_customer_number,
+                claimant_data.absence_case_id,
+                extra=claimant_data.get_traceable_details(),
+            )
+            claimant_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_IN_DB,
+                f"employer {claimant_data.employer_customer_number}",
+            )
+            self.increment(self.Metrics.EMPLOYER_NOT_FOUND_COUNT)
+            return None
+
+        self.increment(self.Metrics.EMPLOYER_FOUND_COUNT)
+        claim.employer_id = employer_pfml_entry.employer_id
+        logger.info(
+            "Attached employer %s to claim %s",
+            claimant_data.employer_customer_number,
+            claimant_data.absence_case_id,
+            extra=claimant_data.get_traceable_details(),
+        )
 
     def generate_employee_reference_file(
         self, extract_data: ExtractData, employee_pfml_entry: Employee
