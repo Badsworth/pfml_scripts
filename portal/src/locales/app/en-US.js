@@ -19,69 +19,7 @@ const chars = {
 };
 
 const errors = {
-  auth: {
-    attemptBlocked_forgotPassword:
-      "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at $t(shared.contactCenterPhoneNumber).",
-    attemptBlocked_login:
-      "Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity.",
-    attemptsLimitExceeded_forgotPassword:
-      "Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again.",
-    attemptsLimitExceeded_login:
-      "Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again.",
-    code: {
-      deliveryFailure:
-        "We encountered an error while sending the verification code. Try again.",
-      expired:
-        "Sorry, your verification code has expired or has already been used.",
-      mismatchException:
-        "Invalid verification code. Make sure the code matches the code emailed to you.",
-      pattern:
-        "Enter the 6 digit code sent to your email and ensure it does not include any punctuation.",
-      required: "Enter the 6 digit code sent to your email",
-    },
-    // TODO (CP-1768) Remove these auth.ein strings once requests flow through API
-    ein: {
-      invalid: "Invalid employer ID number. Please try again.",
-      required: "Enter your 9-digit Employer Identification Number.",
-    },
-    expiredVerificationCode:
-      "Invalid verification code. Please request a new code.",
-    incorrectEmailOrPassword: "Incorrect email or password",
-    invalidParametersFallback: "Enter all required information",
-    invalidParametersIncludingMaybePassword:
-      "Check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",
-    invalidPhoneFormat: "Invalid phone number",
-    isEmployer: {
-      required:
-        "Select Yes if you are you creating an employer account to manage leave for your company.",
-    },
-    password: {
-      insecure: "$t(shared.auth.passwordError_insecure)",
-      invalid: "$t(shared.auth.passwordError_invalid)",
-      required: "$t(shared.auth.passwordError_required)",
-      resetRequiredException:
-        'Your password must be reset before you can log in again. Click the "Forgot your password?" link below to reset your password.',
-    },
-    userNotConfirmed:
-      "Confirm your account by following the instructions in the verification email sent to your inbox.",
-    userNotFound: "Incorrect email",
-    username: {
-      exists: "$t(shared.auth.emailError_exists)",
-      required: "$t(shared.auth.emailError_required)",
-    },
-  },
-  caughtError:
-    "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber).",
-  caughtError_DocumentsLoadError: "$t(shared.documentsLoadError)",
-  caughtError_DocumentsUploadError: "$t(shared.documentsUploadError)",
-  caughtError_ForbiddenError:
-    "Sorry, an authorization error was encountered. Please log out and then log in to try again.",
-  caughtError_NetworkError: "$t(shared.networkError)",
-  caughtError_NotFoundError:
-    "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
-  caughtError_UserNotReceivedError:
-    "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
-  claims: {
+  applications: {
     date_of_birth: {
       format: "Your date of birth must include a valid month, day, and year.",
       invalid_age: "The person taking leave must be at least 14 years old.",
@@ -456,6 +394,68 @@ const errors = {
       },
     },
   },
+  auth: {
+    attemptBlocked_forgotPassword:
+      "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at $t(shared.contactCenterPhoneNumber).",
+    attemptBlocked_login:
+      "Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity.",
+    attemptsLimitExceeded_forgotPassword:
+      "Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again.",
+    attemptsLimitExceeded_login:
+      "Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again.",
+    code: {
+      deliveryFailure:
+        "We encountered an error while sending the verification code. Try again.",
+      expired:
+        "Sorry, your verification code has expired or has already been used.",
+      mismatchException:
+        "Invalid verification code. Make sure the code matches the code emailed to you.",
+      pattern:
+        "Enter the 6 digit code sent to your email and ensure it does not include any punctuation.",
+      required: "Enter the 6 digit code sent to your email",
+    },
+    // TODO (CP-1768) Remove these auth.ein strings once requests flow through API
+    ein: {
+      invalid: "Invalid employer ID number. Please try again.",
+      required: "Enter your 9-digit Employer Identification Number.",
+    },
+    expiredVerificationCode:
+      "Invalid verification code. Please request a new code.",
+    incorrectEmailOrPassword: "Incorrect email or password",
+    invalidParametersFallback: "Enter all required information",
+    invalidParametersIncludingMaybePassword:
+      "Check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",
+    invalidPhoneFormat: "Invalid phone number",
+    isEmployer: {
+      required:
+        "Select Yes if you are you creating an employer account to manage leave for your company.",
+    },
+    password: {
+      insecure: "$t(shared.auth.passwordError_insecure)",
+      invalid: "$t(shared.auth.passwordError_invalid)",
+      required: "$t(shared.auth.passwordError_required)",
+      resetRequiredException:
+        'Your password must be reset before you can log in again. Click the "Forgot your password?" link below to reset your password.',
+    },
+    userNotConfirmed:
+      "Confirm your account by following the instructions in the verification email sent to your inbox.",
+    userNotFound: "Incorrect email",
+    username: {
+      exists: "$t(shared.auth.emailError_exists)",
+      required: "$t(shared.auth.emailError_required)",
+    },
+  },
+  caughtError:
+    "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber).",
+  caughtError_DocumentsLoadError: "$t(shared.documentsLoadError)",
+  caughtError_DocumentsUploadError: "$t(shared.documentsUploadError)",
+  caughtError_ForbiddenError:
+    "Sorry, an authorization error was encountered. Please log out and then log in to try again.",
+  caughtError_NetworkError: "$t(shared.networkError)",
+  caughtError_NotFoundError:
+    "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
+  caughtError_UserNotReceivedError:
+    "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   documents: {
     file: {
       required: "Upload at least one file to continue.",

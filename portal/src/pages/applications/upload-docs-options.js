@@ -47,7 +47,7 @@ export const UploadDocsOptions = (props) => {
     if (!upload_docs_options) {
       const appErrorInfo = new AppErrorInfo({
         field: "upload_docs_options",
-        message: t("errors.claims.upload_docs_options.required"),
+        message: t("errors.applications.upload_docs_options.required"),
         type: "required",
       });
 
