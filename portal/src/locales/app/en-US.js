@@ -583,6 +583,25 @@ const shared = {
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
   claimsOtherLeaveTitle: "Other leave, benefits, and income",
+  claimsPreviousLeaveDetails: {
+    addButton: "Add another previous leave",
+    isForCurrentEmployerHint:
+      "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, this employer will be able to review it. We won’t share any leave you took from other employers.",
+    isForCurrentEmployerLabel:
+      "Did you take leave from this employer? EIN:$t(chars.nbsp){{employer_fein, ein}}",
+    leaveEndDateLabel: "What was the last day of this leave?",
+    leaveMinutesHint:
+      "Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours.",
+    leaveMinutesLabel: "What was the total number of hours you took off?",
+    leaveStartDateLabel: "What was the first day of this leave?",
+    limitMessage: "You can only add up to {{limit}} leaves",
+    removeButton: "Remove this previous leave",
+    sectionLabel: "Tell us about your previous time off",
+    workedPerWeekMinutesHint:
+      "Enter the number of hours you would have worked each week, if you were not on leave.<br />If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
+    workedPerWeekMinutesLabel:
+      "How many hours would you have worked per week if you did not take this leave?",
+  },
   claimsVerifyIdTitle: "Your identification",
   contactCenterAddress:
     "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01842",
@@ -1282,18 +1301,19 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReasonDetails: {
-    addButton: "Add another leave",
+    addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     hoursLabel: "$t(shared.hoursLabel)",
     isForCurrentEmployerHint:
-      "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, we'll give this employer a chance to review information from your application. We won't share any information about leave you took from other employers.",
+      "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerHint)",
     isForCurrentEmployerLabel:
-      "Did you take leave from this employer? EIN:$t(chars.nbsp){{employer_fein, ein}}",
-    leaveEndDateLabel: "What was the last day of this leave?",
-    leaveMinutesHint:
-      "Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours.",
-    leaveMinutesLabel: "What was the total number of hours you took off?",
+      "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerLabel)",
+    leaveEndDateLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveEndDateLabel)",
+    leaveMinutesHint: "$t(shared.claimsPreviousLeaveDetails.leaveMinutesHint)",
+    leaveMinutesLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveMinutesLabel)",
     leaveReasonChoice_activeDutyFamily:
       "Managing family affairs while a family member was on active duty in the armed forces",
     leaveReasonChoice_bonding: "Bonding with my child after birth or placement",
@@ -1305,17 +1325,18 @@ const pages = {
     leaveReasonHint:
       "If you didn’t take leave for one of these reasons, go back to the previous screen and select No.",
     leaveReasonLabel: "Why did you need to take this leave?",
-    leaveStartDateLabel: "What was the first day of this leave?",
-    limitMessage: "You can only add up to {{limit}} leaves",
+    leaveStartDateLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveStartDateLabel)",
+    limitMessage: "$t(shared.claimsPreviousLeaveDetails.limitMessage)",
     minutesLabel: "$t(shared.minutesLabel)",
     previousLeaveEntryPrefix: "$t(shared.previousLeaveEntryPrefix)",
-    removeButton: "Remove leave",
-    sectionLabel: "Tell us about your previous time off",
+    removeButton: "$t(shared.claimsPreviousLeaveDetails.removeButton)",
+    sectionLabel: "$t(shared.claimsPreviousLeaveDetails.sectionLabel)",
     title: "$t(shared.claimsOtherLeaveTitle)",
     workedPerWeekMinutesHint:
-      "Enter the number of hours you would have worked each week, if you were not on leave. If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesHint)",
     workedPerWeekMinutesLabel:
-      "How many hours would you have worked per week if you did not take this leave?",
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesLabel)",
   },
   claimsPreviousLeavesSameReason: {
     choiceNo: "$t(shared.choiceNo)",
@@ -1325,8 +1346,31 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesSameReasonDetails: {
-    sectionLabel: "Tell us about your previous time off",
+    addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hoursLabel: "$t(shared.hoursLabel)",
+    isForCurrentEmployerHint:
+      "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerHint)",
+    isForCurrentEmployerLabel:
+      "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerLabel)",
+    leaveEndDateLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveEndDateLabel)",
+    leaveMinutesHint: "$t(shared.claimsPreviousLeaveDetails.leaveMinutesHint)",
+    leaveMinutesLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveMinutesLabel)",
+    leaveStartDateLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveStartDateLabel)",
+    limitMessage: "$t(shared.claimsPreviousLeaveDetails.limitMessage)",
+    minutesLabel: "$t(shared.minutesLabel)",
+    previousLeaveEntryPrefix: "$t(shared.previousLeaveEntryPrefix)",
+    removeButton: "$t(shared.claimsPreviousLeaveDetails.removeButton)",
+    sectionLabel: "$t(shared.claimsPreviousLeaveDetails.sectionLabel)",
     title: "$t(shared.claimsOtherLeaveTitle)",
+    workedPerWeekMinutesHint:
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesHint)",
+    workedPerWeekMinutesLabel:
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesLabel)",
   },
   claimsReasonPregnancy: {
     choiceNo: "$t(shared.choiceNo)",

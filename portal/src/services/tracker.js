@@ -131,7 +131,9 @@ function trackFetchRequest(requestName) {
     const trackedName = requestName.replace("https://", "");
     newrelic.interaction().setName(`fetch: ${trackedName}`);
     newrelic.interaction().setAttribute("environment", process.env.buildEnv);
-    newrelic.interaction().setAttribute("portalReleaseVersion", process.env.releaseVersion);
+    newrelic
+      .interaction()
+      .setAttribute("portalReleaseVersion", process.env.releaseVersion);
     setPageAttributesOnInteraction();
     newrelic.interaction().save();
   }
