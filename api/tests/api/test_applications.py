@@ -34,7 +34,7 @@ from massgov.pfml.db.models.applications import (
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, GeoState, PaymentMethod, TaxIdentifier
+from massgov.pfml.db.models.employees import Address, Gender, GeoState, PaymentMethod, TaxIdentifier
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,

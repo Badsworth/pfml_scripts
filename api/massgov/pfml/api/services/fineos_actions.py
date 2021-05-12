@@ -19,7 +19,6 @@ from enum import Enum
 from typing import Dict, List, Optional, Set, Tuple
 
 import phonenumbers
-from werkzeug.exceptions import NotFound
 
 import massgov.pfml.db
 import massgov.pfml.fineos.models
@@ -43,8 +42,6 @@ from massgov.pfml.db.models.employees import (
     Country,
     Employee,
     Employer,
-    Gender,
-    LkGender,
     PaymentMethod,
     TaxIdentifier,
     User,
@@ -361,20 +358,6 @@ def build_customer_model(application, current_user):
         customer.gender = application.gender.fineos_gender_description
 
     return customer
-
-
-def build_gender(application: Application,) -> Optional[str]:
-    """Convert an application's gender to FINEOS API Customer model's Gender attribute."""
-    application_gender = [
-        gender.fineos_gender_description
-        for gender in vars(Gender).values()
-        if isinstance(gender, LkGender) and gender.gender_id is application.gender_id
-    ]
-    if len(application_gender) != 1:
-        raise NotFound(
-            description="Could not find the following gender id {}".format(application.gender_id)
-        )
-    return application_gender[0]
 
 
 def build_contact_details(
