@@ -77,59 +77,50 @@ function ComboBox(props) {
   };
 
   const search = () => {
-    if (props.choices.length) {
-      return props.choices.reduce((choices, choice, i) => {
-        const isSelected = choice.value === props.value;
-        if (
-          choice.value.includes(props.value) ||
-          choice.label.includes(props.value) ||
-          isPristine
-        ) {
-          const choiceClasses = ["usa-combo-box__list-option"];
-          if (isSelected) {
-            choiceClasses.push("usa-combo-box__list-option--selected");
-            choiceClasses.push("usa-combo-box__list-option--focused");
-          }
-          choices.push(
-            <li
-              key={choice.value}
-              id={props.name + "--list--option-" + i}
-              className={choiceClasses.join(" ")}
-              data-value={choice.value}
-              aria-selected={isSelected}
-              role="option"
-              aria-setsize="64"
-              aria-posinset="1"
-              onMouseOver={onChoiceMouseOver}
-              onMouseOut={onChoiceMouseOut}
-              onFocus={onChoiceFocus}
-              onBlur={onChoiceBlur}
-              onClick={onChoiceChange}
-              onKeyDown={onChoiceKeyDown}
-              tabIndex={isSelected ? "0" : "-1"}
-            >
-              {choice.label}
-            </li>
-          );
+    const finalChoices = props.choices.reduce((choices, choice, i) => {
+      const isSelected = choice.value === props.value;
+      if (
+        choice.value.includes(props.value) ||
+        choice.label.includes(props.value) ||
+        isPristine
+      ) {
+        const choiceClasses = ["usa-combo-box__list-option"];
+        if (isSelected) {
+          choiceClasses.push("usa-combo-box__list-option--selected");
+          choiceClasses.push("usa-combo-box__list-option--focused");
         }
-        return choices;
-      }, []);
+        choices.push(
+          <li
+            key={choice.value}
+            id={props.name + "--list--option-" + i}
+            className={choiceClasses.join(" ")}
+            data-value={choice.value}
+            aria-selected={isSelected}
+            role="option"
+            aria-setsize="64"
+            aria-posinset="1"
+            onMouseOver={onChoiceMouseOver}
+            onMouseOut={onChoiceMouseOut}
+            onFocus={onChoiceFocus}
+            onBlur={onChoiceBlur}
+            onClick={onChoiceChange}
+            onKeyDown={onChoiceKeyDown}
+            tabIndex={isSelected ? "0" : "-1"}
+          >
+            {choice.label}
+          </li>
+        );
+      }
+      return choices;
+    }, []);
+    if (finalChoices.length) {
+      return finalChoices;
     } else {
-      return [
-        <li
-          key="invalid"
-          id="invalid--list--option"
-          className="usa-combo-box__list-option"
-          data-value=""
-          aria-selected="false"
-          role="option"
-          aria-setsize="64"
-          aria-posinset="1"
-          tabIndex="-1"
-        >
+      return (
+        <li className="usa-combo-box__list-option--no-results">
           {props.emptyChoiceLabel}
-        </li>,
-      ];
+        </li>
+      );
     }
   };
 
@@ -239,7 +230,7 @@ ComboBox.propTypes = {
   /**
    * Localized label for the initially selected option when no value is set
    */
-  emptyChoiceLabel: PropTypes.string,
+  emptyChoiceLabel: PropTypes.string.isRequired,
   /**
    * Localized error message. Setting this enables the error state styling.
    */

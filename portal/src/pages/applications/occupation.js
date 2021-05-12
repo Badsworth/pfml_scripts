@@ -74,6 +74,7 @@ export const AppOccupation = (props) => {
           {...getFunctionalInputProps("occupation")}
           choices={occupations}
           updateField={(value) => updateFields({ occupation: value })}
+          emptyChoiceLabel="No matches"
           label="Industry"
           smallLabel
         />
