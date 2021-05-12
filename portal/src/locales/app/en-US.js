@@ -2340,7 +2340,7 @@ const components = {
     // TODO (EMPLOYER-1296): Add Mass.gov link to banner
     body:
       "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be adding more features to the dashboard so you can easily find and manage paid leave applications.",
-    header: "We're making it easier to manage paid leave application",
+    header: "We're making it easier to manage paid leave applications",
   },
   pagination: {
     nextLabel: "Next",
