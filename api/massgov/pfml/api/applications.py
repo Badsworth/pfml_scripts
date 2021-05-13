@@ -63,6 +63,13 @@ LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
     LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_description: DocumentType.CARE_FOR_A_FAMILY_MEMBER_FORM,
 }
 
+ID_DOCS = [
+    DocumentType.PASSPORT.document_type_description,
+    DocumentType.DRIVERS_LICENSE_MASS.document_type_description,
+    DocumentType.DRIVERS_LICENSE_OTHER_STATE.document_type_description,
+    DocumentType.IDENTIFICATION_PROOF.document_type_description,
+]
+
 
 def application_get(application_id):
     with app.db_session() as db_session:
@@ -524,11 +531,12 @@ def document_upload(application_id, body, file):
                 existing_application.leave_reason.leave_reason_description
             ].document_type_description
 
-        # check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
-        if has_previous_state_managed_paid_leave(existing_application, db_session):
-            document_type = (
-                DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_description
-            )
+        if document_type not in ID_DOCS:
+            # check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
+            if has_previous_state_managed_paid_leave(existing_application, db_session):
+                document_type = (
+                    DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_description
+                )
 
         log_attributes = {
             **get_application_log_attributes(existing_application),
