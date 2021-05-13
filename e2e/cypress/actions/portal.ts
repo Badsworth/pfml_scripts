@@ -943,7 +943,7 @@ export function checkNoticeForLeaveAdmin(
   }
 }
 
-export function confirmEligibleParent(): void {
+export function confirmEligibleClaimant(): void {
   cy.contains("button", "I understand and agree").click();
 }
 
@@ -981,17 +981,11 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   // Will return once development work is complete
   // reportOtherLeave(application, otherLeave);
   clickChecklistButton("Review and confirm");
-  if (reason === "Child Bonding") {
-    confirmEligibleParent();
-  } else if (reason === "Care for a Family Member") {
-    confirmEligibleCargiver();
+  if (reason === "Child Bonding" || reason === "Care for a Family Member") {
+    confirmEligibleClaimant();
   }
   onPage("review");
   confirmInfo();
-}
-
-export function confirmEligibleCargiver(): void {
-  cy.contains("I understand and agree").click({ force: true });
 }
 
 export function answerCaringLeaveQuestions(
@@ -999,32 +993,26 @@ export function answerCaringLeaveQuestions(
 ): void {
   cy.contains("I am caring for my sibling.").click();
   cy.contains("Save and continue").click();
-  cy.get(
-    'input[name="leave_details.caring_leave_metadata.family_member_first_name"'
-  ).type(
+  cy.labelled("First name").type(
     application.leave_details?.caring_leave_metadata
-      ?.family_member_first_name || ""
+      ?.family_member_first_name as string
   );
-  cy.get(
-    'input[name="leave_details.caring_leave_metadata.family_member_last_name"'
-  ).type(
-    application.leave_details?.caring_leave_metadata?.family_member_last_name ||
-      ""
+  cy.labelled("Last name").type(
+    application.leave_details?.caring_leave_metadata
+      ?.family_member_first_name as string
   );
   cy.contains("Save and continue").click();
-  if (application.leave_details?.caring_leave_metadata) {
-    const familyMemberDOB = new Date(
-      application.leave_details?.caring_leave_metadata
-        ?.family_member_date_of_birth || ""
-    );
-    cy.labelled("Month").type(
-      (familyMemberDOB.getMonth() + 1).toString() as string
-    );
-    cy.labelled("Day").type(familyMemberDOB.getUTCDate().toString() as string);
-    cy.labelled("Year").type(
-      familyMemberDOB.getUTCFullYear().toString() as string
-    );
-  }
+  const familyMemberDOB = new Date(
+    application.leave_details?.caring_leave_metadata
+      ?.family_member_date_of_birth as string
+  );
+  cy.labelled("Month").type(
+    (familyMemberDOB.getMonth() + 1).toString() as string
+  );
+  cy.labelled("Day").type(familyMemberDOB.getUTCDate().toString() as string);
+  cy.labelled("Year").type(
+    familyMemberDOB.getUTCFullYear().toString() as string
+  );
   cy.contains("Save and continue").click();
 }
 
