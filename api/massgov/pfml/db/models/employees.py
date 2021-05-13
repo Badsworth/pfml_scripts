@@ -572,6 +572,7 @@ class Claim(Base):
     fineos_absence_status = relationship(LkAbsenceStatus)
     employee = relationship("Employee", back_populates="claims")
     employer = relationship("Employer", back_populates="claims")
+    state_logs = relationship("StateLog", back_populates="claim")
 
 
 class Payment(Base):
@@ -1060,6 +1061,7 @@ class StateLog(Base):
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True)
     prev_state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"))
     associated_type = Column(Text, index=True)
 
@@ -1070,6 +1072,7 @@ class StateLog(Base):
     payment = relationship("Payment", back_populates="state_logs")
     reference_file = relationship("ReferenceFile", back_populates="state_logs")
     employee = relationship("Employee", back_populates="state_logs")
+    claim = relationship("Claim", back_populates="state_logs")
     prev_state_log = relationship("StateLog", uselist=False, remote_side=state_log_id)
     import_log = cast("Optional[ImportLog]", relationship(ImportLog, foreign_keys=[import_log_id]))
 
@@ -1083,6 +1086,7 @@ class LatestStateLog(Base):
     )
     payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), index=True)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True)
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
@@ -1090,6 +1094,7 @@ class LatestStateLog(Base):
     state_log = relationship("StateLog")
     payment = relationship("Payment")
     employee = relationship("Employee")
+    claim = relationship("Claim")
     reference_file = relationship("ReferenceFile")
 
 
@@ -1674,6 +1679,7 @@ class Flow(LookupTable):
     DELEGATED_CLAIMANT = LkFlow(20, "Claimant")
     DELEGATED_PAYMENT = LkFlow(21, "Payment")
     DELEGATED_EFT = LkFlow(22, "EFT")
+    DELEGATED_CLAIM_VALIDATION = LkFlow(23, "Claim Validation")
 
 
 class State(LookupTable):
@@ -2023,6 +2029,13 @@ class State(LookupTable):
 
     DELEGATED_PAYMENT_POST_PROCESSING_CHECK = LkState(
         163, "Delegated payment post processing check", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS = LkState(
+        164, "Claim extracted from FINEOS", Flow.DELEGATED_CLAIM_VALIDATION.flow_id
+    )
+    DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT = LkState(
+        165, "Add to Claim Extract Error Report", Flow.DELEGATED_CLAIM_VALIDATION.flow_id
     )
 
 
