@@ -728,6 +728,7 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ReportStep",
             {
+                "processed_report_count": len(PROCESS_FINEOS_EXTRACT_REPORTS),
                 "report_error_count": 0,
                 "report_generated_count": len(PROCESS_FINEOS_EXTRACT_REPORTS),
             },
@@ -1254,7 +1255,11 @@ def test_e2e_pub_payments(
         assert_metrics(
             test_db_other_session,
             "ReportStep",
-            {"report_error_count": 0, "report_generated_count": len(CREATE_PUB_FILES_REPORTS),},
+            {
+                "processed_report_count": len(CREATE_PUB_FILES_REPORTS),
+                "report_error_count": 0,
+                "report_generated_count": len(CREATE_PUB_FILES_REPORTS),
+            },
         )
 
         # TODO file transaction metrics when available
@@ -1596,6 +1601,7 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ReportStep",
             {
+                "processed_report_count": len([PROCESS_PUB_RESPONSES_REPORTS]),
                 "report_error_count": 0,
                 "report_generated_count": len([PROCESS_PUB_RESPONSES_REPORTS]),
             },
