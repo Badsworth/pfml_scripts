@@ -94,8 +94,6 @@ class FineosPeiWritebackStep(Step):
         ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
 
     def run_step(self) -> None:
-        # TODO - we need a way to have this distinguish between
-        #        writeback #1 and #2 - for now only #1 can be run
         self.process_payments_for_writeback()
 
     def process_payments_for_writeback(self) -> None:
