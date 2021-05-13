@@ -44,13 +44,13 @@ function ComboBox(props) {
     listRef.current.setAttribute("hidden", "hidden");
     inputRef.current.blur();
   };
-  const onToggleChoices = (e) => {
-    if (listRef.current.getAttribute("hidden")) {
-      listRef.current.removeAttribute("hidden");
-    } else {
-      listRef.current.setAttribute("hidden", "hidden");
-    }
-  };
+  // const onToggleChoices = (e) => {
+  //   if (listRef.current.getAttribute("hidden")) {
+  //     listRef.current.removeAttribute("hidden");
+  //   } else {
+  //     listRef.current.setAttribute("hidden", "hidden");
+  //   }
+  // };
   const onFocus = (e) => {
     listRef.current.removeAttribute("hidden");
   };
@@ -71,17 +71,20 @@ function ComboBox(props) {
   };
   const onChoiceMouseOver = onChoiceFocus;
   const onChoiceMouseOut = onChoiceBlur;
+  // eslint-disable-next-line no-console
   const onChoiceKeyDown = (e) => console.log(e.key);
   const onChoiceChange = (e) => {
     props.updateField(e.target.getAttribute("data-value"));
+    listRef.current.setAttribute("hidden", "hidden");
+    inputRef.current.blur();
   };
 
   const search = () => {
     const finalChoices = props.choices.reduce((choices, choice, i) => {
       const isSelected = choice.value === props.value;
       if (
-        choice.value.includes(props.value) ||
-        choice.label.includes(props.value) ||
+        choice.value.toLowerCase().includes(props.value.toLowerCase()) ||
+        choice.label.toLowerCase().includes(props.value.toLowerCase()) ||
         isPristine
       ) {
         const choiceClasses = ["usa-combo-box__list-option"];
@@ -125,7 +128,9 @@ function ComboBox(props) {
   };
 
   let searchResults = search();
-
+  const customBtnSpacing = {
+    right: "calc(2.1em + 2px)",
+  };
   return (
     <div
       className={formGroupClasses}
@@ -162,7 +167,7 @@ function ComboBox(props) {
         <input
           id={props.name}
           type="text"
-          className="usa-combo-box__input"
+          className="usa-select usa-combo-box__input"
           ref={inputRef}
           role="combobox"
           aria-owns={props.name + "--list"}
@@ -183,11 +188,18 @@ function ComboBox(props) {
             type="button"
             className="usa-combo-box__clear-input"
             aria-label="Clear the select contents"
+            style={customBtnSpacing}
           >
             &nbsp;
           </button>
         </span>
-        <span className="usa-combo-box__input-button-separator">&nbsp;</span>
+        <span
+          className="usa-combo-box__input-button-separator"
+          style={customBtnSpacing}
+        >
+          &nbsp;
+        </span>
+        {/* Optional different chevron for the "select" field
         <span className="usa-combo-box__toggle-list__wrapper" tabIndex="-1">
           <button
             type="button"
@@ -198,7 +210,7 @@ function ComboBox(props) {
           >
             &nbsp;
           </button>
-        </span>
+        </span> */}
         <ul
           ref={listRef}
           id={props.name + "--list"}
