@@ -88,8 +88,15 @@ class FineosPeiWritebackStep(Step):
         EFT_PAYMENT_COUNT = "eft_payment_count"
         EMPLOYER_REIMBURSEMENT_PAYMENT_COUNT = "employer_reimbursement_payment_count"
         ERRORED_PAYMENT_WRITEBACK_ITEMS_COUNT = "errored_payment_writeback_items_count"
+        ERRORED_WRITEBACK_RECORD_DURING_FILE_CREATION_COUNT = (
+            "errored_writeback_record_during_file_creation_count"
+        )
+        ERRORED_WRITEBACK_RECORD_DURING_FILE_TRANSFER_COUNT = (
+            "errored_writeback_record_during_file_transfer_count"
+        )
         OVERPAYMENT_COUNT = "overpayment_count"
         PAYMENT_WRITEBACK_TWO_ITEMS_COUNT = "payment_writeback_two_items_count"
+        SUCCESSFUL_WRITEBACK_RECORD_COUNT = "successful_writeback_record_count"
         WRITEBACK_RECORD_COUNT = "writeback_record_count"
         ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
 
@@ -342,6 +349,15 @@ class FineosPeiWritebackStep(Step):
                 "Error saving writeback file to PFML S3",
                 extra={"s3_path": pfml_pei_writeback_ready_filepath},
             )
+
+            # If a single record fails, we do not send any records nor the writeback file.
+            self.set_metrics(
+                {
+                    self.Metrics.ERRORED_WRITEBACK_RECORD_DURING_FILE_CREATION_COUNT: len(
+                        pei_writeback_items
+                    )
+                }
+            )
             raise e
 
         # Step 2: then try to save it to FINEOS S3 bucket
@@ -357,6 +373,9 @@ class FineosPeiWritebackStep(Step):
                     "fineos_s3_path": fineos_pei_writeback_filepath,
                 },
             )
+            self.set_metrics(
+                {self.Metrics.SUCCESSFUL_WRITEBACK_RECORD_COUNT: len(pei_writeback_items)}
+            )
         except Exception as e:
             logger.exception(
                 "Error copying writeback to FINEOS",
@@ -364,6 +383,15 @@ class FineosPeiWritebackStep(Step):
                     "pfml_pei_writeback_ready_filepath": pfml_pei_writeback_ready_filepath,
                     "fineos_pei_writeback_filepath": fineos_pei_writeback_filepath,
                 },
+            )
+
+            # If a single record fails, we do not send any records nor the writeback file.
+            self.set_metrics(
+                {
+                    self.Metrics.ERRORED_WRITEBACK_RECORD_DURING_FILE_TRANSFER_COUNT: len(
+                        pei_writeback_items
+                    )
+                }
             )
             raise e
 

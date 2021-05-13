@@ -1235,6 +1235,8 @@ def test_e2e_pub_payments(
                     [ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT]
                 ),
                 "errored_payment_writeback_items_count": 0,
+                "errored_writeback_record_during_file_creation_count": 0,
+                "errored_writeback_record_during_file_transfer_count": 0,
                 "overpayment_count": len(
                     [
                         ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
@@ -1243,6 +1245,36 @@ def test_e2e_pub_payments(
                     ]
                 ),
                 "payment_writeback_two_items_count": 0,
+                "successful_writeback_record_count": len(
+                    [
+                        ScenarioName.CANCELLATION_PAYMENT,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
+                        ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
+                        ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
+                        ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
+                        ScenarioName.ZERO_DOLLAR_PAYMENT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
+                    ]
+                ),
                 "writeback_record_count": len(
                     [
                         ScenarioName.CANCELLATION_PAYMENT,
@@ -1706,12 +1738,26 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                     ]
                 ),
+                "errored_writeback_record_during_file_creation_count": 0,
+                "errored_writeback_record_during_file_transfer_count": 0,
                 "overpayment_count": 0,
                 "payment_writeback_two_items_count": len(
                     [
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                         ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                    ]
+                ),
+                "successful_writeback_record_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                     ]
                 ),
                 "writeback_record_count": len(
