@@ -19,6 +19,7 @@ def set_exporter_env_vars(mock_s3_bucket, mock_fineos_s3_bucket, mock_sftp_clien
     monkeypatch.setenv("FINEOS_DATA_IMPORT_PATH", f"s3://{mock_fineos_s3_bucket}/DT2/dataimports/")
     monkeypatch.setenv("PFML_FINEOS_WRITEBACK_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/cps/outbound/")
 
+    monkeypatch.setenv("DFML_RESPONSE_INBOUND_PATH", f"s3://{mock_s3_bucket}/dfml-response/")
     monkeypatch.setenv("DFML_REPORT_OUTBOUND_PATH", f"s3://{mock_s3_bucket}/dfml-reports/")
     monkeypatch.setenv(
         "PFML_ERROR_REPORTS_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/error_reports/outbound"
