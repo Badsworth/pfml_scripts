@@ -36,6 +36,9 @@ def test_get_claimants_for_outbound(test_db_session, initialize_factories_sessio
     employee2 = EmployeeFactory.create()
     employee3 = EmployeeFactory.create()
 
+    # existing employee without any claims should not be included
+    EmployeeFactory.create()
+
     # employee1 just has the one claim
     ClaimFactory.create(
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id, employee=employee1

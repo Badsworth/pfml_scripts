@@ -2,7 +2,11 @@ import uuid
 
 import pytest
 
-from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference
+from massgov.pfml.db.models.applications import (
+    Application,
+    ApplicationPaymentPreference,
+    ConcurrentLeave,
+)
 from massgov.pfml.db.models.employees import BankAccountType, PaymentMethod
 
 # every test in here requires real resources
@@ -94,3 +98,42 @@ def test_pregnant_recent_birth_flag(test_db_session, user):
 
     assert uuid.UUID(str(inserted_application.application_id)).version == 4
     assert inserted_application.pregnant_or_recent_birth is True
+
+
+def test_add_concurrent_leave(test_db_session, user):
+    application = Application()
+    application_id = uuid.uuid4()
+    application.application_id = application_id
+    application.user_id = user.user_id
+
+    concurrent_leave = ConcurrentLeave()
+    concurrent_leave_id = uuid.uuid4()
+    concurrent_leave.concurrent_leave_id = concurrent_leave_id
+    concurrent_leave.leave_start_date = "2021-03-20"
+    concurrent_leave.leave_end_date = "2021-04-10"
+    concurrent_leave.is_for_current_employer = True
+
+    concurrent_leave.application_id = application_id
+
+    test_db_session.add(application)
+    test_db_session.add(concurrent_leave)
+    test_db_session.commit()
+
+    inserted_application = test_db_session.query(Application).get(application_id)
+
+    assert inserted_application.concurrent_leave.is_for_current_employer is True
+    assert inserted_application.concurrent_leave.leave_start_date == "2021-03-20"
+    assert inserted_application.concurrent_leave.leave_end_date == "2021-04-10"
+
+
+def test_concurrent_leave_is_nullable(test_db_session, user):
+    application = Application()
+    application_id = uuid.uuid4()
+    application.application_id = application_id
+    application.user_id = user.user_id
+
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    inserted_application = test_db_session.query(Application).get(application_id)
+    assert inserted_application.concurrent_leave is None

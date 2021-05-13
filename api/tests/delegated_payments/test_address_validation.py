@@ -143,39 +143,39 @@ def _assert_payment_state_log_outcome(
 
 
 def test_run_step_state_transitions(
-    initialize_factories_session, test_db_session, test_db_other_session
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
     client = MockClient()
 
     check_payments_with_validated_addresses = _set_up_payments(
-        client, test_db_session, fake.random_int(min=5, max=8)
+        client, local_test_db_session, fake.random_int(min=5, max=8)
     )
     check_payments_with_single_verified_matching_addresses = _set_up_payments(
-        client, test_db_session, fake.random_int(min=7, max=11), Confidence.VERIFIED_MATCH
+        client, local_test_db_session, fake.random_int(min=7, max=11), Confidence.VERIFIED_MATCH
     )
     check_payments_with_non_matching_addresses = _set_up_payments(
-        client, test_db_session, fake.random_int(min=1, max=6), Confidence.NO_MATCHES
+        client, local_test_db_session, fake.random_int(min=1, max=6), Confidence.NO_MATCHES
     )
     check_payments_with_multiple_matching_addresses = _set_up_payments(
         client,
-        test_db_session,
+        local_test_db_session,
         fake.random_int(min=4, max=7),
         Confidence.MULTIPLE_MATCHES,
         suggested_address_mismatch=True,
     )
     check_payments_with_multiple_matching_addresses_and_near_match = _set_up_payments(
-        client, test_db_session, fake.random_int(min=1, max=4), Confidence.MULTIPLE_MATCHES
+        client, local_test_db_session, fake.random_int(min=1, max=4), Confidence.MULTIPLE_MATCHES
     )
 
     # Commit the various experian_address_pair.experian_address = None changes to the database.
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     with mock.patch(
         "massgov.pfml.delegated_payments.address_validation._get_experian_client",
         return_value=client,
     ):
         AddressValidationStep(
-            db_session=test_db_session, log_entry_db_session=test_db_other_session
+            db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
         ).run()
 
     for payment in check_payments_with_validated_addresses:
@@ -191,7 +191,7 @@ def test_run_step_state_transitions(
     # Expect payments with already valid addresses to transition into the
     # DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.
     _assert_payment_state(
-        test_db_other_session,
+        local_test_db_other_session,
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         check_payments_with_validated_addresses,
     )
@@ -199,7 +199,7 @@ def test_run_step_state_transitions(
     # Expect payments with verified matching addresses according to Experian to transition into the
     # DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.
     _assert_payment_state(
-        test_db_other_session,
+        local_test_db_other_session,
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         check_payments_with_single_verified_matching_addresses,
     )
@@ -207,7 +207,7 @@ def test_run_step_state_transitions(
     # Expect payments with no matching addresses according to Experian to transition into the
     # PAYMENT_FAILED_ADDRESS_VALIDATION state.
     _assert_payment_state(
-        test_db_other_session,
+        local_test_db_other_session,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         check_payments_with_non_matching_addresses,
     )
@@ -215,7 +215,7 @@ def test_run_step_state_transitions(
     # Expect payments with multiple matching addresses according to Experian to transition into the
     # PAYMENT_FAILED_ADDRESS_VALIDATION state.
     _assert_payment_state(
-        test_db_other_session,
+        local_test_db_other_session,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         check_payments_with_multiple_matching_addresses,
     )
@@ -223,7 +223,7 @@ def test_run_step_state_transitions(
     # Expect payments with a near match in the multiple matching addresses set to transition into
     # the DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.
     _assert_payment_state(
-        test_db_other_session,
+        local_test_db_other_session,
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         check_payments_with_multiple_matching_addresses_and_near_match,
     )
@@ -275,22 +275,22 @@ def test_run_step_no_database_changes_on_exception(
 
 
 def test_run_step_experian_exception(
-    initialize_factories_session, test_db_session, test_db_other_session
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
     client = MockClient()
 
     valid_check_payments = _set_up_payments(
-        client, test_db_session, fake.random_int(min=5, max=11), Confidence.VERIFIED_MATCH
+        client, local_test_db_session, fake.random_int(min=5, max=11), Confidence.VERIFIED_MATCH
     )
     eft_payments_with_multiple_matching_addresses = _set_up_payments(
         client,
-        test_db_session,
+        local_test_db_session,
         fake.random_int(min=4, max=7),
         Confidence.MULTIPLE_MATCHES,
         PaymentMethod.ACH.payment_method_id,
     )
     # Commit the various experian_address_pair.experian_address = None changes to the database.
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     with mock.patch(
         "massgov.pfml.delegated_payments.address_validation._experian_response_for_address",
@@ -300,12 +300,12 @@ def test_run_step_experian_exception(
         return_value=client,
     ):
         AddressValidationStep(
-            db_session=test_db_session, log_entry_db_session=test_db_other_session
+            db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
         ).run()
 
     # Despite having valid addresses, these payments failed because Experian threw an exception
     _assert_payment_state_log_outcome(
-        test_db_other_session,
+        local_test_db_other_session,
         valid_check_payments,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         Constants.UNKNOWN,
@@ -313,7 +313,7 @@ def test_run_step_experian_exception(
 
     # EFT payments will always pass even if Experian throws an exception
     _assert_payment_state_log_outcome(
-        test_db_other_session,
+        local_test_db_other_session,
         eft_payments_with_multiple_matching_addresses,
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         Constants.UNKNOWN,
@@ -321,54 +321,54 @@ def test_run_step_experian_exception(
 
 
 def test_run_step_state_log_outcome_field(
-    initialize_factories_session, test_db_session, test_db_other_session
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
     experian_api_multiple_match_count = fake.random_int(min=2, max=9)
     client = MockClient(multiple_count=experian_api_multiple_match_count)
 
     check_payments_with_validated_addresses = _set_up_payments(
-        client, test_db_session, fake.random_int(min=5, max=8)
+        client, local_test_db_session, fake.random_int(min=5, max=8)
     )
     check_payments_with_single_verified_matching_addresses = _set_up_payments(
-        client, test_db_session, fake.random_int(min=7, max=11), Confidence.VERIFIED_MATCH
+        client, local_test_db_session, fake.random_int(min=7, max=11), Confidence.VERIFIED_MATCH
     )
     check_payments_with_non_matching_addresses = _set_up_payments(
-        client, test_db_session, fake.random_int(min=1, max=6), Confidence.NO_MATCHES
+        client, local_test_db_session, fake.random_int(min=1, max=6), Confidence.NO_MATCHES
     )
     check_payments_with_multiple_matching_addresses = _set_up_payments(
         client,
-        test_db_session,
+        local_test_db_session,
         fake.random_int(min=4, max=7),
         Confidence.MULTIPLE_MATCHES,
         suggested_address_mismatch=True,
     )
     check_payments_with_multiple_matching_addresses_and_near_match = _set_up_payments(
-        client, test_db_session, fake.random_int(min=1, max=4), Confidence.MULTIPLE_MATCHES
+        client, local_test_db_session, fake.random_int(min=1, max=4), Confidence.MULTIPLE_MATCHES
     )
 
     eft_payments_with_multiple_matching_addresses = _set_up_payments(
         client,
-        test_db_session,
+        local_test_db_session,
         fake.random_int(min=4, max=7),
         Confidence.MULTIPLE_MATCHES,
         PaymentMethod.ACH.payment_method_id,
     )
 
     # Commit the various experian_address_pair.experian_address = None changes to the database.
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     with mock.patch(
         "massgov.pfml.delegated_payments.address_validation._get_experian_client",
         return_value=client,
     ):
         AddressValidationStep(
-            db_session=test_db_session, log_entry_db_session=test_db_other_session
+            db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
         ).run()
 
     # Expect payments with already valid addresses to not have any an experian_result element
     # of the state_log.outcome field.
     _assert_payment_state_log_outcome(
-        test_db_other_session,
+        local_test_db_other_session,
         check_payments_with_validated_addresses,
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         Constants.PREVIOUSLY_VERIFIED,
@@ -377,7 +377,7 @@ def test_run_step_state_log_outcome_field(
     # Expect payments with addresses that return a verified match to have a
     # state_log.outcome.experian_result element with the correct confidence level.
     _assert_payment_state_log_outcome(
-        test_db_other_session,
+        local_test_db_other_session,
         check_payments_with_single_verified_matching_addresses,
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         Confidence.VERIFIED_MATCH.value,
@@ -386,7 +386,7 @@ def test_run_step_state_log_outcome_field(
     # Expect payments with addresses that return no matches to have a
     # state_log.outcome.experian_result element with the correct confidence level.
     _assert_payment_state_log_outcome(
-        test_db_other_session,
+        local_test_db_other_session,
         check_payments_with_non_matching_addresses,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         Confidence.NO_MATCHES.value,
@@ -395,7 +395,7 @@ def test_run_step_state_log_outcome_field(
     # Expect payments with addresses that return no matches to have a
     # state_log.outcome.experian_result element with multiple output_address_ elements.
     _assert_payment_state_log_outcome(
-        test_db_other_session,
+        local_test_db_other_session,
         check_payments_with_multiple_matching_addresses,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         Confidence.MULTIPLE_MATCHES.value,
@@ -403,7 +403,7 @@ def test_run_step_state_log_outcome_field(
     )
 
     _assert_payment_state_log_outcome(
-        test_db_other_session,
+        local_test_db_other_session,
         check_payments_with_multiple_matching_addresses_and_near_match,
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         Confidence.MULTIPLE_MATCHES.value,
@@ -414,7 +414,7 @@ def test_run_step_state_log_outcome_field(
     # state_log.outcome.experian_result element with multiple output_address_ elements.
     # BUT still go to the success state
     _assert_payment_state_log_outcome(
-        test_db_other_session,
+        local_test_db_other_session,
         eft_payments_with_multiple_matching_addresses,
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         Confidence.MULTIPLE_MATCHES.value,
@@ -440,9 +440,9 @@ def test_run_step_state_log_outcome_field(
     ),
 )
 def test_get_end_state_and_outcome_for_multiple_matches(
-    initialize_factories_session,
-    test_db_session,
-    test_db_other_session,
+    local_initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
     _description,
     suggested_address,
     expected_end_state,
@@ -454,7 +454,7 @@ def test_get_end_state_and_outcome_for_multiple_matches(
         address_pair.fineos_address, Confidence.MULTIPLE_MATCHES, suggested_address
     )
 
-    address_count_before = test_db_other_session.query(
+    address_count_before = local_test_db_other_session.query(
         sqlalchemy.func.count(Address.address_id)
     ).scalar()
 
@@ -463,7 +463,7 @@ def test_get_end_state_and_outcome_for_multiple_matches(
     )
 
     # Commit the new address_pair.experian_address to the database.
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     assert end_state == expected_end_state
 
@@ -471,7 +471,7 @@ def test_get_end_state_and_outcome_for_multiple_matches(
     assert address_pair.experian_address != address_pair.fineos_address
     assert (
         address_count_before + new_address_count
-        == test_db_other_session.query(sqlalchemy.func.count(Address.address_id)).scalar()
+        == local_test_db_other_session.query(sqlalchemy.func.count(Address.address_id)).scalar()
     )
 
 

@@ -10,7 +10,7 @@ exports[`Employer dashboard renders a 'no results' message in the table, and no 
 </tr>
 `;
 
-exports[`Employer dashboard renders a banner if there are any employers not registered in FINEOS 2`] = `
+exports[`Employer dashboard renders a banner if there are any verified employers that are not registered in FINEOS 2`] = `
 Array [
   "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the ",
   <a

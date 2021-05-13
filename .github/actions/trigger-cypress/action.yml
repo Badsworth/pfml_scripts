@@ -70,7 +70,7 @@ runs:
 
         echo "Workflow running at: https://github.com/${{ github.repository }}/actions/runs/${RUN_ID}"
 
-        if [ '${{ inputs.wait_for_results }}' == 'true' ]; then echo "Yep"; else echo "Nope;" fi;
+        if [ '${{ inputs.wait_for_results }}' == 'true' ]; then
           # Wait for up to 20 minutes for this workflow to complete by looping with a 10s delay. We hope it will
           # never take this long to run the tests, but a timeout would not be helpful.
           for i in {1..120}; do

@@ -217,3 +217,13 @@ export const BIAP60: ScenarioSpecification = {
     },
   },
 };
+
+export const CHAP1: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CHAP1",
+    shortClaim: true,
+    reason: "Care for a Family Member",
+    docs: {},
+  },
+};

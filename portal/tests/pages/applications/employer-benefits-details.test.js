@@ -6,7 +6,7 @@ import EmployerBenefitsDetails, {
   EmployerBenefitCard,
 } from "../../../src/pages/applications/employer-benefits-details";
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
   testHook,
@@ -21,7 +21,7 @@ import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps"
 jest.mock("../../../src/hooks/useAppLogic");
 
 const setup = (claimAttrs) => {
-  const claim = new MockClaimBuilder().continuous().create();
+  const claim = new MockBenefitsApplicationBuilder().continuous().create();
 
   const { appLogic, wrapper } = renderWithAppLogic(EmployerBenefitsDetails, {
     claimAttrs: claimAttrs || claim,
@@ -99,7 +99,7 @@ const clickAddBenefitButton = async (wrapper) => {
 };
 
 const createClaimWithBenefits = () =>
-  new MockClaimBuilder()
+  new MockBenefitsApplicationBuilder()
     .continuous()
     .employerBenefit([
       {

@@ -31,6 +31,7 @@ export function before(): void {
       employerShowAddOrganization: true,
       employerShowVerifications: true,
       employerShowDashboard: true,
+      showCaringLeaveType: true,
     }),
     { log: true }
   );
@@ -335,7 +336,7 @@ export function selectClaimType(application: ApplicationRequestBody): void {
       "I need to bond with my child after birth, adoption, or foster placement.",
     "Pregnancy/Maternity":
       "I can’t work due to an illness, injury, or pregnancy.",
-    "Care for a Family Member": "",
+    "Care for a Family Member": "I need to care for my family member",
   };
   cy.contains(reasonMap[reason]).click();
   if (reasonQualifier) {
@@ -942,7 +943,7 @@ export function checkNoticeForLeaveAdmin(
   }
 }
 
-export function confirmEligibleParent(): void {
+export function confirmEligibleClaimant(): void {
   cy.contains("button", "I understand and agree").click();
 }
 
@@ -964,6 +965,8 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
     reason === "Pregnancy/Maternity"
   ) {
     answerPregnancyQuestion(application);
+  } else if (reason === "Care for a Family Member") {
+    answerCaringLeaveQuestions(application);
   } else {
     enterBondingDateInfo(application);
   }
@@ -978,11 +981,39 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   // Will return once development work is complete
   // reportOtherLeave(application, otherLeave);
   clickChecklistButton("Review and confirm");
-  if (reason === "Child Bonding") {
-    confirmEligibleParent();
+  if (reason === "Child Bonding" || reason === "Care for a Family Member") {
+    confirmEligibleClaimant();
   }
   onPage("review");
   confirmInfo();
+}
+
+export function answerCaringLeaveQuestions(
+  application: ApplicationRequestBody
+): void {
+  cy.contains("I am caring for my sibling.").click();
+  cy.contains("Save and continue").click();
+  cy.labelled("First name").type(
+    application.leave_details?.caring_leave_metadata
+      ?.family_member_first_name as string
+  );
+  cy.labelled("Last name").type(
+    application.leave_details?.caring_leave_metadata
+      ?.family_member_first_name as string
+  );
+  cy.contains("Save and continue").click();
+  const familyMemberDOB = new Date(
+    application.leave_details?.caring_leave_metadata
+      ?.family_member_date_of_birth as string
+  );
+  cy.labelled("Month").type(
+    (familyMemberDOB.getMonth() + 1).toString() as string
+  );
+  cy.labelled("Day").type(familyMemberDOB.getUTCDate().toString() as string);
+  cy.labelled("Year").type(
+    familyMemberDOB.getUTCFullYear().toString() as string
+  );
+  cy.contains("Save and continue").click();
 }
 
 export function submitPartsTwoThreeNoLeaveCert(

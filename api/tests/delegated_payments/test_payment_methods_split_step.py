@@ -75,6 +75,7 @@ def test_split_payment_methods(payment_split_step, test_db_session):
 
 
 def test_cleanup_states_rollback(payment_split_step, test_db_session):
+    test_db_session.begin_nested()
     for _ in range(5):
         create_payment_in_state(
             State.DELEGATED_PAYMENT_VALIDATED, test_db_session, PaymentMethod.ACH.payment_method_id,
@@ -94,6 +95,7 @@ def test_cleanup_states_rollback(payment_split_step, test_db_session):
             create_payment_in_state(misc_state, test_db_session)
 
     test_db_session.commit()  # It will rollback to this DB state
+    test_db_session.begin_nested()
 
     # Get the counts before running
     state_log_counts = state_log_util.get_state_counts(test_db_session)

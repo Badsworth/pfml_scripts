@@ -60,6 +60,7 @@ def _random_payment_with_state_log(
         amount=Decimal(fake.random_int(min=10, max=9_999)),
         disb_method_id=method.payment_method_id,
         experian_address_pair=address_pair,
+        claim_type=claim.claim_type,
     )
 
     state_log_util.create_finished_state_log(
@@ -101,7 +102,10 @@ def test_create_check_file_eligible_payment_error(
 
 
 def test_create_check_file_success(
-    initialize_factories_session, monkeypatch, test_db_session, test_db_other_session,
+    local_initialize_factories_session,
+    monkeypatch,
+    local_test_db_session,
+    local_test_db_other_session,
 ):
     account_number = str(fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999))
     routing_number = str(fake.random_int(min=10_000_000_000, max=99_999_999_999))
@@ -112,12 +116,12 @@ def test_create_check_file_success(
 
     payments = []
     for _i in range(fake.random_int(min=3, max=8)):
-        payments.append(_random_valid_check_payment_with_state_log(test_db_session))
+        payments.append(_random_valid_check_payment_with_state_log(local_test_db_session))
 
-    ez_check_file, positive_pay_file = pub_check.create_check_file(test_db_session)
+    ez_check_file, positive_pay_file = pub_check.create_check_file(local_test_db_session)
 
     # Explicitly commit the changes to the database since we expect the calling code to do it.
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     assert isinstance(ez_check_file, EzCheckFile)
     assert isinstance(positive_pay_file, CheckIssueFile)
@@ -126,7 +130,7 @@ def test_create_check_file_success(
     # Confirm that we updated the state log for each payment.
     for i, payment in enumerate(payments):
         assert (
-            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            local_test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
             .filter(
                 StateLog.end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id
             )
@@ -259,7 +263,7 @@ def test_convert_payment_to_ez_check_record_unsupported_claimtype(
     initialize_factories_session, test_db_session
 ):
     claim = ClaimFactory(claim_type_id=ClaimType.MILITARY_LEAVE.claim_type_id)
-    payment_without_address = PaymentFactory(claim=claim)
+    payment_without_address = PaymentFactory(claim=claim, claim_type=claim.claim_type)
     with pytest.raises(pub_check.UnSupportedClaimTypeException):
         pub_check._convert_payment_to_ez_check_record(payment_without_address, 0)
 
@@ -267,7 +271,7 @@ def test_convert_payment_to_ez_check_record_unsupported_claimtype(
 def test_format_check_memo_success(initialize_factories_session, test_db_session):
     payment = _random_valid_check_payment_with_state_log(test_db_session)
     memo = pub_check._format_check_memo(payment)
-    claim_type = payment.claim.claim_type.claim_type_description
+    claim_type = payment.claim_type.claim_type_description
 
     pattern = "PFML {} Payment {}".format(claim_type, payment.claim.fineos_absence_id)
     assert re.search(pattern, memo)

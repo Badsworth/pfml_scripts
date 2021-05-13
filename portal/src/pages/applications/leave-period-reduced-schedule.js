@@ -12,6 +12,7 @@ import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
+import findKeyByValue from "../../utils/findKeyByValue";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -74,10 +75,10 @@ export const LeavePeriodReducedSchedule = (props) => {
     );
   };
 
-  const contentContext = {
-    [LeaveReason.bonding]: "bonding",
-    [LeaveReason.medical]: "medical",
-  }[claim.leave_details.reason];
+  const contentContext = findKeyByValue(
+    LeaveReason,
+    claim.leave_details.reason
+  );
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -90,9 +91,11 @@ export const LeavePeriodReducedSchedule = (props) => {
       title={t("pages.claimsLeavePeriodReducedSchedule.title")}
       onSave={handleSave}
     >
-      {claim.isMedicalLeave && (
+      {(claim.isMedicalLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
-          {t("pages.claimsLeavePeriodReducedSchedule.medicalAlert")}
+          {t("pages.claimsLeavePeriodReducedSchedule.needDocumentAlert", {
+            context: contentContext,
+          })}
         </Alert>
       )}
 
@@ -111,9 +114,11 @@ export const LeavePeriodReducedSchedule = (props) => {
           },
         ]}
         hint={
-          claim.isMedicalLeave
-            ? t("pages.claimsLeavePeriodReducedSchedule.hasLeaveHint_medical")
-            : null // could use `context` if another leave type needs hint text
+          claim.isMedicalLeave || claim.isCaringLeave
+            ? t("pages.claimsLeavePeriodReducedSchedule.hasLeaveHint", {
+                context: contentContext,
+              })
+            : null
         }
         label={t("pages.claimsLeavePeriodReducedSchedule.hasLeaveLabel")}
         type="radio"
@@ -136,6 +141,7 @@ export const LeavePeriodReducedSchedule = (props) => {
             tOptions={{ context: contentContext }}
           />
         </Lead>
+
         {claim.isBondingLeave && (
           <div className="measure-6">
             <Details

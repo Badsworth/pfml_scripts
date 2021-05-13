@@ -6,7 +6,6 @@ import * as Util from "../helpers";
 export const taskName: Cfg.TaskType = "_DenyClaim";
 export const steps: Cfg.StoredStep[] = [
   {
-    time: 15000,
     name: "Reject leave plan",
     test: async (browser: Browser): Promise<void> => {
       // go to leave details
@@ -44,7 +43,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Deny application",
     test: async (browser: Browser): Promise<void> => {
       const denyButton = await Util.waitForElement(
@@ -81,8 +79,7 @@ export default async (
   data: Cfg.LSTSimClaim
 ): Promise<void> => {
   data.agentTask = taskName;
-  const realTimeSteps = steps.map(Util.simulateRealTime);
-  for (const step of realTimeSteps) {
+  for (const step of steps) {
     const stepName = `Deny - ${step.name}`;
     try {
       console.info(stepName);

@@ -31,7 +31,7 @@ export const Index = ({ appLogic }) => {
     <React.Fragment>
       {shouldShowDashboard ? (
         <BackButton
-          label={t("pages.employersDashboard.backToDashboardLabel")}
+          label={t("pages.employersOrganizations.backToDashboardLabel")}
           href={appLogic.portalFlow.getNextPageRoute("BACK")}
         />
       ) : (
@@ -41,11 +41,11 @@ export const Index = ({ appLogic }) => {
       {showVerifications && hasVerifiableEmployer && (
         <Alert
           state="warning"
-          heading={t("pages.employersDashboard.verificationTitle")}
+          heading={t("pages.employersOrganizations.verificationTitle")}
         >
           <p>
             <Trans
-              i18nKey="pages.employersDashboard.verificationBody"
+              i18nKey="pages.employersOrganizations.verificationBody"
               components={{
                 "your-organizations-link": <React.Fragment />,
               }}

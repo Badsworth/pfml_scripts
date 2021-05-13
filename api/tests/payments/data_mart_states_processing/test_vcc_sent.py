@@ -74,9 +74,9 @@ def test_process_vcc_sent_mismatched_data(
 
 
 def test_process_vcc_sent_success(
-    test_db_session, mocker, initialize_factories_session, mock_data_mart_client,
+    local_test_db_session, mocker, local_initialize_factories_session, mock_data_mart_client,
 ):
-    state_log = create_vcc_sent_state_log(test_db_session)
+    state_log = create_vcc_sent_state_log(local_test_db_session)
     run_test_process_success_no_pending_payment(
-        test_db_session, mock_data_mart_client, mocker, state_log, vcc_sent.process
+        local_test_db_session, mock_data_mart_client, mocker, state_log, vcc_sent.process
     )

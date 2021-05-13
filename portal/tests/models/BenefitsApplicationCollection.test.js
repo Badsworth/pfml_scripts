@@ -1,13 +1,13 @@
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
-import { MockClaimBuilder } from "../test-utils";
+import { MockBenefitsApplicationBuilder } from "../test-utils";
 
 describe("BenefitsApplicationCollection", () => {
   let collection, completedClaim, startedClaim, submittedClaim;
 
   beforeEach(() => {
-    startedClaim = new MockClaimBuilder().create();
-    completedClaim = new MockClaimBuilder().completed().create();
-    submittedClaim = new MockClaimBuilder().submitted().create();
+    startedClaim = new MockBenefitsApplicationBuilder().create();
+    completedClaim = new MockBenefitsApplicationBuilder().completed().create();
+    submittedClaim = new MockBenefitsApplicationBuilder().submitted().create();
     collection = new BenefitsApplicationCollection([
       startedClaim,
       completedClaim,

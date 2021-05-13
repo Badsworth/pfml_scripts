@@ -43,7 +43,11 @@ export default {
       },
     },
     [routes.employers.status]: {},
-    [routes.employers.success]: {},
+    [routes.employers.success]: {
+      on: {
+        BACK: routes.employers.dashboard,
+      },
+    },
     [routes.employers.newApplication]: {
       on: {
         CLAIM_NOT_REVIEWABLE: routes.employers.status,

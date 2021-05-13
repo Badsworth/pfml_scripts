@@ -229,11 +229,14 @@ def test_return_early_from_process_payments_for_writeback_if_no_records(test_db_
     "payment_count", ((0), (1), (fake.random_int(min=2, max=10)),), ids=["zero", "one", "many"],
 )
 def test_create_db_records_for_payments(
-    test_db_session, test_db_other_session, initialize_factories_session, payment_count
+    local_test_db_session,
+    local_test_db_other_session,
+    local_initialize_factories_session,
+    payment_count,
 ):
     pei_writeback_items = []
     for _i in range(payment_count):
-        payment = generate_disbursed_payment(test_db_session)
+        payment = generate_disbursed_payment(local_test_db_session)
         writeback_record = writeback._disbursed_payment_to_pei_writeback_record(payment)
 
         pei_writeback_items.append(
@@ -252,22 +255,26 @@ def test_create_db_records_for_payments(
         file_location="s3://some-test-bucket/path/to/file.txt",
         reference_file_type_id=ReferenceFileType.PEI_WRITEBACK.reference_file_type_id,
     )
-    test_db_session.add(reference_file)
+    local_test_db_session.add(reference_file)
 
-    writeback._create_db_records_for_payments(pei_writeback_items, test_db_session, reference_file)
+    writeback._create_db_records_for_payments(
+        pei_writeback_items, local_test_db_session, reference_file
+    )
 
     # Assert that no records are saved to the database before we commit the changes.
-    assert test_db_other_session.query(func.count(PaymentReferenceFile.payment_id)).scalar() == 0
+    assert (
+        local_test_db_other_session.query(func.count(PaymentReferenceFile.payment_id)).scalar() == 0
+    )
 
     # Assert that we've saved the records to the database after committing changes.
-    test_db_session.commit()
+    local_test_db_session.commit()
     assert (
-        test_db_other_session.query(func.count(PaymentReferenceFile.payment_id)).scalar()
+        local_test_db_other_session.query(func.count(PaymentReferenceFile.payment_id)).scalar()
         == payment_count
     )
     assert (
         len(
-            test_db_other_session.query(StateLog)
+            local_test_db_other_session.query(StateLog)
             .filter(StateLog.end_state == State.PAYMENT_COMPLETE)
             .all()
         )

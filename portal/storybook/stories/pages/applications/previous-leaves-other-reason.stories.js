@@ -1,4 +1,4 @@
-import { MockClaimBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const leavePeriodAttrs = {
@@ -6,8 +6,12 @@ const leavePeriodAttrs = {
 };
 
 const mockClaims = {
-  continuous: new MockClaimBuilder().continuous(leavePeriodAttrs).create(),
-  intermittent: new MockClaimBuilder().intermittent(leavePeriodAttrs).create(),
+  continuous: new MockBenefitsApplicationBuilder()
+    .continuous(leavePeriodAttrs)
+    .create(),
+  intermittent: new MockBenefitsApplicationBuilder()
+    .intermittent(leavePeriodAttrs)
+    .create(),
 };
 
 const { config, DefaultStory } = generateClaimPageStory(

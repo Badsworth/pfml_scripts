@@ -15,7 +15,6 @@ interface E2EConfig {
   COGNITO_CLIENTID: string;
   PORTAL_USERNAME: string;
   PORTAL_PASSWORD: string;
-  EMPLOYER_PORTAL_USERNAME: string;
   EMPLOYER_PORTAL_PASSWORD: string;
   API_BASEURL: string;
   FINEOS_BASEURL: string;
@@ -32,14 +31,11 @@ interface E2EConfig {
   SSO_USERNAME: string;
 }
 interface LSTConfig {
-  FLOOD_DATA_BASEURL: string;
-  SIMULATION_SPEED: string;
   FLOOD_API_TOKEN: string;
   TESTMAIL_APIKEY: string;
   PORTAL_PASSWORD: string;
   FINEOS_USERS: string;
   FINEOS_PASSWORD: string;
-  EMPLOYER_PORTAL_USERNAME: string;
   LST_EMPLOYEES_FILE: string;
   LST_EMPLOYERS_FILE: string;
 }

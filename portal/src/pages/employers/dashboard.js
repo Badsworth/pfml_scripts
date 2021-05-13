@@ -33,8 +33,8 @@ export const Dashboard = (props) => {
   const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
   // Leave admins not registered in Fineos won't be able to access associated claim data from Fineos.
   // We use this flag to communicate this to the user.
-  const hasEmployerNotRegisteredInFineos =
-    user.hasEmployerNotRegisteredInFineos;
+  const hasVerifiedEmployerNotRegisteredInFineos =
+    user.hasVerifiedEmployerNotRegisteredInFineos;
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const showVerificationRowInPlaceOfClaims =
     shouldShowVerifications && hasOnlyUnverifiedEmployers;
@@ -65,14 +65,21 @@ export const Dashboard = (props) => {
     });
   };
 
+  const getCommaDelimitedEmployerEINs = () => {
+    const employers = user.getVerifiedEmployersNotRegisteredInFineos();
+    return employers.map((employer) => employer.employer_fein).join(", ");
+  };
+
   return (
     <React.Fragment>
       <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
       <Title>{t("pages.employersDashboard.title")}</Title>
-      {hasEmployerNotRegisteredInFineos && (
+      {hasVerifiedEmployerNotRegisteredInFineos && (
         <Alert
           state="info"
-          heading={t("pages.employersDashboard.unavailableClaimsTitle")}
+          heading={t("pages.employersDashboard.unavailableClaimsTitle", {
+            employers: getCommaDelimitedEmployerEINs(),
+          })}
         >
           <p>
             <Trans
@@ -260,9 +267,7 @@ const ClaimTableRows = (props) => {
       case "employer_fein":
         return employerFein;
       case "status":
-        return (
-          <AbsenceCaseStatusTag status={get(claim, "fineos_absence_status")} />
-        );
+        return <AbsenceCaseStatusTag status={get(claim, "claim_status")} />;
       default:
         return "";
     }

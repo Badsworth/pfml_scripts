@@ -1593,6 +1593,25 @@ components:
           $ref: "#/components/schemas/Date"
       additionalProperties: false
 
+    ConcurrentLeave:
+      type: object
+      properties:
+        concurrent_leave_id:
+          type: string
+          format: uuid
+          example: "2a340cf8-6d2a-4f82-a075-73588d003f8f"
+          nullable: true
+        is_for_current_employer:
+          type: boolean
+          nullable: true
+          example: true
+        leave_end_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        leave_start_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+
     PreviousLeave:
       type: object
       properties:
@@ -1762,6 +1781,9 @@ components:
             has_previous_leaves_same_reason:
               type: boolean
               nullable: true
+            has_concurrent_leave:
+              type: boolean
+              nullable: true
             previous_leaves:
               nullable: true
               type: array
@@ -1780,6 +1802,9 @@ components:
               items:
                 $ref: "#/components/schemas/PreviousLeave"
               maxItems: 6
+            concurrent_leave:
+              $ref: "#/components/schemas/ConcurrentLeave"
+              nullable: true
         - type: object
           properties:
             employee_ssn:
@@ -1953,6 +1978,9 @@ components:
         has_previous_leaves_same_reason:
           type: boolean
           nullable: true
+        has_concurrent_leave:
+          type: boolean
+          nullable: true
         previous_leaves:
           type: array
           items:
@@ -1965,6 +1993,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PreviousLeave"
+        concurrent_leave:
+          $ref: "#/components/schemas/ConcurrentLeave"
+          nullable: true
 
     DocumentUploadRequest:
       type: object

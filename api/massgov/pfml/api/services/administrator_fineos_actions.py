@@ -34,9 +34,18 @@ DOWNLOADABLE_DOC_TYPES = [
     "request for more information",
     "denial notice",
     "employer response additional documentation",
+    "care for a family member form",
 ]
 
 logger = logging.get_logger(__name__)
+
+
+EFORM_TYPES = {
+    "OTHER_INCOME": "Other Income",
+    "OTHER_INCOME_V2": "Other Income v2",
+    "OTHER_LEAVES": "Other Leaves",
+    "OTHER_LEAVES_V2": "Other Leaves v2",
+}
 
 
 class RegisterFINEOSDuplicateRecord(Exception):
@@ -179,24 +188,34 @@ def get_claim_as_leave_admin(
     other_incomes: List[EmployerBenefit] = []
     is_reviewable = False
     follow_up_date = None
+    contains_version_one_eforms = False
+    contains_version_two_eforms = False
+    outstanding_requirement_status = None
 
     for req in managed_reqs:
         if req.type == LEAVE_ADMIN_INFO_REQUEST_TYPE:
             follow_up_date = req.followUpDate
+            outstanding_requirement_status = req.status
             break
 
     for eform_summary_obj in eform_summaries:
         eform_summary = eform_summary_obj.dict()
-        if eform_summary["eformType"] == "Other Income":
+        if eform_summary["eformType"] == EFORM_TYPES["OTHER_INCOME"]:
+            contains_version_one_eforms = True
             eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
             other_incomes.extend(
                 other_income
                 for other_income in TransformOtherIncomeEform.from_fineos(eform)
                 if other_income.program_type == "Employer"
             )
-        elif eform_summary["eformType"] == "Other Leaves":
+        elif eform_summary["eformType"] == EFORM_TYPES["OTHER_LEAVES"]:
+            contains_version_one_eforms = True
             eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
             other_leaves = other_leaves + TransformOtherLeaveEform.from_fineos(eform)
+        elif eform_summary["eformType"] == EFORM_TYPES["OTHER_INCOME_V2"]:
+            contains_version_two_eforms = True
+        elif eform_summary["eformType"] == EFORM_TYPES["OTHER_LEAVES_V2"]:
+            contains_version_two_eforms = True
 
     if customer_info["address"] is not None:
         claimant_address = Address(
@@ -209,7 +228,7 @@ def get_claim_as_leave_admin(
     else:
         claimant_address = Address()
 
-    if follow_up_date is not None:
+    if follow_up_date is not None and outstanding_requirement_status == "Open":
         is_reviewable = date.today() < follow_up_date
 
     leave_details = get_leave_details(absence_periods)
@@ -232,6 +251,8 @@ def get_claim_as_leave_admin(
         status=status,
         follow_up_date=follow_up_date,
         is_reviewable=is_reviewable,
+        contains_version_one_eforms=contains_version_one_eforms,
+        contains_version_two_eforms=contains_version_two_eforms,
     )
 
 

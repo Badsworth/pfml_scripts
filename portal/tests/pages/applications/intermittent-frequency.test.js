@@ -7,7 +7,7 @@ import IntermittentFrequency, {
   irregularOver6MonthsId,
 } from "../../../src/pages/applications/intermittent-frequency";
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -26,7 +26,10 @@ describe("IntermittentFrequency", () => {
 
   it("renders the page", () => {
     const { wrapper } = renderWithAppLogic(IntermittentFrequency, {
-      claimAttrs: new MockClaimBuilder().intermittent().create(),
+      claimAttrs: new MockBenefitsApplicationBuilder()
+        .intermittent()
+        .medicalLeaveReason()
+        .create(),
     });
 
     expect(wrapper).toMatchSnapshot();
@@ -136,33 +139,44 @@ describe("IntermittentFrequency", () => {
     });
   });
 
-  it("displays Alert about having medical form when claim is for Medical leave", () => {
+  it("displays Alert about having form when claim is Medical or Caring leave", () => {
+    const { wrapper: caringWrapper } = renderWithAppLogic(
+      IntermittentFrequency,
+      {
+        claimAttrs: new MockBenefitsApplicationBuilder()
+          .caringLeaveReason()
+          .create(),
+      }
+    );
     const { wrapper: medicalWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+        claimAttrs: new MockBenefitsApplicationBuilder()
+          .medicalLeaveReason()
+          .create(),
       }
     );
     const { wrapper: bondingWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder().bondingBirthLeaveReason().create(),
+        claimAttrs: new MockBenefitsApplicationBuilder()
+          .bondingBirthLeaveReason()
+          .create(),
       }
     );
-    const alert = medicalWrapper.find("Alert");
 
-    expect(alert.exists()).toBe(true);
-    expect(alert).toMatchSnapshot();
+    expect(medicalWrapper.find("Alert")).toMatchSnapshot();
+    expect(caringWrapper.find("Alert")).toMatchSnapshot();
     expect(bondingWrapper.find("Alert").exists()).toBe(false);
   });
 
-  it("displays hint text with medical form context when claim is for Medical leave", () => {
+  it("displays Lead text with form context when claim is for Medical or Caring leave", () => {
     expect.assertions();
 
     const { wrapper: medicalWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder()
+        claimAttrs: new MockBenefitsApplicationBuilder()
           .medicalLeaveReason()
           .intermittent()
           .create(),
@@ -171,25 +185,26 @@ describe("IntermittentFrequency", () => {
     const { wrapper: bondingWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder()
+        claimAttrs: new MockBenefitsApplicationBuilder()
           .bondingBirthLeaveReason()
           .intermittent()
           .create(),
       }
     );
 
-    const fieldFinder = (nodeWrapper) =>
-      ["InputNumber", "InputChoiceGroup"].includes(nodeWrapper.name());
-    const medicalWrapperFields = medicalWrapper.findWhere(fieldFinder);
-    const bondingWrapperFields = bondingWrapper.findWhere(fieldFinder);
+    const { wrapper: caringWrapper } = renderWithAppLogic(
+      IntermittentFrequency,
+      {
+        claimAttrs: new MockBenefitsApplicationBuilder()
+          .caringLeaveReason()
+          .intermittent()
+          .create(),
+      }
+    );
 
-    medicalWrapperFields.forEach((field) => {
-      expect(field.prop("hint")).toMatchSnapshot();
-    });
-
-    bondingWrapperFields.forEach((field) => {
-      expect(field.prop("hint")).toBeNull();
-    });
+    expect(bondingWrapper.find("Lead").exists()).toBe(false);
+    expect(caringWrapper.find("Lead")).toMatchSnapshot();
+    expect(medicalWrapper.find("Lead")).toMatchSnapshot();
   });
 
   describe("frequency_basis change handler", () => {
@@ -229,7 +244,7 @@ describe("IntermittentFrequency", () => {
   });
 
   it("sends the page's fields and the leave period ID to the API when the data is already on the claim", () => {
-    const claim = new MockClaimBuilder().intermittent().create();
+    const claim = new MockBenefitsApplicationBuilder().intermittent().create();
     const {
       duration,
       duration_basis,
@@ -265,7 +280,7 @@ describe("IntermittentFrequency", () => {
   });
 
   it("sends the page's fields and the leave period ID to the API when the data is newly entered", async () => {
-    const claim = new MockClaimBuilder().intermittent().create();
+    const claim = new MockBenefitsApplicationBuilder().intermittent().create();
 
     const frequency_interval_basis = FrequencyIntervalBasis.months;
     const frequency = 6;

@@ -228,6 +228,18 @@ class Phone(Base):
     phone_type_instance = relationship(LkPhoneType)
 
 
+class ConcurrentLeave(Base):
+    __tablename__ = "concurrent_leave"
+    concurrent_leave_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    application_id = Column(
+        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True, nullable=False
+    )
+    is_for_current_employer = Column(Boolean)
+    leave_start_date = Column(Date)
+    leave_end_date = Column(Date)
+    application = relationship("Application")
+
+
 class PreviousLeave(Base):
     # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
     # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
@@ -341,6 +353,7 @@ class Application(Base):
     )
     has_previous_leaves_same_reason = Column(Boolean)
     has_previous_leaves_other_reason = Column(Boolean)
+    has_concurrent_leave = Column(Boolean)
 
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
@@ -368,13 +381,22 @@ class Application(Base):
     #
     # https://github.com/dropbox/sqlalchemy-stubs/issues/152
     continuous_leave_periods = relationship(
-        "ContinuousLeavePeriod", back_populates="application", uselist=True
+        "ContinuousLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     intermittent_leave_periods = relationship(
-        "IntermittentLeavePeriod", back_populates="application", uselist=True
+        "IntermittentLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     reduced_schedule_leave_periods = relationship(
-        "ReducedScheduleLeavePeriod", back_populates="application", uselist=True
+        "ReducedScheduleLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     employer_benefits = relationship("EmployerBenefit", back_populates="application", uselist=True)
     other_incomes = relationship("OtherIncome", back_populates="application", uselist=True)
@@ -387,6 +409,7 @@ class Application(Base):
     previous_leaves_same_reason = relationship(
         "PreviousLeaveSameReason", back_populates="application", uselist=True,
     )
+    concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False,)
 
 
 class CaringLeaveMetadata(Base):

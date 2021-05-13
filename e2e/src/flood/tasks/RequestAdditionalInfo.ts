@@ -8,8 +8,7 @@ export default async (
   data: Cfg.LSTSimClaim
 ): Promise<void> => {
   data.agentTask = taskName;
-  const realTimeSteps = steps.map(Util.simulateRealTime);
-  for (const step of realTimeSteps) {
+  for (const step of steps) {
     const stepName = `Request Additional Info - ${step.name} - ${data.missingDocument}`;
     try {
       console.info(stepName);
@@ -22,7 +21,6 @@ export default async (
 
 export const steps: Cfg.StoredStep[] = [
   {
-    time: 15000,
     name: "Add info for missing document",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // go to evidence and approve
@@ -79,7 +77,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Add Leave Request Review notes",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // go to the absence hub tab

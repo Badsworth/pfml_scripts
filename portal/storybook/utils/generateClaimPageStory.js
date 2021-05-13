@@ -3,7 +3,7 @@ import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import DocumentCollection from "src/models/DocumentCollection";
-import { MockClaimBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import React from "react";
 import User from "../../src/models/User";
 import englishLocale from "src/locales/app/en-US";
@@ -75,7 +75,9 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
   if (!mockClaims) {
     mockClaims = {
       empty: new BenefitsApplication(),
-      "continuous leave": new MockClaimBuilder().continuous().create(),
+      "continuous leave": new MockBenefitsApplicationBuilder()
+        .continuous()
+        .create(),
     };
   }
 

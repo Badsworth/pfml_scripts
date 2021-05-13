@@ -26,9 +26,10 @@
 # SCENARIO_VOUCHER_I: missing entry in vpeiclaimdetails.csv and therefore missing:
 #                     absence case number, vendor invoice number, leave type, activity code, case status,
 #                     employer ID, leave request ID, leave request decision, check description
-# SCENARIO_VOUCHER_J: missing entry in VBI_REQUSTEDABSENCE.csv and therefore missing leave request ID and decision
-# SCENARIO_VOUCHER_K: missing entry in VBI_REQUESTEDABSENCE_SOM.csv and therefore missing:
-#                     leave type, activity code, case status, employer ID
+# SCENARIO_VOUCHER_J: missing entry in VBI_REQUSTEDABSENCE.csv and therefore missing:
+#                     leave request ID, leave request decision, leave type,
+#                     activity code, case status, employer ID
+# SCENARIO_VOUCHER_K: missing entry in VBI_REQUESTEDABSENCE_SOM.csv and therefore missing: Nothing!
 # SCENARIO_VOUCHER_L: missing entry in vpeipaymentdetails.csv and therefore missing:
 #                     payment period start date, payment period end date, check description, vendor invoice date
 #
@@ -107,10 +108,11 @@ class ScenarioOutput:
         self.payments = self.scenario_data.payments
 
         # Identify if there are errors.
+        # Note: missing_from_vbi_requestedabsence_som is no longer an error
+        # state for the payment voucher.
         possible_error_states = [
             "employee_not_in_db",
             "missing_from_vbi_requestedabsence",
-            "missing_from_vbi_requestedabsence_som",
             "missing_from_vpeiclaimdetails",
             "missing_from_vpeipaymentdetails",
             "missing_payment_start_date",
@@ -141,6 +143,7 @@ class ScenarioOutput:
         payment_period_end_date = ""
         vendor_invoice_date = ""
         vendor_invoice_number = ""
+        absence_case_creation_date = ""
 
         # Override with values if they are accessible.
         try:
@@ -157,7 +160,7 @@ class ScenarioOutput:
             case_status = payment.claim.fineos_absence_status.absence_status_description
 
         if self.scenario_data.employer:
-            employer_id = self.scenario_data.employer.fineos_employer_id
+            employer_id = str(self.scenario_data.employer.fineos_employer_id)
 
         if payment.period_start_date:
             payment_period_start_date = payment.period_start_date.isoformat()
@@ -178,6 +181,11 @@ class ScenarioOutput:
         if payment.claim.fineos_absence_id:
             vendor_invoice_number = gax.get_vendor_invoice_number(
                 payment.claim.fineos_absence_id, payment.fineos_pei_i_value
+            )
+
+        if self.scenario_data.absence_case_creation_date:
+            absence_case_creation_date = self.scenario_data.absence_case_creation_date.strftime(
+                "%Y-%m-%d %H:%M:%S"
             )
 
         # Construct and return the dictionary.
@@ -220,6 +228,8 @@ class ScenarioOutput:
             "leave_request_decision": self.scenario_data.leave_request_decision,
             "payment_event_type": self.scenario_data.payment_event_type,
             "vcm_flag": "Yes",  # This should be overridden as needed
+            "absence_case_creation_date": absence_case_creation_date,
+            "absence_reason_name": self.scenario_data.absence_reason_name,
             "claimants_that_have_zero_or_credit_value": (
                 "1" if payment.amount is not None and float(payment.amount) <= 0 else ""
             ),

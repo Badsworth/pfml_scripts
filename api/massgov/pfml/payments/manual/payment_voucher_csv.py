@@ -11,8 +11,8 @@ from typing import Optional
 class PaymentVoucherCSV:
     """Manual payment voucher CSV format."""
 
-    leave_type: str
-    activity_code: str
+    leave_type: Optional[str]
+    activity_code: Optional[str]
     payment_doc_id_code: str
     payment_doc_id_dept: str
     doc_id: str
@@ -39,12 +39,14 @@ class PaymentVoucherCSV:
     c_value: str
     i_value: str
     fineos_customer_number_employee: Optional[str]
-    case_status: str
-    employer_id: str
+    case_status: Optional[str]
+    employer_id: Optional[str]
     leave_request_id: Optional[str]
     leave_request_decision: Optional[str]
     payment_event_type: Optional[str]
     vcm_flag: str
+    absence_case_creation_date: Optional[str]
+    absence_reason_name: Optional[str]
 
     # fields mostly to be populated manually by team using the voucher file for
     # actually processing the payments
@@ -97,6 +99,8 @@ PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     leave_request_decision="Leave request decision",
     payment_event_type="FINEOS PEI event type",
     vcm_flag="Has Pending VCM",
+    absence_case_creation_date="Absence case creation date",
+    absence_reason_name="Absence reason name",
     good_to_pay_from_prior_batch="Good to pay from prior batch",
     had_a_payment_in_a_prior_batch_by_vc_code="Had a payment in a prior batch (by VC Code)",
     inv="Inv # Exists on the VALID payments sent to EOLFIN/ MMARS nnnnn",

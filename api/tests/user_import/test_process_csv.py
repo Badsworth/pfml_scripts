@@ -127,6 +127,27 @@ def create_employers(test_db_session):
     test_db_session.commit()
 
 
+@pytest.fixture
+def local_create_employers(local_test_db_session):
+    local_test_db_session.add(
+        Employer(employer_fein="847847847", employer_dba="Wayne Enterprises", fineos_employer_id=1)
+    )
+    local_test_db_session.add(
+        Employer(employer_fein="111111111", employer_dba="BogoCorp Ltd", fineos_employer_id=2)
+    )
+    local_test_db_session.add(
+        Employer(
+            employer_fein="222222222",
+            employer_dba="Charles Entertainment Cheese",
+            fineos_employer_id=3,
+        )
+    )
+    local_test_db_session.add(
+        Employer(employer_fein="114444444", employer_dba="Dunkin", fineos_employer_id=4)
+    )
+    local_test_db_session.commit()
+
+
 class TestProcessCSV:
     """ Tests for helper functions within process_csv """
 
@@ -336,7 +357,7 @@ class TestProcessByEmail:
         assert "Uploading results to S3." in success_file_upload.getMessage()
 
     def test_no_fineos_web_ids_created_when_not_forcing_registration(
-        self, test_file_location, test_db_session, create_employers
+        self, test_file_location, local_test_db_session, local_create_employers
     ):
         massgov.pfml.fineos.mock_client.start_capture()
         fineos_client = fineos.create_client()
@@ -347,7 +368,7 @@ class TestProcessByEmail:
             processed += process_by_email(
                 email=email,
                 input_data=employers,
-                db_session=test_db_session,
+                db_session=local_test_db_session,
                 force_registration=False,
                 cognito_pool_id="fake_pool",
                 cognito_client=cognito_client,
@@ -366,16 +387,16 @@ class TestProcessByEmail:
         assert set(cognito_client._memo.keys()) == set(pivoted.keys())
 
         # Ensure ALL changes are committed by the process_by_email flow with intentional rollback
-        test_db_session.rollback()
-        users_created = test_db_session.query(User).all()
+        local_test_db_session.rollback()
+        users_created = local_test_db_session.query(User).all()
         assert len(users_created) == 3
-        user_roles_created = test_db_session.query(UserRole).all()
+        user_roles_created = local_test_db_session.query(UserRole).all()
         assert len(user_roles_created) == 3
         for user_role in user_roles_created:
             assert user_role.role_id == Role.EMPLOYER.role_id
 
         # We shouldn't have any fineos_web_ids in the ULA table because none of these users have verified.
-        user_leave_admins = test_db_session.query(UserLeaveAdministrator).all()
+        user_leave_admins = local_test_db_session.query(UserLeaveAdministrator).all()
         assert len(user_leave_admins) == 3
         for ula in user_leave_admins:
             assert ula.fineos_web_id is None

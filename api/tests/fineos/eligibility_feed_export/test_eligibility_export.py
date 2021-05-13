@@ -35,11 +35,15 @@ def test_main_requires_non_empty_env_vars(
 @moto.mock_sts()
 @moto.mock_s3()
 def test_main_success_fineos_location(
-    test_db_session, initialize_factories_session, monkeypatch, logging_fix, reset_aws_env_vars,
+    local_test_db_session,
+    local_initialize_factories_session,
+    monkeypatch,
+    logging_fix,
+    reset_aws_env_vars,
 ):
     import massgov.pfml.fineos.eligibility_feed_export.eligibility_export as main
 
-    monkeypatch.setattr(main, "make_db_session", lambda: test_db_session)
+    monkeypatch.setattr(main, "make_db_session", lambda: local_test_db_session)
 
     mock_fineos_bucket_name = "fin-som-foo"
 
@@ -68,8 +72,8 @@ def test_main_success_fineos_location(
 
 @moto.mock_ssm()
 def test_main_success_non_fineos_location(
-    test_db_session,
-    initialize_factories_session,
+    local_test_db_session,
+    local_initialize_factories_session,
     monkeypatch,
     logging_fix,
     reset_aws_env_vars,
@@ -77,7 +81,7 @@ def test_main_success_non_fineos_location(
 ):
     import massgov.pfml.fineos.eligibility_feed_export.eligibility_export as main
 
-    monkeypatch.setattr(main, "make_db_session", lambda: test_db_session)
+    monkeypatch.setattr(main, "make_db_session", lambda: local_test_db_session)
 
     WagesAndContributionsFactory.create()
 
@@ -104,17 +108,17 @@ def test_main_success_non_fineos_location(
 
 @moto.mock_ssm()
 def test_main_success_non_fineos_location_updates(
-    test_db_session,
-    initialize_factories_session,
+    local_test_db_session,
+    local_initialize_factories_session,
     monkeypatch,
     logging_fix,
     reset_aws_env_vars,
     tmp_path,
-    create_triggers,
+    local_create_triggers,
 ):
     import massgov.pfml.fineos.eligibility_feed_export.eligibility_export as main
 
-    monkeypatch.setattr(main, "make_db_session", lambda: test_db_session)
+    monkeypatch.setattr(main, "make_db_session", lambda: local_test_db_session)
 
     WagesAndContributionsFactory.create_batch(size=10)
 
@@ -131,11 +135,11 @@ def test_main_success_non_fineos_location_updates(
     monkeypatch.setenv("ELIGIBILITY_FEED_MODE", "updates")
     monkeypatch.delenv("ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", raising=False)
 
-    assert test_db_session.query(EmployeeLog).count() == 10
+    assert local_test_db_session.query(EmployeeLog).count() == 10
 
     response = main.main_with_return()
 
-    assert test_db_session.query(EmployeeLog).count() == 0
+    assert local_test_db_session.query(EmployeeLog).count() == 0
 
     assert response["start"]
     assert response["end"]
@@ -148,17 +152,17 @@ def test_main_success_non_fineos_location_updates(
 
 @moto.mock_ssm()
 def test_main_success_non_fineos_location_updates_with_limit(
-    test_db_session,
-    initialize_factories_session,
+    local_test_db_session,
+    local_initialize_factories_session,
     monkeypatch,
     logging_fix,
     reset_aws_env_vars,
     tmp_path,
-    create_triggers,
+    local_create_triggers,
 ):
     import massgov.pfml.fineos.eligibility_feed_export.eligibility_export as main
 
-    monkeypatch.setattr(main, "make_db_session", lambda: test_db_session)
+    monkeypatch.setattr(main, "make_db_session", lambda: local_test_db_session)
 
     WagesAndContributionsFactory.create_batch(size=10)
 
@@ -175,11 +179,11 @@ def test_main_success_non_fineos_location_updates_with_limit(
     monkeypatch.setenv("ELIGIBILITY_FEED_MODE", "updates")
     monkeypatch.setenv("ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", "5")
 
-    assert test_db_session.query(EmployeeLog).count() == 10
+    assert local_test_db_session.query(EmployeeLog).count() == 10
 
     response = main.main_with_return()
 
-    assert test_db_session.query(EmployeeLog).count() == 5
+    assert local_test_db_session.query(EmployeeLog).count() == 5
 
     assert response["start"]
     assert response["end"]

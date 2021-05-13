@@ -707,6 +707,11 @@ class WorkPatternFixedFactory(BaseFactory):
         lambda w: [
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
+                minutes=8 * 60 + 15,
+            ),
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.MONDAY.day_of_week_id,
                 minutes=8 * 60 + 15,
             ),
@@ -735,11 +740,6 @@ class WorkPatternFixedFactory(BaseFactory):
                 day_of_week_id=application_models.DayOfWeek.SATURDAY.day_of_week_id,
                 minutes=8 * 60 + 15,
             ),
-            application_models.WorkPatternDay(
-                work_pattern_id=w.work_pattern_id,
-                day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
-                minutes=8 * 60 + 15,
-            ),
         ]
     )
 
@@ -764,7 +764,7 @@ class DuaReductionPaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.DuaReductionPayment
 
-    absence_case_id = Generators.FineosAbsenceId
+    fineos_customer_number = factory.Faker("numerify", text="####")
     employer_fein = Generators.Fein
     payment_date = factory.Faker("date_object")
     request_week_begin_date = factory.Faker("date_object")

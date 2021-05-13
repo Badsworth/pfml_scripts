@@ -115,7 +115,7 @@ exports[`GetReady renders get ready content 1`] = `
     <Heading
       level="4"
     >
-      Bond with your child
+      To bond with a child
     </Heading>
     <Trans
       i18nKey="pages.getReady.stepTwoBondingLeaveBody"
@@ -243,21 +243,27 @@ Array [
 `;
 
 exports[`GetReady renders get ready content 5`] = `
-Array [
-  "Your health care provider must complete the ",
+<p
+  key="p-0"
+>
+  Your health care provider must complete the 
   <a
     href="https://www.mass.gov/medical-leave-form"
     key="1"
   >
     PFML Certification of a Serious Health Condition
-  </a>,
-  ".",
-]
+  </a>
+  .
+</p>
 `;
 
 exports[`GetReady renders get ready content 6`] = `
 Array [
-  "For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.",
+  <p
+    key="p-0"
+  >
+    For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.
+  </p>,
   <p
     key="p-1"
   >

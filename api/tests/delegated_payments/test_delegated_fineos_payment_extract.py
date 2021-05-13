@@ -76,6 +76,15 @@ def payment_extract_step(initialize_factories_session, test_db_session, test_db_
     )
 
 
+@pytest.fixture
+def local_payment_extract_step(
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
+):
+    return extractor.PaymentExtractStep(
+        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+    )
+
+
 def make_s3_file(s3_bucket, key, test_file_name):
     # Utility method to upload a test file to the mocked S3.
     # test_file_name corresponds to the name of the file in the test_files directory
@@ -105,6 +114,7 @@ def add_db_records(
     c_value=None,
     i_value=None,
     additional_payment_state=None,
+    claim_type=None,
 ):
     mailing_address = None
     experian_address_pair = None
@@ -126,7 +136,11 @@ def add_db_records(
             employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
 
         if add_claim:
-            claim_type_id = ClaimType.FAMILY_LEAVE.claim_type_id if add_claim_type else None
+            if not claim_type:
+                claim_type_id = ClaimType.FAMILY_LEAVE.claim_type_id if add_claim_type else None
+            else:
+                claim_type_id = ClaimType.MEDICAL_LEAVE.claim_type_id
+
             claim = ClaimFactory.create(
                 fineos_absence_id=absence_case_id,
                 employee=employee,
@@ -138,6 +152,7 @@ def add_db_records(
             if add_payment:
                 payment = PaymentFactory.create(
                     claim=claim,
+                    claim_type=claim.claim_type,
                     fineos_pei_c_value=c_value,
                     fineos_pei_i_value=i_value,
                     experian_address_pair=experian_address_pair,
@@ -289,18 +304,18 @@ def test_download_and_parse_data(mock_s3_bucket, tmp_path, payment_extract_step)
 def test_process_extract_data(
     mock_s3_bucket,
     set_exporter_env_vars,
-    payment_extract_step,
-    test_db_session,
+    local_payment_extract_step,
+    local_test_db_session,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    setup_process_tests(mock_s3_bucket, test_db_session)
+    setup_process_tests(mock_s3_bucket, local_test_db_session)
 
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 3
 
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     # Make sure files were copied to the processed directory
     moved_files = file_util.list_files(
@@ -317,7 +332,7 @@ def test_process_extract_data(
     # These also correspond to row1/2/3 in the files used
     for index in ["1", "2", "3"]:
         payment = (
-            test_db_session.query(Payment)
+            local_test_db_session.query(Payment)
             .filter(
                 Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == f"30{index}"
             )
@@ -331,7 +346,9 @@ def test_process_extract_data(
         assert payment.fineos_extraction_date == date(2021, 1, 13)
         assert str(payment.amount) == f"{index * 3}.99"  # eg. 111.99
         assert payment.has_address_update is True
-        assert payment.fineos_extract_import_log_id == payment_extract_step.get_import_log_id()
+        assert (
+            payment.fineos_extract_import_log_id == local_payment_extract_step.get_import_log_id()
+        )
 
         claim = payment.claim
         assert claim
@@ -404,7 +421,7 @@ def test_process_extract_data(
     import_log_report = json.loads(payment.fineos_extract_import_log.report)
     assert import_log_report["standard_valid_payment_count"] == 3
 
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
 
@@ -412,28 +429,28 @@ def test_process_extract_data(
 def test_process_extract_data_prior_payment_exists_is_being_processed(
     mock_s3_bucket,
     set_exporter_env_vars,
-    payment_extract_step,
-    test_db_session,
+    local_payment_extract_step,
+    local_test_db_session,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
     caplog,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
         mock_s3_bucket,
-        test_db_session,
+        local_test_db_session,
         add_payment=True,
         additional_payment_state=State.DELEGATED_PAYMENT_COMPLETE,
     )
 
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 3
 
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     for index in ["1", "2", "3"]:
         payments = (
-            test_db_session.query(Payment)
+            local_test_db_session.query(Payment)
             .filter(
                 Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == f"30{index}"
             )
@@ -465,34 +482,38 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
             },
         }
 
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
 
 def test_process_extract_data_one_bad_record(
     mock_s3_bucket,
     set_exporter_env_vars,
-    payment_extract_step,
-    test_db_session,
+    local_payment_extract_step,
+    local_test_db_session,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     # This test will properly process record 1 & 3, but record 2 will
     # end up in an error state because we don't have an TIN/employee/claim associated with them
     setup_process_tests(
-        mock_s3_bucket, test_db_session, add_address=False, add_eft=True, add_second_employee=False,
+        mock_s3_bucket,
+        local_test_db_session,
+        add_address=False,
+        add_eft=True,
+        add_second_employee=False,
     )
 
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 2
 
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     # The second record will have failed and so no payment would have been created
     for index in ["1", "2", "3"]:
         payment = (
-            test_db_session.query(Payment)
+            local_test_db_session.query(Payment)
             .filter(
                 Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == f"30{index}"
             )
@@ -524,21 +545,21 @@ def test_process_extract_data_one_bad_record(
             assert state_log.outcome == EXPECTED_OUTCOME
             assert payment.claim_id
 
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
 
 def test_process_extract_data_rollback(
     mock_s3_bucket,
     set_exporter_env_vars,
-    payment_extract_step,
-    test_db_session,
+    local_payment_extract_step,
+    local_test_db_session,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
-    setup_process_tests(mock_s3_bucket, test_db_session)
+    setup_process_tests(mock_s3_bucket, local_test_db_session)
 
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 3
 
     # Override the method that moves files at the end to throw
@@ -547,15 +568,17 @@ def test_process_extract_data_rollback(
         raise Exception("Fake Error")
 
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    monkeypatch.setattr(payment_extract_step, "move_files_from_received_to_processed", err_method)
+    monkeypatch.setattr(
+        local_payment_extract_step, "move_files_from_received_to_processed", err_method
+    )
 
     with pytest.raises(Exception, match="Fake Error"):
-        payment_extract_step.run()
+        local_payment_extract_step.run()
 
     # Make certain that there are no payments or state logs in the DB
-    payments = test_db_session.query(Payment).all()
+    payments = local_test_db_session.query(Payment).all()
     assert len(payments) == 0
-    state_logs = test_db_session.query(StateLog).all()
+    state_logs = local_test_db_session.query(StateLog).all()
     assert len(state_logs) == 0
 
     # The files should have been moved to the error folder
@@ -564,7 +587,7 @@ def test_process_extract_data_rollback(
     assert len(files) == 4
 
     # The reference file should have been created
-    reference_files = test_db_session.query(ReferenceFile).all()
+    reference_files = local_test_db_session.query(ReferenceFile).all()
     assert len(reference_files) == 1
     assert reference_files[0].file_location == expected_path
     assert (
@@ -572,17 +595,17 @@ def test_process_extract_data_rollback(
         == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
     )
 
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
 
 def test_process_extract_unprocessed_folder_files(
     mock_fineos_s3_bucket,
     set_exporter_env_vars,
-    payment_extract_step,
-    test_db_session,
+    local_payment_extract_step,
+    local_test_db_session,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
@@ -614,7 +637,7 @@ def test_process_extract_unprocessed_folder_files(
         reference_file_type_id=ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id,
     )
 
-    payment_extract_step.run()
+    local_payment_extract_step.run()
     processed_folder = os.path.join(
         get_s3_config().pfml_fineos_extract_archive_path,
         payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
@@ -648,35 +671,37 @@ def test_process_extract_unprocessed_folder_files(
 
     # confirm no files will be copied in a subsequent copy
     copied_files = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, extractor.expected_file_names, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+        local_test_db_session,
+        extractor.expected_file_names,
+        ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
     )
     assert len(copied_files) == 0
 
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == 0
 
 
 def test_process_extract_data_no_existing_address_eft(
     mock_s3_bucket,
     set_exporter_env_vars,
-    payment_extract_step,
-    test_db_session,
+    local_payment_extract_step,
+    local_test_db_session,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
-        mock_s3_bucket, test_db_session, add_address=False, add_eft=False,
+        mock_s3_bucket, local_test_db_session, add_address=False, add_eft=False,
     )
 
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 3
 
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     for index in ["1", "2", "3"]:
         payment = (
-            test_db_session.query(Payment)
+            local_test_db_session.query(Payment)
             .filter(
                 Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == f"30{index}"
             )
@@ -757,7 +782,7 @@ def test_process_extract_data_no_existing_address_eft(
             assert "Initiated DELEGATED_EFT flow for employee" in state_log.outcome["message"]
             assert state_log.end_state_id == State.DELEGATED_EFT_SEND_PRENOTE.state_id
 
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
 
@@ -765,27 +790,27 @@ def test_process_extract_data_no_existing_address_eft(
 def test_process_extract_data_existing_payment(
     mock_s3_bucket,
     set_exporter_env_vars,
-    payment_extract_step,
-    test_db_session,
+    local_payment_extract_step,
+    local_test_db_session,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
         mock_s3_bucket,
-        test_db_session,
+        local_test_db_session,
         add_payment=True,
         additional_payment_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
     )
 
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 3
 
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     for index in ["1", "2", "3"]:
         payments = (
-            test_db_session.query(Payment)
+            local_test_db_session.query(Payment)
             .filter(
                 Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == f"30{index}"
             )
@@ -807,54 +832,10 @@ def test_process_extract_data_existing_payment(
                 State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
             ]
 
-    payment_count_after = test_db_session.query(Payment).count()
+    payment_count_after = local_test_db_session.query(Payment).count()
     assert payment_count_after == 6  # 3 payments each with an old record and a new one
 
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
-
-
-@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_extract_data_claim_exists_without_leave_type(
-    mock_s3_bucket,
-    set_exporter_env_vars,
-    payment_extract_step,
-    test_db_session,
-    tmp_path,
-    monkeypatch,
-    create_triggers,
-):
-    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-
-    # Create a basic payment
-    fineos_data = FineosPaymentData()
-    # Create a claim without the claim type
-    add_db_records_from_fineos_data(test_db_session, fineos_data, add_claim_type=False)
-
-    upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
-
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 1
-
-    payment_extract_step.run()
-
-    payment = test_db_session.query(Payment).one_or_none()
-    assert payment
-    assert payment.claim
-
-    assert len(payment.state_logs) == 1
-    state_log = payment.state_logs[0]
-    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
-
-    assert state_log.outcome["message"] == "Error processing payment record"
-    validation_issues = state_log.outcome["validation_container"]["validation_issues"]
-    assert len(validation_issues) == 1
-    assert validation_issues[0] == {
-        "reason": "MissingInDB",
-        "details": "Claim ABS-4720 exists, but does not have a claim type associated with it.",
-    }
-
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
 
@@ -862,11 +843,11 @@ def test_process_extract_data_claim_exists_without_leave_type(
 def test_process_extract_data_minimal_viable_payment(
     mock_s3_bucket,
     set_exporter_env_vars,
-    payment_extract_step,
-    test_db_session,
+    local_payment_extract_step,
+    local_test_db_session,
     tmp_path,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     # This test creates a file with absolutely no data besides the bare
     # minimum to be viable to create a payment, this is done in order
@@ -874,16 +855,16 @@ def test_process_extract_data_minimal_viable_payment(
     # edge cases are accounted for and handled appropriately. This shouldn't
     # ever be a real scenario, but might encompass small pieces of something real
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
     # C & I value are the bare minimum to have a payment
     fineos_data = FineosPaymentData(False, c_value="1000", i_value="1")
     upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
     # We deliberately do no DB setup, there will not be any prior employee or claim
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
-    payment = test_db_session.query(Payment).one_or_none()
+    payment = local_test_db_session.query(Payment).one_or_none()
     assert payment
     assert payment.claim is None
 
@@ -897,7 +878,7 @@ def test_process_extract_data_minimal_viable_payment(
     # and they may adjust in the future
     assert len(state_log.outcome["validation_container"]["validation_issues"]) >= 7
 
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
 
@@ -905,15 +886,15 @@ def test_process_extract_data_minimal_viable_payment(
 def test_process_extract_data_minimal_viable_standard_payment(
     mock_s3_bucket,
     set_exporter_env_vars,
-    payment_extract_step,
-    test_db_session,
+    local_payment_extract_step,
+    local_test_db_session,
     tmp_path,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     # Same as the above test, but we setup enough to make a "standard" payment
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
     # C & I value are the bare minimum to have a payment
@@ -922,9 +903,9 @@ def test_process_extract_data_minimal_viable_standard_payment(
     )
     upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
     # We deliberately do no DB setup, there will not be any prior employee or claim
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
-    payment = test_db_session.query(Payment).one_or_none()
+    payment = local_test_db_session.query(Payment).one_or_none()
     assert payment
     assert payment.claim is None
 
@@ -938,7 +919,7 @@ def test_process_extract_data_minimal_viable_standard_payment(
     # and they may adjust in the future
     assert len(state_log.outcome["validation_container"]["validation_issues"]) >= 11
 
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
 
@@ -946,39 +927,47 @@ def test_process_extract_data_minimal_viable_standard_payment(
 def test_process_extract_data_leave_request_decision_validation(
     mock_s3_bucket,
     set_exporter_env_vars,
-    payment_extract_step,
-    test_db_session,
-    initialize_factories_session,
+    local_payment_extract_step,
+    local_test_db_session,
+    local_initialize_factories_session,
     tmp_path,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
+    medical_claim_type_record = FineosPaymentData(claim_type="Employee")
     approved_record = FineosPaymentData(leave_request_decision="Approved")
     pending_record = FineosPaymentData(leave_request_decision="Pending")
     in_review_record = FineosPaymentData(leave_request_decision="In Review")
     rejected_record = FineosPaymentData(leave_request_decision="Rejected")
 
     # setup both payments in DB
-    add_db_records_from_fineos_data(test_db_session, approved_record)
-    add_db_records_from_fineos_data(test_db_session, pending_record)
-    add_db_records_from_fineos_data(test_db_session, in_review_record)
-    add_db_records_from_fineos_data(test_db_session, rejected_record)
+    add_db_records_from_fineos_data(local_test_db_session, approved_record)
+    add_db_records_from_fineos_data(local_test_db_session, pending_record)
+    add_db_records_from_fineos_data(local_test_db_session, in_review_record)
+    add_db_records_from_fineos_data(local_test_db_session, rejected_record)
+    add_db_records_from_fineos_data(local_test_db_session, medical_claim_type_record)
 
     upload_fineos_data(
         tmp_path,
         mock_s3_bucket,
-        [approved_record, pending_record, in_review_record, rejected_record],
+        [
+            approved_record,
+            pending_record,
+            in_review_record,
+            rejected_record,
+            medical_claim_type_record,
+        ],
     )
 
     # We deliberately do no DB setup, there will not be any prior employee or claim
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     approved_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(
             Payment.fineos_pei_c_value == approved_record.c_value,
             Payment.fineos_pei_i_value == approved_record.i_value,
@@ -993,7 +982,7 @@ def test_process_extract_data_leave_request_decision_validation(
     )
 
     pending_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(
             Payment.fineos_pei_c_value == pending_record.c_value,
             Payment.fineos_pei_i_value == pending_record.i_value,
@@ -1008,7 +997,7 @@ def test_process_extract_data_leave_request_decision_validation(
     )
 
     in_review_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(
             Payment.fineos_pei_c_value == in_review_record.c_value,
             Payment.fineos_pei_i_value == in_review_record.i_value,
@@ -1023,7 +1012,7 @@ def test_process_extract_data_leave_request_decision_validation(
     )
 
     rejected_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(
             Payment.fineos_pei_c_value == rejected_record.c_value,
             Payment.fineos_pei_i_value == rejected_record.i_value,
@@ -1037,37 +1026,55 @@ def test_process_extract_data_leave_request_decision_validation(
         == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
     )
 
+    medical_claim_type_record = (
+        local_test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == medical_claim_type_record.c_value,
+            Payment.fineos_pei_i_value == medical_claim_type_record.i_value,
+        )
+        .one_or_none()
+    )
+
+    assert medical_claim_type_record
+    assert len(medical_claim_type_record.state_logs) == 1
+    assert (
+        medical_claim_type_record.state_logs[0].end_state_id
+        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+    )
+
     import_log_report = json.loads(rejected_payment.fineos_extract_import_log.report)
     assert import_log_report["not_pending_or_approved_leave_request_count"] == 1
-    assert import_log_report["standard_valid_payment_count"] == 3
+    assert import_log_report["standard_valid_payment_count"] == 4
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_not_id_proofed(
     mock_s3_bucket,
     set_exporter_env_vars,
-    test_db_session,
-    payment_extract_step,
+    local_test_db_session,
+    local_payment_extract_step,
     tmp_path,
-    initialize_factories_session,
+    local_initialize_factories_session,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     datasets = []
     # This tests that a payment with a claim missing ID proofing with be rejected
 
     standard_payment_data = FineosPaymentData()
-    add_db_records_from_fineos_data(test_db_session, standard_payment_data, is_id_proofed=False)
+    add_db_records_from_fineos_data(
+        local_test_db_session, standard_payment_data, is_id_proofed=False
+    )
     datasets.append(standard_payment_data)
 
     upload_fineos_data(tmp_path, mock_s3_bucket, datasets)
 
     # Run the extract process
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     standard_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == standard_payment_data.i_value)
         .one_or_none()
     )
@@ -1089,12 +1096,12 @@ def test_process_extract_not_id_proofed(
 def test_process_extract_additional_payment_types(
     mock_s3_bucket,
     set_exporter_env_vars,
-    test_db_session,
-    payment_extract_step,
+    local_test_db_session,
+    local_payment_extract_step,
     tmp_path,
-    initialize_factories_session,
+    local_initialize_factories_session,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     datasets = []
@@ -1106,7 +1113,7 @@ def test_process_extract_additional_payment_types(
     zero_dollar_data = FineosPaymentData(
         payment_amount="0.00", payment_method="Elec Funds Transfer"
     )
-    add_db_records_from_fineos_data(test_db_session, zero_dollar_data)
+    add_db_records_from_fineos_data(local_test_db_session, zero_dollar_data)
     datasets.append(zero_dollar_data)
 
     # Create an overpayment
@@ -1115,7 +1122,8 @@ def test_process_extract_additional_payment_types(
     overpayment_data = FineosPaymentData(
         event_type="Overpayment", event_reason="Unknown", payment_method="Elec Funds Transfer"
     )
-    add_db_records_from_fineos_data(test_db_session, overpayment_data)
+
+    add_db_records_from_fineos_data(local_test_db_session, overpayment_data)
     datasets.append(overpayment_data)
 
     # Create a cancellation
@@ -1124,28 +1132,28 @@ def test_process_extract_additional_payment_types(
         payment_amount="-123.45",
         payment_method="Elec Funds Transfer",
     )
-    add_db_records_from_fineos_data(test_db_session, cancellation_data)
+    add_db_records_from_fineos_data(local_test_db_session, cancellation_data)
     datasets.append(cancellation_data)
 
     # Unknown - negative payment amount, but PaymentOut
     negative_payment_out_data = FineosPaymentData(
         event_type="PaymentOut", payment_amount="-100.00", payment_method="Elec Funds Transfer"
     )
-    add_db_records_from_fineos_data(test_db_session, negative_payment_out_data)
+    add_db_records_from_fineos_data(local_test_db_session, negative_payment_out_data)
     datasets.append(negative_payment_out_data)
 
     # Unknown - missing payment amount
     no_payment_out_data = FineosPaymentData(
         payment_amount=None, payment_method="Elec Funds Transfer"
     )
-    add_db_records_from_fineos_data(test_db_session, no_payment_out_data)
+    add_db_records_from_fineos_data(local_test_db_session, no_payment_out_data)
     datasets.append(no_payment_out_data)
 
     # Unknown - missing event type
     missing_event_payment_out_data = FineosPaymentData(
         event_type=None, payment_method="Elec Funds Transfer"
     )
-    add_db_records_from_fineos_data(test_db_session, missing_event_payment_out_data)
+    add_db_records_from_fineos_data(local_test_db_session, missing_event_payment_out_data)
     datasets.append(missing_event_payment_out_data)
 
     # Create a record for an employer reimbursement
@@ -1155,20 +1163,20 @@ def test_process_extract_additional_payment_types(
         payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
         payment_method="Elec Funds Transfer",
     )
-    add_db_records_from_fineos_data(test_db_session, employer_reimbursement_data)
+    add_db_records_from_fineos_data(local_test_db_session, employer_reimbursement_data)
     datasets.append(employer_reimbursement_data)
 
     upload_fineos_data(tmp_path, mock_s3_bucket, datasets)
 
     # Run the extract process
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     # No PUB EFT records should exist
-    len(test_db_session.query(PubEft).all()) == 0
+    len(local_test_db_session.query(PubEft).all()) == 0
 
     # Zero dollar payment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
     zero_dollar_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == zero_dollar_data.i_value)
         .one_or_none()
     )
@@ -1180,7 +1188,7 @@ def test_process_extract_additional_payment_types(
 
     # Overpayment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
     overpayment_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == overpayment_data.i_value)
         .one_or_none()
     )
@@ -1192,7 +1200,7 @@ def test_process_extract_additional_payment_types(
 
     # ACH Cancellation should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
     cancellation_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == cancellation_data.i_value)
         .one_or_none()
     )
@@ -1205,7 +1213,7 @@ def test_process_extract_additional_payment_types(
     for unknown_data in [negative_payment_out_data, no_payment_out_data, negative_payment_out_data]:
         # Unknown should be in the error report state DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
         unknown_payment = (
-            test_db_session.query(Payment)
+            local_test_db_session.query(Payment)
             .filter(Payment.fineos_pei_i_value == unknown_data.i_value)
             .one_or_none()
         )
@@ -1218,7 +1226,7 @@ def test_process_extract_additional_payment_types(
 
     # Employer reimbursement should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT
     employer_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
         .one_or_none()
     )
@@ -1234,12 +1242,12 @@ def test_process_extract_additional_payment_types(
 def test_process_extract_additional_payment_types_can_be_missing_other_files(
     mock_s3_bucket,
     set_exporter_env_vars,
-    test_db_session,
-    payment_extract_step,
+    local_test_db_session,
+    local_payment_extract_step,
     tmp_path,
-    initialize_factories_session,
+    local_initialize_factories_session,
     monkeypatch,
-    create_triggers,
+    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     # This tests that the behavior of non-standard payment types are handled properly
@@ -1258,21 +1266,21 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         include_payment_details=False,
         include_requested_absence=False,
     )
-    add_db_records_from_fineos_data(test_db_session, zero_dollar_data)
+    add_db_records_from_fineos_data(local_test_db_session, zero_dollar_data)
     datasets.append(zero_dollar_data)
 
     # Create an overpayment
     # note that the event reason for an overpayment is Unknown which is treated as
     # None in our approach, setting it here to make sure that doesn't cause a validation issue.
     overpayment_data = FineosPaymentData(
-        event_type="Overpayment",
+        event_type="Overpayment Adjustment",
         event_reason="Unknown",
         payment_method="Elec Funds Transfer",
         include_claim_details=False,
         include_payment_details=False,
         include_requested_absence=False,
     )
-    add_db_records_from_fineos_data(test_db_session, overpayment_data)
+    add_db_records_from_fineos_data(local_test_db_session, overpayment_data)
     datasets.append(overpayment_data)
 
     # Create a cancellation
@@ -1284,7 +1292,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         include_payment_details=False,
         include_requested_absence=False,
     )
-    add_db_records_from_fineos_data(test_db_session, cancellation_data)
+    add_db_records_from_fineos_data(local_test_db_session, cancellation_data)
     datasets.append(cancellation_data)
 
     # Create a record for an employer reimbursement
@@ -1297,20 +1305,20 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         include_payment_details=False,
         include_requested_absence=False,
     )
-    add_db_records_from_fineos_data(test_db_session, employer_reimbursement_data)
+    add_db_records_from_fineos_data(local_test_db_session, employer_reimbursement_data)
     datasets.append(employer_reimbursement_data)
 
     upload_fineos_data(tmp_path, mock_s3_bucket, datasets)
 
     # Run the extract process
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     # No PUB EFT records should exist
-    len(test_db_session.query(PubEft).all()) == 0
+    len(local_test_db_session.query(PubEft).all()) == 0
 
     # Zero dollar payment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
     zero_dollar_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == zero_dollar_data.i_value)
         .one_or_none()
     )
@@ -1323,7 +1331,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
 
     # Overpayment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
     overpayment_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == overpayment_data.i_value)
         .one_or_none()
     )
@@ -1336,7 +1344,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
 
     # ACH Cancellation should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
     cancellation_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == cancellation_data.i_value)
         .one_or_none()
     )
@@ -1349,7 +1357,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
 
     # Employer reimbursement should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT
     employer_payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
         .one_or_none()
     )
@@ -1407,6 +1415,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "AMOUNT_MONAMT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
             ValidationIssue(
                 ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
                 "Unknown payment scenario encountered. Payment Amount: None, Event Type: None, Event Reason: ",
@@ -1434,6 +1443,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1457,6 +1467,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD4"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD6"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1479,6 +1490,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKSORT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
         ]
     )
 
@@ -1592,17 +1604,21 @@ def test_validation_zip_code(initialize_factories_session, set_exporter_env_vars
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_update_eft_existing_eft_matches_and_approved(
-    payment_extract_step, test_db_session, mock_s3_bucket, set_exporter_env_vars, monkeypatch,
+    local_payment_extract_step,
+    local_test_db_session,
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    monkeypatch,
 ):
     # This is the happiest of paths, we've already got the EFT info for the
     # employee and it has already been prenoted.
 
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
+    setup_process_tests(mock_s3_bucket, local_test_db_session, add_eft=False)
 
     # Set an employee to have the same EFT we know is going to be extracted
     employee = (
-        test_db_session.query(Employee)
+        local_test_db_session.query(Employee)
         .join(TaxIdentifier)
         .filter(TaxIdentifier.tax_identifier == "1" * 9)
         .first()
@@ -1618,11 +1634,11 @@ def test_update_eft_existing_eft_matches_and_approved(
     EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
 
     # Run the process
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     # Verify the payment isn't marked as having an EFT update
     payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == "301")
         .first()
     )
@@ -1637,7 +1653,9 @@ def test_update_eft_existing_eft_matches_and_approved(
 
     # There should not be a DELEGATED_EFT_SEND_PRENOTE record
     employee_state_logs_after = (
-        test_db_session.query(StateLog).filter(StateLog.employee_id == employee.employee_id).all()
+        local_test_db_session.query(StateLog)
+        .filter(StateLog.employee_id == employee.employee_id)
+        .all()
     )
     assert len(employee_state_logs_after) == 0
 
@@ -1648,8 +1666,8 @@ def test_update_eft_existing_eft_matches_and_approved(
 )
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_update_eft_existing_eft_matches_and_not_approved(
-    payment_extract_step,
-    test_db_session,
+    local_payment_extract_step,
+    local_test_db_session,
     mock_s3_bucket,
     set_exporter_env_vars,
     monkeypatch,
@@ -1659,11 +1677,11 @@ def test_update_eft_existing_eft_matches_and_not_approved(
     # employee and it has already been prenoted.
 
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
+    setup_process_tests(mock_s3_bucket, local_test_db_session, add_eft=False)
 
     # Set an employee to have the same EFT we know is going to be extracted
     employee = (
-        test_db_session.query(Employee)
+        local_test_db_session.query(Employee)
         .join(TaxIdentifier)
         .filter(TaxIdentifier.tax_identifier == "1" * 9)
         .first()
@@ -1680,11 +1698,11 @@ def test_update_eft_existing_eft_matches_and_not_approved(
     EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
 
     # Run the process
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     # Verify the payment isn't marked as having an EFT update
     payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == "301")
         .first()
     )
@@ -1705,23 +1723,29 @@ def test_update_eft_existing_eft_matches_and_not_approved(
 
     # There should not be a DELEGATED_EFT_SEND_PRENOTE record
     employee_state_logs_after = (
-        test_db_session.query(StateLog).filter(StateLog.employee_id == employee.employee_id).all()
+        local_test_db_session.query(StateLog)
+        .filter(StateLog.employee_id == employee.employee_id)
+        .all()
     )
     assert len(employee_state_logs_after) == 0
 
 
 def test_update_eft_existing_eft_matches_and_pending_with_pub(
-    payment_extract_step, test_db_session, mock_s3_bucket, set_exporter_env_vars, monkeypatch,
+    local_payment_extract_step,
+    local_test_db_session,
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    monkeypatch,
 ):
     # This is the happiest of paths, we've already got the EFT info for the
     # employee and it has already been prenoted.
 
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
+    setup_process_tests(mock_s3_bucket, local_test_db_session, add_eft=False)
 
     # Set an employee to have the same EFT we know is going to be extracted
     employee = (
-        test_db_session.query(Employee)
+        local_test_db_session.query(Employee)
         .join(TaxIdentifier)
         .filter(TaxIdentifier.tax_identifier == "1" * 9)
         .first()
@@ -1738,11 +1762,11 @@ def test_update_eft_existing_eft_matches_and_pending_with_pub(
     EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
 
     # Run the process
-    payment_extract_step.run()
+    local_payment_extract_step.run()
 
     # Verify the payment isn't marked as having an EFT update
     payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == "301")
         .first()
     )
@@ -1760,14 +1784,20 @@ def test_update_eft_existing_eft_matches_and_pending_with_pub(
 
     # There should not be a DELEGATED_EFT_SEND_PRENOTE record
     employee_state_logs_after = (
-        test_db_session.query(StateLog).filter(StateLog.employee_id == employee.employee_id).all()
+        local_test_db_session.query(StateLog)
+        .filter(StateLog.employee_id == employee.employee_id)
+        .all()
     )
     assert len(employee_state_logs_after) == 0
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_update_experian_address_pair_fineos_address_no_update(
-    payment_extract_step, test_db_session, mock_s3_bucket, set_exporter_env_vars, monkeypatch,
+    local_payment_extract_step,
+    local_test_db_session,
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    monkeypatch,
 ):
     # update_experian_address_pair_fineos_address() has 2 possible outcomes:
     #   1. There is no change to address
@@ -1775,11 +1805,11 @@ def test_update_experian_address_pair_fineos_address_no_update(
     # In this test, we cover #1. #2 is covered by other tests.
 
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    setup_process_tests(mock_s3_bucket, test_db_session)
+    setup_process_tests(mock_s3_bucket, local_test_db_session)
 
     # Set an employee to have the same address we know is going to be extracted
     employee = (
-        test_db_session.query(Employee)
+        local_test_db_session.query(Employee)
         .join(TaxIdentifier)
         .filter(TaxIdentifier.tax_identifier == "1" * 9)
         .first()
@@ -1798,15 +1828,15 @@ def test_update_experian_address_pair_fineos_address_no_update(
         )
     )
     payment = PaymentFactory.create(claim=claim, experian_address_pair=address_pair)
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     # Run the process
-    payment_extract_step.run()
-    test_db_session.expire_all()
+    local_payment_extract_step.run()
+    local_test_db_session.expire_all()
 
     # Verify the payment isn't marked as having an address update
     payment = (
-        test_db_session.query(Payment)
+        local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == "301")
         .first()
     )

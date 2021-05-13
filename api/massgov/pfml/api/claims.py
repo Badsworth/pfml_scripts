@@ -185,18 +185,32 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     with app.db_session() as db_session:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
-        claim = get_claim_as_leave_admin(
+        claim_review_response = get_claim_as_leave_admin(
             user_leave_admin.fineos_web_id, fineos_absence_id, employer  # type: ignore
         )
-        if claim is None:
+
+        if claim_review_response is None:
             raise NotFound(
                 description="Could not fetch Claim from FINEOS with given absence ID {}".format(
                     fineos_absence_id
                 )
             )
 
+        claim_from_db = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .one_or_none()
+        )
+
+        if claim_from_db and claim_from_db.fineos_absence_status:
+            claim_review_response.status = (
+                claim_from_db.fineos_absence_status.absence_status_description
+            )
+
         return response_util.success_response(
-            message="Successfully retrieved claim", data=claim.dict(), status_code=200
+            message="Successfully retrieved claim",
+            data=claim_review_response.dict(),
+            status_code=200,
         ).to_api_response()
 
 
@@ -312,12 +326,13 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
 
 def get_claims() -> flask.Response:
     current_user = app.current_user()
+    is_employer = can(READ, "EMPLOYER_API")
 
     with PaginationAPIContext(Claim, request=flask.request) as pagination_context:
         with app.db_session() as db_session:
             # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims)
             # so if something changes there it probably needs to be changed here
-            if current_user and current_user.employers:
+            if is_employer and current_user and current_user.employers:
                 verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
                     feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
                     user_email=current_user.email_address,
@@ -345,6 +360,18 @@ def get_claims() -> flask.Response:
                 )
 
         page = page_for_api_context(pagination_context, query)
+
+    logger.info(
+        "get_claims success",
+        extra={
+            "is_employer": str(is_employer),
+            "pagination.order_by": pagination_context.order_by,
+            "pagination.order_direction": pagination_context.order_direction,
+            "pagination.page_offset": pagination_context.page_offset,
+            "pagination.total_pages": page.total_pages,
+            "pagination.total_records": page.total_records,
+        },
+    )
 
     return response_util.paginated_success_response(
         message="Successfully retrieved claims",

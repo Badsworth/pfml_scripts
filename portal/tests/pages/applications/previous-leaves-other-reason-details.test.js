@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
   testHook,
@@ -17,8 +17,8 @@ import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps"
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const setup = (claimAttrs = {}) => {
-  const claim = new MockClaimBuilder().continuous().create();
+const setup = (claimAttrs = { employer_fein: "12-3456789" }) => {
+  const claim = new MockBenefitsApplicationBuilder().continuous().create();
 
   const { appLogic, wrapper } = renderWithAppLogic(
     PreviousLeavesOtherReasonDetails,
@@ -110,7 +110,8 @@ const clickAddPreviousLeaveButton = async (wrapper) => {
 };
 
 const createClaimWithPreviousLeaves = () =>
-  new MockClaimBuilder()
+  new MockBenefitsApplicationBuilder()
+    .employed()
     .continuous()
     .previousLeavesOtherReason([
       {
@@ -241,7 +242,10 @@ describe("PreviousLeavesOtherReasonDetails", () => {
 
 describe("PreviousLeavesOtherReasonDetailsCard", () => {
   it("renders the component", () => {
-    const claim = new MockClaimBuilder().continuous().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .employed()
+      .continuous()
+      .create();
     const index = 0;
     let getFunctionalInputProps;
 
