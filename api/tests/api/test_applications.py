@@ -1040,6 +1040,25 @@ def test_application_patch_employee_ssn(client, user, auth_token, test_db_sessio
     assert application.tax_identifier
     assert application.tax_identifier.tax_identifier == "123456789"
 
+def test_application_patch_occupation(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    assert application.occupation is None
+    assert application.job_title is None
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"occupation": "Mining", "job_title": "Miner"},
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()["data"]
+    assert data["occupation"] is "Mining"
+    assert data["job_title"] is "Miner"
+
+    test_db_session.refresh(application)
+    assert application.occupation is "Mining"
+    assert application.job_title is "Miner"
 
 def test_application_patch_masked_tax_id_has_no_effect(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
