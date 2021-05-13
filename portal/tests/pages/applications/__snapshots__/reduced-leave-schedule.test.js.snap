@@ -2,6 +2,19 @@
 
 exports[`ReducedLeaveSchedule renders lead with expected content when leave reason is Bonding 1`] = `"Enter 0 for days you won’t work a reduced schedule."`;
 
+exports[`ReducedLeaveSchedule renders lead with expected content when leave reason is Caring 1`] = `
+Array [
+  "Enter 0 for days you won’t work a reduced schedule.",
+  <br
+    key="br-1"
+  />,
+  <br
+    key="br-2"
+  />,
+  "Your answer must match Question # in the Certification to Care for a Family Member.",
+]
+`;
+
 exports[`ReducedLeaveSchedule renders lead with expected content when leave reason is Medical 1`] = `
 Array [
   "Enter 0 for days you won’t work a reduced schedule.",
@@ -11,7 +24,7 @@ Array [
   <br
     key="br-2"
   />,
-  "Refer to Question 33 in the Certification of a Serious Health Condition form (page 8).",
+  "Your answer must match Question 33 in the Certification of a Serious Health Condition form.",
 ]
 `;
 

@@ -466,6 +466,17 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    *
    * @returns {MockBenefitsApplicationBuilder}
    */
+  previousLeavesSameReason(attrs = [{}]) {
+    set(this.claimAttrs, "has_previous_leaves_same_reason", true);
+    const previousLeaves = attrs.map((attr) => new PreviousLeave(attr));
+    set(this.claimAttrs, "previous_leaves_same_reason", previousLeaves);
+    return this;
+  }
+
+  /**
+   *
+   * @returns {MockClaimBuilder}
+   */
   previousLeavesOtherReason(attrs = [{}]) {
     set(this.claimAttrs, "has_previous_leaves_other_reason", true);
     const previousLeaves = attrs.map((attr) => new PreviousLeave(attr));

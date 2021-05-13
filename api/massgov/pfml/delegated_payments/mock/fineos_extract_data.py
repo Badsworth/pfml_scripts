@@ -3,8 +3,8 @@ import io
 import os
 from collections import OrderedDict
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import List
+from datetime import date, datetime, timedelta
+from typing import List, cast
 
 import faker
 
@@ -163,6 +163,9 @@ class FineosClaimantData(FineosData):
         self.leave_request_evidence = self.get_value("leave_request_evidence", "Satisfied")
         self.leave_request_start = self.get_value("leave_request_start", "2021-01-01 12:00:00")
         self.leave_request_end = self.get_value("leave_request_end", "2021-04-01 12:00:00")
+        self.employer_customer_num = self.get_value(
+            "employer_customer_num", str(fake.unique.random_int())
+        )
 
     def get_employee_feed_record(self):
         employee_feed_record = OrderedDict()
@@ -198,9 +201,7 @@ class FineosClaimantData(FineosData):
             requested_absence_record["ABSENCEPERIOD_START"] = self.leave_request_start
             requested_absence_record["ABSENCEPERIOD_END"] = self.leave_request_end
             requested_absence_record["EMPLOYEE_CUSTOMERNO"] = self.customer_number
-            requested_absence_record[
-                "EMPLOYER_CUSTOMERNO"
-            ] = None  # TODO - not doing anything with this yet
+            requested_absence_record["EMPLOYER_CUSTOMERNO"] = self.employer_customer_num
 
         return requested_absence_record
 
@@ -389,6 +390,8 @@ def generate_payment_extract_files(
         employee = scenario_data.employee
         claim = scenario_data.claim
 
+        prior_payment = scenario_data.payment if round > 1 else None
+
         if employee.tax_identifier is None:
             raise Exception("Expected employee with tin")
 
@@ -399,8 +402,18 @@ def generate_payment_extract_files(
         payment_method = scenario_descriptor.payment_method.payment_method_description
 
         payment_date = payments_util.get_now()
-        payment_start_period = payment_date
-        payment_end_period = payment_date + timedelta(days=15)
+
+        # This'll be a new payment based on different C/I values
+        if round > 1 and scenario_descriptor.has_additional_payment_in_period and prior_payment:
+            payment_start_period = cast(date, prior_payment.period_start_date)
+            payment_end_period = cast(date, prior_payment.period_end_date)
+            c_value = scenario_data.additional_payment_c_value
+            i_value = scenario_data.additional_payment_i_value
+        else:
+            payment_start_period = payment_date
+            payment_end_period = payment_date + timedelta(days=15)
+            c_value = scenario_data.payment_c_value
+            i_value = scenario_data.payment_i_value
 
         is_eft = scenario_descriptor.payment_method == PaymentMethod.ACH
         routing_nbr = ssn if is_eft else ""
@@ -411,7 +424,15 @@ def generate_payment_extract_files(
             else ""
         )
 
-        payment_amount = "-100.00" if scenario_descriptor.negative_payment_amount else "100.00"
+        if scenario_descriptor.payment_close_to_cap:
+            # The cap is $850.00
+            payment_amount = "800.00"
+        else:
+            payment_amount = "100.00"
+
+        if scenario_descriptor.negative_payment_amount:
+            payment_amount = "-" + payment_amount
+
         event_type = "PaymentOut"
         payee_identifier = "Social Security Number"
         event_reason = "Automatic Main Payment"
@@ -449,8 +470,8 @@ def generate_payment_extract_files(
         # Auto generated: c_value, i_value, leave_request_id
         fineos_payments_data = FineosPaymentData(
             generate_defaults=True,
-            c_value=scenario_data.payment_c_value,
-            i_value=scenario_data.payment_i_value,
+            c_value=c_value,
+            i_value=i_value,
             include_claim_details=scenario_descriptor.include_non_vpei_records,
             include_payment_details=scenario_descriptor.include_non_vpei_records,
             include_requested_absence=scenario_descriptor.include_non_vpei_records,
@@ -518,6 +539,7 @@ def generate_claimant_data_files(
         scenario_descriptor = scenario_data.scenario_descriptor
         employee = scenario_data.employee
         claim = scenario_data.claim
+        employer = scenario_data.employer
 
         if employee.tax_identifier is None:
             raise Exception("Expected employee with tin")
@@ -562,6 +584,7 @@ def generate_claimant_data_files(
         leave_request_start = "2021-01-01 12:00:00"
         leave_request_end = "2021-04-01 12:00:00"
         notification_number = f"NTN-{absence_case_number}"
+        fineos_employer_id = employer.fineos_employer_id
         leave_type = scenario_descriptor.claim_type
 
         # Auto generated: c_value, i_value, leave_request_id
@@ -587,6 +610,7 @@ def generate_claimant_data_files(
             leave_request_start=leave_request_start,
             leave_request_end=leave_request_end,
             notification_number=notification_number,
+            employer_customer_num=fineos_employer_id,
         )
 
         fineos_claimant_dataset.append(fineos_payments_data)

@@ -17,6 +17,8 @@ from massgov.pfml.db.models.verifications import Verification, VerificationType
 
 logger = logging.get_logger(__name__)
 
+WITHOLDING_THRESHOLD = 0.05
+
 
 def verifications():
     body = connexion.request.json
@@ -82,8 +84,11 @@ def verifications():
             ).to_api_response()
 
         if (
-            employer_quarterly_contribution.employer_total_pfml_contribution
-            != verification_request.withholding_amount
+            abs(
+                employer_quarterly_contribution.employer_total_pfml_contribution
+                - verification_request.withholding_amount
+            )
+            > WITHOLDING_THRESHOLD
         ):
             logger.warning("Withholding amount is incorrect.", extra=verification_request.dict())
 

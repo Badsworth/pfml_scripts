@@ -19,69 +19,7 @@ const chars = {
 };
 
 const errors = {
-  auth: {
-    attemptBlocked_forgotPassword:
-      "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at $t(shared.contactCenterPhoneNumber).",
-    attemptBlocked_login:
-      "Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity.",
-    attemptsLimitExceeded_forgotPassword:
-      "Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again.",
-    attemptsLimitExceeded_login:
-      "Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again.",
-    code: {
-      deliveryFailure:
-        "We encountered an error while sending the verification code. Try again.",
-      expired:
-        "Sorry, your verification code has expired or has already been used.",
-      mismatchException:
-        "Invalid verification code. Make sure the code matches the code emailed to you.",
-      pattern:
-        "Enter the 6 digit code sent to your email and ensure it does not include any punctuation.",
-      required: "Enter the 6 digit code sent to your email",
-    },
-    // TODO (CP-1768) Remove these auth.ein strings once requests flow through API
-    ein: {
-      invalid: "Invalid employer ID number. Please try again.",
-      required: "Enter your 9-digit Employer Identification Number.",
-    },
-    expiredVerificationCode:
-      "Invalid verification code. Please request a new code.",
-    incorrectEmailOrPassword: "Incorrect email or password",
-    invalidParametersFallback: "Enter all required information",
-    invalidParametersIncludingMaybePassword:
-      "Check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",
-    invalidPhoneFormat: "Invalid phone number",
-    isEmployer: {
-      required:
-        "Select Yes if you are you creating an employer account to manage leave for your company.",
-    },
-    password: {
-      insecure: "$t(shared.auth.passwordError_insecure)",
-      invalid: "$t(shared.auth.passwordError_invalid)",
-      required: "$t(shared.auth.passwordError_required)",
-      resetRequiredException:
-        'Your password must be reset before you can log in again. Click the "Forgot your password?" link below to reset your password.',
-    },
-    userNotConfirmed:
-      "Confirm your account by following the instructions in the verification email sent to your inbox.",
-    userNotFound: "Incorrect email",
-    username: {
-      exists: "$t(shared.auth.emailError_exists)",
-      required: "$t(shared.auth.emailError_required)",
-    },
-  },
-  caughtError:
-    "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber).",
-  caughtError_DocumentsLoadError: "$t(shared.documentsLoadError)",
-  caughtError_DocumentsUploadError: "$t(shared.documentsUploadError)",
-  caughtError_ForbiddenError:
-    "Sorry, an authorization error was encountered. Please log out and then log in to try again.",
-  caughtError_NetworkError: "$t(shared.networkError)",
-  caughtError_NotFoundError:
-    "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
-  caughtError_UserNotReceivedError:
-    "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
-  claims: {
+  applications: {
     date_of_birth: {
       format: "Your date of birth must include a valid month, day, and year.",
       invalid_age: "The person taking leave must be at least 14 years old.",
@@ -456,6 +394,68 @@ const errors = {
       },
     },
   },
+  auth: {
+    attemptBlocked_forgotPassword:
+      "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at $t(shared.contactCenterPhoneNumber).",
+    attemptBlocked_login:
+      "Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity.",
+    attemptsLimitExceeded_forgotPassword:
+      "Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again.",
+    attemptsLimitExceeded_login:
+      "Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again.",
+    code: {
+      deliveryFailure:
+        "We encountered an error while sending the verification code. Try again.",
+      expired:
+        "Sorry, your verification code has expired or has already been used.",
+      mismatchException:
+        "Invalid verification code. Make sure the code matches the code emailed to you.",
+      pattern:
+        "Enter the 6 digit code sent to your email and ensure it does not include any punctuation.",
+      required: "Enter the 6 digit code sent to your email",
+    },
+    // TODO (CP-1768) Remove these auth.ein strings once requests flow through API
+    ein: {
+      invalid: "Invalid employer ID number. Please try again.",
+      required: "Enter your 9-digit Employer Identification Number.",
+    },
+    expiredVerificationCode:
+      "Invalid verification code. Please request a new code.",
+    incorrectEmailOrPassword: "Incorrect email or password",
+    invalidParametersFallback: "Enter all required information",
+    invalidParametersIncludingMaybePassword:
+      "Check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",
+    invalidPhoneFormat: "Invalid phone number",
+    isEmployer: {
+      required:
+        "Select Yes if you are you creating an employer account to manage leave for your company.",
+    },
+    password: {
+      insecure: "$t(shared.auth.passwordError_insecure)",
+      invalid: "$t(shared.auth.passwordError_invalid)",
+      required: "$t(shared.auth.passwordError_required)",
+      resetRequiredException:
+        'Your password must be reset before you can log in again. Click the "Forgot your password?" link below to reset your password.',
+    },
+    userNotConfirmed:
+      "Confirm your account by following the instructions in the verification email sent to your inbox.",
+    userNotFound: "Incorrect email",
+    username: {
+      exists: "$t(shared.auth.emailError_exists)",
+      required: "$t(shared.auth.emailError_required)",
+    },
+  },
+  caughtError:
+    "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber).",
+  caughtError_DocumentsLoadError: "$t(shared.documentsLoadError)",
+  caughtError_DocumentsUploadError: "$t(shared.documentsUploadError)",
+  caughtError_ForbiddenError:
+    "Sorry, an authorization error was encountered. Please log out and then log in to try again.",
+  caughtError_NetworkError: "$t(shared.networkError)",
+  caughtError_NotFoundError:
+    "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
+  caughtError_UserNotReceivedError:
+    "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   documents: {
     file: {
       required: "Upload at least one file to continue.",
@@ -583,6 +583,25 @@ const shared = {
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
   claimsOtherLeaveTitle: "Other leave, benefits, and income",
+  claimsPreviousLeaveDetails: {
+    addButton: "Add another previous leave",
+    isForCurrentEmployerHint:
+      "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, this employer will be able to review it. We won’t share any leave you took from other employers.",
+    isForCurrentEmployerLabel:
+      "Did you take leave from this employer? EIN:$t(chars.nbsp){{employer_fein, ein}}",
+    leaveEndDateLabel: "What was the last day of this leave?",
+    leaveMinutesHint:
+      "Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours.",
+    leaveMinutesLabel: "What was the total number of hours you took off?",
+    leaveStartDateLabel: "What was the first day of this leave?",
+    limitMessage: "You can only add up to {{limit}} leaves",
+    removeButton: "Remove this previous leave",
+    sectionLabel: "Tell us about your previous time off",
+    workedPerWeekMinutesHint:
+      "Enter the number of hours you would have worked each week, if you were not on leave.<br />If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
+    workedPerWeekMinutesLabel:
+      "How many hours would you have worked per week if you did not take this leave?",
+  },
   claimsVerifyIdTitle: "Your identification",
   contactCenterAddress:
     "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01842",
@@ -926,15 +945,16 @@ const pages = {
   claimsEmployerBenefits: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
-    hintHeader: "Employer-sponsored benefits you must report are:",
+    hintBody:
+      "<p>This does not include PFML benefits. You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.</p><p>If you won’t use these benefits from this employer, select No.</p>",
+    hintHeader: "The employer-sponsored benefits you must report are:",
     hintList: [
-      "Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off",
-      "Short-term disability insurance",
+      "Temporary disability insurance, for either short-term or long-term disability",
       "Permanent disability insurance",
-      "Family or medical leave insurance, such as a maternity leave policy",
+      "Family or medical leave benefits, such as a parental leave program",
     ],
     sectionLabel:
-      "Will you use any employer-sponsored benefits from this employer during your PFML leave?",
+      "Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsEmployerBenefitsDetails: {
@@ -971,6 +991,11 @@ const pages = {
     startDateLabel: "When will you start using the benefit?",
     title: "$t(shared.claimsOtherLeaveTitle)",
     typeLabel: "What kind of benefit is it?",
+  },
+  claimsEmployerBenefitsIntro: {
+    sectionLabel:
+      "Tell us about other benefits and income you will use during your paid leave from PFML.",
+    title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsEmploymentStatus: {
     alertBody:
@@ -1282,18 +1307,19 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReasonDetails: {
-    addButton: "Add another leave",
+    addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     hoursLabel: "$t(shared.hoursLabel)",
     isForCurrentEmployerHint:
-      "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, we'll give this employer a chance to review information from your application. We won't share any information about leave you took from other employers.",
+      "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerHint)",
     isForCurrentEmployerLabel:
-      "Did you take leave from this employer? EIN:$t(chars.nbsp){{employer_fein, ein}}",
-    leaveEndDateLabel: "What was the last day of this leave?",
-    leaveMinutesHint:
-      "Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours.",
-    leaveMinutesLabel: "What was the total number of hours you took off?",
+      "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerLabel)",
+    leaveEndDateLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveEndDateLabel)",
+    leaveMinutesHint: "$t(shared.claimsPreviousLeaveDetails.leaveMinutesHint)",
+    leaveMinutesLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveMinutesLabel)",
     leaveReasonChoice_activeDutyFamily:
       "Managing family affairs while a family member was on active duty in the armed forces",
     leaveReasonChoice_bonding: "Bonding with my child after birth or placement",
@@ -1305,17 +1331,18 @@ const pages = {
     leaveReasonHint:
       "If you didn’t take leave for one of these reasons, go back to the previous screen and select No.",
     leaveReasonLabel: "Why did you need to take this leave?",
-    leaveStartDateLabel: "What was the first day of this leave?",
-    limitMessage: "You can only add up to {{limit}} leaves",
+    leaveStartDateLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveStartDateLabel)",
+    limitMessage: "$t(shared.claimsPreviousLeaveDetails.limitMessage)",
     minutesLabel: "$t(shared.minutesLabel)",
     previousLeaveEntryPrefix: "$t(shared.previousLeaveEntryPrefix)",
-    removeButton: "Remove leave",
-    sectionLabel: "Tell us about your previous time off",
+    removeButton: "$t(shared.claimsPreviousLeaveDetails.removeButton)",
+    sectionLabel: "$t(shared.claimsPreviousLeaveDetails.sectionLabel)",
     title: "$t(shared.claimsOtherLeaveTitle)",
     workedPerWeekMinutesHint:
-      "Enter the number of hours you would have worked each week, if you were not on leave. If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesHint)",
     workedPerWeekMinutesLabel:
-      "How many hours would you have worked per week if you did not take this leave?",
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesLabel)",
   },
   claimsPreviousLeavesSameReason: {
     choiceNo: "$t(shared.choiceNo)",
@@ -1325,8 +1352,31 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesSameReasonDetails: {
-    sectionLabel: "Tell us about your previous time off",
+    addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hoursLabel: "$t(shared.hoursLabel)",
+    isForCurrentEmployerHint:
+      "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerHint)",
+    isForCurrentEmployerLabel:
+      "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerLabel)",
+    leaveEndDateLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveEndDateLabel)",
+    leaveMinutesHint: "$t(shared.claimsPreviousLeaveDetails.leaveMinutesHint)",
+    leaveMinutesLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveMinutesLabel)",
+    leaveStartDateLabel:
+      "$t(shared.claimsPreviousLeaveDetails.leaveStartDateLabel)",
+    limitMessage: "$t(shared.claimsPreviousLeaveDetails.limitMessage)",
+    minutesLabel: "$t(shared.minutesLabel)",
+    previousLeaveEntryPrefix: "$t(shared.previousLeaveEntryPrefix)",
+    removeButton: "$t(shared.claimsPreviousLeaveDetails.removeButton)",
+    sectionLabel: "$t(shared.claimsPreviousLeaveDetails.sectionLabel)",
     title: "$t(shared.claimsOtherLeaveTitle)",
+    workedPerWeekMinutesHint:
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesHint)",
+    workedPerWeekMinutesLabel:
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesLabel)",
   },
   claimsReasonPregnancy: {
     choiceNo: "$t(shared.choiceNo)",
@@ -1346,10 +1396,13 @@ const pages = {
     inputHoursLabel_Wednesday: "Wednesday time off",
     inputHoursLabel_weekly: "Hours off per week",
     lead_bonding: "Enter 0 for days you won’t work a reduced schedule.",
+    lead_care:
+      "Enter 0 for days you won’t work a reduced schedule.<br /><br />Your answer must match Question # in the $t(shared.caregiverCertificationForm).",
     lead_medical:
-      "Enter 0 for days you won’t work a reduced schedule.<br /><br />Refer to Question 33 in the Certification of a Serious Health Condition form (page 8).",
-    medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
+      "Enter 0 for days you won’t work a reduced schedule.<br /><br />Your answer must match Question 33 in the Certification of a Serious Health Condition form.",
     minutesLabel: "$t(shared.minutesLabel)",
+    needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
+    needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
     sectionLabel:
       "How many hours will you take off while you are on a reduced leave schedule?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
@@ -1620,6 +1673,7 @@ const pages = {
   claimsUploadDocsOptions: {
     certLabel_bonding_adopt_foster: "Proof of placement",
     certLabel_bonding_newborn: "Proof of birth",
+    certLabel_care: "$t(shared.caregiverCertificationForm)",
     certLabel_medical: "Certification of a Serious Health Condition",
     nonStateIdLabel: "Different identification documentation",
     sectionHint:
@@ -1682,7 +1736,7 @@ const pages = {
     leadBackground_accountCreationList:
       "<ul><li>Work email address: An email address can only be associated with one account.</li><li>Password: Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.</li><li>Employer ID number (EIN): A 9-digit number assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.</li></ul>",
     leadMultipleCompanies:
-      "If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.",
+      "If you manage leave for multiple companies, please create an account for one using the form below. You’ll be able to add more companies to your account in the portal.",
     nextStep: "We’ll send you a 6-digit code to verify your email address.",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "$t(shared.passwordLabel)",
@@ -2340,7 +2394,7 @@ const components = {
     // TODO (EMPLOYER-1296): Add Mass.gov link to banner
     body:
       "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be adding more features to the dashboard so you can easily find and manage paid leave applications.",
-    header: "We're making it easier to manage paid leave application",
+    header: "We're making it easier to manage paid leave applications",
   },
   pagination: {
     nextLabel: "Next",

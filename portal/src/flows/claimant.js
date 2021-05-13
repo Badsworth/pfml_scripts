@@ -429,6 +429,14 @@ export default {
         fields: concurrentLeavesDetailsFields,
       },
       on: {
+        CONTINUE: routes.applications.employerBenefitsIntro,
+      },
+    },
+    [routes.applications.employerBenefitsIntro]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+      },
+      on: {
         CONTINUE: routes.applications.employerBenefits,
       },
     },

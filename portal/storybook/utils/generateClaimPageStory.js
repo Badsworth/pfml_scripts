@@ -178,13 +178,13 @@ function getPossibleErrorsForField(field, translation) {
   // i.e. convert foo[0].bar[1].cat to foo.bar.cat
   const claimFieldKey = field.replace(/\[(\d+)\]/g, "");
   const errorTypes = Object.keys(
-    get(translation.errors.claims, claimFieldKey) || {}
+    get(translation.errors.applications, claimFieldKey) || {}
   );
   const possibleErrors = errorTypes.map((type) => {
     return {
       displayStr: `${claimFieldKey}: ${type}`,
       field,
-      i18nKey: `errors.claims.${claimFieldKey}.${type}`,
+      i18nKey: `errors.applications.${claimFieldKey}.${type}`,
       type,
     };
   });

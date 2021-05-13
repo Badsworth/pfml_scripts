@@ -31,7 +31,7 @@ exports[`CreateAccount when employerShowSelfRegistrationForm is set to true rend
       Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave.
     </Lead>
     <Lead>
-      If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.
+      If you manage leave for multiple companies, please create an account for one using the form below. You’ll be able to add more companies to your account in the portal.
     </Lead>
     <Details
       label="What you can do with this account"

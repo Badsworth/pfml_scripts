@@ -94,7 +94,11 @@ class ScenarioData:
     payment_c_value: Optional[str] = None
     payment_i_value: Optional[str] = None
 
+    additional_payment_c_value: Optional[str] = None
+    additional_payment_i_value: Optional[str] = None
+
     payment: Optional[Payment] = None
+    additional_payment: Optional[Payment] = None
 
 
 @dataclass
@@ -253,6 +257,10 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
 
                 scenario_data.payment_c_value = "7326"
                 scenario_data.payment_i_value = str(fake.unique.random_int())
+
+                if scenario_descriptor.has_additional_payment_in_period:
+                    scenario_data.additional_payment_c_value = "7326"
+                    scenario_data.additional_payment_i_value = str(fake.unique.random_int())
 
                 scenario_dataset.append(scenario_data)
 

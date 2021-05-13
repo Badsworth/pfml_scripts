@@ -2034,6 +2034,7 @@ components:
             - Child bonding evidence form
             - Care for a family member form
             - Military exigency form
+            - Certification Form # Only used when Claimant Portal uploads certification docs
           example: "Passport"
         name:
           type: string

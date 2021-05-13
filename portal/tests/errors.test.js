@@ -18,10 +18,10 @@ describe("errors", () => {
           message: "Field didn't match regex pattern",
         },
       ];
-      const error = new ValidationError(issues, "claims");
+      const error = new ValidationError(issues, "applications");
 
       expect(error.issues).toBe(issues);
-      expect(error.i18nPrefix).toBe("claims");
+      expect(error.i18nPrefix).toBe("applications");
       expect(error.name).toBe("ValidationError");
     });
   });

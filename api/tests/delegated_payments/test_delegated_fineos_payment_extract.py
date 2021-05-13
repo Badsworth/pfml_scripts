@@ -387,7 +387,7 @@ def test_process_extract_data(
         assert len(state_logs) == 1
         state_log = state_logs[0]
         assert state_log.outcome == EXPECTED_OUTCOME
-        assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+        assert state_log.end_state_id == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
 
         pub_efts = employee.pub_efts.all()
 
@@ -541,7 +541,7 @@ def test_process_extract_data_one_bad_record(
                 },
             }
         else:
-            assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+            assert state_log.end_state_id == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
             assert state_log.outcome == EXPECTED_OUTCOME
             assert payment.claim_id
 
@@ -741,7 +741,7 @@ def test_process_extract_data_no_existing_address_eft(
             assert payment.has_eft_update is False
             assert len(pub_efts) == 0  # Not set by setup logic, shouldn't be set at all now
             assert state_log.outcome == EXPECTED_OUTCOME
-            assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+            assert state_log.end_state_id == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
 
         else:
             assert mailing_address.address_line_two == f"AddressLine2-{index}"
@@ -828,7 +828,7 @@ def test_process_extract_data_existing_payment(
             assert state_log.outcome == EXPECTED_OUTCOME
             # The state ID will be either the prior state ID or the new successful one
             assert state_log.end_state_id in [
-                State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id,
+                State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id,
                 State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
             ]
 
@@ -978,7 +978,7 @@ def test_process_extract_data_leave_request_decision_validation(
     assert len(approved_payment.state_logs) == 1
     assert (
         approved_payment.state_logs[0].end_state_id
-        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+        == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
     )
 
     pending_payment = (
@@ -993,7 +993,7 @@ def test_process_extract_data_leave_request_decision_validation(
     assert len(pending_payment.state_logs) == 1
     assert (
         pending_payment.state_logs[0].end_state_id
-        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+        == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
     )
 
     in_review_payment = (
@@ -1008,7 +1008,7 @@ def test_process_extract_data_leave_request_decision_validation(
     assert len(in_review_payment.state_logs) == 1
     assert (
         in_review_payment.state_logs[0].end_state_id
-        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+        == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
     )
 
     rejected_payment = (
@@ -1039,7 +1039,7 @@ def test_process_extract_data_leave_request_decision_validation(
     assert len(medical_claim_type_record.state_logs) == 1
     assert (
         medical_claim_type_record.state_logs[0].end_state_id
-        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+        == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
     )
 
     import_log_report = json.loads(rejected_payment.fineos_extract_import_log.report)
@@ -1649,7 +1649,7 @@ def test_update_eft_existing_eft_matches_and_approved(
 
     assert len(payment.state_logs) == 1
     state_log = payment.state_logs[0]
-    assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+    assert state_log.end_state_id == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
 
     # There should not be a DELEGATED_EFT_SEND_PRENOTE record
     employee_state_logs_after = (
@@ -1777,7 +1777,7 @@ def test_update_eft_existing_eft_matches_and_pending_with_pub(
 
     assert len(payment.state_logs) == 1
     state_log = payment.state_logs[0]
-    assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+    assert state_log.end_state_id == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
 
     import_log_report = json.loads(payment.fineos_extract_import_log.report)
     assert import_log_report["prenote_past_waiting_period_approved_count"] == 1

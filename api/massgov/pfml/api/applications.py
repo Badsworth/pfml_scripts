@@ -16,6 +16,7 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, can, ensure
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
+from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import (
     ApplicationRequestBody,
     DocumentRequestBody,
@@ -45,6 +46,7 @@ from massgov.pfml.db.models.applications import (
     Document,
     DocumentType,
     EmployerBenefit,
+    LeaveReason,
     OtherIncome,
     PreviousLeave,
 )
@@ -53,6 +55,13 @@ from massgov.pfml.util.logging.applications import get_application_log_attribute
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
+    LeaveReason.PREGNANCY_MATERNITY.leave_reason_description: DocumentType.PREGNANCY_MATERNITY_FORM,
+    LeaveReason.CHILD_BONDING.leave_reason_description: DocumentType.CHILD_BONDING_EVIDENCE_FORM,
+    LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_description: DocumentType.OWN_SERIOUS_HEALTH_CONDITION_FORM,
+    LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_description: DocumentType.CARE_FOR_A_FAMILY_MEMBER_FORM,
+}
 
 
 def application_get(application_id):
@@ -443,6 +452,26 @@ def validate_file_name(file_name):
         raise ValidationException(errors=[validation_error], message=message, data={})
 
 
+def has_previous_state_managed_paid_leave(existing_application, db_session):
+    # For now, if there are documents previously submitted for the application with the
+    # STATE_MANAGED_PAID_LEAVE_CONFIRMATION document type, that document type must also
+    # be used for subsequent documents uploaded to the application. If not, the document type
+    # from the request should be used instead.
+    existing_documents_with_old_doc_type = (
+        db_session.query(Document)
+        .filter(Document.application_id == existing_application.application_id)
+        .filter(
+            Document.document_type_id
+            == DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id
+        )
+    ).all()
+
+    if len(existing_documents_with_old_doc_type) > 0:
+        return True
+
+    return False
+
+
 def document_upload(application_id, body, file):
     with app.db_session() as db_session:
         # Get the referenced application or return 404
@@ -483,7 +512,22 @@ def document_upload(application_id, body, file):
         file_description = ""
         if document_details.description:
             file_description = document_details.description
+
+        # To accomodate both State managed Paid Leave Confirmation and the new plan proof types, the front end will
+        # use Certification Form when the feature flag for caring leave is active, but will otherwise use
+        # State manage Paid Leave Confirmation. If the document type is Certification Form,
+        # the API will map to the corresponding plan proof based on leave reason
         document_type = document_details.document_type.value
+        if document_type == IoDocumentTypes.certification_form.value:
+            document_type = LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING[
+                existing_application.leave_reason.leave_reason_description
+            ].document_type_description
+
+        # check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
+        if has_previous_state_managed_paid_leave(existing_application, db_session):
+            document_type = (
+                DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_description
+            )
 
         log_attributes = {
             **get_application_log_attributes(existing_application),
@@ -525,7 +569,7 @@ def document_upload(application_id, body, file):
         now = datetime_util.utcnow()
         document.created_at = now
         document.updated_at = now
-        document.document_type_id = DocumentType.get_id(document_details.document_type.value)
+        document.document_type_id = DocumentType.get_id(document_type)
         document.content_type_id = ContentType.get_id(content_type)
         document.size_bytes = file_size
         document.fineos_id = fineos_document["documentId"]

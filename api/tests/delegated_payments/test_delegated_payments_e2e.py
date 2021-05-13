@@ -111,6 +111,12 @@ class TestDataSet:
                 c=c_value, i=i_value
             ):
                 return scenario_data
+
+            elif CiIndex(
+                c=scenario_data.additional_payment_c_value,
+                i=scenario_data.additional_payment_i_value,
+            ) == CiIndex(c=c_value, i=i_value):
+                return scenario_data
         return None
 
     def populate_scenario_data_payments(self, db_session) -> None:
@@ -125,6 +131,19 @@ class TestDataSet:
                 .first()
             )
             scenario_data.payment = payment
+
+            # If it has an additional payment expected, query for it too
+            if scenario_data.additional_payment_c_value:
+                additional_payment = (
+                    db_session.query(Payment)
+                    .filter(
+                        Payment.fineos_pei_c_value == scenario_data.additional_payment_c_value,
+                        Payment.fineos_pei_i_value == scenario_data.additional_payment_i_value,
+                    )
+                    .order_by(Payment.created_at.desc())
+                    .first()
+                )
+                scenario_data.additional_payment = additional_payment
 
 
 # == The E2E Test ==
@@ -535,6 +554,7 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "AddressValidationStep",
             {
+                "experian_search_exception_count": 0,
                 "invalid_experian_format": 0,
                 "invalid_experian_response": 0,
                 "multiple_experian_matches": len(
@@ -708,6 +728,7 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ReportStep",
             {
+                "processed_report_count": len(PROCESS_FINEOS_EXTRACT_REPORTS),
                 "report_error_count": 0,
                 "report_generated_count": len(PROCESS_FINEOS_EXTRACT_REPORTS),
             },
@@ -1234,7 +1255,11 @@ def test_e2e_pub_payments(
         assert_metrics(
             test_db_other_session,
             "ReportStep",
-            {"report_error_count": 0, "report_generated_count": len(CREATE_PUB_FILES_REPORTS),},
+            {
+                "processed_report_count": len(CREATE_PUB_FILES_REPORTS),
+                "report_error_count": 0,
+                "report_generated_count": len(CREATE_PUB_FILES_REPORTS),
+            },
         )
 
         # TODO file transaction metrics when available
@@ -1576,6 +1601,7 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "ReportStep",
             {
+                "processed_report_count": len([PROCESS_PUB_RESPONSES_REPORTS]),
                 "report_error_count": 0,
                 "report_generated_count": len([PROCESS_PUB_RESPONSES_REPORTS]),
             },
@@ -1663,7 +1689,11 @@ def test_e2e_pub_payments_delayed_scenarios(
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,],
+            scenario_names=[
+                ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
+                ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,
+                ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
+            ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=local_test_db_session,
         )
@@ -1731,6 +1761,22 @@ def test_e2e_pub_payments_delayed_scenarios(
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=local_test_db_session,
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP],
+            end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+            db_session=local_test_db_session,
+            check_additional_payment=True,
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP],
+            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+            db_session=local_test_db_session,
+            check_additional_payment=True,
         )
 
     # ===============================================================================
@@ -1943,6 +1989,7 @@ def assert_payment_state_for_scenarios(
     scenario_names: List[ScenarioName],
     end_state: LkState,
     db_session: db.Session,
+    check_additional_payment: bool = False,
 ):
     for scenario_name in scenario_names:
         scenario_data_items = test_dataset.get_scenario_data_by_name(scenario_name)
@@ -1950,7 +1997,10 @@ def assert_payment_state_for_scenarios(
         assert scenario_data_items is not None, f"No data found for scenario: {scenario_name}"
 
         for scenario_data in scenario_data_items:
-            payment = scenario_data.payment
+            if check_additional_payment:
+                payment = scenario_data.additional_payment
+            else:
+                payment = scenario_data.payment
 
             assert payment is not None
 
