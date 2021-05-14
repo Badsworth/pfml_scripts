@@ -11,6 +11,8 @@ env:
   working-dir: ./infra
   tf-version-monitoring: 0.14.7
   tf-version-default: 0.14.7
+  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
+  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
   tf-format:
@@ -106,3 +108,59 @@ jobs:
           tf_actions_subcommand: "plan"
           tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
           tf_actions_comment: false
+
+  # Run Terriyay
+  get-tf-state:
+    name: Finalize terraform state
+    needs: [tf-format, tf-validate]
+    if: always() && github.ref == "refs/heads/main"
+    runs-on: ubuntu-latest
+    outputs:
+      tf-validate-state: ${{ steps.tf-validate-state.outputs.tf-validate-state }}
+    steps:
+        # https://github.com/technote-space/workflow-conclusion-action
+        # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+      - uses: technote-space/workflow-conclusion-action@v2
+
+      - name: Set tf-format-state value
+        id: tf-format-state
+        run: echo "::set-output name=tf-format-state::${{ env.WORKFLOW_CONCLUSION }}"
+
+      - name: Set tf-validate-state value
+        id: tf-validate-state
+        run: echo "::set-output name=tf-validate-state::${{ env.WORKFLOW_CONCLUSION }}"
+
+  post-to-slack:
+    name: post failures to slack
+    needs: [get-tf-state]
+    if: needs.get-tf-state.outputs.tf-validate-state == 'failure' || 
+        needs.get-tf-state.outputs.tf-validate-state == 'timed_out'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Post to Slack
+        run: |
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "attachments": [{
+              "title": "Terraform validation failed (<${{ env.workflow_self_link }}|build logs>)",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)
+
