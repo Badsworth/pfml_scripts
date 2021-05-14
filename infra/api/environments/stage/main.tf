@@ -88,7 +88,6 @@ module "api" {
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
   enable_application_fraud_check                      = "0"
-  dor_fineos_etl_definition                           = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression                  = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
   release_version                                     = var.release_version
 }

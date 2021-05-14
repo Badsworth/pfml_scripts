@@ -86,7 +86,6 @@ module "api" {
 
   fineos_import_employee_updates_input_directory_path = "s3://fin-somprod-data-export/PRD/dataexports"
 
-  dor_fineos_etl_definition          = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression = "cron(30 0 * * ? *)" # Daily at 00:30 UTC [19:30 EST] [20:30 EDT]
   release_version                    = var.release_version
 }

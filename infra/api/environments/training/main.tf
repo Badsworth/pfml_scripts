@@ -76,7 +76,6 @@ module "api" {
   service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-training.mass.gov"
   enable_application_fraud_check                      = "0"
-  dor_fineos_etl_definition                           = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression                  = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
   release_version                                     = var.release_version
 }
