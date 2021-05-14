@@ -1195,6 +1195,46 @@ def test_e2e_pub_payments(
                     ]
                 ),
                 "ach_prenote_count": len([ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE]),
+                "check_payment_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
+                    ]
+                ),
+                "failed_to_add_transaction_count": 0,
+                "successful_add_to_transaction_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN,
+                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+                        ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
+                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
+                    ]
+                ),
+                "transaction_files_sent_count": 3,  # EzCheck, NACHA, and positive pay files.
             },
         )
 
