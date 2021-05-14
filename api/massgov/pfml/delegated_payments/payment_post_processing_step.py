@@ -1,4 +1,5 @@
 import enum
+import math
 import uuid
 from dataclasses import dataclass, field
 from datetime import date
@@ -99,7 +100,14 @@ class PaymentPostProcessingStep(Step):
                 % (start_date, end_date)
             )
 
-        return result.maximum_weekly_benefit_amount
+        # The amount stored in the table is a maximum for a week, but pay periods
+        # can be longer than a week. We need to scale the maximum amount up based
+        # on the length of the period. This is calculated by finding the length
+        # in days of the pay period, dividing by 7, and rounding up.
+        period_in_days = (end_date - start_date).days
+        weeks = math.ceil(period_in_days / 7.0)
+
+        return weeks * result.maximum_weekly_benefit_amount
 
     def run_step(self):
         """
