@@ -227,6 +227,7 @@ export default class AuthenticationManager {
     if (!employer_id) {
       throw new Error("No employer ID found");
     }
+
     return await postEmployersVerifications(
       {
         employer_id: employer_id,

@@ -69,6 +69,7 @@ export function submitAll(
         getClaimantCredentials(),
         getLeaveAdminCredentials(claim.claim.employer_fein)
       );
+
       log(claim, `API submission completed as ${result.fineos_absence_id}`);
       return { claim, result };
     } catch (e) {

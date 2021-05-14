@@ -46,7 +46,7 @@ export type ClaimSpecification = {
   reduced_leave_spec?: string;
   has_intermittent_leave_periods?: boolean;
   pregnant_or_recent_birth?: boolean;
-  bondingDate?: "far-past" | "past" | "future";
+  bondingDate?: "far-past" | "past" | "future" | Date;
   leave_dates?: [Date, Date];
   address?: Address;
   payment?: PaymentPreference;

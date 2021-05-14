@@ -32,7 +32,7 @@ type LeaveDetailsSpec = {
   has_intermittent_leave_periods?: boolean;
   pregnant_or_recent_birth?: boolean;
   leave_dates?: [Date, Date];
-  bondingDate?: "far-past" | "past" | "future";
+  bondingDate?: "far-past" | "past" | "future" | Date;
 };
 
 export default function generateLeaveDetails(
@@ -108,6 +108,19 @@ export default function generateLeaveDetails(
       break;
     default:
       throw new Error(`Invalid reason given`);
+  }
+
+  if (
+    details.child_birth_date &&
+    details.child_birth_date > formatISODate(new Date())
+  ) {
+    details.has_future_child_date = true;
+  }
+  if (
+    details.child_placement_date &&
+    details.child_placement_date > formatISODate(new Date())
+  ) {
+    details.has_future_child_date = true;
   }
   return details;
 }
@@ -252,6 +265,7 @@ function makeChildPlacementDate(
   spec: LeaveDetailsSpec["bondingDate"],
   leaveStart: Date
 ): string {
+  if (spec instanceof Date) return formatISODate(spec);
   switch (spec) {
     case "far-past":
       return formatISODate(
