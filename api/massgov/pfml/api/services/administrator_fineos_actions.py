@@ -190,10 +190,12 @@ def get_claim_as_leave_admin(
     follow_up_date = None
     contains_version_one_eforms = False
     contains_version_two_eforms = False
+    outstanding_requirement_status = None
 
     for req in managed_reqs:
         if req.type == LEAVE_ADMIN_INFO_REQUEST_TYPE:
             follow_up_date = req.followUpDate
+            outstanding_requirement_status = req.status
             break
 
     for eform_summary_obj in eform_summaries:
@@ -226,7 +228,7 @@ def get_claim_as_leave_admin(
     else:
         claimant_address = Address()
 
-    if follow_up_date is not None:
+    if follow_up_date is not None and outstanding_requirement_status == "Open":
         is_reviewable = date.today() < follow_up_date
 
     leave_details = get_leave_details(absence_periods)

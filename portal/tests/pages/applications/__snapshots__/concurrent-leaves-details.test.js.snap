@@ -9,7 +9,7 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
     level="2"
     size="1"
   >
-    Will you use accrued paid leave from this employer? EIN: 12-3456789
+    Will you use accrued paid leave from this employer? EIN: 12‑3456789
   </Heading>
 </QuestionPage>
 `;

@@ -12,7 +12,7 @@ exports[`PreviousLeavesOtherReasonDetails when the user has no previous leaves r
     Tell us about your previous time off
   </Heading>
   <RepeatableFieldset
-    addButtonLabel="Add another leave"
+    addButtonLabel="Add another previous leave"
     entries={
       Array [
         PreviousLeave {
@@ -32,7 +32,7 @@ exports[`PreviousLeavesOtherReasonDetails when the user has no previous leaves r
     limitMessage="You can only add up to 6 leaves"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
-    removeButtonLabel="Remove leave"
+    removeButtonLabel="Remove this previous leave"
     render={[Function]}
   />
 </QuestionPage>
@@ -50,7 +50,7 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
     Tell us about your previous time off
   </Heading>
   <RepeatableFieldset
-    addButtonLabel="Add another leave"
+    addButtonLabel="Add another previous leave"
     entries={
       Array [
         PreviousLeave {
@@ -80,115 +80,8 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
     limitMessage="You can only add up to 6 leaves"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
-    removeButtonLabel="Remove leave"
+    removeButtonLabel="Remove this previous leave"
     render={[Function]}
   />
 </QuestionPage>
-`;
-
-exports[`PreviousLeavesOtherReasonDetailsCard renders the component 1`] = `
-<Fragment>
-  <InputChoiceGroup
-    choices={
-      Array [
-        Object {
-          "label": "An illness or injury",
-          "value": "Serious health condition",
-        },
-        Object {
-          "label": "Pregnancy",
-          "value": "Pregnancy / Maternity",
-        },
-        Object {
-          "label": "Bonding with my child after birth or placement",
-          "value": "Child bonding",
-        },
-        Object {
-          "label": "Caring for a family member",
-          "value": "Care for a family member",
-        },
-        Object {
-          "label": "Managing family affairs while a family member was on active duty in the armed forces",
-          "value": "Military exigency family",
-        },
-        Object {
-          "label": "Caring for a family member who served in the armed forces",
-          "value": "Military caregiver",
-        },
-      ]
-    }
-    hint="If you didn’t take leave for one of these reasons, go back to the previous screen and select No."
-    label="Why did you need to take this leave?"
-    name="previous_leaves_other_reason[0].leave_reason"
-    onChange={[Function]}
-    smallLabel={true}
-    type="radio"
-    value=""
-  />
-  <InputChoiceGroup
-    choices={
-      Array [
-        Object {
-          "label": "Yes",
-          "value": "true",
-        },
-        Object {
-          "label": "No",
-          "value": "false",
-        },
-      ]
-    }
-    hint="This is the same Employer Identification Number you entered earlier in your application. After you submit your application, we'll give this employer a chance to review information from your application. We won't share any information about leave you took from other employers."
-    label="Did you take leave from this employer? EIN: "
-    name="previous_leaves_other_reason[0].is_for_current_employer"
-    onChange={[Function]}
-    smallLabel={true}
-    type="radio"
-    value=""
-  />
-  <InputDate
-    dayLabel="Day"
-    example="mm / dd / yyyy"
-    label="What was the first day of this leave?"
-    monthLabel="Month"
-    name="previous_leaves_other_reason[0].leave_start_date"
-    onChange={[Function]}
-    smallLabel={true}
-    value=""
-    yearLabel="Year"
-  />
-  <InputDate
-    dayLabel="Day"
-    example="mm / dd / yyyy"
-    label="What was the last day of this leave?"
-    monthLabel="Month"
-    name="previous_leaves_other_reason[0].leave_end_date"
-    onChange={[Function]}
-    smallLabel={true}
-    value=""
-    yearLabel="Year"
-  />
-  <InputHours
-    hint="Enter the number of hours you would have worked each week, if you were not on leave. If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours."
-    hoursLabel="Hours"
-    label="How many hours would you have worked per week if you did not take this leave?"
-    minutesIncrement={15}
-    minutesLabel="Minutes"
-    name="previous_leaves_other_reason[0].worked_per_week_minutes"
-    onChange={[Function]}
-    smallLabel={true}
-    value={null}
-  />
-  <InputHours
-    hint="Add up all the hours you took off between the first and last day of this leave and enter the total. For example, if you took off 8 hours in one week and 12 hours in another, you should enter 20 hours."
-    hoursLabel="Hours"
-    label="What was the total number of hours you took off?"
-    minutesIncrement={15}
-    minutesLabel="Minutes"
-    name="previous_leaves_other_reason[0].leave_minutes"
-    onChange={[Function]}
-    smallLabel={true}
-    value={null}
-  />
-</Fragment>
 `;

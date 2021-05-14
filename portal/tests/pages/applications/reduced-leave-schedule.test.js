@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -7,12 +7,12 @@ import ReducedLeaveSchedule from "../../../src/pages/applications/reduced-leave-
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const fixedWorkPatternClaim = new MockClaimBuilder()
+const fixedWorkPatternClaim = new MockBenefitsApplicationBuilder()
   .reducedSchedule()
   .fixedWorkPattern()
   .create();
 
-const variableScheduleClaim = new MockClaimBuilder()
+const variableScheduleClaim = new MockBenefitsApplicationBuilder()
   .reducedSchedule()
   .variableWorkPattern()
   .create();
@@ -38,7 +38,7 @@ const setup = (claimAttrs) => {
 
 describe("ReducedLeaveSchedule", () => {
   it("renders lead with expected content when leave reason is Medical", () => {
-    const claim = new MockClaimBuilder()
+    const claim = new MockBenefitsApplicationBuilder()
       .medicalLeaveReason()
       .reducedSchedule()
       .variableWorkPattern()
@@ -49,8 +49,20 @@ describe("ReducedLeaveSchedule", () => {
   });
 
   it("renders lead with expected content when leave reason is Bonding", () => {
-    const claim = new MockClaimBuilder()
+    const claim = new MockBenefitsApplicationBuilder()
       .bondingBirthLeaveReason()
+      .reducedSchedule()
+      .variableWorkPattern()
+      .create();
+
+    const { wrapper } = setup(claim);
+
+    expect(wrapper.find("Lead").find("Trans").dive()).toMatchSnapshot();
+  });
+
+  it("renders lead with expected content when leave reason is Caring", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .caringLeaveReason()
       .reducedSchedule()
       .variableWorkPattern()
       .create();

@@ -95,8 +95,8 @@ resource "newrelic_alert_condition" "portal_ajax_response_time" {
 }
 
 resource "newrelic_alert_condition" "portal_page_load_time" {
-  # WARN: Average load time above 2 seconds for at least 5 minutes
-  # CRIT: Average load time above 5 seconds for at least 5 minutes
+  # WARN: Average load time above 5 seconds for at least 5 minutes
+  # CRIT: Average load time above 7 seconds for at least 10 minutes
   policy_id       = newrelic_alert_policy.portal_alerts.id
   name            = "Portal page load time too high"
   type            = "browser_metric"
@@ -109,15 +109,15 @@ resource "newrelic_alert_condition" "portal_page_load_time" {
     time_function = "all" # e.g. "for at least..."
     duration      = 5     # units: minutes
     operator      = "above"
-    threshold     = 3 # units: seconds
+    threshold     = 5 # units: seconds
   }
 
   term {
     priority      = "critical"
     time_function = "all" # e.g. "for at least..."
-    duration      = 5     # units: minutes
+    duration      = 10    # units: minutes
     operator      = "above"
-    threshold     = 5 # units: seconds
+    threshold     = 7 # units: seconds
   }
 }
 

@@ -131,6 +131,7 @@ class Regexes:
 class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
+    INVALID_DATASET = "InvalidDataset"
     MISSING_IN_DB = "MissingInDB"
     FIELD_TOO_SHORT = "FieldTooShort"
     FIELD_TOO_LONG = "FieldTooLong"
@@ -150,6 +151,7 @@ class ValidationReason(str, Enum):
     EFT_PRENOTE_REJECTED = "EFTRejected"
     CLAIMANT_MISMATCH = "ClaimantMismatch"
     CLAIM_NOT_ID_PROOFED = "ClaimNotIdProofed"
+    PAYMENT_EXCEEDS_PAY_PERIOD_CAP = "PaymentExceedsPayPeriodCap"
 
 
 @dataclass(frozen=True, eq=True)
@@ -169,6 +171,9 @@ class ValidationContainer:
 
     def has_validation_issues(self) -> bool:
         return len(self.validation_issues) != 0
+
+    def get_reasons(self) -> List[ValidationReason]:
+        return [validation_issue.reason for validation_issue in self.validation_issues]
 
 
 class ValidationIssueException(Exception):
@@ -1224,3 +1229,21 @@ def create_staging_table_instance(
     return db_cls(
         **data, reference_file=ref_file, fineos_extract_import_log_id=fineos_extract_import_log_id,
     )
+
+
+def get_traceable_payment_details(payment: Payment) -> Dict[str, Optional[Any]]:
+    # For logging purposes, this returns useful, traceable details
+    # about a payment and related fields if they exist.
+    #
+    # DO NOT PUT PII IN THE RETURN OF THIS METHOD, IT'S MEANT FOR LOGGING
+    #
+
+    claim = payment.claim
+    employee = payment.claim.employee if payment.claim else None
+
+    return {
+        "c_value": payment.fineos_pei_c_value,
+        "i_value": payment.fineos_pei_i_value,
+        "absence_case_number": claim.fineos_absence_id if claim else None,
+        "fineos_customer_number": employee.fineos_customer_number if employee else None,
+    }

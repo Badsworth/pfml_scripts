@@ -15,10 +15,11 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
-import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
+import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import uploadDocumentsHelper from "../../utils/uploadDocumentsHelper";
 import useFilesLogic from "../../hooks/useFilesLogic";
@@ -64,9 +65,9 @@ export const UploadCertification = (props) => {
       break;
   }
 
-  const certificationDocuments = findDocumentsByTypes(
+  const certificationDocuments = findDocumentsByLeaveReason(
     documents,
-    [DocumentType.certification.medicalCertification] // TODO (CP-962): Set based on leaveReason
+    get(claim, "leave_details.reason")
   );
 
   const handleSave = async () => {
@@ -76,10 +77,16 @@ export const UploadCertification = (props) => {
       return;
     }
 
+    // To enable backwards-compabitility, the document type when uploading will switch from State managed Paid Leave Confirmation to Certification Form
+    // when the showCaringLeaveType flag is enabled; the API will set the plan proof on the document upload to FINEOS when Certification Form is used
+    const documentType = isFeatureEnabled("showCaringLeaveType")
+      ? DocumentType.certification.certificationForm
+      : DocumentType.certification.medicalCertification;
+
     const uploadPromises = appLogic.documents.attach(
       claim.application_id,
       files.items,
-      DocumentType.certification.medicalCertification, // TODO (CP-962): set based on leave reason
+      documentType,
       query.additionalDoc === "true"
     );
 

@@ -23,6 +23,7 @@ const routes = {
     dateOfChild: "/applications/date-of-child",
     employerBenefits: "/applications/employer-benefits",
     employerBenefitsDetails: "/applications/employer-benefits-details",
+    employerBenefitsIntro: "/applications/employer-benefits-intro",
     employmentStatus: "/applications/employment-status",
     familyMemberDateOfBirth: "/applications/family-member-date-of-birth",
     familyMemberName: "/applications/family-member-name",
@@ -117,8 +118,8 @@ const routes = {
         "https://www.mass.gov/pfml-acute-claimant",
       employerAccount:
         "https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications",
-      // EMPLOYER-1186: Update with actual link
-      employerDashboard: "https://www.mass.gov",
+      // TODO (EMPLOYER-1296): Currently is not being used since there is not content
+      employerDashboard: "https://www.mass.gov/employer-dashboard",
       employerReimbursements:
         "https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits",
       employersGuide:

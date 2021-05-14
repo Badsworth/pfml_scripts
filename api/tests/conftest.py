@@ -57,7 +57,7 @@ def app_cors(monkeypatch, test_db):
 @pytest.fixture
 def app(test_db_session, initialize_factories_session, set_auth_public_keys):
     return massgov.pfml.api.app.create_app(
-        check_migrations_current=False, db_session_factory=test_db_session
+        check_migrations_current=False, db_session_factory=test_db_session, do_close_db=False
     )
 
 
@@ -418,6 +418,13 @@ def test_db_session(test_db):
     connection = test_db.connect()
     trans = connection.begin()
     session = Session(bind=connection)
+
+    session.begin_nested()
+
+    @sqlalchemy.event.listens_for(session, "after_transaction_end")
+    def restart_savepoint(session, transaction):
+        if transaction.nested and not transaction._parent.nested:
+            session.begin_nested()
 
     yield session
 
@@ -790,8 +797,8 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 # This fixture was necessary at the time of this PR as
 # the test_db_via_migration was not working. Will refactor
 # once that fixture is fixed. The code here is functionally
-# equal to migration file:
-# 2021_01_29_15_51_16_14155f78d8e6_create_dua_reduction_payment_table.py
+# equal to index created in migration file:
+# 2021_04_27_17_07_38_a654bf03da3f_switch_dua_payment_data_to_use_fineos_.py
 @pytest.fixture
 def dua_reduction_payment_unique_index(initialize_factories_session):
     import massgov.pfml.db as db
@@ -801,7 +808,7 @@ def dua_reduction_payment_unique_index(initialize_factories_session):
         connection.execute(
             """
             create unique index on dua_reduction_payment (
-                absence_case_id,
+                fineos_customer_number,
                 coalesce(employer_fein, ''),
                 coalesce(payment_date, '1788-02-06'),
                 coalesce(request_week_begin_date, '1788-02-06'),

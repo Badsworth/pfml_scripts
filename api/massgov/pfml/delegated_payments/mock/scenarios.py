@@ -4,9 +4,7 @@ from typing import Dict, List, Optional
 
 from massgov.pfml.db.models.employees import (
     BankAccountType,
-    ClaimType,
     LkBankAccountType,
-    LkClaimType,
     LkPaymentMethod,
     LkPaymentTransactionType,
     PaymentMethod,
@@ -32,6 +30,8 @@ class ScenarioName(Enum):
     HAPPY_PATH_CHECK_FAMILY_RETURN_PAID = "PUB_CHECK_FAMILY_RETURN_PAID"
     HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING = "PUB_CHECK_FAMILY_RETURN_OUTSTANDING"
     HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE = "PUB_CHECK_FAMILY_RETURN_FUTURE"
+
+    HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP = "HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -59,6 +59,7 @@ class ScenarioName(Enum):
     INVALID_ADDRESS_FIXED = "INVALID_ADDRESS_FIXED"
     REJECTED_LEAVE_REQUEST_DECISION = "REJECTED_LEAVE_REQUEST_DECISION"
     PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
+    SECOND_PAYMENT_FOR_PERIOD_OVER_CAP = "SECOND_PAYMENT_FOR_PERIOD_OVER_CAP"
 
     CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
     CLAIM_NOT_ID_PROOFED = "CLAIM_NOT_ID_PROOFED"
@@ -72,6 +73,7 @@ class ScenarioName(Enum):
     PUB_ACH_PRENOTE_RETURN = "PUB_ACH_PRENOTE_RETURN"
     PUB_ACH_PRENOTE_NOTIFICATION = "PUB_ACH_PRENOTE_NOTIFICATION"
     PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT = "PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT"
+    PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND = "PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND"
 
     PUB_ACH_FAMILY_RETURN = "PUB_ACH_FAMILY_RETURN"
     PUB_ACH_FAMILY_NOTIFICATION = "PUB_ACH_FAMILY_NOTIFICATION"
@@ -102,7 +104,7 @@ class ScenarioDescriptor:
     # missing claim
     missing_claim: bool = False
 
-    claim_type: LkClaimType = ClaimType.FAMILY_LEAVE
+    claim_type: str = "Family"
     is_id_proofed: bool = True  # TODO - when claimant extract is file generation is ready, make this set the ID proofing field
 
     payment_method: LkPaymentMethod = PaymentMethod.ACH
@@ -116,6 +118,9 @@ class ScenarioDescriptor:
     invalid_address: bool = False
     invalid_address_fixed: bool = False
 
+    # This adds a second payment that'll show up in round 2
+    has_additional_payment_in_period: bool = False
+
     # prior_verified_address: bool = False TODO add when available
     fineos_extract_address_valid: bool = True
     fineos_extract_address_valid_after_fix: bool = False
@@ -127,6 +132,7 @@ class ScenarioDescriptor:
     is_audit_approved_delayed: bool = False
 
     negative_payment_amount: bool = False
+    payment_close_to_cap: bool = False
 
     include_non_vpei_records: bool = True
 
@@ -140,6 +146,7 @@ class ScenarioDescriptor:
     pub_ach_return_payment_id_not_found: bool = False
 
     pub_ach_return_invalid_prenote_payment_id_format: bool = False
+    pub_ach_return_prenote_payment_id_not_found: bool = False
 
     pub_ach_response_change_notification: bool = False
     pub_ach_notification_reason_code: str = "CO1"
@@ -155,8 +162,7 @@ class ScenarioDescriptor:
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-        claim_type=ClaimType.MEDICAL_LEAVE,
+        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED, claim_type="Employee",
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED),
     ScenarioDescriptor(
@@ -248,6 +254,12 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         prenoted=False,
     ),
     ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+        pub_ach_response_return=True,
+        pub_ach_return_prenote_payment_id_not_found=True,
+        prenoted=False,
+    ),
+    ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_FAMILY_RETURN, pub_ach_response_return=True
     ),
     ScenarioDescriptor(
@@ -266,12 +278,12 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_RETURN,
-        claim_type=ClaimType.MEDICAL_LEAVE,
+        claim_type="Employee",
         pub_ach_response_return=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-        claim_type=ClaimType.MEDICAL_LEAVE,
+        claim_type="Employee",
         pub_ach_response_change_notification=True,
     ),
     ScenarioDescriptor(
@@ -342,6 +354,16 @@ DELAYED_SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         fineos_extract_address_valid=False,
         fineos_extract_address_valid_after_fix=True,
         pub_check_response=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
+        payment_close_to_cap=False,
+        has_additional_payment_in_period=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,
+        payment_close_to_cap=True,
+        has_additional_payment_in_period=True,
     ),
 ]
 

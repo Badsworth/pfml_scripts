@@ -29,6 +29,8 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
     DuaReductionPaymentFactory,
+    EmployeeFactory,
+    EmployeeWithFineosNumberFactory,
     ReferenceFileFactory,
 )
 from massgov.pfml.payments.payments_util import get_now
@@ -84,9 +86,9 @@ def _get_valid_dua_payment_data() -> Dict[str, Any]:
     end_date = _random_date_in_past_year()
     begin_date = end_date - timedelta(days=365)  # Doesn't need to be exact. We don't check it.
 
-    # Make sure Case ID and FEIN are unique for each returned dict.
+    # Make sure customer number and FEIN are unique for each returned dict.
     return {
-        "absence_case_id": "NTN-{}-ABS-01".format(fake.unique.random_int(min=1000, max=9999)),
+        "fineos_customer_number": str(fake.unique.random_int(min=1000, max=9999)),
         "employer_fein": str(fake.unique.random_int(min=100_000, max=999_999)),
         "payment_date": _random_date_in_past_year(),
         "request_week_begin_date": _random_date_in_past_year(),
@@ -592,55 +594,34 @@ def test_copy_to_sftp_and_archive_s3_files(
         5,
     ),
 )
-def test_format_claims_for_dua_claimant_list_expected_structure_is_generated(claims_count):
-    claims = ClaimFactory.build_batch(size=claims_count)
+def test_format_claimants_for_dua_claimant_list_expected_structure_is_generated(claims_count):
+    employees = EmployeeWithFineosNumberFactory.build_batch(size=claims_count)
 
-    formatted_rows = dua._format_claims_for_dua_claimant_list(claims)
+    formatted_rows = dua._format_claimants_for_dua_claimant_list(employees)
     expected_rows = [
         {
-            dua.Constants.CASE_ID_FIELD: claim.fineos_absence_id,
+            dua.Constants.CASE_ID_FIELD: employee.fineos_customer_number,
             dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
-            dua.Constants.SSN_FIELD: claim.employee.tax_identifier.tax_identifier.replace("-", ""),
+            dua.Constants.SSN_FIELD: employee.tax_identifier.tax_identifier.replace("-", ""),
         }
-        for claim in claims
+        for employee in employees
     ]
 
-    assert len(formatted_rows) == len(claims)
+    assert len(formatted_rows) == len(employees)
     assert formatted_rows == expected_rows
 
 
-def test_format_claims_for_dua_claimant_list_expected_structure_with_missing_employee_is_generated():
-    claims = ClaimFactory.build_batch(size=3)
-    claims[0].employee = None
-    expected_rows = [
-        {
-            dua.Constants.CASE_ID_FIELD: claim.fineos_absence_id,
-            dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
-            dua.Constants.SSN_FIELD: claim.employee.tax_identifier.tax_identifier.replace("-", ""),
-        }
-        for claim in claims[1:]
-    ]
+def test_format_claimants_for_dua_claimant_list_null_fineos_customer_number_id():
+    employees_no_fineos_id = EmployeeFactory.build_batch(size=3, fineos_customer_number=None)
+    employees_no_tax_id = EmployeeFactory.build_batch(
+        size=3, tax_identifier=None, tax_identifier_id=None
+    )
 
-    formatted_rows = dua._format_claims_for_dua_claimant_list(claims)
+    employees = employees_no_fineos_id + employees_no_tax_id
 
-    assert len(formatted_rows) == len(claims) - 1
-    assert formatted_rows == expected_rows
+    formatted_rows = dua._format_claimants_for_dua_claimant_list(employees)
 
-
-def test_format_claims_for_dua_claimant_list_null_absence_id():
-    claims = ClaimFactory.build_batch(size=3, fineos_absence_id=None)
-
-    formatted_rows = dua._format_claims_for_dua_claimant_list(claims)
-
-    assert len(formatted_rows) == len(claims)
-
-    for i, row in enumerate(formatted_rows):
-        claim = claims[i]
-        assert row == {
-            dua.Constants.CASE_ID_FIELD: None,
-            dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
-            dua.Constants.SSN_FIELD: claim.employee.tax_identifier.tax_identifier.replace("-", ""),
-        }
+    assert len(formatted_rows) == 0
 
 
 @pytest.mark.parametrize(
@@ -664,6 +645,7 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
 
     claims = ClaimFactory.create_batch(
         size=claims_count,
+        employee=factory.SubFactory(EmployeeWithFineosNumberFactory),
         fineos_absence_status_id=factory.Iterator(reductions_common.OUTBOUND_STATUSES),
     )
 
@@ -727,7 +709,7 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
         # data aren't misaligned. A parser can unintentionally give a false positive here.
         assert csv_line == ",".join(
             [
-                claim.fineos_absence_id,
+                claim.employee.fineos_customer_number,
                 claim.employee.tax_identifier.tax_identifier.replace("-", ""),
                 dua.Constants.TEMPORARY_BENEFIT_START_DATE,
             ]

@@ -4,7 +4,7 @@ from typing import List, Optional
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.employees import ClaimType, PaymentMethod
+from massgov.pfml.db.models.employees import PaymentMethod
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     NachaBatchType,
     create_nacha_batch,
@@ -61,10 +61,7 @@ class PubACHResponseGenerator:
             return
 
         nacha_batch_type: NachaBatchType = NachaBatchType.FAMILY_LEAVE
-        if (
-            scenario_descriptor.claim_type == ClaimType.MEDICAL_LEAVE
-            or not scenario_descriptor.prenoted
-        ):
+        if scenario_descriptor.claim_type == "Employee" or not scenario_descriptor.prenoted:
             nacha_batch_type = NachaBatchType.MEDICAL_LEAVE
 
         nacha_batch = self.get_batch_by_type(nacha_batch_type)
@@ -72,8 +69,13 @@ class PubACHResponseGenerator:
         is_return = scenario_descriptor.prenoted
         is_prenote = not is_return
 
-        pub_individual_id = payment.pub_individual_id
-        if pub_individual_id and scenario_descriptor.pub_ach_return_payment_id_not_found:
+        pub_individual_id = (
+            payment.pub_eft.pub_individual_id if is_prenote else payment.pub_individual_id
+        )
+        if pub_individual_id and (
+            scenario_descriptor.pub_ach_return_payment_id_not_found
+            or scenario_descriptor.pub_ach_return_prenote_payment_id_not_found
+        ):
             pub_individual_id = (
                 pub_individual_id * 100
             )  # We might want to consider a different approach for this to avoid an overlap if we add a lot of scenarios. Maybe make it negative?

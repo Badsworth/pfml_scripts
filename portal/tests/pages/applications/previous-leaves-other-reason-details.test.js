@@ -1,24 +1,17 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
-  testHook,
 } from "../../test-utils";
 import PreviousLeave, {
   PreviousLeaveReason,
 } from "../../../src/models/PreviousLeave";
-import PreviousLeavesOtherReasonDetails, {
-  PreviousLeavesOtherReasonDetailsCard,
-} from "../../../src/pages/applications/previous-leaves-other-reason-details";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import React from "react";
-import { shallow } from "enzyme";
-import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
+import PreviousLeavesOtherReasonDetails from "../../../src/pages/applications/previous-leaves-other-reason-details";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const setup = (claimAttrs = {}) => {
-  const claim = new MockClaimBuilder().continuous().create();
+const setup = (claimAttrs = { employer_fein: "12-3456789" }) => {
+  const claim = new MockBenefitsApplicationBuilder().continuous().create();
 
   const { appLogic, wrapper } = renderWithAppLogic(
     PreviousLeavesOtherReasonDetails,
@@ -110,7 +103,8 @@ const clickAddPreviousLeaveButton = async (wrapper) => {
 };
 
 const createClaimWithPreviousLeaves = () =>
-  new MockClaimBuilder()
+  new MockBenefitsApplicationBuilder()
+    .employed()
     .continuous()
     .previousLeavesOtherReason([
       {
@@ -236,31 +230,5 @@ describe("PreviousLeavesOtherReasonDetails", () => {
     const { submitForm } = simulateEvents(wrapper);
     await submitForm();
     expect(spy).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe("PreviousLeavesOtherReasonDetailsCard", () => {
-  it("renders the component", () => {
-    const claim = new MockClaimBuilder().continuous().create();
-    const index = 0;
-    let getFunctionalInputProps;
-
-    testHook(() => {
-      getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
-        formState: {},
-        updateFields: jest.fn(),
-      });
-    });
-
-    const wrapper = shallow(
-      <PreviousLeavesOtherReasonDetailsCard
-        claim={claim}
-        getFunctionalInputProps={getFunctionalInputProps}
-        index={index}
-      />
-    );
-
-    expect(wrapper).toMatchSnapshot();
   });
 });

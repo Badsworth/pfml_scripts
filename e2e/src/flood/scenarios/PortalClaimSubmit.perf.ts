@@ -176,16 +176,19 @@ function employerResponse(fineosId: string): Cfg.StoredStep {
         // Log in on Portal as Leave Admin
         authToken = await login(
           browser,
-          `gqzap.lst-employer.${data.claim.employer_fein?.replace(
+          `gqzap.employer.${data.claim.employer_fein?.replace(
             "-",
             ""
           )}@inbox.testmail.app`,
           await Cfg.config("E2E_EMPLOYER_PORTAL_PASSWORD")
         );
-        // Review submited application via direct link on Portal
-        await browser.visit(
-          `${await Cfg.PortalBaseUrl}/employers/applications/new-application/?absence_id=${fineosId}`
-        );
+
+        await (
+          await Util.waitForElement(browser, By.linkText("Dashboard"))
+        ).click();
+
+        await Util.findClaimOnEmployerDashboard(browser, fineosId);
+        // // Review submited application via direct link on Portal
         error = await Util.maybeFindElement(
           browser,
           By.visibleText("An error occurred")
@@ -200,12 +203,8 @@ function employerResponse(fineosId: string): Cfg.StoredStep {
       }
 
       // Are you the right person? true | false
-      await (
-        await Util.waitForElement(
-          browser,
-          By.css("[name='hasReviewerVerified'][value='true'] + label")
-        )
-      ).click();
+      await (await Util.waitForElement(browser, By.visibleText("Yes"))).click();
+
       // Click "Agree and submit" button
       await (
         await Util.waitForElement(browser, By.visibleText("Agree and submit"))
@@ -296,6 +295,7 @@ async function setFeatureFlags(browser: Browser): Promise<void> {
       pfmlTerriyay: true,
       claimantShowAuth: true,
       claimantAuthThroughApi: true,
+      employerShowDashboard: true,
     }),
     url: await Cfg.PortalBaseUrl,
   });

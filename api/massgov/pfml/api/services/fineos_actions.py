@@ -270,6 +270,11 @@ def complete_intake(application: Application, db_session: massgov.pfml.db.Sessio
 DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE = (
     DocumentType.IDENTIFICATION_PROOF.document_type_id,
     DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id,
+    DocumentType.OWN_SERIOUS_HEALTH_CONDITION_FORM.document_type_id,
+    DocumentType.PREGNANCY_MATERNITY_FORM.document_type_id,
+    DocumentType.CHILD_BONDING_EVIDENCE_FORM.document_type_id,
+    DocumentType.CARE_FOR_A_FAMILY_MEMBER_FORM.document_type_id,
+    DocumentType.MILITARY_EXIGENCY_FORM.document_type_id,
 )
 
 

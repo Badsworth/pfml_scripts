@@ -1,14 +1,8 @@
 import Document, { DocumentType } from "../../src/models/Document";
 import LeaveReason from "../../src/models/LeaveReason";
-import { MockClaimBuilder } from "../test-utils";
 import findDocumentsByLeaveReason from "../../src/utils/findDocumentsByLeaveReason";
 
 describe("findDocumentsByLeaveReason", () => {
-  const medicalClaim = new MockClaimBuilder().medicalLeaveReason().create();
-  const bondingClaim = new MockClaimBuilder()
-    .bondingBirthLeaveReason()
-    .create();
-
   describe("when the showCaringLeave feature flag is on", () => {
     // TODO (CP-1989): Remove feature flag and refactor tests
     const documentsList = [
@@ -27,7 +21,10 @@ describe("findDocumentsByLeaveReason", () => {
     });
 
     it("returns an empty array when no documents are found", () => {
-      const documents = findDocumentsByLeaveReason(documentsList, bondingClaim);
+      const documents = findDocumentsByLeaveReason(
+        documentsList,
+        LeaveReason.bonding
+      );
       expect(documents).toEqual([]);
     });
 
@@ -38,7 +35,7 @@ describe("findDocumentsByLeaveReason", () => {
       ];
       const documents = findDocumentsByLeaveReason(
         [...documentsList, ...testDocs],
-        medicalClaim
+        LeaveReason.medical
       );
 
       expect(documents).toHaveLength(2);
@@ -46,7 +43,7 @@ describe("findDocumentsByLeaveReason", () => {
     });
 
     it("returns an empty array when the documents list is empty", () => {
-      const documents = findDocumentsByLeaveReason([], medicalClaim);
+      const documents = findDocumentsByLeaveReason([], LeaveReason.medical);
       expect(documents).toEqual([]);
     });
   });
@@ -75,7 +72,10 @@ describe("findDocumentsByLeaveReason", () => {
       process.env.featureFlags = {
         showCaringLeaveType: false,
       };
-      const documents = findDocumentsByLeaveReason(documentsList, medicalClaim);
+      const documents = findDocumentsByLeaveReason(
+        documentsList,
+        LeaveReason.medical
+      );
       expect(documents).toHaveLength(1);
       expect(documents[0].document_type).toEqual(
         DocumentType.certification.medicalCertification

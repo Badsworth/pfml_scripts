@@ -113,7 +113,7 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
 
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
     assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment.claim)
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.claim.employee.first_name
     assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.claim.employee.last_name
 
@@ -204,6 +204,10 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
     payment_audit_scenario_data_set = generate_audit_report_dataset(
         DEFAULT_AUDIT_SCENARIO_DATA_SET, test_db_session
     )
+    payment_audit_scenario_data_set_by_payment_id = {
+        str(audit_scenario_data.payment_audit_data.payment.payment_id): audit_scenario_data
+        for audit_scenario_data in payment_audit_scenario_data_set
+    }
 
     # generate audit report
     payment_audit_report_step.run()
@@ -235,13 +239,15 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
 
     # Validate column values
     parsed_csv = csv.DictReader(open(audit_report_file_path))
+    parsed_csv_by_payment_id = {
+        row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id]: row for row in parsed_csv
+    }
 
-    index = 0
-    for row in parsed_csv:
-        audit_scenario_data = payment_audit_scenario_data_set[index]
+    for payment_id, row in parsed_csv_by_payment_id.items():
+        audit_scenario_data = payment_audit_scenario_data_set_by_payment_id.get(payment_id, None)
+        assert audit_scenario_data is not None
+
         validate_payment_audit_csv_row_by_payment_audit_data(row, audit_scenario_data)
-
-        index += 1
 
     # check reference file created for archive folder file
     assert (

@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -12,7 +12,7 @@ const setup = (claimAttrs) => {
   const { appLogic, claim, wrapper } = renderWithAppLogic(
     EmploymentStatusPage,
     {
-      claimAttrs: claimAttrs || new MockClaimBuilder().create(),
+      claimAttrs: claimAttrs || new MockBenefitsApplicationBuilder().create(),
     }
   );
   const { changeField, changeRadioGroup, submitForm } = simulateEvents(wrapper);
@@ -148,7 +148,7 @@ describe("EmploymentStatusPage", () => {
 
     describe("when claim has existing employment status", () => {
       it("submits status and FEIN without changing fields", () => {
-        const test = new MockClaimBuilder().employed().create();
+        const test = new MockBenefitsApplicationBuilder().employed().create();
         const { appLogic, claim, submitForm } = setup(test);
 
         submitForm();

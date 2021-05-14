@@ -3,7 +3,7 @@ import ConcurrentLeavesDetails from "../../../src/pages/applications/concurrent-
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const setup = (claimAttrs = {}) => {
+const setup = (claimAttrs = { employer_fein: "12-3456789" }) => {
   const {
     appLogic,
     claim,
@@ -23,7 +23,7 @@ const setup = (claimAttrs = {}) => {
 
 describe("ConcurrentLeavesDetails", () => {
   it("renders the page", () => {
-    const { wrapper } = setup({ employer_fein: "12-3456789" });
+    const { wrapper } = setup();
 
     expect(wrapper).toMatchSnapshot();
   });

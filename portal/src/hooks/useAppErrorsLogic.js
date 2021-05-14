@@ -84,7 +84,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
    * @param {string} issue.type
    * @param {string} i18nPrefix - prefix used in the i18n key
    * @returns {string | Trans} Internationalized error message or Trans component
-   * @example getMessageFromIssue(issue, "claims");
+   * @example getMessageFromIssue(issue, "applications");
    */
   const getMessageFromIssue = ({ field, message, rule, type }, i18nPrefix) => {
     let issueMessageKey;
@@ -160,8 +160,8 @@ const useAppErrorsLogic = ({ portalFlow }) => {
     }
 
     // 1. Display a field or rule-level message if present:
-    //    a. Field-level: "errors.claims.ssn.required" => "Please enter your SSN."
-    //    b. Rule-level: "errors.claims.rules.min_leave_periods" => "At least one leave period is required."
+    //    a. Field-level: "errors.applications.ssn.required" => "Please enter your SSN."
+    //    b. Rule-level: "errors.applications.rules.min_leave_periods" => "At least one leave period is required."
     const issueMessage = t(issueMessageKey, { field });
 
     // When a translation is missing, the key will be returned

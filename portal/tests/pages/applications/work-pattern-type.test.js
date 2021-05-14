@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -33,7 +33,7 @@ describe("WorkPatternType", () => {
 
   it("resets hours_worked_per_week to null and work_pattern_days to empty array when type changes", async () => {
     const { appLogic, claim, changeRadioGroup, submitForm } = setup(
-      new MockClaimBuilder().fixedWorkPattern().create()
+      new MockBenefitsApplicationBuilder().fixedWorkPattern().create()
     );
 
     changeRadioGroup(
@@ -56,7 +56,7 @@ describe("WorkPatternType", () => {
 
   it("does not reset hours_worked_per_week to null and work_pattern_days to empty array when type does NOT change", async () => {
     const { appLogic, claim, submitForm } = setup(
-      new MockClaimBuilder().fixedWorkPattern().create()
+      new MockBenefitsApplicationBuilder().fixedWorkPattern().create()
     );
 
     await submitForm();

@@ -13,7 +13,6 @@ from massgov.pfml.db.models.employees import (
     Employer,
     GeoState,
     LkAbsenceStatus,
-    LkClaimType,
     Payment,
     PaymentMethod,
     PrenoteState,
@@ -95,7 +94,11 @@ class ScenarioData:
     payment_c_value: Optional[str] = None
     payment_i_value: Optional[str] = None
 
+    additional_payment_c_value: Optional[str] = None
+    additional_payment_i_value: Optional[str] = None
+
     payment: Optional[Payment] = None
+    additional_payment: Optional[Payment] = None
 
 
 @dataclass
@@ -157,7 +160,6 @@ def create_employee(ssn: str, fineos_customer_number: str) -> Employee:
 def create_claim(
     employer: Employer,
     employee: Employee,
-    claim_type: LkClaimType,
     absence_status: LkAbsenceStatus,
     fineos_absence_id: str,
     is_id_proofed: bool,
@@ -165,7 +167,6 @@ def create_claim(
     return ClaimFactory.create(
         employer=employer,
         employee=employee,
-        claim_type_id=claim_type.claim_type_id,
         fineos_absence_status_id=absence_status.absence_status_id,
         fineos_absence_id=fineos_absence_id,
         is_id_proofed=is_id_proofed,
@@ -210,7 +211,6 @@ def generate_scenario_data_in_db(
     claim = create_claim(
         employer=employer,
         employee=employee,
-        claim_type=scenario_descriptor.claim_type,
         fineos_absence_id=absence_case_id,
         absence_status=AbsenceStatus.APPROVED,
         is_id_proofed=scenario_descriptor.is_id_proofed,
@@ -257,6 +257,10 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
 
                 scenario_data.payment_c_value = "7326"
                 scenario_data.payment_i_value = str(fake.unique.random_int())
+
+                if scenario_descriptor.has_additional_payment_in_period:
+                    scenario_data.additional_payment_c_value = "7326"
+                    scenario_data.additional_payment_i_value = str(fake.unique.random_int())
 
                 scenario_dataset.append(scenario_data)
 

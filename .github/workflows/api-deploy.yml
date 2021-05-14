@@ -865,3 +865,43 @@ jobs:
           github_branch: ${{ steps.determine_e2e_ref.outputs.e2e_ref }}
           # Limit to "stable" suite for any environment but test.
           only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
+
+  post-e2e-failures-to-slack:
+    name: Post E2E failures to Slack
+    needs: [finish-comms-slack, end-to-end]
+    # Run if the E2E tests failed. Skip for CPS Preview since those tests are not
+    # expected to pass for a while. This conditional will be removed in INFRA-460.
+    if: always() &&
+        github.event.inputs.deployment_env != 'cps-preview' &&
+        (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Post to Slack
+        run: |
+          echo "Slackbot message reply TS is ${{ needs.finish-comms-slack.outputs.message-ts }}"
+          
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "thread_ts": "${{ needs.finish-comms-slack.outputs.message-ts }}",
+            "attachments": [{
+              "title": "E2E Test failed in ${{ github.event.inputs.deployment_env || 'test' }} (<${{ env.workflow_self_link }}|build logs>)",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)

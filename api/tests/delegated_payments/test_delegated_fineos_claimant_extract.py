@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 import tempfile
@@ -120,7 +121,7 @@ def test_run_step_happy_path(
 
     tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
     employee = EmployeeFactory(tax_identifier=tax_identifier)
-    EmployerFactory(fineos_employer_id=96)
+    employer = EmployerFactory(fineos_employer_id=96)
 
     employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 1
@@ -150,6 +151,7 @@ def test_run_step_happy_path(
     assert claim.absence_period_start_date == datetime.date(2021, 5, 13)
     assert claim.absence_period_end_date == datetime.date(2021, 7, 22)
     assert claim.is_id_proofed is True
+    assert claim.employer_id == employer.employer_id
 
     updated_employee = (
         local_test_db_session.query(Employee)
@@ -335,7 +337,9 @@ def test_run_step_no_employee(
         .one_or_none()
     )
 
-    assert claim is None
+    # Claim still gets created even if employee doesn't exist
+    assert claim
+    assert claim.employee_id is None
 
     state_logs = local_test_db_session.query(StateLog).all()
     assert len(state_logs) == 0
@@ -381,9 +385,9 @@ def formatted_claim(initialize_factories_session) -> Claim:
 
 def make_claimant_data_from_fineos_data(fineos_data):
     extract_data = claimant_extract.ExtractData(claimant_extract.expected_file_names, "2021-02-21")
-    extract_data.employee_feed.indexed_data = {
-        fineos_data.customer_number: fineos_data.get_employee_feed_record()
-    }
+
+    employee_feeds = [fineos_data.get_employee_feed_record()]
+    extract_data.employee_feed.indexed_data = {fineos_data.customer_number: employee_feeds}
 
     requested_absences = [fineos_data.get_requested_absence_record()]
     extract_data.requested_absence_info.indexed_data = {
@@ -438,10 +442,8 @@ def test_create_or_update_claim_invalid_values(claimant_extract_step, test_db_se
     fineos_data = FineosClaimantData(generate_defaults=False, absence_case_number="NTN-001-ABS-01")
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
-    # There are not any validation issues because it's not ID proofed so
-    # the records gets skipped. Technically the full process won't ever
-    # get to to calling the below method, but this is just in case.
-    assert len(claimant_data.validation_container.validation_issues) == 0
+    # The number of required fields we pull out of the requested absence file
+    assert len(claimant_data.validation_container.validation_issues) == 7
 
     # The claim will be created, but with just an absence case number
     claim = claimant_extract_step.create_or_update_claim(claimant_data)
@@ -695,25 +697,211 @@ def test_run_step_validation_issues(
 ):
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     # Create some validation issues
-    fineos_data = FineosClaimantData(routing_nbr="", leave_request_end="")
+    fineos_data = FineosClaimantData(routing_nbr="", leave_request_end="", date_of_birth="")
 
+    # Create the employee record
     tax_identifier = TaxIdentifierFactory(tax_identifier=fineos_data.ssn)
-    EmployeeFactory(tax_identifier=tax_identifier)
+    employee_before = EmployeeFactory(tax_identifier=tax_identifier)
+
+    # Create the employer record
+    employer = EmployerFactory(fineos_employer_id=fineos_data.employer_customer_num)
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
 
     upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
 
     # Run the process
     claimant_extract_step.run_step()
 
-    # Verify the state logs
-    state_logs = test_db_session.query(StateLog).all()
-    assert len(state_logs) == 1
+    # Verify the Employee was still updated with valid fields
+    employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee_before.employee_id)
+        .one_or_none()
+    )
+    assert employee
+    assert employee.fineos_customer_number == fineos_data.customer_number
+    assert employee.date_of_birth == employee_before.date_of_birth
 
-    state_log = state_logs[0]
+    # Because one piece of EFT info was invalid, we did not create it
+    assert len(employee.pub_efts.all()) == 0
+
+    # Verify the claim was still created despite an invalid field (that isn't set)
+    assert len(employee.claims) == 1
+    claim = employee.claims[0]
+    assert claim.fineos_absence_id == fineos_data.absence_case_number
+    assert claim.employee_id == employee.employee_id
+    assert claim.fineos_notification_id == fineos_data.notification_number
+    assert (
+        claim.claim_type_id
+        == payments_util.get_mapped_claim_type(fineos_data.leave_type).claim_type_id
+    )
+    assert claim.fineos_absence_status_id == AbsenceStatus.get_id(fineos_data.absence_case_status)
+    assert claim.absence_period_start_date is not None
+    assert claim.absence_period_end_date is None  # Due to being empty
+    assert claim.is_id_proofed
+    assert claim.employer_id == employer.employer_id
+
+    # Verify the state logs and outcome
+    assert len(employee.state_logs) == 1
+    state_log = employee.state_logs[0]
     assert (
         state_log.end_state_id
         == State.DELEGATED_CLAIMANT_ADD_TO_CLAIMANT_EXTRACT_ERROR_REPORT.state_id
     )
+    validation_issues = state_log.outcome["validation_container"]["validation_issues"]
+    assert validation_issues == [
+        {"reason": "MissingField", "details": "ABSENCEPERIOD_END"},
+        {"reason": "MissingField", "details": "DATEOFBIRTH"},
+        {"reason": "MissingField", "details": "SORTCODE"},
+    ]
+
+
+def test_run_step_minimal_viable_claim(
+    claimant_extract_step,
+    test_db_session,
+    tmp_path,
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    monkeypatch,
+):
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    # Create a record with only an absence case number
+    # This should still end up created in the DB, but with
+    # significant validation issues
+    fineos_data = FineosClaimantData(
+        False, include_employee_feed=False, absence_case_number="ABS-001"
+    )
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
+
+    # Run the process
+    claimant_extract_step.run_step()
+
+    claim = test_db_session.query(Claim).one_or_none()
+    assert claim
+    assert claim.fineos_absence_id == fineos_data.absence_case_number
+    assert claim.employee_id is None
+    assert claim.fineos_notification_id is None
+    assert claim.claim_type_id is None
+    assert claim.fineos_absence_status_id is None
+    assert claim.absence_period_start_date is None
+    assert claim.absence_period_end_date is None
+    assert claim.is_id_proofed is False
+
+    # We don't have an employee to connect this to, so there
+    # won't be any state logs
+    # TODO - how could we communicate this? This technically is an existing issue.
+    #        Should we make errors associated with claims instead?
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 0
+
+
+def test_run_step_no_default_payment_pref(
+    claimant_extract_step,
+    test_db_session,
+    tmp_path,
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    monkeypatch,
+):
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    # Create records without a default payment preference
+    # None of the payment preference related fields will be set
+    fineos_data = FineosClaimantData(
+        default_payment_pref="N",
+        payment_method="Elec Funds Transfer",
+        account_nbr="123456789",
+        routing_nbr="123456789",
+        account_type="Checking",
+    )
+
+    # Create the employee record
+    tax_identifier = TaxIdentifierFactory(tax_identifier=fineos_data.ssn)
+    employee_before = EmployeeFactory(tax_identifier=tax_identifier)
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
+
+    # Run the process
+    claimant_extract_step.run_step()
+
+    # Verify the Employee was still updated
+    employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee_before.employee_id)
+        .one_or_none()
+    )
+    assert employee
+    assert employee.fineos_customer_number == fineos_data.customer_number
+
+    # Because the payment preferences weren't the default, no EFT records are created
+    assert len(employee.pub_efts.all()) == 0
+
+    # The claim still is attached to the employee
+    assert len(employee.claims) == 1
+    claim = employee.claims[0]
+    assert claim.fineos_absence_id == fineos_data.absence_case_number
+    assert claim.employee_id == employee.employee_id
+
+
+def test_run_step_mix_of_payment_prefs(
+    claimant_extract_step,
+    test_db_session,
+    tmp_path,
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    monkeypatch,
+):
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    # Create a record that isn't a default payment preference
+    # then create another record with the same customer number & absence case number
+    # but with default payment preference set to Y
+    # We will use the default payment preference and ignore the other record
+    not_default_fineos_data = FineosClaimantData(
+        default_payment_pref="N",
+        payment_method="Check",
+        account_nbr="Unknown",
+        routing_nbr="Unknown",
+        account_type="Unknown",
+    )
+
+    default_fineos_data = copy.deepcopy(not_default_fineos_data)
+    default_fineos_data.default_payment_pref = "Y"
+    default_fineos_data.payment_method = "Elec Funds Transfer"
+    default_fineos_data.account_nbr = "123456789"
+    default_fineos_data.routing_nbr = "123456789"
+    default_fineos_data.account_type = "Checking"
+
+    # Create the employee record
+    tax_identifier = TaxIdentifierFactory(tax_identifier=default_fineos_data.ssn)
+    employee_before = EmployeeFactory(tax_identifier=tax_identifier)
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, [not_default_fineos_data, default_fineos_data])
+
+    # Run the process
+    claimant_extract_step.run_step()
+
+    # Verify the Employee was updated
+    employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee_before.employee_id)
+        .one_or_none()
+    )
+    assert employee
+    assert employee.fineos_customer_number == default_fineos_data.customer_number
+
+    # The default payment preferences were used.
+    pub_efts = employee.pub_efts.all()
+    assert len(pub_efts) == 1
+    assert pub_efts[0].pub_eft.routing_nbr == default_fineos_data.routing_nbr
+    assert pub_efts[0].pub_eft.account_nbr == default_fineos_data.account_nbr
+    assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+
+    # The claim was attached to the employee
+    assert len(employee.claims) == 1
+    claim = employee.claims[0]
+    assert claim.fineos_absence_id == default_fineos_data.absence_case_number
+    assert claim.employee_id == employee.employee_id
 
 
 def test_extract_to_staging_tables(emp_updates_path, claimant_extract_step, test_db_session):

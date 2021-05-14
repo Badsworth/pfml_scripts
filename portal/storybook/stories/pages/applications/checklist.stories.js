@@ -3,7 +3,7 @@ import Step, { ClaimSteps } from "src/models/Step";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { Checklist } from "src/pages/applications/checklist";
 import DocumentCollection from "src/models/DocumentCollection";
-import { MockClaimBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import React from "react";
 import claimantConfig from "src/flows/claimant";
 import { find } from "lodash";
@@ -30,32 +30,38 @@ function generateWarningsForStep(name) {
  */
 const scenarios = {
   "Verify Identity not started": {
-    claim: new MockClaimBuilder().create(),
+    claim: new MockBenefitsApplicationBuilder().create(),
     warnings: generateWarningsForStep(ClaimSteps.verifyId),
   },
   "Employment Information not started": {
-    claim: new MockClaimBuilder().create(),
+    claim: new MockBenefitsApplicationBuilder().create(),
     warnings: generateWarningsForStep(ClaimSteps.employerInformation),
   },
   "Leave Details not started": {
-    claim: new MockClaimBuilder().create(),
+    claim: new MockBenefitsApplicationBuilder().create(),
     warnings: generateWarningsForStep(ClaimSteps.leaveDetails),
   },
   "Part 1 ready for review": {
-    claim: new MockClaimBuilder().noOtherLeave().create(),
+    claim: new MockBenefitsApplicationBuilder().noOtherLeave().create(),
   },
   "Part 1 submitted, payments not started": {
-    claim: new MockClaimBuilder().noOtherLeave().submitted().create(),
+    claim: new MockBenefitsApplicationBuilder()
+      .noOtherLeave()
+      .submitted()
+      .create(),
     query: {
       "part-one-submitted": "true",
     },
   },
   "Part 2 submitted, no medical docs uploaded": {
-    claim: new MockClaimBuilder().paymentPrefSubmitted().submitted().create(),
+    claim: new MockBenefitsApplicationBuilder()
+      .paymentPrefSubmitted()
+      .submitted()
+      .create(),
     warnings: generateWarningsForStep(ClaimSteps.payment),
   },
   "Part 2 submitted, caring leave with no certification form uploaded": {
-    claim: new MockClaimBuilder()
+    claim: new MockBenefitsApplicationBuilder()
       .paymentPrefSubmitted()
       .submitted()
       .caringLeaveReason()
@@ -64,21 +70,21 @@ const scenarios = {
   },
 
   "Proof of birth not uploaded (newborn)": {
-    claim: new MockClaimBuilder()
+    claim: new MockBenefitsApplicationBuilder()
       .paymentPrefSubmitted()
       .submitted()
       .bondingBirthLeaveReason()
       .create(),
   },
   "Proof of placement not uploaded (adoption/foster)": {
-    claim: new MockClaimBuilder()
+    claim: new MockBenefitsApplicationBuilder()
       .paymentPrefSubmitted()
       .submitted()
       .bondingAdoptionLeaveReason()
       .create(),
   },
   "Proof of birth not uploaded (future newborn)": {
-    claim: new MockClaimBuilder()
+    claim: new MockBenefitsApplicationBuilder()
       .paymentPrefSubmitted()
       .submitted()
       .bondingBirthLeaveReason()
@@ -86,7 +92,7 @@ const scenarios = {
       .create(),
   },
   "Proof of placement not uploaded (future adoption/foster)": {
-    claim: new MockClaimBuilder()
+    claim: new MockBenefitsApplicationBuilder()
       .paymentPrefSubmitted()
       .submitted()
       .bondingAdoptionLeaveReason()
@@ -94,7 +100,7 @@ const scenarios = {
       .create(),
   },
   "Docs uploaded, ready to submit": {
-    claim: new MockClaimBuilder().complete().create(),
+    claim: new MockBenefitsApplicationBuilder().complete().create(),
     documents: [
       new Document({
         document_type: DocumentType.identityVerification,

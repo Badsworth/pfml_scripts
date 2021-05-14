@@ -59,6 +59,7 @@ def init(
     if sync_lookups:
         massgov.pfml.db.models.init_lookup_tables(session_factory)
         massgov.pfml.db.models.applications.sync_state_metrics(session_factory)
+        massgov.pfml.db.models.payments.sync_maximum_weekly_benefit_amount(session_factory)
 
     if check_migrations_current:
         have_all_migrations_run(engine)
@@ -149,7 +150,6 @@ def session_scope(session: Session, close: bool = False) -> Generator[Session, N
     See https://docs.sqlalchemy.org/en/13/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it
     """
 
-    session.begin_nested()
     try:
         yield session
         session.commit()

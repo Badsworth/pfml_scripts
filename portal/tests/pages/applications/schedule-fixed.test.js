@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockBenefitsApplicationBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
@@ -17,7 +17,7 @@ const MINUTES_WORKED_PER_WEEK = 60 * 8 * 7;
 
 const setup = (claim) => {
   if (!claim) {
-    claim = new MockClaimBuilder()
+    claim = new MockBenefitsApplicationBuilder()
       .continuous()
       .workPattern({
         work_pattern_type: WorkPatternType.fixed,
@@ -42,7 +42,7 @@ describe("ScheduleFixed", () => {
 
   it("displays work schedule values that were previously entered", () => {
     const workPattern = WorkPattern.createWithWeek(MINUTES_WORKED_PER_WEEK);
-    const claim = new MockClaimBuilder()
+    const claim = new MockBenefitsApplicationBuilder()
       .continuous()
       .workPattern({
         work_pattern_type: WorkPatternType.fixed,
