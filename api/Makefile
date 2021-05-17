@@ -120,7 +120,6 @@ create-user: ## Create local API User
 
 deps: ## Install dependencies
 	$(POETRY_CMD) install --no-root --extras "mssql-server api-only-dependencies"
-	$(RUN_CMD) npm install --only=dev
 
 deps-check:
 	$(PY_RUN_CMD) safety check --full-report
@@ -261,7 +260,8 @@ lint-security: ## Run security linting
 	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll
 
 lint-spectral: ## Run OpenAPI Spec linting
-	$(RUN_CMD) npx spectral lint $(OPEN_API_PATH) --ruleset .spectral.yaml
+	docker run --rm --tty --cap-drop=ALL --network=none --read-only --volume=$(PWD):/tmp:ro \
+           stoplight/spectral lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash
