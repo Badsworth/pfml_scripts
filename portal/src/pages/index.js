@@ -49,6 +49,7 @@ export const Index = (props) => {
       </div>
       <div className="margin-top-6 measure-7">
         <Heading level="2">{t("pages.index.createAccountHeading")}</Heading>
+        <p>{t("pages.index.createAccountHint")}</p>
 
         <div className="grid-row grid-gap">
           <article className="grid-col-12 mobile-lg:grid-col margin-bottom-3">
