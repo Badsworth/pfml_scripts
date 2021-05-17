@@ -421,11 +421,11 @@ class ContentType(str, LookupEnum):
 
 # Gender I/O Types
 class Gender(str, LookupEnum):
-    Man = "Woman"
-    Woman = "Man"
-    NONBINARY = "Non-binary"
-    NOT_LISTED = "Gender not listed"
-    NO_ANSWER = "Prefer not to answer"
+    woman = "Woman"
+    man = "Man"
+    non_binary = "Non-binary"
+    not_listed = "Gender not listed"
+    no_answer = "Prefer not to answer"
 
     @classmethod
     def get_lookup_model(cls):
