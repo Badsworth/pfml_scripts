@@ -739,6 +739,7 @@ def previous_leave_delete(application_id: str, previous_leave_id: str) -> Respon
 
 def payment_preference_submit(application_id: str) -> Response:
     body = connexion.request.json
+
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 

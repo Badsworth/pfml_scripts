@@ -325,6 +325,7 @@ def update_from_request(
     # set keys, LookupEnum handling, alias/map field names, etc.
     for key in body.__fields_set__:
         value = getattr(body, key)
+        
         if key in ("leave_details", "employee_ssn", "tax_identifier"):
             continue
 
@@ -385,6 +386,7 @@ def update_from_request(
 
             if lookup_model:
                 value = lookup_model
+
         setattr(application, key, value)
 
     leave_schedules = update_leave_details(db_session, body, application)
