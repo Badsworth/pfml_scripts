@@ -506,12 +506,13 @@ export function intermittentFillAbsencePeriod(claimNumber: string): void {
 
 export function claimAdjudicationFlow(
   claimNumber: string,
+  claimType: string,
   ERresponse = false
 ): void {
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
   onTab("Tasks");
-  assertHasTask("Certification Review");
+  assertHasTask(`${claimType} Certification Review`);
   assertHasTask("ID Review");
   if (ERresponse) {
     assertHasTask("Employer Approval Received");

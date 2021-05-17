@@ -37,7 +37,11 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
       fineos.before();
       cy.unstash<Submission>("submission").then((submission) => {
         cy.visit("/");
-        fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);
+        fineos.claimAdjudicationFlow(
+          submission.fineos_absence_id,
+          "Medical",
+          true
+        );
         fineos.addBondingLeaveFlow(new Date());
       });
     }
