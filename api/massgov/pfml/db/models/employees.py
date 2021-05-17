@@ -126,7 +126,7 @@ class LkGender(Base):
     __tablename__ = "lk_gender"
     gender_id = Column(Integer, primary_key=True, autoincrement=True)
     gender_description = Column(Text)
-    fineos_gender_description = Column(Text, nullable=False)
+    fineos_gender_description = Column(Text, nullable=True)
 
     def __init__(self, gender_id, gender_description, fineos_gender_description):
         self.gender_id = gender_id
