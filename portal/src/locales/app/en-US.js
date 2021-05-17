@@ -2241,6 +2241,15 @@ const components = {
       "Does the employee work at an acute care hospital, or the teaching hospital of the University of Massachusetts Medical School?",
     bondingRegsReviewDetailsSummary:
       "If so, this employee may be eligible to take their paid family leave anytime in 2021, <emergency-bonding-regs-employer-link>due to emergency Covid-19 regulations for hospital workers</emergency-bonding-regs-employer-link>.",
+    choiceNo: "No (comment required)",
+    choiceUnknown: "I don't know",
+    choiceYes: "Yes",
+    commentHeading:
+      "Tell us why you think this relationship is inaccurate. (required)",
+    familyMemberRelationshipHint:
+      "This employee has attested the family member relationship is <eligible-relationship-link>a covered relationship</eligible-relationship-link>. If something on the form seems incorrect, add a comment at the end of the page.",
+    familyMemberRelationshipLabel:
+      "Do you believe the listed relationship is described accurately? (Optional)",
     header: "Leave details",
     leaveDurationLabel: "Leave duration",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
@@ -2251,6 +2260,9 @@ const components = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveTypeLabel: "Leave type",
+    warningHeading: "The employee will be denied paid leave.",
+    warningLead:
+      "We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied",
   },
   employersLeaveSchedule: {
     caption: "This is your employee’s expected leave schedule.",
