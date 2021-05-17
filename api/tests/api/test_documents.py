@@ -327,6 +327,7 @@ def test_military_exigency_doc_upload(
     assert response_data["created_at"] is not None
 
 
+# TODO: (API-1647) This test should be removed once State manage Paid Leave Confirmation is obsolete
 def test_old_document_type_saved(client, consented_user, consented_user_token, test_db_session):
     claim = ClaimFactory.create(
         fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
@@ -358,6 +359,44 @@ def test_old_document_type_saved(client, consented_user, consented_user_token, t
     assert response_data["description"] == "Care for a family member form"
     assert response_data["fineos_document_id"] == "3011"  # See massgov/pfml/fineos/mock_client.py
     assert response_data["name"] == "care_test.png"
+    assert response_data["user_id"] == str(consented_user.user_id)
+    assert response_data["created_at"] is not None
+
+
+# TODO: (API-1647) This test should also be removed once State manage Paid Leave Confirmation is obsolete
+def test_document_type_with_id_doc(client, consented_user, consented_user_token, test_db_session):
+    # Regression test to to verify that we do not switch ID doc types to the State managed
+    # Paid Leave Confirmation type
+
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+
+    application = ApplicationFactory.create(user=consented_user, claim=claim)
+
+    # Create a document with the STATE_MANAGED_PAID_LEAVE_CONFIRMATION document type
+    DocumentFactory.create(
+        user_id=consented_user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id,
+    )
+
+    # POST a document with one of the ID document types to make sure it isn't overwritten with cert doc type
+    response = client.post(
+        "/v1/applications/{}/documents".format(application.application_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+        content_type="multipart/form-data",
+        data=document_upload_payload_helper(VALID_FORM_DATA, valid_file()),
+    ).get_json()
+
+    assert response["status_code"] == 200
+
+    response_data = response["data"]
+    assert response_data["content_type"] == "image/png"
+    assert response_data["description"] == "Passport"
+    assert response_data["document_type"] == "Passport"
+    assert response_data["fineos_document_id"] == "3011"  # See massgov/pfml/fineos/mock_client.py
+    assert response_data["name"] == "passport.png"
     assert response_data["user_id"] == str(consented_user.user_id)
     assert response_data["created_at"] is not None
 

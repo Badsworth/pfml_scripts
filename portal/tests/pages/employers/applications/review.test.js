@@ -107,7 +107,7 @@ describe("Review", () => {
       setComment("my comment");
     });
 
-    await await simulateEvents(wrapper).submitForm();
+    await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
@@ -248,5 +248,43 @@ describe("Review", () => {
       "NTN-111-ABS-01",
       expect.objectContaining({ has_amendments: true })
     );
+  });
+
+  it("only calls preventDefault when pressing enter in text input", async () => {
+    await act(async () => {
+      const openAmendedHours = wrapper
+        .find("SupportingWorkDetails")
+        .find("AmendButton")
+        .prop("onClick");
+      await openAmendedHours();
+    });
+    const textInput = wrapper
+      .find("SupportingWorkDetails")
+      .find("ConditionalContent")
+      .update()
+      .find('input[name="hours_worked_per_week"]');
+    const mockPreventDefaultForEnter = jest.fn();
+    textInput.simulate("keydown", {
+      keyCode: 13,
+      preventDefault: mockPreventDefaultForEnter,
+    });
+    const mockPreventDefaultForOtherKeys = jest.fn();
+    textInput.simulate("keydown", {
+      keyCode: 65, // letter A
+      preventDefault: mockPreventDefaultForOtherKeys,
+    });
+    expect(mockPreventDefaultForEnter).toHaveBeenCalled();
+    expect(mockPreventDefaultForOtherKeys).not.toHaveBeenCalled();
+  });
+
+  it("doesn't call preventDefault() when pressing enter on submit button", async () => {
+    const mockPreventDefault = jest.fn();
+    await act(async () => {
+      await wrapper.find('button[type="submit"]').simulate("keydown", {
+        keyCode: 13,
+        preventDefault: mockPreventDefault,
+      });
+    });
+    expect(mockPreventDefault).not.toHaveBeenCalled();
   });
 });

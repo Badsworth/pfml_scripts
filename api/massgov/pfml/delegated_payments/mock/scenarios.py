@@ -73,6 +73,7 @@ class ScenarioName(Enum):
     PUB_ACH_PRENOTE_RETURN = "PUB_ACH_PRENOTE_RETURN"
     PUB_ACH_PRENOTE_NOTIFICATION = "PUB_ACH_PRENOTE_NOTIFICATION"
     PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT = "PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT"
+    PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND = "PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND"
 
     PUB_ACH_FAMILY_RETURN = "PUB_ACH_FAMILY_RETURN"
     PUB_ACH_FAMILY_NOTIFICATION = "PUB_ACH_FAMILY_NOTIFICATION"
@@ -145,6 +146,7 @@ class ScenarioDescriptor:
     pub_ach_return_payment_id_not_found: bool = False
 
     pub_ach_return_invalid_prenote_payment_id_format: bool = False
+    pub_ach_return_prenote_payment_id_not_found: bool = False
 
     pub_ach_response_change_notification: bool = False
     pub_ach_notification_reason_code: str = "CO1"
@@ -249,6 +251,12 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
         pub_ach_response_return=True,
         pub_ach_return_invalid_prenote_payment_id_format=True,
+        prenoted=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+        pub_ach_response_return=True,
+        pub_ach_return_prenote_payment_id_not_found=True,
         prenoted=False,
     ),
     ScenarioDescriptor(

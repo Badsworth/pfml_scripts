@@ -159,6 +159,20 @@ export const Review = (props) => {
     await props.appLogic.employers.submitClaimReview(absenceId, payload);
   });
 
+  /**
+   * Disable default browser behavior resulting in a form submission when a user presses Enter in a text field.
+   * On other pages, this behavior is desirable and more accessible, however the behavior is not desired for this page,
+   * since there's no way to go back to fix something if someone accidentally submits this page.
+   */
+  const handleKeyDown = (e) => {
+    if (
+      e.keyCode === 13 &&
+      ["text", "radio", "checkbox"].includes(e.target.type)
+    ) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="maxw-desktop-lg">
       <BackButton />
@@ -189,7 +203,13 @@ export const Review = (props) => {
       <EmployeeInformation claim={claim} />
       <LeaveDetails claim={claim} />
       <LeaveSchedule appLogic={appLogic} claim={claim} />
-      <form id="employer-review-form" onSubmit={handleSubmit} method="post">
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+      <form
+        id="employer-review-form"
+        onSubmit={handleSubmit}
+        method="post"
+        onKeyDown={handleKeyDown}
+      >
         <SupportingWorkDetails
           appErrors={appErrors}
           hoursWorkedPerWeek={claim.hours_worked_per_week}
