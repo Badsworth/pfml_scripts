@@ -725,11 +725,13 @@ const pages = {
     createAccountButton: "Create account",
     createEmployerAccount:
       "<strong>Are you a Massachusetts employer?</strong> Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to create an employer account.",
+    employerRedirect:
+      "Need to create an employer account? <employer-create-account-link>Register to manage leave for your team.</employer-create-account-link>",
     haveAnAccountFooterLabel: "Have an account?",
     logInFooterLink: "Log in",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "$t(shared.passwordLabel)",
-    title: "Create an account",
+    title: "Create a worker account to apply for paid leave",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authForgotPassword: {
@@ -1987,15 +1989,16 @@ const pages = {
     title: "Get ready to apply",
   },
   index: {
-    claimantCardBody: "You can now apply for Paid Family and Medical Leave.",
-    claimantCreateAccountButton: "Create an account",
+    claimantCardBody: "Apply for Paid Family and Medical Leave.",
+    claimantCreateAccountButton: "Create a worker account",
     claimantHeading: "Workers",
-    createAccountHeading: "Create an account",
+    createAccountHeading: "Choose an account type",
+    createAccountHint:
+      "You can create an account as a worker or as an employer.",
     employerCardBody_contactCenter:
       "Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to create an employer account.",
     employerCardBody_massEmployer: "Are you a Massachusetts employer?",
-    employerCardBody_selfRegister:
-      "Register now so you can manage leave for your team.",
+    employerCardBody_selfRegister: "Manage leave for your team.",
     employerCreateAccountButton: "Create an employer account",
     employerHeading: "Employers",
     seoTitle: "Massachusetts Paid Family and Medical Leave",

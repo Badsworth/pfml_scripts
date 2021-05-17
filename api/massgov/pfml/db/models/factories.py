@@ -804,6 +804,7 @@ class DiaReductionPaymentFactory(BaseFactory):
     end_date = factory.Faker("date_object")
     weekly_amount = 400.00
     award_created_date = factory.Faker("date_object")
+    termination_date = factory.Faker("date_object")
 
 
 class CaringLeaveMetadataFactory(BaseFactory):

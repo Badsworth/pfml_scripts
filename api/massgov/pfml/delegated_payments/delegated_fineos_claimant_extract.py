@@ -676,6 +676,10 @@ class ClaimantExtractStep(Step):
 
             # Associate claim with employee in case it is a new claim.
             claim.employee_id = employee_pfml_entry.employee_id
+            # NOTE: fix to address test issues with query cache using a claim with the employee_id not set in other steps
+            # This will make the employee object available in memory for the same transaction
+            # TODO settle on approach after further investigation
+            claim.employee = employee_pfml_entry
 
             self.db_session.add(employee_pfml_entry)
 

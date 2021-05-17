@@ -8,7 +8,7 @@ FROM python:3.8-slim as build
 RUN pip install poetry
 RUN apt-get update \
  && apt-get install --no-install-recommends --yes \
-        make nodejs npm \
+        make \
         build-essential git curl \
         postgresql gnupg \
  && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \

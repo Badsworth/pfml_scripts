@@ -118,14 +118,22 @@ class PaymentPostProcessingStep(Step):
         run even if a payment has errored in a prior step so that
         all issues can be communicated in the eventual error report.
         """
-        payment_containers = self._get_payments_awaiting_post_processing_validation()
 
-        # Run validations that process payments
-        # by group them under a single employee
-        self._process_payments_across_employee(payment_containers)
+        try:
+            payment_containers = self._get_payments_awaiting_post_processing_validation()
 
-        # After all validations are run, move states of the payments
-        self._move_payments_to_new_state(payment_containers)
+            # Run validations that process payments
+            # by group them under a single employee
+            self._process_payments_across_employee(payment_containers)
+
+            # After all validations are run, move states of the payments
+            self._move_payments_to_new_state(payment_containers)
+
+            self.db_session.commit()
+        except Exception:
+            self.db_session.rollback()
+            logger.exception("Error during payment post processing step")
+            raise
 
     def _get_payments_awaiting_post_processing_validation(self) -> List[PaymentContainer]:
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
