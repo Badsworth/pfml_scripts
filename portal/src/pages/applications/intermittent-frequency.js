@@ -3,6 +3,7 @@ import BenefitsApplication, {
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
 } from "../../models/BenefitsApplication";
+import { Trans, useTranslation } from "react-i18next";
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -15,10 +16,10 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import findKeyByValue from "../../utils/findKeyByValue";
+import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
-import { useTranslation } from "react-i18next";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
@@ -95,9 +96,28 @@ export const IntermittentFrequency = (props) => {
     >
       {(claim.isMedicalLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
-          {t("pages.claimsIntermittentFrequency.needDocumentAlert", {
-            context: contentContext,
-          })}
+          <Trans
+            i18nKey="pages.claimsIntermittentFrequency.needDocumentAlert"
+            components={{
+              "healthcare-provider-form-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.healthcareProviderForm}
+                />
+              ),
+              "caregiver-certification-form-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.caregiverCertificationForm}
+                />
+              ),
+            }}
+            tOptions={{
+              context: contentContext,
+            }}
+          />
         </Alert>
       )}
 

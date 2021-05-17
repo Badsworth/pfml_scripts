@@ -16,7 +16,7 @@ exports[`UploadCertification before any documents have been loaded renders page 
   level="2"
   size="1"
 >
-  Upload your Certification of Your Family Member’s Serious Health Condition
+  Upload your certification form
 </Heading>
 `;
 
@@ -40,7 +40,7 @@ exports[`UploadCertification before any documents have been loaded renders page 
   level="2"
   size="1"
 >
-  Upload your Certification of a Serious Health Condition
+  Upload your certification form
 </Heading>
 `;
 
@@ -53,7 +53,7 @@ Array [
     rel="noopener"
     target="_blank"
   >
-    PFML Certification of a Serious Health Condition
+    Certification of Your Serious Health Condition
   </a>,
   " to prove that you need to take medical leave.",
 ]

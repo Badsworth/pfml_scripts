@@ -5,7 +5,28 @@ exports[`IntermittentFrequency displays Alert about having form when claim is Me
   neutral={true}
   state="info"
 >
-  You will need a completed Certification of a Serious Health Condition form for this section.
+  <Trans
+    components={
+      Object {
+        "caregiver-certification-form-link": <a
+          href="https://www.mass.gov/family-caring-form"
+          rel="noopener"
+          target="_blank"
+        />,
+        "healthcare-provider-form-link": <a
+          href="https://www.mass.gov/medical-leave-form"
+          rel="noopener"
+          target="_blank"
+        />,
+      }
+    }
+    i18nKey="pages.claimsIntermittentFrequency.needDocumentAlert"
+    tOptions={
+      Object {
+        "context": "medical",
+      }
+    }
+  />
 </Alert>
 `;
 
@@ -14,7 +35,28 @@ exports[`IntermittentFrequency displays Alert about having form when claim is Me
   neutral={true}
   state="info"
 >
-  You will need a completed Certification of Your Family Member’s Serious Health Condition for this section.
+  <Trans
+    components={
+      Object {
+        "caregiver-certification-form-link": <a
+          href="https://www.mass.gov/family-caring-form"
+          rel="noopener"
+          target="_blank"
+        />,
+        "healthcare-provider-form-link": <a
+          href="https://www.mass.gov/medical-leave-form"
+          rel="noopener"
+          target="_blank"
+        />,
+      }
+    }
+    i18nKey="pages.claimsIntermittentFrequency.needDocumentAlert"
+    tOptions={
+      Object {
+        "context": "care",
+      }
+    }
+  />
 </Alert>
 `;
 
@@ -26,7 +68,7 @@ exports[`IntermittentFrequency displays Lead text with form context when claim i
 
 exports[`IntermittentFrequency displays Lead text with form context when claim is for Medical or Caring leave 2`] = `
 <Lead>
-  Your answers must match Questions 35 and 36 in the Certification of a Serious Health Condition form.
+  Your answers must match Questions 35 and 36 in the Certification of Your Serious Health Condition form.
 </Lead>
 `;
 
@@ -49,7 +91,28 @@ exports[`IntermittentFrequency renders the page 1`] = `
     neutral={true}
     state="info"
   >
-    You will need a completed Certification of a Serious Health Condition form for this section.
+    <Trans
+      components={
+        Object {
+          "caregiver-certification-form-link": <a
+            href="https://www.mass.gov/family-caring-form"
+            rel="noopener"
+            target="_blank"
+          />,
+          "healthcare-provider-form-link": <a
+            href="https://www.mass.gov/medical-leave-form"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="pages.claimsIntermittentFrequency.needDocumentAlert"
+      tOptions={
+        Object {
+          "context": "medical",
+        }
+      }
+    />
   </Alert>
   <Heading
     level="2"
@@ -58,7 +121,7 @@ exports[`IntermittentFrequency renders the page 1`] = `
     Tell us the estimated frequency and duration of your intermittent leave.
   </Heading>
   <Lead>
-    Your answers must match Questions 35 and 36 in the Certification of a Serious Health Condition form.
+    Your answers must match Questions 35 and 36 in the Certification of Your Serious Health Condition form.
   </Lead>
   <InputChoiceGroup
     choices={
