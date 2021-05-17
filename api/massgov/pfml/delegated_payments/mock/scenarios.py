@@ -43,6 +43,7 @@ class ScenarioName(Enum):
 
     # Prenote
     NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE = "NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE"
+    CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED = "CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED"
 
     # TODO not a real scenario - remove
     EFT_ACCOUNT_NOT_PRENOTED = "EFT_ACCOUNT_NOT_PRENOTED"
@@ -61,9 +62,9 @@ class ScenarioName(Enum):
     PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
     SECOND_PAYMENT_FOR_PERIOD_OVER_CAP = "SECOND_PAYMENT_FOR_PERIOD_OVER_CAP"
 
-    CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
+    HAPPY_PATH_CLAIM_MISSING_EMPLOYEE = "HAPPY_PATH_CLAIM_MISSING_EMPLOYEE"
+    CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT = "CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT"
     CLAIM_NOT_ID_PROOFED = "CLAIM_NOT_ID_PROOFED"
-    # TODO CLAIM_DOES_NOT_EXIST - PUB-165
 
     # Audit
     AUDIT_REJECTED = "AUDIT_REJECTED"
@@ -103,6 +104,15 @@ class ScenarioDescriptor:
 
     # missing claim
     missing_claim: bool = False
+
+    # missing employee
+    claim_missing_employee: bool = False
+
+    # create payment
+    create_payment: bool = True
+
+    # unknown employee
+    claim_extract_employee_identifier_unknown: bool = False
 
     claim_type: str = "Family"
     is_id_proofed: bool = True  # TODO - when claimant extract is file generation is ready, make this set the ID proofing field
@@ -199,6 +209,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
         no_prior_eft_account=True,
         prenoted=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED,
+        prenoted=True,
+        create_payment=False,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CLAIM_NOT_ID_PROOFED, missing_claim=True, is_id_proofed=False
@@ -329,6 +344,14 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
         payment_method=PaymentMethod.CHECK,
         pub_check_return_invalid_check_number=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE, claim_missing_employee=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+        claim_missing_employee=True,
+        claim_extract_employee_identifier_unknown=True,
     ),
 ]
 
