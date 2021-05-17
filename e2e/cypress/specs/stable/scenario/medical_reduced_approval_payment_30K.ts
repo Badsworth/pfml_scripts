@@ -57,7 +57,11 @@ describe("Submit medical application via the web portal: Adjudication Approval &
       fineos.before();
       cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {
-        fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);
+        fineos.claimAdjudicationFlow(
+          submission.fineos_absence_id,
+          "Medical",
+          true
+        );
       });
     }
   );
