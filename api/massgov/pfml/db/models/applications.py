@@ -85,16 +85,6 @@ class LkLeaveReason(Base):
         return self._map[self.leave_reason_id]
 
 
-class LkLeaveType(Base):
-    __tablename__ = "lk_leave_type"
-    leave_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    leave_type_description = Column(Text)
-
-    def __init__(self, leave_type_id, leave_type_description):
-        self.leave_type_id = leave_type_id
-        self.leave_type_description = leave_type_description
-
-
 class LkLeaveReasonQualifier(Base):
     __tablename__ = "lk_leave_reason_qualifier"
     leave_reason_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -331,7 +321,6 @@ class Application(Base):
     employer_notification_method_id = Column(
         Integer, ForeignKey("lk_notification_method.notification_method_id")
     )
-    leave_type_id = Column(Integer, ForeignKey("lk_leave_type.leave_type_id"))
     leave_reason_id = Column(Integer, ForeignKey("lk_leave_reason.leave_reason_id"))
     leave_reason_qualifier_id = Column(
         Integer, ForeignKey("lk_leave_reason_qualifier.leave_reason_qualifier_id")
@@ -364,7 +353,6 @@ class Application(Base):
     employee = relationship(Employee)
     occupation = relationship(LkOccupation)
     gender = relationship(LkGender)
-    leave_type = relationship(LkLeaveType)
     leave_reason = relationship(LkLeaveReason)
     leave_reason_qualifier = relationship(LkLeaveReasonQualifier)
     employment_status = relationship(LkEmploymentStatus)
@@ -627,16 +615,6 @@ class LeaveReasonQualifier(LookupTable):
     NOT_WORK_RELATED = LkLeaveReasonQualifier(6, "Not Work Related")
     SICKNESS = LkLeaveReasonQualifier(7, "Sickness")
     POSTNATAL_DISABILITY = LkLeaveReasonQualifier(8, "Postnatal Disability")
-
-
-class LeaveType(LookupTable):
-    model = LkLeaveType
-    column_names = ("leave_type_id", "leave_type_description")
-
-    BONDING_LEAVE = LkLeaveType(1, "Bonding Leave")
-    MEDICAL_LEAVE = LkLeaveType(2, "Medical Leave")
-    ACCIDENT = LkLeaveType(3, "Accident")
-    MILITARY = LkLeaveType(4, "Military")
 
 
 class RelationshipToCaregiver(LookupTable):
@@ -958,7 +936,6 @@ def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     LeaveReason.sync_to_database(db_session)
     LeaveReasonQualifier.sync_to_database(db_session)
-    LeaveType.sync_to_database(db_session)
     RelationshipToCaregiver.sync_to_database(db_session)
     RelationshipQualifier.sync_to_database(db_session)
     NotificationMethod.sync_to_database(db_session)
