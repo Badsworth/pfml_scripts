@@ -10,7 +10,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "8e477b802405"
-down_revision = "c911058236e6"
+down_revision = "b2ef539ff3c3"
 branch_labels = None
 depends_on = None
 
@@ -23,7 +23,7 @@ def upgrade():
     )
     op.add_column("lk_gender", sa.Column("fineos_gender_description", sa.Text(), nullable=True))
     op.alter_column("lk_gender", "fineos_gender_description", nullable=False)
-    # ### end Alembic commands ###
+    ### end Alembic commands ###
 
 
 def downgrade():
