@@ -2,11 +2,12 @@ import TestMailClient from "./TestMailClient";
 
 export default class TestMailVerificationFetcher {
   namespace: string;
-  endpoint = "https://api.testmail.app/api/json";
+  endpoint: string;
   client: TestMailClient;
 
   constructor(apiKey: string, namespace: string) {
     this.namespace = namespace;
+    this.endpoint = "https://api.testmail.app/api/json";
     this.client = new TestMailClient(apiKey, namespace);
   }
 

@@ -1,15 +1,77 @@
-import generateLSTData from "../../scripts/generateLSTData";
-import dataDirectory from "../../generation/DataDirectory";
-import archiver from "archiver";
-import * as fs from "fs";
 import path from "path";
+import webpack from "webpack";
+import CopyPlugin from "copy-webpack-plugin";
+import ZipPlugin from "zip-webpack-plugin";
+import dataDirectory from "../../generation/DataDirectory";
+import generateLSTData from "../../scripts/generateLSTData";
 import config, { E2ELSTConfig } from "../../config";
-import { pipeline, Readable } from "stream";
-import { promisify } from "util";
-const pipelineP = promisify(pipeline);
+import * as fs from "fs";
 
 export default class Bundler {
   constructor(private floodDirectory: string) {}
+
+  private bundleArchive(outputDirectory: string): Promise<[string, string]> {
+    return new Promise((resolve, reject) => {
+      const config: webpack.Configuration = {
+        context: this.floodDirectory,
+        devtool: "cheap-source-map" as const,
+        optimization: {
+          minimize: false,
+          moduleIds: "named",
+          usedExports: false,
+          providedExports: false,
+        },
+        entry: {
+          "index.perf": `./index.perf.ts`,
+        },
+        output: {
+          path: outputDirectory,
+          filename: "[name].[chunkhash].js",
+          libraryTarget: "commonjs2",
+        },
+        mode: "production" as const,
+        target: "node",
+        // externalsPresets: { node: true }, // Needed for Webpack 5.
+        externals: ["@flood/element", "@flood/element-api", "faker"],
+        resolve: {
+          extensions: [".ts", ".js"],
+        },
+        module: {
+          rules: [
+            {
+              test: /\.[jt]s$/,
+              exclude: [/node_modules/],
+              use: [
+                {
+                  loader: "babel-loader",
+                },
+              ],
+            },
+          ],
+        },
+        plugins: [
+          new CopyPlugin({
+            patterns: [{ from: `./data/*` }, { from: "./forms/*" }],
+          }),
+          new ZipPlugin({
+            filename: "archive.zip",
+          }),
+        ],
+      };
+      webpack(config, (err, stats) => {
+        if (err) return reject(err);
+        if (!stats) return reject("Webpack returned nothing");
+        if (stats.hasErrors()) return reject(stats.toJson().errors);
+
+        const info = stats.toJson();
+        const entrypoints = info.assetsByChunkName?.["index.perf"];
+        if (!info.outputPath) return reject("No output path was given");
+        if (!entrypoints || !Array.isArray(entrypoints))
+          return reject("No chunk was generated for index.perf");
+        resolve([path.join(outputDirectory, "archive.zip"), entrypoints[0]]);
+      });
+    });
+  }
 
   /**
    * Zip up flood files and prepare for upload to Flood.
@@ -17,41 +79,16 @@ export default class Bundler {
    * @param outputDirectory
    */
   async bundle(outputDirectory: string): Promise<string[]> {
-    const zipFile = path.join(outputDirectory, "archive.zip");
+    // Compile the files using Webpack.
+    const [archive, indexJs] = await this.bundleArchive(outputDirectory);
 
-    const output = fs.createWriteStream(
-      path.join(outputDirectory, "archive.zip")
+    // Create a .ts file that proxies to our index file within the archive.
+    const indexTs = path.join(outputDirectory, "index.ts");
+    await fs.promises.writeFile(
+      indexTs,
+      `// @ts-nocheck\n// This file was auto-generated, and is a stub that proxies to the compiled code.\nimport main from "./${indexJs}";\n\nexport default main;\n`
     );
-    const archive = archiver("zip", {
-      zlib: { level: 9 },
-    });
-    archive.pipe(output);
-
-    archive.directory(this.floodDirectory, false, (entry) => {
-      if (entry.name.match(/^data\/documents/) || entry.name.match(/^tmp/)) {
-        return false;
-      }
-      if (entry.name === "index.perf.ts") {
-        return false;
-      }
-      return entry;
-    });
-    await archive.finalize();
-
-    async function* getIndexFile(sourceFile: string) {
-      yield "// @ts-nocheck\n\n";
-      yield* fs.createReadStream(sourceFile);
-    }
-
-    // Copy in the index file, adding a ts-nocheck header that will prevent missing types from throwing fatal errors.
-    const inputIndex = path.join(this.floodDirectory, "index.perf.ts");
-    const outputIndex = path.join(outputDirectory, "index.perf.ts");
-    await pipelineP(
-      Readable.from(getIndexFile(inputIndex)),
-      fs.createWriteStream(outputIndex)
-    );
-
-    return [zipFile, outputIndex];
+    return [archive, indexTs];
   }
 
   /**
@@ -69,7 +106,6 @@ export default class Bundler {
     await storage.prepare();
 
     const props = [
-      "SIMULATION_SPEED",
       "PORTAL_BASEURL",
       "API_BASEURL",
       "FINEOS_BASEURL",

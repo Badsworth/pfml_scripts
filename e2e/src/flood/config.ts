@@ -1,5 +1,7 @@
 import { Browser, TestSettings, ENV, StepOptions } from "@flood/element";
 import Tasks from "./tasks";
+// @ts-ignore
+import envConfig from "./data/env.json";
 /*
  * The (2) imports below are outside of the src/flood/* directory
  * This means that, if changed, the makeFloodBundle.sh script
@@ -152,12 +154,8 @@ export async function config(name: string): Promise<string> {
   if (name in process.env) {
     return process.env[name] as string;
   } else {
-    const envConfig: Record<string, unknown> = await import(
-      //@ts-ignore
-      "./data/env.json"
-    );
     if (name in envConfig) {
-      return envConfig[name] as string;
+      return envConfig[name as keyof typeof envConfig] as string;
     }
   }
   throw new Error(
