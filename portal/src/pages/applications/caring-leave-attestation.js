@@ -35,8 +35,12 @@ export const CaringLeaveAttestation = (props) => {
         <Trans
           i18nKey="pages.claimsCaringLeaveAttestation.lead"
           components={{
-            "eligible-relationship-link": (
-              <a href={routes.external.caregiverRelationship} />
+            "caregiver-relationship-link": (
+              <a
+                target="_blank"
+                rel="noopener"
+                href={routes.external.massgov.caregiverRelationship}
+              />
             ),
           }}
         />

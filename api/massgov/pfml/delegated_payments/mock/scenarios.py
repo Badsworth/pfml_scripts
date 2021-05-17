@@ -31,6 +31,8 @@ class ScenarioName(Enum):
     HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING = "PUB_CHECK_FAMILY_RETURN_OUTSTANDING"
     HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE = "PUB_CHECK_FAMILY_RETURN_FUTURE"
 
+    HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP = "HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP"
+
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
     CANCELLATION_PAYMENT = "CANCELLATION_PAYMENT"
@@ -41,6 +43,7 @@ class ScenarioName(Enum):
 
     # Prenote
     NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE = "NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE"
+    CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED = "CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED"
 
     # TODO not a real scenario - remove
     EFT_ACCOUNT_NOT_PRENOTED = "EFT_ACCOUNT_NOT_PRENOTED"
@@ -57,10 +60,11 @@ class ScenarioName(Enum):
     INVALID_ADDRESS_FIXED = "INVALID_ADDRESS_FIXED"
     REJECTED_LEAVE_REQUEST_DECISION = "REJECTED_LEAVE_REQUEST_DECISION"
     PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
+    SECOND_PAYMENT_FOR_PERIOD_OVER_CAP = "SECOND_PAYMENT_FOR_PERIOD_OVER_CAP"
 
-    CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB = "CLAIMANT_EXTRACT_EMPLOYEE_MISSING_IN_DB"
+    HAPPY_PATH_CLAIM_MISSING_EMPLOYEE = "HAPPY_PATH_CLAIM_MISSING_EMPLOYEE"
+    CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT = "CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT"
     CLAIM_NOT_ID_PROOFED = "CLAIM_NOT_ID_PROOFED"
-    # TODO CLAIM_DOES_NOT_EXIST - PUB-165
 
     # Audit
     AUDIT_REJECTED = "AUDIT_REJECTED"
@@ -70,6 +74,7 @@ class ScenarioName(Enum):
     PUB_ACH_PRENOTE_RETURN = "PUB_ACH_PRENOTE_RETURN"
     PUB_ACH_PRENOTE_NOTIFICATION = "PUB_ACH_PRENOTE_NOTIFICATION"
     PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT = "PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT"
+    PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND = "PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND"
 
     PUB_ACH_FAMILY_RETURN = "PUB_ACH_FAMILY_RETURN"
     PUB_ACH_FAMILY_NOTIFICATION = "PUB_ACH_FAMILY_NOTIFICATION"
@@ -100,6 +105,15 @@ class ScenarioDescriptor:
     # missing claim
     missing_claim: bool = False
 
+    # missing employee
+    claim_missing_employee: bool = False
+
+    # create payment
+    create_payment: bool = True
+
+    # unknown employee
+    claim_extract_employee_identifier_unknown: bool = False
+
     claim_type: str = "Family"
     is_id_proofed: bool = True  # TODO - when claimant extract is file generation is ready, make this set the ID proofing field
 
@@ -114,6 +128,9 @@ class ScenarioDescriptor:
     invalid_address: bool = False
     invalid_address_fixed: bool = False
 
+    # This adds a second payment that'll show up in round 2
+    has_additional_payment_in_period: bool = False
+
     # prior_verified_address: bool = False TODO add when available
     fineos_extract_address_valid: bool = True
     fineos_extract_address_valid_after_fix: bool = False
@@ -125,6 +142,7 @@ class ScenarioDescriptor:
     is_audit_approved_delayed: bool = False
 
     negative_payment_amount: bool = False
+    payment_close_to_cap: bool = False
 
     include_non_vpei_records: bool = True
 
@@ -138,6 +156,7 @@ class ScenarioDescriptor:
     pub_ach_return_payment_id_not_found: bool = False
 
     pub_ach_return_invalid_prenote_payment_id_format: bool = False
+    pub_ach_return_prenote_payment_id_not_found: bool = False
 
     pub_ach_response_change_notification: bool = False
     pub_ach_notification_reason_code: str = "CO1"
@@ -192,6 +211,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         prenoted=False,
     ),
     ScenarioDescriptor(
+        scenario_name=ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED,
+        prenoted=True,
+        create_payment=False,
+    ),
+    ScenarioDescriptor(
         scenario_name=ScenarioName.CLAIM_NOT_ID_PROOFED, missing_claim=True, is_id_proofed=False
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.EFT_ACCOUNT_NOT_PRENOTED, prenoted=False),
@@ -242,6 +266,12 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
         pub_ach_response_return=True,
         pub_ach_return_invalid_prenote_payment_id_format=True,
+        prenoted=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+        pub_ach_response_return=True,
+        pub_ach_return_prenote_payment_id_not_found=True,
         prenoted=False,
     ),
     ScenarioDescriptor(
@@ -315,6 +345,14 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         payment_method=PaymentMethod.CHECK,
         pub_check_return_invalid_check_number=True,
     ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE, claim_missing_employee=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+        claim_missing_employee=True,
+        claim_extract_employee_identifier_unknown=True,
+    ),
 ]
 
 SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {
@@ -339,6 +377,16 @@ DELAYED_SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         fineos_extract_address_valid=False,
         fineos_extract_address_valid_after_fix=True,
         pub_check_response=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
+        payment_close_to_cap=False,
+        has_additional_payment_in_period=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,
+        payment_close_to_cap=True,
+        has_additional_payment_in_period=True,
     ),
 ]
 

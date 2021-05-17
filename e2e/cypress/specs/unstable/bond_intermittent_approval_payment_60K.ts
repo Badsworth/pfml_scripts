@@ -51,7 +51,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
 
   it(
     "CSR rep will approve intermittent bonding application",
-    { baseUrl: getFineosBaseUrl() },
+    { retries: 0, baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();
@@ -67,7 +67,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
 
   it(
     "CSR rep will record actual hours reported by employee",
-    { baseUrl: getFineosBaseUrl() },
+    { retries: 0, baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();

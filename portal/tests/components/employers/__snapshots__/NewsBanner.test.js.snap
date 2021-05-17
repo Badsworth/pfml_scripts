@@ -2,7 +2,7 @@
 
 exports[`NewsBanner renders the component 1`] = `
 <Alert
-  heading="We're making it easier to manage paid leave application"
+  heading="We're making it easier to manage paid leave applications"
   state="info"
 >
   <p>

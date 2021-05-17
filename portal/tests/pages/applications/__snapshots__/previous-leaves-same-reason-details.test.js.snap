@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PreviousLeavesSameReasonDetails renders the page 1`] = `
+exports[`PreviousLeavesSameReasonDetails when the user has no previous leaves reported renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Other leave, benefits, and income"
@@ -11,5 +11,77 @@ exports[`PreviousLeavesSameReasonDetails renders the page 1`] = `
   >
     Tell us about your previous time off
   </Heading>
+  <RepeatableFieldset
+    addButtonLabel="Add another previous leave"
+    entries={
+      Array [
+        PreviousLeave {
+          "is_for_current_employer": null,
+          "is_for_same_reason_as_leave_reason": null,
+          "leave_end_date": null,
+          "leave_minutes": null,
+          "leave_reason": null,
+          "leave_start_date": null,
+          "previous_leave_id": null,
+          "worked_per_week_minutes": null,
+        },
+      ]
+    }
+    headingPrefix="Previous leave"
+    limit={6}
+    limitMessage="You can only add up to 6 leaves"
+    onAddClick={[Function]}
+    onRemoveClick={[Function]}
+    removeButtonLabel="Remove this previous leave"
+    render={[Function]}
+  />
+</QuestionPage>
+`;
+
+exports[`PreviousLeavesSameReasonDetails when user's claim has previous leaves renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other leave, benefits, and income"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Tell us about your previous time off
+  </Heading>
+  <RepeatableFieldset
+    addButtonLabel="Add another previous leave"
+    entries={
+      Array [
+        PreviousLeave {
+          "is_for_current_employer": null,
+          "is_for_same_reason_as_leave_reason": null,
+          "leave_end_date": "2021-01-26",
+          "leave_minutes": 25,
+          "leave_reason": "Care for a family member",
+          "leave_start_date": "2021-01-01",
+          "previous_leave_id": 89,
+          "worked_per_week_minutes": 40,
+        },
+        PreviousLeave {
+          "is_for_current_employer": null,
+          "is_for_same_reason_as_leave_reason": null,
+          "leave_end_date": "2020-12-13",
+          "leave_minutes": 20,
+          "leave_reason": "Child bonding",
+          "leave_start_date": "2020-11-21",
+          "previous_leave_id": 9,
+          "worked_per_week_minutes": 40,
+        },
+      ]
+    }
+    headingPrefix="Previous leave"
+    limit={6}
+    limitMessage="You can only add up to 6 leaves"
+    onAddClick={[Function]}
+    onRemoveClick={[Function]}
+    removeButtonLabel="Remove this previous leave"
+    render={[Function]}
+  />
 </QuestionPage>
 `;

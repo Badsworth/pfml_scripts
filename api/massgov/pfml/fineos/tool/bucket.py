@@ -42,7 +42,8 @@ def main():
         "--file_prefixes", type=str, help="List of file prefixes. Default: copy all files"
     )
     parser.add_argument("--recursive", dest="recursive", action="store_true")
-    parser.set_defaults(recursive=False, file_prefixes="all")
+    parser.add_argument("--dated-folders", dest="dated_folders", action="store_true")
+    parser.set_defaults(recursive=False, dated_folders=False, file_prefixes="all")
 
     args = parser.parse_args()
 
@@ -182,7 +183,17 @@ def file_name_contains_prefix(file_prefixes, file_name):
     return False
 
 
-def copy_dir(source, dest, s3_source, s3_dest, boto_source, boto_dest, file_prefixes, recursive):
+def copy_dir(
+    source,
+    dest,
+    s3_source,
+    s3_dest,
+    boto_source,
+    boto_dest,
+    file_prefixes,
+    recursive,
+    dated_folders,
+):
     if not source.endswith("/"):
         source = source + "/"
 
@@ -191,17 +202,21 @@ def copy_dir(source, dest, s3_source, s3_dest, boto_source, boto_dest, file_pref
 
     # get list of all files in source prefix
     source_files = massgov.pfml.util.files.list_files(
-        source, recursive=recursive, boto_session=boto_source
+        source, recursive=recursive, boto_session=boto_source,
     )
 
     # get list of all files in dest prefix
     dest_files = massgov.pfml.util.files.list_files(
-        dest, recursive=recursive, boto_session=boto_dest
+        dest, recursive=recursive, boto_session=boto_dest,
     )
 
     for file in source_files:
         # copy select files that don’t already exist in the destination
         if file_name_contains_prefix(file_prefixes, file) and (file not in dest_files):
             source_file = source + file
-            dest_file = dest + file
+            if dated_folders and not file.contains("/"):
+                date = file.split("_")[0]
+                dest_file = f"{dest}{date}/{file}"
+            else:
+                dest_file = dest + file
             bucket_cp(source_file, dest_file, s3_source, s3_dest)

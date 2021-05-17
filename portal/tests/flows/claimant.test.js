@@ -1,5 +1,5 @@
 import BenefitsApplication, {
-  ClaimStatus,
+  BenefitsApplicationStatus,
   EmploymentStatus,
   WorkPatternType,
 } from "../../src/models/BenefitsApplication";
@@ -133,6 +133,11 @@ const machineTests = {
           get(event.context.claim, "has_intermittent_leave_periods")
         ).toEqual(true);
       },
+    },
+  },
+  [routes.applications.employerBenefitsIntro]: {
+    meta: {
+      test: () => {},
     },
   },
   [routes.applications.employerBenefits]: {
@@ -334,7 +339,7 @@ describe("claimFlowConfigs", () => {
     work_pattern: { work_pattern_type: WorkPatternType.variable },
   };
   const completed = {
-    status: ClaimStatus.completed,
+    status: BenefitsApplicationStatus.completed,
   };
   const testData = [
     { claimData: hasStateId, userData: {} },

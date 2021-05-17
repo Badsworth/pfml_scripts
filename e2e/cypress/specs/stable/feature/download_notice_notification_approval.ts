@@ -45,7 +45,7 @@ describe("Approval (notifications/notices)", () => {
     "Should generate a legal notice (Approval) that the claimant can view",
     { retries: 0 },
     () => {
-      // cy.dependsOnPreviousPass([submit]);
+      cy.dependsOnPreviousPass([submit]);
       portal.before();
       cy.visit("/");
       portal.login(credentials);

@@ -705,8 +705,6 @@ jobs:
     name: Finish deploy comms (GitHub)
     needs: [start-comms-github, deploy-info, postdeploy-info]
     runs-on: ubuntu-latest
-    outputs:
-      message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
     if: always() && needs.start-comms-github.result == 'success'
     steps:
       - uses: chrnorm/deployment-status@releases/v1
@@ -730,6 +728,8 @@ jobs:
     name: Finish deploy comms (Slack)
     needs: [start-comms-slack, deploy-info, postdeploy-info]
     runs-on: ubuntu-latest
+    outputs:
+      message-ts: ${{ steps.post-to-slack.outputs.message-ts }}
     # Notifies if there's a failure on auto-deploys to test
     if: always() && 
       (
@@ -838,10 +838,11 @@ jobs:
   post-e2e-failures-to-slack:
     name: Post E2E failures to Slack
     needs: [finish-comms-slack, end-to-end]
-    if: always() && 
-      (
+    # Run if the E2E tests failed. Skip for CPS Preview since those tests are not
+    # expected to pass for a while. This conditional will be removed in INFRA-460.
+    if: always() &&
+        github.event.inputs.deployment_env != 'cps-preview' &&
         (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
-      )
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials

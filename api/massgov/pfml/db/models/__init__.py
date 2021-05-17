@@ -6,7 +6,7 @@ import time
 
 import massgov.pfml.util.logging
 
-from . import applications, employees, verifications
+from . import applications, employees, payments, verifications  # noqa: F401
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 

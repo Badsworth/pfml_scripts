@@ -286,7 +286,7 @@ class Employer(Base):
     exemption_cease_date = Column(Date)
     dor_updated_date = Column(TIMESTAMP(timezone=True))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-    fineos_employer_id = Column(Integer, index=True)
+    fineos_employer_id = Column(Integer, index=True, unique=True)
 
     claims = cast(Optional[List["Claim"]], relationship("Claim", back_populates="employer"))
     wages_and_contributions: "Query[WagesAndContributions]" = dynamic_loader(
@@ -462,9 +462,6 @@ class Employee(Base):
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-    mailing_address_id = deferred(
-        Column(UUID(as_uuid=True).evaluates_none(), ForeignKey("address.address_id"), index=True,)
-    )
     payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     ctr_vendor_customer_code = Column(Text)
     ctr_address_pair_id = Column(
@@ -572,6 +569,7 @@ class Claim(Base):
     fineos_absence_status = relationship(LkAbsenceStatus)
     employee = relationship("Employee", back_populates="claims")
     employer = relationship("Employer", back_populates="claims")
+    state_logs = relationship("StateLog", back_populates="claim")
 
 
 class Payment(Base):
@@ -1060,6 +1058,7 @@ class StateLog(Base):
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True)
     prev_state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"))
     associated_type = Column(Text, index=True)
 
@@ -1070,6 +1069,7 @@ class StateLog(Base):
     payment = relationship("Payment", back_populates="state_logs")
     reference_file = relationship("ReferenceFile", back_populates="state_logs")
     employee = relationship("Employee", back_populates="state_logs")
+    claim = relationship("Claim", back_populates="state_logs")
     prev_state_log = relationship("StateLog", uselist=False, remote_side=state_log_id)
     import_log = cast("Optional[ImportLog]", relationship(ImportLog, foreign_keys=[import_log_id]))
 
@@ -1083,6 +1083,7 @@ class LatestStateLog(Base):
     )
     payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), index=True)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True)
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
@@ -1090,6 +1091,7 @@ class LatestStateLog(Base):
     state_log = relationship("StateLog")
     payment = relationship("Payment")
     employee = relationship("Employee")
+    claim = relationship("Claim")
     reference_file = relationship("ReferenceFile")
 
 
@@ -1139,6 +1141,7 @@ class DiaReductionPayment(Base):
     end_date = Column(Date)
     weekly_amount = Column(Numeric(asdecimal=True))
     award_created_date = Column(Date)
+    termination_date = Column(Date)
 
     created_at = Column(
         TIMESTAMP(timezone=True),
@@ -1674,6 +1677,7 @@ class Flow(LookupTable):
     DELEGATED_CLAIMANT = LkFlow(20, "Claimant")
     DELEGATED_PAYMENT = LkFlow(21, "Payment")
     DELEGATED_EFT = LkFlow(22, "EFT")
+    DELEGATED_CLAIM_VALIDATION = LkFlow(23, "Claim Validation")
 
 
 class State(LookupTable):
@@ -1805,6 +1809,10 @@ class State(LookupTable):
         51,
         "New DUA reductions payments report sent to DFML",
         Flow.DFML_DUA_REDUCTION_REPORT.flow_id,
+    )
+
+    DIA_REPORT_FOR_DFML_CREATED = LkState(
+        162, "Create DIA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     )
 
     # ==============================
@@ -2017,8 +2025,15 @@ class State(LookupTable):
         161, "FINEOS Writeback #2 sent - Check", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    DIA_REPORT_FOR_DFML_CREATED = LkState(
-        162, "Create DIA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
+    DELEGATED_PAYMENT_POST_PROCESSING_CHECK = LkState(
+        163, "Delegated payment post processing check", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS = LkState(
+        164, "Claim extracted from FINEOS", Flow.DELEGATED_CLAIM_VALIDATION.flow_id
+    )
+    DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT = LkState(
+        165, "Add to Claim Extract Error Report", Flow.DELEGATED_CLAIM_VALIDATION.flow_id
     )
 
 

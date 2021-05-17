@@ -16,6 +16,7 @@ from sqlalchemy.orm import scoped_session
 import massgov.pfml.db as db
 import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
+import massgov.pfml.db.models.payments as payment_models
 import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.util.datetime as datetime_util
 
@@ -150,7 +151,7 @@ class EmployerOnlyDORDataFactory(EmployerOnlyRequiredFactory):
 
 
 class EmployerFactory(EmployerOnlyDORDataFactory):
-    fineos_employer_id = random.randint(100, 1000)
+    fineos_employer_id = factory.Sequence(lambda n: n)
 
 
 class TaxIdentifierFactory(BaseFactory):
@@ -659,6 +660,14 @@ class StateMetricFactory(BaseFactory):
     average_weekly_wage = Decimal("1331.66")
 
 
+class MaximumWeeklyBenefitAmountFactory(BaseFactory):
+    class Meta:
+        model = payment_models.MaximumWeeklyBenefitAmount
+
+    effective_date = datetime(2019, 10, 1)
+    maximum_weekly_benefit_amount = Decimal("1000.00")
+
+
 class DocumentFactory(BaseFactory):
     class Meta:
         model = application_models.Document
@@ -793,6 +802,7 @@ class DiaReductionPaymentFactory(BaseFactory):
     end_date = factory.Faker("date_object")
     weekly_amount = 400.00
     award_created_date = factory.Faker("date_object")
+    termination_date = factory.Faker("date_object")
 
 
 class CaringLeaveMetadataFactory(BaseFactory):

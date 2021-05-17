@@ -3,7 +3,7 @@ import {
   PaymentPreferenceMethod,
 } from "../../src/models/PaymentPreference";
 import BenefitsApplication, {
-  ClaimStatus,
+  BenefitsApplicationStatus,
   ContinuousLeavePeriod,
   DurationBasis,
   EmploymentStatus,
@@ -301,7 +301,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
     super();
     this.claimAttrs = {
       application_id: "mock_application_id",
-      status: ClaimStatus.started,
+      status: BenefitsApplicationStatus.started,
     };
   }
 
@@ -466,6 +466,17 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    *
    * @returns {MockBenefitsApplicationBuilder}
    */
+  previousLeavesSameReason(attrs = [{}]) {
+    set(this.claimAttrs, "has_previous_leaves_same_reason", true);
+    const previousLeaves = attrs.map((attr) => new PreviousLeave(attr));
+    set(this.claimAttrs, "previous_leaves_same_reason", previousLeaves);
+    return this;
+  }
+
+  /**
+   *
+   * @returns {MockClaimBuilder}
+   */
   previousLeavesOtherReason(attrs = [{}]) {
     set(this.claimAttrs, "has_previous_leaves_other_reason", true);
     const previousLeaves = attrs.map((attr) => new PreviousLeave(attr));
@@ -535,7 +546,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    */
   completed() {
     this.complete();
-    set(this.claimAttrs, "status", ClaimStatus.completed);
+    set(this.claimAttrs, "status", BenefitsApplicationStatus.completed);
 
     return this;
   }
@@ -566,7 +577,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   submitted() {
     this.part1Complete();
     this.absenceId();
-    set(this.claimAttrs, "status", ClaimStatus.submitted);
+    set(this.claimAttrs, "status", BenefitsApplicationStatus.submitted);
 
     return this;
   }

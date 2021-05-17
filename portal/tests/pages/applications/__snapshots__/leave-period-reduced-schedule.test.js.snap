@@ -136,7 +136,28 @@ exports[`LeavePeriodReducedSchedule renders the page with medical leave content 
     neutral={true}
     state="info"
   >
-    You will need a completed Certification of a Serious Health Condition form for this section.
+    <Trans
+      components={
+        Object {
+          "caregiver-certification-form-link": <a
+            href="https://www.mass.gov/family-caring-form"
+            rel="noopener"
+            target="_blank"
+          />,
+          "healthcare-provider-form-link": <a
+            href="https://www.mass.gov/medical-leave-form"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="pages.claimsLeavePeriodReducedSchedule.needDocumentAlert"
+      tOptions={
+        Object {
+          "context": "medical",
+        }
+      }
+    />
   </Alert>
   <InputChoiceGroup
     choices={
@@ -153,7 +174,7 @@ exports[`LeavePeriodReducedSchedule renders the page with medical leave content 
         },
       ]
     }
-    hint="Your answer must match Question 26 in the Certification of a Serious Health Condition form."
+    hint="Your answer must match Question 26 in the Certification of Your Serious Health Condition form."
     label="Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?"
     name="has_reduced_schedule_leave_periods"
     onChange={[Function]}
@@ -215,6 +236,21 @@ exports[`LeavePeriodReducedSchedule renders the page with medical leave content 
 
 exports[`LeavePeriodReducedSchedule renders the page with medical leave content 2`] = `
 Array [
+  "You will need a completed ",
+  <a
+    href="https://www.mass.gov/medical-leave-form"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    Certification of Your Serious Health Condition
+  </a>,
+  " for this section.",
+]
+`;
+
+exports[`LeavePeriodReducedSchedule renders the page with medical leave content 3`] = `
+Array [
   "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.",
   <br
     key="br-1"
@@ -222,6 +258,6 @@ Array [
   <br
     key="br-2"
   />,
-  "Your answer must match Question 32 in the Certification of a Serious Health Condition form .",
+  "Your answer must match Question 32 in the Certification of Your Serious Health Condition form .",
 ]
 `;

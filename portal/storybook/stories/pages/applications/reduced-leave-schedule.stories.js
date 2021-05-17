@@ -10,6 +10,14 @@ const mockClaims = {
     .variableWorkPattern()
     .bondingBirthLeaveReason()
     .create(),
+  "Caring (Fixed)": new MockBenefitsApplicationBuilder()
+    .fixedWorkPattern()
+    .caringLeaveReason()
+    .create(),
+  "Caring (Variable)": new MockBenefitsApplicationBuilder()
+    .variableWorkPattern()
+    .caringLeaveReason()
+    .create(),
   "Medical (Fixed)": new MockBenefitsApplicationBuilder()
     .fixedWorkPattern()
     .medicalLeaveReason()
