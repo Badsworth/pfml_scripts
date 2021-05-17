@@ -380,9 +380,6 @@ def update_from_request(
         if key == "phone":
             add_or_update_phone(db_session, body.phone, application)
             continue
-        if key == "gender":
-            key = "gender_id"
-            value = Gender.get_id(value) if value else None
         if isinstance(value, LookupEnum):
             lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
 
