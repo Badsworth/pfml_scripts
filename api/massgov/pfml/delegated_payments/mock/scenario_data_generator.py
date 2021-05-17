@@ -190,7 +190,7 @@ def generate_scenario_data_in_db(
     employee = create_employee(ssn, fineos_customer_number)
 
     add_eft = (
-        scenario_descriptor.payment_method == PaymentMethod.ACH
+        scenario_descriptor.payment_method.payment_method_id == PaymentMethod.ACH.payment_method_id
         and not scenario_descriptor.no_prior_eft_account
     )
     if add_eft:
@@ -208,13 +208,23 @@ def generate_scenario_data_in_db(
 
     absence_case_id = f"{fineos_notification_id}-ABS-001"
 
-    claim = create_claim(
-        employer=employer,
-        employee=employee,
-        fineos_absence_id=absence_case_id,
-        absence_status=AbsenceStatus.APPROVED,
-        is_id_proofed=scenario_descriptor.is_id_proofed,
-    )
+    if scenario_descriptor.claim_missing_employee:
+        claim = ClaimFactory.create(
+            employer=employer,
+            employee=None,
+            employee_id=None,
+            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+            fineos_absence_id=absence_case_id,
+            is_id_proofed=scenario_descriptor.is_id_proofed,
+        )
+    else:
+        claim = create_claim(
+            employer=employer,
+            employee=employee,
+            fineos_absence_id=absence_case_id,
+            absence_status=AbsenceStatus.APPROVED,
+            is_id_proofed=scenario_descriptor.is_id_proofed,
+        )
 
     return ScenarioData(
         scenario_descriptor=scenario_descriptor, employer=employer, employee=employee, claim=claim,

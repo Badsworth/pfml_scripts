@@ -153,7 +153,7 @@ describe("LeaveSchedule", () => {
       expect(medicalDocuments.length).toBe(2);
       expect(medicalDocuments.map((node) => node.dive().text())).toEqual([
         "Medical cert doc",
-        "Certification of a Serious Health Condition",
+        "Certification of Your Serious Health Condition",
       ]);
     });
 
@@ -262,7 +262,7 @@ describe("LeaveSchedule", () => {
       expect(medicalDocuments.length).toBe(2);
       expect(medicalDocuments.map((node) => node.dive().text())).toEqual([
         "Medical cert doc",
-        "Certification of a Serious Health Condition",
+        "Certification of Your Serious Health Condition",
       ]);
     });
 
@@ -275,7 +275,7 @@ describe("LeaveSchedule", () => {
       expect(documents.length).toBe(3);
       expect(documents.map((node) => node.dive().text())).toEqual([
         "Medical cert doc",
-        "Certification of a Serious Health Condition",
+        "Certification of Your Serious Health Condition",
         "Caring cert doc",
       ]);
     });

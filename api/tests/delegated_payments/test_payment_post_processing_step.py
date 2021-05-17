@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -197,6 +197,39 @@ def test_validate_payments_not_exceeding_cap_multiple_pay_periods(
     assert payment_container4.validation_container.has_validation_issues()
 
 
+def test_validate_payments_not_exceeding_cap_multiweek_pay_periods(
+    payment_post_processing_step, test_db_session
+):
+    # Pay periods can be for more than one week, and the cap
+    # is a maximum per week. A pay period of of more than one week
+    # should allow a cap equal to maximum_per_week * weeks. Weeks
+    # are always rounded up (eg. 8 days = 2 weeks
+    employee = EmployeeFactory.create()
+    start_date = date(2021, 1, 1)
+    end_date_start = date(2021, 1, 2)  # Weeks will be 2, 8, 15... days long
+
+    # Show that
+    for i in range(1, 10):
+        end_date = end_date_start + timedelta(days=7 * (i - 1))
+        payment_container1 = _create_payment_container(
+            employee,
+            Decimal("850.00") * Decimal(i),
+            test_db_session,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        # Also create a second container for exactly $0.01 that'll fail
+        # as it pushes it just over the cap.
+        payment_container2 = _create_payment_container(
+            employee, Decimal("0.01"), test_db_session, start_date=start_date, end_date=end_date,
+        )
+        payment_post_processing_step._validate_payments_not_exceeding_cap(
+            employee.employee_id, [payment_container1, payment_container2],
+        )
+        assert not payment_container1.validation_container.has_validation_issues()
+        assert payment_container2.validation_container.has_validation_issues()
+
+
 def test_validate_payments_not_exceeding_cap_other_payment_types(
     payment_post_processing_step, test_db_session
 ):
@@ -253,7 +286,7 @@ def test_validate_payment_cap_for_period(payment_post_processing_step, test_db_s
     This test validates that the logic for choosing payments to pay is correct.
     """
     start_date = date(2021, 1, 1)
-    end_date = date(2021, 1, 8)
+    end_date = date(2021, 1, 8)  # Exactly one week, so cap is $850
     # All values well under the cap
     group = _create_employee_payment_group(
         prior_amounts=["100.00", "100.00"], current_amounts=["100.00", "100.00"]

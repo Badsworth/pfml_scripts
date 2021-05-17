@@ -624,7 +624,6 @@ class ClaimantExtractStep(Step):
     def update_employee_info(self, claimant_data: ClaimantData, claim: Claim) -> Optional[Employee]:
         """Returns the employee if found and updates its info"""
         self.increment(self.Metrics.PROCESSED_EMPLOYEE_COUNT)
-
         if not claimant_data.employee_tax_identifier:
             self.increment(self.Metrics.EMPLOYEE_NOT_FOUND_IN_FEED_COUNT)
             return None
@@ -636,6 +635,7 @@ class ClaimantExtractStep(Step):
                 .filter(TaxIdentifier.tax_identifier == claimant_data.employee_tax_identifier)
                 .one_or_none()
             )
+
             if tax_identifier_id is not None:
                 employee_pfml_entry = (
                     self.db_session.query(Employee)
@@ -676,6 +676,10 @@ class ClaimantExtractStep(Step):
 
             # Associate claim with employee in case it is a new claim.
             claim.employee_id = employee_pfml_entry.employee_id
+            # NOTE: fix to address test issues with query cache using a claim with the employee_id not set in other steps
+            # This will make the employee object available in memory for the same transaction
+            # TODO settle on approach after further investigation
+            claim.employee = employee_pfml_entry
 
             self.db_session.add(employee_pfml_entry)
 

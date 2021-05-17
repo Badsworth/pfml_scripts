@@ -462,9 +462,6 @@ class Employee(Base):
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-    mailing_address_id = deferred(
-        Column(UUID(as_uuid=True).evaluates_none(), ForeignKey("address.address_id"), index=True,)
-    )
     payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     ctr_vendor_customer_code = Column(Text)
     ctr_address_pair_id = Column(
@@ -1144,6 +1141,7 @@ class DiaReductionPayment(Base):
     end_date = Column(Date)
     weekly_amount = Column(Numeric(asdecimal=True))
     award_created_date = Column(Date)
+    termination_date = Column(Date)
 
     created_at = Column(
         TIMESTAMP(timezone=True),

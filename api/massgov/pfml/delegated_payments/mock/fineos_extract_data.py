@@ -387,6 +387,11 @@ def generate_payment_extract_files(
 
     for scenario_data in scenario_dataset:
         scenario_descriptor = scenario_data.scenario_descriptor
+
+        # Given scenario CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED, we want to simulate payment not created
+        if not scenario_descriptor.create_payment:
+            continue
+
         employee = scenario_data.employee
         claim = scenario_data.claim
 
@@ -545,12 +550,14 @@ def generate_claimant_data_files(
             raise Exception("Expected employee with tin")
 
         ssn = employee.tax_identifier.tax_identifier.replace("-", "")
+        if scenario_descriptor.claim_extract_employee_identifier_unknown:
+            ssn = "UNKNOWNSSN"
         absence_case_number = claim.fineos_absence_id
 
         if scenario_descriptor.missing_claim:
             absence_case_number = "UNKNOWNABSENCECASENUMBER"
 
-        date_of_birth = employee.date_of_birth
+        date_of_birth = "1991-01-01 12:00:00"
         payment_method = scenario_descriptor.payment_method.payment_method_description
         account_type = scenario_descriptor.account_type.bank_account_type_description
         address_1 = (
@@ -598,9 +605,9 @@ def generate_claimant_data_files(
             city=city,
             state=state,
             post_code=post_code,
-            sort_code=sort_code,
+            routing_nbr=sort_code,
             account_nbr=account_nbr,
-            natinsno=natinsno,
+            ssn=natinsno,
             default_payment_pref=default_payment_pref,
             customer_number=customer_number,
             absence_case_number=absence_case_number,

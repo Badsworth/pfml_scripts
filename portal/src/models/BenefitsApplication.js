@@ -79,7 +79,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
    * @returns {boolean}
    */
   get isCompleted() {
-    return this.status === ClaimStatus.completed;
+    return this.status === BenefitsApplicationStatus.completed;
   }
 
   /**
@@ -104,7 +104,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
    * @returns {boolean}
    */
   get isSubmitted() {
-    return this.status === ClaimStatus.submitted;
+    return this.status === BenefitsApplicationStatus.submitted;
   }
 }
 
@@ -112,7 +112,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
  * Enums for the Application's `status` field
  * @enum {string}
  */
-export const ClaimStatus = {
+export const BenefitsApplicationStatus = {
   // Submitted by the user (Step 2)
   completed: "Completed",
   // AKA: In Progress (Step 1)

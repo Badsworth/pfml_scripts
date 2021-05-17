@@ -45,7 +45,20 @@ exports[`FamilyMemberRelationship renders the page 1`] = `
         },
       ]
     }
-    hint="Learn more about which relationships are covered."
+    hint={
+      <Trans
+        components={
+          Object {
+            "caregiver-relationship-link": <a
+              href="https://www.mass.gov/family-caring-leave-relationships"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
+        i18nKey="pages.claimsFamilyMemberRelationship.sectionHint"
+      />
+    }
     label="What is your relationship with the family member you are caring for?"
     name="leave_details.caring_leave_metadata.relationship_to_caregiver"
     onChange={[Function]}

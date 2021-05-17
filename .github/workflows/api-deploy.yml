@@ -766,6 +766,8 @@ jobs:
     name: Finish deploy comms (Slack)
     needs: [start-comms-slack, deploy-info, postdeploy-info]
     runs-on: ubuntu-latest
+    outputs:
+      message-ts: ${{ steps.post-to-slack.outputs.message-ts }}
     # Notifies if there's a failure on auto-deploys to test
     if: always() && 
       (

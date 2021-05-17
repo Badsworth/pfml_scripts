@@ -103,10 +103,9 @@ const routes = {
       calculateHours: "https://www.mass.gov/pfml-calculate-hours",
       calculateReductions:
         "https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits#-calculate-any-reductions-",
-      // caregiver routes to be updated upon DFML confirmation
       caregiverCertificationForm: "https://www.mass.gov/family-caring-form",
       caregiverRelationship:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-",
+        "https://www.mass.gov/family-caring-leave-relationships",
       consentAgreement:
         "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
       dfml: "https://www.mass.gov/orgs/department-of-family-and-medical-leave",

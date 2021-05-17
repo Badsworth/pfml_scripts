@@ -43,10 +43,15 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         WARNING_COUNT = "warning_count"
 
     def __init__(
-        self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session,
+        self,
+        db_session: massgov.pfml.db.Session,
+        log_entry_db_session: massgov.pfml.db.Session,
+        inbound_path: str = "",
     ) -> None:
         """Constructor."""
-        pub_check_inbound_path = delegated_config.get_s3_config().pfml_pub_check_archive_path
+        pub_check_inbound_path = inbound_path
+        if not inbound_path:
+            pub_check_inbound_path = delegated_config.get_s3_config().pfml_pub_check_archive_path
         super().__init__(db_session, log_entry_db_session, pub_check_inbound_path)
 
     def process_file(self, path: str) -> None:
