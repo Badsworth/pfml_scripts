@@ -22,15 +22,6 @@ def upgrade():
         "application_gender_id_fkey", "application", "lk_gender", ["gender_id"], ["gender_id"]
     )
     op.add_column("lk_gender", sa.Column("fineos_gender_description", sa.Text(), nullable=True))
-    op.execute(
-        "UPDATE lk_gender SET fineos_gender_description = 'Male' WHERE gender_description = 'Male'"
-    )
-    op.execute(
-        "UPDATE lk_gender SET fineos_gender_description = 'Female' WHERE gender_description = 'Female'"
-    )
-    op.execute(
-        "UPDATE lk_gender SET fineos_gender_description = 'Neutral' WHERE gender_description = 'Other'"
-    )
     op.alter_column("lk_gender", "fineos_gender_description", nullable=False)
     # ### end Alembic commands ###
 
