@@ -102,6 +102,40 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       issueMessageKey = `errors.${i18nPrefix}.${type}`;
     }
 
+    const htmlErrorMessage = maybeGetHtmlErrorMessage(type, issueMessageKey);
+    if (htmlErrorMessage) return htmlErrorMessage;
+
+    // 1. Display a field or rule-level message if present:
+    //    a. Field-level: "errors.applications.ssn.required" => "Please enter your SSN."
+    //    b. Rule-level: "errors.applications.rules.min_leave_periods" => "At least one leave period is required."
+    const issueMessage = t(issueMessageKey, { field });
+
+    // When a translation is missing, the key will be returned
+    if (issueMessage !== issueMessageKey && issueMessage) {
+      return issueMessage;
+    }
+
+    // 3. Display generic message if present: "errors.validationFallback.pattern" => "Field (ssn) is invalid format."
+    if (type) {
+      const fallbackKey = `errors.validationFallback.${type}`;
+      const fallbackMessage = t(fallbackKey, { field });
+      if (fallbackMessage !== fallbackKey) {
+        return fallbackMessage;
+      }
+    }
+
+    // 4. Display API message if present
+    // 5. Otherwise fallback to a generic validation failure message
+    return message || t("errors.validationFallback.invalid", { field });
+  };
+
+  /**
+   * Create the custom HTML error message, if the given error type requires HTML formatting/links
+   * @param {string} type
+   * @param {string} issueMessageKey
+   * @returns {Trans} React node for the message, if the given error type should have an HTML message
+   */
+  const maybeGetHtmlErrorMessage = (type, issueMessageKey) => {
     // TODO (CP-1532): Remove once links in error messages are fully supported
     if (type === "fineos_case_creation_issues") {
       return (
@@ -158,27 +192,6 @@ const useAppErrorsLogic = ({ portalFlow }) => {
         />
       );
     }
-
-    // 1. Display a field or rule-level message if present:
-    //    a. Field-level: "errors.applications.ssn.required" => "Please enter your SSN."
-    //    b. Rule-level: "errors.applications.rules.min_leave_periods" => "At least one leave period is required."
-    const issueMessage = t(issueMessageKey, { field });
-
-    // When a translation is missing, the key will be returned
-    if (issueMessage !== issueMessageKey && issueMessage) {
-      return issueMessage;
-    }
-
-    // 3. Display generic message if present: "errors.validationFallback.pattern" => "Field (ssn) is invalid format."
-    const fallbackKey = `errors.validationFallback.${type}`;
-    const fallbackMessage = t(fallbackKey, { field });
-    if (fallbackMessage !== fallbackKey) {
-      return fallbackMessage;
-    }
-
-    // 4. Display API message if present
-    // 5. Otherwise fallback to a generic validation failure message
-    return message || t("errors.validationFallback.invalid", { field });
   };
 
   /**
