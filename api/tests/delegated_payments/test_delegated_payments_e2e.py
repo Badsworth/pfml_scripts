@@ -1290,6 +1290,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
