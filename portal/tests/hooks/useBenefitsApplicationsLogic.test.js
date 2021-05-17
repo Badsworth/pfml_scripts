@@ -1,6 +1,6 @@
 import { BadRequestError, NotFoundError } from "../../src/errors";
 import BenefitsApplication, {
-  ClaimStatus,
+  BenefitsApplicationStatus,
 } from "../../src/models/BenefitsApplication";
 import { MockBenefitsApplicationBuilder, testHook } from "../test-utils";
 import {
@@ -399,7 +399,7 @@ describe("useBenefitsApplicationsLogic", () => {
         const claim = claimsLogic.benefitsApplications.getItem(applicationId);
 
         expect(completeClaimMock).toHaveBeenCalledWith(applicationId);
-        expect(claim.status).toBe(ClaimStatus.completed);
+        expect(claim.status).toBe(BenefitsApplicationStatus.completed);
       });
 
       it("clears prior errors", async () => {
@@ -694,7 +694,7 @@ describe("useBenefitsApplicationsLogic", () => {
         const claim = claimsLogic.benefitsApplications.getItem(applicationId);
 
         expect(submitClaimMock).toHaveBeenCalledWith(applicationId);
-        expect(claim.status).toBe(ClaimStatus.submitted);
+        expect(claim.status).toBe(BenefitsApplicationStatus.submitted);
       });
 
       it("clears prior errors", async () => {
