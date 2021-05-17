@@ -14,13 +14,13 @@ exports[`IntermittentFrequency displays Alert about having form when claim is Me
   neutral={true}
   state="info"
 >
-  You will need a completed Certification to Care for a Family Member for this section.
+  You will need a completed Certification of Your Family Member’s Serious Health Condition for this section.
 </Alert>
 `;
 
 exports[`IntermittentFrequency displays Lead text with form context when claim is for Medical or Caring leave 1`] = `
 <Lead>
-  Your answers must match Questions # and # in the completed Certification to Care for a Family Member.
+  Your answers must match Questions 29 and 30 in the completed Certification of Your Family Member’s Serious Health Condition.
 </Lead>
 `;
 

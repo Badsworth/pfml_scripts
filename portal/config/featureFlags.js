@@ -81,11 +81,13 @@ const flagsConfig = {
   // environment config files.
   development: {
     example: true,
+    claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowNewsBanner: true,
     pfmlTerriyay: true,
   },
   test: {
+    claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
     employerShowNewsBanner: true,
@@ -93,6 +95,7 @@ const flagsConfig = {
     employerShowVerifications: true,
   },
   stage: {
+    claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
     employerShowNewsBanner: true,
@@ -100,10 +103,12 @@ const flagsConfig = {
     employerShowVerifications: true,
   },
   training: {
+    claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   performance: {
+    claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
     employerShowNewsBanner: true,
@@ -111,10 +116,12 @@ const flagsConfig = {
     employerShowVerifications: true,
   },
   uat: {
+    claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   prod: {
+    claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
     employerShowNewsBanner: true,
