@@ -34,7 +34,7 @@ from massgov.pfml.db.models.applications import (
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, GeoState, PaymentMethod, TaxIdentifier
+from massgov.pfml.db.models.employees import Address, Gender, GeoState, PaymentMethod, TaxIdentifier
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
@@ -3323,6 +3323,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     application.employer_notification_date = date(2021, 1, 7)
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.gender_id = Gender.WOMAN.gender_id
     application.work_pattern = WorkPatternFixedFactory.create()
     application.has_continuous_leave_periods = True
 
@@ -3386,6 +3387,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                             country="USA",
                         ),
                     ),
+                    gender="Female",
                     classExtensionInformation=[
                         massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
                             name="MassachusettsID", stringValue=application.mass_id

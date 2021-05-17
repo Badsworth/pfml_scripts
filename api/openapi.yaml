@@ -1752,6 +1752,15 @@ components:
                 - Engineer
                 - Health Care
               example: "Sales Clerk"
+            gender:
+              type: string
+              nullable: true
+              enum:
+                - Woman
+                - Man
+                - Non-binary
+                - Gender not listed
+                - Prefer not to answer
             leave_details:
               $ref: "#/components/schemas/ApplicationLeaveDetails"
             work_pattern:
@@ -1924,6 +1933,15 @@ components:
             - Health Care
           example: "Sales Clerk"
           nullable: true
+        gender:
+          type: string
+          nullable: true
+          enum:
+            - Woman
+            - Man
+            - Non-binary
+            - Gender not listed
+            - Prefer not to answer
         hours_worked_per_week:
           type: number
           nullable: true

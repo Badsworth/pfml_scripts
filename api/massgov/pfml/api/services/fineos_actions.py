@@ -359,6 +359,9 @@ def build_customer_model(application, current_user):
     # the addPaymentPreference or updatePaymentPreference endpoints
     if application.residential_address is not None:
         customer.customerAddress = build_customer_address(application.residential_address)
+    if application.gender is not None:
+        customer.gender = application.gender.fineos_gender_description
+
     return customer
 
 
