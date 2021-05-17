@@ -93,9 +93,28 @@ export const LeavePeriodReducedSchedule = (props) => {
     >
       {(claim.isMedicalLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
-          {t("pages.claimsLeavePeriodReducedSchedule.needDocumentAlert", {
-            context: contentContext,
-          })}
+          <Trans
+            i18nKey="pages.claimsLeavePeriodReducedSchedule.needDocumentAlert"
+            components={{
+              "healthcare-provider-form-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.healthcareProviderForm}
+                />
+              ),
+              "caregiver-certification-form-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.caregiverCertificationForm}
+                />
+              ),
+            }}
+            tOptions={{
+              context: contentContext,
+            }}
+          />
         </Alert>
       )}
 

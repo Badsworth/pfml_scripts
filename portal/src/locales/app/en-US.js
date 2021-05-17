@@ -571,8 +571,9 @@ const shared = {
     "Do you work in an acute care hospital or the teaching hospital of the University of Massachusetts Medical School?",
   bondingRegsLeavePeriodDetailsSummary:
     "If you had a child join your family in 2020, you may be eligible for paid leave anytime in 2021. <emergency-bonding-regs-worker-link>Learn more about emergency Covid-19 regulations for hospital workers.</emergency-bonding-regs-worker-link>",
-  caregiverCertificationForm:
+  certificationFormCare:
     "Certification of Your Family Member’s Serious Health Condition",
+  certificationFormMedical: "Certification of Your Serious Health Condition",
   choiceNo: "No",
   choicePendingOtherIncomes:
     "I’ve applied for another benefit that hasn’t been approved$t(chars.nbsp)yet.",
@@ -645,9 +646,9 @@ const shared = {
   filesUploaded: "Number of files uploaded",
   hoursLabel: "Hours",
   leavePeriodCaringAlert:
-    "You will need a completed $t(shared.caregiverCertificationForm) for this section.",
+    "You will need a completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> for this$t(chars.nbsp)section.",
   leavePeriodMedicalAlert:
-    "You will need a completed Certification of a Serious Health Condition form for this section.",
+    "You will need a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link> for this$t(chars.nbsp)section.",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Bond with a child",
   leaveReasonCare: "Care for a family member",
@@ -879,16 +880,16 @@ const pages = {
     stepHTMLDescription_bondingNewbornFuture:
       "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.",
     stepHTMLDescription_care:
-      "<p>You need to provide your completed <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
+      "<p>You need to provide your completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
-      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p>",
+      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p>",
     // TODO (CP-1983) Merge leaveDetails and leaveDetailsWithCaring when showCaringLeave feature flag is not needed
     stepHTMLDescription_leaveDetailsWithCaring:
-      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship</caregiver-relationship-link>.</p>",
+      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship</caregiver-relationship-link>.</p>",
     stepHTMLDescription_medical:
-      "<p>You need to provide your completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
+      "<p>You need to provide your completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_otherLeave:
       "You will need to know:<ul><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.</li></ul>",
     stepHTMLDescription_payment:
@@ -1050,9 +1051,9 @@ const pages = {
     frequencyBasisLabel:
       "How often might you need to be absent from work (frequency interval)?",
     frequencyHint_care:
-      "Your answers must match Questions 29 and 30 in the completed $t(shared.caregiverCertificationForm).",
+      "Your answers must match Questions 29 and 30 in the completed $t(shared.certificationFormCare).",
     frequencyHint_medical:
-      "Your answers must match Questions 35 and 36 in the Certification of a Serious Health Condition form.",
+      "Your answers must match Questions 35 and 36 in the $t(shared.certificationFormMedical) form.",
     frequencyLabel_irregular:
       "Estimate how many absences over the next 6 months.",
     frequencyLabel_months: "Estimate how many absences per month.",
@@ -1072,16 +1073,16 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 24 of the $t(shared.caregiverCertificationForm).",
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 24 of the $t(shared.certificationFormCare).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 29 in the Certification of a Serious Health Condition form.",
+      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 29 in the $t(shared.certificationFormMedical) form.",
     datesSectionLabel:
       "Enter the start and end dates for your continuous leave.",
     endDateLabel: "Last day of leave",
     hasLeaveHint_care:
-      "Your answer must match Question 22 in the completed $t(shared.caregiverCertificationForm).",
+      "Your answer must match Question 22 in the completed $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
-      "Your answer must match Question 26 in the Certification of a Serious Health Condition form.",
+      "Your answer must match Question 26 in the $t(shared.certificationFormMedical) form.",
     hasLeaveLabel:
       "Do you need to take off work completely for a period of time (continuous leave)?",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
@@ -1098,9 +1099,9 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 28 of the $t(shared.caregiverCertificationForm).",
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 28 of the $t(shared.certificationFormCare).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 34 in the Certification of a Serious Health Condition form.",
+      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 34 in the $t(shared.certificationFormMedical) form.",
     datesSectionLabel:
       "Enter the start and end dates for your intermittent leave.",
     endDateLabel: "Last day of leave",
@@ -1109,9 +1110,9 @@ const pages = {
     hasLeaveHint_bonding:
       "For example, you need to take time off for: <ul><li>Court dates for your foster child</li><li>Social worker visits</li><li>Gaps in your childcare</li></ul>",
     hasLeaveHint_care:
-      "Your answer must match Question 22 in the completed $t(shared.caregiverCertificationForm).",
+      "Your answer must match Question 22 in the completed $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
-      "Your answer must match Question 26 in the Certification of a Serious Health Condition form.",
+      "Your answer must match Question 26 in the $t(shared.certificationFormMedical) form.",
     hasLeaveLabel:
       "Do you need to take off work in uneven blocks of time (intermittent leave)?",
     hybridLeaveWarning:
@@ -1130,18 +1131,18 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 26 of the $t(shared.caregiverCertificationForm).",
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 26 of the $t(shared.certificationFormCare).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 32 in the Certification of a Serious Health Condition form .",
+      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 32 in the $t(shared.certificationFormMedical) form .",
     datesSectionLabel:
       "Enter the start and end dates for your reduced leave schedule.",
     endDateLabel: "Last day of leave",
     endDateLabel_medical:
       "Last day of leave or re$t(chars.nbhyphen)evaluation date",
     hasLeaveHint_care:
-      "Your answer must match Question 22 in the completed $t(shared.caregiverCertificationForm).",
+      "Your answer must match Question 22 in the completed $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
-      "Your answer must match Question 26 in the Certification of a Serious Health Condition form.",
+      "Your answer must match Question 26 in the $t(shared.certificationFormMedical) form.",
     hasLeaveLabel:
       "Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
@@ -1399,9 +1400,9 @@ const pages = {
     inputHoursLabel_weekly: "Hours off per week",
     lead_bonding: "Enter 0 for days you won’t work a reduced schedule.",
     lead_care:
-      "Enter 0 for days you won’t work a reduced schedule.<br /><br />Your answer must match Question 27 in the $t(shared.caregiverCertificationForm).",
+      "Enter 0 for days you won’t work a reduced schedule.<br /><br />Your answer must match Question 27 in the $t(shared.certificationFormCare).",
     lead_medical:
-      "Enter 0 for days you won’t work a reduced schedule.<br /><br />Your answer must match Question 33 in the Certification of a Serious Health Condition form.",
+      "Enter 0 for days you won’t work a reduced schedule.<br /><br />Your answer must match Question 33 in the $t(shared.certificationFormMedical) form.",
     minutesLabel: "$t(shared.minutesLabel)",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
     needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
@@ -1663,20 +1664,19 @@ const pages = {
     lead_bonding_newborn:
       "You need to upload one of the following documents to confirm your child’s date of birth:",
     lead_care:
-      "You need to upload a completed <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link> to prove that you need to take leave to care for a family member with a serious medical condition.",
+      "You need to upload a completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> to prove that you need to take leave to care for a family member with a serious medical condition.",
     lead_medical:
-      "You need to upload a completed <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link> to prove that you need to take medical leave.",
+      "You need to upload a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link> to prove that you need to take medical leave.",
     sectionLabel_bonding: "Upload your documentation",
-    sectionLabel_care: "Upload your $t(shared.caregiverCertificationForm)",
-    sectionLabel_medical:
-      "Upload your Certification of a Serious Health Condition",
+    sectionLabel_care: "Upload your certification form",
+    sectionLabel_medical: "Upload your certification form",
     title: "Upload certification",
   },
   claimsUploadDocsOptions: {
     certLabel_bonding_adopt_foster: "Proof of placement",
     certLabel_bonding_newborn: "Proof of birth",
-    certLabel_care: "$t(shared.caregiverCertificationForm)",
-    certLabel_medical: "Certification of a Serious Health Condition",
+    certLabel_care: "$t(shared.certificationFormCare)",
+    certLabel_medical: "$t(shared.certificationFormMedical)",
     nonStateIdLabel: "Different identification documentation",
     sectionHint:
       "You only need to complete this if you received a notice from the Department of Family and Medical Leave asking you to provide additional documents or you need to provide proof of birth or placement. ",
@@ -1946,9 +1946,9 @@ const pages = {
       "When you log into your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
     viewApplicationsTitle: "View all applications",
     viewFormsBody:
-      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process. ",
+      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>$t(shared.certificationFormMedical) form</healthcare-provider-form-link> during the review process. ",
     viewFormsBody_caring:
-      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process. For leave to care for a family member you can download the <caregiver-certification-form-link>Certification to Care for a Family Member</caregiver-certification-form-link> during the review process. ",
+      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>$t(shared.certificationFormMedical) form</healthcare-provider-form-link> during the review process. For leave to care for a family member you can download the <caregiver-certification-form-link>Certification to Care for a Family Member</caregiver-certification-form-link> during the review process. ",
     viewFormsTitle: "View forms and notices online",
     welcomeBody:
       "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.",
@@ -1976,13 +1976,13 @@ const pages = {
       "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
     stepTwoBondingLeaveSubhead: "To bond with a child",
     stepTwoCaringLeaveBody:
-      "<p>The health care provider of the person you're caring for must complete the <caregiver-certification-form-link>$t(shared.caregiverCertificationForm)</caregiver-certification-form-link>.</p>",
+      "<p>The health care provider of the person you're caring for must complete the <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link>.</p>",
     stepTwoCaringLeaveSubhead:
       "To care for a family member with a serious health condition",
     stepTwoFamilyLeaveSubhead: "Family leave",
     stepTwoHeading: "2. Get documentation that supports your leave request",
     stepTwoMedicalLeaveBody:
-      "<p>Your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p>",
+      "<p>Your health care provider must complete the <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>.</p>",
     stepTwoMedicalLeaveSubhead: "Medical leave",
     title: "Get ready to apply",
   },
@@ -2265,7 +2265,7 @@ const components = {
     downloadAttachments:
       "Download the documentation below or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
     header: "Leave schedule",
-    healthCareProviderFormLink: "Certification of a Serious Health Condition",
+    healthCareProviderFormLink: "$t(shared.certificationFormMedical)",
     leaveFrequencyLabel: "Leave frequency",
     recordkeepingInstructions:
       "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
