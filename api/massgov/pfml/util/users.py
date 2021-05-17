@@ -41,12 +41,7 @@ def create_user(
         db_session.add(user)
 
         if employer_for_leave_admin:
-            user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
-            user_leave_admin = UserLeaveAdministrator(
-                user=user, employer=employer_for_leave_admin, fineos_web_id=None,
-            )
-            db_session.add(user_role)
-            db_session.add(user_leave_admin)
+            initial_link_user_leave_admin(db_session, user, employer_for_leave_admin)
 
         db_session.commit()
     except Exception as error:
@@ -58,6 +53,15 @@ def create_user(
         )
         raise error
 
+    return user
+
+
+def initial_link_user_leave_admin(db_session: db.Session, user: User, employer: Employer) -> User:
+    """A helper function to create the first user leave admin and role"""
+    user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
+    user_leave_admin = UserLeaveAdministrator(user=user, employer=employer, fineos_web_id=None,)
+    db_session.add(user_role)
+    db_session.add(user_leave_admin)
     return user
 
 
