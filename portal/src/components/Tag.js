@@ -12,11 +12,11 @@ const Tag = ({ label, state }) => {
     "radius-lg",
     "text-no-wrap",
     {
-      "text-success": state === "success",
+      "text-success-dark": state === "success",
       "bg-success-lighter": state === "success",
       "text-base-darkest": state === "warning",
       "bg-warning-lighter": state === "warning",
-      "text-error": state === "error",
+      "text-error-darker": state === "error",
       "bg-error-lighter": state === "error",
       "text-base-darker": state === "inactive",
       "bg-base-lightest": state === "inactive",
