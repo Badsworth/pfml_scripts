@@ -144,6 +144,7 @@ def _get_valid_dia_payment_data() -> Dict[str, str]:
         "END_DATE": fake.date(pattern="%Y%m%d"),
         "WEEKLY_AMOUNT": str(fake.random_int(min=0.0, max=100.0)),
         "AWARD_CREATED_DATE": fake.date(pattern="%Y%m%d"),
+        "TERMINATION_DATE": fake.date(pattern="%Y%m%d"),
     }
 
 
@@ -548,6 +549,7 @@ def test_assert_dia_payments_are_stored_correctly(
     assert str(record.award_amount) == params[0]["AWARD_AMOUNT"]
     assert record.award_code == params[0]["AWARD_CODE"]
     assert record.award_created_date == parse_date(params[0]["AWARD_CREATED_DATE"])
+    assert record.termination_date == parse_date(params[0]["TERMINATION_DATE"])
     assert record.award_date == parse_date(params[0]["AWARD_DATE"])
     assert record.award_id == params[0]["AWARD_ID"]
     assert record.board_no == params[0]["BOARD_NO"]

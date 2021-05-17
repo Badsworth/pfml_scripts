@@ -58,6 +58,7 @@ class Constants:
     END_DATE_FIELD = "END_DATE"
     WEEKLY_AMOUNT_FIELD = "WEEKLY_AMOUNT"
     AWARD_CREATED_DATE_FIELD = "AWARD_CREATED_DATE"
+    TERMINATION_DATE_FIELD = "TERMINATION_DATE"
 
     CLAIMAINT_LIST_FIELDS = [
         CUSTOMER_NUMBER_FIELD,
@@ -83,6 +84,7 @@ class Constants:
         END_DATE_FIELD,
         WEEKLY_AMOUNT_FIELD,
         AWARD_CREATED_DATE_FIELD,
+        TERMINATION_DATE_FIELD,
     ]
 
     PAYMENT_CSV_FIELD_MAPPINGS = {
@@ -100,6 +102,7 @@ class Constants:
         END_DATE_FIELD: "end_date",
         WEEKLY_AMOUNT_FIELD: "weekly_amount",
         AWARD_CREATED_DATE_FIELD: "award_created_date",
+        TERMINATION_DATE_FIELD: "termination_date",
     }
 
 

@@ -1141,6 +1141,7 @@ class DiaReductionPayment(Base):
     end_date = Column(Date)
     weekly_amount = Column(Numeric(asdecimal=True))
     award_created_date = Column(Date)
+    termination_date = Column(Date)
 
     created_at = Column(
         TIMESTAMP(timezone=True),
