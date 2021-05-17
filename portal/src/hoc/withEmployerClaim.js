@@ -21,7 +21,10 @@ const withEmployerClaim = (Component) => {
     const { appLogic, query } = props;
     const { t } = useTranslation();
     const absenceId = query.absence_id;
-    const claim = appLogic.employers.claim;
+    const claim =
+      appLogic.employers.claim?.fineos_absence_id === absenceId
+        ? appLogic.employers.claim
+        : null;
     const user = appLogic.users.user;
 
     assert(appLogic.employers);

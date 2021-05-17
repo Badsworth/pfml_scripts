@@ -17,7 +17,7 @@ describe("NewApplication", () => {
     .completed()
     .reviewable(true)
     .create();
-  const query = { absence_id: "mock-absence-id" };
+  const query = { absence_id: "NTN-111-ABS-01" };
   let appLogic, wrapper;
 
   beforeEach(() => {
@@ -86,7 +86,7 @@ describe("NewApplication", () => {
       "CLAIM_NOT_REVIEWABLE",
       {},
       {
-        absence_id: "mock-absence-id",
+        absence_id: "NTN-111-ABS-01",
       },
       { redirect: true }
     );
@@ -128,7 +128,7 @@ describe("NewApplication", () => {
         "CONFIRMATION",
         {},
         {
-          absence_id: "mock-absence-id",
+          absence_id: "NTN-111-ABS-01",
         }
       );
     });

@@ -14,7 +14,7 @@ describe("Confirmation", () => {
     .completed()
     .reviewable(true)
     .create();
-  const query = { absence_id: "mock-absence-id" };
+  const query = { absence_id: "NTN-111-ABS-01" };
   let appLogic, wrapper;
 
   beforeEach(() => {

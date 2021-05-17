@@ -32,7 +32,7 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
    * @param {string} absenceId - FINEOS absence id
    */
   const loadClaim = async (absenceId) => {
-    if (claim) return;
+    if (claim && claim.fineos_absence_id === absenceId) return;
     appErrorsLogic.clearErrors();
 
     try {

@@ -171,7 +171,7 @@ describe("Employer dashboard", () => {
 
     expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
     expect(wrapper.find("thead")).toMatchSnapshot();
-    expect(wrapper.find("ClaimTableRows").dive().find("a")).toHaveLength(2);
+    expect(wrapper.find("ClaimTableRows").dive().find("Link")).toHaveLength(2);
   });
 
   it("renders claim rows without links if employer is not registered in FINEOS", () => {
