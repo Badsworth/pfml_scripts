@@ -53,6 +53,33 @@ paths:
             schema:
               $ref: "#/components/schemas/UserCreateRequest"
 
+  /users/{user_id}/convert_employer:
+    post:
+      tags:
+        - Users
+      summary: Convert a User account to an employer role
+      operationId: massgov.pfml.api.users.users_convert_employer
+      parameters:
+        - name: user_id
+          in: path
+          schema:
+            type: string
+          description: ID of User to update
+          required: true
+      responses:
+        "201":
+          description: User converted without errors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      requestBody:
+        $ref: '#/components/requestBodies/EmployerAddFeinRequestBody'
+  
   /users/{user_id}:
     get:
       tags:
@@ -1655,8 +1682,6 @@ components:
           enum:
             - other_reason
             - same_reason
-            # TODO (CP-2123): Remove when we remove references to previous_leaves
-            - deprecated
 
     ApplicationRequestBody:
       allOf:
@@ -1752,6 +1777,15 @@ components:
                 - Engineer
                 - Health Care
               example: "Sales Clerk"
+            gender:
+              type: string
+              nullable: true
+              enum:
+                - Woman
+                - Man
+                - Non-binary
+                - Gender not listed
+                - Prefer not to answer
             leave_details:
               $ref: "#/components/schemas/ApplicationLeaveDetails"
             work_pattern:
@@ -1771,10 +1805,6 @@ components:
               maxItems: 3
             phone:
               $ref: "#/components/schemas/Phone"
-            has_previous_leaves:
-              type: boolean
-              nullable: true
-              example: false
             has_previous_leaves_other_reason:
               type: boolean
               nullable: true
@@ -1784,12 +1814,6 @@ components:
             has_concurrent_leave:
               type: boolean
               nullable: true
-            previous_leaves:
-              nullable: true
-              type: array
-              items:
-                $ref: "#/components/schemas/PreviousLeave"
-              maxItems: 6
             previous_leaves_other_reason:
               nullable: true
               type: array
@@ -1924,6 +1948,15 @@ components:
             - Health Care
           example: "Sales Clerk"
           nullable: true
+        gender:
+          type: string
+          nullable: true
+          enum:
+            - Woman
+            - Man
+            - Non-binary
+            - Gender not listed
+            - Prefer not to answer
         hours_worked_per_week:
           type: number
           nullable: true
@@ -1968,10 +2001,6 @@ components:
           example: "Started"
         phone:
           $ref: "#/components/schemas/MaskedPhone"
-        has_previous_leaves:
-          type: boolean
-          nullable: true
-          example: false
         has_previous_leaves_other_reason:
           type: boolean
           nullable: true
@@ -1981,10 +2010,6 @@ components:
         has_concurrent_leave:
           type: boolean
           nullable: true
-        previous_leaves:
-          type: array
-          items:
-            $ref: "#/components/schemas/PreviousLeave"
         previous_leaves_other_reason:
           type: array
           items:

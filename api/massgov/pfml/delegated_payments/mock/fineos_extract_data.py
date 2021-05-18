@@ -393,7 +393,6 @@ def generate_payment_extract_files(
             continue
 
         employee = scenario_data.employee
-        claim = scenario_data.claim
 
         prior_payment = scenario_data.payment if round > 1 else None
 
@@ -481,7 +480,7 @@ def generate_payment_extract_files(
             include_payment_details=scenario_descriptor.include_non_vpei_records,
             include_requested_absence=scenario_descriptor.include_non_vpei_records,
             tin=ssn,
-            absence_case_number=claim.fineos_absence_id,
+            absence_case_number=scenario_data.absence_case_id,
             payment_address_1=mock_address["line_1"],
             payment_address_2=mock_address["line_2"],
             city=mock_address["city"],
@@ -543,7 +542,6 @@ def generate_claimant_data_files(
     for scenario_data in scenario_dataset:
         scenario_descriptor = scenario_data.scenario_descriptor
         employee = scenario_data.employee
-        claim = scenario_data.claim
         employer = scenario_data.employer
 
         if employee.tax_identifier is None:
@@ -552,10 +550,7 @@ def generate_claimant_data_files(
         ssn = employee.tax_identifier.tax_identifier.replace("-", "")
         if scenario_descriptor.claim_extract_employee_identifier_unknown:
             ssn = "UNKNOWNSSN"
-        absence_case_number = claim.fineos_absence_id
-
-        if scenario_descriptor.missing_claim:
-            absence_case_number = "UNKNOWNABSENCECASENUMBER"
+        absence_case_number = scenario_data.absence_case_id
 
         date_of_birth = "1991-01-01 12:00:00"
         payment_method = scenario_descriptor.payment_method.payment_method_description
@@ -586,8 +581,8 @@ def generate_claimant_data_files(
         default_payment_pref = "Y"
         customer_number = ssn
         absence_case_number = absence_case_number
-        absence_case_status = claim.fineos_absence_status.absence_status_description
-        leave_request_evidence = "Satisfied"
+        absence_case_status = "Approved"
+        leave_request_evidence = "Satisfied" if scenario_descriptor.is_id_proofed else "Rejected"
         leave_request_start = "2021-01-01 12:00:00"
         leave_request_end = "2021-04-01 12:00:00"
         notification_number = f"NTN-{absence_case_number}"

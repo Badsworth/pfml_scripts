@@ -11,7 +11,7 @@ from massgov.pfml.db.models.factories import (
     EmployerBenefitFactory,
     IntermittentLeavePeriodFactory,
     OtherIncomeFactory,
-    PreviousLeaveFactory,
+    PreviousLeaveOtherReasonFactory,
     ReducedScheduleLeavePeriodFactory,
 )
 from massgov.pfml.util.logging.applications import get_application_log_attributes
@@ -24,7 +24,7 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
     EmployerBenefitFactory.create(application_id=application.application_id, benefit_type_id=None)
     OtherIncomeFactory.create(application_id=application.application_id)
-    PreviousLeaveFactory.create(application_id=application.application_id)
+    PreviousLeaveOtherReasonFactory.create(application_id=application.application_id)
 
     log_attributes = get_application_log_attributes(application)
 
@@ -41,7 +41,8 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.has_mailing_address": "False",
         "application.has_other_incomes": None,
         "application.has_other_incomes_awaiting_approval": None,
-        "application.has_previous_leaves": None,
+        "application.has_previous_leaves_other_reason": None,
+        "application.has_previous_leaves_same_reason": None,
         "application.has_reduced_schedule_leave_periods": "False",
         "application.has_state_id": "False",
         "application.has_submitted_payment_preference": None,
@@ -49,7 +50,8 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.leave_reason_qualifier": None,
         "application.num_employer_benefits": "1",
         "application.num_other_incomes": "1",
-        "application.num_previous_leaves": "1",
+        "application.num_previous_leaves_other_reason": "1",
+        "application.num_previous_leaves_same_reason": "0",
         "application.num_employer_benefit_types.Accrued paid leave": "0",
         "application.num_employer_benefit_types.Family or medical leave insurance": "0",
         "application.num_employer_benefit_types.Permanent disability insurance": "0",
@@ -61,12 +63,18 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.num_other_income_types.SSDI": "1",
         "application.num_other_income_types.Unemployment Insurance": "0",
         "application.num_other_income_types.Workers Compensation": "0",
-        "application.num_previous_leave_reasons.Care for a family member": "0",
-        "application.num_previous_leave_reasons.Child bonding": "0",
-        "application.num_previous_leave_reasons.Military caregiver": "0",
-        "application.num_previous_leave_reasons.Military exigency family": "0",
-        "application.num_previous_leave_reasons.Pregnancy / Maternity": "1",
-        "application.num_previous_leave_reasons.Serious health condition": "0",
+        "application.num_previous_leave_other_reason_reasons.Care for a family member": "0",
+        "application.num_previous_leave_other_reason_reasons.Child bonding": "0",
+        "application.num_previous_leave_other_reason_reasons.Military caregiver": "0",
+        "application.num_previous_leave_other_reason_reasons.Military exigency family": "0",
+        "application.num_previous_leave_other_reason_reasons.Pregnancy / Maternity": "1",
+        "application.num_previous_leave_other_reason_reasons.Serious health condition": "0",
+        "application.num_previous_leave_same_reason_reasons.Care for a family member": "0",
+        "application.num_previous_leave_same_reason_reasons.Child bonding": "0",
+        "application.num_previous_leave_same_reason_reasons.Military caregiver": "0",
+        "application.num_previous_leave_same_reason_reasons.Military exigency family": "0",
+        "application.num_previous_leave_same_reason_reasons.Pregnancy / Maternity": "0",
+        "application.num_previous_leave_same_reason_reasons.Serious health condition": "0",
         "application.pregnant_or_recent_birth": "False",
         "application.start_time": str(application.start_time),
         "application.start_time.timestamp": str(application.start_time.timestamp()),

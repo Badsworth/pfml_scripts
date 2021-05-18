@@ -146,7 +146,6 @@ def applications_start():
 
 def applications_update(application_id):
     body = connexion.request.json
-
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
@@ -728,8 +727,7 @@ def previous_leave_delete(application_id: str, previous_leave_id: str) -> Respon
 
         applications_service.remove_previous_leave(db_session, existing_previous_leave)
         db_session.expire(
-            existing_application,
-            ["previous_leaves", "previous_leaves_other_reason", "previous_leaves_same_reason"],
+            existing_application, ["previous_leaves_other_reason", "previous_leaves_same_reason"],
         )
 
     return response_util.success_response(
@@ -740,6 +738,7 @@ def previous_leave_delete(application_id: str, previous_leave_id: str) -> Respon
 
 def payment_preference_submit(application_id: str) -> Response:
     body = connexion.request.json
+
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 

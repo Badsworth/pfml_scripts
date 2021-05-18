@@ -359,6 +359,9 @@ def build_customer_model(application, current_user):
     # the addPaymentPreference or updatePaymentPreference endpoints
     if application.residential_address is not None:
         customer.customerAddress = build_customer_address(application.residential_address)
+    if application.gender is not None:
+        customer.gender = application.gender.fineos_gender_description
+
     return customer
 
 
@@ -1137,14 +1140,22 @@ def create_other_leaves_and_other_incomes_eforms(
     log_attributes = get_application_log_attributes(application)
 
     # Send previous leaves to fineos
-    if application.previous_leaves:
+    if application.previous_leaves_other_reason:
         # Convert from DB models to API models because the API enum models are easier to serialize to strings
-        previous_leaves = map(
-            lambda leave: PreviousLeave.from_orm(leave), application.previous_leaves
+        previous_leaves_other_reason = map(
+            lambda leave: PreviousLeave.from_orm(leave), application.previous_leaves_other_reason
         )
-        eform = PreviousLeavesEFormBuilder.build(previous_leaves)
+        eform = PreviousLeavesEFormBuilder.build(previous_leaves_other_reason)
         create_eform(application, db_session, eform)
         logger.info("Created Other Leaves eform", extra=log_attributes)
+    if application.previous_leaves_same_reason:
+        # Convert from DB models to API models because the API enum models are easier to serialize to strings
+        previous_leaves_same_reason = map(
+            lambda leave: PreviousLeave.from_orm(leave), application.previous_leaves_same_reason
+        )
+        eform = PreviousLeavesEFormBuilder.build(previous_leaves_same_reason)
+        create_eform(application, db_session, eform)
+        logger.info("Created Same Leaves eform", extra=log_attributes)
     # Send employer benefits and other incomes to fineos
     if (
         application.employer_benefits

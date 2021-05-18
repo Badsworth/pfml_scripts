@@ -1,5 +1,101 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`LeaveDetails Caring Leave renders relationship question when showCaringLeaveType flag is true 1`] = `
+<Fragment>
+  <ReviewHeading
+    level="2"
+  >
+    Leave details
+  </ReviewHeading>
+  <ReviewRow
+    label="Leave type"
+    level="3"
+  >
+    Care for a family member
+  </ReviewRow>
+  <ReviewRow
+    label="Application ID"
+    level="3"
+  >
+    NTN-111-ABS-01
+  </ReviewRow>
+  <ReviewRow
+    label="Leave duration"
+    level="3"
+  >
+    1/1/2021 – 7/1/2021
+  </ReviewRow>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "yes",
+        },
+        Object {
+          "checked": false,
+          "label": "I don't know",
+          "value": "unknown",
+        },
+        Object {
+          "checked": false,
+          "label": "No (comment required)",
+          "value": "no",
+        },
+      ]
+    }
+    hint={
+      <Trans
+        components={
+          Object {
+            "eligible-relationship-link": <a />,
+          }
+        }
+        i18nKey="components.employersLeaveDetails.familyMemberRelationshipHint"
+      />
+    }
+    label={
+      <ReviewHeading
+        level="2"
+      >
+        Do you believe the listed relationship is described accurately? (Optional)
+      </ReviewHeading>
+    }
+    name="relationshipAccuracy"
+    onChange={[Function]}
+    type="radio"
+  />
+  <ConditionalContent
+    clearField={[Function]}
+    getField={[Function]}
+    updateFields={[Function]}
+    visible={false}
+  >
+    <Alert
+      className="measure-5 margin-bottom-3 margin-top-3"
+      heading="The employee will be denied paid leave."
+      headingSize="3"
+      state="warning"
+    >
+      We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied
+    </Alert>
+    <FormLabel
+      className="usa-label"
+      htmlFor="comment"
+      small={true}
+    >
+      Tell us why you think this relationship is inaccurate. (required)
+    </FormLabel>
+    <textarea
+      className="usa-textarea margin-top-3"
+      name="comment"
+      onChange={[Function]}
+    />
+  </ConditionalContent>
+</Fragment>
+`;
+
 exports[`LeaveDetails renders the component 1`] = `
 <Fragment>
   <ReviewHeading

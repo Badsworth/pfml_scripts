@@ -202,6 +202,7 @@ class EmployeeFactory(EmployeeOnlyDORDataFactory):
     email_address = factory.Faker("email")
     phone_number = "+19425290727"
     ctr_vendor_customer_code = "VC0001201168"
+    gender_id = None
 
 
 class EmployeeWithFineosNumberFactory(EmployeeFactory):
@@ -464,7 +465,7 @@ class ApplicationFactory(BaseFactory):
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda a: a.employer.employer_id)
 
-    employee = factory.SubFactory(EmployeeFactory)
+    employee = factory.SubFactory(EmployeeFactory, gender_id=1)
     employee_id = factory.LazyAttribute(lambda a: a.employee.employee_id)
 
     tax_identifier = factory.SelfAttribute("employee.tax_identifier")
@@ -473,6 +474,7 @@ class ApplicationFactory(BaseFactory):
     phone = factory.SubFactory(PhoneFactory)
 
     # Lookups
+    gender_id = None
     occupation_id = None
     employment_status_id = None
     relationship_to_caregiver_id = None
@@ -622,8 +624,7 @@ class OtherIncomeFactory(BaseFactory):
 
 class PreviousLeaveFactory(BaseFactory):
     class Meta:
-        # TODO (CP-2123): Change to application_models.PreviousLeave when we remove previous_leaves
-        model = application_models.PreviousLeaveDeprecated
+        model = application_models.PreviousLeave
 
     # application_id must be passed into the create() call
     leave_reason_id = (

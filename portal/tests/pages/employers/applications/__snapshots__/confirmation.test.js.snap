@@ -9,7 +9,7 @@ exports[`Confirmation renders the page 1`] = `
     i18nKey="pages.employersClaimsConfirmation.applicationIdLabel"
     values={
       Object {
-        "absenceId": "mock-absence-id",
+        "absenceId": "NTN-111-ABS-01",
       }
     }
   />
@@ -57,7 +57,7 @@ Array [
   >
     Application ID:
   </strong>,
-  " mock-absence-id",
+  " NTN-111-ABS-01",
 ]
 `;
 

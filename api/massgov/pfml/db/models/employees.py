@@ -126,10 +126,12 @@ class LkGender(Base):
     __tablename__ = "lk_gender"
     gender_id = Column(Integer, primary_key=True, autoincrement=True)
     gender_description = Column(Text)
+    fineos_gender_description = Column(Text, nullable=True)
 
-    def __init__(self, gender_id, gender_description):
+    def __init__(self, gender_id, gender_description, fineos_gender_description):
         self.gender_id = gender_id
         self.gender_description = gender_description
+        self.fineos_gender_description = fineos_gender_description
 
 
 class LkOccupation(Base):
@@ -1596,11 +1598,12 @@ class MaritalStatus(LookupTable):
 
 class Gender(LookupTable):
     model = LkGender
-    column_names = ("gender_id", "gender_description")
-
-    FEMALE = LkGender(1, "Female")
-    MALE = LkGender(2, "Male")
-    OTHER = LkGender(3, "Other")
+    column_names = ("gender_id", "gender_description", "fineos_gender_description")
+    WOMAN = LkGender(1, "Woman", "Female")
+    MAN = LkGender(2, "Man", "Male")
+    NONBINARY = LkGender(3, "Non-binary", "Neutral")
+    NOT_LISTED = LkGender(4, "Gender not listed", "Unknown")
+    NO_ANSWER = LkGender(5, "Prefer not to answer", "Not Provided")
 
 
 class Occupation(LookupTable):

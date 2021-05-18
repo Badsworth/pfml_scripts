@@ -10,6 +10,7 @@ import withEmployerClaim from "../../src/hoc/withEmployerClaim";
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("withEmployerClaim", () => {
+  const secondClaimAbsenceId = "NTN-222-ABS-01";
   const user = new User({
     user_id: "mock_user_id",
     consented_to_data_sharing: true,
@@ -30,7 +31,7 @@ describe("withEmployerClaim", () => {
       }),
     ],
   });
-  const absence_id = "mock-absence-id";
+  const absence_id = "NTN-111-ABS-01";
   const PageComponent = () => <div />;
   const WrappedComponent = withEmployerClaim(PageComponent);
   let appLogic, wrapper;
@@ -39,10 +40,13 @@ describe("withEmployerClaim", () => {
     appLogic = useAppLogic();
   });
 
-  function render(appLogic) {
+  function render(appLogic, absenceId = absence_id) {
     act(() => {
       wrapper = mount(
-        <WrappedComponent appLogic={appLogic} query={{ absence_id }} />
+        <WrappedComponent
+          appLogic={appLogic}
+          query={{ absence_id: absenceId }}
+        />
       );
     });
   }
@@ -60,9 +64,26 @@ describe("withEmployerClaim", () => {
     render(appLogic);
 
     expect(appLogic.employers.loadClaim).toHaveBeenCalledTimes(1);
+    expect(appLogic.employers.loadClaim).toHaveBeenCalledWith("NTN-111-ABS-01");
+  });
+
+  it("loads the claim if the loaded claim is different", () => {
+    render(appLogic, secondClaimAbsenceId);
+
+    expect(appLogic.employers.loadClaim).toHaveBeenCalledTimes(1);
     expect(appLogic.employers.loadClaim).toHaveBeenCalledWith(
-      "mock-absence-id"
+      secondClaimAbsenceId
     );
+  });
+
+  it("does not load the claim if it's already loaded", () => {
+    appLogic.employers.claim = new EmployerClaim({
+      fineos_absence_id: secondClaimAbsenceId,
+    });
+
+    render(appLogic, secondClaimAbsenceId);
+
+    expect(appLogic.employers.loadClaim).not.toHaveBeenCalled();
   });
 
   it("does not load claim if user has not yet loaded", () => {

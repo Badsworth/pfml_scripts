@@ -12,6 +12,7 @@ from massgov.pfml.api.models.applications.common import (
     DocumentType,
     EmployerBenefit,
     EmploymentStatus,
+    Gender,
     Occupation,
     OtherIncome,
     PaymentPreference,
@@ -33,6 +34,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     middle_name: Optional[str]
     last_name: Optional[str]
     date_of_birth: Optional[date]
+    gender: Optional[Gender]
     has_continuous_leave_periods: Optional[bool]
     has_intermittent_leave_periods: Optional[bool]
     has_reduced_schedule_leave_periods: Optional[bool]
@@ -52,10 +54,8 @@ class ApplicationRequestBody(PydanticBaseModel):
     other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
     phone: Optional[Phone]
-    previous_leaves: Optional[List[PreviousLeave]]
     previous_leaves_other_reason: Optional[List[PreviousLeave]]
     previous_leaves_same_reason: Optional[List[PreviousLeave]]
-    has_previous_leaves: Optional[bool]
     has_previous_leaves_other_reason: Optional[bool]
     has_previous_leaves_same_reason: Optional[bool]
 

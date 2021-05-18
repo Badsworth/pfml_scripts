@@ -324,14 +324,16 @@ class ClaimantExtractStep(Step):
         EMPLOYEE_FEED_RECORD_COUNT = "employee_feed_record_count"
         EMPLOYEE_NOT_FOUND_IN_FEED_COUNT = "employee_not_found_in_feed_count"
         EMPLOYEE_NOT_FOUND_IN_DATABASE_COUNT = "employee_not_found_in_database_count"
+        TAX_IDENTIFIER_MISSING_IN_DB_COUNT = "tax_identifier_missing_in_db_count"
         EMPLOYEE_PROCESSED_MULTIPLE_TIMES = "employee_processed_multiple_times"
-        ERRORED_CLAIM_COUNT = "errored_claim_count"
+        CLAIM_UPDATE_EXCEPTION_COUNT = "claim_update_exception_count"
         ERRORED_CLAIMANT_COUNT = "errored_claimant_count"
+        ERRORED_CLAIM_COUNT = "errored_claim_count"
         EVIDENCE_NOT_ID_PROOFED_COUNT = "evidence_not_id_proofed_count"
         NEW_EFT_COUNT = "new_eft_count"
         PROCESSED_EMPLOYEE_COUNT = "processed_employee_count"
         PROCESSED_REQUESTED_ABSENCE_COUNT = "processed_requested_absence_count"
-        VALID_CLAIMANT_COUNT = "valid_claimant_count"
+        VALID_CLAIM_COUNT = "valid_claim_count"
         VBI_REQUESTED_ABSENCE_SOM_RECORD_COUNT = "vbi_requested_absence_som_record_count"
         NO_EMPLOYEE_FEED_RECORDS_FOUND_COUNT = "no_employee_feed_records_found_count"
         NO_DEFAULT_PAYMENT_PREFERENCE_COUNT = "no_default_payment_preference_count"
@@ -505,14 +507,6 @@ class ClaimantExtractStep(Step):
                 extra=claimant_data.get_traceable_details(),
             )
 
-            if not claimant_data.is_id_proofed:
-                logger.info(
-                    "Absence_case_id %s is not id proofed yet",
-                    absence_case_id,
-                    extra=claimant_data.get_traceable_details(),
-                )
-                self.increment(self.Metrics.EVIDENCE_NOT_ID_PROOFED_COUNT)
-
             employee_pfml_entry = None
             try:
                 # Add / update entry on claim table
@@ -524,7 +518,7 @@ class ClaimantExtractStep(Step):
                     absence_case_id,
                     extra=claimant_data.get_traceable_details(),
                 )
-                self.increment(self.Metrics.ERRORED_CLAIM_COUNT)
+                self.increment(self.Metrics.CLAIM_UPDATE_EXCEPTION_COUNT)
                 continue
 
             try:
@@ -546,8 +540,6 @@ class ClaimantExtractStep(Step):
                 if employee_pfml_entry.employee_id not in updated_employee_ids:
                     self.generate_employee_reference_file(extract_data, employee_pfml_entry)
 
-                    self.manage_state_log(extract_data, employee_pfml_entry, claimant_data)
-
                     updated_employee_ids.add(employee_pfml_entry.employee_id)
                 else:
                     logger.info(
@@ -555,6 +547,9 @@ class ClaimantExtractStep(Step):
                         employee_pfml_entry.employee_id,
                     )
                     self.increment(self.Metrics.EMPLOYEE_PROCESSED_MULTIPLE_TIMES)
+
+            if claim is not None:
+                self.manage_state_log(extract_data, claim, claimant_data)
 
         logger.info(
             "Successfully processed claimant extract data into db: %s", extract_data.date_str
@@ -612,6 +607,19 @@ class ClaimantExtractStep(Step):
                 claimant_data.absence_end_date
             )
 
+        if not claimant_data.is_id_proofed:
+            logger.info(
+                "Absence_case_id %s is not id proofed yet",
+                claimant_data.absence_case_id,
+                extra=claimant_data.get_traceable_details(),
+            )
+            self.increment(self.Metrics.EVIDENCE_NOT_ID_PROOFED_COUNT)
+
+            claimant_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.CLAIM_NOT_ID_PROOFED,
+                "Claim has not been ID proofed, LEAVEREQUEST_EVIDENCERESULTTYPE is not Satisfied",
+            )
+
         claim_pfml.is_id_proofed = claimant_data.is_id_proofed
 
         # Return claim, we want to create this even if the employee
@@ -625,6 +633,7 @@ class ClaimantExtractStep(Step):
         """Returns the employee if found and updates its info"""
         self.increment(self.Metrics.PROCESSED_EMPLOYEE_COUNT)
         if not claimant_data.employee_tax_identifier:
+            # When we did validation, we would have added an error for this
             self.increment(self.Metrics.EMPLOYEE_NOT_FOUND_IN_FEED_COUNT)
             return None
 
@@ -635,13 +644,24 @@ class ClaimantExtractStep(Step):
                 .filter(TaxIdentifier.tax_identifier == claimant_data.employee_tax_identifier)
                 .one_or_none()
             )
-
-            if tax_identifier_id is not None:
+            if tax_identifier_id is None:
+                self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
+                claimant_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_IN_DB,
+                    f"tax_identifier: {claimant_data.employee_tax_identifier}",
+                )
+            else:
                 employee_pfml_entry = (
                     self.db_session.query(Employee)
                     .filter(Employee.tax_identifier_id == tax_identifier_id)
                     .one_or_none()
                 )
+                if not employee_pfml_entry:
+                    self.increment(self.Metrics.EMPLOYEE_NOT_FOUND_IN_DATABASE_COUNT)
+                    claimant_data.validation_container.add_validation_issue(
+                        payments_util.ValidationReason.MISSING_IN_DB,
+                        f"tax_identifier: {claimant_data.employee_tax_identifier}",
+                    )
 
         except SQLAlchemyError as e:
             logger.exception(
@@ -653,11 +673,10 @@ class ClaimantExtractStep(Step):
 
         # Assumption is we should not be creating employees in the PFML DB through this extract.
         if employee_pfml_entry is None:
+            # We added validation issues above for the scenarios that cause this
             logger.warning(
                 f"Employee in employee file with customer nbr {claimant_data.fineos_customer_number} not found in PFML DB.",
             )
-
-            self.increment(self.Metrics.EMPLOYEE_NOT_FOUND_IN_DATABASE_COUNT)
             return None
 
         with fineos_log_tables_util.update_entity_and_remove_log_entry(
@@ -768,7 +787,7 @@ class ClaimantExtractStep(Step):
             )
             claimant_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB,
-                f"employer {claimant_data.employer_customer_number}",
+                f"employer customer number: {claimant_data.employer_customer_number}",
             )
             self.increment(self.Metrics.EMPLOYER_NOT_FOUND_COUNT)
             return None
@@ -834,37 +853,36 @@ class ClaimantExtractStep(Step):
             )
 
     def manage_state_log(
-        self, extract_data: ExtractData, employee_pfml_entry: Employee, claimant_data: ClaimantData
+        self, extract_data: ExtractData, claim: Claim, claimant_data: ClaimantData
     ) -> None:
         """Manages the DELEGATED_CLAIMANT states"""
         validation_container = claimant_data.validation_container
-        validation_container.record_key = employee_pfml_entry.employee_id
 
         # If there are validation issues, add to claimant extract error report.
         if validation_container.has_validation_issues():
             state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_CLAIMANT_ADD_TO_CLAIMANT_EXTRACT_ERROR_REPORT,
-                associated_model=employee_pfml_entry,
+                end_state=State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT,
+                associated_model=claim,
                 import_log_id=self.get_import_log_id(),
                 outcome=state_log_util.build_outcome(
-                    f"Employee {employee_pfml_entry.employee_id} had validation issues in FINEOS claimant extract {extract_data.date_str}",
+                    f"Claim {claim.fineos_absence_id} had validation issues in FINEOS claimant extract {extract_data.date_str}",
                     validation_container,
                 ),
                 db_session=self.db_session,
             )
-            self.increment(self.Metrics.ERRORED_CLAIMANT_COUNT)
+            self.increment(self.Metrics.ERRORED_CLAIM_COUNT)
 
         else:
             state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
-                associated_model=employee_pfml_entry,
+                end_state=State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
+                associated_model=claim,
                 import_log_id=self.get_import_log_id(),
                 outcome=state_log_util.build_outcome(
-                    f"Employee {employee_pfml_entry.employee_id} successfully extracted from FINEOS claimant extract {extract_data.date_str}"
+                    f"Claim {claim.fineos_absence_id} successfully extracted from FINEOS claimant extract {extract_data.date_str}"
                 ),
                 db_session=self.db_session,
             )
-            self.increment(self.Metrics.VALID_CLAIMANT_COUNT)
+            self.increment(self.Metrics.VALID_CLAIM_COUNT)
 
     # TODO move to payments_util
     def move_files_from_received_to_processed(self, extract_data: ExtractData) -> None:

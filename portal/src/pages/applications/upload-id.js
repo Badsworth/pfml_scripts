@@ -46,10 +46,9 @@ export const UploadId = (props) => {
     claim.application_id
   );
 
-  const idDocuments = findDocumentsByTypes(
-    documents,
-    [DocumentType.identityVerification] // TODO (CP-962): Set based on leaveReason
-  );
+  const idDocuments = findDocumentsByTypes(documents, [
+    DocumentType.identityVerification,
+  ]);
 
   const handleSave = async () => {
     if (files.isEmpty && idDocuments.length) {
@@ -61,7 +60,7 @@ export const UploadId = (props) => {
     const uploadPromises = appLogic.documents.attach(
       claim.application_id,
       files.items,
-      DocumentType.identityVerification, // TODO (CP-962): set based on leave reason
+      DocumentType.identityVerification,
       additionalDoc === "true"
     );
 
