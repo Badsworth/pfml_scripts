@@ -1466,6 +1466,22 @@ def test_bank_account_type_required_for_ACH():
     ] == issues
 
 
+def test_valid_routing_number():
+    test_app = ApplicationFactory.build(
+        payment_preference=PaymentPreferenceFactory.build(
+            payment_method_id=PaymentMethod.ACH.payment_method_id, routing_number="123456789"
+        )
+    )
+    issues = get_payments_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.checksum,
+            message="Routing number is invalid",
+            field="payment_preference.routing_number",
+        )
+    ] == issues
+
+
 def test_payment_method_required_for_payment_preference():
     test_app = ApplicationFactory.build(
         payment_preference=PaymentPreferenceFactory.build(payment_method_id=None)

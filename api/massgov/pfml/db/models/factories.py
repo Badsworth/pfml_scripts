@@ -523,7 +523,7 @@ class PaymentPreferenceFactory(BaseFactory):
     payment_pref_id = Generators.UuidObj
     payment_method_id = employee_models.PaymentMethod.ACH.payment_method_id
     account_number = "123456789"
-    routing_number = "234567890"
+    routing_number = "011401533"
     bank_account_type_id = employee_models.BankAccountType.CHECKING.bank_account_type_id
 
 

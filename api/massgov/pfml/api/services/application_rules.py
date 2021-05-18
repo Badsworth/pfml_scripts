@@ -24,6 +24,7 @@ from massgov.pfml.db.models.applications import (
     PreviousLeave,
 )
 from massgov.pfml.db.models.employees import PaymentMethod
+from massgov.pfml.util.routing_number_validation import validate_routing_number
 
 PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
@@ -637,6 +638,15 @@ def get_payments_issues(application: Application) -> List[Issue]:
                     field="payment_preference.routing_number",
                 )
             )
+        elif not validate_routing_number(application.payment_preference.routing_number):
+            issues.append(
+                Issue(
+                    type=IssueType.checksum,
+                    message="Routing number is invalid",
+                    field="payment_preference.routing_number",
+                )
+            )
+
         if not application.payment_preference.bank_account_type_id:
             issues.append(
                 Issue(

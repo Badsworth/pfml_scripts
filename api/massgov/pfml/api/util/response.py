@@ -119,6 +119,8 @@ class IssueType(str, Enum):
     require_employer = "require_employer"
     # Employer record must exist in the API and FINEOS
     require_contributing_employer = "require_contributing_employer"
+    # Data failed a checksum test e.g. Routing number
+    checksum = "checksum"
 
 
 @dataclass
