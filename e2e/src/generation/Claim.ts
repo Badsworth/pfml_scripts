@@ -28,7 +28,10 @@ import { StreamWrapper } from "./FileWrapper";
 import { collect, map, AnyIterable } from "streaming-iterables";
 
 const pipelineP = promisify(pipeline);
-
+interface PromiseWithOptionalGeneration<T> extends Promise<T> {
+  orGenerateAndSave(gen: () => T): Promise<T>;
+}
+// export type LoadOrGeneratePromise = PromiseWithOptionalGeneration<ClaimPool>;
 /**
  * Specifies how a claim should be generated.
  */
@@ -303,18 +306,31 @@ export default class ClaimPool implements AsyncIterable<GeneratedClaim> {
   /**
    * Load a pool from NDJSON format.
    */
-  static async load(filename: string, documentDir: string): Promise<ClaimPool> {
-    // Check readability of the file up front so we can verify its existence.
-    await fs.promises.access(filename, fs.constants.R_OK);
-
-    // Load the claims from NDJSON, then "rehydrate" each one by replacing the file path
-    // with a function to create a UInt8Buffer for the file contents.
-    const input = fs.createReadStream(filename).pipe(ndjson.parse());
-    const hydrate = si.map((claim: DehydratedClaim) =>
-      ClaimGenerator.hydrate(claim, documentDir)
-    );
-
-    return new this(hydrate(input));
+  static load(
+    filename: string,
+    documentDir: string
+  ): PromiseWithOptionalGeneration<ClaimPool> {
+    const loadPromise = (async () => {
+      await fs.promises.access(filename, fs.constants.R_OK);
+      const input = fs.createReadStream(filename).pipe(ndjson.parse());
+      const hydrate = si.map((claim: DehydratedClaim) =>
+        ClaimGenerator.hydrate(claim, documentDir)
+      );
+      return new this(hydrate(input));
+    })();
+    return Object.assign(loadPromise, {
+      orGenerateAndSave: async (generator: () => ClaimPool) => {
+        // When orGenerateAndSave() is called, return a new promise that adds a catch() to
+        // the load promise to regenerate and save the data _only if the initial load fails_
+        return loadPromise.catch(async (e) => {
+          if (e.code !== "ENOENT") return Promise.reject(e);
+          // Invoke the generator here, and save the pool it returns to `filename`
+          const pool = await generator();
+          await pool.save(filename, documentDir);
+          return await ClaimPool.load(filename, documentDir);
+        });
+      },
+    });
   }
 
   constructor(

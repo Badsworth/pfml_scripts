@@ -1,6 +1,18 @@
 import { expect, describe, it } from "@jest/globals";
 import EmployerPool, { Employer } from "../../../src/generation/Employer";
 import { collect } from "streaming-iterables";
+import dataDirectory, {
+  DataDirectory,
+} from "../../../src/generation/DataDirectory";
+import * as fs from "fs";
+
+const storage: DataDirectory = dataDirectory("tmp", __dirname);
+async function prepareStorage() {
+  await storage.prepare();
+}
+async function removeStorage() {
+  await fs.promises.rmdir(storage.dir, { recursive: true });
+}
 
 describe("Employer Generation", () => {
   it("generate() should generate an employer pool", () => {
@@ -177,5 +189,32 @@ describe("Employer Generation", () => {
         withholding
       );
     }
+  });
+
+  describe("andGenerateOrSave", () => {
+    beforeEach(async () => {
+      await prepareStorage();
+    });
+    afterEach(async () => {
+      await removeStorage();
+    });
+    it("orGenerateAndSave() will generate used employees when used with load()", async () => {
+      const employers = EmployerPool.generate(1);
+      const gen = jest.fn(() => employers);
+      const pool = await EmployerPool.load(storage.employees).orGenerateAndSave(
+        gen
+      );
+      expect(gen).toHaveBeenCalled();
+      expect((await collect(pool)).length).toEqual(
+        await collect(await EmployerPool.load(storage.employees)).length
+      );
+    });
+    it("orGenerateAndSave() will save employers to hard drive", async () => {
+      await EmployerPool.load(storage.employees).orGenerateAndSave(() =>
+        EmployerPool.generate(1)
+      );
+      const refreshedPool = await EmployerPool.load(storage.employees);
+      expect((await collect(refreshedPool)).length).toBe(1);
+    });
   });
 });

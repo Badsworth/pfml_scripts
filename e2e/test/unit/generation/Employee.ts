@@ -1,4 +1,3 @@
-import dataDirectory from "./../../../src/generation/DataDirectory";
 import { describe, it, expect } from "@jest/globals";
 import EmployerPool from "../../../src/generation/Employer";
 import EmployeePool, {
@@ -6,6 +5,18 @@ import EmployeePool, {
   WageSpecification,
 } from "../../../src/generation/Employee";
 import fs from "fs";
+import dataDirectory, {
+  DataDirectory,
+} from "./../../../src/generation/DataDirectory";
+import { collect } from "streaming-iterables";
+
+const storage: DataDirectory = dataDirectory("tmp", __dirname);
+const prepareStorage = async () => {
+  await storage.prepare();
+};
+const removeStorage = async () => {
+  await fs.promises.rmdir(storage.dir, { recursive: true });
+};
 
 const wageTests: [WageSpecification, number, number][] = [
   ["ineligible", 0, 5399],
@@ -15,8 +26,6 @@ const wageTests: [WageSpecification, number, number][] = [
   ["low", 5400, 30000],
   [10000, 10000, 10000],
 ];
-
-const EMPLOYEE_TEST_DIR = "/employee_unit_test";
 
 describe("EmployeeGenerator", () => {
   const employerPool = EmployerPool.generate(1);
@@ -72,9 +81,6 @@ describe("EmployeeGenerator", () => {
 });
 
 describe("EmployeePool", () => {
-  const storage = dataDirectory(EMPLOYEE_TEST_DIR);
-  // before/after used to remove create/remove directory to test the persisitence of used employees
-  beforeAll(async () => await storage.prepare());
   afterAll(async () => {
     await fs.promises.rmdir(storage.dir, { recursive: true });
   });
@@ -99,6 +105,8 @@ describe("EmployeePool", () => {
       });
       pool = new EmployeePool(employees);
     });
+    beforeAll(async () => await prepareStorage());
+    afterAll(async () => await removeStorage());
     it.each(wageTests)(
       "Should be able to pick() an employee with %s wages",
       (spec, min, max) => {
@@ -116,6 +124,18 @@ describe("EmployeePool", () => {
         .map(() => pool.pick({}))
         .map((e) => e.ssn);
       expect(new Set(ssns).size).toBe(10);
+    });
+
+    it("will persist used employees when saved after pick(s) have been performed", async () => {
+      const pool = EmployeePool.generate(1, employerPool, {});
+      const employee = await pool.pick({});
+      await pool.save(storage.employees, storage.usedEmployees);
+      const refreshedPool = await EmployeePool.load(
+        storage.employees,
+        storage.usedEmployees
+      );
+      expect(refreshedPool.used.size).toBe(1);
+      expect(refreshedPool.used.has(employee.ssn)).toBe(true);
     });
   });
 
@@ -144,15 +164,30 @@ describe("EmployeePool", () => {
     expect(pool.pick({ metadata: { prenoted: true } })).toEqual(expectEmployee);
   });
 
-  it("will persist used employees when saved after pick(s) have been performed", async () => {
-    const pool = EmployeePool.generate(1, employerPool, {});
-    const employee = await pool.pick({});
-    await pool.save(storage.employees, storage.usedEmployees);
-    const refreshedPool = await EmployeePool.load(
-      storage.employees,
-      storage.usedEmployees
-    );
-    expect(refreshedPool.used.size).toBe(1);
-    expect(refreshedPool.used.has(employee.ssn)).toBe(true);
+  describe("orGenerateAndSave", () => {
+    beforeEach(async () => {
+      await prepareStorage();
+    });
+    afterEach(async () => {
+      await removeStorage();
+    });
+    it("orGenerateAndSave() will generate used employees when used with load()", async () => {
+      const employees = EmployeePool.generate(1, employerPool, {});
+      const gen = jest.fn(() => employees);
+      const pool = await EmployeePool.load(storage.employees).orGenerateAndSave(
+        gen
+      );
+      expect(gen).toHaveBeenCalled();
+      expect((await collect(pool)).length).toEqual(
+        await collect(await EmployeePool.load(storage.employees)).length
+      );
+    });
+    it("orGenerateAndSave() will save employers to hard drive", async () => {
+      await EmployeePool.load(storage.employees).orGenerateAndSave(() =>
+        EmployeePool.generate(1, employerPool, {})
+      );
+      const refreshedPool = await EmployeePool.load(storage.employees);
+      expect((await collect(refreshedPool)).length).toBe(1);
+    });
   });
 });

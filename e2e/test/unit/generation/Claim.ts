@@ -13,6 +13,9 @@ import path from "path";
 import os from "os";
 import { mocked } from "ts-jest/utils";
 import { Uint8ArrayWrapper } from "../../../src/generation/FileWrapper";
+import dataDirectory, {
+  DataDirectory,
+} from "./../../../src/generation/DataDirectory";
 
 jest.mock("../../../src/generation/documents");
 const generateDocumentsMock = mocked(generateDocuments);
@@ -119,6 +122,16 @@ const employee = {
   occupations: [{ fein: "12-34567", wages: 10000 }],
 };
 
+let storage: DataDirectory;
+const EMPLOYEE_TEST_DIR = "/employee_unit_test";
+const prepareStorage = async () => {
+  storage = dataDirectory(EMPLOYEE_TEST_DIR);
+  await storage.prepare();
+};
+
+const removeStorage = async () => {
+  await fs.promises.rmdir(storage.dir, { recursive: true });
+};
 describe("Claim Generator", () => {
   let employeePool: EmployeePool;
 
@@ -594,8 +607,41 @@ describe("ClaimPool", () => {
 
   it("Should throw an error if requested to open a nonexistent file", async () => {
     const file = path.join(tempDir, "claims-nonexistent.ndjson");
-    await expect(() => ClaimPool.load(file, tempDir)).rejects.toThrowError(
-      "ENOENT"
-    );
+    expect(
+      async () => await ClaimPool.load(file, tempDir)
+    ).rejects.toThrowError("ENOENT");
+  });
+
+  describe("orGenerateAndSave", () => {
+    beforeEach(async () => {
+      await prepareStorage();
+    });
+    afterEach(async () => {
+      await removeStorage();
+    });
+    it("orGenerateAndSave() will claims to hard drive", async () => {
+      const claims = ClaimPool.generate(employeePool, {}, medical, 1);
+      const gen = jest.fn(() => claims);
+      await ClaimPool.load(storage.claims, storage.documents).orGenerateAndSave(
+        gen
+      );
+      const refreshedPool = await collect(
+        await ClaimPool.load(storage.claims, storage.documents)
+      );
+      expect(gen).toHaveBeenCalled();
+      expect(refreshedPool.length).toBe(1);
+    });
+
+    it("orGenerateAndSave() will generate used employees when used with load()", async () => {
+      const pool = await collect(
+        await ClaimPool.load(
+          storage.claims,
+          storage.documents
+        ).orGenerateAndSave(() =>
+          ClaimPool.generate(employeePool, {}, medical, 1)
+        )
+      );
+      expect(pool.length).toBe(1);
+    });
   });
 });

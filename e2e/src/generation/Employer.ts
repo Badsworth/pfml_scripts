@@ -11,6 +11,12 @@ const pipelineP = promisify(pipeline);
 
 type EmployerSize = "small" | "medium" | "large";
 
+export interface GeneratePromise<T> extends Promise<T> {
+  orGenerateAndSave(generationCb: () => T): Promise<T>;
+}
+
+export type LoadOrGeneratePromise = GeneratePromise<EmployerPool>;
+
 export type Employer = {
   accountKey: string;
   name: string;
@@ -119,9 +125,21 @@ export default class EmployerPool implements Iterable<Employer> {
   /**
    * Load a pool from a JSON file.
    */
-  static async load(filename: string): Promise<EmployerPool> {
-    const data = await fs.promises.readFile(filename, "utf-8");
-    return new this(JSON.parse(data));
+  static load(filename: string): LoadOrGeneratePromise {
+    const employerProm = (async () => {
+      const raw = await fs.promises.readFile(filename, "utf-8");
+      return new this(JSON.parse(raw));
+    })();
+    return Object.assign(employerProm, {
+      orGenerateAndSave: async (generator: () => EmployerPool) => {
+        return employerProm.catch(async (e) => {
+          if (e.code !== "ENOENT") throw e;
+          const employerPool = generator();
+          await employerPool.save(filename);
+          return employerPool;
+        });
+      },
+    });
   }
 
   /**

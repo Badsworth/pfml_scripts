@@ -10,11 +10,15 @@ import JSONStream from "JSONStream";
 import shuffle from "./shuffle";
 
 const pipelineP = promisify(pipeline);
+interface PromiseWithOptionalGeneration<T> extends Promise<T> {
+  orGenerateAndSave(gen: () => T): Promise<T>;
+}
 
 export type EmployeeOccupation = {
   fein: string;
   wages: number;
 };
+
 export type Employee = {
   first_name: string;
   last_name: string;
@@ -140,7 +144,6 @@ export type EmployeePickSpec = {
 
 export default class EmployeePool implements Iterable<Employee> {
   used: Set<string>;
-
   /**
    * Generate a new pool.
    */
@@ -158,19 +161,34 @@ export default class EmployeePool implements Iterable<Employee> {
   /**
    * Load a pool from a JSON file.
    */
-  static async load(
+  static load(
     filename: string,
     usedFileName?: string
-  ): Promise<EmployeePool> {
+  ): PromiseWithOptionalGeneration<EmployeePool> {
     // Do not use streams here. Interestingly, the perf/memory usage of this was tested,
     // and raw read/parse is faster and more efficient than the streams equivalent. ¯\_(ツ)_/¯
-    let used = [];
-    const raw = await fs.promises.readFile(filename, "utf-8");
-    if (usedFileName) {
-      const contents = await fs.promises.readFile(usedFileName, "utf-8");
-      used = JSON.parse(contents);
-    }
-    return new this(JSON.parse(raw), used);
+    const loadPromise = (async () => {
+      let used: string[] = [];
+      const raw = await fs.promises.readFile(filename, "utf-8");
+      if (usedFileName) {
+        const contents = await fs.promises.readFile(usedFileName, "utf-8");
+        used = JSON.parse(contents);
+      }
+      return new this(JSON.parse(raw), used);
+    })();
+    return Object.assign(loadPromise, {
+      orGenerateAndSave: async (generator: () => EmployeePool) => {
+        // When orGenerateAndSave() is called, return a new promise that adds a catch() to
+        // the load promise to regenerate and save the data _only if the initial load fails_
+        return loadPromise.catch(async (e) => {
+          if (e.code !== "ENOENT") return Promise.reject(e);
+          // Invoke the generator here, and save the pool it returns to `filename`
+          const pool = generator();
+          await pool.save(filename, usedFileName);
+          return await EmployeePool.load(filename, usedFileName);
+        });
+      },
+    });
   }
 
   /**
