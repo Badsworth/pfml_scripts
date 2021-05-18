@@ -466,9 +466,9 @@ export function intermittentFillAbsencePeriod(claimNumber: string): void {
   cy.get("#PopupContainer").within(() => {
     cy.get("input[value='Yes']").click();
   });
-  cy.get(
-    "input[name*='unspecifiedCertificationEpisodicPeriodDetailsWidget_un99_episodeDuration']"
-  ).type("{selectall}5");
+  cy.get("#certificationEpisodicLeaveEntitlementWidget").within(() => {
+    cy.get("input[name*=episodeDuration]").type("{selectall}5");
+  });
   clickBottomWidgetButton("OK");
   wait();
   cy.get("input[type='button'][value='Apply']").click();
