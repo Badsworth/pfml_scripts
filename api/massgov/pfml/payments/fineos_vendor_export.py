@@ -2,7 +2,7 @@ import os
 import tempfile
 import uuid
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -250,15 +250,6 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 absence_case_id,
                 extra={"absence_case_id": absence_case_id},
             )
-        evidence_result_type = requested_absence.get("LEAVEREQUEST_EVIDENCERESULTTYPE")
-        if evidence_result_type is None or evidence_result_type != "Satisfied":
-            if absence_case_id is not None:
-                logger.info(
-                    "Skipping: absence_case_id %s is not id proofed",
-                    absence_case_id,
-                    extra={"absence_case_id": absence_case_id},
-                )
-            continue
 
         employee_pfml_entry = None
         try:
@@ -283,7 +274,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             )
             continue
 
-        if employee_pfml_entry is not None:
+        if employee_pfml_entry and claim and claim.is_id_proofed:
             if employee_pfml_entry.employee_id not in updated_employee_ids:
                 generate_employee_reference_file(
                     db_session, extract_data, employee_pfml_entry, validation_container
@@ -303,6 +294,18 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                     "Skipping adding a reference file and state_log for employee %s",
                     employee_pfml_entry.employee_id,
                 )
+        else:
+            error_msg = "Skipping: absence case is not id proofed"
+            extra: Dict[str, Any] = {}
+            if absence_case_id is not None:
+                extra.update(absence_case_id=absence_case_id)
+            if employee_pfml_entry is not None:
+                extra.update(fineos_customer_number=employee_pfml_entry.fineos_customer_number)
+
+            logger.info(
+                error_msg, extra=extra,
+            )
+            continue
 
     logger.info("Successfully processed vendor extract data into db: %s", extract_data.date_str)
     return None
