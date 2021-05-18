@@ -200,7 +200,7 @@ def test_e2e_pub_payments(
     # Data Setup - Mirror DOR Import + Claim Application
     # ========================================================================
 
-    test_dataset = generate_test_dataset(SCENARIO_DESCRIPTORS)
+    test_dataset = generate_test_dataset(SCENARIO_DESCRIPTORS, test_db_session)
     # Confirm generated DB rows match expectations
     assert len(test_dataset.scenario_dataset) == len(SCENARIO_DESCRIPTORS)
 
@@ -246,7 +246,14 @@ def test_e2e_pub_payments(
         # == Validate employee state logs
         assert_employee_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,],
+            scenario_names=[
+                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+                ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+            ],
             end_state=State.DELEGATED_EFT_SEND_PRENOTE,
             flow=Flow.DELEGATED_EFT,
             db_session=test_db_session,
@@ -338,7 +345,7 @@ def test_e2e_pub_payments(
             test_dataset=test_dataset,
             scenario_names=[
                 ScenarioName.CLAIM_NOT_ID_PROOFED,
-                ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
+                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
                 ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
                 ScenarioName.PUB_ACH_PRENOTE_RETURN,
                 ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
@@ -401,7 +408,7 @@ def test_e2e_pub_payments(
                 ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
                 ScenarioName.PUB_ACH_PRENOTE_RETURN,
                 ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
+                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
             ],
@@ -509,7 +516,11 @@ def test_e2e_pub_payments(
                 "eft_found_count": len(ach_payments)
                 - len(
                     [
-                        ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
+                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
                         ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
                     ]
                 ),
@@ -529,7 +540,15 @@ def test_e2e_pub_payments(
                 ),
                 "errored_claimant_count": 0,
                 "evidence_not_id_proofed_count": len([ScenarioName.CLAIM_NOT_ID_PROOFED]),
-                "new_eft_count": len([ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE]),
+                "new_eft_count": len(
+                    [
+                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+                    ]
+                ),
                 "processed_employee_count": len(SCENARIO_DESCRIPTORS),
                 "processed_requested_absence_count": len(SCENARIO_DESCRIPTORS),
                 "valid_claim_count": len(SCENARIO_DESCRIPTORS)
@@ -593,7 +612,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                         ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
                         ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                        ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
+                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
                     ]
                 ),
                 "employee_in_payment_extract_missing_in_db_count": 0,
@@ -601,7 +620,7 @@ def test_e2e_pub_payments(
                 "errored_payment_count": len(
                     [
                         ScenarioName.CLAIM_NOT_ID_PROOFED,
-                        ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
+                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
                         ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                         ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
                         ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
@@ -620,7 +639,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_PRENOTE_RETURN,
                         ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
                         ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
+                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
                     ]
                 ),
                 "not_pending_or_approved_leave_request_count": len(
@@ -1004,21 +1023,15 @@ def test_e2e_pub_payments(
         # == Validate prenote states
         assert_prenote_state(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,],
-            expected_prenote_state=PrenoteState.PENDING_WITH_PUB,
-        )
-
-        # TODO PUB-196 should be PrenoteState.PENDING_WITH_PUB
-        assert_prenote_state(
-            test_dataset=test_dataset,
             scenario_names=[
+                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
                 ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
                 ScenarioName.PUB_ACH_PRENOTE_RETURN,
                 ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
             ],
-            expected_prenote_state=PrenoteState.PENDING_PRE_PUB,
+            expected_prenote_state=PrenoteState.PENDING_WITH_PUB,
         )
 
         # == Rejects processed
@@ -1293,7 +1306,16 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
                     ]
                 ),
-                "ach_prenote_count": len([ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE]),
+                "ach_prenote_count": len(
+                    [
+                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+                    ]
+                ),
                 "check_payment_count": len(
                     [
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
@@ -1321,7 +1343,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
                         ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
                         ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
+                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                         ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -1332,6 +1354,11 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
+                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
                     ]
                 ),
                 "transaction_files_sent_count": 3,  # EzCheck, NACHA, and positive pay files.
@@ -1559,21 +1586,22 @@ def test_e2e_pub_payments(
         # TODO should probably be approved - hold for discussions with Mass/DUA/PUB
         assert_prenote_state(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,],
-            expected_prenote_state=PrenoteState.PENDING_WITH_PUB,
-        )
-
-        # TODO PUB-196 should at least be PrenoteState.PENDING_WITH_PUB, and probably approved for standard prenote
-        assert_prenote_state(
-            test_dataset=test_dataset,
             scenario_names=[
+                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
                 ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
             ],
-            expected_prenote_state=PrenoteState.PENDING_PRE_PUB,
+            expected_prenote_state=PrenoteState.PENDING_WITH_PUB,
+        )
+
+        assert_prenote_state(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+            ],
+            expected_prenote_state=PrenoteState.REJECTED,
         )
 
         # == Assert files
@@ -1693,8 +1721,6 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_FAMILY_RETURN,
                 ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
@@ -1751,13 +1777,13 @@ def test_e2e_pub_payments(
                 "eft_prenote_id_not_found_count": len(
                     [ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,]
                 ),
-                "eft_prenote_rejected_count": 0,
-                "eft_prenote_unexpected_state_count": len(
+                "eft_prenote_rejected_count": len(
                     [
                         ScenarioName.PUB_ACH_PRENOTE_RETURN,
                         ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                     ]
-                ),  # TODO PUB-196 this should be empty, move items to return and change notification
+                ),
+                "eft_prenote_unexpected_state_count": 0,
                 "payment_already_complete_count": 0,
                 "payment_complete_with_change_count": len(
                     [
@@ -1954,7 +1980,12 @@ def test_e2e_pub_payments(
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,],
+            scenario_names=[
+                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+                ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+            ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=test_db_session,
         )
@@ -1989,7 +2020,7 @@ def test_e2e_pub_payments_delayed_scenarios(
     # Data Setup - Mirror DOR Import + Claim Application
     # ========================================================================
 
-    test_dataset = generate_test_dataset(DELAYED_SCENARIO_DESCRIPTORS)
+    test_dataset = generate_test_dataset(DELAYED_SCENARIO_DESCRIPTORS, local_test_db_session)
     # Confirm generated DB rows match expectations
     assert len(test_dataset.scenario_dataset) == len(DELAYED_SCENARIO_DESCRIPTORS)
 
@@ -2176,14 +2207,16 @@ def test_e2e_pub_payments_delayed_scenarios(
 # == Common E2E Workflow Segments ==
 
 
-def generate_test_dataset(scenario_descriptors: List[ScenarioDescriptor]) -> TestDataSet:
+def generate_test_dataset(
+    scenario_descriptors: List[ScenarioDescriptor], db_session: db.Session
+) -> TestDataSet:
     config = ScenarioDataConfig(
         scenarios_with_count=[
             ScenarioNameWithCount(scenario_name=scenario_descriptor.scenario_name, count=1)
             for scenario_descriptor in scenario_descriptors
         ]
     )
-    scenario_dataset = generate_scenario_dataset(config=config)
+    scenario_dataset = generate_scenario_dataset(config=config, db_session=db_session)
     return TestDataSet(scenario_dataset)
 
 
@@ -2363,6 +2396,7 @@ def assert_prenote_state(
     scenario_names: List[ScenarioName],
     expected_prenote_state: PrenoteState,
 ):
+    assertion_errors = []
     for scenario_name in scenario_names:
         scenario_data_items = test_dataset.get_scenario_data_by_name(scenario_name)
 
@@ -2377,9 +2411,15 @@ def assert_prenote_state(
 
             assert pub_eft is not None, f"No PubEft found: {scenario_name}"
 
-            assert (
-                pub_eft.prenote_state_id == expected_prenote_state.prenote_state_id
-            ), f"Unexpected prenote state for scenario: {scenario_name}, expected: {expected_prenote_state.prenote_state_description}, found: {pub_eft.prenote_state.prenote_state_description}"
+            if pub_eft.prenote_state_id != expected_prenote_state.prenote_state_id:
+                assertion_errors.append(
+                    f"Scenario: {scenario_name}, found state: {pub_eft.prenote_state.prenote_state_description}\n"
+                )
+
+    errors = "".join(assertion_errors)
+    assert (
+        len(assertion_errors) == 0
+    ), f"Unexpected prenote state for scenario(s) - expected state: {expected_prenote_state.prenote_state_description}\n{errors}"
 
 
 def assert_employee_state_for_scenarios(

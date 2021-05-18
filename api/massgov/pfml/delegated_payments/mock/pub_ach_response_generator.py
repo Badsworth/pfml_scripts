@@ -98,7 +98,7 @@ class PubACHResponseGenerator:
             return_reason_code = scenario_descriptor.pub_ach_notification_reason_code
         else:
             raise Exception(
-                "Invalid scenario - name: %s, pub_ach_response_return: %s, pub_ach_response_change_notificatio: %s",
+                "Invalid scenario - name: %s, pub_ach_response_return: %s, pub_ach_response_change_notification: %s",
                 scenario_descriptor.scenario_name,
                 scenario_descriptor.pub_ach_response_return,
                 scenario_descriptor.pub_ach_response_change_notification,

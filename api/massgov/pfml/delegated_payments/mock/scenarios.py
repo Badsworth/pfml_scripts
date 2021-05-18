@@ -42,7 +42,7 @@ class ScenarioName(Enum):
     EMPLOYER_REIMBURSEMENT_PAYMENT = "EMPLOYER_REIMBURSEMENT_PAYMENT"
 
     # Prenote
-    NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE = "NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE"
+    PRENOTE_WITH_EXISTING_EFT_ACCOUNT = "PRENOTE_WITH_EXISTING_EFT_ACCOUNT"
     CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED = "CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED"
 
     # TODO not a real scenario - remove
@@ -122,7 +122,7 @@ class ScenarioDescriptor:
 
     account_type: LkBankAccountType = BankAccountType.CHECKING
 
-    no_prior_eft_account: bool = False
+    existing_eft_account: bool = True
     prenoted: bool = True  # TODO add all prenote states
 
     invalid_address: bool = False
@@ -206,21 +206,23 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE,
-        no_prior_eft_account=True,
+        scenario_name=ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+        existing_eft_account=True,
         prenoted=False,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED,
-        prenoted=True,
-        create_payment=False,
+        scenario_name=ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED, create_payment=False,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CLAIM_NOT_ID_PROOFED,
         has_existing_claim=False,
         is_id_proofed=False,
     ),
-    ScenarioDescriptor(scenario_name=ScenarioName.EFT_ACCOUNT_NOT_PRENOTED, prenoted=False),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+        existing_eft_account=False,
+        prenoted=False,
+    ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
         payment_method=PaymentMethod.CHECK,
@@ -256,11 +258,13 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_approved=False),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_RETURN,
+        existing_eft_account=False,
         prenoted=False,
         pub_ach_response_return=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+        existing_eft_account=False,
         prenoted=False,
         pub_ach_response_change_notification=True,
     ),
@@ -268,12 +272,14 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
         pub_ach_response_return=True,
         pub_ach_return_invalid_prenote_payment_id_format=True,
+        existing_eft_account=False,
         prenoted=False,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
         pub_ach_response_return=True,
         pub_ach_return_prenote_payment_id_not_found=True,
+        existing_eft_account=False,
         prenoted=False,
     ),
     ScenarioDescriptor(

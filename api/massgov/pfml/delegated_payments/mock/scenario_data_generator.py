@@ -4,7 +4,9 @@ from typing import Dict, List, Optional
 
 import faker
 
+import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
+from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Address,
@@ -16,6 +18,7 @@ from massgov.pfml.db.models.employees import (
     Payment,
     PaymentMethod,
     PrenoteState,
+    State,
     TaxIdentifier,
 )
 from massgov.pfml.db.models.factories import (
@@ -180,6 +183,7 @@ def generate_scenario_data_in_db(
     fineos_employer_id: str,
     fineos_notification_id: str,
     fineos_customer_number: str,
+    db_session: db.Session,
 ) -> ScenarioData:
 
     employer = create_employer(fein, fineos_employer_id)
@@ -188,7 +192,7 @@ def generate_scenario_data_in_db(
 
     add_eft = (
         scenario_descriptor.payment_method.payment_method_id == PaymentMethod.ACH.payment_method_id
-        and not scenario_descriptor.no_prior_eft_account
+        and scenario_descriptor.existing_eft_account
     )
     if add_eft:
         prenote_state = (
@@ -202,6 +206,16 @@ def generate_scenario_data_in_db(
             prenote_state_id=prenote_state.prenote_state_id,
         )
         EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
+
+        if not scenario_descriptor.prenoted:
+            state_log_util.create_finished_state_log(
+                end_state=State.DELEGATED_EFT_SEND_PRENOTE,
+                associated_model=employee,
+                outcome=state_log_util.build_outcome(
+                    "Initiated DELEGATED_EFT flow for employee associated with payment"
+                ),
+                db_session=db_session,
+            )
 
     absence_case_id = f"{fineos_notification_id}-ABS-001"
 
@@ -232,7 +246,9 @@ def generate_scenario_data_in_db(
     )
 
 
-def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
+def generate_scenario_dataset(
+    config: ScenarioDataConfig, db_session: db.Session
+) -> List[ScenarioData]:
     try:
         scenario_dataset: List[ScenarioData] = []
 
@@ -264,6 +280,7 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
                     fineos_employer_id=fineos_employer_id,
                     fineos_notification_id=fineos_notification_id,
                     fineos_customer_number=fineos_customer_number,
+                    db_session=db_session,
                 )
 
                 scenario_data.payment_c_value = "7326"
