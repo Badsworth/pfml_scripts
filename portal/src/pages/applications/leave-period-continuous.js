@@ -13,6 +13,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -135,7 +136,11 @@ export const LeavePeriodContinuous = (props) => {
         hint={
           claim.isMedicalLeave || claim.isCaringLeave
             ? t("pages.claimsLeavePeriodContinuous.hasLeaveHint", {
-                context: contentContext,
+                context:
+                  claim.isMedicalLeave &&
+                  isFeatureEnabled("updateMedicalCertForm")
+                    ? "updateMedicalCertForm"
+                    : contentContext,
               })
             : null
         }
@@ -157,7 +162,13 @@ export const LeavePeriodContinuous = (props) => {
         <Lead>
           <Trans
             i18nKey="pages.claimsLeavePeriodContinuous.datesLead"
-            tOptions={{ context: contentContext }}
+            tOptions={{
+              context:
+                claim.isMedicalLeave &&
+                isFeatureEnabled("updateMedicalCertForm")
+                  ? "updateMedicalCertForm"
+                  : contentContext,
+            }}
           />
         </Lead>
 

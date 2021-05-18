@@ -18,6 +18,7 @@ import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
 import findKeyByValue from "../../utils/findKeyByValue";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import spreadMinutesOverWeek from "../../utils/spreadMinutesOverWeek";
 import useFormState from "../../hooks/useFormState";
@@ -92,7 +93,7 @@ export const ReducedLeaveSchedule = (props) => {
     );
   };
 
-  const contentReasonContext = findKeyByValue(
+  const contentContext = findKeyByValue(
     LeaveReason,
     claim.leave_details.reason
   );
@@ -142,7 +143,7 @@ export const ReducedLeaveSchedule = (props) => {
               ),
             }}
             tOptions={{
-              context: contentReasonContext,
+              context: contentContext,
             }}
           />
         </Alert>
@@ -157,7 +158,12 @@ export const ReducedLeaveSchedule = (props) => {
       <Lead>
         <Trans
           i18nKey="pages.claimsReducedLeaveSchedule.lead"
-          tOptions={{ context: contentReasonContext }}
+          tOptions={{
+            context:
+              claim.isMedicalLeave && isFeatureEnabled("updateMedicalCertForm")
+                ? "updateMedicalCertForm"
+                : contentContext,
+          }}
         />
       </Lead>
 

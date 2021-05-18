@@ -75,6 +75,11 @@ const flagsConfig = {
     // Leave Admins can review Caring Leave claims
     // TODO (CP-1989): Remove this flag once caring leave is made available in Production
     showCaringLeaveType: false,
+
+    // When this flag is enabled, the medical leave question numbers for leave periods
+    // are updated to reflect the new "Certification of Your Serious Health Condition"
+    // TODO (CP-2205): Remove this flag once updated medical leave form is effective
+    updateMedicalCertForm: false,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in

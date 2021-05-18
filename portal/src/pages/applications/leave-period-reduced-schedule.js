@@ -13,6 +13,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -117,7 +118,6 @@ export const LeavePeriodReducedSchedule = (props) => {
           />
         </Alert>
       )}
-
       <InputChoiceGroup
         {...getFunctionalInputProps("has_reduced_schedule_leave_periods")}
         choices={[
@@ -135,7 +135,11 @@ export const LeavePeriodReducedSchedule = (props) => {
         hint={
           claim.isMedicalLeave || claim.isCaringLeave
             ? t("pages.claimsLeavePeriodReducedSchedule.hasLeaveHint", {
-                context: contentContext,
+                context:
+                  claim.isMedicalLeave &&
+                  isFeatureEnabled("updateMedicalCertForm")
+                    ? "updateMedicalCertForm"
+                    : contentContext,
               })
             : null
         }
@@ -157,7 +161,13 @@ export const LeavePeriodReducedSchedule = (props) => {
         <Lead>
           <Trans
             i18nKey="pages.claimsLeavePeriodReducedSchedule.datesLead"
-            tOptions={{ context: contentContext }}
+            tOptions={{
+              context:
+                claim.isMedicalLeave &&
+                isFeatureEnabled("updateMedicalCertForm")
+                  ? "updateMedicalCertForm"
+                  : contentContext,
+            }}
           />
         </Lead>
 
