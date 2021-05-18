@@ -102,8 +102,8 @@ class ScenarioDescriptor:
 
     employee_in_payment_extract_missing_in_db: bool = False
 
-    # missing claim
-    missing_claim: bool = False
+    # missing claims will be created by the claimant extract
+    has_existing_claim: bool = True
 
     # missing employee
     claim_missing_employee: bool = False
@@ -115,7 +115,7 @@ class ScenarioDescriptor:
     claim_extract_employee_identifier_unknown: bool = False
 
     claim_type: str = "Family"
-    is_id_proofed: bool = True  # TODO - when claimant extract is file generation is ready, make this set the ID proofing field
+    is_id_proofed: bool = True
 
     payment_method: LkPaymentMethod = PaymentMethod.ACH
     payment_transaction_type: LkPaymentTransactionType = PaymentTransactionType.STANDARD
@@ -216,7 +216,9 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         create_payment=False,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.CLAIM_NOT_ID_PROOFED, missing_claim=True, is_id_proofed=False
+        scenario_name=ScenarioName.CLAIM_NOT_ID_PROOFED,
+        has_existing_claim=False,
+        is_id_proofed=False,
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.EFT_ACCOUNT_NOT_PRENOTED, prenoted=False),
     ScenarioDescriptor(

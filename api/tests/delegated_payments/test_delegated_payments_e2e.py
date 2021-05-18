@@ -103,6 +103,16 @@ class TestDataSet:
                 self.scenario_dataset_map[scenario_name] = []
             self.scenario_dataset_map[scenario_name].append(scenario_data)
 
+    def get_scenario_names(self, scenarios_to_filter: Optional[List[str]] = None) -> List[str]:
+        filter_set = set()
+        if scenarios_to_filter:
+            filter_set.update(scenarios_to_filter)
+        return [
+            sd.scenario_descriptor.scenario_name
+            for sd in self.scenario_dataset
+            if sd.scenario_descriptor.scenario_name not in filter_set
+        ]
+
     def get_scenario_data_by_name(
         self, scenario_name: ScenarioName
     ) -> Optional[List[ScenarioData]]:
@@ -147,6 +157,17 @@ class TestDataSet:
                     .first()
                 )
                 scenario_data.additional_payment = additional_payment
+
+    def populate_scenario_dataset_claims(self, db_session) -> None:
+        for scenario_data in self.scenario_dataset:
+            if scenario_data.claim:
+                continue
+
+            scenario_data.claim = (
+                db_session.query(Claim)
+                .filter(Claim.fineos_absence_id == scenario_data.absence_case_id)
+                .first()
+            )
 
 
 # == The E2E Test ==
@@ -204,17 +225,8 @@ def test_e2e_pub_payments(
 
         # == Validate created rows
         claims = test_db_session.query(Claim).all()
-        missing_claims = list(
-            filter(lambda sd: sd.scenario_descriptor.missing_claim, test_dataset.scenario_dataset)
-        )
-        assert len(claims) == len(test_dataset.scenario_dataset) + len(missing_claims)
-
-        # Claims
-        claims = test_db_session.query(Claim).all()
-        missing_claims = list(
-            filter(lambda sd: sd.scenario_descriptor.missing_claim, test_dataset.scenario_dataset)
-        )
-        assert len(claims) == len(test_dataset.scenario_dataset) + len(missing_claims)
+        # Each scenario will have a claim created even if it doesn't start with one
+        assert len(claims) == len(test_dataset.scenario_dataset)
 
         # Payments
         payments = test_db_session.query(Payment).all()
@@ -340,11 +352,25 @@ def test_e2e_pub_payments(
             db_session=test_db_session,
         )
 
-        # Validate claim state
+        # == Validate claim state
+        invalid_claim_scenarios = [
+            ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+            ScenarioName.CLAIM_NOT_ID_PROOFED,
+        ]
+        valid_claim_scenarios = test_dataset.get_scenario_names(
+            scenarios_to_filter=invalid_claim_scenarios
+        )
+
         assert_claim_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED],
-            end_state=State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
+            scenario_names=valid_claim_scenarios,
+            end_state=State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
+            db_session=test_db_session,
+        )
+        assert_claim_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=invalid_claim_scenarios,
+            end_state=State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT,
             db_session=test_db_session,
         )
 
@@ -490,18 +516,29 @@ def test_e2e_pub_payments(
                 "eft_rejected_count": 0,
                 "employee_feed_record_count": len(SCENARIO_DESCRIPTORS),
                 "employee_not_found_in_feed_count": 0,
-                "employee_not_found_in_database_count": len(
+                "tax_identifier_missing_in_db_count": len(
                     [ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT]
                 ),
+                "employee_not_found_in_database_count": 0,
                 "employee_processed_multiple_times": 0,
-                "errored_claim_count": 0,
+                "errored_claim_count": len(
+                    [
+                        ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+                        ScenarioName.CLAIM_NOT_ID_PROOFED,
+                    ]
+                ),
                 "errored_claimant_count": 0,
-                "evidence_not_id_proofed_count": 0,
+                "evidence_not_id_proofed_count": len([ScenarioName.CLAIM_NOT_ID_PROOFED]),
                 "new_eft_count": len([ScenarioName.NO_PRIOR_EFT_ACCOUNT_ON_EMPLOYEE]),
                 "processed_employee_count": len(SCENARIO_DESCRIPTORS),
                 "processed_requested_absence_count": len(SCENARIO_DESCRIPTORS),
-                "valid_claimant_count": len(SCENARIO_DESCRIPTORS)
-                - len([ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT]),
+                "valid_claim_count": len(SCENARIO_DESCRIPTORS)
+                - len(
+                    [
+                        ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+                        ScenarioName.CLAIM_NOT_ID_PROOFED,
+                    ]
+                ),
                 "vbi_requested_absence_som_record_count": len(SCENARIO_DESCRIPTORS),
             },
         )
@@ -2243,6 +2280,7 @@ def process_fineos_extracts(
         )
 
     test_dataset.populate_scenario_data_payments(db_session)
+    test_dataset.populate_scenario_dataset_claims(db_session)
 
 
 def setup_common_env_variables(monkeypatch):
@@ -2277,12 +2315,14 @@ def assert_claim_state_for_scenarios(
         assert scenario_data_items is not None, f"No data found for scenario: {scenario_name}"
 
         for scenario_data in scenario_data_items:
-            employee = scenario_data.employee
+            claim = scenario_data.claim
             state_log = state_log_util.get_latest_state_log_in_flow(
-                employee, Flow.DELEGATED_CLAIMANT, db_session
+                claim, Flow.DELEGATED_CLAIM_VALIDATION, db_session
             )
 
-            assert state_log is not None
+            assert (
+                state_log is not None
+            ), f"No state found for scenario: {scenario_name}, {claim.state_logs}"
             assert (
                 state_log.end_state_id == end_state.state_id
             ), f"Unexpected claim state for scenario: {scenario_name}, expected: {end_state.state_description}, found: {state_log.end_state.state_description}"
