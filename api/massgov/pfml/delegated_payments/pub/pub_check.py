@@ -110,11 +110,6 @@ def create_check_file(
 
     if encountered_exception:
         logger.info("Not creating a check file because we encountered issues adding records")
-
-        # If a single check payment is not added to the payment, then we do not send any check
-        # payments to PUB so we need to count all of the check payments we attempted to add.
-        if count_incrementer:
-            [count_incrementer("failed_to_add_transaction_count") for _ in eligible_check_payments]
         return (None, None)
 
     ez_check_file = EzCheckFile(_get_ez_check_header())

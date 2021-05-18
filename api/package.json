@@ -1,0 +1,10 @@
+{
+  "name": "massgov-pfml-api-dev-tools",
+  "version": "1.0.0",
+  "description": "Some dev tools for the Mass PFML API",
+  "author": "",
+  "devDependencies": {
+    "@stoplight/spectral": "^5.8.1",
+    "expression-eval": "^4.0.0"
+  }
+}

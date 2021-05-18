@@ -27,7 +27,7 @@ Array [
       rel="noopener"
       target="_blank"
     >
-      Certification of Your Serious Health Condition
+      Certification of a Serious Health Condition
     </a>
     .
   </p>,
@@ -143,7 +143,7 @@ Array [
       rel="noopener"
       target="_blank"
     >
-      Certification of Your Serious Health Condition
+      Certification of a Serious Health Condition
     </a>
     . Use your health care provider’s answers on the certification form to fill out some parts of the application.
   </p>,
@@ -310,7 +310,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "caregiver-relationship-link": <a
-              href="https://www.mass.gov/family-caring-leave-relationships"
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
               rel="noopener"
               target="_blank"
             />,
@@ -354,7 +354,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "caregiver-relationship-link": <a
-              href="https://www.mass.gov/family-caring-leave-relationships"
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
               rel="noopener"
               target="_blank"
             />,
@@ -398,7 +398,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "caregiver-relationship-link": <a
-              href="https://www.mass.gov/family-caring-leave-relationships"
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
               rel="noopener"
               target="_blank"
             />,
@@ -442,7 +442,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "caregiver-relationship-link": <a
-              href="https://www.mass.gov/family-caring-leave-relationships"
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
               rel="noopener"
               target="_blank"
             />,
@@ -504,7 +504,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "caregiver-relationship-link": <a
-              href="https://www.mass.gov/family-caring-leave-relationships"
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
               rel="noopener"
               target="_blank"
             />,
@@ -566,7 +566,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "caregiver-relationship-link": <a
-              href="https://www.mass.gov/family-caring-leave-relationships"
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
               rel="noopener"
               target="_blank"
             />,
@@ -610,7 +610,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "caregiver-relationship-link": <a
-              href="https://www.mass.gov/family-caring-leave-relationships"
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
               rel="noopener"
               target="_blank"
             />,

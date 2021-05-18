@@ -64,16 +64,6 @@ export const CreateAccount = (props) => {
         />
       </Alert>
       <Title>{t("pages.authCreateAccount.title")}</Title>
-      <p>
-        <Trans
-          i18nKey="pages.authCreateAccount.employerRedirect"
-          components={{
-            "employer-create-account-link": (
-              <a href={routes.employers.createAccount} />
-            ),
-          }}
-        />
-      </p>
       <InputText
         {...getFunctionalInputProps("username")}
         type="email"

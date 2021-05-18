@@ -1,5 +1,5 @@
-import { MockEmployerClaimBuilder, simulateEvents } from "../../test-utils";
 import LeaveDetails from "../../../src/components/employers/LeaveDetails";
+import { MockEmployerClaimBuilder } from "../../test-utils";
 import React from "react";
 import ReviewRow from "../../../src/components/ReviewRow";
 import { shallow } from "enzyme";
@@ -14,10 +14,6 @@ describe("LeaveDetails", () => {
 
   it("renders the component", () => {
     expect(wrapper).toMatchSnapshot();
-  });
-
-  it("does not render relationship question when claim is not for Care", () => {
-    expect(wrapper.exists("InputChoiceGroup")).toBe(false);
   });
 
   it("renders the emergency regs content when claim is for Bonding", () => {
@@ -52,40 +48,5 @@ describe("LeaveDetails", () => {
     expect(wrapper.find(ReviewRow).last().children().first().text()).toEqual(
       "—"
     );
-  });
-
-  describe("Caring Leave", () => {
-    const setup = () => {
-      const claim = new MockEmployerClaimBuilder()
-        .completed()
-        .caringLeaveReason()
-        .create();
-      const wrapper = shallow(<LeaveDetails claim={claim} />);
-      const { changeRadioGroup } = simulateEvents(wrapper);
-      return { changeRadioGroup, wrapper };
-    };
-
-    it("does not render relationship question when showCaringLeaveType flag is false", () => {
-      const { wrapper } = setup();
-      expect(wrapper.exists("InputChoiceGroup")).toBe(false);
-    });
-
-    it("renders relationship question when showCaringLeaveType flag is true", () => {
-      process.env.featureFlags = { showCaringLeaveType: true };
-      const { wrapper } = setup();
-      expect(wrapper).toMatchSnapshot();
-      expect(wrapper.exists("InputChoiceGroup")).toBe(true);
-    });
-
-    it("initially renders with the comment box hidden", () => {
-      const { wrapper } = setup();
-      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(false);
-    });
-
-    it("renders the comment box when user indicates the relationship is inaccurate ", () => {
-      const { wrapper, changeRadioGroup } = setup();
-      changeRadioGroup("relationshipAccuracy", "no");
-      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
-    });
   });
 });

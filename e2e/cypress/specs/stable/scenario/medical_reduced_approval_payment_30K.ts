@@ -51,7 +51,7 @@ describe("Submit medical application via the web portal: Adjudication Approval &
 
   it(
     "CSR rep will approve reduced medical application",
-    { retries: 0, baseUrl: getFineosBaseUrl() },
+    { baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();

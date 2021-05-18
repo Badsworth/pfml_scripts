@@ -22,7 +22,8 @@ export default class BenefitsApplicationsApi extends BaseApi {
   }
 
   get i18nPrefix() {
-    return "applications";
+    // TODO (CP-2077) Rename this to "applications"
+    return "claims";
   }
 
   /**

@@ -6,7 +6,6 @@ function render(customProps = {}) {
   const props = Object.assign(
     {
       children: "Field Label",
-      inputId: "foo",
     },
     customProps
   );
@@ -68,7 +67,6 @@ describe("FormLabel", () => {
       expect(hint).toMatchInlineSnapshot(`
         <span
           className="display-block line-height-sans-5 measure-5 usa-intro"
-          id="foo_hint"
         >
           Hint text
         </span>
@@ -83,7 +81,6 @@ describe("FormLabel", () => {
         expect(hint).toMatchInlineSnapshot(`
           <span
             className="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
-            id="foo_hint"
           >
             Hint text
           </span>

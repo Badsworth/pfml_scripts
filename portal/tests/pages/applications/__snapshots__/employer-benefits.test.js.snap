@@ -27,32 +27,27 @@ exports[`EmployerBenefits when the claim contains employer benefits data renders
           startDate="2021-01-01"
         />
         <p>
-          The employer-sponsored benefits you must report are:
+          Employer-sponsored benefits you must report are:
         </p>
         <ul
           className="usa-list"
         >
           <li>
-            Temporary disability insurance, for either short-term or long-term disability
+            Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off
+          </li>
+          <li>
+            Short-term disability insurance
           </li>
           <li>
             Permanent disability insurance
           </li>
           <li>
-            Family or medical leave benefits, such as a parental leave program
+            Family or medical leave insurance, such as a maternity leave policy
           </li>
         </ul>
-        <Trans
-          i18nKey="pages.claimsEmployerBenefits.hintBody"
-          tOptions={
-            Object {
-              "employer_fein": "12-3456789",
-            }
-          }
-        />
       </React.Fragment>
     }
-    label="Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?"
+    label="Will you use any employer-sponsored benefits from this employer during your PFML leave?"
     name="has_employer_benefits"
     onChange={[Function]}
     type="radio"
@@ -88,32 +83,27 @@ exports[`EmployerBenefits when the claim does not contain employer benefits data
           startDate="2021-01-01"
         />
         <p>
-          The employer-sponsored benefits you must report are:
+          Employer-sponsored benefits you must report are:
         </p>
         <ul
           className="usa-list"
         >
           <li>
-            Temporary disability insurance, for either short-term or long-term disability
+            Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off
+          </li>
+          <li>
+            Short-term disability insurance
           </li>
           <li>
             Permanent disability insurance
           </li>
           <li>
-            Family or medical leave benefits, such as a parental leave program
+            Family or medical leave insurance, such as a maternity leave policy
           </li>
         </ul>
-        <Trans
-          i18nKey="pages.claimsEmployerBenefits.hintBody"
-          tOptions={
-            Object {
-              "employer_fein": "12-3456789",
-            }
-          }
-        />
       </React.Fragment>
     }
-    label="Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?"
+    label="Will you use any employer-sponsored benefits from this employer during your PFML leave?"
     name="has_employer_benefits"
     onChange={[Function]}
     type="radio"

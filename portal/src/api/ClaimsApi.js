@@ -10,7 +10,8 @@ export default class ClaimsApi extends BaseApi {
   }
 
   get i18nPrefix() {
-    return "claims";
+    // TODO (CP-2077): Rename to "claims"
+    return "apiClaims";
   }
 
   /**

@@ -2,7 +2,6 @@
 
 exports[`Dropdown renders select field with list of options 1`] = `
 <select
-  aria-labelledby="Dropdown1_label Dropdown1_hint"
   className="usa-select maxw-mobile-lg"
   id="Dropdown1"
   name="field-name"

@@ -270,45 +270,20 @@ def get_other_income_issues(income: OtherIncome, index: int) -> List[Issue]:
     return issues
 
 
-def get_previous_leaves_other_reason_issues(application: Application) -> List[Issue]:
+def get_previous_leaves_issues(application: Application) -> List[Issue]:
     issues = []
 
-    if (
-        application.has_previous_leaves_other_reason
-        and len(list(application.previous_leaves_other_reason)) == 0
-    ):
+    if application.has_previous_leaves and len(list(application.previous_leaves)) == 0:
         issues.append(
             Issue(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
-                message="when has_previous_leaves_other_reason is true, previous_leaves_other_reason cannot be empty",
-                field="previous_leaves_other_reason",
+                message="when has_previous_leaves is true, previous_leaves cannot be empty",
+                field="previous_leaves",
             )
         )
     else:
-        for index, leave in enumerate(application.previous_leaves_other_reason, 0):
-            issues += get_previous_leave_issues(leave, index)
-
-    return issues
-
-
-def get_previous_leaves_same_reason_issues(application: Application) -> List[Issue]:
-    issues = []
-
-    if (
-        application.has_previous_leaves_same_reason
-        and len(list(application.previous_leaves_same_reason)) == 0
-    ):
-        issues.append(
-            Issue(
-                type=IssueType.required,
-                rule=IssueRule.conditional,
-                message="when has_previous_leaves_same_reason is true, previous_leaves_same_reason cannot be empty",
-                field="previous_leaves_same_reason",
-            )
-        )
-    else:
-        for index, leave in enumerate(application.previous_leaves_same_reason, 0):
+        for index, leave in enumerate(application.previous_leaves, 0):
             issues += get_previous_leave_issues(leave, index)
 
     return issues
@@ -468,8 +443,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
 
     issues += get_employer_benefits_issues(application)
     issues += get_other_incomes_issues(application)
-    issues += get_previous_leaves_other_reason_issues(application)
-    issues += get_previous_leaves_same_reason_issues(application)
+    issues += get_previous_leaves_issues(application)
 
     if require_other_leaves_fields:
         # TODO (CP-1674): Move these rules into the "always required" set once the

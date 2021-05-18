@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UploadDocsOptions renders document options for leave reason: Care for a Family Member null 1`] = `
+exports[`UploadDocsOptions renders document options for leave reason: Serious Health Condition - Employee Adoption 1`] = `
 Array [
   Object {
     "checked": false,
@@ -14,13 +14,13 @@ Array [
   },
   Object {
     "checked": false,
-    "label": "Certification of Your Family Member’s Serious Health Condition",
+    "label": "Certification of a Serious Health Condition",
     "value": "UPLOAD_CERTIFICATION",
   },
 ]
 `;
 
-exports[`UploadDocsOptions renders document options for leave reason: Child Bonding Adoption 1`] = `
+exports[`UploadDocsOptions renders document options for leave reason: Serious Health Condition - Employee Newborn 1`] = `
 Array [
   Object {
     "checked": false,
@@ -34,27 +34,7 @@ Array [
   },
   Object {
     "checked": false,
-    "label": "Proof of placement",
-    "value": "UPLOAD_CERTIFICATION",
-  },
-]
-`;
-
-exports[`UploadDocsOptions renders document options for leave reason: Child Bonding Newborn 1`] = `
-Array [
-  Object {
-    "checked": false,
-    "label": "Massachusetts driver’s license or ID",
-    "value": "UPLOAD_MASS_ID",
-  },
-  Object {
-    "checked": false,
-    "label": "Different identification documentation",
-    "value": "UPLOAD_ID",
-  },
-  Object {
-    "checked": false,
-    "label": "Proof of birth",
+    "label": "Certification of a Serious Health Condition",
     "value": "UPLOAD_CERTIFICATION",
   },
 ]
@@ -74,7 +54,7 @@ Array [
   },
   Object {
     "checked": false,
-    "label": "Certification of Your Serious Health Condition",
+    "label": "Certification of a Serious Health Condition",
     "value": "UPLOAD_CERTIFICATION",
   },
 ]

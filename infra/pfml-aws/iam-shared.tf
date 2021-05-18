@@ -105,9 +105,6 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "firehose:*",
       "kinesis:*",
 
-      # Allow Infra Admins to view resources associated with WAF ACL
-      "appsync:ListGraphqlApis",
-
       # Allow API team to deploy Step Functions, such as the DOR Import.
       "states:*",
 

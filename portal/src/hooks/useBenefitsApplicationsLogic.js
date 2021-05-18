@@ -23,7 +23,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   // if loadAll hasn't been called yet
   const [hasLoadedAll, setHasLoadedAll] = useState(false);
 
-  const applicationsApi = useMemo(() => new BenefitsApplicationsApi({ user }), [
+  const claimsApi = useMemo(() => new BenefitsApplicationsApi({ user }), [
     user,
   ]);
 
@@ -81,9 +81,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, warnings } = await applicationsApi.getClaim(
-        application_id
-      );
+      const { claim, warnings } = await claimsApi.getClaim(application_id);
 
       if (benefitsApplications.getItem(application_id)) {
         setBenefitsApplication(claim);
@@ -112,7 +110,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claims } = await applicationsApi.getClaims();
+      const { claims } = await claimsApi.getClaims();
 
       setBenefitsApplications(claims);
       setHasLoadedAll(true);
@@ -132,7 +130,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, errors, warnings } = await applicationsApi.updateClaim(
+      const { claim, errors, warnings } = await claimsApi.updateClaim(
         application_id,
         patchData
       );
@@ -143,7 +141,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       // the claim is updated in our state, to avoid overriding
       // the user's in-progress answers
       if (errors && errors.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues, "claims");
       }
 
       setBenefitsApplication(claim);
@@ -156,7 +154,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       // for situations like leave periods, where the API passes us back
       // a leave_period_id field for making subsequent updates.
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues, "claims");
       }
 
       const params = { claim_id: claim.application_id };
@@ -175,7 +173,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim } = await applicationsApi.completeClaim(application_id);
+      const { claim } = await claimsApi.completeClaim(application_id);
 
       setBenefitsApplication(claim);
       const context = { claim, user };
@@ -195,7 +193,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim } = await applicationsApi.createClaim();
+      const { claim } = await claimsApi.createClaim();
 
       addBenefitsApplication(claim);
 
@@ -216,7 +214,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim } = await applicationsApi.submitClaim(application_id);
+      const { claim } = await claimsApi.submitClaim(application_id);
 
       setBenefitsApplication(claim);
 
@@ -243,7 +241,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         claim,
         errors,
         warnings,
-      } = await applicationsApi.submitPaymentPreference(
+      } = await claimsApi.submitPaymentPreference(
         application_id,
         paymentPreferenceData
       );
@@ -252,14 +250,14 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       const issues = getRelevantIssues(errors, warnings, []);
 
       if (errors && errors.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues, "claims");
       }
 
       setBenefitsApplication(claim);
       setClaimWarnings(application_id, warnings);
 
       if (issues && issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues, "claims");
       }
 
       const context = { claim, user };

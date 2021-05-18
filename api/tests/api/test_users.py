@@ -373,66 +373,6 @@ def test_users_patch(client, user, auth_token, test_db_session):
     assert user.consented_to_data_sharing is True
 
 
-def test_users_convert_employer(client, user, employer_for_new_user, auth_token, test_db_session):
-    ein = employer_for_new_user.employer_fein
-    body = {"employer_fein": format_fein(ein)}
-    assert len(user.roles) == 0
-    response = client.post(
-        "v1/users/{}/convert_employer".format(user.user_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json=body,
-    )
-    response_body = response.get_json()
-    assert response.status_code == 201
-    assert response_body.get("data")["user_leave_administrators"] == [
-        {
-            "employer_dba": employer_for_new_user.employer_dba,
-            "employer_fein": format_fein(employer_for_new_user.employer_fein),
-            "employer_id": str(employer_for_new_user.employer_id),
-            "has_fineos_registration": False,
-            "has_verification_data": False,
-            "verified": False,
-        }
-    ]
-    assert response_body.get("data")["roles"] == [
-        {"role_description": "Employer", "role_id": Role.EMPLOYER.role_id,}
-    ]
-
-    assert len(user.roles) == 1
-    assert user.roles[0].role_id == Role.EMPLOYER.role_id
-    assert len(user.user_leave_administrators) == 1
-    assert user.user_leave_administrators[0].employer_id == employer_for_new_user.employer_id
-
-
-def test_users_convert_employer_bad_fein(client, user, auth_token):
-    body = {"employer_fein": "999999999"}
-    response = client.post(
-        "v1/users/{}/convert_employer".format(user.user_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json=body,
-    )
-    assert response.status_code == 400
-
-
-def test_users_unauthorized_convert_employer(
-    client, employer_for_new_user, auth_token, test_db_session
-):
-    user_2 = UserFactory.create()
-    assert len(user_2.user_leave_administrators) == 0
-    ein = employer_for_new_user.employer_fein
-    body = {"employer_fein": format_fein(ein)}
-    response = client.post(
-        "v1/users/{}/convert_employer".format(user_2.user_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json=body,
-    )
-
-    tests.api.validate_error_response(response, 403)
-
-    # test_db_session.refresh(user_2)
-    assert len(user_2.user_leave_administrators) == 0
-
-
 def test_users_unauthorized_patch(client, user, auth_token, test_db_session):
     user_2 = UserFactory.create()
 

@@ -37,6 +37,7 @@ from massgov.pfml.db.models.applications import (
     Phone,
     PhoneType,
     PreviousLeave,
+    PreviousLeaveDeprecated,
     PreviousLeaveOtherReason,
     PreviousLeaveQualifyingReason,
     PreviousLeaveSameReason,
@@ -352,6 +353,10 @@ def update_from_request(
             set_other_incomes(db_session, body.other_incomes, application)
             continue
 
+        if key == "previous_leaves":
+            set_previous_leaves(db_session, body.previous_leaves, application, "previous_leaves")
+            continue
+
         if key == "previous_leaves_other_reason":
             set_previous_leaves(
                 db_session,
@@ -376,6 +381,7 @@ def update_from_request(
         if key == "phone":
             add_or_update_phone(db_session, body.phone, application)
             continue
+
         if isinstance(value, LookupEnum):
             lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
 
@@ -776,11 +782,14 @@ def set_previous_leaves(
     db_session: db.Session,
     api_previous_leaves: Optional[List[claims_common_io.PreviousLeave]],
     application: Application,
-    type: Literal["previous_leaves_same_reason", "previous_leaves_other_reason"],
+    # TODO (CP-2123): Remove 'previous_leaves' literal when we remove references to previous_leaves
+    type: Literal["previous_leaves_same_reason", "previous_leaves_other_reason", "previous_leaves"],
 ) -> None:
     previous_leave_type = {
         "previous_leaves_same_reason": PreviousLeaveSameReason,
         "previous_leaves_other_reason": PreviousLeaveOtherReason,
+        # TODO (CP-2123): Remove references to previous_leaves
+        "previous_leaves": PreviousLeaveDeprecated,
     }[type]
 
     if getattr(application, type):

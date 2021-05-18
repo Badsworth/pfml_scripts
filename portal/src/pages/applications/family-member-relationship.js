@@ -7,8 +7,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { Trans } from "react-i18next";
-import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -76,20 +74,7 @@ export const FamilyMemberRelationship = (props) => {
           value: RelationshipToCaregiver[key],
         }))}
         label={t("pages.claimsFamilyMemberRelationship.sectionLabel")}
-        hint={
-          <Trans
-            i18nKey="pages.claimsFamilyMemberRelationship.sectionHint"
-            components={{
-              "caregiver-relationship-link": (
-                <a
-                  target="_blank"
-                  rel="noopener"
-                  href={routes.external.massgov.caregiverRelationship}
-                />
-              ),
-            }}
-          />
-        }
+        hint={t("pages.claimsFamilyMemberRelationship.sectionHint")}
         type="radio"
       />
     </QuestionPage>

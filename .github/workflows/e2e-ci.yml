@@ -14,9 +14,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    env:
-      CYPRESS_INSTALL_BINARY: 0
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+    env: { CYPRESS_INSTALL_BINARY: 0 }
     steps:
       - uses: actions/checkout@v2
       - name: Setup Node
@@ -28,28 +26,3 @@ jobs:
         run: npm run lint:ci
       - name: "Simulation Tests"
         run: npm run test:unit
-
-  check-flood:
-    name: "Check Flood Bundling"
-    runs-on: ubuntu-latest
-    env:
-      CYPRESS_INSTALL_BINARY: 0
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
-      E2E_FLOOD_API_TOKEN: ${{ secrets.E2E_FLOOD_API_TOKEN }}
-      E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
-      E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
-      E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
-      E2E_FINEOS_USERS: ${{ secrets.E2E_FINEOS_USERS }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Node
-        uses: actions/setup-node@v1
-        with: { node-version: 12.x }
-      - name: "Install Dependencies"
-        run: npm ci
-      - name: "Build Flood Bundle"
-        run: E2E_ENVIRONMENT=performance npm run cli -- flood base --bundle
-      - name: "Attempt Flood Compilation"
-        run: node_modules/.bin/element compile data/flood/latest/index.ts
-      - name: "Check compiled script is runnable"
-        run: node index_compiled.js

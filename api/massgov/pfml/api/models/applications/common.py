@@ -393,9 +393,6 @@ class DocumentType(str, LookupEnum):
     approval_notice = "Approval Notice"
     request_for_more_information = "Request for More Information"
     denial_notice = "Denial Notice"
-    certification_form = (
-        "Certification Form"  # only used when Portal uploads a certification document
-    )
     own_serious_health_condition_form = "Own serious health condition form"
     pregnancy_maternity_form = "Pregnancy/Maternity form"
     child_bonding_evidence_form = "Child bonding evidence form"
@@ -417,19 +414,6 @@ class ContentType(str, LookupEnum):
     @classmethod
     def get_lookup_model(cls):
         return db_application_models.LkContentType
-
-
-# Gender I/O Types
-class Gender(str, LookupEnum):
-    woman = "Woman"
-    man = "Man"
-    non_binary = "Non-binary"
-    not_listed = "Gender not listed"
-    no_answer = "Prefer not to answer"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkGender
 
 
 # Phone I/O Types

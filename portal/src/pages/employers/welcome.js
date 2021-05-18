@@ -3,8 +3,6 @@ import Alert from "../../components/Alert";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
-import Link from "next/link";
-import NewTag from "../../components/NewTag";
 import { NewsBanner } from "../../components/employers/NewsBanner";
 import PropTypes from "prop-types";
 import React from "react";
@@ -72,7 +70,10 @@ export const Welcome = ({ appLogic, user }) => {
               <Heading level="2">
                 <Icon name="list" size={4} {...iconProps} />
                 {t("pages.employersWelcome.viewApplicationsTitle")}
-                <NewTag />
+                {t("chars.nbsp")}
+                <span className="usa-tag radius-md margin-left-05">
+                  {t("pages.employersWelcome.newTag")}
+                </span>
               </Heading>
               <p>
                 <Trans
@@ -133,14 +134,18 @@ export const Welcome = ({ appLogic, user }) => {
               <Heading level="2">
                 {t("pages.employersWelcome.settingsTitle")}
               </Heading>
-              <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05">
-                <li>
-                  <Link href={routes.employers.organizations}>
-                    <a>{t("pages.employersWelcome.settingsLink")}</a>
-                  </Link>
-                  <NewTag />
-                </li>
-              </ul>
+              <Trans
+                i18nKey="pages.employersWelcome.settingsLinks"
+                components={{
+                  ul: (
+                    <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05" />
+                  ),
+                  li: <li />,
+                  "your-organizations-link": (
+                    <a href={routes.employers.organizations} />
+                  ),
+                }}
+              />
             </React.Fragment>
           )}
           <Heading level="2">

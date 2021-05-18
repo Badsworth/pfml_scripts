@@ -15,7 +15,7 @@ import convertMinutesToHours from "../utils/convertMinutesToHours";
  * @param {string} locale - language code
  * @returns {string} formatted value
  */
-export default function formatValue(value, format, locale) {
+export default function (value, format, locale) {
   if (format === "currency") {
     return formatCurrency(value, locale);
   } else if (format === "ein") {

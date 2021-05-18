@@ -1,5 +1,5 @@
 import BenefitsApplication, {
-  BenefitsApplicationStatus,
+  ClaimStatus,
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
 import Document, { DocumentType } from "../../models/Document";
@@ -239,10 +239,7 @@ export const Checklist = (props) => {
     // context has to be a string
     let context = String(stepGroup.number);
 
-    if (
-      stepGroup.number === 1 &&
-      claim.status === BenefitsApplicationStatus.submitted
-    ) {
+    if (stepGroup.number === 1 && claim.status === ClaimStatus.submitted) {
       // Description for the first part changes after it's been confirmed
       context += "_submitted";
     }

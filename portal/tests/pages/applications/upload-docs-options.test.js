@@ -33,20 +33,16 @@ describe("UploadDocsOptions", () => {
 
     const claims = [
       new MockBenefitsApplicationBuilder()
-        .completed()
         .medicalLeaveReason()
+        .completed()
         .create(),
       new MockBenefitsApplicationBuilder()
-        .completed()
-        .caringLeaveReason()
-        .create(),
-      new MockBenefitsApplicationBuilder()
-        .completed()
         .bondingBirthLeaveReason()
+        .completed()
         .create(),
       new MockBenefitsApplicationBuilder()
-        .completed()
         .bondingAdoptionLeaveReason()
+        .completed()
         .create(),
     ];
 

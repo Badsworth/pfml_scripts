@@ -21,14 +21,12 @@ class Document extends BaseModel {
 }
 
 /**
- * Enums for Document `document_type` field.  In the `certification` object, `certificationForm` is only used for uploads of certification forms; the API then sets the plan
- * proof based on leave reason.  The other `certification` types are used when we retrieve documents from FINEOS.
+ * Enums for Document `document_type` field
  * @enum {string}
  */
 export const DocumentType = {
   approvalNotice: "Approval Notice",
   certification: {
-    certificationForm: "Certification Form",
     [LeaveReason.care]: "Care for a family member form",
     [LeaveReason.bonding]: "Child bonding evidence form",
     [LeaveReason.medical]: "Own serious health condition form",

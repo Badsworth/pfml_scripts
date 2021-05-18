@@ -14,11 +14,7 @@ exports[`CaringLeaveAttestation renders the page 1`] = `
     <Trans
       components={
         Object {
-          "caregiver-relationship-link": <a
-            href="https://www.mass.gov/family-caring-leave-relationships"
-            rel="noopener"
-            target="_blank"
-          />,
+          "eligible-relationship-link": <a />,
         }
       }
       i18nKey="pages.claimsCaringLeaveAttestation.lead"

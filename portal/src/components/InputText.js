@@ -45,7 +45,6 @@ function InputText({ type = "text", ...props }) {
   const field = (
     <input
       autoComplete={props.autoComplete}
-      aria-labelledby={`${inputId}_label ${inputId}_hint`}
       className={fieldClasses}
       data-value-type={props.valueType}
       id={inputId}

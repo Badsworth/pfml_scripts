@@ -53,7 +53,6 @@ class Constants:
 
 class AddressValidationStep(Step):
     class Metrics(str, enum.Enum):
-        EXPERIAN_SEARCH_EXCEPTION_COUNT = "experian_search_exception_count"
         INVALID_EXPERIAN_FORMAT = "invalid_experian_format"
         INVALID_EXPERIAN_RESPONSE = "invalid_experian_response"
         MULTIPLE_EXPERIAN_MATCHES = "multiple_experian_matches"
@@ -111,7 +110,7 @@ class AddressValidationStep(Step):
                 message=Constants.MESSAGE_EXPERIAN_EXCEPTION_FORMAT.format(type(e).__name__),
                 db_session=self.db_session,
             )
-            self.increment(self.Metrics.EXPERIAN_SEARCH_EXCEPTION_COUNT)
+            self.increment("experian_search_exception_count")
             return None
 
         if response.result is None:

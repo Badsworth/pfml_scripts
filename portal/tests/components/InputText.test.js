@@ -58,9 +58,6 @@ describe("InputText", () => {
     expect(input1.prop("id")).toMatch(idRegex);
     expect(input1.prop("id")).not.toBe(input2.prop("id"));
     expect(label1.prop("inputId")).toBe(input1.prop("id"));
-    expect(input1.prop("aria-labelledby")).toBe(
-      `${input1.prop("id")}_label ${input1.prop("id")}_hint`
-    );
   });
 
   describe("when inputId prop is set", () => {
@@ -72,9 +69,6 @@ describe("InputText", () => {
 
       expect(input.prop("id")).toBe("my-unique-id");
       expect(label.prop("inputId")).toBe(input.prop("id"));
-      expect(input.prop("aria-labelledby")).toBe(
-        "my-unique-id_label my-unique-id_hint"
-      );
     });
   });
 

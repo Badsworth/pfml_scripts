@@ -37,11 +37,7 @@ function FormLabel({
 
   return (
     <React.Fragment>
-      <LabelElement
-        className={labelClasses}
-        htmlFor={props.inputId}
-        id={`${props.inputId}_label`}
-      >
+      <LabelElement className={labelClasses} htmlFor={props.inputId}>
         {props.children}
         {props.optionalText && (
           <span className="usa-hint text-base-dark text-normal">
@@ -50,11 +46,7 @@ function FormLabel({
         )}
       </LabelElement>
 
-      {props.hint && (
-        <span className={hintClasses} id={`${props.inputId}_hint`}>
-          {props.hint}
-        </span>
-      )}
+      {props.hint && <span className={hintClasses}>{props.hint}</span>}
 
       {props.example && <span className={exampleClasses}>{props.example}</span>}
 

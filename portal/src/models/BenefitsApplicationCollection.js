@@ -1,5 +1,5 @@
 import BaseCollection from "./BaseCollection";
-import { BenefitsApplicationStatus } from "./BenefitsApplication";
+import { ClaimStatus } from "./BenefitsApplication";
 
 /** @typedef {import('./BenefitsApplication').default} BenefitsApplication */
 
@@ -12,9 +12,7 @@ export default class BenefitsApplicationCollection extends BaseCollection {
    * @returns {BenefitsApplication[]} Returns all claims with an "Started" or "Submitted" status
    */
   get inProgress() {
-    return this.items.filter(
-      (item) => item.status !== BenefitsApplicationStatus.completed
-    );
+    return this.items.filter((item) => item.status !== ClaimStatus.completed);
   }
 
   /**

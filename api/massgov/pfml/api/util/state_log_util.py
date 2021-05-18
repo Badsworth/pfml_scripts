@@ -1,4 +1,3 @@
-import abc
 from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import datetime, timedelta
@@ -13,7 +12,6 @@ import massgov.pfml.db as db
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
-    Claim,
     Employee,
     LatestStateLog,
     LkFlow,
@@ -30,12 +28,11 @@ from massgov.pfml.payments.payments_util import ValidationContainer
 logger = logging.get_logger(__name__)
 
 # The types this state log supports querying for
-AssociatedModel = Union[Claim, Employee, Payment, ReferenceFile]
+AssociatedModel = Union[Employee, Payment, ReferenceFile]
 
 
 class AssociatedClass(Enum):
     EMPLOYEE = "employee"
-    CLAIM = "claim"
     PAYMENT = "payment"
     REFERENCE_FILE = "reference_file"
 
@@ -45,8 +42,6 @@ class AssociatedClass(Enum):
             return AssociatedClass.PAYMENT
         elif isinstance(associated_model, Employee):
             return AssociatedClass.EMPLOYEE
-        elif isinstance(associated_model, Claim):
-            return AssociatedClass.CLAIM
         elif isinstance(associated_model, ReferenceFile):
             return AssociatedClass.REFERENCE_FILE
 
@@ -54,139 +49,11 @@ class AssociatedClass(Enum):
     def get_associated_model(state_log: StateLog) -> Optional[AssociatedModel]:
         if state_log.associated_type == AssociatedClass.EMPLOYEE.value:
             return state_log.employee
-        elif state_log.associated_type == AssociatedClass.CLAIM.value:
-            return state_log.claim
         elif state_log.associated_type == AssociatedClass.PAYMENT.value:
             return state_log.payment
         elif state_log.associated_type == AssociatedClass.REFERENCE_FILE.value:
             return state_log.reference_file
         return None
-
-
-class QueryParamHelper(abc.ABC, metaclass=abc.ABCMeta):
-    """
-    Abstract base class for organizing and constructing common query params.
-
-    """
-
-    associated_model: AssociatedModel
-
-    def __init__(self, associated_model: AssociatedModel) -> None:
-        _raise_exception_if_associated_model_has_no_id(associated_model)
-        self.associated_model = associated_model
-
-    def get_associated_class(self) -> AssociatedClass:
-        return AssociatedClass.get_associated_type(self.associated_model)
-
-    @abc.abstractmethod
-    def get_associated_model_id(self) -> UUID:
-        pass
-
-    @abc.abstractmethod
-    def get_latest_filter_params(self) -> List[Any]:
-        pass
-
-    @abc.abstractmethod
-    def get_all_state_logs_for_model_filter_params(self) -> List[Any]:
-        pass
-
-    @abc.abstractmethod
-    def get_log_message(self) -> str:
-        pass
-
-    @abc.abstractmethod
-    def attach_model_to_state_log(self, state_log: StateLog) -> None:
-        pass
-
-
-class EmployeeQueryParamHelper(QueryParamHelper):
-    associated_model: Employee
-
-    def get_associated_model_id(self) -> UUID:
-        return cast(UUID, self.associated_model.employee_id)
-
-    def get_latest_filter_params(self) -> List[Any]:
-        return [LatestStateLog.employee_id == self.associated_model.employee_id]
-
-    def get_all_state_logs_for_model_filter_params(self) -> List[Any]:
-        return [StateLog.employee_id == self.associated_model.employee_id]
-
-    def get_log_message(self) -> str:
-        return f"Query - employee id: {self.get_associated_model_id()}"
-
-    def attach_model_to_state_log(self, state_log: StateLog) -> None:
-        state_log.employee = self.associated_model
-
-
-class PaymentQueryParamHelper(QueryParamHelper):
-    associated_model: Payment
-
-    def get_associated_model_id(self) -> UUID:
-        return self.associated_model.payment_id
-
-    def get_latest_filter_params(self) -> List[Any]:
-        return [LatestStateLog.payment_id == self.associated_model.payment_id]
-
-    def get_all_state_logs_for_model_filter_params(self) -> List[Any]:
-        return [StateLog.payment_id == self.associated_model.payment_id]
-
-    def get_log_message(self) -> str:
-        return f"Query - payment id: {self.get_associated_model_id()}"
-
-    def attach_model_to_state_log(self, state_log: StateLog) -> None:
-        state_log.payment = self.associated_model
-
-
-class ClaimQueryParamHelper(QueryParamHelper):
-    associated_model: Claim
-
-    def get_associated_model_id(self) -> UUID:
-        return self.associated_model.claim_id
-
-    def get_latest_filter_params(self) -> List[Any]:
-        return [LatestStateLog.claim_id == self.associated_model.claim_id]
-
-    def get_all_state_logs_for_model_filter_params(self) -> List[Any]:
-        return [StateLog.claim_id == self.associated_model.claim_id]
-
-    def get_log_message(self) -> str:
-        return f"Query - claim id: {self.get_associated_model_id()}"
-
-    def attach_model_to_state_log(self, state_log: StateLog) -> None:
-        state_log.claim = self.associated_model
-
-
-class ReferenceFileQueryParamHelper(QueryParamHelper):
-    associated_model: ReferenceFile
-
-    def get_associated_model_id(self) -> UUID:
-        return self.associated_model.reference_file_id
-
-    def get_latest_filter_params(self) -> List[Any]:
-        return [LatestStateLog.reference_file_id == self.associated_model.reference_file_id]
-
-    def get_all_state_logs_for_model_filter_params(self) -> List[Any]:
-        return [StateLog.reference_file_id == self.associated_model.reference_file_id]
-
-    def get_log_message(self) -> str:
-        return f"Query - reference_file_id: {self.get_associated_model_id()}"
-
-    def attach_model_to_state_log(self, state_log: StateLog) -> None:
-        state_log.reference_file = self.associated_model
-
-
-def build_query_param_helper(associated_model: AssociatedModel) -> QueryParamHelper:
-    if isinstance(associated_model, Employee):
-        return EmployeeQueryParamHelper(associated_model)
-
-    elif isinstance(associated_model, Claim):
-        return ClaimQueryParamHelper(associated_model)
-
-    elif isinstance(associated_model, Payment):
-        return PaymentQueryParamHelper(associated_model)
-
-    elif isinstance(associated_model, ReferenceFile):
-        return ReferenceFileQueryParamHelper(associated_model)
 
 
 def get_now() -> datetime:
@@ -239,14 +106,30 @@ def _create_state_log(
 
     messages = []
     try:
-        latest_query_params = []
+        latest_query_params = None
         if associated_model:
-            query_param_helper = build_query_param_helper(associated_model)
 
-            latest_query_params = query_param_helper.get_latest_filter_params()
+            _raise_exception_if_associated_model_has_no_id(associated_model)
 
-            query_param_helper.attach_model_to_state_log(state_log)
-            messages.append(query_param_helper.get_log_message())
+            latest_query_params = []
+            # Depending on whether it's a payment/employee/reference_file, need to setup
+            # the object and query params differently
+            if isinstance(associated_model, Payment):
+                state_log.payment = associated_model
+                latest_query_params.append(LatestStateLog.payment_id == associated_model.payment_id)
+                messages.append(f"Query - payment id: {associated_model.payment_id}")
+            elif isinstance(associated_model, Employee):
+                state_log.employee = associated_model
+                latest_query_params.append(
+                    LatestStateLog.employee_id == associated_model.employee_id
+                )
+                messages.append(f"Query - employee id: {associated_model.employee_id}")
+            elif isinstance(associated_model, ReferenceFile):
+                state_log.reference_file = associated_model
+                latest_query_params.append(
+                    LatestStateLog.reference_file_id == associated_model.reference_file_id
+                )
+                messages.append(f"Query - reference_file_id: {associated_model.reference_file_id}")
 
             # We also want the latest state log to be in the same flow and flow is attached to the states
             latest_query_params.append(LkState.flow_id == end_state.flow_id)
@@ -300,7 +183,6 @@ def _create_or_update_latest_state_log(
                 type(e),
                 extra={
                     "state_log_id": state_log.state_log_id or "Empty",
-                    "claim_id": state_log.claim_id or "Empty",
                     "payment_id": state_log.payment_id or "Empty",
                     "employee_id": state_log.employee_id or "Empty",
                     "reference_file_id": state_log.reference_file_id or "Empty",
@@ -327,7 +209,6 @@ def _create_or_update_latest_state_log(
 
         # Only one of the below models will not be None, but
         # they default to None anyways
-        latest_state_log.claim = state_log.claim
         latest_state_log.employee = state_log.employee
         latest_state_log.payment = state_log.payment
         latest_state_log.reference_file = state_log.reference_file
@@ -361,12 +242,24 @@ def create_state_log_without_associated_model(
 def get_latest_state_log_in_flow(
     associated_model: AssociatedModel, flow: LkFlow, db_session: db.Session
 ) -> Optional[StateLog]:
-    # Get params needed for latest state log query
-    query_param_helper = build_query_param_helper(associated_model)
-    filter_params = query_param_helper.get_latest_filter_params()
+    filter_params = [LkState.flow_id == flow.flow_id]
 
-    # Add the flow
-    filter_params.append(LkState.flow_id == flow.flow_id)
+    _raise_exception_if_associated_model_has_no_id(associated_model)
+
+    associated_model_id: Optional[UUID] = None
+    if isinstance(associated_model, Employee):
+        filter_params.append(LatestStateLog.employee_id == associated_model.employee_id)
+        # TODO: API-1376 changed payment_id and reference_file_id types to PostgreSQLUUID. Changing
+        # employee_id to PostgreSQLUUID from UUID is a more involved change since so many places in
+        # the codebase use that value and we'll have a cascade of type annotation changes. Delaying
+        # that change until later in favor of getting the hotfix in API-1376 out the door.
+        associated_model_id = cast(UUID, associated_model.employee_id)
+    elif isinstance(associated_model, Payment):
+        filter_params.append(LatestStateLog.payment_id == associated_model.payment_id)
+        associated_model_id = associated_model.payment_id
+    elif isinstance(associated_model, ReferenceFile):
+        filter_params.append(LatestStateLog.reference_file_id == associated_model.reference_file_id)
+        associated_model_id = associated_model.reference_file_id
 
     latest_state_log: Optional[StateLog] = (
         db_session.query(StateLog)
@@ -378,7 +271,7 @@ def get_latest_state_log_in_flow(
     logger.debug(
         "Latest state log flow query result - associated class: %s, associated model id: %s, flow state: %s (%s), id: %s",
         AssociatedClass.get_associated_type(associated_model).value,
-        query_param_helper.get_associated_model_id(),
+        associated_model_id,
         flow.flow_description,
         flow.flow_id,
         ("None" if not latest_state_log else latest_state_log.state_log_id),
@@ -390,12 +283,24 @@ def get_latest_state_log_in_flow(
 def get_latest_state_log_in_end_state(
     associated_model: AssociatedModel, end_state: LkState, db_session: db.Session,
 ) -> Optional[StateLog]:
-    # Get params needed for latest state log query
-    query_param_helper = build_query_param_helper(associated_model)
-    filter_params = query_param_helper.get_latest_filter_params()
+    filter_params = [StateLog.end_state_id == end_state.state_id]
 
-    # Also filter on the end state ID
-    filter_params.append(StateLog.end_state_id == end_state.state_id)
+    _raise_exception_if_associated_model_has_no_id(associated_model)
+
+    associated_model_id: Optional[UUID] = None
+    if isinstance(associated_model, Employee):
+        filter_params.append(LatestStateLog.employee_id == associated_model.employee_id)
+        # TODO: API-1376 changed payment_id and reference_file_id types to PostgreSQLUUID. Changing
+        # employee_id to PostgreSQLUUID from UUID is a more involved change since so many places in
+        # the codebase use that value and we'll have a cascade of type annotation changes. Delaying
+        # that change until later in favor of getting the hotfix in API-1376 out the door.
+        associated_model_id = cast(UUID, associated_model.employee_id)
+    elif isinstance(associated_model, Payment):
+        filter_params.append(LatestStateLog.payment_id == associated_model.payment_id)
+        associated_model_id = associated_model.payment_id
+    elif isinstance(associated_model, ReferenceFile):
+        filter_params.append(LatestStateLog.reference_file_id == associated_model.reference_file_id)
+        associated_model_id = associated_model.reference_file_id
 
     # Example query (for employee scenario)
     #
@@ -409,7 +314,7 @@ def get_latest_state_log_in_end_state(
     logger.debug(
         "Latest state log query result - associated class: %s, associated model id: %s, end state: %s (%s), id: %s",
         AssociatedClass.get_associated_type(associated_model).value,
-        query_param_helper.get_associated_model_id(),
+        associated_model_id,
         end_state.state_description,
         end_state.state_id,
         ("None" if not latest_state_log else latest_state_log.state_log_id),
@@ -471,12 +376,16 @@ def get_all_latest_state_logs_regardless_of_associated_class(
 def has_been_in_end_state(
     associated_model: AssociatedModel, db_session: db.Session, end_state: LkState
 ) -> bool:
-    # Get the query params to filter state logs to the ones specific to this model
-    query_param_helper = build_query_param_helper(associated_model)
-    filter_params = query_param_helper.get_all_state_logs_for_model_filter_params()
+    filter_params = [StateLog.end_state_id == end_state.state_id]
 
-    # Filter to just the state log we want to check
-    filter_params.append(StateLog.end_state_id == end_state.state_id)
+    _raise_exception_if_associated_model_has_no_id(associated_model)
+
+    if isinstance(associated_model, Employee):
+        filter_params.append(StateLog.employee_id == associated_model.employee_id)
+    elif isinstance(associated_model, Payment):
+        filter_params.append(StateLog.payment_id == associated_model.payment_id)
+    elif isinstance(associated_model, ReferenceFile):
+        filter_params.append(StateLog.reference_file_id == associated_model.reference_file_id)
 
     # Query is effectively (for an employee):
     # SELECT count(*) FROM state_log
@@ -628,8 +537,6 @@ def process_state(
 def _raise_exception_if_associated_model_has_no_id(associated_model: AssociatedModel) -> None:
     if isinstance(associated_model, Employee) and associated_model.employee_id is None:
         raise ValueError("Employee model associated with StateLog has no employee_id")
-    elif isinstance(associated_model, Claim) and associated_model.claim_id is None:
-        raise ValueError("Claim model associated with StateLog has no claim_id")
     elif isinstance(associated_model, Payment) and associated_model.payment_id is None:
         raise ValueError("Payment model associated with StateLog has no payment_id")
     elif isinstance(associated_model, ReferenceFile) and associated_model.reference_file_id is None:

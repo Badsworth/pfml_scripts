@@ -108,21 +108,12 @@ describe("useEmployersLogic", () => {
       expect(employersLogic.loadClaim).toBeInstanceOf(Function);
     });
 
-    it("makes call to retrieve claim", async () => {
-      const secondClaimAbsenceId = "mock-fineos-absence-id-2";
-
+    it("returns claim data", async () => {
       await act(async () => {
         await employersLogic.loadClaim(absenceId);
       });
 
       expect(getClaimMock).toHaveBeenCalledWith(absenceId);
-
-      await act(async () => {
-        await employersLogic.loadClaim(secondClaimAbsenceId);
-      });
-
-      expect(getClaimMock).toHaveBeenCalledWith(secondClaimAbsenceId);
-      expect(getClaimMock).toHaveBeenCalledTimes(2);
     });
 
     describe("errors", () => {

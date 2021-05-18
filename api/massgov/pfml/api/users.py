@@ -7,14 +7,9 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
-from massgov.pfml.api.models.users.requests import (
-    UserConvertEmployerRequest,
-    UserCreateRequest,
-    UserUpdateRequest,
-)
+from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
 from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
 from massgov.pfml.api.services.user_rules import (
-    get_users_convert_employer_issues,
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
@@ -22,8 +17,7 @@ from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.db.models.employees import Employer, Role, User
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
-from massgov.pfml.util.strings import sanitize_fein
-from massgov.pfml.util.users import initial_link_user_leave_admin, register_user
+from massgov.pfml.util.users import register_user
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -105,53 +99,6 @@ def users_get(user_id):
     ensure(READ, u)
     return response_util.success_response(
         message="Successfully retrieved user", data=user_response(u),
-    ).to_api_response()
-
-
-def users_convert_employer(user_id):
-    """This endpoint converts the user specified by the user_id to an employer"""
-    body = UserConvertEmployerRequest.parse_obj(connexion.request.json)
-
-    with app.db_session() as db_session:
-        updated_user = get_or_404(db_session, User, user_id)
-        ensure(EDIT, updated_user)
-
-        employer_fein = sanitize_fein(body.employer_fein)
-        employer = (
-            db_session.query(Employer).filter(Employer.employer_fein == employer_fein).one_or_none()
-        )
-        if not employer or not employer.fineos_employer_id:
-            logger.info("users_convert failure - Employer not found!")
-            return response_util.error_response(
-                status_code=BadRequest,
-                message="Invalid FEIN",
-                errors=[
-                    response_util.custom_issue(
-                        type=response_util.IssueType.require_employer,
-                        message="Invalid FEIN",
-                        field="employer_fein",
-                    )
-                ],
-                data={},
-            ).to_api_response()
-
-        # verify that we can convert the account
-        employer_issues = get_users_convert_employer_issues(updated_user, employer, db_session)
-        if employer_issues:
-            logger.info("users_patch failure - Couldn't convert user to employer account")
-            return response_util.error_response(
-                status_code=BadRequest,
-                message="Couldn't convert user to employer account!",
-                errors=employer_issues,
-                data={},
-            ).to_api_response()
-        else:
-            initial_link_user_leave_admin(db_session, updated_user, employer)
-            db_session.commit()
-            db_session.refresh(updated_user)
-
-    return response_util.success_response(
-        message="Successfully converted user", status_code=201, data=user_response(updated_user),
     ).to_api_response()
 
 

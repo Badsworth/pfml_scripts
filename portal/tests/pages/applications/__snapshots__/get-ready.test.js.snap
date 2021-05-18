@@ -251,7 +251,7 @@ exports[`GetReady renders get ready content 5`] = `
     href="https://www.mass.gov/medical-leave-form"
     key="1"
   >
-    Certification of Your Serious Health Condition
+    PFML Certification of a Serious Health Condition
   </a>
   .
 </p>

@@ -34,25 +34,21 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
     data-test="employee_name"
     scope="row"
   >
-    <Link
+    <a
       href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
     >
-      <a>
-        Jane Doe
-      </a>
-    </Link>
+      Jane Doe
+    </a>
   </th>
   <td
     data-label="Application ID"
     key="fineos_absence_id"
   >
-    <Link
+    <a
       href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
     >
-      <a>
-        NTN-111-ABS-01
-      </a>
-    </Link>
+      NTN-111-ABS-01
+    </a>
   </td>
   <td
     data-label="Organization"

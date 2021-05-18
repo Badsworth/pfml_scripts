@@ -4,8 +4,6 @@ exports[`FormLabel when component prop is set to label renders label with expect
 <Fragment>
   <label
     className="usa-label text-bold font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
-    htmlFor="foo"
-    id="foo_label"
   >
     Field Label
   </label>
@@ -16,8 +14,6 @@ exports[`FormLabel when component prop is set to legend renders legend with expe
 <Fragment>
   <legend
     className="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
-    htmlFor="foo"
-    id="foo_label"
   >
     Field Label
   </legend>
@@ -28,8 +24,6 @@ exports[`FormLabel when the type prop isn't set renders label with expected clas
 <Fragment>
   <label
     className="usa-label text-bold font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
-    htmlFor="foo"
-    id="foo_label"
   >
     Field Label
   </label>

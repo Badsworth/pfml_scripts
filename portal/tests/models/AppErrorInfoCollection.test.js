@@ -62,7 +62,7 @@ describe("AppErrorInfoCollection", () => {
           field,
           message: (
             <Trans
-              i18nKey="errors.applications.fineos_case_creation_issues"
+              i18nKey="errors.claims.fineos_case_creation_issues"
               components={{
                 "mass-gov-form-link": <a href="test/link" />,
               }}

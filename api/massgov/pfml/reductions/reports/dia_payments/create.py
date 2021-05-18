@@ -54,7 +54,6 @@ class DFMLReportRow(BaseModel):
     end_date: Optional[date] = Field(None, alias=dia.Constants.END_DATE_FIELD)
     weekly_amount: Optional[Decimal] = Field(None, alias=dia.Constants.WEEKLY_AMOUNT_FIELD)
     award_created_date: Optional[date] = Field(None, alias=dia.Constants.AWARD_CREATED_DATE_FIELD)
-    termination_date: Optional[date] = Field(None, alias=dia.Constants.TERMINATION_DATE_FIELD)
 
     # with additional data about existing claims
     absence_case_id: Optional[str] = Field(None, alias="ABSENCE_CASE_ID")
@@ -88,7 +87,6 @@ def _make_report_row_from_payment(row_data: DFMLReportRowData) -> DFMLReportRow:
         end_date=payment.end_date,
         weekly_amount=payment.weekly_amount,
         award_created_date=payment.award_created_date,
-        termination_date=payment.termination_date,
     )
 
     if claim:

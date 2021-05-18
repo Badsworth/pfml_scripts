@@ -36,18 +36,22 @@ export const UploadDocsOptions = (props) => {
       [ReasonQualifier.fosterCare]: "bonding_adopt_foster",
     },
     [LeaveReason.medical]: "medical",
-    [LeaveReason.care]: "care",
   };
-  const certChoiceLabel =
-    leaveReason === LeaveReason.bonding
-      ? contentContext[leaveReason][reasonQualifier]
-      : contentContext[leaveReason];
+  let certChoiceLabel;
+  switch (leaveReason) {
+    case LeaveReason.medical:
+      certChoiceLabel = contentContext[leaveReason];
+      break;
+    case LeaveReason.bonding:
+      certChoiceLabel = contentContext[leaveReason][reasonQualifier];
+      break;
+  }
 
   const handleSave = () => {
     if (!upload_docs_options) {
       const appErrorInfo = new AppErrorInfo({
         field: "upload_docs_options",
-        message: t("errors.applications.upload_docs_options.required"),
+        message: t("errors.claims.upload_docs_options.required"),
         type: "required",
       });
 

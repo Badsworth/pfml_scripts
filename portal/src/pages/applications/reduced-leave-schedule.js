@@ -18,7 +18,6 @@ import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
 import findKeyByValue from "../../utils/findKeyByValue";
-import routes from "../../routes";
 import spreadMinutesOverWeek from "../../utils/spreadMinutesOverWeek";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -123,28 +122,9 @@ export const ReducedLeaveSchedule = (props) => {
     >
       {(claim.isMedicalLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
-          <Trans
-            i18nKey="pages.claimsReducedLeaveSchedule.needDocumentAlert"
-            components={{
-              "healthcare-provider-form-link": (
-                <a
-                  target="_blank"
-                  rel="noopener"
-                  href={routes.external.massgov.healthcareProviderForm}
-                />
-              ),
-              "caregiver-certification-form-link": (
-                <a
-                  target="_blank"
-                  rel="noopener"
-                  href={routes.external.massgov.caregiverCertificationForm}
-                />
-              ),
-            }}
-            tOptions={{
-              context: contentReasonContext,
-            }}
-          />
+          {t("pages.claimsReducedLeaveSchedule.needDocumentAlert", {
+            context: contentReasonContext,
+          })}
         </Alert>
       )}
 

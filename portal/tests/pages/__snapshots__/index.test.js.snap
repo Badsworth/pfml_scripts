@@ -28,11 +28,8 @@ exports[`Index does show employer information when employerShowSelfRegistrationF
     <Heading
       level="2"
     >
-      Choose an account type
+      Create an account
     </Heading>
-    <p>
-      You can create an account as a worker or as an employer.
-    </p>
     <div
       className="grid-row grid-gap"
     >
@@ -48,13 +45,13 @@ exports[`Index does show employer information when employerShowSelfRegistrationF
             Workers
           </Heading>
           <p>
-            Apply for Paid Family and Medical Leave.
+            You can now apply for Paid Family and Medical Leave.
           </p>
           <ButtonLink
             className="margin-top-3"
             href="/create-account"
           >
-            Create a worker account
+            Create an account
           </ButtonLink>
           <div
             className="margin-top-2 text-dark text-bold"
@@ -84,7 +81,7 @@ exports[`Index does show employer information when employerShowSelfRegistrationF
             Employers
           </Heading>
           <p>
-            Manage leave for your team.
+            Register now so you can manage leave for your team.
           </p>
           <ButtonLink
             className="margin-top-3"
@@ -156,11 +153,8 @@ exports[`Index renders landing page content 1`] = `
     <Heading
       level="2"
     >
-      Choose an account type
+      Create an account
     </Heading>
-    <p>
-      You can create an account as a worker or as an employer.
-    </p>
     <div
       className="grid-row grid-gap"
     >
@@ -176,13 +170,13 @@ exports[`Index renders landing page content 1`] = `
             Workers
           </Heading>
           <p>
-            Apply for Paid Family and Medical Leave.
+            You can now apply for Paid Family and Medical Leave.
           </p>
           <ButtonLink
             className="margin-top-3"
             href="/create-account"
           >
-            Create a worker account
+            Create an account
           </ButtonLink>
           <div
             className="margin-top-2 text-dark text-bold"

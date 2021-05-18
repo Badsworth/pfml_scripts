@@ -68,7 +68,6 @@ def handler(
         assert "ein" in cognito_metadata
 
         logger.info("Creating a leave administrator account", extra=log_attributes)
-
         user = leave_admin_create(
             db_session=db_session,
             auth_id=cognito_user_attrs["sub"],

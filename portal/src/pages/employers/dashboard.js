@@ -3,7 +3,6 @@ import Alert from "../../components/Alert";
 import ClaimCollection from "../../models/ClaimCollection";
 import Details from "../../components/Details";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
-import Link from "next/link";
 import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
 import PaginationSummary from "../../components/PaginationSummary";
@@ -250,18 +249,16 @@ const ClaimTableRows = (props) => {
       case "created_at":
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
+        // TODO (EMPLOYER-1178) Use <Link> for client-side navigation
         return isEmployerRegisteredInFineos ? (
-          <Link href={claimRoute}>
-            <a>{get(claim, columnKey)}</a>
-          </Link>
+          <a href={claimRoute}>{get(claim, columnKey)}</a>
         ) : (
           get(claim, columnKey)
         );
       case "employee_name":
+        // TODO (EMPLOYER-1178) Use <Link> for client-side navigation
         return isEmployerRegisteredInFineos ? (
-          <Link href={claimRoute}>
-            <a>{fullName}</a>
-          </Link>
+          <a href={claimRoute}>{fullName}</a>
         ) : (
           fullName
         );

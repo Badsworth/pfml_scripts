@@ -3,7 +3,7 @@ import {
   PaymentPreferenceMethod,
 } from "../../src/models/PaymentPreference";
 import BenefitsApplication, {
-  BenefitsApplicationStatus,
+  ClaimStatus,
   ContinuousLeavePeriod,
   DurationBasis,
   EmploymentStatus,
@@ -301,7 +301,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
     super();
     this.claimAttrs = {
       application_id: "mock_application_id",
-      status: BenefitsApplicationStatus.started,
+      status: ClaimStatus.started,
     };
   }
 
@@ -546,7 +546,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    */
   completed() {
     this.complete();
-    set(this.claimAttrs, "status", BenefitsApplicationStatus.completed);
+    set(this.claimAttrs, "status", ClaimStatus.completed);
 
     return this;
   }
@@ -577,7 +577,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   submitted() {
     this.part1Complete();
     this.absenceId();
-    set(this.claimAttrs, "status", BenefitsApplicationStatus.submitted);
+    set(this.claimAttrs, "status", ClaimStatus.submitted);
 
     return this;
   }

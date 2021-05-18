@@ -69,13 +69,8 @@ class PubACHResponseGenerator:
         is_return = scenario_descriptor.prenoted
         is_prenote = not is_return
 
-        pub_individual_id = (
-            payment.pub_eft.pub_individual_id if is_prenote else payment.pub_individual_id
-        )
-        if pub_individual_id and (
-            scenario_descriptor.pub_ach_return_payment_id_not_found
-            or scenario_descriptor.pub_ach_return_prenote_payment_id_not_found
-        ):
+        pub_individual_id = payment.pub_individual_id
+        if pub_individual_id and scenario_descriptor.pub_ach_return_payment_id_not_found:
             pub_individual_id = (
                 pub_individual_id * 100
             )  # We might want to consider a different approach for this to avoid an overlap if we add a lot of scenarios. Maybe make it negative?

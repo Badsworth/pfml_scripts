@@ -1,5 +1,5 @@
 import BenefitsApplication, {
-  BenefitsApplicationStatus,
+  ClaimStatus,
 } from "../../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import { uniqueId } from "lodash";
@@ -15,7 +15,7 @@ export const completeClaimMock = jest.fn((application_id) =>
     status: 200,
     claim: new BenefitsApplication({
       application_id,
-      status: BenefitsApplicationStatus.completed,
+      status: ClaimStatus.completed,
     }),
     warnings: [],
   })
@@ -27,7 +27,7 @@ export const createClaimMock = jest.fn(() =>
     status: 201,
     claim: new BenefitsApplication({
       application_id: `mock-created-claim-application-id-${uniqueId()}`,
-      status: BenefitsApplicationStatus.started,
+      status: ClaimStatus.started,
     }),
     warnings: [],
   })
@@ -40,7 +40,7 @@ export const getClaimMock = jest.fn(() =>
     status: 200,
     claim: new BenefitsApplication({
       application_id: getClaimMockApplicationId,
-      status: BenefitsApplicationStatus.started,
+      status: ClaimStatus.started,
     }),
     warnings: [],
   })
@@ -53,11 +53,11 @@ export const getClaimsMock = jest.fn(() =>
     claims: new BenefitsApplicationCollection([
       new BenefitsApplication({
         application_id: getClaimMockApplicationId,
-        status: BenefitsApplicationStatus.started,
+        status: ClaimStatus.started,
       }),
       new BenefitsApplication({
         application_id: "mock-application-id-2",
-        status: BenefitsApplicationStatus.started,
+        status: ClaimStatus.started,
       }),
     ]),
     warnings: [],
@@ -70,7 +70,7 @@ export const updateClaimMock = jest.fn((application_id, patchData) =>
     status: 200,
     claim: new BenefitsApplication({
       application_id,
-      status: BenefitsApplicationStatus.started,
+      status: ClaimStatus.started,
       ...patchData,
     }),
     warnings: [],
@@ -83,7 +83,7 @@ export const submitClaimMock = jest.fn((application_id) =>
     status: 201,
     claim: new BenefitsApplication({
       application_id,
-      status: BenefitsApplicationStatus.submitted,
+      status: ClaimStatus.submitted,
     }),
     warnings: [],
   })

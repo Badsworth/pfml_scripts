@@ -12,9 +12,8 @@ const setup = (options = { hasEmployerBenefits: true }) => {
     ? new MockBenefitsApplicationBuilder()
         .continuous()
         .employerBenefit()
-        .employed()
         .create()
-    : new MockBenefitsApplicationBuilder().continuous().employed().create();
+    : new MockBenefitsApplicationBuilder().continuous().create();
 
   const { appLogic, wrapper } = renderWithAppLogic(EmployerBenefits, {
     claimAttrs: claim,

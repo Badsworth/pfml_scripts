@@ -126,12 +126,10 @@ class LkGender(Base):
     __tablename__ = "lk_gender"
     gender_id = Column(Integer, primary_key=True, autoincrement=True)
     gender_description = Column(Text)
-    fineos_gender_description = Column(Text, nullable=True)
 
-    def __init__(self, gender_id, gender_description, fineos_gender_description):
+    def __init__(self, gender_id, gender_description):
         self.gender_id = gender_id
         self.gender_description = gender_description
-        self.fineos_gender_description = fineos_gender_description
 
 
 class LkOccupation(Base):
@@ -464,6 +462,9 @@ class Employee(Base):
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
+    mailing_address_id = deferred(
+        Column(UUID(as_uuid=True).evaluates_none(), ForeignKey("address.address_id"), index=True,)
+    )
     payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     ctr_vendor_customer_code = Column(Text)
     ctr_address_pair_id = Column(
@@ -571,7 +572,6 @@ class Claim(Base):
     fineos_absence_status = relationship(LkAbsenceStatus)
     employee = relationship("Employee", back_populates="claims")
     employer = relationship("Employer", back_populates="claims")
-    state_logs = relationship("StateLog", back_populates="claim")
 
 
 class Payment(Base):
@@ -1060,7 +1060,6 @@ class StateLog(Base):
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
-    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True)
     prev_state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"))
     associated_type = Column(Text, index=True)
 
@@ -1071,7 +1070,6 @@ class StateLog(Base):
     payment = relationship("Payment", back_populates="state_logs")
     reference_file = relationship("ReferenceFile", back_populates="state_logs")
     employee = relationship("Employee", back_populates="state_logs")
-    claim = relationship("Claim", back_populates="state_logs")
     prev_state_log = relationship("StateLog", uselist=False, remote_side=state_log_id)
     import_log = cast("Optional[ImportLog]", relationship(ImportLog, foreign_keys=[import_log_id]))
 
@@ -1085,7 +1083,6 @@ class LatestStateLog(Base):
     )
     payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), index=True)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
-    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True)
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
@@ -1093,7 +1090,6 @@ class LatestStateLog(Base):
     state_log = relationship("StateLog")
     payment = relationship("Payment")
     employee = relationship("Employee")
-    claim = relationship("Claim")
     reference_file = relationship("ReferenceFile")
 
 
@@ -1143,7 +1139,6 @@ class DiaReductionPayment(Base):
     end_date = Column(Date)
     weekly_amount = Column(Numeric(asdecimal=True))
     award_created_date = Column(Date)
-    termination_date = Column(Date)
 
     created_at = Column(
         TIMESTAMP(timezone=True),
@@ -1598,12 +1593,11 @@ class MaritalStatus(LookupTable):
 
 class Gender(LookupTable):
     model = LkGender
-    column_names = ("gender_id", "gender_description", "fineos_gender_description")
-    WOMAN = LkGender(1, "Woman", "Female")
-    MAN = LkGender(2, "Man", "Male")
-    NONBINARY = LkGender(3, "Non-binary", "Neutral")
-    NOT_LISTED = LkGender(4, "Gender not listed", "Unknown")
-    NO_ANSWER = LkGender(5, "Prefer not to answer", "Not Provided")
+    column_names = ("gender_id", "gender_description")
+
+    FEMALE = LkGender(1, "Female")
+    MALE = LkGender(2, "Male")
+    OTHER = LkGender(3, "Other")
 
 
 class Occupation(LookupTable):
@@ -1680,8 +1674,6 @@ class Flow(LookupTable):
     DELEGATED_CLAIMANT = LkFlow(20, "Claimant")
     DELEGATED_PAYMENT = LkFlow(21, "Payment")
     DELEGATED_EFT = LkFlow(22, "EFT")
-    DELEGATED_CLAIM_VALIDATION = LkFlow(23, "Claim Validation")
-    ERRORED_PAYMENT_PEI_WRITEBACK = LkFlow(24, "Errored Payment PEI Writeback")
 
 
 class State(LookupTable):
@@ -2031,58 +2023,6 @@ class State(LookupTable):
 
     DELEGATED_PAYMENT_POST_PROCESSING_CHECK = LkState(
         163, "Delegated payment post processing check", Flow.DELEGATED_PAYMENT.flow_id
-    )
-
-    DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS = LkState(
-        164, "Claim extracted from FINEOS", Flow.DELEGATED_CLAIM_VALIDATION.flow_id
-    )
-    DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT = LkState(
-        165, "Add to Claim Extract Error Report", Flow.DELEGATED_CLAIM_VALIDATION.flow_id
-    )
-
-    ### States (171-179) used to send payment transaction statuses back to FINEOS
-    ###  without preventing us from receiving them again in subsequent extracts
-    ADD_ADDRESS_VALIDATION_ERROR_TO_FINEOS_WRITEBACK = LkState(
-        170,
-        "Add address validation error to FINEOS writeback",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
-    )
-    ADDRESS_VALIDATION_ERROR_FINEOS_WRITEBACK_SENT = LkState(
-        171,
-        "Address validation error FINEOS writeback sent",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
-    )
-    ADD_AUDIT_REJECT_TO_FINEOS_WRITEBACK = LkState(
-        172, "Add audit reject to FINEOS writeback", Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id
-    )
-    AUDIT_REJECT_FINEOS_WRITEBACK_SENT = LkState(
-        173, "Audit reject FINEOS writeback sent", Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id
-    )
-    ADD_AUTOMATED_VALIDATION_ERROR_TO_FINEOS_WRITEBACK = LkState(
-        174,
-        "Add automated validation error to FINEOS writeback",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
-    )
-    AUTOMATED_VALIDATION_ERROR_FINEOS_WRITEBACK_SENT = LkState(
-        175,
-        "Automated validation error FINEOS writeback sent",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
-    )
-    ADD_PENDING_PRENOTE_TO_FINEOS_WRITEBACK = LkState(
-        176, "Add pending prenote to FINEOS writeback", Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id
-    )
-    PENDING_PRENOTE_FINEOS_WRITEBACK_SENT = LkState(
-        177, "Pending prenote FINEOS writeback sent", Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id
-    )
-    ADD_PRENOTE_REJECTED_ERROR_TO_FINEOS_WRITEBACK = LkState(
-        178,
-        "Add prenote rejected error to FINEOS writeback",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
-    )
-    PRENOTE_REJECTED_ERROR_FINEOS_WRITEBACK_SENT = LkState(
-        179,
-        "Prenote rejected error FINEOS writeback sent",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
     )
 
 

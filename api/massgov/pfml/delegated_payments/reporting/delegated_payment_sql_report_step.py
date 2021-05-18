@@ -25,7 +25,6 @@ class ReportStep(Step):
     report_names: Iterable[ReportName]
 
     class Metrics(str, enum.Enum):
-        PROCESSED_REPORT_COUNT = "processed_report_count"
         REPORT_ERROR_COUNT = "report_error_count"
         REPORT_GENERATED_COUNT = "report_generated_count"
 
@@ -41,7 +40,6 @@ class ReportStep(Step):
     def run_step(self) -> None:
         report_names_str = ", ".join([r.value for r in self.report_names])
         expected_reports_count = len(list(self.report_names))
-        self.set_metrics({self.Metrics.PROCESSED_REPORT_COUNT: expected_reports_count})
 
         try:
             logger.info("Start generating %i reports: %s", expected_reports_count, report_names_str)

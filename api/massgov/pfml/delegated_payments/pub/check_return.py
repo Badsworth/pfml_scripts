@@ -25,8 +25,6 @@ class PaidStatus(enum.Enum):
 
 @dataclasses.dataclass
 class CheckPayment:
-    """A check payment response that was parsed from a line in the CSV return file."""
-
     line_number: int
     raw_line: str
     check_number: str

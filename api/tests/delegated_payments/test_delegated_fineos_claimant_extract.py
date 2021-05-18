@@ -10,7 +10,6 @@ import pytest
 import massgov.pfml.delegated_payments.delegated_fineos_claimant_extract as claimant_extract
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     BankAccountType,
@@ -22,6 +21,7 @@ from massgov.pfml.db.models.employees import (
     PrenoteState,
     ReferenceFileType,
     State,
+    StateLog,
 )
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
@@ -177,28 +177,27 @@ def test_run_step_happy_path(
     assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.PENDING_PRE_PUB.prenote_state_id
 
     # Confirm StateLogs
-    eft_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.DELEGATED_EFT_SEND_PRENOTE,
-        db_session=local_test_db_session,
-    )
-    assert len(eft_state_logs) == 1
-    assert eft_state_logs[0].import_log_id == 1
+    state_logs = local_test_db_session.query(StateLog).all()
 
-    claim_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        associated_class=state_log_util.AssociatedClass.CLAIM,
-        end_state=State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
-        db_session=local_test_db_session,
-    )
-    assert len(claim_state_logs) == 1
-    assert claim_state_logs[0].import_log_id == 1
-    assert claim_state_logs[0].claim_id == claim.claim_id
+    updated_employee_state_log_count = 2
+
+    assert len(state_logs) == updated_employee_state_log_count
+    assert len(updated_employee.state_logs) == updated_employee_state_log_count
+
+    # Confirm 1 state log for DELEGATED_EFT flow
+    for state_log in updated_employee.state_logs:
+        assert state_log.end_state_id in [
+            State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id,
+            State.DELEGATED_EFT_SEND_PRENOTE.state_id,
+        ]
+
+        assert state_log.import_log_id == 1
 
     # Confirm metrics added to import log
     import_log = local_test_db_session.query(ImportLog).first()
     import_log_report = json.loads(import_log.report)
     assert import_log_report["evidence_not_id_proofed_count"] == 3
-    assert import_log_report["valid_claim_count"] == 1
+    assert import_log_report["valid_claimant_count"] == 1
 
     employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -248,24 +247,13 @@ def test_run_step_existing_approved_eft_info(
     assert pub_efts[0].pub_eft.account_nbr == "123546789"
     assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
     assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.APPROVED.prenote_state_id
-
     # We should not have added it to the EFT state flow
     # and there shouldn't have been any errors
-    eft_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.DELEGATED_EFT_SEND_PRENOTE,
-        db_session=local_test_db_session,
+    assert len(updated_employee.state_logs) == 1
+    assert (
+        updated_employee.state_logs[0].end_state_id
+        == State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id
     )
-    assert len(eft_state_logs) == 0
-
-    claim_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        associated_class=state_log_util.AssociatedClass.CLAIM,
-        end_state=State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
-        db_session=local_test_db_session,
-    )
-    assert len(claim_state_logs) == 1
-    assert claim_state_logs[0].import_log_id == 1
-    assert claim_state_logs[0].claim.employee_id == updated_employee.employee_id
 
 
 def test_run_step_existing_rejected_eft_info(
@@ -313,25 +301,14 @@ def test_run_step_existing_rejected_eft_info(
     assert pub_efts[0].pub_eft.account_nbr == "123546789"
     assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
     assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id
-
     # We should not have added it to the EFT state flow
-    eft_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.DELEGATED_EFT_SEND_PRENOTE,
-        db_session=local_test_db_session,
+    # and there would have been a single error
+    assert len(updated_employee.state_logs) == 1
+    assert (
+        updated_employee.state_logs[0].end_state_id
+        == State.DELEGATED_CLAIMANT_ADD_TO_CLAIMANT_EXTRACT_ERROR_REPORT.state_id
     )
-    assert len(eft_state_logs) == 0
-
-    # and there would have been a single error on the claims state log for the good record
-    claims: List[Claim] = (
-        local_test_db_session.query(Claim)
-        .filter(Claim.fineos_absence_id == "NTN-1308-ABS-01")
-        .all()
-    )
-    assert len(claims) == 1
-    claim = claims[0]
-    assert len(claim.state_logs) == 1
-    assert claim.state_logs[0].outcome["validation_container"]["validation_issues"] == [
+    assert updated_employee.state_logs[0].outcome["validation_container"]["validation_issues"] == [
         {
             "reason": "EFTRejected",
             "details": "EFT prenote was rejected - cannot pay with this account info",
@@ -364,11 +341,8 @@ def test_run_step_no_employee(
     assert claim
     assert claim.employee_id is None
 
-    assert len(claim.state_logs) == 1
-    assert claim.state_logs[0].outcome["validation_container"]["validation_issues"] == [
-        {"reason": "MissingInDB", "details": "tax_identifier: 881778956"},
-        {"reason": "MissingInDB", "details": "employer customer number: 96"},
-    ]
+    state_logs = local_test_db_session.query(StateLog).all()
+    assert len(state_logs) == 0
 
     employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -734,6 +708,8 @@ def test_run_step_validation_issues(
 
     upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
 
+    upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
+
     # Run the process
     claimant_extract_step.run_step()
 
@@ -767,10 +743,11 @@ def test_run_step_validation_issues(
     assert claim.employer_id == employer.employer_id
 
     # Verify the state logs and outcome
-    assert len(claim.state_logs) == 1
-    state_log = claim.state_logs[0]
+    assert len(employee.state_logs) == 1
+    state_log = employee.state_logs[0]
     assert (
-        state_log.end_state_id == State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT.state_id
+        state_log.end_state_id
+        == State.DELEGATED_CLAIMANT_ADD_TO_CLAIMANT_EXTRACT_ERROR_REPORT.state_id
     )
     validation_issues = state_log.outcome["validation_container"]["validation_issues"]
     assert validation_issues == [
@@ -812,69 +789,12 @@ def test_run_step_minimal_viable_claim(
     assert claim.absence_period_end_date is None
     assert claim.is_id_proofed is False
 
-    # Verify the state logs and outcome
-    assert len(claim.state_logs) == 1
-    state_log = claim.state_logs[0]
-    assert (
-        state_log.end_state_id == State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT.state_id
-    )
-    validation_issues = state_log.outcome["validation_container"]["validation_issues"]
-    assert validation_issues == [
-        {"reason": "MissingField", "details": "NOTIFICATION_CASENUMBER"},
-        {"reason": "MissingField", "details": "ABSENCEREASON_COVERAGE"},
-        {"reason": "MissingField", "details": "ABSENCE_CASESTATUS"},
-        {"reason": "MissingField", "details": "ABSENCEPERIOD_START"},
-        {"reason": "MissingField", "details": "ABSENCEPERIOD_END"},
-        {"reason": "MissingField", "details": "EMPLOYEE_CUSTOMERNO"},
-        {"reason": "MissingField", "details": "EMPLOYER_CUSTOMERNO"},
-        {
-            "reason": "ClaimNotIdProofed",
-            "details": "Claim has not been ID proofed, LEAVEREQUEST_EVIDENCERESULTTYPE is not Satisfied",
-        },
-    ]
-
-
-def test_run_step_not_id_proofed(
-    claimant_extract_step,
-    test_db_session,
-    tmp_path,
-    mock_s3_bucket,
-    set_exporter_env_vars,
-    monkeypatch,
-):
-    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    fineos_data = FineosClaimantData(leave_request_evidence="Rejected")
-
-    # Create the employee record
-    tax_identifier = TaxIdentifierFactory(tax_identifier=fineos_data.ssn)
-    EmployeeFactory(tax_identifier=tax_identifier)
-
-    upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
-
-    # Run the process
-    claimant_extract_step.run_step()
-
-    # Validate the claim was created properly
-    claim = test_db_session.query(Claim).one_or_none()
-    assert claim
-    assert claim.fineos_absence_id == fineos_data.absence_case_number
-    assert claim.employee_id is not None
-    assert claim.fineos_notification_id == fineos_data.notification_number
-    assert (
-        claim.claim_type_id
-        == payments_util.get_mapped_claim_type(fineos_data.leave_type).claim_type_id
-    )
-    assert claim.fineos_absence_status_id == AbsenceStatus.get_id(fineos_data.absence_case_status)
-    assert claim.absence_period_start_date is not None
-    assert claim.absence_period_end_date is not None
-    assert not claim.is_id_proofed
-
-    # Verify the state logs
-    assert len(claim.state_logs) == 1
-    state_log = claim.state_logs[0]
-    assert (
-        state_log.end_state_id == State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT.state_id
-    )
+    # We don't have an employee to connect this to, so there
+    # won't be any state logs
+    # TODO - how could we communicate this? This technically is an existing issue.
+    #        Should we make errors associated with claims instead?
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 0
 
 
 def test_run_step_no_default_payment_pref(

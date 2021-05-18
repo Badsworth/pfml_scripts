@@ -1,13 +1,13 @@
 import { CommandModule } from "yargs";
 import presets from "./flood/preset.config";
 import { SystemWideArgs } from "../cli";
+import Bundler from "./flood/Bundler";
 import path from "path";
 import FloodClient from "./flood/FloodClient";
 import config from "../config";
 import { v4 as uuid } from "uuid";
 import * as fs from "fs";
 import delay from "delay";
-import Bundler from "./flood/Bundler";
 
 type PresetArgs = {
   presetID: keyof typeof presets;
@@ -46,33 +46,30 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
       throw new Error(`Unknown preset: ${args.presetID}`);
     }
     const deployments: (() => Promise<unknown>)[] = [];
+    const bundler = new Bundler(path.join(__dirname, "..", "flood"));
     const client = new FloodClient(config("FLOOD_API_TOKEN"));
 
     // Loop through all components and bundle.
     for (const component of preset) {
-      const bundler = new Bundler(path.join(__dirname, "..", "flood"));
       logger.info(`Generating data for "${component.flood.name}"`);
       await bundler.generateData(component.data.scenario, component.data.count);
       logger.info(`Completed data generation for "${component.flood.name}"`);
 
       if (args.bundle || args.deploy) {
-        const bundler = new Bundler(path.join(__dirname, "..", "flood"));
-        const bundleDir = path.join(__dirname, "..", "..", "data", "flood");
-        const output = path.join(bundleDir, uuid());
+        const output = path.join(
+          __dirname,
+          "..",
+          "..",
+          "data",
+          "flood",
+          uuid()
+        );
         await fs.promises.mkdir(output, { recursive: true });
         logger.info(
           `Bundling files for "${component.flood.name}" into ${output}`
         );
         const files = await bundler.bundle(output);
         logger.debug(`Bundle files: ${files.join(", ")}`);
-
-        const symlink = path.join(bundleDir, "latest");
-        await fs.promises.unlink(symlink).catch((e) => {
-          if (e.code !== "ENOENT") {
-            throw e;
-          }
-        });
-        await fs.promises.symlink(output, symlink);
 
         // Create a function that can be used to trigger deployment of this bundle later on.
         const deploy = async () => {

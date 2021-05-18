@@ -199,9 +199,7 @@ describe("useAppErrorsLogic", () => {
         ];
 
         act(() => {
-          appErrorsLogic.catchError(
-            new ValidationError(issues, "applications")
-          );
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
         });
 
         const appErrorInfo = appErrorsLogic.appErrors.items[0];
@@ -226,9 +224,7 @@ describe("useAppErrorsLogic", () => {
         ];
 
         act(() => {
-          appErrorsLogic.catchError(
-            new ValidationError(issues, "applications")
-          );
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
         });
 
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
@@ -245,9 +241,7 @@ describe("useAppErrorsLogic", () => {
         ];
 
         act(() => {
-          appErrorsLogic.catchError(
-            new ValidationError(issues, "applications")
-          );
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
         });
 
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
@@ -282,9 +276,7 @@ describe("useAppErrorsLogic", () => {
         ];
 
         act(() => {
-          appErrorsLogic.catchError(
-            new ValidationError(issues, "applications")
-          );
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
         });
 
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
@@ -301,9 +293,7 @@ describe("useAppErrorsLogic", () => {
         ];
 
         act(() => {
-          appErrorsLogic.catchError(
-            new ValidationError(issues, "applications")
-          );
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
         });
 
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
@@ -320,9 +310,7 @@ describe("useAppErrorsLogic", () => {
         ];
 
         act(() => {
-          appErrorsLogic.catchError(
-            new ValidationError(issues, "applications")
-          );
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
         });
 
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
@@ -343,9 +331,7 @@ describe("useAppErrorsLogic", () => {
         ];
 
         act(() => {
-          appErrorsLogic.catchError(
-            new ValidationError(issues, "applications")
-          );
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
         });
 
         expect(appErrorsLogic.appErrors.items).toHaveLength(2);
@@ -370,9 +356,7 @@ describe("useAppErrorsLogic", () => {
         ];
 
         act(() => {
-          appErrorsLogic.catchError(
-            new ValidationError(issues, "applications")
-          );
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
         });
 
         expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
@@ -538,7 +522,7 @@ describe("useAppErrorsLogic", () => {
       ];
 
       act(() => {
-        appErrorsLogic.catchError(new ValidationError(issues, "applications"));
+        appErrorsLogic.catchError(new ValidationError(issues, "claims"));
       });
 
       expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(`
@@ -550,7 +534,7 @@ describe("useAppErrorsLogic", () => {
               />,
             }
           }
-          i18nKey="errors.applications.fineos_case_creation_issues"
+          i18nKey="errors.claims.fineos_case_creation_issues"
         />
       `);
     });
