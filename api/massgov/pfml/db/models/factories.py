@@ -624,8 +624,7 @@ class OtherIncomeFactory(BaseFactory):
 
 class PreviousLeaveFactory(BaseFactory):
     class Meta:
-        # TODO (CP-2123): Change to application_models.PreviousLeave when we remove previous_leaves
-        model = application_models.PreviousLeaveDeprecated
+        model = application_models.PreviousLeave
 
     # application_id must be passed into the create() call
     leave_reason_id = (

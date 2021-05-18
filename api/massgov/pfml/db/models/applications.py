@@ -16,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import backref, relationship
+from sqlalchemy.orm import backref, deferred, relationship
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
@@ -254,12 +254,6 @@ class PreviousLeave(Base):
     __mapper_args__ = {"polymorphic_on": type, "polymorphic_identity": "previous_leave"}
 
 
-# TODO (CP-2123): Remove this class when we remove references to previous_leaves
-class PreviousLeaveDeprecated(PreviousLeave):
-    application = relationship("Application", back_populates="previous_leaves")
-    __mapper_args__ = {"polymorphic_identity": "deprecated"}
-
-
 # The Application model will have references to previous_leaves for both other and same reasons
 # In order for sqlalchemy to distinguish between the 2, we are making PreviousLeave polymorphic
 # https://docs.sqlalchemy.org/en/14/orm/inheritance.html#single-table-inheritance
@@ -338,10 +332,10 @@ class Application(Base):
     has_other_incomes = Column(Boolean)
     other_incomes_awaiting_approval = Column(Boolean)
     has_submitted_payment_preference = Column(Boolean)
-    has_previous_leaves = Column(Boolean)
     caring_leave_metadata_id = Column(
         UUID(as_uuid=True), ForeignKey("caring_leave_metadata.caring_leave_metadata_id")
     )
+    has_previous_leaves = deferred(Column(Boolean().evaluates_none()))
     has_previous_leaves_same_reason = Column(Boolean)
     has_previous_leaves_other_reason = Column(Boolean)
     has_concurrent_leave = Column(Boolean)
@@ -391,9 +385,6 @@ class Application(Base):
     )
     employer_benefits = relationship("EmployerBenefit", back_populates="application", uselist=True)
     other_incomes = relationship("OtherIncome", back_populates="application", uselist=True)
-    previous_leaves = relationship(
-        "PreviousLeaveDeprecated", back_populates="application", uselist=True
-    )
     previous_leaves_other_reason = relationship(
         "PreviousLeaveOtherReason", back_populates="application", uselist=True,
     )

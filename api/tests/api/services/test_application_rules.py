@@ -23,7 +23,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReason,
     LeaveReasonQualifier,
     OtherIncome,
-    PreviousLeaveDeprecated,
+    PreviousLeaveOtherReason,
     WorkPatternDay,
 )
 from massgov.pfml.db.models.employees import PaymentMethod
@@ -35,7 +35,8 @@ from massgov.pfml.db.models.factories import (
     IntermittentLeavePeriodFactory,
     OtherIncomeFactory,
     PaymentPreferenceFactory,
-    PreviousLeaveFactory,
+    PreviousLeaveOtherReasonFactory,
+    PreviousLeaveSameReasonFactory,
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
     WorkPatternVariableFactory,
@@ -1811,8 +1812,16 @@ def test_other_leave_feature_flagged_rules():
     )
     assert (
         Issue(
-            field="has_previous_leaves",
-            message="has_previous_leaves is required",
+            field="has_previous_leaves_other_reason",
+            message="has_previous_leaves_other_reason is required",
+            type=IssueType.required,
+        )
+        not in issues
+    )
+    assert (
+        Issue(
+            field="has_previous_leaves_same_reason",
+            message="has_previous_leaves_same_reason is required",
             type=IssueType.required,
         )
         not in issues
@@ -1840,8 +1849,16 @@ def test_other_leave_feature_flagged_rules():
     )
     assert (
         Issue(
-            field="has_previous_leaves",
-            message="has_previous_leaves is required",
+            field="has_previous_leaves_other_reason",
+            message="has_previous_leaves_other_reason is required",
+            type=IssueType.required,
+        )
+        not in issues
+    )
+    assert (
+        Issue(
+            field="has_previous_leaves_same_reason",
+            message="has_previous_leaves_same_reason is required",
             type=IssueType.required,
         )
         not in issues
@@ -1875,8 +1892,16 @@ def test_other_leave_submitted_feature_flagged_rules():
     )
     assert (
         Issue(
-            field="has_previous_leaves",
-            message="has_previous_leaves is required",
+            field="has_previous_leaves_other_reason",
+            message="has_previous_leaves_other_reason is required",
+            type=IssueType.required,
+        )
+        not in issues
+    )
+    assert (
+        Issue(
+            field="has_previous_leaves_same_reason",
+            message="has_previous_leaves_same_reason is required",
             type=IssueType.required,
         )
         not in issues
@@ -2080,30 +2105,41 @@ def test_has_other_incomes_required():
 
 def test_has_previous_leaves_true_no_leave():
     application = ApplicationFactory.build()
-    application.has_previous_leaves = True
+    application.has_previous_leaves_other_reason = True
+    application.has_previous_leaves_same_reason = True
 
     issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.required,
             rule=IssueRule.conditional,
-            message="when has_previous_leaves is true, previous_leaves cannot be empty",
-            field="previous_leaves",
-        )
+            message="when has_previous_leaves_other_reason is true, previous_leaves_other_reason cannot be empty",
+            field="previous_leaves_other_reason",
+        ),
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="when has_previous_leaves_same_reason is true, previous_leaves_same_reason cannot be empty",
+            field="previous_leaves_same_reason",
+        ),
     ] == issues
 
 
 def test_previous_leave_no_issues():
     application = ApplicationFactory.build()
-    leaves = [PreviousLeaveFactory.build(application_id=application.application_id,)]
-    application.previous_leaves = leaves
+    application.has_previous_leaves_other_reason = True
+    application.has_previous_leaves_same_reason = False
+    leaves_other_reason = [
+        PreviousLeaveOtherReasonFactory.build(application_id=application.application_id,)
+    ]
+    application.previous_leaves_other_reason = leaves_other_reason
 
     issues = get_conditional_issues(application, Headers())
     assert [] == issues
 
 
 def test_previous_leave_missing_fields():
-    test_app = ApplicationFactory.build(previous_leaves=[PreviousLeaveDeprecated()])
+    test_app = ApplicationFactory.build(previous_leaves_other_reason=[PreviousLeaveOtherReason()])
     issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
@@ -2132,11 +2168,11 @@ def test_previous_leave_missing_fields():
 def test_previous_leave_start_date_must_be_after_2020():
     application = ApplicationFactory.build()
     leaves = [
-        PreviousLeaveFactory.build(
+        PreviousLeaveSameReasonFactory.build(
             application_id=application.application_id, leave_start_date=date(2020, 12, 31),
         )
     ]
-    application.previous_leaves = leaves
+    application.previous_leaves_same_reason = leaves
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -2151,11 +2187,11 @@ def test_previous_leave_start_date_must_be_after_2020():
 def test_previous_leave_end_date_must_be_after_2020():
     application = ApplicationFactory.build()
     leaves = [
-        PreviousLeaveFactory.build(
+        PreviousLeaveOtherReasonFactory.build(
             application_id=application.application_id, leave_end_date=date(2020, 12, 31),
         )
     ]
-    application.previous_leaves = leaves
+    application.previous_leaves_other_reason = leaves
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -2170,13 +2206,13 @@ def test_previous_leave_end_date_must_be_after_2020():
 def test_previous_leave_end_date_must_be_after_start_date():
     application = ApplicationFactory.build()
     leaves = [
-        PreviousLeaveFactory.build(
+        PreviousLeaveSameReasonFactory.build(
             application_id=application.application_id,
             leave_start_date=date(2021, 1, 2),
             leave_end_date=date(2021, 1, 1),
         )
     ]
-    application.previous_leaves = leaves
+    application.previous_leaves_same_reason = leaves
 
     issues = get_conditional_issues(application, Headers())
     assert [

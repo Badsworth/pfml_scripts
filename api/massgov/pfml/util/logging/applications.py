@@ -62,7 +62,8 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         "has_intermittent_leave_periods",
         "has_mailing_address",
         "has_other_incomes",
-        "has_previous_leaves",
+        "has_previous_leaves_other_reason",
+        "has_previous_leaves_same_reason",
         "has_reduced_schedule_leave_periods",
         "has_submitted_payment_preference",
         "pregnant_or_recent_birth",
@@ -134,15 +135,22 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
     # add leave start_date and end_date for each type of leave period
     result.update(get_leave_period_log_attributes(application))
 
-    result.update(get_previous_leaves_log_attributes(application.previous_leaves))
+    result.update(
+        get_previous_leaves_log_attributes(application.previous_leaves_other_reason, "other_reason")
+    )
+    result.update(
+        get_previous_leaves_log_attributes(application.previous_leaves_same_reason, "same_reason")
+    )
     result.update(get_employer_benefits_log_attributes(application.employer_benefits))
     result.update(get_other_incomes_log_attributes(application.other_incomes))
 
     return result
 
 
-def get_previous_leaves_log_attributes(leaves: Iterable[PreviousLeave]) -> Dict[str, str]:
-    result = {"application.num_previous_leaves": str(len(list(leaves)))}
+def get_previous_leaves_log_attributes(
+    leaves: Iterable[PreviousLeave], leave_type: str
+) -> Dict[str, str]:
+    result = {f"application.num_previous_leaves_{leave_type}": str(len(list(leaves)))}
 
     reason_values = [
         PreviousLeaveQualifyingReason.PREGNANCY_MATERNITY.previous_leave_qualifying_reason_description,
@@ -164,7 +172,7 @@ def get_previous_leaves_log_attributes(leaves: Iterable[PreviousLeave]) -> Dict[
     for reason in reason_values:
         assert reason
         count = reason_counts[reason]
-        result[f"application.num_previous_leave_reasons.{reason}"] = str(count)
+        result[f"application.num_previous_leave_{leave_type}_reasons.{reason}"] = str(count)
 
     return result
 

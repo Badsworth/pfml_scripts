@@ -1682,8 +1682,6 @@ components:
           enum:
             - other_reason
             - same_reason
-            # TODO (CP-2123): Remove when we remove references to previous_leaves
-            - deprecated
 
     ApplicationRequestBody:
       allOf:
@@ -1807,10 +1805,6 @@ components:
               maxItems: 3
             phone:
               $ref: "#/components/schemas/Phone"
-            has_previous_leaves:
-              type: boolean
-              nullable: true
-              example: false
             has_previous_leaves_other_reason:
               type: boolean
               nullable: true
@@ -1820,12 +1814,6 @@ components:
             has_concurrent_leave:
               type: boolean
               nullable: true
-            previous_leaves:
-              nullable: true
-              type: array
-              items:
-                $ref: "#/components/schemas/PreviousLeave"
-              maxItems: 6
             previous_leaves_other_reason:
               nullable: true
               type: array
@@ -2013,10 +2001,6 @@ components:
           example: "Started"
         phone:
           $ref: "#/components/schemas/MaskedPhone"
-        has_previous_leaves:
-          type: boolean
-          nullable: true
-          example: false
         has_previous_leaves_other_reason:
           type: boolean
           nullable: true
@@ -2026,10 +2010,6 @@ components:
         has_concurrent_leave:
           type: boolean
           nullable: true
-        previous_leaves:
-          type: array
-          items:
-            $ref: "#/components/schemas/PreviousLeave"
         previous_leaves_other_reason:
           type: array
           items:

@@ -54,10 +54,8 @@ class ApplicationRequestBody(PydanticBaseModel):
     other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
     phone: Optional[Phone]
-    previous_leaves: Optional[List[PreviousLeave]]
     previous_leaves_other_reason: Optional[List[PreviousLeave]]
     previous_leaves_same_reason: Optional[List[PreviousLeave]]
-    has_previous_leaves: Optional[bool]
     has_previous_leaves_other_reason: Optional[bool]
     has_previous_leaves_same_reason: Optional[bool]
 
