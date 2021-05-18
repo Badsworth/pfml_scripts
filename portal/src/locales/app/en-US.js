@@ -315,6 +315,8 @@ const errors = {
         required: "Select how you want to get your weekly benefit.",
       },
       routing_number: {
+        checksum:
+          "Enter a valid routing number. Check that you entered your routing number correctly. It is a 9-digit number located in the bottom left-hand corner of a check which uniquely identifies your bank.",
         pattern: "Enter your routing number in the correct format.",
         required: "Enter a routing number.",
       },
