@@ -21,8 +21,8 @@ interface DocumentGeneratorInterface<C extends Record<string, unknown>> {
 export abstract class AbstractDocumentGenerator<
   C extends Record<string, unknown>
 > implements DocumentGeneratorInterface<C> {
+  constructor(public documentType: DocumentType) {}
   abstract documentSource: string;
-  abstract documentType: DocumentUploadRequest["document_type"];
   async generate(claim: ApplicationRequestBody, config: C): PromisedDocument {
     const formData = this.getFormData(claim, config);
     return this.fillPDFBytes(this.documentSource, formData);

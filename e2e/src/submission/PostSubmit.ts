@@ -4,6 +4,8 @@ import * as actions from "../util/playwright";
 import config from "../config";
 import path from "path";
 import { v4 as uuid } from "uuid";
+import { GeneratedClaim } from "../generation/Claim";
+import { getDocumentReviewTaskName } from "../util/documents";
 
 export type Tasks =
   | "ID Review"
@@ -91,6 +93,7 @@ export async function withFineosBrowser<T extends unknown>(
 
 export async function approveClaim(
   page: playwright.Page,
+  claim: GeneratedClaim,
   fineos_absence_id: string
 ): Promise<void> {
   await actions.gotoCase(page, fineos_absence_id);
@@ -105,8 +108,10 @@ export async function approveClaim(
     page.click("#footerButtonsBar input[value='OK']"),
   ]);
 
-  await closeTask(page, "ID Review");
-  await closeTask(page, "Certification Review");
+  // Close all of the documentation review tasks.
+  for (const document of claim.documents) {
+    await closeTask(page, getDocumentReviewTaskName(document.document_type));
+  }
   await closeTask(page, "Employer Approval Received");
   await actions.clickTab(page, "Absence Hub");
 
@@ -149,19 +154,22 @@ async function expectClaimState(page: playwright.Page, expected: string) {
 
 export async function closeDocuments(
   page: playwright.Page,
+  claim: GeneratedClaim,
   fineos_absence_id: string
 ): Promise<void> {
   await actions.gotoCase(page, fineos_absence_id);
   await page.click('input[type="submit"][value="Adjudicate"]');
   await approveDocuments(page);
   await page.click("#footerButtonsBar input[value='OK']");
-  await closeTask(page, "ID Review");
-  await closeTask(page, "Certification Review");
+  // Close all of the documentation review tasks.
+  for (const document of claim.documents) {
+    await closeTask(page, getDocumentReviewTaskName(document.document_type));
+  }
 }
 
 export async function closeTask(
   page: playwright.Page,
-  task: Tasks
+  task: string
 ): Promise<void> {
   await actions.clickTab(page, "Tasks");
   await Promise.race([

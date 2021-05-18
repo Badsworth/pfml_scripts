@@ -52,13 +52,13 @@ const setConcurrency = (requested: number) => {
           );
         switch (metadata.postSubmit) {
           case "APPROVE":
-            await approveClaim(page, fineos_absence_id);
+            await approveClaim(page, claim, fineos_absence_id);
             break;
           case "DENY":
             await denyClaim(page, fineos_absence_id);
             break;
           case "APPROVEDOCS":
-            await closeDocuments(page, fineos_absence_id);
+            await closeDocuments(page, claim, fineos_absence_id);
             break;
           default:
             throw new Error(

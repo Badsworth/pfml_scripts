@@ -37,7 +37,10 @@ function describeCertificationDocs(spec: ScenarioSpecification["claim"]) {
     const generator = generators[documentKey as keyof typeof generators];
     return (
       generator &&
-      generator.documentType === "State managed Paid Leave Confirmation"
+      (generator.documentType === "State managed Paid Leave Confirmation" ||
+        generator.documentType === "Child bonding evidence form" ||
+        generator.documentType === "Own serious health condition form" ||
+        generator.documentType === "Care for a family member form")
     );
   });
   if (!matchingDocs) {

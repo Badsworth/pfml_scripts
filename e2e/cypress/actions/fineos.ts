@@ -1,5 +1,10 @@
 import { ApplicationRequestBody, ReducedScheduleLeavePeriods } from "_api";
 import { format, addMonths, addDays, startOfWeek, subDays } from "date-fns";
+import {
+  getCertificationDocumentType,
+  getDocumentReviewTaskName,
+} from "../../src/util/documents";
+import { LeaveReason } from "../../src/types";
 
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
@@ -198,36 +203,6 @@ export function uploadDocument(
   clickBottomWidgetButton();
   cy.get("input[type='file']").attachFile(`./${docName}.pdf`);
   clickBottomWidgetButton();
-}
-
-export function findDocument(documentType: string): void {
-  let documentCategory: string;
-  switch (documentType) {
-    case "MA ID":
-      documentCategory = "Identification_Proof";
-      cy.get(`a[name*=${documentCategory}]`).should(
-        "contain.text",
-        "Identification Proof"
-      );
-      break;
-    case "HCP":
-    case "FOSTER":
-      documentCategory = "State_managed_Paid_Leave_Confirmation";
-      cy.get(`a[name*=${documentCategory}]`).should(
-        "contain.text",
-        "State managed Paid Leave Confirmation"
-      );
-      break;
-    case "Employer Confirmation":
-      documentCategory = "Employer Confirmation of Leave Data";
-      cy.get("tr[class='ListRowSelected']").should(
-        "contain.text",
-        documentCategory
-      );
-      break;
-    default:
-      throw new Error("Provided reason for transfer is not recognized.");
-  }
 }
 
 export function approveClaim(): void {
@@ -453,23 +428,21 @@ export function checkStatus(
 }
 
 export function markEvidence(
-  claimNumber: string,
-  claimType: string,
-  evidenceType: string
+  evidenceType: string,
+  receipt = "Received",
+  decision = "Satisfied",
+  reason = "Evidence has been reviewed and approved"
 ): void {
-  assertAdjudicatingClaim(claimNumber);
   onTab("Evidence");
   cy.contains(".ListTable td", evidenceType).click();
   cy.get("input[type='submit'][value='Manage Evidence']").click();
   // Focus inside popup. Note: There should be no need for an explicit wait here because
   // Cypress will not move on until the popup has been rendered.
   cy.get(".WidgetPanel_PopupWidget").within(() => {
-    if (claimType === "BGBM1") {
-      cy.labelled("Evidence Receipt").select("Received");
-    }
-    cy.labelled("Evidence Decision").select("Satisfied");
+    cy.labelled("Evidence Receipt").select(receipt);
+    cy.labelled("Evidence Decision").select(decision);
     cy.labelled("Evidence Decision Reason").type(
-      "{selectall}{backspace}Evidence has been reviewed and approved"
+      `{selectall}{backspace}${reason}`
     );
     cy.get("input[type='button'][value='OK']").click();
     // Wait till modal has fully closed before moving on.
@@ -506,12 +479,18 @@ export function intermittentFillAbsencePeriod(claimNumber: string): void {
 
 export function claimAdjudicationFlow(
   claimNumber: string,
+  reason: LeaveReason,
   ERresponse = false
 ): void {
+  const docType = getCertificationDocumentType(
+    reason,
+    Cypress.env("E2E_HAS_FINEOS_SP") === "true"
+  );
+
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
   onTab("Tasks");
-  assertHasTask("Certification Review");
+  assertHasTask(getDocumentReviewTaskName(docType));
   assertHasTask("ID Review");
   if (ERresponse) {
     assertHasTask("Employer Approval Received");
@@ -520,8 +499,8 @@ export function claimAdjudicationFlow(
   assertPlanStatus("Applicability", "Applicable");
   assertPlanStatus("Eligibility", "Met");
   cy.get("input[type='submit'][value='Adjudicate']").click();
-  markEvidence(claimNumber, "MHAP1", "State managed Paid Leave Confirmation");
-  markEvidence(claimNumber, "MHAP1", "Identification Proof");
+  markEvidence(docType);
+  markEvidence("Identification Proof");
   fillAbsencePeriod(claimNumber);
   onTab("Manage Request");
   assertPlanStatus("Evidence", "Satisfied");
@@ -539,6 +518,7 @@ export function claimAdjudicationFlow(
 
 export function intermittentClaimAdjudicationFlow(
   claimNumber: string,
+  reason: LeaveReason,
   ERresponse = false
 ): void {
   visitClaim(claimNumber);
@@ -549,8 +529,13 @@ export function intermittentClaimAdjudicationFlow(
   assertClaimStatus("Adjudication");
   cy.get("input[type='submit'][value='Adjudicate']").click();
   checkStatus(claimNumber, "Eligibility", "Met");
-  markEvidence(claimNumber, "MHAP1", "State managed Paid Leave Confirmation");
-  markEvidence(claimNumber, "MHAP1", "Identification Proof");
+  markEvidence(
+    getCertificationDocumentType(
+      reason,
+      Cypress.env("E2E_HAS_FINEOS_SP") === "true"
+    )
+  );
+  markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
   intermittentFillAbsencePeriod(claimNumber);
   onTab("Manage Request");
@@ -618,47 +603,27 @@ export function submitIntermittentActualHours(
   });
 }
 
-export function mailedDocumentMarkEvidenceRecieved(claimNumber: string): void {
+export function mailedDocumentMarkEvidenceRecieved(
+  claimNumber: string,
+  reason: LeaveReason
+): void {
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
   onTab("Documents");
-  findDocument("MA ID");
-  uploadDocument("HCP", "State Managed");
+  assertHasDocument("Identification Proof");
+  const documentType = getCertificationDocumentType(
+    reason,
+    Cypress.env("E2E_HAS_FINEOS_SP") === "true"
+  );
+  uploadDocument("HCP", documentType);
   onTab("Documents");
-  findDocument("HCP");
+  assertHasDocument(documentType);
   onTab("Absence Hub");
   cy.get('input[type="submit"][value="Adjudicate"]').click();
-  markEvidence(claimNumber, "BGBM1", "State managed Paid Leave Confirmation");
-  markEvidence(claimNumber, "BGBM1", "Identification Proof");
+  markEvidence(documentType);
+  markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
   clickBottomWidgetButton();
-}
-
-export function claimAdjudicationMailedDoc(claimNumber: string): void {
-  visitClaim(claimNumber);
-  assertClaimStatus("Adjudication");
-  onTab("Documents");
-  // Assert ID Doc is present
-  findDocument("MA ID");
-  uploadDocument("HCP", "State Managed");
-  onTab("Documents");
-  findDocument("HCP");
-  onTab("Absence Hub");
-  cy.get('input[type="submit"][value="Adjudicate"]').click();
-  markEvidence(claimNumber, "BGBM1", "State managed Paid Leave Confirmation");
-  markEvidence(claimNumber, "BGBM1", "Identification Proof");
-  checkStatus(claimNumber, "Evidence", "Satisfied");
-  fillAbsencePeriod(claimNumber);
-  checkStatus(claimNumber, "Availability", "Time Available");
-  // Complete Adjudication
-  assertAdjudicatingClaim(claimNumber);
-  clickBottomWidgetButton("OK");
-  assertPlanStatus("Applicability", "Applicable");
-  assertPlanStatus("Eligibility", "Met");
-  assertPlanStatus("Evidence", "Satisfied");
-  assertPlanStatus("Availability", "Time Available");
-  assertPlanStatus("Restriction", "Passed");
-  assertPlanStatus("Protocols", "Passed");
 }
 
 export function checkHoursWorkedPerWeek(

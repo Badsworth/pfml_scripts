@@ -34,7 +34,11 @@ describe("Approval (notifications/notices)", () => {
             fineos_absence_id: response.fineos_absence_id,
             timestamp_from: Date.now(),
           });
-          fineos.claimAdjudicationFlow(response.fineos_absence_id, true);
+          fineos.claimAdjudicationFlow(
+            response.fineos_absence_id,
+            "Child Bonding",
+            true
+          );
           fineos.triggerNoticeRelease("Approval Notice");
         });
       });

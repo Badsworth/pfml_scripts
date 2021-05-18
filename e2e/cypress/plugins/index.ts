@@ -193,6 +193,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       E2E_PORTAL_PASSWORD: config("PORTAL_PASSWORD"),
       E2E_EMPLOYER_PORTAL_PASSWORD: config("EMPLOYER_PORTAL_PASSWORD"),
       E2E_ENVIRONMENT: config("ENVIRONMENT"),
+      E2E_HAS_FINEOS_SP: config("HAS_FINEOS_SP"),
     },
   };
 }

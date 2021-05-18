@@ -41,7 +41,7 @@ export const REDUCED_ER: ScenarioSpecification = {
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
     docs: {
-      HCP: {},
+      FOSTERPLACEMENT: {},
       MASSID: {},
     },
     employerResponse: {
@@ -215,5 +215,15 @@ export const BIAP60: ScenarioSpecification = {
       spanHoursStart: "4",
       spanHoursEnd: "4",
     },
+  },
+};
+
+export const CHAP1: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CHAP1",
+    shortClaim: true,
+    reason: "Care for a Family Member",
+    docs: {},
   },
 };

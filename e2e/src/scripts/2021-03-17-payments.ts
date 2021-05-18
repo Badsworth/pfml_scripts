@@ -84,16 +84,13 @@ import DOR from "../generation/writers/DOR";
           );
         switch (metadata.postSubmit) {
           case "APPROVE":
-            console.log(`Post Submit: Approving ${fineos_absence_id}`);
-            await approveClaim(page, fineos_absence_id);
+            await approveClaim(page, claim, fineos_absence_id);
             break;
           case "DENY":
-            console.log(`Post Submit: Denying ${fineos_absence_id}`);
             await denyClaim(page, fineos_absence_id);
             break;
           case "APPROVEDOCS":
-            console.log(`Post Submit: Approving docs ${fineos_absence_id}`);
-            await closeDocuments(page, fineos_absence_id);
+            await closeDocuments(page, claim, fineos_absence_id);
             break;
           default:
             throw new Error(

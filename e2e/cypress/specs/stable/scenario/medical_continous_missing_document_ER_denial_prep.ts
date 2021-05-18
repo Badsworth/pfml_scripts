@@ -42,12 +42,15 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
 
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
+          const reason = claim.claim.leave_details?.reason;
+          if (!reason) throw new Error(`No claim type given`);
           fineos.checkHoursWorkedPerWeek(
             submission.fineos_absence_id,
             claim.claim.hours_worked_per_week as number
           );
           fineos.mailedDocumentMarkEvidenceRecieved(
-            submission.fineos_absence_id
+            submission.fineos_absence_id,
+            reason
           );
         });
       });

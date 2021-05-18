@@ -1,6 +1,5 @@
 import {
   AbstractDocumentGenerator,
-  DocumentType,
   PDFFormData,
 } from "./AbstractDocumentGenerator";
 import { ApplicationRequestBody } from "../../api";
@@ -9,9 +8,6 @@ import { format, parseISO } from "date-fns";
 export default class OutOfStateID extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
-  get documentType(): DocumentType {
-    return "Identification Proof";
-  }
   get documentSource(): string {
     return this.path("license-CT.pdf");
   }

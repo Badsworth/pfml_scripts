@@ -70,6 +70,21 @@ export default function generateLeaveDetails(
     employer_notified: true,
     reason,
     reason_qualifier: reason_qualifier ?? null,
+    caring_leave_metadata:
+      reason === "Care for a Family Member"
+        ? {
+            relationship_to_caregiver: "Sibling - Brother/Sister",
+            family_member_first_name: faker.name.firstName(),
+            family_member_last_name: faker.name.lastName(),
+            family_member_date_of_birth: formatISO(
+              faker.date.between(
+                add(new Date(), { years: -85 }),
+                add(new Date(), { years: -10 })
+              ),
+              { representation: "date" }
+            ),
+          }
+        : undefined,
   };
 
   const earliestStartDate = getEarliestStartDate(details);
@@ -81,6 +96,9 @@ export default function generateLeaveDetails(
 
   switch (reason) {
     case "Serious Health Condition - Employee":
+      // Do nothing else.
+      break;
+    case "Care for a Family Member":
       // Do nothing else.
       break;
     case "Pregnancy/Maternity":

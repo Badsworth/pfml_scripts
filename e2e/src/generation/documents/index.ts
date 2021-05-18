@@ -9,17 +9,38 @@ import FosterPlacementLetter from "./FosterPlacementLetter";
 import PersonalLetter from "./PersonalLetter";
 import CatPicture from "./CatPicture";
 import FileWrapper from "../FileWrapper";
+import config from "../../config";
+import { getCertificationDocumentType } from "../../util/documents";
+
+const hasServicePack = config("HAS_FINEOS_SP") === "true";
 
 export const generators = {
-  MASSID: new MassID(),
-  OOSID: new OutOfStateID(),
-  PREBIRTH: new PrebirthLetter(),
-  HCP: new HealthCareProviderForm(),
-  BIRTHCERTIFICATE: new BirthCertificate(),
-  ADOPTIONCERT: new AdoptionCertificate(),
-  FOSTERPLACEMENT: new FosterPlacementLetter(),
-  PERSONALLETTER: new PersonalLetter(),
-  CATPIC: new CatPicture(),
+  MASSID: new MassID("Identification Proof"),
+  OOSID: new OutOfStateID("Identification Proof"),
+  PREBIRTH: new PrebirthLetter(
+    getCertificationDocumentType("Child Bonding", hasServicePack)
+  ),
+  HCP: new HealthCareProviderForm(
+    getCertificationDocumentType(
+      "Serious Health Condition - Employee",
+      hasServicePack
+    )
+  ),
+  BIRTHCERTIFICATE: new BirthCertificate(
+    getCertificationDocumentType("Child Bonding", hasServicePack)
+  ),
+  ADOPTIONCERT: new AdoptionCertificate(
+    getCertificationDocumentType("Child Bonding", hasServicePack)
+  ),
+  FOSTERPLACEMENT: new FosterPlacementLetter(
+    getCertificationDocumentType("Child Bonding", hasServicePack)
+  ),
+  PERSONALLETTER: new PersonalLetter(
+    getCertificationDocumentType("Child Bonding", hasServicePack)
+  ),
+  CATPIC: new CatPicture(
+    getCertificationDocumentType("Child Bonding", hasServicePack)
+  ),
 };
 
 export type DocumentWithPromisedFile = Omit<DocumentUploadRequest, "file"> & {

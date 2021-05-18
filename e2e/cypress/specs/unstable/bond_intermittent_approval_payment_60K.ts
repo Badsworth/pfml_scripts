@@ -59,6 +59,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
       cy.unstash<Submission>("submission").then((submission) => {
         fineos.intermittentClaimAdjudicationFlow(
           submission.fineos_absence_id,
+          "Child Bonding",
           true
         );
       });

@@ -10,6 +10,8 @@ export type OAuthCreds = {
   secretID: string;
 };
 
+export type LeaveReason = NonNullable<ApplicationLeaveDetails["reason"]>;
+
 export type LeavePeriods = Pick<
   ApplicationLeaveDetails,
   | "reduced_schedule_leave_periods"

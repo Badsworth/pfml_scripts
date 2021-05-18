@@ -112,7 +112,7 @@ import { approveClaim, withFineosBrowser } from "../submission/PostSubmit";
 
           // Conditionally execute one of our actions.
           if (approvalScenarios.includes(claim.scenario)) {
-            return approveClaim(page, fineos_absence_id);
+            return approveClaim(page, claim, fineos_absence_id);
           }
           if (denialScenarios.includes(claim.scenario)) {
             // Deny the claim.

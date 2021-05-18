@@ -1,6 +1,5 @@
 import {
   AbstractDocumentGenerator,
-  DocumentType,
   PDFFormData,
 } from "./AbstractDocumentGenerator";
 import {
@@ -13,9 +12,6 @@ import { differenceInWeeks, format, parseISO } from "date-fns";
 export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
-  get documentType(): DocumentType {
-    return "State managed Paid Leave Confirmation";
-  }
   get documentSource(): string {
     return this.path("hcp-real.pdf");
   }

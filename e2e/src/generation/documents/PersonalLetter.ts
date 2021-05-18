@@ -1,6 +1,5 @@
 import {
   AbstractDocumentGenerator,
-  DocumentType,
   PDFFormData,
 } from "./AbstractDocumentGenerator";
 import { ApplicationRequestBody } from "../../api";
@@ -9,9 +8,6 @@ import { format, parseISO } from "date-fns";
 export default class PersonalLetter extends AbstractDocumentGenerator<{
   birthDate?: string;
 }> {
-  get documentType(): DocumentType {
-    return "State managed Paid Leave Confirmation";
-  }
   get documentSource(): string {
     return this.path("personal-letter.pdf");
   }

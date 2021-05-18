@@ -1,6 +1,5 @@
 import {
   AbstractDocumentGenerator,
-  DocumentType,
   PDFFormData,
 } from "./AbstractDocumentGenerator";
 import { ApplicationRequestBody } from "../../api";
@@ -14,9 +13,6 @@ function reformat(date: string): string {
 export default class FosterPlacementLetter extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
-  get documentType(): DocumentType {
-    return "State managed Paid Leave Confirmation";
-  }
   get documentSource(): string {
     return this.path("foster-adopt-cert.pdf");
   }

@@ -29,6 +29,7 @@ interface E2EConfig {
   API_FINEOS_CLIENT_SECRET: string;
   SSO_PASSWORD: string;
   SSO_USERNAME: string;
+  HAS_FINEOS_SP: string;
 }
 interface LSTConfig {
   FLOOD_API_TOKEN: string;
@@ -41,6 +42,10 @@ interface LSTConfig {
 }
 
 export type E2ELSTConfig = E2EConfig & LSTConfig;
+
+const defaults: Partial<E2ELSTConfig> = {
+  HAS_FINEOS_SP: "false",
+};
 
 export type E2ELSTConfigFunction = (name: keyof E2ELSTConfig) => string;
 
@@ -64,6 +69,10 @@ export function factory(env: string | undefined): E2ELSTConfigFunction {
     const configValue = config[name];
     if (typeof configValue === "string") {
       return configValue;
+    }
+    const defaultValue = defaults[name];
+    if (typeof defaultValue === "string") {
+      return defaultValue;
     }
     throw new Error(
       `No configuration found for ${name}. You can either set this value as an environment variable E2E_${name}, or you can define it in config.`

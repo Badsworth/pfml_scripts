@@ -1,6 +1,5 @@
 import {
   AbstractDocumentGenerator,
-  DocumentType,
   PDFFormData,
 } from "./AbstractDocumentGenerator";
 import { ApplicationRequestBody } from "../../api";
@@ -10,9 +9,6 @@ import faker from "faker";
 export default class PrebirthLetter extends AbstractDocumentGenerator<{
   birthDate?: string;
 }> {
-  get documentType(): DocumentType {
-    return "State managed Paid Leave Confirmation";
-  }
   get documentSource(): string {
     return this.path("pre-birth-letter.pdf");
   }

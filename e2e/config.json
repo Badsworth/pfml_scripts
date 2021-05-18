@@ -77,7 +77,8 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-04-14.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-04-14.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
+    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
+    "HAS_FINEOS_SP": "true"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
