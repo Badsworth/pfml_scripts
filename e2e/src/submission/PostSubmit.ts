@@ -160,6 +160,7 @@ export async function closeDocuments(
   await actions.gotoCase(page, fineos_absence_id);
   await page.click('input[type="submit"][value="Adjudicate"]');
   await approveDocuments(page);
+  await approveCertificationPeriods(page);
   await page.click("#footerButtonsBar input[value='OK']");
   // Close all of the documentation review tasks.
   for (const document of claim.documents) {

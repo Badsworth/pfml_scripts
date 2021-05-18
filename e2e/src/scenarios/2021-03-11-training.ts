@@ -1,5 +1,5 @@
 import { ScenarioSpecification } from "../generation/Scenario";
-
+import { parseISO } from "date-fns";
 // Deny claim for financial eligibility
 export const TRNA: ScenarioSpecification = {
   employee: { mass_id: true, wages: "ineligible" },
@@ -64,6 +64,7 @@ export const TRND: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
     },
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
   },
 };
 
@@ -120,6 +121,22 @@ export const TRNG: ScenarioSpecification = {
   },
 };
 
+export const TRNG2: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNG2",
+    reason: "Serious Health Condition - Employee",
+    has_continuous_leave_periods: true,
+    docs: {
+      MASSID: {},
+      HCP: {},
+    },
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
+  },
+};
+
 export const TRNH: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -138,7 +155,7 @@ export const TRNI: ScenarioSpecification = {
   claim: {
     label: "TRNI",
     reason: "Serious Health Condition - Employee",
-    has_intermittent_leave_periods: true,
+    reduced_leave_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
       HCP: {},
@@ -150,6 +167,7 @@ export const TRNI: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
     },
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
   },
 };
 
@@ -342,6 +360,7 @@ export const TRNT: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
     },
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
   },
 };
 
@@ -444,6 +463,7 @@ export const TRNZ: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
     },
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
   },
 };
 
@@ -517,6 +537,7 @@ export const TRNAD: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
     },
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
   },
 };
 
@@ -536,5 +557,291 @@ export const TRNAE: ScenarioSpecification = {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+  },
+};
+export const TRNAF: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAF",
+    reason: "Care for a Family Member",
+    work_pattern_spec: "standard",
+    docs: {
+      MASSID: {},
+      CARING: { invalid: true },
+    },
+  },
+};
+
+export const TRNAG: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAG",
+    reason: "Care for a Family Member",
+    work_pattern_spec: "standard",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
+    metadata: {
+      postSubmit: "APPROVE",
+    },
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
+  },
+};
+
+export const TRNAH: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAH",
+    reason: "Care for a Family Member",
+    work_pattern_spec: "standard",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 35,
+      comment: "$100 Disability income per week",
+    },
+  },
+};
+
+export const TRNAI: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAI",
+    reason: "Care for a Family Member",
+    work_pattern_spec: "standard",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 30,
+    },
+  },
+};
+
+export const TRNAJ: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAJ",
+    reason: "Care for a Family Member",
+    has_continuous_leave_periods: true,
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
+  },
+};
+
+export const TRNAK: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAK",
+    reason: "Care for a Family Member",
+    has_continuous_leave_periods: true,
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
+  },
+};
+
+export const TRNAL: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAL",
+    reason: "Care for a Family Member",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+  },
+};
+
+export const TRNAM: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAM",
+    reason: "Care for a Family Member",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
+    metadata: {
+      postSubmit: "APPROVE",
+    },
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
+  },
+};
+
+export const TRNAN1: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAN1",
+    reason: "Care for a Family Member",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 35,
+      comment: "$100 Disability income per week",
+    },
+  },
+};
+
+export const TRNAN2: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAN2",
+    reason: "Care for a Family Member",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 30,
+    },
+  },
+};
+
+export const TRNAO: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAO",
+    reason: "Care for a Family Member",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
+  },
+};
+
+export const TRNAP: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAP",
+    reason: "Care for a Family Member",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+  },
+};
+
+export const TRNAQ1: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAQ1",
+    reason: "Care for a Family Member",
+    has_intermittent_leave_periods: true,
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 35,
+      comment: "$100 Disability income per week",
+    },
+  },
+};
+
+export const TRNAQ2: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAQ2",
+    reason: "Care for a Family Member",
+    has_intermittent_leave_periods: true,
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 30,
+    },
+  },
+};
+
+export const TRNAR: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAR",
+    reason: "Care for a Family Member",
+    has_intermittent_leave_periods: true,
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
+  },
+};
+
+export const TRNAS: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAS",
+    has_continuous_leave_periods: true,
+    reason: "Care for a Family Member",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
+  },
+};
+
+// The question here is whether we're able to enter the intermittent leave pattern at approval time.  (If yes, should push all the way through approval)
+export const TRNAT: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAT",
+    has_continuous_leave_periods: true,
+    reason: "Care for a Family Member",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
+    leave_dates: [parseISO("2021-07-19"), parseISO("2021-12-06")],
   },
 };
