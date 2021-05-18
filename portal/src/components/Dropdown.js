@@ -49,6 +49,7 @@ function Dropdown(props) {
         name={props.name}
         onChange={props.onChange}
         value={props.value}
+        aria-labelledby={`${inputId}_label ${inputId}_hint`}
       >
         {/* Include a blank initial option which will be chosen if no option has been selected yet */}
         {!props.hideEmptyChoice && (
