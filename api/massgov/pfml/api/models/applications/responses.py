@@ -19,6 +19,7 @@ from massgov.pfml.api.models.applications.common import (
     WorkPattern,
 )
 from massgov.pfml.api.models.claims.common import PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
@@ -70,12 +71,13 @@ class ApplicationResponse(PydanticBaseModel):
     other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
     phone: Optional[MaskedPhone]
-    previous_leaves: Optional[List[PreviousLeave]]
     previous_leaves_other_reason: Optional[List[PreviousLeave]]
     previous_leaves_same_reason: Optional[List[PreviousLeave]]
+    concurrent_leave: Optional[ConcurrentLeave]
     has_previous_leaves: Optional[bool]
     has_previous_leaves_other_reason: Optional[bool]
     has_previous_leaves_same_reason: Optional[bool]
+    has_concurrent_leave: Optional[bool]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":

@@ -622,6 +622,20 @@ class OtherIncomeFactory(BaseFactory):
     )
 
 
+class ConcurrentLeaveFactory(BaseFactory):
+    class Meta:
+        model = application_models.ConcurrentLeave
+
+    # application_id must be passed into the create() call
+    is_for_current_employer = factory.Faker("boolean")
+    leave_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 1), date_end=date(2021, 3, 15)
+    )
+    leave_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
+    )
+
+
 class PreviousLeaveFactory(BaseFactory):
     class Meta:
         model = application_models.PreviousLeave

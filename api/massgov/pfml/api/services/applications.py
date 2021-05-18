@@ -26,6 +26,7 @@ from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
     CaringLeaveMetadata,
+    ConcurrentLeave,
     ContinuousLeavePeriod,
     DayOfWeek,
     Document,
@@ -350,6 +351,10 @@ def update_from_request(
 
         if key == "other_incomes":
             set_other_incomes(db_session, body.other_incomes, application)
+            continue
+
+        if key == "concurrent_leave":
+            set_concurrent_leave(db_session, body.concurrent_leave, application)
             continue
 
         if key == "previous_leaves_other_reason":
@@ -770,6 +775,23 @@ def set_other_incomes(
             )
 
         db_session.add(new_other_income)
+
+
+def set_concurrent_leave(
+    db_session: db.Session,
+    api_concurrent_leave: Optional[massgov.pfml.api.models.common.ConcurrentLeave],
+    application: Application,
+) -> None:
+    if not api_concurrent_leave:
+        return
+
+    concurrent_leave = ConcurrentLeave(
+        application_id=application.application_id,
+        is_for_current_employer=api_concurrent_leave.is_for_current_employer,
+        leave_start_date=api_concurrent_leave.leave_start_date,
+        leave_end_date=api_concurrent_leave.leave_end_date,
+    )
+    db_session.add(concurrent_leave)
 
 
 def set_previous_leaves(

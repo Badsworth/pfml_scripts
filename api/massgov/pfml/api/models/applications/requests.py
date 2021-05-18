@@ -19,7 +19,7 @@ from massgov.pfml.api.models.applications.common import (
     Phone,
     WorkPattern,
 )
-from massgov.pfml.api.models.common import PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave, PreviousLeave
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import FEINUnformattedStr, MassIdStr, TaxIdUnformattedStr
@@ -56,8 +56,10 @@ class ApplicationRequestBody(PydanticBaseModel):
     phone: Optional[Phone]
     previous_leaves_other_reason: Optional[List[PreviousLeave]]
     previous_leaves_same_reason: Optional[List[PreviousLeave]]
+    concurrent_leave: Optional[ConcurrentLeave]
     has_previous_leaves_other_reason: Optional[bool]
     has_previous_leaves_same_reason: Optional[bool]
+    has_concurrent_leave: Optional[bool]
 
     caring_leave_metadata: Optional[CaringLeaveMetadata]
 

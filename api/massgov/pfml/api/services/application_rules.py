@@ -270,6 +270,42 @@ def get_other_income_issues(income: OtherIncome, index: int) -> List[Issue]:
     return issues
 
 
+def get_concurrent_leave_issues(application: Application) -> List[Issue]:
+    issues = []
+
+    if application.has_concurrent_leave and application.concurrent_leave:
+        concurrent_leave = application.concurrent_leave
+        issues += check_date_range(
+            concurrent_leave.leave_start_date,
+            "concurrent_leave.leave_start_date",
+            concurrent_leave.leave_end_date,
+            "concurrent_leave.leave_end_date",
+            PFML_PROGRAM_LAUNCH_DATE,
+        )
+    else:
+        if application.has_concurrent_leave and not application.concurrent_leave:
+            issues.append(
+                Issue(
+                    type=IssueType.required,
+                    rule=IssueRule.conditional,
+                    message="when has_concurrent_leave is true, concurrent_leave must be present",
+                    field="concurrent_leave",
+                )
+            )
+        else:
+            if not application.has_concurrent_leave and application.concurrent_leave:
+                issues.append(
+                    Issue(
+                        type=IssueType.required,
+                        rule=IssueRule.conditional,
+                        message="when has_concurrent_leave is false, concurrent_leave must be null",
+                        field="concurrent_leave",
+                    )
+                )
+
+    return issues
+
+
 def get_previous_leaves_other_reason_issues(application: Application) -> List[Issue]:
     issues = []
 
@@ -468,8 +504,10 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
 
     issues += get_employer_benefits_issues(application)
     issues += get_other_incomes_issues(application)
+
     issues += get_previous_leaves_other_reason_issues(application)
     issues += get_previous_leaves_same_reason_issues(application)
+    issues += get_concurrent_leave_issues(application)
 
     if require_other_leaves_fields:
         # TODO (CP-1674): Move these rules into the "always required" set once the

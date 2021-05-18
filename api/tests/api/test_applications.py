@@ -40,6 +40,7 @@ from massgov.pfml.db.models.factories import (
     ApplicationFactory,
     CaringLeaveMetadataFactory,
     ClaimFactory,
+    ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
     DocumentFactory,
     EmployerBenefitFactory,
@@ -47,7 +48,6 @@ from massgov.pfml.db.models.factories import (
     IntermittentLeavePeriodFactory,
     LeaveReasonFactory,
     OtherIncomeFactory,
-    PreviousLeaveFactory,
     PreviousLeaveOtherReasonFactory,
     PreviousLeaveSameReasonFactory,
     ReducedScheduleLeavePeriodFactory,
@@ -2035,6 +2035,108 @@ def test_application_patch_other_income_exceed_limit(client, user, auth_token, t
     assert application.other_incomes == existing_incomes
 
 
+def test_application_patch_concurrent_leave_is_optional(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_concurrent_leave": False,},
+    )
+
+    assert response.status_code == 200
+    warnings = response.get_json().get("warnings")
+
+    assert {
+        "field": "concurrent_leave",
+        "message": "when has_concurrent_leave is true, concurrent_leave must be present",
+        "type": "required",
+        "rule": "conditional",
+    } not in warnings
+
+
+def test_application_patch_concurrent_leave_validate_is_not_present(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_concurrent_leave": True,},
+    )
+
+    assert response.status_code == 200
+    warnings = response.get_json().get("warnings")
+
+    assert {
+        "field": "concurrent_leave",
+        "message": "when has_concurrent_leave is true, concurrent_leave must be present",
+        "type": "required",
+        "rule": "conditional",
+    } in warnings
+
+
+def test_application_patch_concurrent_leave_validate_is_present(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    concurrent_leave = ConcurrentLeaveFactory(application_id=application.application_id)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_concurrent_leave": True,},
+    )
+
+    assert response.status_code == 200
+    data = response.get_json().get("data")
+    warnings = response.get_json().get("warnings")
+
+    assert {
+        "field": "concurrent_leave",
+        "message": "when has_concurrent_leave is true, concurrent_leave must be present",
+        "type": "required",
+        "rule": "conditional",
+    } not in warnings
+
+    data_concurrent_leave = data.get("concurrent_leave")
+    assert data_concurrent_leave is not None
+    assert (
+        data_concurrent_leave["is_for_current_employer"] == concurrent_leave.is_for_current_employer
+    )
+    assert data_concurrent_leave["leave_start_date"] == concurrent_leave.leave_start_date.__str__()
+    assert data_concurrent_leave["leave_end_date"] == concurrent_leave.leave_end_date.__str__()
+
+
+def test_application_patch_concurrent_leave_validate_is_present_but_flag_is_false(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    ConcurrentLeaveFactory(application_id=application.application_id)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_concurrent_leave": False,},
+    )
+
+    assert response.status_code == 200
+    data = response.get_json().get("data")
+    assert data.get("has_concurrent_leave") is False
+    data_concurrent_leave = data.get("concurrent_leave")
+    assert data_concurrent_leave is not None
+
+    warnings = response.get_json().get("warnings")
+
+    assert {
+        "field": "concurrent_leave",
+        "message": "when has_concurrent_leave is false, concurrent_leave must be null",
+        "type": "required",
+        "rule": "conditional",
+    } in warnings
+
+
 def test_application_patch_has_previous_leaves(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
@@ -2058,16 +2160,6 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
         json={
-            "previous_leaves": [
-                {
-                    "is_for_current_employer": True,
-                    "leave_start_date": "2021-01-01",
-                    "leave_end_date": "2021-05-01",
-                    "leave_reason": "Pregnancy / Maternity",
-                    "worked_per_week_minutes": 20,
-                    "leave_minutes": 10,
-                }
-            ],
             "previous_leaves_other_reason": [
                 {
                     "is_for_current_employer": True,
@@ -2133,11 +2225,7 @@ def test_application_patch_add_empty_array_for_previous_leaves(
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={
-            "previous_leaves": [],
-            "previous_leaves_other_reason": [],
-            "previous_leaves_same_reason": [],
-        },
+        json={"previous_leaves_other_reason": [], "previous_leaves_same_reason": [],},
     )
     test_db_session.refresh(application)
 
@@ -2162,16 +2250,6 @@ def test_application_patch_add_empty_previous_leaves(client, user, auth_token, t
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
         json={
-            "previous_leaves": [
-                {
-                    "is_for_current_employer": None,
-                    "leave_end_date": None,
-                    "leave_start_date": None,
-                    "leave_reason": None,
-                    "worked_per_week_minutes": None,
-                    "leave_minutes": None,
-                },
-            ],
             "previous_leaves_other_reason": [
                 {
                     "is_for_current_employer": None,
@@ -2279,9 +2357,6 @@ def test_application_patch_previous_leave_exceed_limit(client, user, auth_token,
     application = ApplicationFactory.create(user=user)
     limit = 6
 
-    leaves = PreviousLeaveFactory.create_batch(size=2, application_id=application.application_id,)
-    application.previous_leaves = leaves
-
     application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
         size=2, application_id=application.application_id,
     )
@@ -2292,7 +2367,6 @@ def test_application_patch_previous_leave_exceed_limit(client, user, auth_token,
     test_db_session.add(application)
     test_db_session.commit()
 
-    existing_leaves = application.previous_leaves
     existing_leaves_other_reason = application.previous_leaves_other_reason
     existing_leaves_same_reason = application.previous_leaves_same_reason
 
@@ -2312,7 +2386,6 @@ def test_application_patch_previous_leave_exceed_limit(client, user, auth_token,
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
         json={
-            "previous_leaves": new_leaves,
             "previous_leaves_other_reason": new_leaves,
             "previous_leaves_same_reason": new_leaves,
         },
@@ -2320,7 +2393,6 @@ def test_application_patch_previous_leave_exceed_limit(client, user, auth_token,
 
     assert response.status_code == 400
     test_db_session.refresh(application)
-    assert application.previous_leaves == existing_leaves
 
     assert application.previous_leaves_other_reason == existing_leaves_other_reason
     assert application.previous_leaves_same_reason == existing_leaves_same_reason
@@ -4715,7 +4787,6 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
 
 
 def test_submit_app_with_leave_reason_id_not_in_map(client, user, auth_token, test_db_session):
-
     with pytest.raises(NoClaimTypeForAbsenceType):
         new_leave_reason = LeaveReasonFactory.create(
             leave_reason_id=999, leave_reason_description="New reason"
