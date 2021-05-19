@@ -60,7 +60,7 @@ module "api" {
     "https://paidleave-cps-preview.eol.mass.gov",
     "https://paidleave-api-cps-preview.eol.mass.gov",
   ]
-  enforce_leave_admin_verification = "0"
+  enforce_leave_admin_verification = "1"
   enable_application_fraud_check   = "0"
   release_version                  = var.release_version
 

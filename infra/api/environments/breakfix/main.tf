@@ -61,7 +61,7 @@ module "api" {
     "https://paidleave-api-breakfix.eol.mass.gov",
     "https://l296x0cj1m.execute-api.us-east-1.amazonaws.com"
   ]
-  enforce_leave_admin_verification = "0"
+  enforce_leave_admin_verification = "1"
   enable_application_fraud_check   = "0"
   release_version                  = var.release_version
   portal_base_url                  = "https://paidleave-breakfix.eol.mass.gov"

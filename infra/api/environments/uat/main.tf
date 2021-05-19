@@ -62,7 +62,7 @@ module "api" {
   rmv_client_certificate_binary_arn                = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-uat/rmv_client_certificate-LWvMFe"
   rmv_check_behavior                               = "partially_mocked" # TODO?
   rmv_check_mock_success                           = "1"
-  enforce_leave_admin_verification                 = "0"
+  enforce_leave_admin_verification                 = "1"
 
   # copied from stage for now, with replacements for idt --> uat. may not be right
   fineos_client_customer_api_url                      = "https://uat-api.masspfml.fineos.com/customerapi/"
