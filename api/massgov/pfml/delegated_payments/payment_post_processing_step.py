@@ -105,7 +105,9 @@ class PaymentPostProcessingStep(Step):
         # on the length of the period. This is calculated by finding the length
         # in days of the pay period, dividing by 7, and rounding up.
         period_in_days = (end_date - start_date).days
-        weeks = math.ceil(period_in_days / 7.0)
+        # Note that the number of days can be equal to 0 if the pay period is for 1 day
+        # We set the minimum number of weeks to be equal to 1
+        weeks = math.ceil(period_in_days / 7.0) or 1
 
         return weeks * result.maximum_weekly_benefit_amount
 

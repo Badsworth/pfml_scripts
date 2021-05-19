@@ -106,6 +106,52 @@ def _validate_amounts_not_selected(group, expected_chosen_amounts):
     assert sorted(actual_amounts_chosen) == sorted(expected_chosen_amounts)
 
 
+def test_get_maximum_amount_for_period(payment_post_processing_step):
+    # For dates used, the maximum for a week is $850.00. Weeks are rounded up (eg. 8 days = 2 weeks)
+
+    # Period is all contained in one day
+    amount = payment_post_processing_step._get_maximum_amount_for_period(
+        date(2021, 1, 1), date(2021, 1, 1)
+    )
+    assert amount == Decimal("850.00")
+
+    # Period is part of one week
+    amount = payment_post_processing_step._get_maximum_amount_for_period(
+        date(2021, 1, 1), date(2021, 1, 4)
+    )
+    assert amount == Decimal("850.00")
+
+    # Period is exactly a week
+    amount = payment_post_processing_step._get_maximum_amount_for_period(
+        date(2021, 1, 1), date(2021, 1, 8)
+    )
+    assert amount == Decimal("850.00")
+
+    # Period is part of two weeks
+    amount = payment_post_processing_step._get_maximum_amount_for_period(
+        date(2021, 1, 1), date(2021, 1, 11)
+    )
+    assert amount == Decimal("1700.00")
+
+    # Period is exactly two weeks
+    amount = payment_post_processing_step._get_maximum_amount_for_period(
+        date(2021, 1, 1), date(2021, 1, 15)
+    )
+    assert amount == Decimal("1700.00")
+
+    # Period is part of three weeks
+    amount = payment_post_processing_step._get_maximum_amount_for_period(
+        date(2021, 1, 1), date(2021, 1, 18)
+    )
+    assert amount == Decimal("2550.00")
+
+    # Period is exactly three weeks
+    amount = payment_post_processing_step._get_maximum_amount_for_period(
+        date(2021, 1, 1), date(2021, 1, 22)
+    )
+    assert amount == Decimal("2550.00")
+
+
 def test_validate_payments_not_exceeding_cap(payment_post_processing_step, test_db_session):
     employee = EmployeeFactory.create()
 
