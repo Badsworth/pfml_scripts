@@ -3,6 +3,7 @@
 name: API CI Testing
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -160,7 +161,10 @@ jobs:
       - uses: technote-space/workflow-conclusion-action@v2
       - name: Set test-state value
         id: test-state
-        run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
+        run: |
+          pwd
+          ls -lart
+          echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
 
   post-to-slack:
     name: post failures to slack
