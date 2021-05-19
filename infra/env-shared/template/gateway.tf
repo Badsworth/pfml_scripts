@@ -51,15 +51,10 @@ resource "aws_api_gateway_stage" "pfml" {
   lifecycle {
     create_before_destroy = true
   }
-  
-  variables {
-    key = "this",
-    value = "that"
-  }
 
   deployment_id = aws_api_gateway_deployment.stage.id
   rest_api_id   = aws_api_gateway_rest_api.pfml.id
-  stage_name    = "${var.environment_name}"
+  stage_name    = "${var.environment_name}-${module.constants.salt}"
 }
 
 resource "aws_api_gateway_method_settings" "full_stage_settings" {
