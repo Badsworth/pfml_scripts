@@ -21,7 +21,7 @@ resource "aws_api_gateway_usage_plan" "reports_plan" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.pfml.id
-    stage  = aws_api_gateway_deployment.stage.stage_name
+    stage  = aws_api_gateway_stage.pfml.stage_name
   }
 
   quota_settings {

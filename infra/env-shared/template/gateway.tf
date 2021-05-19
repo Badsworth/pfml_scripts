@@ -23,7 +23,6 @@ resource "aws_api_gateway_rest_api" "pfml" {
 }
 
 resource "aws_api_gateway_deployment" "stage" {
-  stage_name  = var.environment_name
   rest_api_id = aws_api_gateway_rest_api.pfml.id
 
   triggers = {
@@ -48,9 +47,19 @@ resource "aws_api_gateway_deployment" "stage" {
   ]
 }
 
+resource "aws_api_gateway_stage" "pfml" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  deployment_id = aws_api_gateway_deployment.stage.id
+  rest_api_id   = aws_api_gateway_rest_api.pfml.id
+  stage_name    = var.environment_name
+}
+
 resource "aws_api_gateway_method_settings" "full_stage_settings" {
   rest_api_id = aws_api_gateway_rest_api.pfml.id
-  stage_name  = aws_api_gateway_deployment.stage.stage_name
+  stage_name  = aws_api_gateway_stage.pfml.stage_name
   method_path = "*/*"
 
   settings {

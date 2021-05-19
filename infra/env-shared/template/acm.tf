@@ -37,7 +37,7 @@ resource "aws_api_gateway_domain_name" "domain_name" {
 
 resource "aws_api_gateway_base_path_mapping" "stage_mapping" {
   count       = local.cert_domain == null ? 0 : 1
-  stage_name  = var.environment_name
+  stage_name  = aws_api_gateway_stage.pfml.stage_name
   api_id      = aws_api_gateway_rest_api.pfml.id
   domain_name = aws_api_gateway_domain_name.domain_name[0].domain_name
 }
