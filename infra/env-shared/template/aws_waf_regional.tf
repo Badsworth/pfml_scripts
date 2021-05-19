@@ -58,6 +58,9 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
 }
 
 resource "aws_wafv2_web_acl_association" "rate_based_acl" {
+  depends_on = [
+    aws_wafregional_web_acl_association.api_gateway # 1st test of if order of association matters.
+  ]
   # Only apply this ACL if set to true in ../environments/<enviroment_name>/main.tf
   count = var.enable_regional_rate_based_acl ? 1 : 0
 
