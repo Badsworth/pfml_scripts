@@ -124,3 +124,7 @@ output "cert_domains" {
   }
 
 }
+
+output "salt" {
+  value = substr(sha1(timestamp()), 0, 6)
+}
