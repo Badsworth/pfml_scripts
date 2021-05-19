@@ -57,15 +57,15 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
   }
 }
 
-# resource "aws_wafv2_web_acl_association" "rate_based_acl" {
-#   # Only apply this ACL if set to true in ../environments/<enviroment_name>/main.tf
-#   count = var.enable_regional_rate_based_acl ? 1 : 0
+resource "aws_wafv2_web_acl_association" "rate_based_acl" {
+  # Only apply this ACL if set to true in ../environments/<enviroment_name>/main.tf
+  count = var.enable_regional_rate_based_acl ? 1 : 0
 
-#   # must be an must be an ARN of an Application Load Balancer or an Amazon API Gateway stage.
-#   # resource_arn will need to be manually entered prior to 
-#   resource_arn = aws_api_gateway_stage.pfml.arn
-#   web_acl_arn  = aws_wafv2_web_acl.regional_rate_based_acl[0].arn
-# }
+  # must be an must be an ARN of an Application Load Balancer or an Amazon API Gateway stage.
+  # resource_arn will need to be manually entered prior to 
+  resource_arn = aws_api_gateway_stage.pfml.arn
+  web_acl_arn  = aws_wafv2_web_acl.regional_rate_based_acl[0].arn
+}
 
 #------------------------------------------------------------------------------#
 #                     Fortinet Managed AWS WAF Rules                           #
