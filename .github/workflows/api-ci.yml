@@ -3,7 +3,6 @@
 name: API CI Testing
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
@@ -158,13 +157,11 @@ jobs:
     steps:
         # https://github.com/technote-space/workflow-conclusion-action
         # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+      - uses: actions/checkout@v2
       - uses: technote-space/workflow-conclusion-action@v2
       - name: Set test-state value
         id: test-state
-        run: |
-          pwd
-          ls -lart
-          echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
+        run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
 
   post-to-slack:
     name: post failures to slack
