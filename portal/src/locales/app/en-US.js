@@ -723,11 +723,13 @@ const pages = {
     createAccountButton: "Create account",
     createEmployerAccount:
       "<strong>Are you a Massachusetts employer?</strong> Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to create an employer account.",
+    employerRedirect:
+      "Need to create an employer account? <employer-create-account-link>Register to manage leave for your team.</employer-create-account-link>",
     haveAnAccountFooterLabel: "Have an account?",
     logInFooterLink: "Log in",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "$t(shared.passwordLabel)",
-    title: "Create an account",
+    title: "Create a worker account to apply for paid leave",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authForgotPassword: {
@@ -1923,12 +1925,10 @@ const pages = {
     learnMoreLinks:
       "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
     learnMoreTitle: "Learn more",
-    newTag: "New",
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
     respondTitle: "Respond to applications within 10 business days",
-    settingsLinks:
-      "<ul><li><your-organizations-link>Your organizations</your-organizations-link></li></ul>",
+    settingsLink: "Your organizations",
     settingsTitle: "Settings",
     verificationBody:
       "We require every employer to verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team.",
@@ -1978,15 +1978,16 @@ const pages = {
     title: "Get ready to apply",
   },
   index: {
-    claimantCardBody: "You can now apply for Paid Family and Medical Leave.",
-    claimantCreateAccountButton: "Create an account",
+    claimantCardBody: "Apply for Paid Family and Medical Leave.",
+    claimantCreateAccountButton: "Create a worker account",
     claimantHeading: "Workers",
-    createAccountHeading: "Create an account",
+    createAccountHeading: "Choose an account type",
+    createAccountHint:
+      "You can create an account as a worker or as an employer.",
     employerCardBody_contactCenter:
       "Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to create an employer account.",
     employerCardBody_massEmployer: "Are you a Massachusetts employer?",
-    employerCardBody_selfRegister:
-      "Register now so you can manage leave for your team.",
+    employerCardBody_selfRegister: "Manage leave for your team.",
     employerCreateAccountButton: "Create an employer account",
     employerHeading: "Employers",
     seoTitle: "Massachusetts Paid Family and Medical Leave",
@@ -2383,6 +2384,7 @@ const components = {
       "We are performing scheduled maintenance to improve functionality and our overall service. Paid leave applications will be back online on <strong>{{scheduledRemovalDayAndTime}}</strong>.<br/><br/>When we are back, you will be able to access your existing applications or create a new one. Employers will be able to respond to information requests. We appreciate your understanding and patience. To get ready, review <what-to-expect-link>what to expect when you apply for paid family and medical leave benefits</what-to-expect-link>.",
     title: "We’re undergoing maintenance",
   },
+  newTag: "New",
   newsBanner: {
     // TODO (EMPLOYER-1296): Add Mass.gov link to banner
     body:

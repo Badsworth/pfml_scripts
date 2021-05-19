@@ -25,24 +25,6 @@ exports[`Employer welcome displays links to Organizations page when employerShow
     key="0"
   >
     <a
-      href="/employers/organizations"
-      key="0"
-    >
-      Your organizations
-    </a>
-  </li>
-</ul>
-`;
-
-exports[`Employer welcome displays links to Organizations page when employerShowVerifications is true 4`] = `
-<ul
-  className="usa-list desktop:font-body-2xs desktop:padding-top-05"
-  key="0"
->
-  <li
-    key="0"
-  >
-    <a
       href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
       key="0"
       rel="noopener"
