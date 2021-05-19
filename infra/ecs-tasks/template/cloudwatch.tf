@@ -328,3 +328,42 @@ module "pub-payments-process-fineos" {
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
 }
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Process CPS extracts at 3am EST (4am EDT) (8am UTC) on the weekend
+#
+# This happens during the work week as a part of
+# payments_payment_voucher_plus_scheduler.
+module "weekend_cps_extract_processing_scheduler" {
+  source = "../../modules/ecs_task_scheduler"
+  # This technically impacts more than just payments, but the week day
+  # processing is also tied to this var at the moment, so using the same here.
+  is_enabled = var.enable_recurring_payments_schedule
+
+  task_name           = "weekend-cps-extract-processing"
+  schedule_expression = "cron(0 8 ? * SUN,SAT *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["payments-fineos-process"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["payments-fineos-process"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.payments_fineos_process_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "payments-fineos-process",
+        "command": [
+          "payments-fineos-process",
+          "--steps=vendor-extract"
+        ]
+      }
+    ]
+  }
+  JSON
+}
