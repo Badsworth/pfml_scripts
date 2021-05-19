@@ -116,9 +116,6 @@ resource "aws_wafregional_web_acl" "fortinet_managed_rules" {
 }
 
 resource "aws_wafregional_web_acl_association" "api_gateway" {
-depends_on = [
-    aws_wafv2_web_acl_association.rate_based_acl # 2nd test of if order of association matters.
-  ]
 
   count        = var.enable_fortinet_managed_rules ? 1 : 0
   resource_arn = "arn:aws:apigateway:us-east-1::/restapis/${aws_api_gateway_rest_api.pfml.id}/stages/${var.environment_name}"
