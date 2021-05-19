@@ -58,9 +58,7 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
 }
 
 resource "aws_wafv2_web_acl_association" "rate_based_acl" {
-  depends_on = [
-    aws_wafregional_web_acl_association.api_gateway # 1st test of if order of association matters.
-  ]
+
   # Only apply this ACL if set to true in ../environments/<enviroment_name>/main.tf
   count = var.enable_regional_rate_based_acl ? 1 : 0
 
@@ -119,6 +117,10 @@ resource "aws_wafregional_web_acl" "fortinet_managed_rules" {
 }
 
 resource "aws_wafregional_web_acl_association" "api_gateway" {
+depends_on = [
+    aws_wafv2_web_acl_association.rate_based_acl # 2nd test of if order of association matters.
+  ]
+
   count        = var.enable_fortinet_managed_rules ? 1 : 0
   resource_arn = aws_api_gateway_stage.pfml.arn
   web_acl_id   = aws_wafregional_web_acl.fortinet_managed_rules[0].id
