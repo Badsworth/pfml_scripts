@@ -58,6 +58,9 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
 }
 
 resource "aws_wafv2_web_acl_association" "rate_based_acl" {
+  depends_on = [
+    aws_api_gateway_deployment.stage
+  ]
 
   # Only apply this ACL if set to true in ../environments/<enviroment_name>/main.tf
   count = var.enable_regional_rate_based_acl ? 1 : 0
