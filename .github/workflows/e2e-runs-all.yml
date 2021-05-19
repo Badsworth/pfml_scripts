@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: [ "test", "stage", "performance", "training", "uat" ]
+        environment: [ "test", "stage", "performance", "training", "uat", "cps-preview" ]
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/trigger-cypress
