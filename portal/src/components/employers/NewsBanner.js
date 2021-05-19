@@ -2,12 +2,15 @@ import { Trans, useTranslation } from "react-i18next";
 import Alert from "../Alert";
 import PropTypes from "prop-types";
 import React from "react";
+import { isFeatureEnabled } from "../../services/featureFlags";
+import routes from "../../../src/routes";
 
 /**
  * Banner that announces upcoming features and comms in Employer Portal
  */
 export const NewsBanner = ({ className }) => {
   const { t } = useTranslation();
+  const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
 
   return (
     <Alert
@@ -18,16 +21,16 @@ export const NewsBanner = ({ className }) => {
       <p>
         <Trans
           i18nKey="components.newsBanner.body"
-          // TODO (EMPLOYER-1296): Add Mass.gov link to banner
-          // components={{
-          //   "learn-more-link": (
-          //     <a
-          //       href={routes.external.massgov.employerDashboard}
-          //       target="_blank"
-          //       rel="noopener"
-          //     />
-          //   ),
-          // }}
+          tOptions={{ context: shouldShowDashboard && "live" }}
+          components={{
+            "learn-more-link": (
+              <a
+                href={routes.external.massgov.employerDashboard}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
+          }}
         />
       </p>
     </Alert>

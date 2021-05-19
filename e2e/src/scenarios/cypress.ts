@@ -116,8 +116,7 @@ export const MCAP_NODOC: ScenarioSpecification = {
   claim: {
     label: "MCAP_NODOC",
     shortClaim: true,
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    reason: "Serious Health Condition - Employee",
     work_pattern_spec: "0,315,315,315,315,315,0",
     docs: {
       // Missing HCP.

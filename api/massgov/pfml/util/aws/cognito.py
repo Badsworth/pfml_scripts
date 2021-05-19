@@ -218,7 +218,10 @@ def create_cognito_account(
                 "sign_up_source": "pfml_api"
             },
         )
-    except cognito_client.exceptions.InvalidPasswordException as error:
+    except (
+        cognito_client.exceptions.InvalidPasswordException,
+        cognito_client.exceptions.InvalidParameterException,
+    ) as error:
         # Thrown for various reasons:
         # 1. When password doesn't conform to our password requirements (length, casing, characters)
         # 2. When password is a commonly used or compromised credential

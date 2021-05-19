@@ -71,6 +71,35 @@ def test_create_cognito_account_invalid_password_error(
     assert exc.value.issue.type == "invalid"
 
 
+def test_create_cognito_account_invalid_parameter_exception(
+    mock_cognito, mock_cognito_user_pool, monkeypatch
+):
+    def sign_up(**kwargs):
+        raise mock_cognito.exceptions.InvalidParameterException(
+            error_response={
+                "Error": {
+                    "Code": "InvalidParameterException",
+                    "Message": "1 validation error detected: Value at 'password' failed to satisfy constraint: Member must satisfy regular expression pattern: ^[\\S]+.*[\\S]+$",
+                }
+            },
+            operation_name="SignUp",
+        )
+
+    monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
+
+    with pytest.raises(cognito_util.CognitoValidationError) as exc:
+        cognito_util.create_cognito_account(
+            fake.email(domain="example.com"),
+            " abc123",  # One known way to trigger this exception is to begin a password with a space character
+            mock_cognito_user_pool["id"],
+            mock_cognito_user_pool["client_id"],
+            cognito_client=mock_cognito,
+        )
+
+    assert exc.value.issue.field == "password"
+    assert exc.value.issue.type == "invalid"
+
+
 def test_create_cognito_account_insecure_password_error(
     mock_cognito, mock_cognito_user_pool, monkeypatch
 ):

@@ -157,6 +157,7 @@ jobs:
     steps:
         # https://github.com/technote-space/workflow-conclusion-action
         # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+      - uses: actions/checkout@v2
       - uses: technote-space/workflow-conclusion-action@v2
       - name: Set test-state value
         id: test-state

@@ -7,10 +7,66 @@ exports[`NewsBanner renders the component 1`] = `
 >
   <p>
     <Trans
+      components={
+        Object {
+          "learn-more-link": <a
+            href="https://www.mass.gov/employer-dashboard"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
       i18nKey="components.newsBanner.body"
+      tOptions={
+        Object {
+          "context": undefined,
+        }
+      }
     />
   </p>
 </Alert>
 `;
 
 exports[`NewsBanner renders the component 2`] = `"Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be adding more features to the dashboard so you can easily find and manage paid leave applications."`;
+
+exports[`NewsBanner when dashboard feature flag is enabled renders go live content 1`] = `
+<Alert
+  heading="We're making it easier to manage paid leave applications"
+  state="info"
+>
+  <p>
+    <Trans
+      components={
+        Object {
+          "learn-more-link": <a
+            href="https://www.mass.gov/employer-dashboard"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="components.newsBanner.body"
+      tOptions={
+        Object {
+          "context": "live",
+        }
+      }
+    />
+  </p>
+</Alert>
+`;
+
+exports[`NewsBanner when dashboard feature flag is enabled renders go live content 2`] = `
+Array [
+  "Our dashboard is in beta. You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be ",
+  <a
+    href="https://www.mass.gov/employer-dashboard"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    adding more features
+  </a>,
+  " to the dashboard so you can easily find and manage paid leave applications. You can use our feedback form to tell us what you think of our new features.",
+]
+`;
