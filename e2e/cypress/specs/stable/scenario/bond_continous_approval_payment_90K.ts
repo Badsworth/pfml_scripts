@@ -3,7 +3,6 @@ import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 
-//
 describe("Submit bonding application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest = it("As a claimant, I should be able to submit a continous bonding application through the portal", () => {
     portal.before();

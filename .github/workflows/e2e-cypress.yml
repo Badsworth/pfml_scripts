@@ -43,6 +43,7 @@ env:
   E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
   CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title || github.event.head_commit.message }}
 
 jobs:
   cypress:
@@ -58,11 +59,10 @@ jobs:
 
       # Set Cypress Tags according to what type of event we're dealing with.
       - name: Set variables for PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' 
         run: |
           echo "cypress_tags=PR" >> $GITHUB_ENV
           echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "COMMIT_INFO_MESSAGE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
           echo "only_stable=false" >> $GITHUB_ENV
       - name: Set variables for Nightly
         if: github.event_name == 'schedule'
@@ -124,7 +124,6 @@ jobs:
         run: |
           echo "cypress_tags=PR" >> $GITHUB_ENV
           echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "COMMIT_INFO_MESSAGE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
           echo "only_stable=false" >> $GITHUB_ENV
       - name: Set variables for Nightly
         if: github.event_name == 'schedule'
