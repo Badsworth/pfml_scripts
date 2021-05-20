@@ -5,6 +5,7 @@ import {
   getDocumentReviewTaskName,
 } from "../../src/util/documents";
 import { LeaveReason } from "../../src/types";
+import { config } from "./common";
 
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
@@ -64,7 +65,7 @@ export function before(): void {
     /(ajax\/pagerender\.jsp|sharedpages\/ajax\/listviewpagerender\.jsp|AJAXRequestHandler\.do)/
   ).as("ajaxRender");
 
-  if (Cypress.env("E2E_ENVIRONMENT") === "uat") {
+  if (config("ENVIRONMENT") === "uat") {
     SSO();
   }
 }
@@ -484,7 +485,7 @@ export function claimAdjudicationFlow(
 ): void {
   const docType = getCertificationDocumentType(
     reason,
-    Cypress.env("E2E_HAS_FINEOS_SP") === "true"
+    config("HAS_FINEOS_SP") === "true"
   );
 
   visitClaim(claimNumber);
@@ -530,10 +531,7 @@ export function intermittentClaimAdjudicationFlow(
   cy.get("input[type='submit'][value='Adjudicate']").click();
   checkStatus(claimNumber, "Eligibility", "Met");
   markEvidence(
-    getCertificationDocumentType(
-      reason,
-      Cypress.env("E2E_HAS_FINEOS_SP") === "true"
-    )
+    getCertificationDocumentType(reason, config("HAS_FINEOS_SP") === "true")
   );
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
@@ -613,7 +611,7 @@ export function mailedDocumentMarkEvidenceRecieved(
   assertHasDocument("Identification Proof");
   const documentType = getCertificationDocumentType(
     reason,
-    Cypress.env("E2E_HAS_FINEOS_SP") === "true"
+    config("HAS_FINEOS_SP") === "true"
   );
   uploadDocument("HCP", documentType);
   onTab("Documents");

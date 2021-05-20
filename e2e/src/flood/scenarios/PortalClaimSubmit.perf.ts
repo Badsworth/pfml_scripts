@@ -2,6 +2,7 @@ import { StepFunction, TestData, Browser, step, By, ENV } from "@flood/element";
 import * as Cfg from "../config";
 import * as Util from "../helpers";
 import { fetchFormData, fetchJSON } from "../fetch";
+import config from "../../config";
 
 let authToken: string;
 let newAccount: { username: string; password: string };
@@ -108,7 +109,7 @@ async function register(
   password: string
 ) {
   // go to registration page
-  await browser.visit(`${await Cfg.PortalBaseUrl}/create-account/`);
+  await browser.visit(`${config("PORTAL_BASEURL")}/create-account/`);
   // fill out the form
   await (await Util.labelled(browser, "Email address")).type(username);
   await (await Util.labelled(browser, "Password")).type(password);
@@ -138,7 +139,7 @@ async function login(
   username: string,
   password: string
 ): Promise<string> {
-  await browser.visit(`${await Cfg.PortalBaseUrl}/login`);
+  await browser.visit(`${config("PORTAL_BASEURL")}/login`);
   await (await Util.labelled(browser, "Email address")).type(username);
   await (await Util.labelled(browser, "Password")).type(password);
   await (
@@ -180,7 +181,7 @@ function employerResponse(fineosId: string): Cfg.StoredStep {
             "-",
             ""
           )}@inbox.testmail.app`,
-          await Cfg.config("E2E_EMPLOYER_PORTAL_PASSWORD")
+          config("EMPLOYER_PORTAL_PASSWORD")
         );
 
         await (
@@ -297,7 +298,7 @@ async function setFeatureFlags(browser: Browser): Promise<void> {
       claimantAuthThroughApi: true,
       employerShowDashboard: true,
     }),
-    url: await Cfg.PortalBaseUrl,
+    url: config("PORTAL_BASEURL"),
   });
 }
 
@@ -394,7 +395,7 @@ async function createApplication(browser: Browser): Promise<void> {
   const res = await fetchJSON(
     browser,
     authToken,
-    `${await Cfg.APIBaseUrl}/applications`,
+    `${config("API_BASEURL")}/applications`,
     {
       method: "POST",
     }
@@ -416,7 +417,7 @@ async function updateApplication(
   const res = await fetchJSON(
     browser,
     authToken,
-    `${await Cfg.APIBaseUrl}/applications/${applicationId}`,
+    `${config("API_BASEURL")}/applications/${applicationId}`,
     {
       method: "PATCH",
       body: JSON.stringify(claimPart),
@@ -434,7 +435,7 @@ async function submitApplication(browser: Browser): Promise<void> {
   const res = await fetchJSON(
     browser,
     authToken,
-    `${await Cfg.APIBaseUrl}/applications/${applicationId}/submit_application`,
+    `${config("API_BASEURL")}/applications/${applicationId}/submit_application`,
     {
       method: "POST",
     }
@@ -463,7 +464,7 @@ async function uploadDocuments(
         file: { data, name, type: "application/pdf" },
         name,
       },
-      `${await Cfg.APIBaseUrl}/applications/${applicationId}/documents`,
+      `${config("API_BASEURL")}/applications/${applicationId}/documents`,
       {
         method: "POST",
       }
@@ -482,7 +483,9 @@ async function completeApplication(browser: Browser): Promise<void> {
   const res = await fetchJSON(
     browser,
     authToken,
-    `${await Cfg.APIBaseUrl}/applications/${applicationId}/complete_application`,
+    `${config(
+      "API_BASEURL"
+    )}/applications/${applicationId}/complete_application`,
     {
       method: "POST",
     }

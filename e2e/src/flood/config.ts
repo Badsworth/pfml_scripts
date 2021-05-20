@@ -1,15 +1,8 @@
 import { Browser, TestSettings, ENV, StepOptions } from "@flood/element";
 import Tasks from "./tasks";
-// @ts-ignore
-import envConfig from "./data/env.json";
-/*
- * The (2) imports below are outside of the src/flood/* directory
- * This means that, if changed, the makeFloodBundle.sh script
- * also needs to be updated accordingly, otherwise, these changes
- * will cause issues/bugs running and/or deploying Load & Stress tests
- */
-import { DocumentUploadRequest } from "../api";
-import { GeneratedClaim } from "../generation/Claim";
+import config from "../config";
+import type { DocumentUploadRequest } from "../api";
+import type { GeneratedClaim } from "../generation/Claim";
 
 export const globalElementSettings: TestSettings = {
   loopCount: 1,
@@ -24,9 +17,6 @@ export const globalElementSettings: TestSettings = {
   clearCache: true,
   clearCookies: true,
 };
-
-export const PortalBaseUrl = config("E2E_PORTAL_BASEURL");
-export const APIBaseUrl = config("E2E_API_BASEURL");
 
 export type LSTStepFunction = (
   browser: Browser,
@@ -103,16 +93,17 @@ const MAX_NODES = 90;
 export async function getFineosBaseUrl(
   userType?: FineosUserType
 ): Promise<string> {
-  const base = await config("E2E_FINEOS_BASEURL");
+  const base = config("FINEOS_BASEURL");
   let username: string;
   let password: string;
   let uuid = 0;
+  // @todo: This is too much complexity. Split user selection out to a separate function.
   if (typeof userType !== "undefined") {
     // Expects "E2E_FINEOS_USERS" to be stringified JSON.
     // E.g., "{\"USER_TYPE\": {\"username\": \"USERNAME", \"password\": \"PASSWORD\"}}"
     ({
       [userType]: { username, password },
-    } = JSON.parse(await config("E2E_FINEOS_USERS")));
+    } = JSON.parse(config("FINEOS_USERS")));
     // finds a unique id for each concurrent user => 0, 1, 2...
     uuid =
       ENV.FLOOD_GRID_INDEX * MAX_NODES * MAX_BROWSERS +
@@ -127,8 +118,8 @@ export async function getFineosBaseUrl(
       username = `${username}${uuid}`;
     }
   } else {
-    username = await config("E2E_FINEOS_USERNAME");
-    password = await config("E2E_FINEOS_PASSWORD");
+    username = config("FINEOS_USERNAME");
+    password = config("FINEOS_PASSWORD");
   }
   if (!base) {
     throw new Error(
@@ -148,17 +139,4 @@ export async function getFineosBaseUrl(
   }`;
   console.info(`\n\n\nFineosAuthUrl: ${fineosAuthUrl}\nuuid: ${uuid}\n\n\n`);
   return fineosAuthUrl;
-}
-
-export async function config(name: string): Promise<string> {
-  if (name in process.env) {
-    return process.env[name] as string;
-  } else {
-    if (name in envConfig) {
-      return envConfig[name as keyof typeof envConfig] as string;
-    }
-  }
-  throw new Error(
-    `${name} must be set as an environment variable to use this script`
-  );
 }

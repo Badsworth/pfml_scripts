@@ -2,6 +2,7 @@ import { fineos, portal, email } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { ApplicationResponse } from "../../../../src/api";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Denial Notification and Notice", () => {
   after(() => {
@@ -9,8 +10,8 @@ describe("Denial Notification and Notice", () => {
   });
 
   const credentials: Credentials = {
-    username: Cypress.env("E2E_PORTAL_USERNAME"),
-    password: Cypress.env("E2E_PORTAL_PASSWORD"),
+    username: config("PORTAL_USERNAME"),
+    password: config("PORTAL_PASSWORD"),
   };
 
   const submit = it(

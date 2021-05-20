@@ -1,6 +1,7 @@
 import { fineos, portal } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
   const submissionTest = it("As a claimant, I should be able to submit a continous bonding application through the portal", () => {
@@ -11,8 +12,8 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
       const paymentPreference = claim.paymentPreference;
 
       const credentials: Credentials = {
-        username: Cypress.env("E2E_PORTAL_USERNAME"),
-        password: Cypress.env("E2E_PORTAL_PASSWORD"),
+        username: config("PORTAL_USERNAME"),
+        password: config("PORTAL_PASSWORD"),
       };
       cy.stash("credentials", credentials);
       portal.login(credentials);

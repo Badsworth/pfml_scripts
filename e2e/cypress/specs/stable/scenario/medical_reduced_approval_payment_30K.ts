@@ -1,6 +1,7 @@
 import { portal, fineos } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Submit medical application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest = it("As a claimant, I should be able to submit a reduced medical application through the portal", () => {
@@ -11,8 +12,8 @@ describe("Submit medical application via the web portal: Adjudication Approval &
       const paymentPreference = claim.paymentPreference;
 
       const credentials: Credentials = {
-        username: Cypress.env("E2E_PORTAL_USERNAME"),
-        password: Cypress.env("E2E_PORTAL_PASSWORD"),
+        username: config("PORTAL_USERNAME"),
+        password: config("PORTAL_PASSWORD"),
       };
       portal.login(credentials);
       portal.goToDashboardFromApplicationsPage();

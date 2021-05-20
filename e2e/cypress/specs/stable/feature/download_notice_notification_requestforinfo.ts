@@ -1,6 +1,7 @@
 import { fineos, portal, email } from "../../../actions";
 import { getFineosBaseUrl } from "../../../config";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Request for More Information (notifications/notices)", () => {
   after(() => {
@@ -8,8 +9,8 @@ describe("Request for More Information (notifications/notices)", () => {
   });
 
   const credentials: Credentials = {
-    username: Cypress.env("E2E_PORTAL_USERNAME"),
-    password: Cypress.env("E2E_PORTAL_PASSWORD"),
+    username: config("PORTAL_USERNAME"),
+    password: config("PORTAL_PASSWORD"),
   };
 
   const submit = it(

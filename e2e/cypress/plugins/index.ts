@@ -9,7 +9,7 @@
 // https://on.cypress.io/plugins-guide
 // ***********************************************************
 
-import config from "../../src/config";
+import config, { merged } from "../../src/config";
 import faker from "faker";
 import path from "path";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
@@ -181,20 +181,11 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
   };
   on("file:preprocessor", webpackPreprocessor(options));
 
+  // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
+  const configEntries = Object.entries(merged).map(([k, v]) => [`E2E_${k}`, v]);
   return {
     baseUrl: config("PORTAL_BASEURL"),
-    env: {
-      // Map through config => environment variables that we will need to use in our tests.
-      E2E_FINEOS_BASEURL: config("FINEOS_BASEURL"),
-      E2E_FINEOS_USERNAME: config("FINEOS_USERNAME"),
-      E2E_FINEOS_PASSWORD: config("FINEOS_PASSWORD"),
-      E2E_PORTAL_BASEURL: config("PORTAL_BASEURL"),
-      E2E_PORTAL_USERNAME: config("PORTAL_USERNAME"),
-      E2E_PORTAL_PASSWORD: config("PORTAL_PASSWORD"),
-      E2E_EMPLOYER_PORTAL_PASSWORD: config("EMPLOYER_PORTAL_PASSWORD"),
-      E2E_ENVIRONMENT: config("ENVIRONMENT"),
-      E2E_HAS_FINEOS_SP: config("HAS_FINEOS_SP"),
-    },
+    env: Object.fromEntries(configEntries),
   };
 }
 

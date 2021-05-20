@@ -2,6 +2,7 @@ import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
 import * as Cfg from "./config";
 import { getFamilyLeavePlanProp } from "./tasks/ApproveClaim";
 import { actions } from "./scenarios/SavilinxAgent.perf";
+import config from "../config";
 
 export const formatDate = (d: string | null | undefined): string =>
   new Intl.DateTimeFormat("en-US", {
@@ -94,8 +95,8 @@ export type TestMailVerificationFetcher = {
 export async function getMailVerifier(
   browser: Browser
 ): Promise<TestMailVerificationFetcher> {
-  const apiKey = await Cfg.config("E2E_TESTMAIL_APIKEY");
-  const namespace = await Cfg.config("E2E_TESTMAIL_NAMESPACE");
+  const apiKey = config("TESTMAIL_APIKEY");
+  const namespace = config("TESTMAIL_NAMESPACE");
   const endpoint = "https://api.testmail.app/api/json";
   let tag: string;
   let username: string;

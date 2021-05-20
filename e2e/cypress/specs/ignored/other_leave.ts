@@ -1,6 +1,7 @@
 import { fineos, portal } from "../../actions";
 import { getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
+import { config } from "../../actions/common";
 
 describe("Submit a bonding claim with other income and other leave - BHAP1", () => {
   const submit = it("As a claimant, I submit a BHAP1 claim with other leave and other income through the portal", () => {
@@ -15,8 +16,8 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
       const paymentPreference = claim.paymentPreference;
 
       const credentials: Credentials = {
-        username: Cypress.env("E2E_PORTAL_USERNAME"),
-        password: Cypress.env("E2E_PORTAL_PASSWORD"),
+        username: config("PORTAL_USERNAME"),
+        password: config("PORTAL_PASSWORD"),
       };
       portal.login(credentials);
       portal.goToDashboardFromApplicationsPage();

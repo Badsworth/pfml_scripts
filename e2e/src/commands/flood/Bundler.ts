@@ -4,11 +4,12 @@ import CopyPlugin from "copy-webpack-plugin";
 import ZipPlugin from "zip-webpack-plugin";
 import dataDirectory from "../../generation/DataDirectory";
 import generateLSTData from "../../scripts/generateLSTData";
-import config, { E2ELSTConfig } from "../../config";
+import { merged } from "../../config";
+import winston from "winston";
 import * as fs from "fs";
 
 export default class Bundler {
-  constructor(private floodDirectory: string) {}
+  constructor(private floodDirectory: string, private logger: winston.Logger) {}
 
   private bundleArchive(outputDirectory: string): Promise<[string, string]> {
     return new Promise((resolve, reject) => {
@@ -56,9 +57,20 @@ export default class Bundler {
           new ZipPlugin({
             filename: "archive.zip",
           }),
+          // Configuration is built into the bundle by string replacing all process.env.E2E_* references
+          // in config.ts with their current values.
+          new webpack.DefinePlugin(
+            Object.fromEntries(
+              Object.entries(merged).map(([k, v]) => [
+                `process.env.E2E_${k}`,
+                JSON.stringify(v),
+              ])
+            )
+          ),
         ],
       };
       webpack(config, (err, stats) => {
+        this.logger.debug(stats.toString());
         if (err) return reject(err);
         if (!stats) return reject("Webpack returned nothing");
         if (stats.hasErrors()) return reject(stats.toJson().errors);
@@ -86,7 +98,7 @@ export default class Bundler {
     const indexTs = path.join(outputDirectory, "index.ts");
     await fs.promises.writeFile(
       indexTs,
-      `// @ts-nocheck\n// This file was auto-generated, and is a stub that proxies to the compiled code.\nimport main from "./${indexJs}";\n\nexport default main;\n`
+      `// @ts-nocheck\n// This file was auto-generated, and is a stub that proxies to the compiled code.\nimport main, {settings} from "./${indexJs}";\n\nexport default main;\nexport {settings}\n`
     );
     return [archive, indexTs];
   }
@@ -104,25 +116,6 @@ export default class Bundler {
       if (e.code !== "ENOENT") throw e;
     });
     await storage.prepare();
-
-    const props = [
-      "PORTAL_BASEURL",
-      "API_BASEURL",
-      "FINEOS_BASEURL",
-      "FINEOS_USERNAME",
-      "FINEOS_PASSWORD",
-      "FINEOS_USERS",
-      "EMPLOYER_PORTAL_PASSWORD",
-      "TESTMAIL_NAMESPACE",
-      "TESTMAIL_APIKEY",
-    ] as (keyof E2ELSTConfig)[];
-
-    const cfg = props.reduce((cfg, prop) => {
-      cfg[`E2E_${prop}`] = config(prop);
-      return cfg;
-    }, {} as Record<string, string>);
-    await fs.promises.writeFile(storage.join("env.json"), JSON.stringify(cfg));
-
     await generateLSTData(storage, count, scenario);
   }
 }

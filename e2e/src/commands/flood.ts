@@ -50,13 +50,15 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
 
     // Loop through all components and bundle.
     for (const component of preset) {
-      const bundler = new Bundler(path.join(__dirname, "..", "flood"));
+      const bundler = new Bundler(
+        path.join(__dirname, "..", "flood"),
+        args.logger
+      );
       logger.info(`Generating data for "${component.flood.name}"`);
       await bundler.generateData(component.data.scenario, component.data.count);
       logger.info(`Completed data generation for "${component.flood.name}"`);
 
       if (args.bundle || args.deploy) {
-        const bundler = new Bundler(path.join(__dirname, "..", "flood"));
         const bundleDir = path.join(__dirname, "..", "..", "data", "flood");
         const output = path.join(bundleDir, uuid());
         await fs.promises.mkdir(output, { recursive: true });

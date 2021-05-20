@@ -15,6 +15,7 @@ import {
 } from "../../src/errors";
 import path from "path";
 import { email } from ".";
+import { config } from "./common";
 
 export function before(): void {
   // Set the feature flag necessary to see the portal.
@@ -32,7 +33,7 @@ export function before(): void {
       employerShowVerifications: true,
       employerShowDashboard: true,
       // Only show caring leave on environments with the service pack.
-      showCaringLeaveType: Cypress.env("E2E_HAS_FINEOS_SP") === "true",
+      showCaringLeaveType: config("HAS_FINEOS_SP") === "true",
     }),
     { log: true }
   );
@@ -187,7 +188,7 @@ export function downloadLegalNotice(
 }
 
 export function login(credentials: Credentials): void {
-  cy.visit(`${Cypress.env("E2E_PORTAL_BASEURL")}/login`);
+  cy.visit(`${config("PORTAL_BASEURL")}/login`);
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").typeMasked(credentials.password);
   cy.contains("button", "Log in").click({ waitForAnimations: true });

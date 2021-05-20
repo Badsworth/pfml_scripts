@@ -8,6 +8,7 @@ import {
 } from "@flood/element";
 import * as Cfg from "../config";
 import * as Util from "../helpers";
+import config from "../../config";
 
 type EmployerData = {
   name: string;
@@ -35,16 +36,11 @@ export const steps: Cfg.StoredStep[] = [
           employerShowAddOrganization: true,
           employerShowVerifications: true,
         }),
-        url: await Cfg.PortalBaseUrl,
+        url: config("PORTAL_BASEURL"),
       });
       await browser.visit(
-        `${await Cfg.PortalBaseUrl}/employers/create-account`
+        `${config("PORTAL_BASEURL")}/employers/create-account`
       );
-      // const registerEmployerButton = await waitForElement(
-      //   browser,
-      //   By.linkText("Create an employer account")
-      // );
-      // await browser.click(registerEmployerButton);
     },
   },
   {

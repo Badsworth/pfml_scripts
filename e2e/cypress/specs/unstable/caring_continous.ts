@@ -1,7 +1,8 @@
 import { portal } from "../../actions";
+import { config } from "../../actions/common";
 
 describe("Submit part one of a caring leave claim through the portal", () => {
-  if (Cypress.env("E2E_HAS_FINEOS_SP") === "true") {
+  if (config("HAS_FINEOS_SP") === "true") {
     it("As a claimant, I should be able to submit part one of a caring leave claim", () => {
       portal.before();
       cy.task("generateClaim", "CHAP1").then((claim) => {
@@ -11,8 +12,8 @@ describe("Submit part one of a caring leave claim through the portal", () => {
         const application: ApplicationRequestBody = claim.claim;
 
         const credentials: Credentials = {
-          username: Cypress.env("E2E_PORTAL_USERNAME"),
-          password: Cypress.env("E2E_PORTAL_PASSWORD"),
+          username: config("PORTAL_USERNAME"),
+          password: config("PORTAL_PASSWORD"),
         };
         portal.login(credentials);
         portal.goToDashboardFromApplicationsPage();

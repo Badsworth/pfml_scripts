@@ -1,7 +1,7 @@
 # How to run Element scripts
 
 - You need a `data` folder inside `src/flood`
-- The `data` folder needs to contain a `env.json` with the environment variables and a `claims.json` with all scenario data.
+- The `data` folder needs to contain a `claims.json` with all scenario data.
 - Now when you run `npm run flood:plan` it should go through all scenarios in that `claims.json` file and show steps it could possibly run.
 
 # Deploying Element scripts
@@ -16,7 +16,7 @@ The workaround for this is keeping the `scripts/makeFloodBundle.sh` script updat
 - Generate the dataset for the run using the generate commands and submit employers/employees to be added to the respective environments this LST is going to run against.
 - Run the build script: `scripts/makeFloodBundle.sh` or `npm run flood:build`.
   - Inside the `.zip` archive will be:
-    - Everything inside the `src/flood` folder, **except**: 
+    - Everything inside the `src/flood` folder, **except**:
       - `index.perf.ts`, it is uploaded separately
       - `tmp` folders, get generated locally, but are irrelevant
       -  Other irrelevant files such as `deployment.md` this one.
@@ -25,7 +25,7 @@ The workaround for this is keeping the `scripts/makeFloodBundle.sh` script updat
       - `src/simulation/documents.ts`
       - `src/api.ts`
 - Login in to Flood, create a new Stream.
-- On the "Design" tab: 
+- On the "Design" tab:
   - Choose "Script Upload"
   - Upload the `.zip` and the `index.perf.ts` files added to the `scripts/` folder.
   - Make sure you click on the "Element" logo
