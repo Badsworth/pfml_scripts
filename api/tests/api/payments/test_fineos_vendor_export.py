@@ -114,14 +114,13 @@ def test_process_vendor_extract_data_happy_path(
 
     vendor_export.process_vendor_extract_data(test_db_session)
 
-    # Requested absences file artifact above has three records but only one with the
-    # LEAVEREQUEST_EVIDENCERESULTTYPE == Satisfied
-    claims: List[Claim] = (
-        test_db_session.query(Claim).filter(Claim.fineos_absence_id == "NTN-1308-ABS-01").all()
-    )
+    claims: List[Claim] = (test_db_session.query(Claim).all())
 
-    assert len(claims) == 1
-    claim = claims[0]
+    assert claims[0].fineos_notification_id == "NTN-2922"
+    assert claims[0].is_id_proofed is False
+
+    assert len(claims) == 3
+    claim = claims[2]
 
     assert claim is not None
     assert claim.employee_id == employee.employee_id
