@@ -93,8 +93,9 @@ resource "aws_db_instance" "default" {
       # minutes to hours. Plan changes to these configs with this in mind, and
       # any changes must be made in AWS Console first, then in Terraform as a follow-up.
       # 
-      # "engine_version" and "parameter_group_name" will be managed manually
+      # "engine_version", "parameter_group_name" and "db_subnet_group_name"  will be managed manually by Smartronix
       # -----------------------------------------------------------------------#
+      db_subnet_group_name,
       engine_version,
       instance_class,
       storage_type,
