@@ -2,6 +2,7 @@ import uuid
 from datetime import date
 from typing import Any, Dict
 
+import botocore.exceptions
 import faker
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -347,6 +348,20 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
             "has_verification_data": False,
         }
     ]
+
+
+def test_users_get_aws_503(client, mock_cognito, monkeypatch, valid_claimant_creation_request_body):
+
+    # valid user input recieves an error because the connection timed out
+    body = valid_claimant_creation_request_body
+
+    def sign_up(**kwargs):
+        raise botocore.exceptions.HTTPClientError(error="ServiceUnavailable")
+
+    monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
+    response = client.post("/v1/users", json=body)
+
+    assert response.status_code == 503
 
 
 def test_users_get_current_fineos_forbidden(client, fineos_user_token):

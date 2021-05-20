@@ -1,6 +1,9 @@
 #
 # Utility functions to support custom validation handlers on connexion
 #
+from typing import Union
+
+import botocore.exceptions
 import connexion.apps.flask_app
 import pydantic
 import sentry_sdk
@@ -116,12 +119,28 @@ def handle_fineos_unavailable_error(error: FINEOSFatalUnavailable) -> Response:
     ).to_api_response()
 
 
+def handle_aws_connection_error(
+    error: Union[botocore.exceptions.ConnectionError, botocore.exceptions.HTTPClientError]
+) -> Response:
+    return response_util.error_response(
+        status_code=ServiceUnavailable,
+        message="Connection was closed before receiving a valid response from endpoint.",
+        errors=[],
+    ).to_api_response()
+
+
 def add_error_handlers_to_app(connexion_app):
     connexion_app.add_error_handler(ValidationException, validation_request_handler)
     connexion_app.add_error_handler(BadRequestProblem, connexion_400_handler)
     connexion_app.add_error_handler(ExtraParameterProblem, connexion_400_handler)
     connexion_app.add_error_handler(pydantic.ValidationError, handle_pydantic_validation_error)
     connexion_app.add_error_handler(FINEOSFatalUnavailable, handle_fineos_unavailable_error)
+    connexion_app.add_error_handler(
+        botocore.exceptions.HTTPClientError, handle_aws_connection_error
+    )
+    connexion_app.add_error_handler(
+        botocore.exceptions.ConnectionError, handle_aws_connection_error
+    )
 
     # These are all handled with the same generic exception handler to make them uniform in structure.
     connexion_app.add_error_handler(NotFound, http_exception_handler)
