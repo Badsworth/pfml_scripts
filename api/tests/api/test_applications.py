@@ -2470,11 +2470,11 @@ def test_application_patch_date_of_birth_under_14(client, user, auth_token):
     assert error_type == "invalid_age"
 
 
-def test_application_patch_date_of_birth_before_1900(client, user, auth_token):
+def test_application_patch_date_of_birth_before_1850(client, user, auth_token):
     application = ApplicationFactory.create(user=user)
 
     now = datetime.now()
-    test_date = now.replace(year=1899)
+    test_date = now.replace(year=1849)
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -2495,8 +2495,8 @@ def test_application_patch_date_of_birth_before_1900(client, user, auth_token):
     error_type = error.get("type")
 
     assert field == "date_of_birth"
-    assert message == "Date of birth must be within the past 100 years"
-    assert rule == "date_of_birth_within_past_100_years"
+    assert message == "Date of birth must be within the past 150 years"
+    assert rule == "date_of_birth_within_past_150_years"
     assert error_type == "invalid_year_range"
 
 
@@ -4985,3 +4985,41 @@ def test_application_patch_caring_leave_metadata_change_leave_reason(
     )
     assert application.caring_leave_metadata is None
     assert response_body.get("data").get("leave_details").get("caring_leave_metadata") is None
+
+
+def test_application_patch_caring_leave_metadata_family_member_date_of_birth_validation(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(
+        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+    )
+
+    # use an invalid date of birth
+    update_request_body = {
+        "leave_details": {
+            "caring_leave_metadata": {"family_member_date_of_birth": date(1849, 1, 1).isoformat()}
+        }
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    assert response.status_code == 400
+
+    response_body = response.get_json()
+    errors = response_body.get("errors")
+    assert len(errors) == 1
+
+    error = errors[0]
+    field = error.get("field")
+    message = error.get("message")
+    rule = error.get("rule")
+    error_type = error.get("type")
+
+    assert field == "leave_details.caring_leave_metadata.family_member_date_of_birth"
+    assert message == "Date of birth must be within the past 150 years"
+    assert rule == "date_of_birth_within_past_150_years"
+    assert error_type == "invalid_year_range"
