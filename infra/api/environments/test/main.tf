@@ -107,7 +107,6 @@ module "api" {
   service_now_base_url                                = "https://savilinxtest.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-test.mass.gov"
   enable_application_fraud_check                      = "0"
-  enable_sentry                                       = "1"
   release_version                                     = var.release_version
 
   dor_fineos_etl_definition          = local.dor_fineos_etl_definition

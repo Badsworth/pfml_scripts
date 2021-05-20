@@ -26,7 +26,6 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.logging import audit, log_every
-from massgov.pfml.util.sentry import initialize_sentry
 
 logger = logging.get_logger(__name__)
 
@@ -53,7 +52,6 @@ class ImportFineosEmployeeUpdatesReport:
 
 def handler():
     """ECS handler function."""
-    initialize_sentry()
     audit.init_security_logging()
     logging.init(__name__)
 

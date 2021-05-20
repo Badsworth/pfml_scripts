@@ -13,7 +13,6 @@ import massgov.pfml.util.logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import Role, User, UserRole
-from massgov.pfml.util.sentry import initialize_sentry
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -50,7 +49,6 @@ def create_fineos_user_helper(db_session: Session) -> None:
 
 
 def create_fineos_user():
-    initialize_sentry()
     massgov.pfml.util.logging.init("db-create-fineos-user")
     massgov.pfml.util.logging.audit.init_security_logging()
     db_session_raw = db.init()

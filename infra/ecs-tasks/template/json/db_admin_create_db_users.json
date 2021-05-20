@@ -26,8 +26,7 @@
       { "name": "ENVIRONMENT", "value": "${environment_name}" },
       { "name": "DB_HOST", "value": "${db_host}" },
       { "name": "DB_NAME", "value": "${db_name}" },
-      { "name": "DB_USERNAME", "value": "${db_username}" },
-      { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"}
+      { "name": "DB_USERNAME", "value": "${db_username}" }
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password"},

@@ -40,9 +40,7 @@
       { "name": "PFML_FINEOS_EXTRACT_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/cps/extracts" },
       { "name": "PFML_ERROR_REPORTS_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/reports" },
 
-      { "name": "DFML_REPORT_OUTBOUND_PATH", "value": "s3://massgov-pfml-${environment_name}-reports/dfml-reports"},
-
-      { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"}
+      { "name": "DFML_REPORT_OUTBOUND_PATH", "value": "s3://massgov-pfml-${environment_name}-reports/dfml-reports"}
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },

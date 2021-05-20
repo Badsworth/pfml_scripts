@@ -24,7 +24,6 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
 )
 from massgov.pfml.payments import vcc
-from massgov.pfml.util.sentry import initialize_sentry
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -35,7 +34,6 @@ parser.add_argument(
 
 
 def main():
-    initialize_sentry()
     """Payments mock files and data generator."""
     massgov.pfml.util.logging.init(__name__)
 

@@ -41,7 +41,6 @@ from massgov.pfml.payments.fineos_vendor_export import VendorExtractStep
 from massgov.pfml.payments.manual.payment_voucher import Configuration as VoucherConfiguration
 from massgov.pfml.payments.manual.payment_voucher import PaymentVoucherStep
 from massgov.pfml.util.logging import audit
-from massgov.pfml.util.sentry import initialize_sentry
 
 logger = logging.get_logger(__name__)
 
@@ -103,7 +102,6 @@ def make_db_session() -> db.Session:
 
 def main():
     """Entry point for Payment Voucher plus supporting actions"""
-    initialize_sentry()
     audit.init_security_logging()
     logging.init(__name__)
 

@@ -15,7 +15,6 @@ import _pytest.monkeypatch
 import boto3
 import moto
 import pytest
-import sentry_sdk
 import sqlalchemy
 from jose import jwt
 
@@ -28,13 +27,6 @@ import massgov.pfml.util.logging
 from massgov.pfml.db.models.factories import UserFactory
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
-
-
-@pytest.fixture(autouse=True)
-def disable_sentry(monkeypatch):
-    monkeypatch.setattr(sentry_sdk, "init", lambda: None)
-    monkeypatch.setattr(sentry_sdk, "capture_exception", lambda: None)
-    monkeypatch.setattr(sentry_sdk, "capture_message", lambda: None)
 
 
 @pytest.fixture(autouse=True, scope="session")
