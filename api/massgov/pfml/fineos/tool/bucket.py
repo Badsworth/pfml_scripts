@@ -111,6 +111,7 @@ def bucket_tool(args, s3, s3_fineos, boto3, fineos_boto_session):
             fineos_boto_session if is_fineos_bucket(args.to_dir) else boto3,
             list_files,
             args.recursive,
+            args.dated_folders,
         )
 
 
