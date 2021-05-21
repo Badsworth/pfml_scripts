@@ -287,4 +287,48 @@ describe("Review", () => {
     });
     expect(mockPreventDefault).not.toHaveBeenCalled();
   });
+
+  describe("Caring Leave", () => {
+    beforeEach(() => {
+      const caringLeaveClaim = new MockEmployerClaimBuilder()
+        .completed()
+        .caringLeaveReason()
+        .reviewable()
+        .create();
+
+      ({ appLogic, wrapper } = renderComponent("mount", caringLeaveClaim));
+    });
+
+    it("submits a caring leave claim with the correct options", async () => {
+      await simulateEvents(wrapper).submitForm();
+
+      expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+        "NTN-111-ABS-01",
+        {
+          believe_relationship_accurate: expect.any(String),
+          comment: expect.any(String),
+          employer_benefits: expect.any(Array),
+          employer_decision: undefined, // undefined by default
+          fraud: undefined, // undefined by default
+          hours_worked_per_week: expect.any(Number),
+          previous_leaves: expect.any(Array),
+          has_amendments: false,
+          relationship_inaccurate_reason: expect.any(String),
+        }
+      );
+    });
+
+    it("disables submit button when LA indicates the relationship is inaccurate and no relationship comment", () => {
+      act(() => {
+        wrapper
+          .find("LeaveDetails")
+          .props()
+          .onChangeBelieveRelationshipAccurate("no");
+      });
+
+      expect(
+        wrapper.update().find('button[type="submit"]').prop("disabled")
+      ).toBe(true);
+    });
+  });
 });

@@ -62,8 +62,9 @@ exports[`LeaveDetails Caring Leave renders relationship question when showCaring
         Do you believe the listed relationship is described accurately? (Optional)
       </ReviewHeading>
     }
-    name="relationshipAccuracy"
+    name="believeRelationshipAccurate"
     onChange={[Function]}
+    smallLabel={true}
     type="radio"
   />
   <ConditionalContent

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { isEqual, pick } from "lodash";
+import { get, isEqual, pick } from "lodash";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
@@ -12,6 +12,7 @@ import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
 import LeaveDetails from "../../../components/employers/LeaveDetails";
+import LeaveReason from "../../../models/LeaveReason";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
 import PreviousLeave from "../../../models/PreviousLeave";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
@@ -60,11 +61,19 @@ export const Review = (props) => {
     employerDecision: undefined,
     fraud: undefined,
     employeeNotice: undefined,
+    believeRelationshipAccurate: "",
+    relationshipInaccurateReason: "",
   });
   const isCommentRequired =
     formState.fraud === "Yes" ||
     formState.employerDecision === "Deny" ||
     formState.employeeNotice === "No";
+
+  const isSubmitDisabled =
+    (isCommentRequired && formState.comment === "") ||
+    (formState.believeRelationshipAccurate === "no" &&
+      formState.relationshipInaccurateReason === "");
+  const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
 
   useEffect(() => {
     // Generate id based on index for employer benefit, previous leave (id is not provided by BE)
@@ -127,6 +136,22 @@ export const Review = (props) => {
     updateFields({ employerDecision: updatedEmployerDecision });
   };
 
+  const handleBelieveRelationshipAccurateChange = (
+    updatedBelieveRelationshipAccurate
+  ) => {
+    updateFields({
+      believeRelationshipAccurate: updatedBelieveRelationshipAccurate,
+    });
+  };
+
+  const handleRelationshipInaccurateReason = (
+    updatedRelationshipInaccurateReason
+  ) => {
+    updateFields({
+      relationshipInaccurateReason: updatedRelationshipInaccurateReason,
+    });
+  };
+
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
 
@@ -143,6 +168,7 @@ export const Review = (props) => {
         "benefit_type",
       ])
     );
+
     const payload = {
       comment: formState.comment,
       employer_benefits,
@@ -155,6 +181,16 @@ export const Review = (props) => {
         !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
         !isEqual(amendedHours, claim.hours_worked_per_week),
     };
+
+    if (isCaringLeave) {
+      const parsedRelationshipComment =
+        formState.believeRelationshipAccurate === "no"
+          ? formState.relationshipInaccurateReason
+          : "";
+      payload.believe_relationship_accurate =
+        formState.believeRelationshipAccurate;
+      payload.relationship_inaccurate_reason = parsedRelationshipComment;
+    }
 
     await props.appLogic.employers.submitClaimReview(absenceId, payload);
   });
@@ -201,7 +237,17 @@ export const Review = (props) => {
       </p>
       <p className="margin-top-0">{claim.employer_fein}</p>
       <EmployeeInformation claim={claim} />
-      <LeaveDetails claim={claim} />
+      <LeaveDetails
+        claim={claim}
+        believeRelationshipAccurate={formState.believeRelationshipAccurate}
+        onChangeBelieveRelationshipAccurate={
+          handleBelieveRelationshipAccurateChange
+        }
+        relationshipInaccurateReason={formState.relationshipInaccurateReason}
+        onChangeRelationshipInaccurateReason={
+          handleRelationshipInaccurateReason
+        }
+      />
       <LeaveSchedule appLogic={appLogic} claim={claim} />
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <form
@@ -250,7 +296,7 @@ export const Review = (props) => {
           type="submit"
           loading={handleSubmit.isThrottled}
           loadingMessage={t("pages.employersClaimsReview.submitLoadingMessage")}
-          disabled={isCommentRequired && formState.comment === ""}
+          disabled={isSubmitDisabled}
         >
           {t("pages.employersClaimsReview.submitButton")}
         </Button>

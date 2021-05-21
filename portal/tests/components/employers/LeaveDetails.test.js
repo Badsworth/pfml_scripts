@@ -9,6 +9,7 @@ describe("LeaveDetails", () => {
 
   beforeEach(() => {
     claim = new MockEmployerClaimBuilder().completed().create();
+
     wrapper = shallow(<LeaveDetails claim={claim} />);
   });
 
@@ -56,13 +57,26 @@ describe("LeaveDetails", () => {
 
   describe("Caring Leave", () => {
     const setup = () => {
+      const onChangeBelieveRelationshipAccurateMock = jest.fn();
       const claim = new MockEmployerClaimBuilder()
         .completed()
         .caringLeaveReason()
         .create();
-      const wrapper = shallow(<LeaveDetails claim={claim} />);
+      const wrapper = shallow(
+        <LeaveDetails
+          claim={claim}
+          onChangeBelieveRelationshipAccurate={
+            onChangeBelieveRelationshipAccurateMock
+          }
+          onChangeRelationshipInaccurateReason={jest.fn()}
+        />
+      );
       const { changeRadioGroup } = simulateEvents(wrapper);
-      return { changeRadioGroup, wrapper };
+      return {
+        changeRadioGroup,
+        wrapper,
+        onChangeBelieveRelationshipAccurateMock,
+      };
     };
 
     it("does not render relationship question when showCaringLeaveType flag is false", () => {
@@ -83,8 +97,16 @@ describe("LeaveDetails", () => {
     });
 
     it("renders the comment box when user indicates the relationship is inaccurate ", () => {
-      const { wrapper, changeRadioGroup } = setup();
-      changeRadioGroup("relationshipAccuracy", "no");
+      const {
+        wrapper,
+        changeRadioGroup,
+        onChangeBelieveRelationshipAccurateMock,
+      } = setup();
+      changeRadioGroup("believeRelationshipAccurate", "no");
+      expect(onChangeBelieveRelationshipAccurateMock).toHaveBeenCalledWith(
+        "no"
+      );
+      wrapper.setProps({ believeRelationshipAccurate: "no" });
       expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
     });
   });

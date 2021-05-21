@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import Alert from "../Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../Details";
@@ -7,6 +6,7 @@ import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
+import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { Trans } from "react-i18next";
@@ -23,14 +23,16 @@ import { useTranslation } from "../../locales/i18n";
 
 const LeaveDetails = (props) => {
   const { t } = useTranslation();
-  const [relationshipAccuracy, setRelationshipAccuracy] = useState(false);
-  const [comment, setComment] = useState("");
   const {
     claim: {
       fineos_absence_id,
       isIntermittent,
       leave_details: { reason },
     },
+    believeRelationshipAccurate,
+    onChangeBelieveRelationshipAccurate,
+    onChangeRelationshipInaccurateReason,
+    relationshipInaccurateReason,
   } = props;
 
   const isCaringLeave = reason === LeaveReason.care;
@@ -96,23 +98,24 @@ const LeaveDetails = (props) => {
       {shouldShowCaringLeave && isCaringLeave && (
         <React.Fragment>
           <InputChoiceGroup
-            name="relationshipAccuracy"
+            smallLabel
+            name="believeRelationshipAccurate"
             onChange={(e) => {
-              setRelationshipAccuracy(e.target.value);
+              onChangeBelieveRelationshipAccurate(e.target.value);
             }}
             choices={[
               {
-                checked: relationshipAccuracy === "yes",
+                checked: believeRelationshipAccurate === "yes",
                 label: t("components.employersLeaveDetails.choiceYes"),
                 value: "yes",
               },
               {
-                checked: relationshipAccuracy === "unknown",
+                checked: believeRelationshipAccurate === "unknown",
                 label: t("components.employersLeaveDetails.choiceUnknown"),
                 value: "unknown",
               },
               {
-                checked: relationshipAccuracy === "no",
+                checked: believeRelationshipAccurate === "no",
                 label: t("components.employersLeaveDetails.choiceNo"),
                 value: "no",
               },
@@ -138,10 +141,12 @@ const LeaveDetails = (props) => {
           />
 
           <ConditionalContent
-            getField={() => comment}
-            clearField={() => setComment("")}
-            updateFields={(event) => setComment(event.target.value)}
-            visible={relationshipAccuracy === "no"}
+            getField={() => relationshipInaccurateReason}
+            clearField={() => onChangeRelationshipInaccurateReason("")}
+            updateFields={(event) =>
+              onChangeRelationshipInaccurateReason(event.target.value)
+            }
+            visible={believeRelationshipAccurate === "no"}
           >
             <Alert
               state="warning"
@@ -157,7 +162,9 @@ const LeaveDetails = (props) => {
             <textarea
               className="usa-textarea margin-top-3"
               name="comment"
-              onChange={(event) => setComment(event.target.value)}
+              onChange={(event) =>
+                onChangeRelationshipInaccurateReason(event.target.value)
+              }
             />
           </ConditionalContent>
         </React.Fragment>
@@ -168,6 +175,10 @@ const LeaveDetails = (props) => {
 
 LeaveDetails.propTypes = {
   claim: PropTypes.instanceOf(EmployerClaim).isRequired,
+  believeRelationshipAccurate: PropTypes.oneOf(["yes", "unknown", "no", ""]),
+  onChangeBelieveRelationshipAccurate: PropTypes.func,
+  relationshipInaccurateReason: PropTypes.string,
+  onChangeRelationshipInaccurateReason: PropTypes.func,
 };
 
 export default LeaveDetails;
