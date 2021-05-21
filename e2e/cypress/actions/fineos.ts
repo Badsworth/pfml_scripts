@@ -239,11 +239,14 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
 export function createNotification(
   startDate: Date,
   endDate: Date,
-  claimType?: string,
+  claimType?: "military" | "bonding" | "caring",
   application?: ApplicationRequestBody
 ): void {
   const clickNext = (timeout?: number) =>
-    cy.get('#navButtons input[value="Next "]', { timeout }).first().click();
+    cy
+      .get('#navButtons input[value="Next "]', { timeout })
+      .first()
+      .click({ force: true });
   cy.contains("span", "Create Notification").click();
   clickNext();
   cy.labelled("Hours worked per week").type(
@@ -277,6 +280,22 @@ export function createNotification(
     case "caring":
       // @Reminder
       // Implement once available
+      cy.contains("div", "Caring for a family member")
+        .prev()
+        .find("input")
+        .click();
+      clickNext();
+      cy.labelled("Qualifier 1").select("Serious Health Condition");
+      cy.wait("@ajaxRender");
+      cy.get("#leaveRequestAbsenceRelationshipsWidget").within(() => {
+        cy.labelled("Primary Relationship to Employee").select(
+          "Sibling - Brother/Sister"
+        );
+        // cy.wait("@ajaxRender");
+        cy.wait(1500);
+        cy.labelled("Qualifier 1").select("Biological");
+      });
+      clickNext();
       break;
 
     default:
@@ -305,6 +324,7 @@ export function createNotification(
       `${format(endDate, "MM/dd/yyyy")}{enter}`
     );
     wait();
+    cy.get('input[title="Quick Add"]').click();
   }
 
   if (has_intermittent_leave_periods) {
@@ -352,7 +372,10 @@ export function createNotification(
     cy.labelled("Work Pattern Type").select("2 weeks Rotating");
     wait();
   }
+  cy.wait(2000);
   cy.labelled("Standard Work Week").click();
+  cy.wait(1000);
+  cy.get('input[value="Apply to Calendar"]').click({ force: true });
   clickNext();
   if (claimType === "military") {
     cy.labelled("Military Caregiver Description").type(
