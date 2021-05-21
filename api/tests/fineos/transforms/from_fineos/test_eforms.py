@@ -37,7 +37,10 @@ def other_income_eform():
                 {"name": "StartDate", "dateValue": "2020-10-01"},
                 {"name": "Spacer", "stringValue": ""},
                 {"name": "Frequency", "stringValue": "Per Month "},
-                {"name": "ProgramType", "stringValue": "Employer"},
+                {
+                    "name": "ProgramType",
+                    "enumValue": {"domainName": "Program Type", "instanceValue": "Non-Employer"},
+                },
                 {
                     "name": "ReceiveWageReplacement2",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "No"},
@@ -57,7 +60,10 @@ def other_income_eform():
                     "name": "WRT4",
                     "enumValue": {"domainName": "WageReplacementType", "instanceValue": "Unknown",},
                 },
-                {"name": "ProgramType2", "stringValue": "Employer"},
+                {
+                    "name": "ProgramType2",
+                    "enumValue": {"domainName": "Program Type", "instanceValue": "Employer"},
+                },
             ],
         }
     )
@@ -186,7 +192,7 @@ class TestTransformEformBody:
         assert benefit_1["benefit_start_date"] == date(2020, 10, 1)
         assert benefit_1["benefit_end_date"] == date(2020, 10, 30)
         assert benefit_1["benefit_type"] == "Accrued paid leave"
-        assert benefit_1["program_type"] == "Employer"
+        assert benefit_1["program_type"] == "Non-Employer"
 
         assert type(employer_benefits_list[1]) is EmployerBenefit
         benefit_2 = employer_benefits_list[1].dict()
