@@ -35,7 +35,8 @@
       { "name": "FINEOS_CLIENT_WSCOMPOSER_API_URL", "value": "${fineos_client_wscomposer_api_url}" },
       { "name": "FINEOS_CLIENT_WSCOMPOSER_USER_ID", "value": "${fineos_client_wscomposer_user_id}" },
       { "name": "FINEOS_CLIENT_OAUTH2_URL", "value": "${fineos_client_oauth2_url}" },
-      { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_ID", "value": "${fineos_client_oauth2_client_id}" }
+      { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_ID", "value": "${fineos_client_oauth2_client_id}" },
+      { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"}
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },

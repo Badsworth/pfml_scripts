@@ -69,6 +69,7 @@ module "tasks" {
   ctr_data_mart_host     = ""
   ctr_data_mart_username = ""
 
+  enable_sentry                   = "1"
   fineos_data_export_path         = "s3://fin-somdev-data-export/DT2/dataexports"
   fineos_data_import_path         = "s3://fin-somdev-data-import/DT2/peiupdate"
   fineos_error_export_path        = "s3://fin-somdev-data-export/DT2/errorExtracts"

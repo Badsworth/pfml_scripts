@@ -392,5 +392,6 @@ data "template_file" "task_container_definitions" {
     ctr_gax_bievnt_email_address           = var.ctr_gax_bievnt_email_address
     ctr_vcc_bievnt_email_address           = var.ctr_vcc_bievnt_email_address
     dfml_business_operations_email_address = var.dfml_business_operations_email_address
+    enable_sentry                          = var.enable_sentry
   }, lookup(each.value, "vars", {}))
 }

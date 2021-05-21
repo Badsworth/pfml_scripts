@@ -54,6 +54,7 @@ from massgov.pfml.payments.manual.payment_voucher_csv import (
     writeback_csv_writer,
 )
 from massgov.pfml.payments.step import Step
+from massgov.pfml.util.sentry import initialize_sentry
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.payments.manual.manual_payment")
 
@@ -128,6 +129,7 @@ class PaymentVoucherStep(Step):
 
 def main():
     """Main entry point for manual payment voucher tool."""
+    initialize_sentry()
     massgov.pfml.util.logging.audit.init_security_logging()
     massgov.pfml.util.logging.init("manual_payment")
 

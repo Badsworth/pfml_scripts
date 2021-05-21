@@ -9,6 +9,7 @@ from alembic.config import Config
 from alembic.runtime import migration
 
 import massgov.pfml.util.logging
+from massgov.pfml.util.sentry import initialize_sentry
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "./alembic.ini"))
@@ -18,6 +19,7 @@ alembic_cfg.set_main_option("script_location", os.path.dirname(__file__))
 
 
 def up(revision="head"):
+    initialize_sentry()
     command.upgrade(alembic_cfg, revision)
 
 

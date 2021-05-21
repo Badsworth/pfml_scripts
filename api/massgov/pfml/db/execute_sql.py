@@ -17,6 +17,7 @@ import massgov.pfml.db
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.audit
+from massgov.pfml.util.sentry import initialize_sentry
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 S3_BUCKET = os.environ.get("S3_EXPORT_BUCKET", None)
@@ -31,6 +32,7 @@ def get_file_target(args, count):
 
 def execute_sql():
     """Execute some SQL against the database."""
+    initialize_sentry()
     massgov.pfml.util.logging.audit.init_security_logging()
     massgov.pfml.util.logging.init("execute_sql")
 

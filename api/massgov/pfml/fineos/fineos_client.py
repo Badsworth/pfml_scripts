@@ -275,7 +275,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 in (requests.codes.SERVICE_UNAVAILABLE, requests.codes.GATEWAY_TIMEOUT,)
                 or "ESOCKETTIMEDOUT" in response.text
             ):
-                # The service is unavailable for some reason. Log a warning. there should be a
+                # The service is unavailable for some reason. Log a warning and don't tell sentry -- there should be a
                 # percentage-based alarm for when there are too many of these.
                 #
                 # Ideally we would never get GATEWAY_TIMEOUT and would instead always keep our client-side timeout lower than the
@@ -296,7 +296,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 )
                 log_fn = logger.warning
             else:
-                # We should never see anything other than these. Log an error if we do. These include issues
+                # We should never see anything other than these. Log an error and notify Sentry if we do. These include issues
                 # like 400 BAD REQUEST (misformatted request), 500 INTERNAL SERVER ERROR, and 413 SIZE TOO LARGE.
                 err = exception.FINEOSFatalResponseError(
                     response_status=response.status_code, message=response.text

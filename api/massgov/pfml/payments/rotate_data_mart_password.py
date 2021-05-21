@@ -3,11 +3,13 @@ import sys
 
 import massgov.pfml.payments.data_mart as data_mart
 import massgov.pfml.util.logging as logging
+from massgov.pfml.util.sentry import initialize_sentry
 
 logger = logging.get_logger(__name__)
 
 
 def main():
+    initialize_sentry()
     logging.init(__name__)
     logger.info("Starting rotate_data_mart_password task")
 
