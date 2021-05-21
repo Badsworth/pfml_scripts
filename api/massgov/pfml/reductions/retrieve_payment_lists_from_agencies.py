@@ -7,6 +7,7 @@ import massgov.pfml.reductions.dia as dia
 import massgov.pfml.reductions.dua as dua
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit as audit
+from massgov.pfml.util.batch.log import LogEntry
 
 logger = logging.get_logger(__name__)
 
@@ -49,11 +50,26 @@ def main():
     config = Configuration(sys.argv[1:])
 
     with db.session_scope(db.init(), close=True) as db_session:
-
         if config.get_dia_list:
-            dia.download_payment_list_from_moveit(db_session)
-            dia.load_new_dia_payments(db_session)
+            with LogEntry(db_session, "DIA retrieve_payment_lists_from_agencies") as log_entry:
+                dia_payment_lists_downloaded_count = dia.download_payment_list_from_moveit(
+                    db_session
+                )
+                log_entry.set_metrics(
+                    {
+                        dia.Metrics.DIA_PAYMENT_LISTS_DOWNLOADED_COUNT: dia_payment_lists_downloaded_count
+                    }
+                )
+                dia.load_new_dia_payments(db_session, log_entry)
 
         if config.get_dua_list:
-            dua.download_payment_list_from_moveit(db_session)
-            dua.load_new_dua_payments(db_session)
+            with LogEntry(db_session, "DUA retrieve_payment_lists_from_agencies") as log_entry:
+                dua_payment_lists_downloaded_count = dua.download_payment_list_from_moveit(
+                    db_session
+                )
+                log_entry.set_metrics(
+                    {
+                        dua.Metrics.DUA_PAYMENT_LISTS_DOWNLOADED_COUNT: dua_payment_lists_downloaded_count
+                    }
+                )
+                dua.load_new_dua_payments(db_session, log_entry)

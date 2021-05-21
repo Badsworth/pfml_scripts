@@ -24,6 +24,8 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.payments.payments_util import get_now
 from massgov.pfml.reductions.config import get_s3_config
+from massgov.pfml.reductions.dia import Metrics
+from massgov.pfml.util.batch.log import LogEntry
 
 logger = logging.get_logger(__name__)
 
@@ -140,7 +142,7 @@ def _write_dfml_report_rows(
     writer.writerows(reduction_payments_info)
 
 
-def create_report_new_dia_payments_to_dfml(db_session: db.Session) -> None:
+def create_report_new_dia_payments_to_dfml(db_session: db.Session, log_entry: LogEntry) -> None:
     config = get_s3_config()
 
     s3_file_path = os.path.join(
@@ -162,6 +164,13 @@ def create_report_new_dia_payments_to_dfml(db_session: db.Session) -> None:
             "report_data_count": len(report_data),
             "unique_reduction_payments_count": len(unique_reduction_payments),
         },
+    )
+
+    log_entry.set_metrics(
+        {
+            Metrics.REPORT_NEW_DIA_PAYMENTS_TO_DFML_ROW_COUNT: len(report_data),
+            Metrics.UNIQUE_REDUCTION_PAYMENTS_COUNT: len(unique_reduction_payments),
+        }
     )
 
     with file_util.open_stream(s3_dest, mode="w") as output_file:

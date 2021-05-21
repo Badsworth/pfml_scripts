@@ -36,6 +36,7 @@ from massgov.pfml.reductions.dia import (
     download_payment_list_if_none_today,
     upload_claimant_list_to_moveit,
 )
+from massgov.pfml.util.batch.log import LogEntry
 
 fake = faker.Faker()
 
@@ -292,7 +293,8 @@ def test_create_list_of_claimants(
         employee=factory.SubFactory(EmployeeWithFineosNumberFactory),
     )
 
-    create_list_of_claimants(test_db_session)
+    log_entry = LogEntry(test_db_session, "Test")
+    create_list_of_claimants(test_db_session, log_entry)
 
     # Expect that the file to appear in the mock_s3_bucket.
     s3 = boto3.client("s3")
@@ -362,7 +364,8 @@ def test_create_list_of_claimants_skips_claims_with_missing_data(
         )
     )
 
-    create_list_of_claimants(test_db_session)
+    log_entry = LogEntry(test_db_session, "Test")
+    create_list_of_claimants(test_db_session, log_entry)
 
     # Expect that the file to appear in the mock_s3_bucket.
     s3 = boto3.client("s3")
@@ -446,7 +449,8 @@ def test_download_payment_list_if_none_today(
     assert len(mock_sftp_client.listdir(moveit_archive_path)) == 0
     assert len(file_util.list_files(full_s3_dest_path)) == 0
 
-    download_payment_list_if_none_today(local_test_db_session)
+    log_entry = LogEntry(local_test_db_other_session, "Test")
+    download_payment_list_if_none_today(local_test_db_session, log_entry)
 
     # Expect to have moved all files from the source to the archive directory of MoveIt.
     files_in_moveit_archive_dir = mock_sftp_client.listdir(moveit_archive_path)
@@ -524,7 +528,8 @@ def test_assert_dia_payments_are_stored_correctly(
     assert len(file_util.list_files(pending_directory)) == 1
     assert len(file_util.list_files(archive_directory)) == 0
 
-    dia.load_new_dia_payments(test_db_session)
+    log_entry = LogEntry(test_db_session, "Test")
+    dia.load_new_dia_payments(test_db_session, log_entry)
 
     # Files should have been moved.
     assert len(file_util.list_files(pending_directory)) == 0
@@ -606,7 +611,8 @@ def test_load_new_dia_payments_sucessfully(
     assert len(file_util.list_files(pending_directory)) == ref_file_count
     assert len(file_util.list_files(archive_directory)) == 0
 
-    dia.load_new_dia_payments(test_db_session)
+    log_entry = LogEntry(test_db_session, "Test")
+    dia.load_new_dia_payments(test_db_session, log_entry)
 
     # Expect to have loaded some rows to the database.
     assert (
@@ -675,7 +681,8 @@ def test_load_new_dia_payments_handles_duplicates(
     assert len(file_util.list_files(pending_directory)) == 2
     assert len(file_util.list_files(archive_directory)) == 0
 
-    dia.load_new_dia_payments(test_db_session)
+    log_entry = LogEntry(test_db_session, "Test")
+    dia.load_new_dia_payments(test_db_session, log_entry)
 
     # Expect to have loaded some rows to the database.
     assert (

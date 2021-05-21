@@ -21,6 +21,7 @@ from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployeeWithFineosNumberFactory,
 )
+from massgov.pfml.util.batch.log import LogEntry
 
 
 def test_write_dfml_report_rows_no_claim_info():
@@ -259,7 +260,8 @@ def test_create_report_new_dia_payments_to_dfml(
     # Associate employee with second payment, but no claims
     EmployeeFactory.create(fineos_customer_number=reduction_payments[1].fineos_customer_number)
 
-    dia_payments_reports_create.create_report_new_dia_payments_to_dfml(test_db_session)
+    log_entry = LogEntry(test_db_session, "Test")
+    dia_payments_reports_create.create_report_new_dia_payments_to_dfml(test_db_session, log_entry)
 
     # Expect that the file to appear in the mock_s3_bucket.
     s3 = boto3.client("s3")

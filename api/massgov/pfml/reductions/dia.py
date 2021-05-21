@@ -8,6 +8,7 @@ from sqlalchemy import func
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
@@ -25,9 +26,19 @@ from massgov.pfml.payments.sftp_s3_transfer import (
 )
 from massgov.pfml.reductions.common import get_claimants_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
+from massgov.pfml.util.batch.log import LogEntry
 from massgov.pfml.util.files import upload_to_s3
 
 logger = logging.get_logger(__name__)
+
+
+class Metrics:
+    PENDING_DIA_PAYMENT_REFERENCE_FILES_COUNT = "pending_dia_payment_reference_files_count"
+    NEW_DIA_PAYMENT_ROW_COUNT = "new_dia_payment_row_count"
+    CLAIMANTS_SENT_TO_DIA_COUNT = "claimants_sent_to_dia_count"
+    DIA_PAYMENT_LISTS_DOWNLOADED_COUNT = "dia_payment_lists_downloaded_count"
+    REPORT_NEW_DIA_PAYMENTS_TO_DFML_ROW_COUNT = "report_new_dia_payments_to_dfml_row_count"
+    UNIQUE_REDUCTION_PAYMENTS_COUNT = "unique_reduction_payments_count"
 
 
 class Constants:
@@ -200,13 +211,15 @@ def upload_claimant_list_to_moveit(db_session: db.Session) -> None:
     db_session.commit()
 
 
-def create_list_of_claimants(db_session: db.Session) -> None:
+def create_list_of_claimants(db_session: db.Session, log_entry: batch_log.LogEntry) -> None:
     s3_config = get_s3_config()
 
     claimants = get_claimants_for_outbound(db_session)
     dia_claimant_info = _format_claimants_for_dia_claimant_list(claimants)
 
     tempfile_path = _write_claimants_to_tempfile(dia_claimant_info)
+
+    log_entry.set_metrics({Metrics.CLAIMANTS_SENT_TO_DIA_COUNT: len(dia_claimant_info)})
 
     # Upload info to s3
     file_name = (
@@ -255,7 +268,7 @@ def _payment_list_has_been_downloaded_today(db_session: db.Session) -> bool:
     return num_files > 0
 
 
-def download_payment_list_from_moveit(db_session: db.Session) -> None:
+def download_payment_list_from_moveit(db_session: db.Session) -> int:
     s3_config = get_s3_config()
     moveit_config = get_moveit_config()
 
@@ -290,13 +303,20 @@ def download_payment_list_from_moveit(db_session: db.Session) -> None:
             extra={"reference_file_count": len(copied_reference_files)},
         )
 
+    return len(copied_reference_files)
+
 
 # Meant to be called from ECS directly as a task.
-def download_payment_list_if_none_today(db_session: db.Session) -> None:
+def download_payment_list_if_none_today(
+    db_session: db.Session, log_entry: batch_log.LogEntry
+) -> None:
     # Downloading payment lists from requires connecting to MoveIt. Wrap that call in this condition
     # so we only incur the overhead of that connection if we haven't retrieved a payment list today.
     if _payment_list_has_been_downloaded_today(db_session) is False:
-        download_payment_list_from_moveit(db_session)
+        dia_payment_lists_downloaded_count = download_payment_list_from_moveit(db_session)
+        log_entry.set_metrics(
+            {Metrics.DIA_PAYMENT_LISTS_DOWNLOADED_COUNT: dia_payment_lists_downloaded_count}
+        )
 
 
 def _get_pending_dia_payment_reference_files(
@@ -312,6 +332,7 @@ def _get_pending_dia_payment_reference_files(
         )
         .all()
     )
+
     return files
 
 
@@ -337,53 +358,73 @@ def _get_matching_dia_reduction_payments(
     return query.all()
 
 
-def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> None:
+def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> int:
     rows = csv.DictReader(file, fieldnames=Constants.PAYMENT_LIST_FIELDS)
+
+    new_row_count = 0
+
     for row in rows:
         db_data = _convert_dict_with_csv_keys_to_db_keys(row)
         if len(_get_matching_dia_reduction_payments(db_data, db_session)) == 0:
             dia_reduction_payment = DiaReductionPayment(**db_data)
             db_session.add(dia_reduction_payment)
 
+            new_row_count += 1
+
+    return new_row_count
+
 
 def _load_dia_payment_from_reference_file(
-    ref_file: ReferenceFile, archive_directory: str, db_session: db.Session
-) -> None:
-    # Load to database.
-    with file_util.open_stream(ref_file.file_location) as f:
-        _load_new_rows_from_file(f, db_session)
+    ref_file: ReferenceFile, archive_directory: str, db_session: db.Session,
+) -> int:
+    new_row_count = 0
 
-    # Move to archive directory and update ReferenceFile.
-    filename = os.path.basename(ref_file.file_location)
-    dest_path = os.path.join(archive_directory, filename)
-    file_util.rename_file(ref_file.file_location, dest_path)
-    ref_file.file_location = dest_path
-    db_session.commit()
+    try:
+        # Load to database.
+        with file_util.open_stream(ref_file.file_location) as f:
+            new_row_count = _load_new_rows_from_file(f, db_session)
 
-    # Create StateLog entry.
-    state_log_util.create_finished_state_log(
-        associated_model=ref_file,
-        end_state=State.DIA_PAYMENT_LIST_SAVED_TO_DB,
-        outcome=state_log_util.build_outcome("Loaded DIA payment file into database"),
-        db_session=db_session,
-    )
-    db_session.commit()
+        # Move to archive directory and update ReferenceFile.
+        filename = os.path.basename(ref_file.file_location)
+        dest_path = os.path.join(archive_directory, filename)
+        file_util.rename_file(ref_file.file_location, dest_path)
+        ref_file.file_location = dest_path
+        db_session.commit()
+
+        # Create StateLog entry.
+        state_log_util.create_finished_state_log(
+            associated_model=ref_file,
+            end_state=State.DIA_PAYMENT_LIST_SAVED_TO_DB,
+            outcome=state_log_util.build_outcome("Loaded DIA payment file into database"),
+            db_session=db_session,
+        )
+        db_session.commit()
+
+        return new_row_count
+
+    except Exception:
+        # TODO: transition to an error state
+
+        # Log exceptions but continue attempting to load other payment files into the database.
+        logger.exception(
+            "Failed to load new DIA payments to database from file",
+            extra={
+                "file_location": ref_file.file_location,
+                "reference_file_id": ref_file.reference_file_id,
+            },
+        )
+
+        return new_row_count
 
 
-def load_new_dia_payments(db_session: db.Session) -> None:
+def load_new_dia_payments(db_session: db.Session, log_entry: LogEntry) -> None:
     s3_config = get_s3_config()
     pending_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dia_pending_directory_path)
     archive_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dia_archive_directory_path)
 
     for ref_file in _get_pending_dia_payment_reference_files(pending_dir, db_session):
-        try:
-            _load_dia_payment_from_reference_file(ref_file, archive_dir, db_session)
-        except Exception:
-            # Log exceptions but continue attempting to load other payment files into the database.
-            logger.exception(
-                "Failed to load new DIA payments to database from file",
-                extra={
-                    "file_location": ref_file.file_location,
-                    "reference_file_id": ref_file.reference_file_id,
-                },
-            )
+        log_entry.increment(Metrics.PENDING_DIA_PAYMENT_REFERENCE_FILES_COUNT)
+
+        new_row_count = _load_dia_payment_from_reference_file(ref_file, archive_dir, db_session)
+        for _row in range(new_row_count):
+            log_entry.increment(Metrics.NEW_DIA_PAYMENT_ROW_COUNT)

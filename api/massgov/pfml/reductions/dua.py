@@ -10,6 +10,7 @@ from sqlalchemy import func
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
@@ -31,6 +32,14 @@ from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.files import create_csv_from_list, upload_to_s3
 
 logger = logging.get_logger(__name__)
+
+
+class Metrics:
+    PENDING_DUA_PAYMENT_REFERENCE_FILES_COUNT = "pending_dua_payment_reference_files_count"
+    NEW_DUA_PAYMENT_ROW_COUNT = "new_dua_payment_row_count"
+    CLAIMANTS_SENT_TO_DUA_COUNT = "claimants_sent_to_dua_count"
+    DUA_PAYMENT_LISTS_DOWNLOADED_COUNT = "dua_payment_lists_downloaded_count"
+    REPORT_NEW_DUA_PAYMENTS_TO_DFML_ROW_COUNT = "report_new_dua_payments_to_dfml_row_count"
 
 
 class Constants:
@@ -162,7 +171,7 @@ def _get_claimants_info_csv_path(claimants: List[Dict]) -> pathlib.Path:
     return file_util.create_csv_from_list(claimants, Constants.CLAIMANT_LIST_FIELDS, file_name)
 
 
-def create_list_of_claimants(db_session: db.Session) -> None:
+def create_list_of_claimants(db_session: db.Session, log_entry: batch_log.LogEntry) -> None:
     config = get_s3_config()
 
     claimants = get_claimants_for_outbound(db_session)
@@ -170,6 +179,8 @@ def create_list_of_claimants(db_session: db.Session) -> None:
     dua_claimant_info = _format_claimants_for_dua_claimant_list(claimants)
 
     claimant_info_path = _get_claimants_info_csv_path(dua_claimant_info)
+
+    log_entry.set_metrics({Metrics.CLAIMANTS_SENT_TO_DUA_COUNT: len(dua_claimant_info)})
 
     s3_dest = os.path.join(
         config.s3_bucket_uri, config.s3_dua_outbound_directory_path, claimant_info_path.name
@@ -197,14 +208,19 @@ def create_list_of_claimants(db_session: db.Session) -> None:
     db_session.commit()
 
 
-def load_new_dua_payments(db_session: db.Session) -> None:
+def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry) -> None:
     s3_config = get_s3_config()
     pending_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dua_pending_directory_path)
     archive_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dua_archive_directory_path)
 
     for ref_file in _get_pending_dua_payment_reference_files(pending_dir, db_session):
+        log_entry.increment(Metrics.PENDING_DUA_PAYMENT_REFERENCE_FILES_COUNT)
+
         try:
-            _load_dua_payment_from_reference_file(ref_file, archive_dir, db_session)
+            new_row_count = _load_dua_payment_from_reference_file(ref_file, archive_dir, db_session)
+            for _row in range(new_row_count):
+                log_entry.increment(Metrics.NEW_DUA_PAYMENT_ROW_COUNT)
+
         except Exception:
             # Log exceptions but continue attempting to load other payment files into the database.
             logger.exception(
@@ -217,11 +233,13 @@ def load_new_dua_payments(db_session: db.Session) -> None:
 
 
 def _load_dua_payment_from_reference_file(
-    ref_file: ReferenceFile, archive_directory: str, db_session: db.Session
-) -> None:
+    ref_file: ReferenceFile, archive_directory: str, db_session: db.Session,
+) -> int:
+    new_row_count = 0
+
     # Load to database.
     with file_util.open_stream(ref_file.file_location) as f:
-        _load_new_rows_from_file(f, db_session)
+        new_row_count = _load_new_rows_from_file(f, db_session)
 
     # Move to archive directory and update ReferenceFile.
     filename = os.path.basename(ref_file.file_location)
@@ -238,6 +256,8 @@ def _load_dua_payment_from_reference_file(
         db_session=db_session,
     )
     db_session.commit()
+
+    return new_row_count
 
 
 def _get_pending_dua_payment_reference_files(
@@ -278,12 +298,18 @@ def _get_matching_dua_reduction_payments(
     return query.all()
 
 
-def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> None:
+def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> int:
+    new_row_count = 0
+
     for row in csv.DictReader(file):
         db_data = _convert_dict_with_csv_keys_to_db_keys(row)
         if len(_get_matching_dua_reduction_payments(db_data, db_session)) == 0:
             dua_reduction_payment = DuaReductionPayment(**db_data)
             db_session.add(dua_reduction_payment)
+
+            new_row_count += 1
+
+    return new_row_count
 
     # Commit these changes to the database after we've updated the ReferenceFile's file_location
     # in the calling code.
@@ -303,7 +329,7 @@ def _payment_list_has_been_downloaded_today(db_session: db.Session) -> bool:
     return num_files > 0
 
 
-def download_payment_list_from_moveit(db_session: db.Session) -> None:
+def download_payment_list_from_moveit(db_session: db.Session) -> int:
     s3_config = get_s3_config()
     moveit_config = get_moveit_config()
 
@@ -338,13 +364,20 @@ def download_payment_list_from_moveit(db_session: db.Session) -> None:
             extra={"reference_file_count": len(copied_reference_files)},
         )
 
+    return len(copied_reference_files)
+
 
 # Meant to be called from ECS directly as a task.
-def download_payment_list_if_none_today(db_session: db.Session) -> None:
+def download_payment_list_if_none_today(
+    db_session: db.Session, log_entry: batch_log.LogEntry
+) -> None:
     # Downloading payment lists from requires connecting to MoveIt. Wrap that call in this condition
     # so we only incur the overhead of that connection if we haven't retrieved a payment list today.
     if _payment_list_has_been_downloaded_today(db_session) is False:
-        download_payment_list_from_moveit(db_session)
+        dua_payment_lists_downloaded_count = download_payment_list_from_moveit(db_session)
+        log_entry.set_metrics(
+            {Metrics.DUA_PAYMENT_LISTS_DOWNLOADED_COUNT: dua_payment_lists_downloaded_count}
+        )
 
 
 def _convert_cent_to_dollars(cent: str) -> Decimal:
@@ -420,7 +453,9 @@ def _get_new_dua_payments_to_dfml_report_csv_path(
     )
 
 
-def create_report_new_dua_payments_to_dfml(db_session: db.Session) -> None:
+def create_report_new_dua_payments_to_dfml(
+    db_session: db.Session, log_entry: batch_log.LogEntry
+) -> None:
     config = get_s3_config()
 
     # get non-submitted payments
@@ -432,6 +467,10 @@ def create_report_new_dua_payments_to_dfml(db_session: db.Session) -> None:
     # get csv path for reduction report
     reduction_report_csv_path = _get_new_dua_payments_to_dfml_report_csv_path(
         reduction_payment_report_info
+    )
+
+    log_entry.set_metrics(
+        {Metrics.REPORT_NEW_DUA_PAYMENTS_TO_DFML_ROW_COUNT: len(non_submitted_payments)}
     )
 
     # Upload info to s3
