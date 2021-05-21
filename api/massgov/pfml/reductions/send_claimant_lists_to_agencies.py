@@ -7,6 +7,7 @@ import massgov.pfml.reductions.dia as dia
 import massgov.pfml.reductions.dua as dua
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit as audit
+from massgov.pfml.util.batch.log import LogEntry
 
 logger = logging.get_logger(__name__)
 
@@ -49,9 +50,11 @@ def main():
     with db.session_scope(db.init(), close=True) as db_session:
 
         if config.send_dia_list:
-            dia.create_list_of_claimants(db_session)
-            dia.upload_claimant_list_to_moveit(db_session)
+            with LogEntry(db_session, "DIA send_claimant_lists_to_agencies") as log_entry:
+                dia.create_list_of_claimants(db_session, log_entry)
+                dia.upload_claimant_list_to_moveit(db_session)
 
         if config.send_dua_list:
-            dua.create_list_of_claimants(db_session)
-            dua.copy_claimant_list_to_moveit(db_session)
+            with LogEntry(db_session, "DUA send_claimant_lists_to_agencies") as log_entry:
+                dua.create_list_of_claimants(db_session, log_entry)
+                dua.copy_claimant_list_to_moveit(db_session)

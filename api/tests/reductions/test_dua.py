@@ -34,6 +34,7 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
 )
 from massgov.pfml.payments.payments_util import get_now
+from massgov.pfml.util.batch.log import LogEntry
 
 fake = faker.Faker()
 
@@ -395,7 +396,8 @@ def test_load_new_dua_payments_success(
     assert len(file_util.list_files(pending_directory)) == ref_file_count
     assert len(file_util.list_files(archive_directory)) == 0
 
-    dua.load_new_dua_payments(test_db_session)
+    log_entry = LogEntry(test_db_session, "Test")
+    dua.load_new_dua_payments(test_db_session, log_entry)
 
     # Expect to have loaded some rows to the database.
     assert (
@@ -660,7 +662,8 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
         .all()
     ) == []
 
-    dua.create_list_of_claimants(test_db_session)
+    log_entry = LogEntry(test_db_session, "Test")
+    dua.create_list_of_claimants(test_db_session, log_entry)
 
     # We always expect this function to create a single DUA_CLAIMANT_LIST every time it runs.
     claim_files_created_count = 1
@@ -815,7 +818,8 @@ def test_download_payment_list_if_none_today(
     assert len(mock_sftp_client.listdir(moveit_archive_path)) == 0
     assert len(file_util.list_files(full_s3_dest_path)) == 0
 
-    dua.download_payment_list_if_none_today(test_db_session)
+    log_entry = LogEntry(test_db_session, "Test")
+    dua.download_payment_list_if_none_today(test_db_session, log_entry)
 
     # Expect to have moved all files from the source to the archive directory of MoveIt.
     files_in_moveit_archive_dir = mock_sftp_client.listdir(moveit_archive_path)
@@ -926,7 +930,7 @@ def test_format_reduction_payments_for_report_with_payments():
 
 @pytest.mark.integration
 def test_create_report_new_dua_payments_to_dfml(
-    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session
+    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
 ):
     s3_bucket_uri = "s3://" + mock_s3_bucket
     dest_dir = "reductions/dfml/outbound"
@@ -936,7 +940,8 @@ def test_create_report_new_dua_payments_to_dfml(
     reduction_payments = [
         DuaReductionPaymentFactory.create() for _i in range(0, random.randint(2, 8))
     ]
-    dua.create_report_new_dua_payments_to_dfml(test_db_session)
+    log_entry = LogEntry(test_db_session, "Test")
+    dua.create_report_new_dua_payments_to_dfml(test_db_session, log_entry)
 
     # Expect that the file to appear in the mock_s3_bucket.
     s3 = boto3.client("s3")

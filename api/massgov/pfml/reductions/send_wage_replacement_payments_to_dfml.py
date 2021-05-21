@@ -9,6 +9,7 @@ import massgov.pfml.reductions.reports.dia_payments.send as dia_payments_reports
 import massgov.pfml.reductions.reports.dua_payments_reports as dua_reports
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit as audit
+from massgov.pfml.util.batch.log import LogEntry
 
 logger = logging.get_logger(__name__)
 
@@ -52,10 +53,14 @@ def main():
     with db.session_scope(db.init(), close=True) as db_session:
         if config.send_dia_report:
             logger.info("Running DIA steps")
-            dia_payments_reports_create.create_report_new_dia_payments_to_dfml(db_session)
-            dia_payments_reports_send.send_dia_reductions_report(db_session)
+            with LogEntry(db_session, "DIA send_wage_replacement_payments_to_dfml") as log_entry:
+                dia_payments_reports_create.create_report_new_dia_payments_to_dfml(
+                    db_session, log_entry
+                )
+                dia_payments_reports_send.send_dia_reductions_report(db_session)
 
         if config.send_dua_report:
             logger.info("Running DUA steps")
-            dua.create_report_new_dua_payments_to_dfml(db_session)
-            dua_reports.send_dua_reductions_report(db_session)
+            with LogEntry(db_session, "DUA send_wage_replacement_payments_to_dfml") as log_entry:
+                dua.create_report_new_dua_payments_to_dfml(db_session, log_entry)
+                dua_reports.send_dua_reductions_report(db_session)
