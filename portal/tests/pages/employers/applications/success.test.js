@@ -7,7 +7,7 @@ describe("Success", () => {
   const query = { absence_id: "test-absence-id" };
   let wrapper;
 
-  it("renders Success page with back button to dashboard", () => {
+  it("renders Success page", () => {
     ({ wrapper } = renderWithAppLogic(Success, {
       diveLevels: 1,
       props: { query },
@@ -17,9 +17,12 @@ describe("Success", () => {
   });
 
   describe("when dashboard feature flag is enabled", () => {
+    beforeEach(() => {
+      process.env.featureFlags = { employerShowDashboard: true };
+    });
+
     it("renders back button to dashboard", () => {
       mockRouter.pathname = routes.employers.success;
-      process.env.featureFlags = { employerShowDashboard: true };
       ({ wrapper } = renderWithAppLogic(Success, {
         diveLevels: 1,
         props: { query },
@@ -27,17 +30,14 @@ describe("Success", () => {
 
       expect(wrapper.find("BackButton")).toMatchSnapshot();
     });
-  });
 
-  describe("when news banner feature flag is enabled", () => {
-    it("renders banner", () => {
-      process.env.featureFlags = { employerShowNewsBanner: true };
+    it("does not render news banner", () => {
       ({ wrapper } = renderWithAppLogic(Success, {
         diveLevels: 1,
         props: { query },
       }));
 
-      expect(wrapper.find("NewsBanner").exists()).toEqual(true);
+      expect(wrapper.find("NewsBanner").exists()).toEqual(false);
     });
   });
 });

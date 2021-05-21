@@ -32,10 +32,6 @@ export const Dashboard = (props) => {
   }
 
   const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
-  // Leave admins not registered in Fineos won't be able to access associated claim data from Fineos.
-  // We use this flag to communicate this to the user.
-  const hasVerifiedEmployerNotRegisteredInFineos =
-    user.hasVerifiedEmployerNotRegisteredInFineos;
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const showVerificationRowInPlaceOfClaims =
     shouldShowVerifications && hasOnlyUnverifiedEmployers;
@@ -66,55 +62,33 @@ export const Dashboard = (props) => {
     });
   };
 
-  const getCommaDelimitedEmployerEINs = () => {
-    const employers = user.getVerifiedEmployersNotRegisteredInFineos();
-    return employers.map((employer) => employer.employer_fein).join(", ");
-  };
-
   return (
     <React.Fragment>
       <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
       <Title>{t("pages.employersDashboard.title")}</Title>
-      {hasVerifiedEmployerNotRegisteredInFineos && (
-        <Alert
-          state="info"
-          heading={t("pages.employersDashboard.unavailableClaimsTitle", {
-            employers: getCommaDelimitedEmployerEINs(),
-          })}
-        >
-          <p>
-            <Trans
-              i18nKey="pages.employersDashboard.unavailableClaimsBody"
-              components={{
-                "learn-more-link": (
-                  <a
-                    href={routes.external.massgov.employerAccount}
-                    target="_blank"
-                    rel="noopener"
-                  />
-                ),
-              }}
-            />
-          </p>
-        </Alert>
-      )}
-      {shouldShowVerifications && hasVerifiableEmployer && (
-        <Alert
-          state="warning"
-          heading={t("pages.employersDashboard.verificationTitle")}
-        >
-          <p>
-            <Trans
-              i18nKey="pages.employersDashboard.verificationBody"
-              components={{
-                "your-organizations-link": (
-                  <a href={routes.employers.organizations} />
-                ),
-              }}
-            />
-          </p>
-        </Alert>
-      )}
+
+      <div className="measure-6">
+        {shouldShowVerifications && hasVerifiableEmployer && (
+          <Alert
+            state="warning"
+            heading={t("pages.employersDashboard.verificationTitle")}
+          >
+            <p>
+              <Trans
+                i18nKey="pages.employersDashboard.verificationBody"
+                components={{
+                  "your-organizations-link": (
+                    <a href={routes.employers.organizations} />
+                  ),
+                }}
+              />
+            </p>
+          </Alert>
+        )}
+
+        <DashboardInfoAlert user={user} />
+      </div>
+
       <section className="margin-bottom-4">
         <p className="margin-y-2">
           {t("pages.employersDashboard.instructions")}
@@ -299,6 +273,74 @@ const ClaimTableRows = (props) => {
       ))}
     </tr>
   ));
+};
+
+const DashboardInfoAlert = (props) => {
+  const { user } = props;
+  const { t } = useTranslation();
+
+  const getCommaDelimitedEmployerEINs = () => {
+    const employers = user.getVerifiedEmployersNotRegisteredInFineos();
+    return employers.map((employer) => employer.employer_fein).join(", ");
+  };
+
+  // Leave admins not registered in Fineos won't be able to access associated claim data from Fineos.
+  // We use this flag to communicate this to the user.
+  if (user.hasVerifiedEmployerNotRegisteredInFineos) {
+    return (
+      <Alert
+        state="info"
+        heading={t("pages.employersDashboard.unavailableClaimsTitle", {
+          employers: getCommaDelimitedEmployerEINs(),
+        })}
+      >
+        <p>
+          <Trans
+            i18nKey="pages.employersDashboard.unavailableClaimsBody"
+            components={{
+              "learn-more-link": (
+                <a
+                  href={routes.external.massgov.employerAccount}
+                  target="_blank"
+                  rel="noopener"
+                />
+              ),
+            }}
+          />
+        </p>
+      </Alert>
+    );
+  }
+
+  return (
+    <Alert state="info" heading={t("pages.employersDashboard.betaHeader")}>
+      <p>
+        <Trans
+          i18nKey="pages.employersDashboard.betaMessage"
+          components={{
+            "learn-more-link": (
+              <a
+                href={routes.external.massgov.employerDashboard}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
+            "user-feedback-link": (
+              <a
+                href={routes.external.massgov.feedbackEmployer}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
+          }}
+        />
+      </p>
+    </Alert>
+  );
+};
+
+DashboardInfoAlert.propTypes = {
+  user: PropTypes.instanceOf(User).isRequired,
 };
 
 ClaimTableRows.propTypes = {

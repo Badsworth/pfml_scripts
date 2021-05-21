@@ -32,7 +32,6 @@ export const Welcome = ({ appLogic, user }) => {
     fill: "currentColor",
   };
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
-  const shouldShowNewsBanner = isFeatureEnabled("employerShowNewsBanner");
   const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
   const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
@@ -47,7 +46,6 @@ export const Welcome = ({ appLogic, user }) => {
       <div className="grid-row">
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersWelcome.welcomeTitle")}</Title>
-          {shouldShowNewsBanner && <NewsBanner />}
           {shouldShowVerifications && hasVerifiableEmployer && (
             <Alert
               state="warning"
@@ -65,6 +63,7 @@ export const Welcome = ({ appLogic, user }) => {
               </p>
             </Alert>
           )}
+          {!shouldShowDashboard && <NewsBanner />}
           <p>{t("pages.employersWelcome.welcomeBody")}</p>
 
           {shouldShowDashboard && (

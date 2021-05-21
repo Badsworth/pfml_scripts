@@ -39,10 +39,6 @@ const flagsConfig = {
     // TODO (EMPLOYER-1054): Remove flag
     employerShowDashboard: false,
 
-    // When this flag is enabled, the News Banner is visible
-    // This will be reused to announce future features and comms
-    employerShowNewsBanner: false,
-
     // When this flag is enabled, file upload is visible on the Review page
     // TODO (EMPLOYER-665): Show file upload once the endpoint is available
     employerShowFileUpload: false,
@@ -88,14 +84,13 @@ const flagsConfig = {
     example: true,
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
-    employerShowNewsBanner: true,
+    employerShowVerifications: true,
     pfmlTerriyay: true,
   },
   test: {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowNewsBanner: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
@@ -103,33 +98,28 @@ const flagsConfig = {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowNewsBanner: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
   training: {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
-    employerShowNewsBanner: true,
   },
   performance: {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowNewsBanner: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
   uat: {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
-    employerShowNewsBanner: true,
   },
   prod: {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowNewsBanner: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
     pfmlTerriyay: true,

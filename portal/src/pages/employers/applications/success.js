@@ -16,7 +16,6 @@ export const Success = (props) => {
     appLogic,
     query: { absence_id },
   } = props;
-  const showNewsBanner = isFeatureEnabled("employerShowNewsBanner");
   const showDashboard = isFeatureEnabled("employerShowDashboard");
 
   return (
@@ -28,7 +27,7 @@ export const Success = (props) => {
         />
       )}
       <Title>{t("pages.employersClaimsSuccess.title")}</Title>
-      {showNewsBanner && <NewsBanner className="margin-bottom-2" />}
+      {!showDashboard && <NewsBanner className="margin-bottom-2" />}
       <Trans
         i18nKey="pages.employersClaimsSuccess.applicationIdLabel"
         values={{ absenceId: absence_id }}

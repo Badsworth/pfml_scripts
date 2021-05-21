@@ -1,10 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Success renders Success page with back button to dashboard 1`] = `
+exports[`Success renders Success page 1`] = `
 <Fragment>
   <Title>
     Thanks for reviewing the application
   </Title>
+  <NewsBanner
+    className="margin-bottom-2"
+  />
   <Trans
     i18nKey="pages.employersClaimsSuccess.applicationIdLabel"
     values={

@@ -57,6 +57,12 @@ describe("Employer welcome", () => {
       wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
     });
 
+    it("does not display the news banner", () => {
+      wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
+
+      expect(wrapper.find("NewsBanner").exists()).toEqual(false);
+    });
+
     it("shows the navigation bar", () => {
       expect(wrapper.find("EmployerNavigationTabs").exists()).toBe(true);
     });
@@ -67,13 +73,6 @@ describe("Employer welcome", () => {
         "View all applications"
       );
     });
-  });
-
-  it("displays banner when employerShowNewsBanner is true", () => {
-    process.env.featureFlags = { employerShowNewsBanner: true };
-    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-
-    expect(wrapper.find("NewsBanner").exists()).toEqual(true);
   });
 
   it("displays links to Organizations page when employerShowVerifications is true", () => {

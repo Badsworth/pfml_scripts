@@ -83,6 +83,7 @@ exports[`Employer welcome renders page 1`] = `
       <Title>
         Welcome
       </Title>
+      <NewsBanner />
       <p>
         Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.
       </p>

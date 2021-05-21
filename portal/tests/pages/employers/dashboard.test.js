@@ -102,27 +102,31 @@ describe("Employer dashboard", () => {
     expect(wrapper.find("PaginationNavigation")).toMatchSnapshot();
   });
 
-  it("renders a banner if there are any verified employers that are not registered in FINEOS", () => {
+  it("renders a beta info alert if all employers are registered in FINEOS", () => {
     const { wrapper } = setup([], {
       user_leave_administrators: [
         new UserLeaveAdministrator({
           employer_dba: "Work Inc",
           employer_fein: "12-3456789",
           employer_id: "mock-employer-id-1",
-          has_fineos_registration: false,
+          has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
       ],
     });
 
-    expect(wrapper.find("Alert").prop("heading")).toMatchInlineSnapshot(
-      `"Your applications are not accessible right now for: 12-3456789"`
+    expect(
+      wrapper.find("DashboardInfoAlert").dive().find("Alert").prop("heading")
+    ).toMatchInlineSnapshot(
+      `"We're making it easier to manage paid leave applications"`
     );
-    expect(wrapper.find("Alert").dive().find("Trans").dive()).toMatchSnapshot();
+    expect(
+      wrapper.find("DashboardInfoAlert").dive().find("Alert Trans").dive()
+    ).toMatchSnapshot();
   });
 
-  it("renders a banner with multiple EINs if there are multiple verified employers that are not registered in FINEOS", () => {
+  it("renders an alert about claim availability when some employers aren't registered in FINEOS yet", () => {
     const { wrapper } = setup([], {
       user_leave_administrators: [
         new UserLeaveAdministrator({
@@ -144,9 +148,15 @@ describe("Employer dashboard", () => {
       ],
     });
 
-    expect(wrapper.find("Alert").prop("heading")).toMatchInlineSnapshot(
+    expect(
+      wrapper.find("DashboardInfoAlert").dive().find("Alert").prop("heading")
+    ).toMatchInlineSnapshot(
       `"Your applications are not accessible right now for: 12-3456789, 00-3456789"`
     );
+
+    expect(
+      wrapper.find("DashboardInfoAlert").dive().find("Alert Trans").dive()
+    ).toMatchSnapshot();
   });
 
   it("does not render a banner if there are any unverified employers that are not registered in FINEOS", () => {
