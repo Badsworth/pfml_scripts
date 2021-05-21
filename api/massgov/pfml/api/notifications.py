@@ -27,6 +27,12 @@ def notifications_post():
     body = connexion.request.json
     # Use the pydantic models for validation
     notification_request = NotificationRequest.parse_obj(body)
+    log_attributes = {
+        "notification.absence_case_id": notification_request.absence_case_id,
+        "notification.recipient_type": notification_request.recipient_type,
+        "notification.source": notification_request.source,
+        "notification.trigger": notification_request.trigger,
+    }
 
     with app.db_session() as db_session:
         # Persist the notification to the DB
@@ -48,6 +54,8 @@ def notifications_post():
             .filter(Claim.fineos_absence_id == notification_request.absence_case_id)
             .one_or_none()
         )
+        if claim:
+            log_attributes = {**log_attributes, "claim_id": str(claim.claim_id)}
 
         try:
             employer = (
@@ -56,12 +64,15 @@ def notifications_post():
                 .one_or_none()
             )
 
+            if employer:
+                log_attributes = {**log_attributes, "employer_id": employer.employer_id}
         except MultipleResultsFound:
-            logger.exception("Multiple employers found for specified FEIN")
+            logger.exception("Multiple employers found for specified FEIN", extra=log_attributes)
 
             newrelic.agent.record_custom_event(
                 "FineosError",
                 {
+                    **log_attributes,
                     "error.class": "FINEOSNotificationMultipleResults",
                     "error.message": "Multiple employers found for specified FEIN",
                     "request.method": flask.request.method if has_flask_context else None,
@@ -84,12 +95,14 @@ def notifications_post():
 
         if employer is None:
             logger.warning(
-                "Failed to lookup the specified FEIN to add Claim record on Notification POST request"
+                "Failed to lookup the specified FEIN to add Claim record on Notification POST request",
+                extra=log_attributes,
             )
 
             newrelic.agent.record_custom_event(
                 "FineosError",
                 {
+                    **log_attributes,
                     "error.class": "FINEOSNotificationInvalidFEIN",
                     "error.message": "Failed to lookup the specified FEIN to add Claim record on Notification POST request",
                     "request.method": flask.request.method if has_flask_context else None,
@@ -118,14 +131,19 @@ def notifications_post():
 
             db_session.add(new_claim)
             db_session.commit()
+
+            log_attributes = {**log_attributes, "claim_id": str(new_claim.claim_id)}
+            logger.info("Created Claim from a Notification", extra=log_attributes)
         elif claim.employer_id is None:
             claim.employer_id = employer.employer_id
             db_session.add(claim)
             db_session.commit()
+            logger.info("Associated Employer to Claim", extra=log_attributes)
 
     # Send the request to Service Now
     send_notification_to_service_now(notification_request, employer)
 
+    logger.info("Sent notification", extra=log_attributes)
     return response_util.success_response(
         message="Successfully started notification process.", status_code=201, data={}
     ).to_api_response()

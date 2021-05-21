@@ -397,6 +397,8 @@ The spec is available at:
 
 ### Getting local authentication credentials
 
+#### User authentication
+
 In order to make requests to the API, an authentication token must be included.
 Currently this is a JWT set in the `Authorization` HTTP header. A JWT signed by
 a locally generated JWK can be created for a user via:
@@ -448,6 +450,18 @@ For individual requests via `curl` or similar:
 ```sh
 curl -v --header "Authorization: Bearer <big jwt string above>" http://localhost:1550/v1/users/current
 ```
+
+#### Machine-to-machine authentication
+
+Some endpoints require a `client_id` and `client_secret`. For these, you will need to configure your environment to point to a real Cognito resource:
+
+1. Copy credentials in the ["Testing" section of this Confluence page](https://lwd.atlassian.net/l/c/CRjiWu8L), you'll need these for later steps.
+1. Update the `COGNITO_USER_POOL_KEYS_URL` setting in `docker-compose.yml` to point to one of our environments. There should be one already in the file that you can uncomment.
+1. Update `tokenUrl` in the `openapi.yaml` to the Cognito address (for stage: `https://massgov-pfml-stage.auth.us-east-1.amazoncognito.com/oauth2/token`)
+1. Create a user: `make create-user args=fineos` 
+1. In a tool like Postico, edit the DB record for the user, and change its `active_directory_id` to the `client_id`
+1. Re-build and restart the Docker container
+
 
 ### Seed your database
 
