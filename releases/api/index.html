@@ -656,7 +656,7 @@
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.4.2">api/v2.4.2</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.5.0-rc2">api/v2.5.0-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -666,7 +666,7 @@
 </tr>
 <tr>
 <td>performance</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.4.2">api/v2.4.2</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.5.0-rc2">api/v2.5.0-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(performance)">GitHub</a></td>
 </tr>
 <tr>
@@ -676,7 +676,7 @@
 </tr>
 <tr>
 <td>uat</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.4.2">api/v2.4.2</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.5.0-rc2">api/v2.5.0-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(uat)">GitHub</a></td>
 </tr>
 <tr>
@@ -692,57 +692,19 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (PUB-207,API-1374,PUB-205,INFRA-446,INFRA-446,CP-2108,INFRA-443,INFRA-478,API-1654,API-1653,PUB-208,CP-2192,API-1605,CP-2146,PUB-196,PUB-202,CP-2123,PUB-192,PUB-200,API-707)">Jira List</a>):</p>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (PUB-207,API-1374,PUB-205,INFRA-446)">Jira List</a>):</p>
 <ul>
-<li>changed 'enforce_leave_admin_verification' flag in evironments where not enabled (<a href="https://github.com/EOLWD/pfml/pull/4225">#4225</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-208">PUB-208</a>: Minimum number of weeks is 1 for $850 check (<a href="https://github.com/EOLWD/pfml/pull/4211">#4211</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-207">PUB-207</a>: Be able to run the PUB claimant extract without doing prenoting (<a href="https://github.com/EOLWD/pfml/pull/4229">#4229</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-205">PUB-205</a>: Include rejects payments into the writeback status update flow. (<a href="https://github.com/EOLWD/pfml/pull/4217">#4217</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-202">PUB-202</a>: Add states+flows for new PEI writeback error states (<a href="https://github.com/EOLWD/pfml/pull/4194">#4194</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-200">PUB-200</a>: Overpayment report sql update (<a href="https://github.com/EOLWD/pfml/pull/4186">#4186</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-196">PUB-196</a>: Set employees with not prenoted EFT test scenarios to DELEGATED_EFT_SEND_PRENOTE state (<a href="https://github.com/EOLWD/pfml/pull/4165">#4165</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-192">PUB-192</a>: Make the claimant extract create claim state logs instead (<a href="https://github.com/EOLWD/pfml/pull/4190">#4190</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-478">INFRA-478</a>: Ignore changes to RDS subnet group in API terraform (<a href="https://github.com/EOLWD/pfml/pull/4220">#4220</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-446">INFRA-446</a>: remove sentry integration (<a href="https://github.com/EOLWD/pfml/pull/4082">#4082</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-443">INFRA-443</a>: Return boto/AWS Connection Errors as 503 (<a href="https://github.com/EOLWD/pfml/pull/4147">#4147</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-2192">CP-2192</a>: Catch InvalidParameterException in Cognito sign up requests (<a href="https://github.com/EOLWD/pfml/pull/4154">#4154</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-2146">CP-2146</a>: Add Concurrent Leave Part Two - Logic and Test Cases (<a href="https://github.com/EOLWD/pfml/pull/4141">#4141</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-2123">CP-2123</a>: Remove references to previous_leaves / has_previous_leaves (<a href="https://github.com/EOLWD/pfml/pull/4119">#4119</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-2108">CP-2108</a>: add validation for family member date of birth (<a href="https://github.com/EOLWD/pfml/pull/4160">#4160</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-707">API-707</a>: Part 2- Remove "leave type" from API (<a href="https://github.com/EOLWD/pfml/pull/3915">#3915</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1654">API-1654</a>: Process all records in CPS vendor extract regardless of ID proofing (<a href="https://github.com/EOLWD/pfml/pull/4224">#4224</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1653">API-1653</a>: Also process CPS vendor extracts on the weekend (<a href="https://github.com/EOLWD/pfml/pull/4203">#4203</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1605">API-1605</a>: Validate routing number checksum (<a href="https://github.com/EOLWD/pfml/pull/4184">#4184</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-1374">API-1374</a>: Wrap reductions ECS tasks in LogEntry (<a href="https://github.com/EOLWD/pfml/pull/4175">#4175</a>)</li>
 <li>Revert "INFRA-446: remove sentry integration (<a href="https://github.com/EOLWD/pfml/pull/4082">#4082</a>)" (#4233)</li>
-<li>INFRA: Fix fineos-bucket-tool method calls (<a href="https://github.com/EOLWD/pfml/pull/4216">#4216</a>)</li>
-<li>API: Remove package-lock.json again (<a href="https://github.com/EOLWD/pfml/pull/4202">#4202</a>)</li>
 </ul>
 <details>
 <summary>Raw</summary>
- <br>* changed 'enforce_leave_admin_verification' flag in evironments where not enabled ([#4225](https://github.com/EOLWD/pfml/pull/4225))
- <br>* [PUB-208](https://lwd.atlassian.net/browse/PUB-208): Minimum number of weeks is 1 for $850 check ([#4211](https://github.com/EOLWD/pfml/pull/4211))
  <br>* [PUB-207](https://lwd.atlassian.net/browse/PUB-207): Be able to run the PUB claimant extract without doing prenoting ([#4229](https://github.com/EOLWD/pfml/pull/4229))
  <br>* [PUB-205](https://lwd.atlassian.net/browse/PUB-205): Include rejects payments into the writeback status update flow. ([#4217](https://github.com/EOLWD/pfml/pull/4217))
- <br>* [PUB-202](https://lwd.atlassian.net/browse/PUB-202): Add states+flows for new PEI writeback error states ([#4194](https://github.com/EOLWD/pfml/pull/4194))
- <br>* [PUB-200](https://lwd.atlassian.net/browse/PUB-200): Overpayment report sql update ([#4186](https://github.com/EOLWD/pfml/pull/4186))
- <br>* [PUB-196](https://lwd.atlassian.net/browse/PUB-196): Set employees with not prenoted EFT test scenarios to DELEGATED_EFT_SEND_PRENOTE state ([#4165](https://github.com/EOLWD/pfml/pull/4165))
- <br>* [PUB-192](https://lwd.atlassian.net/browse/PUB-192): Make the claimant extract create claim state logs instead ([#4190](https://github.com/EOLWD/pfml/pull/4190))
- <br>* [INFRA-478](https://lwd.atlassian.net/browse/INFRA-478): Ignore changes to RDS subnet group in API terraform ([#4220](https://github.com/EOLWD/pfml/pull/4220))
- <br>* [INFRA-446](https://lwd.atlassian.net/browse/INFRA-446): remove sentry integration ([#4082](https://github.com/EOLWD/pfml/pull/4082))
- <br>* [INFRA-443](https://lwd.atlassian.net/browse/INFRA-443): Return boto/AWS Connection Errors as 503 ([#4147](https://github.com/EOLWD/pfml/pull/4147))
- <br>* [CP-2192](https://lwd.atlassian.net/browse/CP-2192): Catch InvalidParameterException in Cognito sign up requests ([#4154](https://github.com/EOLWD/pfml/pull/4154))
- <br>* [CP-2146](https://lwd.atlassian.net/browse/CP-2146): Add Concurrent Leave Part Two - Logic and Test Cases ([#4141](https://github.com/EOLWD/pfml/pull/4141))
- <br>* [CP-2123](https://lwd.atlassian.net/browse/CP-2123): Remove references to previous_leaves / has_previous_leaves ([#4119](https://github.com/EOLWD/pfml/pull/4119))
- <br>* [CP-2108](https://lwd.atlassian.net/browse/CP-2108): add validation for family member date of birth ([#4160](https://github.com/EOLWD/pfml/pull/4160))
- <br>* [API-707](https://lwd.atlassian.net/browse/API-707): Part 2- Remove "leave type" from API ([#3915](https://github.com/EOLWD/pfml/pull/3915))
- <br>* [API-1654](https://lwd.atlassian.net/browse/API-1654): Process all records in CPS vendor extract regardless of ID proofing ([#4224](https://github.com/EOLWD/pfml/pull/4224))
- <br>* [API-1653](https://lwd.atlassian.net/browse/API-1653): Also process CPS vendor extracts on the weekend ([#4203](https://github.com/EOLWD/pfml/pull/4203))
- <br>* [API-1605](https://lwd.atlassian.net/browse/API-1605): Validate routing number checksum ([#4184](https://github.com/EOLWD/pfml/pull/4184))
  <br>* [API-1374](https://lwd.atlassian.net/browse/API-1374): Wrap reductions ECS tasks in LogEntry ([#4175](https://github.com/EOLWD/pfml/pull/4175))
  <br>* Revert "INFRA-446: remove sentry integration ([#4082](https://github.com/EOLWD/pfml/pull/4082))" (#4233)
- <br>* INFRA: Fix fineos-bucket-tool method calls ([#4216](https://github.com/EOLWD/pfml/pull/4216))
- <br>* API: Remove package-lock.json again ([#4202](https://github.com/EOLWD/pfml/pull/4202))
 </details>
                 
               
