@@ -28,7 +28,11 @@ class TransformOtherIncomeAttributes(TransformEformAttributes):
         "StartDate": {"name": "benefit_start_date", "type": "dateValue"},
         "EndDate": {"name": "benefit_end_date", "type": "dateValue"},
         "WRT": {"name": "benefit_type", "type": "enumValue", "embeddedProperty": "instanceValue"},
-        "ProgramType": {"name": "program_type", "type": "stringValue"},
+        "ProgramType": {
+            "name": "program_type",
+            "type": "enumValue",
+            "embeddedProperty": "instanceValue",
+        },
     }
 
 
