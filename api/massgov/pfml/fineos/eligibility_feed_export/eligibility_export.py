@@ -11,6 +11,7 @@ import massgov.pfml.util.batch.log
 import massgov.pfml.util.config as config
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db, fineos
+from massgov.pfml.util.sentry import initialize_sentry
 
 logging.init(__name__)
 logger = logging.get_logger(__name__)
@@ -57,6 +58,7 @@ def main():
 
 
 def main_with_return():
+    initialize_sentry()
     logger.info("Starting FINEOS eligibility feed export run")
 
     config = eligibility_feed.EligibilityFeedExportConfig()

@@ -6,6 +6,7 @@ from typing import Union
 import botocore.exceptions
 import connexion.apps.flask_app
 import pydantic
+import sentry_sdk
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem, ProblemException
 from flask.wrappers import Response
 from werkzeug.exceptions import (
@@ -20,7 +21,7 @@ from werkzeug.exceptions import (
 
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging as logging
-import massgov.pfml.util.newrelic.events as newrelic_util
+import massgov.pfml.util.sentry as sentry_util
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.api.validation.validators import (
     CustomParameterValidator,
@@ -60,7 +61,9 @@ def log_validation_error(
         logger.info(message, extra=log_attributes)
     else:
         # Log explicit errors in the case of unexpected validation errors.
-        newrelic_util.log_and_capture_exception(message, extra=log_attributes)
+        with sentry_sdk.push_scope() as scope:
+            scope.fingerprint = [error.type, error.rule, error.field]
+            sentry_util.log_and_capture_exception(message, extra=log_attributes)
 
 
 def validation_request_handler(validation_exception: ValidationException) -> Response:

@@ -5,7 +5,9 @@ from typing import List, Optional
 
 import massgov.pfml.util.logging
 from massgov.pfml.db import create_engine, create_user, get_config
+from massgov.pfml.util.sentry import initialize_sentry
 
+initialize_sentry()
 massgov.pfml.util.logging.init("DB Admin Tasks")
 
 

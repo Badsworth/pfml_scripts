@@ -9,6 +9,7 @@ import jose
 import newrelic.agent
 import requests
 from jose import jwt
+from sentry_sdk import set_user
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from werkzeug.exceptions import Unauthorized
 
@@ -61,6 +62,7 @@ def decode_cognito_token(token):
 
             flask.g.current_user = user
 
+            set_user({"id": user.user_id, "email": user.email_address})
             newrelic.agent.add_custom_parameter("current_user.user_id", user.user_id)
             newrelic.agent.add_custom_parameter("current_user.auth_id", user.active_directory_id)
 

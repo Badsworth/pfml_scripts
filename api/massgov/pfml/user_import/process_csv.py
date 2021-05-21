@@ -12,6 +12,7 @@ from smart_open import open as smart_open
 
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
+from massgov.pfml.util.sentry import initialize_sentry
 from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_or_update_leave_admin
 
@@ -23,6 +24,7 @@ from massgov.pfml.util.users import register_or_update_leave_admin
 #     "https://my-bucket.s3.us-west-2.amazonaws.com/folder/filename.csv"
 #
 
+initialize_sentry()
 logger = massgov.pfml.util.logging.get_logger(__name__)
 REQUIRED_FIELDS = set(("fein", "email"))
 

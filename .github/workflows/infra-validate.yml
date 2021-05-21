@@ -113,7 +113,7 @@ jobs:
   get-tf-state:
     name: Finalize terraform state
     needs: [tf-format, tf-validate]
-    if: always() && github.ref == 'refs/heads/main'
+    if: always() && github.ref == "refs/heads/main"
     runs-on: ubuntu-latest
     outputs:
       tf-validate-state: ${{ steps.tf-validate-state.outputs.tf-validate-state }}

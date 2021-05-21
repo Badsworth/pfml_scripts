@@ -48,7 +48,8 @@
         { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "value": "${bounce_forwarding_email_address_arn}" },
 
         { "name": "CTR_DATA_MART_HOST", "value": "${ctr_data_mart_host}" },
-        { "name": "CTR_DATA_MART_USERNAME", "value": "${ctr_data_mart_username}" }
+        { "name": "CTR_DATA_MART_USERNAME", "value": "${ctr_data_mart_username}" },
+        { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"}
       ],
       "secrets": [
         { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },

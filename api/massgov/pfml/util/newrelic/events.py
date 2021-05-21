@@ -1,12 +1,8 @@
 import gzip
 import json
 import os
-import sys
 from datetime import datetime
-from types import TracebackType
-from typing import Dict, Optional, Tuple, Union
 
-import newrelic.agent
 import requests
 
 import massgov.pfml.util.logging
@@ -133,33 +129,3 @@ def get_task_metadata(url_suffix: str = "") -> dict:
             "ECS metadata not available for local environments. Run this task on ECS to see metadata."
         )
         return {}
-
-
-def log_and_capture_exception(msg: str, extra: Optional[Dict] = None) -> None:
-    """
-    Sometimes we want to record custom messages that do not match an exception message. For example, when a ValidationError contains
-    multiple issues, we want to log and record each one individually in New Relic. Injecting a new exception with a
-    human-readable error message is the only way for errors to receive custom messages.
-    This does not affect the traceback or any other visible attribute in New Relic. Everything else, including
-    the original exception class name, is retained and displayed.
-    """
-
-    info = sys.exc_info()
-    info_with_readable_msg: Union[
-        BaseException, Tuple[type, BaseException, Optional[TracebackType]]
-    ]
-
-    if info[0] is None:
-        exc = Exception(msg)
-        info_with_readable_msg = (type(exc), exc, exc.__traceback__)
-    else:
-        info_with_readable_msg = (info[0], Exception(msg), info[2])
-
-    logger.error(msg, extra=extra, exc_info=info_with_readable_msg)
-
-    newrelic.agent.record_exception(
-        exc=info_with_readable_msg[0],
-        value=info_with_readable_msg[1],
-        tb=info_with_readable_msg[2],
-        params=extra,
-    )

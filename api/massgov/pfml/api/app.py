@@ -13,6 +13,7 @@ import flask
 import flask_cors
 import newrelic.api.time_trace
 from flask import Flask, current_app, g
+from sentry_sdk import set_context
 from sqlalchemy.orm import Session
 
 import massgov.pfml.api.authorization.flask
@@ -84,6 +85,7 @@ def create_app(
 
     @flask_app.before_request
     def push_db():
+        set_context("New Relic", newrelic.api.time_trace.get_linking_metadata())
         g.db = db_session_factory
         g.start_time = time.monotonic()
         massgov.pfml.util.logging.access.access_log_start(flask.request)

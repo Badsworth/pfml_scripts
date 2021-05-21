@@ -303,6 +303,7 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
 
 module "unexpected_validation_violations" {
   # Alarm on validation errors that should never happen, like type or enum mismatches.
+  # This will eventually be replaced by a Sentry notification so it's less noisy.
   source = "../newrelic_single_error_alarm"
 
   enabled     = true
@@ -363,6 +364,7 @@ module "cognito_sign_up_client_error" {
 
 module "portal_synthetic_ping_failure" {
   # Alarm on validation errors that should never happen, like type or enum mismatches.
+  # This will eventually be replaced by a Sentry notification so it's less noisy.
   source = "../newrelic_single_error_alarm"
 
   # ignore performance and training environments

@@ -54,6 +54,7 @@
       { "name": "ENABLE_APPLICATION_FRAUD_CHECK", "value": "${enable_application_fraud_check}" },
       { "name": "SERVICE_NOW_BASE_URL", "value": "${service_now_base_url}" },
       { "name": "PORTAL_BASE_URL", "value": "${portal_base_url}" },
+      { "name": "ENABLE_SENTRY", "value": "${enable_sentry}" },
       { "name": "RELEASE_VERSION", "value": "${release_version}" },
       { "name": "FEATURES_FILE_PATH", "value": "s3://massgov-pfml-${environment_name}-feature-gate/features.yaml"}
     ],

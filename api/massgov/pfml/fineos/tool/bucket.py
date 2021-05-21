@@ -12,6 +12,7 @@ import massgov.pfml.util.aws.sts
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.audit
+from massgov.pfml.util.sentry import initialize_sentry
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -23,6 +24,7 @@ class BucketConfig(BaseSettings):
 
 def main():
     """Main entry point."""
+    initialize_sentry()
     massgov.pfml.util.logging.audit.init_security_logging()
     massgov.pfml.util.logging.init(__name__)
 
