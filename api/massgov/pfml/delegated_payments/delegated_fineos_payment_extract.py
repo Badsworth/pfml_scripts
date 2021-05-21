@@ -27,6 +27,7 @@ from massgov.pfml.db.models.employees import (
     EmployeeAddress,
     EmployeePubEftPair,
     ExperianAddressPair,
+    Flow,
     GeoState,
     LatestStateLog,
     LkPaymentTransactionType,
@@ -567,6 +568,7 @@ class PaymentExtractStep(Step):
             .filter(
                 Payment.payment_id.in_(payment_ids),
                 StateLog.end_state_id.notin_(payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS),
+                LkState.flow_id == Flow.DELEGATED_PAYMENT.flow_id,
             )
             .first()
         )

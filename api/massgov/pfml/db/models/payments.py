@@ -1,17 +1,28 @@
 import datetime
+import uuid
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import TIMESTAMP, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.functions import now as sqlnow
+from sqlalchemy.types import TypeEngine
 
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import ReferenceFile
+from massgov.pfml.db.models.employees import ImportLog, Payment, ReferenceFile
 
+from ..lookup import LookupTable
 from .base import Base, utc_timestamp_gen, uuid_gen
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+
+# (PostgreSQLUUID) https://github.com/dropbox/sqlalchemy-stubs/issues/94
+if TYPE_CHECKING:
+    PostgreSQLUUID = TypeEngine[uuid.UUID]
+else:
+    PostgreSQLUUID = UUID(as_uuid=True)
 
 
 class FineosExtractVpei(Base):
@@ -500,6 +511,74 @@ class MaximumWeeklyBenefitAmount(Base):
 
         self.effective_date = effective_date
         self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
+
+
+class FineosWritebackDetails(Base):
+    __tablename__ = "fineos_writeback_details"
+    payment_id = Column(
+        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, primary_key=True
+    )
+
+    transaction_status_id = Column(
+        Integer,
+        ForeignKey("lk_fineos_writeback_transaction_status.transaction_status_id"),
+        nullable=False,
+    )
+    import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    payment = relationship(Payment)
+    transaction_status = relationship("LkFineosWritebackTransactionStatus")
+    import_log = relationship(ImportLog)
+
+
+class LkFineosWritebackTransactionStatus(Base):
+    __tablename__ = "lk_fineos_writeback_transaction_status"
+    transaction_status_id = Column(Integer, primary_key=True, autoincrement=True)
+    transaction_status_description = Column(Text)
+    writeback_record_status = Column(Text)
+
+    def __init__(
+        self, transaction_status_id, transaction_status_description, writeback_record_status
+    ):
+        if len(transaction_status_description) > 30:
+            raise Exception(
+                "FINEOS limits transaction statuses to a maximum of 30 characters, we cannot use %s"
+                % transaction_status_description
+            )
+
+        self.transaction_status_id = transaction_status_id
+        self.transaction_status_description = transaction_status_description
+        self.writeback_record_status = writeback_record_status
+
+
+ACTIVE_WRITEBACK_RECORD_STATUS = "Active"
+# PENDING_ACTIVE_WRITEBACK_RECORD_STATUS = ""
+
+
+class FineosWritebackTransactionStatus(LookupTable):
+    model = LkFineosWritebackTransactionStatus
+    column_names = (
+        "transaction_status_id",
+        "transaction_status_description",
+        "writeback_record_status",
+    )
+
+    FAILED_MANUAL_VALIDATION = LkFineosWritebackTransactionStatus(
+        1, "Failed Manual Validation", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+    FAILED_AUTOMATED_VALIDATION = LkFineosWritebackTransactionStatus(
+        2, "Failed Automated Validation", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+
+def sync_lookup_tables(db_session):
+    FineosWritebackTransactionStatus.sync_to_database(db_session)
 
 
 def sync_maximum_weekly_benefit_amount(db_session):

@@ -2,7 +2,7 @@ import csv
 import enum
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
@@ -18,6 +18,7 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
@@ -213,6 +214,24 @@ class PaymentRejectsStep(Step):
                 state_log_util.build_outcome("Payment rejected"),
                 self.db_session,
             )
+
+            state_log_util.create_finished_state_log(
+                payment,
+                State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+                state_log_util.build_outcome(
+                    cast(
+                        str,
+                        FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION.transaction_status_description,
+                    )
+                ),
+                self.db_session,
+            )
+            writeback_details = FineosWritebackDetails(
+                payment=payment,
+                transaction_status_id=FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION.transaction_status_id,
+                import_log_id=self.get_import_log_id(),
+            )
+            self.db_session.add(writeback_details)
         else:
             self.increment(self.Metrics.ACCEPTED_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
