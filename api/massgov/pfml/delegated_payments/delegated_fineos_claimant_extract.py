@@ -316,6 +316,8 @@ class ClaimantData:
 
 
 class ClaimantExtractStep(Step):
+    skip_prenoting: bool = False
+
     class Metrics(str, enum.Enum):
         CLAIM_NOT_FOUND_COUNT = "claim_not_found_count"
         CLAIM_PROCESSED_COUNT = "claim_processed_count"
@@ -341,6 +343,7 @@ class ClaimantExtractStep(Step):
         EMPLOYER_FOUND_COUNT = "employer_found_count"
 
     def run_step(self) -> None:
+        self.skip_prenoting = os.environ.get("SKIP_PRENOTING", "0") == "1"
         self.process_claimant_extract_data()
 
     def process_claimant_extract_data(self) -> None:
@@ -706,6 +709,11 @@ class ClaimantExtractStep(Step):
 
     def update_eft_info(self, claimant_data: ClaimantData, employee_pfml_entry: Employee,) -> None:
         """Updates EFT info and starts prenoting process if necessary"""
+        if self.skip_prenoting:
+            # This is temporary prior to launch in case we need to run
+            # the claimant extract on its own to fetch claim information.
+            # Once we've launched, this can be removed as it's unused.
+            return
 
         if claimant_data.should_do_eft_operations:
             # Always create an EFT object, we'll use this

@@ -984,6 +984,48 @@ def test_run_step_mix_of_payment_prefs(
     assert claim.employee_id == employee.employee_id
 
 
+def test_run_step_skip_prenote_flag(
+    claimant_extract_step,
+    test_db_session,
+    tmp_path,
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    monkeypatch,
+):
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("SKIP_PRENOTING", "1")
+
+    claimant_data = FineosClaimantData(
+        default_payment_pref="Y",
+        payment_method="Elec Funds Transfer",
+        account_nbr="123456789",
+        routing_nbr="123456789",
+        account_type="Checking",
+    )
+
+    # Create the employee record
+    tax_identifier = TaxIdentifierFactory(tax_identifier=claimant_data.ssn)
+    employee_before = EmployeeFactory(tax_identifier=tax_identifier)
+    assert len(employee_before.pub_efts.all()) == 0
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, [claimant_data])
+
+    # Run the process
+    claimant_extract_step.run_step()
+
+    # Verify the Employee was updated
+    employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee_before.employee_id)
+        .one_or_none()
+    )
+    assert employee
+
+    # We didn't attach the EFT record because of the flag
+    pub_efts = employee.pub_efts.all()
+    assert len(pub_efts) == 0
+
+
 def test_extract_to_staging_tables(emp_updates_path, claimant_extract_step, test_db_session):
     tempdir = tempfile.mkdtemp()
     date = "2020-12-21-19-20-42"
