@@ -233,6 +233,8 @@ def get_claim_as_leave_admin(
 
     leave_details = get_leave_details(absence_periods)
 
+    logger.info("Count of info request employer benefits:", extra={"count": len(other_incomes)})
+
     return ClaimReviewResponse(
         date_of_birth=customer_info["dateOfBirth"],
         employer_benefits=other_incomes,
