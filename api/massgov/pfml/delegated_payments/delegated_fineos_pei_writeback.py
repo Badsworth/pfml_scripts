@@ -6,7 +6,7 @@ import os
 import uuid
 from dataclasses import dataclass
 from datetime import date
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
@@ -23,6 +23,10 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
     StateLog,
+)
+from massgov.pfml.db.models.payments import (
+    FineosWritebackDetails,
+    LkFineosWritebackTransactionStatus,
 )
 from massgov.pfml.delegated_payments.delegated_payments_util import get_now
 from massgov.pfml.delegated_payments.step import Step
@@ -56,10 +60,12 @@ class PeiWritebackItem:
 
 
 ACTIVE_WRITEBACK_RECORD_STATUS = "Active"
+
 PAID_WRITEBACK_RECORD_TRANSACTION_STATUS = "Paid"
 POSTED_WRITEBACK_RECORD_TRANSACTION_STATUS = "Posted"
 PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS = "Processed"
 ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS = "Error"
+
 WRITEBACK_FILE_SUFFIX = "-pei_writeback.csv"
 
 PEI_WRITEBACK_CSV_ENCODERS: csv_util.Encoders = {
@@ -99,6 +105,8 @@ class FineosPeiWritebackStep(Step):
         SUCCESSFUL_WRITEBACK_RECORD_COUNT = "successful_writeback_record_count"
         WRITEBACK_RECORD_COUNT = "writeback_record_count"
         ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
+
+        GENERIC_FLOW_WRITEBACK_ITEMS_COUNT = "generic_flow_writeback_items_count"
 
     def run_step(self) -> None:
         self.process_payments_for_writeback()
@@ -245,6 +253,19 @@ class FineosPeiWritebackStep(Step):
         # TODO: Add disbursed payments to this writeback using the same pattern as above but with a
         # writeback_record_converter of _disbursed_payment_to_pei_writeback_record.
 
+        # == Payments Generic FINEOS status writebacks flow ==
+
+        generic_flow_writeback_items = self._get_writeback_items_for_generic_flow()
+        generic_flow_writeback_items_count = len(generic_flow_writeback_items)
+        logger.info(
+            "Found %i extracted writeback items in state: %s",
+            generic_flow_writeback_items_count,
+            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_description,
+        )
+        self.set_metrics(
+            {self.Metrics.GENERIC_FLOW_WRITEBACK_ITEMS_COUNT: generic_flow_writeback_items_count}
+        )
+
         return (
             zero_dollar_payment_writeback_items
             + overpayment_writeback_items
@@ -254,6 +275,7 @@ class FineosPeiWritebackStep(Step):
             + employer_reimbursement_payment_writeback_items
             + errored_payment_writeback_items
             + payment_writeback_two_items
+            + generic_flow_writeback_items
         )
 
     def _get_writeback_items_for_state(
@@ -295,6 +317,100 @@ class FineosPeiWritebackStep(Step):
                 logger.exception(
                     "Error adding payment to list of writeback records",
                     extra={"payment_id": log.payment.payment_id},
+                )
+                continue
+
+        return pei_writeback_items
+
+    def _get_payment_writeback_transaction_status(
+        self, payment: Payment
+    ) -> Optional[LkFineosWritebackTransactionStatus]:
+        writeback_details = (
+            self.db_session.query(FineosWritebackDetails)
+            .filter(FineosWritebackDetails.payment_id == payment.payment_id)
+            .one_or_none()
+        )
+
+        if writeback_details is None:
+            return None
+
+        return writeback_details.transaction_status
+
+    def _get_writeback_items_for_generic_flow(self):
+
+        pei_writeback_items = []
+
+        state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            associated_class=state_log_util.AssociatedClass.PAYMENT,
+            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            db_session=self.db_session,
+        )
+
+        for state_log in state_logs:
+            try:
+                payment = state_log.payment
+
+                missing_fields = []
+
+                for field in REQUIRED_FIELDS_FOR_EXTRACTED_PAYMENT:
+                    field_value = getattr(payment, field)
+                    if not field_value:
+                        missing_fields.append(field_value)
+
+                if missing_fields:
+                    error_msg = f"Payment {payment.payment_id} cannot be converted to PeiWritebackRecord for extracted payments because it is missing fields."
+                    logger.error(error_msg, extra={"missing_fields": missing_fields})
+                    raise Exception(error_msg)
+
+                transaction_status: Optional[
+                    LkFineosWritebackTransactionStatus
+                ] = self._get_payment_writeback_transaction_status(payment)
+
+                if (
+                    transaction_status is None
+                    or transaction_status.transaction_status_description is None
+                ):
+                    raise Exception(
+                        f"Can not find writeback details for payment {payment.payment_id} with state {cast(LkState, state_log.end_state).state_description} and outcome {state_log.outcome}"
+                    )
+
+                metric_name = transaction_status.transaction_status_description.lower().replace(
+                    " ", "_"
+                )
+                self.increment(f"{metric_name}_writeback_transaction_status_count")
+
+                # TODO transfer logic in _extracted_payment_to_pei_writeback_record when fully transitioning to using generic flow
+                transaction_status_date = payment.fineos_extraction_date or get_now()
+
+                writeback_record = PeiWritebackRecord(
+                    pei_C_Value=payment.fineos_pei_c_value,
+                    pei_I_Value=payment.fineos_pei_i_value,
+                    status=transaction_status.writeback_record_status,
+                    extractionDate=payment.fineos_extraction_date,
+                    transactionStatus=transaction_status.transaction_status_description,
+                    transactionNo=str(payment.check.check_number)
+                    if payment.check and payment.check.check_number
+                    else None,
+                    transStatusDate=transaction_status_date,
+                )
+
+                pei_writeback_items.append(
+                    PeiWritebackItem(
+                        payment=payment,
+                        writeback_record=writeback_record,
+                        prior_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+                        end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
+                        encoded_row=csv_util.encode_row(
+                            writeback_record, PEI_WRITEBACK_CSV_ENCODERS
+                        ),
+                    )
+                )
+                self.increment(self.Metrics.WRITEBACK_RECORD_COUNT)
+
+            except Exception:
+                logger.exception(
+                    "Error adding payment to list of writeback records",
+                    extra={"payment_id": state_log.payment.payment_id},
                 )
                 continue
 

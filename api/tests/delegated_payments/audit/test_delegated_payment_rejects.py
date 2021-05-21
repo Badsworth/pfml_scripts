@@ -19,6 +19,7 @@ from massgov.pfml.db.models.employees import (
     StateLog,
 )
 from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
+from massgov.pfml.db.models.payments import FineosWritebackDetails
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import PaymentAuditCSV
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     PaymentAuditData,
@@ -143,6 +144,10 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
     )
     assert payment_state_log.outcome["message"] == "Payment rejected"
+
+    writeback_details = test_db_session.query(FineosWritebackDetails).all()
+    assert len(writeback_details) == 1
+    assert writeback_details[0].payment_id == payment_1.payment_id
 
     # test acceptance
     payment_2 = PaymentFactory.create()

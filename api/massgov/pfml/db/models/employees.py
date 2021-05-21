@@ -634,6 +634,7 @@ class Payment(Base):
     fineos_extract_import_log = relationship("ImportLog")
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
+    # fineos_writeback_details = relationship("FineosWritebackDetails", back_populates="payment", uselist=False)
 
     check = relationship("PaymentCheck", backref="payment", uselist=False)
 
@@ -1681,7 +1682,7 @@ class Flow(LookupTable):
     DELEGATED_PAYMENT = LkFlow(21, "Payment")
     DELEGATED_EFT = LkFlow(22, "EFT")
     DELEGATED_CLAIM_VALIDATION = LkFlow(23, "Claim Validation")
-    ERRORED_PAYMENT_PEI_WRITEBACK = LkFlow(24, "Errored Payment PEI Writeback")
+    DELEGATED_PEI_WRITEBACK = LkFlow(24, "Payment PEI Writeback")
 
 
 class State(LookupTable):
@@ -2040,49 +2041,55 @@ class State(LookupTable):
         165, "Add to Claim Extract Error Report", Flow.DELEGATED_CLAIM_VALIDATION.flow_id
     )
 
-    ### States (171-179) used to send payment transaction statuses back to FINEOS
+    ### Generic states used to send payment transaction statuses back to FINEOS
     ###  without preventing us from receiving them again in subsequent extracts
-    ADD_ADDRESS_VALIDATION_ERROR_TO_FINEOS_WRITEBACK = LkState(
-        170,
-        "Add address validation error to FINEOS writeback",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
+    DELEGATED_ADD_TO_FINEOS_WRITEBACK = LkState(
+        170, "Add to FINEOS writeback", Flow.DELEGATED_PEI_WRITEBACK.flow_id,
     )
-    ADDRESS_VALIDATION_ERROR_FINEOS_WRITEBACK_SENT = LkState(
-        171,
-        "Address validation error FINEOS writeback sent",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
+    DELEGATED_FINEOS_WRITEBACK_SENT = LkState(
+        171, "FINEOS writeback sent", Flow.DELEGATED_PEI_WRITEBACK.flow_id,
     )
-    ADD_AUDIT_REJECT_TO_FINEOS_WRITEBACK = LkState(
-        172, "Add audit reject to FINEOS writeback", Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id
+
+    # Deprecated writeback states
+    DEPRECATED_ADD_AUDIT_REJECT_TO_FINEOS_WRITEBACK = LkState(
+        172,
+        "DEPRECATED STATE - Add audit reject to FINEOS writeback",
+        Flow.DELEGATED_PEI_WRITEBACK.flow_id,
     )
-    AUDIT_REJECT_FINEOS_WRITEBACK_SENT = LkState(
-        173, "Audit reject FINEOS writeback sent", Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id
+    DEPRECATED_AUDIT_REJECT_FINEOS_WRITEBACK_SENT = LkState(
+        173,
+        "DEPRECATED STATE - Audit reject FINEOS writeback sent",
+        Flow.DELEGATED_PEI_WRITEBACK.flow_id,
     )
-    ADD_AUTOMATED_VALIDATION_ERROR_TO_FINEOS_WRITEBACK = LkState(
+    DEPRECATED_ADD_AUTOMATED_VALIDATION_ERROR_TO_FINEOS_WRITEBACK = LkState(
         174,
-        "Add automated validation error to FINEOS writeback",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
+        "DEPRECATED STATE - Add automated validation error to FINEOS writeback",
+        Flow.DELEGATED_PEI_WRITEBACK.flow_id,
     )
-    AUTOMATED_VALIDATION_ERROR_FINEOS_WRITEBACK_SENT = LkState(
+    DEPRECATED_AUTOMATED_VALIDATION_ERROR_FINEOS_WRITEBACK_SENT = LkState(
         175,
-        "Automated validation error FINEOS writeback sent",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
+        "DEPRECATED STATE - Automated validation error FINEOS writeback sent",
+        Flow.DELEGATED_PEI_WRITEBACK.flow_id,
     )
-    ADD_PENDING_PRENOTE_TO_FINEOS_WRITEBACK = LkState(
-        176, "Add pending prenote to FINEOS writeback", Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id
+    DEPRECATED_ADD_PENDING_PRENOTE_TO_FINEOS_WRITEBACK = LkState(
+        176,
+        "DEPRECATED STATE - Add pending prenote to FINEOS writeback",
+        Flow.DELEGATED_PEI_WRITEBACK.flow_id,
     )
-    PENDING_PRENOTE_FINEOS_WRITEBACK_SENT = LkState(
-        177, "Pending prenote FINEOS writeback sent", Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id
+    DEPRECATED_PENDING_PRENOTE_FINEOS_WRITEBACK_SENT = LkState(
+        177,
+        "DEPRECATED STATE - Pending prenote FINEOS writeback sent",
+        Flow.DELEGATED_PEI_WRITEBACK.flow_id,
     )
-    ADD_PRENOTE_REJECTED_ERROR_TO_FINEOS_WRITEBACK = LkState(
+    DEPRECATED_ADD_PRENOTE_REJECTED_ERROR_TO_FINEOS_WRITEBACK = LkState(
         178,
-        "Add prenote rejected error to FINEOS writeback",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
+        "DEPRECATED STATE - Add prenote rejected error to FINEOS writeback",
+        Flow.DELEGATED_PEI_WRITEBACK.flow_id,
     )
-    PRENOTE_REJECTED_ERROR_FINEOS_WRITEBACK_SENT = LkState(
+    DEPRECATED_PRENOTE_REJECTED_ERROR_FINEOS_WRITEBACK_SENT = LkState(
         179,
-        "Prenote rejected error FINEOS writeback sent",
-        Flow.ERRORED_PAYMENT_PEI_WRITEBACK.flow_id,
+        "DEPRECATED STATE - Prenote rejected error FINEOS writeback sent",
+        Flow.DELEGATED_PEI_WRITEBACK.flow_id,
     )
 
 
