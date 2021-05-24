@@ -45,7 +45,7 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
               false
             );
             fineos.denyClaim("Evidence documents fail requirements");
-            fineos.triggerNoticeRelease("Denial notice");
+            fineos.triggerNoticeRelease("Denial Notice");
           });
       });
     }
