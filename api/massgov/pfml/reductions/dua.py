@@ -4,7 +4,7 @@ import os
 import pathlib
 from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import func
 
@@ -14,6 +14,7 @@ import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
+    Claim,
     DuaReductionPayment,
     DuaReductionPaymentReferenceFile,
     Employee,
@@ -32,6 +33,8 @@ from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.files import create_csv_from_list, upload_to_s3
 
 logger = logging.get_logger(__name__)
+
+DuaReductionPaymentAndClaim = Tuple[DuaReductionPayment, Optional[Claim]]
 
 
 class Metrics:
@@ -76,6 +79,10 @@ class Constants:
     RQST_WK_DT_FIELD = "RQST_WK_DT"
     WBA_ADDITIONS_FIELD = "WBA_ADDITIONS"
     PAID_AM_FIELD = "PAID_AM"
+    ABSENCE_CASE_ID_FIELD = "ABSENCE_CASE_ID"
+    ABSENCE_CASE_STATUS_FIELD = "ABSENCE_CASE_STATUS"
+    ABSENCE_CASE_PERIOD_START_FIELD = "ABSENCE_PERIOD_START_DATE"
+    ABSENCE_CASE_PERIOD_END_FIELD = "ABSENCE_PERIOD_END_DATE"
 
     CLAIMANT_LIST_FIELDS = [
         CASE_ID_FIELD,
@@ -93,6 +100,10 @@ class Constants:
         BYB_DT_FIELD: "benefit_year_begin_date",
         BYE_DT_FIELD: "benefit_year_end_date",
         DATE_PAYMENT_ADDED_TO_REPORT_FIELD: "created_at",
+        ABSENCE_CASE_ID_FIELD: "claim.fineos_absence_id",
+        ABSENCE_CASE_PERIOD_START_FIELD: "claim.absence_period_start_date",
+        ABSENCE_CASE_PERIOD_END_FIELD: "claim.absence_period_end_date",
+        ABSENCE_CASE_STATUS_FIELD: "claim.fineos_absence_status.absence_status_description",
     }
 
     DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
@@ -388,11 +399,18 @@ def _convert_cent_to_dollars(cent: str) -> Decimal:
     return Decimal(dollar)
 
 
-def _get_non_submitted_reduction_payments(db_session: db.Session) -> List[DuaReductionPayment]:
-    # TODO: currently we are grabbing all data, filtering strategy will be determined in the future
-    non_submitted_reduction_payments = db_session.query(DuaReductionPayment).all()
-
-    return non_submitted_reduction_payments
+def _get_non_submitted_reduction_payments(
+    db_session: db.Session,
+) -> List[DuaReductionPaymentAndClaim]:
+    return (
+        db_session.query(DuaReductionPayment, Claim)
+        .outerjoin(
+            Employee, DuaReductionPayment.fineos_customer_number == Employee.fineos_customer_number,
+        )
+        .outerjoin(Claim, Claim.employee_id == Employee.employee_id)
+        .order_by(DuaReductionPayment.created_at, Claim.created_at)
+        .all()
+    )
 
 
 def _format_date_for_report(raw_date: Optional[date]) -> str:
@@ -403,7 +421,7 @@ def _format_date_for_report(raw_date: Optional[date]) -> str:
 
 
 def _format_reduction_payments_for_report(
-    reduction_payments: List[DuaReductionPayment],
+    reduction_payments: List[DuaReductionPaymentAndClaim],
 ) -> List[Dict]:
     if len(reduction_payments) == 0:
         return [
@@ -412,9 +430,9 @@ def _format_reduction_payments_for_report(
                 for field in Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys()
             }
         ]
-
     payments = []
-    for payment in reduction_payments:
+
+    for payment, claim in reduction_payments:
         info = {
             Constants.CASE_ID_FIELD: payment.fineos_customer_number,
             Constants.WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: _format_date_for_report(
@@ -436,6 +454,21 @@ def _format_reduction_payments_for_report(
                 payment.created_at
             ),
         }
+
+        if claim is not None:
+            info.update(
+                {
+                    Constants.ABSENCE_CASE_ID_FIELD: claim.fineos_absence_id,
+                    Constants.ABSENCE_CASE_STATUS_FIELD: claim.fineos_absence_status.absence_status_description,
+                    Constants.ABSENCE_CASE_PERIOD_START_FIELD: _format_date_for_report(
+                        claim.absence_period_start_date
+                    ),
+                    Constants.ABSENCE_CASE_PERIOD_END_FIELD: _format_date_for_report(
+                        claim.absence_period_end_date
+                    ),
+                }
+            )
+
         payments.append(info)
     return payments
 
@@ -487,10 +520,14 @@ def create_report_new_dua_payments_to_dfml(
     db_session.add(ref_file)
     db_session.commit()
 
+    unique_reduction_payments = {
+        p.dua_reduction_payment_id: p for p, _ in non_submitted_payments
+    }.values()
+
     # Create objects that link DuaReductionPayments to the ReferenceFile.
-    for reduction_payment in non_submitted_payments:
+    for unique_reduction_payment in unique_reduction_payments:
         link_obj = DuaReductionPaymentReferenceFile(
-            dua_reduction_payment=reduction_payment, reference_file=ref_file
+            dua_reduction_payment=unique_reduction_payment, reference_file=ref_file
         )
         db_session.add(link_obj)
 

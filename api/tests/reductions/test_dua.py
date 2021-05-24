@@ -1,3 +1,4 @@
+import datetime
 import os
 import random
 import string
@@ -18,6 +19,7 @@ import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
     DuaReductionPayment,
     DuaReductionPaymentReferenceFile,
     LatestStateLog,
@@ -873,18 +875,27 @@ def test_download_payment_list_if_none_today(
         )
 
 
-def test_format_reduction_payments_for_report_optional_fields_empty():
+def test_generate_reduction_payment_report_information_optional_fields_empty(
+    initialize_factories_session, test_db_session
+):
     # Set one of the optional fields to None.
-    dua_reduction_payment = DuaReductionPaymentFactory.build()
+    dua_reduction_payment = DuaReductionPaymentFactory.create(created_at=datetime_util.utcnow())
+
     dua_reduction_payment.request_week_begin_date = None
+    employee = EmployeeFactory.create(
+        fineos_customer_number=dua_reduction_payment.fineos_customer_number
+    )
+    claim = ClaimFactory.create(
+        fineos_absence_status_id=AbsenceStatus.COMPLETED.absence_status_id, employee=employee
+    )
 
     # Expect that this will not raise an error.
-    formatted_rows = dua._format_reduction_payments_for_report([dua_reduction_payment])
+    formatted_rows = dua._format_reduction_payments_for_report([[dua_reduction_payment, claim]])
 
     assert formatted_rows[0][dua.Constants.RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD] == ""
 
 
-def test_format_reduction_payments_for_report_with_no_new_payments():
+def test_generate_reduction_payment_report_information_with_no_new_payments():
     no_reduction_payments = []
     report = dua._format_reduction_payments_for_report(no_reduction_payments)
 
@@ -894,38 +905,54 @@ def test_format_reduction_payments_for_report_with_no_new_payments():
             assert v == "NO NEW PAYMENTS"
 
 
-def test_format_reduction_payments_for_report_with_payments():
-    dua_reduction_payment = DuaReductionPaymentFactory.build(created_at=datetime_util.utcnow())
+def test_generate_reduction_payment_report_information_with_payments(
+    initialize_factories_session, test_db_session
+):
+    dua_reduction_payment = DuaReductionPaymentFactory.create(created_at=datetime_util.utcnow())
+    employee = EmployeeFactory.create(
+        fineos_customer_number=dua_reduction_payment.fineos_customer_number
+    )
+    claim = ClaimFactory.create(
+        fineos_absence_status_id=AbsenceStatus.COMPLETED.absence_status_id,
+        employee_id=employee.employee_id,
+        absence_period_start_date=datetime.date(2019, 3, 19),
+        absence_period_end_date=datetime.date(2019, 3, 21),
+        created_at=datetime.date(2019, 4, 1),
+    )
+    report = dua._format_reduction_payments_for_report([[dua_reduction_payment, claim]])
 
-    report = dua._format_reduction_payments_for_report([dua_reduction_payment])
+    # We hard-code this report's information for simplicity.
+    expected_report = {
+        "CASE_ID": dua_reduction_payment.fineos_customer_number,
+        "PAYMENT_DATE": dua_reduction_payment.payment_date.strftime(
+            dua.Constants.PAYMENT_REPORT_TIME_FORMAT
+        ),
+        "BENEFIT_WEEK_START_DATE": dua_reduction_payment.request_week_begin_date.strftime(
+            dua.Constants.PAYMENT_REPORT_TIME_FORMAT
+        ),
+        "GROSS_PAYMENT_AMOUNT": dua._convert_cent_to_dollars(
+            str(dua_reduction_payment.gross_payment_amount_cents)
+        ),
+        "NET_PAYMENT_AMOUNT": dua._convert_cent_to_dollars(
+            str(dua_reduction_payment.payment_amount_cents)
+        ),
+        "FRAUD_IND": dua_reduction_payment.fraud_indicator,
+        "BYB_DT": dua_reduction_payment.benefit_year_begin_date.strftime(
+            dua.Constants.PAYMENT_REPORT_TIME_FORMAT
+        ),
+        "BYE_DT": dua_reduction_payment.benefit_year_end_date.strftime(
+            dua.Constants.PAYMENT_REPORT_TIME_FORMAT
+        ),
+        "DATE_PAYMENT_ADDED_TO_REPORT": dua_reduction_payment.created_at.strftime(
+            dua.Constants.PAYMENT_REPORT_TIME_FORMAT
+        ),
+        "ABSENCE_CASE_ID": claim.fineos_absence_id,
+        "ABSENCE_CASE_STATUS": claim.fineos_absence_status.absence_status_description,
+        "ABSENCE_PERIOD_START_DATE": "03/19/2019",
+        "ABSENCE_PERIOD_END_DATE": "03/21/2019",
+    }
 
-    assert len(report) == 1
-
-    dollar_fields = [
-        dua.Constants.WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD,
-        dua.Constants.PAID_AM_OUTBOUND_DFML_REPORT_FIELD,
-    ]
-    date_fields = [
-        dua.Constants.WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD,
-        dua.Constants.RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD,
-        dua.Constants.BYB_DT_FIELD,
-        dua.Constants.BYE_DT_FIELD,
-        dua.Constants.DATE_PAYMENT_ADDED_TO_REPORT_FIELD,
-    ]
-
-    for info in report:
-        assert info.keys() == dua.Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys()
-        for k, v in info.items():
-            field = dua.Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP[k]
-
-            if k in dollar_fields:
-                assert v == dua._convert_cent_to_dollars(str(dua_reduction_payment.__dict__[field]))
-            elif k in date_fields:
-                assert v == dua_reduction_payment.__dict__[field].strftime(
-                    dua.Constants.PAYMENT_REPORT_TIME_FORMAT
-                )
-            else:
-                assert v == dua_reduction_payment.__dict__[field]
+    assert report[0] == expected_report
 
 
 @pytest.mark.integration
@@ -937,10 +964,25 @@ def test_create_report_new_dua_payments_to_dfml(
     monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
     monkeypatch.setenv("S3_DFML_OUTBOUND_DIRECTORY_PATH", dest_dir)
 
-    reduction_payments = [
-        DuaReductionPaymentFactory.create() for _i in range(0, random.randint(2, 8))
-    ]
     log_entry = LogEntry(test_db_session, "Test")
+    # Build up payment records
+    reduction_payments = DuaReductionPaymentFactory.create_batch(
+        size=5, created_at=datetime_util.utcnow()
+    )
+
+    employees = [
+        EmployeeFactory.create(fineos_customer_number=reduction_payment.fineos_customer_number)
+        for reduction_payment in reduction_payments
+    ]
+    [
+        ClaimFactory.create(
+            fineos_absence_status_id=AbsenceStatus.COMPLETED.absence_status_id,
+            created_at=datetime_util.utcnow(),
+            employee=employee,
+        )
+        for employee in employees
+    ]
+
     dua.create_report_new_dua_payments_to_dfml(test_db_session, log_entry)
 
     # Expect that the file to appear in the mock_s3_bucket.
