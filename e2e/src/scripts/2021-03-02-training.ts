@@ -4,11 +4,8 @@ import ClaimPool from "../generation/Claim";
 import * as scenarios from "../scenarios";
 import DOR from "../generation/writers/DOR";
 import dataDirectory from "../generation/DataDirectory";
-import { submit, PostSubmitCallback } from "./util";
-import ClaimSubmissionTracker from "../submission/ClaimStateTracker";
-import SubmittedClaimIndex from "../submission/writers/SubmittedClaimIndex";
-import path from "path";
-import { approveClaim, withFineosBrowser } from "../submission/PostSubmit";
+import { ScenarioSpecification } from "../generation/Scenario";
+import { format } from "date-fns";
 
 /**
  * This is a data generation script.
@@ -18,122 +15,132 @@ import { approveClaim, withFineosBrowser } from "../submission/PostSubmit";
  * won't overwrite existing data.
  */
 (async () => {
-  const storage = dataDirectory("next");
+  const date = format(new Date(), "yyyy-MM-dd");
+  // storage used for claim submission
+  const storage = dataDirectory(`${date}-training`);
   await storage.prepare();
-
-  let employerPool: EmployerPool;
-  let employeePool: EmployeePool;
-  let claimPool: ClaimPool;
-
   // Generate a pool of employers.
-  try {
-    employerPool = await EmployerPool.load(storage.employers);
-  } catch (e) {
-    if (e.code !== "ENOENT") throw e;
-    employerPool = EmployerPool.generate(2, { size: "small" });
-    await employerPool.save(storage.employers);
-    await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
-  }
+  const employerPool: EmployerPool = await EmployerPool.load(
+    storage.employers
+  ).orGenerateAndSave(() => EmployerPool.generate(5));
+  await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
 
   // Generate a pool of employees.
-  try {
-    employeePool = await EmployeePool.load(storage.employees);
-  } catch (e) {
-    if (e.code !== "ENOENT") throw e;
+  const employeePool: EmployeePool = await EmployeePool.load(
+    storage.employees
+  ).orGenerateAndSave(() =>
     // Define the kinds of employees we need to support. Each type of employee is generated as its own pool,
     // then we merge them all together.
-    employeePool = EmployeePool.merge(
-      EmployeePool.generate(100, employerPool, { wages: 30000 }),
-      EmployeePool.generate(100, employerPool, { wages: 60000 }),
-      EmployeePool.generate(100, employerPool, { wages: 90000 })
-    );
-    await employeePool.save(storage.employees);
-    await DOR.writeEmployeesFile(
-      employerPool,
-      employeePool,
-      storage.dorFile("DORDFML")
-    );
-  }
+    EmployeePool.merge(
+      EmployeePool.generate(13000, employerPool, { wages: "eligible" }),
+      EmployeePool.generate(400, employerPool, { wages: "ineligible" })
+    )
+  );
+  await DOR.writeEmployeesFile(
+    employerPool,
+    employeePool,
+    storage.dorFile("DORDFML")
+  );
 
   // Generate a pool of claims. This could happen later, though!
-  try {
-    claimPool = await ClaimPool.load(storage.claims, storage.documents);
-  } catch (e) {
-    if (e.code !== "ENOENT") throw e;
+  await ClaimPool.load(storage.claims, storage.documents).orGenerateAndSave(
+    () => {
+      // Define the kinds of claims we need to generate.  Each type of claim is defined as its own pool, which we merge
+      // together into one big pool.
+      const generate = (spec: ScenarioSpecification, count: number) =>
+        ClaimPool.generate(employeePool, spec.employee, spec.claim, count);
+      return ClaimPool.merge(
+        generate(scenarios.TRNA, 20),
+        generate(scenarios.TRNB, 80),
+        generate(scenarios.TRNC, 200),
+        generate(scenarios.TRND, 100),
+        generate(scenarios.TRNE, 150),
+        generate(scenarios.TRNF, 150),
+        generate(scenarios.TRNG, 150),
+        generate(scenarios.TRNG2, 150),
+        generate(scenarios.TRNH, 300),
+        generate(scenarios.TRNI, 100),
+        generate(scenarios.TRNJ, 50),
+        generate(scenarios.TRNK, 50),
+        generate(scenarios.TRNL, 100),
+        generate(scenarios.TRNM, 200),
+        generate(scenarios.TRNN, 100),
+        generate(scenarios.TRNO, 100),
+        generate(scenarios.TRNP, 100),
+        generate(scenarios.TRNQ, 100),
+        generate(scenarios.TRNR, 80),
+        generate(scenarios.TRNS, 20),
+        generate(scenarios.TRNT, 100),
+        generate(scenarios.TRNU, 150),
+        generate(scenarios.TRNV, 150),
+        generate(scenarios.TRNW, 150),
+        generate(scenarios.TRNX, 150),
+        generate(scenarios.TRNY, 300),
+        generate(scenarios.TRNZ, 100),
+        generate(scenarios.TRNAA, 200),
+        generate(scenarios.TRNAB, 200),
+        generate(scenarios.TRNAC, 200),
+        generate(scenarios.TRNAD, 100),
+        generate(scenarios.TRNAE, 100),
+        generate(scenarios.TRNAF, 200),
+        generate(scenarios.TRNAG, 100),
+        generate(scenarios.TRNAH, 150),
+        generate(scenarios.TRNAI, 150),
+        generate(scenarios.TRNAJ, 150),
+        generate(scenarios.TRNAK, 150),
+        generate(scenarios.TRNAL, 300),
+        generate(scenarios.TRNAM, 100),
+        generate(scenarios.TRNAN1, 50),
+        generate(scenarios.TRNAN2, 50),
+        generate(scenarios.TRNAO, 100),
+        generate(scenarios.TRNAP, 200),
+        generate(scenarios.TRNAQ1, 50),
+        generate(scenarios.TRNAQ2, 50),
+        generate(scenarios.TRNAR, 100),
+        generate(scenarios.TRNAS, 100),
+        generate(scenarios.TRNAT, 100)
+      );
+    }
+  );
 
-    // Define the kinds of claims we need to generate.  Each type of claim is defined as its own pool, which we merge
-    // together into one big pool.
-    claimPool = ClaimPool.merge(
-      ClaimPool.generate(
-        employeePool,
-        scenarios.BHAP1.employee,
-        scenarios.BHAP1.claim,
-        100
-      ),
-      ClaimPool.generate(
-        employeePool,
-        scenarios.MHAP1.employee,
-        scenarios.MHAP1.claim,
-        100
-      )
-    );
-    await claimPool.save(storage.claims, storage.documents);
-  }
+  // used to generate fresh employees and employers for training
+  const claimantsOnlyStorage = dataDirectory(`${date}-training-claimants-only`);
+  await claimantsOnlyStorage.prepare();
+  // Generate a pool of employers.
+  const claimantsOnlyEmployerPool: EmployerPool = await EmployerPool.load(
+    claimantsOnlyStorage.employers
+  ).orGenerateAndSave(() =>
+    EmployerPool.merge(
+      EmployerPool.generate(1, { size: "large" }),
+      EmployerPool.generate(1, {
+        size: "small",
+        family_exemption: true,
+        medical_exemption: true,
+      })
+    )
+  );
 
-  // Now, we're ready to submit claims. This part of the script is behind an if block for now to prevent submission from
-  // triggering before we're ready.
-  if (false) {
-    // The "tracker" will prevent us from double-submitting claims, as it prevents submission
-    // of claims that have previously been submitted.
-    const tracker = new ClaimSubmissionTracker(storage.state);
+  await DOR.writeEmployersFile(
+    claimantsOnlyEmployerPool,
+    claimantsOnlyStorage.dorFile("DORDFMLEMP")
+  );
 
-    // This particular submission process involves conditionally adjudicating some of the claims. Some will be denied,
-    // some approved, and some will have documents closed. To handle this, we'll define a postSubmit callback for the
-    // submitter that checks the scenario ID to see what further action we need to take.
-    const approvalScenarios = ["BHAP1"];
-    const denialScenarios = ["BHAP2"];
-    const closeDocumentScenarios = ["BHAP3"];
-    const postProcessScenarios = [
-      ...approvalScenarios,
-      ...denialScenarios,
-      ...closeDocumentScenarios,
-    ];
-    const postSubmit: PostSubmitCallback = async (claim, response) => {
-      if (postProcessScenarios.includes(claim.scenario)) {
-        // Open a puppeteer browser for the duration of this callback.
-        await withFineosBrowser(async (page) => {
-          const { fineos_absence_id } = response;
-          if (!fineos_absence_id)
-            throw new Error(
-              `No fineos_absence_id was found on this response: ${JSON.stringify(
-                response
-              )}`
-            );
+  // Generate a pool of employees.
+  const claimantsOnlyEmployeePool: EmployeePool = await EmployeePool.load(
+    claimantsOnlyStorage.employees
+  ).orGenerateAndSave(() =>
+    // Define the kinds of employees we need to support. Each type of employee is generated as its own pool,
+    // then we merge them all together.
+    EmployeePool.generate(1000, claimantsOnlyEmployerPool, {
+      wages: "eligible",
+    })
+  );
 
-          // Conditionally execute one of our actions.
-          if (approvalScenarios.includes(claim.scenario)) {
-            return approveClaim(page, claim, fineos_absence_id);
-          }
-          if (denialScenarios.includes(claim.scenario)) {
-            // Deny the claim.
-          }
-          if (closeDocumentScenarios.includes(claim.scenario)) {
-            // Close documents.
-          }
-        });
-      }
-    };
-
-    // Finally, kick off submission submission.
-    await submit(claimPool, tracker, postSubmit);
-
-    // Last but not least, write the index of submitted claims in CSV format.
-    await SubmittedClaimIndex.write(
-      path.join(storage.dir, "submitted.csv"),
-      await ClaimPool.load(storage.claims, storage.documents),
-      tracker
-    );
-  }
+  await DOR.writeEmployeesFile(
+    claimantsOnlyEmployerPool,
+    claimantsOnlyEmployeePool,
+    claimantsOnlyStorage.dorFile("DORDFML")
+  );
 
   const used = process.memoryUsage().heapUsed / 1024 / 1024;
   console.log(

@@ -47,7 +47,7 @@ const employerSizeWheel = [
 type EmployerGenerationSpec = {
   size?: Employer["size"];
   withholdings?: (number | null)[]; // quarters with 0 or null withholding amounts
-  family_expemption?: boolean;
+  family_exemption?: boolean;
   medical_exemption?: boolean;
   exemption_commence_date?: Date;
   exemption_cease_date?: Date;
@@ -100,7 +100,7 @@ export class EmployerGenerator {
       state: "MA",
       zip: faker.address.zipCode("#####-####"),
       dba: name,
-      family_exemption: spec.family_expemption || false,
+      family_exemption: spec.family_exemption || false,
       medical_exemption: spec.medical_exemption || false,
       exemption_commence_date: spec.exemption_commence_date,
       exemption_cease_date: spec.exemption_cease_date,

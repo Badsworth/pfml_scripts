@@ -177,9 +177,6 @@ export async function closeTask(
     page.waitForNavigation(),
     page.click(`td[title="${task}"]`),
   ]);
-  // await actions.click(page, await page.waitForSelector(`td[title="${task}"]`));
-  await actions.waitForStablePage(page);
-  await page.waitForTimeout(150);
   await Promise.race([
     page.waitForNavigation(),
     page.click('input[type="submit"][value="Close"]'),
@@ -225,10 +222,13 @@ async function approveCertificationPeriods(
 }
 
 async function approvePlanEligibility(page: playwright.Page): Promise<void> {
-  await actions.clickTab(page, "Manage Request");
   await Promise.all([
     page.waitForNavigation(),
-    page.click('input[value="Accept"]'),
+    actions.clickTab(page, "Manage Request"),
+  ]);
+  await Promise.all([
+    page.waitForNavigation(),
+    page.click('input[type="submit"][value="Accept"]'),
   ]);
   await delay(150);
 }

@@ -36,6 +36,8 @@ export function getDocumentReviewTaskName(
       return "ID Review";
     case "State managed Paid Leave Confirmation":
       return "Certification Review";
+    case "Care for a family member form":
+      return "Caring Certification Review";
     default:
       throw new Error(
         `Unable to determine document review task for "${documentType}"`
