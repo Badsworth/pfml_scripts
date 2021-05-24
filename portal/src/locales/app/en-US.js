@@ -1879,7 +1879,7 @@ const pages = {
     statusDescription_approved:
       "<strong>Approved:</strong> DFML has approved this leave request.",
     statusDescription_closed:
-      "<strong>Closed:</strong> The leave has passed and no action can be taken.",
+      "<strong>Closed:</strong> The leave has passed or no action can be taken.",
     statusDescription_denied:
       "<strong>Denied:</strong> DFML has denied this leave request.",
     statusDescription_none:

@@ -229,7 +229,7 @@ Array [
   >
     Closed:
   </strong>,
-  " The leave has passed and no action can be taken.",
+  " The leave has passed or no action can be taken.",
 ]
 `;
 
