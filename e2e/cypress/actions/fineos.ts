@@ -626,16 +626,25 @@ export function submitIntermittentActualHours(
 
 export function mailedDocumentMarkEvidenceRecieved(
   claimNumber: string,
-  reason: LeaveReason
+  reason: LeaveReason,
+  uploadedIDProof = true
 ): void {
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
   onTab("Documents");
-  assertHasDocument("Identification Proof");
+  if (uploadedIDProof) {
+    assertHasDocument("Identification Proof");
+  }
   const documentType = getCertificationDocumentType(
     reason,
     config("HAS_FINEOS_SP") === "true"
   );
+  cy.log("DOCUMENT TYPE", documentType);
+
+  if (reason === "Care for a Family Member") {
+    uploadDocument("HCP", "Relationship proof");
+    cy.wait(1000);
+  }
   uploadDocument("HCP", documentType);
   onTab("Documents");
   assertHasDocument(documentType);

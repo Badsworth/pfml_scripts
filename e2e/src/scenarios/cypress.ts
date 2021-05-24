@@ -229,12 +229,14 @@ export const CHAP1: ScenarioSpecification = {
 };
 
 export const CHAP2: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "eligible" },
+  employee: { mass_id: true, wages: "ineligible" },
   claim: {
     label: "CHAP2",
     shortClaim: true,
     has_continuous_leave_periods: true,
     reason: "Care for a Family Member",
-    docs: {},
+    docs: {
+      CARING: {},
+    },
   },
 };

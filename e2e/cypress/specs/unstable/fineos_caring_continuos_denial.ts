@@ -40,8 +40,11 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
             fineos.assertClaimStatus("Adjudication");
             fineos.mailedDocumentMarkEvidenceRecieved(
               fineos_absence_id,
-              reason as LeaveReason
+              reason as LeaveReason,
+              false
             );
+            fineos.denyClaim("Claimant wages failed 30x rule");
+            fineos.triggerNoticeRelease("Denial Notice");
           });
       });
     }
