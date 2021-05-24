@@ -278,8 +278,6 @@ export function createNotification(
       break;
 
     case "caring":
-      // @Reminder
-      // Implement once available
       cy.contains("div", "Caring for a family member")
         .prev()
         .find("input")
@@ -291,7 +289,6 @@ export function createNotification(
         cy.labelled("Primary Relationship to Employee").select(
           "Sibling - Brother/Sister"
         );
-        // cy.wait("@ajaxRender");
         cy.wait(1500);
         cy.labelled("Qualifier 1").select("Biological");
       });
@@ -372,7 +369,7 @@ export function createNotification(
     cy.labelled("Work Pattern Type").select("2 weeks Rotating");
     wait();
   }
-  cy.wait(2000);
+  cy.wait(1500);
   cy.labelled("Standard Work Week").click();
   cy.wait(1000);
   cy.get('input[value="Apply to Calendar"]').click({ force: true });
@@ -627,7 +624,8 @@ export function submitIntermittentActualHours(
 export function mailedDocumentMarkEvidenceRecieved(
   claimNumber: string,
   reason: LeaveReason,
-  uploadedIDProof = true
+  uploadedIDProof = true,
+  approveDocs = true
 ): void {
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
@@ -639,15 +637,23 @@ export function mailedDocumentMarkEvidenceRecieved(
     reason,
     config("HAS_FINEOS_SP") === "true"
   );
-  cy.log("DOCUMENT TYPE", documentType);
   uploadDocument("HCP", documentType);
   onTab("Documents");
   assertHasDocument(documentType);
   onTab("Absence Hub");
   cy.get('input[type="submit"][value="Adjudicate"]').click();
-  markEvidence(documentType);
-  markEvidence("Identification Proof");
-  checkStatus(claimNumber, "Evidence", "Satisfied");
+  const evidenceDecision = approveDocs ? "Satisfied" : "Not Satisfied";
+  const evidenceReason = !approveDocs
+    ? "Evidence has been reviewed and denied"
+    : undefined;
+  markEvidence(documentType, undefined, evidenceDecision, evidenceReason);
+  markEvidence(
+    "Identification Proof",
+    undefined,
+    evidenceDecision,
+    evidenceReason
+  );
+  checkStatus(claimNumber, "Evidence", evidenceDecision);
   clickBottomWidgetButton();
 }
 
