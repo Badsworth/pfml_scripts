@@ -2397,11 +2397,13 @@ const components = {
     ],
   },
   footer: {
+    dataSharingAgreement: "Data Sharing Agreement",
     description: "$t(shared.siteDescription)",
     logoTitle: "Go to PFML homepage",
     orgAddress: "PO Box 838 Lawrence, MA 01842",
     orgName: "Department of Family and Medical Leave (DFML)",
     orgPhoneNumber: "$t(shared.contactCenterPhoneNumber)",
+    privacyPolicy: "Privacy$t(chars.nbsp)Policy",
     title: "Paid Family and Medical Leave (PFML)",
   },
   form: {

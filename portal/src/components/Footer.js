@@ -23,6 +23,16 @@ const Footer = () => {
         href: routes.external.massgov.dfml,
       },
     },
+    links: [
+      {
+        href: routes.external.massgov.privacyPolicy,
+        title: t("components.footer.privacyPolicy"),
+      },
+      {
+        href: routes.external.massgov.consentAgreement,
+        title: t("components.footer.dataSharingAgreement"),
+      },
+    ],
     stackedLogo: true,
     siteLogo: (
       <React.Fragment>
