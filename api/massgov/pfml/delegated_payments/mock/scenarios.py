@@ -373,11 +373,13 @@ DELAYED_SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         payment_method=PaymentMethod.CHECK,
         invalid_address=True,
         invalid_address_fixed=True,
+        has_additional_payment_in_period=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
         is_audit_approved=False,
         is_audit_approved_delayed=True,
+        has_additional_payment_in_period=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,
@@ -385,6 +387,7 @@ DELAYED_SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         fineos_extract_address_valid=False,
         fineos_extract_address_valid_after_fix=True,
         pub_check_response=False,
+        has_additional_payment_in_period=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,

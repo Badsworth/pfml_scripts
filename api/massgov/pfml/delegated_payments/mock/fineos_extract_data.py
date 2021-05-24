@@ -401,7 +401,7 @@ def generate_payment_extract_files(
 
         ssn = employee.tax_identifier.tax_identifier.replace("-", "")
         if scenario_descriptor.employee_in_payment_extract_missing_in_db:
-            ssn = "UNKNOWNSSN"
+            ssn = "UNKNOWNID"  # This needs to be 9 characters otherwise we'll also fail EFT validations
 
         payment_method = scenario_descriptor.payment_method.payment_method_description
 

@@ -10,15 +10,12 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, cast
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import (
-    Claim,
-    LatestStateLog,
-    Payment,
-    PaymentTransactionType,
-    State,
-    StateLog,
+from massgov.pfml.db.models.employees import Claim, Payment, PaymentTransactionType, State, StateLog
+from massgov.pfml.db.models.payments import (
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+    MaximumWeeklyBenefitAmount,
 )
-from massgov.pfml.db.models.payments import MaximumWeeklyBenefitAmount
 from massgov.pfml.delegated_payments.step import Step
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -196,15 +193,14 @@ class PaymentPostProcessingStep(Step):
             )
         )
 
-        # For the payment IDs fetched above, grab any payments
-        # that are in a non-restartable (non-error) state
+        # For the payment IDs fetched above, look for any payments
+        # that we have sent to PUB already
         return (
             self.db_session.query(Payment)
-            .join(LatestStateLog)
-            .join(StateLog, LatestStateLog.state_log_id == StateLog.state_log_id)
+            .join(StateLog)
             .filter(
                 Payment.payment_id.in_(subquery),
-                StateLog.end_state_id.notin_(payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS),
+                StateLog.end_state_id.in_(payments_util.Constants.PAID_STATE_IDS),
             )
             .all()
         )
@@ -324,11 +320,12 @@ class PaymentPostProcessingStep(Step):
             if payment_container.validation_container.has_validation_issues():
                 self.increment(self.Metrics.PAYMENTS_FAILED_VALIDATION_COUNT)
                 logger.info(
-                    "Payment %s passed all validation rules",
+                    "Payment %s failed a validation rule",
                     _make_payment_log(payment_container.payment),
                     extra=payment_container.get_traceable_details(True),
                 )
 
+                # Add it to the state for being put in the payment error report
                 state_log_util.create_finished_state_log(
                     end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
                     outcome=state_log_util.build_outcome(
@@ -338,6 +335,8 @@ class PaymentPostProcessingStep(Step):
                     associated_model=payment_container.payment,
                     db_session=self.db_session,
                 )
+
+                self._manage_pei_writeback_state(payment_container)
 
             # Otherwise it is ready for address validation
             else:
@@ -356,6 +355,36 @@ class PaymentPostProcessingStep(Step):
                     associated_model=payment_container.payment,
                     db_session=self.db_session,
                 )
+
+    def _manage_pei_writeback_state(self, payment_container: PaymentContainer) -> None:
+        # Add it to a state for getting put in a PEI writeback
+        # to indicate that the payment errored to anyone looking in FINEOS
+        # This is in flow DELEGATED_PEI_WRITEBACK
+        state_log_util.create_finished_state_log(
+            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            outcome=state_log_util.build_outcome(
+                "Payment failed post-processing validation", payment_container.validation_container
+            ),
+            associated_model=payment_container.payment,
+            db_session=self.db_session,
+        )
+
+        transaction_status = None
+        reasons = payment_container.validation_container.get_reasons()
+        if payments_util.ValidationReason.PAYMENT_EXCEEDS_PAY_PERIOD_CAP in reasons:
+            transaction_status = FineosWritebackTransactionStatus.TOTAL_BENEFITS_OVER_CAP
+        else:
+            raise Exception(
+                "No transaction status configured for any validation issue %s for payment %s"
+                % (reasons, _make_payment_log(payment_container.payment))
+            )
+
+        writeback_details = FineosWritebackDetails(
+            payment=payment_container.payment,
+            transaction_status_id=transaction_status.transaction_status_id,
+            import_log_id=cast(int, self.get_import_log_id()),
+        )
+        self.db_session.add(writeback_details)
 
 
 ###

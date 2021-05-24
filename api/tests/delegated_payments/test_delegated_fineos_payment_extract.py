@@ -18,6 +18,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeeAddress,
     EmployeeLog,
+    Flow,
     GeoState,
     Payment,
     PaymentMethod,
@@ -44,6 +45,8 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
 )
 from massgov.pfml.delegated_payments.delegated_config import get_s3_config
 from massgov.pfml.delegated_payments.delegated_payments_util import (
@@ -263,6 +266,51 @@ def add_s3_files(mock_fineos_s3_bucket, s3_prefix):
     )
 
 
+def validate_pei_writeback_state_for_payment(
+    payment,
+    db_session,
+    is_invalid=False,
+    is_issue_in_system=False,
+    is_pending_prenote=False,
+    is_rejected_prenote=False,
+):
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PEI_WRITEBACK, db_session
+    )
+
+    writeback_details = (
+        db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment.payment_id)
+        .one_or_none()
+    )
+
+    assert state_log
+    assert state_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+
+    assert writeback_details
+
+    if is_invalid:
+        assert (
+            writeback_details.transaction_status_id
+            == FineosWritebackTransactionStatus.FAILED_AUTOMATED_VALIDATION.transaction_status_id
+        )
+    elif is_issue_in_system:
+        assert (
+            writeback_details.transaction_status_id
+            == FineosWritebackTransactionStatus.DATA_ISSUE_IN_SYSTEM.transaction_status_id
+        )
+    elif is_pending_prenote:
+        assert (
+            writeback_details.transaction_status_id
+            == FineosWritebackTransactionStatus.PENDING_PRENOTE.transaction_status_id
+        )
+    elif is_rejected_prenote:
+        assert (
+            writeback_details.transaction_status_id
+            == FineosWritebackTransactionStatus.PRENOTE_ERROR.transaction_status_id
+        )
+
+
 ### TESTS BEGIN
 
 
@@ -462,12 +510,16 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
         new_payment = [
             payment
             for payment in payments
-            if payment.state_logs[0].end_state_id
-            == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+            if payment.state_logs[0].end_state_id != State.DELEGATED_PAYMENT_COMPLETE.state_id
         ][0]
         assert new_payment
-        assert len(new_payment.state_logs) == 1
-        state_log = new_payment.state_logs[0]
+
+        state_log = state_log_util.get_latest_state_log_in_flow(
+            new_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+        )
+        assert (
+            state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+        )
 
         assert state_log.outcome == {
             "message": "Error processing payment record",
@@ -481,6 +533,9 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
                 ],
             },
         }
+        validate_pei_writeback_state_for_payment(
+            new_payment, local_test_db_session, is_invalid=True
+        )
 
     employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -522,13 +577,14 @@ def test_process_extract_data_one_bad_record(
         # Payment is created even when employee cannot be found
         assert payment
 
-        assert len(payment.state_logs) == 1
-        state_log = payment.state_logs[0]
+        state_log = state_log_util.get_latest_state_log_in_flow(
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+        )
         if index == "2":
             assert payment.claim_id is None
             assert (
                 state_log.end_state_id
-                == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+                == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id
             )
             assert state_log.outcome == {
                 "message": "Error processing payment record",
@@ -540,6 +596,9 @@ def test_process_extract_data_one_bad_record(
                     ],
                 },
             }
+            validate_pei_writeback_state_for_payment(
+                payment, local_test_db_session, is_issue_in_system=True
+            )
         else:
             assert state_log.end_state_id == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
             assert state_log.outcome == EXPECTED_OUTCOME
@@ -725,10 +784,9 @@ def test_process_extract_data_no_existing_address_eft(
         assert employee_addresses[0].employee_id == employee.employee_id
         assert employee_addresses[0].address_id == mailing_address.address_id
 
-        # Verify that there is exactly one state log per payment
-        state_logs = payment.state_logs
-        assert len(state_logs) == 1
-        state_log = state_logs[0]
+        state_log = state_log_util.get_latest_state_log_in_flow(
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+        )
 
         pub_efts = employee.pub_efts.all()
 
@@ -772,7 +830,12 @@ def test_process_extract_data_no_existing_address_eft(
             }
             assert (
                 state_log.end_state_id
-                == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+                == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id
+            )
+
+            # There is also a state log for the payment in the PEI writeback flow
+            validate_pei_writeback_state_for_payment(
+                payment, local_test_db_session, is_pending_prenote=True
             )
 
             # Verify that there is exactly one successful state log per employee that uses ACH
@@ -800,7 +863,7 @@ def test_process_extract_data_existing_payment(
         mock_s3_bucket,
         local_test_db_session,
         add_payment=True,
-        additional_payment_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+        additional_payment_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
     )
 
     employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
@@ -829,7 +892,7 @@ def test_process_extract_data_existing_payment(
             # The state ID will be either the prior state ID or the new successful one
             assert state_log.end_state_id in [
                 State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id,
-                State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
+                State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id,
             ]
 
     payment_count_after = local_test_db_session.query(Payment).count()
@@ -868,8 +931,9 @@ def test_process_extract_data_minimal_viable_payment(
     assert payment
     assert payment.claim is None
 
-    assert len(payment.state_logs) == 1
-    state_log = payment.state_logs[0]
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
     assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
 
     assert state_log.outcome["message"] == "Error processing payment record"
@@ -877,6 +941,9 @@ def test_process_extract_data_minimal_viable_payment(
     # Not going to exactly match the errors here as there are many
     # and they may adjust in the future
     assert len(state_log.outcome["validation_container"]["validation_issues"]) >= 7
+
+    # Payment is not added to the PEI writeback flow because we don't know the type of payment
+    validate_pei_writeback_state_for_payment(payment, local_test_db_session, is_invalid=True)
 
     employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -909,8 +976,9 @@ def test_process_extract_data_minimal_viable_standard_payment(
     assert payment
     assert payment.claim is None
 
-    assert len(payment.state_logs) == 1
-    state_log = payment.state_logs[0]
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
     assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
 
     assert state_log.outcome["message"] == "Error processing payment record"
@@ -918,6 +986,9 @@ def test_process_extract_data_minimal_viable_standard_payment(
     # Not going to exactly match the errors here as there are many
     # and they may adjust in the future
     assert len(state_log.outcome["validation_container"]["validation_issues"]) >= 11
+
+    # Payment is also added to the PEI writeback error flow
+    validate_pei_writeback_state_for_payment(payment, local_test_db_session, is_invalid=True)
 
     employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -1020,10 +1091,13 @@ def test_process_extract_data_leave_request_decision_validation(
         .one_or_none()
     )
     assert rejected_payment
-    assert len(rejected_payment.state_logs) == 1
-    assert (
-        rejected_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+    assert len(rejected_payment.state_logs) == 2
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        rejected_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+    validate_pei_writeback_state_for_payment(
+        rejected_payment, local_test_db_session, is_invalid=True
     )
 
     medical_claim_type_record = (
@@ -1078,18 +1152,23 @@ def test_process_extract_not_id_proofed(
         .filter(Payment.fineos_pei_i_value == standard_payment_data.i_value)
         .one_or_none()
     )
-    assert len(standard_payment.state_logs) == 1
-
-    assert (
-        standard_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        standard_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
     )
-    issues = standard_payment.state_logs[0].outcome["validation_container"]["validation_issues"]
+    assert (
+        state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id
+    )
+
+    issues = state_log.outcome["validation_container"]["validation_issues"]
     assert len(issues) == 1
     assert issues[0] == {
         "reason": "ClaimNotIdProofed",
         "details": f"Claim {standard_payment_data.absence_case_number} has not been ID proofed",
     }
+    validate_pei_writeback_state_for_payment(
+        standard_payment, local_test_db_session, is_issue_in_system=True
+    )
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
@@ -1210,19 +1289,58 @@ def test_process_extract_additional_payment_types(
         == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id
     )
 
-    for unknown_data in [negative_payment_out_data, no_payment_out_data, negative_payment_out_data]:
-        # Unknown should be in the error report state DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
-        unknown_payment = (
-            local_test_db_session.query(Payment)
-            .filter(Payment.fineos_pei_i_value == unknown_data.i_value)
-            .one_or_none()
-        )
+    # Negative payment will cause an unknown transaction type which is restartable
+    # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE and
+    # DELEGATED_ADD_TO_FINEOS_WRITEBACK
+    negative_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == negative_payment_out_data.i_value)
+        .one_or_none()
+    )
 
-        assert len(unknown_payment.state_logs) == 1
-        assert (
-            unknown_payment.state_logs[0].end_state_id
-            == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
-        )
+    assert len(negative_payment.state_logs) == 2
+    set([state_log.end_state_id for state_log in negative_payment.state_logs]) == set(
+        [
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id,
+            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
+        ]
+    )
+
+    # No payment amount means the payment needs to be updated, so we error
+    # the payment and add it to two states.
+    # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT and
+    # DELEGATED_ADD_TO_FINEOS_WRITEBACK
+    no_amount_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == no_payment_out_data.i_value)
+        .one_or_none()
+    )
+
+    assert len(no_amount_payment.state_logs) == 2
+    set([state_log.end_state_id for state_log in negative_payment.state_logs]) == set(
+        [
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
+            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
+        ]
+    )
+
+    # No event type means the payment needs to be updated, so we error
+    # the payment and add it to two states.
+    # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT and
+    # DELEGATED_ADD_TO_FINEOS_WRITEBACK
+    missing_event_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == missing_event_payment_out_data.i_value)
+        .one_or_none()
+    )
+
+    assert len(missing_event_payment.state_logs) == 2
+    set([state_log.end_state_id for state_log in missing_event_payment.state_logs]) == set(
+        [
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
+            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
+        ]
+    )
 
     # Employer reimbursement should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT
     employer_payment = (
@@ -1647,8 +1765,9 @@ def test_update_eft_existing_eft_matches_and_approved(
     # The payment should still be connected to the EFT record
     assert payment.pub_eft_id == pub_eft_record.pub_eft_id
 
-    assert len(payment.state_logs) == 1
-    state_log = payment.state_logs[0]
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
     assert state_log.end_state_id == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
 
     # There should not be a DELEGATED_EFT_SEND_PRENOTE record
@@ -1711,14 +1830,41 @@ def test_update_eft_existing_eft_matches_and_not_approved(
     # The payment should still be connected to the EFT record
     assert payment.pub_eft_id == pub_eft_record.pub_eft_id
 
-    assert len(payment.state_logs) == 1
-    state_log = payment.state_logs[0]
-    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+
+    # Pending prenotes get put into a restartable error state
+    if prenote_state.prenote_state_id in [
+        PrenoteState.PENDING_PRE_PUB.prenote_state_id,
+        PrenoteState.PENDING_WITH_PUB.prenote_state_id,
+    ]:
+        assert (
+            state_log.end_state_id
+            == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id
+        )
+    else:
+        assert (
+            state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+        )
     issues = state_log.outcome["validation_container"]["validation_issues"]
     assert len(issues) == 1
     assert (
         issues[0]["details"]
         == f"EFT prenote has not been approved, is currently in state [{prenote_state.prenote_state_description}]"
+    )
+
+    # Payment is also added to the PEI writeback error flow
+    validate_pei_writeback_state_for_payment(
+        payment,
+        local_test_db_session,
+        is_rejected_prenote=prenote_state.prenote_state_id
+        == PrenoteState.REJECTED.prenote_state_id,
+        is_pending_prenote=prenote_state.prenote_state_id
+        in [
+            PrenoteState.PENDING_PRE_PUB.prenote_state_id,
+            PrenoteState.PENDING_WITH_PUB.prenote_state_id,
+        ],
     )
 
     # There should not be a DELEGATED_EFT_SEND_PRENOTE record
@@ -1775,8 +1921,9 @@ def test_update_eft_existing_eft_matches_and_pending_with_pub(
     # The payment should still be connected to the EFT record
     assert payment.pub_eft_id == pub_eft_record.pub_eft_id
 
-    assert len(payment.state_logs) == 1
-    state_log = payment.state_logs[0]
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
     assert state_log.end_state_id == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
 
     import_log_report = json.loads(payment.fineos_extract_import_log.report)
@@ -1894,9 +2041,9 @@ def test_extract_to_staging_tables(payment_extract_step, test_db_session, tmp_pa
 
 def test_get_active_payment_state(payment_extract_step, test_db_session):
     non_restartable_states = [
-        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
         State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK,
-        State.ADD_TO_ERRORED_PEI_WRITEBACK,
+        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
     ]
     restartable_states = payments_util.Constants.RESTARTABLE_PAYMENT_STATES
 

@@ -90,19 +90,27 @@ class Constants:
     # How do you know if something should go in this list?
     #   1. The payment associated with the state has reached an end state and will never change again
     #   2. The state is an error state and someone will be notified (eg. Program Integrity) via a report
-    #   3. We expect, and want, to receive the payment again when the issue is corrected via the FINEOS extract
+    #   3. The state has a scenario where we want to receive the same payment again unmodified (eg. the issue is we're missing the employee record)
     #   4. The payment has not already been sent to PUB - even if it's an error state
     #   5. The state is in the DELEGATED_PAYMENT flow
     RESTARTABLE_PAYMENT_STATES = frozenset(
         [
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-            State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
         ]
     )
     RESTARTABLE_PAYMENT_STATE_IDS = frozenset(
         [state.state_id for state in RESTARTABLE_PAYMENT_STATES]
     )
+
+    # States that indicate we have sent a payment to PUB
+    PAID_STATES = frozenset(
+        [
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+        ]
+    )
+    PAID_STATE_IDS = frozenset([state.state_id for state in PAID_STATES])
 
     # States that we wait in while waiting for the reject file
     # If any payments are still in this state when the extract
@@ -131,20 +139,12 @@ class Regexes:
 class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
-    INVALID_DATASET = "InvalidDataset"
     MISSING_IN_DB = "MissingInDB"
     FIELD_TOO_SHORT = "FieldTooShort"
     FIELD_TOO_LONG = "FieldTooLong"
     INVALID_LOOKUP_VALUE = "InvalidLookupValue"
     INVALID_VALUE = "InvalidValue"
     INVALID_TYPE = "InvalidType"
-    MULTIPLE_VALUES_FOUND = "MultipleValuesFound"
-    VALUE_NOT_FOUND = "ValueNotFound"
-    NON_NULLABLE = "NonNullable"
-    EXCEPTION_OCCURRED = "ExceptionOccurred"
-    OUTBOUND_STATUS_ERROR = "OutboundStatusError"
-    MISMATCHED_DATA = "MismatchedData"
-    UNUSABLE_STATE = "UnusableState"
     RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED = "ReceivedPaymentCurrentlyBeingProcessed"
     UNEXPECTED_PAYMENT_TRANSACTION_TYPE = "UnexpectedPaymentTransactionType"
     EFT_PRENOTE_PENDING = "EFTPending"

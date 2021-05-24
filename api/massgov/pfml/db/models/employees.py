@@ -2092,6 +2092,16 @@ class State(LookupTable):
         Flow.DELEGATED_PEI_WRITEBACK.flow_id,
     )
 
+    # Restartable error states. Payments in these states will be accepted
+    # on subsequent runs of processing (assuming no other issues).
+    DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE = LkState(
+        180, "Add to Payment Error Report - RESTARTABLE", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(
+        181, "Add to Payment Reject Report - RESTARTABLE", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
 
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType

@@ -72,6 +72,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
     def get_import_log_id(self) -> Optional[int]:
         if not self.log_entry:
             return None
+        self.log_entry_db_session.commit()
         return self.log_entry.import_log.import_log_id
 
     def initialize_metrics(self) -> None:
