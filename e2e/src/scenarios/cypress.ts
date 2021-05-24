@@ -217,6 +217,19 @@ export const BIAP60: ScenarioSpecification = {
   },
 };
 
+export const BIAP60ER: ScenarioSpecification = {
+  ...BIAP60,
+  claim: {
+    ...BIAP60.claim,
+    label: "BIAP60ER",
+    employerResponse: {
+      hours_worked_per_week: 20,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+  },
+};
+
 export const CHAP1: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
