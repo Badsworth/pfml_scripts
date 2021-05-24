@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal
+from enum import Enum
 from typing import List, Optional
 
 from massgov.pfml.api.models.common import PreviousLeave
@@ -45,6 +46,23 @@ class EmployerBenefit(PydanticBaseModel):
     program_type: Optional[str]
 
 
+class NatureOfLeave(str, Enum):
+    ILLNESS_OR_INJURY = "An illness or injury"
+    PREGNANCY = "Pregnancy"
+    CHILD_BONDING = "Bonding with my child after birth or placement"
+    MILITARY_CAREGIVER = "Caring for a family member who serves in the armed forces"
+    MILITARY_MANAGING_FAMILY = (
+        "Managing family affairs while a family member is on active duty in the armed forces"
+    )
+    FAMILY_CAREGIVER = "Caring for a family member with a serious health condition"
+
+
+class YesNoUnsure(str, Enum):
+    YES = "Yes"
+    NO = "No"
+    UNSURE = "Don't Know"
+
+
 class EmployerClaimReview(PydanticBaseModel):
     """ Defines the Employer info request / response format """
 
@@ -55,3 +73,6 @@ class EmployerClaimReview(PydanticBaseModel):
     employer_decision: Optional[str]
     fraud: Optional[str]
     has_amendments: bool = False
+    nature_of_leave: Optional[NatureOfLeave]
+    believe_relationship_accurate: Optional[YesNoUnsure]
+    relationship_inaccurate_reason: Optional[str]

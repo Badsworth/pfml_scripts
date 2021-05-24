@@ -46,6 +46,17 @@ class OtherInfoAttributeBuilder(EFormAttributeBuilder):
         "hours_worked_per_week": {"name": "AverageWeeklyHoursWorked", "type": "decimalValue"},
         "employer_decision": {"name": "EmployerDecision", "type": "stringValue"},
         "fraud": {"name": "Fraud1", "type": "stringValue"},
+        "nature_of_leave": {
+            "name": "NatureOfLeave",
+            "type": "enumValue",
+            "domainName": "Nature of leave",
+        },
+        "believe_relationship_accurate": {
+            "name": "BelieveAccurate",
+            "type": "enumValue",
+            "domainName": "PleaseSelectYesNoIdontKnow",
+        },
+        "relationship_inaccurate_reason": {"name": "WhyInaccurate", "type": "stringValue"},
     }
 
 

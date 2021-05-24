@@ -546,6 +546,18 @@ export interface EmployerClaimRequestBody {
   employer_decision?: "Approve" | "Deny" | "Requires More Information";
   fraud?: "Yes" | "No";
   comment?: string;
+  nature_of_leave?:
+  | (
+      | "An illness or injury"
+      | "Pregnancy"
+      | "Bonding with my child after birth or placement"
+      | "Caring for a family member who serves in the armed forces"
+      | "Managing family affairs while a family member is on active duty in the armed forces"
+      | "Caring for a family member with a serious health condition"
+    )
+  | null;
+  believe_relationship_accurate?: "Yes" | "No" | "Don't Know" | null;
+  relationship_inaccurate_reason?: string;
 }
 export interface UpdateClaimReviewResponse {
   claim_id: string;

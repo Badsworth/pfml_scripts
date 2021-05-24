@@ -69,6 +69,7 @@ def update_claim_body():
                 "leave_reason": "Pregnancy / Maternity",
             }
         ],
+        "nature_of_leave": "Pregnancy",
     }
 
 
@@ -1109,6 +1110,88 @@ class TestUpdateClaim:
             {"case_id": claim.fineos_absence_id},
         )
         assert capture[1][0] == "create_eform"
+
+    # Inner class for testing Caring Leave scenarios
+    class TestCaringLeave:
+        @pytest.fixture()
+        def employer(self, initialize_factories_session):
+            return EmployerFactory.create()
+
+        @pytest.fixture()
+        def user_leave_admin(self, employer_user, employer, test_verification):
+            return UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+
+        @pytest.fixture()
+        def with_user_leave_admin_link(self, user_leave_admin, test_db_session):
+            test_db_session.add(user_leave_admin)
+            test_db_session.commit()
+
+        @pytest.fixture()
+        def with_mock_client_capture(self):
+            massgov.pfml.fineos.mock_client.start_capture()
+
+        @pytest.fixture()
+        def claim(self, employer):
+            return ClaimFactory.create(employer_id=employer.employer_id)
+
+        @pytest.fixture()
+        def update_caring_leave_claim_body(self, update_claim_body):
+            update_claim_body[
+                "nature_of_leave"
+            ] = "Caring for a family member with a serious health condition"
+            update_claim_body["believe_relationship_accurate"] = "No"
+            update_claim_body["relationship_inaccurate_reason"] = "No reason, lol"
+
+            return update_claim_body
+
+        @pytest.fixture()
+        def perform_update(
+            self, client, claim, employer_auth_token, update_caring_leave_claim_body
+        ):
+            def update_claim_review():
+                return client.patch(
+                    f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+                    headers={"Authorization": f"Bearer {employer_auth_token}"},
+                    json=update_caring_leave_claim_body,
+                )
+
+            return update_claim_review
+
+        def test_response_status(
+            self, with_user_leave_admin_link, with_mock_client_capture, perform_update
+        ):
+            response = perform_update()
+            assert response.status_code == 200
+
+        def test_eform_attributes(
+            self, with_user_leave_admin_link, with_mock_client_capture, perform_update
+        ):
+            perform_update()
+
+            captures = massgov.pfml.fineos.mock_client.get_capture()
+            assert len(captures) >= 2
+
+            handler, fineos_web_id, params = captures[1]
+            assert handler == "create_eform"
+
+            eform = params["eform"]
+
+            nature_of_leave_attr = eform.get_attribute("NatureOfLeave")
+            assert (
+                nature_of_leave_attr["enumValue"]["instanceValue"]
+                == "Caring for a family member with a serious health condition"
+            )
+
+            believe_accurate_attr = eform.get_attribute("BelieveAccurate")
+            assert believe_accurate_attr["enumValue"]["instanceValue"] == "No"
+
+            why_inaccurate_attr = eform.get_attribute("WhyInaccurate")
+            assert why_inaccurate_attr["stringValue"] == "No reason, lol"
 
 
 def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> bool:
