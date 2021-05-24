@@ -195,7 +195,8 @@ export const Review = (props) => {
       has_amendments:
         !isEqual(formState.amendedBenefits, formState.employerBenefits) ||
         !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
-        !isEqual(amendedHours, claim.hours_worked_per_week),
+        !isEqual(amendedHours, claim.hours_worked_per_week) ||
+        formState.believeRelationshipAccurate === "no",
     };
 
     if (isCaringLeave) {

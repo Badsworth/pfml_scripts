@@ -260,7 +260,6 @@ describe("Review", () => {
         .props()
         .onChange(new PreviousLeave({ previous_leave_id: 0 }));
     });
-
     await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
@@ -273,12 +272,14 @@ describe("Review", () => {
     act(() => {
       wrapper.find("SupportingWorkDetails").props().onChange(60);
     });
-
     await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
-      expect.objectContaining({ has_amendments: true })
+      expect.objectContaining({
+        has_amendments: true,
+        hours_worked_per_week: 60,
+      })
     );
   });
 
@@ -369,6 +370,9 @@ describe("Review", () => {
 
   describe("Caring Leave", () => {
     beforeEach(() => {
+      process.env.featureFlags = {
+        showCaringLeaveType: true,
+      };
       const caringLeaveClaim = new MockEmployerClaimBuilder()
         .completed()
         .caringLeaveReason()
@@ -408,6 +412,24 @@ describe("Review", () => {
       expect(
         wrapper.update().find('button[type="submit"]').prop("disabled")
       ).toBe(true);
+    });
+
+    it("submits has_amendments as true when LA indicates the relationship is inaccurate", async () => {
+      await act(async () => {
+        await wrapper
+          .find("input[name='believeRelationshipAccurate']")
+          .last()
+          .simulate("change", { target: { value: "no" } });
+        await simulateEvents(wrapper).submitForm();
+      });
+
+      expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+        "NTN-111-ABS-01",
+        expect.objectContaining({
+          has_amendments: true,
+          believe_relationship_accurate: "no",
+        })
+      );
     });
   });
 });
