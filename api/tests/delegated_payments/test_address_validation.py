@@ -24,6 +24,7 @@ from massgov.pfml.db.models.factories import (
     ExperianAddressPairFactory,
     PaymentFactory,
 )
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.address_validation import (
     AddressValidationStep,
     Constants,
@@ -103,6 +104,14 @@ def _assert_payment_state(db_session: db.Session, state: LkState, payments: List
     assert db_session.query(sqlalchemy.func.count(StateLog.state_log_id)).filter(
         StateLog.end_state_id == state.state_id
     ).filter(StateLog.payment_id.in_(payment_ids)).scalar() == len(payments)
+
+
+def _assert_fineos_writeback_details(db_session: db.Session, payments: List[Payment]) -> None:
+    payment_ids = [payment.payment_id for payment in payments]
+    db_session.query(sqlalchemy.func.count(FineosWritebackDetails.payment_id)).filter(
+        FineosWritebackDetails.transaction_status_id
+        == FineosWritebackTransactionStatus.ADDRESS_VALIDATION_ERROR.transaction_status_id
+    ).filter(FineosWritebackDetails.payment_id.in_(payment_ids)).scalar() == len(payments)
 
 
 def _assert_payment_state_log_outcome(
@@ -205,19 +214,35 @@ def test_run_step_state_transitions(
     )
 
     # Expect payments with no matching addresses according to Experian to transition into the
-    # PAYMENT_FAILED_ADDRESS_VALIDATION state.
+    # PAYMENT_FAILED_ADDRESS_VALIDATION state and DELEGATED_ADD_TO_FINEOS_WRITEBACK state.
     _assert_payment_state(
         local_test_db_other_session,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         check_payments_with_non_matching_addresses,
     )
+    _assert_payment_state(
+        local_test_db_other_session,
+        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+        check_payments_with_non_matching_addresses,
+    )
+    _assert_fineos_writeback_details(
+        local_test_db_other_session, check_payments_with_non_matching_addresses
+    )
 
     # Expect payments with multiple matching addresses according to Experian to transition into the
-    # PAYMENT_FAILED_ADDRESS_VALIDATION state.
+    # PAYMENT_FAILED_ADDRESS_VALIDATION state and DELEGATED_ADD_TO_FINEOS_WRITEBACK state.
     _assert_payment_state(
         local_test_db_other_session,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         check_payments_with_multiple_matching_addresses,
+    )
+    _assert_payment_state(
+        local_test_db_other_session,
+        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+        check_payments_with_multiple_matching_addresses,
+    )
+    _assert_fineos_writeback_details(
+        local_test_db_other_session, check_payments_with_multiple_matching_addresses
     )
 
     # Expect payments with a near match in the multiple matching addresses set to transition into
@@ -261,10 +286,11 @@ def test_run_step_no_database_changes_on_exception(
             db_session=test_db_session, log_entry_db_session=test_db_other_session
         ).run()
 
-    # We expect to find no payments in either of the post-address validation states.
+    # We expect to find no payments in any of the post-address validation states.
     post_address_validation_states = [
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION.state_id,
+        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
     ]
     assert (
         test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
@@ -310,6 +336,13 @@ def test_run_step_experian_exception(
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         Constants.UNKNOWN,
     )
+    _assert_payment_state_log_outcome(
+        local_test_db_other_session,
+        valid_check_payments,
+        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+        Constants.UNKNOWN,
+    )
+    _assert_fineos_writeback_details(local_test_db_other_session, valid_check_payments)
 
     # EFT payments will always pass even if Experian throws an exception
     _assert_payment_state_log_outcome(
@@ -391,6 +424,15 @@ def test_run_step_state_log_outcome_field(
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         Confidence.NO_MATCHES.value,
     )
+    _assert_payment_state_log_outcome(
+        local_test_db_other_session,
+        check_payments_with_non_matching_addresses,
+        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+        Confidence.NO_MATCHES.value,
+    )
+    _assert_fineos_writeback_details(
+        local_test_db_other_session, check_payments_with_non_matching_addresses
+    )
 
     # Expect payments with addresses that return no matches to have a
     # state_log.outcome.experian_result element with multiple output_address_ elements.
@@ -400,6 +442,16 @@ def test_run_step_state_log_outcome_field(
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         Confidence.MULTIPLE_MATCHES.value,
         experian_api_multiple_match_count,
+    )
+    _assert_payment_state_log_outcome(
+        local_test_db_other_session,
+        check_payments_with_multiple_matching_addresses,
+        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+        Confidence.MULTIPLE_MATCHES.value,
+        experian_api_multiple_match_count,
+    )
+    _assert_fineos_writeback_details(
+        local_test_db_other_session, check_payments_with_multiple_matching_addresses
     )
 
     _assert_payment_state_log_outcome(

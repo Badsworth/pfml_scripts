@@ -589,6 +589,9 @@ class FineosWritebackTransactionStatus(LookupTable):
     TOTAL_BENEFITS_OVER_CAP = LkFineosWritebackTransactionStatus(
         6, "Total Benefits Over Cap", ACTIVE_WRITEBACK_RECORD_STATUS
     )
+    ADDRESS_VALIDATION_ERROR = LkFineosWritebackTransactionStatus(
+        7, "Address Validation Error", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
 
 
 def sync_lookup_tables(db_session):
