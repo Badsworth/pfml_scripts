@@ -1,5 +1,5 @@
 import base64
-from typing import Optional
+from typing import Dict, Optional, Union
 
 import connexion
 import flask
@@ -103,6 +103,26 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
         return user_leave_admin
 
 
+def get_employer_log_attributes(app: connexion.FlaskApp) -> Dict[str, int]:
+    """
+    Determine the requesting user's employer relationships & verification status
+    """
+    current_user = app.current_user()
+    if current_user is None:
+        raise Unauthorized()
+
+    employers = list(current_user.employers)
+    verified_employers = [
+        e.employer_id for e in current_user.employers if current_user.verified_employer(e)
+    ]
+    log_attributes = {
+        "num_employers": len(employers),
+        "num_verified_employers": len(verified_employers),
+        "num_unverified_employers": len(employers) - len(verified_employers),
+    }
+    return log_attributes
+
+
 @requires(READ, "EMPLOYER_API")
 def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     body = connexion.request.json
@@ -122,6 +142,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     except (VerificationRequired, NotAuthorizedForAccess) as error:
         return error.to_api_response()
 
+    log_attributes: Dict[str, Union[bool, str, int, None]]
     log_attributes = {
         "absence_case_id": fineos_absence_id,
         "user_leave_admin.employer_id": user_leave_admin.employer_id,
@@ -129,6 +150,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
         "claim_request.fraud": claim_request.fraud,
         "claim_request.has_amendments": claim_request.has_amendments,
         "claim_request.has_comment": str(bool(claim_request.comment)),
+        **get_employer_log_attributes(app),
     }
 
     fineos_web_id = user_leave_admin.fineos_web_id
@@ -182,6 +204,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     except (VerificationRequired, NotAuthorizedForAccess) as error:
         return error.to_api_response()
 
+    log_attributes = get_employer_log_attributes(app)
     with app.db_session() as db_session:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
@@ -190,6 +213,10 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         )
 
         if claim_review_response is None:
+            logger.error(
+                "employer_get_claim_review failure - could not get claim for absence id",
+                extra={**log_attributes},
+            )
             raise NotFound(
                 description="Could not fetch Claim from FINEOS with given absence ID {}".format(
                     fineos_absence_id
@@ -207,6 +234,9 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 claim_from_db.fineos_absence_status.absence_status_description
             )
 
+        logger.info(
+            "employer_get_claim_review success", extra={**log_attributes},
+        )
         return response_util.success_response(
             message="Successfully retrieved claim",
             data=claim_review_response.dict(),
@@ -227,6 +257,11 @@ def employer_get_claim_documents(fineos_absence_id: str) -> flask.Response:
 
     documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
     documents_list = [doc.dict() for doc in documents]
+
+    log_attributes = get_employer_log_attributes(app)
+    logger.info(
+        "employer_get_claim_documents success", extra={**log_attributes},
+    )
     return response_util.success_response(
         message="Successfully retrieved documents", data=documents_list, status_code=200
     ).to_api_response()
@@ -238,6 +273,8 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
     Calls out to the FINEOS Group Client API to download a document for a specified claim.
     The requesting user must be of the EMPLOYER role.
     """
+    log_attributes: Dict[str, Union[str, int]] = {}
+    log_attributes.update(get_employer_log_attributes(app))
     try:
         user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
     except (VerificationRequired, NotAuthorizedForAccess) as error:
@@ -249,9 +286,16 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
     )
 
     if document is None:
+        logger.error(
+            "employer_document_download failed - document not found", extra={**log_attributes},
+        )
         raise Forbidden(description="User does not have access to this document")
 
     if document.document_type and document.document_type.lower() not in DOWNLOADABLE_DOC_TYPES:
+        log_attributes["document_type"] = document.document_type
+        logger.error(
+            "employer_document_download failed - document_type not found", extra={**log_attributes},
+        )
         raise Forbidden(description="User does not have access to this document")
 
     document_data: Base64EncodedFileData = download_document_as_leave_admin(
@@ -261,6 +305,9 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
 
     content_type = document_data.contentType or "application/octet-stream"
 
+    logger.info(
+        "employer_document_download success", extra={**log_attributes},
+    )
     return flask.Response(
         file_bytes,
         content_type=content_type,
@@ -327,6 +374,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
 def get_claims() -> flask.Response:
     current_user = app.current_user()
     is_employer = can(READ, "EMPLOYER_API")
+    log_attributes = get_employer_log_attributes(app)
 
     with PaginationAPIContext(Claim, request=flask.request) as pagination_context:
         with app.db_session() as db_session:
@@ -370,6 +418,7 @@ def get_claims() -> flask.Response:
             "pagination.page_offset": pagination_context.page_offset,
             "pagination.total_pages": page.total_pages,
             "pagination.total_records": page.total_records,
+            **log_attributes,
         },
     )
 
