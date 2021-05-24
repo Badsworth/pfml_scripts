@@ -3,6 +3,7 @@ import { get, isEqual, pick } from "lodash";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
+import DocumentCollection from "../../../models/DocumentCollection";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
 import EmployerBenefit from "../../../models/EmployerBenefit";
@@ -20,6 +21,7 @@ import PropTypes from "prop-types";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
+import findDocumentsByLeaveReason from "../../../utils/findDocumentsByLeaveReason";
 import formatDateRange from "../../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
@@ -36,7 +38,7 @@ export const Review = (props) => {
   } = props;
   const {
     appErrors,
-    employers: { claim },
+    employers: { claim, documents, downloadDocument, loadDocuments },
   } = appLogic;
   const { t } = useTranslation();
   // TODO (EMPLOYER-718): Remove feature flag
@@ -99,6 +101,20 @@ export const Review = (props) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [claim]);
+
+  useEffect(() => {
+    if (!documents) {
+      loadDocuments(absenceId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documents, absenceId]);
+
+  // only cert forms should be shown
+  const allDocuments = documents ? documents.items : [];
+  const certificationDocuments = findDocumentsByLeaveReason(
+    allDocuments,
+    get(claim, "leave_details.reason")
+  );
 
   const updateFields = (fields) => {
     setFormState({ ...formState, ...fields });
@@ -239,6 +255,8 @@ export const Review = (props) => {
       <EmployeeInformation claim={claim} />
       <LeaveDetails
         claim={claim}
+        documents={certificationDocuments}
+        downloadDocument={downloadDocument}
         believeRelationshipAccurate={formState.believeRelationshipAccurate}
         onChangeBelieveRelationshipAccurate={
           handleBelieveRelationshipAccurateChange
@@ -248,7 +266,11 @@ export const Review = (props) => {
           handleRelationshipInaccurateReason
         }
       />
-      <LeaveSchedule appLogic={appLogic} claim={claim} />
+      <LeaveSchedule
+        appLogic={appLogic}
+        claim={claim}
+        hasDocuments={!!certificationDocuments.length}
+      />
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <form
         id="employer-review-form"
@@ -310,6 +332,9 @@ Review.propTypes = {
     appErrors: PropTypes.object.isRequired,
     employers: PropTypes.shape({
       claim: PropTypes.instanceOf(EmployerClaim),
+      documents: PropTypes.instanceOf(DocumentCollection),
+      downloadDocument: PropTypes.func.isRequired,
+      loadDocuments: PropTypes.func.isRequired,
       submitClaimReview: PropTypes.func.isRequired,
     }).isRequired,
     portalFlow: PropTypes.shape({

@@ -2266,11 +2266,13 @@ const components = {
     choiceYes: "Yes",
     commentHeading:
       "Tell us why you think this relationship is inaccurate. (required)",
+    documentationLabel: "Documentation",
     familyMemberRelationshipHint:
       "This employee has attested the family member relationship is <eligible-relationship-link>a covered relationship</eligible-relationship-link>. If something on the form seems incorrect, add a comment at the end of the page.",
     familyMemberRelationshipLabel:
       "Do you believe the listed relationship is described accurately? (Optional)",
     header: "Leave details",
+    healthCareProviderFormLink: "$t(shared.certificationFormMedical)",
     leaveDurationLabel: "Leave duration",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
@@ -2280,6 +2282,10 @@ const components = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveTypeLabel: "Leave type",
+    recordkeepingInstructions:
+      "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
+    recordkeepingInstructions_caringLeave:
+      "<p>To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.</p><p>View the family relationship on page 3.</p>",
     warningHeading: "The employee will be denied paid leave.",
     warningLead:
       "We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied",
@@ -2296,14 +2302,10 @@ const components = {
       "$t(shared.claimDurationTypeReducedSchedule)",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
-    documentationLabel: "Documentation",
     downloadAttachments:
       "Download the documentation below or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
     header: "Leave schedule",
-    healthCareProviderFormLink: "$t(shared.certificationFormMedical)",
     leaveFrequencyLabel: "Leave frequency",
-    recordkeepingInstructions:
-      "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
     tableName: "Leave schedule details table",
   },

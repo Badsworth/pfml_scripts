@@ -1,15 +1,42 @@
+import Document, { DocumentType } from "../../../../src/models/Document";
 import {
   MockEmployerClaimBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../../test-utils";
+import DocumentCollection from "../../../../src/models/DocumentCollection";
 import EmployerBenefit from "../../../../src/models/EmployerBenefit";
+import LeaveReason from "../../../../src/models/LeaveReason";
 import PreviousLeave from "../../../../src/models/PreviousLeave";
 import Review from "../../../../src/pages/employers/applications/review";
 import { act } from "react-dom/test-utils";
 import { clone } from "lodash";
 
 jest.mock("../../../../src/hooks/useAppLogic");
+
+const DOCUMENTS = new DocumentCollection([
+  new Document({
+    content_type: "image/png",
+    created_at: "2020-04-05",
+    document_type: DocumentType.certification.medicalCertification,
+    fineos_document_id: "fineos-id-4",
+    name: "Medical cert doc",
+  }),
+  new Document({
+    content_type: "application/pdf",
+    created_at: "2020-01-02",
+    document_type: DocumentType.approvalNotice,
+    fineos_document_id: "fineos-id-1",
+    name: "Approval notice doc",
+  }),
+  new Document({
+    content_type: "application/pdf",
+    created_at: "2020-02-01",
+    document_type: DocumentType.certification[LeaveReason.care],
+    fineos_document_id: "fineos-id-10",
+    name: "Caring cert doc",
+  }),
+]);
 
 describe("Review", () => {
   const claim = new MockEmployerClaimBuilder()
@@ -20,11 +47,16 @@ describe("Review", () => {
 
   let appLogic, wrapper;
 
-  const renderComponent = (render = "shallow", employerClaimAttrs = claim) => {
+  const renderComponent = (
+    render = "shallow",
+    employerClaimAttrs = claim,
+    props = {}
+  ) => {
     return renderWithAppLogic(Review, {
       employerClaimAttrs,
       props: {
         query,
+        ...props,
       },
       render,
     });
@@ -286,6 +318,53 @@ describe("Review", () => {
       });
     });
     expect(mockPreventDefault).not.toHaveBeenCalled();
+  });
+
+  describe("Documents", () => {
+    it("loads the documents while documents are undefined", () => {
+      ({ appLogic } = renderComponent("mount"));
+      expect(appLogic.employers.loadDocuments).toHaveBeenCalledWith(
+        "NTN-111-ABS-01"
+      );
+    });
+
+    describe("when the claim is a caring leave", () => {
+      function render() {
+        const caringLeaveClaim = clone(claim);
+        caringLeaveClaim.leave_details.reason = "Care for a Family Member";
+        appLogic.employers.documents = DOCUMENTS;
+        ({ appLogic, wrapper } = renderComponent("mount", caringLeaveClaim, {
+          appLogic,
+        }));
+      }
+
+      it("does not load the documents while documents is loaded ", () => {
+        render();
+        expect(appLogic.employers.loadDocuments).not.toHaveBeenCalled();
+      });
+
+      it("shows only medical cert when feature flag is false", () => {
+        render();
+        const documents = wrapper.find("LeaveDetails").props().documents;
+        expect(documents.length).toBe(1);
+        expect(documents.map((document) => document.name)).toEqual([
+          "Medical cert doc",
+        ]);
+      });
+
+      it("shows medical cert and caring cert when feature flag is true", () => {
+        process.env.featureFlags = {
+          showCaringLeaveType: true,
+        };
+        render();
+        const documents = wrapper.find("LeaveDetails").props().documents;
+        expect(documents.length).toBe(2);
+        expect(documents.map((document) => document.name)).toEqual([
+          "Medical cert doc",
+          "Caring cert doc",
+        ]);
+      });
+    });
   });
 
   describe("Caring Leave", () => {

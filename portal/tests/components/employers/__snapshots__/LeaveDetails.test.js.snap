@@ -1,5 +1,29 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`LeaveDetails Caring Leave renders documentation hint correctly with family relationship 1`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    To meet 
+    <a
+      href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      federal laws and regulations
+    </a>
+    , you must keep medical records separate and confidential from any personnel files.
+  </p>,
+  <p
+    key="p-1"
+  >
+    View the family relationship on page 3.
+  </p>,
+]
+`;
+
 exports[`LeaveDetails Caring Leave renders relationship question when showCaringLeaveType flag is true 1`] = `
 <Fragment>
   <ReviewHeading
@@ -137,5 +161,20 @@ Array [
     due to emergency Covid-19 regulations for hospital workers
   </a>,
   ".",
+]
+`;
+
+exports[`LeaveDetails when there are documents renders documentation hint correctly with family relationship 1`] = `
+Array [
+  "To meet ",
+  <a
+    href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    federal laws and regulations
+  </a>,
+  ", you must keep medical records separate and confidential from any personnel files.",
 ]
 `;

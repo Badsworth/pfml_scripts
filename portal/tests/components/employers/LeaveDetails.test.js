@@ -1,16 +1,36 @@
+import Document, { DocumentType } from "../../../src/models/Document";
 import { MockEmployerClaimBuilder, simulateEvents } from "../../test-utils";
 import LeaveDetails from "../../../src/components/employers/LeaveDetails";
 import React from "react";
 import ReviewRow from "../../../src/components/ReviewRow";
+import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
+
+const DOCUMENTS = [
+  new Document({
+    content_type: "image/png",
+    created_at: "2020-04-05",
+    document_type: DocumentType.certification.medicalCertification,
+    fineos_document_id: "fineos-id-4",
+    name: "Medical cert doc",
+  }),
+  new Document({
+    content_type: "application/pdf",
+    created_at: "2020-02-01",
+    document_type: DocumentType.certification.medicalCertification,
+    fineos_document_id: "fineos-id-9",
+    // intentionally omit name
+  }),
+];
 
 describe("LeaveDetails", () => {
   let claim, wrapper;
 
   beforeEach(() => {
     claim = new MockEmployerClaimBuilder().completed().create();
-
-    wrapper = shallow(<LeaveDetails claim={claim} />);
+    wrapper = shallow(
+      <LeaveDetails claim={claim} documents={[]} downloadDocument={jest.fn()} />
+    );
   });
 
   it("renders the component", () => {
@@ -26,7 +46,13 @@ describe("LeaveDetails", () => {
       .completed()
       .bondingLeaveReason()
       .create();
-    const bondingWrapper = shallow(<LeaveDetails claim={bondingClaim} />);
+    const bondingWrapper = shallow(
+      <LeaveDetails
+        claim={bondingClaim}
+        documents={[]}
+        downloadDocument={jest.fn()}
+      />
+    );
 
     expect(bondingWrapper.find("Details Trans").dive()).toMatchSnapshot();
   });
@@ -48,15 +74,88 @@ describe("LeaveDetails", () => {
       .completed(true)
       .create();
     const wrapper = shallow(
-      <LeaveDetails claim={claimWithIntermittentLeave} />
+      <LeaveDetails
+        claim={claimWithIntermittentLeave}
+        documents={[]}
+        downloadDocument={jest.fn()}
+      />
     );
     expect(wrapper.find(ReviewRow).last().children().first().text()).toEqual(
       "—"
     );
   });
 
-  describe("Caring Leave", () => {
+  it("does not render documentation row", () => {
+    expect(wrapper.exists('ReviewRow[label="Documentation"]')).toBe(false);
+  });
+
+  describe("when there are documents", () => {
     const setup = () => {
+      const downloadDocumentSpy = jest.fn();
+      const claim = new MockEmployerClaimBuilder().completed().create();
+      const wrapper = shallow(
+        <LeaveDetails
+          claim={claim}
+          documents={DOCUMENTS}
+          downloadDocument={downloadDocumentSpy}
+        />
+      );
+      return { downloadDocumentSpy, wrapper };
+    };
+
+    it("shows the documents heading", () => {
+      const { wrapper } = setup();
+      expect(wrapper.exists('ReviewRow[label="Documentation"]')).toBe(true);
+    });
+
+    it("renders documentation hint correctly with family relationship", () => {
+      const { wrapper } = setup();
+      const documentsHint = wrapper
+        .find(
+          'Trans[i18nKey="components.employersLeaveDetails.recordkeepingInstructions"]'
+        )
+        .dive();
+      expect(documentsHint).toMatchSnapshot();
+    });
+
+    it("renders document's name if there is no document name", () => {
+      const { wrapper } = setup();
+      const medicalDocuments = wrapper.find("HcpDocumentItem");
+      expect(medicalDocuments.length).toBe(2);
+      expect(medicalDocuments.map((node) => node.dive().text())).toEqual([
+        "Medical cert doc",
+        "Certification of Your Serious Health Condition",
+      ]);
+    });
+
+    it("makes a call to download documents on click", async () => {
+      const { downloadDocumentSpy, wrapper } = setup();
+      await act(async () => {
+        await wrapper
+          .find("HcpDocumentItem")
+          .at(0)
+          .dive()
+          .find("a")
+          .simulate("click", {
+            preventDefault: jest.fn(),
+          });
+      });
+
+      expect(downloadDocumentSpy).toHaveBeenCalledWith(
+        "NTN-111-ABS-01",
+        expect.objectContaining({
+          content_type: "image/png",
+          created_at: "2020-04-05",
+          document_type: "State managed Paid Leave Confirmation",
+          fineos_document_id: "fineos-id-4",
+          name: "Medical cert doc",
+        })
+      );
+    });
+  });
+
+  describe("Caring Leave", () => {
+    const setup = (documents = []) => {
       const onChangeBelieveRelationshipAccurateMock = jest.fn();
       const claim = new MockEmployerClaimBuilder()
         .completed()
@@ -65,6 +164,8 @@ describe("LeaveDetails", () => {
       const wrapper = shallow(
         <LeaveDetails
           claim={claim}
+          documents={documents}
+          downloadDocument={jest.fn()}
           onChangeBelieveRelationshipAccurate={
             onChangeBelieveRelationshipAccurateMock
           }
@@ -82,6 +183,16 @@ describe("LeaveDetails", () => {
     it("does not render relationship question when showCaringLeaveType flag is false", () => {
       const { wrapper } = setup();
       expect(wrapper.exists("InputChoiceGroup")).toBe(false);
+    });
+
+    it("renders documentation hint correctly with family relationship", () => {
+      const { wrapper } = setup(DOCUMENTS);
+      const documentsHint = wrapper
+        .find(
+          'Trans[i18nKey="components.employersLeaveDetails.recordkeepingInstructions"]'
+        )
+        .dive();
+      expect(documentsHint).toMatchSnapshot();
     });
 
     it("renders relationship question when showCaringLeaveType flag is true", () => {
