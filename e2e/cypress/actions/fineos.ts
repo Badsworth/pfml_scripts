@@ -640,11 +640,6 @@ export function mailedDocumentMarkEvidenceRecieved(
     config("HAS_FINEOS_SP") === "true"
   );
   cy.log("DOCUMENT TYPE", documentType);
-
-  if (reason === "Care for a Family Member") {
-    uploadDocument("HCP", "Relationship proof");
-    cy.wait(1000);
-  }
   uploadDocument("HCP", documentType);
   onTab("Documents");
   assertHasDocument(documentType);
