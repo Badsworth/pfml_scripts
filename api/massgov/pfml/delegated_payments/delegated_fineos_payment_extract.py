@@ -45,10 +45,14 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
 )
 from massgov.pfml.db.models.payments import (
+    ACTIVE_WRITEBACK_RECORD_STATUS,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+    LkFineosWritebackTransactionStatus,
 )
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.payments.payments_util import get_now
@@ -458,7 +462,7 @@ class PaymentData:
 
         elif self.is_standard_payment:
             self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISMATCHED_DATA,
+                payments_util.ValidationReason.MISSING_DATASET,
                 f"Payment leave request ID not found in requested absence file: {self.leave_request_id}",
             )
 
@@ -509,8 +513,11 @@ class PaymentData:
         return {
             "c_value": self.c_value,
             "i_value": self.i_value,
-            "absence_case_number": self.absence_case_number,
+            "absence_case_id": self.absence_case_number,
         }
+
+    def get_payment_message_str(self) -> str:
+        return f"[C={self.c_value},I={self.i_value},absence_case_id={self.absence_case_number}]"
 
 
 class PaymentExtractStep(Step):
@@ -877,9 +884,8 @@ class PaymentExtractStep(Step):
         # or a payment might have been created before. We'll check that later.
 
         logger.info(
-            "Creating new payment for CI: %s, %s",
-            payment_data.c_value,
-            payment_data.i_value,
+            "Creating new payment for %s",
+            payment_data.get_payment_message_str(),
             extra=payment_data.get_traceable_details(),
         )
         payment = Payment(payment_id=uuid.uuid4())
@@ -1000,8 +1006,9 @@ class PaymentExtractStep(Step):
             extra["pub_eft_id"] = existing_eft.pub_eft_id
             self.increment(self.Metrics.EFT_FOUND_COUNT)
             logger.info(
-                "Found existing EFT info for claimant in prenote state %s",
+                "Found existing EFT info for claimant in prenote state %s for payment %s",
                 existing_eft.prenote_state.prenote_state_description,
+                payment_data.get_payment_message_str(),
                 extra=extra,
             )
 
@@ -1042,7 +1049,9 @@ class PaymentExtractStep(Step):
 
             extra["pub_eft_id"] = new_eft.pub_eft_id
             logger.info(
-                "Initiating DELEGATED_EFT flow for employee associated with payment", extra=extra,
+                "Initiating DELEGATED_EFT flow for employee associated with payment %i",
+                payment_data.get_payment_message_str(),
+                extra=extra,
             )
 
             # We need to put the payment in an error state if it's not prenoted
@@ -1129,13 +1138,25 @@ class PaymentExtractStep(Step):
         return payment
 
     def _setup_state_log(self, payment: Payment, payment_data: PaymentData) -> None:
+        transaction_status = None
 
         # https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
         # Does the payment have validation issues
         # If so, add to that error state
         if payment_data.validation_container.has_validation_issues():
-            end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
             message = "Error processing payment record"
+
+            # https://lwd.atlassian.net/wiki/spaces/API/pages/1319272855/Payment+Transaction+Scenarios
+            # We want to determine what kind of PEI writeback we'd do if it has errors
+            transaction_status = self._determine_pei_transaction_status(payment_data)
+            self._manage_pei_writeback_state(payment, transaction_status, payment_data)
+
+            # Payments in an active state go to the general error report state
+            if transaction_status.writeback_record_status == ACTIVE_WRITEBACK_RECORD_STATUS:
+                end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+            else:  # Otherwise they go to the restartable error report state
+                end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
+
             self.increment(self.Metrics.ERRORED_PAYMENT_COUNT)
 
         # Employer reimbursements are added to the FINEOS writeback + a report
@@ -1187,6 +1208,104 @@ class PaymentExtractStep(Step):
             associated_model=payment,
             db_session=self.db_session,
         )
+        logger.info(
+            "Payment %s added to state %s",
+            payment_data.get_payment_message_str(),
+            end_state.state_description,
+        )
+
+    def _manage_pei_writeback_state(
+        self,
+        payment: Payment,
+        transaction_status: LkFineosWritebackTransactionStatus,
+        payment_data: PaymentData,
+    ) -> None:
+        """ If the payment had any validation issues, we want to writeback to FINEOS
+            so that the particular error can be shown in the UI.
+
+            Note that some of these states also mark the payment as
+            Active (they only end up in extracts when PendingActive)
+            This is deliberate as some payments need to be marked as Active
+            so they can be fixed and reissued (an extracted payment can't be modified)
+        """
+
+        message = f"Payment {payment_data.get_payment_message_str()} added to DELEGATED_PEI_WRITEBACK flow with transaction status {transaction_status.transaction_status_description}"
+
+        # Create the state log, note this is in the DELEGATED_PEI_WRITEBACK flow
+        # So it is added in addition to the state log added in manage_state_log
+        state_log_util.create_finished_state_log(
+            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            outcome=state_log_util.build_outcome(message, payment_data.validation_container),
+            associated_model=payment,
+            db_session=self.db_session,
+        )
+        writeback_details = FineosWritebackDetails(
+            payment=payment,
+            transaction_status_id=transaction_status.transaction_status_id,
+            import_log_id=cast(int, self.get_import_log_id()),
+        )
+        self.db_session.add(writeback_details)
+        logger.info(message, extra=payment_data.get_traceable_details())
+
+    def _determine_pei_transaction_status(
+        self, payment_data: PaymentData
+    ) -> LkFineosWritebackTransactionStatus:
+        # https://lwd.atlassian.net/wiki/spaces/API/pages/1319272855/Payment+Transaction+Scenarios
+        validation_reasons = payment_data.validation_container.get_reasons()
+        has_unfixable_issues = False
+        has_pending_prenote = False
+        has_rejected_prenote = False
+
+        for reason in validation_reasons:
+            # Some issues are either due to the data setup in our system
+            # or issues with the extracts themselves (records entirely missing)
+            # If that's the case, we don't want to block the payment from being
+            # processed again, we want to keep receiving it until we/FINEOS fix the issue
+            # ID Proofing is included in this list, as we shouldn't receive non-ID proofed
+            # records in the extract
+            if reason in [
+                payments_util.ValidationReason.MISSING_IN_DB,
+                payments_util.ValidationReason.CLAIM_NOT_ID_PROOFED,
+                payments_util.ValidationReason.MISSING_DATASET,
+                payments_util.ValidationReason.CLAIMANT_MISMATCH,
+                payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
+            ]:
+                has_unfixable_issues = True
+
+            # Pending prenotes will also be put in PendingActive as we are just
+            # waiting to get the payment
+            elif reason == payments_util.ValidationReason.EFT_PRENOTE_PENDING:
+                has_pending_prenote = True
+
+            # Rejected prenotes will get set to Active as the payment information
+            # needs to be fixed as we can't even attempt to pay them
+            elif reason == payments_util.ValidationReason.EFT_PRENOTE_REJECTED:
+                has_rejected_prenote = True
+
+            # Otherwise the issue is any of the other validation reasons
+            # which all will set the payment to Active so the payment can
+            # be fixed and reissued. This always takes precendence, so
+            # we can immediately return without iterating further.
+            else:
+                return FineosWritebackTransactionStatus.FAILED_AUTOMATED_VALIDATION
+
+        # Unfixable issues take next precendence
+        if has_unfixable_issues:
+            return FineosWritebackTransactionStatus.DATA_ISSUE_IN_SYSTEM
+
+        # Pending and rejected can't happen at the same time, so ordering
+        # won't matter
+        if has_pending_prenote:
+            return FineosWritebackTransactionStatus.PENDING_PRENOTE
+
+        if has_rejected_prenote:
+            return FineosWritebackTransactionStatus.PRENOTE_ERROR
+
+        # This should be impossible
+        raise Exception(
+            "Unknown scenario encountered when attempting to figure out the transaction status for %s. Got reasons %s"
+            % (payment_data.get_payment_message_str(), validation_reasons)
+        )
 
     def process_records_to_db(self, extract_data: ExtractData) -> None:
         logger.info("Processing payment extract data into db: %s", extract_data.date_str)
@@ -1207,7 +1326,7 @@ class PaymentExtractStep(Step):
                 )
 
                 logger.info(
-                    f"Processing payment record - absence case number: {payment_data.absence_case_number}",
+                    f"Processing payment record {payment_data.get_payment_message_str()}",
                     extra=payment_data.get_traceable_details(),
                 )
 
@@ -1223,7 +1342,8 @@ class PaymentExtractStep(Step):
                 )
 
                 logger.info(
-                    f"Done processing payment record - absence case number: {payment_data.absence_case_number}",
+                    "Done processing payment record %s",
+                    payment_data.get_payment_message_str(),
                     extra=payment_data.get_traceable_details(),
                 )
             except Exception:

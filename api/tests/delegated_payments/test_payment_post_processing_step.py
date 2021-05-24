@@ -1,3 +1,4 @@
+import random
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -5,8 +6,9 @@ import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-from massgov.pfml.db.models.employees import State
+from massgov.pfml.db.models.employees import Flow, State
 from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory, PaymentFactory
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.payment_post_processing_step import (
     EmployeePaymentGroup,
     PaymentContainer,
@@ -22,10 +24,13 @@ from massgov.pfml.delegated_payments.payment_post_processing_step import (
 
 @pytest.fixture
 def payment_post_processing_step(
-    initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
+    local_initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
+    monkeypatch,
 ):
     return PaymentPostProcessingStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
+        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
 
 
@@ -54,7 +59,7 @@ def _create_payment_container(
     )
 
     if has_processed_state:
-        state = State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT
+        state = random.choice(list(payments_util.Constants.PAID_STATES))
     elif has_errored_state:
         state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     else:
@@ -152,24 +157,32 @@ def test_get_maximum_amount_for_period(payment_post_processing_step):
     assert amount == Decimal("2550.00")
 
 
-def test_validate_payments_not_exceeding_cap(payment_post_processing_step, test_db_session):
+def test_validate_payments_not_exceeding_cap(payment_post_processing_step, local_test_db_session):
     employee = EmployeeFactory.create()
 
     # New payments that are being processed
-    payment_container1 = _create_payment_container(employee, Decimal("225.00"), test_db_session)
-    payment_container2 = _create_payment_container(employee, Decimal("225.00"), test_db_session)
+    payment_container1 = _create_payment_container(
+        employee, Decimal("225.00"), local_test_db_session
+    )
+    payment_container2 = _create_payment_container(
+        employee, Decimal("225.00"), local_test_db_session
+    )
 
     # Prior payments already processed
     _create_payment_container(
-        employee, Decimal("200.00"), test_db_session, has_processed_state=True
+        employee, Decimal("200.00"), local_test_db_session, has_processed_state=True
     )
     _create_payment_container(
-        employee, Decimal("200.00"), test_db_session, has_processed_state=True
+        employee, Decimal("200.00"), local_test_db_session, has_processed_state=True
     )
 
     # Prior payments that errored and aren't factored into the calculation
-    _create_payment_container(employee, Decimal("500.00"), test_db_session, has_errored_state=True)
-    _create_payment_container(employee, Decimal("500.00"), test_db_session, has_errored_state=True)
+    _create_payment_container(
+        employee, Decimal("500.00"), local_test_db_session, has_errored_state=True
+    )
+    _create_payment_container(
+        employee, Decimal("500.00"), local_test_db_session, has_errored_state=True
+    )
 
     # The cap is configured to 850.00, the two new payments
     # alongside the two previously processed payments sum to exactly this
@@ -182,7 +195,7 @@ def test_validate_payments_not_exceeding_cap(payment_post_processing_step, test_
     assert not payment_container2.validation_container.has_validation_issues()
 
     # Make another payment that'll push it over the cap
-    payment_container3 = _create_payment_container(employee, Decimal("0.01"), test_db_session)
+    payment_container3 = _create_payment_container(employee, Decimal("0.01"), local_test_db_session)
     payment_post_processing_step._validate_payments_not_exceeding_cap(
         employee.employee_id, [payment_container1, payment_container2, payment_container3]
     )
@@ -193,8 +206,39 @@ def test_validate_payments_not_exceeding_cap(payment_post_processing_step, test_
     assert payment_container3.validation_container.has_validation_issues()
 
 
+def test_get_all_active_payments_associated_with_employee(
+    payment_post_processing_step, local_test_db_session
+):
+    # This test shows that it doesn't need to be the latest state for a payment
+    # for us to find the prior payments, just so long as they were sent to PUB at some point
+
+    employee = EmployeeFactory.create()
+    # New payment are being processed
+    payment_container = _create_payment_container(
+        employee, Decimal("225.00"), local_test_db_session
+    )
+
+    prior_payment_container = _create_payment_container(
+        employee, Decimal("800.00"), local_test_db_session, has_processed_state=True
+    )
+
+    # Add another state log
+    state_log_util.create_finished_state_log(
+        prior_payment_container.payment,
+        State.DELEGATED_PAYMENT_COMPLETE,
+        state_log_util.build_outcome("MESSAGE"),
+        local_test_db_session,
+    )
+
+    active_payments = payment_post_processing_step._get_all_active_payments_associated_with_employee(
+        employee.employee_id, [payment_container.payment.payment_id]
+    )
+    assert len(active_payments) == 1
+    assert active_payments[0].payment_id == prior_payment_container.payment.payment_id
+
+
 def test_validate_payments_not_exceeding_cap_multiple_pay_periods(
-    payment_post_processing_step, test_db_session
+    payment_post_processing_step, local_test_db_session
 ):
     employee = EmployeeFactory.create()
 
@@ -204,28 +248,28 @@ def test_validate_payments_not_exceeding_cap_multiple_pay_periods(
     payment_container1 = _create_payment_container(
         employee,
         Decimal("800.00"),
-        test_db_session,
+        local_test_db_session,
         start_date=date(2021, 1, 1),
         end_date=date(2021, 1, 8),
     )
     payment_container2 = _create_payment_container(
         employee,
         Decimal("800.00"),
-        test_db_session,
+        local_test_db_session,
         start_date=date(2021, 2, 1),
         end_date=date(2021, 2, 8),
     )
     payment_container3 = _create_payment_container(
         employee,
         Decimal("800.00"),
-        test_db_session,
+        local_test_db_session,
         start_date=date(2021, 3, 1),
         end_date=date(2021, 3, 8),
     )
     payment_container4 = _create_payment_container(
         employee,
         Decimal("1200.00"),
-        test_db_session,
+        local_test_db_session,
         start_date=date(2021, 4, 1),
         end_date=date(2021, 4, 8),
     )
@@ -244,7 +288,7 @@ def test_validate_payments_not_exceeding_cap_multiple_pay_periods(
 
 
 def test_validate_payments_not_exceeding_cap_multiweek_pay_periods(
-    payment_post_processing_step, test_db_session
+    payment_post_processing_step, local_test_db_session
 ):
     # Pay periods can be for more than one week, and the cap
     # is a maximum per week. A pay period of of more than one week
@@ -260,14 +304,18 @@ def test_validate_payments_not_exceeding_cap_multiweek_pay_periods(
         payment_container1 = _create_payment_container(
             employee,
             Decimal("850.00") * Decimal(i),
-            test_db_session,
+            local_test_db_session,
             start_date=start_date,
             end_date=end_date,
         )
         # Also create a second container for exactly $0.01 that'll fail
         # as it pushes it just over the cap.
         payment_container2 = _create_payment_container(
-            employee, Decimal("0.01"), test_db_session, start_date=start_date, end_date=end_date,
+            employee,
+            Decimal("0.01"),
+            local_test_db_session,
+            start_date=start_date,
+            end_date=end_date,
         )
         payment_post_processing_step._validate_payments_not_exceeding_cap(
             employee.employee_id, [payment_container1, payment_container2],
@@ -277,14 +325,18 @@ def test_validate_payments_not_exceeding_cap_multiweek_pay_periods(
 
 
 def test_validate_payments_not_exceeding_cap_other_payment_types(
-    payment_post_processing_step, test_db_session
+    payment_post_processing_step, local_test_db_session
 ):
     employee = EmployeeFactory.create()
 
     # New payments that are being processed, sum exactly to cap
     # and will be accepted
-    payment_container1 = _create_payment_container(employee, Decimal("425.00"), test_db_session)
-    payment_container2 = _create_payment_container(employee, Decimal("425.00"), test_db_session)
+    payment_container1 = _create_payment_container(
+        employee, Decimal("425.00"), local_test_db_session
+    )
+    payment_container2 = _create_payment_container(
+        employee, Decimal("425.00"), local_test_db_session
+    )
 
     # Other payments of non-standard types. Despite all of these
     # existing, none of them will have any effect on the above payments
@@ -299,19 +351,22 @@ def test_validate_payments_not_exceeding_cap_other_payment_types(
     for payment_type in other_payment_types:
         # Create the payment in various other states for each of them
         _create_payment_container(
-            employee, Decimal("850.00"), test_db_session, payment_transaction_type=payment_type
+            employee,
+            Decimal("850.00"),
+            local_test_db_session,
+            payment_transaction_type=payment_type,
         )
         _create_payment_container(
             employee,
             Decimal("850.00"),
-            test_db_session,
+            local_test_db_session,
             payment_transaction_type=payment_type,
             has_processed_state=True,
         )
         _create_payment_container(
             employee,
             Decimal("850.00"),
-            test_db_session,
+            local_test_db_session,
             payment_transaction_type=payment_type,
             has_errored_state=True,
         )
@@ -327,7 +382,7 @@ def test_validate_payments_not_exceeding_cap_other_payment_types(
     assert not payment_container2.validation_container.has_validation_issues()
 
 
-def test_validate_payment_cap_for_period(payment_post_processing_step, test_db_session):
+def test_validate_payment_cap_for_period(payment_post_processing_step, local_test_db_session):
     """
     This test validates that the logic for choosing payments to pay is correct.
     """
@@ -398,7 +453,7 @@ def test_validate_payment_cap_for_period(payment_post_processing_step, test_db_s
     _validate_amounts_not_selected(group, ["800.00"])
 
 
-def test_run_step_payment_cap(payment_post_processing_step, test_db_session):
+def test_run_step_payment_cap(payment_post_processing_step, local_test_db_session):
     # Sanity test to show payments are filtered by employee ID
     # and old payments from other employees aren't picked up
     # when doing the payment cap processing logic
@@ -406,13 +461,13 @@ def test_run_step_payment_cap(payment_post_processing_step, test_db_session):
     # Create an employee with 4 new payments
     # and one old payment that sum to the cap
     employee1 = EmployeeFactory.create()
-    _create_payment_container(employee1, Decimal("200.00"), test_db_session)
-    _create_payment_container(employee1, Decimal("200.00"), test_db_session)
-    _create_payment_container(employee1, Decimal("200.00"), test_db_session)
-    _create_payment_container(employee1, Decimal("200.00"), test_db_session)
+    _create_payment_container(employee1, Decimal("200.00"), local_test_db_session)
+    _create_payment_container(employee1, Decimal("200.00"), local_test_db_session)
+    _create_payment_container(employee1, Decimal("200.00"), local_test_db_session)
+    _create_payment_container(employee1, Decimal("200.00"), local_test_db_session)
 
     _create_payment_container(
-        employee1, Decimal("50.00"), test_db_session, has_processed_state=True
+        employee1, Decimal("50.00"), local_test_db_session, has_processed_state=True
     )
 
     # Create old payments for other employees
@@ -420,22 +475,58 @@ def test_run_step_payment_cap(payment_post_processing_step, test_db_session):
     employee3 = EmployeeFactory.create()
     employee4 = EmployeeFactory.create()
     _create_payment_container(
-        employee2, Decimal("850.00"), test_db_session, has_processed_state=True
+        employee2, Decimal("850.00"), local_test_db_session, has_processed_state=True
     )
     _create_payment_container(
-        employee3, Decimal("850.00"), test_db_session, has_processed_state=True
+        employee3, Decimal("850.00"), local_test_db_session, has_processed_state=True
     )
     _create_payment_container(
-        employee4, Decimal("850.00"), test_db_session, has_processed_state=True
+        employee4, Decimal("850.00"), local_test_db_session, has_processed_state=True
     )
 
-    payment_post_processing_step.run_step()
+    payment_post_processing_step.run()
 
     # All 4 payments should have been moved to the success state
     state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
         end_state=State.PAYMENT_READY_FOR_ADDRESS_VALIDATION,
-        db_session=test_db_session,
+        db_session=local_test_db_session,
     )
 
     assert len(state_logs) == 4
+
+
+def test_run_step_payment_over_cap(payment_post_processing_step, local_test_db_session):
+    employee = EmployeeFactory.create()
+    payment_container = _create_payment_container(
+        employee, Decimal("600.00"), local_test_db_session
+    )
+    _create_payment_container(
+        employee, Decimal("500.00"), local_test_db_session, has_processed_state=True
+    )
+
+    payment_post_processing_step.run()
+
+    payment = payment_container.payment
+    # The payment should have been added to two states in different flows
+    payment_flow_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert (
+        payment_flow_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+    )
+    pei_writeback_flow_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
+    )
+    assert pei_writeback_flow_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    writeback_details = (
+        local_test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment.payment_id)
+        .one_or_none()
+    )
+    assert writeback_details
+    assert (
+        writeback_details.transaction_status_id
+        == FineosWritebackTransactionStatus.TOTAL_BENEFITS_OVER_CAP.transaction_status_id
+    )

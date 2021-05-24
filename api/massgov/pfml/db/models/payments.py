@@ -558,7 +558,9 @@ class LkFineosWritebackTransactionStatus(Base):
 
 
 ACTIVE_WRITEBACK_RECORD_STATUS = "Active"
-# PENDING_ACTIVE_WRITEBACK_RECORD_STATUS = ""
+PENDING_ACTIVE_WRITEBACK_RECORD_STATUS = (
+    ""  # To keep a payment in pending active, we don't set the value
+)
 
 
 class FineosWritebackTransactionStatus(LookupTable):
@@ -574,6 +576,18 @@ class FineosWritebackTransactionStatus(LookupTable):
     )
     FAILED_AUTOMATED_VALIDATION = LkFineosWritebackTransactionStatus(
         2, "Failed Automated Validation", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+    PRENOTE_ERROR = LkFineosWritebackTransactionStatus(
+        3, "Prenote Error", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+    PENDING_PRENOTE = LkFineosWritebackTransactionStatus(
+        4, "Pending Prenote", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+    DATA_ISSUE_IN_SYSTEM = LkFineosWritebackTransactionStatus(
+        5, "Data Issue in System", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+    TOTAL_BENEFITS_OVER_CAP = LkFineosWritebackTransactionStatus(
+        6, "Total Benefits Over Cap", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
 

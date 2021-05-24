@@ -36,6 +36,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
     FineosWritebackDetails,
+    LkFineosWritebackTransactionStatus,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
@@ -356,6 +357,13 @@ def test_e2e_pub_payments(
         # End State
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
+            scenario_names=[ScenarioName.REJECTED_LEAVE_REQUEST_DECISION],
+            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+            db_session=test_db_session,
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
             scenario_names=[
                 ScenarioName.CLAIM_NOT_ID_PROOFED,
                 ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
@@ -363,12 +371,11 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_PRENOTE_RETURN,
                 ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                 ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
-                ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
                 ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
             ],
-            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
             db_session=test_db_session,
         )
 
@@ -1042,7 +1049,19 @@ def test_e2e_pub_payments(
         # == Validate FINEOS status writeback states
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.AUDIT_REJECTED,],
+            scenario_names=[
+                ScenarioName.AUDIT_REJECTED,
+                ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
+                ScenarioName.CLAIM_NOT_ID_PROOFED,
+                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+                ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
+                ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+                ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+            ],
             end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
             flow=Flow.DELEGATED_PEI_WRITEBACK,
             db_session=test_db_session,
@@ -1193,8 +1212,22 @@ def test_e2e_pub_payments(
             ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
             ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
             ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-            ScenarioName.AUDIT_REJECTED,
         ]
+        generic_flow_writeback_scenarios = [
+            ScenarioName.AUDIT_REJECTED,
+            ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
+            ScenarioName.CLAIM_NOT_ID_PROOFED,
+            ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+            ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+            ScenarioName.PUB_ACH_PRENOTE_RETURN,
+            ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+            ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
+            ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+            ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+            ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+        ]
+
+        writeback_scenario_names.extend(generic_flow_writeback_scenarios)
 
         writeback_scenario_payments = []
         for writeback_scenario_name in writeback_scenario_names:
@@ -1204,7 +1237,7 @@ def test_e2e_pub_payments(
         assert len(writeback_scenario_names) == len(writeback_scenario_payments)
 
         writeback_details = test_db_session.query(FineosWritebackDetails).all()
-        generic_flow_writeback_scenarios = [ScenarioName.AUDIT_REJECTED]
+
         assert len(writeback_details) == len(generic_flow_writeback_scenarios)
 
         generic_flow_scenario_payments = []
@@ -1212,21 +1245,29 @@ def test_e2e_pub_payments(
             scenario_payments = test_dataset.get_scenario_payments_by_name(writeback_scenario_name)
             generic_flow_scenario_payments.extend(scenario_payments)
 
-        generic_flow_scenario_payment_ids = [p.payment_id for p in generic_flow_scenario_payments]
+        generic_flow_scenario_payment_ids = set(
+            [p.payment_id for p in generic_flow_scenario_payments]
+        )
 
         expected_csv_rows = []
         for p in writeback_scenario_payments:
             expected_csv_row = {
                 "pei_C_Value": p.fineos_pei_c_value,
                 "pei_I_Value": p.fineos_pei_i_value,
-                "status": "Active",  # TODO adjust when PendingActive states are implemented
             }
 
             # TODO remove condition when we are fully transitioned to using generic flow
             if p.payment_id in generic_flow_scenario_payment_ids:
+                transaction_status = get_writeback_transaction_status_for_payment(
+                    test_db_session, p
+                )
                 expected_csv_row[
                     "transactionStatus"
-                ] = get_writeback_transaction_status_for_payment(test_db_session, p)
+                ] = transaction_status.transaction_status_description
+                expected_csv_row["status"] = transaction_status.writeback_record_status
+
+            else:
+                expected_csv_row["status"] = "Active"
 
             expected_csv_rows.append(expected_csv_row)
 
@@ -1530,7 +1571,7 @@ def test_e2e_pub_payments(
                 "successful_writeback_record_count": len(writeback_scenario_names),
                 "writeback_record_count": len(writeback_scenario_names),
                 "zero_dollar_payment_count": len([ScenarioName.ZERO_DOLLAR_PAYMENT]),
-                "generic_flow_writeback_items_count": len([ScenarioName.AUDIT_REJECTED]),
+                "generic_flow_writeback_items_count": len(generic_flow_writeback_scenarios),
                 "failed_manual_validation_writeback_transaction_status_count": len(
                     [ScenarioName.AUDIT_REJECTED]
                 ),
@@ -2178,14 +2219,8 @@ def test_e2e_pub_payments_delayed_scenarios(
                 ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
                 ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,
                 ScenarioName.INVALID_ADDRESS_FIXED,
+                ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
             ],
-            end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-            db_session=local_test_db_session,
-        )
-
-        assert_payment_state_for_scenarios(
-            test_dataset=test_dataset,
-            scenario_names=[ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=local_test_db_session,
             check_additional_payment=True,
@@ -2242,6 +2277,7 @@ def test_e2e_pub_payments_delayed_scenarios(
             scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED],
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
             db_session=local_test_db_session,
+            check_additional_payment=True,
         )
 
     # ===============================================================================
@@ -2610,7 +2646,9 @@ def get_payments_in_end_state(db_session: db.Session, end_state: LkState) -> Lis
     return [state_log.payment for state_log in state_logs]
 
 
-def get_writeback_transaction_status_for_payment(db_session: db.Session, payment: Payment) -> str:
+def get_writeback_transaction_status_for_payment(
+    db_session: db.Session, payment: Payment
+) -> LkFineosWritebackTransactionStatus:
     writeback_details = (
         db_session.query(FineosWritebackDetails)
         .filter(FineosWritebackDetails.payment_id == payment.payment_id)
@@ -2619,7 +2657,7 @@ def get_writeback_transaction_status_for_payment(db_session: db.Session, payment
 
     assert writeback_details is not None
 
-    return writeback_details.transaction_status.transaction_status_description
+    return writeback_details.transaction_status
 
 
 def get_current_date_folder():
