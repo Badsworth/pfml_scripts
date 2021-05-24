@@ -859,7 +859,8 @@ export function completeIntermittentLeaveDetails(
       if (leave.duration_basis !== "Days") {
         throw new Error("Duration basis should be Days");
       }
-      cy.labelled("At least a day").click({ force: true });
+      // @bc: This label was changed recently: "At least a day" -> "At least one day".
+      cy.labelled(/At least (a|one) day/).click({ force: true });
     }
   );
   if (!leave.duration) {
