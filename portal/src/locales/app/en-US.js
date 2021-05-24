@@ -2238,7 +2238,7 @@ const components = {
     claimDurationType_reducedSchedule:
       "$t(shared.claimDurationTypeReducedSchedule)",
     downloadAttachments:
-      "Download the documentation below or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
+      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
     frequencyBasis_irregular: "Irregular over the next 6 months",
     frequencyBasis_months: "At least once a month",
     frequencyBasis_weeks: "At least once a week",
@@ -2303,7 +2303,7 @@ const components = {
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
     downloadAttachments:
-      "Download the documentation below or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
+      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
     header: "Leave schedule",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",

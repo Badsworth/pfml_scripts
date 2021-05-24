@@ -208,7 +208,7 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
 
 exports[`LeaveSchedule renders reduced schedule 2`] = `
 Array [
-  "Download the documentation below or contact us at ",
+  "Download the attached documentation or contact us at ",
   <a
     href="tel:(833) 344‑7365"
     key="1"
