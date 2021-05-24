@@ -62,13 +62,13 @@ exports[`IntermittentFrequency displays Alert about having form when claim is Me
 
 exports[`IntermittentFrequency displays Lead text with form context when claim is for Medical or Caring leave 1`] = `
 <Lead>
-  Your answers must match Questions 29 and 30 in the completed Certification of Your Family Member’s Serious Health Condition.
+  Your answers must match Questions 29 and 30 in the Certification of Your Family Member’s Serious Health Condition.
 </Lead>
 `;
 
 exports[`IntermittentFrequency displays Lead text with form context when claim is for Medical or Caring leave 2`] = `
 <Lead>
-  Your answers must match Questions 35 and 36 in the Certification of Your Serious Health Condition form.
+  Your answers must match Questions 35 and 36 in the Certification of Your Serious Health Condition.
 </Lead>
 `;
 
@@ -121,19 +121,19 @@ exports[`IntermittentFrequency renders the page 1`] = `
     Tell us the estimated frequency and duration of your intermittent leave.
   </Heading>
   <Lead>
-    Your answers must match Questions 35 and 36 in the Certification of Your Serious Health Condition form.
+    Your answers must match Questions 35 and 36 in the Certification of Your Serious Health Condition.
   </Lead>
   <InputChoiceGroup
     choices={
       Array [
         Object {
           "checked": false,
-          "label": "At least once a week",
+          "label": "Once or more per week",
           "value": "Weeks",
         },
         Object {
           "checked": false,
-          "label": "At least once a month",
+          "label": "Once or more per month",
           "value": "Months",
         },
         Object {
@@ -169,12 +169,12 @@ exports[`IntermittentFrequency renders the page 1`] = `
         Array [
           Object {
             "checked": false,
-            "label": "At least a day",
+            "label": "At least one day",
             "value": "Days",
           },
           Object {
             "checked": true,
-            "label": "Less than a full work day",
+            "label": "Less than one full work day",
             "value": "Hours",
           },
         ]

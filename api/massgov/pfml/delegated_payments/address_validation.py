@@ -13,6 +13,7 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     State,
 )
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.experian.physical_address.client import Client
 from massgov.pfml.experian.physical_address.client.models.search import (
@@ -64,14 +65,21 @@ class AddressValidationStep(Step):
         VERIFIED_EXPERIAN_MATCH = "verified_experian_match"
 
     def run_step(self) -> None:
-        experian_client = _get_experian_client()
+        try:
+            experian_client = _get_experian_client()
 
-        payments = _get_payments_awaiting_address_validation(self.db_session)
-        for payment in payments:
-            self._validate_address_for_payment(payment, experian_client)
-            self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
+            payments = _get_payments_awaiting_address_validation(self.db_session)
+            for payment in payments:
+                self._validate_address_for_payment(payment, experian_client)
+                self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
 
-        self.db_session.commit()
+            self.db_session.commit()
+
+        except Exception:
+            self.db_session.rollback()
+            logger.exception("Error processing addresses for payments")
+            raise
+
         return None
 
     def _validate_address_for_payment(self, payment: Payment, experian_client: Client) -> None:
@@ -103,24 +111,25 @@ class AddressValidationStep(Step):
                 % (payment.payment_id, type(e).__name__)
             )
 
-            _create_end_state_by_payment_type(
+            self._create_end_state_by_payment_type(
                 payment=payment,
                 address=address,
                 address_validation_result=None,
                 end_state=Constants.ERROR_STATE,
                 message=Constants.MESSAGE_EXPERIAN_EXCEPTION_FORMAT.format(type(e).__name__),
-                db_session=self.db_session,
             )
             self.increment(self.Metrics.EXPERIAN_SEARCH_EXCEPTION_COUNT)
             return None
 
         if response.result is None:
+            outcome = state_log_util.build_outcome(Constants.MESSAGE_INVALID_EXPERIAN_RESPONSE)
             state_log_util.create_finished_state_log(
                 associated_model=payment,
                 end_state=Constants.ERROR_STATE,
-                outcome=state_log_util.build_outcome(Constants.MESSAGE_INVALID_EXPERIAN_RESPONSE),
+                outcome=outcome,
                 db_session=self.db_session,
             )
+            self._manage_pei_writeback_state(payment, outcome)
             self.increment(self.Metrics.INVALID_EXPERIAN_RESPONSE)
             return None
 
@@ -140,13 +149,12 @@ class AddressValidationStep(Step):
                 end_state = Constants.SUCCESS_STATE
                 message = Constants.MESSAGE_VALID_ADDRESS
                 self.increment(self.Metrics.VALID_EXPERIAN_FORMAT)
-            _create_end_state_by_payment_type(
+            self._create_end_state_by_payment_type(
                 payment=payment,
                 address=address,
                 address_validation_result=result,
                 end_state=end_state,
                 message=message,
-                db_session=self.db_session,
             )
             return None
 
@@ -157,49 +165,68 @@ class AddressValidationStep(Step):
             end_state, message = _get_end_state_and_message_for_multiple_matches(
                 result, experian_client, address_pair
             )
-            _create_end_state_by_payment_type(
+            self._create_end_state_by_payment_type(
                 payment=payment,
                 address=address,
                 address_validation_result=result,
                 end_state=end_state,
                 message=message,
-                db_session=self.db_session,
             )
             return
 
         # Zero responses
         self.increment(self.Metrics.NO_EXPERIAN_MATCH_COUNT)
-        _create_end_state_by_payment_type(
+        self._create_end_state_by_payment_type(
             payment=payment,
             address=address,
             address_validation_result=result,
             end_state=Constants.ERROR_STATE,
             message=Constants.MESSAGE_INVALID_EXPERIAN_RESPONSE,
+        )
+
+    def _create_end_state_by_payment_type(
+        self,
+        payment: Payment,
+        address: Address,
+        address_validation_result: Optional[AddressSearchV1Result],
+        end_state: LkState,
+        message: str,
+    ) -> None:
+        # We don't need to block ACH payments for bad addresses, but
+        # still want to put it in the log so it can end up in a report
+        if payment.disb_method_id != PaymentMethod.CHECK.payment_method_id:
+            if end_state.state_id == Constants.ERROR_STATE.state_id:
+                # Update the message to mention that for EFT we do not
+                # require the address to be valid.
+                message += " but not required for EFT payment"
+            end_state = Constants.SUCCESS_STATE
+
+        outcome = _outcome_for_search_result(address_validation_result, message, address)
+        state_log_util.create_finished_state_log(
+            associated_model=payment,
+            end_state=end_state,
+            outcome=outcome,
             db_session=self.db_session,
         )
 
+        if end_state.state_id == Constants.ERROR_STATE.state_id:
+            self._manage_pei_writeback_state(payment, outcome)
 
-def _create_end_state_by_payment_type(
-    payment: Payment,
-    address: Address,
-    address_validation_result: Optional[AddressSearchV1Result],
-    end_state: LkState,
-    message: str,
-    db_session: db.Session,
-) -> None:
-    # We don't need to block ACH payments for bad addresses, but
-    # still want to put it in the log so it can end up in a report
-    if payment.disb_method_id != PaymentMethod.CHECK.payment_method_id:
-        if end_state != Constants.ERROR_STATE:
-            # Update the message to mention that for EFT we do not
-            # require the address to be valid.
-            message += " but not required for EFT payment"
-        end_state = Constants.SUCCESS_STATE
-
-    outcome = _outcome_for_search_result(address_validation_result, message, address)
-    state_log_util.create_finished_state_log(
-        associated_model=payment, end_state=end_state, outcome=outcome, db_session=db_session,
-    )
+    def _manage_pei_writeback_state(self, payment: Payment, outcome: Dict[str, Any]) -> None:
+        # Create the state log, note this is in the DELEGATED_PEI_WRITEBACK flow
+        # So it is added in addition to the state log added in _create_end_state_by_payment_type
+        state_log_util.create_finished_state_log(
+            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            outcome=outcome,
+            associated_model=payment,
+            db_session=self.db_session,
+        )
+        writeback_details = FineosWritebackDetails(
+            payment=payment,
+            transaction_status_id=FineosWritebackTransactionStatus.ADDRESS_VALIDATION_ERROR.transaction_status_id,
+            import_log_id=cast(int, self.get_import_log_id()),
+        )
+        self.db_session.add(writeback_details)
 
 
 def _get_experian_client() -> Client:

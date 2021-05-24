@@ -32,4 +32,5 @@ export type SubjectOptions =
   | "approval (employer)"
   | "denial (claimant)"
   | "approval (claimant)"
+  | "review leave hours"
   | "request for additional info";

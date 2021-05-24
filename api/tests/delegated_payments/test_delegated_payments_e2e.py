@@ -1061,6 +1061,7 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
                 ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+                ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
             ],
             end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
             flow=Flow.DELEGATED_PEI_WRITEBACK,
@@ -1225,6 +1226,7 @@ def test_e2e_pub_payments(
             ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
             ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
             ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+            ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
         ]
 
         writeback_scenario_names.extend(generic_flow_writeback_scenarios)
@@ -2192,7 +2194,10 @@ def test_e2e_pub_payments_delayed_scenarios(
         # == Validate FINEOS status writeback states
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,],
+            scenario_names=[
+                ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
+                ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,
+            ],
             end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
             flow=Flow.DELEGATED_PEI_WRITEBACK,
             db_session=local_test_db_session,

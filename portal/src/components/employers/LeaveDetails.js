@@ -1,6 +1,7 @@
 import Alert from "../Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../Details";
+import Document from "../../models/Document";
 import EmployerClaim from "../../models/EmployerClaim";
 import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -10,6 +11,7 @@ import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { Trans } from "react-i18next";
+import download from "downloadjs";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../services/featureFlags";
@@ -24,12 +26,14 @@ import { useTranslation } from "../../locales/i18n";
 const LeaveDetails = (props) => {
   const { t } = useTranslation();
   const {
+    believeRelationshipAccurate,
     claim: {
-      fineos_absence_id,
+      fineos_absence_id: absenceId,
       isIntermittent,
       leave_details: { reason },
     },
-    believeRelationshipAccurate,
+    documents,
+    downloadDocument,
     onChangeBelieveRelationshipAccurate,
     onChangeRelationshipInaccurateReason,
     relationshipInaccurateReason,
@@ -82,7 +86,7 @@ const LeaveDetails = (props) => {
         level="3"
         label={t("components.employersLeaveDetails.applicationIdLabel")}
       >
-        {fineos_absence_id}
+        {absenceId}
       </ReviewRow>
       <ReviewRow
         level="3"
@@ -95,6 +99,34 @@ const LeaveDetails = (props) => {
               props.claim.leaveEndDate
             )}
       </ReviewRow>
+      {!!documents.length && (
+        <ReviewRow
+          level="3"
+          label={t("components.employersLeaveDetails.documentationLabel")}
+        >
+          <Trans
+            i18nKey="components.employersLeaveDetails.recordkeepingInstructions"
+            components={{
+              "mass-employer-role-link": (
+                <a
+                  href={routes.external.massgov.employersGuide}
+                  target="_blank"
+                  rel="noopener"
+                />
+              ),
+            }}
+            tOptions={{ context: isCaringLeave ? "caringLeave" : null }}
+          />
+          {documents.map((document) => (
+            <HcpDocumentItem
+              downloadDocument={downloadDocument}
+              absenceId={absenceId}
+              document={document}
+              key={document.fineos_document_id}
+            />
+          ))}
+        </ReviewRow>
+      )}
       {shouldShowCaringLeave && isCaringLeave && (
         <React.Fragment>
           <InputChoiceGroup
@@ -174,11 +206,47 @@ const LeaveDetails = (props) => {
 };
 
 LeaveDetails.propTypes = {
-  claim: PropTypes.instanceOf(EmployerClaim).isRequired,
   believeRelationshipAccurate: PropTypes.oneOf(["yes", "unknown", "no", ""]),
+  claim: PropTypes.instanceOf(EmployerClaim).isRequired,
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  downloadDocument: PropTypes.func.isRequired,
   onChangeBelieveRelationshipAccurate: PropTypes.func,
   relationshipInaccurateReason: PropTypes.string,
   onChangeRelationshipInaccurateReason: PropTypes.func,
+};
+
+const HcpDocumentItem = (props) => {
+  const { absenceId, document, downloadDocument } = props;
+  const { t } = useTranslation();
+  const documentName =
+    document.name?.trim() ||
+    t("components.employersLeaveDetails.healthCareProviderFormLink") ||
+    document.document_type.trim();
+
+  const handleClick = async (event) => {
+    event.preventDefault();
+    const documentData = await downloadDocument(absenceId, document);
+
+    download(
+      documentData,
+      documentName,
+      document.content_type || "application/pdf"
+    );
+  };
+
+  return (
+    <div>
+      <a onClick={handleClick} href="">
+        {documentName}
+      </a>
+    </div>
+  );
+};
+
+HcpDocumentItem.propTypes = {
+  absenceId: PropTypes.string.isRequired,
+  document: PropTypes.instanceOf(Document).isRequired,
+  downloadDocument: PropTypes.func.isRequired,
 };
 
 export default LeaveDetails;

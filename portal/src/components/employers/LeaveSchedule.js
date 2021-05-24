@@ -1,18 +1,12 @@
-import React, { useEffect } from "react";
-import Document from "../../models/Document";
-import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
 import IntermittentLeaveSchedule from "./IntermittentLeaveSchedule";
 import PropTypes from "prop-types";
+import React from "react";
 import ReviewHeading from "../ReviewHeading";
-import ReviewRow from "../ReviewRow";
 import Table from "../Table";
 import { Trans } from "react-i18next";
-import download from "downloadjs";
-import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
-import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -20,35 +14,16 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const LeaveSchedule = ({ appLogic, claim }) => {
+const LeaveSchedule = ({ hasDocuments, claim }) => {
   const { t } = useTranslation();
-  const {
-    employers: { documents, loadDocuments },
-  } = appLogic;
   const {
     isContinuous,
     isIntermittent,
     isReducedSchedule,
-    fineos_absence_id: absenceId,
     leave_details: { intermittent_leave_periods },
   } = claim;
 
-  useEffect(() => {
-    if (!documents) {
-      loadDocuments(absenceId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documents, absenceId]);
-
-  // only HCP forms should be shown
-  const allDocuments = documents ? documents.items : [];
-  const certificationDocuments = findDocumentsByLeaveReason(
-    allDocuments,
-    get(claim, "leave_details.reason")
-  );
-
   const buildContext = () => {
-    const hasDocuments = !!certificationDocuments.length;
     if (isIntermittent && hasDocuments) return "intermittentWithDocuments";
     if (!isIntermittent && hasDocuments) return "documents";
   };
@@ -152,89 +127,13 @@ const LeaveSchedule = ({ appLogic, claim }) => {
           )}
         </tbody>
       </Table>
-      {!!certificationDocuments.length && (
-        <ReviewRow
-          level="3"
-          label={t("components.employersLeaveSchedule.documentationLabel")}
-        >
-          <Trans
-            i18nKey="components.employersLeaveSchedule.recordkeepingInstructions"
-            components={{
-              "mass-employer-role-link": (
-                <a
-                  href={routes.external.massgov.employersGuide}
-                  target="_blank"
-                  rel="noopener"
-                />
-              ),
-            }}
-          />
-          <p>
-            {certificationDocuments.map((document) => (
-              <HcpDocumentItem
-                appLogic={appLogic}
-                absenceId={absenceId}
-                document={document}
-                key={document.fineos_document_id}
-              />
-            ))}
-          </p>
-        </ReviewRow>
-      )}
     </React.Fragment>
   );
 };
 
 LeaveSchedule.propTypes = {
-  appLogic: PropTypes.shape({
-    employers: PropTypes.shape({
-      documents: PropTypes.instanceOf(DocumentCollection),
-      loadDocuments: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
   claim: PropTypes.instanceOf(EmployerClaim).isRequired,
-};
-
-const HcpDocumentItem = (props) => {
-  const { absenceId, appLogic, document } = props;
-  const { t } = useTranslation();
-
-  const documentName =
-    document.name?.trim() ||
-    t("components.employersLeaveSchedule.healthCareProviderFormLink") ||
-    document.document_type.trim();
-
-  const handleClick = async (event) => {
-    event.preventDefault();
-    const documentData = await appLogic.employers.downloadDocument(
-      absenceId,
-      document
-    );
-
-    download(
-      documentData,
-      documentName,
-      document.content_type || "application/pdf"
-    );
-  };
-
-  return (
-    <div>
-      <a onClick={handleClick} href="">
-        {documentName}
-      </a>
-    </div>
-  );
-};
-
-HcpDocumentItem.propTypes = {
-  absenceId: PropTypes.string.isRequired,
-  appLogic: PropTypes.shape({
-    employers: PropTypes.shape({
-      downloadDocument: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  document: PropTypes.instanceOf(Document).isRequired,
+  hasDocuments: PropTypes.bool,
 };
 
 export default LeaveSchedule;

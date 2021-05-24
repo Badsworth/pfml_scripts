@@ -35,6 +35,7 @@ export const getNotificationSubject = function (
     "denial (claimant)": "Your paid leave application was Denied",
     "approval (claimant)": "Your paid leave application was Approved",
     "request for additional info": `Action required: Provide additional information for your paid leave application ${caseNumber}`,
+    "review leave hours": `${employeeName} reported their intermittent leave hours`,
   };
   if (notificationType in notificationSubjects) {
     return notificationSubjects[notificationType];

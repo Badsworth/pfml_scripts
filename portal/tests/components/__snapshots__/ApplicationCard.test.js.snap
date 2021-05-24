@@ -1,16 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ApplicationCard renders Alert inside the component when there is an error loading documents 1`] = `
-Array [
-  "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at ",
-  <a
-    href="tel:(833) 344‑7365"
-    key="1"
-  >
-    (833) 344‑7365
-  </a>,
-]
-`;
+exports[`ApplicationCard renders Alert inside the component when there is an error loading documents 1`] = `"An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at (833) 344‑7365."`;
 
 exports[`ApplicationCard renders EIN 1`] = `
 <div
