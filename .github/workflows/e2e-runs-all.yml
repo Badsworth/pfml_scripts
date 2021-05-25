@@ -25,6 +25,7 @@ jobs:
       matrix:
         environment: [ "test", "stage", "performance", "training", "uat", ]
     steps:
+      - uses: actions/checkout@v1
       - uses: actions/is-my-site-up@v1.1
         with:
           site: "https://paideave-${{ matrix.environment }}.mass.gov/?_ff=pfmlTerriyay:true"
