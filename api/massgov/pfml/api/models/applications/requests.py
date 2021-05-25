@@ -9,7 +9,6 @@ from massgov.pfml.api.models.applications.common import (
     Address,
     ApplicationLeaveDetails,
     DocumentType,
-    EmployerBenefit,
     EmploymentStatus,
     Gender,
     Occupation,
@@ -18,7 +17,7 @@ from massgov.pfml.api.models.applications.common import (
     Phone,
     WorkPattern,
 )
-from massgov.pfml.api.models.common import ConcurrentLeave, PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import FEINUnformattedStr, MassIdStr, TaxIdUnformattedStr

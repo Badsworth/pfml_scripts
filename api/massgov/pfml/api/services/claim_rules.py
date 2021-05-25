@@ -3,11 +3,8 @@ from decimal import Decimal
 from itertools import chain
 from typing import List, Optional
 
-from massgov.pfml.api.models.claims.common import (
-    EmployerBenefit,
-    EmployerClaimReview,
-    PreviousLeave,
-)
+from massgov.pfml.api.models.claims.common import EmployerClaimReview, PreviousLeave
+from massgov.pfml.api.models.common import EmployerBenefit
 from massgov.pfml.api.util.response import IssueType
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 

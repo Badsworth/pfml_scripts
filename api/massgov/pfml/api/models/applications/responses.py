@@ -6,7 +6,6 @@ from typing import List, Optional
 from pydantic import UUID4
 
 from massgov.pfml.api.models.applications.common import (
-    EmployerBenefit,
     EmploymentStatus,
     Gender,
     MaskedAddress,
@@ -19,7 +18,7 @@ from massgov.pfml.api.models.applications.common import (
     WorkPattern,
 )
 from massgov.pfml.api.models.claims.common import PreviousLeave
-from massgov.pfml.api.models.common import ConcurrentLeave
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (

@@ -10,7 +10,7 @@ from pydantic import UUID4, root_validator
 import massgov.pfml.db.models.applications as db_application_models
 import massgov.pfml.db.models.employees as db_employee_models
 import massgov.pfml.util.pydantic.mask as mask
-from massgov.pfml.api.models.common import LookupEnum
+from massgov.pfml.api.models.common import AmountFrequency, LookupEnum
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
@@ -325,29 +325,6 @@ class WorkPattern(PydanticBaseModel):
     work_pattern_days: Optional[List[WorkPatternDay]]
 
 
-class AmountFrequency(str, LookupEnum):
-    per_day = "Per Day"
-    per_week = "Per Week"
-    per_month = "Per Month"
-    all_at_once = "In Total"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkAmountFrequency
-
-
-class EmployerBenefitType(str, LookupEnum):
-    accrued_paid_leave = "Accrued paid leave"
-    short_term_disability = "Short-term disability insurance"
-    permanent_disability_insurance = "Permanent disability insurance"
-    family_or_medical_leave_insurance = "Family or medical leave insurance"
-    unknown = "Unknown"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkEmployerBenefitType
-
-
 class OtherIncomeType(str, LookupEnum):
     workers_comp = "Workers Compensation"
     unemployment = "Unemployment Insurance"
@@ -360,16 +337,6 @@ class OtherIncomeType(str, LookupEnum):
     @classmethod
     def get_lookup_model(cls):
         return db_application_models.LkOtherIncomeType
-
-
-class EmployerBenefit(PydanticBaseModel):
-    employer_benefit_id: Optional[UUID4]
-    benefit_type: Optional[EmployerBenefitType]
-    benefit_start_date: Optional[date]
-    benefit_end_date: Optional[date]
-    benefit_amount_dollars: Optional[Decimal]
-    benefit_amount_frequency: Optional[AmountFrequency]
-    is_full_salary_continuous: Optional[bool]
 
 
 class OtherIncome(PydanticBaseModel):

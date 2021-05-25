@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
-from massgov.pfml.api.models.common import PreviousLeave
+from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -35,15 +35,6 @@ class LeaveDetails(PydanticBaseModel):
     continuous_leave_periods: Optional[List[StandardLeavePeriod]]
     intermittent_leave_periods: Optional[List[IntermittentLeavePeriod]]
     reduced_schedule_leave_periods: Optional[List[StandardLeavePeriod]]
-
-
-class EmployerBenefit(PydanticBaseModel):
-    benefit_amount_dollars: Optional[float]
-    benefit_amount_frequency: Optional[str]
-    benefit_start_date: Optional[date]
-    benefit_end_date: Optional[date]
-    benefit_type: Optional[str]
-    program_type: Optional[str]
 
 
 class NatureOfLeave(str, Enum):

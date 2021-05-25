@@ -4,12 +4,8 @@ from typing import List, Optional
 
 from pydantic import UUID4
 
-from massgov.pfml.api.models.claims.common import (
-    Address,
-    EmployerBenefit,
-    LeaveDetails,
-    PreviousLeave,
-)
+from massgov.pfml.api.models.claims.common import Address, LeaveDetails
+from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
 from massgov.pfml.db.models.employees import Claim
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (

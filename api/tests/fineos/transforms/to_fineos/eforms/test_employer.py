@@ -1,19 +1,17 @@
 import random
+from decimal import Decimal
 
 import pytest
 
-from massgov.pfml.api.models.claims.common import (
-    EmployerBenefit,
-    EmployerClaimReview,
-    PreviousLeave,
-)
+from massgov.pfml.api.models.claims.common import EmployerClaimReview, PreviousLeave
+from massgov.pfml.api.models.common import EmployerBenefit
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EmployerClaimReviewEFormBuilder
 
 
 @pytest.fixture
 def employer_benefit():
     return EmployerBenefit(
-        benefit_amount_dollars=round(random.random() * 400, 2),
+        benefit_amount_dollars=Decimal(round(random.random() * 400, 2)),
         benefit_amount_frequency="Per Week",
         benefit_start_date="2020-04-01",
         benefit_end_date="2020-05-01",
@@ -111,14 +109,14 @@ def test_employer_claim_review_eform_single_entries(employer_claim_review):
 def test_employer_claim_review_eform_multiple_entries(employer_claim_review):
     employer_benefits = [
         EmployerBenefit(
-            benefit_amount_dollars=round(random.random() * 400, 2),
+            benefit_amount_dollars=Decimal(round(random.random() * 400, 2)),
             benefit_amount_frequency="Per Week",
             benefit_start_date="2020-04-01",
             benefit_end_date="2020-05-01",
             benefit_type="Short-term disability insurance",
         ),
         EmployerBenefit(
-            benefit_amount_dollars=round(random.random() * 400, 2),
+            benefit_amount_dollars=Decimal(round(random.random() * 400, 2)),
             benefit_amount_frequency="Per Month",
             benefit_start_date="2020-04-02",
             benefit_end_date="2020-05-02",
