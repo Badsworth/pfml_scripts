@@ -373,6 +373,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
 
 def get_claims() -> flask.Response:
     current_user = app.current_user()
+    employer_id = flask.request.args.get("employer_id")
     is_employer = can(READ, "EMPLOYER_API")
     log_attributes = get_employer_log_attributes(app)
 
@@ -386,14 +387,19 @@ def get_claims() -> flask.Response:
                     user_email=current_user.email_address,
                 )
 
+                if employer_id:
+                    employers_list = (
+                        db_session.query(Employer).filter(Employer.employer_id == employer_id).all()
+                    )
+                else:
+                    employers_list = list(current_user.employers)
+
                 if verification_required:
                     employer_ids_list = [
-                        e.employer_id
-                        for e in current_user.employers
-                        if current_user.verified_employer(e)
+                        e.employer_id for e in employers_list if current_user.verified_employer(e)
                     ]
                 else:
-                    employer_ids_list = [e.employer_id for e in current_user.employers]
+                    employer_ids_list = [e.employer_id for e in employers_list]
 
                 query = (
                     db_session.query(Claim)

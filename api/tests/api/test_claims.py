@@ -19,6 +19,7 @@ from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
 from massgov.pfml.util import feature_gate
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
+from massgov.pfml.util.strings import format_fein
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -1374,6 +1375,7 @@ class TestGetClaimsEndpoint:
                     "order_direction": "descending",
                     "order_by": "created_at",
                 },
+                "real_page_size": 25,
                 "status_code": 200,
             },
             {
@@ -1387,6 +1389,7 @@ class TestGetClaimsEndpoint:
                     "order_direction": "descending",
                     "order_by": "created_at",
                 },
+                "real_page_size": 10,
                 "status_code": 200,
             },
             {
@@ -1406,6 +1409,7 @@ class TestGetClaimsEndpoint:
                     "order_direction": "descending",
                     "order_by": "created_at",
                 },
+                "real_page_size": 30,
                 "status_code": 200,
             },
             {
@@ -1419,6 +1423,7 @@ class TestGetClaimsEndpoint:
                     "order_direction": "ascending",
                     "order_by": "claim_id",
                 },
+                "real_page_size": 25,
                 "status_code": 200,
             },
             {
@@ -1456,6 +1461,14 @@ class TestGetClaimsEndpoint:
                 continue
 
             response_body = response.get_json()
+
+            actual_response_page_size = len(response_body["data"])
+            expected_page_size = scenario["real_page_size"]
+            assert actual_response_page_size == expected_page_size, (
+                f"tag:{tag}\nUnexpected data response size {actual_response_page_size},"
+                + f"should've been {expected_page_size}"
+            )
+
             actual_page_metadata = response_body["meta"]["paging"]
             expected_page_metadata = scenario["paging"]
 
@@ -1465,6 +1478,56 @@ class TestGetClaimsEndpoint:
                     raise AssertionError(
                         f"tag: {tag}\n{key} value was '{actual_value}', not expected {expected_value}"
                     )
+
+    def test_get_claims_for_employer_id(
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        employee = EmployeeFactory.create()
+
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+
+        other_employer = EmployerFactory.create()
+        other_link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=other_employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(other_employer)
+        test_db_session.add(other_link)
+
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=other_employer,
+                employee=employee,
+                fineos_absence_status_id=1,
+                claim_type_id=1,
+            )
+
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/claims?employer_id={employer.employer_id}",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        for claim in response_body["data"]:
+            assert claim["employer"]["employer_fein"] == format_fein(employer.employer_fein)
 
     def test_get_claims_as_claimant(self, client, auth_token, user):
         employer = EmployerFactory.create()

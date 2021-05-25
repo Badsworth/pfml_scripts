@@ -344,6 +344,13 @@ paths:
         - $ref: "#/components/parameters/pageOffset"
         - $ref: "#/components/parameters/orderBy"
         - $ref: "#/components/parameters/orderDirection"
+        - name: employer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: ID of Employer to query claims for
+          required: false
       responses:
         "200":
           description: The claim information.
