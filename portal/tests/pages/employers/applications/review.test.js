@@ -129,6 +129,7 @@ describe("Review", () => {
         hours_worked_per_week: expect.any(Number),
         previous_leaves: expect.any(Array),
         has_amendments: false,
+        leave_reason: "Serious Health Condition - Employee",
       }
     );
   });
@@ -397,6 +398,7 @@ describe("Review", () => {
           previous_leaves: expect.any(Array),
           has_amendments: false,
           relationship_inaccurate_reason: expect.any(String),
+          leave_reason: "Care for a Family Member",
         }
       );
     });

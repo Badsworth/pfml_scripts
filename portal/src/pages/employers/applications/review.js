@@ -191,6 +191,7 @@ export const Review = (props) => {
       employer_decision: formState.employerDecision,
       fraud: formState.fraud,
       hours_worked_per_week: amendedHours,
+      leave_reason: get(claim, "leave_details.reason"),
       previous_leaves,
       has_amendments:
         !isEqual(formState.amendedBenefits, formState.employerBenefits) ||
