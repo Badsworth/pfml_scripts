@@ -408,7 +408,7 @@ describe("Review", () => {
         wrapper
           .find("LeaveDetails")
           .props()
-          .onChangeBelieveRelationshipAccurate("no");
+          .onChangeBelieveRelationshipAccurate("No");
       });
 
       expect(
@@ -421,7 +421,7 @@ describe("Review", () => {
         await wrapper
           .find("input[name='believeRelationshipAccurate']")
           .last()
-          .simulate("change", { target: { value: "no" } });
+          .simulate("change", { target: { value: "No" } });
         await simulateEvents(wrapper).submitForm();
       });
 
@@ -429,7 +429,7 @@ describe("Review", () => {
         "NTN-111-ABS-01",
         expect.objectContaining({
           has_amendments: true,
-          believe_relationship_accurate: "no",
+          believe_relationship_accurate: "No",
         })
       );
     });

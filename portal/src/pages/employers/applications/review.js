@@ -73,7 +73,7 @@ export const Review = (props) => {
 
   const isSubmitDisabled =
     (isCommentRequired && formState.comment === "") ||
-    (formState.believeRelationshipAccurate === "no" &&
+    (formState.believeRelationshipAccurate === "No" &&
       formState.relationshipInaccurateReason === "");
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
 
@@ -197,12 +197,12 @@ export const Review = (props) => {
         !isEqual(formState.amendedBenefits, formState.employerBenefits) ||
         !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
         !isEqual(amendedHours, claim.hours_worked_per_week) ||
-        formState.believeRelationshipAccurate === "no",
+        formState.believeRelationshipAccurate === "No",
     };
 
     if (isCaringLeave) {
       const parsedRelationshipComment =
-        formState.believeRelationshipAccurate === "no"
+        formState.believeRelationshipAccurate === "No"
           ? formState.relationshipInaccurateReason
           : "";
       payload.believe_relationship_accurate =
