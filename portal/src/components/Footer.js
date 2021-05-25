@@ -23,12 +23,22 @@ const Footer = () => {
         href: routes.external.massgov.dfml,
       },
     },
+    links: [
+      {
+        href: routes.external.massgov.privacyPolicy,
+        title: t("components.footer.privacyPolicy"),
+      },
+      {
+        href: routes.external.massgov.consentAgreement,
+        title: t("components.footer.dataSharingAgreement"),
+      },
+    ],
     stackedLogo: true,
     siteLogo: (
       <React.Fragment>
         <SiteLogo
           url={{
-            domain: routes.index,
+            domain: routes.external.massgov.dfml,
           }}
           image={{
             src: DFMLLogo,
@@ -36,11 +46,11 @@ const Footer = () => {
             width: 165,
             height: 45,
           }}
-          title={t("components.footer.logoTitle")}
+          title={t("components.footer.logoTitleDFML")}
         />
         <SiteLogo
           url={{
-            domain: routes.index,
+            domain: routes.external.massgov.pfml,
           }}
           image={{
             src: PFMLLogo,
@@ -48,7 +58,7 @@ const Footer = () => {
             width: 118,
             height: 45,
           }}
-          title={t("components.footer.logoTitle")}
+          title={t("components.footer.logoTitlePFML")}
         />
       </React.Fragment>
     ),

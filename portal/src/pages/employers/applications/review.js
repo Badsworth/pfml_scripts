@@ -43,6 +43,7 @@ export const Review = (props) => {
   const { t } = useTranslation();
   // TODO (EMPLOYER-718): Remove feature flag
   const showPreviousLeaves = isFeatureEnabled("employerShowPreviousLeaves");
+  const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
 
   // explicitly check for false as opposed to falsy values.
   // temporarily allows the redirect behavior to work even
@@ -73,7 +74,7 @@ export const Review = (props) => {
 
   const isSubmitDisabled =
     (isCommentRequired && formState.comment === "") ||
-    (formState.believeRelationshipAccurate === "no" &&
+    (formState.believeRelationshipAccurate === "No" &&
       formState.relationshipInaccurateReason === "");
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
 
@@ -195,12 +196,16 @@ export const Review = (props) => {
       has_amendments:
         !isEqual(formState.amendedBenefits, formState.employerBenefits) ||
         !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
-        !isEqual(amendedHours, claim.hours_worked_per_week),
+        !isEqual(amendedHours, claim.hours_worked_per_week) ||
+        formState.believeRelationshipAccurate === "No",
     };
+    if (shouldShowCaringLeave) {
+      payload.leave_reason = get(claim, "leave_details.reason");
+    }
 
-    if (isCaringLeave) {
+    if (shouldShowCaringLeave && isCaringLeave) {
       const parsedRelationshipComment =
-        formState.believeRelationshipAccurate === "no"
+        formState.believeRelationshipAccurate === "No"
           ? formState.relationshipInaccurateReason
           : "";
       payload.believe_relationship_accurate =

@@ -109,6 +109,7 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
     )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] == ""
     assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes] == ""
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity] == ""
 
 
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):

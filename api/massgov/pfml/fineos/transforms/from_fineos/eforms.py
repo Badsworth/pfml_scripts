@@ -4,7 +4,8 @@ from typing import List, Union
 
 from pydantic import BaseModel
 
-from massgov.pfml.api.models.claims.common import EmployerBenefit, PreviousLeave
+from massgov.pfml.api.models.claims.common import PreviousLeave
+from massgov.pfml.api.models.common import EmployerBenefit
 from massgov.pfml.fineos.models.group_client_api import EForm
 from massgov.pfml.fineos.transforms.from_fineos.base import TransformEformAttributes
 

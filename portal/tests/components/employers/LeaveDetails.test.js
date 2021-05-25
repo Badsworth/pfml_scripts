@@ -213,11 +213,11 @@ describe("LeaveDetails", () => {
         changeRadioGroup,
         onChangeBelieveRelationshipAccurateMock,
       } = setup();
-      changeRadioGroup("believeRelationshipAccurate", "no");
+      changeRadioGroup("believeRelationshipAccurate", "No");
       expect(onChangeBelieveRelationshipAccurateMock).toHaveBeenCalledWith(
-        "no"
+        "No"
       );
-      wrapper.setProps({ believeRelationshipAccurate: "no" });
+      wrapper.setProps({ believeRelationshipAccurate: "No" });
       expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
     });
   });

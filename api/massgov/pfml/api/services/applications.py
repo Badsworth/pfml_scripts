@@ -8,6 +8,7 @@ from werkzeug.exceptions import BadRequest, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
 import massgov.pfml.api.models.claims.common as claims_common_io
+import massgov.pfml.api.models.common as common_io
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 import massgov.pfml.util.datetime as datetime_util
@@ -714,7 +715,7 @@ def delete_application_other_benefits(
 
 def set_employer_benefits(
     db_session: db.Session,
-    api_employer_benefits: Optional[List[apps_common_io.EmployerBenefit]],
+    api_employer_benefits: Optional[List[common_io.EmployerBenefit]],
     application: Application,
 ) -> None:
 

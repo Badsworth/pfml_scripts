@@ -19,6 +19,7 @@ from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
 from massgov.pfml.util import feature_gate
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
+from massgov.pfml.util.strings import format_fein
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -69,6 +70,7 @@ def update_claim_body():
                 "leave_reason": "Pregnancy / Maternity",
             }
         ],
+        "leave_reason": "Pregnancy/Maternity",
     }
 
 
@@ -1110,6 +1112,83 @@ class TestUpdateClaim:
         )
         assert capture[1][0] == "create_eform"
 
+    # Inner class for testing Caring Leave scenarios
+    class TestCaringLeave:
+        @pytest.fixture()
+        def employer(self, initialize_factories_session):
+            return EmployerFactory.create()
+
+        @pytest.fixture()
+        def user_leave_admin(self, employer_user, employer, test_verification):
+            return UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+
+        @pytest.fixture()
+        def with_user_leave_admin_link(self, user_leave_admin, test_db_session):
+            test_db_session.add(user_leave_admin)
+            test_db_session.commit()
+
+        @pytest.fixture()
+        def with_mock_client_capture(self):
+            massgov.pfml.fineos.mock_client.start_capture()
+
+        @pytest.fixture()
+        def claim(self, employer):
+            return ClaimFactory.create(employer_id=employer.employer_id)
+
+        @pytest.fixture()
+        def update_caring_leave_claim_body(self, update_claim_body):
+            update_claim_body["leave_reason"] = "Care for a Family Member"
+            update_claim_body["believe_relationship_accurate"] = "No"
+            update_claim_body["relationship_inaccurate_reason"] = "No reason, lol"
+
+            return update_claim_body
+
+        @pytest.fixture()
+        def perform_update(
+            self, client, claim, employer_auth_token, update_caring_leave_claim_body
+        ):
+            def update_claim_review():
+                return client.patch(
+                    f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+                    headers={"Authorization": f"Bearer {employer_auth_token}"},
+                    json=update_caring_leave_claim_body,
+                )
+
+            return update_claim_review
+
+        def test_response_status(
+            self, with_user_leave_admin_link, with_mock_client_capture, perform_update
+        ):
+            response = perform_update()
+            assert response.status_code == 200
+
+        def test_eform_attributes(
+            self, with_user_leave_admin_link, with_mock_client_capture, perform_update
+        ):
+            perform_update()
+
+            captures = massgov.pfml.fineos.mock_client.get_capture()
+            assert len(captures) >= 2
+
+            handler, fineos_web_id, params = captures[1]
+            assert handler == "create_eform"
+
+            eform = params["eform"]
+
+            nature_of_leave_attr = eform.get_attribute("NatureOfLeave")
+            assert nature_of_leave_attr is not None
+
+            believe_accurate_attr = eform.get_attribute("BelieveAccurate")
+            assert believe_accurate_attr is not None
+
+            why_inaccurate_attr = eform.get_attribute("WhyInaccurate")
+            assert why_inaccurate_attr is not None
+
 
 def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> bool:
     assert claim_response["absence_period_end_date"] == claim_query.absence_period_end_date
@@ -1291,6 +1370,7 @@ class TestGetClaimsEndpoint:
                     "order_direction": "descending",
                     "order_by": "created_at",
                 },
+                "real_page_size": 25,
                 "status_code": 200,
             },
             {
@@ -1304,6 +1384,7 @@ class TestGetClaimsEndpoint:
                     "order_direction": "descending",
                     "order_by": "created_at",
                 },
+                "real_page_size": 10,
                 "status_code": 200,
             },
             {
@@ -1323,6 +1404,7 @@ class TestGetClaimsEndpoint:
                     "order_direction": "descending",
                     "order_by": "created_at",
                 },
+                "real_page_size": 30,
                 "status_code": 200,
             },
             {
@@ -1336,6 +1418,7 @@ class TestGetClaimsEndpoint:
                     "order_direction": "ascending",
                     "order_by": "claim_id",
                 },
+                "real_page_size": 25,
                 "status_code": 200,
             },
             {
@@ -1373,6 +1456,14 @@ class TestGetClaimsEndpoint:
                 continue
 
             response_body = response.get_json()
+
+            actual_response_page_size = len(response_body["data"])
+            expected_page_size = scenario["real_page_size"]
+            assert actual_response_page_size == expected_page_size, (
+                f"tag:{tag}\nUnexpected data response size {actual_response_page_size},"
+                + f"should've been {expected_page_size}"
+            )
+
             actual_page_metadata = response_body["meta"]["paging"]
             expected_page_metadata = scenario["paging"]
 
@@ -1382,6 +1473,56 @@ class TestGetClaimsEndpoint:
                     raise AssertionError(
                         f"tag: {tag}\n{key} value was '{actual_value}', not expected {expected_value}"
                     )
+
+    def test_get_claims_for_employer_id(
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        employee = EmployeeFactory.create()
+
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+
+        other_employer = EmployerFactory.create()
+        other_link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=other_employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(other_employer)
+        test_db_session.add(other_link)
+
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=other_employer,
+                employee=employee,
+                fineos_absence_status_id=1,
+                claim_type_id=1,
+            )
+
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/claims?employer_id={employer.employer_id}",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        for claim in response_body["data"]:
+            assert claim["employer"]["employer_fein"] == format_fein(employer.employer_fein)
 
     def test_get_claims_as_claimant(self, client, auth_token, user):
         employer = EmployerFactory.create()

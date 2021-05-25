@@ -772,8 +772,8 @@ class Document(Base):
     application_id = Column(
         UUID(as_uuid=True), ForeignKey("application.application_id"), nullable=False, index=True
     )
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
     document_type_id = Column(
         Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
     )
@@ -893,8 +893,13 @@ class Notification(Base):
     __tablename__ = "notification"
     notification_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     request_json = Column(JSON, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+    )
     fineos_absence_id = Column(Text, index=True)
 
 

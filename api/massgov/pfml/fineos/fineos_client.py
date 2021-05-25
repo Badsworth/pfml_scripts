@@ -825,6 +825,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "managedReqId": None,
         }
 
+        document_type = document_type.replace("/", "%2F")
+
         response = self._customer_api(
             "POST",
             f"customer/cases/{absence_id}/documents/base64Upload/{document_type}",

@@ -344,6 +344,13 @@ paths:
         - $ref: "#/components/parameters/pageOffset"
         - $ref: "#/components/parameters/orderBy"
         - $ref: "#/components/parameters/orderDirection"
+        - name: employer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: ID of Employer to query claims for
+          required: false
       responses:
         "200":
           description: The claim information.
@@ -1560,6 +1567,21 @@ components:
             - "No"
         comment:
           type: string
+        leave_reason:
+          type: string
+          nullable: true
+          example: Care for a Family Member
+        believe_relationship_accurate:
+          type: string
+          nullable: true
+          enum:
+            - "Yes"
+            - "No"
+            - "Unknown"
+        relationship_inaccurate_reason:
+          type: string
+          nullable: true
+          example: Their reported info doesn't match my records
       additionalProperties: false
       required:
         - employer_benefits

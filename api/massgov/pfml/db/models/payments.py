@@ -572,7 +572,7 @@ class FineosWritebackTransactionStatus(LookupTable):
     )
 
     FAILED_MANUAL_VALIDATION = LkFineosWritebackTransactionStatus(
-        1, "Failed Manual Validation", ACTIVE_WRITEBACK_RECORD_STATUS
+        1, "Payment Audit Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
     FAILED_AUTOMATED_VALIDATION = LkFineosWritebackTransactionStatus(
         2, "Failed Automated Validation", ACTIVE_WRITEBACK_RECORD_STATUS
@@ -591,6 +591,9 @@ class FineosWritebackTransactionStatus(LookupTable):
     )
     ADDRESS_VALIDATION_ERROR = LkFineosWritebackTransactionStatus(
         7, "Address Validation Error", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+    PENDING_PAYMENT_AUDIT = LkFineosWritebackTransactionStatus(
+        8, "Pending Payment Audit", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
 

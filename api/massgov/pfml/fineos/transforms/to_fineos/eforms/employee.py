@@ -1,8 +1,8 @@
 from itertools import chain
 from typing import Iterable, Optional
 
-from massgov.pfml.api.models.applications.common import EmployerBenefit, OtherIncome
-from massgov.pfml.api.models.common import PreviousLeave
+from massgov.pfml.api.models.applications.common import OtherIncome
+from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
 from massgov.pfml.fineos.transforms.to_fineos.base import (
     EFormAttributeBuilder,
     EFormBody,

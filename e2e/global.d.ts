@@ -27,7 +27,7 @@ declare namespace Cypress {
     runner: Cypress.Runner;
   }
   interface Chainable<Subject = any> {
-    labelled(label: string): Chainable<Element>;
+    labelled(label: string|RegExp): Chainable<HTMLElement>;
     typeMasked(
       text: string,
       options?: Partial<Cypress.TypeOptions>

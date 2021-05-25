@@ -55,17 +55,17 @@ exports[`LeaveDetails Caring Leave renders relationship question when showCaring
         Object {
           "checked": false,
           "label": "Yes",
-          "value": "yes",
+          "value": "Yes",
         },
         Object {
           "checked": false,
           "label": "I don't know",
-          "value": "unknown",
+          "value": "Unknown",
         },
         Object {
           "checked": false,
           "label": "No (comment required)",
-          "value": "no",
+          "value": "No",
         },
       ]
     }
@@ -114,7 +114,7 @@ exports[`LeaveDetails Caring Leave renders relationship question when showCaring
     </FormLabel>
     <textarea
       className="usa-textarea margin-top-3"
-      name="comment"
+      name="relationshipInaccurateReason"
       onChange={[Function]}
     />
   </ConditionalContent>

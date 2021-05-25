@@ -488,11 +488,18 @@ export function intermittentFillAbsencePeriod(claimNumber: string): void {
     cy.get("input[value='Yes']").click();
   });
   cy.get("#certificationEpisodicLeaveEntitlementWidget").within(() => {
-    cy.get("input[name*=episodeDuration]").type("{selectall}5");
+    cy.get("input[name*=episodeDuration]").focus().type("{selectall}5").blur();
+    // Wait until the entitlement widget becomes detached from the DOM. At this point, we're in the middle
+    // of a rerender, and we just need to wait a little additional time for the render to complete.
+    cy.root()
+      .should(($el) => !Cypress.dom.isAttached($el))
+      .wait(250);
   });
-  clickBottomWidgetButton("OK");
-  wait();
-  cy.get("input[type='button'][value='Apply']").click();
+  // This has to be reselected because #certificationEpisodicLeaveEntitlementWidget
+  // is removed and rerendered after episode duration is selected.
+  cy.get(
+    "#certificationEpisodicLeaveEntitlementWidget input[type='button'][value='Apply']"
+  ).click();
   cy.get("#PopupContainer").within(() => {
     cy.get("input[value='Yes']").click();
   });
@@ -581,21 +588,32 @@ export function submitIntermittentActualHours(
   cy.contains("tbody", "Episodic").click();
   cy.contains("input", "Record Actual").click();
   cy.get(".popup-container").within(() => {
+    cy.wait("@ajaxRender");
+    // Wait for focus to be captured on the "Last Day Worked" field. This happens automatically, and only occurs
+    // when the popup is ready for interaction. Annoyingly, it gets captured 2x on render, forcing us to wait as well.
+    cy.labelled("Last Day Worked").should("have.focus").wait(250);
+
     const mostRecentSunday = startOfWeek(new Date());
     const startDate = subDays(mostRecentSunday, 13);
     const startDateFormatted = format(startDate, "MM/dd/yyyy");
     const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
 
-    cy.labelled("Absence start date").type(
-      `{selectall}{backspace}${startDateFormatted}{enter}`
-    );
-    cy.wait("@ajaxRender");
-    cy.wait(200);
-    cy.labelled("Absence end date").type(
-      `{selectall}{backspace}${endDateFormatted}{enter}`
-    );
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    cy.labelled("Absence start date")
+      .focus()
+      .type(`{selectall}{backspace}${startDateFormatted}`)
+      .blur()
+      // Wait for this element to be detached, then rerendered after being blurred.
+      .should(($el) => Cypress.dom.isDetached($el))
+      .wait(100);
+
+    cy.labelled("Absence end date")
+      .focus()
+      .type(`{selectall}{backspace}${endDateFormatted}`)
+      .blur()
+      // Wait for this element to be detached, then rerendered after being blurred.
+      .should(($el) => Cypress.dom.isDetached($el))
+      .wait(100);
+
     cy.get(
       "input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursStartDate']"
     ).type(`{selectall}{backspace}${timeSpanHoursStart}`);

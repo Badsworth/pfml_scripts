@@ -57,7 +57,6 @@ from massgov.pfml.util.sqlalchemy import get_or_404
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
-    LeaveReason.PREGNANCY_MATERNITY.leave_reason_description: DocumentType.PREGNANCY_MATERNITY_FORM,
     LeaveReason.CHILD_BONDING.leave_reason_description: DocumentType.CHILD_BONDING_EVIDENCE_FORM,
     LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_description: DocumentType.OWN_SERIOUS_HEALTH_CONDITION_FORM,
     LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_description: DocumentType.CARE_FOR_A_FAMILY_MEMBER_FORM,
@@ -525,10 +524,15 @@ def document_upload(application_id, body, file):
         # State manage Paid Leave Confirmation. If the document type is Certification Form,
         # the API will map to the corresponding plan proof based on leave reason
         document_type = document_details.document_type.value
+
         if document_type == IoDocumentTypes.certification_form.value:
-            document_type = LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING[
-                existing_application.leave_reason.leave_reason_description
-            ].document_type_description
+            if existing_application.pregnant_or_recent_birth:
+                document_type = DocumentType.PREGNANCY_MATERNITY_FORM.document_type_description
+            # For non-pregnancy leave reasons
+            else:
+                document_type = LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING[
+                    existing_application.leave_reason.leave_reason_description
+                ].document_type_description
 
         if document_type not in ID_DOCS:
             # check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs

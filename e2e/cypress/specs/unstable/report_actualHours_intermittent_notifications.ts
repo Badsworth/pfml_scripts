@@ -65,8 +65,7 @@ describe("Report of intermittent leave hours notification", () => {
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              // Reduced timeout, since we have multiple tests that run prior to this.
-              60000
+              180000
             )
             .then(async (emails) => {
               const data = email.getNotificationData(emails[0].html);

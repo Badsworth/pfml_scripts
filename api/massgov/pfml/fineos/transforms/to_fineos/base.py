@@ -10,6 +10,9 @@ class EFormBody:
         self.eformType: str = eformType
         self.eformAttributes: List[dict] = eformAttributes
 
+    def get_attribute(self, name: str) -> Optional[dict]:
+        return next((a for a in self.eformAttributes if a["name"] == name), None)
+
 
 class EFormAttributeBuilder:
     """Base class for eForm attribute builders. Subclasses can define mappings for converting
@@ -43,7 +46,7 @@ class EFormAttributeBuilder:
         attribute_name = f"{definition['name']}{attribute_suffix}"
         attribute_type = definition["type"]
 
-        if attribute_type == "enumValue":
+        if attribute_type == "enumValue" and value is not None:
             # enumValue types need to be coerced into a ModelEnum instance
             domain_name = definition["domainName"]
             value = ModelEnum(domainName=domain_name, instanceValue=value)

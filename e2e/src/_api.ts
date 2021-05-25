@@ -546,6 +546,9 @@ export interface EmployerClaimRequestBody {
   employer_decision?: "Approve" | "Deny" | "Requires More Information";
   fraud?: "Yes" | "No";
   comment?: string;
+  leave_reason?: string;
+  believe_relationship_accurate?: "Yes" | "No" | "Unknown" | null;
+  relationship_inaccurate_reason?: string;
 }
 export interface UpdateClaimReviewResponse {
   claim_id: string;

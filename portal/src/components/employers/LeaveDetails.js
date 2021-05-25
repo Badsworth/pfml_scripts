@@ -137,19 +137,19 @@ const LeaveDetails = (props) => {
             }}
             choices={[
               {
-                checked: believeRelationshipAccurate === "yes",
+                checked: believeRelationshipAccurate === "Yes",
                 label: t("components.employersLeaveDetails.choiceYes"),
-                value: "yes",
+                value: "Yes",
               },
               {
-                checked: believeRelationshipAccurate === "unknown",
+                checked: believeRelationshipAccurate === "Unknown",
                 label: t("components.employersLeaveDetails.choiceUnknown"),
-                value: "unknown",
+                value: "Unknown",
               },
               {
-                checked: believeRelationshipAccurate === "no",
+                checked: believeRelationshipAccurate === "No",
                 label: t("components.employersLeaveDetails.choiceNo"),
-                value: "no",
+                value: "No",
               },
             ]}
             label={
@@ -178,7 +178,7 @@ const LeaveDetails = (props) => {
             updateFields={(event) =>
               onChangeRelationshipInaccurateReason(event.target.value)
             }
-            visible={believeRelationshipAccurate === "no"}
+            visible={believeRelationshipAccurate === "No"}
           >
             <Alert
               state="warning"
@@ -193,7 +193,7 @@ const LeaveDetails = (props) => {
             </FormLabel>
             <textarea
               className="usa-textarea margin-top-3"
-              name="comment"
+              name="relationshipInaccurateReason"
               onChange={(event) =>
                 onChangeRelationshipInaccurateReason(event.target.value)
               }
@@ -206,7 +206,7 @@ const LeaveDetails = (props) => {
 };
 
 LeaveDetails.propTypes = {
-  believeRelationshipAccurate: PropTypes.oneOf(["yes", "unknown", "no", ""]),
+  believeRelationshipAccurate: PropTypes.oneOf(["Yes", "Unknown", "No", ""]),
   claim: PropTypes.instanceOf(EmployerClaim).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   downloadDocument: PropTypes.func.isRequired,

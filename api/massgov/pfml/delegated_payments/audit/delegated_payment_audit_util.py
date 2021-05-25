@@ -42,6 +42,7 @@ class PaymentAuditData:
     number_of_times_in_rejected_or_error_state: int
     rejected_by_program_integrity: Optional[bool] = None
     rejected_notes: str = ""
+    skipped_by_program_integrity: Optional[bool] = None
 
 
 def write_audit_report(
@@ -152,6 +153,7 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         ),
         rejected_by_program_integrity=bool_to_str[payment_audit_data.rejected_by_program_integrity],
         rejected_notes=payment_audit_data.rejected_notes,
+        skipped_by_program_integrity=bool_to_str[payment_audit_data.skipped_by_program_integrity],
     )
 
     return payment_audit_row

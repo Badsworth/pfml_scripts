@@ -2,8 +2,8 @@ from datetime import date
 
 import faker
 
-from massgov.pfml.api.models.applications.common import EmployerBenefit, OtherIncome
-from massgov.pfml.api.models.common import PreviousLeave
+from massgov.pfml.api.models.applications.common import OtherIncome
+from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
 from massgov.pfml.db.models.applications import (
     AmountFrequency,
     EmployerBenefitType,

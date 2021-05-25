@@ -1057,7 +1057,7 @@ const pages = {
     frequencyHint_care:
       "Your answers must match Questions 29 and 30 in the $t(shared.certificationFormCare).",
     frequencyHint_medical:
-      "Your answers must match Questions 35 and 36 in the $t(shared.certificationFormMedical).",
+      "Your answers must match the intermittent leave section in the $t(shared.certificationFormMedical).",
     frequencyHint_updateMedicalCertForm:
       "Your answers must match Questions 21 and 22 in the $t(shared.certificationFormMedical).",
     frequencyLabel_irregular:
@@ -1081,7 +1081,7 @@ const pages = {
     datesLead_care:
       "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 24 in the $t(shared.certificationFormCare).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 29 in the $t(shared.certificationFormMedical).",
+      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormMedical).",
     datesLead_updateMedicalCertForm:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 16 in the $t(shared.certificationFormMedical).",
     datesSectionLabel:
@@ -1090,7 +1090,7 @@ const pages = {
     hasLeaveHint_care:
       "Your answer must match the corresponding checkbox of Question 22 in the $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
-      "Your answer must match the corresponding checkbox of Question 26 in the $t(shared.certificationFormMedical).",
+      "Your answer must match the $t(shared.certificationFormMedical).",
     hasLeaveHint_updateMedicalCertForm:
       "Your answer must match the corresponding checkbox of Question 14 in the $t(shared.certificationFormMedical).",
     hasLeaveLabel:
@@ -1111,7 +1111,7 @@ const pages = {
     datesLead_care:
       "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 28 in the $t(shared.certificationFormCare).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 34 in the $t(shared.certificationFormMedical).",
+      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormMedical).",
     datesLead_updateMedicalCertForm:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 20 in the $t(shared.certificationFormMedical).",
     datesSectionLabel:
@@ -1124,7 +1124,7 @@ const pages = {
     hasLeaveHint_care:
       "Your answer must match the corresponding checkbox of Question 22 in the $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
-      "Your answer must match the corresponding checkbox of Question 26 in the $t(shared.certificationFormMedical).",
+      "Your answer must match the $t(shared.certificationFormMedical).",
     hasLeaveHint_updateMedicalCertForm:
       "Your answer must match the corresponding checkbox of Question 14 in the $t(shared.certificationFormMedical).",
     hasLeaveLabel:
@@ -1147,7 +1147,7 @@ const pages = {
     datesLead_care:
       "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 26 in the $t(shared.certificationFormCare).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 32 in the $t(shared.certificationFormMedical).",
+      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormMedical).",
     datesLead_updateMedicalCertForm:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 18 in the $t(shared.certificationFormMedical).",
     datesSectionLabel:
@@ -1158,7 +1158,7 @@ const pages = {
     hasLeaveHint_care:
       "Your answer must match the corresponding checkbox of Question 22 in the $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
-      "Your answer must match the corresponding checkbox of Question 26 in the $t(shared.certificationFormMedical).",
+      "Your answer must match the $t(shared.certificationFormMedical).",
     hasLeaveHint_updateMedicalCertForm:
       "Your answer must match the corresponding checkbox of Question 14 in the $t(shared.certificationFormMedical).",
     hasLeaveLabel:
@@ -1420,7 +1420,7 @@ const pages = {
     lead_care:
       "Enter 0 for days you won’t work a reduced schedule.<br /><br />The total number of hours you enter must match Question 27 in the $t(shared.certificationFormCare).",
     lead_medical:
-      "Enter 0 for days you won’t work a reduced schedule.<br /><br />The total number of hours you enter must match Question 33 in the $t(shared.certificationFormMedical).",
+      "Enter 0 for days you won’t work a reduced schedule.<br /><br />The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormMedical).",
     lead_updateMedicalCertForm:
       "Enter 0 for days you won’t work a reduced schedule.<br /><br />The total number of hours you enter must match Question 19 in the $t(shared.certificationFormMedical).",
     minutesLabel: "$t(shared.minutesLabel)",
@@ -1879,7 +1879,7 @@ const pages = {
     statusDescription_approved:
       "<strong>Approved:</strong> DFML has approved this leave request.",
     statusDescription_closed:
-      "<strong>Closed:</strong> The leave has passed and no action can be taken.",
+      "<strong>Closed:</strong> The leave has passed or no action can be taken.",
     statusDescription_denied:
       "<strong>Denied:</strong> DFML has denied this leave request.",
     statusDescription_none:
@@ -2238,7 +2238,7 @@ const components = {
     claimDurationType_reducedSchedule:
       "$t(shared.claimDurationTypeReducedSchedule)",
     downloadAttachments:
-      "Download the documentation below or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
+      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
     frequencyBasis_irregular: "Irregular over the next 6 months",
     frequencyBasis_months: "At least once a month",
     frequencyBasis_weeks: "At least once a week",
@@ -2303,7 +2303,7 @@ const components = {
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
     downloadAttachments:
-      "Download the documentation below or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
+      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
     header: "Leave schedule",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
@@ -2397,11 +2397,14 @@ const components = {
     ],
   },
   footer: {
+    dataSharingAgreement: "Data Sharing Agreement",
     description: "$t(shared.siteDescription)",
-    logoTitle: "Go to PFML homepage",
+    logoTitleDFML: "Go to DFML homepage",
+    logoTitlePFML: "Go to PFML homepage",
     orgAddress: "PO Box 838 Lawrence, MA 01842",
     orgName: "Department of Family and Medical Leave (DFML)",
     orgPhoneNumber: "$t(shared.contactCenterPhoneNumber)",
+    privacyPolicy: "Privacy$t(chars.nbsp)Policy",
     title: "Paid Family and Medical Leave (PFML)",
   },
   form: {

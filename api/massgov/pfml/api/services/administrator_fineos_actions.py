@@ -8,13 +8,13 @@ import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.claims.common import (
     Address,
-    EmployerBenefit,
     IntermittentLeavePeriod,
     LeaveDetails,
     PreviousLeave,
     StandardLeavePeriod,
 )
 from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, DocumentResponse
+from massgov.pfml.api.models.common import EmployerBenefit
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
 from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (

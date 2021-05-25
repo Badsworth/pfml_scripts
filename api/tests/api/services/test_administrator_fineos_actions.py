@@ -259,6 +259,245 @@ def mock_fineos_other_income_eform_both_versions(period_decisions):
     return mock_client
 
 
+@pytest.fixture
+def mock_fineos_other_income_v1_eform():
+    def mock_eform_summary(*args, **kwargs):
+        return [
+            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_INCOME"]),
+        ]
+
+    def mock_get_eform(*args, **kwargs):
+        return group_client_api.EForm(
+            eformType="Other Income",
+            eformId=27701,
+            eformAttributes=[
+                group_client_api.EFormAttribute(
+                    name="StartDate",
+                    booleanValue=None,
+                    dateValue=date(2021, 5, 3),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="Frequency2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="Per Week",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="ProgramType",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="Program Type", instanceValue="Employer"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="Spacer4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="ProgramType2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="Program Type", instanceValue="Non-Employer"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="ReceiveWageReplacement",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="YesNoI'veApplied", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="StartDate2",
+                    booleanValue=None,
+                    dateValue=date(2021, 5, 5),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="Spacer1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="Spacer3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="Spacer2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="Spacer",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="WRT1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="WageReplacementType",
+                        instanceValue="Permanent disability insurance",
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="WRT2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="WageReplacementType2", instanceValue="Please Select"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="WRT3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="WageReplacementType", instanceValue="Please Select"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="WRT4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="WageReplacementType2", instanceValue="SSDI"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="EndDate2",
+                    booleanValue=None,
+                    dateValue=date(2021, 5, 29),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="Amount",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=500.0,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="EndDate",
+                    booleanValue=None,
+                    dateValue=date(2021, 5, 29),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="Amount2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=500.0,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="ReceiveWageReplacement3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="YesNoI'veApplied", instanceValue="Please Select"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="Frequency",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="Per Week",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="ReceiveWageReplacement2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="YesNoI'veApplied", instanceValue="Yes"
+                    ),
+                ),
+            ],
+        )
+
+    mock_client = create_client()
+    mock_client.get_eform_summary = mock_eform_summary
+    mock_client.get_eform = mock_get_eform
+
+    return mock_client
+
+
 def test_create_leave_admin_request_payload():
     create_or_update_request = CreateOrUpdateLeaveAdmin(
         fineos_web_id="testID",
@@ -446,3 +685,41 @@ def test_get_claim_other_income_eform_type_contains_both_versions(
     )
     assert leave_details.contains_version_one_eforms is True
     assert leave_details.contains_version_two_eforms is True
+
+
+@pytest.mark.integration
+def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_factories_session):
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details = get_claim_as_leave_admin(
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_income_v1_eform,
+    )
+    assert leave_details.date_of_birth == "****-12-25"
+    assert len(leave_details.employer_benefits) == 1
+    assert leave_details.employer_benefits[0].benefit_amount_dollars == 500
+    assert leave_details.employer_benefits[0].benefit_amount_frequency == "Per Week"
+    assert leave_details.employer_benefits[0].benefit_start_date == date(2021, 5, 3)
+    assert leave_details.employer_benefits[0].benefit_end_date == date(2021, 5, 29)
+    assert leave_details.employer_benefits[0].benefit_type == "Permanent disability insurance"
+    assert leave_details.employer_benefits[0].program_type == "Employer"
+    assert leave_details.employer_dba == employer.employer_dba
+    assert leave_details.employer_id == employer.employer_id
+    assert leave_details.fineos_absence_id == absence_id
+    assert leave_details.first_name == "Bud"
+    assert leave_details.middle_name == ""
+    assert leave_details.last_name == "Baxter"
+    assert leave_details.hours_worked_per_week == 37.5
+    assert leave_details.leave_details.reason == "Serious Health Condition - Employee"
+    assert leave_details.previous_leaves == []
+    assert leave_details.residential_address.line_1 == "55 Trinity Ave."
+    assert leave_details.residential_address.line_2 == "Suite 3450"
+    assert leave_details.residential_address.city == "Atlanta"
+    assert leave_details.residential_address.state == "GA"
+    assert leave_details.residential_address.zip == "30303"
+    assert leave_details.tax_identifier == "***-**-1234"
+    assert leave_details.follow_up_date == date(2021, 2, 1)
+    assert leave_details.is_reviewable is False
+    assert leave_details.status == "Known"
+    assert leave_details.contains_version_one_eforms is True
+    assert leave_details.contains_version_two_eforms is False

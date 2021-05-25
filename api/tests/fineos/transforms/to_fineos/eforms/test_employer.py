@@ -1,19 +1,17 @@
 import random
+from decimal import Decimal
 
 import pytest
 
-from massgov.pfml.api.models.claims.common import (
-    EmployerBenefit,
-    EmployerClaimReview,
-    PreviousLeave,
-)
+from massgov.pfml.api.models.claims.common import EmployerClaimReview, PreviousLeave
+from massgov.pfml.api.models.common import EmployerBenefit
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EmployerClaimReviewEFormBuilder
 
 
 @pytest.fixture
 def employer_benefit():
     return EmployerBenefit(
-        benefit_amount_dollars=round(random.random() * 400, 2),
+        benefit_amount_dollars=Decimal(round(random.random() * 400, 2)),
         benefit_amount_frequency="Per Week",
         benefit_start_date="2020-04-01",
         benefit_end_date="2020-05-01",
@@ -39,6 +37,9 @@ def employer_claim_review(previous_leave, employer_benefit):
         hours_worked_per_week=22,
         employer_decision="Approve",
         fraud="Yes",
+        leave_reason="Pregnancy/Maternity",
+        believe_relationship_accurate=None,
+        relationship_inaccurate_reason=None,
     )
 
 
@@ -47,7 +48,7 @@ def test_employer_claim_review_eform_no_entries(employer_claim_review):
     employer_claim_review.previous_leaves = []
     eform_body = EmployerClaimReviewEFormBuilder.build(employer_claim_review)
     assert eform_body.eformType == "Employer Response to Leave Request"
-    assert len(eform_body.eformAttributes) == 4
+    assert len(eform_body.eformAttributes) == 5
     expected_attributes = [
         {"name": "Comment", "stringValue": employer_claim_review.comment},
         {
@@ -56,6 +57,10 @@ def test_employer_claim_review_eform_no_entries(employer_claim_review):
         },
         {"name": "EmployerDecision", "stringValue": employer_claim_review.employer_decision},
         {"name": "Fraud1", "stringValue": "Yes"},
+        {
+            "name": "NatureOfLeave",
+            "enumValue": {"domainName": "Nature of leave", "instanceValue": "Pregnancy"},
+        },
     ]
 
     assert eform_body.eformAttributes == expected_attributes
@@ -66,7 +71,7 @@ def test_employer_claim_review_eform_single_entries(employer_claim_review):
     employer_benefits = employer_claim_review.employer_benefits
     previous_leaves = employer_claim_review.previous_leaves
     assert eform_body.eformType == "Employer Response to Leave Request"
-    assert len(eform_body.eformAttributes) == 12
+    assert len(eform_body.eformAttributes) == 13
     expected_attributes = [
         {"decimalValue": employer_benefits[0].benefit_amount_dollars, "name": "Amount"},
         {"name": "Frequency", "stringValue": "Per Week"},
@@ -92,6 +97,10 @@ def test_employer_claim_review_eform_single_entries(employer_claim_review):
         },
         {"name": "EmployerDecision", "stringValue": employer_claim_review.employer_decision},
         {"name": "Fraud1", "stringValue": "Yes"},
+        {
+            "name": "NatureOfLeave",
+            "enumValue": {"domainName": "Nature of leave", "instanceValue": "Pregnancy"},
+        },
     ]
 
     assert eform_body.eformAttributes == expected_attributes
@@ -100,14 +109,14 @@ def test_employer_claim_review_eform_single_entries(employer_claim_review):
 def test_employer_claim_review_eform_multiple_entries(employer_claim_review):
     employer_benefits = [
         EmployerBenefit(
-            benefit_amount_dollars=round(random.random() * 400, 2),
+            benefit_amount_dollars=Decimal(round(random.random() * 400, 2)),
             benefit_amount_frequency="Per Week",
             benefit_start_date="2020-04-01",
             benefit_end_date="2020-05-01",
             benefit_type="Short-term disability insurance",
         ),
         EmployerBenefit(
-            benefit_amount_dollars=round(random.random() * 400, 2),
+            benefit_amount_dollars=Decimal(round(random.random() * 400, 2)),
             benefit_amount_frequency="Per Month",
             benefit_start_date="2020-04-02",
             benefit_end_date="2020-05-02",
@@ -132,7 +141,7 @@ def test_employer_claim_review_eform_multiple_entries(employer_claim_review):
     employer_benefits = employer_claim_review.employer_benefits
     previous_leaves = employer_claim_review.previous_leaves
     assert eform_body.eformType == "Employer Response to Leave Request"
-    assert len(eform_body.eformAttributes) == 22
+    assert len(eform_body.eformAttributes) == 23
     expected_attributes = [
         {"decimalValue": employer_benefits[0].benefit_amount_dollars, "name": "Amount"},
         {"name": "Frequency", "stringValue": "Per Week"},
@@ -183,6 +192,63 @@ def test_employer_claim_review_eform_multiple_entries(employer_claim_review):
         },
         {"name": "EmployerDecision", "stringValue": employer_claim_review.employer_decision},
         {"name": "Fraud1", "stringValue": "Yes"},
+        {
+            "name": "NatureOfLeave",
+            "enumValue": {"domainName": "Nature of leave", "instanceValue": "Pregnancy"},
+        },
     ]
 
     assert eform_body.eformAttributes == expected_attributes
+
+
+class TestCaringLeaveReview:
+    @pytest.fixture
+    def caring_leave_review(self):
+        return EmployerClaimReview(
+            comment="Test Claim",
+            employer_benefits=[],
+            previous_leaves=[],
+            hours_worked_per_week=40,
+            employer_decision="Allow",
+            fraud="No",
+            leave_reason="Care for a Family Member",
+            believe_relationship_accurate="No",
+            relationship_inaccurate_reason="I dunno",
+        )
+
+    @pytest.fixture
+    def eform(self, caring_leave_review):
+        return EmployerClaimReviewEFormBuilder.build(caring_leave_review)
+
+    def test_nature_of_leave_attribute(self, eform):
+        nature_of_leave_attr = eform.get_attribute("NatureOfLeave")
+        expected_attr = {
+            "name": "NatureOfLeave",
+            "enumValue": {
+                "domainName": "Nature of leave",
+                "instanceValue": "Caring for a family member with a serious health condition",
+            },
+        }
+        assert nature_of_leave_attr == expected_attr
+
+    def test_invalid_leave_reason_attribute(self, caring_leave_review):
+        caring_leave_review.leave_reason = "foo"
+        eform = EmployerClaimReviewEFormBuilder.build(caring_leave_review)
+
+        assert eform.get_attribute("NatureOfLeave") is None
+
+    def test_believe_accurate_attribute(self, eform):
+        believe_accurate_attr = eform.get_attribute("BelieveAccurate")
+        expected_attr = {
+            "name": "BelieveAccurate",
+            "enumValue": {"domainName": "PleaseSelectYesNoIdontKnow", "instanceValue": "No"},
+        }
+        assert believe_accurate_attr == expected_attr
+
+    def test_why_inaccurate_attribute(self, eform):
+        why_inaccurate_attr = eform.get_attribute("WhyInaccurate")
+        expected_attr = {
+            "name": "WhyInaccurate",
+            "stringValue": "I dunno",
+        }
+        assert why_inaccurate_attr == expected_attr

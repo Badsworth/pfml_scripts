@@ -37,6 +37,7 @@ class PaymentAuditCSV(AbstractRecord):
     number_of_times_in_rejected_or_error_state: Optional[str]
     rejected_by_program_integrity: Optional[str]
     rejected_notes: Optional[str]
+    skipped_by_program_integrity: Optional[str]
 
 
 PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
@@ -69,4 +70,5 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     number_of_times_in_rejected_or_error_state="Number of times in Error or Rejected State",
     rejected_by_program_integrity="Reject",
     rejected_notes="Reject Notes",
+    skipped_by_program_integrity="Skip",
 )
