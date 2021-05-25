@@ -37,21 +37,10 @@ class LeaveDetails(PydanticBaseModel):
     reduced_schedule_leave_periods: Optional[List[StandardLeavePeriod]]
 
 
-class NatureOfLeave(str, Enum):
-    ILLNESS_OR_INJURY = "An illness or injury"
-    PREGNANCY = "Pregnancy"
-    CHILD_BONDING = "Bonding with my child after birth or placement"
-    MILITARY_CAREGIVER = "Caring for a family member who serves in the armed forces"
-    MILITARY_MANAGING_FAMILY = (
-        "Managing family affairs while a family member is on active duty in the armed forces"
-    )
-    FAMILY_CAREGIVER = "Caring for a family member with a serious health condition"
-
-
-class YesNoUnsure(str, Enum):
+class YesNoUnknown(str, Enum):
     YES = "Yes"
     NO = "No"
-    UNSURE = "Don't Know"
+    UNKNOWN = "Unknown"
 
 
 class EmployerClaimReview(PydanticBaseModel):
@@ -64,6 +53,6 @@ class EmployerClaimReview(PydanticBaseModel):
     employer_decision: Optional[str]
     fraud: Optional[str]
     has_amendments: bool = False
-    nature_of_leave: Optional[NatureOfLeave]
-    believe_relationship_accurate: Optional[YesNoUnsure]
+    leave_reason: Optional[str]
+    believe_relationship_accurate: Optional[YesNoUnknown]
     relationship_inaccurate_reason: Optional[str]

@@ -1567,23 +1567,17 @@ components:
             - "No"
         comment:
           type: string
-        nature_of_leave:
+        leave_reason:
           type: string
           nullable: true
-          enum:
-            - An illness or injury
-            - Pregnancy
-            - Bonding with my child after birth or placement
-            - Caring for a family member who serves in the armed forces
-            - Managing family affairs while a family member is on active duty in the armed forces
-            - Caring for a family member with a serious health condition
+          example: Care for a Family Member
         believe_relationship_accurate:
           type: string
           nullable: true
           enum:
             - "Yes"
             - "No"
-            - "Don't Know"
+            - "Unknown"
         relationship_inaccurate_reason:
           type: string
           nullable: true

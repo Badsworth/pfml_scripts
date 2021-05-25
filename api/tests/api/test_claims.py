@@ -70,7 +70,7 @@ def update_claim_body():
                 "leave_reason": "Pregnancy / Maternity",
             }
         ],
-        "nature_of_leave": "Pregnancy",
+        "leave_reason": "Pregnancy/Maternity",
     }
 
 
@@ -1142,9 +1142,7 @@ class TestUpdateClaim:
 
         @pytest.fixture()
         def update_caring_leave_claim_body(self, update_claim_body):
-            update_claim_body[
-                "nature_of_leave"
-            ] = "Caring for a family member with a serious health condition"
+            update_claim_body["leave_reason"] = "Care for a Family Member"
             update_claim_body["believe_relationship_accurate"] = "No"
             update_claim_body["relationship_inaccurate_reason"] = "No reason, lol"
 
@@ -1183,16 +1181,13 @@ class TestUpdateClaim:
             eform = params["eform"]
 
             nature_of_leave_attr = eform.get_attribute("NatureOfLeave")
-            assert (
-                nature_of_leave_attr["enumValue"]["instanceValue"]
-                == "Caring for a family member with a serious health condition"
-            )
+            assert nature_of_leave_attr is not None
 
             believe_accurate_attr = eform.get_attribute("BelieveAccurate")
-            assert believe_accurate_attr["enumValue"]["instanceValue"] == "No"
+            assert believe_accurate_attr is not None
 
             why_inaccurate_attr = eform.get_attribute("WhyInaccurate")
-            assert why_inaccurate_attr["stringValue"] == "No reason, lol"
+            assert why_inaccurate_attr is not None
 
 
 def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> bool:
