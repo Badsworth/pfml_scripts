@@ -289,7 +289,7 @@ export function createNotification(
         cy.labelled("Primary Relationship to Employee").select(
           "Sibling - Brother/Sister"
         );
-        cy.wait(1500);
+        cy.wait("@ajaxRender");
         cy.labelled("Qualifier 1").select("Biological");
       });
       clickNext();
@@ -369,7 +369,7 @@ export function createNotification(
     cy.labelled("Work Pattern Type").select("2 weeks Rotating");
     wait();
   }
-  cy.wait(1500);
+  cy.wait("@ajaxRender");
   cy.labelled("Standard Work Week").click();
   cy.wait(1000);
   cy.get('input[value="Apply to Calendar"]').click({ force: true });
