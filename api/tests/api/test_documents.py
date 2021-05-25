@@ -86,7 +86,15 @@ def document_upload_helper(client, user, auth_token, form_data, leave_reason_id=
 
     if not leave_reason_id:
         leave_reason_id = LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
-    application = ApplicationFactory.create(user=user, claim=claim, leave_reason_id=leave_reason_id)
+
+    pregnant_or_recent_birth = leave_reason_id == LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+
+    application = ApplicationFactory.create(
+        user=user,
+        claim=claim,
+        leave_reason_id=leave_reason_id,
+        pregnant_or_recent_birth=pregnant_or_recent_birth,
+    )
 
     response = client.post(
         "/v1/applications/{}/documents".format(application.application_id),
