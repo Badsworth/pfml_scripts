@@ -26,9 +26,12 @@ jobs:
         environment: [ "test", "stage", "performance", "training", "uat", ]
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/is-my-site-up@v1.1
+      - uses: jtalk/url-health-check-action@v1.5
         with:
-          site: "https://paideave-${{ matrix.environment }}.mass.gov/?_ff=pfmlTerriyay:true"
+          URL: "https://paideave-${{ matrix.environment }}.mass.gov/?_ff=pfmlTerriyay:true"
+          max-attempts: 3
+          retry-delay: 3s
+          retry-all: yes
           # url-to-hit: "https://paidleave-cps-preview.eol.mass.gov/"
 
   # trigger_e2e:
