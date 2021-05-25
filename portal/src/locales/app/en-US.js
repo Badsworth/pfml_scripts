@@ -2399,7 +2399,8 @@ const components = {
   footer: {
     dataSharingAgreement: "Data Sharing Agreement",
     description: "$t(shared.siteDescription)",
-    logoTitle: "Go to PFML homepage",
+    logoTitleDFML: "Go to DFML homepage",
+    logoTitlePFML: "Go to PFML homepage",
     orgAddress: "PO Box 838 Lawrence, MA 01842",
     orgName: "Department of Family and Medical Leave (DFML)",
     orgPhoneNumber: "$t(shared.contactCenterPhoneNumber)",

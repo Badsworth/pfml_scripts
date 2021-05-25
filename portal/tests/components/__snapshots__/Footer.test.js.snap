@@ -36,10 +36,10 @@ exports[`Footer renders footer with default settings 1`] = `
             "width": 165,
           }
         }
-        title="Go to PFML homepage"
+        title="Go to DFML homepage"
         url={
           Object {
-            "domain": "/",
+            "domain": "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
           }
         }
       />
@@ -55,7 +55,7 @@ exports[`Footer renders footer with default settings 1`] = `
         title="Go to PFML homepage"
         url={
           Object {
-            "domain": "/",
+            "domain": "https://www.mass.gov/pfml",
           }
         }
       />
