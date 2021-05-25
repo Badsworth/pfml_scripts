@@ -25,9 +25,9 @@ jobs:
       matrix:
         environment: [ "test", "stage", "performance", "training", "uat", ]
     steps:
-      - uses: srt32/uptime@master
+      - uses: actions/is-my-site-up@v1.1
         with:
-          url-to-hit: "https://paideave-${{ matrix.environment }}.mass.gov/?_ff=pfmlTerriyay:true"
+          site: "https://paideave-${{ matrix.environment }}.mass.gov/?_ff=pfmlTerriyay:true"
           # url-to-hit: "https://paidleave-cps-preview.eol.mass.gov/"
 
   # trigger_e2e:
