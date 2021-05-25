@@ -30,6 +30,7 @@ jobs:
           url: "https://paideave-${{ matrix.environment }}.mass.gov/?_ff=pfmlTerriyay:true"
           max-attempts: 3
           retry-delay: 3s
+          follow-redirect: yes
           # retry-all: yes
           # url-to-hit: "https://paidleave-cps-preview.eol.mass.gov/"
 
