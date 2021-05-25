@@ -25,13 +25,12 @@ jobs:
       matrix:
         environment: [ "test", "stage", "performance", "training", "uat", ]
     steps:
-      - uses: actions/checkout@v1
-      - uses: jtalk/url-health-check-action@v1.5
+      - uses: padurean/https-certificate-expiry-health-check-action@v1.0.0
         with:
-          URL: "https://paideave-${{ matrix.environment }}.mass.gov/"
+          url: "https://paideave-${{ matrix.environment }}.mass.gov/"
           max-attempts: 3
           retry-delay: 3s
-          retry-all: yes
+          # retry-all: yes
           # url-to-hit: "https://paidleave-cps-preview.eol.mass.gov/"
 
   # trigger_e2e:
