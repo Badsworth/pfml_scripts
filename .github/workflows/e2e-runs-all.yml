@@ -18,7 +18,7 @@ on:
 
 jobs:
   ping_web_portal:
-    name: Ping web portal before running tests
+    name: Ping web portal before running tests ... 
     runs-on: ubuntu-latest
     strategy:
     matrix:
