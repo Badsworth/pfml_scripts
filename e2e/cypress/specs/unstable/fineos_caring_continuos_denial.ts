@@ -10,7 +10,7 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
     () => {
       fineos.before();
       cy.visit("/");
-      cy.task("generateClaim", "CHAP2").then((claim) => {
+      cy.task("generateClaim", "CDENY2").then((claim) => {
         if (
           !claim.claim.first_name ||
           !claim.claim.last_name ||
