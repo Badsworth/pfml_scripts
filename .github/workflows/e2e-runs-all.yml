@@ -13,8 +13,8 @@ on:
         required: false
         default: "Manual"
   push:
-  schedule:
-    - cron:  '0 11 * * 1-5'
+  # schedule:
+  #   - cron:  '0 11 * * 1-5'
 
 jobs:
   ping_web_portal:
