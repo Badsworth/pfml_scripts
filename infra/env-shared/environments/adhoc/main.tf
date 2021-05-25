@@ -61,8 +61,8 @@ module "pfml" {
   nlb_port          = 80
 
   # AWS WAF ACL settings
-  enable_regional_rate_based_acl = true
+  enable_regional_rate_based_acl = false
   enable_fortinet_managed_rules  = true
-  enforce_fortinet_managed_rules = false # false = Count rule matches (override type = COUNT)
+  enforce_fortinet_managed_rules = true # false = Count rule matches (override type = COUNT)
 }                                        # true  = Block rule matches (override type = NONE)
 
