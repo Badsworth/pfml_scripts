@@ -12,10 +12,23 @@ on:
         description: "Cypress Run Tags"
         required: false
         default: "Manual"
+  push:
   schedule:
     - cron:  '0 11 * * 1-5'
 
 jobs:
+  ping_web_portal:
+    name: Ping web portal before running tests
+    runs-on: ubuntu-latest
+    strategy:
+    matrix:
+        environment: [ "test", "stage", "performance", "training", "uat", "cps-preview" ]
+    steps:
+      uses: srt32/uptime@master
+      with:
+        url-to-hit: "https://paideave-${{ matrix.environment }}.mass.gov"
+        url-to-hit: "https://paidleave-cps-preview.eol.mass.gov/"
+
   trigger_e2e:
     name: Run Cypress Test
     runs-on: ubuntu-latest
