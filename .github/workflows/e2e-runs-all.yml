@@ -23,28 +23,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: [ "test", "stage", "performance", "training", "uat", "cps-preview" ]
+        environment: [ "test", "stage", "performance", "training", "uat", ]
     steps:
       - uses: srt32/uptime@master
         with:
-          url-to-hit: "https://paideave-${{ matrix.environment }}.mass.gov"
-          # url-to-hit: "https://paidleave-cps-preview.eol.mass.gov/"
+          url-to-hit: "https://paideave-${{ matrix.environment }}.mass.gov/?_ff=pfmlTerriyay:true"
+          url-to-hit: "https://paidleave-cps-preview.eol.mass.gov/"
 
-  trigger_e2e:
-    name: Run Cypress Test
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        environment: [ "test", "stage", "performance", "training", "uat", "cps-preview" ]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/trigger-cypress
-        name: "Trigger Cypress Run in ${{ matrix.environment }}"
-        with:
-          target_environment: "${{ matrix.environment }}"
-          cypress_tags: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.cypress_tags || format('Morning Run ({0})', matrix.environment) }}
-          github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          github_branch: ${{ matrix.environment == 'test' && 'main' || format('deploy/portal/{0}', matrix.environment) }}
-          wait_for_results: "false"
-          only_stable: 'true'
+  # trigger_e2e:
+  #   name: Run Cypress Test
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       environment: [ "test", "stage", "performance", "training", "uat", "cps-preview" ]
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: ./.github/actions/trigger-cypress
+  #       name: "Trigger Cypress Run in ${{ matrix.environment }}"
+  #       with:
+  #         target_environment: "${{ matrix.environment }}"
+  #         cypress_tags: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.cypress_tags || format('Morning Run ({0})', matrix.environment) }}
+  #         github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+  #         github_branch: ${{ matrix.environment == 'test' && 'main' || format('deploy/portal/{0}', matrix.environment) }}
+  #         wait_for_results: "false"
+  #         only_stable: 'true'
