@@ -117,6 +117,7 @@ class PaymentRejectsStep(Step):
             "payment_state_log_not_in_audit_response_pending_count"
         )
         REJECTED_PAYMENT_COUNT = "rejected_payment_count"
+        SKIPPED_PAYMENT_COUNT = "skipped_payment_count"
         STATE_LOGS_COUNT = "state_logs_count"
 
     def run_step(self) -> None:
@@ -179,13 +180,16 @@ class PaymentRejectsStep(Step):
                         row, PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
                     ),
                     rejected_notes=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.rejected_notes),
+                    skipped_by_program_integrity=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity
+                    ),
                 )
                 payment_rejects_rows.append(payment_reject_row)
 
         return payment_rejects_rows
 
     def transition_audit_pending_payment_state(
-        self, payment: Payment, is_rejected_payment: bool
+        self, payment: Payment, is_rejected_payment: bool, is_skipped_payment: bool
     ) -> None:
         payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
             payment, Flow.DELEGATED_PAYMENT, self.db_session
@@ -215,20 +219,42 @@ class PaymentRejectsStep(Step):
                 self.db_session,
             )
 
+            writeback_transaction_status = FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
             state_log_util.create_finished_state_log(
                 payment,
                 State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
                 state_log_util.build_outcome(
-                    cast(
-                        str,
-                        FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION.transaction_status_description,
-                    )
+                    cast(str, writeback_transaction_status.transaction_status_description,)
                 ),
                 self.db_session,
             )
             writeback_details = FineosWritebackDetails(
                 payment=payment,
-                transaction_status_id=FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION.transaction_status_id,
+                transaction_status_id=writeback_transaction_status.transaction_status_id,
+                import_log_id=self.get_import_log_id(),
+            )
+            self.db_session.add(writeback_details)
+        elif is_skipped_payment:
+            self.increment(self.Metrics.SKIPPED_PAYMENT_COUNT)
+            state_log_util.create_finished_state_log(
+                payment,
+                State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+                state_log_util.build_outcome("Payment skipped"),
+                self.db_session,
+            )
+
+            writeback_transaction_status = FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
+            state_log_util.create_finished_state_log(
+                payment,
+                State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+                state_log_util.build_outcome(
+                    cast(str, writeback_transaction_status.transaction_status_description,)
+                ),
+                self.db_session,
+            )
+            writeback_details = FineosWritebackDetails(
+                payment=payment,
+                transaction_status_id=writeback_transaction_status.transaction_status_id,
                 import_log_id=self.get_import_log_id(),
             )
             self.db_session.add(writeback_details)
@@ -248,6 +274,9 @@ class PaymentRejectsStep(Step):
             if payment_rejects_row.rejected_by_program_integrity is None:
                 raise PaymentRejectsException("Missing rejection column in rejects file.")
 
+            if payment_rejects_row.skipped_by_program_integrity is None:
+                raise PaymentRejectsException("Missing skip column in rejects file.")
+
             payment = (
                 self.db_session.query(Payment)
                 .filter(Payment.payment_id == payment_rejects_row.pfml_payment_id)
@@ -260,8 +289,16 @@ class PaymentRejectsStep(Step):
                 )
 
             is_rejected_payment = payment_rejects_row.rejected_by_program_integrity == "Y"
+            is_skipped_payment = payment_rejects_row.skipped_by_program_integrity == "Y"
 
-            self.transition_audit_pending_payment_state(payment, is_rejected_payment)
+            if is_rejected_payment and is_skipped_payment:
+                raise PaymentRejectsException(
+                    "Unexpected state - rejects row both rejected and skipped."
+                )
+
+            self.transition_audit_pending_payment_state(
+                payment, is_rejected_payment, is_skipped_payment
+            )
 
     def _transition_not_sampled_payment_audit_pending_state(self, pending_state: LkState) -> None:
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(

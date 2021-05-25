@@ -19,7 +19,7 @@ from massgov.pfml.db.models.employees import (
     StateLog,
 )
 from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
-from massgov.pfml.db.models.payments import FineosWritebackDetails
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import PaymentAuditCSV
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     PaymentAuditData,
@@ -117,9 +117,71 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
     ):
         payment_rejects_step.transition_audit_pending_payment_states([payment_rejects_row])
 
-    payment_rejects_row.pfml_payment_id = payment.payment_id
     payment_rejects_row.rejected_by_program_integrity = "Y"
+    payment_rejects_row.skipped_by_program_integrity = None
+
+    with pytest.raises(
+        PaymentRejectsException, match="Missing skip column in rejects file.",
+    ):
+        payment_rejects_step.transition_audit_pending_payment_states([payment_rejects_row])
+
+    payment_rejects_row.rejected_by_program_integrity = "Y"
+    payment_rejects_row.skipped_by_program_integrity = "Y"
+
+    with pytest.raises(
+        PaymentRejectsException, match="Unexpected state - rejects row both rejected and skipped.",
+    ):
+        payment_rejects_step.transition_audit_pending_payment_states([payment_rejects_row])
+
+
+@pytest.mark.parametrize(
+    "rejected_by_program_integrity, skipped_by_program_integrity",
+    [("", ""), ("N", "N"), ("Foo", "Foo"), ("Y", ""), ("", "Y"),],
+)
+def test_valid_combination_of_reject_and_skip(
+    test_db_session,
+    payment_rejects_step,
+    rejected_by_program_integrity,
+    skipped_by_program_integrity,
+):
+    claim = ClaimFactory.create(claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id)
+    payment = PaymentFactory.create(
+        disb_method_id=PaymentMethod.ACH.payment_method_id, claim=claim,
+    )
+    state_log_util.create_finished_state_log(
+        payment,
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+        state_log_util.build_outcome("test"),
+        test_db_session,
+    )
+
+    payment_audit_data = PaymentAuditData(
+        payment=payment,
+        is_first_time_payment=True,
+        is_previously_rejected_payment=True,
+        is_previously_errored_payment=True,
+        number_of_times_in_rejected_or_error_state=0,
+    )
+
+    payment_rejects_row = build_audit_report_row(payment_audit_data)
+    payment_rejects_row.rejected_by_program_integrity = rejected_by_program_integrity
+    payment_rejects_row.skipped_by_program_integrity = skipped_by_program_integrity
+
     payment_rejects_step.transition_audit_pending_payment_states([payment_rejects_row])
+
+    end_state = ACCEPTED_STATE
+    if rejected_by_program_integrity == "Y":
+        end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
+
+    if skipped_by_program_integrity == "Y":
+        end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
+
+    payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert payment_state_log is not None
+    assert payment_state_log.end_state_id == end_state.state_id
 
 
 def test_transition_audit_pending_payment_state(test_db_session, payment_rejects_step):
@@ -132,7 +194,7 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         test_db_session,
     )
 
-    payment_rejects_step.transition_audit_pending_payment_state(payment_1, True)
+    payment_rejects_step.transition_audit_pending_payment_state(payment_1, True, False)
 
     payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
         payment_1, Flow.DELEGATED_PAYMENT, test_db_session
@@ -145,9 +207,29 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
     )
     assert payment_state_log.outcome["message"] == "Payment rejected"
 
-    writeback_details = test_db_session.query(FineosWritebackDetails).all()
-    assert len(writeback_details) == 1
-    assert writeback_details[0].payment_id == payment_1.payment_id
+    expected_writeback_transaction_status = (
+        FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
+    )
+    writeback_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_1, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert writeback_state_log is not None
+    assert writeback_state_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    assert (
+        writeback_state_log.outcome["message"]
+        == expected_writeback_transaction_status.transaction_status_description
+    )
+
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment_1.payment_id)
+        .one_or_none()
+    )
+    assert writeback_details is not None
+    assert (
+        writeback_details.transaction_status_id
+        == expected_writeback_transaction_status.transaction_status_id
+    )
 
     # test acceptance
     payment_2 = PaymentFactory.create()
@@ -158,7 +240,7 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         test_db_session,
     )
 
-    payment_rejects_step.transition_audit_pending_payment_state(payment_2, False)
+    payment_rejects_step.transition_audit_pending_payment_state(payment_2, False, False)
 
     payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
         payment_2, Flow.DELEGATED_PAYMENT, test_db_session
@@ -175,7 +257,7 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         PaymentRejectsException,
         match=f"No state log found for payment found in audit reject file: {payment_3.payment_id}",
     ):
-        payment_rejects_step.transition_audit_pending_payment_state(payment_3, True)
+        payment_rejects_step.transition_audit_pending_payment_state(payment_3, True, False)
 
     # test not a payment pending state exception
     payment_4 = PaymentFactory.create()
@@ -190,7 +272,51 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         PaymentRejectsException,
         match=f"Found payment state log not in audit response pending state: {State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED.state_description}, payment_id: {payment_4.payment_id}",
     ):
-        payment_rejects_step.transition_audit_pending_payment_state(payment_4, True)
+        payment_rejects_step.transition_audit_pending_payment_state(payment_4, True, False)
+
+    # test skip
+    payment_5 = PaymentFactory.create()
+    state_log_util.create_finished_state_log(
+        payment_5,
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+        state_log_util.build_outcome("test"),
+        test_db_session,
+    )
+
+    payment_rejects_step.transition_audit_pending_payment_state(payment_5, False, True)
+
+    payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_5, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert payment_state_log is not None
+    assert (
+        payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE.state_id
+    )
+    assert payment_state_log.outcome["message"] == "Payment skipped"
+
+    expected_writeback_transaction_status = FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
+    writeback_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_5, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert writeback_state_log is not None
+    assert writeback_state_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    assert (
+        writeback_state_log.outcome["message"]
+        == expected_writeback_transaction_status.transaction_status_description
+    )
+
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment_5.payment_id)
+        .one_or_none()
+    )
+    assert writeback_details is not None
+    assert (
+        writeback_details.transaction_status_id
+        == expected_writeback_transaction_status.transaction_status_id
+    )
 
 
 def test_transition_not_sampled_payment_audit_pending_states(test_db_session, payment_rejects_step):

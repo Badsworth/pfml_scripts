@@ -70,6 +70,9 @@ class ScenarioName(Enum):
     AUDIT_REJECTED = "AUDIT_REJECTED"
     AUDIT_REJECTED_THEN_ACCEPTED = "AUDIT_REJECTED_THEN_ACCEPTED"
 
+    AUDIT_SKIPPED = "AUDIT_SKIPPED"
+    AUDIT_SKIPPED_THEN_ACCEPTED = "AUDIT_SKIPPED_THEN_ACCEPTED"
+
     # Returns
     PUB_ACH_PRENOTE_RETURN = "PUB_ACH_PRENOTE_RETURN"
     PUB_ACH_PRENOTE_NOTIFICATION = "PUB_ACH_PRENOTE_NOTIFICATION"
@@ -138,7 +141,8 @@ class ScenarioDescriptor:
 
     leave_request_decision: str = "Approved"
 
-    is_audit_approved: bool = True
+    is_audit_rejected: bool = False
+    is_audit_skipped: bool = False
     is_audit_approved_delayed: bool = False
 
     negative_payment_amount: bool = False
@@ -255,7 +259,8 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
         leave_request_decision="Rejected",
     ),
-    ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_approved=False),
+    ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_rejected=True),
+    ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_SKIPPED, is_audit_skipped=True),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_RETURN,
         existing_eft_account=False,
@@ -377,7 +382,13 @@ DELAYED_SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
-        is_audit_approved=False,
+        is_audit_rejected=True,
+        is_audit_approved_delayed=True,
+        has_additional_payment_in_period=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.AUDIT_SKIPPED_THEN_ACCEPTED,
+        is_audit_skipped=True,
         is_audit_approved_delayed=True,
         has_additional_payment_in_period=True,
     ),
