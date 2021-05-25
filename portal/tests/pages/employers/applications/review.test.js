@@ -133,6 +133,29 @@ describe("Review", () => {
     );
   });
 
+  it("submits a claim with leave_reason when showCaringLeaveType is on ", async () => {
+    process.env.featureFlags = {
+      showCaringLeaveType: true,
+    };
+    ({ wrapper, appLogic } = renderComponent("mount"));
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      {
+        comment: expect.any(String),
+        employer_benefits: expect.any(Array),
+        employer_decision: undefined, // undefined by default
+        fraud: undefined, // undefined by default
+        hours_worked_per_week: expect.any(Number),
+        previous_leaves: expect.any(Array),
+        has_amendments: false,
+        leave_reason: "Serious Health Condition - Employee",
+      }
+    );
+    process.env.featureFlags = {};
+  });
+
   it("sets 'comment' based on the Feedback", async () => {
     act(() => {
       const setComment = wrapper.find("Feedback").prop("setComment");
@@ -397,6 +420,7 @@ describe("Review", () => {
           previous_leaves: expect.any(Array),
           has_amendments: false,
           relationship_inaccurate_reason: expect.any(String),
+          leave_reason: "Care for a Family Member",
         }
       );
     });
