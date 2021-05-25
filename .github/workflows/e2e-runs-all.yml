@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: padurean/https-certificate-expiry-health-check-action@v1.0.0
         with:
-          url: "https://paideave-${{ matrix.environment }}.mass.gov/"
+          url: "https://paideave-${{ matrix.environment }}.mass.gov/?_ff=pfmlTerriyay:true"
           max-attempts: 3
           retry-delay: 3s
           # retry-all: yes
