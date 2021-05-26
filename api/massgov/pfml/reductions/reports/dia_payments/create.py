@@ -168,8 +168,8 @@ def create_report_new_dia_payments_to_dfml(db_session: db.Session, log_entry: Lo
 
     log_entry.set_metrics(
         {
-            Metrics.REPORT_NEW_DIA_PAYMENTS_TO_DFML_ROW_COUNT: len(report_data),
-            Metrics.UNIQUE_REDUCTION_PAYMENTS_COUNT: len(unique_reduction_payments),
+            Metrics.REPORT_DIA_PAYMENTS_TO_DFML_ROW_COUNT: len(report_data),
+            Metrics.REPORT_DIA_UNIQUE_REDUCTION_PAYMENTS_COUNT: len(unique_reduction_payments),
         }
     )
 

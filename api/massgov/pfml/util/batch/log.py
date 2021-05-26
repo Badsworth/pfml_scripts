@@ -107,11 +107,11 @@ class LogEntry:
         self.metrics.update(**metrics)
         self._commit_metrics()
 
-    def increment(self, name):
+    def increment(self, name, increment=1):
         """Increment an integer count in the report. Commits to database at time intervals."""
         if name not in self.metrics:
             self.metrics[name] = 0
-        self.metrics[name] += 1
+        self.metrics[name] += increment
         self._commit_metrics()
 
     def _commit_metrics(self):

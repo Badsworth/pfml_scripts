@@ -39,10 +39,15 @@ DuaReductionPaymentAndClaim = Tuple[DuaReductionPayment, Optional[Claim]]
 
 class Metrics:
     PENDING_DUA_PAYMENT_REFERENCE_FILES_COUNT = "pending_dua_payment_reference_files_count"
+    SUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = "successful_dia_payment_reference_files_count"
+    UNSUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = (
+        "unsuccessful_dia_payment_reference_files_count"
+    )
     NEW_DUA_PAYMENT_ROW_COUNT = "new_dua_payment_row_count"
+    TOTAL_DUA_PAYMENT_ROW_COUNT = "total_dua_payment_row_count"
     CLAIMANTS_SENT_TO_DUA_COUNT = "claimants_sent_to_dua_count"
     DUA_PAYMENT_LISTS_DOWNLOADED_COUNT = "dua_payment_lists_downloaded_count"
-    REPORT_NEW_DUA_PAYMENTS_TO_DFML_ROW_COUNT = "report_new_dua_payments_to_dfml_row_count"
+    REPORT_DUA_PAYMENTS_TO_DFML_ROW_COUNT = "report_dua_payments_to_dfml_row_count"
 
 
 class Constants:
@@ -228,11 +233,17 @@ def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry)
         log_entry.increment(Metrics.PENDING_DUA_PAYMENT_REFERENCE_FILES_COUNT)
 
         try:
-            new_row_count = _load_dua_payment_from_reference_file(ref_file, archive_dir, db_session)
-            for _row in range(new_row_count):
-                log_entry.increment(Metrics.NEW_DUA_PAYMENT_ROW_COUNT)
+            new_row_count, total_row_count = _load_dua_payment_from_reference_file(
+                ref_file, archive_dir, db_session
+            )
+            log_entry.increment(Metrics.SUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT)
+            log_entry.increment(Metrics.NEW_DUA_PAYMENT_ROW_COUNT, new_row_count)
+            log_entry.increment(Metrics.TOTAL_DUA_PAYMENT_ROW_COUNT, total_row_count)
 
         except Exception:
+            # TODO: transition to an error state
+            log_entry.increment(Metrics.UNSUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT)
+
             # Log exceptions but continue attempting to load other payment files into the database.
             logger.exception(
                 "Failed to load new DUA payments to database from file",
@@ -245,12 +256,13 @@ def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry)
 
 def _load_dua_payment_from_reference_file(
     ref_file: ReferenceFile, archive_directory: str, db_session: db.Session,
-) -> int:
+) -> Tuple[int, int]:
     new_row_count = 0
+    total_row_count = 0
 
     # Load to database.
     with file_util.open_stream(ref_file.file_location) as f:
-        new_row_count = _load_new_rows_from_file(f, db_session)
+        new_row_count, total_row_count = _load_new_rows_from_file(f, db_session)
 
     # Move to archive directory and update ReferenceFile.
     filename = os.path.basename(ref_file.file_location)
@@ -268,7 +280,7 @@ def _load_dua_payment_from_reference_file(
     )
     db_session.commit()
 
-    return new_row_count
+    return new_row_count, total_row_count
 
 
 def _get_pending_dua_payment_reference_files(
@@ -309,10 +321,12 @@ def _get_matching_dua_reduction_payments(
     return query.all()
 
 
-def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> int:
+def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> Tuple[int, int]:
     new_row_count = 0
+    total_row_count = 0
 
     for row in csv.DictReader(file):
+        total_row_count += 1
         db_data = _convert_dict_with_csv_keys_to_db_keys(row)
         if len(_get_matching_dua_reduction_payments(db_data, db_session)) == 0:
             dua_reduction_payment = DuaReductionPayment(**db_data)
@@ -320,7 +334,7 @@ def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> int:
 
             new_row_count += 1
 
-    return new_row_count
+    return new_row_count, total_row_count
 
     # Commit these changes to the database after we've updated the ReferenceFile's file_location
     # in the calling code.
@@ -340,7 +354,7 @@ def _payment_list_has_been_downloaded_today(db_session: db.Session) -> bool:
     return num_files > 0
 
 
-def download_payment_list_from_moveit(db_session: db.Session) -> int:
+def download_payment_list_from_moveit(db_session: db.Session, log_entry: batch_log.LogEntry) -> int:
     s3_config = get_s3_config()
     moveit_config = get_moveit_config()
 
@@ -375,6 +389,7 @@ def download_payment_list_from_moveit(db_session: db.Session) -> int:
             extra={"reference_file_count": len(copied_reference_files)},
         )
 
+    log_entry.set_metrics({Metrics.DUA_PAYMENT_LISTS_DOWNLOADED_COUNT: len(copied_reference_files)})
     return len(copied_reference_files)
 
 
@@ -385,10 +400,7 @@ def download_payment_list_if_none_today(
     # Downloading payment lists from requires connecting to MoveIt. Wrap that call in this condition
     # so we only incur the overhead of that connection if we haven't retrieved a payment list today.
     if _payment_list_has_been_downloaded_today(db_session) is False:
-        dua_payment_lists_downloaded_count = download_payment_list_from_moveit(db_session)
-        log_entry.set_metrics(
-            {Metrics.DUA_PAYMENT_LISTS_DOWNLOADED_COUNT: dua_payment_lists_downloaded_count}
-        )
+        download_payment_list_from_moveit(db_session, log_entry)
 
 
 def _convert_cent_to_dollars(cent: str) -> Decimal:
@@ -503,7 +515,7 @@ def create_report_new_dua_payments_to_dfml(
     )
 
     log_entry.set_metrics(
-        {Metrics.REPORT_NEW_DUA_PAYMENTS_TO_DFML_ROW_COUNT: len(non_submitted_payments)}
+        {Metrics.REPORT_DUA_PAYMENTS_TO_DFML_ROW_COUNT: len(non_submitted_payments)}
     )
 
     # Upload info to s3
