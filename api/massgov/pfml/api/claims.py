@@ -1,5 +1,5 @@
 import base64
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import connexion
 import flask
@@ -123,6 +123,15 @@ def get_employer_log_attributes(app: connexion.FlaskApp) -> Dict[str, int]:
     return log_attributes
 
 
+def get_claim_log_attributes(claim: Claim) -> Dict[str, Any]:
+    if claim.claim_type:
+        claim_type_desc = claim.claim_type.claim_type_description
+    else:
+        claim_type_desc = None
+
+    return {"claim_type_description": claim_type_desc}
+
+
 @requires(READ, "EMPLOYER_API")
 def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     body = connexion.request.json
@@ -234,6 +243,9 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 claim_from_db.fineos_absence_status.absence_status_description
             )
 
+        if claim_from_db:
+            log_attributes.update(get_claim_log_attributes(claim_from_db))
+
         logger.info(
             "employer_get_claim_review success", extra={**log_attributes},
         )
@@ -259,6 +271,11 @@ def employer_get_claim_documents(fineos_absence_id: str) -> flask.Response:
     documents_list = [doc.dict() for doc in documents]
 
     log_attributes = get_employer_log_attributes(app)
+
+    claim = get_claim_from_db(fineos_absence_id)
+    if claim:
+        log_attributes.update(get_claim_log_attributes(claim))
+
     logger.info(
         "employer_get_claim_documents success", extra={**log_attributes},
     )
@@ -305,6 +322,10 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
 
     content_type = document_data.contentType or "application/octet-stream"
 
+    claim = get_claim_from_db(fineos_absence_id)
+    if claim:
+        log_attributes.update(get_claim_log_attributes(claim))
+
     logger.info(
         "employer_document_download success", extra={**log_attributes},
     )
@@ -342,12 +363,7 @@ def user_has_access_to_claim(claim: Claim) -> bool:
 
 
 def get_claim(fineos_absence_id: str) -> flask.Response:
-    with app.db_session() as db_session:
-        claim = (
-            db_session.query(Claim)
-            .filter(Claim.fineos_absence_id == fineos_absence_id)
-            .one_or_none()
-        )
+    claim = get_claim_from_db(fineos_absence_id)
 
     if claim is None:
         logger.warning("Claim not in database.")
@@ -369,6 +385,17 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
         data=ClaimResponse.from_orm(claim).dict(),
         status_code=200,
     ).to_api_response()
+
+
+def get_claim_from_db(fineos_absence_id: str) -> Optional[Claim]:
+    with app.db_session() as db_session:
+        claim = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .one_or_none()
+        )
+
+    return claim
 
 
 def get_claims() -> flask.Response:
