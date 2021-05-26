@@ -83,7 +83,8 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - Portal Claims Normal Traffic",
         project: "PFML",
-        threads: 6,
+        // threads: 6,
+        threads: 3, // use concurrency of 3 for test runs
         duration: seconds(60),
       },
       data: {
@@ -95,7 +96,8 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - SavilinxAgent",
         project: "PFML",
-        threads: 40,
+        // threads: 40,
+        threads: 3, // use a concurrency of 3 for test runs
         duration: seconds(45),
         rampup: seconds(3),
       },
@@ -109,7 +111,8 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - Portal Claims 1st Spike",
         project: "PFML",
-        threads: 20,
+        // threads: 20,
+        threads: 3, // use a concurrency of 3 for test runs
         duration: seconds(15),
       },
       data: {
@@ -122,7 +125,8 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - Portal Claims 2nd Spike",
         project: "PFML",
-        threads: 30,
+        // threads: 30,
+        threads: 3, // use a concurrency of 3 for test runs
         duration: seconds(15),
       },
       data: {
