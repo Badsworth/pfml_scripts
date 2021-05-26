@@ -455,7 +455,7 @@ jobs:
           TF_CLI_ARGS: ''
         run: |
           function_list=$(terraform state list | { grep step_functions || true; })
-          if ! [[ -z "$function_list" ]]; then
+          if ! [[ -z "$function_list" ]] && ! [[ -f "step_functions.tf" ]]; then
             echo "step functions managed by api -- delete"
             terraform plan -destroy -lock-timeout=120s \
             -target=module.api.aws_sfn_state_machine.dor_fineos_etl \
