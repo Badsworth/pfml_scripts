@@ -1544,10 +1544,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/EmployerBenefit"
+          maxItems: 10
         previous_leaves:
           type: array
           items:
             $ref: "#/components/schemas/PreviousLeave"
+          maxItems: 16
         has_amendments:
           type: boolean
         hours_worked_per_week:

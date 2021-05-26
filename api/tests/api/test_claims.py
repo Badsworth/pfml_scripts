@@ -840,6 +840,266 @@ class TestUpdateClaim:
         assert errors[0].get("type") == "minimum"
         assert errors[0].get("field") == "employer_benefits[0].benefit_end_date"
 
+    def test_employer_update_claim_review_validates_previous_leaves_length(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        base_request = {
+            "comment": "comment",
+            "employer_benefits": [
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-04-10",
+                    "benefit_start_date": "2021-03-16",
+                    "benefit_type": "Accrued paid leave",
+                }
+            ],
+            "employer_decision": "Approve",
+            "fraud": "Yes",
+            "has_amendments": False,
+            "hours_worked_per_week": 40,
+            # previous_leaves intentionally excluded
+        }
+
+        previous_leaves = [
+            {
+                "leave_end_date": "2020-10-04",
+                "leave_start_date": "2020-10-01",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2020-10-06",
+                "leave_start_date": "2020-10-05",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2020-10-15",
+                "leave_start_date": "2020-10-10",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2020-10-20",
+                "leave_start_date": "2020-10-16",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2020-10-30",
+                "leave_start_date": "2020-10-25",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2020-11-05",
+                "leave_start_date": "2020-11-01",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2020-11-10",
+                "leave_start_date": "2020-11-08",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2020-11-15",
+                "leave_start_date": "2020-11-11",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2020-12-01",
+                "leave_start_date": "2020-11-20",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2021-01-05",
+                "leave_start_date": "2020-12-06",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2021-01-15",
+                "leave_start_date": "2021-01-10",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2021-01-20",
+                "leave_start_date": "2021-01-16",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2021-01-30",
+                "leave_start_date": "2021-01-25",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2021-02-05",
+                "leave_start_date": "2021-02-01",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2021-02-10",
+                "leave_start_date": "2021-02-06",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2021-02-15",
+                "leave_start_date": "2021-02-11",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+            {
+                "leave_end_date": "2021-02-20",
+                "leave_start_date": "2021-02-16",
+                "leave_reason": "Pregnancy / Maternity",
+            },
+        ]
+
+        request_with_17_previous_leaves = {**base_request, "previous_leaves": previous_leaves}
+
+        response = client.patch(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=request_with_17_previous_leaves,
+        )
+
+        errors = response.get_json().get("errors")
+        assert response.status_code == 400
+        assert len(errors) == 1
+        assert errors[0].get("rule") == 16
+        assert errors[0].get("type") == "maxItems"
+        assert errors[0].get("field") == "previous_leaves"
+
+    def test_employer_update_claim_review_validates_employer_benefits_length(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        base_request = {
+            "comment": "comment",
+            # employer_benefits intentionally excluded
+            "employer_decision": "Approve",
+            "fraud": "Yes",
+            "has_amendments": False,
+            "hours_worked_per_week": 40,
+            "previous_leaves": [
+                {
+                    "leave_end_date": "2021-02-06",
+                    "leave_start_date": "2021-01-25",
+                    "leave_reason": "Pregnancy / Maternity",
+                }
+            ],
+        }
+
+        request_with_11_employer_benefits = {
+            **base_request,
+            "employer_benefits": [
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+            ],
+        }
+        response = client.patch(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=request_with_11_employer_benefits,
+        )
+
+        errors = response.get_json().get("errors")
+        assert response.status_code == 400
+        assert len(errors) == 1
+        assert errors[0].get("rule") == 10
+        assert errors[0].get("type") == "maxItems"
+        assert errors[0].get("field") == "employer_benefits"
+
     def test_employer_update_claim_review_validates_multiple_fields_at_once(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification
     ):
