@@ -51,7 +51,9 @@ These guidelines are meant to reinforce those two goals.
 
 ### For authors or requesters:
 
-- Include the JIRA ticket number in the title if it exists. For example: `PFML-123: Implement API endpoint`
+- Include the JIRA ticket number in the title. For example: `PFML-123: Implement API endpoint`. Every change should have an associated JIRA ticket unless it is a documentation change. A single JIRA ticket may be associated with multiple pull requests.
+
+- If it is a documentation change, please prefix with docs: `docs: Clean up CONTRIBUTING.md`.
 
 - Include a [GitHub label](https://github.com/EOLWD/pfml/labels) if relevant.
 These labels can be a helpful wayfinding and context building tool, especially for new engineers onboarding into the codebase.
@@ -111,20 +113,22 @@ The Portal engineering team [is configured](https://github.com/orgs/EOLWD/teams/
 so that PR reviews are automatically assigned to a member of the team via a round robin algorithm,
 with the goal of equally distributing PR reviews across the team.
 
-Since the Portal engineering team includes those working on either the Claimant Portal or Employer Portal, PR reviews are distributed between both groups. 
+Since the Portal engineering team includes those working on either the Claimant Portal or Employer Portal, PR reviews are distributed between both groups.
+
+The API team has configured code owners for slices of the codebase in [the CODEOWNERS file](../.github/CODEOWNERS). These code owners will be automatically assigned when the relevant code paths are edited.
 
 ## Pull Request Titles
 
 Please title Pull Requests in GitHub as "API-nnn: summary", "CP-nnn: summary", etc. For tickets that have subtasks, use the parent ticket's id in the title, and include the subtask in the PR description.
 When making a fix with no ticket, please use "API: summary" or "Portal: summary".
 
-This makes it easier to search for PRs and also links from JIRA tickets to GitHub PRs automatically.
+This makes it easier to search for PRs and also links JIRA tickets to GitHub PRs automatically.
 
 ## Merging a PR
 
 ### How to merge
 
-When merging a PR, use the PR description as a starting point. Copy it into the merge commit body and clean it up as desired.
+When merging a PR, use the PR description as a starting point. Copy it into the merge commit body and clean it up as desired. Please verify that the commit title includes the JIRA ticket.
 
 Example:
 

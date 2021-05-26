@@ -1,15 +1,15 @@
-PORTAL_PATHS := . ../infra/portal ../.github/workflows/portal-deploy.yml
+PORTAL_PATHS := . ../infra/portal
 release-notes: refs=origin/deploy/portal/stage..origin/main
 release-notes: ## Generate PORTAL release notes for $refs (defaults between stage and test)
 	@git log --pretty='format: * %s' $(refs) -- $(PORTAL_PATHS) | \
-	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
+	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD|PFMLPB)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
 	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
 
 release-list: refs=origin/deploy/portal/stage..origin/main
 release-list: ## Generate comma-separated list of ticket ids for $refs
 	@git log --pretty='format: * %s' $(refs) -- $(PORTAL_PATHS) | \
-	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+' | \
-	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
+	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD|PFMLPB)-[0-9]+' | \
+	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD|PFMLPB)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
 
 PORTAL_RELEASE_BRANCHES := $(addprefix origin/, main deploy/portal/stage deploy/portal/prod deploy/portal/performance deploy/portal/training deploy/portal/uat deploy/portal/breakfix deploy/portal/cps-preview)
 where-ticket: ## Search release branches for $ticket
