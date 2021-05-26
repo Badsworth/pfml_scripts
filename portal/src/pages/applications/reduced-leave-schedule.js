@@ -155,21 +155,30 @@ export const ReducedLeaveSchedule = (props) => {
         })}
       </Heading>
 
-      <Lead>
-        <Trans
-          i18nKey="pages.claimsReducedLeaveSchedule.lead"
-          tOptions={{
-            context:
-              claim.isMedicalLeave && isFeatureEnabled("updateMedicalCertForm")
-                ? "updateMedicalCertForm"
-                : contentContext,
-          }}
-        />
-      </Lead>
+      {!gatherMinutesAsWeeklyAverage && (
+        <Lead>
+          <Trans i18nKey="pages.claimsReducedLeaveSchedule.lead" />
+        </Lead>
+      )}
+
+      {(claim.isMedicalLeave || claim.isCaringLeave) && (
+        <Lead>
+          <Trans
+            i18nKey="pages.claimsReducedLeaveSchedule.leadCertGuidance"
+            tOptions={{
+              context:
+                claim.isMedicalLeave &&
+                isFeatureEnabled("updateMedicalCertForm")
+                  ? "updateMedicalCertForm"
+                  : contentContext,
+            }}
+          />
+        </Lead>
+      )}
 
       <Details label={t("pages.claimsReducedLeaveSchedule.workScheduleToggle")}>
         {gatherMinutesAsWeeklyAverage ? (
-          t("pages.claimsReview.workPatternVariableTime", {
+          t("pages.claimsReducedLeaveSchedule.workPatternVariableTime", {
             context:
               convertMinutesToHours(workPattern.minutesWorkedPerWeek)
                 .minutes === 0

@@ -37,42 +37,58 @@ const setup = (claimAttrs) => {
 };
 
 describe("ReducedLeaveSchedule", () => {
-  it("renders lead with expected content when leave reason is Medical", () => {
-    const claim = new MockBenefitsApplicationBuilder()
-      .medicalLeaveReason()
-      .reducedSchedule()
-      .variableWorkPattern()
-      .create();
-
-    const { wrapper } = setup(claim);
-    expect(wrapper.find("Lead").find("Trans").dive()).toMatchSnapshot();
-  });
-
-  it("renders lead with expected content when leave reason is Bonding", () => {
-    const claim = new MockBenefitsApplicationBuilder()
-      .bondingBirthLeaveReason()
-      .reducedSchedule()
-      .variableWorkPattern()
-      .create();
-
-    const { wrapper } = setup(claim);
-
-    expect(wrapper.find("Lead").find("Trans").dive()).toMatchSnapshot();
-  });
-
-  it("renders lead with expected content when leave reason is Caring", () => {
-    const claim = new MockBenefitsApplicationBuilder()
-      .caringLeaveReason()
-      .reducedSchedule()
-      .variableWorkPattern()
-      .create();
-
-    const { wrapper } = setup(claim);
-
-    expect(wrapper.find("Lead").find("Trans").dive()).toMatchSnapshot();
-  });
-
   describe("when work pattern is a fixed schedule", () => {
+    it("renders 2 leads with expected content when leave reason is Medical", () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .medicalLeaveReason()
+        .reducedSchedule()
+        .fixedWorkPattern()
+        .create();
+
+      const { wrapper } = setup(claim);
+      const leads = wrapper.find("Lead");
+
+      expect(leads).toHaveLength(2);
+
+      leads.forEach((lead) => {
+        expect(lead.find("Trans").dive()).toMatchSnapshot();
+      });
+    });
+
+    it("renders 1 lead with expected content when leave reason is Bonding", () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .bondingBirthLeaveReason()
+        .reducedSchedule()
+        .fixedWorkPattern()
+        .create();
+
+      const { wrapper } = setup(claim);
+      const leads = wrapper.find("Lead");
+
+      expect(leads).toHaveLength(1);
+
+      leads.forEach((lead) => {
+        expect(lead.find("Trans").dive()).toMatchSnapshot();
+      });
+    });
+
+    it("renders 2 leads with expected content when leave reason is Caring", () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .caringLeaveReason()
+        .reducedSchedule()
+        .fixedWorkPattern()
+        .create();
+
+      const { wrapper } = setup(claim);
+      const leads = wrapper.find("Lead");
+
+      expect(leads).toHaveLength(2);
+
+      leads.forEach((lead) => {
+        expect(lead.find("Trans").dive()).toMatchSnapshot();
+      });
+    });
+
     it("renders section label with expected content", () => {
       const { wrapper } = setup(fixedWorkPatternClaim);
 
@@ -169,6 +185,45 @@ describe("ReducedLeaveSchedule", () => {
   });
 
   describe("when work pattern is a variable schedule", () => {
+    it("only renders 1 lead when leave reason is Medical", () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .medicalLeaveReason()
+        .reducedSchedule()
+        .variableWorkPattern()
+        .create();
+
+      const { wrapper } = setup(claim);
+      const leads = wrapper.find("Lead");
+
+      expect(leads).toHaveLength(1);
+    });
+
+    it("renders 0 leads when leave reason is Bonding", () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .bondingBirthLeaveReason()
+        .reducedSchedule()
+        .variableWorkPattern()
+        .create();
+
+      const { wrapper } = setup(claim);
+      const leads = wrapper.find("Lead");
+
+      expect(leads).toHaveLength(0);
+    });
+
+    it("only renders 1 lead when leave reason is Caring", () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .caringLeaveReason()
+        .reducedSchedule()
+        .variableWorkPattern()
+        .create();
+
+      const { wrapper } = setup(claim);
+      const leads = wrapper.find("Lead");
+
+      expect(leads).toHaveLength(1);
+    });
+
     it("renders section label with expected content", () => {
       const { wrapper } = setup(variableScheduleClaim);
 
@@ -182,7 +237,7 @@ describe("ReducedLeaveSchedule", () => {
         <Details
           label="View your work schedule"
         >
-          40h
+          40h per week
         </Details>
       `);
     });

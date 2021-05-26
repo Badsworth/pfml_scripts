@@ -1433,19 +1433,22 @@ const pages = {
     inputHoursLabel_Tuesday: "Tuesday time off",
     inputHoursLabel_Wednesday: "Wednesday time off",
     inputHoursLabel_weekly: "Hours off per week",
-    lead_bonding: "Enter 0 for days you won’t work a reduced schedule.",
-    lead_care:
-      "Enter 0 for days you won’t work a reduced schedule.<br /><br />The total number of hours you enter must match Question 27 in the $t(shared.certificationFormCare).",
-    lead_medical:
-      "Enter 0 for days you won’t work a reduced schedule.<br /><br />The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormMedical).",
-    lead_updateMedicalCertForm:
-      "Enter 0 for days you won’t work a reduced schedule.<br /><br />The total number of hours you enter must match Question 19 in the $t(shared.certificationFormMedical).",
+    lead: "Enter 0 for days you won’t work a reduced schedule.",
+    leadCertGuidance_care:
+      "The total number of hours you enter must match Question 27 in the $t(shared.certificationFormCare).",
+    leadCertGuidance_medical:
+      "The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormMedical).",
+    leadCertGuidance_updateMedicalCertForm:
+      "The total number of hours you enter must match Question 19 in the $t(shared.certificationFormMedical).",
     minutesLabel: "$t(shared.minutesLabel)",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
     needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
     sectionLabel:
       "How many hours will you take off while you are on a reduced leave schedule?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
+    workPatternVariableTime: "$t(shared.displayTime) per week",
+    workPatternVariableTime_noMinutes:
+      "$t(shared.displayTime_noMinutes) per week",
     workScheduleToggle: "View your work schedule",
   },
   claimsReview: {
