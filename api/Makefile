@@ -229,7 +229,8 @@ init-db: ## Initialize local DB
 init-db: start-db db-upgrade db-create-users
 
 jwks.json: ## Generate a local JSON Web Key Set to use for local API Authentication
-	$(PY_RUN_CMD) python3 -W ignore bin/create-jwks.py > $@
+	$(PY_RUN_CMD) python3 -W ignore bin/create-jwks.py
+	$(PY_RUN_CMD) python3 -W ignore -m json.tool $@ > /dev/null 2>&1 || (echo "$@ is not valid JSON" && exit 1)
 
 jwt: ## Generate a JSON Web Token for $auth_id signed by locally generated JWKS
 jwt: jwks.json

@@ -13,4 +13,4 @@ raw_key = key.to_dict()
 
 full_key = {**raw_key, **{"kid": str(uuid.uuid4()), "use": "sig"}}
 
-print(json.dumps({"keys": [full_key]}, sort_keys=True, indent=4))
+json.dump({"keys": [full_key]}, open("jwks.json", "w"), sort_keys=True, indent=4)
