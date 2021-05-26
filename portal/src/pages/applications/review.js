@@ -4,6 +4,7 @@ import {
 } from "../../models/PaymentPreference";
 import BenefitsApplication, {
   EmploymentStatus,
+  Gender,
   PhoneType,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
@@ -22,6 +23,7 @@ import OtherIncome, {
 } from "../../models/OtherIncome";
 import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get, isUndefined } from "lodash";
+
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
@@ -86,7 +88,8 @@ export const Review = (props) => {
 
   const certificationDocuments = findDocumentsByLeaveReason(
     documents,
-    get(claim, "leave_details.reason")
+    get(claim, "leave_details.reason"),
+    get(claim, "leave_details.pregnant_or_recent_birth")
   );
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
@@ -99,6 +102,7 @@ export const Review = (props) => {
     get(claim, "leave_details.reduced_schedule_leave_periods[0]")
   );
   const workPattern = new WorkPattern(get(claim, "work_pattern"));
+  const gender = get(claim, "gender");
 
   const steps = Step.createClaimStepsFromMachine(
     claimantConfigs,
@@ -188,6 +192,17 @@ export const Review = (props) => {
           get(claim, "last_name"),
         ].join(" ")}
       </ReviewRow>
+
+      {gender && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.userGenderLabel")}
+        >
+          {t("pages.claimsReview.genderValue", {
+            context: findKeyByValue(Gender, gender),
+          })}
+        </ReviewRow>
+      )}
 
       <ReviewRow
         level={reviewRowLevel}

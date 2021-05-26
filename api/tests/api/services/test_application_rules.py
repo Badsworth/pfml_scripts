@@ -2160,23 +2160,23 @@ def test_previous_leave_missing_fields():
     assert [
         Issue(
             type=IssueType.required,
-            message="previous_leaves[0].leave_start_date is required",
-            field="previous_leaves[0].leave_start_date",
+            message="previous_leaves_other_reason[0].leave_start_date is required",
+            field="previous_leaves_other_reason[0].leave_start_date",
         ),
         Issue(
             type=IssueType.required,
-            message="previous_leaves[0].leave_end_date is required",
-            field="previous_leaves[0].leave_end_date",
+            message="previous_leaves_other_reason[0].leave_end_date is required",
+            field="previous_leaves_other_reason[0].leave_end_date",
         ),
         Issue(
             type=IssueType.required,
-            message="previous_leaves[0].is_for_current_employer is required",
-            field="previous_leaves[0].is_for_current_employer",
+            message="previous_leaves_other_reason[0].is_for_current_employer is required",
+            field="previous_leaves_other_reason[0].is_for_current_employer",
         ),
         Issue(
             type=IssueType.required,
-            message="previous_leaves[0].leave_reason is required",
-            field="previous_leaves[0].leave_reason",
+            message="previous_leaves_other_reason[0].leave_reason is required",
+            field="previous_leaves_other_reason[0].leave_reason",
         ),
     ] == issues
 
@@ -2194,8 +2194,8 @@ def test_previous_leave_start_date_must_be_after_2020():
     assert [
         Issue(
             type=IssueType.minimum,
-            message="previous_leaves[0].leave_start_date cannot be earlier than 2021-01-01",
-            field="previous_leaves[0].leave_start_date",
+            message="previous_leaves_same_reason[0].leave_start_date cannot be earlier than 2021-01-01",
+            field="previous_leaves_same_reason[0].leave_start_date",
         ),
     ] == issues
 
@@ -2213,8 +2213,8 @@ def test_previous_leave_end_date_must_be_after_2020():
     assert [
         Issue(
             type=IssueType.minimum,
-            message="previous_leaves[0].leave_end_date cannot be earlier than 2021-01-01",
-            field="previous_leaves[0].leave_end_date",
+            message="previous_leaves_other_reason[0].leave_end_date cannot be earlier than 2021-01-01",
+            field="previous_leaves_other_reason[0].leave_end_date",
         ),
     ] == issues
 
@@ -2234,7 +2234,7 @@ def test_previous_leave_end_date_must_be_after_start_date():
     assert [
         Issue(
             type=IssueType.invalid_date_range,
-            message="previous_leaves[0].leave_end_date cannot be earlier than previous_leaves[0].leave_start_date",
-            field="previous_leaves[0].leave_end_date",
+            message="previous_leaves_same_reason[0].leave_end_date cannot be earlier than previous_leaves_same_reason[0].leave_start_date",
+            field="previous_leaves_same_reason[0].leave_end_date",
         ),
     ] == issues

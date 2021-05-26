@@ -44,7 +44,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
           submission.fineos_absence_id,
           "--"
         );
-        portal.vistActionRequiredERFormPage(submission.fineos_absence_id);
+        portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, true);
       });
     });

@@ -24,6 +24,7 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../src/models/OtherIncome";
+
 import Address from "../../src/models/Address";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import LeaveReason from "../../src/models/LeaveReason";
@@ -633,6 +634,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
     set(this.claimAttrs, "first_name", "Jane");
     set(this.claimAttrs, "middle_name", middleName || "");
     set(this.claimAttrs, "last_name", "Doe");
+    set(this.claimAttrs, "gender", "Woman");
     set(this.claimAttrs, "phone", {
       phone_number: "123-456-****",
       phone_type: PhoneType.cell,

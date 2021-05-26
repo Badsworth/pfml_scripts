@@ -4,7 +4,11 @@
  * @see https://jestjs.io/docs/en/manual-mocks#mocking-user-modules
  * @example jest.mock("../api/UsersApi")
  */
-import User from "../../models/User";
+import User, {
+  RoleDescription,
+  UserLeaveAdministrator,
+  UserRole,
+} from "../../models/User";
 
 const createMockUser = () =>
   new User({
@@ -13,6 +17,21 @@ const createMockUser = () =>
     email_address: "mock-user@example.com",
     user_id: "api-123",
   });
+
+const createMockEmployer = () => {
+  const user = createMockUser();
+  user.roles.push(new UserRole({ role_description: RoleDescription.employer }));
+  user.user_leave_administrators.push(
+    new UserLeaveAdministrator({
+      employer_dba: "Test Company",
+      employer_fein: "1298391823",
+      employer_id: "dda903f-f093f-ff900",
+      has_verification_data: true,
+      verified: true,
+    })
+  );
+  return user;
+};
 
 export const mockCreateUser = jest.fn(() =>
   Promise.resolve({
@@ -35,8 +54,16 @@ export const mockUpdateUser = jest.fn(() =>
   })
 );
 
+export const mockConvertUser = jest.fn(() =>
+  Promise.resolve({
+    success: true,
+    user: createMockEmployer(),
+  })
+);
+
 export default jest.fn().mockImplementation(() => ({
   createUser: mockCreateUser,
   getCurrentUser: mockGetCurrentUser,
   updateUser: mockUpdateUser,
+  convertUser: mockConvertUser,
 }));

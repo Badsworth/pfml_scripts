@@ -28,6 +28,7 @@ const routes = {
     familyMemberDateOfBirth: "/applications/family-member-date-of-birth",
     familyMemberName: "/applications/family-member-name",
     familyMemberRelationship: "/applications/family-member-relationship",
+    gender: "/applications/gender",
     getReady: "/applications/get-ready",
     index: "/applications",
     intermittentFrequency: "/applications/intermittent-frequency",
@@ -163,6 +164,7 @@ const routes = {
   index: "/",
   user: {
     consentToDataSharing: "/user/consent-to-data-sharing",
+    convert: "/user/convert-to-employer",
   },
 };
 

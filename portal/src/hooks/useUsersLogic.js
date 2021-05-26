@@ -5,6 +5,7 @@ import {
 } from "../errors";
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
+
 import UsersApi from "../api/UsersApi";
 import tracker from "../services/tracker";
 
@@ -114,7 +115,29 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     }
   };
 
+  /**
+   * Convert user role through a POST request to /users/{user_id}/convert_employer
+   * @param {string} user_id - ID of user being converted
+   * @param {object} postData - User fields to update - role and leave admin
+   */
+  const convertUser = async (user_id, postData) => {
+    appErrorsLogic.clearErrors();
+
+    try {
+      const { user } = await usersApi.convertUser(user_id, postData);
+
+      setUser(user);
+
+      portalFlow.goTo(routes.employers.organizations, {
+        account_converted: true,
+      });
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
   return {
+    convertUser,
     user,
     updateUser,
     loadUser,

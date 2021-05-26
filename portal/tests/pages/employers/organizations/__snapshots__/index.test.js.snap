@@ -73,3 +73,12 @@ exports[`Index renders the page 1`] = `
   </Table>
 </Fragment>
 `;
+
+exports[`Index when "account_converted" query parameter is enabled shows a success message telling the user they are now a leave admin 1`] = `
+<Alert
+  heading="Success"
+  state="success"
+>
+  Your account type is now converted.
+</Alert>
+`;

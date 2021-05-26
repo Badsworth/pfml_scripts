@@ -475,6 +475,7 @@ export function markEvidence(
 export function fillAbsencePeriod(claimNumber: string): void {
   assertAdjudicatingClaim(claimNumber);
   onTab("Evidence");
+  cy.wait(2000);
   onTab("Certification Periods");
   cy.get("input[value='Prefill with Requested Absence Periods']").click();
   cy.get("#PopupContainer input[value='Yes']").click();
@@ -642,42 +643,25 @@ export function submitIntermittentActualHours(
 
 export function mailedDocumentMarkEvidenceRecieved(
   claimNumber: string,
-  reason: LeaveReason,
-  uploadedIDProof = true,
-  approveDocs = true
+  reason: LeaveReason
 ): void {
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
   onTab("Documents");
-  if (uploadedIDProof) {
-    assertHasDocument("Identification Proof");
-  } else {
-    uploadDocument("MA_ID", "Identification proof");
-  }
+  assertHasDocument("Identification Proof");
   const documentType = getCertificationDocumentType(
     reason,
     config("HAS_FINEOS_SP") === "true"
   );
-  cy.wait(150);
   uploadDocument("HCP", documentType);
   onTab("Documents");
   assertHasDocument(documentType);
   onTab("Absence Hub");
-
-  // cy.get('input[type="submit"][value="Adjudicate"]').click();
-  // const evidenceDecision = approveDocs ? "Satisfied" : "Not Satisfied";
-  // const evidenceReason = !approveDocs
-  //   ? "Evidence has been reviewed and denied"
-  //   : undefined;
-  // markEvidence(documentType, undefined, evidenceDecision, evidenceReason);
-  // markEvidence(
-  //   "Identification Proof",
-  //   undefined,
-  //   evidenceDecision,
-  //   evidenceReason
-  // );
-  // checkStatus(claimNumber, "Evidence", evidenceDecision);
-  // clickBottomWidgetButton();
+  cy.get('input[type="submit"][value="Adjudicate"]').click();
+  markEvidence(documentType);
+  markEvidence("Identification Proof");
+  checkStatus(claimNumber, "Evidence", "Satisfied");
+  clickBottomWidgetButton();
 }
 
 export function reviewMailedDocumentsWithTasks(
@@ -731,7 +715,7 @@ export function reviewMailedDocumentsWithTasks(
 
 export function openDocTasks(): void {
   openTask("ID Review");
-  // replaace Caring with argument of Leave Type
+  // replace Caring with argument of Leave Type
   openTask("Caring Certification Review");
 }
 
@@ -758,6 +742,14 @@ export function closeTask(task: string): void {
   cy.get('input[type="submit"][value="Close"]').click();
   cy.wait(150);
 }
+export function claimExtensionAdjudicationFlow(claimNumber: string): void {
+  visitClaim(claimNumber);
+  cy.get("input[type='submit'][value='Adjudicate']").click();
+  markEvidence("State managed Paid Leave Confirmation");
+  markEvidence("Identification Proof");
+  checkStatus(claimNumber, "Evidence", "Satisfied");
+}
+
 export function checkHoursWorkedPerWeek(
   claimNumber: string,
   hours_worked_per_week: number
@@ -778,6 +770,66 @@ export function checkHoursWorkedPerWeek(
       .equal(String(hours_worked_per_week));
   });
   clickBottomWidgetButton("OK");
+}
+
+export function claimAddTimeAfterApproval(
+  claimNumber: string,
+  endDate: Date
+): void {
+  // Adds a leave extension/transition to a claim.
+  // This is not the same as updating a claim to adjust the time.
+  const newStartDateFormatted = format(
+    addDays(new Date(endDate), 1),
+    "MM/dd/yyyy"
+  );
+  const newEndDateFormatted = format(
+    addDays(new Date(endDate), 8),
+    "MM/dd/yyyy"
+  );
+
+  visitClaim(claimNumber);
+  onTab("Absence Hub");
+
+  cy.get("a[title='Register a Leave Extension or Transition']").click({
+    force: true,
+    timeout: 30000,
+  });
+
+  onTab("Capture Additional Time");
+  cy.get(".header-title").contains("Capture Additional Time");
+  cy.wait(500);
+  cy.wait("@ajaxRender");
+
+  // This assumes the claim is continuos
+  cy.get("input[title='Add Time Off Period']").click();
+  cy.wait(500);
+  cy.wait("@ajaxRender");
+  cy.labelled("Absence status").select("Known");
+  cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un19_startDate']").type(
+    `{selectall}{backspace}${newStartDateFormatted}{enter}`
+  );
+  cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un19_endDate']").type(
+    `{selectall}{backspace}${newEndDateFormatted}{enter}`
+  );
+
+  cy.get(
+    "input[name='timeOffAbsencePeriodDetailsWidget_un19_startDateAllDay_CHECKBOX']"
+  ).click();
+  cy.get(
+    "input[name='timeOffAbsencePeriodDetailsWidget_un19_endDateAllDay_CHECKBOX']"
+  ).click();
+  cy.get("input[title='OK']").click();
+
+  clickBottomWidgetButton("Next");
+  cy.wait(500);
+  clickBottomWidgetButton("Next");
+  cy.wait(500);
+  clickBottomWidgetButton("Next");
+  cy.wait(500);
+  clickBottomWidgetButton("Next");
+  cy.wait(500);
+  clickBottomWidgetButton("OK");
+  cy.wait(1000);
 }
 
 export function addBondingLeaveFlow(timeStamp: Date): void {

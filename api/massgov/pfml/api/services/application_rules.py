@@ -324,7 +324,7 @@ def get_previous_leaves_other_reason_issues(application: Application) -> List[Is
         )
     else:
         for index, leave in enumerate(application.previous_leaves_other_reason, 0):
-            issues += get_previous_leave_issues(leave, index)
+            issues += get_previous_leave_issues(leave, f"previous_leaves_other_reason[{index}]")
 
     return issues
 
@@ -346,13 +346,12 @@ def get_previous_leaves_same_reason_issues(application: Application) -> List[Iss
         )
     else:
         for index, leave in enumerate(application.previous_leaves_same_reason, 0):
-            issues += get_previous_leave_issues(leave, index)
+            issues += get_previous_leave_issues(leave, f"previous_leaves_same_reason[{index}]")
 
     return issues
 
 
-def get_previous_leave_issues(leave: PreviousLeave, index: int) -> List[Issue]:
-    leave_path = f"previous_leaves[{index}]"
+def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Issue]:
     issues = []
 
     required_fields = [
@@ -508,6 +507,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
 
     issues += get_previous_leaves_other_reason_issues(application)
     issues += get_previous_leaves_same_reason_issues(application)
+
     issues += get_concurrent_leave_issues(application)
 
     if require_other_leaves_fields:

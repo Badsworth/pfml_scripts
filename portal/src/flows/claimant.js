@@ -15,6 +15,7 @@ import {
   EmploymentStatus,
   WorkPatternType,
 } from "../models/BenefitsApplication";
+
 import { ClaimSteps } from "../models/Step";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as concurrentLeavesDetailsFields } from "../pages/applications/concurrent-leaves-details";
@@ -27,6 +28,7 @@ import { fields as employmentStatusFields } from "../pages/applications/employme
 import { fields as familyMemberDateOfBirthFields } from "../pages/applications/family-member-date-of-birth";
 import { fields as familyMemberNameFields } from "../pages/applications/family-member-name";
 import { fields as familyMemberRelationshipFields } from "../pages/applications/family-member-relationship";
+import { fields as genderFields } from "../pages/applications/gender";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
@@ -100,12 +102,28 @@ export default {
         CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
         START_APPLICATION: routes.applications.start,
         SHOW_APPLICATIONS: routes.applications.index,
+        /* We need this to trigger test coverage on
+         * the routes.user.convert page, which is
+         * otherwise isolated.
+         */
+        CONVERT_EMPLOYER: routes.user.convert,
       },
     },
     [routes.applications.start]: {
       meta: {},
       on: {
         CREATE_CLAIM: routes.applications.checklist,
+      },
+    },
+    [routes.user.convert]: {
+      meta: {},
+      on: {
+        PREVENT_CONVERSION: routes.applications.getReady,
+        /* We cannot move between 2 different flows due to
+         * claimant test only using claimant state, therefore,
+         * we have no access to redirect to employer pages
+         */
+        // CONTINUE: routes.employers.organizations,
       },
     },
     [routes.user.consentToDataSharing]: {
@@ -147,6 +165,15 @@ export default {
       meta: {
         step: ClaimSteps.verifyId,
         fields: nameFields,
+      },
+      on: {
+        CONTINUE: routes.applications.gender,
+      },
+    },
+    [routes.applications.gender]: {
+      meta: {
+        step: ClaimSteps.verifyId,
+        fields: genderFields,
       },
       on: {
         CONTINUE: routes.applications.phoneNumber,

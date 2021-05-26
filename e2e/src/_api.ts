@@ -715,6 +715,7 @@ export interface ApplicationResponse {
   occupation?:
     | ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care")
     | null;
+  gender?: ("Woman" | "Man" | "Non-binary" | "Gender not listed" | "Prefer not to answer") | null;
   hours_worked_per_week?: number | null;
   leave_details?: ApplicationLeaveDetails | null;
   payment_preference?: PaymentPreference[] | null;
@@ -770,6 +771,7 @@ export interface ApplicationRequestBody {
   occupation?:
     | ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care")
     | null;
+  gender?: ("Woman" | "Man" | "Non-binary" | "Gender not listed" | "Prefer not to answer") | null;
   leave_details?: ApplicationLeaveDetails;
   work_pattern?: WorkPattern | null;
   employer_benefits?: EmployerBenefit[] | null;

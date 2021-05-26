@@ -80,6 +80,13 @@ const flagsConfig = {
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
+  "cps-preview": {
+    claimantAuthThroughApi: true,
+    employerAuthThroughApi: true,
+    employerShowAddOrganization: true,
+    employerShowSelfRegistrationForm: true,
+    employerShowVerifications: true,
+  },
   development: {
     example: true,
     claimantAuthThroughApi: true,

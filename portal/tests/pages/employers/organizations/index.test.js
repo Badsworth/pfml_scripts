@@ -12,12 +12,14 @@ jest.mock("../../../../src/hooks/useAppLogic");
 describe("Index", () => {
   let appLogic, wrapper;
 
+  const query = {};
+
   const renderPage = () => {
     testHook(() => {
       appLogic = useAppLogic();
     });
 
-    wrapper = shallow(<Index appLogic={appLogic} />).dive();
+    wrapper = shallow(<Index appLogic={appLogic} query={query} />).dive();
   };
 
   beforeEach(() => {
@@ -202,6 +204,15 @@ describe("Index", () => {
         expect(verifiedRow.find("a").exists()).toBe(false);
         expect(verificationBlockedRow.find("a").exists()).toBe(false);
       });
+    });
+  });
+
+  describe('when "account_converted" query parameter is enabled', () => {
+    it("shows a success message telling the user they are now a leave admin", () => {
+      wrapper = shallow(
+        <Index appLogic={appLogic} query={{ account_converted: "true" }} />
+      ).dive();
+      expect(wrapper.find("Alert")).toMatchSnapshot();
     });
   });
 
