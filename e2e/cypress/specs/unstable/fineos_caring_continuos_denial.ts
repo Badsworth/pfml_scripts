@@ -47,14 +47,12 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
               false,
               true
             );
-            // fineos.denyClaim("Evidence documents fail requirements");
-            // fineos.triggerNoticeRelease("Denial Notice");
           });
       });
     }
   );
 
-  it("Leave admin will submit ER approval for employee", () => {
+  const employerDenial = it("Leave admin will submit ER approval for employee", () => {
     cy.dependsOnPreviousPass([fineosSubmission]);
     portal.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
@@ -63,14 +61,14 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
           getLeaveAdminCredentials(claim.claim.employer_fein as string)
         );
         portal.selectClaimFromEmployerDashboard(fineos_absence_id, "--");
-        portal.vistActionRequiredERFormPage(fineos_absence_id);
+        portal.visitActionRequiredERFormPage(fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, false, true);
       });
     });
   });
 
   it("CSR rep will deny claim", { baseUrl: getFineosBaseUrl() }, () => {
-    cy.dependsOnPreviousPass([fineosSubmission]);
+    cy.dependsOnPreviousPass([fineosSubmission, employerDenial]);
     fineos.before();
     cy.visit("/");
     cy.unstash<string>("fineos_absence_id").then((fineos_absence_id) => {
