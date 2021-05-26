@@ -138,6 +138,18 @@ export const MHAP1: ScenarioSpecification = {
   },
 };
 
+export const MHAP1ER: ScenarioSpecification = {
+  ...MHAP1,
+  claim: {
+    ...MHAP1.claim,
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+  },
+};
+
 export const MHAP4: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {

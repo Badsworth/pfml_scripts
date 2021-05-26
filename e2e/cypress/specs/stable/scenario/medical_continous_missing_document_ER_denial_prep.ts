@@ -82,7 +82,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
         portal.login(
           getLeaveAdminCredentials(claim.claim.employer_fein as string)
         );
-        portal.vistActionRequiredERFormPage(submission.fineos_absence_id);
+        portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         portal.checkHoursPerWeekLeaveAdmin(
           claim.claim.hours_worked_per_week as number
         );

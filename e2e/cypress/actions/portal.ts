@@ -882,7 +882,7 @@ export function checkHoursPerWeekLeaveAdmin(hwpw: number): void {
   });
 }
 
-export function vistActionRequiredERFormPage(fineosAbsenceId: string): void {
+export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   cy.visit(
     `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
   );
