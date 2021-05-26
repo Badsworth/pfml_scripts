@@ -6,7 +6,6 @@ import {
 } from "../../src/util/documents";
 import { LeaveReason } from "../../src/types";
 import { config } from "./common";
-import Claim, { GeneratedClaim } from "generation/Claim";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
@@ -659,6 +658,7 @@ export function mailedDocumentMarkEvidenceRecieved(
     reason,
     config("HAS_FINEOS_SP") === "true"
   );
+  cy.wait(150);
   uploadDocument("HCP", documentType);
   onTab("Documents");
   assertHasDocument(documentType);
@@ -700,12 +700,13 @@ export function reviewMailedDocumentsWithTasks(
     reason,
     config("HAS_FINEOS_SP") === "true"
   );
+  cy.wait(150);
   uploadDocument("HCP", documentType);
   onTab("Documents");
+  cy.wait(150);
   assertHasDocument(documentType);
   onTab("Absence Hub");
   openDocTasks();
-  // cy.wait(80000000);
   onTab("Absence Hub");
   cy.get('input[type="submit"][value="Adjudicate"]').click();
   const evidenceDecision = approveDocs ? "Satisfied" : "Not Satisfied";
@@ -713,6 +714,7 @@ export function reviewMailedDocumentsWithTasks(
     ? "Evidence has been reviewed and denied"
     : undefined;
   markEvidence(documentType, undefined, evidenceDecision, evidenceReason);
+  cy.wait(150);
   markEvidence(
     "Identification Proof",
     undefined,
@@ -738,8 +740,8 @@ export function openTask(taskName: string): void {
   cy.get('input[type="submit"][value="Add"]').click({ force: true });
   cy.get('span[id="NameSearchWidget"]').within(() => {
     cy.get('input[type="text"]').type(taskName);
-    cy.wait("@ajaxRender");
     cy.contains("input", "Find").click();
+    cy.wait("@ajaxRender");
     cy.wait(250);
   });
   cy.get('span[id="footerButtonsBar"]').within(() => {
@@ -750,6 +752,7 @@ export function openTask(taskName: string): void {
 export function closeTask(task: string): void {
   onTab("Tasks");
   cy.wait("@ajaxRender");
+  cy.wait(150);
   cy.get(`td[title="${task}"]`).click();
   cy.wait(150);
   cy.get('input[type="submit"][value="Close"]').click();

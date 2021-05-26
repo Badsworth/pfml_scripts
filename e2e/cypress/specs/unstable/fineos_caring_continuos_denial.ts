@@ -12,6 +12,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
       fineos.before();
       cy.visit("/");
       cy.task("generateClaim", "CDENY2").then((claim) => {
+        cy.stash("claim", claim);
         if (
           !claim.claim.first_name ||
           !claim.claim.last_name ||
@@ -35,16 +36,11 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
           .invoke("text")
           .then((text) => {
             const fineos_absence_id = text.slice(24);
+            cy.stash("fineos_absence_id", fineos_absence_id);
             cy.log(fineos_absence_id);
             const reason = claim.claim.leave_details?.reason;
             fineos.visitClaim(fineos_absence_id);
             fineos.assertClaimStatus("Adjudication");
-            // fineos.mailedDocumentMarkEvidenceRecieved(
-            //   fineos_absence_id,
-            //   reason as LeaveReason,
-            //   false,
-            //   true
-            // );
             fineos.reviewMailedDocumentsWithTasks(
               fineos_absence_id,
               reason as LeaveReason,
@@ -62,17 +58,24 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     cy.dependsOnPreviousPass([fineosSubmission]);
     portal.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
+      cy.unstash<string>("fineos_absence_id").then((fineos_absence_id) => {
         portal.login(
           getLeaveAdminCredentials(claim.claim.employer_fein as string)
         );
-        portal.selectClaimFromEmployerDashboard(
-          submission.fineos_absence_id,
-          "--"
-        );
-        portal.vistActionRequiredERFormPage(submission.fineos_absence_id);
+        portal.selectClaimFromEmployerDashboard(fineos_absence_id, "--");
+        portal.vistActionRequiredERFormPage(fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, false, true);
       });
+    });
+  });
+
+  it("CSR rep will deny claim", { baseUrl: getFineosBaseUrl() }, () => {
+    cy.dependsOnPreviousPass([fineosSubmission]);
+    fineos.before();
+    cy.visit("/");
+    cy.unstash<string>("fineos_absence_id").then((fineos_absence_id) => {
+      fineos.visitClaim(fineos_absence_id);
+      fineos.denyClaim("Claimant wages failed 30x rule");
     });
   });
 });
