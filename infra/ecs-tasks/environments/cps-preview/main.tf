@@ -1,3 +1,6 @@
+locals {
+  environment_name = "cps-preview"
+}
 provider "aws" {
   region = "us-east-1"
 }
@@ -88,4 +91,7 @@ module "tasks" {
   enable_register_admins_job         = true
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
+
+  dor_fineos_etl_definition          = local.dor_fineos_etl_definition
+  dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 }

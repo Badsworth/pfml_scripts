@@ -94,7 +94,4 @@ module "api" {
   fineos_client_oauth2_client_id = ""
 
   service_now_base_url = "https://savilinxstage.servicenowservices.com"
-
-  # dor_fineos_etl_definition                        = local.dor_fineos_etl_definition
-  # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 }

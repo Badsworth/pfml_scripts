@@ -78,7 +78,5 @@ module "api" {
   fineos_aws_iam_role_arn                             = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
   fineos_aws_iam_role_external_id                     = "8jFBtjr4UA@"
   enable_application_fraud_check                      = "0"
-  dor_fineos_etl_definition                           = local.dor_fineos_etl_definition
-  dor_fineos_etl_schedule_expression                  = "cron(30 0 * * ? *)" # Daily at 00:30 UTC [19:30 EST] [20:30 EDT]
   release_version                                     = var.release_version
 }

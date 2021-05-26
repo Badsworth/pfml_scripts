@@ -136,7 +136,23 @@ variable "fineos_payment_max_history_date" {
   type        = string
   default     = ""
 }
+variable "dor_fineos_etl_definition" {
+  description = "Step function definition for DOR FINEOS ETL"
+  type        = string
+  default     = <<-END
+    {
+      "StartAt": "nothing",
+      "States": {"nothing": {"Type": "Pass", "End": true}}
+    }
+    END
+}
 
+variable "dor_fineos_etl_schedule_expression" {
+  # Daily at 04:30 UTC [12:30 EST] [13:30 EDT]
+  description = "EventBridge schedule for DOR FINEOS ETL"
+  type        = string
+  default     = "cron(30 4 * * ? *)"
+}
 variable "pfml_ctr_inbound_path" {
   description = "PFML API stores a copy of all files that CTR/MMARS generates for us"
   type        = string

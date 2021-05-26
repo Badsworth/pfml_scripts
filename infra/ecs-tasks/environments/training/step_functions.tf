@@ -5,6 +5,11 @@
 #
 # State machine for daily DOR FINEOS ETL.
 #
+
+data "aws_ecs_cluster" "training" {
+  cluster_name = "training"
+}
+
 locals {
   dor_fineos_etl_definition = templatefile("${path.module}/step_function/dor_fineos_etl.json",
     {
@@ -14,7 +19,7 @@ locals {
       security_group        = data.aws_security_group.tasks.id
       subnet_1              = tolist(data.aws_subnet_ids.vpc_app.ids)[0]
       subnet_2              = tolist(data.aws_subnet_ids.vpc_app.ids)[1]
-      sns_failure_topic_arn = data.aws_sns_topic.task_failure.arn
+      sns_failure_topic_arn = "arn:aws:sns:us-east-1:498823821309:mass-pfml-training-task-failure"
 
       task_failure_notification_enabled = true
   })

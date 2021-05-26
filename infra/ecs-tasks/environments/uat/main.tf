@@ -1,3 +1,6 @@
+locals {
+  environment_name = "uat"
+}
 provider "aws" {
   region = "us-east-1"
 }
@@ -52,4 +55,7 @@ module "tasks" {
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
+
+  dor_fineos_etl_definition          = local.dor_fineos_etl_definition
+  dor_fineos_etl_schedule_expression = "cron(30 0 * * ? *)" # Daily at 00:30 UTC [19:30 EST] [20:30 EDT]
 }
