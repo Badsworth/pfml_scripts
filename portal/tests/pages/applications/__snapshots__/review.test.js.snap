@@ -112,6 +112,12 @@ exports[`Final Review Page when the claim is complete renders Review page with f
     Jane  Doe
   </ReviewRow>
   <ReviewRow
+    label="Gender Identity"
+    level="3"
+  >
+    Woman
+  </ReviewRow>
+  <ReviewRow
     label="Phone number"
     level="3"
   >
@@ -356,6 +362,12 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
     level="4"
   >
     Jane  Doe
+  </ReviewRow>
+  <ReviewRow
+    label="Gender Identity"
+    level="4"
+  >
+    Woman
   </ReviewRow>
   <ReviewRow
     label="Phone number"
@@ -640,6 +652,12 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     level="4"
   >
     Jane  Doe
+  </ReviewRow>
+  <ReviewRow
+    label="Gender Identity"
+    level="4"
+  >
+    Woman
   </ReviewRow>
   <ReviewRow
     label="Phone number"

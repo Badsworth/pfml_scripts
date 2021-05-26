@@ -24,7 +24,12 @@ export const QuestionPage = (props) => {
   return (
     <React.Fragment>
       <BackButton />
-      <form onSubmit={handleSubmit} className="usa-form" method="post">
+      <form
+        onSubmit={handleSubmit}
+        data-cy={props.dataCy}
+        className="usa-form"
+        method="post"
+      >
         <Title small>{props.title}</Title>
         {props.children}
         <Button
@@ -52,6 +57,10 @@ QuestionPage.propTypes = {
    * Function that performs the save operation. Can be asynchronous.
    */
   onSave: PropTypes.func.isRequired,
+  /**
+   * A data selector to support end-to-end testing with Cypress.js
+   */
+  dataCy: PropTypes.string,
 };
 
 export default QuestionPage;

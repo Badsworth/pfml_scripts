@@ -11,6 +11,7 @@ describe("BaseBenefitsApplication", () => {
         first_name: "Michael",
         middle_name: middleName || "",
         last_name: "Scott",
+        gender: "Man",
         date_of_birth: "1980-07-17",
         tax_identifier: "1234",
       };

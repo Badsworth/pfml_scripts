@@ -1,21 +1,22 @@
-import { Credentials } from "../../src/types";
 import {
   ApplicationResponse,
-  WorkPattern,
   IntermittentLeavePeriods,
-  WorkPatternDay,
-  ReducedScheduleLeavePeriods,
   PaymentPreference,
   PaymentPreferenceRequestBody,
+  ReducedScheduleLeavePeriods,
+  WorkPattern,
+  WorkPatternDay,
 } from "../../src/api";
-import { inFieldset } from "./common";
 import {
   extractDebugInfoFromBody,
   extractDebugInfoFromHeaders,
 } from "../../src/errors";
-import path from "path";
-import { email } from ".";
+
+import { Credentials } from "../../src/types";
 import { config } from "./common";
+import { email } from ".";
+import { inFieldset } from "./common";
+import path from "path";
 
 export function before(): void {
   // Set the feature flag necessary to see the portal.
@@ -267,6 +268,17 @@ export function verifyIdentity(
     cy.log("Employer FEIN", application.employer_fein);
     cy.contains("button", "Save and continue").click();
   }
+
+  /* @todo:
+   * gender list should be available after api.ts is updated
+   * or declared somewhere else
+   */
+  // const Gender = ["Gender not listed", "Man", "Woman", "Nonbinary", "Prefer not to answer"];
+  cy.get("[data-cy='gender-form']")
+    // .contains(Gender[application.gender_id || 1])
+    .contains("Man")
+    .click();
+  cy.contains("button", "Save and continue").click();
 
   // Added Phone Section behind Feature Flag
   cy.labelled("Phone number").type(application.phone?.phone_number as string);

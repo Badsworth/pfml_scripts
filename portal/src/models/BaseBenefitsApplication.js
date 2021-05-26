@@ -1,5 +1,6 @@
 /* eslint sort-keys: ["error", "asc"] */
 import { compact, get, map } from "lodash";
+
 import Address from "./Address";
 import BaseModel from "./BaseModel";
 import LeaveReason from "./LeaveReason";
@@ -21,6 +22,7 @@ class BaseBenefitsApplication extends BaseModel {
       employer_fein: null,
       fineos_absence_id: null,
       first_name: null,
+      gender: null,
       hours_worked_per_week: null,
       last_name: null,
       leave_details: {

@@ -646,6 +646,11 @@ const shared = {
   fileUpload_addFirstFileButton: "Choose files",
   fileUpload_fileHeadingPrefix: "File",
   filesUploaded: "Number of files uploaded",
+  genderGenderNotListed: "Gender not listed",
+  genderMan: "Man",
+  genderNonbinary: "Non-binary",
+  genderPreferNotToAnswer: "Prefer not to answer",
+  genderWoman: "Woman",
   hoursLabel: "Hours",
   leavePeriodCaringAlert:
     "You will need a completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> for this$t(chars.nbsp)section.",
@@ -1042,6 +1047,18 @@ const pages = {
       "Learn more about <caregiver-relationship-link>which relationships are covered</caregiver-relationship-link>.",
     sectionLabel:
       "What is your relationship with the family member you are caring for?",
+  },
+  claimsGender: {
+    choiceGenderNotListed: "$t(shared.genderGenderNotListed)",
+    choiceMan: "$t(shared.genderMan)",
+    choiceNonbinary: "$t(shared.genderNonbinary)",
+    choicePreferNotToAnswer: "$t(shared.genderPreferNotToAnswer)",
+    choiceWoman: "$t(shared.genderWoman)",
+    genderIdLabel: "Gender selection",
+    sectionLabel: "What is your gender identity?",
+    sectionLabelHint:
+      "This data helps us understand who is accessing our program to ensure it is built for everyone.",
+    title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsIntermittentFrequency: {
     durationBasisChoice_days: "At least one day",
@@ -1478,6 +1495,11 @@ const pages = {
     familyMemberRelationship_serviceMember: "Service Member",
     familyMemberRelationship_sibling: "Sibling",
     familyMemberRelationship_spouse: "Spouse or domestic partner",
+    genderValue_genderNotListed: "$t(shared.genderGenderNotListed)",
+    genderValue_man: "$t(shared.genderMan)",
+    genderValue_nonbinary: "$t(shared.genderNonbinary)",
+    genderValue_preferNotToAnswer: "$t(shared.genderPreferNotToAnswer)",
+    genderValue_woman: "$t(shared.genderWoman)",
     intermittentFrequencyDurationLabel: "Frequency of intermittent leave",
     intermittentFrequencyDuration_irregularMonths_days:
       "Estimated {{frequency}} absences over the next 6 months, each lasting {{duration}} days.",
@@ -1575,6 +1597,7 @@ const pages = {
     title:
       "Check your answers before submitting your$t(chars.nbsp)application.",
     userDateOfBirthLabel: "Date of birth",
+    userGenderLabel: "Gender Identity",
     userNameLabel: "Name",
     userStateIdLabel: "Driver’s License Number",
     userTaxIdLabel: "Social Security Number or ITIN",

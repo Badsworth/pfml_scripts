@@ -58,6 +58,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.applications.gender]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.applications.phoneNumber]: {
     meta: {
       test: () => {},

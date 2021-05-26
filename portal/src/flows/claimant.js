@@ -28,6 +28,7 @@ import { fields as employmentStatusFields } from "../pages/applications/employme
 import { fields as familyMemberDateOfBirthFields } from "../pages/applications/family-member-date-of-birth";
 import { fields as familyMemberNameFields } from "../pages/applications/family-member-name";
 import { fields as familyMemberRelationshipFields } from "../pages/applications/family-member-relationship";
+import { fields as genderFields } from "../pages/applications/gender";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
@@ -164,6 +165,15 @@ export default {
       meta: {
         step: ClaimSteps.verifyId,
         fields: nameFields,
+      },
+      on: {
+        CONTINUE: routes.applications.gender,
+      },
+    },
+    [routes.applications.gender]: {
+      meta: {
+        step: ClaimSteps.verifyId,
+        fields: genderFields,
       },
       on: {
         CONTINUE: routes.applications.phoneNumber,

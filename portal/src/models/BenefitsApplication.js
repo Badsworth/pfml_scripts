@@ -3,6 +3,7 @@
  * @file Benefits application model and enum values
  */
 import { compact, get, isNil, merge, sum, sumBy, zip, zipObject } from "lodash";
+
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import BaseModel from "./BaseModel";
 import { DateTime } from "luxon";
@@ -368,8 +369,18 @@ export const PhoneType = {
   phone: "Phone",
 };
 
-/**
- * Enums for caring leave's relationship to caregiver
+/* Enums for claimant gender options
+ * @enum {string}
+ */
+export const Gender = {
+  genderNotListed: "Gender not listed",
+  man: "Man",
+  nonbinary: "Non-binary",
+  preferNotToAnswer: "Prefer not to answer",
+  woman: "Woman",
+};
+
+/* Enums for caring leave's relationship to caregiver
  * @enum {string}
  */
 export const RelationshipToCaregiver = {
