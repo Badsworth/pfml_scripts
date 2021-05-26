@@ -936,7 +936,10 @@ These guidelines are meant to reinforce those two goals.</p>
 <h3 id="for-authors-or-requesters">For authors or requesters:</h3>
 <ul>
 <li>
-<p>Include the JIRA ticket number in the title if it exists. For example: <code>PFML-123: Implement API endpoint</code></p>
+<p>Include the JIRA ticket number in the title. For example: <code>PFML-123: Implement API endpoint</code>. Every change should have an associated JIRA ticket unless it is a documentation change. A single JIRA ticket may be associated with multiple pull requests.</p>
+</li>
+<li>
+<p>If it is a documentation change, please prefix with docs: <code>docs: Clean up CONTRIBUTING.md</code>.</p>
 </li>
 <li>
 <p>Include a <a href="https://github.com/EOLWD/pfml/labels">GitHub label</a> if relevant.
@@ -992,14 +995,15 @@ and <a href="https://help.github.com/en/github/setting-up-and-managing-organizat
 <p>The Portal engineering team <a href="https://github.com/orgs/EOLWD/teams/pfml-portal/edit/review_assignment">is configured</a>
 so that PR reviews are automatically assigned to a member of the team via a round robin algorithm,
 with the goal of equally distributing PR reviews across the team.</p>
-<p>Since the Portal engineering team includes those working on either the Claimant Portal or Employer Portal, PR reviews are distributed between both groups. </p>
+<p>Since the Portal engineering team includes those working on either the Claimant Portal or Employer Portal, PR reviews are distributed between both groups.</p>
+<p>The API team has configured code owners for slices of the codebase in <a href="https://github.com/EOLWD/pfml/tree/main/.github/CODEOWNERS">the CODEOWNERS file</a>. These code owners will be automatically assigned when the relevant code paths are edited.</p>
 <h2 id="pull-request-titles">Pull Request Titles</h2>
 <p>Please title Pull Requests in GitHub as "API-nnn: summary", "CP-nnn: summary", etc. For tickets that have subtasks, use the parent ticket's id in the title, and include the subtask in the PR description.
 When making a fix with no ticket, please use "API: summary" or "Portal: summary".</p>
-<p>This makes it easier to search for PRs and also links from JIRA tickets to GitHub PRs automatically.</p>
+<p>This makes it easier to search for PRs and also links JIRA tickets to GitHub PRs automatically.</p>
 <h2 id="merging-a-pr">Merging a PR</h2>
 <h3 id="how-to-merge">How to merge</h3>
-<p>When merging a PR, use the PR description as a starting point. Copy it into the merge commit body and clean it up as desired.</p>
+<p>When merging a PR, use the PR description as a starting point. Copy it into the merge commit body and clean it up as desired. Please verify that the commit title includes the JIRA ticket.</p>
 <p>Example:</p>
 <div class="codehilite"><pre><span></span><code>PFML-540: Implement GET claims endpoint (#145)
 
