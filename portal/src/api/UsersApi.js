@@ -1,5 +1,6 @@
 /* eslint-disable jsdoc/require-returns */
 import User, { UserLeaveAdministrator, UserRole } from "../models/User";
+
 import BaseApi from "./BaseApi";
 import routes from "../routes";
 
@@ -68,6 +69,32 @@ export default class UsersApi extends BaseApi {
     return {
       user: new User({
         ...patchData,
+        ...data,
+        roles,
+        user_leave_administrators,
+      }),
+    };
+  };
+
+  /**
+   * Convert a user role to another
+   * @param {string} user_id - ID of user being converted
+   * @param {object} postData - User fields to update - role and leave admin
+   * @returns {Promise<UsersApiResult>}
+   */
+  convertUser = async (user_id, postData) => {
+    const { data } = await this.request(
+      "POST",
+      `${user_id}/convert_employer`,
+      postData
+    );
+    const roles = this.createUserRoles(data.roles);
+    const user_leave_administrators = this.createUserLeaveAdministrators(
+      data.user_leave_administrators
+    );
+
+    return {
+      user: new User({
         ...data,
         roles,
         user_leave_administrators,

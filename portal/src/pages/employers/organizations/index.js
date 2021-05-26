@@ -13,12 +13,14 @@ import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
-export const Index = ({ appLogic }) => {
+export const Index = (props) => {
+  const { appLogic, query } = props;
   const { t } = useTranslation();
   const {
     hasVerifiableEmployer,
     user_leave_administrators,
   } = appLogic.users.user;
+  const accountConverted = query?.account_converted === "true";
   const showVerifications = isFeatureEnabled("employerShowVerifications");
   const showAddOrganization = isFeatureEnabled("employerShowAddOrganization");
   const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
@@ -38,6 +40,14 @@ export const Index = ({ appLogic }) => {
         <BackButton />
       )}
       <Title>{t("pages.employersOrganizations.title")}</Title>
+      {accountConverted && (
+        <Alert
+          heading={t("pages.employersOrganizations.convertHeading")}
+          state="success"
+        >
+          {t("pages.employersOrganizations.convertDescription")}
+        </Alert>
+      )}
       {showVerifications && hasVerifiableEmployer && (
         <Alert
           state="warning"
@@ -105,6 +115,9 @@ Index.propTypes = {
       user: PropTypes.instanceOf(User).isRequired,
     }).isRequired,
   }).isRequired,
+  query: PropTypes.shape({
+    account_converted: PropTypes.string,
+  }),
 };
 
 export default withUser(Index);

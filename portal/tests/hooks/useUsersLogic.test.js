@@ -339,4 +339,69 @@ describe("useUsersLogic", () => {
       });
     });
   });
+
+  describe("convertUser", () => {
+    const user_id = "mock-user-id";
+    const postData = { employer_fein: "12-3456789" };
+
+    beforeEach(async () => {
+      await act(async () => {
+        renderHook();
+        await usersLogic.convertUser(user_id, postData);
+      });
+    });
+
+    it("converts user role in the api", () => {
+      expect(usersApi.convertUser).toHaveBeenCalledWith(user_id, postData);
+    });
+
+    it("receives user as employer", () => {
+      expect(usersLogic.user).toBeInstanceOf(User);
+      expect(usersLogic.user.roles.length).toBeGreaterThan(0);
+      expect(usersLogic.user.user_leave_administrators.length).toBeGreaterThan(
+        0
+      );
+      expect(usersLogic.user.roles[0].role_description).toBe(
+        RoleDescription.employer
+      );
+    });
+
+    it("goes to next page", () => {
+      expect(mockRouter.push).toHaveBeenCalled();
+    });
+
+    describe("when errors exist", () => {
+      beforeEach(async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo()])
+          );
+        });
+
+        await act(async () => {
+          await usersLogic.convertUser(user_id, postData);
+        });
+      });
+
+      it("clears errors", () => {
+        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      });
+    });
+
+    describe("when api errors", () => {
+      it("catches error", async () => {
+        usersApi.convertUser.mockImplementationOnce(() => {
+          throw new NetworkError();
+        });
+
+        await act(async () => {
+          await usersLogic.convertUser(user_id, postData);
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
+          NetworkError.name
+        );
+      });
+    });
+  });
 });

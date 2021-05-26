@@ -163,6 +163,7 @@ const routes = {
   index: "/",
   user: {
     consentToDataSharing: "/user/consent-to-data-sharing",
+    convert: "/user/convert-to-employer",
   },
 };
 

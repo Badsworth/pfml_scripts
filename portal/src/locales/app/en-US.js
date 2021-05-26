@@ -1736,6 +1736,16 @@ const pages = {
     sectionLabel: "How would you describe your work schedule?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
+  convertToEmployer: {
+    alertDescription:
+      'Converting your account from "employee" to "employer" is irreversible and will not be possible if any claims have been created, are in-progress, or are completed.',
+    alertHeading: "This action is irreversible!",
+    einHint:
+      "Your Employer Identification Number is a <ein-link>9-digit number</ein-link> assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.",
+    einLabel: "Employer ID number (EIN)",
+    submit: "Convert account",
+    title: "Convert to employer account",
+  },
   employersAuthCreateAccount: {
     alertHeading:
       "Workers who wish to apply for paid leave should follow <create-account-link>these instructions</create-account-link>.",
@@ -1905,6 +1915,8 @@ const pages = {
   employersOrganizations: {
     addOrganizationButton: "Add organization",
     backToDashboardLabel: "Back to Dashboard",
+    convertDescription: "Your account type is now converted.",
+    convertHeading: "Success",
     einTableHeader: "Employer ID number (EIN)",
     nearFutureAvailability_addOrganization:
       "You'll be able to add more organizations to your account in the near future.",

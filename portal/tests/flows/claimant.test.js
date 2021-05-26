@@ -28,6 +28,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.user.convert]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.applications.checklist]: {
     meta: {
       test: () => {},
@@ -383,6 +388,8 @@ describe("claimFlowConfigs", () => {
   // of the portal application when tested.
   const testModel = createModel(routingMachine).withEvents({
     CONSENT_TO_DATA_SHARING: {},
+    PREVENT_CONVERSION: {},
+    CONVERT_EMPLOYER: {},
     CONTINUE: {},
     CREATE_CLAIM: {},
     EMPLOYER_INFORMATION: {},

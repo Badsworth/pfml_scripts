@@ -15,6 +15,7 @@ import {
   EmploymentStatus,
   WorkPatternType,
 } from "../models/BenefitsApplication";
+
 import { ClaimSteps } from "../models/Step";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as concurrentLeavesDetailsFields } from "../pages/applications/concurrent-leaves-details";
@@ -100,12 +101,28 @@ export default {
         CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
         START_APPLICATION: routes.applications.start,
         SHOW_APPLICATIONS: routes.applications.index,
+        /* We need this to trigger test coverage on
+         * the routes.user.convert page, which is
+         * otherwise isolated.
+         */
+        CONVERT_EMPLOYER: routes.user.convert,
       },
     },
     [routes.applications.start]: {
       meta: {},
       on: {
         CREATE_CLAIM: routes.applications.checklist,
+      },
+    },
+    [routes.user.convert]: {
+      meta: {},
+      on: {
+        PREVENT_CONVERSION: routes.applications.getReady,
+        /* We cannot move between 2 different flows due to
+         * claimant test only using claimant state, therefore,
+         * we have no access to redirect to employer pages
+         */
+        // CONTINUE: routes.employers.organizations,
       },
     },
     [routes.user.consentToDataSharing]: {
