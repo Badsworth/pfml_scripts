@@ -6,7 +6,7 @@ import {
 } from "../../src/util/documents";
 import { LeaveReason } from "../../src/types";
 import { config } from "./common";
-
+import Claim, { GeneratedClaim } from "generation/Claim";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
@@ -290,6 +290,7 @@ export function createNotification(
           "Sibling - Brother/Sister"
         );
         cy.wait("@ajaxRender");
+        cy.wait(200);
         cy.labelled("Qualifier 1").select("Biological");
       });
       clickNext();
@@ -370,6 +371,7 @@ export function createNotification(
     wait();
   }
   cy.wait("@ajaxRender");
+  cy.wait(200);
   cy.labelled("Standard Work Week").click();
   cy.wait(1000);
   cy.get('input[value="Apply to Calendar"]').click({ force: true });
@@ -650,6 +652,8 @@ export function mailedDocumentMarkEvidenceRecieved(
   onTab("Documents");
   if (uploadedIDProof) {
     assertHasDocument("Identification Proof");
+  } else {
+    uploadDocument("MA_ID", "Identification proof");
   }
   const documentType = getCertificationDocumentType(
     reason,
@@ -658,6 +662,50 @@ export function mailedDocumentMarkEvidenceRecieved(
   uploadDocument("HCP", documentType);
   onTab("Documents");
   assertHasDocument(documentType);
+  onTab("Absence Hub");
+
+  // cy.get('input[type="submit"][value="Adjudicate"]').click();
+  // const evidenceDecision = approveDocs ? "Satisfied" : "Not Satisfied";
+  // const evidenceReason = !approveDocs
+  //   ? "Evidence has been reviewed and denied"
+  //   : undefined;
+  // markEvidence(documentType, undefined, evidenceDecision, evidenceReason);
+  // markEvidence(
+  //   "Identification Proof",
+  //   undefined,
+  //   evidenceDecision,
+  //   evidenceReason
+  // );
+  // checkStatus(claimNumber, "Evidence", evidenceDecision);
+  // clickBottomWidgetButton();
+}
+
+export function reviewMailedDocumentsWithTasks(
+  claimNumber: string,
+  reason: LeaveReason,
+  uploadedIDProof = true,
+  approveDocs = true
+): void {
+  visitClaim(claimNumber);
+  assertClaimStatus("Adjudication");
+  onTab("Documents");
+  if (uploadedIDProof) {
+    assertHasDocument("Identification Proof");
+  } else {
+    uploadDocument("MA_ID", "Identification proof");
+    onTab("Documents");
+    assertHasDocument("Identification Proof");
+  }
+  const documentType = getCertificationDocumentType(
+    reason,
+    config("HAS_FINEOS_SP") === "true"
+  );
+  uploadDocument("HCP", documentType);
+  onTab("Documents");
+  assertHasDocument(documentType);
+  onTab("Absence Hub");
+  openDocTasks();
+  // cy.wait(80000000);
   onTab("Absence Hub");
   cy.get('input[type="submit"][value="Adjudicate"]').click();
   const evidenceDecision = approveDocs ? "Satisfied" : "Not Satisfied";
@@ -673,8 +721,40 @@ export function mailedDocumentMarkEvidenceRecieved(
   );
   checkStatus(claimNumber, "Evidence", evidenceDecision);
   clickBottomWidgetButton();
+
+  for (const task of ["ID Review", "Caring Certification Review"]) {
+    closeTask(task);
+  }
 }
 
+export function openDocTasks(): void {
+  openTask("ID Review");
+  // replaace Caring with argument of Leave Type
+  openTask("Caring Certification Review");
+}
+
+export function openTask(taskName: string): void {
+  onTab("Tasks");
+  cy.get('input[type="submit"][value="Add"]').click({ force: true });
+  cy.get('span[id="NameSearchWidget"]').within(() => {
+    cy.get('input[type="text"]').type(taskName);
+    cy.wait("@ajaxRender");
+    cy.contains("input", "Find").click();
+    cy.wait(250);
+  });
+  cy.get('span[id="footerButtonsBar"]').within(() => {
+    cy.contains("Next").click();
+  });
+}
+
+export function closeTask(task: string): void {
+  onTab("Tasks");
+  cy.wait("@ajaxRender");
+  cy.get(`td[title="${task}"]`).click();
+  cy.wait(150);
+  cy.get('input[type="submit"][value="Close"]').click();
+  cy.wait(150);
+}
 export function checkHoursWorkedPerWeek(
   claimNumber: string,
   hours_worked_per_week: number

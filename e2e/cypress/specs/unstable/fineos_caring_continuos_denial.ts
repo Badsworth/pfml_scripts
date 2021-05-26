@@ -1,10 +1,11 @@
-import { fineos } from "../../actions";
 import { extractLeavePeriod } from "../../../src/util/claims";
-import { getFineosBaseUrl } from "../../config";
 import { LeaveReason } from "types";
+import { portal, fineos } from "../../actions";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
+import { Submission } from "../../../src/types";
 
-describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
-  it(
+describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
+  const fineosSubmission = it(
     "Should be able to create a claim",
     { baseUrl: getFineosBaseUrl() },
     () => {
@@ -38,16 +39,40 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
             const reason = claim.claim.leave_details?.reason;
             fineos.visitClaim(fineos_absence_id);
             fineos.assertClaimStatus("Adjudication");
-            fineos.mailedDocumentMarkEvidenceRecieved(
+            // fineos.mailedDocumentMarkEvidenceRecieved(
+            //   fineos_absence_id,
+            //   reason as LeaveReason,
+            //   false,
+            //   true
+            // );
+            fineos.reviewMailedDocumentsWithTasks(
               fineos_absence_id,
               reason as LeaveReason,
               false,
-              false
+              true
             );
-            fineos.denyClaim("Evidence documents fail requirements");
-            fineos.triggerNoticeRelease("Denial Notice");
+            // fineos.denyClaim("Evidence documents fail requirements");
+            // fineos.triggerNoticeRelease("Denial Notice");
           });
       });
     }
   );
+
+  it("Leave admin will submit ER approval for employee", () => {
+    cy.dependsOnPreviousPass([fineosSubmission]);
+    portal.before();
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        portal.login(
+          getLeaveAdminCredentials(claim.claim.employer_fein as string)
+        );
+        portal.selectClaimFromEmployerDashboard(
+          submission.fineos_absence_id,
+          "--"
+        );
+        portal.vistActionRequiredERFormPage(submission.fineos_absence_id);
+        portal.respondToLeaveAdminRequest(false, true, false, true);
+      });
+    });
+  });
 });
