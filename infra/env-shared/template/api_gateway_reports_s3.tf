@@ -25,7 +25,7 @@ resource "aws_api_gateway_usage_plan" "reports_plan" {
   }
 
   quota_settings {
-    limit  = 1000
+    limit  = 10000
     offset = 0
     period = "DAY"
   }
