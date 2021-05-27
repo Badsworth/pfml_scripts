@@ -25,6 +25,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.pub import check_return, process_check_return_step
 from massgov.pfml.delegated_payments.pub.check_return import PaidStatus
 
@@ -117,8 +118,20 @@ def test_process_single_check_payment_outstanding(step, payment, payment_state, 
     ),
 )
 def test_process_single_check_payment_failed(
-    step, payment, payment_state, check_status, expected_payment_check_status,
+    payment,
+    payment_state,
+    check_status,
+    expected_payment_check_status,
+    test_db_session,
+    test_db_other_session,
+    mocker,
 ):
+    step = process_check_return_step.ProcessCheckReturnFileStep(
+        test_db_session, test_db_other_session
+    )
+    step.reference_file = ReferenceFile(file_location="test")
+    mocker.patch.object(step, "add_pub_error")
+
     step.process_single_check_payment(check_payment_factory(check_status))
 
     assert (
@@ -126,13 +139,12 @@ def test_process_single_check_payment_failed(
         == expected_payment_check_status.payment_check_status_id
     )
     assert payment.check.check_posted_date is None
-    assert payment_state().end_state_id == State.ADD_TO_ERRORED_PEI_WRITEBACK.state_id
+    assert payment_state().end_state_id == State.DELEGATED_PAYMENT_ERROR_FROM_BANK.state_id
     assert payment_state().outcome == {
         "check_line_number": "20",
         "check_status": check_status.name,
         "message": "Payment failed by check status " + check_status.name,
     }
-    step.log_entry.increment.assert_called_once_with("payment_failed_by_check")
     step.add_pub_error.assert_called_once_with(
         pub_error_type=PubErrorType.CHECK_PAYMENT_FAILED,
         message="payment failed by check: " + check_status.name,
@@ -186,7 +198,10 @@ def test_process_single_check_payment_without_state(step, payment_without_state)
 
 @freezegun.freeze_time("2021-04-12 08:00:00", tz_offset=0)
 def test_process_check_return_step_full(
-    test_db_session, mock_s3_bucket_resource, initialize_factories_session
+    local_test_db_session,
+    local_test_db_other_session,
+    local_initialize_factories_session,
+    mock_s3_bucket_resource,
 ):
     # Note: see check_outstanding_small.csv and check_paid_small.csv to understand this test.
 
@@ -197,11 +212,15 @@ def test_process_check_return_step_full(
 
     # Add payments 1 to 9 to the database. These correspond to check numbers 501 to 509 in return
     # files.
-    payments = [payment_by_check_sent_to_pub_factory(i, test_db_session) for i in range(1, 10)]
+    payments = [
+        payment_by_check_sent_to_pub_factory(i, local_test_db_other_session) for i in range(1, 10)
+    ]
 
     # Run step.
     process_return_file_step = process_check_return_step.ProcessCheckReturnFileStep(
-        test_db_session, test_db_session, "s3://%s/" % mock_s3_bucket_resource.name
+        local_test_db_session,
+        local_test_db_other_session,
+        "s3://%s/" % mock_s3_bucket_resource.name,
     )
     assert process_return_file_step.have_more_files_to_process() is True
     process_return_file_step.run()
@@ -210,7 +229,9 @@ def test_process_check_return_step_full(
     assert process_return_file_step.have_more_files_to_process() is False
 
     # Test updates to reference_file table.
-    reference_files = test_db_session.query(ReferenceFile).order_by(ReferenceFile.created_at).all()
+    reference_files = (
+        local_test_db_other_session.query(ReferenceFile).order_by(ReferenceFile.created_at).all()
+    )
     assert len(reference_files) == 2
     for reference_file in reference_files:
         assert (
@@ -225,16 +246,16 @@ def test_process_check_return_step_full(
     expected_states = {
         501: (State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT, None, reference_files[0], 2),
         502: (State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT, None, reference_files[0], 3),
-        503: (State.ADD_TO_ERRORED_PEI_WRITEBACK, "STALE", reference_files[0], 4),
-        504: (State.ADD_TO_ERRORED_PEI_WRITEBACK, "STOP", reference_files[0], 5),
-        505: (State.ADD_TO_ERRORED_PEI_WRITEBACK, "VOID", reference_files[0], 6),
+        503: (State.DELEGATED_PAYMENT_ERROR_FROM_BANK, "STALE", reference_files[0], 4),
+        504: (State.DELEGATED_PAYMENT_ERROR_FROM_BANK, "STOP", reference_files[0], 5),
+        505: (State.DELEGATED_PAYMENT_ERROR_FROM_BANK, "VOID", reference_files[0], 6),
         506: (State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK, None, reference_files[1], 3),
         507: (State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK, None, reference_files[1], 4),
     }
     for payment in payments:
-        test_db_session.refresh(payment)
+        local_test_db_other_session.refresh(payment)
         payment_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_session
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_other_session
         )
         state_id = payment_state_log.end_state.state_id
         if payment.check.check_number in expected_states:
@@ -250,12 +271,33 @@ def test_process_check_return_step_full(
                 assert payment_state_log.outcome["check_line_number"] == str(expected_line_num)
             assert len(payment.reference_files) == 1
             assert payment.reference_files[0].reference_file == expected_reference_file
+
+            if expected_state == State.DELEGATED_PAYMENT_ERROR_FROM_BANK:
+                writeback_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
+                    payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
+                )
+                assert (
+                    writeback_state_log.end_state.state_id
+                    == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+                )
+
+                writeback_details = (
+                    local_test_db_session.query(FineosWritebackDetails)
+                    .filter(FineosWritebackDetails.payment_id == payment.payment_id)
+                    .one_or_none()
+                )
+                assert writeback_details
+                assert (
+                    writeback_details.transaction_status_id
+                    == FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_id
+                )
+
         else:
             # Not in test files - state unchanged.
             assert state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT.state_id
             assert payment.reference_files == []
 
-    errors = test_db_session.query(PubError).all()
+    errors = local_test_db_other_session.query(PubError).all()
     assert len(errors) == 6
     assert errors[0].reference_file == reference_files[0]
     assert errors[0].line_number == 4
@@ -279,7 +321,7 @@ def test_process_check_return_step_full(
     assert errors[4].details == {}
     assert errors[5].reference_file == reference_files[1]
     assert errors[5].line_number == 2
-    assert errors[5].message == "unexpected state for payment: Add to Errored PEI writeback (151)"
+    assert errors[5].message == "unexpected state for payment: Payment Errored from Bank (182)"
     assert errors[5].details == {"check_number": "505"}
 
 

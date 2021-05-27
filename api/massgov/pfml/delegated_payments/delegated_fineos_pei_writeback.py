@@ -64,7 +64,6 @@ ACTIVE_WRITEBACK_RECORD_STATUS = "Active"
 PAID_WRITEBACK_RECORD_TRANSACTION_STATUS = "Paid"
 POSTED_WRITEBACK_RECORD_TRANSACTION_STATUS = "Posted"
 PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS = "Processed"
-ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS = "Error"
 
 WRITEBACK_FILE_SUFFIX = "-pei_writeback.csv"
 
@@ -93,7 +92,6 @@ class FineosPeiWritebackStep(Step):
         CHECK_PAYMENT_COUNT = "check_payment_count"
         EFT_PAYMENT_COUNT = "eft_payment_count"
         EMPLOYER_REIMBURSEMENT_PAYMENT_COUNT = "employer_reimbursement_payment_count"
-        ERRORED_PAYMENT_WRITEBACK_ITEMS_COUNT = "errored_payment_writeback_items_count"
         ERRORED_WRITEBACK_RECORD_DURING_FILE_CREATION_COUNT = (
             "errored_writeback_record_during_file_creation_count"
         )
@@ -216,24 +214,6 @@ class FineosPeiWritebackStep(Step):
             }
         )
 
-        errored_payment_writeback_items = self._get_writeback_items_for_state(
-            prior_state=State.ADD_TO_ERRORED_PEI_WRITEBACK,
-            end_state=State.ERRORED_PEI_WRITEBACK_SENT,
-            writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
-            transaction_status=ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS,
-        )
-        errored_payment_writeback_items_count = len(errored_payment_writeback_items)
-        logger.info(
-            "Found %i extracted writeback items in state: %s",
-            errored_payment_writeback_items_count,
-            State.ADD_TO_ERRORED_PEI_WRITEBACK.state_description,
-        )
-        self.set_metrics(
-            {
-                self.Metrics.ERRORED_PAYMENT_WRITEBACK_ITEMS_COUNT: errored_payment_writeback_items_count
-            }
-        )
-
         payment_writeback_two_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK,
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK,
@@ -244,7 +224,7 @@ class FineosPeiWritebackStep(Step):
         logger.info(
             "Found %i extracted writeback items in state: %s",
             payment_writeback_two_items_count,
-            State.ADD_TO_ERRORED_PEI_WRITEBACK.state_description,
+            State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK.state_description,
         )
         self.set_metrics(
             {self.Metrics.PAYMENT_WRITEBACK_TWO_ITEMS_COUNT: payment_writeback_two_items_count}
@@ -273,7 +253,6 @@ class FineosPeiWritebackStep(Step):
             + eft_payment_writeback_items
             + cancelled_payment_writeback_items
             + employer_reimbursement_payment_writeback_items
-            + errored_payment_writeback_items
             + payment_writeback_two_items
             + generic_flow_writeback_items
         )
@@ -653,18 +632,6 @@ class FineosPeiWritebackStep(Step):
 
         if state_log.end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK.state_id:
             transaction_status_date = payment.check.check_posted_date
-
-        elif (
-            state_log.end_state_id == State.ADD_TO_ERRORED_PEI_WRITEBACK.state_id
-            and payment.check is not None
-        ):
-            if payment.check.payment_check_status.payment_check_status_description is not None:
-                transaction_status = (
-                    payment.check.payment_check_status.payment_check_status_description
-                )
-
-            current_datetime = get_now()
-            transaction_status_date = current_datetime
 
         if payment.fineos_extraction_date is not None:
             if valid_pub_payment:

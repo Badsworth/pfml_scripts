@@ -1066,23 +1066,25 @@ def test_e2e_pub_payments(
         )
 
         # == Validate FINEOS status writeback states
+        stage_2_generic_flow_writeback_scenarios = [
+            ScenarioName.AUDIT_REJECTED,
+            ScenarioName.AUDIT_SKIPPED,
+            ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
+            ScenarioName.CLAIM_NOT_ID_PROOFED,
+            ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+            ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+            ScenarioName.PUB_ACH_PRENOTE_RETURN,
+            ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+            ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
+            ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+            ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+            ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+            ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+        ]
+
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.AUDIT_REJECTED,
-                ScenarioName.AUDIT_SKIPPED,
-                ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
-                ScenarioName.CLAIM_NOT_ID_PROOFED,
-                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
-                ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
-                ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-                ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-                ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-            ],
+            scenario_names=stage_2_generic_flow_writeback_scenarios,
             end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
             flow=Flow.DELEGATED_PEI_WRITEBACK,
             db_session=test_db_session,
@@ -1223,7 +1225,7 @@ def test_e2e_pub_payments(
             writeback_file_path, ReferenceFileType.PEI_WRITEBACK, test_db_session,
         )
 
-        writeback_scenario_names = [
+        stage_2_legacy_writeback_scenario_names = [
             ScenarioName.CANCELLATION_PAYMENT,
             ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
             ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
@@ -1252,68 +1254,14 @@ def test_e2e_pub_payments(
             ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
             ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
         ]
-        generic_flow_writeback_scenarios = [
-            ScenarioName.AUDIT_REJECTED,
-            ScenarioName.AUDIT_SKIPPED,
-            ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
-            ScenarioName.CLAIM_NOT_ID_PROOFED,
-            ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
-            ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-            ScenarioName.PUB_ACH_PRENOTE_RETURN,
-            ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-            ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
-            ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-            ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-            ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-            ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-        ]
 
-        writeback_scenario_names.extend(generic_flow_writeback_scenarios)
-
-        writeback_scenario_payments = []
-        for writeback_scenario_name in writeback_scenario_names:
-            scenario_payments = test_dataset.get_scenario_payments_by_name(writeback_scenario_name)
-            writeback_scenario_payments.extend(scenario_payments)
-
-        assert len(writeback_scenario_names) == len(writeback_scenario_payments)
-
-        writeback_details = test_db_session.query(FineosWritebackDetails).all()
-
-        assert len(writeback_details) == len(generic_flow_writeback_scenarios)
-
-        generic_flow_scenario_payments = []
-        for writeback_scenario_name in generic_flow_writeback_scenarios:
-            scenario_payments = test_dataset.get_scenario_payments_by_name(writeback_scenario_name)
-            generic_flow_scenario_payments.extend(scenario_payments)
-
-        generic_flow_scenario_payment_ids = set(
-            [p.payment_id for p in generic_flow_scenario_payments]
+        assert_writeback_payments(
+            test_dataset,
+            stage_2_legacy_writeback_scenario_names,
+            stage_2_generic_flow_writeback_scenarios,
+            writeback_file_path,
+            test_db_session,
         )
-
-        expected_csv_rows = []
-        for p in writeback_scenario_payments:
-            expected_csv_row = {
-                "pei_C_Value": p.fineos_pei_c_value,
-                "pei_I_Value": p.fineos_pei_i_value,
-            }
-
-            # TODO remove condition when we are fully transitioned to using generic flow
-            if p.payment_id in generic_flow_scenario_payment_ids:
-                transaction_status = get_writeback_transaction_status_for_payment(
-                    test_db_session, p
-                )
-                expected_csv_row[
-                    "transactionStatus"
-                ] = transaction_status.transaction_status_description
-                expected_csv_row["status"] = transaction_status.writeback_record_status
-
-            else:
-                expected_csv_row["status"] = "Active"
-
-            expected_csv_rows.append(expected_csv_row)
-
-        writeback_csv_rows = parse_csv(writeback_file_path)
-        assert_csv_content(writeback_csv_rows, expected_csv_rows)
 
         # == Reports
         assert_reports(
@@ -1601,7 +1549,6 @@ def test_e2e_pub_payments(
                 "employer_reimbursement_payment_count": len(
                     [ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT]
                 ),
-                "errored_payment_writeback_items_count": 0,
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
                 "overpayment_count": len(
@@ -1612,10 +1559,12 @@ def test_e2e_pub_payments(
                     ]
                 ),
                 "payment_writeback_two_items_count": 0,
-                "successful_writeback_record_count": len(writeback_scenario_names),
-                "writeback_record_count": len(writeback_scenario_names),
+                "successful_writeback_record_count": len(stage_2_legacy_writeback_scenario_names)
+                + len(stage_2_generic_flow_writeback_scenarios),
+                "writeback_record_count": len(stage_2_legacy_writeback_scenario_names)
+                + len(stage_2_generic_flow_writeback_scenarios),
                 "zero_dollar_payment_count": len([ScenarioName.ZERO_DOLLAR_PAYMENT]),
-                "generic_flow_writeback_items_count": len(generic_flow_writeback_scenarios),
+                "generic_flow_writeback_items_count": len(stage_2_generic_flow_writeback_scenarios),
                 "payment_audit_error_writeback_transaction_status_count": len(
                     [ScenarioName.AUDIT_REJECTED]
                 ),
@@ -1678,7 +1627,7 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_FAMILY_RETURN,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
             ],
-            end_state=State.ERRORED_PEI_WRITEBACK_SENT,
+            end_state=State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
             db_session=test_db_session,
         )
 
@@ -1724,7 +1673,7 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
             ],
-            end_state=State.ERRORED_PEI_WRITEBACK_SENT,
+            end_state=State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
             db_session=test_db_session,
         )
 
@@ -1876,6 +1825,45 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
             ]
+        )
+
+        # == Writeback
+        writeback_folder_path = os.path.join(s3_config.fineos_data_import_path)
+        assert_files(writeback_folder_path, ["pei_writeback.csv"], get_current_timestamp_prefix())
+
+        writeback_file_path = f"{s3_config.pfml_fineos_writeback_archive_path}sent/{date_folder}/{timestamp_prefix}pei_writeback.csv"
+        assert_ref_file(
+            writeback_file_path, ReferenceFileType.PEI_WRITEBACK, test_db_session,
+        )
+
+        stage_3_legacy_writeback_scenario_names = [
+            ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+            ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+        ]
+
+        stage_3_generic_flow_writeback_scenarios = [
+            ScenarioName.PUB_ACH_FAMILY_RETURN,
+            ScenarioName.PUB_ACH_MEDICAL_RETURN,
+            ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+            ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+            ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+        ]
+
+        assert_writeback_payments(
+            test_dataset,
+            stage_3_legacy_writeback_scenario_names,
+            stage_3_generic_flow_writeback_scenarios,
+            writeback_file_path,
+            test_db_session,
+        )
+
+        # == Reports
+        assert_reports(
+            s3_config.dfml_report_outbound_path,
+            s3_config.pfml_error_reports_archive_path,
+            PROCESS_PUB_RESPONSES_REPORTS,
+            test_db_session,
         )
 
         # == Metrics
@@ -2044,50 +2032,18 @@ def test_e2e_pub_payments(
                 "check_payment_count": 0,
                 "eft_payment_count": 0,
                 "employer_reimbursement_payment_count": 0,
-                "errored_payment_writeback_items_count": len(
-                    [
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                    ]
-                ),
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
                 "overpayment_count": 0,
-                "payment_writeback_two_items_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                    ]
-                ),
-                "successful_writeback_record_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                    ]
-                ),
-                "writeback_record_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                    ]
-                ),
+                "payment_writeback_two_items_count": len(stage_3_legacy_writeback_scenario_names),
+                "successful_writeback_record_count": len(stage_3_legacy_writeback_scenario_names)
+                + len(stage_3_generic_flow_writeback_scenarios),
+                "writeback_record_count": len(stage_3_legacy_writeback_scenario_names)
+                + len(stage_3_generic_flow_writeback_scenarios),
                 "zero_dollar_payment_count": 0,
+                "bank_processing_error_writeback_transaction_status_count": len(
+                    stage_3_generic_flow_writeback_scenarios
+                ),
             },
         )
 
@@ -2099,14 +2055,6 @@ def test_e2e_pub_payments(
                 "report_error_count": 0,
                 "report_generated_count": len([PROCESS_PUB_RESPONSES_REPORTS]),
             },
-        )
-
-        # == Reports
-        assert_reports(
-            s3_config.dfml_report_outbound_path,
-            s3_config.pfml_error_reports_archive_path,
-            PROCESS_PUB_RESPONSES_REPORTS,
-            test_db_session,
         )
 
     # ===============================================================================
@@ -2701,6 +2649,64 @@ def assert_metrics(
     assert (
         len(assertion_errors) == 0
     ), f"Unexpected metric value(s) in log report '{log_report_name}', description: {description}\n{errors}"
+
+
+def assert_writeback_payments(
+    test_dataset: TestDataSet,
+    legacy_writeback_scenario_names: List[ScenarioName],
+    generic_writeback_scenario_names: List[ScenarioName],
+    writeback_file_path: str,
+    db_session: db.Session,
+):
+
+    writeback_scenario_names = []
+    writeback_scenario_names.extend(legacy_writeback_scenario_names)
+    writeback_scenario_names.extend(generic_writeback_scenario_names)
+
+    writeback_scenario_payments = []
+    for writeback_scenario_name in writeback_scenario_names:
+        scenario_payments = test_dataset.get_scenario_payments_by_name(writeback_scenario_name)
+        writeback_scenario_payments.extend(scenario_payments)
+
+    assert len(writeback_scenario_names) == len(writeback_scenario_payments)
+
+    generic_flow_scenario_payments = []
+    for writeback_scenario_name in generic_writeback_scenario_names:
+        scenario_payments = test_dataset.get_scenario_payments_by_name(writeback_scenario_name)
+        generic_flow_scenario_payments.extend(scenario_payments)
+
+    generic_flow_scenario_payment_ids = set([p.payment_id for p in generic_flow_scenario_payments])
+
+    writeback_details = (
+        db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id.in_(generic_flow_scenario_payment_ids))
+        .all()
+    )
+
+    assert len(writeback_details) == len(generic_writeback_scenario_names)
+
+    expected_csv_rows = []
+    for p in writeback_scenario_payments:
+        expected_csv_row = {
+            "pei_C_Value": p.fineos_pei_c_value,
+            "pei_I_Value": p.fineos_pei_i_value,
+        }
+
+        # TODO remove condition when we are fully transitioned to using generic flow
+        if p.payment_id in generic_flow_scenario_payment_ids:
+            transaction_status = get_writeback_transaction_status_for_payment(db_session, p)
+            expected_csv_row[
+                "transactionStatus"
+            ] = transaction_status.transaction_status_description
+            expected_csv_row["status"] = transaction_status.writeback_record_status
+
+        else:
+            expected_csv_row["status"] = "Active"
+
+        expected_csv_rows.append(expected_csv_row)
+
+    writeback_csv_rows = parse_csv(writeback_file_path)
+    assert_csv_content(writeback_csv_rows, expected_csv_rows)
 
 
 # == Utility Helpers ==

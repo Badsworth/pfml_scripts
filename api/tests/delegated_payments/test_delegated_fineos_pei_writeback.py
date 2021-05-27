@@ -23,6 +23,7 @@ from massgov.pfml.db.models.employees import (
     StateLog,
 )
 from massgov.pfml.db.models.factories import PaymentFactory
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -126,7 +127,21 @@ def _generate_cancelled_payment(test_db_session: db.Session) -> Payment:
 
 
 def _generate_errored_payment(test_db_session: db.Session) -> Payment:
-    return _generate_payment_and_state(test_db_session, State.ADD_TO_ERRORED_PEI_WRITEBACK)
+    payment = _generate_payment_and_state(test_db_session, State.DELEGATED_PAYMENT_ERROR_FROM_BANK)
+
+    state_log_util.create_finished_state_log(
+        associated_model=payment,
+        end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+        outcome=state_log_util.build_outcome("test"),
+        db_session=test_db_session,
+    )
+    writeback_details = FineosWritebackDetails(
+        payment=payment,
+        transaction_status_id=FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_id,
+    )
+    test_db_session.add(writeback_details)
+
+    return payment
 
 
 @pytest.mark.parametrize(
@@ -293,7 +308,7 @@ def test_process_payments_for_writeback(
         state_log = state_log_util.get_latest_state_log_in_flow(
             payment, Flow.DELEGATED_PAYMENT, local_test_db_other_session
         )
-        assert state_log.end_state_id == State.ERRORED_PEI_WRITEBACK_SENT.state_id
+        assert state_log.end_state_id == State.DELEGATED_PAYMENT_ERROR_FROM_BANK.state_id
 
     # Assert that the contents of the writeback file match our expectations.
     writeback_file_lines = list(file_util.read_file_lines(ref_file.file_location))
@@ -311,7 +326,7 @@ def test_process_payments_for_writeback(
         # Expect both transaction statuses in the writeback file.
         writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS,
         writeback.PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
-        writeback.ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS,
+        FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_description,
         r"\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d",  # Transaction date
     )
     prog = re.compile(expected_line_pattern)
@@ -337,7 +352,10 @@ def test_process_payments_for_writeback(
             assert transaction_status == writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS
             assert transaction_date == (extraction_date + timedelta(days=2))
         elif i_value in errored_payments_i_values:
-            assert transaction_status == writeback.ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS
+            assert (
+                transaction_status
+                == FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_description
+            )
             assert transaction_date == extraction_date
         else:
             assert transaction_status == writeback.PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS

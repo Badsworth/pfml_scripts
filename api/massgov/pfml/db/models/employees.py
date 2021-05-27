@@ -1996,12 +1996,14 @@ class State(LookupTable):
     # PEI WRITE BACK ERROR TO FINEOS
     # These states are not retryable because this is erroring after we've sent a payment to PUB
     # If there was an error, it will require a manual effort to fix.
-    ADD_TO_ERRORED_PEI_WRITEBACK = LkState(
-        151, "Add to Errored PEI writeback", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_ADD_TO_ERRORED_PEI_WRITEBACK = LkState(
+        151, "DEPRECATED STATE - Add to Errored PEI writeback", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    ERRORED_PEI_WRITEBACK_SENT = LkState(
-        152, "Errored PEI write back sent to FINEOS", Flow.DELEGATED_PAYMENT.flow_id
+    DEPREACTED_ERRORED_PEI_WRITEBACK_SENT = LkState(
+        152,
+        "DEPRECATED STATE - Errored PEI write back sent to FINEOS",
+        Flow.DELEGATED_PAYMENT.flow_id,
     )
 
     # Delegated payments address validation states.
@@ -2100,6 +2102,12 @@ class State(LookupTable):
 
     DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(
         181, "Add to Payment Reject Report - RESTARTABLE", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    # Payment was rejected as part of a PUB ACH or Check return file processing
+    # Replaces deprecated DEPRECATED_ADD_TO_ERRORED_PEI_WRITEBACK and DEPREACTED_ERRORED_PEI_WRITEBACK_SENT states as part of transition to generic writeback flow
+    DELEGATED_PAYMENT_ERROR_FROM_BANK = LkState(
+        182, "Payment Errored from Bank", Flow.DELEGATED_PAYMENT.flow_id
     )
 
 

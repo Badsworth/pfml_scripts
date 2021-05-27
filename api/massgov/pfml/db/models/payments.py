@@ -575,25 +575,28 @@ class FineosWritebackTransactionStatus(LookupTable):
         1, "Payment Audit Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
     FAILED_AUTOMATED_VALIDATION = LkFineosWritebackTransactionStatus(
-        2, "Failed Automated Validation", ACTIVE_WRITEBACK_RECORD_STATUS
+        2, "Payment Validation Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
     PRENOTE_ERROR = LkFineosWritebackTransactionStatus(
-        3, "Prenote Error", ACTIVE_WRITEBACK_RECORD_STATUS
+        3, "EFT Account Information Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
     PENDING_PRENOTE = LkFineosWritebackTransactionStatus(
-        4, "Pending Prenote", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+        4, "EFT Pending Bank Validation", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
     )
     DATA_ISSUE_IN_SYSTEM = LkFineosWritebackTransactionStatus(
-        5, "Data Issue in System", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+        5, "Payment System Error", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
     )
     TOTAL_BENEFITS_OVER_CAP = LkFineosWritebackTransactionStatus(
-        6, "Total Benefits Over Cap", ACTIVE_WRITEBACK_RECORD_STATUS
+        6, "Max Weekly Benefits Exceeded", ACTIVE_WRITEBACK_RECORD_STATUS
     )
     ADDRESS_VALIDATION_ERROR = LkFineosWritebackTransactionStatus(
         7, "Address Validation Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
     PENDING_PAYMENT_AUDIT = LkFineosWritebackTransactionStatus(
         8, "Pending Payment Audit", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+    BANK_PROCESSING_ERROR = LkFineosWritebackTransactionStatus(
+        9, "Bank Processing Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
 

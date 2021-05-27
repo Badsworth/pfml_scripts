@@ -25,6 +25,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
 from massgov.pfml.delegated_payments.pub import process_files_in_path_step
 from massgov.pfml.delegated_payments.util.ach import reader
@@ -275,14 +276,33 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             # Expected normal state for an ACH returned payment.
             state_log_util.create_finished_state_log(
                 payment,
-                State.ADD_TO_ERRORED_PEI_WRITEBACK,
+                State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
                 state_log_util.build_outcome(
-                    "Add to error PEI writeback",
+                    "Bank Processing Error",
                     ach_return_reason_code=str(ach_return.return_reason_code),
                     ach_return_line_number=str(ach_return.line_number),
                 ),
                 self.db_session,
             )
+
+            writeback_transaction_status = FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR
+            state_log_util.create_finished_state_log(
+                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+                associated_model=payment,
+                outcome=state_log_util.build_outcome(
+                    cast(str, writeback_transaction_status.transaction_status_description,)
+                ),
+                import_log_id=self.get_import_log_id(),
+                db_session=self.db_session,
+            )
+
+            writeback_details = FineosWritebackDetails(
+                payment=payment,
+                transaction_status_id=writeback_transaction_status.transaction_status_id,
+                import_log_id=self.get_import_log_id(),
+            )
+            self.db_session.add(writeback_details)
+
             self.add_pub_error(
                 pub_error_type=PubErrorType.ACH_RETURN,
                 message="Payment rejected by PUB",
@@ -294,13 +314,10 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             )
 
             self.increment(self.Metrics.PAYMENT_REJECTED_COUNT)
-        elif end_state_id in {
-            State.ADD_TO_ERRORED_PEI_WRITEBACK.state_id,
-            State.ERRORED_PEI_WRITEBACK_SENT.state_id,
-        }:
+        elif end_state_id == State.DELEGATED_PAYMENT_ERROR_FROM_BANK.state_id:
             # Already processed an ACH return for this payment.
             logger.info(
-                "payment already in a PEI_WRITEBACK state",
+                "payment already in a bank processing error state",
                 extra={
                     "payments.ach.id_number": ach_return.id_number,
                     "payments.state": end_state_id,
