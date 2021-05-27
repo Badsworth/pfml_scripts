@@ -27,7 +27,6 @@ import massgov.pfml.api.authentication as authentication
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.audit as audit_logging
 from massgov.pfml.api.gunicorn_wrapper import GunicornAppWrapper
-from massgov.pfml.fineos.exception import FINEOSFatalUnavailable
 
 logger = massgov.pfml.util.logging.get_logger(__package__)
 
