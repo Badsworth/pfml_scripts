@@ -19,6 +19,7 @@ import faker
 
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
+from massgov.pfml.util.bg import background_task
 from massgov.pfml.util.datetime.quarter import Quarter
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.dor.mock.generate")
@@ -89,10 +90,9 @@ NO_EXEMPTION_DATE = dt.date(9999, 12, 31)
 # == entry point functions for command line ==
 
 
+@background_task("dor-generate")
 def main():
     """DOR Mock File Generator"""
-    massgov.pfml.util.logging.init(__name__)
-
     args = parser.parse_args()
     employer_count = args.count
     update_mode = args.update

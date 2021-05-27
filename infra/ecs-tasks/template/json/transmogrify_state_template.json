@@ -30,7 +30,8 @@
       { "name": "LOGGING_LEVEL", "value": "${logging_level}" }
     ],
     "secrets": [
-      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
+      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
+      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"}
     ]
   }
 ]

@@ -11,8 +11,8 @@ import massgov.pfml.util.batch.log
 import massgov.pfml.util.config as config
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db, fineos
+from massgov.pfml.util.bg import background_task
 
-logging.init(__name__)
 logger = logging.get_logger(__name__)
 
 
@@ -41,11 +41,7 @@ def make_fineos_boto_session(config: eligibility_feed.EligibilityFeedExportConfi
     )
 
 
-def handler(_event, _context):
-    """Handler for Lambda function"""
-    return main_with_return()
-
-
+@background_task("fineos-eligibility-feed-export")
 def main():
     """Entry point for ECS task
 

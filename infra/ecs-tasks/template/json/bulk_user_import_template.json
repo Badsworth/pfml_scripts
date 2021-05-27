@@ -39,6 +39,7 @@
       { "name": "COGNITO_IDENTITY_POOL_ID", "value": "${cognito_user_pool_id}" }
     ],
     "secrets": [
+      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
       { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_SECRET", "valueFrom": "/service/${app_name}/${environment_name}/fineos_oauth2_client_secret" }
     ]

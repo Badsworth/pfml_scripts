@@ -13,7 +13,7 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     CREATE_PUB_FILES_REPORTS,
 )
-from massgov.pfml.util.logging import audit
+from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
@@ -79,11 +79,9 @@ def make_db_session() -> db.Session:
     return db.init(sync_lookups=True)
 
 
+@background_task("pub-payments-create-pub-files")
 def main():
     """Entry point for PUB Payment Processing"""
-    audit.init_security_logging()
-    logging.init(__name__)
-
     config = Configuration(sys.argv[1:])
 
     with db.session_scope(make_db_session(), close=True) as db_session, db.session_scope(

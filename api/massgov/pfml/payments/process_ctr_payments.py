@@ -15,7 +15,7 @@ from massgov.pfml.payments.outbound_returns import (
     process_outbound_returns,
 )
 from massgov.pfml.payments.vcc import build_vcc_files_for_s3
-from massgov.pfml.util.logging import audit
+from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
@@ -86,11 +86,9 @@ def make_db_session() -> db.Session:
     return db.init(sync_lookups=True)
 
 
+@background_task("payments-ctr-process")
 def ctr_process():
     """Entry point for CTR Payment Processing"""
-    audit.init_security_logging()
-    logging.init(__name__)
-
     config = Configuration(sys.argv[1:])
 
     with db.session_scope(make_db_session(), close=True) as db_session:

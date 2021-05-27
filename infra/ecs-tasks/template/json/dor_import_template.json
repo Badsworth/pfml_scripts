@@ -31,6 +31,7 @@
       { "name": "FOLDER_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/dor/received" }
     ],
     "secrets": [
+      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
       { "name": "GPG_DECRYPTION_KEY", "valueFrom": "/service/${app_name}-dor-import/${environment_name}/gpg_decryption_key" },
       { "name": "GPG_DECRYPTION_KEY_PASSPHRASE", "valueFrom": "/service/${app_name}-dor-import/${environment_name}/gpg_decryption_key_passphrase" },

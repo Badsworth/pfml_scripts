@@ -43,7 +43,6 @@ import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.datetime
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
-import massgov.pfml.util.logging.audit
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import Employee, Flow, State, TaxIdentifier
 from massgov.pfml.payments import fineos_payment_export, fineos_vendor_export, gax
@@ -54,6 +53,7 @@ from massgov.pfml.payments.manual.payment_voucher_csv import (
     writeback_csv_writer,
 )
 from massgov.pfml.payments.step import Step
+from massgov.pfml.util.bg import background_task
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.payments.manual.manual_payment")
 
@@ -126,11 +126,9 @@ class PaymentVoucherStep(Step):
         )
 
 
+@background_task("payments-manual-payment-voucher")
 def main():
     """Main entry point for manual payment voucher tool."""
-    massgov.pfml.util.logging.audit.init_security_logging()
-    massgov.pfml.util.logging.init("manual_payment")
-
     config = Configuration(sys.argv[1:])
 
     logger.info(

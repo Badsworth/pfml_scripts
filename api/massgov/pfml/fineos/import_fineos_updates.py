@@ -23,9 +23,10 @@ from massgov.pfml.db.models.employees import (
     LkTitle,
     TaxIdentifier,
 )
+from massgov.pfml.util.bg import background_task
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import utcnow
-from massgov.pfml.util.logging import audit, log_every
+from massgov.pfml.util.logging import log_every
 
 logger = logging.get_logger(__name__)
 
@@ -50,11 +51,9 @@ class ImportFineosEmployeeUpdatesReport:
     process_duration_in_seconds: float = 0
 
 
+@background_task("fineos-import-employee-updates")
 def handler():
     """ECS handler function."""
-    audit.init_security_logging()
-    logging.init(__name__)
-
     logger.info("Starting import of employee updates from FINEOS.")
 
     db_session_raw = db.init(sync_lookups=True)

@@ -16,7 +16,6 @@ const moduleGlobal = {
  * Configure our monitoring services with environment-specific key/ids
  */
 function initialize() {
-
   // Don't break when rendered in a non-browser environment
   if (typeof window === "undefined") return;
 

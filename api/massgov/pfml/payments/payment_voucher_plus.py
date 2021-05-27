@@ -40,7 +40,7 @@ from massgov.pfml.payments.error_reports import VendorExtractErrorReportStep
 from massgov.pfml.payments.fineos_vendor_export import VendorExtractStep
 from massgov.pfml.payments.manual.payment_voucher import Configuration as VoucherConfiguration
 from massgov.pfml.payments.manual.payment_voucher import PaymentVoucherStep
-from massgov.pfml.util.logging import audit
+from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
@@ -100,11 +100,9 @@ def make_db_session() -> db.Session:
     return db.init(sync_lookups=True)
 
 
+@background_task("payments-payment-voucher-plus")
 def main():
     """Entry point for Payment Voucher plus supporting actions"""
-    audit.init_security_logging()
-    logging.init(__name__)
-
     try:
         config = Configuration(sys.argv[1:])
     except Exception as e:

@@ -19,7 +19,6 @@ import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_uti
 import massgov.pfml.util.batch.log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
-import massgov.pfml.util.logging.audit
 import massgov.pfml.util.newrelic.events
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import EmployeeLog, ImportLog, WagesAndContributions
@@ -31,6 +30,7 @@ from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYER_QUARTER_INFO_FORMAT,
 )
 from massgov.pfml.dor.importer.paths import ImportBatch, get_files_to_process
+from massgov.pfml.util.bg import background_task
 from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
 
@@ -98,11 +98,9 @@ class ImportRunReport:
     message: str = ""
 
 
+@background_task("dor-import")
 def handler(event=None, context=None):
     """ECS task main method."""
-    massgov.pfml.util.logging.audit.init_security_logging()
-    logging.init(__name__)
-
     logger.addFilter(filter_add_memory_usage)
 
     report = ImportRunReport(start=datetime.now().isoformat())

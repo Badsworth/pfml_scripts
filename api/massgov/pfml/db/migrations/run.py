@@ -9,6 +9,7 @@ from alembic.config import Config
 from alembic.runtime import migration
 
 import massgov.pfml.util.logging
+from massgov.pfml.util.bg import background_task
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "./alembic.ini"))
@@ -17,14 +18,17 @@ alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "./alembic.ini"))
 alembic_cfg.set_main_option("script_location", os.path.dirname(__file__))
 
 
+@background_task("db-migrate-up")
 def up(revision="head"):
     command.upgrade(alembic_cfg, revision)
 
 
+@background_task("db-migrate-down")
 def down(revision="-1"):
     command.downgrade(alembic_cfg, revision)
 
 
+@background_task("db-migrate-downall")
 def downall(revision="base"):
     command.downgrade(alembic_cfg, revision)
 

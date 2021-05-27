@@ -118,6 +118,7 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
       FROM Transaction, TransactionError
       WHERE appName='PFML-API-${upper(var.environment_name)}'
         AND (name IS NULL or name NOT LIKE '%push_db')
+        AND (transactionType IS NULL or transactionType = 'Web')
     NRQL
     evaluation_offset = 1 # offset by one window
   }

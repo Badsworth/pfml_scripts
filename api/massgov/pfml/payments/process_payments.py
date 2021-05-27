@@ -12,7 +12,7 @@ from massgov.pfml.payments.fineos_payment_export import (
 )
 from massgov.pfml.payments.fineos_pei_writeback import process_payments_for_writeback
 from massgov.pfml.payments.fineos_vendor_export import process_vendor_extract_data
-from massgov.pfml.util.logging import audit
+from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
@@ -59,11 +59,9 @@ def make_db_session() -> db.Session:
     return db.init(sync_lookups=True)
 
 
+@background_task("payments-fineos-process")
 def fineos_process():
     """Entry point for FINEOS Payment Exports Processing"""
-    audit.init_security_logging()
-    logging.init(__name__)
-
     config = Configuration(sys.argv[1:])
 
     with db.session_scope(make_db_session(), close=True) as db_session:

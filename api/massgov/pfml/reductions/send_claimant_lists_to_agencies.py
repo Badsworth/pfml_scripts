@@ -6,8 +6,8 @@ import massgov.pfml.db as db
 import massgov.pfml.reductions.dia as dia
 import massgov.pfml.reductions.dua as dua
 import massgov.pfml.util.logging as logging
-import massgov.pfml.util.logging.audit as audit
 from massgov.pfml.util.batch.log import LogEntry
+from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
@@ -42,9 +42,8 @@ class Configuration:
             self.send_dua_list = DUA in steps
 
 
+@background_task("reductions-send-claimant-lists-to-agencies")
 def main():
-    audit.init_security_logging()
-    logging.init("Sending claimant lists")
     config = Configuration(sys.argv[1:])
 
     with db.session_scope(db.init(), close=True) as db_session:

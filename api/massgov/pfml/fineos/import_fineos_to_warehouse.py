@@ -12,7 +12,7 @@ from pydantic import BaseSettings, Field
 import massgov.pfml.util.aws.sts
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
-import massgov.pfml.util.logging.audit
+from massgov.pfml.util.bg import background_task
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -113,11 +113,9 @@ class BucketConfig(BaseSettings):
     bi_warehouse_path: str = Field(..., min_length=1)
 
 
+@background_task("import-fineos-to-warehouse")
 def handler():
     """ECS task handler."""
-    massgov.pfml.util.logging.audit.init_security_logging()
-    massgov.pfml.util.logging.init(__name__)
-
     config = BucketConfig()
 
     fineos_boto_session = massgov.pfml.util.aws.sts.assume_session(

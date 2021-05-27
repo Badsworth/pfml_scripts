@@ -54,7 +54,8 @@
         { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
         { "name": "CTR_DATA_MART_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/ctr-data-mart-password" },
         { "name": "CTR_MOVEIT_SSH_KEY", "valueFrom": "/service/${app_name}-comptroller/${environment_name}/eolwd-moveit-ssh-key" },
-        { "name": "CTR_MOVEIT_SSH_KEY_PASSWORD", "valueFrom": "/service/${app_name}-comptroller/${environment_name}/eolwd-moveit-ssh-key-password" }
+        { "name": "CTR_MOVEIT_SSH_KEY_PASSWORD", "valueFrom": "/service/${app_name}-comptroller/${environment_name}/eolwd-moveit-ssh-key-password" },
+        { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"}
       ]
     }
   ]

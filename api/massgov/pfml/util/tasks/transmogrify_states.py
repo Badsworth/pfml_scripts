@@ -37,7 +37,7 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import LkState, StateLog
-from massgov.pfml.util.logging import audit
+from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
@@ -76,14 +76,12 @@ def make_db_session() -> db.Session:
     return db.init(sync_lookups=True)
 
 
+@background_task("transmogrify-state-logs")
 def transmogrify_states():
     """Entry point for changing all state logs in a given state to another new state
        Note this is deliberately named "transmogrify" instead of state to illicit a reaction
        that this is not just a simple/routine script to be run (see above description)
     """
-    audit.init_security_logging()
-    logging.init(__name__)
-
     config = Configuration(sys.argv[1:])
 
     with db.session_scope(make_db_session(), close=True) as db_session:

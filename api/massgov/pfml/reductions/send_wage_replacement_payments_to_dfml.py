@@ -8,8 +8,8 @@ import massgov.pfml.reductions.reports.dia_payments.create as dia_payments_repor
 import massgov.pfml.reductions.reports.dia_payments.send as dia_payments_reports_send
 import massgov.pfml.reductions.reports.dua_payments_reports as dua_reports
 import massgov.pfml.util.logging as logging
-import massgov.pfml.util.logging.audit as audit
 from massgov.pfml.util.batch.log import LogEntry
+from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
@@ -44,10 +44,8 @@ class Configuration:
             self.send_dua_report = DUA in steps
 
 
+@background_task("reductions-send-wage-replacement-payments-to-dfml")
 def main():
-    audit.init_security_logging()
-    logging.init("Sending wage replacement payments")
-
     config = Configuration(sys.argv[1:])
 
     with db.session_scope(db.init(), close=True) as db_session:

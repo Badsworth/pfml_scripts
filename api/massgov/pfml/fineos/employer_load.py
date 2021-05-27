@@ -8,7 +8,7 @@ import massgov.pfml.fineos.employers
 import massgov.pfml.util.batch.log
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db, fineos
-from massgov.pfml.util.logging import audit
+from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
@@ -33,11 +33,9 @@ def parse_args():
     return parser.parse_args()
 
 
+@background_task("load-employers-to-fineos")
 def handler():
     """ECS handler function."""
-    audit.init_security_logging()
-    logging.init(__name__)
-
     logger.info("Starting loading employers to FINEOS.")
 
     args = parse_args()

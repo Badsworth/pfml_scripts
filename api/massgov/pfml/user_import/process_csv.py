@@ -12,6 +12,7 @@ from smart_open import open as smart_open
 
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
+from massgov.pfml.util.bg import background_task
 from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_or_update_leave_admin
 
@@ -191,8 +192,8 @@ def process_files(
     logger.info("done processing files ")
 
 
+@background_task("bulk-user-import")
 def process():
-    massgov.pfml.util.logging.init("process_csv")
     cognito_pool_id = os.environ.get("COGNITO_IDENTITY_POOL_ID", None)
     if not cognito_pool_id:
         logger.error("Required: COGNITO_IDENTITY_POOL_ID value")

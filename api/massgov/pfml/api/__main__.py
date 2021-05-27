@@ -13,13 +13,11 @@
 # This must be done as early as possible, even before other imports, and even if it makes style
 # enforcement unhappy.
 # https://docs.newrelic.com/docs/agents/python-agent/python-agent-api/initialize
-import os  # isort:skip
-import newrelic.agent  # isort:skip
+from massgov.pfml.util.newrelic import init_newrelic  # isort:skip
 
-newrelic.agent.initialize(
-    config_file=os.path.join(os.path.dirname(__file__), "../../..", "newrelic.ini"),
-    environment=os.environ.get("ENVIRONMENT", "local"),
-)
+init_newrelic()
+
+import os
 
 import massgov.pfml.api.api
 import massgov.pfml.api.app as app

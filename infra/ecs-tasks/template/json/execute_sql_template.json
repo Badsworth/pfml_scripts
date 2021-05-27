@@ -30,6 +30,7 @@
       { "name": "S3_EXPORT_BUCKET", "value": "${s3_export_bucket}"}
     ],
     "secrets": [
+      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password"}
     ]
   }

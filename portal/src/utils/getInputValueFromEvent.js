@@ -50,6 +50,6 @@ export default function getInputValueFromEvent(event) {
     // to fail validation if its value is empty.
     result = null;
   }
-    
+
   return result;
 }

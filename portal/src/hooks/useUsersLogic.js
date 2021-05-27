@@ -128,7 +128,9 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
 
       setUser(user);
 
-      portalFlow.goTo(routes.employers.organizations, { account_converted: true });
+      portalFlow.goTo(routes.employers.organizations, {
+        account_converted: true,
+      });
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

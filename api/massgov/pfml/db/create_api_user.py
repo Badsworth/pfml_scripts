@@ -10,9 +10,9 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm.session import Session
 
 import massgov.pfml.util.logging
-import massgov.pfml.util.logging.audit
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import Role, User, UserRole
+from massgov.pfml.util.bg import background_task
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -48,9 +48,8 @@ def create_fineos_user_helper(db_session: Session) -> None:
             )
 
 
+@background_task("db-create-fineos-user")
 def create_fineos_user():
-    massgov.pfml.util.logging.init("db-create-fineos-user")
-    massgov.pfml.util.logging.audit.init_security_logging()
     db_session_raw = db.init()
 
     with db.session_scope(db_session_raw) as db_session:

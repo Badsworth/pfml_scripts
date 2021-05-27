@@ -3,12 +3,13 @@ import sys
 
 import massgov.pfml.payments.data_mart as data_mart
 import massgov.pfml.util.logging as logging
+from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
 
+@background_task("payments-rotate-data-mart-password")
 def main():
-    logging.init(__name__)
     logger.info("Starting rotate_data_mart_password task")
 
     data_mart_config = data_mart.DataMartConfig()

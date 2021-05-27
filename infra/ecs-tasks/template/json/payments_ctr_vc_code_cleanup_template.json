@@ -35,7 +35,8 @@
       ],
       "secrets": [
         { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
-        { "name": "CTR_DATA_MART_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/ctr-data-mart-password" }
+        { "name": "CTR_DATA_MART_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/ctr-data-mart-password" },
+        { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"}
       ]
     }
   ]

@@ -260,6 +260,7 @@ data "aws_iam_policy_document" "register_admins_task_role_policy_document" {
     ]
 
     resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common/*",
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
     ]
   }
@@ -270,6 +271,7 @@ data "aws_iam_policy_document" "register_admins_task_role_policy_document" {
     ]
 
     resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common",
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
     ]
   }
@@ -381,6 +383,7 @@ data "aws_iam_policy_document" "dor_import_execution_role_extras" {
     ]
 
     resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common/*",
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
       "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}/*",
       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin/*"
@@ -393,6 +396,7 @@ data "aws_iam_policy_document" "dor_import_execution_role_extras" {
     ]
 
     resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common",
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
       "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}",
       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
@@ -705,6 +709,7 @@ data "aws_iam_policy_document" "payments_ctr_import_execution_role_extras" {
     ]
 
     resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common/*",
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
       "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}/*"
     ]
@@ -716,6 +721,7 @@ data "aws_iam_policy_document" "payments_ctr_import_execution_role_extras" {
     ]
 
     resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common",
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
       "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}"
     ]
@@ -1147,6 +1153,7 @@ data "aws_iam_policy_document" "reductions_workflow_execution_role_extras" {
     ]
 
     resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common/*",
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
       "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}/*"
     ]
@@ -1158,6 +1165,7 @@ data "aws_iam_policy_document" "reductions_workflow_execution_role_extras" {
     ]
 
     resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common",
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
       "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}"
     ]
