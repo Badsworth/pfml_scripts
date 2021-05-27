@@ -474,7 +474,7 @@ export function intermittentFillAbsencePeriod(claimNumber: string): void {
     // of a rerender, and we just need to wait a little additional time for the render to complete.
     cy.root()
       .should(($el) => !Cypress.dom.isAttached($el))
-      .wait(250);
+      .wait(300);
   });
   // This has to be reselected because #certificationEpisodicLeaveEntitlementWidget
   // is removed and rerendered after episode duration is selected.

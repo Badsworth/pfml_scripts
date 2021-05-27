@@ -242,12 +242,20 @@ export const BIAP60ER: ScenarioSpecification = {
   },
 };
 
-export const CHAP1: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "eligible" },
+export const CCAP90: ScenarioSpecification = {
+  employee: {
+    wages: 90000,
+    mass_id: true,
+  },
   claim: {
-    label: "CHAP1",
-    shortClaim: true,
+    label: "CCAP90",
     reason: "Care for a Family Member",
+    work_pattern_spec: "0,720,0,720,0,720,0",
     docs: {},
+    leave_dates: [
+      addWeeks(mostRecentSunday, 9),
+      addWeeks(mostRecentSunday, 13),
+    ],
+    metadata: { expected_weekly_payment: "850.00" },
   },
 };

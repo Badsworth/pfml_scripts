@@ -906,7 +906,8 @@ export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
 export function respondToLeaveAdminRequest(
   suspectFraud: boolean,
   gaveNotice: boolean,
-  approval: boolean
+  approval: boolean,
+  isCaringLeave = false
 ): void {
   cy.contains(
     "fieldset",
@@ -926,11 +927,21 @@ export function respondToLeaveAdminRequest(
   ).within(() => {
     cy.contains("label", approval ? "Approve" : "Deny (explain below)").click();
   });
+  // caring leave type has an additional question to respond to
+  if (isCaringLeave) {
+    cy.contains(
+      "fieldset",
+      "Do you believe the listed relationship is described accurately? (Optional)"
+    ).within(() => {
+      cy.contains("label", "Yes").click();
+    });
+  }
   if (suspectFraud || !gaveNotice || !approval) {
     cy.get('textarea[name="comment"]').type(
       "This is a generic explanation of the leave admin's response."
     );
   }
+
   cy.contains("button", "Submit").click();
   cy.contains("Thanks for reviewing the application");
 }
