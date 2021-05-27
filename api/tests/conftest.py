@@ -486,6 +486,7 @@ def local_test_db(local_test_db_schema):
     # not used directly, but loads models into Base
     import massgov.pfml.db.models.employees as employees  # noqa: F401
     import massgov.pfml.db.models.applications as applications  # noqa: F401
+    import massgov.pfml.db.models.payments as payments  # noqa: F401
 
     engine = db.create_engine()
     Base.metadata.create_all(bind=engine)

@@ -1,9 +1,11 @@
 import enum
+from typing import cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import LkState, State
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.step import Step
 
 # This step moves various payment states
@@ -17,7 +19,7 @@ from massgov.pfml.delegated_payments.step import Step
 # move those to the error state
 logger = logging.get_logger(__name__)
 
-ERROR_STATE = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+ERROR_STATE = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
 ERROR_OUTCOME = state_log_util.build_outcome("Payment timed out waiting for audit reject report")
 
 
@@ -63,6 +65,23 @@ class StateCleanupStep(Step):
                 payment, ERROR_STATE, ERROR_OUTCOME, self.db_session
             )
 
+            writeback_transaction_status = FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
+            state_log_util.create_finished_state_log(
+                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+                associated_model=payment,
+                outcome=state_log_util.build_outcome(
+                    cast(str, writeback_transaction_status.transaction_status_description,)
+                ),
+                import_log_id=self.get_import_log_id(),
+                db_session=self.db_session,
+            )
+
+            writeback_details = FineosWritebackDetails(
+                payment=payment,
+                transaction_status_id=writeback_transaction_status.transaction_status_id,
+                import_log_id=self.get_import_log_id(),
+            )
+            self.db_session.add(writeback_details)
         logger.info(
             "Successfully moved %i state logs from %s to %s",
             state_log_count,
