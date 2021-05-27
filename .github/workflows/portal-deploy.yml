@@ -178,7 +178,7 @@ jobs:
     needs: [update-the-deploy-branch, deploy-info]
     outputs:
       version_link: ${{ steps.create_version_link.outputs.version_link }}
-    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || (!contains(github.event.inputs.deployment_env || 'test', 'test' ) && !contains(github.event.inputs.deployment_env || 'test', 'cps-preview') )}} # Mutes notifications for auto-deploys to test    
+    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -288,29 +288,6 @@ jobs:
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         -H "Accept: application/vnd.github.v3+json" \
                         -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "performance", "version": "${{ env.version }}" } }'
-          echo "Done."
-
-  extra-cps-preview-deploy:
-    if: contains(github.event.inputs.deployment_env || 'test', 'test') && contains(github.event.inputs.version || 'main', 'main')
-    name: (test) Extra cps-preview deploy
-    needs: update-the-deploy-branch
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      - name: Start a cps-preview deploy
-        env:
-          GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
-          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          WORKFLOW_NAME: "portal-deploy.yml"
-        run: |
-          echo "*** An API test deploy is now in progress. Enqueuing an extra deployment to cps-preview... ***"
-          curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
-                        -H "Authorization: Bearer $GITHUB_TOKEN" \
-                        -H "Accept: application/vnd.github.v3+json" \
-                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "cps-preview", "version": "${{ env.version }}" } }'
           echo "Done."
 
   deploy:
