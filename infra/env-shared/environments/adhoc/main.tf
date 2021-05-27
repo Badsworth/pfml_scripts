@@ -64,5 +64,5 @@ module "pfml" {
   enable_regional_rate_based_acl = false
   enable_fortinet_managed_rules  = true
   enforce_fortinet_managed_rules = true # false = Count rule matches (override type = COUNT)
-}                                        # true  = Block rule matches (override type = NONE)
+}                                       # true  = Block rule matches (override type = NONE)
 
