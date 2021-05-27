@@ -117,18 +117,16 @@ resource "aws_db_instance" "default" {
     # Human-readable tag for operations team (smartronix)
     purpose = "${var.environment_name} database for PFML"
 
-    # Temporary scheduler exception tags
-    schedulev2       = "na"
-    expenddate       = "01/31/21"
-    expenddatedetail = "SCTASK0177777"
     # schedulev2 is an EOTSS-required custom tag. It configures a mandatory scheduled downtime
     # period for test only.*
     #
-    # Test downtime is disabled until 01/31/2021 to account for launch activities.
+    # *Test downtime is currently disabled to account for launch activities. Usually this requires an exception tag provided by EOTSS,
+    #  however a separate arrangement has been made as indicated in ServiceNow ticket SCTASK0208809.
     #
     # If you change this schedule, please update the ECS autoscaling policy in autoscaling-ecs.tf.
     #
     # See https://lwd.atlassian.net/wiki/spaces/DD/pages/275611773/RDS+databases.
+    schedulev2 = "na"
   })
 }
 # ------------------------------------
