@@ -2,7 +2,6 @@ import { extractLeavePeriod } from "../../../src/util/claims";
 import { LeaveReason } from "types";
 import { portal, fineos } from "../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
-import { Submission } from "../../../src/types";
 
 describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
   const fineosSubmission = it(
@@ -44,7 +43,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
             fineos.reviewMailedDocumentsWithTasks(
               fineos_absence_id,
               reason as LeaveReason,
-              false,
+              "Caring Certification Review",
               true
             );
           });
@@ -52,7 +51,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     }
   );
 
-  const employerDenial = it("Leave admin will submit ER approval for employee", () => {
+  const employerDenial = it("Leave admin will submit ER denial for employee", () => {
     cy.dependsOnPreviousPass([fineosSubmission]);
     portal.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
@@ -73,7 +72,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     cy.visit("/");
     cy.unstash<string>("fineos_absence_id").then((fineos_absence_id) => {
       fineos.visitClaim(fineos_absence_id);
-      fineos.denyClaim("Claimant wages failed 30x rule");
+      fineos.denyClaim("Covered family relationship not established");
     });
   });
 });

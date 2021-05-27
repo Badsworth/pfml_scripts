@@ -372,7 +372,8 @@ export function createNotification(
   cy.wait("@ajaxRender");
   cy.wait(200);
   cy.labelled("Standard Work Week").click();
-  cy.wait(1000);
+  cy.wait("@ajaxRender");
+  cy.wait(200);
   cy.get('input[value="Apply to Calendar"]').click({ force: true });
   clickNext();
   if (claimType === "military") {
@@ -664,33 +665,33 @@ export function mailedDocumentMarkEvidenceRecieved(
   clickBottomWidgetButton();
 }
 
+/**
+ *Assumes that the ID and certification documents have not been uploaded to the case.
+ *The function will upload both ID documents and certification document into fineos.
+ *The certfication review and identification proof tasks are both opened and then closed after marking the evidence.
+ */
 export function reviewMailedDocumentsWithTasks(
   claimNumber: string,
   reason: LeaveReason,
-  uploadedIDProof = true,
+  taskName: string,
   approveDocs = true
 ): void {
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
   onTab("Documents");
-  if (uploadedIDProof) {
-    assertHasDocument("Identification Proof");
-  } else {
-    uploadDocument("MA_ID", "Identification proof");
-    onTab("Documents");
-    assertHasDocument("Identification Proof");
-  }
+  uploadDocument("MA_ID", "Identification proof");
+  onTab("Documents");
+  assertHasDocument("Identification Proof");
   const documentType = getCertificationDocumentType(
     reason,
     config("HAS_FINEOS_SP") === "true"
   );
-  cy.wait(150);
   uploadDocument("HCP", documentType);
   onTab("Documents");
   cy.wait(150);
   assertHasDocument(documentType);
   onTab("Absence Hub");
-  openDocTasks();
+  openDocTasks(taskName);
   onTab("Absence Hub");
   cy.get('input[type="submit"][value="Adjudicate"]').click();
   const evidenceDecision = approveDocs ? "Satisfied" : "Not Satisfied";
@@ -698,7 +699,6 @@ export function reviewMailedDocumentsWithTasks(
     ? "Evidence has been reviewed and denied"
     : undefined;
   markEvidence(documentType, undefined, evidenceDecision, evidenceReason);
-  cy.wait(150);
   markEvidence(
     "Identification Proof",
     undefined,
@@ -707,16 +707,14 @@ export function reviewMailedDocumentsWithTasks(
   );
   checkStatus(claimNumber, "Evidence", evidenceDecision);
   clickBottomWidgetButton();
-
-  for (const task of ["ID Review", "Caring Certification Review"]) {
+  for (const task of ["ID Review", taskName]) {
     closeTask(task);
   }
 }
 
-export function openDocTasks(): void {
+export function openDocTasks(taskName: string): void {
   openTask("ID Review");
-  // replace Caring with argument of Leave Type
-  openTask("Caring Certification Review");
+  openTask(taskName);
 }
 
 export function openTask(taskName: string): void {
@@ -738,10 +736,9 @@ export function closeTask(task: string): void {
   cy.wait("@ajaxRender");
   cy.wait(150);
   cy.get(`td[title="${task}"]`).click();
-  cy.wait(150);
   cy.get('input[type="submit"][value="Close"]').click();
-  cy.wait(150);
 }
+
 export function claimExtensionAdjudicationFlow(claimNumber: string): void {
   visitClaim(claimNumber);
   cy.get("input[type='submit'][value='Adjudicate']").click();
