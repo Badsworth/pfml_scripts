@@ -45,4 +45,4 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
       - name: "Deploy"
-        run: npm run cli -- flood ${{ github.event.inputs.preset }}
+        run: npm run cli -- flood ${{ github.event.inputs.preset }} --deploy
