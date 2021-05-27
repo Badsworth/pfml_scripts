@@ -210,6 +210,26 @@ module "export_leave_admins_created_scheduler" {
   DOC
 }
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Run cps-errors daily at 9am EST (10am EDT) (2pm UTC)
+# This needs to run after fineos-bucket-tool
+module "cps_errors_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name           = "process-cps-error-reports"
+  schedule_expression = "cron(0 14 * * ? *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["cps-errors"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["cps-errors"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.cps_errors_task_role.arn
+}
 
 module "reductions_dia_send_claimant_lists_scheduler" {
   source     = "../../modules/ecs_task_scheduler"

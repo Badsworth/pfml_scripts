@@ -284,6 +284,12 @@ locals {
       }
     },
 
+    "cps-errors" = {
+      command             = ["cps-errors"]
+      containers_template = "default_template.json"
+      task_role           = aws_iam_role.cps_errors_task_role.arn
+    },
+
     "payments-rotate-data-mart-password" = {
       command             = ["payments-rotate-data-mart-password"]
       containers_template = "payments_rotate_data_mart_password_template.json"

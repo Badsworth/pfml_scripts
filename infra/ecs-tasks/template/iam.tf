@@ -1245,3 +1245,44 @@ data "aws_iam_policy_document" "fineos_bucket_tool_task_policy_document" {
     effect = "Allow"
   }
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for cps-errors
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "cps_errors_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-cps-errors-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "cps_errors_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-cps-errors-execution-role-policy"
+  role   = aws_iam_role.cps_errors_task_role.id
+  policy = data.aws_iam_policy_document.cps_errors_role_policy_document.json
+}
+
+data "aws_iam_policy_document" "cps_errors_role_policy_document" {
+  statement {
+    sid = "AllowS3ReadOnBucket"
+    actions = [
+      "s3:Get*",
+      "s3:List*"
+    ]
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps-errors/",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps-errors/*"
+    ]
+  }
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}"
+    ]
+
+    effect = "Allow"
+  }
+}

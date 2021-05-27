@@ -128,6 +128,7 @@ fineos-test-vendor-export-generate = "massgov.pfml.payments.mock.fineos_extract_
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
 fineos-import-employee-updates = "massgov.pfml.fineos.import_fineos_updates:handler"
 fineos-bucket-tool = "massgov.pfml.fineos.tool.bucket:main"
+cps-errors = "massgov.pfml.fineos.process_cps_errors.process_cps_errors:main"
 import-fineos-to-warehouse = "massgov.pfml.fineos.import_fineos_to_warehouse:handler"
 reductions-retrieve-payment-lists-from-agencies = "massgov.pfml.reductions.retrieve_payment_lists_from_agencies:main"
 reductions-send-claimant-lists-to-agencies = "massgov.pfml.reductions.send_claimant_lists_to_agencies:main"
