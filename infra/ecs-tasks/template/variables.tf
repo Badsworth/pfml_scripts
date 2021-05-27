@@ -279,11 +279,6 @@ variable "task_failure_email_address_list" {
   default     = []
 }
 
-variable "enable_sentry" {
-  description = "Enable sending ECS errors to Sentry."
-  type        = string
-  default     = "0"
-}
 variable "enable_reductions_send_claimant_lists_to_agencies_schedule" {
   description = "Enable scheduling for 'reductions-send-claimant-lists-to-agencies' ECS task"
   type        = bool

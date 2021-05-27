@@ -33,7 +33,6 @@ from massgov.pfml.dor.importer.dor_file_formats import (
 from massgov.pfml.dor.importer.paths import ImportBatch, get_files_to_process
 from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
-from massgov.pfml.util.sentry import initialize_sentry
 
 logger = logging.get_logger("massgov.pfml.dor.importer.import_dor")
 
@@ -101,7 +100,6 @@ class ImportRunReport:
 
 def handler(event=None, context=None):
     """ECS task main method."""
-    initialize_sentry()
     massgov.pfml.util.logging.audit.init_security_logging()
     logging.init(__name__)
 

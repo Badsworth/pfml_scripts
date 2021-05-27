@@ -23,8 +23,6 @@ module.exports = {
   maintenanceStart: null,
   maintenanceEnd: null,
   newRelicAppId: null,
-  sentryDsn:
-    "https://3c7da99697784a3dab944dec622d1b50@o514801.ingest.sentry.io/5620266",
   gtmConfig: {
     // Google Tag Manager Stage environment
     auth: "9Gb_47rccihIuwtcFdJy4w",

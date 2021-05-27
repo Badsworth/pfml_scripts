@@ -16,7 +16,6 @@ from massgov.pfml.payments.outbound_returns import (
 )
 from massgov.pfml.payments.vcc import build_vcc_files_for_s3
 from massgov.pfml.util.logging import audit
-from massgov.pfml.util.sentry import initialize_sentry
 
 logger = logging.get_logger(__name__)
 
@@ -100,7 +99,6 @@ def ctr_process():
 
 def _ctr_process(db_session: db.Session, config: Configuration) -> None:
     """Process CTR Payments"""
-    initialize_sentry()
     logger.info("Start - CTR Payments ECS Task")
 
     # If any of the first 3 steps fail

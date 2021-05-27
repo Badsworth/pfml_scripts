@@ -20,7 +20,6 @@ import faker
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
 from massgov.pfml.util.datetime.quarter import Quarter
-from massgov.pfml.util.sentry import initialize_sentry
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.dor.mock.generate")
 
@@ -92,7 +91,6 @@ NO_EXEMPTION_DATE = dt.date(9999, 12, 31)
 
 def main():
     """DOR Mock File Generator"""
-    initialize_sentry()
     massgov.pfml.util.logging.init(__name__)
 
     args = parser.parse_args()
