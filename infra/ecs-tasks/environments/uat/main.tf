@@ -50,8 +50,12 @@ module "tasks" {
 
   fineos_eligibility_feed_output_directory_path       = "s3://fin-sompre-data-import/UAT"
   fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/UAT/dataexports"
-  fineos_error_export_path                            = "s3://fin-sompre-data-export/UAT/errorExtracts"
-  logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
+
+  fineos_data_export_path  = "s3://fin-sompre-data-export/UAT/dataexports"
+  fineos_data_import_path  = "s3://fin-sompre-data-import/UAT/peiupdate"
+  fineos_error_export_path = "s3://fin-sompre-data-export/UAT/errorExtracts"
+
+  logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
