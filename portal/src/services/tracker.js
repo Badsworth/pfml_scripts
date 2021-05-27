@@ -2,8 +2,6 @@
  * @file Wrapper methods around our monitoring service. Methods in here should
  * handle a scenario where the monitoring service is blocked by things like an ad blocker.
  */
-import * as Sentry from "@sentry/react";
-import { Dedupe as DedupeIntegration } from "@sentry/integrations";
 
 /**
  * Module level global variable keeping track of custom attributes that should be added to all events within a single page,
@@ -18,14 +16,6 @@ const moduleGlobal = {
  * Configure our monitoring services with environment-specific key/ids
  */
 function initialize() {
-  if (process.env.buildEnv === "test") {
-    Sentry.init({
-      dsn: process.env.sentryDsn,
-      integrations: [new DedupeIntegration()],
-      environment: process.env.buildEnv,
-      release: process.env.releaseVersion,
-    });
-  }
 
   // Don't break when rendered in a non-browser environment
   if (typeof window === "undefined") return;
@@ -65,9 +55,6 @@ function newrelicReady() {
  * @param {object} [customAttributes] - name/value pairs representing custom attributes
  */
 function noticeError(error, customAttributes) {
-  if (process.env.buildEnv === "test") {
-    Sentry.captureException(error);
-  }
   if (newrelicReady()) {
     newrelic.noticeError(error, {
       ...moduleGlobal.customPageAttributes,

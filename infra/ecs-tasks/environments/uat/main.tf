@@ -47,7 +47,6 @@ module "tasks" {
 
   fineos_aws_iam_role_arn         = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
   fineos_aws_iam_role_external_id = "8jFBtjr4UA@"
-  enable_sentry                   = "0"
 
   fineos_eligibility_feed_output_directory_path       = "s3://fin-sompre-data-import/UAT"
   fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/UAT/dataexports"

@@ -21,18 +21,12 @@ newrelic.agent.initialize(
     environment=os.environ.get("ENVIRONMENT", "local"),
 )
 
-import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
-from sentry_sdk.integrations.logging import ignore_logger
-
 import massgov.pfml.api.api
 import massgov.pfml.api.app as app
 import massgov.pfml.api.authentication as authentication
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.audit as audit_logging
 from massgov.pfml.api.gunicorn_wrapper import GunicornAppWrapper
-from massgov.pfml.fineos.exception import FINEOSFatalUnavailable
-from massgov.pfml.util.sentry import sanitize_sentry_event
 
 logger = massgov.pfml.util.logging.get_logger(__package__)
 
@@ -40,34 +34,7 @@ logger = massgov.pfml.util.logging.get_logger(__package__)
 def main():
     audit_logging.init_security_logging()
     massgov.pfml.util.logging.init(__package__)
-    initialize_flask_sentry()
     start_server()
-
-
-def initialize_flask_sentry():
-    if os.environ.get("ENABLE_SENTRY", "0") == "1":
-
-        api_release = (
-            ""
-            if not os.environ.get("RELEASE_VERSION")
-            else 'massgov-pfml-api@{os.environ.get("RELEASE_VERSION").replace("api/", "")}'
-        )
-
-        sentry_sdk.init(
-            dsn="https://3d9b96c9cef846ae8cbd9630530e719c@o514801.ingest.sentry.io/5618604",
-            environment=os.environ.get("ENVIRONMENT", "local"),
-            integrations=[FlaskIntegration()],
-            request_bodies="never",
-            before_send=sanitize_sentry_event,
-            # Ignore temporary unavailability from FINEOS API.
-            # Outages should be captured through percentage-based New Relic alarms.
-            ignore_errors=[FINEOSFatalUnavailable],
-            # Disable tracing since we rely on New Relic already.
-            traces_sample_rate=0,
-            release=api_release,
-            debug=False,
-        )
-        ignore_logger("massgov.pfml.util.logging.audit")
 
 
 def start_server():

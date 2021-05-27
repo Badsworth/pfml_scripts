@@ -38,7 +38,6 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import LkState, StateLog
 from massgov.pfml.util.logging import audit
-from massgov.pfml.util.sentry import initialize_sentry
 
 logger = logging.get_logger(__name__)
 
@@ -82,7 +81,6 @@ def transmogrify_states():
        Note this is deliberately named "transmogrify" instead of state to illicit a reaction
        that this is not just a simple/routine script to be run (see above description)
     """
-    initialize_sentry()
     audit.init_security_logging()
     logging.init(__name__)
 

@@ -23,7 +23,6 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import Employee, TaxIdentifier
 from massgov.pfml.util.logging import audit
-from massgov.pfml.util.sentry import initialize_sentry
 
 logger = logging.get_logger(__name__)
 
@@ -47,7 +46,6 @@ class Configuration:
 
 def main():
     """Main entry point for MMARS vendor customer code cleanup tool."""
-    initialize_sentry()
     audit.init_security_logging()
     logging.init(__name__)
     logger.info("Start MMARS vendor customer code cleanup")

@@ -73,7 +73,6 @@ module "tasks" {
   ctr_data_mart_host     = "dua-fdm-wdb1.cs.govt.state.ma.us"
   ctr_data_mart_username = "SRV-LWD-DFML-PROD"
 
-  enable_sentry                   = "0"
   fineos_data_export_path         = "s3://fin-somprod-data-export/PRD/dataexports"
   fineos_data_import_path         = "s3://fin-somprod-data-import/PRD/peiupdate"
   fineos_error_export_path        = "s3://fin-somprod-data-export/PRD/errorExtracts"

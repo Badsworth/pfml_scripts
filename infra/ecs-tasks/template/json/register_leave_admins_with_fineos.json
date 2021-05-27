@@ -36,7 +36,6 @@
       { "name": "FINEOS_CLIENT_WSCOMPOSER_USER_ID", "value": "${fineos_client_wscomposer_user_id}" },
       { "name": "FINEOS_CLIENT_OAUTH2_URL", "value": "${fineos_client_oauth2_url}" },
       { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_ID", "value": "${fineos_client_oauth2_client_id}" },
-      { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"},
       { "name": "FEATURES_FILE_PATH", "value": "s3://massgov-pfml-${environment_name}-feature-gate/features.yaml"}
     ],
     "secrets": [
