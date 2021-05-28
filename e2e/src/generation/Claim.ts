@@ -133,6 +133,7 @@ export class ClaimGenerator {
       occupation: "Administrative",
       first_name: employee.first_name,
       last_name: employee.last_name,
+      gender: "Prefer not to answer",
       tax_identifier: employee.ssn,
       employer_fein: occupation.fein,
       date_of_birth: employee.date_of_birth,

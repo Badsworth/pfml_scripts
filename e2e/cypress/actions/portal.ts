@@ -258,26 +258,14 @@ export function clickChecklistButton(label: string): void {
     .click();
 }
 
-export function verifyIdentity(
-  application: ApplicationRequestBody,
-  leaveType: string
-): void {
-  if (leaveType === "normal") {
-    cy.labelled("First name").type(application.first_name as string);
-    cy.labelled("Last name").type(application.last_name as string);
-    cy.log("Employer FEIN", application.employer_fein);
-    cy.contains("button", "Save and continue").click();
-  }
+export function verifyIdentity(application: ApplicationRequestBody): void {
+  cy.labelled("First name").type(application.first_name as string);
+  cy.labelled("Last name").type(application.last_name as string);
+  cy.log("Employer FEIN", application.employer_fein);
+  cy.contains("button", "Save and continue").click();
 
-  /* @todo:
-   * gender list should be available after api.ts is updated
-   * or declared somewhere else
-   */
-  // const Gender = ["Gender not listed", "Man", "Woman", "Nonbinary", "Prefer not to answer"];
-  cy.get("[data-cy='gender-form']")
-    // .contains(Gender[application.gender_id || 1])
-    .contains("Man")
-    .click();
+  cy.contains("What is your gender identity?");
+  cy.contains(application.gender as string).click();
   cy.contains("button", "Save and continue").click();
 
   // Added Phone Section behind Feature Flag
@@ -985,7 +973,7 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
     application.leave_details && application.leave_details.reason_qualifier;
 
   clickChecklistButton("Verify your identification");
-  verifyIdentity(application, "normal");
+  verifyIdentity(application);
   onPage("checklist");
   clickChecklistButton("Enter employment information");
   enterEmployerInfo(application);
