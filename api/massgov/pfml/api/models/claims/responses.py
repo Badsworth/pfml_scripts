@@ -18,6 +18,7 @@ from massgov.pfml.util.pydantic.types import (
 class EmployerResponse(PydanticBaseModel):
     employer_dba: str
     employer_fein: FEINFormattedStr
+    employer_id: UUID4
 
 
 class EmployeeResponse(PydanticBaseModel):

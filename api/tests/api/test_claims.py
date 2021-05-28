@@ -1460,6 +1460,7 @@ def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> b
     assert claim_response["employer"]["employer_fein"] == FEINFormattedStr.validate_type(
         claim_query.employer.employer_fein
     )
+    assert claim_response["employer"]["employer_id"] == str(claim_query.employer.employer_id)
     assert claim_response["employee"]["first_name"] == claim_query.employee.first_name
     assert claim_response["employee"]["middle_name"] == claim_query.employee.middle_name
     assert claim_response["employee"]["last_name"] == claim_query.employee.last_name
