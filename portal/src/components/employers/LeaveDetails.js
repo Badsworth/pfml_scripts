@@ -206,7 +206,7 @@ const LeaveDetails = (props) => {
 };
 
 LeaveDetails.propTypes = {
-  believeRelationshipAccurate: PropTypes.oneOf(["Yes", "Unknown", "No", ""]),
+  believeRelationshipAccurate: PropTypes.oneOf(["Yes", "Unknown", "No"]),
   claim: PropTypes.instanceOf(EmployerClaim).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   downloadDocument: PropTypes.func.isRequired,

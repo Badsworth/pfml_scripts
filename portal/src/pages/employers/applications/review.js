@@ -64,7 +64,7 @@ export const Review = (props) => {
     employerDecision: undefined,
     fraud: undefined,
     employeeNotice: undefined,
-    believeRelationshipAccurate: "",
+    believeRelationshipAccurate: undefined,
     relationshipInaccurateReason: "",
   });
   const isCommentRequired =

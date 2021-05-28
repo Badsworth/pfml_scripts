@@ -411,7 +411,7 @@ describe("Review", () => {
       expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
         "NTN-111-ABS-01",
         {
-          believe_relationship_accurate: expect.any(String),
+          believe_relationship_accurate: undefined, // undefined by default
           comment: expect.any(String),
           employer_benefits: expect.any(Array),
           employer_decision: undefined, // undefined by default
