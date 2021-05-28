@@ -699,7 +699,7 @@ const shared = {
   qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
   resendVerificationCodeLink: "Resend the code",
   siteDescription:
-    "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
+    "Apply for this Commonwealth-offered benefit here, or log in to review your applications.",
   submitApplicationButton: "I understand and agree",
   usernameLabel: "Email address",
   verificationCodeLabel: "6-digit code",
@@ -2070,7 +2070,8 @@ const pages = {
     employerCardBody_selfRegister: "Manage leave for your team.",
     employerCreateAccountButton: "Create an employer account",
     employerHeading: "Employers",
-    seoTitle: "Massachusetts Paid Family and Medical Leave",
+    seoTitle:
+      "Create or Log into your account for Massachusetts Paid Family and Medical Leave",
     title:
       "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
   },
@@ -2447,7 +2448,8 @@ const components = {
   },
   footer: {
     dataSharingAgreement: "Data Sharing Agreement",
-    description: "$t(shared.siteDescription)",
+    description:
+      "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
     logoTitleDFML: "Go to DFML homepage",
     logoTitlePFML: "Go to PFML homepage",
     orgAddress: "PO Box 838 Lawrence, MA 01842",

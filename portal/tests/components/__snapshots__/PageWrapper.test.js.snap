@@ -13,7 +13,7 @@ exports[`PageWrapper renders Spinner when isLoading is true 1`] = `
 
 exports[`PageWrapper sets description meta tag 1`] = `
 <meta
-  content="Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons."
+  content="Apply for this Commonwealth-offered benefit here, or log in to review your applications."
   name="description"
 />
 `;

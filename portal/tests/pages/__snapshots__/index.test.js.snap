@@ -6,7 +6,7 @@ exports[`Index does show employer information when employerShowSelfRegistrationF
     className="maxw-desktop"
   >
     <Title
-      seoTitle="Massachusetts Paid Family and Medical Leave"
+      seoTitle="Create or Log into your account for Massachusetts Paid Family and Medical Leave"
     >
       <Trans
         components={
@@ -134,7 +134,7 @@ exports[`Index renders landing page content 1`] = `
     className="maxw-desktop"
   >
     <Title
-      seoTitle="Massachusetts Paid Family and Medical Leave"
+      seoTitle="Create or Log into your account for Massachusetts Paid Family and Medical Leave"
     >
       <Trans
         components={
