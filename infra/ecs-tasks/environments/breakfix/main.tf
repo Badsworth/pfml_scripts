@@ -39,16 +39,16 @@ module "tasks" {
   cognito_user_pool_id = "us-east-1_Bi6tPV5hz"
 
   # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url          = ""
-  fineos_client_customer_api_url                      = ""
-  fineos_client_group_client_api_url                  = ""
-  fineos_client_wscomposer_api_url                    = ""
-  fineos_client_oauth2_url                            = ""
-  fineos_client_oauth2_client_id                      = ""
-  fineos_aws_iam_role_arn                             = ""
-  fineos_aws_iam_role_external_id                     = ""
-  fineos_eligibility_feed_output_directory_path       = ""
-  fineos_import_employee_updates_input_directory_path = ""
+  fineos_client_integration_services_api_url          = "https://pfx-api.masspfml.fineos.com/integration-services/"
+  fineos_client_customer_api_url                      = "https://pfx-api.masspfml.fineos.com/customerapi/"
+  fineos_client_group_client_api_url                  = "https://pfx-api.masspfml.fineos.com/groupclientapi/"
+  fineos_client_wscomposer_api_url                    = "https://pfx-api.masspfml.fineos.com/integration-services/wscomposer/"
+  fineos_client_oauth2_url                            = "https://pfx-api.masspfml.fineos.com/oauth2/token"
+  fineos_client_oauth2_client_id                      = "470dvu60ij99vpgsm8dug3nuhg"
+  fineos_aws_iam_role_arn                             = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
+  fineos_aws_iam_role_external_id                     = "8jFBtjr4UA@"
+  fineos_eligibility_feed_output_directory_path       = "s3://fin-sompre-data-import/PFX/"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/PFX/dataexports"
 
   # These can be kept blank.
   eolwd_moveit_sftp_uri    = ""
@@ -72,9 +72,9 @@ module "tasks" {
   ctr_data_mart_username = ""
 
   # TODO: Values from FINEOS.
-  fineos_data_export_path  = ""
-  fineos_data_import_path  = ""
-  fineos_error_export_path = ""
+  fineos_data_export_path  = "s3://fin-sompre-data-export/PFX/dataexports"
+  fineos_data_import_path  = "s3://fin-sompre-data-import/PFX/peiupdate"
+  fineos_error_export_path = "s3://fin-sompre-data-export/PFX/errorExtracts"
 
   pfml_fineos_inbound_path  = "s3://massgov-pfml-breakfix-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path = "s3://massgov-pfml-breakfix-agency-transfer/cps/outbound"

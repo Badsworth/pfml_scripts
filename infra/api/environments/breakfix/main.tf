@@ -80,18 +80,17 @@ module "api" {
   rmv_check_mock_success            = "1"
 
   # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url          = ""
-  fineos_client_customer_api_url                      = ""
-  fineos_client_group_client_api_url                  = ""
-  fineos_client_wscomposer_api_url                    = ""
-  fineos_client_wscomposer_user_id                    = ""
-  fineos_client_oauth2_url                            = ""
-  fineos_import_employee_updates_input_directory_path = null
-  fineos_aws_iam_role_arn                             = null
-  fineos_aws_iam_role_external_id                     = null
+  fineos_client_integration_services_api_url          = "https://pfx-api.masspfml.fineos.com/integration-services/"
+  fineos_client_customer_api_url                      = "https://pfx-api.masspfml.fineos.com/customerapi/"
+  fineos_client_group_client_api_url                  = "https://pfx-api.masspfml.fineos.com/groupclientapi/"
+  fineos_client_wscomposer_api_url                    = "https://pfx-api.masspfml.fineos.com/integration-services/wscomposer/"
+  fineos_client_wscomposer_user_id                    = "OASIS"
+  fineos_client_oauth2_url                            = "https://pfx-api.masspfml.fineos.com/oauth2/token"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/PFX/dataexports"
+  fineos_aws_iam_role_arn                             = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
+  fineos_aws_iam_role_external_id                     = "8jFBtjr4UA@"
 
-  # TODO: This value is provided by FINEOS over Interchange.
-  fineos_client_oauth2_client_id = ""
+  fineos_client_oauth2_client_id = "470dvu60ij99vpgsm8dug3nuhg"
 
   service_now_base_url = "https://savilinxstage.servicenowservices.com"
 }
