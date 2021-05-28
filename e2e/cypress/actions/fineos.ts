@@ -6,7 +6,6 @@ import {
 } from "../../src/util/documents";
 import { LeaveReason } from "../../src/types";
 import { config } from "./common";
-
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
@@ -239,11 +238,14 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
 export function createNotification(
   startDate: Date,
   endDate: Date,
-  claimType?: string,
+  claimType?: "military" | "bonding" | "caring",
   application?: ApplicationRequestBody
 ): void {
   const clickNext = (timeout?: number) =>
-    cy.get('#navButtons input[value="Next "]', { timeout }).first().click();
+    cy
+      .get('#navButtons input[value="Next "]', { timeout })
+      .first()
+      .click({ force: true });
   cy.contains("span", "Create Notification").click();
   clickNext();
   cy.labelled("Hours worked per week").type(
@@ -275,8 +277,22 @@ export function createNotification(
       break;
 
     case "caring":
-      // @Reminder
-      // Implement once available
+      cy.contains("div", "Caring for a family member")
+        .prev()
+        .find("input")
+        .click();
+      clickNext();
+      cy.labelled("Qualifier 1").select("Serious Health Condition");
+      cy.wait("@ajaxRender");
+      cy.get("#leaveRequestAbsenceRelationshipsWidget").within(() => {
+        cy.labelled("Primary Relationship to Employee").select(
+          "Sibling - Brother/Sister"
+        );
+        cy.wait("@ajaxRender");
+        cy.wait(200);
+        cy.labelled("Qualifier 1").select("Biological");
+      });
+      clickNext();
       break;
 
     default:
@@ -305,6 +321,7 @@ export function createNotification(
       `${format(endDate, "MM/dd/yyyy")}{enter}`
     );
     wait();
+    cy.get('input[title="Quick Add"]').click();
   }
 
   if (has_intermittent_leave_periods) {
@@ -352,7 +369,12 @@ export function createNotification(
     cy.labelled("Work Pattern Type").select("2 weeks Rotating");
     wait();
   }
+  cy.wait("@ajaxRender");
+  cy.wait(200);
   cy.labelled("Standard Work Week").click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  cy.get('input[value="Apply to Calendar"]').click({ force: true });
   clickNext();
   if (claimType === "military") {
     cy.labelled("Military Caregiver Description").type(
@@ -611,6 +633,80 @@ export function mailedDocumentMarkEvidenceRecieved(
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
   clickBottomWidgetButton();
+}
+
+/**
+ *Assumes that the ID and certification documents have not been uploaded to the case.
+ *The function will upload both ID documents and certification document into fineos.
+ *The certfication review and identification proof tasks are both opened and then closed after marking the evidence.
+ */
+export function reviewMailedDocumentsWithTasks(
+  claimNumber: string,
+  reason: LeaveReason,
+  taskName: string,
+  approveDocs = true
+): void {
+  visitClaim(claimNumber);
+  assertClaimStatus("Adjudication");
+  onTab("Documents");
+  uploadDocument("MA_ID", "Identification proof");
+  onTab("Documents");
+  assertHasDocument("Identification Proof");
+  const documentType = getCertificationDocumentType(
+    reason,
+    config("HAS_FINEOS_SP") === "true"
+  );
+  uploadDocument("HCP", documentType);
+  onTab("Documents");
+  cy.wait(150);
+  assertHasDocument(documentType);
+  onTab("Absence Hub");
+  openDocTasks(taskName);
+  onTab("Absence Hub");
+  cy.get('input[type="submit"][value="Adjudicate"]').click();
+  const evidenceDecision = approveDocs ? "Satisfied" : "Not Satisfied";
+  const evidenceReason = !approveDocs
+    ? "Evidence has been reviewed and denied"
+    : undefined;
+  markEvidence(documentType, undefined, evidenceDecision, evidenceReason);
+  markEvidence(
+    "Identification Proof",
+    undefined,
+    evidenceDecision,
+    evidenceReason
+  );
+  checkStatus(claimNumber, "Evidence", evidenceDecision);
+  clickBottomWidgetButton();
+  for (const task of ["ID Review", taskName]) {
+    closeTask(task);
+  }
+}
+
+export function openDocTasks(taskName: string): void {
+  openTask("ID Review");
+  openTask(taskName);
+}
+
+export function openTask(taskName: string): void {
+  onTab("Tasks");
+  cy.get('input[type="submit"][value="Add"]').click({ force: true });
+  cy.get('span[id="NameSearchWidget"]').within(() => {
+    cy.get('input[type="text"]').type(taskName);
+    cy.contains("input", "Find").click();
+    cy.wait("@ajaxRender");
+    cy.wait(250);
+  });
+  cy.get('span[id="footerButtonsBar"]').within(() => {
+    cy.contains("Next").click();
+  });
+}
+
+export function closeTask(task: string): void {
+  onTab("Tasks");
+  cy.wait("@ajaxRender");
+  cy.wait(150);
+  cy.get(`td[title="${task}"]`).click();
+  cy.get('input[type="submit"][value="Close"]').click();
 }
 
 export function claimExtensionAdjudicationFlow(

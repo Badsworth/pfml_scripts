@@ -933,8 +933,14 @@ export function respondToLeaveAdminRequest(
       "fieldset",
       "Do you believe the listed relationship is described accurately? (Optional)"
     ).within(() => {
-      cy.contains("label", "Yes").click();
+      cy.contains("label", approval ? "Yes" : "No").click();
+      cy.wait(150);
     });
+    if (!approval) {
+      cy.get('textarea[name="relationshipInaccurateReason"]').type(
+        "Employee and person receiving care are not related"
+      );
+    }
   }
   if (suspectFraud || !gaveNotice || !approval) {
     cy.get('textarea[name="comment"]').type(

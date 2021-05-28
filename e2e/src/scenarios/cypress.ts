@@ -259,3 +259,14 @@ export const CCAP90: ScenarioSpecification = {
     metadata: { expected_weekly_payment: "850.00" },
   },
 };
+
+export const CDENY2: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CDENY2",
+    shortClaim: true,
+    has_continuous_leave_periods: true,
+    reason: "Care for a Family Member",
+    docs: {},
+  },
+};
