@@ -443,6 +443,24 @@ def write_row_to_output(
         )
         has_errors = True
 
+    # Process fields from VBI_REQUESTEDABSENCE_SOM.csv.
+    employer_id: Optional[str] = ""
+    if (
+        payment_data.absence_case_number is not None
+        and payment_data.absence_case_number
+        in vendor_extract_data.requested_absence_info.indexed_data
+    ):
+        requested_absence = vendor_extract_data.requested_absence_info.indexed_data[
+            payment_data.absence_case_number
+        ]
+        employer_id = requested_absence["EMPLOYER_CUSTOMERNO"]
+    else:
+        logger.warning(
+            "Absence case missing and/or absence case not found in VBI_REQUESTEDABSENCE_SOM.csv; cannot set employer_id",
+            extra=extra,
+        )
+        has_errors = True
+
     # Process fields from VBI_REQUESTEDABSENCE.csv.
     # Note: Using VBI_REQUESTEDABSENCE.csv is the most accurate source when attempting to
     # get data at the leave request level of granularity because we are indexing this
@@ -454,7 +472,6 @@ def write_row_to_output(
     leave_type: Optional[str] = ""
     activity_code: Optional[str] = ""
     case_status: Optional[str] = ""
-    employer_id: Optional[str] = ""
     if (
         payment_data.leave_request_id is not None
         and payment_data.leave_request_id in voucher_extract_data.vbi_requested_absence.indexed_data
@@ -467,7 +484,6 @@ def write_row_to_output(
         absence_case_creation_date = vbi_requested_absence.get("ABSENCE_CASECREATIONDATE")
         absence_reason_name = vbi_requested_absence.get("ABSENCEREASON_NAME")
         case_status = vbi_requested_absence.get("ABSENCE_CASESTATUS")
-        employer_id = vbi_requested_absence.get("EMPLOYER_CUSTOMERNO")
 
         try:
             leave_type = get_leave_type(vbi_requested_absence)

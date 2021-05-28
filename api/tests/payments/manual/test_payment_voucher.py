@@ -113,6 +113,7 @@ class ScenarioOutput:
         possible_error_states = [
             "employee_not_in_db",
             "missing_from_vbi_requestedabsence",
+            "missing_from_vbi_requestedabsence_som",
             "missing_from_vpeiclaimdetails",
             "missing_from_vpeipaymentdetails",
             "missing_payment_start_date",

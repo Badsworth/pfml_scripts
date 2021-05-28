@@ -824,7 +824,8 @@ def generate_scenario_data_db(
                 )
 
         if (
-            scenario_descriptor.missing_from_vbi_requestedabsence
+            scenario_descriptor.missing_from_vbi_requestedabsence_som
+            or scenario_descriptor.missing_from_vbi_requestedabsence
             or scenario_descriptor.missing_from_vpeiclaimdetails
         ):
             employer = None

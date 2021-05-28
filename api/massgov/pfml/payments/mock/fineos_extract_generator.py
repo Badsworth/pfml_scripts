@@ -99,6 +99,7 @@ REQUESTED_ABSENCE_SOM_FIELD_NAMES = [
     "ABSENCEPERIOD_END",
     "LEAVEREQUEST_EVIDENCERESULTTYPE",
     "EMPLOYEE_CUSTOMERNO",
+    "EMPLOYER_CUSTOMERNO",
 ]
 REQUESTED_ABSENCE_FIELD_NAMES = [
     "ABSENCE_CASENUMBER",
@@ -386,6 +387,9 @@ def _generate_fineos_vendor_rows_for_scenario(
             requested_absence_som_row[
                 "EMPLOYEE_CUSTOMERNO"
             ] = scenario_data.employee_customer_number
+
+            if not scenario_descriptor.missing_from_vpeiclaimdetails and employer:
+                requested_absence_som_row["EMPLOYER_CUSTOMERNO"] = employer.fineos_employer_id
 
             requested_absence_som_csv_writer.writerow(requested_absence_som_row)
 
