@@ -124,3 +124,9 @@ output "cert_domains" {
   }
 
 }
+
+output "slackbot_channels" {
+  value = {
+    "mass-pfml-pd-warnings" = "C01GTDGBR0F"
+  }
+}
