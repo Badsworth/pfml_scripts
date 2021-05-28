@@ -209,7 +209,7 @@ export const TRNL: ScenarioSpecification = {
   claim: {
     label: "TRNL",
     reason: "Serious Health Condition - Employee",
-    has_intermittent_leave_periods: true,
+    reduced_leave_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
       HCP: {},
@@ -229,7 +229,7 @@ export const TRNM: ScenarioSpecification = {
   claim: {
     label: "TRNM",
     reason: "Serious Health Condition - Employee",
-    has_intermittent_leave_periods: true,
+    reduced_leave_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
       HCP: {},
@@ -308,7 +308,7 @@ export const TRNQ: ScenarioSpecification = {
       employer_decision: "Approve",
     },
     metadata: {
-      postSubmit: "APPROVEDOCS",
+      postSubmit: "APPROVE",
     },
   },
 };
@@ -452,6 +452,7 @@ export const TRNZ: ScenarioSpecification = {
     label: "TRNZ",
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},
@@ -473,6 +474,7 @@ export const TRNAA: ScenarioSpecification = {
     label: "TRNAA",
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},
@@ -490,6 +492,7 @@ export const TRNAB: ScenarioSpecification = {
     label: "TRNAB",
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},
@@ -510,6 +513,7 @@ export const TRNAC: ScenarioSpecification = {
     label: "TRNAC",
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},
@@ -528,7 +532,7 @@ export const TRNAD: ScenarioSpecification = {
     pregnant_or_recent_birth: true,
     docs: {
       MASSID: {},
-      HCP: {},
+      PREGNANCY_MATERNITY_FORM: {},
     },
     employerResponse: {
       hours_worked_per_week: 40,
@@ -551,7 +555,7 @@ export const TRNAE: ScenarioSpecification = {
     pregnant_or_recent_birth: true,
     docs: {
       MASSID: {},
-      HCP: {},
+      PREGNANCY_MATERNITY_FORM: {},
     },
     employerResponse: {
       hours_worked_per_week: 40,
@@ -565,6 +569,7 @@ export const TRNAF: ScenarioSpecification = {
     label: "TRNAF",
     reason: "Care for a Family Member",
     work_pattern_spec: "standard",
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: { invalid: true },
@@ -599,6 +604,7 @@ export const TRNAH: ScenarioSpecification = {
     label: "TRNAH",
     reason: "Care for a Family Member",
     work_pattern_spec: "standard",
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -616,6 +622,7 @@ export const TRNAI: ScenarioSpecification = {
     label: "TRNAI",
     reason: "Care for a Family Member",
     work_pattern_spec: "standard",
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -632,12 +639,17 @@ export const TRNAJ: ScenarioSpecification = {
     label: "TRNAJ",
     reason: "Care for a Family Member",
     has_continuous_leave_periods: true,
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
     },
     metadata: {
       postSubmit: "APPROVEDOCS",
+    },
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
     },
   },
 };
@@ -648,6 +660,7 @@ export const TRNAK: ScenarioSpecification = {
     label: "TRNAK",
     reason: "Care for a Family Member",
     has_continuous_leave_periods: true,
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -663,6 +676,7 @@ export const TRNAL: ScenarioSpecification = {
   claim: {
     label: "TRNAL",
     reason: "Care for a Family Member",
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -697,6 +711,7 @@ export const TRNAN1: ScenarioSpecification = {
     label: "TRNAN1",
     reason: "Care for a Family Member",
     reduced_leave_spec: "0,240,240,240,240,240,0",
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -714,6 +729,7 @@ export const TRNAN2: ScenarioSpecification = {
     label: "TRNAN2",
     reason: "Care for a Family Member",
     reduced_leave_spec: "0,240,240,240,240,240,0",
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -730,6 +746,7 @@ export const TRNAO: ScenarioSpecification = {
     label: "TRNAO",
     reason: "Care for a Family Member",
     reduced_leave_spec: "0,240,240,240,240,240,0",
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -750,6 +767,7 @@ export const TRNAP: ScenarioSpecification = {
     label: "TRNAP",
     reason: "Care for a Family Member",
     reduced_leave_spec: "0,240,240,240,240,240,0",
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -763,6 +781,7 @@ export const TRNAQ1: ScenarioSpecification = {
     label: "TRNAQ1",
     reason: "Care for a Family Member",
     has_intermittent_leave_periods: true,
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -780,6 +799,7 @@ export const TRNAQ2: ScenarioSpecification = {
     label: "TRNAQ2",
     reason: "Care for a Family Member",
     has_intermittent_leave_periods: true,
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -796,6 +816,7 @@ export const TRNAR: ScenarioSpecification = {
     label: "TRNAR",
     reason: "Care for a Family Member",
     has_intermittent_leave_periods: true,
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -816,6 +837,7 @@ export const TRNAS: ScenarioSpecification = {
     label: "TRNAS",
     has_continuous_leave_periods: true,
     reason: "Care for a Family Member",
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -842,6 +864,9 @@ export const TRNAT: ScenarioSpecification = {
       employer_decision: "Approve",
       hours_worked_per_week: 40,
     },
-    leave_dates: [parseISO("2021-07-19"), parseISO("2021-12-06")],
+    metadata: {
+      postSubmit: "APPROVE",
+    },
+    leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
   },
 };

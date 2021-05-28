@@ -38,6 +38,8 @@ export function getDocumentReviewTaskName(
       return "Certification Review";
     case "Care for a family member form":
       return "Caring Certification Review";
+    case "Pregnancy/Maternity form":
+      return "Medical Pregnancy Certification Review";
     default:
       throw new Error(
         `Unable to determine document review task for "${documentType}"`

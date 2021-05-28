@@ -45,6 +45,9 @@ export const generators = {
   CARING: new CaringLeaveProviderForm(
     getCertificationDocumentType("Care for a Family Member", hasServicePack)
   ),
+  PREGNANCY_MATERNITY_FORM: new HealthCareProviderForm(
+    "Pregnancy/Maternity form"
+  ),
 };
 
 export type DocumentWithPromisedFile = Omit<DocumentUploadRequest, "file"> & {
