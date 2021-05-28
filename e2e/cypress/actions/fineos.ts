@@ -643,10 +643,15 @@ export function mailedDocumentMarkEvidenceRecieved(
   clickBottomWidgetButton();
 }
 
-export function claimExtensionAdjudicationFlow(claimNumber: string): void {
+export function claimExtensionAdjudicationFlow(
+  claimNumber: string,
+  reason: LeaveReason
+): void {
   visitClaim(claimNumber);
   cy.get("input[type='submit'][value='Adjudicate']").click();
-  markEvidence("State managed Paid Leave Confirmation");
+  markEvidence(
+    getCertificationDocumentType(reason, config("HAS_FINEOS_SP") === "true")
+  );
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
 }

@@ -38,7 +38,10 @@ describe("Post-approval (notifications/notices)", { retries: 0 }, () => {
             true
           );
           fineos.claimAddTimeAfterApproval(response.fineos_absence_id, endDate);
-          fineos.claimExtensionAdjudicationFlow(response.fineos_absence_id);
+          fineos.claimExtensionAdjudicationFlow(
+            response.fineos_absence_id,
+            "Child Bonding"
+          );
         });
       });
     }
