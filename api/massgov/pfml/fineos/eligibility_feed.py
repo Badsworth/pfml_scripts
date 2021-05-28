@@ -71,12 +71,6 @@ class AddressType(Enum):
     business = "Business"
 
 
-class Gender(Enum):
-    male = "Male"
-    female = "Female"
-    other = "Other"
-
-
 class MaritalStatus(Enum):
     single = "Single"
     married = "Married"
@@ -185,7 +179,7 @@ class EligibilityFeedRecord(NoneMeansDefault):
     employeeSecondName: Optional[str] = None
     employeeThirdName: Optional[str] = None
     employeeDateOfDeath: Optional[date] = None
-    employeeGender: Optional[Gender] = None
+    employeeGender: Optional[str] = None
     employeeMaritalStatus: Optional[MaritalStatus] = None
     employeeNationalID: Optional[str] = None
     employeeNationalIDType: Optional[NationalIdType] = None
@@ -199,7 +193,7 @@ class EligibilityFeedRecord(NoneMeansDefault):
     spouseLastName: Optional[str] = None
     spouseDateOfBirth: Optional[date] = None
     spouseDateOfDeath: Optional[date] = None
-    spouseGender: Optional[Gender] = None
+    spouseGender: Optional[str] = None
     spouseNationalID: Optional[str] = None
     spouseNationalIDType: Optional[str] = None
     # if any address information is included, these fields are then all required
@@ -936,7 +930,7 @@ def employee_to_eligibility_feed_record(
         employeeDateOfBirth=employee.date_of_birth,
         # FINEOS optional params
         employeeSecondName=employee.middle_name,
-        employeeGender=(Gender(employee.gender.gender_description) if employee.gender else None),
+        employeeGender=(employee.gender.fineos_gender_description if employee.gender else None),
         employeeMaritalStatus=(
             MaritalStatus(employee.marital_status.marital_status_description)
             if employee.marital_status

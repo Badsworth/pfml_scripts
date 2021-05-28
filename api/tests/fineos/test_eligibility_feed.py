@@ -14,6 +14,7 @@ from massgov.pfml.db.models.employees import (
     EmployeeLog,
     EmployeeOccupation,
     Employer,
+    Gender,
     TaxIdentifier,
     Title,
 )
@@ -146,6 +147,44 @@ def test_employee_to_eligibility_feed_record_with_no_tax_identifier(initialize_f
 
     assert eligibility_feed_record.employeeNationalID is None
     assert eligibility_feed_record.employeeNationalIDType is None
+
+
+def test_employee_to_eligibility_feed_record_with_gender(initialize_factories_session):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    employee.gender_id = Gender.WOMAN.gender_id
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, wages_and_contributions, employer
+    )
+
+    assert eligibility_feed_record.employeeGender == Gender.WOMAN.fineos_gender_description
+
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    employee.gender_id = Gender.MAN.gender_id
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, wages_and_contributions, employer
+    )
+
+    assert eligibility_feed_record.employeeGender == Gender.MAN.fineos_gender_description
+
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    employee.gender_id = Gender.NONBINARY.gender_id
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, wages_and_contributions, employer
+    )
+
+    assert eligibility_feed_record.employeeGender == Gender.NONBINARY.fineos_gender_description
 
 
 def test_employee_to_eligibility_feed_record_with_employee_title(initialize_factories_session):

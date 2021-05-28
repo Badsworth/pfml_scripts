@@ -172,14 +172,14 @@ def test_fineos_updates_happy_path(
     assert updated_employee_one.title_id == 2
     assert updated_employee_one.date_of_birth == datetime.date(1970, 10, 6)
     assert updated_employee_one.marital_status_id == MaritalStatus.SINGLE.marital_status_id
-    assert updated_employee_one.gender_id == Gender.WOMAN.gender_id
+    assert updated_employee_one.gender_id == Gender.MAN.gender_id
     assert updated_employee_one.title_id == Title.MR.title_id
 
     assert updated_employee_two is not None
     assert updated_employee_two.title_id == 1
     assert updated_employee_two.date_of_birth == datetime.date(1994, 9, 14)
     assert updated_employee_two.marital_status_id is None
-    assert updated_employee_two.gender_id is None
+    assert updated_employee_two.gender_id is Gender.NOT_LISTED.gender_id
     assert updated_employee_two.title_id == Title.UNKNOWN.title_id
 
     assert employee_occupation_one is not None

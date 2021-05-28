@@ -235,7 +235,7 @@ def process_csv_row(
         gender = row.get("EMPLOYEEGENDER")
         gender_id = (
             db_session.query(LkGender.gender_id)
-            .filter(LkGender.gender_description == gender)
+            .filter(LkGender.fineos_gender_description == gender)
             .one_or_none()
         )
         if gender_id is not None:
