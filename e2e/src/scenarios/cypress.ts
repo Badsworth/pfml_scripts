@@ -196,7 +196,7 @@ export const BCAP90: ScenarioSpecification = {
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: {
       MASSID: {},
-      HCP: {},
+      FOSTERPLACEMENT: {},
     },
     // This scenario requires a 2 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],

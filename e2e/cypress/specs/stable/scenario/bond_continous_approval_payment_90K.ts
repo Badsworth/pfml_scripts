@@ -1,4 +1,4 @@
-import { fineos, portal } from "../../../actions";
+import { fineos, fineosPages, portal } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
@@ -51,18 +51,35 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
   });
 
   it(
-    "CSR rep will approve continous bonding application",
+    "CSR rep will approve continuous bonding application",
     { retries: 0, baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();
       cy.visit("/");
-      cy.unstash<Submission>("submission").then((submission) => {
-        fineos.claimAdjudicationFlow(
-          submission.fineos_absence_id,
-          "Child Bonding",
-          true
-        );
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          const claimPage = fineosPages.ClaimPage.visit(
+            submission.fineos_absence_id
+          );
+          claimPage.adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              // Receive all of the claim documentation.
+              claim.documents.forEach((document) => {
+                evidence.receive(document.document_type);
+              });
+            });
+            adjudication.certificationPeriods((cert) => cert.prefill());
+            adjudication.acceptLeavePlan();
+          });
+          claimPage.shouldHaveStatus("Applicability", "Applicable");
+          claimPage.shouldHaveStatus("Eligibility", "Met");
+          claimPage.shouldHaveStatus("Evidence", "Satisfied");
+          claimPage.shouldHaveStatus("Availability", "Time Available");
+          claimPage.shouldHaveStatus("Restriction", "Passed");
+          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
+          claimPage.approve();
+        });
       });
     }
   );

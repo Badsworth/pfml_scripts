@@ -1,7 +1,11 @@
-import { fineos, portal, email } from "../../../actions";
+import { fineos, portal, email, fineosPages } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
+import {
+  findCertificationDoc,
+  getDocumentReviewTaskName,
+} from "../../../../src/util/documents";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
@@ -35,12 +39,36 @@ describe("Approval (notifications/notices)", () => {
             fineos_absence_id: response.fineos_absence_id,
             timestamp_from: Date.now(),
           });
-          fineos.claimAdjudicationFlow(
-            response.fineos_absence_id,
-            "Child Bonding",
-            true
+
+          const claimPage = fineosPages.ClaimPage.visit(
+            response.fineos_absence_id
           );
-          fineos.triggerNoticeRelease("Approval Notice");
+          claimPage.adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              // Receive and approve all of the documentation for the claim.
+              claim.documents.forEach((doc) =>
+                evidence.receive(doc.document_type)
+              );
+            });
+            adjudication.certificationPeriods((cert) => cert.prefill());
+            adjudication.acceptLeavePlan();
+          });
+          claimPage.tasks((tasks) => {
+            const certificationDoc = findCertificationDoc(claim.documents);
+            const certificationTask = getDocumentReviewTaskName(
+              certificationDoc.document_type
+            );
+            tasks.assertTaskExists("ID Review");
+            tasks.assertTaskExists(certificationTask);
+          });
+          claimPage.shouldHaveStatus("Applicability", "Applicable");
+          claimPage.shouldHaveStatus("Eligibility", "Met");
+          claimPage.shouldHaveStatus("Evidence", "Satisfied");
+          claimPage.shouldHaveStatus("Availability", "Time Available");
+          claimPage.shouldHaveStatus("Restriction", "Passed");
+          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
+          claimPage.approve();
+          claimPage.triggerNotice("Approval Notice");
         });
       });
     }

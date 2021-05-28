@@ -1,7 +1,8 @@
-import { fineos, portal, email } from "../../../actions";
+import { fineos, portal, email, fineosPages } from "../../../actions";
 import { getFineosBaseUrl } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
+import { findCertificationDoc } from "../../../../src/util/documents";
 
 describe("Request for More Information (notifications/notices)", () => {
   after(() => {
@@ -34,10 +35,28 @@ describe("Request for More Information (notifications/notices)", () => {
             fineos_absence_id: responseData.fineos_absence_id,
             timestamp_from: Date.now(),
           });
-          fineos.visitClaim(responseData.fineos_absence_id);
-          fineos.assertClaimStatus("Adjudication");
-          fineos.additionalEvidenceRequest(responseData.fineos_absence_id);
-          fineos.triggerNoticeRelease("Request for more Information");
+
+          const page = fineosPages.ClaimPage.visit(
+            responseData.fineos_absence_id
+          );
+          page.adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              const certificationDocument = findCertificationDoc(
+                claim.documents
+              );
+              evidence.requestAdditionalInformation(
+                certificationDocument.document_type,
+                {
+                  "Healthcare Provider Information incomplete":
+                    "This is incomplete",
+                },
+                "Please resubmit page 1 of the Healthcare Provider form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
+              );
+            });
+          });
+          // This should trigger a change in plan status.
+          page.shouldHaveStatus("PlanDecision", "Pending Evidence");
+          page.triggerNotice("Request for more Information");
         });
       });
     }

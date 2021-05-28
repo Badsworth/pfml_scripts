@@ -1,4 +1,4 @@
-import { fineos, portal, email } from "../../../actions";
+import { fineos, portal, email, fineosPages } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { ApplicationResponse } from "../../../../src/api";
 import { Submission } from "../../../../src/types";
@@ -35,11 +35,11 @@ describe("Denial Notification and Notice", () => {
             fineos_absence_id: responseData.fineos_absence_id,
             timestamp_from: Date.now(),
           });
-          fineos.visitClaim(responseData.fineos_absence_id);
-          fineos.assertClaimStatus("Adjudication");
-          fineos.assertPlanStatus("Eligibility", "Not Met");
-          fineos.denyClaim("Claimant wages failed 30x rule");
-          fineos.triggerNoticeRelease("Denial Notice");
+
+          fineosPages.ClaimPage.visit(responseData.fineos_absence_id)
+            .shouldHaveStatus("Eligibility", "Not Met")
+            .deny("Claimant wages failed 30x rule")
+            .triggerNotice("Denial Notice");
         });
       });
     }

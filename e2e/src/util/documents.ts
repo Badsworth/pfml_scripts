@@ -44,3 +44,15 @@ export function getDocumentReviewTaskName(
       );
   }
 }
+
+export function findCertificationDoc<
+  T extends Pick<DocumentUploadRequest, "document_type">
+>(documents: T[]): T {
+  const certificationDoc = documents.find(
+    (doc) => doc.document_type !== "Identification Proof"
+  );
+  if (!certificationDoc) {
+    throw new Error("No certification document was found");
+  }
+  return certificationDoc;
+}

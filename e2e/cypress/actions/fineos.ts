@@ -127,7 +127,7 @@ export function assertPlanStatus(
  * Called from the tasks page, asserts that a particular task is found.
  * @param name
  */
-function assertHasTask(name: string) {
+export function assertHasTask(name: string): void {
   cy.get("table[id*='TasksForCaseWidget']").should((table) => {
     expect(table, `Expected to find a "${name}" task`).to.have.descendants(
       `tr td:nth-child(6)[title="${name}"]`
@@ -170,7 +170,7 @@ export function assertAdjudicatingClaim(claimId: string): void {
 /**
  * Helper to switch to a particular tab.
  */
-function onTab(label: string): void {
+export function onTab(label: string): void {
   cy.contains(".TabStrip td", label).click().should("have.class", "TabOn");
   // Wait on any in-flight Ajax to complete, then add a very slight delay for rendering to occur.
   cy.wait("@ajaxRender").wait(50);
@@ -383,36 +383,6 @@ export function enterReducedWorkHours(
   cy.get("input[name*='_hours']").each((input, index) => {
     cy.wrap(input).type(weekdayInfo[index].hours.toString());
   });
-}
-
-export function additionalEvidenceRequest(claimNumber: string): void {
-  assertClaimStatus("Adjudication");
-  assertAbsenceCaseNumber(claimNumber as string);
-  cy.get("input[type='submit'][value='Adjudicate']").click();
-  onTab("Evidence");
-  cy.get("input[type='submit'][value='Additional Information']").click();
-  cy.get(
-    "input[name*='healthcareProviderInformationIncompleteBoolean_CHECKBOX']"
-  ).click();
-  cy.get("input[name*='healthcareProviderInformationIncompleteText']").type(
-    "Wrote Physician requesting revised page 1."
-  );
-  cy.get("textarea[name*='missingInformationBox']").type(
-    "Please resubmit page 1 of the Healthcare Provider form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
-  );
-  clickBottomWidgetButton("OK");
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  clickBottomWidgetButton("OK");
-  cy.wait(200);
-  // cy.wait(90000);
-  // onTab("Documents");
-  // cy.get("tbody").within(() => {
-  //   cy.get("td > a[title='Request for more Information']").should(
-  //     "contain.text",
-  //     "Request for more Information"
-  //   );
-  // });
 }
 
 export function checkStatus(
