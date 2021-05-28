@@ -15,6 +15,7 @@ class BaseBenefitsApplication extends BaseModel {
   get defaults() {
     return {
       application_id: null,
+      concurrent_leave: null,
       created_at: null,
       date_of_birth: null,
       // array of EmployerBenefit objects. See the EmployerBenefit model

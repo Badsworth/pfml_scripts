@@ -330,6 +330,7 @@ describe("claimFlowConfigs", () => {
   const caringLeaveClaim = { leave_details: { reason: LeaveReason.care } };
   const employed = {
     employment_status: EmploymentStatus.employed,
+    has_concurrent_leave: true,
   };
   const hasIntermittentLeavePeriods = { has_intermittent_leave_periods: true };
   const hasReducedScheduleLeavePeriods = {

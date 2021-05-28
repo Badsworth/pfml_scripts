@@ -935,8 +935,19 @@ const pages = {
     title: "Checklist: Create a new application",
   },
   claimsConcurrentLeaves: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hintWhatKindBody:
+      "<p>This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.</p>",
+    hintWhatKindHeading: "What kinds of accrued paid leave to report",
+    hintWhenToReportBody:
+      "<p>If your PFML leave includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave. Select Yes to report this leave.</p><p>If your PFML leave includes working fewer hours than normal (a reduced leave schedule) or taking time off work in uneven or unpredictable blocks of time (intermittent leave), you need to report leave if ONE of the following two statements is true:</p><ul><li>You are planning to use this accrued paid leave on days when you are also taking PFML leave.</li><li>You are planning to use this accrued paid leave for a PFML qualifying reason, even if it’s not the same reason you are applying for leave now.</li></ul>",
+    hintWhenToReportDetailsBody:
+      "<ul><li>You had a serious health condition, including illness, injury, or pregnancy.</li><li>If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.</li><li>You bonded with your child after birth or placement.</li><li>You needed to manage family affairs while a family member is on active duty in the armed forces.</li><li>You needed to care for a family member who serves in the armed forces.</li><li>You needed to care for a family member with a serious health condition.</li></ul>",
+    hintWhenToReportDetailsLabel: "What are the qualifying reasons?",
+    hintWhenToReportHeading: "When you need to report it",
     sectionLabel:
-      "Will you use any employer-sponsored accrued paid leave during your PFML leave?",
+      "Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsConcurrentLeavesDetails: {

@@ -65,6 +65,7 @@ export const guards = {
     get(claim, "employment_status") === EmploymentStatus.employed,
   isCompleted: ({ claim }) => claim.isCompleted,
   hasStateId: ({ claim }) => claim.has_state_id === true,
+  hasConcurrentLeave: ({ claim }) => claim.has_concurrent_leave === true,
   hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
   hasIntermittentLeavePeriods: ({ claim }) =>
     claim.has_intermittent_leave_periods === true,
@@ -447,7 +448,13 @@ export default {
         fields: concurrentLeavesFields,
       },
       on: {
-        CONTINUE: routes.applications.concurrentLeavesDetails,
+        CONTINUE: [
+          {
+            target: routes.applications.concurrentLeavesDetails,
+            cond: "hasConcurrentLeave",
+          },
+          { target: routes.applications.employerBenefitsIntro },
+        ],
       },
     },
     [routes.applications.concurrentLeavesDetails]: {

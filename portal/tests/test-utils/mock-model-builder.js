@@ -26,6 +26,7 @@ import OtherIncome, {
 } from "../../src/models/OtherIncome";
 
 import Address from "../../src/models/Address";
+import ConcurrentLeave from "../../src/models/ConcurrentLeave";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import LeaveReason from "../../src/models/LeaveReason";
 import PreviousLeave from "../../src/models/PreviousLeave";
@@ -184,6 +185,27 @@ export class BaseMockBenefitsApplicationBuilder {
     ]);
     set(this.claimAttrs, "has_other_incomes", true);
     set(this.claimAttrs, "other_incomes_awaiting_approval", false);
+    return this;
+  }
+
+  concurrentLeave(attrs) {
+    set(
+      this.claimAttrs,
+      "concurrent_leave",
+      attrs
+        ? new ConcurrentLeave(attrs)
+        : new ConcurrentLeave({
+            is_for_current_employer: true,
+            leave_start_date: "2021-01-01",
+            leave_end_date: "2021-03-01",
+          })
+    );
+
+    if (this instanceof MockBenefitsApplicationBuilder) {
+      // only the MockBenefitsApplicationBuilder has this attr, MockEmployerClaimBuilder does not
+      set(this.claimAttrs, "has_concurrent_leave", true);
+    }
+
     return this;
   }
 

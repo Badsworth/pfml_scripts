@@ -16,6 +16,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
     return merge({
       ...super.defaults,
       employment_status: null,
+      has_concurrent_leave: null,
       has_continuous_leave_periods: null,
       has_employer_benefits: null,
       has_intermittent_leave_periods: null,

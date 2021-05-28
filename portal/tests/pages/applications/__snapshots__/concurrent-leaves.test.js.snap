@@ -5,11 +5,149 @@ exports[`ConcurrentLeaves renders the page 1`] = `
   onSave={[Function]}
   title="Other leave, benefits, and income"
 >
-  <Heading
-    level="2"
-    size="1"
-  >
-    Will you use any employer-sponsored accrued paid leave during your PFML leave?
-  </Heading>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": true,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    hint={
+      <React.Fragment>
+        <LeaveDatesAlert
+          endDate="2021-06-01"
+          startDate="2021-01-01"
+        />
+        <Heading
+          level="3"
+        >
+          What kinds of accrued paid leave to report
+        </Heading>
+        <Trans
+          i18nKey="pages.claimsConcurrentLeaves.hintWhatKindBody"
+        />
+        <Heading
+          level="3"
+        >
+          When you need to report it
+        </Heading>
+        <Trans
+          components={
+            Object {
+              "li": <li />,
+              "ul": <ul
+                className="usa-list"
+              />,
+            }
+          }
+          i18nKey="pages.claimsConcurrentLeaves.hintWhenToReportBody"
+        />
+        <Details
+          label="What are the qualifying reasons?"
+        >
+          <Trans
+            components={
+              Object {
+                "li": <li />,
+                "ul": <ul
+                  className="usa-list"
+                />,
+              }
+            }
+            i18nKey="pages.claimsConcurrentLeaves.hintWhenToReportDetailsBody"
+          />
+        </Details>
+      </React.Fragment>
+    }
+    label="Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?"
+    name="has_concurrent_leave"
+    onChange={[Function]}
+    type="radio"
+    value={true}
+  />
+</QuestionPage>
+`;
+
+exports[`when the claim does not contain concurrent leave data renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other leave, benefits, and income"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    hint={
+      <React.Fragment>
+        <LeaveDatesAlert
+          endDate="2021-06-01"
+          startDate="2021-01-01"
+        />
+        <Heading
+          level="3"
+        >
+          What kinds of accrued paid leave to report
+        </Heading>
+        <Trans
+          i18nKey="pages.claimsConcurrentLeaves.hintWhatKindBody"
+        />
+        <Heading
+          level="3"
+        >
+          When you need to report it
+        </Heading>
+        <Trans
+          components={
+            Object {
+              "li": <li />,
+              "ul": <ul
+                className="usa-list"
+              />,
+            }
+          }
+          i18nKey="pages.claimsConcurrentLeaves.hintWhenToReportBody"
+        />
+        <Details
+          label="What are the qualifying reasons?"
+        >
+          <Trans
+            components={
+              Object {
+                "li": <li />,
+                "ul": <ul
+                  className="usa-list"
+                />,
+              }
+            }
+            i18nKey="pages.claimsConcurrentLeaves.hintWhenToReportDetailsBody"
+          />
+        </Details>
+      </React.Fragment>
+    }
+    label="Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?"
+    name="has_concurrent_leave"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
 </QuestionPage>
 `;
