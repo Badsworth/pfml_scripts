@@ -1,6 +1,12 @@
 import { ApplicationRequestBody, DocumentUploadRequest } from "../../api";
 import fs from "fs";
-import { PDFCheckBox, PDFDocument, PDFOptionList, PDFTextField } from "pdf-lib";
+import {
+  PDFCheckBox,
+  PDFDocument,
+  PDFOptionList,
+  PDFRadioGroup,
+  PDFTextField,
+} from "pdf-lib";
 import path from "path";
 import { v4 as uuid } from "uuid";
 import { DocumentWithPromisedFile } from "./index";
@@ -72,6 +78,8 @@ export abstract class AbstractDocumentGenerator<
         if (fieldValue) field.check();
         else field.uncheck();
       } else if (field instanceof PDFOptionList) {
+        field.select(fieldValue as string);
+      } else if (field instanceof PDFRadioGroup) {
         field.select(fieldValue as string);
       } else {
         throw new Error(`Unknown field type for ${fieldName}`);

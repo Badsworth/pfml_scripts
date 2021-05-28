@@ -8,7 +8,7 @@ import AdoptionCertificate from "./AdoptionCertificate";
 import FosterPlacementLetter from "./FosterPlacementLetter";
 import PersonalLetter from "./PersonalLetter";
 import CatPicture from "./CatPicture";
-import CaringCertification from "./CaringCertification";
+import CaringLeaveProviderForm from "./CaringLeaveProviderForm";
 import FileWrapper from "../FileWrapper";
 import config from "../../config";
 import { getCertificationDocumentType } from "../../util/documents";
@@ -42,7 +42,9 @@ export const generators = {
   CATPIC: new CatPicture(
     getCertificationDocumentType("Child Bonding", hasServicePack)
   ),
-  CARING: new CaringCertification("Care for a family member form"),
+  CARING: new CaringLeaveProviderForm(
+    getCertificationDocumentType("Care for a Family Member", hasServicePack)
+  ),
 };
 
 export type DocumentWithPromisedFile = Omit<DocumentUploadRequest, "file"> & {

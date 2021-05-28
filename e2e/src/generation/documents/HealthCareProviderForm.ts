@@ -7,13 +7,13 @@ import {
   IntermittentLeavePeriods,
   ReducedScheduleLeavePeriods,
 } from "../../api";
-import { differenceInWeeks, format, parseISO } from "date-fns";
+import { differenceInWeeks, format, parseISO, subYears } from "date-fns";
 
 export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
   get documentSource(): string {
-    return this.path("hcp-real.pdf");
+    return this.path("hcp-v3.pdf");
   }
   getFormData(
     claim: ApplicationRequestBody,
@@ -24,55 +24,56 @@ export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
     }
     // Note: To debug this PDF's fields, follow this: https://stackoverflow.com/a/38257183
     const dob = parseISO(claim.date_of_birth);
+    const conditionStart = subYears(new Date(), 2);
     const data: { [k: string]: string | boolean } = {
-      untitled1: `${claim.first_name} ${claim.last_name}`,
-      untitled46: `${claim.first_name} ${claim.last_name}`,
-      untitled47: `${claim.first_name} ${claim.last_name}`,
-      untitled48: `${claim.first_name} ${claim.last_name}`,
-      untitled50: `${claim.first_name} ${claim.last_name}`,
-      untitled4: format(dob, "MM"),
-      untitled5: format(dob, "dd"),
-      untitled6: config.invalid ? "" : format(dob, "yyyy"),
-      untitled3: `${config.invalid ? "" : claim.tax_identifier?.slice(7)}`,
-      // Checkbox 5 - "I am taking leave because of my own serious health condition"
-      untitled51: "Yes",
-      // Checkbox 12 - "Does the patient have a serious health condition that necessitates continuing care􏰗"
-      untitled56: "Yes",
-      // Checkbox 13 - "When did the condition begin􏰗"
-      untitled59: "Yes",
-      // Checkbox 14 - "Which of the following characteristics apply..."
-      untitled60: "Yes",
-      // Checkbox 15 - "Is the patient􏰑s serious health condition a pregnancy􏰖related issue"
-      untitled65: "Yes",
-      // Checkbox 16 - "Is this health condition a work􏰖related injury􏰗"
-      untitled67: "Yes",
-      // Checkbox 17 - "Is this health condition related to the patient􏰑s military service􏰗"
-      untitled69: "Yes",
-      // Checkbox 19 - Leave Type? Continuous
-      untitled72: claim.has_continuous_leave_periods ? "Yes" : false,
-      // Checkbox 19 - Leave Type? Reduced
-      untitled73: claim.has_reduced_schedule_leave_periods ? "Yes" : false,
-      // Checkbox 19 - Leave Type? Intermittent
-      untitled74: claim.has_intermittent_leave_periods ? "Yes" : false,
-      // Checkbox 22 - What level of physical exertion - very heavy
-      untitled79: "Yes",
-      // Checkbox 23 - Is your medical opinion that...
-      untitled80: "Yes",
-      // Checkbox 24 - "During this time􏰐 are there any other potentially work􏰖related activities" - Yes
-      untitled82: "Yes",
-      // Text 25 - What to refrain from:
-      untitled29: "All work",
+      // Employee Info - Section 1
+      "Employee name": `${claim.first_name} ${claim.last_name}`,
+      Employee: `${claim.first_name} ${claim.last_name}`,
+      "Employee first name": `${claim.first_name}`,
+      "Employee Last name": `${claim.last_name}`,
+      "Emp. DOB mm": format(dob, "MM"),
+      "Emp. DOB dd": format(dob, "dd"),
+      "Emp. DOB yyyy": config.invalid ? "" : format(dob, "yyyy"),
+      "Emp. SSI last 4": `${
+        config.invalid ? "" : claim.tax_identifier?.slice(7)
+      }`,
+      "Are you applying for your own serious health condition?": "Yes",
+      "Provider initial Page 3": "TC",
 
-      // Checkbox 27 - Reduced leave? No
-      untitled87: "Yes",
+      // Health Condition - Section 2
+      "Does the patient have a serious health condition": "Yes",
+      "Requires or did require": "On",
+      "Requires one medical visit": "On",
+      "Condition start mm": format(conditionStart, "MM"),
+      "Condition start dd": format(conditionStart, "dd"),
+      "Conditiion start yyyy": format(conditionStart, "yyyy"),
+      "Provider initial Page 4": "TC",
+      "Yes Pregnancy": claim.leave_details?.pregnant_or_recent_birth
+        ? "On"
+        : false,
+      "No pregnancy": claim.leave_details?.pregnant_or_recent_birth
+        ? false
+        : "On",
+      "Is this health condition a jobrelated injury": "No_3",
+
+      // Section 3 #14
+      "Continuous leave": claim.has_continuous_leave_periods ? "On" : false,
+      "Reduced leave schedule": claim.has_reduced_schedule_leave_periods
+        ? "On"
+        : false,
+      "Intermittent leave": claim.has_intermittent_leave_periods ? "On" : false,
+      "Provider initial, Page 5": "TC",
+      "Provider initial Page 6": "TC",
 
       // Practitioner data.
-      untitled39: "Theodore Cure, MD",
-      untitled40: "[assume license is valid]",
-      untitled41: "General Medicine",
-      untitled42: "[assume business is valid]",
-      untitled44: "555-555-5555",
-      untitled45: "example@example.com",
+      "Provider name": "Theodore Cure",
+      "Provider Title": "MD",
+      License: "[assume license is valid]",
+      "Area of practice": "General Medicine",
+      "Practice name": "[assume business is valid]",
+      "Office Phone 1": "555",
+      "Office Phone 2": "555",
+      "Office phone 3": "5555",
     };
     let start_date = new Date();
     let end_date = new Date();
@@ -95,21 +96,19 @@ export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
         start_date = parseISO(period.start_date);
         end_date = parseISO(period.end_date);
 
-        data["untitled21"] = format(start_date, "MM");
-        data["untitled22"] = format(start_date, "dd");
-        data["untitled23"] = format(start_date, "yyyy");
-        data["untitled24"] = format(end_date, "MM");
-        data["untitled25"] = format(end_date, "dd");
-        data["untitled26"] = format(end_date, "yyyy");
-
         switch (leave_type) {
           case "continuous":
-            // Checkbox 26  - Continuous Leave? Yes
-            data["untitled84"] = true;
-            data["untitled31"] = differenceInWeeks(
+            data["Weeks of continuous leave"] = differenceInWeeks(
               end_date,
               start_date
             ).toString();
+            // Leave Period start/end dates
+            data["Continuous start mm"] = format(start_date, "MM");
+            data["Continuous start dd"] = format(start_date, "dd");
+            data["Continuous start yyyy"] = format(start_date, "yyyy");
+            data["Continuous end mm"] = format(end_date, "MM");
+            data["Continuous end dd"] = format(end_date, "dd");
+            data["Continuous end yyyy"] = format(end_date, "yyyy");
             break;
           case "intermittent":
             const {
@@ -128,13 +127,20 @@ export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
                 "Unable to handle intermittent leave durations of anything other than 1 days."
               );
             }
-            // Checkbox 29 - Intermittent leave periods:
-            data["untitled89"] = true;
-            data["untitled34"] = "1";
-            // Checkbox 30 - How long will a single absence last? No more than 1 day.
-            data["untitled93"] = true;
+            data["Intermittent start mm"] = format(start_date, "MM");
+            data["Intermittent start dd"] = format(start_date, "dd");
+            data["Intermittent start yyyy"] = format(start_date, "yyyy");
+            data["Intermittent end mm"] = format(end_date, "MM");
+            data["Intermittent end dd"] = format(end_date, "dd");
+            data["Intermittent end yyyy"] = format(end_date, "yyyy");
+            // Question 21
+            data["Absences"] = "Once per week";
+            data["Times per week"] = "1";
+            // Question 22 - How long will a single absence last? No more than 1 day.
+            data["Absence length: At least one day, up to"] = "Less than 1 day";
             // Days it will last.
-            data["untitled38"] = duration.toString();
+            data["Days"] = duration.toString();
+            data["Yes"] = "Yes";
             break;
           case "reduced_schedule":
             const reducedPeriod = period as ReducedScheduleLeavePeriods;
@@ -146,29 +152,31 @@ export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
               (reducedPeriod.friday_off_minutes ?? 0) +
               (reducedPeriod.saturday_off_minutes ?? 0) +
               (reducedPeriod.sunday_off_minutes ?? 0);
-            data["untitled86"] = true;
             // Weeks of reduced schedule.
-            data["untitled32"] = differenceInWeeks(
+            data["Weeks of a reduced leave schedule"] = differenceInWeeks(
               end_date,
               start_date
             ).toString();
+            data["Reduced start mm"] = format(start_date, "MM");
+            data["Reduced start dd"] = format(start_date, "dd");
+            data["Reduced start yyyy"] = format(start_date, "yyyy");
+            data["Reduced end mm"] = format(end_date, "MM");
+            data["Reduced end dd"] = format(end_date, "dd");
+            data["Reduced end yyyy"] = format(end_date, "yyyy");
             // Hours off.
-            data["untitled33"] = Math.round(totalMinutes / 60).toString();
+            data["Hours of reduced leave schedule"] = Math.round(
+              totalMinutes / 60
+            ).toString();
             break;
         }
       } else {
         switch (leave_type) {
           case "continuous":
-            // Checkbox 26 Continuous leave? No.
-            data["untitled85"] = true;
-            break;
-          case "intermittent":
-            // Intermittent leave? No.
-            data["untitled88"] = true;
+            data["No continuous leave needed"] = "On";
             break;
           case "reduced_schedule":
-            // Reduced leave? No
-            data["untitled87"] = true;
+            data["no reduced leave schedule needed"] = "Yes";
+            data["No reduced leave schedule needed"] = "On";
             break;
         }
       }
