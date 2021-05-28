@@ -4,6 +4,7 @@ import datetime
 import pytest
 from freezegun import freeze_time
 
+import massgov.pfml.api.claims
 import massgov.pfml.fineos.mock_client
 import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
@@ -1781,6 +1782,7 @@ class TestGetClaimsEndpoint:
         assert response.status_code == 200
         response_body = response.get_json()
 
+        assert len(response_body["data"]) == 5
         for claim in response_body["data"]:
             assert claim["employer"]["employer_fein"] == format_fein(employer.employer_fein)
 
@@ -1809,3 +1811,63 @@ class TestGetClaimsEndpoint:
         claim_data = response_body.get("data")
         for i in range(3):
             assert_claim_response_equal_to_claim_query(claim_data[i], generated_claims[2 - i])
+
+    def test_get_claims_with_blocked_fein(
+        self,
+        client,
+        employer_auth_token,
+        employer_user,
+        test_db_session,
+        test_verification,
+        monkeypatch,
+    ):
+        employer = EmployerFactory.create()
+        employee = EmployeeFactory.create()
+
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+
+        other_employer = EmployerFactory.create()
+        other_link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=other_employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(other_employer)
+        test_db_session.add(other_link)
+
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=other_employer,
+                employee=employee,
+                fineos_absence_status_id=1,
+                claim_type_id=1,
+            )
+
+        test_db_session.commit()
+        monkeypatch.setattr(
+            massgov.pfml.api.claims,
+            "CLAIMS_DASHBOARD_BLOCKED_FEINS",
+            set([employer.employer_fein]),
+        )
+        response = client.get(
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        assert len(response_body["data"]) == 5
+        for claim in response_body["data"]:
+            assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
