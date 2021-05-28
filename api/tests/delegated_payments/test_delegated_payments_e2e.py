@@ -363,19 +363,21 @@ def test_e2e_pub_payments(
             db_session=test_db_session,
         )
 
+        state_1_invalid_payment_scenarios = [
+            ScenarioName.CLAIM_NOT_ID_PROOFED,
+            ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+            ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+            ScenarioName.PUB_ACH_PRENOTE_RETURN,
+            ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+            ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
+            ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+            ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+            ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+        ]
+
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.CLAIM_NOT_ID_PROOFED,
-                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
-                ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
-                ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-                ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-            ],
+            scenario_names=state_1_invalid_payment_scenarios,
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
             db_session=test_db_session,
         )
@@ -503,6 +505,20 @@ def test_e2e_pub_payments(
                 }
                 for p in payments
             ],
+        )
+
+        # == Writeback
+        stage_1_generic_flow_writeback_scenarios = []
+        stage_1_generic_flow_writeback_scenarios.extend(state_1_invalid_payment_scenarios)
+        stage_1_generic_flow_writeback_scenarios.append(
+            ScenarioName.REJECTED_LEAVE_REQUEST_DECISION
+        )
+        stage_1_generic_flow_writeback_scenarios.append(
+            ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN
+        )
+
+        assert_writeback_for_stage(
+            test_dataset, [], stage_1_generic_flow_writeback_scenarios, test_db_session,
         )
 
         # Validate reference files
@@ -915,6 +931,48 @@ def test_e2e_pub_payments(
 
         assert_metrics(
             test_db_other_session,
+            "FineosPeiWritebackStep",
+            {
+                "cancelled_payment_count": 0,
+                "check_payment_count": 0,
+                "eft_payment_count": 0,
+                "employer_reimbursement_payment_count": 0,
+                "errored_writeback_record_during_file_creation_count": 0,
+                "errored_writeback_record_during_file_transfer_count": 0,
+                "overpayment_count": 0,
+                "payment_writeback_two_items_count": 0,
+                "successful_writeback_record_count": len(stage_1_generic_flow_writeback_scenarios),
+                "writeback_record_count": len(stage_1_generic_flow_writeback_scenarios),
+                "zero_dollar_payment_count": 0,
+                "generic_flow_writeback_items_count": len(stage_1_generic_flow_writeback_scenarios),
+                "address_validation_error_writeback_transaction_status_count": len(
+                    [ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN]
+                ),
+                "payment_system_error_writeback_transaction_status_count": len(
+                    [
+                        ScenarioName.CLAIM_NOT_ID_PROOFED,
+                        ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
+                        ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
+                    ]
+                ),
+                "eft_pending_bank_validation_writeback_transaction_status_count": len(
+                    [
+                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+                    ]
+                ),
+                "payment_validation_error_writeback_transaction_status_count": len(
+                    [ScenarioName.REJECTED_LEAVE_REQUEST_DECISION]
+                ),
+            },
+        )
+
+        assert_metrics(
+            test_db_other_session,
             "ReportStep",
             {
                 "processed_report_count": len(PROCESS_FINEOS_EXTRACT_REPORTS),
@@ -1065,31 +1123,6 @@ def test_e2e_pub_payments(
             db_session=test_db_session,
         )
 
-        # == Validate FINEOS status writeback states
-        stage_2_generic_flow_writeback_scenarios = [
-            ScenarioName.AUDIT_REJECTED,
-            ScenarioName.AUDIT_SKIPPED,
-            ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
-            ScenarioName.CLAIM_NOT_ID_PROOFED,
-            ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
-            ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-            ScenarioName.PUB_ACH_PRENOTE_RETURN,
-            ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-            ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
-            ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-            ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-            ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-            ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-        ]
-
-        assert_payment_state_for_scenarios(
-            test_dataset=test_dataset,
-            scenario_names=stage_2_generic_flow_writeback_scenarios,
-            end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
-            flow=Flow.DELEGATED_PEI_WRITEBACK,
-            db_session=test_db_session,
-        )
-
         # == Validate prenote states
         assert_prenote_state(
             test_dataset=test_dataset,
@@ -1217,14 +1250,6 @@ def test_e2e_pub_payments(
         )
 
         # == Writeback
-        writeback_folder_path = os.path.join(s3_config.fineos_data_import_path)
-        assert_files(writeback_folder_path, ["pei_writeback.csv"], get_current_timestamp_prefix())
-
-        writeback_file_path = f"{s3_config.pfml_fineos_writeback_archive_path}sent/{date_folder}/{timestamp_prefix}pei_writeback.csv"
-        assert_ref_file(
-            writeback_file_path, ReferenceFileType.PEI_WRITEBACK, test_db_session,
-        )
-
         stage_2_legacy_writeback_scenario_names = [
             ScenarioName.CANCELLATION_PAYMENT,
             ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
@@ -1255,11 +1280,15 @@ def test_e2e_pub_payments(
             ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
         ]
 
-        assert_writeback_payments(
+        stage_2_generic_flow_writeback_scenarios = [
+            ScenarioName.AUDIT_REJECTED,
+            ScenarioName.AUDIT_SKIPPED,
+        ]
+
+        assert_writeback_for_stage(
             test_dataset,
             stage_2_legacy_writeback_scenario_names,
             stage_2_generic_flow_writeback_scenarios,
-            writeback_file_path,
             test_db_session,
         )
 
@@ -1828,14 +1857,6 @@ def test_e2e_pub_payments(
         )
 
         # == Writeback
-        writeback_folder_path = os.path.join(s3_config.fineos_data_import_path)
-        assert_files(writeback_folder_path, ["pei_writeback.csv"], get_current_timestamp_prefix())
-
-        writeback_file_path = f"{s3_config.pfml_fineos_writeback_archive_path}sent/{date_folder}/{timestamp_prefix}pei_writeback.csv"
-        assert_ref_file(
-            writeback_file_path, ReferenceFileType.PEI_WRITEBACK, test_db_session,
-        )
-
         stage_3_legacy_writeback_scenario_names = [
             ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
             ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
@@ -1850,11 +1871,10 @@ def test_e2e_pub_payments(
             ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
         ]
 
-        assert_writeback_payments(
+        assert_writeback_for_stage(
             test_dataset,
             stage_3_legacy_writeback_scenario_names,
             stage_3_generic_flow_writeback_scenarios,
-            writeback_file_path,
             test_db_session,
         )
 
@@ -2084,12 +2104,51 @@ def test_e2e_pub_payments(
             db_session=test_db_session,
         )
 
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+            ],
+            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+            db_session=test_db_session,
+        )
+
         # validate other scenarios that have reached an end state are erroring out
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=stage_1_happy_path_scenarios,
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
             db_session=test_db_session,
+        )
+
+        # Writeback
+        stage_4_legacy_writeback_scenario_names = []
+
+        stage_4_generic_flow_writeback_scenarios = [
+            ScenarioName.PUB_ACH_PRENOTE_RETURN,
+            ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+        ]
+
+        assert_writeback_for_stage(
+            test_dataset,
+            stage_4_legacy_writeback_scenario_names,
+            stage_4_generic_flow_writeback_scenarios,
+            test_db_session,
+        )
+
+        # Metrics
+        assert_metrics(
+            test_db_other_session,
+            "FineosPeiWritebackStep",
+            {
+                "eft_account_information_error_writeback_transaction_status_count": len(
+                    [
+                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+                    ]
+                ),
+            },
         )
 
 
@@ -2651,14 +2710,36 @@ def assert_metrics(
     ), f"Unexpected metric value(s) in log report '{log_report_name}', description: {description}\n{errors}"
 
 
-def assert_writeback_payments(
+def assert_writeback_for_stage(
     test_dataset: TestDataSet,
     legacy_writeback_scenario_names: List[ScenarioName],
     generic_writeback_scenario_names: List[ScenarioName],
-    writeback_file_path: str,
     db_session: db.Session,
 ):
 
+    # Validate file creation
+    s3_config = payments_config.get_s3_config()
+    date_folder = get_current_date_folder()
+    timestamp_prefix = get_current_timestamp_prefix()
+
+    writeback_folder_path = os.path.join(s3_config.fineos_data_import_path)
+    assert_files(writeback_folder_path, ["pei_writeback.csv"], timestamp_prefix)
+
+    writeback_file_path = f"{s3_config.pfml_fineos_writeback_archive_path}sent/{date_folder}/{timestamp_prefix}pei_writeback.csv"
+    assert_ref_file(
+        writeback_file_path, ReferenceFileType.PEI_WRITEBACK, db_session,
+    )
+
+    # Validate FINEOS status writeback states
+    assert_payment_state_for_scenarios(
+        test_dataset=test_dataset,
+        scenario_names=generic_writeback_scenario_names,
+        end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
+        flow=Flow.DELEGATED_PEI_WRITEBACK,
+        db_session=db_session,
+    )
+
+    # Validate counts
     writeback_scenario_names = []
     writeback_scenario_names.extend(legacy_writeback_scenario_names)
     writeback_scenario_names.extend(generic_writeback_scenario_names)
@@ -2685,6 +2766,7 @@ def assert_writeback_payments(
 
     assert len(writeback_details) == len(generic_writeback_scenario_names)
 
+    # Validate csv content
     expected_csv_rows = []
     for p in writeback_scenario_payments:
         expected_csv_row = {

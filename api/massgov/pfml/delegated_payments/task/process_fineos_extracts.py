@@ -10,6 +10,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import
 )
 from massgov.pfml.delegated_payments.delegated_fineos_claimant_extract import ClaimantExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import PaymentExtractStep
+from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
 from massgov.pfml.delegated_payments.payment_post_processing_step import PaymentPostProcessingStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
@@ -28,6 +29,7 @@ PAYMENT_EXTRACT = "payment-extract"
 PAYMENT_POST_PROCESSING = "payment-post-processing"
 VALIDATE_ADDRESSES = "validate-addresses"
 CREATE_AUDIT_REPORT = "audit-report"
+CREATE_PEI_WRITEBACK = "initial-writeback"
 REPORT = "report"
 ALLOWED_VALUES = [
     ALL,
@@ -48,6 +50,7 @@ class Configuration:
     do_payment_post_processing: bool
     validate_addresses: bool
     make_audit_report: bool
+    create_pei_writeback: bool
     make_reports: bool
 
     def __init__(self, input_args: List[str]):
@@ -72,6 +75,7 @@ class Configuration:
             self.do_payment_post_processing = True
             self.validate_addresses = True
             self.make_audit_report = True
+            self.create_pei_writeback = True
             self.make_reports = True
         else:
             self.do_audit_cleanup = RUN_AUDIT_CLEANUP in steps
@@ -80,6 +84,7 @@ class Configuration:
             self.do_payment_post_processing = PAYMENT_POST_PROCESSING in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
             self.make_audit_report = CREATE_AUDIT_REPORT in steps
+            self.create_pei_writeback = CREATE_PEI_WRITEBACK in steps
             self.make_reports = REPORT in steps
 
 
@@ -125,6 +130,11 @@ def _process_fineos_extracts(
 
     if config.make_audit_report:
         PaymentAuditReportStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
+
+    if config.create_pei_writeback:
+        FineosPeiWritebackStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 
