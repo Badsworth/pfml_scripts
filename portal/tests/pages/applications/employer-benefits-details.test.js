@@ -42,6 +42,7 @@ const benefitData = {
   benefit_type: EmployerBenefitType.shortTermDisability,
   benefit_start_date: "2021-03-01",
   benefit_end_date: "2021-04-01",
+  is_full_salary_continuous: true,
   benefit_amount_dollars: 100,
   benefit_amount_frequency: EmployerBenefitFrequency.monthly,
   employer_benefit_id: null,
@@ -67,6 +68,10 @@ const setBenefitFields = (wrapper, benefit) => {
   changeField(
     "employer_benefits[0].benefit_end_date",
     benefit.benefit_end_date
+  );
+  changeRadioGroup(
+    "employer_benefits[0].is_full_salary_continuous",
+    benefit.is_full_salary_continuous
   );
   changeField(
     "employer_benefits[0].benefit_amount_dollars",
@@ -108,13 +113,15 @@ const createClaimWithBenefits = () =>
         benefit_end_date: "2021-02-01",
         benefit_start_date: "2021-01-01",
         benefit_type: EmployerBenefitType.familyOrMedicalLeave,
+        is_full_salary_continuous: true,
       },
       {
         benefit_amount_dollars: 700,
         benefit_amount_frequency: EmployerBenefitFrequency.monthly,
         benefit_end_date: "2021-02-05",
         benefit_start_date: "2021-01-05",
-        benefit_type: EmployerBenefitType.paidLeave,
+        benefit_type: EmployerBenefitType.permanentDisability,
+        is_full_salary_continuous: false,
       },
     ])
     .create();
@@ -325,13 +332,14 @@ describe("EmployerBenefitsDetails", () => {
 const setupBenefitCard = () => {
   const index = 0;
   const entry = new EmployerBenefit();
+  const updateFields = jest.fn();
   let getFunctionalInputProps;
 
   testHook(() => {
     getFunctionalInputProps = useFunctionalInputProps({
       appErrors: new AppErrorInfoCollection(),
       formState: {},
-      updateFields: jest.fn(),
+      updateFields,
     });
   });
 
@@ -340,6 +348,7 @@ const setupBenefitCard = () => {
       entry={entry}
       index={index}
       getFunctionalInputProps={getFunctionalInputProps}
+      updateFields={updateFields}
     />
   );
 

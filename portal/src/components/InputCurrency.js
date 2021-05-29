@@ -22,7 +22,7 @@ const InputCurrency = (props) => {
   return (
     <InputNumber
       {...props}
-      value={maskedValue}
+      value={maskedValue || maskCurrency(props.value)}
       valueType="float"
       mask="currency"
       onChange={handleChange}

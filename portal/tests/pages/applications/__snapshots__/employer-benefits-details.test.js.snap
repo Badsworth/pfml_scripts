@@ -7,31 +7,25 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
       Array [
         Object {
           "checked": false,
-          "hint": "For example, vacation time, sick leave, or personal time",
-          "label": "Accrued paid leave",
-          "value": "Accrued paid leave",
-        },
-        Object {
-          "checked": false,
-          "hint": "Also known as temporary disability insurance",
-          "label": "Short-term disability insurance",
+          "hint": "Short-term or long-term disability",
+          "label": "Temporary disability insurance",
           "value": "Short-term disability insurance",
         },
         Object {
           "checked": false,
-          "hint": "Also known as a permanent disability policy",
+          "hint": false,
           "label": "Permanent disability insurance",
           "value": "Permanent disability insurance",
         },
         Object {
           "checked": false,
-          "hint": "For example, a paid maternity leave policy",
+          "hint": "For example, a paid parental leave policy",
           "label": "Family or medical leave insurance",
           "value": "Family or medical leave insurance",
         },
       ]
     }
-    label="What kind of benefit is it?"
+    label="What kind of employer-sponsored benefit is it?"
     name="employer_benefits[0].benefit_type"
     onChange={[Function]}
     smallLabel={true}
@@ -41,7 +35,7 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
   <InputDate
     dayLabel="Day"
     example="mm / dd / yyyy"
-    label="When will you start using the benefit?"
+    label="What is the first day of leave from work that this benefit will pay you for?"
     monthLabel="Month"
     name="employer_benefits[0].benefit_start_date"
     onChange={[Function]}
@@ -52,62 +46,96 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
   <InputDate
     dayLabel="Day"
     example="mm / dd / yyyy"
-    label="When will you stop using the benefit?"
+    label="What is the last day of leave from work that this benefit will pay you for?"
     monthLabel="Month"
     name="employer_benefits[0].benefit_end_date"
     onChange={[Function]}
+    optionalText="(optional)"
     smallLabel={true}
     value=""
     yearLabel="Year"
   />
-  <Fieldset>
-    <FormLabel
-      component="legend"
-      optionalText="(optional)"
-      small={true}
-    >
-      How much will you receive?
-    </FormLabel>
-    <InputCurrency
-      formGroupClassName="margin-top-05"
-      label="Amount"
-      labelClassName="text-normal margin-top-0"
-      name="employer_benefits[0].benefit_amount_dollars"
-      onChange={[Function]}
-      smallLabel={true}
-      value={null}
-      width="medium"
-    />
-    <Dropdown
-      choices={
-        Array [
-          Object {
-            "label": "Daily",
-            "value": "Per Day",
-          },
-          Object {
-            "label": "Weekly",
-            "value": "Per Week",
-          },
-          Object {
-            "label": "Monthly",
-            "value": "Per Month",
-          },
-          Object {
-            "label": "All at once",
-            "value": "In Total",
-          },
-        ]
-      }
-      formGroupClassName="margin-top-1"
-      label="Frequency"
-      labelClassName="text-normal margin-top-0"
-      name="employer_benefits[0].benefit_amount_frequency"
-      onChange={[Function]}
-      smallLabel={true}
-      value=""
-    />
-  </Fieldset>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    label="Does this employer-sponsored benefit fully replace your wages?"
+    name="employer_benefits[0].is_full_salary_continuous"
+    onChange={[Function]}
+    smallLabel={true}
+    type="radio"
+    value=""
+  />
+  <ConditionalContent
+    clearField={[Function]}
+    fieldNamesClearedWhenHidden={
+      Array [
+        "employer_benefits[0].benefit_amount_frequency",
+        "employer_benefits[0].benefit_amount_dollars",
+      ]
+    }
+    getField={[Function]}
+    updateFields={[MockFunction]}
+    visible={false}
+  >
+    <Fieldset>
+      <FormLabel
+        component="legend"
+        optionalText="(optional)"
+        small={true}
+      >
+        How much will you receive?
+      </FormLabel>
+      <InputCurrency
+        formGroupClassName="margin-top-05"
+        label="Amount"
+        labelClassName="text-normal margin-top-0"
+        name="employer_benefits[0].benefit_amount_dollars"
+        onChange={[Function]}
+        smallLabel={true}
+        value={null}
+      />
+      <Dropdown
+        choices={
+          Array [
+            Object {
+              "label": "Daily",
+              "value": "Per Day",
+            },
+            Object {
+              "label": "Weekly",
+              "value": "Per Week",
+            },
+            Object {
+              "label": "Monthly",
+              "value": "Per Month",
+            },
+            Object {
+              "label": "All at once",
+              "value": "In Total",
+            },
+          ]
+        }
+        label="Frequency"
+        labelClassName="text-normal margin-top-0"
+        name="employer_benefits[0].benefit_amount_frequency"
+        onChange={[Function]}
+        smallLabel={true}
+        value=""
+      />
+    </Fieldset>
+  </ConditionalContent>
 </Fragment>
 `;
 
@@ -138,19 +166,21 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
           "benefit_start_date": "2021-01-01",
           "benefit_type": "Family or medical leave insurance",
           "employer_benefit_id": null,
+          "is_full_salary_continuous": true,
         },
         EmployerBenefit {
           "benefit_amount_dollars": 700,
           "benefit_amount_frequency": "Per Month",
           "benefit_end_date": "2021-02-05",
           "benefit_start_date": "2021-01-05",
-          "benefit_type": "Accrued paid leave",
+          "benefit_type": "Permanent disability insurance",
           "employer_benefit_id": null,
+          "is_full_salary_continuous": false,
         },
       ]
     }
     headingPrefix="Benefit"
-    limit={3}
+    limit={6}
     limitMessage="You can only add up to 3 benefits"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
@@ -187,11 +217,12 @@ exports[`EmployerBenefitsDetails when the user's claim has no employer benefits 
           "benefit_start_date": null,
           "benefit_type": null,
           "employer_benefit_id": null,
+          "is_full_salary_continuous": null,
         },
       ]
     }
     headingPrefix="Benefit"
-    limit={3}
+    limit={6}
     limitMessage="You can only add up to 3 benefits"
     onAddClick={[Function]}
     onRemoveClick={[Function]}

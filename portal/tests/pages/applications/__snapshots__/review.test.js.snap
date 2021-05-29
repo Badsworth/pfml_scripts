@@ -25,7 +25,7 @@ Array [
     key="1"
     label="Benefit 2"
     reviewRowLevel="4"
-    type="Short-term disability insurance"
+    type="Temporary disability insurance"
   />,
   <OtherLeaveEntry
     amount="$250.00 per month"

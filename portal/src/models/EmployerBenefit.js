@@ -14,6 +14,7 @@ class EmployerBenefit extends BaseModel {
       benefit_type: null,
       // this ID field is currently only used by the /applications API in the Claimant portal
       employer_benefit_id: null,
+      is_full_salary_continuous: null,
     };
   }
 }

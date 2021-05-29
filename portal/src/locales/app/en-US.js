@@ -637,7 +637,7 @@ const shared = {
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
   employerBenefitType_permanentDisability: "Permanent disability insurance",
-  employerBenefitType_shortTermDisability: "Short-term disability insurance",
+  employerBenefitType_shortTermDisability: "Temporary disability insurance",
   employerInstructions_addComment:
     "If something is incomplete, add a comment at the end of the page.",
   employerInstructions_followUpDate:
@@ -991,28 +991,31 @@ const pages = {
     amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.employerBenefitEntryPrefix)",
     choiceHint_familyOrMedicalLeave:
-      "For example, a paid maternity leave policy",
+      "For example, a paid parental leave policy",
     choiceHint_paidLeave:
       "For example, vacation time, sick leave, or personal time",
-    choiceHint_permanentDisability:
-      "Also known as a permanent disability policy",
-    choiceHint_shortTermDisability:
-      "Also known as temporary disability insurance",
+    choiceHint_shortTermDisability: "Short-term or long-term disability",
     choiceLabel_familyOrMedicalLeave:
       "$t(shared.employerBenefitType_familyOrMedicalLeave)",
+    choiceLabel_no: "$t(shared.choiceNo)",
     choiceLabel_paidLeave: "$t(shared.employerBenefitType_paidLeave)",
     choiceLabel_permanentDisability:
       "$t(shared.employerBenefitType_permanentDisability)",
     choiceLabel_shortTermDisability:
       "$t(shared.employerBenefitType_shortTermDisability)",
-    endDateLabel: "When will you stop using the benefit?",
+    choiceLabel_yes: "$t(shared.choiceYes)",
+    endDateLabel:
+      "What is the last day of leave from work that this benefit will pay you for?",
+    isFullSalaryContinuousLabel:
+      "Does this employer-sponsored benefit fully replace your wages?",
     limitMessage: "You can only add up to 3 benefits",
     removeButton: "Remove benefit",
     sectionLabel:
       "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.",
-    startDateLabel: "When will you start using the benefit?",
+    startDateLabel:
+      "What is the first day of leave from work that this benefit will pay you for?",
     title: "$t(shared.claimsOtherLeaveTitle)",
-    typeLabel: "What kind of benefit is it?",
+    typeLabel: "What kind of employer-sponsored benefit is it?",
   },
   claimsEmployerBenefitsIntro: {
     sectionLabel:

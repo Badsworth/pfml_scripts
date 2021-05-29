@@ -5,6 +5,7 @@ import EmployerBenefit, {
 import React, { useEffect, useRef } from "react";
 import { get, pick } from "lodash";
 import BenefitsApplication from "../../models/BenefitsApplication";
+import ConditionalContent from "../../components/ConditionalContent";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
@@ -96,6 +97,7 @@ export const EmployerBenefitsDetails = (props) => {
         entry={entry}
         getFunctionalInputProps={getFunctionalInputProps}
         index={index}
+        updateFields={updateFields}
       />
     );
   };
@@ -127,7 +129,7 @@ export const EmployerBenefitsDetails = (props) => {
           "pages.claimsEmployerBenefitsDetails.removeButton"
         )}
         render={render}
-        limit={3}
+        limit={6}
         limitMessage={t("pages.claimsEmployerBenefitsDetails.limitMessage")}
       />
     </QuestionPage>
@@ -147,7 +149,12 @@ EmployerBenefitsDetails.propTypes = {
  */
 export const EmployerBenefitCard = (props) => {
   const { t } = useTranslation();
-  const { entry, getFunctionalInputProps, index } = props;
+  const { entry, getFunctionalInputProps, index, updateFields } = props;
+  const clearField = (fieldName) => updateFields({ [fieldName]: null });
+  // Since we are not passing the formState to the benefit card,
+  // get the field value from the entry by removing the field path
+  const getEntryField = (fieldName) =>
+    get(entry, fieldName.replace(`employer_benefits[${index}].`, ""));
   const selectedType = entry.benefit_type;
 
   const benefitFrequencyChoices = ["daily", "weekly", "monthly", "inTotal"].map(
@@ -166,7 +173,6 @@ export const EmployerBenefitCard = (props) => {
       <InputChoiceGroup
         {...getFunctionalInputProps(`employer_benefits[${index}].benefit_type`)}
         choices={[
-          "paidLeave",
           "shortTermDisability",
           "permanentDisability",
           "familyOrMedicalLeave",
@@ -176,9 +182,11 @@ export const EmployerBenefitCard = (props) => {
             label: t("pages.claimsEmployerBenefitsDetails.choiceLabel", {
               context: benefitTypeKey,
             }),
-            hint: t("pages.claimsEmployerBenefitsDetails.choiceHint", {
-              context: benefitTypeKey,
-            }),
+            hint:
+              benefitTypeKey !== "permanentDisability" &&
+              t("pages.claimsEmployerBenefitsDetails.choiceHint", {
+                context: benefitTypeKey,
+              }),
             value: EmployerBenefitType[benefitTypeKey],
           };
         })}
@@ -206,38 +214,76 @@ export const EmployerBenefitCard = (props) => {
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
+        optionalText={t("components.form.optional")}
         smallLabel
       />
-      <Fieldset>
-        <FormLabel
-          component="legend"
-          small
-          optionalText={t("components.form.optional")}
-        >
-          {t("pages.claimsEmployerBenefitsDetails.amountLegend")}
-        </FormLabel>
-        <InputCurrency
-          {...getFunctionalInputProps(
-            `employer_benefits[${index}].benefit_amount_dollars`,
-            { fallbackValue: null }
-          )}
-          label={t("pages.claimsEmployerBenefitsDetails.amountLabel")}
-          labelClassName="text-normal margin-top-0"
-          formGroupClassName="margin-top-05"
-          width="medium"
-          smallLabel
-        />
-        <Dropdown
-          {...getFunctionalInputProps(
-            `employer_benefits[${index}].benefit_amount_frequency`
-          )}
-          choices={benefitFrequencyChoices}
-          label={t("pages.claimsEmployerBenefitsDetails.amountFrequencyLabel")}
-          labelClassName="text-normal margin-top-0"
-          formGroupClassName="margin-top-1"
-          smallLabel
-        />
-      </Fieldset>
+      <InputChoiceGroup
+        {...getFunctionalInputProps(
+          `employer_benefits[${index}].is_full_salary_continuous`
+        )}
+        choices={[
+          {
+            checked: entry.is_full_salary_continuous === true,
+            label: t("pages.claimsEmployerBenefitsDetails.choiceLabel", {
+              context: "yes",
+            }),
+            value: "true",
+          },
+          {
+            checked: entry.is_full_salary_continuous === false,
+            label: t("pages.claimsEmployerBenefitsDetails.choiceLabel", {
+              context: "no",
+            }),
+            value: "false",
+          },
+        ]}
+        label={t(
+          "pages.claimsEmployerBenefitsDetails.isFullSalaryContinuousLabel"
+        )}
+        type="radio"
+        smallLabel
+      />
+      <ConditionalContent
+        fieldNamesClearedWhenHidden={[
+          `employer_benefits[${index}].benefit_amount_frequency`,
+          `employer_benefits[${index}].benefit_amount_dollars`,
+        ]}
+        clearField={clearField}
+        getField={getEntryField}
+        updateFields={updateFields}
+        visible={get(entry, "is_full_salary_continuous") === false}
+      >
+        <Fieldset>
+          <FormLabel
+            component="legend"
+            small
+            optionalText={t("components.form.optional")}
+          >
+            {t("pages.claimsEmployerBenefitsDetails.amountLegend")}
+          </FormLabel>
+          <InputCurrency
+            {...getFunctionalInputProps(
+              `employer_benefits[${index}].benefit_amount_dollars`,
+              { fallbackValue: null }
+            )}
+            label={t("pages.claimsEmployerBenefitsDetails.amountLabel")}
+            labelClassName="text-normal margin-top-0"
+            formGroupClassName="margin-top-05"
+            smallLabel
+          />
+          <Dropdown
+            {...getFunctionalInputProps(
+              `employer_benefits[${index}].benefit_amount_frequency`
+            )}
+            choices={benefitFrequencyChoices}
+            label={t(
+              "pages.claimsEmployerBenefitsDetails.amountFrequencyLabel"
+            )}
+            labelClassName="text-normal margin-top-0"
+            smallLabel
+          />
+        </Fieldset>
+      </ConditionalContent>
     </React.Fragment>
   );
 };
@@ -246,6 +292,7 @@ EmployerBenefitCard.propTypes = {
   index: PropTypes.number.isRequired,
   entry: PropTypes.object.isRequired,
   getFunctionalInputProps: PropTypes.func.isRequired,
+  updateFields: PropTypes.func.isRequired,
 };
 
 export default withBenefitsApplication(EmployerBenefitsDetails);
