@@ -77,7 +77,7 @@ export default class UsersApi extends BaseApi {
   };
 
   /**
-   * Convert a user role to another
+   * Convert a claimant to employer
    * @param {string} user_id - ID of user being converted
    * @param {object} postData - User fields to update - role and leave admin
    * @returns {Promise<UsersApiResult>}
@@ -88,6 +88,28 @@ export default class UsersApi extends BaseApi {
       `${user_id}/convert_employer`,
       postData
     );
+    const roles = this.createUserRoles(data.roles);
+    const user_leave_administrators = this.createUserLeaveAdministrators(
+      data.user_leave_administrators
+    );
+
+    return {
+      user: new User({
+        ...data,
+        roles,
+        user_leave_administrators,
+      }),
+    };
+  };
+
+  /**
+   * Convert an employer to a claimant
+   * @param {string} user_id - ID of user being converted
+   * @returns {Promise<UsersApiResult>}
+   */
+  convertToClaimant = async (user_id) => {
+    const { data } = await this.request("POST", `${user_id}/convert_claimant`);
+
     const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators

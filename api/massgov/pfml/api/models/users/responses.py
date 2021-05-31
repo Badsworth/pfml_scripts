@@ -33,3 +33,7 @@ class UserResponse(PydanticBaseModel):
     consented_to_data_sharing: bool
     roles: List[RoleResponse]
     user_leave_administrators: List[UserLeaveAdminResponse]
+
+
+class AdminUserConvertResponse(PydanticBaseModel):
+    email_sent: bool

@@ -706,6 +706,10 @@ const shared = {
 };
 
 const pages = {
+  adminWelcome: {
+    title: "Portal Admin Panel",
+    body: "Admin tools for making tasks easier and more efficient.",
+  },
   app: {
     seoDescription: "$t(shared.siteDescription)",
   },
@@ -1775,6 +1779,13 @@ const pages = {
     choiceLabel_variable: "My schedule is not consistent from week to week.",
     sectionLabel: "How would you describe your work schedule?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
+  },
+  convertToClaimant: {
+    alertDescription:
+      'Converting your account from "employer" to "employee" is irreversible and will not be possible if you\'re already verified.',
+    alertHeading: "This action is irreversible!",
+    submit: "Convert account",
+    title: "Convert to employee account",
   },
   convertToEmployer: {
     alertDescription:

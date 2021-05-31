@@ -20,6 +20,12 @@ class User extends BaseModel {
     );
   }
 
+  get hasAdminRole() {
+    return this.roles.some(
+      (userRole) => userRole.role_description === RoleDescription.admin
+    );
+  }
+
   /**
    * Determines whether user_leave_administrators has only unverified employers
    * @returns {boolean}
@@ -46,6 +52,10 @@ class User extends BaseModel {
    */
   get hasVerifiedEmployerNotRegisteredInFineos() {
     return !!this.getVerifiedEmployersNotRegisteredInFineos().length;
+  }
+
+  get hasVerifiedEmployer() {
+    return this.user_leave_administrators.some((employer) => employer.verified);
   }
 
   /**
@@ -134,6 +144,7 @@ export class UserRole extends BaseModel {
  * @enum {string}
  */
 export const RoleDescription = {
+  admin: "Admin",
   claimant: "Claimant",
   employer: "Employer",
 };

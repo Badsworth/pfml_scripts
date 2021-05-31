@@ -5,22 +5,26 @@ from werkzeug.exceptions import BadRequest, NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.reductions.config as reductions_config
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import (
+    AdminUserConvertRequest,
     UserConvertEmployerRequest,
     UserCreateRequest,
     UserUpdateRequest,
 )
 from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
 from massgov.pfml.api.services.user_rules import (
+    get_users_convert_claimant_issues,
     get_users_convert_employer_issues,
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.db.models.employees import Employer, Role, User
+from massgov.pfml.db.models.employees import User, Employer, UserRole, Role, UserLeaveAdministrator
 from massgov.pfml.util.aws.cognito import CognitoValidationError
+from massgov.pfml.util.aws.ses import EmailRecipient, send_email
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import sanitize_fein
 from massgov.pfml.util.users import initial_link_user_leave_admin, register_user
@@ -108,6 +112,57 @@ def users_get(user_id):
     ).to_api_response()
 
 
+def users_getAll():
+    with app.db_session() as db_session:
+        # todo: authentication / check role as Admin
+        users = db_session.query(User).all()
+
+    users_response = [user_response(u) for u in users]
+
+    return response_util.success_response(
+        message="Successfully retrieved users", data=users_response,
+    ).to_api_response()
+
+
+def users_convert():
+    # todo: authentication / check role as Admin
+    body = AdminUserConvertRequest.parse_obj(connexion.request.json)
+    user_id = deepgetattr(body, "user_id")
+    with app.db_session() as db_session:
+        user = db_session.query(User).filter(User.user_id == user_id).one()
+
+    email_config = reductions_config.get_email_config()
+    sender = email_config.pfml_email_address
+    bounce_forwarding_email_address_arn = email_config.bounce_forwarding_email_address_arn
+    email_recipient = EmailRecipient(to_addresses=[user.email_address])
+    subject = f"Convert your account now"
+    body = f"Yes click here"  # todo: template
+
+    email = send_email(
+        recipient=email_recipient,
+        subject=subject,
+        body_text=body,
+        sender=sender,
+        bounce_forwarding_email_address_arn=bounce_forwarding_email_address_arn,
+    )
+
+    wasEmailSent = email["ResponseMetadata"]["HTTPStatusCode"] == 200
+
+    return response_util.success_response(
+        message="Successfully sent email", data={"email_sent": wasEmailSent},
+    ).to_api_response()
+
+def users_convert_claimant_email(user_id):
+    with app.db_session() as db_session:
+        updated_user = get_or_404(db_session, User, user_id)
+        ensure(EDIT, updated_user)
+
+    wasEmailSent = True
+
+    return response_util.success_response(
+        message="Successfully sent email", data={"email_sent": wasEmailSent},
+    ).to_api_response()
+
 def users_convert_employer(user_id):
     """This endpoint converts the user specified by the user_id to an employer"""
     body = UserConvertEmployerRequest.parse_obj(connexion.request.json)
@@ -154,6 +209,36 @@ def users_convert_employer(user_id):
         message="Successfully converted user", status_code=201, data=user_response(updated_user),
     ).to_api_response()
 
+def users_convert_claimant(user_id):
+    """Converts the employer specified by the user_id to a claimant"""
+    with app.db_session() as db_session:
+        user = get_or_404(db_session, User, user_id)
+        ensure(EDIT, user)
+
+        employer_issues = get_users_convert_claimant_issues(user, db_session)
+        if employer_issues:
+            logger.info("users_convert_claimant failure - Couldn't convert user to claimant account")
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="Couldn't convert user to claimant account!",
+                errors=employer_issues,
+                data={},
+            ).to_api_response()
+        else:
+            employer_roles = db_session.query(UserRole).filter(UserRole.user_id == user_id and UserRole.role_id == Role.EMPLOYER.role_id).all()
+            for role in employer_roles:
+                db_session.delete(role)
+            
+            user_leave_admins = db_session.query(UserLeaveAdministrator).filter(UserLeaveAdministrator.user_id == user_id).all()
+            for ula in user_leave_admins:
+                db_session.delete(ula)
+
+            db_session.commit()
+            db_session.refresh(user)
+
+    return response_util.success_response(
+        message="Successfully converted user", status_code=201, data=user_response(user),
+    ).to_api_response()
 
 def users_current_get():
     """Return the currently authenticated user"""

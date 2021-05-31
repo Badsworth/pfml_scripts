@@ -38,6 +38,39 @@ def get_users_convert_employer_issues(
     return issues
 
 
+def get_users_convert_claimant_issues(
+    user: User, db_session: db.Session
+) -> List[Issue]:
+    """Validate that the user is an unverified Employer"""
+    issues = []
+
+    verified_leave_admins = [
+        ula for ula in user.user_leave_administrators 
+        if ula.fineos_web_id is not None or ula.verification_id is not None
+    ]
+
+    if Role.EMPLOYER.role_id not in [role.role_id for role in user.roles]:
+        issues.append(
+            Issue(
+                field="user_leave_administrator.employer_fein",
+                message="You're not an employer!",
+                type=IssueType.conflicting,
+            )
+        )
+    if len(verified_leave_admins) > 0:
+      issues.append(
+          Issue(
+              field="user_leave_administrator.employer_fein",
+              message="Verified employers cannot their convert account!",
+              type=IssueType.conflicting,
+          )
+      )
+        
+
+    return issues
+
+
+
 def get_users_post_required_fields_issues(user_create_request: UserCreateRequest) -> List[Issue]:
     """Validate that the request has all required fields"""
     ALWAYS_REQUIRED_FIELDS = ["email_address", "password", "role.role_description"]

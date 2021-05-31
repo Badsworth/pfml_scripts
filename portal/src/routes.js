@@ -4,7 +4,12 @@
  * hard-coded into various files.
  */
 const routes = {
+  admin: {
+    maintenance: "/admin/maintenance",
+    users: "/admin/users",
+  },
   api: {
+    admin: "/admin",
     applications: "/applications",
     claims: "/claims",
     employers: "/employers",
@@ -164,7 +169,8 @@ const routes = {
   index: "/",
   user: {
     consentToDataSharing: "/user/consent-to-data-sharing",
-    convert: "/user/convert-to-employer",
+    convertClaimant: "/user/convert-to-claimant",
+    convertEmployer: "/user/convert-to-employer",
   },
 };
 
@@ -182,6 +188,13 @@ export const isEmployersRoute = (url) => {
  */
 export const isApplicationsRoute = (url) => {
   return Object.values(routes.applications).includes(getRouteFromUrl(url));
+};
+/**
+ * @param {string} url - path, with or without query param
+ * @returns {boolean}
+ */
+export const isAdminRoute = (url) => {
+  return getRouteFromUrl(url).includes("admin/") || url === "/admin";
 };
 
 /**

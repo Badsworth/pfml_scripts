@@ -107,7 +107,8 @@ export default {
          * the routes.user.convert page, which is
          * otherwise isolated.
          */
-        CONVERT_EMPLOYER: routes.user.convert,
+        CONVERT_CLAIMANT: routes.user.convertClaimant,
+        CONVERT_EMPLOYER: routes.user.convertEmployer,
       },
     },
     [routes.applications.start]: {
@@ -116,7 +117,15 @@ export default {
         CREATE_CLAIM: routes.applications.checklist,
       },
     },
-    [routes.user.convert]: {
+    [routes.user.convertClaimant]: {
+      meta: {},
+      on: {
+        CONTINUE: routes.applications.getReady,
+        /* We cannot move between 2 different flows */
+        // IS_VERIFIED_EMPLOYER: routes.employers.organizations,
+      },
+    },
+    [routes.user.convertEmployer]: {
       meta: {},
       on: {
         PREVENT_CONVERSION: routes.applications.getReady,

@@ -29,6 +29,63 @@ paths:
                 $ref: "#/components/schemas/SuccessfulResponse"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
+  
+  /admin/users:
+    get:
+      tags:
+        - Admin
+      summary: Retrieve all User accounts
+      operationId: massgov.pfml.api.users.users_getAll
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a user object.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  
+  /admin/users/{user_id}/convert_employer:
+    post:
+      tags:
+        - Admin
+      summary: Send email to an User to convert to employer
+      operationId: massgov.pfml.api.users.users_convert
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a user object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserConvertResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/users/{user_id}/convert_claimant:
+    post:
+      tags:
+        - Admin
+      summary: Sends email to User with instructions to convert from employer to claimant
+      operationId: massgov.pfml.api.users.users_convert_claimant_email
+      parameters:
+        - name: user_id
+          in: path
+          schema:
+            type: string
+          description: ID of User to update
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a user object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserConvertResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /users:
     post:
@@ -79,6 +136,31 @@ paths:
           $ref: "#/components/responses/NotFound"
       requestBody:
         $ref: '#/components/requestBodies/EmployerAddFeinRequestBody'
+  
+  /users/{user_id}/convert_claimant:
+    post:
+      tags:
+        - Users
+      summary: Convert a User account to an employer role
+      operationId: massgov.pfml.api.users.users_convert_claimant
+      parameters:
+        - name: user_id
+          in: path
+          schema:
+            type: string
+          description: ID of User to update
+          required: true
+      responses:
+        "201":
+          description: User converted without errors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
   
   /users/{user_id}:
     get:
@@ -1363,7 +1445,14 @@ components:
           nullable: true
           pattern: '^[0-9]{5}((?:-[0-9]{4})?|(?:-\*{4})?)$'
           example: "12345"
-
+          
+    AdminUserConvertResponse:
+      type: object
+      properties:
+        email_sent: 
+          type: boolean
+          example: false
+    
     UserResponse:
       type: object
       properties:
