@@ -29,6 +29,40 @@ paths:
                 $ref: "#/components/schemas/SuccessfulResponse"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
+  
+  /admin/users:
+    get:
+      tags:
+        - Admin
+      summary: Retrieve all User accounts
+      operationId: massgov.pfml.api.users.users_getAll
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a user object.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  
+  /admin/users/{user_id}/convert_employer:
+    post:
+      tags:
+        - Admin
+      summary: Send email to an User to convert to employer
+      operationId: massgov.pfml.api.users.users_convert
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a user object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserConvertResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /users:
     post:
@@ -1363,7 +1397,14 @@ components:
           nullable: true
           pattern: '^[0-9]{5}((?:-[0-9]{4})?|(?:-\*{4})?)$'
           example: "12345"
-
+          
+    AdminUserConvertResponse:
+      type: object
+      properties:
+        email_sent: 
+          type: boolean
+          example: false
+    
     UserResponse:
       type: object
       properties:

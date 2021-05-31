@@ -4,7 +4,11 @@
  * hard-coded into various files.
  */
 const routes = {
+  admin: {
+    users: "/admin/users",
+  },
   api: {
+    admin: "/admin",
     applications: "/applications",
     claims: "/claims",
     employers: "/employers",
@@ -182,6 +186,13 @@ export const isEmployersRoute = (url) => {
  */
 export const isApplicationsRoute = (url) => {
   return Object.values(routes.applications).includes(getRouteFromUrl(url));
+};
+/**
+ * @param {string} url - path, with or without query param
+ * @returns {boolean}
+ */
+export const isAdminRoute = (url) => {
+  return getRouteFromUrl(url).includes("admin/") || url === "/admin";
 };
 
 /**

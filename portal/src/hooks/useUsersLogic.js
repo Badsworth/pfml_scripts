@@ -3,9 +3,14 @@ import {
   UserNotFoundError,
   UserNotReceivedError,
 } from "../errors";
-import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
+import routes, {
+  isAdminRoute,
+  isApplicationsRoute,
+  isEmployersRoute,
+} from "../routes";
 import { useMemo, useState } from "react";
 
+import AdminApi from "../api/AdminApi";
 import UsersApi from "../api/UsersApi";
 import tracker from "../services/tracker";
 
@@ -19,6 +24,7 @@ import tracker from "../services/tracker";
  */
 const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
+  const adminApi = useMemo(() => new AdminApi(), []);
   const [user, setUser] = useState();
 
   /**
@@ -103,9 +109,11 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     const pathname = portalFlow.pathname;
     if (pathname === routes.user.consentToDataSharing) return;
 
+    const isNotAdmin = !user.hasAdminRole && isAdminRoute(pathname);
+    const isNotEmployer = !user.hasEmployerRole && isEmployersRoute(pathname);
     // Portal currently does not support hybrid account (both Employer AND Claimant account)
     // If user has Employer role, they cannot access Claimant Portal regardless of multiple roles
-    if (!user.hasEmployerRole && isEmployersRoute(pathname)) {
+    if (isNotEmployer || isNotAdmin) {
       portalFlow.goTo(routes.applications.index);
       return;
     }
@@ -115,6 +123,19 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     }
   };
 
+  const getUsers = () => {
+    if (user.hasAdminRole) {
+      return adminApi.getUsers();
+    }
+    return [];
+  };
+
+  const convertUserToEmployer = (user_id) => {
+    if (user.hasAdminRole) {
+      return adminApi.convertUserToEmployer(user_id);
+    }
+    return false;
+  };
   /**
    * Convert user role through a POST request to /users/{user_id}/convert_employer
    * @param {string} user_id - ID of user being converted
@@ -136,6 +157,34 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     }
   };
 
+  const getUsers = () => {
+    if (user.hasAdminRole) {
+      return adminApi.getUsers();
+    }
+    return [];
+  };
+
+  const convertUserToEmployer = (user_id) => {
+    if (user.hasAdminRole) {
+      return adminApi.convertUserToEmployer(user_id);
+    }
+    return false;
+  };
+
+  const getUsers = () => {
+    if (user.hasAdminRole) {
+      return adminApi.getUsers();
+    }
+    return [];
+  };
+
+  const convertUserToEmployer = (user_id) => {
+    if (user.hasAdminRole) {
+      return adminApi.convertUserToEmployer(user_id);
+    }
+    return false;
+  };
+
   return {
     convertUser,
     user,
@@ -144,6 +193,10 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     requireUserConsentToDataAgreement,
     requireUserRole,
     setUser,
+    admin: {
+      getUsers,
+      convertUserToEmployer,
+    },
   };
 };
 

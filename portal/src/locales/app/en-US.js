@@ -706,6 +706,10 @@ const shared = {
 };
 
 const pages = {
+  adminWelcome: {
+    title: "Portal Admin Panel",
+    body: "Admin tools for making tasks easier and more efficient.",
+  },
   app: {
     seoDescription: "$t(shared.siteDescription)",
   },
