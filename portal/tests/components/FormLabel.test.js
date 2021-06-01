@@ -54,40 +54,33 @@ describe("FormLabel", () => {
 
   describe("when component prop is set to label", () => {
     it("renders label with expected classes", () => {
-      const { wrapper } = render({ component: "label" });
+      const { wrapper } = render({ component: "label", inputId: "foo" });
 
       expect(wrapper).toMatchSnapshot();
     });
   });
 
   describe("when hint prop is set", () => {
-    it("styles the hint as usa-intro", () => {
+    it("renders the hint", () => {
       const { wrapper } = render({ hint: "Hint text" });
-      const hint = wrapper.find(".usa-intro").last();
+      const hint = wrapper.find("Hint").last();
 
       expect(hint).toMatchInlineSnapshot(`
-        <span
-          className="display-block line-height-sans-5 measure-5 usa-intro"
-          id="foo_hint"
+        <Hint
+          inputId="foo"
+          small={false}
         >
           Hint text
-        </span>
+        </Hint>
       `);
     });
 
     describe("when the label is small", () => {
-      it("styles the hint text as usa-hint", () => {
+      it("passes small prop to Hint", () => {
         const { wrapper } = render({ hint: "Hint text", small: true });
-        const hint = wrapper.find(".usa-hint").last();
+        const hint = wrapper.find("Hint");
 
-        expect(hint).toMatchInlineSnapshot(`
-          <span
-            className="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
-            id="foo_hint"
-          >
-            Hint text
-          </span>
-        `);
+        expect(hint.prop("small")).toBe(true);
       });
     });
   });

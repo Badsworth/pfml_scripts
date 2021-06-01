@@ -28,7 +28,7 @@ function formatDateRange(startIsoDate, endIsoDate) {
  * @param {string} isoDate - ISO 8601 date string
  * @returns {string}
  */
-function formatDate(isoDate) {
+export function formatDate(isoDate) {
   if (!isoDate) return "";
 
   const dateTime = DateTime.fromISO(isoDate);
