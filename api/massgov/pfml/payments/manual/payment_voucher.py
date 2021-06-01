@@ -599,6 +599,7 @@ def write_row_to_output(
         adl2_corrected="",
         removed_or_added_after_audit_of_info="",
         to_be_removed_from_file="",
+        amalgamationc=payment_data.amalgamationc,
         notes="",
     )
     output_csv.writerow(asdict(payment_row))

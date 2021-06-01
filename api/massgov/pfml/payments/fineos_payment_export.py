@@ -144,6 +144,8 @@ class PaymentData:
     account_nbr: Optional[str]
     raw_account_type: Optional[str]
 
+    amalgamationc: Optional[str]
+
     def __init__(self, extract_data: ExtractData, index: CiIndex, pei_record: Dict[str, str]):
         self.validation_container = payments_util.ValidationContainer(str(index))
         self.c_value = index.c
@@ -243,6 +245,10 @@ class PaymentData:
             self.validation_container,
             eft_required,
             custom_validator_func=payments_util.lookup_validator(BankAccountType),
+        )
+
+        self.amalgamationc = payments_util.validate_csv_input(
+            "AMALGAMATIONC", pei_record, self.validation_container, False
         )
 
         # Find the record in the other datasets.

@@ -61,6 +61,7 @@ class PaymentVoucherCSV:
     adl2_corrected: str
     removed_or_added_after_audit_of_info: str
     to_be_removed_from_file: str
+    amalgamationc: Optional[str]
     notes: str
 
 
@@ -112,6 +113,7 @@ PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     adl2_corrected="ADL2 Corrected? (-1)",
     removed_or_added_after_audit_of_info="REMOVED or ADDED after audit of info",
     to_be_removed_from_file="TO BE REMOVED FROM FILE",
+    amalgamationc="AMALGAMATIONC",
     notes="NOTES:",
 )
 

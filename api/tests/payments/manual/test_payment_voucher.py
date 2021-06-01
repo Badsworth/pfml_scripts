@@ -244,6 +244,7 @@ class ScenarioOutput:
             "adl2_corrected": "",
             "removed_or_added_after_audit_of_info": "",
             "to_be_removed_from_file": "",
+            "amalgamationc": None,
             "notes": "",
         }
 
