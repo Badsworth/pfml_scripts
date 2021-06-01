@@ -124,7 +124,7 @@ describe("Review", () => {
       {
         comment: expect.any(String),
         employer_benefits: expect.any(Array),
-        employer_decision: undefined, // undefined by default
+        employer_decision: "Approve", // "Approve" by default
         fraud: undefined, // undefined by default
         hours_worked_per_week: expect.any(Number),
         previous_leaves: expect.any(Array),
@@ -133,7 +133,7 @@ describe("Review", () => {
     );
   });
 
-  it("submits a claim with leave_reason when showCaringLeaveType is on ", async () => {
+  it("submits a claim with leave_reason when showCaringLeaveType is on", async () => {
     process.env.featureFlags = {
       showCaringLeaveType: true,
     };
@@ -145,7 +145,7 @@ describe("Review", () => {
       {
         comment: expect.any(String),
         employer_benefits: expect.any(Array),
-        employer_decision: undefined, // undefined by default
+        employer_decision: "Approve", // "Approve" by default
         fraud: undefined, // undefined by default
         hours_worked_per_week: expect.any(Number),
         previous_leaves: expect.any(Array),
@@ -170,7 +170,23 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'employer_decision' based on EmployerDecision", async () => {
+  it("sets 'employer_decision' if the employer denys", async () => {
+    act(() => {
+      const setEmployerDecision = wrapper
+        .find("EmployerDecision")
+        .prop("onChange");
+      setEmployerDecision("Deny");
+    });
+
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ employer_decision: "Deny" })
+    );
+  });
+
+  it("sets 'employer_decision' if the employer approves", async () => {
     act(() => {
       const setEmployerDecision = wrapper
         .find("EmployerDecision")
@@ -414,7 +430,7 @@ describe("Review", () => {
           believe_relationship_accurate: undefined, // undefined by default
           comment: expect.any(String),
           employer_benefits: expect.any(Array),
-          employer_decision: undefined, // undefined by default
+          employer_decision: "Approve", // "Approve" by default
           fraud: undefined, // undefined by default
           hours_worked_per_week: expect.any(Number),
           previous_leaves: expect.any(Array),

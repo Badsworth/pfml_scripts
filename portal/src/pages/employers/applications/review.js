@@ -61,7 +61,7 @@ export const Review = (props) => {
     amendedLeaves: [],
     amendedHours: 0,
     comment: "",
-    employerDecision: undefined,
+    employerDecision: "Approve",
     fraud: undefined,
     employeeNotice: undefined,
     believeRelationshipAccurate: undefined,
