@@ -454,7 +454,7 @@ describe("Review", () => {
       ).toBe(true);
     });
 
-    it("submits has_amendments as true when LA indicates the relationship is inaccurate", async () => {
+    it("submits has_amendments as false when LA indicates the relationship is inaccurate", async () => {
       await act(async () => {
         await wrapper
           .find("input[name='believeRelationshipAccurate']")
@@ -466,7 +466,7 @@ describe("Review", () => {
       expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
         "NTN-111-ABS-01",
         expect.objectContaining({
-          has_amendments: true,
+          has_amendments: false,
           believe_relationship_accurate: "No",
         })
       );
