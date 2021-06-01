@@ -333,6 +333,86 @@ const errors = {
         required: "Select a number type.",
       },
     },
+    previous_leaves_other_reason: {
+      is_for_current_employer: {
+        required:
+          "$t(shared.claimsPreviousLeaveDetails.errors.isForCurrentEmployer_required)",
+      },
+      leave_end_date: {
+        format:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_format)",
+        invalid_date_range:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_invalidDateRange)",
+        minimum:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_minimum)",
+        required:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_required)",
+      },
+      leave_minutes: {
+        maximum:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveMinutes_maximum)",
+        required:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveMinutes_required)",
+      },
+      leave_reason: {
+        required:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveReason_required)",
+      },
+      leave_start_date: {
+        format:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_format)",
+        maximum:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_maximum)",
+        minimum:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_minimum)",
+        required:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_required)",
+      },
+      worked_per_week_minutes: {
+        maximum:
+          "$t(shared.claimsPreviousLeaveDetails.errors.workedPerWeekMinutes_maximum)",
+        required:
+          "$t(shared.claimsPreviousLeaveDetails.errors.workedPerWeekMinutes_required)",
+      },
+    },
+    previous_leaves_same_reason: {
+      is_for_current_employer: {
+        required:
+          "$t(shared.claimsPreviousLeaveDetails.errors.isForCurrentEmployer_required)",
+      },
+      leave_end_date: {
+        format:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_format)",
+        invalid_date_range:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_invalidDateRange)",
+        minimum:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_minimum)",
+        required:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_required)",
+      },
+      leave_minutes: {
+        maximum:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveMinutes_maximum)",
+        required:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveMinutes_required)",
+      },
+      leave_start_date: {
+        format:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_format)",
+        maximum:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_maximum)",
+        minimum:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_minimum)",
+        required:
+          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_required)",
+      },
+      worked_per_week_minutes: {
+        maximum:
+          "$t(shared.claimsPreviousLeaveDetails.errors.workedPerWeekMinutes_maximum)",
+        required:
+          "$t(shared.claimsPreviousLeaveDetails.errors.workedPerWeekMinutes_required)",
+      },
+    },
     residential_address: {
       city: {
         required: "Enter a city for your residential address.",
@@ -589,6 +669,32 @@ const shared = {
   claimsOtherLeaveTitle: "Other leave, benefits, and income",
   claimsPreviousLeaveDetails: {
     addButton: "Add another previous leave",
+    errors: {
+      isForCurrentEmployer_required:
+        "Select yes if your leave is from this employer.",
+      leaveEndDate_format:
+        "The date your leave ended must include a valid month, day, and year.",
+      leaveEndDate_invalidDateRange:
+        "The date your leave ends must be on or after the date your leave began.",
+      leaveEndDate_minimum:
+        "Only enter previous leaves taken on or after January 1, 2021.",
+      leaveEndDate_required: "Enter the date your leave ended.",
+      leaveMinutes_maximum:
+        "The hours entered are more than the possible hours.",
+      leaveMinutes_required:
+        "Enter the hours you took off work for your leave.",
+      leaveReason_required: "Select the qualifying reason for your leave.",
+      leaveStartDate_format:
+        "The date your leave began must include a valid month, day, and year.",
+      leaveStartDate_maximum:
+        "Only enter previous leaves that began before today.",
+      leaveStartDate_minimum:
+        "Only enter previous leaves taken on or after January 1, 2021.",
+      leaveStartDate_required: "Enter the date your leave began.",
+      workedPerWeekMinutes_maximum:
+        "The hours entered are more than the possible hours.",
+      workedPerWeekMinutes_required: "Enter the hours you normally worked.",
+    },
     isForCurrentEmployerHint:
       "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, this employer will be able to review it. We won’t share any leave you took from other employers.",
     isForCurrentEmployerLabel:

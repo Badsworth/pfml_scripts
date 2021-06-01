@@ -10,20 +10,12 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const fields = [];
-
-// TODO(CP-2125): Integrate this page with the API. For now we'll use this 'tempFields' array so that
-// the Checklist page won't block this step from appearing completed. This is because the Checklist page
-// uses the above `fields` array to calculate whether or not a page/Step is completed. With the empty array
-// above the page/Step will appear complete regardless of if the API has saved the data to the DB.
-export const tempFields = ["claim.has_previous_leaves_same_reason"];
+export const fields = ["claim.has_previous_leaves_same_reason"];
 
 export const PreviousLeavesSameReason = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
-  const { formState, updateFields } = useFormState(
-    pick(props, tempFields).claim
-  );
+  const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,

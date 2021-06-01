@@ -10,16 +10,12 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const fields = [];
-
-const tempFields = ["claim.has_previous_leaves_other_reason"];
+export const fields = ["claim.has_previous_leaves_other_reason"];
 
 export const PreviousLeavesOtherReason = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
-  const { formState, updateFields } = useFormState(
-    pick(props, tempFields).claim
-  );
+  const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,

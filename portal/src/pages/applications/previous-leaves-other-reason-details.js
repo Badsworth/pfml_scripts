@@ -9,18 +9,13 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
+import { Trans } from "react-i18next";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const fields = [];
-
-// TODO(CP-2125): Integrate this page with the API. For now we'll use this 'tempFields' array so that
-// the Checklist page won't block this step from appearing completed. This is because the Checklist page
-// uses the above `fields` array to calculate whether or not a page/Step is completed. With the empty array
-// above the page/Step will appear complete regardless of if the API has saved the data to the DB.
-export const tempFields = [
+export const fields = [
   "claim.previous_leaves_other_reason",
   "claim.previous_leaves_other_reason[*].is_for_current_employer",
   "claim.previous_leaves_other_reason[*].is_for_same_reason_as_leave_reason",
@@ -37,7 +32,7 @@ export const PreviousLeavesOtherReasonDetails = (props) => {
   const { appLogic, claim } = props;
   const limit = 6;
 
-  const initialEntries = pick(props, tempFields).claim;
+  const initialEntries = pick(props, fields).claim;
   if (initialEntries.previous_leaves_other_reason.length === 0) {
     initialEntries.previous_leaves_other_reason = [new PreviousLeave()];
   }
@@ -74,10 +69,11 @@ export const PreviousLeavesOtherReasonDetails = (props) => {
     updateFields,
   });
 
-  const render = (_entry, index) => {
+  const render = (entry, index) => {
     return (
       <PreviousLeavesOtherReasonDetailsCard
         claim={claim}
+        entry={entry}
         index={index}
         getFunctionalInputProps={getFunctionalInputProps}
       />
@@ -126,6 +122,7 @@ export const PreviousLeavesOtherReasonDetailsCard = (props) => {
   const { t } = useTranslation();
   const {
     claim: { employer_fein },
+    entry: { is_for_current_employer, leave_reason },
     getFunctionalInputProps,
     index,
   } = props;
@@ -148,36 +145,42 @@ export const PreviousLeavesOtherReasonDetailsCard = (props) => {
               "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_medical"
             ),
             value: PreviousLeaveReason.medical,
+            checked: leave_reason === PreviousLeaveReason.medical,
           },
           {
             label: t(
               "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_pregnancy"
             ),
             value: PreviousLeaveReason.pregnancy,
+            checked: leave_reason === PreviousLeaveReason.pregnancy,
           },
           {
             label: t(
               "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_bonding"
             ),
             value: PreviousLeaveReason.bonding,
+            checked: leave_reason === PreviousLeaveReason.bonding,
           },
           {
             label: t(
               "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_care"
             ),
             value: PreviousLeaveReason.care,
+            checked: leave_reason === PreviousLeaveReason.care,
           },
           {
             label: t(
               "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_activeDutyFamily"
             ),
             value: PreviousLeaveReason.activeDutyFamily,
+            checked: leave_reason === PreviousLeaveReason.activeDutyFamily,
           },
           {
             label: t(
               "pages.claimsPreviousLeavesOtherReasonDetails.leaveReasonChoice_serviceMemberFamily"
             ),
             value: PreviousLeaveReason.serviceMemberFamily,
+            checked: leave_reason === PreviousLeaveReason.serviceMemberFamily,
           },
         ]}
       />
@@ -198,10 +201,12 @@ export const PreviousLeavesOtherReasonDetailsCard = (props) => {
           {
             label: t("pages.claimsPreviousLeavesOtherReasonDetails.choiceYes"),
             value: "true",
+            checked: is_for_current_employer === true,
           },
           {
             label: t("pages.claimsPreviousLeavesOtherReasonDetails.choiceNo"),
             value: "false",
+            checked: is_for_current_employer === false,
           },
         ]}
       />
@@ -246,9 +251,9 @@ export const PreviousLeavesOtherReasonDetailsCard = (props) => {
         minutesLabel={t(
           "pages.claimsPreviousLeavesOtherReasonDetails.minutesLabel"
         )}
-        hint={t(
-          "pages.claimsPreviousLeavesOtherReasonDetails.workedPerWeekMinutesHint"
-        )}
+        hint={
+          <Trans i18nKey="pages.claimsPreviousLeavesOtherReasonDetails.workedPerWeekMinutesHint" />
+        }
         minutesIncrement={15}
       />
       <InputHours
@@ -277,6 +282,7 @@ export const PreviousLeavesOtherReasonDetailsCard = (props) => {
 
 PreviousLeavesOtherReasonDetailsCard.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  entry: PropTypes.instanceOf(PreviousLeave).isRequired,
   getFunctionalInputProps: PropTypes.func.isRequired,
   index: PropTypes.number.isRequired,
 };
