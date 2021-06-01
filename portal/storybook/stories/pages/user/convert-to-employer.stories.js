@@ -16,7 +16,7 @@ export const Page = (args) => {
 
   const appLogic = {
     users: {
-      convertUser: () => {},
+      convertUserToEmployer: () => {},
     },
     appErrors: new AppErrorInfoCollection(),
   };

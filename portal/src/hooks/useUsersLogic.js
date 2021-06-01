@@ -9,8 +9,8 @@ import routes, {
   isEmployersRoute,
 } from "../routes";
 import { useMemo, useState } from "react";
-
 import AdminApi from "../api/AdminApi";
+import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
 import tracker from "../services/tracker";
 
@@ -130,9 +130,9 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     return [];
   };
 
-  const convertUserToEmployer = (user_id) => {
+  const convertAccountEmail = (user_id, role) => {
     if (user.hasAdminRole) {
-      return adminApi.convertUserToEmployer(user_id);
+      return adminApi.convertAccountEmail(user_id, role);
     }
     return false;
   };
@@ -141,11 +141,15 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
    * @param {string} user_id - ID of user being converted
    * @param {object} postData - User fields to update - role and leave admin
    */
-  const convertUser = async (user_id, postData) => {
+  const convertUserToEmployer = async (user_id, postData) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { user } = await usersApi.convertUser(user_id, postData);
+      const { user } = await usersApi.convertUserToRole(
+        user_id,
+        postData,
+        RoleDescription.employer
+      );
 
       setUser(user);
 
@@ -161,7 +165,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
    * Convert user role through a POST request to /users/{user_id}/convert_claimant
    * @param {string} user_id
    */
-  const convertToClaimant = async (user_id) => {
+  const convertUserToClaimant = async (user_id) => {
     appErrorsLogic.clearErrors();
 
     try {
@@ -181,8 +185,8 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   };
 
   return {
-    convertUser,
-    convertToClaimant,
+    convertUserToEmployer,
+    convertUserToClaimant,
     user,
     updateUser,
     loadUser,
@@ -191,7 +195,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     setUser,
     admin: {
       getUsers,
-      convertUserToEmployer,
+      convertAccountEmail,
     },
   };
 };

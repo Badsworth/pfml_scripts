@@ -82,10 +82,10 @@ export default class UsersApi extends BaseApi {
    * @param {object} postData - User fields to update - role and leave admin
    * @returns {Promise<UsersApiResult>}
    */
-  convertUser = async (user_id, postData) => {
+  convertUserToRole = async (user_id, postData, role) => {
     const { data } = await this.request(
       "POST",
-      `${user_id}/convert_employer`,
+      `${user_id}/convert_${role.toLowerCase()}`,
       postData
     );
     const roles = this.createUserRoles(data.roles);

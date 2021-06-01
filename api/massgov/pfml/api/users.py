@@ -26,8 +26,11 @@ from massgov.pfml.db.models.employees import User, Employer, UserRole, Role, Use
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email
 from massgov.pfml.util.sqlalchemy import get_or_404
-from massgov.pfml.util.strings import sanitize_fein
+from massgov.pfml.util.strings import sanitize_fein, mask_fein
 from massgov.pfml.util.users import initial_link_user_leave_admin, register_user
+from massgov.pfml.util.aws.ses import EmailRecipient, send_email
+
+import massgov.pfml.reductions.config as reductions_config
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -101,7 +104,6 @@ def users_post():
         status_code=201,
     ).to_api_response()
 
-
 def users_get(user_id):
     with app.db_session() as db_session:
         u = get_or_404(db_session, User, user_id)
@@ -111,6 +113,39 @@ def users_get(user_id):
         message="Successfully retrieved user", data=user_response(u),
     ).to_api_response()
 
+def users_getAll():
+    with app.db_session() as db_session:
+        # todo: authentication / check role as Admin
+        users = db_session.query(User).all()
+        
+    users_response = [user_response(u) for u in users]
+
+    return response_util.success_response(
+        message="Successfully retrieved users", data=users_response,
+    ).to_api_response()
+
+def users_convert_employer_email(user_id):
+    # todo: authentication / check role as Admin
+    with app.db_session() as db_session:
+        user = db_session.query(User).one()
+        
+    email_config = reductions_config.get_email_config()
+    sender = email_config.pfml_email_address
+    bounce_forwarding_email_address_arn = email_config.bounce_forwarding_email_address_arn
+    email_recipient = EmailRecipient(to_addresses=[user.email_address])
+    subject = f"Convert your account now"
+    body = f"Yes click here"
+    send_email(
+      recipient=email_recipient,
+      subject=subject,
+      body_text=body,
+      sender=sender,
+      bounce_forwarding_email_address_arn=bounce_forwarding_email_address_arn,
+    )
+
+    return response_util.success_response(
+        message="Successfully retrieved users", data=True,
+    ).to_api_response()
 
 def users_getAll():
     with app.db_session() as db_session:
@@ -274,8 +309,6 @@ def users_patch(user_id):
 ##########################################
 # Data helpers
 ##########################################
-
-
 def user_response(user: User) -> Dict[str, Any]:
     response = UserResponse.from_orm(user).dict()
     response["user_leave_administrators"] = [

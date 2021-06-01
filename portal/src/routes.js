@@ -5,7 +5,6 @@
  */
 const routes = {
   admin: {
-    maintenance: "/admin/maintenance",
     users: "/admin/users",
   },
   api: {

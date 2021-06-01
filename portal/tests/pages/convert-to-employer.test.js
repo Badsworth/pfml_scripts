@@ -28,7 +28,9 @@ describe("ConvertToEmployer", () => {
         consented_to_data_sharing: true,
         ...options.user,
       });
-      appLogic.users.convertUser = jest.fn((user_id, postData) => null);
+      appLogic.users.convertUserToEmployer = jest.fn(
+        (user_id, postData) => null
+      );
       appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
         options.claims
       );
@@ -55,9 +57,12 @@ describe("ConvertToEmployer", () => {
     const { changeField, submitForm } = simulateEvents(wrapper);
     changeField("employer_fein", fein);
     await submitForm();
-    expect(appLogic.users.convertUser).toHaveBeenCalledWith("mock_user_id", {
-      employer_fein: fein,
-    });
+    expect(appLogic.users.convertUserToEmployer).toHaveBeenCalledWith(
+      "mock_user_id",
+      {
+        employer_fein: fein,
+      }
+    );
   });
 
   it("does not render page when user has at least one claim", () => {

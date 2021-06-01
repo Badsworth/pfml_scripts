@@ -1,24 +1,12 @@
 import React, { useEffect, useState } from "react";
-
-// import Button from "../../components/Button";
-// import Heading from "../../components/Heading";
-// import InputChoice from "../../components/InputChoice";
-// import InputDateTime from "../../components/InputDateTime";
-// import InputText from "../../components/InputText";
-// import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
+import { RoleDescription } from "../../models/User";
 import Table from "../../components/Table";
-// import Title from "../../components/Title";
-import User from "../../models/User";
-// import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
 export const Users = ({ appLogic }) => {
-  // const { t } = useTranslation();
-
   const [users, setUsers] = useState([]);
 
-  console.log(appLogic.users);
   useEffect(() => {
     appLogic.users.admin
       .getUsers()
@@ -26,12 +14,13 @@ export const Users = ({ appLogic }) => {
       .catch((e) => {
         throw e;
       });
-  }, []);
+  }, [appLogic.users.admin]);
 
-  const sendEmailConvert = (user_id) => (e) => {
+  const sendAccountConversionEmail = (user_id, role) => (e) => {
     e.preventDefault();
-    appLogic.users.admin.convertUserToEmployer(user_id);
+    appLogic.users.admin.convertAccountEmail(user_id, role);
   };
+
   return (
     <Table>
       <caption>Users:</caption>
@@ -55,7 +44,13 @@ export const Users = ({ appLogic }) => {
                     : ""}
                 </td>
                 <td>
-                  <button type="button" onClick={sendEmailConvert(u.user_id)}>
+                  <button
+                    type="button"
+                    onClick={sendAccountConversionEmail(
+                      u.user_id,
+                      RoleDescription.employer
+                    )}
+                  >
                     Convert to employer
                   </button>
                 </td>
@@ -68,7 +63,14 @@ export const Users = ({ appLogic }) => {
 };
 
 Users.propTypes = {
-  // appLogic: PropTypes.instanceOf(User).isRequired,
+  appLogic: PropTypes.shape({
+    users: PropTypes.shape({
+      admin: PropTypes.shape({
+        getUsers: PropTypes.func.isRequired,
+        convertAccountEmail: PropTypes.func.isRequired,
+      }),
+    }),
+  }).isRequired,
 };
 
 export default withUser(Users);

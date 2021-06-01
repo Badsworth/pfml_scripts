@@ -65,5 +65,5 @@ export default jest.fn().mockImplementation(() => ({
   createUser: mockCreateUser,
   getCurrentUser: mockGetCurrentUser,
   updateUser: mockUpdateUser,
-  convertUser: mockConvertUser,
+  convertUserToRole: mockConvertUser,
 }));
