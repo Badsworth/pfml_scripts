@@ -147,17 +147,6 @@ def users_convert_employer_email(user_id):
         message="Successfully retrieved users", data=True,
     ).to_api_response()
 
-def users_convert_claimant_email(user_id):
-    with app.db_session() as db_session:
-        updated_user = get_or_404(db_session, User, user_id)
-        ensure(EDIT, updated_user)
-
-    wasEmailSent = True
-
-    return response_util.success_response(
-        message="Successfully sent email", data={"email_sent": wasEmailSent},
-    ).to_api_response()
-
 def users_convert_employer(user_id):
     """This endpoint converts the user specified by the user_id to an employer"""
     body = UserConvertEmployerRequest.parse_obj(connexion.request.json)
