@@ -283,6 +283,16 @@ def get_concurrent_leave_issues(application: Application) -> List[Issue]:
             "concurrent_leave.leave_end_date",
             PFML_PROGRAM_LAUNCH_DATE,
         )
+
+        required_fields = [
+            "leave_start_date",
+            "leave_end_date",
+            "is_for_current_employer",
+        ]
+
+        issues += check_required_fields(
+            "concurrent_leave", application.concurrent_leave, required_fields
+        )
     else:
         if application.has_concurrent_leave and not application.concurrent_leave:
             issues.append(

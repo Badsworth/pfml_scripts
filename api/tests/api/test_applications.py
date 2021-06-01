@@ -20,6 +20,7 @@ from massgov.pfml.api.util.response import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
+    ConcurrentLeave,
     ContinuousLeavePeriod,
     DocumentType,
     EmploymentStatus,
@@ -2033,6 +2034,87 @@ def test_application_patch_other_income_exceed_limit(client, user, auth_token, t
     assert response.status_code == 400
     test_db_session.refresh(application)
     assert application.other_incomes == existing_incomes
+
+
+def test_application_patch_concurrent_leave(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "has_concurrent_leave": True,
+            "concurrent_leave": {
+                "is_for_current_employer": True,
+                "leave_start_date": "2021-06-01",
+                "leave_end_date": "2021-07-01",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json().get("data")
+
+    assert data["concurrent_leave"]["is_for_current_employer"] is True
+    assert data["concurrent_leave"]["leave_start_date"] == "2021-06-01"
+    assert data["concurrent_leave"]["leave_end_date"] == "2021-07-01"
+
+
+def test_application_delete_concurrent_leave(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    ConcurrentLeaveFactory.create(application_id=application.application_id)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_concurrent_leave": False, "concurrent_leave": None},
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json().get("data")
+
+    assert getattr(data, "concurrent_leave", None) is None
+
+
+def test_application_patch_concurrent_leave_replaces_existing_leave(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    ConcurrentLeaveFactory.create(
+        application_id=application.application_id,
+        leave_start_date="2021-01-01",
+        leave_end_date="2021-03-01",
+    )
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "has_concurrent_leave": False,
+            "concurrent_leave": {
+                "is_for_current_employer": True,
+                "leave_start_date": "2021-06-01",
+                "leave_end_date": "2021-07-01",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json().get("data")
+
+    assert data["concurrent_leave"]["is_for_current_employer"] is True
+    assert data["concurrent_leave"]["leave_start_date"] == "2021-06-01"
+    assert data["concurrent_leave"]["leave_end_date"] == "2021-07-01"
+
+    assert (
+        test_db_session.query(ConcurrentLeave)
+        .filter(ConcurrentLeave.application_id == application.application_id)
+        .count()
+        == 1
+    )
 
 
 def test_application_patch_concurrent_leave_is_optional(client, user, auth_token, test_db_session):

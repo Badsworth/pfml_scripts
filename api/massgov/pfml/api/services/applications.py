@@ -54,7 +54,7 @@ from massgov.pfml.util.pydantic.types import Regexes
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 LeaveScheduleDB = Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
-OtherBenefitsDB = Union[EmployerBenefit, OtherIncome, PreviousLeave]
+OtherBenefitsDB = Union[EmployerBenefit, OtherIncome, PreviousLeave, ConcurrentLeave]
 
 
 def process_partially_masked_field(
@@ -783,6 +783,9 @@ def set_concurrent_leave(
     api_concurrent_leave: Optional[massgov.pfml.api.models.common.ConcurrentLeave],
     application: Application,
 ) -> None:
+    if application.concurrent_leave:
+        delete_application_other_benefits(ConcurrentLeave, application, db_session)
+
     if not api_concurrent_leave:
         return
 

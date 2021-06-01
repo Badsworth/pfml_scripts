@@ -17,6 +17,7 @@ from massgov.pfml.api.services.application_rules import (
 )
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
+    ConcurrentLeave,
     EmployerBenefit,
     EmploymentStatus,
     IntermittentLeavePeriod,
@@ -30,6 +31,7 @@ from massgov.pfml.db.models.employees import PaymentMethod
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
     EmployerBenefitFactory,
     IntermittentLeavePeriodFactory,
@@ -41,6 +43,8 @@ from massgov.pfml.db.models.factories import (
     WorkPatternFixedFactory,
     WorkPatternVariableFactory,
 )
+
+PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 
 
 def test_first_name_required():
@@ -2139,6 +2143,99 @@ def test_has_previous_leaves_true_no_leave():
             field="previous_leaves_same_reason",
         ),
     ] == issues
+
+
+def test_concurrent_leave_no_issues():
+    application = ApplicationFactory.build()
+    application.has_concurrent_leave = True
+    application.concurrent_leave = ConcurrentLeaveFactory.build(
+        application_id=application.application_id,
+        is_for_current_employer=True,
+        leave_start_date=date(2021, 1, 1),
+        leave_end_date=date(2021, 3, 1),
+    )
+
+    issues = get_conditional_issues(application, Headers())
+    assert [] == issues
+
+
+def test_concurrent_leave_required_fields():
+    application = ApplicationFactory.build()
+    application.has_concurrent_leave = True
+    application.concurrent_leave = ConcurrentLeaveFactory.build(
+        application_id=application.application_id,
+        is_for_current_employer=None,
+        leave_start_date=None,
+        leave_end_date=None,
+    )
+
+    issues = get_conditional_issues(application, Headers())
+
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="concurrent_leave.leave_start_date is required",
+            field="concurrent_leave.leave_start_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="concurrent_leave.leave_end_date is required",
+            field="concurrent_leave.leave_end_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="concurrent_leave.is_for_current_employer is required",
+            field="concurrent_leave.is_for_current_employer",
+        ),
+    ] == issues
+
+
+@pytest.mark.parametrize(
+    "test_concurrent_leave,expected_issues",
+    [
+        (
+            ConcurrentLeave(
+                is_for_current_employer=True,
+                leave_start_date=date(2020, 1, 1),
+                leave_end_date=date(2020, 4, 1),
+            ),
+            [
+                Issue(
+                    type=IssueType.minimum,
+                    message=f"concurrent_leave.leave_start_date cannot be earlier than {PFML_PROGRAM_LAUNCH_DATE}",
+                    field="concurrent_leave.leave_start_date",
+                ),
+                Issue(
+                    type=IssueType.minimum,
+                    message=f"concurrent_leave.leave_end_date cannot be earlier than {PFML_PROGRAM_LAUNCH_DATE}",
+                    field="concurrent_leave.leave_end_date",
+                ),
+            ],
+        ),
+        (
+            ConcurrentLeave(
+                is_for_current_employer=True,
+                leave_start_date=date(2021, 5, 1),
+                leave_end_date=date(2021, 4, 1),
+            ),
+            [
+                Issue(
+                    type=IssueType.invalid_date_range,
+                    message="concurrent_leave.leave_end_date cannot be earlier than concurrent_leave.leave_start_date",
+                    field="concurrent_leave.leave_end_date",
+                )
+            ],
+        ),
+    ],
+)
+def test_concurrent_leave_date_range_issues(test_concurrent_leave, expected_issues):
+    application = ApplicationFactory.build()
+    application.has_concurrent_leave = True
+    application.concurrent_leave = test_concurrent_leave
+
+    issues = get_conditional_issues(application, Headers())
+
+    assert expected_issues == issues
 
 
 def test_previous_leave_no_issues():
