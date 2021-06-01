@@ -72,6 +72,7 @@ class AmountFrequency(str, LookupEnum):
     per_week = "Per Week"
     per_month = "Per Month"
     all_at_once = "In Total"
+    unknown = "Unknown"
 
     @classmethod
     def get_lookup_model(cls):
