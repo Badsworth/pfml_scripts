@@ -1,5 +1,6 @@
 import { ScenarioSpecification } from "../generation/Scenario";
 import { addWeeks, subWeeks, startOfWeek } from "date-fns";
+import { getCaringLeaveStartDate } from "../../src/util/claims";
 
 /**
  * Cypress Testing Scenarios.
@@ -253,8 +254,8 @@ export const CCAP90: ScenarioSpecification = {
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: {},
     leave_dates: [
-      addWeeks(mostRecentSunday, 9),
-      addWeeks(mostRecentSunday, 13),
+      getCaringLeaveStartDate(),
+      addWeeks(getCaringLeaveStartDate(), 2),
     ],
     metadata: { expected_weekly_payment: "850.00" },
   },
