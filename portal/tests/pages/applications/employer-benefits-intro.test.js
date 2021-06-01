@@ -26,6 +26,8 @@ describe("EmployerBenefitsIntroIntro", () => {
     const { wrapper } = setup();
 
     expect(wrapper).toMatchSnapshot();
+
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it("calls goToNextPage when user submits form", async () => {

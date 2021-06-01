@@ -1151,6 +1151,8 @@ const pages = {
     typeLabel: "What kind of employer-sponsored benefit is it?",
   },
   claimsEmployerBenefitsIntro: {
+    intro:
+      "<p>Next, we need to know about any other employer-sponsored benefits you'll use or other sources of income you'll receive during your PFML paid leave period. We can determine your PFML benefit amount once we have this information.</p><p>An employer-sponsored benefit is a policy provided by your employer that provides you income while you can’t work. This includes temporary disability insurance, permanent disability insurance, and a family or medical leave policy.</p>",
     sectionLabel:
       "Tell us about other benefits and income you will use during your paid leave from PFML.",
     title: "$t(shared.claimsOtherLeaveTitle)",
