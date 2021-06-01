@@ -115,6 +115,9 @@ build-app: ## Build app container
 		--build-arg RUN_UID=$(RUN_UID) \
 		.
 
+create-leave-admin-and-claims: ## Create local API Leave Admin user and claims
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-leave-admin-and-claims.py
+
 create-user: ## Create local API User
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py $(args)
 
