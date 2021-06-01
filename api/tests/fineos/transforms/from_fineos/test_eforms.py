@@ -2,8 +2,11 @@ from datetime import date
 
 import pytest
 
-from massgov.pfml.api.models.claims.common import PreviousLeave
-from massgov.pfml.api.models.common import EmployerBenefit
+from massgov.pfml.api.models.common import (
+    EmployerBenefit,
+    PreviousLeave,
+    PreviousLeaveQualifyingReason,
+)
 from massgov.pfml.fineos.models.group_client_api import EForm
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformOtherIncomeEform,
@@ -177,7 +180,9 @@ def other_leave_eform_bad_values():
 @pytest.fixture
 def previous_leave():
     return PreviousLeave(
-        leave_start_date="2020-05-15", leave_end_date="2020-06-01", leave_reason="Medical"
+        leave_start_date="2020-05-15",
+        leave_end_date="2020-06-01",
+        leave_reason=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION,
     )
 
 

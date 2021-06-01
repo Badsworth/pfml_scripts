@@ -1,11 +1,15 @@
 import abc
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type, Union, cast
 
 from pydantic import BaseModel
 
+from massgov.pfml.fineos.transforms.common import (
+    DEFAULT_ENUM_REPLACEMENT_VALUE,
+    FineosToApiEnumConverter,
+)
+
 DEFAULT_ENUM_VALUE_UNSELECTED = "Please Select"
-DEFAULT_ENUM_REPLACEMENT_VALUE = "Unknown"
 
 
 class AbstractTransform(abc.ABC, metaclass=abc.ABCMeta):
@@ -20,7 +24,7 @@ class AbstractTransform(abc.ABC, metaclass=abc.ABCMeta):
 
 class TransformEformAttributes:
 
-    PROP_MAP: Dict[str, Dict[str, str]] = {}
+    PROP_MAP: Dict[str, Dict[str, Union[str, Type[FineosToApiEnumConverter]]]] = {}
 
     @classmethod
     def sanitize_attribute(cls, item_value: Any) -> Optional[Any]:
@@ -52,6 +56,12 @@ class TransformEformAttributes:
                 if "embeddedProperty" in cls.PROP_MAP[attr_name]:
                     embeddedProperty = cls.PROP_MAP[attr_name]["embeddedProperty"]
                     transformed_value = attribute[attr_type][embeddedProperty]
+
+                    if "enumOverride" in cls.PROP_MAP[attr_name]:
+                        enum_override = cast(
+                            FineosToApiEnumConverter, cls.PROP_MAP[attr_name]["enumOverride"]
+                        )
+                        transformed_value = enum_override.to_api_enum(transformed_value)
                 else:
                     transformed_value = attribute[attr_type]
 
