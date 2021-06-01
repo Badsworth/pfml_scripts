@@ -53,7 +53,7 @@ paths:
       tags:
         - Admin
       summary: Send email to an User to convert to employer
-      operationId: massgov.pfml.api.users.users_convert
+      operationId: massgov.pfml.api.users.users_convert_employer_email
       responses:
         "200":
           description: A successful request returns a 200 status code and a user object.

@@ -102,7 +102,6 @@ def users_post():
         status_code=201,
     ).to_api_response()
 
-
 def users_get(user_id):
     with app.db_session() as db_session:
         u = get_or_404(db_session, User, user_id)
@@ -123,7 +122,7 @@ def users_getAll():
         message="Successfully retrieved users", data=users_response,
     ).to_api_response()
 
-def users_convert(user_id):
+def users_convert_employer_email(user_id)
     # todo: authentication / check role as Admin
     with app.db_session() as db_session:
         user = db_session.query(User).one()
@@ -144,88 +143,6 @@ def users_convert(user_id):
 
     return response_util.success_response(
         message="Successfully retrieved users", data=True,
-    ).to_api_response()
-
-
-def users_getAll():
-    with app.db_session() as db_session:
-        # todo: authentication / check role as Admin
-        users = db_session.query(User).all()
-
-    users_response = [user_response(u) for u in users]
-
-    return response_util.success_response(
-        message="Successfully retrieved users", data=users_response,
-    ).to_api_response()
-
-
-def users_convert():
-    # todo: authentication / check role as Admin
-    body = AdminUserConvertRequest.parse_obj(connexion.request.json)
-    user_id = deepgetattr(body, "user_id")
-    with app.db_session() as db_session:
-        user = db_session.query(User).filter(User.user_id == user_id).one()
-
-    email_config = reductions_config.get_email_config()
-    sender = email_config.pfml_email_address
-    bounce_forwarding_email_address_arn = email_config.bounce_forwarding_email_address_arn
-    email_recipient = EmailRecipient(to_addresses=[user.email_address])
-    subject = f"Convert your account now"
-    body = f"Yes click here"  # todo: template
-
-    email = send_email(
-        recipient=email_recipient,
-        subject=subject,
-        body_text=body,
-        sender=sender,
-        bounce_forwarding_email_address_arn=bounce_forwarding_email_address_arn,
-    )
-
-    wasEmailSent = email["ResponseMetadata"]["HTTPStatusCode"] == 200
-
-    return response_util.success_response(
-        message="Successfully sent email", data={"email_sent": wasEmailSent},
-    ).to_api_response()
-
-
-def users_getAll():
-    with app.db_session() as db_session:
-        # todo: authentication / check role as Admin
-        users = db_session.query(User).all()
-
-    users_response = [user_response(u) for u in users]
-
-    return response_util.success_response(
-        message="Successfully retrieved users", data=users_response,
-    ).to_api_response()
-
-
-def users_convert():
-    # todo: authentication / check role as Admin
-    body = AdminUserConvertRequest.parse_obj(connexion.request.json)
-    user_id = deepgetattr(body, "user_id")
-    with app.db_session() as db_session:
-        user = db_session.query(User).filter(User.user_id == user_id).one()
-
-    email_config = reductions_config.get_email_config()
-    sender = email_config.pfml_email_address
-    bounce_forwarding_email_address_arn = email_config.bounce_forwarding_email_address_arn
-    email_recipient = EmailRecipient(to_addresses=[user.email_address])
-    subject = f"Convert your account now"
-    body = f"Yes click here"  # todo: template
-
-    email = send_email(
-        recipient=email_recipient,
-        subject=subject,
-        body_text=body,
-        sender=sender,
-        bounce_forwarding_email_address_arn=bounce_forwarding_email_address_arn,
-    )
-
-    wasEmailSent = email["ResponseMetadata"]["HTTPStatusCode"] == 200
-
-    return response_util.success_response(
-        message="Successfully sent email", data={"email_sent": wasEmailSent},
     ).to_api_response()
 
 def users_convert_employer(user_id):
@@ -274,7 +191,6 @@ def users_convert_employer(user_id):
         message="Successfully converted user", status_code=201, data=user_response(updated_user),
     ).to_api_response()
 
-
 def users_current_get():
     """Return the currently authenticated user"""
     current_user = app.current_user()
@@ -309,8 +225,6 @@ def users_patch(user_id):
 ##########################################
 # Data helpers
 ##########################################
-
-
 def user_response(user: User) -> Dict[str, Any]:
     response = UserResponse.from_orm(user).dict()
     response["user_leave_administrators"] = [

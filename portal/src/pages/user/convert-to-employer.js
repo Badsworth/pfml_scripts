@@ -18,7 +18,7 @@ import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 export const ConvertToEmployer = (props) => {
   const { appLogic, user, claims } = props;
   const { t } = useTranslation();
-  const { convertUser } = appLogic.users;
+  const { convertUserToEmployer } = appLogic.users;
   const { formState, updateFields } = useFormState({ employer_fein: "" });
   const hasClaims = !claims.isEmpty;
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -29,7 +29,7 @@ export const ConvertToEmployer = (props) => {
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await convertUser(user.user_id, {
+    await convertUserToEmployer(user.user_id, {
       employer_fein: formState.employer_fein,
     });
   });
@@ -99,7 +99,7 @@ export const ConvertToEmployer = (props) => {
 ConvertToEmployer.propTypes = {
   appLogic: PropTypes.shape({
     users: PropTypes.shape({
-      convertUser: PropTypes.func.isRequired,
+      convertUserToEmployer: PropTypes.func.isRequired,
     }),
     portalFlow: PropTypes.shape({
       goTo: PropTypes.func.isRequired,

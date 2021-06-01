@@ -347,12 +347,16 @@ describe("useUsersLogic", () => {
     beforeEach(async () => {
       await act(async () => {
         renderHook();
-        await usersLogic.convertUser(user_id, postData);
+        await usersLogic.convertUserToEmployer(user_id, postData);
       });
     });
 
     it("converts user role in the api", () => {
-      expect(usersApi.convertUser).toHaveBeenCalledWith(user_id, postData);
+      expect(usersApi.convertUserToRole).toHaveBeenCalledWith(
+        user_id,
+        postData,
+        RoleDescription.employer
+      );
     });
 
     it("receives user as employer", () => {
@@ -379,7 +383,7 @@ describe("useUsersLogic", () => {
         });
 
         await act(async () => {
-          await usersLogic.convertUser(user_id, postData);
+          await usersLogic.convertUserToEmployer(user_id, postData);
         });
       });
 
@@ -390,12 +394,12 @@ describe("useUsersLogic", () => {
 
     describe("when api errors", () => {
       it("catches error", async () => {
-        usersApi.convertUser.mockImplementationOnce(() => {
+        usersApi.convertUserToRole.mockImplementationOnce(() => {
           throw new NetworkError();
         });
 
         await act(async () => {
-          await usersLogic.convertUser(user_id, postData);
+          await usersLogic.convertUserToEmployer(user_id, postData);
         });
 
         expect(appErrorsLogic.appErrors.items[0].name).toEqual(

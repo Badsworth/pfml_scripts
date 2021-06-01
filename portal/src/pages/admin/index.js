@@ -1,20 +1,17 @@
 import Link from "next/link";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
-import User from "../../models/User";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
-export const Welcome = ({ appLogic, user }) => {
+export const Welcome = () => {
   const { t } = useTranslation();
 
   const adminPages = [];
   for (const [k, v] of Object.entries(routes.admin)) {
     adminPages.push({ name: k, path: v });
   }
-  console.log(adminPages);
 
   return (
     <React.Fragment>
@@ -35,8 +32,6 @@ export const Welcome = ({ appLogic, user }) => {
   );
 };
 
-Welcome.propTypes = {
-  user: PropTypes.instanceOf(User).isRequired,
-};
+Welcome.propTypes = {};
 
 export default withUser(Welcome);

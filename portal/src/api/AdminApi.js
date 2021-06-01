@@ -1,5 +1,5 @@
-import User, { RoleDescription } from "../models/User";
 import BaseApi from "./BaseApi";
+import User from "../models/User";
 
 export default class AdminApi extends BaseApi {
   get basePath() {
@@ -26,16 +26,12 @@ export default class AdminApi extends BaseApi {
    * @param {RoleDescription} role
    * @returns {Promise<{ emailSent: boolean }>}
    */
-  convertUserToRole = async (user_id, role) => {
+  convertAccountEmail = async (user_id, role) => {
     const { data } = await this.request(
       "POST",
       `users/${user_id}/convert_${role.toLowerCase()}`,
       {}
     );
     return data;
-  };
-
-  convertUserToEmployer = async (user_id) => {
-    return await this.convertUserToRole(user_id, RoleDescription.employer);
   };
 }
