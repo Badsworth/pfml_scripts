@@ -14,6 +14,7 @@ import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
     Claim,
     DuaReductionPayment,
     DuaReductionPaymentReferenceFile,
@@ -471,7 +472,11 @@ def _format_reduction_payments_for_report(
             info.update(
                 {
                     Constants.ABSENCE_CASE_ID_FIELD: claim.fineos_absence_id,
-                    Constants.ABSENCE_CASE_STATUS_FIELD: claim.fineos_absence_status.absence_status_description,
+                    Constants.ABSENCE_CASE_STATUS_FIELD: (
+                        AbsenceStatus.get_description(claim.fineos_absence_status_id)
+                        if claim.fineos_absence_status_id
+                        else None
+                    ),
                     Constants.ABSENCE_CASE_PERIOD_START_FIELD: _format_date_for_report(
                         claim.absence_period_start_date
                     ),

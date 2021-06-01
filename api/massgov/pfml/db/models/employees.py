@@ -568,7 +568,7 @@ class Claim(Base):
     benefit_days = Column(Integer)
 
     claim_type = relationship(LkClaimType)
-    fineos_absence_status = relationship(LkAbsenceStatus)
+    fineos_absence_status = cast(Optional[LkAbsenceStatus], relationship(LkAbsenceStatus))
     employee = relationship("Employee", back_populates="claims")
     employer = relationship("Employer", back_populates="claims")
     state_logs = relationship("StateLog", back_populates="claim")
