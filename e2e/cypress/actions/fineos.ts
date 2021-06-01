@@ -460,21 +460,20 @@ export function intermittentFillAbsencePeriod(claimNumber: string): void {
   cy.get("#PopupContainer").within(() => {
     cy.get("input[value='Yes']").click();
   });
-  cy.get("#certificationEpisodicLeaveEntitlementWidget").within(() => {
-    cy.get("input[name*=episodeDuration]").focus().type("{selectall}5").blur();
-    // Wait until the entitlement widget becomes detached from the DOM. At this point, we're in the middle
-    // of a rerender, and we just need to wait a little additional time for the render to complete.
-    cy.root()
-      .should(($el) => !Cypress.dom.isAttached($el))
-      .wait(300);
-  });
-  // This has to be reselected because #certificationEpisodicLeaveEntitlementWidget
-  // is removed and rerendered after episode duration is selected.
-  cy.get(
-    "#certificationEpisodicLeaveEntitlementWidget input[type='button'][value='Apply']"
-  ).click();
-  cy.get("#PopupContainer").within(() => {
-    cy.get("input[value='Yes']").click();
+  cy.get("input[name*=episodeDuration]").then((el) => {
+    if (el.val() !== "5") {
+      // Only override this value if it's not 5.
+      cy.get("input[name*=episodeDuration]")
+        .focus()
+        .type("{selectall}5")
+        .blur();
+      cy.get(
+        "#certificationEpisodicLeaveEntitlementWidget input[type='button'][value='Apply']:visible"
+      ).click();
+      cy.get("#PopupContainer").within(() => {
+        cy.get("input[value='Yes']").click();
+      });
+    }
   });
 }
 
