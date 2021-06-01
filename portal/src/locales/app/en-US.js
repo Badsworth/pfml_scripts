@@ -20,6 +20,25 @@ const chars = {
 
 const errors = {
   applications: {
+    concurrent_leave: {
+      is_for_current_employer: {
+        required: "Select yes if your leave is from this employer.",
+      },
+      leave_end_date: {
+        format:
+          "The date your leave ends must include a valid month, day, and year.",
+        invalid_date_range:
+          "The date your leave ends must be on or after the date your leave begins.",
+        minimum: "Enter a date after December 31, 2020.",
+        required: "Enter the date this leave ends.",
+      },
+      leave_start_date: {
+        format:
+          "The date your leave starts must include a valid month, day, and year.",
+        minimum: "Enter a date after December 31, 2020.",
+        required: "Enter the date this leave starts.",
+      },
+    },
     date_of_birth: {
       format: "Your date of birth must include a valid month, day, and year.",
       invalid_age: "The person taking leave must be at least 14 years old.",
@@ -1057,6 +1076,12 @@ const pages = {
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsConcurrentLeavesDetails: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hintHeader:
+      "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, this employer will be able to review it. We won’t share any leave you plan to take from other employers.",
+    leaveEndDateLabel: "What is the last day of this leave?",
+    leaveStartDateLabel: "What is the first day of this leave?",
     sectionLabel:
       "Will you use accrued paid leave from this employer? EIN: {{employer_fein, ein}}",
     title: "$t(shared.claimsOtherLeaveTitle)",
