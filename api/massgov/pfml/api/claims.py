@@ -126,22 +126,28 @@ def get_employer_log_attributes(app: connexion.FlaskApp) -> Dict[str, int]:
     return log_attributes
 
 
-def get_claim_log_attributes(claim: Claim) -> Dict[str, Any]:
-    if claim.claim_type:
-        claim_type_desc = claim.claim_type.claim_type_description
-    else:
-        claim_type_desc = None
+def get_claim_log_attributes(claim: Optional[Claim]) -> Dict[str, Any]:
+    if claim is None:
+        return {}
 
-    return {"claim_type_description": claim_type_desc}
+    application = claim.application  # type: ignore
+    if application is None:
+        return {}
+
+    leave_reason = (
+        application.leave_reason.leave_reason_description if application.leave_reason else None
+    )
+
+    return {"leave_reason": leave_reason}
 
 
 @requires(READ, "EMPLOYER_API")
 def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     body = connexion.request.json
 
-    claim_request: EmployerClaimReview = EmployerClaimReview.parse_obj(body)
+    claim_review: EmployerClaimReview = EmployerClaimReview.parse_obj(body)
 
-    if issues := claim_rules.get_employer_claim_review_issues(claim_request):
+    if issues := claim_rules.get_employer_claim_review_issues(claim_review):
         return response_util.error_response(
             status_code=BadRequest,
             message="Invalid claim review body",
@@ -154,15 +160,20 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     except (VerificationRequired, NotAuthorizedForAccess) as error:
         return error.to_api_response()
 
+    claim = get_claim_from_db(fineos_absence_id)
+
     log_attributes: Dict[str, Union[bool, str, int, None]]
+
     log_attributes = {
         "absence_case_id": fineos_absence_id,
         "user_leave_admin.employer_id": user_leave_admin.employer_id,
-        "claim_request.employer_decision": claim_request.employer_decision,
-        "claim_request.fraud": claim_request.fraud,
-        "claim_request.has_amendments": claim_request.has_amendments,
-        "claim_request.has_comment": str(bool(claim_request.comment)),
+        "claim_request.believe_relationship_accurate": claim_review.believe_relationship_accurate,
+        "claim_request.employer_decision": claim_review.employer_decision,
+        "claim_request.fraud": claim_review.fraud,
+        "claim_request.has_amendments": claim_review.has_amendments,
+        "claim_request.has_comment": str(bool(claim_review.comment)),
         **get_employer_log_attributes(app),
+        **get_claim_log_attributes(claim),
     }
 
     fineos_web_id = user_leave_admin.fineos_web_id
@@ -186,14 +197,14 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
         ).to_api_response()
 
     if (
-        claim_request.employer_decision == "Approve"
-        and not claim_request.has_amendments
-        and not claim_request.comment
+        claim_review.employer_decision == "Approve"
+        and not claim_review.has_amendments
+        and not claim_review.comment
     ):
         complete_claim_review(fineos_web_id, fineos_absence_id)
         logger.info("Completed claim review", extra=log_attributes)
     else:
-        transformed_eform = EmployerClaimReviewEFormBuilder.build(claim_request)
+        transformed_eform = EmployerClaimReviewEFormBuilder.build(claim_review)
         create_eform(fineos_web_id, fineos_absence_id, transformed_eform)
         logger.info("Created eform", extra=log_attributes)
 
@@ -390,7 +401,10 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
     ).to_api_response()
 
 
-def get_claim_from_db(fineos_absence_id: str) -> Optional[Claim]:
+def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
+    if fineos_absence_id is None:
+        return None
+
     with app.db_session() as db_session:
         claim = (
             db_session.query(Claim)
