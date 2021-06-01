@@ -122,7 +122,7 @@ def users_getAll():
         message="Successfully retrieved users", data=users_response,
     ).to_api_response()
 
-def users_convert_employer_email(user_id)
+def users_convert_employer_email(user_id):
     # todo: authentication / check role as Admin
     with app.db_session() as db_session:
         user = db_session.query(User).one()
