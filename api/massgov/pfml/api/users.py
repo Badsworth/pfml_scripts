@@ -147,46 +147,6 @@ def users_convert_employer_email(user_id):
         message="Successfully retrieved users", data=True,
     ).to_api_response()
 
-def users_getAll():
-    with app.db_session() as db_session:
-        # todo: authentication / check role as Admin
-        users = db_session.query(User).all()
-
-    users_response = [user_response(u) for u in users]
-
-    return response_util.success_response(
-        message="Successfully retrieved users", data=users_response,
-    ).to_api_response()
-
-
-def users_convert():
-    # todo: authentication / check role as Admin
-    body = AdminUserConvertRequest.parse_obj(connexion.request.json)
-    user_id = deepgetattr(body, "user_id")
-    with app.db_session() as db_session:
-        user = db_session.query(User).filter(User.user_id == user_id).one()
-
-    email_config = reductions_config.get_email_config()
-    sender = email_config.pfml_email_address
-    bounce_forwarding_email_address_arn = email_config.bounce_forwarding_email_address_arn
-    email_recipient = EmailRecipient(to_addresses=[user.email_address])
-    subject = f"Convert your account now"
-    body = f"Yes click here"  # todo: template
-
-    email = send_email(
-        recipient=email_recipient,
-        subject=subject,
-        body_text=body,
-        sender=sender,
-        bounce_forwarding_email_address_arn=bounce_forwarding_email_address_arn,
-    )
-
-    wasEmailSent = email["ResponseMetadata"]["HTTPStatusCode"] == 200
-
-    return response_util.success_response(
-        message="Successfully sent email", data={"email_sent": wasEmailSent},
-    ).to_api_response()
-
 def users_convert_claimant_email(user_id):
     with app.db_session() as db_session:
         updated_user = get_or_404(db_session, User, user_id)
@@ -287,7 +247,6 @@ def users_current_get():
     return response_util.success_response(
         message="Successfully retrieved current user", data=user_response(current_user),
     ).to_api_response()
-
 
 def users_patch(user_id):
     """This endpoint modifies the user specified by the user_id"""
