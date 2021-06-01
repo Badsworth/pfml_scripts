@@ -39,6 +39,7 @@ function getRawEnvironment() {
     FINEOS_PASSWORD: process.env.E2E_FINEOS_PASSWORD,
     FINEOS_USERS: process.env.E2E_FINEOS_USERS,
     HAS_FINEOS_SP: process.env.E2E_HAS_FINEOS_SP,
+    FINEOS_HAS_UPDATED_EFORMS: process.env.E2E_FINEOS_HAS_UPDATED_EFORMS,
 
     SSO_USERNAME: process.env.E2E_SSO_USERNAME,
     SSO_PASSWORD: process.env.E2E_SSO_PASSWORD,

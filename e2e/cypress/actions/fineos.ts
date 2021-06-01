@@ -134,7 +134,7 @@ export function assertHasTask(name: string): void {
   });
 }
 
-function assertHasDocument(name: string) {
+export function assertHasDocument(name: string): void {
   cy.get("table[id*='DocumentsForCaseListviewWidget']").should((table) => {
     expect(table, `Expected to find a "${name}" document`).to.have.descendants(
       `a:contains("${name}")`
