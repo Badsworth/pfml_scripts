@@ -53,6 +53,15 @@ export const Users = ({ appLogic }) => {
                   >
                     Convert to employer
                   </button>
+                  <button
+                    type="button"
+                    onClick={sendAccountConversionEmail(
+                      u.user_id,
+                      RoleDescription.claimant
+                    )}
+                  >
+                    Convert to claimant
+                  </button>
                 </td>
               </tr>
             ))
