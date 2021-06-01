@@ -200,6 +200,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
         claim_review.employer_decision == "Approve"
         and not claim_review.has_amendments
         and not claim_review.comment
+        and not claim_review.relationship_inaccurate_reason
     ):
         complete_claim_review(fineos_web_id, fineos_absence_id)
         logger.info("Completed claim review", extra=log_attributes)

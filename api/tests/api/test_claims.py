@@ -1404,16 +1404,15 @@ class TestUpdateClaim:
         @pytest.fixture()
         def update_caring_leave_claim_body(self, update_claim_body):
             update_claim_body["leave_reason"] = "Care for a Family Member"
-            update_claim_body["believe_relationship_accurate"] = "No"
-            update_claim_body["relationship_inaccurate_reason"] = "No reason, lol"
+            update_claim_body["believe_relationship_accurate"] = "Yes"
+            update_claim_body["fraud"] = "No"
+            update_claim_body["comment"] = ""
 
             return update_claim_body
 
         @pytest.fixture()
-        def perform_update(
-            self, client, claim, employer_auth_token, update_caring_leave_claim_body
-        ):
-            def update_claim_review():
+        def perform_update(self, client, claim, employer_auth_token):
+            def update_claim_review(update_caring_leave_claim_body):
                 return client.patch(
                     f"/v1/employers/claims/{claim.fineos_absence_id}/review",
                     headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -1423,15 +1422,47 @@ class TestUpdateClaim:
             return update_claim_review
 
         def test_response_status(
-            self, with_user_leave_admin_link, with_mock_client_capture, perform_update
+            self,
+            with_user_leave_admin_link,
+            with_mock_client_capture,
+            perform_update,
+            update_caring_leave_claim_body,
         ):
-            response = perform_update()
+            response = perform_update(update_caring_leave_claim_body)
             assert response.status_code == 200
 
-        def test_eform_attributes(
-            self, with_user_leave_admin_link, with_mock_client_capture, perform_update
+        def test_employer_confirmation_sent(
+            self,
+            with_user_leave_admin_link,
+            with_mock_client_capture,
+            perform_update,
+            update_caring_leave_claim_body,
+            claim,
         ):
-            perform_update()
+            perform_update(update_caring_leave_claim_body)
+
+            capture = massgov.pfml.fineos.mock_client.get_capture()
+            assert capture[1] == (
+                "update_outstanding_information_as_received",
+                "fake-fineos-web-id",
+                {
+                    "outstanding_information": massgov.pfml.fineos.models.group_client_api.OutstandingInformationData(
+                        informationType="Employer Confirmation of Leave Data"
+                    ),
+                    "case_id": claim.fineos_absence_id,
+                },
+            )
+
+        def test_create_eform_and_attributes_with_inaccurate_relation_and_no_comment(
+            self,
+            with_user_leave_admin_link,
+            with_mock_client_capture,
+            perform_update,
+            update_caring_leave_claim_body,
+        ):
+            update_caring_leave_claim_body["believe_relationship_accurate"] = "No"
+            update_caring_leave_claim_body["relationship_inaccurate_reason"] = "No reason, lol"
+            perform_update(update_caring_leave_claim_body)
 
             captures = massgov.pfml.fineos.mock_client.get_capture()
             assert len(captures) >= 2
@@ -1440,15 +1471,27 @@ class TestUpdateClaim:
             assert handler == "create_eform"
 
             eform = params["eform"]
+            assert eform.eformType == "Employer Response to Leave Request"
 
-            nature_of_leave_attr = eform.get_attribute("NatureOfLeave")
-            assert nature_of_leave_attr is not None
+        def test_create_eform_with_comment_and_accurate_relationship(
+            self,
+            with_user_leave_admin_link,
+            with_mock_client_capture,
+            perform_update,
+            update_caring_leave_claim_body,
+        ):
+            update_caring_leave_claim_body["comment"] = "comment"
+            perform_update(update_caring_leave_claim_body)
 
-            believe_accurate_attr = eform.get_attribute("BelieveAccurate")
-            assert believe_accurate_attr is not None
+            captures = massgov.pfml.fineos.mock_client.get_capture()
+            assert len(captures) >= 2
 
-            why_inaccurate_attr = eform.get_attribute("WhyInaccurate")
-            assert why_inaccurate_attr is not None
+            handler, fineos_web_id, params = captures[1]
+            assert handler == "create_eform"
+            assert fineos_web_id == "fake-fineos-web-id"
+
+            eform = params["eform"]
+            assert eform.eformType == "Employer Response to Leave Request"
 
 
 def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> bool:

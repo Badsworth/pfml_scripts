@@ -8,16 +8,15 @@ import ConcurrentLeavesDetails from "../../../src/pages/applications/concurrent-
 jest.mock("../../../src/hooks/useAppLogic");
 
 const setup = () => {
-  const {
-    appLogic,
-    claim,
-    wrapper,
-  } = renderWithAppLogic(ConcurrentLeavesDetails, {
-    claimAttrs: new MockBenefitsApplicationBuilder()
-      .employed()
-      .continuous()
-      .create(),
-  });
+  const { appLogic, claim, wrapper } = renderWithAppLogic(
+    ConcurrentLeavesDetails,
+    {
+      claimAttrs: new MockBenefitsApplicationBuilder()
+        .employed()
+        .continuous()
+        .create(),
+    }
+  );
 
   const { changeField, changeRadioGroup, submitForm } = simulateEvents(wrapper);
 
