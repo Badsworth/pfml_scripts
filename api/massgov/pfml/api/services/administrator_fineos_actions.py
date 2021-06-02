@@ -35,6 +35,10 @@ DOWNLOADABLE_DOC_TYPES = [
     "denial notice",
     "employer response additional documentation",
     "care for a family member form",
+    "own serious health condition",
+    "pregnancy/maternity form",
+    "child bonding evidence form",
+    "military exigency form",
 ]
 
 logger = logging.get_logger(__name__)
