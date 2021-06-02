@@ -275,15 +275,26 @@ export const CDENY2: ScenarioSpecification = {
   },
 };
 
+export const MED_PRE: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "MED_PRE",
+    reason: "Serious Health Condition - Employee",
+    pregnant_or_recent_birth: true,
+    shortClaim: true,
+    docs: {
+      MASSID: {},
+      PREGNANCY_MATERNITY_FORM: {},
+    },
+  },
+};
+
 export const CHAP_RFI: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "CHAP_RFI",
     reason: "Care for a Family Member",
-    leave_dates: [
-      getCaringLeaveStartDate(),
-      addDays(getCaringLeaveStartDate(), 2),
-    ],
+    shortClaim: true,
     docs: {
       MASSID: {},
       CARING: {},
