@@ -5,6 +5,7 @@ import useBenefitsApplicationsLogic from "./useBenefitsApplicationsLogic";
 import useClaimsLogic from "./useClaimsLogic";
 import useDocumentsLogic from "./useDocumentsLogic";
 import useEmployersLogic from "./useEmployersLogic";
+import useFlagsLogic from "./useFeatureFlagsLogic";
 import useOtherLeavesLogic from "./useOtherLeavesLogic";
 import usePortalFlow from "./usePortalFlow";
 import useUsersLogic from "./useUsersLogic";
@@ -51,10 +52,9 @@ const useAppLogic = () => {
   });
 
   const otherLeaves = useOtherLeavesLogic({ appErrorsLogic });
+  const featureFlags = useFlagsLogic({ appErrorsLogic });
 
   return {
-    // `_appErrorsLogic` should not be used except for testing
-    _appErrorsLogic: appErrorsLogic,
     appErrors,
     auth,
     benefitsApplications,
@@ -68,6 +68,7 @@ const useAppLogic = () => {
     portalFlow,
     setAppErrors: appErrorsLogic.setAppErrors,
     users,
+    featureFlags,
   };
 };
 

@@ -1,5 +1,7 @@
 import "../../styles/app.scss";
+
 import React, { useEffect, useState } from "react";
+
 import { Auth } from "@aws-amplify/auth";
 import PageWrapper from "../components/PageWrapper";
 import PropTypes from "prop-types";
@@ -116,13 +118,20 @@ export const App = ({ Component, pageProps }) => {
     };
   }, [router, appLogic]);
 
+  useEffect(() => {
+    appLogic.featureFlags.loadFeatureFlags();
+  }, []);
+
+  const maintenance = appLogic.featureFlags.flags[0];
+
   return (
     <PageWrapper
       appLogic={appLogic}
       isLoading={ui.isLoading}
-      maintenancePageRoutes={process.env.maintenancePageRoutes || []}
-      maintenanceStart={process.env.maintenanceStart}
-      maintenanceEnd={process.env.maintenanceEnd}
+      maintenance={maintenance}
+      maintenancePageRoutes={maintenance.options.page_routes}
+      maintenanceStart={maintenance.start}
+      maintenanceEnd={maintenance.end}
     >
       <Component appLogic={appLogic} query={router.query} {...pageProps} />
     </PageWrapper>

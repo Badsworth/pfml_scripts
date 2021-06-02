@@ -6,6 +6,7 @@ import { Helmet } from "react-helmet";
 import PropTypes from "prop-types";
 import React from "react";
 import Spinner from "../components/Spinner";
+import UpcomingMaintenanceBanner from "../components/UpcomingMaintenanceBanner";
 import dynamic from "next/dynamic";
 import { isFeatureEnabled } from "../services/featureFlags";
 import { useTranslation } from "../locales/i18n";
@@ -30,6 +31,18 @@ const isInMaintenanceWindow = (start, end) => {
   const isBeforeEnd = end ? now < DateTime.fromISO(end) : true;
 
   return isAfterStart && isBeforeEnd;
+};
+
+/**
+ * @param {string} [start] - ISO 8601 date time
+ * @param {string} [end] - ISO 8601 date time
+ * @returns {boolean}
+ */
+ const isBeforeMaintenanceWindow = (start) => {
+  const now = DateTime.local();
+  const isBeforeStart = start ? now < DateTime.fromISO(start) : true;
+
+  return isBeforeStart;
 };
 
 /**
@@ -61,6 +74,7 @@ const PageWrapper = (props) => {
   const {
     appLogic,
     isLoading,
+    maintenance,
     maintenancePageRoutes,
     maintenanceStart,
     maintenanceEnd,
@@ -82,12 +96,18 @@ const PageWrapper = (props) => {
     isMaintenancePageRoute(
       maintenancePageRoutes,
       appLogic.portalFlow.pathname
-    ) && isInMaintenanceWindow(maintenanceStart, maintenanceEnd);
+    ) && isInMaintenanceWindow(maintenanceStart, maintenanceEnd) && !appLogic.portalFlow.pathname.startsWith("/login");
 
   // User-friendly representation of the maintenance end time
   const maintenanceRemovalDayAndTimeText = maintenanceEnd
     ? DateTime.fromISO(maintenanceEnd).toLocaleString(DateTime.DATETIME_FULL)
     : null;
+
+  /**
+   * Should this page display an upcoming maintenance banner?
+   * @type {boolean}
+   */
+  const showUpcomingMaintenanceBanner = isBeforeMaintenanceWindow(maintenanceStart) && maintenance.enabled;
 
   // Prevent site from being rendered if this feature flag isn't enabled.
   // We render a vague but recognizable message that serves as an indicator
@@ -102,7 +122,7 @@ const PageWrapper = (props) => {
         <Spinner aria-valuetext={t("components.spinner.label")} />
       </section>
     );
-  } else if (showMaintenancePageBody && !isFeatureEnabled("noMaintenance")) {
+  } else if (showMaintenancePageBody && maintenance.enabled) {
     pageBody = (
       <section id="page" data-test="maintenance page">
         <MaintenanceTakeover
@@ -111,7 +131,12 @@ const PageWrapper = (props) => {
       </section>
     );
   } else {
-    pageBody = <section id="page">{props.children}</section>;
+    pageBody = (
+      <section id="page">
+        <UpcomingMaintenanceBanner show={showUpcomingMaintenanceBanner} start={DateTime.fromISO(maintenanceStart).toLocaleString(DateTime.DATETIME_FULL)} end={DateTime.fromISO(maintenanceEnd).toLocaleString(DateTime.DATETIME_FULL)} />
+        {props.children}
+      </section>
+    );
   }
 
   return (
@@ -151,6 +176,8 @@ PageWrapper.propTypes = {
   children: PropTypes.node.isRequired,
   /** Is this page changing or in process of loading? */
   isLoading: PropTypes.bool,
+  /** Maintenance feature flag data */
+  maintenance: PropTypes.object,
   /** Page routes that should render a maintenance page */
   maintenancePageRoutes: PropTypes.arrayOf(PropTypes.string),
   /** ISO 8601 date time for maintenance window start */
