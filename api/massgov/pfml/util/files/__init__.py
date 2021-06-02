@@ -423,7 +423,7 @@ def read_file_lines(path, mode="r", encoding=None):
     return map(lambda line: line.rstrip(), stream)
 
 
-def get_sftp_client(uri: str, ssh_key_password: str, ssh_key: str) -> paramiko.SFTPClient:
+def get_sftp_client(uri: str, ssh_key_password: Optional[str], ssh_key: str) -> paramiko.SFTPClient:
     if not is_sftp_path(uri):
         raise ValueError("uri must be an SFTP URI")
 

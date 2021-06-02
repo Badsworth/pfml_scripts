@@ -30,10 +30,6 @@
       { "name": "LOGGING_LEVEL", "value": "${logging_level}" },
 
       { "name": "S3_BUCKET", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/" },
-      { "name": "S3_DIA_ARCHIVE_DIRECTORY_PATH", "value": "reductions/dia/archive" },
-      { "name": "S3_DIA_OUTBOUND_DIRECTORY_PATH", "value": "reductions/dia/outbound" },
-      { "name": "S3_DUA_ARCHIVE_DIRECTORY_PATH", "value": "reductions/dua/archive" },
-      { "name": "S3_DUA_OUTBOUND_DIRECTORY_PATH", "value": "reductions/dua/outbound" },
 
       { "name": "MOVEIT_SFTP_URI", "value": "${eolwd_moveit_sftp_uri}" },
       { "name": "MOVEIT_DIA_OUTBOUND_PATH", "value": "/DFML/DIA/Outbound" },
