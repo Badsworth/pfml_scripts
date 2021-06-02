@@ -61,7 +61,7 @@ def test_validation_copy_dir_opts(mock_s3_bucket):
     with pytest.raises(
         RuntimeError, match=r"The following options are only valid when using copy_dir.*"
     ):
-        run_tool(["--list", "s3://something", "--file_prefixes", "all"])
+        run_tool(["--list", "s3://something", "--file_prefixes", "foo"])
 
 
 def create_mock_s3_files(bucket, *files):
@@ -69,6 +69,28 @@ def create_mock_s3_files(bucket, *files):
         boto3.client("s3").put_object(
             Bucket=bucket, Key=key, Body="line 1 text\nline 2 text\nline 3 text"
         )
+
+
+def test_copy_default_args(mock_s3_bucket, mock_fineos_s3_bucket):
+    s3 = boto3.resource("s3")
+
+    create_mock_s3_files(
+        mock_s3_bucket, "filename.txt", "filename2.txt",
+    )
+
+    run_tool(
+        [
+            "--copy",
+            f"s3://{mock_s3_bucket}/filename.txt",
+            "--to",
+            f"s3://{mock_fineos_s3_bucket}/filename.txt",
+        ]
+    )
+
+    # list all the objects in the mock_fineos_s3_bucket and grab the keys
+    copied_items = set(map(lambda x: x.key, s3.Bucket(name=mock_fineos_s3_bucket).objects.all()))
+
+    assert copied_items == {"filename.txt"}
 
 
 def test_copy_dir(mock_s3_bucket, mock_fineos_s3_bucket):
@@ -89,6 +111,7 @@ def test_copy_dir(mock_s3_bucket, mock_fineos_s3_bucket):
 
     bucket_tool(args, s3, s3_fineos, boto3, None)
 
+    # list all the objects in the mock_s3_bucket and grab the keys
     copied_items = set(map(lambda x: x.key, s3.Bucket(name=mock_s3_bucket).objects.all()))
 
     assert copied_items == {"filename.txt", "filename2.txt"}
