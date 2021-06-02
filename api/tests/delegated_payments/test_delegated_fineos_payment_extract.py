@@ -20,6 +20,7 @@ from massgov.pfml.db.models.employees import (
     EmployeeLog,
     Flow,
     GeoState,
+    LkState,
     Payment,
     PaymentMethod,
     PrenoteState,
@@ -309,6 +310,13 @@ def validate_pei_writeback_state_for_payment(
             writeback_details.transaction_status_id
             == FineosWritebackTransactionStatus.PRENOTE_ERROR.transaction_status_id
         )
+
+
+def validate_non_standard_payment_state(non_standard_payment: Payment, payment_state: LkState):
+    assert len(non_standard_payment.state_logs) == 2
+    assert set([state_log.end_state_id for state_log in non_standard_payment.state_logs]) == set(
+        [payment_state.state_id, State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,]
+    )
 
 
 ### TESTS BEGIN
@@ -1253,40 +1261,34 @@ def test_process_extract_additional_payment_types(
     # No PUB EFT records should exist
     len(local_test_db_session.query(PubEft).all()) == 0
 
-    # Zero dollar payment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
+    # Zero dollar payment should be in DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
     zero_dollar_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == zero_dollar_data.i_value)
         .one_or_none()
     )
-    assert len(zero_dollar_payment.state_logs) == 1
-    assert (
-        zero_dollar_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT.state_id
+    validate_non_standard_payment_state(
+        zero_dollar_payment, State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
     )
 
-    # Overpayment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
+    # Overpayment should be in DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
     overpayment_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == overpayment_data.i_value)
         .one_or_none()
     )
-    assert len(overpayment_payment.state_logs) == 1
-    assert (
-        overpayment_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT.state_id
+    validate_non_standard_payment_state(
+        overpayment_payment, State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
     )
 
-    # ACH Cancellation should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
+    # ACH Cancellation should be in DELEGATED_PAYMENT_PROCESSED_CANCELLATION
     cancellation_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == cancellation_data.i_value)
         .one_or_none()
     )
-    assert len(cancellation_payment.state_logs) == 1
-    assert (
-        cancellation_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id
+    validate_non_standard_payment_state(
+        cancellation_payment, State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION
     )
 
     # Negative payment will cause an unknown transaction type which is restartable
@@ -1297,13 +1299,8 @@ def test_process_extract_additional_payment_types(
         .filter(Payment.fineos_pei_i_value == negative_payment_out_data.i_value)
         .one_or_none()
     )
-
-    assert len(negative_payment.state_logs) == 2
-    set([state_log.end_state_id for state_log in negative_payment.state_logs]) == set(
-        [
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id,
-            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
-        ]
+    validate_non_standard_payment_state(
+        negative_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
     )
 
     # No payment amount means the payment needs to be updated, so we error
@@ -1315,13 +1312,8 @@ def test_process_extract_additional_payment_types(
         .filter(Payment.fineos_pei_i_value == no_payment_out_data.i_value)
         .one_or_none()
     )
-
-    assert len(no_amount_payment.state_logs) == 2
-    set([state_log.end_state_id for state_log in negative_payment.state_logs]) == set(
-        [
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
-            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
-        ]
+    validate_non_standard_payment_state(
+        no_amount_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
 
     # No event type means the payment needs to be updated, so we error
@@ -1333,26 +1325,18 @@ def test_process_extract_additional_payment_types(
         .filter(Payment.fineos_pei_i_value == missing_event_payment_out_data.i_value)
         .one_or_none()
     )
-
-    assert len(missing_event_payment.state_logs) == 2
-    set([state_log.end_state_id for state_log in missing_event_payment.state_logs]) == set(
-        [
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
-            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
-        ]
+    validate_non_standard_payment_state(
+        missing_event_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
 
-    # Employer reimbursement should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT
+    # Employer reimbursement should be in DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
     employer_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
         .one_or_none()
     )
-
-    assert len(employer_payment.state_logs) == 1
-    assert (
-        employer_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT.state_id
+    validate_non_standard_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
     )
 
 
@@ -1434,56 +1418,47 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
     # No PUB EFT records should exist
     len(local_test_db_session.query(PubEft).all()) == 0
 
-    # Zero dollar payment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
+    # Zero dollar payment should be in DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
     zero_dollar_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == zero_dollar_data.i_value)
         .one_or_none()
     )
-    assert len(zero_dollar_payment.state_logs) == 1
-    assert (
-        zero_dollar_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT.state_id
+    validate_non_standard_payment_state(
+        zero_dollar_payment, State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
     )
     assert zero_dollar_payment.claim_id is None
 
-    # Overpayment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
+    # Overpayment should be in DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
     overpayment_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == overpayment_data.i_value)
         .one_or_none()
     )
-    assert len(overpayment_payment.state_logs) == 1
-    assert (
-        overpayment_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT.state_id
+    validate_non_standard_payment_state(
+        overpayment_payment, State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
     )
     assert overpayment_payment.claim_id is None
 
-    # ACH Cancellation should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
+    # ACH Cancellation should be in DELEGATED_PAYMENT_PROCESSED_CANCELLATION
     cancellation_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == cancellation_data.i_value)
         .one_or_none()
     )
-    assert len(cancellation_payment.state_logs) == 1
-    assert (
-        cancellation_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id
+    validate_non_standard_payment_state(
+        cancellation_payment, State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION
     )
     assert cancellation_payment.claim_id is None
 
-    # Employer reimbursement should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT
+    # Employer reimbursement should be in DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
     employer_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
         .one_or_none()
     )
-
-    assert len(employer_payment.state_logs) == 1
-    assert (
-        employer_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT.state_id
+    validate_non_standard_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
     )
     assert employer_payment.claim_id is None
 

@@ -287,6 +287,21 @@ def test_e2e_pub_payments(
             ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
             ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
         ]
+
+        stage_1_non_standard_payments = [
+            ScenarioName.ZERO_DOLLAR_PAYMENT,
+            ScenarioName.CANCELLATION_PAYMENT,
+            ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
+        ]
+
+        stage_1_overpayment_scenarios = [
+            ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
+            ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
+            ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
+        ]
+
+        stage_1_non_standard_payments.extend(stage_1_overpayment_scenarios)
+
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=stage_1_happy_path_scenarios,
@@ -318,32 +333,28 @@ def test_e2e_pub_payments(
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.ZERO_DOLLAR_PAYMENT,],
-            end_state=State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT,
+            end_state=State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT,
             db_session=test_db_session,
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.CANCELLATION_PAYMENT,],
-            end_state=State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,
+            end_state=State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION,
             db_session=test_db_session,
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
-                ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
-                ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
-            ],
-            end_state=State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT,
+            scenario_names=stage_1_overpayment_scenarios,
+            end_state=State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT,
             db_session=test_db_session,
         )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,],
-            end_state=State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT,
+            end_state=State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT,
             db_session=test_db_session,
         )
 
@@ -509,6 +520,7 @@ def test_e2e_pub_payments(
 
         # == Writeback
         stage_1_generic_flow_writeback_scenarios = []
+        stage_1_generic_flow_writeback_scenarios.extend(stage_1_non_standard_payments)
         stage_1_generic_flow_writeback_scenarios.extend(state_1_invalid_payment_scenarios)
         stage_1_generic_flow_writeback_scenarios.append(
             ScenarioName.REJECTED_LEAVE_REQUEST_DECISION
@@ -692,13 +704,7 @@ def test_e2e_pub_payments(
                 "not_pending_or_approved_leave_request_count": len(
                     [ScenarioName.REJECTED_LEAVE_REQUEST_DECISION]
                 ),
-                "overpayment_count": len(
-                    [
-                        ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
-                        ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
-                        ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
-                    ]
-                ),
+                "overpayment_count": len(stage_1_overpayment_scenarios),
                 "payment_details_record_count": len(SCENARIO_DESCRIPTORS)
                 - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
                 "pei_record_count": len(SCENARIO_DESCRIPTORS)
@@ -933,17 +939,13 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "FineosPeiWritebackStep",
             {
-                "cancelled_payment_count": 0,
                 "check_payment_count": 0,
                 "eft_payment_count": 0,
-                "employer_reimbursement_payment_count": 0,
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
-                "overpayment_count": 0,
                 "payment_writeback_two_items_count": 0,
                 "successful_writeback_record_count": len(stage_1_generic_flow_writeback_scenarios),
                 "writeback_record_count": len(stage_1_generic_flow_writeback_scenarios),
-                "zero_dollar_payment_count": 0,
                 "generic_flow_writeback_items_count": len(stage_1_generic_flow_writeback_scenarios),
                 "address_validation_error_writeback_transaction_status_count": len(
                     [ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN]
@@ -968,6 +970,7 @@ def test_e2e_pub_payments(
                 "payment_validation_error_writeback_transaction_status_count": len(
                     [ScenarioName.REJECTED_LEAVE_REQUEST_DECISION]
                 ),
+                "processed_writeback_transaction_status_count": len(stage_1_non_standard_payments),
             },
         )
 
@@ -1069,42 +1072,6 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
             ],
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT,
-            db_session=test_db_session,
-        )
-
-        # End State
-        assert_payment_state_for_scenarios(
-            test_dataset=test_dataset,
-            scenario_names=[ScenarioName.ZERO_DOLLAR_PAYMENT,],
-            end_state=State.DELEGATED_PAYMENT_ZERO_PAYMENT_FINEOS_WRITEBACK_SENT,
-            db_session=test_db_session,
-        )
-
-        # End State
-        assert_payment_state_for_scenarios(
-            test_dataset=test_dataset,
-            scenario_names=[ScenarioName.CANCELLATION_PAYMENT,],
-            end_state=State.DELEGATED_PAYMENT_CANCELLATION_PAYMENT_FINEOS_WRITEBACK_SENT,
-            db_session=test_db_session,
-        )
-
-        # End State
-        assert_payment_state_for_scenarios(
-            test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
-                ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
-                ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
-            ],
-            end_state=State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT,
-            db_session=test_db_session,
-        )
-
-        # End State
-        assert_payment_state_for_scenarios(
-            test_dataset=test_dataset,
-            scenario_names=[ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,],
-            end_state=State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_PAYMENT_FINEOS_WRITEBACK_SENT,
             db_session=test_db_session,
         )
 
@@ -1251,7 +1218,6 @@ def test_e2e_pub_payments(
 
         # == Writeback
         stage_2_legacy_writeback_scenario_names = [
-            ScenarioName.CANCELLATION_PAYMENT,
             ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
             ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
             ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -1269,11 +1235,6 @@ def test_e2e_pub_payments(
             ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
             ScenarioName.PUB_ACH_MEDICAL_RETURN,
             ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-            ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
-            ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
-            ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
-            ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
-            ScenarioName.ZERO_DOLLAR_PAYMENT,
             ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
             ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
             ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
@@ -1545,7 +1506,6 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "FineosPeiWritebackStep",
             {
-                "cancelled_payment_count": len([ScenarioName.CANCELLATION_PAYMENT]),
                 "check_payment_count": len(
                     [
                         ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
@@ -1575,24 +1535,13 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
                     ]
                 ),
-                "employer_reimbursement_payment_count": len(
-                    [ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT]
-                ),
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
-                "overpayment_count": len(
-                    [
-                        ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
-                        ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
-                        ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
-                    ]
-                ),
                 "payment_writeback_two_items_count": 0,
                 "successful_writeback_record_count": len(stage_2_legacy_writeback_scenario_names)
                 + len(stage_2_generic_flow_writeback_scenarios),
                 "writeback_record_count": len(stage_2_legacy_writeback_scenario_names)
                 + len(stage_2_generic_flow_writeback_scenarios),
-                "zero_dollar_payment_count": len([ScenarioName.ZERO_DOLLAR_PAYMENT]),
                 "generic_flow_writeback_items_count": len(stage_2_generic_flow_writeback_scenarios),
                 "payment_audit_error_writeback_transaction_status_count": len(
                     [ScenarioName.AUDIT_REJECTED]
@@ -2048,19 +1997,15 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "FineosPeiWritebackStep",
             {
-                "cancelled_payment_count": 0,
                 "check_payment_count": 0,
                 "eft_payment_count": 0,
-                "employer_reimbursement_payment_count": 0,
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
-                "overpayment_count": 0,
                 "payment_writeback_two_items_count": len(stage_3_legacy_writeback_scenario_names),
                 "successful_writeback_record_count": len(stage_3_legacy_writeback_scenario_names)
                 + len(stage_3_generic_flow_writeback_scenarios),
                 "writeback_record_count": len(stage_3_legacy_writeback_scenario_names)
                 + len(stage_3_generic_flow_writeback_scenarios),
-                "zero_dollar_payment_count": 0,
                 "bank_processing_error_writeback_transaction_status_count": len(
                     stage_3_generic_flow_writeback_scenarios
                 ),

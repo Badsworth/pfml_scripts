@@ -530,7 +530,7 @@ def test_get_state_logs_stuck_in_state(initialize_factories_session, test_db_ses
 
 def test_get_state_counts(initialize_factories_session, test_db_session):
     misc_states = [
-        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
+        State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT,
         State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
         State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
     ]

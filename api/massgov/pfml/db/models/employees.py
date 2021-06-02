@@ -1868,28 +1868,26 @@ class State(LookupTable):
         121, "DEPRECATED STATE - Payment Error Report sent", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT = LkState(
-        122,
-        "Waiting for Payment Audit Report response - $0 payment",
-        Flow.DELEGATED_PAYMENT.flow_id,
+    DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT = LkState(
+        122, "Processed - $0 payment", Flow.DELEGATED_PAYMENT.flow_id,
     )
-    DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
-        123, "Add $0 payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
+        123, "DEPRECATED STATE - Add $0 payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
     )
-    DELEGATED_PAYMENT_ZERO_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
-        124, "$0 payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_ZERO_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        124, "DEPRECATED STATE - $0 payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT = LkState(
-        125,
-        "Waiting for Payment Audit Report response - overpayment",
+    DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT = LkState(
+        125, "Processed - overpayment", Flow.DELEGATED_PAYMENT.flow_id,
+    )
+    DEPRECATED_DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK = LkState(
+        126,
+        "DEPRECATED STATE - Add overpayment to FINEOS Writeback",
         Flow.DELEGATED_PAYMENT.flow_id,
     )
-    DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK = LkState(
-        126, "Add overpayment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
-    )
-    DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT = LkState(
-        127, "Overpayment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    DEPREACTED_DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        127, "DEPRECATED STATE - Overpayment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
     )
 
     DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING = LkState(
@@ -1966,31 +1964,33 @@ class State(LookupTable):
     DELEGATED_PAYMENT_COMPLETE = LkState(144, "Payment complete", Flow.DELEGATED_PAYMENT.flow_id)
 
     # Delegated payment states for cancellations (similar to 122-127)
-    DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION = LkState(
-        145,
-        "Waiting for Payment Audit Report response - cancellation payment",
+    DELEGATED_PAYMENT_PROCESSED_CANCELLATION = LkState(
+        145, "Processed - Cancellation", Flow.DELEGATED_PAYMENT.flow_id,
+    )
+    DEPRECATED_DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
+        146,
+        "DEPRECATED STATE - Add cancellation payment to FINEOS Writeback",
         Flow.DELEGATED_PAYMENT.flow_id,
     )
-    DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
-        146, "Add cancellation payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
-    )
-    DELEGATED_PAYMENT_CANCELLATION_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
-        147, "cancellation payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_CANCELLATION_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        147,
+        "DEPRECATED STATE - cancellation payment FINEOS Writeback sent",
+        Flow.DELEGATED_PAYMENT.flow_id,
     )
 
     # Report states for employer reimbursement payment states
-    DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT = LkState(
-        148,
-        "Waiting for Payment Audit Report response - employer reimbursement payment",
-        Flow.DELEGATED_PAYMENT.flow_id,
+    DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT = LkState(
+        148, "Processed - Employer Reimbursement", Flow.DELEGATED_PAYMENT.flow_id,
     )
-    DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
+    DEPRECATED_DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
         149,
-        "Add employer reimbursement payment to FINEOS Writeback",
+        "DEPRECATED STATE - Add employer reimbursement payment to FINEOS Writeback",
         Flow.DELEGATED_PAYMENT.flow_id,
     )
-    DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
-        150, "Employer reimbursement payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        150,
+        "DEPRECATED STATE - Employer reimbursement payment FINEOS Writeback sent",
+        Flow.DELEGATED_PAYMENT.flow_id,
     )
 
     # PEI WRITE BACK ERROR TO FINEOS

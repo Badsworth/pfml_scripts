@@ -598,6 +598,7 @@ class FineosWritebackTransactionStatus(LookupTable):
     BANK_PROCESSING_ERROR = LkFineosWritebackTransactionStatus(
         9, "Bank Processing Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
+    PROCESSED = LkFineosWritebackTransactionStatus(10, "Processed", ACTIVE_WRITEBACK_RECORD_STATUS)
 
 
 def sync_lookup_tables(db_session):

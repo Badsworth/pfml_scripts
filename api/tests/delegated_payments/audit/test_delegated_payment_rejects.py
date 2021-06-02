@@ -391,30 +391,6 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     )
 
     # Create a few more payments in pending state (not sampled)
-    cancelled_payment = PaymentFactory.create()
-    state_log_util.create_finished_state_log(
-        cancelled_payment,
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,
-        state_log_util.build_outcome("test"),
-        test_db_session,
-    )
-
-    zero_payment = PaymentFactory.create()
-    state_log_util.create_finished_state_log(
-        zero_payment,
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT,
-        state_log_util.build_outcome("test"),
-        test_db_session,
-    )
-
-    overpayment = PaymentFactory.create()
-    state_log_util.create_finished_state_log(
-        overpayment,
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT,
-        state_log_util.build_outcome("test"),
-        test_db_session,
-    )
-
     not_sampled = PaymentFactory.create()
     state_log_util.create_finished_state_log(
         not_sampled,
@@ -438,30 +414,6 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     )  # there are previously rejected statements in scenario
 
     # check all non sampled pending states have transitioned
-    payment_state_log = state_log_util.get_latest_state_log_in_flow(
-        cancelled_payment, Flow.DELEGATED_PAYMENT, test_db_session
-    )
-    assert (
-        payment_state_log.end_state_id
-        == State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK.state_id
-    )
-
-    payment_state_log = state_log_util.get_latest_state_log_in_flow(
-        zero_payment, Flow.DELEGATED_PAYMENT, test_db_session
-    )
-    assert (
-        payment_state_log.end_state_id
-        == State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK.state_id
-    )
-
-    payment_state_log = state_log_util.get_latest_state_log_in_flow(
-        overpayment, Flow.DELEGATED_PAYMENT, test_db_session
-    )
-    assert (
-        payment_state_log.end_state_id
-        == State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK.state_id
-    )
-
     payment_state_log = state_log_util.get_latest_state_log_in_flow(
         not_sampled, Flow.DELEGATED_PAYMENT, test_db_session
     )

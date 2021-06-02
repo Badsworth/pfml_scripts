@@ -63,7 +63,6 @@ ACTIVE_WRITEBACK_RECORD_STATUS = "Active"
 
 PAID_WRITEBACK_RECORD_TRANSACTION_STATUS = "Paid"
 POSTED_WRITEBACK_RECORD_TRANSACTION_STATUS = "Posted"
-PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS = "Processed"
 
 WRITEBACK_FILE_SUFFIX = "-pei_writeback.csv"
 
@@ -88,21 +87,17 @@ REQUIRED_FIELDS_FOR_DISBURSED_PAYMENT = [
 
 class FineosPeiWritebackStep(Step):
     class Metrics(str, enum.Enum):
-        CANCELLED_PAYMENT_COUNT = "cancelled_payment_count"
         CHECK_PAYMENT_COUNT = "check_payment_count"
         EFT_PAYMENT_COUNT = "eft_payment_count"
-        EMPLOYER_REIMBURSEMENT_PAYMENT_COUNT = "employer_reimbursement_payment_count"
         ERRORED_WRITEBACK_RECORD_DURING_FILE_CREATION_COUNT = (
             "errored_writeback_record_during_file_creation_count"
         )
         ERRORED_WRITEBACK_RECORD_DURING_FILE_TRANSFER_COUNT = (
             "errored_writeback_record_during_file_transfer_count"
         )
-        OVERPAYMENT_COUNT = "overpayment_count"
         PAYMENT_WRITEBACK_TWO_ITEMS_COUNT = "payment_writeback_two_items_count"
         SUCCESSFUL_WRITEBACK_RECORD_COUNT = "successful_writeback_record_count"
         WRITEBACK_RECORD_COUNT = "writeback_record_count"
-        ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
 
         GENERIC_FLOW_WRITEBACK_ITEMS_COUNT = "generic_flow_writeback_items_count"
 
@@ -126,34 +121,6 @@ class FineosPeiWritebackStep(Step):
         logger.info("Successfully processed payments for PEI writeback")
 
     def get_records_to_writeback(self) -> List[PeiWritebackItem]:
-        zero_dollar_payment_writeback_items = self._get_writeback_items_for_state(
-            prior_state=State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
-            end_state=State.DELEGATED_PAYMENT_ZERO_PAYMENT_FINEOS_WRITEBACK_SENT,
-            writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
-            transaction_status=PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
-        )
-        zero_dollar_payment_count = len(zero_dollar_payment_writeback_items)
-        logger.info(
-            "Found %i extracted writeback items in state: %s",
-            zero_dollar_payment_count,
-            State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
-        )
-        self.set_metrics({self.Metrics.ZERO_DOLLAR_PAYMENT_COUNT: zero_dollar_payment_count})
-
-        overpayment_writeback_items = self._get_writeback_items_for_state(
-            prior_state=State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK,
-            end_state=State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT,
-            writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
-            transaction_status=PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
-        )
-        overpayment_count = len(overpayment_writeback_items)
-        logger.info(
-            "Found %i extracted writeback items in state: %s",
-            overpayment_count,
-            State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK.state_description,
-        )
-        self.set_metrics({self.Metrics.OVERPAYMENT_COUNT: overpayment_count})
-
         check_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT,
@@ -181,38 +148,6 @@ class FineosPeiWritebackStep(Step):
             State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_description,
         )
         self.set_metrics({self.Metrics.EFT_PAYMENT_COUNT: eft_payment_count})
-
-        cancelled_payment_writeback_items = self._get_writeback_items_for_state(
-            prior_state=State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK,
-            end_state=State.DELEGATED_PAYMENT_CANCELLATION_PAYMENT_FINEOS_WRITEBACK_SENT,
-            writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
-            transaction_status=PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
-        )
-        cancelled_payment_count = len(cancelled_payment_writeback_items)
-        logger.info(
-            "Found %i extracted writeback items in state: %s",
-            cancelled_payment_count,
-            State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
-        )
-        self.set_metrics({self.Metrics.CANCELLED_PAYMENT_COUNT: cancelled_payment_count})
-
-        employer_reimbursement_payment_writeback_items = self._get_writeback_items_for_state(
-            prior_state=State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK,
-            end_state=State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_PAYMENT_FINEOS_WRITEBACK_SENT,
-            writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
-            transaction_status=PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
-        )
-        employer_reimbursement_payment_count = len(employer_reimbursement_payment_writeback_items)
-        logger.info(
-            "Found %i extracted writeback items in state: %s",
-            employer_reimbursement_payment_count,
-            State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
-        )
-        self.set_metrics(
-            {
-                self.Metrics.EMPLOYER_REIMBURSEMENT_PAYMENT_COUNT: employer_reimbursement_payment_count
-            }
-        )
 
         payment_writeback_two_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK,
@@ -247,12 +182,8 @@ class FineosPeiWritebackStep(Step):
         )
 
         return (
-            zero_dollar_payment_writeback_items
-            + overpayment_writeback_items
-            + check_payment_writeback_items
+            check_payment_writeback_items
             + eft_payment_writeback_items
-            + cancelled_payment_writeback_items
-            + employer_reimbursement_payment_writeback_items
             + payment_writeback_two_items
             + generic_flow_writeback_items
         )
