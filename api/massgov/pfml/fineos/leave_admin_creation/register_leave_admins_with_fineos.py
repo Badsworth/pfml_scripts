@@ -56,22 +56,14 @@ def find_admins_without_registration(db_session: db.Session):
     # For each record, lookup the user and employer
     # Register with fineos
 
-    # TODO: Remove this check - https://lwd.atlassian.net/browse/EMPLOYER-962
-    if app.get_config().enforce_verification:
-        leave_admins_without_fineos = (
-            db_session.query(UserLeaveAdministrator)
-            .filter(
-                UserLeaveAdministrator.fineos_web_id.is_(None),
-                UserLeaveAdministrator.verified == True,  # noqa: E712
-            )
-            .all()
+    leave_admins_without_fineos = (
+        db_session.query(UserLeaveAdministrator)
+        .filter(
+            UserLeaveAdministrator.fineos_web_id.is_(None),
+            UserLeaveAdministrator.verified == True,  # noqa: E712
         )
-    else:
-        leave_admins_without_fineos = (
-            db_session.query(UserLeaveAdministrator)
-            .filter(UserLeaveAdministrator.fineos_web_id.is_(None))
-            .all()
-        )
+        .all()
+    )
 
     if len(leave_admins_without_fineos) > 0:
         fineos_client_config = fineos.factory.FINEOSClientConfig.from_env()
