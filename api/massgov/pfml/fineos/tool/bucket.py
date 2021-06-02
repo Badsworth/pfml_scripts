@@ -65,7 +65,9 @@ def run_tool(raw_args):
     if (args.copy_dir and not args.to_dir) or (args.to_dir and not args.copy_dir):
         raise RuntimeError("Must specify --to_dir with --copy_dir")
 
-    if not args.copy_dir and (args.recursive or args.dated_folders or args.file_prefixes):
+    # Error out if one of the flags for copy_dir is used for another option.
+    # file_prefixes always defaults to "all" so we have to check the value against that default.
+    if not args.copy_dir and (args.recursive or args.dated_folders or args.file_prefixes != "all"):
         raise RuntimeError(
             "The following options are only valid when using copy_dir: [--recursive, --dated-folders, --file_prefixes]"
         )
