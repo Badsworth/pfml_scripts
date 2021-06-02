@@ -8,6 +8,7 @@ function render(customProps = {}) {
       children: "Hint text",
       inputId: "foo",
       small: false,
+      className: null,
     },
     customProps
   );
@@ -52,5 +53,14 @@ describe("Hint", () => {
     const hint = wrapper.find(".usa-intro");
 
     expect(hint.prop("id")).not.toBe("undefined_hint");
+  });
+
+  it("adds className", () => {
+    const { wrapper } = render({
+      className: "margin-bottom-3",
+      children: "Text",
+    });
+
+    expect(wrapper.find(".margin-bottom-3").exists()).toBe(true);
   });
 });

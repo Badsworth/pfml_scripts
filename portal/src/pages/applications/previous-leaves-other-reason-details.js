@@ -1,7 +1,9 @@
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import { get, pick } from "lodash";
 import BenefitsApplication from "../../models/BenefitsApplication";
+import Details from "../../components/Details";
 import Heading from "../../components/Heading";
+import Hint from "../../components/Hint";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import InputHours from "../../components/InputHours";
@@ -10,6 +12,7 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
 import { Trans } from "react-i18next";
+import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -43,6 +46,8 @@ export const PreviousLeavesOtherReasonDetails = (props) => {
     formState,
     "previous_leaves_other_reason"
   );
+
+  const leaveStartDate = formatDate(claim.leaveStartDate).full();
 
   const handleSave = () => {
     appLogic.benefitsApplications.update(claim.application_id, formState);
@@ -88,6 +93,11 @@ export const PreviousLeavesOtherReasonDetails = (props) => {
       <Heading level="2" size="1">
         {t("pages.claimsPreviousLeavesOtherReasonDetails.sectionLabel")}
       </Heading>
+      <Hint className="margin-bottom-3">
+        {t("pages.claimsPreviousLeavesOtherReasonDetails.sectionHint", {
+          leaveStartDate,
+        })}
+      </Hint>
 
       <RepeatableFieldset
         addButtonLabel={t(
@@ -252,7 +262,20 @@ export const PreviousLeavesOtherReasonDetailsCard = (props) => {
           "pages.claimsPreviousLeavesOtherReasonDetails.minutesLabel"
         )}
         hint={
-          <Trans i18nKey="pages.claimsPreviousLeavesOtherReasonDetails.workedPerWeekMinutesHint" />
+          <React.Fragment>
+            <p>
+              {t(
+                "pages.claimsPreviousLeavesOtherReasonDetails.workedPerWeekMinutesHint"
+              )}
+            </p>
+            <Details
+              label={t(
+                "pages.claimsPreviousLeavesOtherReasonDetails.workedPerWeekMinutesDetailsLabel"
+              )}
+            >
+              <Trans i18nKey="pages.claimsPreviousLeavesOtherReasonDetails.workedPerWeekMinutesDetails" />
+            </Details>
+          </React.Fragment>
         }
         minutesIncrement={15}
       />

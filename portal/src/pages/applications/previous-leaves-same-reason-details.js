@@ -1,7 +1,9 @@
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import { get, pick } from "lodash";
 import BenefitsApplication from "../../models/BenefitsApplication";
+import Details from "../../components/Details";
 import Heading from "../../components/Heading";
+import Hint from "../../components/Hint";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import InputHours from "../../components/InputHours";
@@ -12,6 +14,7 @@ import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
+import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -35,7 +38,7 @@ export const PreviousLeavesSameReasonDetails = (props) => {
   /**
    * Converts a LeaveReason to its corresponding PreviousLeaveReason.
    * @param {string} leaveReason - the application leave reason
-   * @returns the corresponding PreviousLeaveReason
+   * @returns {PreviousLeaveReason} the corresponding PreviousLeaveReason
    */
   const leaveReasonToPreviousLeaveReason = (leaveReason) => {
     const previousLeaveReasonKey = findKeyByValue(LeaveReason, leaveReason);
@@ -60,6 +63,8 @@ export const PreviousLeavesSameReasonDetails = (props) => {
     formState,
     "previous_leaves_same_reason"
   );
+
+  const leaveStartDate = formatDate(claim.leaveStartDate).full();
 
   const handleSave = () => {
     appLogic.benefitsApplications.update(claim.application_id, formState);
@@ -109,6 +114,11 @@ export const PreviousLeavesSameReasonDetails = (props) => {
         {t("pages.claimsPreviousLeavesSameReasonDetails.sectionLabel")}
       </Heading>
 
+      <Hint className="margin-bottom-3">
+        {t("pages.claimsPreviousLeavesSameReasonDetails.sectionHint", {
+          leaveStartDate,
+        })}
+      </Hint>
       <RepeatableFieldset
         addButtonLabel={t(
           "pages.claimsPreviousLeavesSameReasonDetails.addButton"
@@ -213,7 +223,20 @@ export const PreviousLeaveSameReasonDetailsCard = (props) => {
           "pages.claimsPreviousLeavesSameReasonDetails.minutesLabel"
         )}
         hint={
-          <Trans i18nKey="pages.claimsPreviousLeavesSameReasonDetails.workedPerWeekMinutesHint" />
+          <React.Fragment>
+            <p>
+              {t(
+                "pages.claimsPreviousLeavesSameReasonDetails.workedPerWeekMinutesHint"
+              )}
+            </p>
+            <Details
+              label={t(
+                "pages.claimsPreviousLeavesSameReasonDetails.workedPerWeekMinutesDetailsLabel"
+              )}
+            >
+              <Trans i18nKey="pages.claimsPreviousLeavesSameReasonDetails.workedPerWeekMinutesDetails" />
+            </Details>
+          </React.Fragment>
         }
         minutesIncrement={15}
       />

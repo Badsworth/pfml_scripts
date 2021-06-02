@@ -7,11 +7,16 @@ import PreviousLeave, {
   PreviousLeaveReason,
 } from "../../../src/models/PreviousLeave";
 import PreviousLeavesOtherReasonDetails from "../../../src/pages/applications/previous-leaves-other-reason-details";
+import React from "react";
+import { shallow } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const setup = (claimAttrs = { employer_fein: "12-3456789" }) => {
-  const claim = new MockBenefitsApplicationBuilder().continuous().create();
+const setup = (claimAttrs) => {
+  const claim = new MockBenefitsApplicationBuilder()
+    .employed()
+    .continuous()
+    .create();
 
   const { appLogic, wrapper } = renderWithAppLogic(
     PreviousLeavesOtherReasonDetails,
@@ -184,10 +189,22 @@ describe("PreviousLeavesOtherReasonDetails", () => {
     });
 
     it("renders the page", () => {
-      expect(
-        wrapper.find("RepeatableFieldset").dive().find("RepeatableFieldsetCard")
-      ).toHaveLength(2);
+      const cards = wrapper
+        .find("RepeatableFieldset")
+        .dive()
+        .find("RepeatableFieldsetCard");
+      const firstCard = cards
+        .find("PreviousLeavesOtherReasonDetailsCard")
+        .first()
+        .dive();
+      const InputHoursHint = () =>
+        firstCard.find("InputHours").first().prop("hint");
+      const inputHoursHint = shallow(<InputHoursHint />);
+
+      expect(cards).toHaveLength(2);
       expect(wrapper).toMatchSnapshot();
+      expect(firstCard).toMatchSnapshot();
+      expect(inputHoursHint.find("Trans").dive()).toMatchSnapshot();
     });
 
     it("adds an empty previous leave when the user clicks Add Previous Leave", async () => {

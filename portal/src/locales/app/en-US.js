@@ -725,11 +725,16 @@ const shared = {
     leaveStartDateLabel: "What was the first day of this leave?",
     limitMessage: "You can only add up to {{limit}} leaves",
     removeButton: "Remove this previous leave",
-    sectionLabel: "Tell us about your previous time off",
+    sectionHint:
+      "Enter details about each period of leave taken between January 1, 2021 and {{leaveStartDate}}. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.",
+    sectionLabel: "Tell us about your previous leave",
+    workedPerWeekMinutesDetails:
+      "If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
+    workedPerWeekMinutesDetailsLabel: "What if my schedule was not consistent?",
     workedPerWeekMinutesHint:
-      "Enter the number of hours you would have worked each week, if you were not on leave.<br />If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
+      "Enter the number of hours you would have worked each week, if you were not on leave.",
     workedPerWeekMinutesLabel:
-      "How many hours would you have worked per week if you did not take this leave?",
+      "How many hours would you normally have worked per week at the time you took this leave?",
   },
   claimsVerifyIdTitle: "Your identification",
   contactCenterAddress:
@@ -1524,8 +1529,13 @@ const pages = {
     minutesLabel: "$t(shared.minutesLabel)",
     previousLeaveEntryPrefix: "$t(shared.previousLeaveEntryPrefix)",
     removeButton: "$t(shared.claimsPreviousLeaveDetails.removeButton)",
+    sectionHint: "$t(shared.claimsPreviousLeaveDetails.sectionHint)",
     sectionLabel: "$t(shared.claimsPreviousLeaveDetails.sectionLabel)",
     title: "$t(shared.claimsOtherLeaveTitle)",
+    workedPerWeekMinutesDetails:
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesDetails)",
+    workedPerWeekMinutesDetailsLabel:
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesDetailsLabel)",
     workedPerWeekMinutesHint:
       "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesHint)",
     workedPerWeekMinutesLabel:
@@ -1558,8 +1568,13 @@ const pages = {
     minutesLabel: "$t(shared.minutesLabel)",
     previousLeaveEntryPrefix: "$t(shared.previousLeaveEntryPrefix)",
     removeButton: "$t(shared.claimsPreviousLeaveDetails.removeButton)",
+    sectionHint: "$t(shared.claimsPreviousLeaveDetails.sectionHint)",
     sectionLabel: "$t(shared.claimsPreviousLeaveDetails.sectionLabel)",
     title: "$t(shared.claimsOtherLeaveTitle)",
+    workedPerWeekMinutesDetails:
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesDetails)",
+    workedPerWeekMinutesDetailsLabel:
+      "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesDetailsLabel)",
     workedPerWeekMinutesHint:
       "$t(shared.claimsPreviousLeaveDetails.workedPerWeekMinutesHint)",
     workedPerWeekMinutesLabel:

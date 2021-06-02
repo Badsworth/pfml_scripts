@@ -16,8 +16,8 @@ exports[`ConcurrentLeavesIntroIntro renders the page 1`] = `
       i18nKey="pages.claimsConcurrentLeavesIntro.intro"
       values={
         Object {
-          "endDate": "6/1/2021",
-          "startDate": "1/1/2021",
+          "endDate": "June 1, 2021",
+          "startDate": "January 1, 2021",
         }
       }
     />
@@ -30,7 +30,7 @@ Array [
   <p
     key="p-0"
   >
-    Next, we need to know about paid leave from your employer that you plan to use between 1/1/2021 and 6/1/2021. This includes paid vacation time, sick time, personal time, and other paid time off provided by your employer. It does not include family or medical leave provided by your employer, or through a short- or long-term disability program. We’ll ask about that later.
+    Next, we need to know about paid leave from your employer that you plan to use between January 1, 2021 and June 1, 2021. This includes paid vacation time, sick time, personal time, and other paid time off provided by your employer. It does not include family or medical leave provided by your employer, or through a short- or long-term disability program. We’ll ask about that later.
   </p>,
   <p
     key="p-1"

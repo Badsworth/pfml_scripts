@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
-import { formatDate } from "../../utils/formatDateRange";
+import formatDate from "../../utils/formatDate";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
@@ -13,8 +13,8 @@ export const ConcurrentLeavesIntro = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
 
-  const startDate = formatDate(claim.leaveStartDate);
-  const endDate = formatDate(claim.leaveEndDate);
+  const startDate = formatDate(claim.leaveStartDate).full();
+  const endDate = formatDate(claim.leaveEndDate).full();
 
   const handleSave = () => {
     appLogic.portalFlow.goToNextPage({ claim }, query);

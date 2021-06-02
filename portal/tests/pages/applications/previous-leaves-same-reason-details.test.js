@@ -8,6 +8,8 @@ import PreviousLeave, {
 } from "../../../src/models/PreviousLeave";
 import { initial, isEqual, last } from "lodash";
 import PreviousLeavesSameReasonDetails from "../../../src/pages/applications/previous-leaves-same-reason-details";
+import React from "react";
+import { shallow } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -187,10 +189,23 @@ describe("PreviousLeavesSameReasonDetails", () => {
     it("renders the page", () => {
       const claimWithPreviousLeaves = createClaimWithPreviousLeaves();
       const { wrapper } = setup(claimWithPreviousLeaves);
-      expect(
-        wrapper.find("RepeatableFieldset").dive().find("RepeatableFieldsetCard")
-      ).toHaveLength(2);
+
+      const cards = wrapper
+        .find("RepeatableFieldset")
+        .dive()
+        .find("RepeatableFieldsetCard");
+      const firstCard = cards
+        .find("PreviousLeaveSameReasonDetailsCard")
+        .first()
+        .dive();
+      const InputHoursHint = () =>
+        firstCard.find("InputHours").first().prop("hint");
+      const inputHoursHint = shallow(<InputHoursHint />);
+
+      expect(cards).toHaveLength(2);
       expect(wrapper).toMatchSnapshot();
+      expect(firstCard).toMatchSnapshot();
+      expect(inputHoursHint.find("Trans").dive()).toMatchSnapshot();
     });
 
     it("adds an empty previous leave when the user clicks Add Previous Leave", async () => {
