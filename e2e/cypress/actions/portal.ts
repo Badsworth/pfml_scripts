@@ -1142,3 +1142,26 @@ export function assertUnverifiedEmployerDashboard(): void {
 export function goToEmployerDashboard(): void {
   cy.get('a[href="/employers/dashboard/"]').first().click();
 }
+
+type UploadAdditonalDocumentOptions =
+  | "Massachusetts driver’s license or ID"
+  | "Different identification documentation"
+  | "Certification";
+
+export function uploadAdditionalDocument(
+  fineosClaimId: string,
+  type: UploadAdditonalDocumentOptions,
+  docName: string
+): void {
+  cy.contains("article", fineosClaimId).within(() => {
+    cy.contains("Upload additional documents").click();
+  });
+  cy.contains("label", type).click();
+  cy.contains("button", "Save and continue").click();
+  if (type !== "Certification") {
+    addId(docName);
+  } else {
+    addLeaveDocs(docName);
+  }
+  cy.contains("You successfully submitted your documents");
+}

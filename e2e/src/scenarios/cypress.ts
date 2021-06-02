@@ -1,5 +1,5 @@
 import { ScenarioSpecification } from "../generation/Scenario";
-import { addWeeks, subWeeks, startOfWeek } from "date-fns";
+import { addWeeks, subWeeks, startOfWeek, addDays } from "date-fns";
 import { getCaringLeaveStartDate } from "../../src/util/claims";
 
 /**
@@ -272,5 +272,21 @@ export const CDENY2: ScenarioSpecification = {
     has_continuous_leave_periods: true,
     reason: "Care for a Family Member",
     docs: {},
+  },
+};
+
+export const CHAP_RFI: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CHAP_RFI",
+    reason: "Care for a Family Member",
+    leave_dates: [
+      getCaringLeaveStartDate(),
+      addDays(getCaringLeaveStartDate(), 2),
+    ],
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
   },
 };

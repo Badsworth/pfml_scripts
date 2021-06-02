@@ -16,6 +16,8 @@ import {
   visitClaim,
 } from "./fineos";
 
+import { DocumentUploadRequest } from "../../src/api";
+
 type StatusCategory =
   | "Applicability"
   | "Eligibility"
@@ -159,6 +161,15 @@ class TasksPage {
     assertHasTask(name);
     return this;
   }
+
+  close(name: string): this {
+    cy.contains("td", name).click();
+    cy.wait("@ajaxRender");
+    cy.get('input[title="Close selected task"]');
+    cy.wait("@ajaxRender");
+    cy.wait(150);
+    return this;
+  }
 }
 
 /**
@@ -182,6 +193,19 @@ export class DocumentsPage {
     clickBottomWidgetButton();
     return this;
   }
+  /**
+   * Asserts the total amount of times a document has been uploaded to a case
+   * @param type
+   * @param occurences
+   */
+  assertDocumentUploads(
+    type: DocumentUploadRequest["document_type"],
+    occurences = 1
+  ): this {
+    cy.get(`a:contains("${type}")`).should("have.length", occurences);
+    return this;
+  }
+
   /**
    * Starts the document creation process and finds the right document type.
    */

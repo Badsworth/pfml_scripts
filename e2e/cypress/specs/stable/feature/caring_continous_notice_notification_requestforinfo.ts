@@ -21,7 +21,7 @@ describe("Request for More Information (notifications/notices)", () => {
       fineos.before();
       cy.visit("/");
 
-      cy.task("generateClaim", "BHAP1").then((claim) => {
+      cy.task("generateClaim", "CHAP_RFI").then((claim) => {
         cy.task("submitClaimToAPI", {
           ...claim,
           credentials,
@@ -47,12 +47,18 @@ describe("Request for More Information (notifications/notices)", () => {
               evidence.requestAdditionalInformation(
                 certificationDocument.document_type,
                 {
-                  "Healthcare Provider Information incomplete":
-                    "This is incomplete",
+                  "Care Information incomplete": "This is incomplete",
                 },
-                "Please resubmit page 1 of the Healthcare Provider form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
+                "Please resubmit page 1 of the Caring Certification form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
               );
             });
+          });
+          page.tasks((task) => {
+            task.assertTaskExists("Caring Certification Review");
+            task.close("Caring Certification Review");
+          });
+          page.documents((document) => {
+            document.assertDocumentUploads("Care for a family member form", 1);
           });
           // This should trigger a change in plan status.
           page.shouldHaveStatus("PlanDecision", "Pending Evidence");
@@ -63,7 +69,7 @@ describe("Request for More Information (notifications/notices)", () => {
   );
 
   it(
-    "Should generate a legal notice (Request for Information) that the claimant can view",
+    "Should allow claimant to upload additional documents and generate a legal notice (Request for Information) that the claimant can view",
     { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit]);
@@ -88,6 +94,11 @@ describe("Request for More Information (notifications/notices)", () => {
             .click();
         });
         portal.downloadLegalNotice("Request", submission.fineos_absence_id, 3);
+        portal.uploadAdditionalDocument(
+          submission.fineos_absence_id,
+          "Certification",
+          "HCP"
+        );
       });
     }
   );
@@ -141,6 +152,27 @@ describe("Request for More Information (notifications/notices)", () => {
               60000
             )
             .should("not.be.empty");
+        });
+      });
+    }
+  );
+
+  it(
+    "CSR rep can view the additional information uploaded by claimant",
+    { baseUrl: getFineosBaseUrl() },
+    () => {
+      fineos.before();
+      cy.visit("/");
+      cy.unstash<Submission>("submission").then((submission) => {
+        const page = fineosPages.ClaimPage.visit(submission.fineos_absence_id);
+        page.tasks((taskPage) =>
+          taskPage.assertTaskExists("Caring Certification Review")
+        );
+        page.documents((documentsPage) => {
+          documentsPage.assertDocumentUploads(
+            "Care for a family member form",
+            2
+          );
         });
       });
     }
