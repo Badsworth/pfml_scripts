@@ -54,7 +54,8 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-05-21.json",
     "LST_EMPLOYEES_FILE": "./employees/lst-2021-05-10.employees.json",
     "LST_EMPLOYERS_FILE": "./employers/lst-2021-05-10.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
+    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
+    "HAS_FINEOS_SP": "true"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",

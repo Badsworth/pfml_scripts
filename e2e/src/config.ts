@@ -77,6 +77,7 @@ const file: Partial<Configuration> =
 // The default layer is a set of default values which will be used if nothing is set.
 const defaults: Partial<Configuration> = {
   HAS_FINEOS_SP: "false",
+  FINEOS_HAS_UPDATED_EFORMS: "false",
 };
 export const merged = {
   ...defaults,
