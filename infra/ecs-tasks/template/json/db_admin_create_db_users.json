@@ -29,9 +29,10 @@
       { "name": "DB_USERNAME", "value": "${db_username}" }
     ],
     "secrets": [
-      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},
-      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password"},
-      { "name": "DB_NESSUS_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-nessus-password"}
+      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key" },
+      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
+      { "name": "DB_NESSUS_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-nessus-password" },
+      { "name": "NR_INSERT_API_KEY", "valueFrom": "/admin/pfml-api/newrelic-insert-api-key" }
     ]
   }
 ]

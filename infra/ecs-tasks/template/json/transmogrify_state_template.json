@@ -31,7 +31,8 @@
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
-      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"}
+      { "name": "NR_INSERT_API_KEY", "valueFrom": "/admin/pfml-api/newrelic-insert-api-key" },
+      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key" }
     ]
   }
 ]

@@ -26,8 +26,11 @@
       { "name": "FINEOS_AWS_IAM_ROLE_ARN", "value": "${fineos_aws_iam_role_arn}" },
       { "name": "FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", "value": "${fineos_aws_iam_role_external_id}" },
       { "name": "FINEOS_DATA_EXPORT_PATH", "value": "${fineos_data_export_path}" },
-      { "name": "BI_WAREHOUSE_PATH", "value": "s3://massgov-pfml-${environment_name}-business-intelligence-tool/warehouse/raw/fineos/" },
-      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"}
+      { "name": "BI_WAREHOUSE_PATH", "value": "s3://massgov-pfml-${environment_name}-business-intelligence-tool/warehouse/raw/fineos/" }
+    ],
+    "secrets": [
+      { "name": "NR_INSERT_API_KEY", "valueFrom": "/admin/pfml-api/newrelic-insert-api-key" },
+      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key" }
     ]
   }
 ]

@@ -27,11 +27,12 @@
       { "name": "DB_HOST", "value": "${db_host}" },
       { "name": "DB_NAME", "value": "${db_name}" },
       { "name": "DB_USERNAME", "value": "${db_username}" },
-      { "name": "S3_EXPORT_BUCKET", "value": "${s3_export_bucket}"}
+      { "name": "S3_EXPORT_BUCKET", "value": "${s3_export_bucket}" }
     ],
     "secrets": [
-      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},
-      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password"}
+      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
+      { "name": "NR_INSERT_API_KEY", "valueFrom": "/admin/pfml-api/newrelic-insert-api-key" },
+      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key" }
     ]
   }
 ]
