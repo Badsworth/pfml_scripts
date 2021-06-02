@@ -13,7 +13,7 @@ import faker from "faker";
 export default class CaringLeaveProviderForm extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
-  get documentSource(): string {
+  documentSource(): string {
     return this.path("caring-v1.1.2.pdf");
   }
   getFormData(

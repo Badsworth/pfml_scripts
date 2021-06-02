@@ -12,7 +12,7 @@ import { differenceInWeeks, format, parseISO, subYears } from "date-fns";
 export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
-  get documentSource(): string {
+  documentSource(): string {
     return this.path("hcp-v3.pdf");
   }
   getFormData(

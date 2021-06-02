@@ -8,7 +8,7 @@ import { format, parseISO } from "date-fns";
 export default class OutOfStateID extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
-  get documentSource(): string {
+  documentSource(): string {
     return this.path("license-CT.pdf");
   }
   getFormData(

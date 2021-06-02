@@ -1,9 +1,9 @@
 import { CommandModule } from "yargs";
 import { SystemWideArgs } from "../../cli";
-import config from "../../config";
 import { prompt } from "enquirer";
 import { endOfQuarter, formatISO, subQuarters } from "date-fns";
-import { getAuthManager } from "../../../src/util/common";
+import { getAuthManager } from "../../util/common";
+import { getLeaveAdminCredentials } from "../../util/credentials";
 
 type RegisterLeaveAdminArgs = {
   fein: string;
@@ -34,10 +34,7 @@ const cmd: CommandModule<SystemWideArgs, RegisterLeaveAdminArgs> = {
     const { fein } = args;
     const authenticator = getAuthManager();
 
-    const creds = {
-      username: `gqzap.employer.${fein.replace("-", "")}@inbox.testmail.app`,
-      password: config("EMPLOYER_PORTAL_PASSWORD"),
-    };
+    const creds = getLeaveAdminCredentials(fein);
     const amount = args.amount
       ? parseFloat(args.amount)
       : parseInt(fein.replace("-", "").slice(0, 6)) / 100;

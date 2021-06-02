@@ -6,11 +6,11 @@ import {
 } from "../../src/api";
 import fs from "fs";
 import {
-  getClaimantCredentials,
   getEmployeePool,
   getPortalSubmitter,
   getAuthManager,
 } from "../../src/util/common";
+import { getClaimantCredentials } from "../../src/util/credentials";
 import { ClaimGenerator } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import config from "../../src/config";

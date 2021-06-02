@@ -9,7 +9,7 @@ import { EmployeeGenerator } from "../Employee";
 export default class MassID extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
-  get documentSource(): string {
+  documentSource(): string {
     return this.path(`license-MA.pdf`);
   }
   getFormData(

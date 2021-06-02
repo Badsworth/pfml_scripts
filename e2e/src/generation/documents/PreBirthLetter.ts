@@ -9,7 +9,7 @@ import faker from "faker";
 export default class PrebirthLetter extends AbstractDocumentGenerator<{
   birthDate?: string;
 }> {
-  get documentSource(): string {
+  documentSource(): string {
     return this.path("pre-birth-letter.pdf");
   }
   getFormData(

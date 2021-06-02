@@ -9,6 +9,8 @@ import {
 import * as Cfg from "../config";
 import * as Util from "../helpers";
 import config from "../../config";
+import TestMailVerificationFetcher from "../../submission/TestMailVerificationFetcher";
+import { generateCredentials } from "../../util/credentials";
 
 type EmployerData = {
   name: string;
@@ -16,7 +18,6 @@ type EmployerData = {
   withholdings: number[];
 };
 
-let emailVerifier: Util.TestMailVerificationFetcher;
 let username: string;
 let password: string;
 
@@ -47,8 +48,7 @@ export const steps: Cfg.StoredStep[] = [
     name: "Register new employer",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // create email verifier and user credentials
-      emailVerifier = await Util.getMailVerifier(browser);
-      ({ username, password } = emailVerifier.getCredentials());
+      ({ username, password } = generateCredentials());
 
       const emailInput = await Util.labelled(browser, "Email address");
       await browser.type(emailInput, username);
@@ -73,7 +73,11 @@ export const steps: Cfg.StoredStep[] = [
   {
     name: "Verify new employer's email",
     test: async (browser: Browser): Promise<void> => {
-      const code = await emailVerifier.getVerificationCodeForUser(username);
+      const fetcher = new TestMailVerificationFetcher(
+        config("TESTMAIL_APIKEY"),
+        config("TESTMAIL_NAMESPACE")
+      );
+      const code = await fetcher.getVerificationCodeForUser(username);
       if (code.length === 0) {
         throw new Error("Couldn't getVerificationCodeForUser email!");
       }

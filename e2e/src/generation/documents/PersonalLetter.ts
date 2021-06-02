@@ -8,7 +8,7 @@ import { format, parseISO } from "date-fns";
 export default class PersonalLetter extends AbstractDocumentGenerator<{
   birthDate?: string;
 }> {
-  get documentSource(): string {
+  documentSource(): string {
     return this.path("personal-letter.pdf");
   }
   getFormData(

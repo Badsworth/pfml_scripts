@@ -28,10 +28,10 @@ export abstract class AbstractDocumentGenerator<
   C extends Record<string, unknown>
 > implements DocumentGeneratorInterface<C> {
   constructor(public documentType: DocumentType) {}
-  abstract documentSource: string;
+  abstract documentSource(): string;
   async generate(claim: ApplicationRequestBody, config: C): PromisedDocument {
     const formData = this.getFormData(claim, config);
-    return this.fillPDFBytes(this.documentSource, formData);
+    return this.fillPDFBytes(this.documentSource(), formData);
   }
   generateDocumentRequestBody(
     claim: ApplicationRequestBody,
