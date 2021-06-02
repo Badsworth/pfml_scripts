@@ -1,6 +1,13 @@
 import { ApplicationRequestBody } from "../_api";
 import { LeavePeriods } from "../types";
-import { max, addDays, parseISO, format, startOfWeek } from "date-fns";
+import {
+  max,
+  addDays,
+  parseISO,
+  format,
+  startOfWeek,
+  addWeeks,
+} from "date-fns";
 import faker from "faker";
 
 export function extractLeavePeriod(
@@ -43,13 +50,17 @@ export function dateToMMddyyyy(date: string): string {
 /**
  * Specific function for setting the start date past
  * July 21st, 2021 and within 60 days of submittal date.
+ *
  * There's a Fineos restriction for caring leave claims
- * submitted before that date.
+ * submitted before that date. Also returns end date
+ * two weeks after start date (for proper payment calculation)
  *
  * @Reminder to remove once we're past 21 July, 20201
  */
-export function getCaringLeaveStartDate(): Date {
-  const minStartDate = max([parseISO("2021-07-21"), startOfWeek(new Date())]);
+export function getCaringLeaveStartEndDates(): [Date, Date] {
+  const minStartDate = max([parseISO("2021-07-29"), new Date()]);
   const maxStartDate = addDays(new Date(), 60);
-  return faker.date.between(minStartDate, maxStartDate);
+  const start = startOfWeek(faker.date.between(minStartDate, maxStartDate));
+  const end = addWeeks(start, 2);
+  return [start, end];
 }
