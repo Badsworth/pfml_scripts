@@ -381,8 +381,8 @@ data "template_file" "task_container_definitions" {
     app_name                   = local.app_name
     task_name                  = each.key
     command                    = jsonencode(each.value.command)
-    cpu                        = lookup(each.value, "cpu", "512")
-    memory                     = lookup(each.value, "memory", "1024")
+    cpu                        = tostring(tonumber(lookup(each.value, "cpu", 512)) - 256)
+    memory                     = tostring(tonumber(lookup(each.value, "memory", 1024)) - 512)
     db_host                    = data.aws_db_instance.default.address
     db_name                    = data.aws_db_instance.default.db_name
     db_username                = data.aws_db_instance.default.master_username
