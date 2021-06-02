@@ -452,31 +452,6 @@ export function fillAbsencePeriod(claimNumber: string): void {
   cy.get("#PopupContainer input[value='Yes']").click();
 }
 
-export function intermittentFillAbsencePeriod(claimNumber: string): void {
-  assertAdjudicatingClaim(claimNumber);
-  onTab("Evidence");
-  onTab("Certification Periods");
-  cy.get("input[value='Prefill with Requested Absence Periods']").click();
-  cy.get("#PopupContainer").within(() => {
-    cy.get("input[value='Yes']").click();
-  });
-  cy.get("input[name*=episodeDuration]").then((el) => {
-    if (el.val() !== "5") {
-      // Only override this value if it's not 5.
-      cy.get("input[name*=episodeDuration]")
-        .focus()
-        .type("{selectall}5")
-        .blur();
-      cy.get(
-        "#certificationEpisodicLeaveEntitlementWidget input[type='button'][value='Apply']:visible"
-      ).click();
-      cy.get("#PopupContainer").within(() => {
-        cy.get("input[value='Yes']").click();
-      });
-    }
-  });
-}
-
 export function claimAdjudicationFlow(
   claimNumber: string,
   reason: LeaveReason,
@@ -534,7 +509,7 @@ export function intermittentClaimAdjudicationFlow(
   );
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
-  intermittentFillAbsencePeriod(claimNumber);
+  fillAbsencePeriod(claimNumber);
   onTab("Manage Request");
   cy.wait(500);
   cy.get("input[type='submit'][value='Accept']").click();

@@ -176,7 +176,7 @@ export const TRNJ: ScenarioSpecification = {
   claim: {
     label: "TRNJ",
     reason: "Serious Health Condition - Employee",
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
     docs: {
       MASSID: {},
       HCP: {},
@@ -193,7 +193,7 @@ export const TRNK: ScenarioSpecification = {
   claim: {
     label: "TRNK",
     reason: "Serious Health Condition - Employee",
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
     docs: {
       MASSID: {},
       HCP: {},
@@ -242,7 +242,7 @@ export const TRNN: ScenarioSpecification = {
   claim: {
     label: "TRNN",
     reason: "Serious Health Condition - Employee",
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
     docs: {
       MASSID: {},
       HCP: {},
@@ -259,7 +259,7 @@ export const TRNO: ScenarioSpecification = {
   claim: {
     label: "TRNO",
     reason: "Serious Health Condition - Employee",
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
     docs: {
       MASSID: {},
       HCP: {},
@@ -298,7 +298,7 @@ export const TRNQ: ScenarioSpecification = {
   claim: {
     label: "TRNQ",
     reason: "Serious Health Condition - Employee",
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
     docs: {
       MASSID: {},
       HCP: {},
@@ -780,7 +780,7 @@ export const TRNAQ1: ScenarioSpecification = {
   claim: {
     label: "TRNAQ1",
     reason: "Care for a Family Member",
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
     leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
@@ -798,7 +798,7 @@ export const TRNAQ2: ScenarioSpecification = {
   claim: {
     label: "TRNAQ2",
     reason: "Care for a Family Member",
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
     leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},
@@ -815,7 +815,7 @@ export const TRNAR: ScenarioSpecification = {
   claim: {
     label: "TRNAR",
     reason: "Care for a Family Member",
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
     leave_dates: [parseISO("2021-07-15"), parseISO("2021-12-02")],
     docs: {
       MASSID: {},

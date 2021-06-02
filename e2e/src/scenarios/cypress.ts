@@ -94,7 +94,7 @@ export const BHAP9: ScenarioSpecification = {
       HCP: {},
       MASSID: {},
     },
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
   },
 };
 
@@ -108,7 +108,7 @@ export const MED_INTER_INEL: ScenarioSpecification = {
       HCP: {},
       MASSID: {},
     },
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
   },
 };
 
@@ -219,7 +219,10 @@ export const BIAP60: ScenarioSpecification = {
       MASSID: {},
       FOSTERPLACEMENT: {},
     },
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: {
+      duration: 5,
+      duration_basis: "Days",
+    },
     // This scenario requires a 4 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
     metadata: {

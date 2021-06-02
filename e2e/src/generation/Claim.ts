@@ -11,7 +11,7 @@ import {
   WorkPattern,
 } from "../api";
 import faker from "faker";
-import generateLeaveDetails from "./LeaveDetails";
+import generateLeaveDetails, { LeaveDetailsSpec } from "./LeaveDetails";
 import { v4 as uuid } from "uuid";
 import generateDocuments, {
   DehydratedDocument,
@@ -31,7 +31,6 @@ const pipelineP = promisify(pipeline);
 interface PromiseWithOptionalGeneration<T> extends Promise<T> {
   orGenerateAndSave(gen: () => T): Promise<T>;
 }
-// export type LoadOrGeneratePromise = PromiseWithOptionalGeneration<ClaimPool>;
 /**
  * Specifies how a claim should be generated.
  */
@@ -46,21 +45,6 @@ export type ClaimSpecification = {
   docs?: DocumentGenerationSpec;
   /** Describes the employer response that accompanies this claim */
   employerResponse?: GeneratedEmployerResponse;
-  /** Generate an employer notification date that is considered "short notice" by law. */
-  shortNotice?: boolean;
-  /** Flag to make this a continuous leave claim */
-  has_continuous_leave_periods?: boolean;
-  /**
-   * Controls the reduced leave periods. If this is set, we will generate a reduced leave claim
-   * following the specification given here. See work_pattern_spec for information on the format.
-   */
-  reduced_leave_spec?: string;
-  /** Flag to make this an intermittent leave claim */
-  has_intermittent_leave_periods?: boolean;
-  pregnant_or_recent_birth?: boolean;
-  bondingDate?: "far-past" | "past" | "future";
-  /** Specify explicit leave dates for the claim. These will be used for the reduced/intermittent/continuous leave periods. */
-  leave_dates?: [Date, Date];
   /** Specify an explicit address to use for the claim. */
   address?: Address;
   /** Specify explicit payment details to be used for the claim. */
@@ -71,11 +55,9 @@ export type ClaimSpecification = {
    * are minutes worked on that day of the week (starting Sunday).
    */
   work_pattern_spec?: WorkPatternSpec;
-  /** Makes a claim for an extremely short time period (1 day). */
-  shortClaim?: boolean;
   /** Optional metadata to be saved verbatim on the claim object. Not submitted in any way. */
   metadata?: GeneratedClaimMetadata;
-};
+} & LeaveDetailsSpec;
 
 export type GeneratedClaimMetadata = Record<string, string | boolean>;
 

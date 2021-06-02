@@ -11,8 +11,11 @@ function describeClaimLeaveType(claimSpec: ScenarioSpecification["claim"]) {
   if (claimSpec.has_continuous_leave_periods) {
     return "Continuous";
   }
-  if (claimSpec.has_intermittent_leave_periods) {
-    return "Intermittent";
+  if (claimSpec.intermittent_leave_spec) {
+    const description = claimSpec.intermittent_leave_spec
+      ? ":\n" + yaml.dump(claimSpec.intermittent_leave_spec)
+      : "";
+    return `Intermittent${description}`;
   }
   if (claimSpec.reduced_leave_spec) {
     return `Reduced (${claimSpec.reduced_leave_spec})`;

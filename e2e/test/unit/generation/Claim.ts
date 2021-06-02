@@ -80,7 +80,7 @@ const intermittent: ClaimSpecification = {
     HCP: {},
     MASSID: {},
   },
-  has_intermittent_leave_periods: true,
+  intermittent_leave_spec: true,
 };
 const intermittent_explicit_dates: ClaimSpecification = {
   label: "Intermittent",
@@ -91,7 +91,7 @@ const intermittent_explicit_dates: ClaimSpecification = {
     HCP: {},
     MASSID: {},
   },
-  has_intermittent_leave_periods: true,
+  intermittent_leave_spec: true,
   leave_dates: [parseISO(START_LEAVE), parseISO(END_LEAVE)],
 };
 const payments: ClaimSpecification = {
@@ -511,7 +511,7 @@ describe("Claim Generator", () => {
     expect(end).toEqual(END_LEAVE);
   });
 
-  it("should use exlicit leave dates when generating an intermittent leave claim", async () => {
+  it("should use explicit leave dates when generating an intermittent leave claim", async () => {
     const claim = ClaimGenerator.generate(
       employeePool,
       {},
@@ -524,6 +524,38 @@ describe("Claim Generator", () => {
 
     expect(start).toEqual(START_LEAVE);
     expect(end).toEqual(END_LEAVE);
+  });
+
+  it("Should allow passing in configuration for an intermittent leave period", async () => {
+    const claim = ClaimGenerator.generate(
+      employeePool,
+      {},
+      {
+        ...intermittent,
+        intermittent_leave_spec: { duration: 1, duration_basis: "Hours" },
+      }
+    );
+    expect(
+      claim.claim.leave_details?.intermittent_leave_periods?.[0].duration
+    ).toEqual(1);
+    expect(
+      claim.claim.leave_details?.intermittent_leave_periods?.[0].duration_basis
+    ).toEqual("Hours");
+
+    const claim2 = ClaimGenerator.generate(
+      employeePool,
+      {},
+      {
+        ...intermittent,
+        intermittent_leave_spec: [{ duration: 1, duration_basis: "Hours" }],
+      }
+    );
+    expect(
+      claim2.claim.leave_details?.intermittent_leave_periods?.[0].duration
+    ).toEqual(1);
+    expect(
+      claim2.claim.leave_details?.intermittent_leave_periods?.[0].duration_basis
+    ).toEqual("Hours");
   });
 });
 
