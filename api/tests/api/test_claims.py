@@ -1374,6 +1374,7 @@ class TestUpdateClaim:
         assert capture[1][0] == "create_eform"
 
     # Inner class for testing Caring Leave scenarios
+    # TODO: add tests for the logging data: https://lwd.atlassian.net/browse/EMPLOYER-1389
     class TestCaringLeave:
         @pytest.fixture()
         def employer(self, initialize_factories_session):

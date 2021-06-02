@@ -164,10 +164,16 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     log_attributes: Dict[str, Union[bool, str, int, None]]
 
+    relationship_accurate_val = (
+        claim_review.believe_relationship_accurate.value
+        if claim_review.believe_relationship_accurate
+        else None
+    )
+
     log_attributes = {
         "absence_case_id": fineos_absence_id,
         "user_leave_admin.employer_id": user_leave_admin.employer_id,
-        "claim_request.believe_relationship_accurate": claim_review.believe_relationship_accurate,
+        "claim_request.believe_relationship_accurate": relationship_accurate_val,
         "claim_request.employer_decision": claim_review.employer_decision,
         "claim_request.fraud": claim_review.fraud,
         "claim_request.has_amendments": claim_review.has_amendments,
