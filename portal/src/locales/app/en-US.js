@@ -59,7 +59,6 @@ const errors = {
         invalid_date_range:
           "Date you stop using this benefit must be on or after the date you start using this benefit.",
         minimum: "Benefit end date must be after December 31, 2020",
-        required: "Enter the date you will stop using this benefit.",
       },
       benefit_start_date: {
         format:
@@ -380,8 +379,6 @@ const errors = {
       leave_start_date: {
         format:
           "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_format)",
-        maximum:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_maximum)",
         minimum:
           "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_minimum)",
         required:
@@ -418,8 +415,6 @@ const errors = {
       leave_start_date: {
         format:
           "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_format)",
-        maximum:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_maximum)",
         minimum:
           "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_minimum)",
         required:
@@ -705,8 +700,6 @@ const shared = {
       leaveReason_required: "Select the qualifying reason for your leave.",
       leaveStartDate_format:
         "The date your leave began must include a valid month, day, and year.",
-      leaveStartDate_maximum:
-        "Only enter previous leaves that began before today.",
       leaveStartDate_minimum:
         "Only enter previous leaves taken on or after January 1, 2021.",
       leaveStartDate_required: "Enter the date your leave began.",

@@ -29,6 +29,7 @@ from massgov.pfml.util.routing_number_validation import validate_routing_number
 PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
 MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
+MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
 
 
 def get_application_issues(application: Application, headers: Headers) -> List[Issue]:
@@ -195,9 +196,9 @@ def get_employer_benefit_issues(benefit: EmployerBenefit, index: int) -> List[Is
     issues = []
 
     required_fields = [
-        "benefit_end_date",
         "benefit_start_date",
         "benefit_type_id",
+        "is_full_salary_continuous",
     ]
     issues += check_required_fields(
         benefit_path, benefit, required_fields, {"benefit_type_id": "benefit_type"}
@@ -369,17 +370,28 @@ def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Iss
         "leave_end_date",
         "is_for_current_employer",
         "leave_reason_id",
+        "leave_minutes",
+        "worked_per_week_minutes",
     ]
     issues += check_required_fields(
         leave_path, leave, required_fields, {"leave_reason_id": "leave_reason"}
     )
+
+    if leave.worked_per_week_minutes and leave.worked_per_week_minutes > MAX_MINUTES_IN_WEEK:
+        issues.append(
+            Issue(
+                type=IssueType.maximum,
+                message=f"Minutes worked per week cannot exceed {MAX_MINUTES_IN_WEEK}",
+                field=f"{leave_path}.worked_per_week_minutes",
+            )
+        )
 
     start_date = leave.leave_start_date
     start_date_path = f"{leave_path}.leave_start_date"
     end_date = leave.leave_end_date
     end_date_path = f"{leave_path}.leave_end_date"
     issues += check_date_range(
-        start_date, start_date_path, end_date, end_date_path, PFML_PROGRAM_LAUNCH_DATE
+        start_date, start_date_path, end_date, end_date_path, minimum_date=PFML_PROGRAM_LAUNCH_DATE,
     )
 
     return issues

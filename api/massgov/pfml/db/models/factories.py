@@ -604,6 +604,7 @@ class EmployerBenefitFactory(BaseFactory):
     benefit_end_date = factory.Faker(
         "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
     )
+    is_full_salary_continuous = True
 
 
 class OtherIncomeFactory(BaseFactory):

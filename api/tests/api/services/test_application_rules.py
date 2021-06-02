@@ -1690,11 +1690,6 @@ def test_employer_benefit_missing_fields():
     assert [
         Issue(
             type=IssueType.required,
-            message="employer_benefits[0].benefit_end_date is required",
-            field="employer_benefits[0].benefit_end_date",
-        ),
-        Issue(
-            type=IssueType.required,
             message="employer_benefits[0].benefit_start_date is required",
             field="employer_benefits[0].benefit_start_date",
         ),
@@ -1702,6 +1697,11 @@ def test_employer_benefit_missing_fields():
             type=IssueType.required,
             message="employer_benefits[0].benefit_type is required",
             field="employer_benefits[0].benefit_type",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="employer_benefits[0].is_full_salary_continuous is required",
+            field="employer_benefits[0].is_full_salary_continuous",
         ),
     ] == issues
 
@@ -2275,6 +2275,16 @@ def test_previous_leave_missing_fields():
             message="previous_leaves_other_reason[0].leave_reason is required",
             field="previous_leaves_other_reason[0].leave_reason",
         ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_other_reason[0].leave_minutes is required",
+            field="previous_leaves_other_reason[0].leave_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_other_reason[0].worked_per_week_minutes is required",
+            field="previous_leaves_other_reason[0].worked_per_week_minutes",
+        ),
     ] == issues
 
 
@@ -2334,4 +2344,27 @@ def test_previous_leave_end_date_must_be_after_start_date():
             message="previous_leaves_same_reason[0].leave_end_date cannot be earlier than previous_leaves_same_reason[0].leave_start_date",
             field="previous_leaves_same_reason[0].leave_end_date",
         ),
+    ] == issues
+
+
+def test_previous_leave_worked_per_week_minutes_must_be_less_than_10080():
+    application = ApplicationFactory.build()
+    leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 2),
+            leave_end_date=date(2021, 2, 3),
+            leave_minutes=1464,
+            worked_per_week_minutes=60000,
+        )
+    ]
+    application.previous_leaves_same_reason = leaves
+
+    issues = get_conditional_issues(application, Headers())
+    assert [
+        Issue(
+            type=IssueType.maximum,
+            message="Minutes worked per week cannot exceed 10080",
+            field="previous_leaves_same_reason[0].worked_per_week_minutes",
+        )
     ] == issues
