@@ -1,6 +1,6 @@
 import { ApplicationRequestBody } from "../_api";
 import { LeavePeriods } from "../types";
-import { max, addDays, parseISO, format } from "date-fns";
+import { max, addDays, parseISO, format, startOfWeek } from "date-fns";
 import faker from "faker";
 
 export function extractLeavePeriod(
@@ -49,7 +49,7 @@ export function dateToMMddyyyy(date: string): string {
  * @Reminder to remove once we're past 21 July, 20201
  */
 export function getCaringLeaveStartDate(): Date {
-  const minStartDate = max([parseISO("2021-07-21"), new Date()]);
+  const minStartDate = max([parseISO("2021-07-21"), startOfWeek(new Date())]);
   const maxStartDate = addDays(new Date(), 60);
   return faker.date.between(minStartDate, maxStartDate);
 }

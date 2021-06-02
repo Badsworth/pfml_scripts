@@ -28,6 +28,7 @@ export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
     const data: { [k: string]: string | boolean } = {
       // Employee Info - Section 1
       "Employee name": `${claim.first_name} ${claim.last_name}`,
+      "Employee Name": `${claim.first_name} ${claim.last_name}`,
       Employee: `${claim.first_name} ${claim.last_name}`,
       "Employee first name": `${claim.first_name}`,
       "Employee Last name": `${claim.last_name}`,

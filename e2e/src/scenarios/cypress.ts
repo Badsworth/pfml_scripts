@@ -255,7 +255,7 @@ export const CCAP90: ScenarioSpecification = {
     label: "CCAP90",
     reason: "Care for a Family Member",
     work_pattern_spec: "0,720,0,720,0,720,0",
-    docs: {},
+    docs: { MASSID: {}, CARING: {} },
     leave_dates: [
       getCaringLeaveStartDate(),
       addWeeks(getCaringLeaveStartDate(), 2),
