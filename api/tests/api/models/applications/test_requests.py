@@ -3,6 +3,7 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 from massgov.pfml.api.models.applications.requests import (
+    future_date_of_birth_validator,
     max_date_of_birth_validator,
     min_date_of_birth_validator,
 )
@@ -43,4 +44,26 @@ def test_min_date_of_birth_validator():
     assert validator_issues[0].message == "The person taking leave must be at least 14 years old"
     assert validator_issues[0].type == "invalid_age"
     assert validator_issues[0].rule == "older_than_14"
+    assert validator_issues[0].field == field_name
+
+
+def test_future_date_of_birth_validator():
+    # valid birthdate - birthdate < 7 months in the future
+    valid_birthdate = date.today() + relativedelta(months=6)
+    field_name = "test_field"
+    validator_issues = future_date_of_birth_validator(valid_birthdate, field_name)
+
+    assert len(validator_issues) == 0
+
+    # invalid birthdate - birthdate > 7 months in the future
+    invalid_birthdate = date.today() + relativedelta(months=7, days=1)
+    validator_issues = future_date_of_birth_validator(invalid_birthdate, field_name)
+
+    assert len(validator_issues) == 1
+    assert (
+        validator_issues[0].message
+        == "Family member's date of birth must be less than 7 months from now"
+    )
+    assert validator_issues[0].type == "future_birth_date"
+    assert validator_issues[0].rule == "max_7_months_in_future"
     assert validator_issues[0].field == field_name

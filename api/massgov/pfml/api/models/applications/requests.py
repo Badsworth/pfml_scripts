@@ -52,6 +52,21 @@ def min_date_of_birth_validator(date_of_birth, field):
     return error_list
 
 
+def future_date_of_birth_validator(date_of_birth, field):
+    error_list = []
+
+    if date_of_birth > date.today() + relativedelta(months=7):
+        error_list.append(
+            ValidationErrorDetail(
+                message="Family member's date of birth must be less than 7 months from now",
+                type="future_birth_date",
+                rule="max_7_months_in_future",
+                field=field,
+            )
+        )
+    return error_list
+
+
 class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
     employee_ssn: Optional[TaxIdUnformattedStr]
@@ -116,6 +131,15 @@ class ApplicationRequestBody(PydanticBaseModel):
             or not leave_details.caring_leave_metadata.family_member_date_of_birth
         ):
             return leave_details
+
+        future_date_of_birth_issue = future_date_of_birth_validator(
+            leave_details.caring_leave_metadata.family_member_date_of_birth,
+            "leave_details.caring_leave_metadata.family_member_date_of_birth",
+        )
+        if future_date_of_birth_issue:
+            raise ValidationException(
+                errors=future_date_of_birth_issue, message="Validation error", data={}
+            )
 
         max_date_of_birth_issue = max_date_of_birth_validator(
             leave_details.caring_leave_metadata.family_member_date_of_birth,
