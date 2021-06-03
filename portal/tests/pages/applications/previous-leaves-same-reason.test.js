@@ -1,4 +1,8 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import {
+  MockBenefitsApplicationBuilder,
+  renderWithAppLogic,
+  simulateEvents,
+} from "../../test-utils";
 import PreviousLeave from "../../../src/models/PreviousLeave";
 import PreviousLeavesSameReason from "../../../src/pages/applications/previous-leaves-same-reason";
 
@@ -24,9 +28,28 @@ const setup = (claimAttrs = {}) => {
 
 describe("PreviousLeavesSameReason", () => {
   it("renders the page", () => {
-    const { wrapper } = setup();
+    const { wrapper } = setup(
+      new MockBenefitsApplicationBuilder().continuous().create()
+    );
 
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("changes label date when leave reason is caring leave", () => {
+    const { wrapper } = setup(
+      new MockBenefitsApplicationBuilder()
+        .caringLeaveReason()
+        .continuous()
+        .create()
+    );
+    expect(wrapper.find("InputChoiceGroup").prop("hint")).toMatchInlineSnapshot(
+      `"Select No if your current paid leave from PFML began on July 1, 2021."`
+    );
+    expect(
+      wrapper.find("InputChoiceGroup").prop("label")
+    ).toMatchInlineSnapshot(
+      `"Did you take any other leave between July 1, 2021–January 1, 2021 for the same reason as you are applying for paid leave now?"`
+    );
   });
 
   it("submits form with has_previous_leaves_same_reason value", async () => {

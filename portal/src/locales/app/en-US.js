@@ -1487,7 +1487,7 @@ const pages = {
       "You bonded with your child after birth or placement.",
       "You needed to manage family affairs while a family member is on active duty in the armed forces.",
       "You needed to care for a family member who serves in the armed forces.",
-      "You needed to care for a family member with a serious health condition.",
+      "You needed to care for a family member with a serious health condition and your leave began on or after July 1, 2021.",
     ],
     sectionLabel:
       "Did you take leave between January 1, 2021–{{leaveStartDate}} for a different qualifying reason?",
@@ -1539,8 +1539,10 @@ const pages = {
   claimsPreviousLeavesSameReason: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
+    sectionHint:
+      "Select No if your current paid leave from PFML began on July 1, 2021.",
     sectionLabel:
-      "Did you take any other leave between January 1, 2021–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
+      "Did you take any other leave between {{previousLeaveStartDate}}–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesSameReasonDetails: {

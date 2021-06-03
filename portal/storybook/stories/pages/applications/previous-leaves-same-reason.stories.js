@@ -12,6 +12,10 @@ const mockClaims = {
   intermittent: new MockBenefitsApplicationBuilder()
     .intermittent(leavePeriodAttrs)
     .create(),
+  caring: new MockBenefitsApplicationBuilder()
+    .caringLeaveReason()
+    .continuous()
+    .create(),
 };
 
 const { config, DefaultStory } = generateClaimPageStory(
