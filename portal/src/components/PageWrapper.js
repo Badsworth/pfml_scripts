@@ -96,7 +96,7 @@ const PageWrapper = (props) => {
     isMaintenancePageRoute(
       maintenancePageRoutes,
       appLogic.portalFlow.pathname
-    ) && isInMaintenanceWindow(maintenanceStart, maintenanceEnd) && !appLogic.portalFlow.pathname.startsWith("/login");
+    ) && isInMaintenanceWindow(maintenanceStart, maintenanceEnd);
 
   // User-friendly representation of the maintenance end time
   const maintenanceRemovalDayAndTimeText = maintenanceEnd
