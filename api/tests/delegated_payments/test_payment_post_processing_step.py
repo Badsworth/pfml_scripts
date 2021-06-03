@@ -48,7 +48,7 @@ def _create_payment_container(
     if not start_date:
         start_date = date(2021, 1, 1)
     if not end_date:
-        end_date = date(2021, 1, 8)
+        end_date = date(2021, 1, 7)
 
     claim = ClaimFactory.create(employee=employee)
     payment = PaymentFactory.create(
@@ -130,31 +130,31 @@ def test_get_maximum_amount_for_period(payment_post_processing_step):
 
     # Period is exactly a week
     amount = payment_post_processing_step._get_maximum_amount_for_period(
-        date(2021, 1, 1), date(2021, 1, 8)
+        date(2021, 1, 1), date(2021, 1, 7)
     )
     assert amount == Decimal("850.00")
 
     # Period is part of two weeks
     amount = payment_post_processing_step._get_maximum_amount_for_period(
-        date(2021, 1, 1), date(2021, 1, 11)
+        date(2021, 1, 1), date(2021, 1, 8)
     )
     assert amount == Decimal("1700.00")
 
     # Period is exactly two weeks
     amount = payment_post_processing_step._get_maximum_amount_for_period(
-        date(2021, 1, 1), date(2021, 1, 15)
+        date(2021, 1, 1), date(2021, 1, 14)
     )
     assert amount == Decimal("1700.00")
 
     # Period is part of three weeks
     amount = payment_post_processing_step._get_maximum_amount_for_period(
-        date(2021, 1, 1), date(2021, 1, 18)
+        date(2021, 1, 1), date(2021, 1, 15)
     )
     assert amount == Decimal("2550.00")
 
     # Period is exactly three weeks
     amount = payment_post_processing_step._get_maximum_amount_for_period(
-        date(2021, 1, 1), date(2021, 1, 22)
+        date(2021, 1, 1), date(2021, 1, 21)
     )
     assert amount == Decimal("2550.00")
 
@@ -317,28 +317,28 @@ def test_validate_payments_not_exceeding_cap_multiple_pay_periods(
         Decimal("800.00"),
         local_test_db_session,
         start_date=date(2021, 1, 1),
-        end_date=date(2021, 1, 8),
+        end_date=date(2021, 1, 7),
     )
     payment_container2 = _create_payment_container(
         employee,
         Decimal("800.00"),
         local_test_db_session,
         start_date=date(2021, 2, 1),
-        end_date=date(2021, 2, 8),
+        end_date=date(2021, 2, 7),
     )
     payment_container3 = _create_payment_container(
         employee,
         Decimal("800.00"),
         local_test_db_session,
         start_date=date(2021, 3, 1),
-        end_date=date(2021, 3, 8),
+        end_date=date(2021, 3, 7),
     )
     payment_container4 = _create_payment_container(
         employee,
         Decimal("1200.00"),
         local_test_db_session,
         start_date=date(2021, 4, 1),
-        end_date=date(2021, 4, 8),
+        end_date=date(2021, 4, 7),
     )
 
     # Send all of the payments. Only the last one will fail
@@ -454,7 +454,7 @@ def test_validate_payment_cap_for_period(payment_post_processing_step, local_tes
     This test validates that the logic for choosing payments to pay is correct.
     """
     start_date = date(2021, 1, 1)
-    end_date = date(2021, 1, 8)  # Exactly one week, so cap is $850
+    end_date = date(2021, 1, 7)  # Exactly one week, so cap is $850
     # All values well under the cap
     group = _create_employee_payment_group(
         prior_amounts=["100.00", "100.00"], current_amounts=["100.00", "100.00"]

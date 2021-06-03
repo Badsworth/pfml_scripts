@@ -101,10 +101,15 @@ class PaymentPostProcessingStep(Step):
         # can be longer than a week. We need to scale the maximum amount up based
         # on the length of the period. This is calculated by finding the length
         # in days of the pay period, dividing by 7, and rounding up.
-        period_in_days = (end_date - start_date).days
-        # Note that the number of days can be equal to 0 if the pay period is for 1 day
-        # We set the minimum number of weeks to be equal to 1
-        weeks = math.ceil(period_in_days / 7.0) or 1
+
+        # We add 1 to the period in days because we want to consider a week to be
+        # 7 days inclusive. For example:
+        #    Jan 1st - Jan 1st is 1 day even though no time passes.
+        #    Jan 1st - Jan 2nd is 2 days
+        #    Jan 1st - Jan 7th is 7 days (eg. Monday -> Sunday)
+        #    Jan 1st - Jan 8th is 8 days (eg. Monday -> the next Monday)
+        period_in_days = (end_date - start_date).days + 1
+        weeks = math.ceil(period_in_days / 7.0)
 
         return weeks * result.maximum_weekly_benefit_amount
 

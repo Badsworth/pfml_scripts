@@ -262,7 +262,7 @@ class FineosPaymentData(FineosData):
         self.amalgamationc = self.get_value("amalgamationc", "")  # Default blank
 
         self.payment_start_period = self.get_value("payment_start", "2021-01-01 12:00:00")
-        self.payment_end_period = self.get_value("payment_end", "2021-01-08 12:00:00")
+        self.payment_end_period = self.get_value("payment_end", "2021-01-07 12:00:00")
 
         self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int()))
         self.leave_request_decision = self.get_value("leave_request_decision", "Approved")
