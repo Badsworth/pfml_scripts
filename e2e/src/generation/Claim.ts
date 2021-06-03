@@ -26,6 +26,11 @@ import * as si from "streaming-iterables";
 import ndjson from "ndjson";
 import { StreamWrapper } from "./FileWrapper";
 import { collect, map, AnyIterable } from "streaming-iterables";
+import { OtherIncome } from "../api";
+import { EmployerBenefit, PreviousLeave } from "../_api";
+import { generateOtherIncomes } from "./OtherIncomes";
+import { generateEmployerBenefits } from "./EmployerBenefits";
+import { generatePreviousLeaves } from "./PreviousLeaves";
 
 const pipelineP = promisify(pipeline);
 interface PromiseWithOptionalGeneration<T> extends Promise<T> {
@@ -45,6 +50,27 @@ export type ClaimSpecification = {
   docs?: DocumentGenerationSpec;
   /** Describes the employer response that accompanies this claim */
   employerResponse?: GeneratedEmployerResponse;
+  /** Generate an employer notification date that is considered "short notice" by law. */
+  shortNotice?: boolean;
+  /** Flag to make this a continuous leave claim */
+  has_continuous_leave_periods?: boolean;
+  /**
+   * Controls the reduced leave periods. If this is set, we will generate a reduced leave claim
+   * following the specification given here. See work_pattern_spec for information on the format.
+   */
+  reduced_leave_spec?: string;
+  /** Flag to make this an intermittent leave claim */
+  has_intermittent_leave_periods?: boolean;
+  pregnant_or_recent_birth?: boolean;
+  bondingDate?: "far-past" | "past" | "future";
+  /** Specify explicit leave dates for the claim. These will be used for the reduced/intermittent/continuous leave periods. */
+  leave_dates?: [Date, Date];
+  /** Specify other incomes, if not specified, start & end dates are automatically matched to leave dates*/
+  other_incomes?: OtherIncome[];
+  /** Specify employer benefits, "Accrued Paid Leave" belongs in this field as well. if not specified, start & end dates are automatically matched to leave dates. */
+  employer_benefits?: EmployerBenefit[];
+  /** Specify previous leaves. if not specified, start & end dates are automatically matched to leave dates. */
+  previous_leaves?: PreviousLeave[];
   /** Specify an explicit address to use for the claim. */
   address?: Address;
   /** Specify explicit payment details to be used for the claim. */
@@ -105,6 +131,9 @@ export class ClaimGenerator {
     const address = spec.address ?? this.generateAddress();
     const workPattern = generateWorkPattern(spec.work_pattern_spec);
     const leaveDetails = generateLeaveDetails(spec, workPattern);
+    const other_incomes = generateOtherIncomes(spec, leaveDetails);
+    const employer_benefits = generateEmployerBenefits(spec, leaveDetails);
+    const previous_leaves = generatePreviousLeaves(spec, leaveDetails);
     // @todo: Later, we will want smarter logic for which occupation is picked.
     const occupation = employee.occupations[0];
 
@@ -134,8 +163,10 @@ export class ClaimGenerator {
         (leaveDetails.reduced_schedule_leave_periods?.length ?? 0) > 0,
       has_intermittent_leave_periods:
         (leaveDetails.intermittent_leave_periods?.length ?? 0) > 0,
+      other_incomes,
+      employer_benefits,
+      previous_leaves,
     };
-
     return {
       id: uuid(),
       // @todo: Rename to label?

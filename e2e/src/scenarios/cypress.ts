@@ -273,6 +273,49 @@ export const CDENY2: ScenarioSpecification = {
   },
 };
 
+export const MIL_RED_OLB: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "MIL_RED with Other Leaves & Benefits",
+    shortClaim: true,
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+    other_incomes: [
+      {
+        income_type: "Earnings from another employment/self-employment",
+        income_amount_dollars: 200,
+        income_amount_frequency: "Per Week",
+      },
+    ],
+    employer_benefits: [
+      {
+        benefit_amount_dollars: 1000,
+        benefit_amount_frequency: "In Total",
+        benefit_type: "Short-term disability insurance",
+        is_full_salary_continuous: false,
+      },
+      {
+        benefit_type: "Accrued paid leave",
+      },
+    ],
+    previous_leaves: [
+      {
+        type: "other_reason",
+        leave_reason: "Child bonding",
+        is_for_current_employer: true,
+        leave_minutes: 2400,
+        worked_per_week_minutes: 1200,
+        leave_start_date: "2021-01-15",
+        leave_end_date: "2021-01-01",
+      },
+    ],
+  },
+};
 export const MED_PRE: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {

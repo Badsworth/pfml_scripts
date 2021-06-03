@@ -11,7 +11,7 @@ describe("Claimant can call call-center to submit a claim for leave with other l
       () => {
         fineos.before();
         cy.visit("/");
-        cy.task("generateClaim", "MIL_RED").then((claim) => {
+        cy.task("generateClaim", "MIL_RED_OLB").then((claim) => {
           if (
             !claim.claim.first_name ||
             !claim.claim.last_name ||
@@ -22,7 +22,6 @@ describe("Claimant can call call-center to submit a claim for leave with other l
             );
           }
           cy.stash("claim", claim.claim);
-
           fineos.searchClaimantSSN(claim.claim.tax_identifier);
           fineos.clickBottomWidgetButton("OK");
           fineos.assertOnClaimantPage(
@@ -51,37 +50,23 @@ describe("Claimant can call call-center to submit a claim for leave with other l
 
               fineosPages.ClaimPage.visit(fineos_absence_id).documents(
                 (documentsPage) => {
+                  const {
+                    employer_benefits,
+                    previous_leaves,
+                    other_incomes,
+                  } = claim.claim;
                   documentsPage
                     .submitOtherBenefits({
-                      employer_benefits: [
-                        {
-                          benefit_amount_dollars: 1000,
-                          benefit_amount_frequency: "In Total",
-                          benefit_start_date: startDate.toISOString(),
-                          benefit_type: "Short-term disability insurance",
-                          is_full_salary_continuous: false,
-                        },
-                      ],
+                      employer_benefits: employer_benefits?.filter(
+                        (b) => b.benefit_type !== "Accrued paid leave"
+                      ),
+                      other_incomes,
                     })
                     .submitOtherLeaves({
-                      previousLeaves: [
-                        {
-                          type: "other_reason",
-                          leave_reason: "Child bonding",
-                          is_for_current_employer: true,
-                          leave_minutes: 2400,
-                          worked_per_week_minutes: 1200,
-                          leave_start_date: "2021-01-15",
-                          leave_end_date: "2021-01-01",
-                        },
-                      ],
-                      accrued_leaves: [
-                        {
-                          benefit_type: "Accrued paid leave",
-                          benefit_end_date: endDate.toISOString(),
-                          benefit_start_date: startDate.toISOString(),
-                        },
-                      ],
+                      previous_leaves,
+                      accrued_leaves: employer_benefits?.filter(
+                        (b) => b.benefit_type === "Accrued paid leave"
+                      ),
                     });
                 }
               );

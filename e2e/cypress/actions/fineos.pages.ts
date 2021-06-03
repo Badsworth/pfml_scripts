@@ -224,7 +224,10 @@ export class DocumentsPage {
   submitOtherBenefits({
     employer_benefits,
     other_incomes,
-  }: Pick<ApplicationResponse, "other_incomes" | "employer_benefits">): this {
+  }: Pick<
+    ApplicationRequestBody,
+    "other_incomes" | "employer_benefits"
+  >): this {
     this.startDocumentCreation("Other Income - current version");
     const alertSpy = cy.spy(window, "alert");
 
@@ -267,7 +270,7 @@ export class DocumentsPage {
     };
     // What kind of income is it?
     if (isNotNull(other_income.income_type))
-      cy.get(`select[id$=OtherIncomeNonEmployerBenefitWRT${i + 6}]`).select(
+      cy.get(`select[id$=OtherIncomeNonEmployerBenefitWRT${i}]`).select(
         otherIncomeTypeMap[other_income.income_type]
       );
 
@@ -287,7 +290,7 @@ export class DocumentsPage {
     if (isNotNull(other_income.income_amount_dollars))
       cy.get(
         `input[type=text][id$=OtherIncomeNonEmployerBenefitAmount${i}]`
-      ).type(`${other_income.income_amount_dollars}{enter}`);
+      ).type(`{selectall}{backspace}${other_income.income_amount_dollars}`);
     // How often will you receive this amount? (Optional)
     const otherIncomeFrequencyMap: Record<
       NonNullable<typeof other_income.income_amount_frequency>,
@@ -369,20 +372,20 @@ export class DocumentsPage {
   /**
    * Submits other leaves within the "Other Leaves - current version" eForm. If succesfull returns back to the "Documents" page.
    * @todo - make it take other leaves as parameters.
-   * @param previousLeaves
+   * @param previous_leaves
    * @param accrued_leaves - All of the accrued paid leaves to be used during the dates of current PFML leave. Currently are listed within the
    * @returns
    */
   submitOtherLeaves({
-    previousLeaves,
+    previous_leaves,
     accrued_leaves,
   }: {
-    previousLeaves?: ApplicationResponse["previous_leaves"];
-    accrued_leaves?: ApplicationResponse["employer_benefits"];
+    previous_leaves?: ApplicationRequestBody["previous_leaves"];
+    accrued_leaves?: ApplicationRequestBody["employer_benefits"];
   }): this {
     this.startDocumentCreation("Other Leaves - current version");
     // Reports all of the previous leaves
-    if (previousLeaves) previousLeaves.forEach(this.fillPreviousLeaveData);
+    if (previous_leaves) previous_leaves.forEach(this.fillPreviousLeaveData);
     if (accrued_leaves) this.fillAccruedLeaveData(accrued_leaves[0]);
     clickBottomWidgetButton();
     this.assertDocumentExists("Other Leaves - current version");
