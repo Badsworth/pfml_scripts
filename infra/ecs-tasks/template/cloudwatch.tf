@@ -388,3 +388,6 @@ module "weekend_cps_extract_processing_scheduler" {
   }
   JSON
 }
+
+## NOTE: If you are adding a new scheduled event here, please add monitoring by including it
+#        in the list in infra/modules/alarms_api/alarms-aws.tf.
