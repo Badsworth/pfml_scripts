@@ -587,6 +587,7 @@ class Payment(Base):
     amount = Column(Numeric(asdecimal=True), nullable=False)
     fineos_pei_c_value = Column(Text, index=True)
     fineos_pei_i_value = Column(Text, index=True)
+    is_adhoc_payment = Column(Boolean, default=False, server_default="FALSE")
     fineos_extraction_date = Column(Date)
     disb_check_eft_number = Column(Text)
     disb_check_eft_issue_date = Column(Date)

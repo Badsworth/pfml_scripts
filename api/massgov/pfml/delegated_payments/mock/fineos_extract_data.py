@@ -85,6 +85,7 @@ PEI_FIELD_NAMES = [
     "EVENTTYPE",
     "PAYEEIDENTIFI",
     "EVENTREASON",
+    "AMALGAMATIONC",
 ]
 PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
 PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"]
@@ -258,6 +259,7 @@ class FineosPaymentData(FineosData):
         self.event_type = self.get_value("event_type", "PaymentOut")
         self.payee_identifier = self.get_value("payee_identifier", "Social Security Number")
         self.event_reason = self.get_value("event_reason", "Automatic Main Payment")
+        self.amalgamationc = self.get_value("amalgamationc", "")  # Default blank
 
         self.payment_start_period = self.get_value("payment_start", "2021-01-01 12:00:00")
         self.payment_end_period = self.get_value("payment_end", "2021-01-08 12:00:00")
@@ -285,6 +287,7 @@ class FineosPaymentData(FineosData):
             vpei_record["EVENTTYPE"] = self.event_type
             vpei_record["PAYEEIDENTIFI"] = self.payee_identifier
             vpei_record["EVENTREASON"] = self.event_reason
+            vpei_record["AMALGAMATIONC"] = self.amalgamationc
         return vpei_record
 
     def get_claim_details_record(self):
@@ -440,6 +443,10 @@ def generate_payment_extract_files(
         event_type = "PaymentOut"
         payee_identifier = "Social Security Number"
         event_reason = "Automatic Main Payment"
+        amalgamationc = ""
+
+        if scenario_descriptor.is_adhoc_payment:
+            amalgamationc = "Adhoc"
 
         claim_type = scenario_descriptor.claim_type
 
@@ -498,6 +505,7 @@ def generate_payment_extract_files(
             event_type=event_type,
             event_reason=event_reason,
             payee_identifier=payee_identifier,
+            amalgamationc=amalgamationc,
             claim_type=claim_type,
         )
 

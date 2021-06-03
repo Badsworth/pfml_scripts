@@ -42,6 +42,7 @@ def _create_payment_container(
     end_date=None,
     has_processed_state=False,
     has_errored_state=False,
+    is_adhoc_payment=False,
     payment_transaction_type=PaymentTransactionType.STANDARD,
 ):
     if not start_date:
@@ -55,6 +56,7 @@ def _create_payment_container(
         amount=amount,
         period_start_date=start_date,
         period_end_date=end_date,
+        is_adhoc_payment=is_adhoc_payment,
         payment_transaction_type_id=payment_transaction_type.payment_transaction_type_id,
     )
 
@@ -204,6 +206,71 @@ def test_validate_payments_not_exceeding_cap(payment_post_processing_step, local
     assert not payment_container1.validation_container.has_validation_issues()
     assert not payment_container2.validation_container.has_validation_issues()
     assert payment_container3.validation_container.has_validation_issues()
+
+
+def test_validate_payments_not_exceeding_cap_adhoc_payments(
+    payment_post_processing_step, local_test_db_session
+):
+    employee = EmployeeFactory.create()
+
+    # New payments that are being processed, but are all adhoc
+    # Will all be accepted
+    payment_container1 = _create_payment_container(
+        employee, Decimal("5000.00"), local_test_db_session, is_adhoc_payment=True
+    )
+    payment_container2 = _create_payment_container(
+        employee, Decimal("5000.00"), local_test_db_session, is_adhoc_payment=True
+    )
+    # Not adhoc, will still be accepted as they sum to less than the cap
+    payment_container3 = _create_payment_container(
+        employee, Decimal("425.00"), local_test_db_session, is_adhoc_payment=False
+    )
+    payment_container4 = _create_payment_container(
+        employee, Decimal("425.00"), local_test_db_session, is_adhoc_payment=False
+    )
+
+    # Prior adhoc payments don't factor into the calculation either
+    _create_payment_container(
+        employee,
+        Decimal("850.00"),
+        local_test_db_session,
+        has_processed_state=True,
+        is_adhoc_payment=True,
+    )
+
+    payment_post_processing_step._validate_payments_not_exceeding_cap(
+        employee.employee_id,
+        [payment_container1, payment_container2, payment_container3, payment_container4],
+    )
+
+    # None of the payments failed, as adhoc payments don't factor into the calculation
+    assert not payment_container1.validation_container.has_validation_issues()
+    assert not payment_container2.validation_container.has_validation_issues()
+    assert not payment_container3.validation_container.has_validation_issues()
+    assert not payment_container4.validation_container.has_validation_issues()
+
+    # Note adding one more non-adhoc payment will still cause something to fail.
+    payment_container5 = _create_payment_container(
+        employee, Decimal("1.00"), local_test_db_session, is_adhoc_payment=False
+    )
+
+    payment_post_processing_step._validate_payments_not_exceeding_cap(
+        employee.employee_id,
+        [
+            payment_container1,
+            payment_container2,
+            payment_container3,
+            payment_container4,
+            payment_container5,
+        ],
+    )
+
+    # The smallest one fails validation.
+    assert not payment_container1.validation_container.has_validation_issues()
+    assert not payment_container2.validation_container.has_validation_issues()
+    assert not payment_container3.validation_container.has_validation_issues()
+    assert not payment_container4.validation_container.has_validation_issues()
+    assert payment_container5.validation_container.has_validation_issues()
 
 
 def test_get_all_active_payments_associated_with_employee(

@@ -2145,6 +2145,7 @@ def test_e2e_pub_payments_delayed_scenarios(
                 ScenarioName.AUDIT_SKIPPED_THEN_ACCEPTED,
                 ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,
                 ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
+                ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=local_test_db_session,
@@ -2180,6 +2181,16 @@ def test_e2e_pub_payments_delayed_scenarios(
             db_session=local_test_db_session,
             log_entry_db_session=local_test_db_other_session,
             config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
+                ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
+            ],
+            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+            db_session=local_test_db_session,
         )
 
         assert_payment_state_for_scenarios(
@@ -2232,6 +2243,7 @@ def test_e2e_pub_payments_delayed_scenarios(
                 ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,
                 ScenarioName.INVALID_ADDRESS_FIXED,
                 ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
+                ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=local_test_db_session,
@@ -2289,6 +2301,8 @@ def test_e2e_pub_payments_delayed_scenarios(
             scenario_names=[
                 ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
                 ScenarioName.AUDIT_SKIPPED_THEN_ACCEPTED,
+                ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
+                ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
             ],
             end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
             db_session=local_test_db_session,

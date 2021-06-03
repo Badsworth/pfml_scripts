@@ -183,6 +183,7 @@ class PaymentData:
     payment_end_period: Optional[str] = None
     payment_date: Optional[str] = None
     payment_amount: Optional[Decimal] = None
+    amalgamation_c: Optional[str] = None
 
     claim_type_raw: Optional[str] = None
 
@@ -224,6 +225,11 @@ class PaymentData:
         # Not required as some valid scenarios won't set this (Overpayments)
         self.event_reason = payments_util.validate_csv_input(
             "EVENTREASON", pei_record, self.validation_container, False
+        )
+
+        # Not required, only care if it's set and a specific value
+        self.amalgamation_c = payments_util.validate_csv_input(
+            "AMALGAMATIONC", pei_record, self.validation_container, False
         )
 
         self.payment_date = payments_util.validate_csv_input(
@@ -545,6 +551,7 @@ class PaymentExtractStep(Step):
         STANDARD_VALID_PAYMENT_COUNT = "standard_valid_payment_count"
         TAX_IDENTIFIER_MISSING_IN_DB_COUNT = "tax_identifier_missing_in_db_count"
         ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
+        ADHOC_PAYMENT_COUNT = "adhoc_payment_count"
 
     def run_step(self):
         with tempfile.TemporaryDirectory() as download_directory:
@@ -931,6 +938,14 @@ class PaymentExtractStep(Step):
         payment.fineos_extraction_date = payments_util.get_now().date()
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
+
+        # A payment is considered adhoc if it's marked as "Adhoc"
+        # This column can be empty/missing, and that's fine. This is used
+        # later in the post-processing step to filter out adhoc payments from
+        # the weekly maximum check.
+        payment.is_adhoc_payment = payment_data.amalgamation_c == "Adhoc"
+        if payment.is_adhoc_payment:
+            self.increment(self.Metrics.ADHOC_PAYMENT_COUNT)
 
         if payment_data.claim_type_raw:
             try:

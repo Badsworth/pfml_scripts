@@ -1179,6 +1179,59 @@ def test_process_extract_not_id_proofed(
     )
 
 
+def test_process_extract_is_adhoc(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    local_payment_extract_step,
+    local_test_db_session,
+    local_initialize_factories_session,
+    tmp_path,
+    monkeypatch,
+    local_create_triggers,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    fineos_adhoc_data = FineosPaymentData(amalgamationc="Adhoc")
+    add_db_records_from_fineos_data(local_test_db_session, fineos_adhoc_data)
+    fineos_standard_data = FineosPaymentData(amalgamationc="Some other value")
+    add_db_records_from_fineos_data(local_test_db_session, fineos_standard_data)
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_adhoc_data, fineos_standard_data])
+
+    local_payment_extract_step.run()
+
+    # The adhoc payment should be valid and have that column set to True
+    adhoc_payment = (
+        local_test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == fineos_adhoc_data.c_value,
+            Payment.fineos_pei_i_value == fineos_adhoc_data.i_value,
+        )
+        .one_or_none()
+    )
+    assert adhoc_payment.is_adhoc_payment
+    assert len(adhoc_payment.state_logs) == 1
+    assert (
+        adhoc_payment.state_logs[0].end_state_id
+        == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
+    )
+
+    # Any other value for that column will create a valid payment with the column False
+    standard_payment = (
+        local_test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == fineos_standard_data.c_value,
+            Payment.fineos_pei_i_value == fineos_standard_data.i_value,
+        )
+        .one_or_none()
+    )
+    assert not standard_payment.is_adhoc_payment
+    assert len(standard_payment.state_logs) == 1
+    assert (
+        standard_payment.state_logs[0].end_state_id
+        == State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id
+    )
+
+
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_additional_payment_types(
     mock_s3_bucket,

@@ -181,7 +181,8 @@ class PaymentPostProcessingStep(Step):
 
         # Get all payment IDs of payments associated with the same employee
         # That aren't the payments we're attempting to validate, that are
-        # standard payments (eg. no cancellations, overpayments, etc.)
+        # standard payments (eg. no cancellations, overpayments, etc.) that are
+        # not adhoc payments (adhoc payments don't factor into the calculation whatsoever)
         subquery = (
             self.db_session.query(Payment.payment_id)
             .join(Claim)
@@ -190,6 +191,7 @@ class PaymentPostProcessingStep(Step):
                 Payment.payment_transaction_type_id
                 == PaymentTransactionType.STANDARD.payment_transaction_type_id,
                 Payment.payment_id.notin_(current_payment_ids),
+                Payment.is_adhoc_payment != True,  # noqa: E712
             )
         )
 
@@ -234,6 +236,17 @@ class PaymentPostProcessingStep(Step):
         # to preserve simple names
         date_range_to_payments: Dict[Tuple[date, date], EmployeePaymentGroup] = {}
         for payment_container in payment_containers:
+            # Adhoc payments do not factor into the calculation, and both
+            # automatically pass the maximum weekly cap rule and don't cause
+            # other payments to fail that rule.
+            if payment_container.payment.is_adhoc_payment:
+                logger.info(
+                    "Payment %s is an adhoc payment and will not factor into the maximum weekly cap calculation.",
+                    _make_payment_log(payment_container.payment),
+                    extra=payment_container.get_traceable_details(False),
+                )
+                continue
+
             date_tuple = _get_date_tuple(payment_container.payment)
 
             if date_tuple not in date_range_to_payments:
@@ -284,7 +297,7 @@ class PaymentPostProcessingStep(Step):
         for payment_container in current_payment_containers:
             if payment_container.payment.payment_id not in accepted_payment_ids:
                 self.increment(self.Metrics.PAYMENT_CAP_PAYMENT_ERROR_COUNT)
-                msg = f"This payment exceeded the maximum amount allowable (${max_amount}) for a claimant for the pay period of {_format_dates(period_start, period_end)}."
+                msg = f"This payment for ${payment_container.payment.amount} exceeded the maximum amount allowable (${max_amount}) for a claimant for the pay period of {_format_dates(period_start, period_end)}."
 
                 if payment_group.prior_payments:
                     prior_payment_msgs = []

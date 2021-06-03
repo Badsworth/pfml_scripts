@@ -32,6 +32,7 @@ class ScenarioName(Enum):
     HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE = "PUB_CHECK_FAMILY_RETURN_FUTURE"
 
     HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP = "HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP"
+    HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP = "HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -147,6 +148,7 @@ class ScenarioDescriptor:
 
     negative_payment_amount: bool = False
     payment_close_to_cap: bool = False
+    is_adhoc_payment: bool = False
 
     include_non_vpei_records: bool = True
 
@@ -404,6 +406,12 @@ DELAYED_SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
         payment_close_to_cap=False,
         has_additional_payment_in_period=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
+        payment_close_to_cap=True,
+        has_additional_payment_in_period=True,
+        is_adhoc_payment=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,
