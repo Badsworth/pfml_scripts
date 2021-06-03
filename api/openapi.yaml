@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2021-02-23"
+  version: "2021-06-1"
 
 servers:
   - url: /v1
@@ -1715,9 +1715,6 @@ components:
               type: string
               nullable: true
               example: "My bonding leave request"
-            employee_ssn:
-              $ref: "#/components/schemas/SsnItin"
-              nullable: true
             tax_identifier:
               $ref: "#/components/schemas/SsnItin"
               nullable: true
@@ -1855,10 +1852,6 @@ components:
               nullable: true
         - type: object
           properties:
-            employee_ssn:
-              deprecated: true
-              description: "`tax_identifier` is the preferred field for this information"
-              nullable: true
             tax_identifier:
               nullable: true
             employer_fein:

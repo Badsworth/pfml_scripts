@@ -1023,7 +1023,7 @@ def test_application_patch_fineos_forbidden(
     assert application.last_name == "Smith"
 
 
-def test_application_patch_employee_ssn(client, user, auth_token, test_db_session):
+def test_application_patch_tax_identifier(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     assert application.tax_identifier
     assert application.tax_identifier.tax_identifier != "123-45-6789"
@@ -1031,7 +1031,7 @@ def test_application_patch_employee_ssn(client, user, auth_token, test_db_sessio
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"employee_ssn": "123-45-6789"},
+        json={"tax_identifier": "123-45-6789"},
     )
 
     assert response.status_code == 200
@@ -1049,7 +1049,7 @@ def test_application_patch_masked_tax_id_has_no_effect(client, user, auth_token,
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"employee_ssn": "***-**-****"},
+        json={"tax_identifier": "***-**-****"},
     )
 
     tests.api.validate_error_response(response, 400)

@@ -327,7 +327,7 @@ def update_from_request(
     for key in body.__fields_set__:
         value = getattr(body, key)
 
-        if key in ("leave_details", "employee_ssn", "tax_identifier"):
+        if key in ("leave_details", "tax_identifier"):
             continue
 
         if key == "mailing_address":
@@ -883,7 +883,7 @@ def add_or_update_phone(
 def get_or_add_tax_identifier(
     db_session: db.Session, body: ApplicationRequestBody
 ) -> Optional[TaxIdentifier]:
-    tax_identifier = body.tax_identifier or body.employee_ssn
+    tax_identifier = body.tax_identifier
 
     if tax_identifier is None:
         return None
