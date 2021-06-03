@@ -92,7 +92,7 @@ export function getLeavePeriod(
 }
 /**
  * Specific function for setting the start date past
- * July 21st, 2021 and within 60 days of submittal date.
+ * July 1st, 2021 and within 60 days of submittal date.
  *
  * There's a Fineos restriction for caring leave claims
  * submitted before that date. Also returns end date
@@ -101,7 +101,7 @@ export function getLeavePeriod(
  * @Reminder to remove once we're past 21 July, 20201
  */
 export function getCaringLeaveStartEndDates(): [Date, Date] {
-  const minStartDate = max([parseISO("2021-07-29"), new Date()]);
+  const minStartDate = max([parseISO("2021-07-08"), new Date()]);
   const maxStartDate = addDays(new Date(), 60);
   const start = startOfWeek(faker.date.between(minStartDate, maxStartDate));
   const end = addWeeks(start, 2);

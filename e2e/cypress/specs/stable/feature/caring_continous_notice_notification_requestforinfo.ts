@@ -97,8 +97,29 @@ describe("Request for More Information (notifications/notices)", () => {
         portal.uploadAdditionalDocument(
           submission.fineos_absence_id,
           "Certification",
-          "HCP"
+          "caring"
         );
+      });
+    }
+  );
+
+  it(
+    "CSR rep can view the additional information uploaded by claimant",
+    { baseUrl: getFineosBaseUrl() },
+    () => {
+      fineos.before();
+      cy.visit("/");
+      cy.unstash<Submission>("submission").then((submission) => {
+        const page = fineosPages.ClaimPage.visit(submission.fineos_absence_id);
+        page.tasks((taskPage) =>
+          taskPage.assertTaskExists("Caring Certification Review")
+        );
+        page.documents((documentsPage) => {
+          documentsPage.assertDocumentUploads(
+            "Care for a family member form",
+            2
+          );
+        });
       });
     }
   );
@@ -152,27 +173,6 @@ describe("Request for More Information (notifications/notices)", () => {
               60000
             )
             .should("not.be.empty");
-        });
-      });
-    }
-  );
-
-  it(
-    "CSR rep can view the additional information uploaded by claimant",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.visit("/");
-      cy.unstash<Submission>("submission").then((submission) => {
-        const page = fineosPages.ClaimPage.visit(submission.fineos_absence_id);
-        page.tasks((taskPage) =>
-          taskPage.assertTaskExists("Caring Certification Review")
-        );
-        page.documents((documentsPage) => {
-          documentsPage.assertDocumentUploads(
-            "Care for a family member form",
-            2
-          );
         });
       });
     }

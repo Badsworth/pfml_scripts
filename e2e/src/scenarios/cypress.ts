@@ -1,5 +1,5 @@
 import { ScenarioSpecification } from "../generation/Scenario";
-import { addWeeks, subWeeks, startOfWeek } from "date-fns";
+import { addWeeks, subWeeks, startOfWeek, addDays } from "date-fns";
 import { getCaringLeaveStartEndDates } from "../../src/util/claims";
 
 /**
@@ -335,7 +335,7 @@ export const CHAP_RFI: ScenarioSpecification = {
   claim: {
     label: "CHAP_RFI",
     reason: "Care for a Family Member",
-    shortClaim: true,
+    leave_dates: [start, addDays(start, 2)],
     docs: {
       MASSID: {},
       CARING: {},
