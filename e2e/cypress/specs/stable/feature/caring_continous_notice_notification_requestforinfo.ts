@@ -14,167 +14,186 @@ describe("Request for More Information (notifications/notices)", () => {
     password: config("PORTAL_PASSWORD"),
   };
 
-  const submit = it(
-    "Given a claim in which a CSR has requested more information",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.visit("/");
+  if (config("HAS_FINEOS_SP") === "true") {
+    const submit = it(
+      "Given a claim in which a CSR has requested more information",
+      { baseUrl: getFineosBaseUrl() },
+      () => {
+        fineos.before();
+        cy.visit("/");
 
-      cy.task("generateClaim", "CHAP_RFI").then((claim) => {
-        cy.task("submitClaimToAPI", {
-          ...claim,
-          credentials,
-        }).then((responseData: ApplicationResponse) => {
-          if (!responseData.fineos_absence_id) {
-            throw new Error("FINEOS ID must be specified");
-          }
-          cy.stash("claim", claim.claim);
-          cy.stash("submission", {
-            application_id: responseData.application_id,
-            fineos_absence_id: responseData.fineos_absence_id,
-            timestamp_from: Date.now(),
-          });
+        cy.task("generateClaim", "CHAP_RFI").then((claim) => {
+          cy.task("submitClaimToAPI", {
+            ...claim,
+            credentials,
+          }).then((responseData: ApplicationResponse) => {
+            if (!responseData.fineos_absence_id) {
+              throw new Error("FINEOS ID must be specified");
+            }
+            cy.stash("claim", claim.claim);
+            cy.stash("submission", {
+              application_id: responseData.application_id,
+              fineos_absence_id: responseData.fineos_absence_id,
+              timestamp_from: Date.now(),
+            });
 
-          const page = fineosPages.ClaimPage.visit(
-            responseData.fineos_absence_id
-          );
-          page.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              const certificationDocument = findCertificationDoc(
-                claim.documents
-              );
-              evidence.requestAdditionalInformation(
-                certificationDocument.document_type,
-                {
-                  "Care Information incomplete": "This is incomplete",
-                },
-                "Please resubmit page 1 of the Caring Certification form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
+            const page = fineosPages.ClaimPage.visit(
+              responseData.fineos_absence_id
+            );
+            page.adjudicate((adjudication) => {
+              adjudication.evidence((evidence) => {
+                const certificationDocument = findCertificationDoc(
+                  claim.documents
+                );
+                evidence.requestAdditionalInformation(
+                  certificationDocument.document_type,
+                  {
+                    "Care Information incomplete": "This is incomplete",
+                  },
+                  "Please resubmit page 1 of the Caring Certification form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
+                );
+              });
+            });
+            page.tasks((task) => {
+              task.assertTaskExists("Caring Certification Review");
+              task.close("Caring Certification Review");
+            });
+            page.documents((document) => {
+              document.assertDocumentUploads(
+                "Care for a family member form",
+                1
               );
             });
+            // This should trigger a change in plan status.
+            page.shouldHaveStatus("PlanDecision", "Pending Evidence");
+            page.triggerNotice("Request for more Information");
           });
-          page.tasks((task) => {
-            task.assertTaskExists("Caring Certification Review");
-            task.close("Caring Certification Review");
-          });
-          page.documents((document) => {
-            document.assertDocumentUploads("Care for a family member form", 1);
-          });
-          // This should trigger a change in plan status.
-          page.shouldHaveStatus("PlanDecision", "Pending Evidence");
-          page.triggerNotice("Request for more Information");
         });
-      });
-    }
-  );
+      }
+    );
 
-  it(
-    "Should allow claimant to upload additional documents and generate a legal notice (Request for Information) that the claimant can view",
-    { retries: 0 },
-    () => {
-      cy.dependsOnPreviousPass([submit]);
-      portal.before();
-      cy.unstash<Submission>("submission").then((submission) => {
-        portal.login(credentials);
-        cy.log("Waiting for documents");
-        cy.task(
-          "waitForClaimDocuments",
-          {
-            credentials: credentials,
-            application_id: submission.application_id,
-            document_type: "Request for more Information",
-          },
-          { timeout: 300000 }
-        );
-        cy.log("Finished waiting for documents");
-        cy.visit("/applications");
-        cy.contains("article", submission.fineos_absence_id).within(() => {
-          cy.contains("a", "Request for more information")
-            .should("be.visible")
-            .click();
-        });
-        portal.downloadLegalNotice("Request", submission.fineos_absence_id, 3);
-        portal.uploadAdditionalDocument(
-          submission.fineos_absence_id,
-          "Certification",
-          "caring"
-        );
-      });
-    }
-  );
-
-  it(
-    "CSR rep can view the additional information uploaded by claimant",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.visit("/");
-      cy.unstash<Submission>("submission").then((submission) => {
-        const page = fineosPages.ClaimPage.visit(submission.fineos_absence_id);
-        page.tasks((taskPage) =>
-          taskPage.assertTaskExists("Caring Certification Review")
-        );
-        page.documents((documentsPage) => {
-          documentsPage.assertDocumentUploads(
-            "Care for a family member form",
-            2
+    it(
+      "Should allow claimant to upload additional documents and generate a legal notice (Request for Information) that the claimant can view",
+      { retries: 0 },
+      () => {
+        cy.dependsOnPreviousPass([submit]);
+        portal.before();
+        cy.unstash<Submission>("submission").then((submission) => {
+          portal.login(credentials);
+          cy.log("Waiting for documents");
+          cy.task(
+            "waitForClaimDocuments",
+            {
+              credentials: credentials,
+              application_id: submission.application_id,
+              document_type: "Request for more Information",
+            },
+            { timeout: 300000 }
+          );
+          cy.log("Finished waiting for documents");
+          cy.visit("/applications");
+          cy.contains("article", submission.fineos_absence_id).within(() => {
+            cy.contains("a", "Request for more information")
+              .should("be.visible")
+              .click();
+          });
+          portal.downloadLegalNotice(
+            "Request",
+            submission.fineos_absence_id,
+            3
+          );
+          portal.uploadAdditionalDocument(
+            submission.fineos_absence_id,
+            "Certification",
+            "caring"
           );
         });
-      });
-    }
-  );
+      }
+    );
 
-  it(
-    "I should receive a 'Thank you for successfully submitting your ... application' notification (employee)",
-    { retries: 0 },
-    () => {
-      cy.dependsOnPreviousPass([submit]);
-      cy.unstash<Submission>("submission").then((submission) => {
-        email
-          .getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject:
-                "Thank you for successfully submitting your Paid Family and Medical Leave Application",
-              timestamp_from: submission.timestamp_from,
-              messageWildcard: submission.fineos_absence_id,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            180000
-          )
-          .should("not.be.empty");
-      });
-    }
-  );
-
-  it(
-    "Should generate a (Request for Information) notification for the claimant",
-    { retries: 0 },
-    () => {
-      cy.dependsOnPreviousPass([submit]);
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-          const subjectClaimant = email.getNotificationSubject(
-            employeeFullName,
-            "request for additional info",
+    it(
+      "CSR rep can view the additional information uploaded by claimant",
+      { baseUrl: getFineosBaseUrl() },
+      () => {
+        fineos.before();
+        cy.visit("/");
+        cy.unstash<Submission>("submission").then((submission) => {
+          const page = fineosPages.ClaimPage.visit(
             submission.fineos_absence_id
           );
-          cy.log(subjectClaimant);
+          page.tasks((taskPage) =>
+            taskPage.assertTaskExists("Caring Certification Review")
+          );
+          page.documents((documentsPage) => {
+            documentsPage.assertDocumentUploads(
+              "Care for a family member form",
+              2
+            );
+          });
+        });
+      }
+    );
+
+    it(
+      "I should receive a 'Thank you for successfully submitting your ... application' notification (employee)",
+      { retries: 0 },
+      () => {
+        cy.dependsOnPreviousPass([submit]);
+        cy.unstash<Submission>("submission").then((submission) => {
           email
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectClaimant,
-                messageWildcard: submission.fineos_absence_id,
+                subject:
+                  "Thank you for successfully submitting your Paid Family and Medical Leave Application",
                 timestamp_from: submission.timestamp_from,
+                messageWildcard: submission.fineos_absence_id,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              60000
+              180000
             )
             .should("not.be.empty");
         });
-      });
-    }
-  );
+      }
+    );
+
+    it(
+      "Should generate a (Request for Information) notification for the claimant",
+      { retries: 0 },
+      () => {
+        cy.dependsOnPreviousPass([submit]);
+        cy.unstash<Submission>("submission").then((submission) => {
+          cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+            const employeeFullName = `${claim.first_name} ${claim.last_name}`;
+            const subjectClaimant = email.getNotificationSubject(
+              employeeFullName,
+              "request for additional info",
+              submission.fineos_absence_id
+            );
+            cy.log(subjectClaimant);
+            email
+              .getEmails(
+                {
+                  address: "gqzap.notifications@inbox.testmail.app",
+                  subject: subjectClaimant,
+                  messageWildcard: submission.fineos_absence_id,
+                  timestamp_from: submission.timestamp_from,
+                  debugInfo: {
+                    "Fineos Claim ID": submission.fineos_absence_id,
+                  },
+                },
+                60000
+              )
+              .should("not.be.empty");
+          });
+        });
+      }
+    );
+  } else {
+    it("Does not run", () => {
+      cy.log(
+        "This test did not execute because this environment does not have the Fineos Service Pack."
+      );
+    });
+  }
 });
