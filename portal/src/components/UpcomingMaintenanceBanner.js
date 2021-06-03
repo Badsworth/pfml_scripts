@@ -7,17 +7,14 @@ import classnames from "classnames";
  * Banner displayed at the top of the site to indicate upcoming
  * scheduled maintenance.
  */
-const UpcomingMaintenanceBanner = (props) => { // props.show, props.start, props.end
-  const classes = classnames("upcoming-maintenance-banner bg-yellow padding-1 text-center",
-  {
-    "display-block": props.show === true,
-  });
+const UpcomingMaintenanceBanner = (props) => { // props.start, props.end
+  const classes = classnames("upcoming-maintenance-banner bg-yellow padding-1 text-center");
 
   return (
     <React.Fragment>
       <div role="alert" className={classes}>
         <Trans
-          i18nKey="components.upcomingMaintenanceBanner.message"
+          i18nKey={(props.end) ? "components.upcomingMaintenanceBanner.messageWithStartEnd" : "components.upcomingMaintenanceBanner.messageWithStartNoEnd"}
           components={{
             start: props.start,
             end: props.end
@@ -29,10 +26,6 @@ const UpcomingMaintenanceBanner = (props) => { // props.show, props.start, props
 };
 
 UpcomingMaintenanceBanner.propTypes = {
-  /**
-   * Boolean used to show the message
-   **/
-  show: PropTypes.bool,
   /**
    * Start date string for the message
    **/

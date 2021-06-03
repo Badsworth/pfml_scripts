@@ -74,12 +74,14 @@ const PageWrapper = (props) => {
   const {
     appLogic,
     isLoading,
-    maintenance,
-    maintenancePageRoutes,
-    maintenanceStart,
-    maintenanceEnd,
+    maintenance
   } = props;
   const { t } = useTranslation();
+
+  const maintenancePageRoutes = maintenance.options.page_routes;
+  const maintenanceStart = maintenance.start;
+  const maintenanceEnd = maintenance.end;
+  const maintenanceEnabled = maintenance.enabled;
 
   /**
    * What to show to the user within our page wrapper. Depends on
@@ -98,8 +100,12 @@ const PageWrapper = (props) => {
       appLogic.portalFlow.pathname
     ) && isInMaintenanceWindow(maintenanceStart, maintenanceEnd);
 
-  // User-friendly representation of the maintenance end time
-  const maintenanceRemovalDayAndTimeText = maintenanceEnd
+  // User-friendly representation of the maintenance times
+  const maintenanceStartTime = maintenanceStart
+    ? DateTime.fromISO(maintenanceStart).toLocaleString(DateTime.DATETIME_FULL)
+    : null;
+
+  const maintenanceEndTime = maintenanceEnd
     ? DateTime.fromISO(maintenanceEnd).toLocaleString(DateTime.DATETIME_FULL)
     : null;
 
@@ -107,7 +113,7 @@ const PageWrapper = (props) => {
    * Should this page display an upcoming maintenance banner?
    * @type {boolean}
    */
-  const showUpcomingMaintenanceBanner = isBeforeMaintenanceWindow(maintenanceStart) && maintenance.enabled;
+  const showUpcomingMaintenanceBanner = isBeforeMaintenanceWindow(maintenanceStart) && maintenanceEnabled;
 
   // Prevent site from being rendered if this feature flag isn't enabled.
   // We render a vague but recognizable message that serves as an indicator
@@ -126,14 +132,14 @@ const PageWrapper = (props) => {
     pageBody = (
       <section id="page" data-test="maintenance page">
         <MaintenanceTakeover
-          scheduledRemovalDayAndTimeText={maintenanceRemovalDayAndTimeText}
+          scheduledRemovalDayAndTimeText={maintenanceEndTime}
         />
       </section>
     );
   } else {
     pageBody = (
       <section id="page">
-        <UpcomingMaintenanceBanner show={showUpcomingMaintenanceBanner} start={DateTime.fromISO(maintenanceStart).toLocaleString(DateTime.DATETIME_FULL)} end={DateTime.fromISO(maintenanceEnd).toLocaleString(DateTime.DATETIME_FULL)} />
+        {(showUpcomingMaintenanceBanner) ? <UpcomingMaintenanceBanner start={maintenanceStartTime} end={maintenanceEndTime} /> : ''}
         {props.children}
       </section>
     );
