@@ -22,11 +22,29 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v1
         with: { node-version: 12.x }
-      - name: "Install Dependencies"
-        run: npm ci
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
       - name: "Lint"
         run: npm run lint:ci
-      - name: "Simulation Tests"
+
+  test:
+    name: "Unit Tests"
+    runs-on: ubuntu-latest
+    env:
+      CYPRESS_INSTALL_BINARY: 0
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with: { node-version: 12.x }
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
+      - name: "Run Jest"
         run: npm run test:unit
 
   check-flood:
@@ -45,8 +63,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v1
         with: { node-version: 12.x }
-      - name: "Install Dependencies"
-        run: npm ci
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
       - name: "Build Flood Bundle"
         run: E2E_ENVIRONMENT=performance npm run cli -- flood base --bundle
       - name: "Attempt Flood Compilation"
