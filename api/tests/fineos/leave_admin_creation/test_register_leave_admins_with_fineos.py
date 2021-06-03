@@ -48,8 +48,6 @@ def test_find_user_and_register(test_db_session, employer_user):
 
 
 def test_registers_leave_admins_without_fineos_ids(test_db_session, monkeypatch, employer_user):
-    monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-
     def mocked_find_user_and_register(db_session, leave_admin, fineos_client):
         mocked_find_user_and_register.was_called = True
         assert leave_admin.user_id == employer_user.user_id
@@ -62,8 +60,12 @@ def test_registers_leave_admins_without_fineos_ids(test_db_session, monkeypatch,
     )
     employer = EmployerFactory.create()
 
+    verification = VerificationFactory.create()
     leave_admin = UserLeaveAdministrator(
-        user_id=employer_user.user_id, employer_id=employer.employer_id, fineos_web_id=None,
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id=None,
+        verification=verification,
     )
 
     test_db_session.add(leave_admin)

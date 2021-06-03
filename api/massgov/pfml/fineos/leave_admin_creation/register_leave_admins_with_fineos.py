@@ -1,12 +1,10 @@
 import boto3
 
-import massgov.pfml.api.app as app
 import massgov.pfml.util.config as config
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
 from massgov.pfml.api.services.administrator_fineos_actions import register_leave_admin_with_fineos
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
-from massgov.pfml.util import feature_gate
 from massgov.pfml.util.bg import background_task
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -60,7 +58,7 @@ def find_admins_without_registration(db_session: db.Session):
         db_session.query(UserLeaveAdministrator)
         .filter(
             UserLeaveAdministrator.fineos_web_id.is_(None),
-            UserLeaveAdministrator.verified == True,  # noqa: E712
+            UserLeaveAdministrator.verification_id.isnot(None),
         )
         .all()
     )
@@ -80,31 +78,16 @@ def find_admins_without_registration(db_session: db.Session):
     )
 
     for leave_admin in leave_admins_without_fineos:
-        verification_required = feature_gate.check_enabled(
-            feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
-            user_email=leave_admin.user.email_address,
-        )
-
-        if verification_required and leave_admin.verified is False:
-            continue
-
         find_user_and_register(db_session, leave_admin, fineos_client)
 
-    if app.get_config().enforce_verification:
-        leave_admins_without_fineos_count = (
-            db_session.query(UserLeaveAdministrator)
-            .filter(
-                UserLeaveAdministrator.fineos_web_id.is_(None),
-                UserLeaveAdministrator.verified == True,  # noqa: E712
-            )
-            .count()
+    leave_admins_without_fineos_count = (
+        db_session.query(UserLeaveAdministrator)
+        .filter(
+            UserLeaveAdministrator.fineos_web_id.is_(None),
+            UserLeaveAdministrator.verification_id.isnot(None),
         )
-    else:
-        leave_admins_without_fineos_count = (
-            db_session.query(UserLeaveAdministrator)
-            .filter(UserLeaveAdministrator.fineos_web_id.is_(None))
-            .count()
-        )
+        .count()
+    )
 
     logger.info(
         "Leave admin records left unprocessed",
