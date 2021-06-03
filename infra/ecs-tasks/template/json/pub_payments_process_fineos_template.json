@@ -40,6 +40,9 @@
       { "name": "PFML_FINEOS_EXTRACT_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/cps/extracts" },
       { "name": "PFML_ERROR_REPORTS_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/reports" },
 
+      { "name": "PFML_FINEOS_WRITEBACK_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/cps/pei-writeback" },
+      { "name": "FINEOS_DATA_IMPORT_PATH", "value": "${fineos_data_import_path}" },
+
       { "name": "DFML_REPORT_OUTBOUND_PATH", "value": "s3://massgov-pfml-${environment_name}-reports/dfml-reports"}
     ],
     "secrets": [

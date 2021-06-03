@@ -38,7 +38,7 @@ SELECT PBT.FINEOS_CUSTOMER_NUMBER "Customer Number",
        PBT.PAYMENT_ID "Payment ID"
 FROM PAYMENT_BATCH_TRANSACTIONS PBT
 WHERE PBT.IS_CURRENT = 'Y'
-  AND PBT.CURRENT_STATE_ID IN (146, 147)
+  AND PBT.CURRENT_STATE_ID IN (145)
 -- Add cancellation payment to FINEOS Writeback
 -- cancellation payment FINEOS Writeback sent
 

@@ -120,7 +120,6 @@ payments-payment-voucher-plus = "massgov.pfml.payments.payment_voucher_plus:main
 pub-payments-process-fineos = "massgov.pfml.delegated_payments.task.process_fineos_extracts:main"
 pub-payments-create-pub-files = "massgov.pfml.delegated_payments.task.process_pub_payments:main"
 pub-payments-process-pub-returns = "massgov.pfml.delegated_payments.task.process_pub_responses:main"
-pub-payments-mock-generate = "massgov.pfml.delegated_payments.mock.generate:main"
 ach-reader = "massgov.pfml.delegated_payments.util.ach.ach_tool:ach_reader"
 check-reader = "massgov.pfml.delegated_payments.pub.check_tool:check_reader"
 fineos-payments-mock-generate = "massgov.pfml.payments.mock.fineos_extract_generator:main"

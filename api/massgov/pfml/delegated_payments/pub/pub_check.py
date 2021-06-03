@@ -21,6 +21,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueEntry, CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile, EzCheckHeader, EzCheckRecord
 
@@ -54,7 +55,9 @@ class Constants:
 
 
 def create_check_file(
-    db_session: db.Session, count_incrementer: Optional[Callable[[str], None]] = None
+    db_session: db.Session,
+    count_incrementer: Optional[Callable[[str], None]] = None,
+    import_log_id: Optional[int] = None,
 ) -> Tuple[Optional[EzCheckFile], Optional[CheckIssueFile]]:
     eligible_check_payments = _get_eligible_check_payments(db_session)
 
@@ -124,12 +127,28 @@ def create_check_file(
         ez_check_file.add_record(record.ez_check_record)
         check_issue_file.add_entry(record.positive_pay_record)
 
+        outcome = state_log_util.build_outcome("Payment added to PUB EZ Check file")
         state_log_util.create_finished_state_log(
             associated_model=payment,
             end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
-            outcome=state_log_util.build_outcome("Payment added to PUB EZ Check file"),
+            outcome=outcome,
             db_session=db_session,
         )
+
+        transaction_status = FineosWritebackTransactionStatus.PAID
+        state_log_util.create_finished_state_log(
+            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            outcome=outcome,
+            associated_model=payment,
+            import_log_id=import_log_id,
+            db_session=db_session,
+        )
+        writeback_details = FineosWritebackDetails(
+            payment=payment,
+            transaction_status_id=transaction_status.transaction_status_id,
+            import_log_id=import_log_id,
+        )
+        db_session.add(writeback_details)
 
     return ez_check_file, check_issue_file
 

@@ -1264,12 +1264,13 @@ class PaymentExtractStep(Step):
             end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
             outcome=state_log_util.build_outcome(message, payment_data.validation_container),
             associated_model=payment,
+            import_log_id=self.get_import_log_id(),
             db_session=self.db_session,
         )
         writeback_details = FineosWritebackDetails(
             payment=payment,
             transaction_status_id=transaction_status.transaction_status_id,
-            import_log_id=cast(int, self.get_import_log_id()),
+            import_log_id=self.get_import_log_id(),
         )
         self.db_session.add(writeback_details)
         logger.info(message, extra=payment_data.get_traceable_details())

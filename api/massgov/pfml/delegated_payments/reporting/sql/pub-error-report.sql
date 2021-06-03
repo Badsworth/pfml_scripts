@@ -38,10 +38,7 @@ SELECT PBT.FINEOS_CUSTOMER_NUMBER "Customer Number",
        PBT.FINEOS_PEI_C_VALUE "C", 
        PBT.FINEOS_PEI_I_VALUE "I", 
        PBT.FINEOS_EXTRACTION_DATE "Fineos Extraction Date", 
-	   PBT.MESSAGE,
-	   PBT.DETAILS,
---       PBT.OUTCOME->>'message' "Error Message",
---       json_array_elements(PBT.OUTCOME->'validation_container'->'validation_issues')->>'reason' "Reason",
---       json_array_elements(PBT.OUTCOME->'validation_container'->'validation_issues')->>'details' "Details", 
+       PBT.MESSAGE,
+       PBT.DETAILS,
        PBT.PAYMENT_ID "Payment ID"
 FROM PAYMENT_BATCH_TRANSACTIONS PBT

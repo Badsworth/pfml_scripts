@@ -1938,11 +1938,11 @@ class State(LookupTable):
         139, "PUB Transaction sent - EFT", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT = LkState(
+    DEPRECATED_DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT = LkState(
         158, "FINEOS Writeback sent - Check", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT = LkState(
+    DEPRECATED_DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT = LkState(
         159, "FINEOS Writeback sent - EFT", Flow.DELEGATED_PAYMENT.flow_id
     )
 
@@ -2026,11 +2026,11 @@ class State(LookupTable):
     )
 
     # 2nd writeback to FINEOS for successful checks
-    DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK = LkState(
-        160, "Add to FINEOS Writeback #2 - Check", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK = LkState(
+        160, "DEPRECATED STATE - Add to FINEOS Writeback #2 - Check", Flow.DELEGATED_PAYMENT.flow_id
     )
-    DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK = LkState(
-        161, "FINEOS Writeback #2 sent - Check", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK = LkState(
+        161, "DEPRECATED STATE - FINEOS Writeback #2 sent - Check", Flow.DELEGATED_PAYMENT.flow_id
     )
 
     DELEGATED_PAYMENT_POST_PROCESSING_CHECK = LkState(
@@ -2109,6 +2109,12 @@ class State(LookupTable):
     # Replaces deprecated DEPRECATED_ADD_TO_ERRORED_PEI_WRITEBACK and DEPREACTED_ERRORED_PEI_WRITEBACK_SENT states as part of transition to generic writeback flow
     DELEGATED_PAYMENT_ERROR_FROM_BANK = LkState(
         182, "Payment Errored from Bank", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    # This state signifies that a payment was successfully sent, but the
+    # bank told us it had issues that may prevent payment in the future
+    DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION = LkState(
+        183, "Payment Complete with change notification", Flow.DELEGATED_PAYMENT.flow_id
     )
 
 

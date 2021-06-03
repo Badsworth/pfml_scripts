@@ -112,9 +112,9 @@ def test_process_nacha_return_file_step_full(
     # Payment states.
     expected_states = {
         46: (State.DELEGATED_PAYMENT_ERROR_FROM_BANK, "R05", 7, None),
-        61: (State.DELEGATED_PAYMENT_COMPLETE, "C01", 9, "4000401234"),
-        68: (State.DELEGATED_PAYMENT_COMPLETE, "C02", 11, "100234567"),
-        75: (State.DELEGATED_PAYMENT_COMPLETE, "C05", 13, "22"),
+        61: (State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION, "C01", 9, "4000401234"),
+        68: (State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION, "C02", 11, "100234567"),
+        75: (State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION, "C05", 13, "22"),
     }
     for payment in payments:
         local_test_db_session.refresh(payment)
@@ -138,29 +138,35 @@ def test_process_nacha_return_file_step_full(
             assert len(payment.reference_files) == 1
             assert payment.reference_files[0].reference_file == reference_file
 
-            if expected_state == State.DELEGATED_PAYMENT_ERROR_FROM_BANK:
-                writeback_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-                    payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
-                )
-                assert (
-                    writeback_state_log.end_state.state_id
-                    == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
-                )
+            writeback_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
+                payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
+            )
+            assert (
+                writeback_state_log.end_state.state_id
+                == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+            )
 
-                writeback_details = (
-                    local_test_db_session.query(FineosWritebackDetails)
-                    .filter(FineosWritebackDetails.payment_id == payment.payment_id)
-                    .one_or_none()
-                )
-                assert writeback_details
+            writeback_details = (
+                local_test_db_session.query(FineosWritebackDetails)
+                .filter(FineosWritebackDetails.payment_id == payment.payment_id)
+                .one_or_none()
+            )
+            assert writeback_details
+            transaction_status_id = writeback_details.transaction_status_id
+            if expected_state == State.DELEGATED_PAYMENT_ERROR_FROM_BANK:
                 assert (
-                    writeback_details.transaction_status_id
+                    transaction_status_id
                     == FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_id
+                )
+            else:
+                assert (
+                    transaction_status_id
+                    == FineosWritebackTransactionStatus.POSTED.transaction_status_id
                 )
 
         else:
             # Not in test file - state unchanged.
-            assert state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_id
+            assert state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id
             assert payment.reference_files == []
 
     # Metrics collected.
@@ -354,11 +360,11 @@ def payment_sent_to_pub_factory(pub_individual_id, test_db_session):
     test_db_session.commit()
 
     massgov.pfml.api.util.state_log_util.create_finished_state_log(
-        end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+        end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
         associated_model=payment,
         db_session=test_db_session,
         outcome=massgov.pfml.api.util.state_log_util.build_outcome(
-            "Generated state DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT"
+            "Generated state DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT"
         ),
     )
 

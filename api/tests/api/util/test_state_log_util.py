@@ -552,7 +552,7 @@ def test_get_state_counts(initialize_factories_session, test_db_session):
     for _ in range(7):
         payment = build_state_log(
             state_log_util.AssociatedClass.PAYMENT,
-            State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
             test_db_session,
         )
         payments.append(payment)
@@ -562,9 +562,7 @@ def test_get_state_counts(initialize_factories_session, test_db_session):
     for state in misc_states:
         assert state_log_counts[state.state_description] == 5
 
-    assert (
-        state_log_counts[State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_description] == 7
-    )
+    assert state_log_counts[State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_description] == 7
 
     # Now move every payment to a new state
     for payment in payments:

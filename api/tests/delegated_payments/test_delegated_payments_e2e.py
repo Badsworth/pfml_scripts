@@ -939,11 +939,8 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "FineosPeiWritebackStep",
             {
-                "check_payment_count": 0,
-                "eft_payment_count": 0,
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
-                "payment_writeback_two_items_count": 0,
                 "successful_writeback_record_count": len(stage_1_generic_flow_writeback_scenarios),
                 "writeback_record_count": len(stage_1_generic_flow_writeback_scenarios),
                 "generic_flow_writeback_items_count": len(stage_1_generic_flow_writeback_scenarios),
@@ -1008,7 +1005,7 @@ def test_e2e_pub_payments(
         timestamp_prefix = get_current_timestamp_prefix()
 
         positive_pay_ez_check_payments = get_payments_in_end_state(
-            test_db_session, State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT
+            test_db_session, State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT
         )
         ez_check_file_contents = file_util.read_file(
             f"{s3_config.pfml_pub_check_archive_path}/sent/{date_folder}/{timestamp_prefix}{payments_util.Constants.FILE_NAME_PUB_EZ_CHECK}.csv"
@@ -1029,7 +1026,7 @@ def test_e2e_pub_payments(
         )
 
         ach_payments = get_payments_in_end_state(
-            test_db_session, State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT
+            test_db_session, State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT
         )
 
         for payment in ach_payments:
@@ -1038,40 +1035,45 @@ def test_e2e_pub_payments(
         # == Validate payments state logs
 
         # End State
+        stage_2_ach_scenarios = [
+            ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
+            ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
+            ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+            ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
+            ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+            ScenarioName.PUB_ACH_FAMILY_RETURN,
+            ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+            ScenarioName.PUB_ACH_MEDICAL_RETURN,
+            ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+            ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+            ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+            ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
+        ]
+
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-                ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
-                ScenarioName.PUB_ACH_FAMILY_RETURN,
-                ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-            ],
-            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+            scenario_names=stage_2_ach_scenarios,
+            end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
             db_session=test_db_session,
         )
 
         # End State
+        stage_2_check_scenarios = [
+            ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+            ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
+            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
+            ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+            ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+            ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+            ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
+        ]
+
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-            ],
-            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT,
+            scenario_names=stage_2_check_scenarios,
+            end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
             db_session=test_db_session,
         )
 
@@ -1091,16 +1093,18 @@ def test_e2e_pub_payments(
         )
 
         # == Validate prenote states
+        stage_2_prenote_scenarios = [
+            ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+            ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+            ScenarioName.PUB_ACH_PRENOTE_RETURN,
+            ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+            ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+            ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+        ]
+
         assert_prenote_state(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
-                ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-                ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-            ],
+            scenario_names=stage_2_prenote_scenarios,
             expected_prenote_state=PrenoteState.PENDING_WITH_PUB,
         )
 
@@ -1217,34 +1221,14 @@ def test_e2e_pub_payments(
         )
 
         # == Writeback
-        stage_2_legacy_writeback_scenario_names = [
-            ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-            ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-            ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-            ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-            ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-            ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-            ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-            ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-            ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
-            ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-            ScenarioName.PUB_ACH_FAMILY_RETURN,
-            ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-            ScenarioName.PUB_ACH_MEDICAL_RETURN,
-            ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-            ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-            ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-            ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-            ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-        ]
+        stage_2_legacy_writeback_scenario_names = []
 
         stage_2_generic_flow_writeback_scenarios = [
             ScenarioName.AUDIT_REJECTED,
             ScenarioName.AUDIT_SKIPPED,
         ]
+        stage_2_generic_flow_writeback_scenarios.extend(stage_2_ach_scenarios)
+        stage_2_generic_flow_writeback_scenarios.extend(stage_2_check_scenarios)
 
         assert_writeback_for_stage(
             test_dataset,
@@ -1276,89 +1260,17 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "PaymentRejectsStep",
             {
-                "accepted_payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                    ]
-                ),
-                "parsed_rows_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_SKIPPED,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                    ]
-                ),
+                "accepted_payment_count": len(stage_2_ach_scenarios) + len(stage_2_check_scenarios),
+                "parsed_rows_count": len([ScenarioName.AUDIT_REJECTED, ScenarioName.AUDIT_SKIPPED,])
+                + len(stage_2_ach_scenarios)
+                + len(stage_2_check_scenarios),
                 "payment_state_log_missing_count": 0,
                 "payment_state_log_not_in_audit_response_pending_count": 0,
                 "rejected_payment_count": len([ScenarioName.AUDIT_REJECTED]),
                 "skipped_payment_count": len([ScenarioName.AUDIT_SKIPPED]),
-                "state_logs_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_SKIPPED,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                    ]
-                ),
+                "state_logs_count": len([ScenarioName.AUDIT_REJECTED, ScenarioName.AUDIT_SKIPPED,])
+                + len(stage_2_ach_scenarios)
+                + len(stage_2_check_scenarios),
             },
         )
 
@@ -1366,60 +1278,9 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "PaymentMethodsSplitStep",
             {
-                "ach_payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                    ]
-                ),
-                "check_payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                    ]
-                ),
-                "payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                    ]
-                ),
+                "ach_payment_count": len(stage_2_ach_scenarios),
+                "check_payment_count": len(stage_2_check_scenarios),
+                "payment_count": len(stage_2_ach_scenarios) + len(stage_2_check_scenarios),
             },
         )
 
@@ -1427,77 +1288,13 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "TransactionFileCreatorStep",
             {
-                "ach_payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                    ]
-                ),
-                "ach_prenote_count": len(
-                    [
-                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
-                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                    ]
-                ),
-                "check_payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                    ]
-                ),
+                "ach_payment_count": len(stage_2_ach_scenarios),
+                "ach_prenote_count": len(stage_2_prenote_scenarios),
+                "check_payment_count": len(stage_2_check_scenarios),
                 "failed_to_add_transaction_count": 0,
-                "successful_add_to_transaction_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                    ]
-                ),
+                "successful_add_to_transaction_count": len(stage_2_prenote_scenarios)
+                + len(stage_2_ach_scenarios)
+                + len(stage_2_check_scenarios),
                 "transaction_files_sent_count": 3,  # EzCheck, NACHA, and positive pay files.
             },
         )
@@ -1506,38 +1303,8 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "FineosPeiWritebackStep",
             {
-                "check_payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                    ]
-                ),
-                "eft_payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                    ]
-                ),
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
-                "payment_writeback_two_items_count": 0,
                 "successful_writeback_record_count": len(stage_2_legacy_writeback_scenario_names)
                 + len(stage_2_generic_flow_writeback_scenarios),
                 "writeback_record_count": len(stage_2_legacy_writeback_scenario_names)
@@ -1549,6 +1316,8 @@ def test_e2e_pub_payments(
                 "pending_payment_audit_writeback_transaction_status_count": len(
                     [ScenarioName.AUDIT_SKIPPED]
                 ),
+                "paid_writeback_transaction_status_count": len(stage_2_ach_scenarios)
+                + len(stage_2_check_scenarios),
             },
         )
 
@@ -1594,7 +1363,7 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
                 ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
             ],
-            end_state=State.DELEGATED_PAYMENT_COMPLETE,
+            end_state=State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
             db_session=test_db_session,
         )
 
@@ -1616,7 +1385,7 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
             ],
-            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+            end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
             db_session=test_db_session,
         )
 
@@ -1628,7 +1397,7 @@ def test_e2e_pub_payments(
                 ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
             ],
-            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT,
+            end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
             db_session=test_db_session,
         )
 
@@ -1640,7 +1409,7 @@ def test_e2e_pub_payments(
                 ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                 ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
             ],
-            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK,
+            end_state=State.DELEGATED_PAYMENT_COMPLETE,
             db_session=test_db_session,
         )
 
@@ -1806,25 +1575,27 @@ def test_e2e_pub_payments(
         )
 
         # == Writeback
-        stage_3_legacy_writeback_scenario_names = [
-            ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-            ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-        ]
-
-        stage_3_generic_flow_writeback_scenarios = [
+        stage_3_errored_writeback_scenarios = [
             ScenarioName.PUB_ACH_FAMILY_RETURN,
             ScenarioName.PUB_ACH_MEDICAL_RETURN,
             ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
             ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
             ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
         ]
+        stage_3_successful_writeback_scenarios = [
+            ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
+            ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
+            ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
+            ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+            ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+        ]
+
+        stage_3_all_writeback_scenarios = (
+            stage_3_errored_writeback_scenarios + stage_3_successful_writeback_scenarios
+        )
 
         assert_writeback_for_stage(
-            test_dataset,
-            stage_3_legacy_writeback_scenario_names,
-            stage_3_generic_flow_writeback_scenarios,
-            test_db_session,
+            test_dataset, [], stage_3_all_writeback_scenarios, test_db_session,
         )
 
         # == Reports
@@ -1997,17 +1768,15 @@ def test_e2e_pub_payments(
             test_db_other_session,
             "FineosPeiWritebackStep",
             {
-                "check_payment_count": 0,
-                "eft_payment_count": 0,
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
-                "payment_writeback_two_items_count": len(stage_3_legacy_writeback_scenario_names),
-                "successful_writeback_record_count": len(stage_3_legacy_writeback_scenario_names)
-                + len(stage_3_generic_flow_writeback_scenarios),
-                "writeback_record_count": len(stage_3_legacy_writeback_scenario_names)
-                + len(stage_3_generic_flow_writeback_scenarios),
+                "successful_writeback_record_count": len(stage_3_all_writeback_scenarios),
+                "writeback_record_count": len(stage_3_all_writeback_scenarios),
                 "bank_processing_error_writeback_transaction_status_count": len(
-                    stage_3_generic_flow_writeback_scenarios
+                    stage_3_errored_writeback_scenarios
+                ),
+                "posted_writeback_transaction_status_count": len(
+                    stage_3_successful_writeback_scenarios
                 ),
             },
         )
@@ -2189,7 +1958,7 @@ def test_e2e_pub_payments_delayed_scenarios(
                 ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
                 ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
             ],
-            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+            end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
             db_session=local_test_db_session,
         )
 
@@ -2304,7 +2073,7 @@ def test_e2e_pub_payments_delayed_scenarios(
                 ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
                 ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
             ],
-            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+            end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
             db_session=local_test_db_session,
             check_additional_payment=True,
         )
@@ -2719,7 +2488,11 @@ def assert_writeback_for_stage(
 
     writeback_details = (
         db_session.query(FineosWritebackDetails)
-        .filter(FineosWritebackDetails.payment_id.in_(generic_flow_scenario_payment_ids))
+        .filter(
+            FineosWritebackDetails.payment_id.in_(generic_flow_scenario_payment_ids),
+            FineosWritebackDetails.created_at
+            >= payments_util.get_now(),  # get writeback items created during current time freeze
+        )
         .all()
     )
 
@@ -2774,7 +2547,8 @@ def get_writeback_transaction_status_for_payment(
     writeback_details = (
         db_session.query(FineosWritebackDetails)
         .filter(FineosWritebackDetails.payment_id == payment.payment_id)
-        .one_or_none()
+        .order_by(FineosWritebackDetails.created_at.desc())
+        .first()
     )
 
     assert writeback_details is not None
