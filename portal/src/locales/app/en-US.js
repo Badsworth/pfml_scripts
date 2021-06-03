@@ -1470,6 +1470,8 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsPreviousLeavesIntro: {
+    intro:
+      "<p>In this section, we need to know about some other leave you may have taken between January 1, 2021 and {{startDate}}:</p><ul><li>Any previous leave for the same reason that you are applying for paid leave now</li><li>Any previous leave for a different reason that also qualifies under PFML</li></ul>",
     sectionLabel: "Tell us about your previous leave.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
