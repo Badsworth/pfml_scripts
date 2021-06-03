@@ -55,6 +55,8 @@ const useAppLogic = () => {
   const featureFlags = useFlagsLogic({ appErrorsLogic });
 
   return {
+    // `_appErrorsLogic` should not be used except for testing
+    _appErrorsLogic: appErrorsLogic,
     appErrors,
     auth,
     benefitsApplications,
