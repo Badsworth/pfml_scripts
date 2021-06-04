@@ -35,7 +35,7 @@ exports[`LeaveReasonPage renders the page for caring leave and does not show rea
       Array [
         Object {
           "checked": false,
-          "label": "I can’t work due to an illness, injury, or pregnancy.",
+          "label": "I can’t work due to my illness, injury, or pregnancy.",
           "value": "Serious Health Condition - Employee",
         },
         Object {
@@ -183,7 +183,7 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
       Array [
         Object {
           "checked": true,
-          "label": "I can’t work due to an illness, injury, or pregnancy.",
+          "label": "I can’t work due to my illness, injury, or pregnancy.",
           "value": "Serious Health Condition - Employee",
         },
         Object {
