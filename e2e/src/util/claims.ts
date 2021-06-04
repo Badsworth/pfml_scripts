@@ -101,7 +101,7 @@ export function getLeavePeriod(
  * @Reminder to remove once we're past 21 July, 20201
  */
 export function getCaringLeaveStartEndDates(): [Date, Date] {
-  const minStartDate = max([parseISO("2021-07-08"), new Date()]);
+  const minStartDate = max([parseISO("2021-07-09"), new Date()]);
   const maxStartDate = addDays(new Date(), 60);
   const start = startOfWeek(faker.date.between(minStartDate, maxStartDate));
   const end = addWeeks(start, 2);

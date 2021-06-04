@@ -792,7 +792,7 @@ describe("ClaimPool", () => {
       const [start, end] = extractLeavePeriod(claim);
       const leave_period_weeks = differenceInCalendarWeeks(end, start);
       expect(isSunday(start)).toBe(true);
-      expect(isAfter(start, parseISO("2021-07-09"))).toBe(true);
+      expect(isAfter(start, parseISO("2021-07-01"))).toBe(true);
       expect(leave_period_weeks).toEqual(2);
     });
   });
