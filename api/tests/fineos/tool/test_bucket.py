@@ -157,10 +157,10 @@ def test_copy_dir_dated_folders(mock_s3_bucket, mock_fineos_s3_bucket):
 
     create_mock_s3_files(
         mock_fineos_s3_bucket,
-        "2021-01-02-01-02-03/2021-01-02-01-02-03-filename.txt",
-        "2021-01-02-01-02-03/2021-01-02-01-02-03-filename2.txt",
-        "2021-01-03-01-02-03-filename.txt",
-        "2021-01-03-01-02-03-filename2.txt",
+        "2021-01-02/2021-01-02_filename.txt",
+        "2021-01-02/2021-01-02_filename2.txt",
+        "2021-01-03_filename.txt",
+        "2021-01-03_filename2.txt",
     )
 
     args = parse_args(
@@ -179,10 +179,10 @@ def test_copy_dir_dated_folders(mock_s3_bucket, mock_fineos_s3_bucket):
     copied_items = set(map(lambda x: x.key, s3.Bucket(name=mock_s3_bucket).objects.all()))
 
     assert copied_items == {
-        "2021-01-02-01-02-03/2021-01-02-01-02-03-filename.txt",
-        "2021-01-02-01-02-03/2021-01-02-01-02-03-filename2.txt",
-        "2021-01-03-01-02-03/2021-01-03-01-02-03-filename.txt",
-        "2021-01-03-01-02-03/2021-01-03-01-02-03-filename2.txt",
+        "2021-01-02/2021-01-02_filename.txt",
+        "2021-01-02/2021-01-02_filename2.txt",
+        "2021-01-03/2021-01-03_filename.txt",
+        "2021-01-03/2021-01-03_filename2.txt",
     }
 
 
@@ -192,10 +192,10 @@ def test_copy_dir_file_prefixes(mock_s3_bucket, mock_fineos_s3_bucket):
 
     create_mock_s3_files(
         mock_fineos_s3_bucket,
-        "2021-01-02-01-02-03/2021-01-02-01-02-03-filename.txt",
-        "2021-01-02-01-02-03/2021-01-02-01-02-03-filename2.txt",
-        "2021-01-03-01-02-03-filename1.txt",
-        "2021-01-03-01-02-03-filename2.txt",
+        "2021-01-02/2021-01-02_filename.txt",
+        "2021-01-02/2021-01-02_filename2.txt",
+        "2021-01-03_filename1.txt",
+        "2021-01-03_filename2.txt",
     )
 
     args = parse_args(
@@ -214,7 +214,4 @@ def test_copy_dir_file_prefixes(mock_s3_bucket, mock_fineos_s3_bucket):
 
     copied_items = set(map(lambda x: x.key, s3.Bucket(name=mock_s3_bucket).objects.all()))
 
-    assert copied_items == {
-        "2021-01-02-01-02-03/2021-01-02-01-02-03-filename2.txt",
-        "2021-01-03-01-02-03-filename2.txt",
-    }
+    assert copied_items == {"2021-01-02/2021-01-02_filename2.txt", "2021-01-03_filename2.txt"}
