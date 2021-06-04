@@ -25,56 +25,6 @@ describe("Employer welcome", () => {
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
-  describe("when employerShowDashboard is false", () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowDashboard: false };
-      testHook(() => {
-        appLogic = useAppLogic();
-      });
-
-      wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-    });
-
-    it("does not show the navigation bar", () => {
-      expect(wrapper.find("EmployerNavigationTabs").exists()).toBe(false);
-    });
-
-    it("does not show the View Applications list item", () => {
-      const viewApplicationsTitle = wrapper.find('Heading[level="2"]').first();
-      expect(viewApplicationsTitle.dive().text()).not.toContain(
-        "View all applications"
-      );
-    });
-  });
-
-  describe("when employerShowDashboard is true", () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowDashboard: true };
-      testHook(() => {
-        appLogic = useAppLogic();
-      });
-
-      wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-    });
-
-    it("does not display the news banner", () => {
-      wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-
-      expect(wrapper.find("NewsBanner").exists()).toEqual(false);
-    });
-
-    it("shows the navigation bar", () => {
-      expect(wrapper.find("EmployerNavigationTabs").exists()).toBe(true);
-    });
-
-    it("shows the View Applications list item", () => {
-      const viewApplicationsTitle = wrapper.find('Heading[level="2"]').first();
-      expect(viewApplicationsTitle.dive().text()).toContain(
-        "View all applications"
-      );
-    });
-  });
-
   it("displays links to Organizations page when employerShowVerifications is true", () => {
     process.env.featureFlags = { employerShowVerifications: true };
     wrapper = shallow(<Welcome appLogic={appLogic} />).dive();

@@ -5,7 +5,6 @@ import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
 import Link from "next/link";
 import NewTag from "../../components/NewTag";
-import { NewsBanner } from "../../components/employers/NewsBanner";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
@@ -33,16 +32,13 @@ export const Welcome = ({ appLogic, user }) => {
   };
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
-  const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
 
   return (
     <React.Fragment>
-      {shouldShowDashboard && (
-        <div className="grid-row">
-          <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
-        </div>
-      )}
+      <div className="grid-row">
+        <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
+      </div>
       <div className="grid-row">
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersWelcome.welcomeTitle")}</Title>
@@ -63,26 +59,21 @@ export const Welcome = ({ appLogic, user }) => {
               </p>
             </Alert>
           )}
-          {!shouldShowDashboard && <NewsBanner />}
           <p>{t("pages.employersWelcome.welcomeBody")}</p>
 
-          {shouldShowDashboard && (
-            <React.Fragment>
-              <Heading level="2">
-                <Icon name="list" size={4} {...iconProps} />
-                {t("pages.employersWelcome.viewApplicationsTitle")}
-                <NewTag />
-              </Heading>
-              <p>
-                <Trans
-                  i18nKey="pages.employersWelcome.viewApplicationsBody"
-                  components={{
-                    "dashboard-link": <a href={routes.employers.dashboard} />,
-                  }}
-                />
-              </p>
-            </React.Fragment>
-          )}
+          <Heading level="2">
+            <Icon name="list" size={4} {...iconProps} />
+            {t("pages.employersWelcome.viewApplicationsTitle")}
+            <NewTag />
+          </Heading>
+          <p>
+            <Trans
+              i18nKey="pages.employersWelcome.viewApplicationsBody"
+              components={{
+                "dashboard-link": <a href={routes.employers.dashboard} />,
+              }}
+            />
+          </p>
 
           <Heading level="2">
             <IconMail {...iconProps} />

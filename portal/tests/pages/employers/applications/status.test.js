@@ -47,22 +47,12 @@ const DOCUMENTS = new DocumentCollection([
   }),
 ]);
 
-function assertStatusRow(wrapper, expectedValue) {
-  const label = wrapper.prop("label");
-  const child = wrapper.childAt(0).text();
-  expect([label, child]).toEqual(expectedValue);
-}
-
 describe("Status", () => {
   const query = { absence_id: "NTN-111-ABS-01" };
   let appLogic;
   let wrapper;
 
   beforeEach(() => {
-    process.env.featureFlags = {
-      employerShowDashboard: false,
-    };
-
     ({ appLogic, wrapper } = renderWithAppLogic(Status, {
       employerClaimAttrs: CLAIM,
       props: {
@@ -118,27 +108,24 @@ describe("Status", () => {
   });
 
   it("shows the application ID", () => {
-    const applicationIdRow = wrapper.find("StatusRow").first();
-    // added to satisfy "Test has no assertions" lint
+    const applicationIdRow = wrapper.find("StatusRow[data-test='id']");
+
     expect(applicationIdRow.exists()).toBe(true);
-    assertStatusRow(applicationIdRow, ["Application ID", "NTN-111-ABS-01"]);
+    expect(applicationIdRow).toMatchSnapshot();
   });
 
   it("shows the leave type", () => {
-    const leaveTypeRow = wrapper.find("StatusRow").at(1);
-    // added to satisfy "Test has no assertions" lint
+    const leaveTypeRow = wrapper.find("StatusRow[data-test='reason']");
+
     expect(leaveTypeRow.exists()).toBe(true);
-    assertStatusRow(leaveTypeRow, ["Leave type", "Medical leave"]);
+    expect(leaveTypeRow).toMatchSnapshot();
   });
 
   it("shows the leave duration", () => {
-    const leaveDurationRow = wrapper.find("StatusRow").at(2);
-    // added to satisfy "Test has no assertions" lint
+    const leaveDurationRow = wrapper.find("StatusRow[data-test='duration']");
+
     expect(leaveDurationRow.exists()).toBe(true);
-    assertStatusRow(leaveDurationRow, [
-      "Leave duration",
-      "1/1/2021 – 7/1/2021",
-    ]);
+    expect(leaveDurationRow).toMatchSnapshot();
   });
 
   it("shows the leave duration types", () => {
@@ -155,23 +142,22 @@ describe("Status", () => {
       },
     }));
 
-    const leaveDurationRows = wrapper.find("StatusRow");
-    // added to satisfy "Test has no assertions" lint
-    expect(leaveDurationRows.exists()).toBe(true);
+    const continuousRow = wrapper.find(
+      "StatusRow[data-test='duration-continuous']"
+    );
+    const intermittentRow = wrapper.find(
+      "StatusRow[data-test='duration-intermittent']"
+    );
+    const reducedScheduleRow = wrapper.find(
+      "StatusRow[data-test='duration-reduced']"
+    );
 
-    const continuousRow = leaveDurationRows.at(3);
-    const intermittentRow = leaveDurationRows.at(4);
-    const reducedScheduleRow = leaveDurationRows.at(5);
-
-    assertStatusRow(continuousRow, ["Continuous leave", "1/1/2021 – 6/1/2021"]);
-    assertStatusRow(intermittentRow, [
-      "Intermittent leave",
-      "2/1/2021 – 7/1/2021",
-    ]);
-    assertStatusRow(reducedScheduleRow, [
-      "Reduced leave schedule",
-      "2/1/2021 – 7/1/2021",
-    ]);
+    expect(continuousRow.exists()).toBe(true);
+    expect(continuousRow).toMatchSnapshot();
+    expect(intermittentRow.exists()).toBe(true);
+    expect(intermittentRow).toMatchSnapshot();
+    expect(reducedScheduleRow.exists()).toBe(true);
+    expect(reducedScheduleRow).toMatchSnapshot();
   });
 
   describe("when documents haven't been loaded yet", () => {
@@ -213,47 +199,11 @@ describe("Status", () => {
     });
   });
 
-  describe("when 'employerShowDashboard' is enabled", () => {
-    beforeEach(() => {
-      process.env.featureFlags = {
-        employerShowDashboard: true,
-      };
+  it("displays status", () => {
+    const row = wrapper.find("StatusRow[data-test='status']");
 
-      ({ wrapper } = renderWithAppLogic(Status, {
-        employerClaimAttrs: CLAIM,
-        props: {
-          query,
-        },
-      }));
-    });
-
-    it("displays status if status is a valid and expected value", () => {
-      const tagComponent = wrapper
-        .find("StatusRow")
-        .at(1)
-        .dive()
-        .find("AbsenceCaseStatusTag");
-
-      expect(tagComponent.exists()).toBe(true);
-      expect(tagComponent.prop("status")).toEqual("Approved");
-    });
-
-    it("displays -- if status is an invalid or unexpected value", () => {
-      ({ wrapper } = renderWithAppLogic(Status, {
-        employerClaimAttrs: PENDING_CLAIM,
-        props: {
-          query,
-        },
-      }));
-      const tagComponent = wrapper
-        .find("StatusRow")
-        .at(1)
-        .dive()
-        .find("AbsenceCaseStatusTag");
-
-      expect(tagComponent.exists()).toBe(true);
-      expect(tagComponent.dive().text()).toEqual("--");
-    });
+    expect(row.exists()).toBe(true);
+    expect(row).toMatchSnapshot();
   });
 
   describe("when there are documents", () => {

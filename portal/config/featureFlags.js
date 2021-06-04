@@ -35,10 +35,6 @@ const flagsConfig = {
     // TODO (EMPLOYER-913): Remove flag
     employerShowAddOrganization: false,
 
-    // When this flag is enabled, dashboard-related features (including adjudication status on Status page) are displayed
-    // TODO (EMPLOYER-1054): Remove flag
-    employerShowDashboard: false,
-
     // When this flag is enabled, file upload is visible on the Review page
     // TODO (EMPLOYER-665): Show file upload once the endpoint is available
     employerShowFileUpload: false,
@@ -84,7 +80,6 @@ const flagsConfig = {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowDashboard: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
@@ -92,7 +87,7 @@ const flagsConfig = {
     example: true,
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
-    employerShowDashboard: true,
+    employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
     pfmlTerriyay: true,
   },
@@ -100,7 +95,6 @@ const flagsConfig = {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowDashboard: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
@@ -108,33 +102,28 @@ const flagsConfig = {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowDashboard: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
   training: {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
-    employerShowDashboard: true,
   },
   performance: {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowDashboard: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
   uat: {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
-    employerShowDashboard: true,
   },
   prod: {
     claimantAuthThroughApi: true,
     employerAuthThroughApi: true,
     employerShowAddOrganization: true,
-    employerShowDashboard: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
     pfmlTerriyay: true,

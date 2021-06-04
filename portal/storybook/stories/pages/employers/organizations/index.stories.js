@@ -29,7 +29,7 @@ export const Default = (args) => {
     user_leave_administrators.push(
       new UserLeaveAdministrator({
         employer_dba: "Knitting Castle",
-        employer_fein: "**-***3443",
+        employer_fein: "11-0003443",
         employer_id: "dda930f-93jfk-iej08",
         has_verification_data: true,
         verified: true,
@@ -41,7 +41,7 @@ export const Default = (args) => {
     user_leave_administrators.push(
       new UserLeaveAdministrator({
         employer_dba: "Book Bindings 'R Us",
-        employer_fein: "**-***1823",
+        employer_fein: "22-0001823",
         employer_id: "dda903f-f093f-ff900",
         has_verification_data: true,
         verified: false,
@@ -53,7 +53,7 @@ export const Default = (args) => {
     user_leave_administrators.push(
       new UserLeaveAdministrator({
         employer_dba: "Tomato Touchdown",
-        employer_fein: "**-***7192",
+        employer_fein: "33-0007192",
         employer_id: "io19fj9-00jjf-uiw3r",
         has_verification_data: false,
         verified: false,
@@ -67,6 +67,9 @@ export const Default = (args) => {
   const appLogic = {
     users: {
       user,
+    },
+    portalFlow: {
+      getNextPageRoute: () => "",
     },
   };
   return <Index appLogic={appLogic} />;
