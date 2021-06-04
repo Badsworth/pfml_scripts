@@ -68,7 +68,7 @@ def update_claim_body():
             {
                 "leave_end_date": "2021-02-06",
                 "leave_start_date": "2021-01-25",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             }
         ],
         "leave_reason": "Pregnancy/Maternity",
@@ -645,7 +645,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2021-02-06",
                     "leave_start_date": "2021-01-25",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }
@@ -744,7 +744,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2021-01-05",
                     "leave_start_date": "2020-12-06",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }
@@ -767,7 +767,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2021-01-05",
                     "leave_start_date": "2021-02-06",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }
@@ -809,7 +809,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2021-02-06",
                     "leave_start_date": "2021-01-25",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }
@@ -877,87 +877,87 @@ class TestUpdateClaim:
             {
                 "leave_end_date": "2020-10-04",
                 "leave_start_date": "2020-10-01",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-10-06",
                 "leave_start_date": "2020-10-05",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-10-15",
                 "leave_start_date": "2020-10-10",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-10-20",
                 "leave_start_date": "2020-10-16",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-10-30",
                 "leave_start_date": "2020-10-25",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-11-05",
                 "leave_start_date": "2020-11-01",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-11-10",
                 "leave_start_date": "2020-11-08",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-11-15",
                 "leave_start_date": "2020-11-11",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-12-01",
                 "leave_start_date": "2020-11-20",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-01-05",
                 "leave_start_date": "2020-12-06",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-01-15",
                 "leave_start_date": "2021-01-10",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-01-20",
                 "leave_start_date": "2021-01-16",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-01-30",
                 "leave_start_date": "2021-01-25",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-02-05",
                 "leave_start_date": "2021-02-01",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-02-10",
                 "leave_start_date": "2021-02-06",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-02-15",
                 "leave_start_date": "2021-02-11",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-02-20",
                 "leave_start_date": "2021-02-16",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
         ]
 
@@ -1001,7 +1001,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2021-02-06",
                     "leave_start_date": "2021-01-25",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }
@@ -1134,7 +1134,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2020-02-06",
                     "leave_start_date": "2020-01-25",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }

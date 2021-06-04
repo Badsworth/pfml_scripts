@@ -2247,7 +2247,7 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
                     "is_for_current_employer": True,
                     "leave_start_date": "2021-01-01",
                     "leave_end_date": "2021-05-01",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2257,7 +2257,7 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
                     "is_for_current_employer": True,
                     "leave_start_date": "2021-01-01",
                     "leave_end_date": "2021-05-01",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2284,7 +2284,7 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
         assert previous_leave.get("is_for_current_employer") is True
         assert previous_leave.get("leave_start_date") == "2021-01-01"
         assert previous_leave.get("leave_end_date") == "2021-05-01"
-        assert previous_leave.get("leave_reason") == "Pregnancy / Maternity"
+        assert previous_leave.get("leave_reason") == "Pregnancy"
         assert previous_leave.get("worked_per_week_minutes") == 20
         assert previous_leave.get("leave_minutes") == 10
 
@@ -2394,7 +2394,7 @@ def test_application_patch_replace_existing_previous_leave(
                     "is_for_current_employer": False,
                     "leave_start_date": "2021-02-01",
                     "leave_end_date": "2021-06-01",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2404,7 +2404,7 @@ def test_application_patch_replace_existing_previous_leave(
                     "is_for_current_employer": False,
                     "leave_start_date": "2021-02-01",
                     "leave_end_date": "2021-06-01",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2430,7 +2430,7 @@ def test_application_patch_replace_existing_previous_leave(
         assert previous_leave.get("is_for_current_employer") is False
         assert previous_leave.get("leave_start_date") == "2021-02-01"
         assert previous_leave.get("leave_end_date") == "2021-06-01"
-        assert previous_leave.get("leave_reason") == "Pregnancy / Maternity"
+        assert previous_leave.get("leave_reason") == "Pregnancy"
         assert previous_leave.get("worked_per_week_minutes") == 20
         assert previous_leave.get("leave_minutes") == 10
 
@@ -2457,7 +2457,7 @@ def test_application_patch_previous_leave_exceed_limit(client, user, auth_token,
             "is_for_current_employer": False,
             "leave_start_date": "2021-02-01",
             "leave_end_date": "2021-06-01",
-            "leave_reason": "Pregnancy / Maternity",
+            "leave_reason": "Pregnancy",
             "worked_per_week_minutes": 20,
             "leave_minutes": 10,
         }

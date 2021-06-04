@@ -1602,6 +1602,9 @@ components:
     ClaimReviewResponse:
       type: object
       properties:
+        concurrent_leave:
+          $ref: "#/components/schemas/ConcurrentLeave"
+          nullable: true
         date_of_birth:
           $ref: "#/components/schemas/MaskedDate"
         employer_benefits:
@@ -1685,13 +1688,13 @@ components:
           type: string
           nullable: true
           enum:
-            - Pregnancy / Maternity
-            - Serious health condition
-            - Care for a family member
-            - Child bonding
-            - Military caregiver
-            - Military exigency family
+            - Pregnancy
+            - Caring for a family member with a serious health condition
+            - Bonding with my child after birth or placement
+            - Caring for a family member who serves in the armed forces
+            - Managing family affairs while a family member is on active duty in the armed forces
             - Unknown
+            - An illness or injury
         worked_per_week_minutes:
           type: integer
           nullable: true

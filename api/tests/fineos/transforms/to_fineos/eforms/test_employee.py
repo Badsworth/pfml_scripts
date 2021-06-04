@@ -346,10 +346,7 @@ def test_transform_previous_leaves():
         {"dateValue": leaves[0].leave_start_date.isoformat(), "name": "BeginDate1"},
         {"dateValue": leaves[0].leave_end_date.isoformat(), "name": "EndDate1"},
         {
-            "enumValue": {
-                "domainName": "QualifyingReasons",
-                "instanceValue": "Pregnancy / Maternity",
-            },
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
             "name": "QualifyingReason1",
         },
         {
@@ -363,10 +360,7 @@ def test_transform_previous_leaves():
         {"dateValue": leaves[1].leave_start_date.isoformat(), "name": "BeginDate2"},
         {"dateValue": leaves[1].leave_end_date.isoformat(), "name": "EndDate2"},
         {
-            "enumValue": {
-                "domainName": "QualifyingReasons",
-                "instanceValue": "Pregnancy / Maternity",
-            },
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
             "name": "QualifyingReason2",
         },
         {

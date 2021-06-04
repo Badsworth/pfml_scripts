@@ -1,5 +1,5 @@
 import abc
-import re
+from string import digits
 from typing import Any, Dict, List, Optional, Type, Union, cast
 
 from pydantic import BaseModel
@@ -41,10 +41,9 @@ class TransformEformAttributes:
         transformed: Dict[str, Dict] = {}
         attr_name: str = ""
         attr_number: str = ""
-        regex = re.compile("([a-zA-Z]+)([0-9]*)")
         for attribute in attributes:
-            matched = regex.match(attribute["name"])
-            attr_name, attr_number = matched.groups() if matched else ("", "")
+            attr_name = attribute["name"].rstrip(digits)
+            attr_number = attribute["name"][len(attr_name) :]
             if attr_name in cls.PROP_MAP:
                 attr_type = cls.PROP_MAP[attr_name]["type"]
                 transformed_name = cls.PROP_MAP[attr_name]["name"]
@@ -71,5 +70,4 @@ class TransformEformAttributes:
 
         # Sort to preserve FINEOS ordering
         transformed_sorted = sorted(transformed.items())
-
         return list(map(lambda item_tuple: item_tuple[1], transformed_sorted))

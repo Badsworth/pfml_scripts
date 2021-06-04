@@ -10,7 +10,7 @@ from massgov.pfml.api.models.common import (
 from massgov.pfml.fineos.models.group_client_api import EForm
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformOtherIncomeEform,
-    TransformOtherLeaveEform,
+    TransformPreviousLeaveFromOtherLeaveEform,
 )
 
 
@@ -80,46 +80,43 @@ def other_leave_eform():
             "eformType": "Other Leaves",
             "eformId": 11475,
             "eformAttributes": [
-                {"name": "SecondaryQualifyingReason", "stringValue": "Military caregiver"},
+                {"name": "V2SecondaryQualifyingReason", "stringValue": "Military caregiver"},
                 {
-                    "name": "QualifyingReason2",
+                    "name": "V2QualifyingReason2",
                     "enumValue": {
                         "domainName": "QualifyingReasons",
-                        "instanceValue": "Child bonding",
+                        "instanceValue": "Bonding with my child after birth or placement",
                     },
                 },
                 {
-                    "name": "QualifyingReason1",
-                    "enumValue": {
-                        "domainName": "QualifyingReasons",
-                        "instanceValue": "Pregnancy / Maternity",
-                    },
+                    "name": "V2QualifyingReason1",
+                    "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
                 },
-                {"name": "EndDate2", "dateValue": "2020-12-15"},
-                {"name": "EndDate1", "dateValue": "2020-09-22"},
-                {"name": "BeginDate2", "dateValue": "2020-09-23"},
+                {"name": "V2OtherLeavesPastLeaveEndDate2", "dateValue": "2020-12-15"},
+                {"name": "V2OtherLeavesPastLeaveEndDate1", "dateValue": "2020-09-22"},
+                {"name": "V2OtherLeavesPastLeaveStartDate2", "dateValue": "2020-09-23"},
                 {
-                    "name": "Applies1",
+                    "name": "V2Applies1",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
-                {"name": "BeginDate1", "dateValue": "2020-09-01"},
+                {"name": "V2OtherLeavesPastLeaveStartDate1", "dateValue": "2020-09-01"},
                 {
-                    "name": "Applies2",
+                    "name": "V2Applies2",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
                 {
-                    "name": "Applies3",
+                    "name": "V2Applies3",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "No"},
                 },
                 {
-                    "name": "LeaveFromEmployer2",
+                    "name": "V2LeaveFromEmployer2",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
                 {
-                    "name": "LeaveFromEmployer1",
+                    "name": "V2LeaveFromEmployer1",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
-                {"name": "SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
+                {"name": "V2SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
             ],
         }
     )
@@ -132,46 +129,46 @@ def other_leave_eform_bad_values():
             "eformType": "Other Leaves",
             "eformId": 11475,
             "eformAttributes": [
-                {"name": "SecondaryQualifyingReason", "stringValue": "Military caregiver"},
+                {"name": "V2SecondaryQualifyingReason", "stringValue": "Military caregiver"},
                 {
-                    "name": "QualifyingReason2",
+                    "name": "V2QualifyingReason2",
                     "enumValue": {
                         "domainName": "QualifyingReasons",
                         "instanceValue": "Please Select",
                     },
                 },
                 {
-                    "name": "QualifyingReason1",
+                    "name": "V2QualifyingReason1",
                     "enumValue": {
                         "domainName": "QualifyingReasons",
                         "instanceValue": "Please Select",
                     },
                 },
-                {"name": "EndDate2", "dateValue": "2020-12-15"},
-                {"name": "EndDate1", "dateValue": "2020-09-22"},
-                {"name": "BeginDate2", "dateValue": "2020-09-23"},
+                {"name": "V2OtherLeavesPastLeaveEndDate2", "dateValue": "2020-12-15"},
+                {"name": "V2OtherLeavesPastLeaveEndDate1", "dateValue": "2020-09-22"},
+                {"name": "V2OtherLeavesPastLeaveStartDate2", "dateValue": "2020-09-23"},
                 {
-                    "name": "Applies1",
+                    "name": "V2Applies1",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
-                {"name": "BeginDate1", "dateValue": "2020-09-01"},
+                {"name": "V2OtherLeavesPastLeaveStartDate1", "dateValue": "2020-09-01"},
                 {
-                    "name": "Applies2",
+                    "name": "V2Applies2",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
                 {
-                    "name": "Applies3",
+                    "name": "V2Applies3",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "No"},
                 },
                 {
-                    "name": "LeaveFromEmployer2",
+                    "name": "V2LeaveFromEmployer2",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
                 {
-                    "name": "LeaveFromEmployer1",
+                    "name": "V2LeaveFromEmployer1",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
-                {"name": "SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
+                {"name": "V2SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
             ],
         }
     )
@@ -210,23 +207,25 @@ class TestTransformEformBody:
         assert benefit_2["program_type"] == "Employer"
 
     def test_transform_other_leave_eform(self, other_leave_eform):
-        other_leaves_list = TransformOtherLeaveEform.from_fineos(other_leave_eform)
+        other_leaves_list = TransformPreviousLeaveFromOtherLeaveEform.from_fineos(other_leave_eform)
         assert len(other_leaves_list) == 2
 
         assert type(other_leaves_list[0]) is PreviousLeave
         other_leave_1 = other_leaves_list[0].dict()
         assert other_leave_1["leave_start_date"] == date(2020, 9, 1)
         assert other_leave_1["leave_end_date"] == date(2020, 9, 22)
-        assert other_leave_1["leave_reason"] == "Pregnancy / Maternity"
+        assert other_leave_1["leave_reason"] == "Pregnancy"
 
         assert type(other_leaves_list[1]) is PreviousLeave
         other_leave_2 = other_leaves_list[1].dict()
         assert other_leave_2["leave_start_date"] == date(2020, 9, 23)
         assert other_leave_2["leave_end_date"] == date(2020, 12, 15)
-        assert other_leave_2["leave_reason"] == "Child bonding"
+        assert other_leave_2["leave_reason"] == "Bonding with my child after birth or placement"
 
     def test_transform_eform_with_bad_values(self, other_leave_eform_bad_values):
-        other_leaves_list = TransformOtherLeaveEform.from_fineos(other_leave_eform_bad_values)
+        other_leaves_list = TransformPreviousLeaveFromOtherLeaveEform.from_fineos(
+            other_leave_eform_bad_values
+        )
         assert len(other_leaves_list) == 2
 
         assert type(other_leaves_list[0]) is PreviousLeave

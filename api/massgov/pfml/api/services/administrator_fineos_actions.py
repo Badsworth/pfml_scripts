@@ -14,12 +14,13 @@ from massgov.pfml.api.models.claims.common import (
     StandardLeavePeriod,
 )
 from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, DocumentResponse
-from massgov.pfml.api.models.common import EmployerBenefit
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
 from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
+    TransformConcurrentLeaveFromOtherLeaveEform,
     TransformOtherIncomeEform,
-    TransformOtherLeaveEform,
+    TransformPreviousLeaveFromOtherLeaveEform,
 )
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EFormBody
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
@@ -47,8 +48,7 @@ logger = logging.get_logger(__name__)
 EFORM_TYPES = {
     "OTHER_INCOME": "Other Income",
     "OTHER_INCOME_V2": "Other Income v2",
-    "OTHER_LEAVES": "Other Leaves",
-    "OTHER_LEAVES_V2": "Other Leaves v2",
+    "OTHER_LEAVES": "Other Leaves - current version",
 }
 
 
@@ -188,7 +188,8 @@ def get_claim_as_leave_admin(
     hours_worked_per_week = customer_occupations["elements"][0]["hrsWorkedPerWeek"]
     eform_summaries = fineos_client.get_eform_summary(fineos_user_id, absence_id)
     managed_reqs = fineos_client.get_managed_requirements(fineos_user_id, absence_id)
-    other_leaves: List[PreviousLeave] = []
+    previous_leaves: List[PreviousLeave] = []
+    concurrent_leave: Optional[ConcurrentLeave] = None
     other_incomes: List[EmployerBenefit] = []
     is_reviewable = False
     follow_up_date = None
@@ -212,15 +213,13 @@ def get_claim_as_leave_admin(
                 for other_income in TransformOtherIncomeEform.from_fineos(eform)
                 if other_income.program_type == "Employer"
             )
-        elif eform_summary["eformType"] == EFORM_TYPES["OTHER_LEAVES"]:
-            contains_version_one_eforms = True
-            eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
-            other_leaves = other_leaves + TransformOtherLeaveEform.from_fineos(eform)
         elif eform_summary["eformType"] == EFORM_TYPES["OTHER_INCOME_V2"]:
             contains_version_two_eforms = True
-        elif eform_summary["eformType"] == EFORM_TYPES["OTHER_LEAVES_V2"]:
+        elif eform_summary["eformType"] == EFORM_TYPES["OTHER_LEAVES"]:
             contains_version_two_eforms = True
-
+            eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
+            previous_leaves.extend(TransformPreviousLeaveFromOtherLeaveEform.from_fineos(eform))
+            concurrent_leave = TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(eform)
     if customer_info["address"] is not None:
         claimant_address = Address(
             line_1=customer_info["address"]["addressLine1"],
@@ -251,7 +250,8 @@ def get_claim_as_leave_admin(
         last_name=customer_info["lastName"],
         leave_details=leave_details,
         middle_name=customer_info["secondName"],
-        previous_leaves=other_leaves,
+        previous_leaves=previous_leaves,
+        concurrent_leave=concurrent_leave,
         residential_address=claimant_address,
         tax_identifier=customer_info["idNumber"] if customer_info["idNumber"] is not None else "",
         status=status,

@@ -22,9 +22,7 @@ def employer_benefit():
 @pytest.fixture
 def previous_leave():
     return PreviousLeave(
-        leave_start_date="2021-05-15",
-        leave_end_date="2021-06-01",
-        leave_reason="Pregnancy / Maternity",
+        leave_start_date="2021-05-15", leave_end_date="2021-06-01", leave_reason="Pregnancy",
     )
 
 
@@ -125,14 +123,12 @@ def test_employer_claim_review_eform_multiple_entries(employer_claim_review):
     ]
     previous_leaves = [
         PreviousLeave(
-            leave_start_date="2021-05-16",
-            leave_end_date="2021-06-02",
-            leave_reason="Pregnancy / Maternity",
+            leave_start_date="2021-05-16", leave_end_date="2021-06-02", leave_reason="Pregnancy",
         ),
         PreviousLeave(
             leave_start_date="2021-05-16",
             leave_end_date="2021-06-02",
-            leave_reason="Child bonding",
+            leave_reason="Bonding with my child after birth or placement",
         ),
     ]
     employer_claim_review.employer_benefits = employer_benefits

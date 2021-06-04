@@ -1,21 +1,38 @@
 import math
 import re
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import BaseModel
 
 from massgov.pfml.api.models.claims.common import PreviousLeave
-from massgov.pfml.api.models.common import EmployerBenefit
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
 from massgov.pfml.fineos.models.group_client_api import EForm
 from massgov.pfml.fineos.transforms.from_fineos.base import TransformEformAttributes
 
 
 class TransformOtherLeaveAttributes(TransformEformAttributes):
     PROP_MAP = {
-        "BeginDate": {"name": "leave_start_date", "type": "dateValue"},
-        "EndDate": {"name": "leave_end_date", "type": "dateValue"},
-        "QualifyingReason": {
+        "V2OtherLeavesPastLeaveStartDate": {"name": "leave_start_date", "type": "dateValue"},
+        "V2OtherLeavesPastLeaveEndDate": {"name": "leave_end_date", "type": "dateValue"},
+        "V2QualifyingReason": {
             "name": "leave_reason",
+            "type": "enumValue",
+            "embeddedProperty": "instanceValue",
+        },
+        "V2LeaveFromEmployer": {
+            "name": "is_for_current_employer",
+            "type": "enumValue",
+            "embeddedProperty": "instanceValue",
+        },
+    }
+
+
+class TransformConcurrentLeaveAttributes(TransformEformAttributes):
+    PROP_MAP = {
+        "V2AccruedStartDate": {"name": "leave_start_date", "type": "dateValue"},
+        "V2AccruedEndDate": {"name": "leave_end_date", "type": "dateValue"},
+        "V2AccruedPLEmployer": {
+            "name": "is_for_current_employer",
             "type": "enumValue",
             "embeddedProperty": "instanceValue",
         },
@@ -37,12 +54,26 @@ class TransformOtherIncomeAttributes(TransformEformAttributes):
     }
 
 
-class TransformOtherLeaveEform(BaseModel):
+class TransformPreviousLeaveFromOtherLeaveEform(BaseModel):
     @classmethod
     def from_fineos(cls, api_model: EForm) -> List[PreviousLeave]:
         eform = api_model.dict()
-        leaves = TransformOtherLeaveAttributes.list_to_props(eform["eformAttributes"])
-        return list(map(lambda leave: PreviousLeave.parse_obj(leave), leaves))
+        previous_leaves = TransformOtherLeaveAttributes.list_to_props(eform["eformAttributes"])
+        return [PreviousLeave.parse_obj(leave) for leave in previous_leaves]
+
+
+class TransformConcurrentLeaveFromOtherLeaveEform(BaseModel):
+    @classmethod
+    def from_fineos(cls, api_model: EForm) -> Optional[ConcurrentLeave]:
+        eform = api_model.dict()
+        concurrent_leaves = TransformConcurrentLeaveAttributes.list_to_props(
+            eform["eformAttributes"]
+        )
+        # The eform should only ever have 0 or 1 concurrent leave
+        concurrent_leave = (
+            ConcurrentLeave.parse_obj(concurrent_leaves[0]) if len(concurrent_leaves) > 0 else None
+        )
+        return concurrent_leave
 
 
 class TransformOtherIncomeEform(BaseModel):
