@@ -331,13 +331,11 @@ export function selectClaimType(application: ApplicationRequestBody): void {
   if (!reason) {
     throw new Error("Claim is missing reason or reason qualifier");
   }
-  const reasonMap: Record<typeof reason, string> = {
-    "Serious Health Condition - Employee":
-      "I can’t work due to an illness, injury, or pregnancy.",
+  const reasonMap: Record<typeof reason, string | RegExp> = {
+    "Serious Health Condition - Employee": /I can’t work due to (an|my) illness, injury, or pregnancy./,
     "Child Bonding":
       "I need to bond with my child after birth, adoption, or foster placement.",
-    "Pregnancy/Maternity":
-      "I can’t work due to an illness, injury, or pregnancy.",
+    "Pregnancy/Maternity": /I can’t work due to (an|my) illness, injury, or pregnancy./,
     "Care for a Family Member": "I need to care for my family member",
   };
   cy.contains(reasonMap[reason]).click();
