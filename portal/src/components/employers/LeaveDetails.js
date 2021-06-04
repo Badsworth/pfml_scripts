@@ -164,7 +164,11 @@ const LeaveDetails = (props) => {
                 i18nKey="components.employersLeaveDetails.familyMemberRelationshipHint"
                 components={{
                   "eligible-relationship-link": (
-                    <a href={routes.external.caregiverRelationship} />
+                    <a
+                      target="_blank"
+                      rel="noopener"
+                      href={routes.external.massgov.caregiverRelationship}
+                    />
                   ),
                 }}
               />
