@@ -927,7 +927,7 @@ def test_generate_reduction_payment_report_information_with_payments(
 
     # We hard-code this report's information for simplicity.
     expected_report = {
-        "CASE_ID": dua_reduction_payment.fineos_customer_number,
+        "CUSTOMER_ID": dua_reduction_payment.fineos_customer_number,
         "PAYMENT_DATE": dua_reduction_payment.payment_date.strftime(
             dua.Constants.PAYMENT_REPORT_TIME_FORMAT
         ),

@@ -70,6 +70,10 @@ class Constants:
     # cases over time), so the field has been repurposed to hold the customer
     # number to avoid DUA needing to change anything on their end.
     CASE_ID_FIELD = "CASE_ID"
+
+    # We changed the primary key from being by absence case to being by customer
+    # number. This is the first column in the DUA report.
+    CUSTOMER_ID_FIELD = "CUSTOMER_ID"
     EMPR_FEIN_FIELD = "EMPR_FEIN"
     WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD = "PAYMENT_DATE"
     RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD = "BENEFIT_WEEK_START_DATE"
@@ -97,7 +101,7 @@ class Constants:
     ]
 
     DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
-        CASE_ID_FIELD: "fineos_customer_number",
+        CUSTOMER_ID_FIELD: "fineos_customer_number",
         WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: "payment_date",
         RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD: "request_week_begin_date",
         WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD: "gross_payment_amount_cents",
@@ -447,7 +451,7 @@ def _format_reduction_payments_for_report(
 
     for payment, claim in reduction_payments:
         info = {
-            Constants.CASE_ID_FIELD: payment.fineos_customer_number,
+            Constants.CUSTOMER_ID_FIELD: payment.fineos_customer_number,
             Constants.WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: _format_date_for_report(
                 payment.payment_date
             ),
