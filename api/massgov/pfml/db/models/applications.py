@@ -16,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import backref, deferred, relationship
+from sqlalchemy.orm import backref, relationship
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
@@ -335,7 +335,6 @@ class Application(Base):
     caring_leave_metadata_id = Column(
         UUID(as_uuid=True), ForeignKey("caring_leave_metadata.caring_leave_metadata_id")
     )
-    has_previous_leaves = deferred(Column(Boolean().evaluates_none()))
     has_previous_leaves_same_reason = Column(Boolean)
     has_previous_leaves_other_reason = Column(Boolean)
     has_concurrent_leave = Column(Boolean)
