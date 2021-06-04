@@ -3,6 +3,7 @@
 #
 
 import argparse
+import re
 import sys
 import tempfile
 
@@ -235,9 +236,17 @@ def copy_dir(
         # copy select files that don’t already exist in the destination
         if file_name_contains_prefix(file_prefixes, file) and (file not in dest_files):
             source_file = source + file
+
             if dated_folders and "/" not in file:
-                date = file.split("_")[0]
-                dest_file = f"{dest}{date}/{file}"
+                match = re.match("(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})", file)
+
+                if match:
+                    date = match.group()
+                    dest_file = f"{dest}/{date}/{file}"
+                else:
+                    logger.warn("Extract found without a date: %s. Copying normally." % file)
+                    dest_file = dest + file
             else:
                 dest_file = dest + file
+
             bucket_cp(source_file, dest_file, s3_source, s3_dest)
