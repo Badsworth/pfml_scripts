@@ -238,7 +238,7 @@ def copy_dir(
             source_file = source + file
 
             if dated_folders and "/" not in file:
-                match = re.match("(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})", file)
+                match = re.match(r"(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})", file)
 
                 if match:
                     date = match.group()
