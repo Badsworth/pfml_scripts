@@ -1373,6 +1373,74 @@ class TestUpdateClaim:
         )
         assert capture[1][0] == "create_eform"
 
+    def test_long_comment_is_valid(
+        self,
+        client,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+        update_claim_body,
+    ):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        update_claim_body["comment"] = "a" * 9999
+
+        response = client.patch(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=update_claim_body,
+        )
+
+        assert response.status_code == 200
+
+    def test_too_long_comment_is_invalid(
+        self,
+        client,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+        update_claim_body,
+    ):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        update_claim_body["comment"] = "a" * 10000
+
+        response = client.patch(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=update_claim_body,
+        )
+
+        assert response.status_code == 400
+        assert response.get_json().get("message") == "Request Validation Error"
+
+        errors = response.get_json().get("errors")
+        error = next(
+            (e for e in errors if e.get("field") == "comment" and e.get("type") == "maxLength"),
+            None,
+        )
+        assert error is not None
+
     # Inner class for testing Caring Leave scenarios
     # TODO: add tests for the logging data: https://lwd.atlassian.net/browse/EMPLOYER-1389
     class TestCaringLeave:
@@ -1493,6 +1561,35 @@ class TestUpdateClaim:
 
             eform = params["eform"]
             assert eform.eformType == "Employer Response to Leave Request"
+
+        def test_long_relationship_inaccurate_reason_is_valid(
+            self, with_user_leave_admin_link, perform_update, update_caring_leave_claim_body,
+        ):
+            update_caring_leave_claim_body["relationship_inaccurate_reason"] = "a" * 9999
+            response = perform_update(update_caring_leave_claim_body)
+
+            assert response.status_code == 200
+
+        def test_too_long_relationship_inaccurate_reason_is_invalid(
+            self, with_user_leave_admin_link, perform_update, update_caring_leave_claim_body,
+        ):
+            update_caring_leave_claim_body["relationship_inaccurate_reason"] = "a" * 10000
+            response = perform_update(update_caring_leave_claim_body)
+
+            assert response.status_code == 400
+            assert response.get_json().get("message") == "Request Validation Error"
+
+            errors = response.get_json().get("errors")
+            error = next(
+                (
+                    e
+                    for e in errors
+                    if e.get("field") == "relationship_inaccurate_reason"
+                    and e.get("type") == "maxLength"
+                ),
+                None,
+            )
+            assert error is not None
 
 
 def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> bool:

@@ -1569,6 +1569,7 @@ components:
             - "No"
         comment:
           type: string
+          maxLength: 9999
         leave_reason:
           type: string
           nullable: true
@@ -1583,6 +1584,7 @@ components:
         relationship_inaccurate_reason:
           type: string
           nullable: true
+          maxLength: 9999
           example: Their reported info doesn't match my records
       additionalProperties: false
       required:
