@@ -426,7 +426,15 @@ def test_users_convert_employer_bad_fein(client, user, auth_token):
         headers={"Authorization": f"Bearer {auth_token}"},
         json=body,
     )
-    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400)
+    errors = response.get_json().get("errors")
+
+    assert {
+        "field": "employer_fein",
+        "message": "Invalid FEIN",
+        "rule": "",
+        "type": "require_employer",
+    } in errors
 
 
 def test_users_unauthorized_convert_employer(
@@ -444,7 +452,6 @@ def test_users_unauthorized_convert_employer(
 
     tests.api.validate_error_response(response, 403)
 
-    # test_db_session.refresh(user_2)
     assert len(user_2.user_leave_administrators) == 0
 
 
@@ -461,7 +468,6 @@ def test_users_unauthorized_patch(client, user, auth_token, test_db_session):
 
     tests.api.validate_error_response(response, 403)
 
-    # test_db_session.refresh(user_2)
     assert user_2.consented_to_data_sharing is False
 
 
