@@ -32,6 +32,15 @@ function hasMaintenancePage(wrapper) {
 }
 
 describe("PageWrapper", () => {
+  const maintenance = {
+    start: null,
+    end: null,
+    enabled: false,
+    options: {
+      page_routes: []
+    }
+  }
+
   beforeEach(() => {
     // Enable rendering of the site
     process.env.featureFlags = {
@@ -44,7 +53,7 @@ describe("PageWrapper", () => {
       pfmlTerriyay: false,
     };
 
-    const wrapper = render();
+    const wrapper = render({ maintenance });
 
     expect(wrapper).toMatchInlineSnapshot(`
         <code>
@@ -54,7 +63,7 @@ describe("PageWrapper", () => {
   });
 
   it("sets description meta tag", () => {
-    const wrapper = render();
+    const wrapper = render({ maintenance });
 
     expect(wrapper.find("meta")).toMatchSnapshot();
   });
@@ -65,7 +74,7 @@ describe("PageWrapper", () => {
       appLogic = useAppLogic();
     });
 
-    const wrapper = render({ appLogic });
+    const wrapper = render({ appLogic, maintenance });
 
     expect(wrapper.find("Header").exists()).toBe(true);
     expect(wrapper.find("Header").prop("user")).toBe(appLogic.users.user);
@@ -73,13 +82,13 @@ describe("PageWrapper", () => {
   });
 
   it("renders Spinner when isLoading is true", () => {
-    const wrapper = render({ isLoading: true });
+    const wrapper = render({ isLoading: true, maintenance });
 
     expect(wrapper.find("#page")).toMatchSnapshot();
   });
 
   it("renders the children as the page's body", () => {
-    const wrapper = render({ children: <p>Page content</p> });
+    const wrapper = render({ children: <p>Page content</p>, maintenance });
 
     expect(wrapper.find("#page")).toMatchInlineSnapshot(`
       <section
@@ -95,44 +104,77 @@ describe("PageWrapper", () => {
   it("renders MaintenanceTakeover when maintenancePageRoutes includes the current page's route and no start/end time is set", () => {
     mockRouter.pathname = "/login";
 
-    const wrapper = render({ maintenancePageRoutes: ["/login"] });
+    const wrapper = render({
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/login"]
+        }
+      }
+    });
 
     expect(hasMaintenancePage(wrapper)).toBe(true);
   });
 
   it("renders MaintenanceTakeover when maintenancePageRoutes includes a wildcard matching the current page's route", () => {
     let wrapper;
-    const maintenancePageRoutes = ["/employers/*"];
 
     // Doesn't render for a page that doesn't match the wildcard
     mockRouter.pathname = "/foo";
-    wrapper = render({ maintenancePageRoutes });
+    wrapper = render({
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/employers/*"]
+        }
+      }
+    });
     expect(hasMaintenancePage(wrapper)).toBe(false);
 
     // Matches base pathname
     mockRouter.pathname = "/employers/";
-    wrapper = render({ maintenancePageRoutes });
+    wrapper = render({
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/employers/*"]
+        }
+      }
+    });
     expect(hasMaintenancePage(wrapper)).toBe(true);
 
     // Matches sub-pages
     mockRouter.pathname = "/employers/create-account";
-    wrapper = render({ maintenancePageRoutes });
+    wrapper = render({ maintenance: { ...maintenance, enabled: true, options: { page_routes: ["/employers/*"] }}});
     expect(hasMaintenancePage(wrapper)).toBe(true);
   });
 
   it("renders MaintenanceTakeover with localized end time when maintenanceEnd is set", () => {
     mockRouter.pathname = "/";
-    const maintenancePageRoutes = ["/*"];
     // Ends in an hour
     const maintenanceEndDateTime = DateTime.local().plus({ hours: 1 });
 
     const wrapperWithoutEndTime = render({
-      maintenancePageRoutes,
-      maintenanceEnd: null,
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/*"]
+        }
+      }
     });
     const wrapperWithEndTime = render({
-      maintenancePageRoutes,
-      maintenanceEnd: maintenanceEndDateTime.toISO(),
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/*"]
+        },
+        end: maintenanceEndDateTime
+      }
     });
 
     expect(
@@ -152,21 +194,33 @@ describe("PageWrapper", () => {
 
   it("renders MaintenanceTakeover when current time is between maintenanceStart and maintenanceEnd", () => {
     mockRouter.pathname = "/";
-    const maintenancePageRoutes = ["/*"];
 
     const wrapperInMaintenanceWindow = render({
-      maintenancePageRoutes,
-      // Started an hour ago
-      maintenanceStart: DateTime.local().minus({ hours: 1 }).toISO(),
-      // Ends in an hour
-      maintenanceEnd: DateTime.local().plus({ hours: 1 }).toISO(),
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/*"]
+        },
+        // Started an hour ago
+        start: DateTime.local().minus({ hours: 1 }).toISO(),
+        // Ends in an hour
+        end: DateTime.local().plus({ hours: 1 }).toISO()
+      }
     });
+
     const wrapperNotInMaintenanceWindow = render({
-      maintenancePageRoutes,
-      // Started 2 hours ago
-      maintenanceStart: DateTime.local().minus({ hours: 1 }).toISO(),
-      // Ended an hour ago
-      maintenanceEnd: DateTime.local().minus({ hours: 1 }).toISO(),
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/*"]
+        },
+        // Started 2 hours ago
+        start: DateTime.local().minus({ hours: 1 }).toISO(),
+        // Ended an hour ago
+        end: DateTime.local().minus({ hours: 1 }).toISO(),
+      }
     });
 
     expect(hasMaintenancePage(wrapperInMaintenanceWindow)).toBe(true);
@@ -175,17 +229,29 @@ describe("PageWrapper", () => {
 
   it("renders MaintenanceTakeover when current time is after maintenanceStart and maintenanceEnd is not set", () => {
     mockRouter.pathname = "/";
-    const maintenancePageRoutes = ["/*"];
 
     const wrapperInMaintenanceWindow = render({
-      maintenancePageRoutes,
-      // Started an hour ago
-      maintenanceStart: DateTime.local().minus({ hours: 1 }).toISO(),
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/*"]
+        },
+        // Started an hour ago
+        start: DateTime.local().minus({ hours: 1 }).toISO(),
+      }
     });
+
     const wrapperNotInMaintenanceWindow = render({
-      maintenancePageRoutes,
-      // Starts in one hour
-      maintenanceStart: DateTime.local().plus({ hours: 1 }).toISO(),
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/*"]
+        },
+        // Starts in one hour
+        start: DateTime.local().plus({ hours: 1 }).toISO(),
+      }
     });
 
     expect(hasMaintenancePage(wrapperInMaintenanceWindow)).toBe(true);
@@ -194,17 +260,29 @@ describe("PageWrapper", () => {
 
   it("renders MaintenanceTakeover when current time is before maintenanceEnd and maintenanceStart is not set", () => {
     mockRouter.pathname = "/";
-    const maintenancePageRoutes = ["/*"];
 
     const wrapperInMaintenanceWindow = render({
-      maintenancePageRoutes,
-      // Ends in an hour
-      maintenanceEnd: DateTime.local().plus({ hours: 1 }).toISO(),
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/*"]
+        },
+        // Ends in an hour
+        end: DateTime.local().plus({ hours: 1 }).toISO(),
+      }
     });
+
     const wrapperNotInMaintenanceWindow = render({
-      maintenancePageRoutes,
-      // Ended an hour ago
-      maintenanceEnd: DateTime.local().minus({ hours: 1 }).toISO(),
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/*"]
+        },
+        // Ended an hour ago
+        end: DateTime.local().minus({ hours: 1 }).toISO(),
+      }
     });
 
     expect(hasMaintenancePage(wrapperInMaintenanceWindow)).toBe(true);
@@ -218,7 +296,15 @@ describe("PageWrapper", () => {
     };
     mockRouter.pathname = "/login";
 
-    const wrapper = render({ maintenancePageRoutes: ["/login"] });
+    const wrapper = render({
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/login"]
+        }
+      }
+    });
 
     expect(hasMaintenancePage(wrapper)).toBe(false);
   });
@@ -229,7 +315,7 @@ describe("PageWrapper", () => {
       appLogic = useAppLogic();
     });
 
-    const wrapper = render({ appLogic });
+    const wrapper = render({ appLogic, maintenance });
 
     expect(wrapper.find("ErrorsSummary").prop("errors")).toBe(
       appLogic.appErrors

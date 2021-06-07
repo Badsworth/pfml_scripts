@@ -128,7 +128,7 @@ const PageWrapper = (props) => {
         <Spinner aria-valuetext={t("components.spinner.label")} />
       </section>
     );
-  } else if (showMaintenancePageBody && maintenance.enabled) {
+  } else if (showMaintenancePageBody && maintenance.enabled && !isFeatureEnabled("noMaintenance")) {
     pageBody = (
       <section id="page" data-test="maintenance page">
         <MaintenanceTakeover

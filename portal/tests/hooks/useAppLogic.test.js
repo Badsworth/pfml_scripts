@@ -20,7 +20,8 @@ describe("useAppLogic", () => {
       portalFlow,
       rest,
       setAppErrors,
-      users;
+      users,
+      featureFlags;
 
     testHook(() => {
       ({
@@ -37,6 +38,7 @@ describe("useAppLogic", () => {
         otherLeaves,
         setAppErrors,
         users,
+        featureFlags,
         ...rest
       } = useAppLogic());
     });
@@ -72,6 +74,9 @@ describe("useAppLogic", () => {
     expect(otherLeaves.removePreviousLeave).toBeInstanceOf(Function);
     expect(users.user).toBeUndefined();
     expect(users).toEqual(expect.anything());
+    expect(featureFlags).toBeInstanceOf(Object);
+    expect(featureFlags.flags).toBeInstanceOf(Array);
+    expect(featureFlags.loadFeatureFlags).toBeInstanceOf(Function);
     // there should be no other properties;
     expect(rest).toEqual({});
   });

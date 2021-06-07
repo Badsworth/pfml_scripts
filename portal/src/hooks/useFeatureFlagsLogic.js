@@ -1,5 +1,5 @@
 import AdminApi from "../api/AdminApi";
-import FlagModel from "../models/AdminFlag";
+import Flag from "../models/Flag";
 import { useState } from "react";
 
 /**
@@ -8,8 +8,8 @@ import { useState } from "react";
  * @returns {object} { flags: Object, loadFeatureFlags: Function }
  */
 const useFlagsLogic = ({ appErrorsLogic }) => {
-    const flagModel = new FlagModel();
-    const initialState = [{...flagModel}];
+    const flagModel = new Flag();
+    const initialState = [flagModel];
     
     const [flags, setFlags] = useState(initialState);
     const adminApi = new AdminApi();

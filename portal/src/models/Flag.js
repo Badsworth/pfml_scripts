@@ -1,10 +1,8 @@
 import BaseModel from "./BaseModel";
 
-class FlagModel extends BaseModel {
+class Flag extends BaseModel {
   get defaults() {
     return {
-      flag_id: null,
-      name: null,
       enabled: false,
       options: {},
       start: null,
@@ -13,4 +11,4 @@ class FlagModel extends BaseModel {
   }
 }
 
-export default FlagModel;
+export default Flag;

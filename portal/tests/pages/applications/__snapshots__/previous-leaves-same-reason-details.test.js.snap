@@ -9,7 +9,7 @@ exports[`PreviousLeavesSameReasonDetails when the user has no previous leaves re
     level="2"
     size="1"
   >
-    Tell us about your previous time off
+    Tell us about your previous leave
   </Heading>
   <RepeatableFieldset
     addButtonLabel="Add another previous leave"
@@ -47,7 +47,7 @@ exports[`PreviousLeavesSameReasonDetails when user's claim has previous leaves r
     level="2"
     size="1"
   >
-    Tell us about your previous time off
+    Tell us about your previous leave
   </Heading>
   <RepeatableFieldset
     addButtonLabel="Add another previous leave"
