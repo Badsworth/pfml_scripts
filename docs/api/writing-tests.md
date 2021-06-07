@@ -2,7 +2,7 @@
 
 [pytest](https://docs.pytest.org) is our test runner, which is simple but
 powerful. If you are new to pytest, reading up on how [fixtures
-work](https://docs.pytest.org/en/latest/fixture.html) in particular might be
+work](https://docs.pytest.org/en/latest/explanation/fixtures.html) in particular might be
 helpful as it's one area that is a bit different than is common with other
 runners (and languages).
 
@@ -21,7 +21,7 @@ For this project specifically:
   - `massgov/pfml/util/aws/` under `test/util/aws/`.
 - Create `__init__.py` files for each directory. This helps [avoid name
   conflicts when pytest is resolving
-  tests](https://docs.pytest.org/en/latest/goodpractices.html#tests-outside-application-code).
+  tests](https://docs.pytest.org/en/stable/goodpractices.html#tests-outside-application-code).
 - Test files should begin with the `test_` prefix, followed by the module the
   tests cover, for example, a file `foo.py` will have tests in a file
   `test_foo.py`.
@@ -54,7 +54,7 @@ below them in the directory hierarchy, for example, the `tests/db/conftest.py`
 file is only loaded for tests under `tests/db/`.
 
 More info:
-https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-functions
+https://docs.pytest.org/en/latest/how-to/fixtures.html?highlight=conftest#scope-sharing-fixtures-across-classes-modules-packages-or-session
 
 ## Helpers
 
