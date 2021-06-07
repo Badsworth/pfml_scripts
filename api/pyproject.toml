@@ -122,6 +122,7 @@ pub-payments-create-pub-files = "massgov.pfml.delegated_payments.task.process_pu
 pub-payments-process-pub-returns = "massgov.pfml.delegated_payments.task.process_pub_responses:main"
 ach-reader = "massgov.pfml.delegated_payments.util.ach.ach_tool:ach_reader"
 check-reader = "massgov.pfml.delegated_payments.pub.check_tool:check_reader"
+fineos-api = "massgov.pfml.fineos.fineos_api:handler"
 fineos-payments-mock-generate = "massgov.pfml.payments.mock.fineos_extract_generator:main"
 fineos-test-vendor-export-generate = "massgov.pfml.payments.mock.fineos_extract_generator:create_test_vendor_export"
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
