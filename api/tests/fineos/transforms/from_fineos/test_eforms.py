@@ -9,13 +9,14 @@ from massgov.pfml.api.models.common import (
 )
 from massgov.pfml.fineos.models.group_client_api import EForm
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
+    TransformEmployerBenefitsFromOtherIncomeEform,
     TransformOtherIncomeEform,
     TransformPreviousLeaveFromOtherLeaveEform,
 )
 
 
 @pytest.fixture
-def other_income_eform():
+def deprecated_other_income_eform():
     return EForm.parse_obj(
         {
             "eformType": "Other Income",
@@ -69,6 +70,114 @@ def other_income_eform():
                     "enumValue": {"domainName": "Program Type", "instanceValue": "Employer"},
                 },
             ],
+        }
+    )
+
+
+@pytest.fixture
+def other_income_eform():
+    return EForm.parse_obj(
+        {
+            "eformType": "Other Income - current version",
+            "eformAttributes": [
+                {
+                    "name": "V2OtherIncomeNonEmployerBenefitWRT1",
+                    "enumValue": {
+                        "domainName": "WageReplacementType2",
+                        "instanceValue": "Social Security Disability Insurance",
+                    },
+                },
+                {"name": "V2Spacer1", "stringValue": ""},
+                {
+                    "name": "V2ReceiveWageReplacement7",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+                },
+                {"name": "Spacer11", "stringValue": ""},
+                {
+                    "name": "V2ReceiveWageReplacement8",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+                },
+                {
+                    "name": "V2SalaryContinuation1",
+                    "enumValue": {
+                        "domainName": "PleaseSelectYesNo",
+                        "instanceValue": "Please Select",
+                    },
+                },
+                {"name": "V2Spacer3", "stringValue": ""},
+                {"name": "V2Spacer2", "stringValue": ""},
+                {
+                    "name": "V2SalaryContinuation2",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+                },
+                {"name": "V2Spacer5", "stringValue": ""},
+                {
+                    "name": "V2ReceiveWageReplacement3",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+                },
+                {"name": "V2Spacer4", "stringValue": ""},
+                {"name": "V2Spacer7", "stringValue": ""},
+                {"name": "V2Spacer6", "stringValue": ""},
+                {"name": "V2Header1", "stringValue": "Employer-Sponsored Benefits"},
+                {"name": "V2Spacer9", "stringValue": ""},
+                {"name": "V2Header2", "stringValue": "Income from Other Sources"},
+                {"name": "V2Spacer8", "stringValue": ""},
+                {
+                    "name": "V2ReceiveWageReplacement1",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+                },
+                {
+                    "name": "V2ReceiveWageReplacement2",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+                },
+                {
+                    "name": "V2Examples7",
+                    "stringValue": "Workers Compensation, Unemployment Insurance, Social Security Disability Insurance, Disability benefits under a governmental retirement plan such as STRS or PERS, Jones Act benefits, Railroad Retirement benefit, Earnings from another employer or through self-employment",
+                },
+                {"name": "V2OtherIncomeNonEmployerBenefitStartDate1", "dateValue": "2021-05-04"},
+                {
+                    "name": "V2WRT1",
+                    "enumValue": {
+                        "domainName": "WageReplacementType",
+                        "instanceValue": "Permanent disability insurance",
+                    },
+                },
+                {
+                    "name": "V2WRT2",
+                    "enumValue": {
+                        "domainName": "WageReplacementType",
+                        "instanceValue": "Temporary disability insurance (Long- or Short-term)",
+                    },
+                },
+                {
+                    "name": "V2Frequency2",
+                    "enumValue": {
+                        "domainName": "FrequencyEforms",
+                        "instanceValue": "One Time / Lump Sum",
+                    },
+                },
+                {
+                    "name": "V2Frequency1",
+                    "enumValue": {"domainName": "FrequencyEforms", "instanceValue": "Per Day"},
+                },
+                {"name": "V2OtherIncomeNonEmployerBenefitEndDate1", "dateValue": "2021-05-29"},
+                {"name": "V2StartDate1", "dateValue": "2021-05-11"},
+                {"name": "V2EndDate1", "dateValue": "2021-05-29"},
+                {"name": "V2Amount1", "decimalValue": 40},
+                {"name": "V2EndDate2", "dateValue": "2021-05-29"},
+                {"name": "V2Amount2", "decimalValue": 100},
+                {"name": "V2StartDate2", "dateValue": "2021-05-18"},
+                {"name": "V2OtherIncomeNonEmployerBenefitAmount1", "decimalValue": 100.0},
+                {"name": "V2Spacer10", "stringValue": ""},
+                {
+                    "name": "V2OtherIncomeNonEmployerBenefitFrequency1",
+                    "enumValue": {
+                        "domainName": "FrequencyEforms",
+                        "instanceValue": "One Time / Lump Sum",
+                    },
+                },
+            ],
+            "eformId": 8296,
         }
     )
 
@@ -184,8 +293,10 @@ def previous_leave():
 
 
 class TestTransformEformBody:
-    def test_transform_other_income_eform(self, other_income_eform):
-        employer_benefits_list = TransformOtherIncomeEform.from_fineos(other_income_eform)
+    def test_transform_deprecated_other_income_eform(self, deprecated_other_income_eform):
+        employer_benefits_list = TransformOtherIncomeEform.from_fineos(
+            deprecated_other_income_eform
+        )
         assert len(employer_benefits_list) == 2
 
         assert type(employer_benefits_list[0]) is EmployerBenefit
@@ -205,6 +316,30 @@ class TestTransformEformBody:
         assert benefit_2["benefit_end_date"] == date(2021, 11, 1)
         assert benefit_2["benefit_type"] == "Short-term disability insurance"
         assert benefit_2["program_type"] == "Employer"
+
+    def test_transform_employer_benefits_from_other_income_eform(self, other_income_eform):
+        employer_benefits_list = TransformEmployerBenefitsFromOtherIncomeEform.from_fineos(
+            other_income_eform
+        )
+        assert len(employer_benefits_list) == 2
+
+        assert type(employer_benefits_list[0]) is EmployerBenefit
+        benefit_1 = employer_benefits_list[0].dict()
+        assert benefit_1["benefit_amount_dollars"] == 40
+        assert benefit_1["benefit_amount_frequency"] == "Per Day"
+        assert benefit_1["benefit_start_date"] == date(2021, 5, 11)
+        assert benefit_1["benefit_end_date"] == date(2021, 5, 29)
+        assert benefit_1["benefit_type"] == "Permanent disability insurance"
+        assert benefit_1["is_full_salary_continuous"] is None
+
+        assert type(employer_benefits_list[1]) is EmployerBenefit
+        benefit_2 = employer_benefits_list[1].dict()
+        assert benefit_2["benefit_amount_dollars"] == 100
+        assert benefit_2["benefit_amount_frequency"] == "In Total"
+        assert benefit_2["benefit_start_date"] == date(2021, 5, 18)
+        assert benefit_2["benefit_end_date"] == date(2021, 5, 29)
+        assert benefit_2["benefit_type"] == "Short-term disability insurance"
+        assert benefit_2["is_full_salary_continuous"] is False
 
     def test_transform_other_leave_eform(self, other_leave_eform):
         other_leaves_list = TransformPreviousLeaveFromOtherLeaveEform.from_fineos(other_leave_eform)

@@ -1,6 +1,10 @@
 from enum import Enum
 
-from massgov.pfml.api.models.common import PreviousLeaveQualifyingReason
+from massgov.pfml.api.models.common import (
+    AmountFrequency,
+    EmployerBenefitType,
+    PreviousLeaveQualifyingReason,
+)
 
 # Value used for unexpected FINEOS enum values
 DEFAULT_ENUM_REPLACEMENT_VALUE = "Unknown"
@@ -39,3 +43,26 @@ class OtherLeaveEFormQualifyingReason(FineosToApiEnumConverter):
     @staticmethod
     def get_api_enum():
         return PreviousLeaveQualifyingReason
+
+
+class FineosEmployerBenefitEnum(FineosToApiEnumConverter):
+    short_term_disability = "Temporary disability insurance (Long- or Short-term)"
+    permanent_disability_insurance = "Permanent disability insurance"
+    family_or_medical_leave_insurance = "Family or medical leave, such as a parental leave policy"
+    unknown = "Unknown"
+
+    @staticmethod
+    def get_api_enum():
+        return EmployerBenefitType
+
+
+class FineosAmountFrequencyEnum(FineosToApiEnumConverter):
+    per_day = "Per Day"
+    per_week = "Per Week"
+    per_month = "Per Month"
+    all_at_once = "One Time / Lump Sum"
+    unknown = "Not Provided"
+
+    @staticmethod
+    def get_api_enum():
+        return AmountFrequency

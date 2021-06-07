@@ -19,6 +19,7 @@ from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministra
 from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformConcurrentLeaveFromOtherLeaveEform,
+    TransformEmployerBenefitsFromOtherIncomeEform,
     TransformOtherIncomeEform,
     TransformPreviousLeaveFromOtherLeaveEform,
 )
@@ -47,7 +48,7 @@ logger = logging.get_logger(__name__)
 
 EFORM_TYPES = {
     "OTHER_INCOME": "Other Income",
-    "OTHER_INCOME_V2": "Other Income v2",
+    "OTHER_INCOME_V2": "Other Income - current version",
     "OTHER_LEAVES": "Other Leaves - current version",
 }
 
@@ -190,7 +191,7 @@ def get_claim_as_leave_admin(
     managed_reqs = fineos_client.get_managed_requirements(fineos_user_id, absence_id)
     previous_leaves: List[PreviousLeave] = []
     concurrent_leave: Optional[ConcurrentLeave] = None
-    other_incomes: List[EmployerBenefit] = []
+    employer_benefits: List[EmployerBenefit] = []
     is_reviewable = False
     follow_up_date = None
     contains_version_one_eforms = False
@@ -208,13 +209,17 @@ def get_claim_as_leave_admin(
         if eform_summary["eformType"] == EFORM_TYPES["OTHER_INCOME"]:
             contains_version_one_eforms = True
             eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
-            other_incomes.extend(
+            employer_benefits.extend(
                 other_income
                 for other_income in TransformOtherIncomeEform.from_fineos(eform)
                 if other_income.program_type == "Employer"
             )
         elif eform_summary["eformType"] == EFORM_TYPES["OTHER_INCOME_V2"]:
             contains_version_two_eforms = True
+            eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
+            employer_benefits = (
+                employer_benefits + TransformEmployerBenefitsFromOtherIncomeEform.from_fineos(eform)
+            )
         elif eform_summary["eformType"] == EFORM_TYPES["OTHER_LEAVES"]:
             contains_version_two_eforms = True
             eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
@@ -236,11 +241,11 @@ def get_claim_as_leave_admin(
 
     leave_details = get_leave_details(absence_periods)
 
-    logger.info("Count of info request employer benefits:", extra={"count": len(other_incomes)})
+    logger.info("Count of info request employer benefits:", extra={"count": len(employer_benefits)})
 
     return ClaimReviewResponse(
         date_of_birth=customer_info["dateOfBirth"],
-        employer_benefits=other_incomes,
+        employer_benefits=employer_benefits,
         employer_fein=employer.employer_fein,
         employer_dba=employer.employer_dba,
         employer_id=employer.employer_id,
