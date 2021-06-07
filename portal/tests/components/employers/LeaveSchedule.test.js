@@ -108,12 +108,12 @@ describe("LeaveSchedule", () => {
           hasDocuments: true,
         },
       }));
+    });
 
-      it("displays caption for an intermittent schedule with documents", () => {
-        expect(wrapper.find("caption").find("Trans").dive().text()).toEqual(
-          "Download the attached documentation for details about the employee’s intermittent leave schedule."
-        );
-      });
+    it("displays caption for an intermittent schedule with documents", () => {
+      expect(wrapper.find("caption").find("Trans").dive().text()).toEqual(
+        "Download the attached documentation for details about the employee’s intermittent leave schedule."
+      );
     });
   });
 

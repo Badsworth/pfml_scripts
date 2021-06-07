@@ -1,8 +1,16 @@
-import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
+import {
+  Locator,
+  Browser,
+  By,
+  ElementHandle,
+  Until,
+  BaseLocator,
+} from "@flood/element";
+import { EvalLocator } from "@flood/element-core/dist/src/page/locators/EvalLocator";
 import * as Cfg from "./config";
 import { getFamilyLeavePlanProp } from "./tasks/ApproveClaim";
 import { actions } from "./scenarios/SavilinxAgent.perf";
-import config from "../config";
+import { EvaluateFn } from "puppeteer";
 
 export const formatDate = (d: string | null | undefined): string =>
   new Intl.DateTimeFormat("en-US", {
@@ -38,6 +46,63 @@ export function byButtonText(text: string): Locator {
     const buttons = [...document.querySelectorAll("button")];
     return buttons.find((button) => button.innerText.match(text));
   }, text);
+}
+
+type SelectorEvaluator = EvaluateFn<string | undefined>;
+export function byContains(selector: string, text: string): Locator {
+  const findMany = (selector: string, text: string) =>
+    Array.from(document.querySelectorAll(selector)).filter((candidate) =>
+      candidate.textContent?.match(text)
+    );
+  const findOne = (selector: string, text: string) =>
+    Array.from(document.querySelectorAll(selector)).find((candidate) =>
+      candidate.textContent?.match(text)
+    );
+
+  return new BaseLocator(
+    new EvalLocator(
+      findOne as SelectorEvaluator,
+      findMany as SelectorEvaluator,
+      [selector, text]
+    ),
+    `byContains(${selector}, ${text})`
+  );
+}
+
+export function byLabelled(labelText: string): Locator {
+  const findMany = (text: string) => {
+    const results = Array.from(document.querySelectorAll("label"))
+      .filter((label) => label.textContent === text)
+      .map((label) => {
+        const labelFor = label.getAttribute("for");
+        if (labelFor !== null) {
+          return document.getElementById(labelFor);
+        }
+      })
+      .filter((i) => i);
+    return results;
+  };
+  const findOne = (text: string) => {
+    const results = Array.from(document.querySelectorAll("label"))
+      .filter((label) => label.textContent === text)
+      .map((label) => {
+        const labelFor = label.getAttribute("for");
+        if (labelFor !== null) {
+          return document.getElementById(labelFor);
+        }
+      })
+      .filter((i) => i);
+    return results.pop();
+  };
+
+  return new BaseLocator(
+    new EvalLocator(
+      findOne as SelectorEvaluator,
+      findMany as SelectorEvaluator,
+      [labelText]
+    ),
+    `By.labelled("${labelText}")`
+  );
 }
 
 export const waitForElement = async (
@@ -84,164 +149,6 @@ export const isFinanciallyEligible = async (
 
   return eligibilityIcon === "icon-checkbox";
 };
-
-export type TestMailVerificationFetcher = {
-  getVerificationCodeForUser: (address: string) => Promise<string>;
-  getCodeFromMessage: (message: { html: string }) => string;
-  getTagFromAddress: (address: string) => string;
-  getCredentials: () => { username: string; password: string };
-};
-
-export async function getMailVerifier(
-  browser: Browser
-): Promise<TestMailVerificationFetcher> {
-  const apiKey = config("TESTMAIL_APIKEY");
-  const namespace = config("TESTMAIL_NAMESPACE");
-  const endpoint = "https://api.testmail.app/api/json";
-  let tag: string;
-  let username: string;
-  let password: string;
-
-  if (!apiKey || !namespace) {
-    throw new Error(
-      "Unable to create Test Mail API client due to missing environment variables."
-    );
-  }
-
-  async function getVerificationCodeForUser(address: string): Promise<string> {
-    const params = {
-      apikey: apiKey,
-      namespace: namespace,
-      tag: getTagFromAddress(address),
-      livequery: true,
-    };
-
-    const paramsString = Object.entries(params)
-      .map(([key, val]) => `${key}=${val}`)
-      .join("&");
-
-    let body;
-    // Stop trying to find email after 90 seconds
-    const getBody = async () =>
-      browser.evaluate(
-        (baseUrl, query) =>
-          new Promise((resolve, reject) => {
-            const controller = new AbortController();
-            setTimeout(() => controller.abort(), 90000);
-            fetch(`${baseUrl}?${query}`, { signal: controller.signal })
-              .then((r) => {
-                resolve(r.json());
-              })
-              .catch(reject);
-          }),
-        endpoint,
-        paramsString
-      );
-
-    const startTimer = new Date().getTime();
-    let endTimer;
-    try {
-      body = await getBody();
-      endTimer = new Date().getTime();
-      console.info(`\n\n\nTestmail API: ${endTimer - startTimer}ms\n\n\n`);
-    } catch (e) {
-      endTimer = new Date().getTime();
-      console.info(
-        `\n\n\nTestmail API: ${endTimer - startTimer}ms\n${
-          e.message
-        }\n\n${address}\n${password}\n\n\n`
-      );
-      throw e;
-    }
-
-    if (body.result !== "success") {
-      throw new Error(
-        `There was an error fetching the verification code: ${body.message}`
-      );
-    }
-
-    if (!Array.isArray(body.emails) || !(body.emails.length > 0)) {
-      throw new Error(`No emails found for this user.`);
-    }
-
-    return getCodeFromMessage(body.emails[0]);
-  }
-
-  function getCodeFromMessage(message: { html: string }): string {
-    const match = message.html.match(/(\d{6})<\/strong>/);
-    if (!match) {
-      throw new Error(`Unable to parse verification code from message.`);
-    }
-    return match[1];
-  }
-
-  function getTagFromAddress(address: string): string {
-    const re = new RegExp(`^${namespace}\.(.*)@inbox\.testmail\.app$`);
-    const match = address.match(re);
-    if (!match || !(match[1].length > 0)) {
-      throw new Error(
-        `Oops, this doesn't look like a testmail address: ${address}`
-      );
-    }
-    return match[1];
-  }
-
-  const randomOf = (charset: string) =>
-    charset[Math.floor(Math.random() * charset.length)];
-
-  function rPassword(length: number) {
-    const symbolsSet = "@#$%^&*";
-    const lowercaseSet = "abcdefghijklmnopqrstuvwxyz";
-    const uppercaseSet = lowercaseSet.toUpperCase();
-    const pChars = [];
-    for (let i = 0; i < length; i++) {
-      pChars.push(
-        i % 2 === 0 ? randomOf(uppercaseSet) : randomOf(lowercaseSet)
-      );
-    }
-    pChars.push(randomOf(symbolsSet));
-    pChars.push(rNum(999));
-    shuffleArray(pChars);
-    return pChars.join("");
-  }
-
-  /**
-   * Durstenfeld shuffle.
-   *
-   * @see https://stackoverflow.com/a/12646864
-   */
-  function shuffleArray(array: (string | number)[]) {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-  }
-
-  function rTag(length: number) {
-    return Math.random().toString(36).substr(2, length);
-  }
-
-  function rNum(max: number) {
-    return Math.floor(Math.random() * max) + 1;
-  }
-
-  function getCredentials() {
-    tag = rTag(8);
-    username = `${namespace}.${tag}@inbox.testmail.app`;
-    password = rPassword(12);
-    return {
-      username,
-      password,
-    };
-  }
-
-  return {
-    getVerificationCodeForUser,
-    getCodeFromMessage,
-    getTagFromAddress,
-    getCredentials,
-  };
-}
 
 export function assignTasks(
   fineosId: string,

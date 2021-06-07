@@ -41,7 +41,6 @@ def load_all(db_session: db.Session, fineos: AbstractFINEOSClient) -> LoadEmploy
         # row lock put in place by `skip_locked_query` is released
         try:
             fineos_actions.create_or_update_employer(fineos, employer)
-            fineos_actions.create_service_agreement_for_employer(fineos, employer)
 
             db_session.commit()
 
@@ -97,7 +96,6 @@ def load_updates(
                 db_session, employer, commit=True
             ):
                 fineos_actions.create_or_update_employer(fineos, employer)
-                fineos_actions.create_service_agreement_for_employer(fineos, employer)
 
             report.loaded_employers_count += 1
 

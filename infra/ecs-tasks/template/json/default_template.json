@@ -32,7 +32,8 @@
       { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password"},
       { "name": "COGNITO_FINEOS_APP_CLIENT_ID", "valueFrom": "/service/${app_name}/${environment_name}/cognito_fineos_app_client_id"},
-      { "name": "COGNITO_INTERNAL_FINEOS_ROLE_APP_CLIENT_ID", "valueFrom": "/service/${app_name}/${environment_name}/cognito_internal_fineos_role_app_client_id"}
+      { "name": "COGNITO_INTERNAL_FINEOS_ROLE_APP_CLIENT_ID", "valueFrom": "/service/${app_name}/${environment_name}/cognito_internal_fineos_role_app_client_id"},
+      { "name": "NR_INSERT_API_KEY", "valueFrom": "/admin/pfml-api/newrelic-insert-api-key" }
     ]
   }
 ]

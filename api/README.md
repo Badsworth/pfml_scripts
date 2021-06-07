@@ -465,7 +465,17 @@ Some endpoints require a `client_id` and `client_secret`. For these, you will ne
 
 ### Seed your database
 
-Some interactions require valid data and associations to exist within the database, such as a valid `Employer` and `Employee`. The easiest way to seed your database is to run a mock DOR import:
+Some interactions require valid data and associations to exist within the database, such as a valid `Employer` and `Employee`. 
+
+To create a leave admin user account with claims, run:
+
+```
+make create-leave-admin-and-claims
+```
+
+The script above will output information you can use to then generate the JWT, which you can use in Swagger to perform API requests as the generated leave admin.
+
+Another way to seed your database is to run a mock DOR import:
 
 Generate a fake DOR file:
 

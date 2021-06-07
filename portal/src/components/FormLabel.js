@@ -1,3 +1,4 @@
+import Hint from "./Hint";
 import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
@@ -25,13 +26,6 @@ function FormLabel({
     "font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet": !small,
   });
 
-  const hintClasses = classnames("display-block line-height-sans-5 measure-5", {
-    // Use hint styling for small labels
-    "usa-hint text-base-darkest": small,
-    // Use lead styling for regular labels
-    "usa-intro": !small,
-  });
-
   const exampleClasses =
     "display-block line-height-sans-5 usa-hint text-base-dark measure-5";
 
@@ -49,11 +43,10 @@ function FormLabel({
           </span>
         )}
       </LabelElement>
-
       {props.hint && (
-        <span className={hintClasses} id={`${props.inputId}_hint`}>
+        <Hint inputId={props.inputId} small={small}>
           {props.hint}
-        </span>
+        </Hint>
       )}
 
       {props.example && <span className={exampleClasses}>{props.example}</span>}

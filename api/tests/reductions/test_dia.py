@@ -221,6 +221,8 @@ def test_copy_to_sftp_and_archive_s3_files(
     monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
     monkeypatch.setenv("S3_DIA_OUTBOUND_DIRECTORY_PATH", source_directory_path)
     monkeypatch.setenv("S3_DIA_ARCHIVE_DIRECTORY_PATH", archive_directory_path)
+    monkeypatch.setenv("MOVEIT_SFTP_URI", "sftp://foo@bar.com")
+    monkeypatch.setenv("MOVEIT_SSH_KEY", "foo")
     monkeypatch.setenv("MOVEIT_DIA_OUTBOUND_PATH", moveit_dia_outbound_path)
 
     filenames = []
@@ -432,6 +434,8 @@ def test_download_payment_list_if_none_today(
 
     monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
     monkeypatch.setenv("S3_DIA_PENDING_DIRECTORY_PATH", s3_dest_path)
+    monkeypatch.setenv("MOVEIT_SFTP_URI", "sftp://foo@bar.com")
+    monkeypatch.setenv("MOVEIT_SSH_KEY", "foo")
     monkeypatch.setenv("MOVEIT_DIA_INBOUND_PATH", moveit_pickup_path)
     monkeypatch.setenv("MOVEIT_DIA_ARCHIVE_PATH", moveit_archive_path)
 

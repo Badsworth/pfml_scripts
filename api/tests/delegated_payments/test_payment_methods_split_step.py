@@ -10,7 +10,7 @@ from massgov.pfml.db.models.factories import PaymentFactory
 # A few miscellaneous states that won't be cleaned up
 misc_states = [
     State.DELEGATED_PAYMENT_COMPLETE,
-    State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+    State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
 ]
 
 

@@ -1,27 +1,26 @@
+import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import { get, pick } from "lodash";
 import BenefitsApplication from "../../models/BenefitsApplication";
+import Details from "../../components/Details";
 import Heading from "../../components/Heading";
+import Hint from "../../components/Hint";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import InputHours from "../../components/InputHours";
-import PreviousLeave from "../../models/PreviousLeave";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
 import { Trans } from "react-i18next";
+import findKeyByValue from "../../utils/findKeyByValue";
+import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const fields = [];
-
-// TODO(CP-2125): Integrate this page with the API. For now we'll use this 'tempFields' array so that
-// the Checklist page won't block this step from appearing completed. This is because the Checklist page
-// uses the above `fields` array to calculate whether or not a page/Step is completed. With the empty array
-// above the page/Step will appear complete regardless of if the API has saved the data to the DB.
-export const tempFields = [
+export const fields = [
   "claim.previous_leaves_same_reason",
   "claim.previous_leaves_same_reason[*].is_for_current_employer",
   "claim.previous_leaves_same_reason[*].leave_end_date",
@@ -36,9 +35,26 @@ export const PreviousLeavesSameReasonDetails = (props) => {
   const { appLogic, claim } = props;
   const limit = 6;
 
-  const initialEntries = pick(props, tempFields).claim;
+  /**
+   * Converts a LeaveReason to its corresponding PreviousLeaveReason.
+   * @param {string} leaveReason - the application leave reason
+   * @returns {PreviousLeaveReason} the corresponding PreviousLeaveReason
+   */
+  const leaveReasonToPreviousLeaveReason = (leaveReason) => {
+    const previousLeaveReasonKey = findKeyByValue(LeaveReason, leaveReason);
+    return PreviousLeaveReason[previousLeaveReasonKey];
+  };
+
+  const initialEntries = pick(props, fields).claim;
   if (initialEntries.previous_leaves_same_reason.length === 0) {
-    initialEntries.previous_leaves_same_reason = [new PreviousLeave()];
+    const leave_reason = leaveReasonToPreviousLeaveReason(
+      claim.leave_details.reason
+    );
+    initialEntries.previous_leaves_same_reason = [
+      new PreviousLeave({
+        leave_reason,
+      }),
+    ];
   }
 
   // default to one existing previous leave.
@@ -48,15 +64,20 @@ export const PreviousLeavesSameReasonDetails = (props) => {
     "previous_leaves_same_reason"
   );
 
+  const leaveStartDate = formatDate(claim.leaveStartDate).full();
+
   const handleSave = () => {
     appLogic.benefitsApplications.update(claim.application_id, formState);
   };
 
   const handleAddClick = () => {
+    const leave_reason = leaveReasonToPreviousLeaveReason(
+      claim.leave_details.reason
+    );
     updateFields({
       previous_leaves_same_reason: [
         ...previous_leaves_same_reason,
-        new PreviousLeave(),
+        new PreviousLeave({ leave_reason }),
       ],
     });
   };
@@ -73,10 +94,11 @@ export const PreviousLeavesSameReasonDetails = (props) => {
     updateFields,
   });
 
-  const render = (_entry, index) => {
+  const render = (entry, index) => {
     return (
       <PreviousLeaveSameReasonDetailsCard
         claim={claim}
+        entry={entry}
         index={index}
         getFunctionalInputProps={getFunctionalInputProps}
       />
@@ -92,6 +114,11 @@ export const PreviousLeavesSameReasonDetails = (props) => {
         {t("pages.claimsPreviousLeavesSameReasonDetails.sectionLabel")}
       </Heading>
 
+      <Hint className="margin-bottom-3">
+        {t("pages.claimsPreviousLeavesSameReasonDetails.sectionHint", {
+          leaveStartDate,
+        })}
+      </Hint>
       <RepeatableFieldset
         addButtonLabel={t(
           "pages.claimsPreviousLeavesSameReasonDetails.addButton"
@@ -125,6 +152,7 @@ export const PreviousLeaveSameReasonDetailsCard = (props) => {
   const { t } = useTranslation();
   const {
     claim: { employer_fein },
+    entry: { is_for_current_employer },
     getFunctionalInputProps,
     index,
   } = props;
@@ -148,10 +176,12 @@ export const PreviousLeaveSameReasonDetailsCard = (props) => {
           {
             label: t("pages.claimsPreviousLeavesSameReasonDetails.choiceYes"),
             value: "true",
+            checked: is_for_current_employer === true,
           },
           {
             label: t("pages.claimsPreviousLeavesSameReasonDetails.choiceNo"),
             value: "false",
+            checked: is_for_current_employer === false,
           },
         ]}
       />
@@ -193,7 +223,20 @@ export const PreviousLeaveSameReasonDetailsCard = (props) => {
           "pages.claimsPreviousLeavesSameReasonDetails.minutesLabel"
         )}
         hint={
-          <Trans i18nKey="pages.claimsPreviousLeavesSameReasonDetails.workedPerWeekMinutesHint" />
+          <React.Fragment>
+            <p>
+              {t(
+                "pages.claimsPreviousLeavesSameReasonDetails.workedPerWeekMinutesHint"
+              )}
+            </p>
+            <Details
+              label={t(
+                "pages.claimsPreviousLeavesSameReasonDetails.workedPerWeekMinutesDetailsLabel"
+              )}
+            >
+              <Trans i18nKey="pages.claimsPreviousLeavesSameReasonDetails.workedPerWeekMinutesDetails" />
+            </Details>
+          </React.Fragment>
         }
         minutesIncrement={15}
       />
@@ -219,6 +262,7 @@ export const PreviousLeaveSameReasonDetailsCard = (props) => {
 
 PreviousLeaveSameReasonDetailsCard.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  entry: PropTypes.instanceOf(PreviousLeave).isRequired,
   getFunctionalInputProps: PropTypes.func.isRequired,
   index: PropTypes.number.isRequired,
 };

@@ -3,6 +3,8 @@
 #
 
 import argparse
+import re
+import sys
 import tempfile
 
 import boto3
@@ -21,11 +23,7 @@ class BucketConfig(BaseSettings):
     fineos_aws_iam_role_external_id: str = Field(..., min_length=1)
 
 
-@background_task("fineos-bucket-tool")
-def main():
-    """Main entry point."""
-    config = BucketConfig()
-
+def parse_args(args):
     parser = argparse.ArgumentParser(description="List or modify a bucket")
     parser.add_argument("--list", type=str, help="List objects in path")
     parser.add_argument("--copy", type=str, help="Copy object")
@@ -41,13 +39,39 @@ def main():
     parser.add_argument("--dated-folders", dest="dated_folders", action="store_true")
     parser.set_defaults(recursive=False, dated_folders=False, file_prefixes="all")
 
-    args = parser.parse_args()
+    return parser.parse_args(args)
 
-    if args.copy and not args.to:
+
+@background_task("fineos-bucket-tool")
+def main():
+    """Main entry point."""
+    run_tool(sys.argv[1:])
+
+
+def run_tool(raw_args):
+    args = parse_args(raw_args)
+
+    exclusive_args = [args.list, args.copy, args.delete, args.copy_dir]
+    if sum(map(bool, exclusive_args)) > 1:
+        raise RuntimeError(
+            "Only one of the following can be specified: --list, --copy, --delete, --copy_dir"
+        )
+
+    if (args.copy and not args.to) or (args.to and not args.copy):
         raise RuntimeError("Must specify --to with --copy")
 
-    if args.delete and not args.delsize:
+    if (args.delete and not args.delsize) or (args.delsize and not args.delete):
         raise RuntimeError("Must specify --delsize with --delete")
+
+    if (args.copy_dir and not args.to_dir) or (args.to_dir and not args.copy_dir):
+        raise RuntimeError("Must specify --to_dir with --copy_dir")
+
+    # Error out if one of the flags for copy_dir is used for another option.
+    # file_prefixes always defaults to "all" so we have to check the value against that default.
+    if not args.copy_dir and (args.recursive or args.dated_folders or args.file_prefixes != "all"):
+        raise RuntimeError(
+            "The following options are only valid when using copy_dir: [--recursive, --dated-folders, --file_prefixes]"
+        )
 
     fineos_boto_session = None
     if (
@@ -58,6 +82,7 @@ def main():
         or is_fineos_bucket(args.copy_dir)
         or is_fineos_bucket(args.to_dir)
     ):
+        config = BucketConfig()
         fineos_boto_session = massgov.pfml.util.aws.sts.assume_session(
             role_arn=config.fineos_aws_iam_role_arn,
             external_id=config.fineos_aws_iam_role_external_id,
@@ -211,9 +236,17 @@ def copy_dir(
         # copy select files that don’t already exist in the destination
         if file_name_contains_prefix(file_prefixes, file) and (file not in dest_files):
             source_file = source + file
-            if dated_folders and not file.contains("/"):
-                date = file.split("_")[0]
-                dest_file = f"{dest}{date}/{file}"
+
+            if dated_folders and "/" not in file:
+                match = re.match(r"(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})", file)
+
+                if match:
+                    date = match.group()
+                    dest_file = f"{dest}{date}/{file}"
+                else:
+                    logger.warn("Extract found without a date: %s. Copying normally." % file)
+                    dest_file = dest + file
             else:
                 dest_file = dest + file
+
             bucket_cp(source_file, dest_file, s3_source, s3_dest)

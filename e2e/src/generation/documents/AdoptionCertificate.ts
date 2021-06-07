@@ -13,7 +13,7 @@ function reformat(date: string): string {
 export default class AdoptionCertificate extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
-  get documentSource(): string {
+  documentSource(): string {
     return this.path("foster-adopt-cert.pdf");
   }
   getFormData(

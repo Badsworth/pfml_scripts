@@ -193,6 +193,15 @@ def do_checks(
 
     rmv_check_record.check_customer_inactive = not license_inquiry_response.is_customer_inactive
 
+    # API-927 - logging specific values for debugging RMV fraud behavior. Not added to RMVCheck() db model
+    # TODO: remove this (https://lwd.atlassian.net/browse/API-1689).
+    logger.info(
+        "RMV fraud flags",
+        extra={
+            "cfl_sanctions": license_inquiry_response.cfl_sanctions,
+            "cfl_sanctions_active": license_inquiry_response.cfl_sanctions_active,
+        },
+    )
     rmv_check_record.check_active_fraudulent_activity = not (
         license_inquiry_response.cfl_sanctions and license_inquiry_response.cfl_sanctions_active
     )

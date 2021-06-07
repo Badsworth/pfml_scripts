@@ -61,7 +61,7 @@ export const Review = (props) => {
     amendedLeaves: [],
     amendedHours: 0,
     comment: "",
-    employerDecision: undefined,
+    employerDecision: "Approve",
     fraud: undefined,
     employeeNotice: undefined,
     believeRelationshipAccurate: undefined,
@@ -196,8 +196,7 @@ export const Review = (props) => {
       has_amendments:
         !isEqual(formState.amendedBenefits, formState.employerBenefits) ||
         !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
-        !isEqual(amendedHours, claim.hours_worked_per_week) ||
-        formState.believeRelationshipAccurate === "No",
+        !isEqual(amendedHours, claim.hours_worked_per_week),
     };
     if (shouldShowCaringLeave) {
       payload.leave_reason = get(claim, "leave_details.reason");

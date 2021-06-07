@@ -44,7 +44,7 @@ exports[`PreviousLeavesOtherReason renders the page 1`] = `
             You needed to care for a family member who serves in the armed forces.
           </li>
           <li>
-            You needed to care for a family member with a serious health condition.
+            You needed to care for a family member with a serious health condition and your leave began on or after July 1, 2021.
           </li>
         </ul>
       </React.Fragment>

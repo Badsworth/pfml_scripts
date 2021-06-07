@@ -1,11 +1,17 @@
 import { StepFunction, TestData, Browser, step, By, ENV } from "@flood/element";
 import * as Cfg from "../config";
 import * as Util from "../helpers";
-import { fetchFormData, fetchJSON } from "../fetch";
 import config from "../../config";
+import {
+  generateCredentials,
+  getLeaveAdminCredentials,
+} from "../../util/credentials";
+import TestMailVerificationFetcher from "../../submission/TestMailVerificationFetcher";
+import { fetchJSON, fetchFormData } from "../fetch";
 
 let authToken: string;
-let newAccount: { username: string; password: string };
+let username: string;
+let password: string;
 let applicationId: string;
 let fineosId: string;
 
@@ -17,24 +23,14 @@ export const steps: Cfg.StoredStep[] = [
     name: "Register a new account",
     test: async (browser: Browser): Promise<void> => {
       await setFeatureFlags(browser);
-      const emailVerifier = await Util.getMailVerifier(browser);
-      newAccount = emailVerifier.getCredentials();
-      await register(
-        browser,
-        emailVerifier,
-        newAccount.username,
-        newAccount.password
-      );
+      ({ username, password } = generateCredentials());
+      await register(browser, username, password);
     },
   },
   {
     name: "Login with new account",
     test: async (browser: Browser): Promise<void> => {
-      authToken = await login(
-        browser,
-        newAccount.username,
-        newAccount.password
-      );
+      authToken = await login(browser, username, password);
     },
   },
   {
@@ -102,12 +98,7 @@ export default async (): Promise<void> => {
   });
 };
 
-async function register(
-  browser: Browser,
-  verifier: Util.TestMailVerificationFetcher,
-  username: string,
-  password: string
-) {
+async function register(browser: Browser, username: string, password: string) {
   // go to registration page
   await browser.visit(`${config("PORTAL_BASEURL")}/create-account/`);
   // fill out the form
@@ -118,9 +109,11 @@ async function register(
     await Util.waitForElement(browser, By.css("button[type='submit']"))
   ).click();
 
-  const code = await verifier.getVerificationCodeForUser(username);
-  if (code.length === 0)
-    throw new Error("Couldn't getVerificationCodeForUser email!");
+  const fetcher = new TestMailVerificationFetcher(
+    config("TESTMAIL_APIKEY"),
+    config("TESTMAIL_NAMESPACE")
+  );
+  const code = await fetcher.getVerificationCodeForUser(username);
   // type code
   await (await Util.labelled(browser, "6-digit code")).type(code);
   // submit code
@@ -174,15 +167,11 @@ function employerResponse(fineosId: string): Cfg.StoredStep {
         await (
           await Util.waitForElement(browser, By.visibleText("Log out"))
         ).click();
+        const fein = data.claim.employer_fein;
+        if (!fein) throw new Error("No FEIN was found on this claim");
+        const { username, password } = getLeaveAdminCredentials(fein);
         // Log in on Portal as Leave Admin
-        authToken = await login(
-          browser,
-          `gqzap.employer.${data.claim.employer_fein?.replace(
-            "-",
-            ""
-          )}@inbox.testmail.app`,
-          config("EMPLOYER_PORTAL_PASSWORD")
-        );
+        authToken = await login(browser, username, password);
 
         await (
           await Util.waitForElement(browser, By.linkText("Dashboard"))

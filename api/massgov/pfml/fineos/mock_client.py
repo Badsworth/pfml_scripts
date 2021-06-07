@@ -519,7 +519,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 "denial notice",
                 "employer response additional documentation",
                 "care for a family member form",
+                "own serious health condition",
+                "pregnancy/maternity form",
+                "child bonding evidence form",
+                "military exigency form",
             ]
+
             allowed_documents = [
                 mock_document(absence_id, document_type=document_type)
                 for document_type in DOWNLOADABLE_DOC_TYPES

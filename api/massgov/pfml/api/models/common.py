@@ -36,13 +36,15 @@ class LookupEnum(Enum):
 
 
 class PreviousLeaveQualifyingReason(str, LookupEnum):
-    PREGNANCY_MATERNITY = "Pregnancy / Maternity"
-    SERIOUS_HEALTH_CONDITION = "Serious health condition"
-    CARE_FOR_A_FAMILY_MEMBER = "Care for a family member"
-    CHILD_BONDING = "Child bonding"
-    MILITARY_CAREGIVER = "Military caregiver"
-    MILITARY_EXIGENCY_FAMILY = "Military exigency family"
+    PREGNANCY_MATERNITY = "Pregnancy"
+    CARE_FOR_A_FAMILY_MEMBER = "Caring for a family member with a serious health condition"
+    CHILD_BONDING = "Bonding with my child after birth or placement"
+    MILITARY_CAREGIVER = "Caring for a family member who serves in the armed forces"
+    MILITARY_EXIGENCY_FAMILY = (
+        "Managing family affairs while a family member is on active duty in the armed forces"
+    )
     UNKNOWN = "Unknown"
+    AN_ILLNESS_OR_INJURY = "An illness or injury"
 
     @classmethod
     def get_lookup_model(cls):
@@ -72,6 +74,7 @@ class AmountFrequency(str, LookupEnum):
     per_week = "Per Week"
     per_month = "Per Month"
     all_at_once = "In Total"
+    unknown = "Unknown"
 
     @classmethod
     def get_lookup_model(cls):

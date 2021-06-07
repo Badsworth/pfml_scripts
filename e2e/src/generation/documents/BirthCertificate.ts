@@ -9,7 +9,7 @@ import { format, parseISO } from "date-fns";
 export default class BirthCertificate extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
-  get documentSource(): string {
+  documentSource(): string {
     return this.path("birth-certificate.pdf");
   }
   getFormData(

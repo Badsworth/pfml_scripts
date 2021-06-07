@@ -45,7 +45,7 @@ exports[`ConsentToDataSharing shows the correct content for non-employers 1`] = 
       heading="How we use your data"
     >
       <p>
-        We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your application with your employer, health care provider(s), and contracted private partners.
+        We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your application with your employer, employer’s affiliates, health care provider(s), and contracted private partners.
       </p>
     </AccordionItem>
     <AccordionItem

@@ -95,7 +95,7 @@ exports[`GetReady renders get ready content 1`] = `
     <Heading
       level="3"
     >
-      Medical leave
+      Medical leave for your own serious health condition
     </Heading>
     <Trans
       components={

@@ -272,7 +272,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         else:
             end_state_id = payment_state_log.end_state_id
 
-        if end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_id:
+        if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
             # Expected normal state for an ACH returned payment.
             state_log_util.create_finished_state_log(
                 payment,
@@ -359,11 +359,11 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         else:
             end_state_id = payment_state_log.end_state_id
 
-        if end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_id:
+        if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
             # Expected normal state for an ACH change notification payment.
             state_log_util.create_finished_state_log(
                 payment,
-                State.DELEGATED_PAYMENT_COMPLETE,
+                State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
                 state_log_util.build_outcome(
                     "Payment complete with change notification",
                     ach_return_reason_code=str(change_notification.return_reason_code),
@@ -372,6 +372,24 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 ),
                 self.db_session,
             )
+
+            # Add the payment to the writeback
+            writeback_transaction_status = FineosWritebackTransactionStatus.POSTED
+            state_log_util.create_finished_state_log(
+                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+                associated_model=payment,
+                outcome=state_log_util.build_outcome(
+                    cast(str, writeback_transaction_status.transaction_status_description,)
+                ),
+                import_log_id=self.get_import_log_id(),
+                db_session=self.db_session,
+            )
+            writeback_details = FineosWritebackDetails(
+                payment=payment,
+                transaction_status_id=writeback_transaction_status.transaction_status_id,
+                import_log_id=self.get_import_log_id(),
+            )
+            self.db_session.add(writeback_details)
 
             logger.warning(
                 "ACH Notification: Payment complete with change notification",
@@ -388,10 +406,10 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 details=change_notification.get_details_for_error(),
                 payment=payment,
             )
-        elif end_state_id == State.DELEGATED_PAYMENT_COMPLETE.state_id:
+        elif end_state_id == State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION.state_id:
             # Payment already reached a successful state.
             logger.info(
-                "payment already in a PAYMENT_COMPLETE state",
+                "payment already in DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION state",
                 extra={
                     "payments.ach.id_number": change_notification.id_number,
                     "payments.state": end_state_id,

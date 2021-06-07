@@ -54,7 +54,6 @@ def min_date_of_birth_validator(date_of_birth, field):
 
 class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
-    employee_ssn: Optional[TaxIdUnformattedStr]
     tax_identifier: Optional[TaxIdUnformattedStr]
     employer_fein: Optional[FEINUnformattedStr]
     first_name: Optional[str]

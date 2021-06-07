@@ -40,38 +40,6 @@ NOT_SAMPLED_STATE_TRANSITIONS: List[NonSampledStateTransitionDescriptor] = []
 
 NOT_SAMPLED_STATE_TRANSITIONS.append(
     NonSampledStateTransitionDescriptor(
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,
-        State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK,
-        state_log_util.build_outcome("Cancelled payment to be added to FINEOS Writeback"),
-    )
-)
-
-NOT_SAMPLED_STATE_TRANSITIONS.append(
-    NonSampledStateTransitionDescriptor(
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT,
-        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
-        state_log_util.build_outcome("$0 payment to be added to FINEOS Writeback"),
-    )
-)
-
-NOT_SAMPLED_STATE_TRANSITIONS.append(
-    NonSampledStateTransitionDescriptor(
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT,
-        State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK,
-        state_log_util.build_outcome("Overpayment to be added to FINEOS Writeback"),
-    )
-)
-
-NOT_SAMPLED_STATE_TRANSITIONS.append(
-    NonSampledStateTransitionDescriptor(
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT,
-        State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK,
-        state_log_util.build_outcome("Employer reimbursement to be added to FINEOS Writeback"),
-    )
-)
-
-NOT_SAMPLED_STATE_TRANSITIONS.append(
-    NonSampledStateTransitionDescriptor(
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED,
         State.DELEGATED_PAYMENT_VALIDATED,
         state_log_util.build_outcome(

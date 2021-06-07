@@ -14,6 +14,7 @@ import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
     Claim,
     DuaReductionPayment,
     DuaReductionPaymentReferenceFile,
@@ -69,6 +70,10 @@ class Constants:
     # cases over time), so the field has been repurposed to hold the customer
     # number to avoid DUA needing to change anything on their end.
     CASE_ID_FIELD = "CASE_ID"
+
+    # We changed the primary key from being by absence case to being by customer
+    # number. This is the first column in the DUA report.
+    CUSTOMER_ID_FIELD = "CUSTOMER_ID"
     EMPR_FEIN_FIELD = "EMPR_FEIN"
     WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD = "PAYMENT_DATE"
     RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD = "BENEFIT_WEEK_START_DATE"
@@ -96,7 +101,7 @@ class Constants:
     ]
 
     DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
-        CASE_ID_FIELD: "fineos_customer_number",
+        CUSTOMER_ID_FIELD: "fineos_customer_number",
         WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: "payment_date",
         RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD: "request_week_begin_date",
         WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD: "gross_payment_amount_cents",
@@ -446,7 +451,7 @@ def _format_reduction_payments_for_report(
 
     for payment, claim in reduction_payments:
         info = {
-            Constants.CASE_ID_FIELD: payment.fineos_customer_number,
+            Constants.CUSTOMER_ID_FIELD: payment.fineos_customer_number,
             Constants.WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: _format_date_for_report(
                 payment.payment_date
             ),
@@ -471,7 +476,11 @@ def _format_reduction_payments_for_report(
             info.update(
                 {
                     Constants.ABSENCE_CASE_ID_FIELD: claim.fineos_absence_id,
-                    Constants.ABSENCE_CASE_STATUS_FIELD: claim.fineos_absence_status.absence_status_description,
+                    Constants.ABSENCE_CASE_STATUS_FIELD: (
+                        AbsenceStatus.get_description(claim.fineos_absence_status_id)
+                        if claim.fineos_absence_status_id
+                        else None
+                    ),
                     Constants.ABSENCE_CASE_PERIOD_START_FIELD: _format_date_for_report(
                         claim.absence_period_start_date
                     ),

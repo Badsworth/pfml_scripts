@@ -1,13 +1,11 @@
-import { renderWithAppLogic, testHook } from "../../../test-utils";
 import Index from "../../../../src/pages/employers/organizations";
 import React from "react";
 import { UserLeaveAdministrator } from "../../../../src/models/User";
+import { mockRouter } from "next/router";
+import { renderWithAppLogic } from "../../../test-utils";
 import routeWithParams from "../../../../src/utils/routeWithParams";
 import routes from "../../../../src/routes";
 import { shallow } from "enzyme";
-import useAppLogic from "../../../../src/hooks/useAppLogic";
-
-jest.mock("../../../../src/hooks/useAppLogic");
 
 describe("Index", () => {
   let appLogic, wrapper;
@@ -15,11 +13,40 @@ describe("Index", () => {
   const query = {};
 
   const renderPage = () => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-
-    wrapper = shallow(<Index appLogic={appLogic} query={query} />).dive();
+    ({ appLogic, wrapper } = renderWithAppLogic(Index, {
+      diveLevels: 1,
+      props: { query },
+      userAttrs: {
+        user_leave_administrators: [
+          new UserLeaveAdministrator({
+            employer_dba: "Book Bindings 'R Us",
+            employer_fein: "00-3451823",
+            employer_id: "dda903f-f093f-ff900",
+            has_fineos_registration: true,
+            has_verification_data: true,
+            verified: false,
+          }),
+          // already verified
+          new UserLeaveAdministrator({
+            employer_dba: "Knitting Castle",
+            employer_fein: "11-3453443",
+            employer_id: "dda930f-93jfk-iej08",
+            has_fineos_registration: true,
+            has_verification_data: true,
+            verified: true,
+          }),
+          // not verified and cannot be verified
+          new UserLeaveAdministrator({
+            employer_dba: "Tomato Touchdown",
+            employer_fein: "22-3457192",
+            employer_id: "io19fj9-00jjf-uiw3r",
+            has_fineos_registration: true,
+            has_verification_data: false,
+            verified: false,
+          }),
+        ],
+      },
+    }));
   };
 
   beforeEach(() => {
@@ -27,6 +54,7 @@ describe("Index", () => {
       employerShowAddOrganization: false,
       employerShowVerifications: false,
     };
+    mockRouter.pathname = routes.employers.organizations;
     renderPage();
   });
 
@@ -46,12 +74,20 @@ describe("Index", () => {
     const rows = wrapper.find("LeaveAdministratorRow");
     const titles = rows.map((row) => row.dive().find("span").first().text());
     const eins = rows.map((row) => row.dive().find("td").text());
-    expect(titles).toEqual([
-      "Book Bindings 'R Us",
-      "Knitting Castle",
-      "Tomato Touchdown",
-    ]);
-    expect(eins).toEqual(["**-***1823", "**-***3443", "**-***7192"]);
+    expect(titles).toMatchInlineSnapshot(`
+Array [
+  "Book Bindings 'R Us",
+  "Knitting Castle",
+  "Tomato Touchdown",
+]
+`);
+    expect(eins).toMatchInlineSnapshot(`
+Array [
+  "00-3451823",
+  "11-3453443",
+  "22-3457192",
+]
+`);
   });
 
   describe('when "employerShowAddOrganization" feature flag is enabled', () => {
@@ -213,21 +249,6 @@ describe("Index", () => {
         <Index appLogic={appLogic} query={{ account_converted: "true" }} />
       ).dive();
       expect(wrapper.find("Alert")).toMatchSnapshot();
-    });
-  });
-
-  describe('when "employerShowDashboard" is enabled', () => {
-    it("has a back button to the dashboard", () => {
-      process.env.featureFlags = { employerShowDashboard: true };
-      ({ wrapper } = renderWithAppLogic(Index, {
-        diveLevels: 1,
-      }));
-
-      expect(wrapper.find("BackButton")).toMatchInlineSnapshot(`
-        <BackButton
-          label="Back to Dashboard"
-        />
-      `);
     });
   });
 });

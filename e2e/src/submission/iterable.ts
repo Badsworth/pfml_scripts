@@ -7,7 +7,7 @@ import { GeneratedClaim } from "../generation/Claim";
 import {
   getClaimantCredentials,
   getLeaveAdminCredentials,
-} from "../util/common";
+} from "../util/credentials";
 import { ApplicationResponse } from "../api";
 import PortalSubmitter from "./PortalSubmitter";
 import * as util from "util";

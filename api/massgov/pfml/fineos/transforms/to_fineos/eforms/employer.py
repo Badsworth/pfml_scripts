@@ -55,7 +55,7 @@ class FineosNatureOfLeave(str, Enum):
 class FineosBelieveAccurate(str, Enum):
     YES = "Yes"
     NO = "No"
-    UNSURE = "Don't Know"
+    UNSURE = "I Don't Know"
 
 
 # Intermediary for handling transforms from our data to FINEOS enums and values

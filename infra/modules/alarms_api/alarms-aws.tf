@@ -6,7 +6,13 @@ locals {
     "fineos-data-export-tool",
     "reductions-retrieve-payment-lists",
     "reductions-send-wage-replacement",
-    "reductions-send-claimant-lists"
+    "reductions-dua-send-claimant-lists",
+    "reductions-dia-send-claimant-lists",
+    "dor-fineos-etl",
+    "import-fineos-to-warehouse",
+    "payments-payment-voucher-plus",
+    "process-cps-error-reports",
+    "weekend-cps-extract-processing",
   ]
 }
 
@@ -125,7 +131,7 @@ resource "aws_cloudwatch_metric_alarm" "failed_invocations" {
   alarm_description = "(${upper(var.environment_name)} API CRIT) ${each.key} failed to start"
   namespace         = "AWS/Events"
   dimensions = {
-    rule_name = "${each.key}_${var.environment_name}_schedule"
+    RuleName = "${each.key}_${var.environment_name}_schedule"
   }
 
   comparison_operator = "GreaterThanThreshold"

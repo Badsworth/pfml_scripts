@@ -34,3 +34,34 @@ export type SubjectOptions =
   | "approval (claimant)"
   | "review leave hours"
   | "request for additional info";
+
+// Type utils
+
+/**
+ * Check whether a given value is neither null nor undefined.
+ * @param arg - value to check
+ * @example
+ * isNotNull(null) => false
+ * isNotNull("") => true
+ */
+export function isNotNull<T>(arg: T): arg is NonNullable<T> {
+  return arg !== null && arg !== undefined;
+}
+
+/**
+ * Check whether a given value is an array where
+ * each member is of a specified type
+ *
+ * @param arr - array to check
+ * @param check - type guard to use when evaluating each item
+ * @example
+ * isTypedArray(["", false, true], isNotNull) => true
+ */
+export function isTypedArray<T>(
+  arr: unknown,
+  check: (x: unknown) => x is T
+): arr is T[] {
+  if (!Array.isArray(arr)) return false;
+  if (arr.some((item) => !check(item))) return false;
+  return true;
+}

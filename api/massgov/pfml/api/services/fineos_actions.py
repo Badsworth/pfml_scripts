@@ -1077,6 +1077,11 @@ def create_or_update_employer(
 
     employer.fineos_employer_id = fineos_employer_id
 
+    # API-1687 - Create service agreements only when employers are created.
+    # Updates to exemption status will be processed by a separate job.
+    if is_create and fineos_employer_id:
+        create_service_agreement_for_employer(fineos, employer)
+
     return fineos_employer_id
 
 

@@ -2,6 +2,7 @@ import { renderWithAppLogic, simulateEvents } from "../../test-utils";
 import ConsentToDataSharing from "../../../src/pages/user/consent-to-data-sharing";
 import { UserRole } from "../../../src/models/User";
 import routes from "../../../src/routes";
+import tracker from "../../../src/services/tracker";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -41,7 +42,9 @@ describe("ConsentToDataSharing", () => {
   });
 
   describe("when the user agrees and submits the form", () => {
+    let trackEventSpy;
     beforeEach(async () => {
+      trackEventSpy = jest.spyOn(tracker, "trackEvent");
       const { submitForm } = simulateEvents(wrapper);
       await submitForm();
     });
@@ -50,6 +53,13 @@ describe("ConsentToDataSharing", () => {
       expect(appLogic.users.updateUser).toHaveBeenCalledWith(user_id, {
         consented_to_data_sharing: true,
       });
+    });
+
+    it("tracks consent with newrelic event", () => {
+      expect(trackEventSpy).toHaveBeenCalledWith(
+        "User consented to data sharing",
+        {}
+      );
     });
   });
 });

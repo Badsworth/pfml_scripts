@@ -23,7 +23,6 @@ export const Index = (props) => {
   const accountConverted = query?.account_converted === "true";
   const showVerifications = isFeatureEnabled("employerShowVerifications");
   const showAddOrganization = isFeatureEnabled("employerShowAddOrganization");
-  const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
 
   const nearFutureAvailabilityContext = showAddOrganization
     ? "inviteMembers"
@@ -31,14 +30,10 @@ export const Index = (props) => {
 
   return (
     <React.Fragment>
-      {shouldShowDashboard ? (
-        <BackButton
-          label={t("pages.employersOrganizations.backToDashboardLabel")}
-          href={appLogic.portalFlow.getNextPageRoute("BACK")}
-        />
-      ) : (
-        <BackButton />
-      )}
+      <BackButton
+        label={t("pages.employersOrganizations.backToDashboardLabel")}
+        href={appLogic.portalFlow.getNextPageRoute("BACK")}
+      />
       <Title>{t("pages.employersOrganizations.title")}</Title>
       {accountConverted && (
         <Alert

@@ -530,7 +530,7 @@ def test_get_state_logs_stuck_in_state(initialize_factories_session, test_db_ses
 
 def test_get_state_counts(initialize_factories_session, test_db_session):
     misc_states = [
-        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
+        State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT,
         State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
         State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
     ]
@@ -552,7 +552,7 @@ def test_get_state_counts(initialize_factories_session, test_db_session):
     for _ in range(7):
         payment = build_state_log(
             state_log_util.AssociatedClass.PAYMENT,
-            State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
             test_db_session,
         )
         payments.append(payment)
@@ -562,9 +562,7 @@ def test_get_state_counts(initialize_factories_session, test_db_session):
     for state in misc_states:
         assert state_log_counts[state.state_description] == 5
 
-    assert (
-        state_log_counts[State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_description] == 7
-    )
+    assert state_log_counts[State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_description] == 7
 
     # Now move every payment to a new state
     for payment in payments:

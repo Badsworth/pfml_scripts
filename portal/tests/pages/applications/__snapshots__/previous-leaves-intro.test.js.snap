@@ -11,5 +11,48 @@ exports[`PreviousLeavesIntro renders the page 1`] = `
   >
     Tell us about your previous leave.
   </Heading>
+  <Hint>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsPreviousLeavesIntro.intro"
+      values={
+        Object {
+          "startDate": "January 1, 2021",
+        }
+      }
+    />
+  </Hint>
 </QuestionPage>
+`;
+
+exports[`PreviousLeavesIntro renders the page 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    In this section, we need to know about some other leave you may have taken between January 1, 2021 and January 1, 2021:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Any previous leave for the same reason that you are applying for paid leave now
+    </li>
+    <li
+      key="1"
+    >
+      Any previous leave for a different reason that also qualifies under PFML
+    </li>
+  </ul>,
+]
 `;

@@ -17,6 +17,7 @@ from massgov.pfml.api.services.application_rules import (
 )
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
+    ConcurrentLeave,
     EmployerBenefit,
     EmploymentStatus,
     IntermittentLeavePeriod,
@@ -30,6 +31,7 @@ from massgov.pfml.db.models.employees import PaymentMethod
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
     EmployerBenefitFactory,
     IntermittentLeavePeriodFactory,
@@ -41,6 +43,8 @@ from massgov.pfml.db.models.factories import (
     WorkPatternFixedFactory,
     WorkPatternVariableFactory,
 )
+
+PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 
 
 def test_first_name_required():
@@ -1686,11 +1690,6 @@ def test_employer_benefit_missing_fields():
     assert [
         Issue(
             type=IssueType.required,
-            message="employer_benefits[0].benefit_end_date is required",
-            field="employer_benefits[0].benefit_end_date",
-        ),
-        Issue(
-            type=IssueType.required,
             message="employer_benefits[0].benefit_start_date is required",
             field="employer_benefits[0].benefit_start_date",
         ),
@@ -1698,6 +1697,11 @@ def test_employer_benefit_missing_fields():
             type=IssueType.required,
             message="employer_benefits[0].benefit_type is required",
             field="employer_benefits[0].benefit_type",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="employer_benefits[0].is_full_salary_continuous is required",
+            field="employer_benefits[0].is_full_salary_continuous",
         ),
     ] == issues
 
@@ -2141,6 +2145,99 @@ def test_has_previous_leaves_true_no_leave():
     ] == issues
 
 
+def test_concurrent_leave_no_issues():
+    application = ApplicationFactory.build()
+    application.has_concurrent_leave = True
+    application.concurrent_leave = ConcurrentLeaveFactory.build(
+        application_id=application.application_id,
+        is_for_current_employer=True,
+        leave_start_date=date(2021, 1, 1),
+        leave_end_date=date(2021, 3, 1),
+    )
+
+    issues = get_conditional_issues(application, Headers())
+    assert [] == issues
+
+
+def test_concurrent_leave_required_fields():
+    application = ApplicationFactory.build()
+    application.has_concurrent_leave = True
+    application.concurrent_leave = ConcurrentLeaveFactory.build(
+        application_id=application.application_id,
+        is_for_current_employer=None,
+        leave_start_date=None,
+        leave_end_date=None,
+    )
+
+    issues = get_conditional_issues(application, Headers())
+
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="concurrent_leave.leave_start_date is required",
+            field="concurrent_leave.leave_start_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="concurrent_leave.leave_end_date is required",
+            field="concurrent_leave.leave_end_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="concurrent_leave.is_for_current_employer is required",
+            field="concurrent_leave.is_for_current_employer",
+        ),
+    ] == issues
+
+
+@pytest.mark.parametrize(
+    "test_concurrent_leave,expected_issues",
+    [
+        (
+            ConcurrentLeave(
+                is_for_current_employer=True,
+                leave_start_date=date(2020, 1, 1),
+                leave_end_date=date(2020, 4, 1),
+            ),
+            [
+                Issue(
+                    type=IssueType.minimum,
+                    message=f"concurrent_leave.leave_start_date cannot be earlier than {PFML_PROGRAM_LAUNCH_DATE}",
+                    field="concurrent_leave.leave_start_date",
+                ),
+                Issue(
+                    type=IssueType.minimum,
+                    message=f"concurrent_leave.leave_end_date cannot be earlier than {PFML_PROGRAM_LAUNCH_DATE}",
+                    field="concurrent_leave.leave_end_date",
+                ),
+            ],
+        ),
+        (
+            ConcurrentLeave(
+                is_for_current_employer=True,
+                leave_start_date=date(2021, 5, 1),
+                leave_end_date=date(2021, 4, 1),
+            ),
+            [
+                Issue(
+                    type=IssueType.invalid_date_range,
+                    message="concurrent_leave.leave_end_date cannot be earlier than concurrent_leave.leave_start_date",
+                    field="concurrent_leave.leave_end_date",
+                )
+            ],
+        ),
+    ],
+)
+def test_concurrent_leave_date_range_issues(test_concurrent_leave, expected_issues):
+    application = ApplicationFactory.build()
+    application.has_concurrent_leave = True
+    application.concurrent_leave = test_concurrent_leave
+
+    issues = get_conditional_issues(application, Headers())
+
+    assert expected_issues == issues
+
+
 def test_previous_leave_no_issues():
     application = ApplicationFactory.build()
     application.has_previous_leaves_other_reason = True
@@ -2177,6 +2274,16 @@ def test_previous_leave_missing_fields():
             type=IssueType.required,
             message="previous_leaves_other_reason[0].leave_reason is required",
             field="previous_leaves_other_reason[0].leave_reason",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_other_reason[0].leave_minutes is required",
+            field="previous_leaves_other_reason[0].leave_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_other_reason[0].worked_per_week_minutes is required",
+            field="previous_leaves_other_reason[0].worked_per_week_minutes",
         ),
     ] == issues
 
@@ -2237,4 +2344,27 @@ def test_previous_leave_end_date_must_be_after_start_date():
             message="previous_leaves_same_reason[0].leave_end_date cannot be earlier than previous_leaves_same_reason[0].leave_start_date",
             field="previous_leaves_same_reason[0].leave_end_date",
         ),
+    ] == issues
+
+
+def test_previous_leave_worked_per_week_minutes_must_be_less_than_10080():
+    application = ApplicationFactory.build()
+    leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 2),
+            leave_end_date=date(2021, 2, 3),
+            leave_minutes=1464,
+            worked_per_week_minutes=60000,
+        )
+    ]
+    application.previous_leaves_same_reason = leaves
+
+    issues = get_conditional_issues(application, Headers())
+    assert [
+        Issue(
+            type=IssueType.maximum,
+            message="Minutes worked per week cannot exceed 10080",
+            field="previous_leaves_same_reason[0].worked_per_week_minutes",
+        )
     ] == issues

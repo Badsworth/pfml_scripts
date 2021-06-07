@@ -1,4 +1,8 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import {
+  MockBenefitsApplicationBuilder,
+  renderWithAppLogic,
+  simulateEvents,
+} from "../../test-utils";
 import ConcurrentLeavesIntroIntro from "../../../src/pages/applications/concurrent-leaves-intro";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -23,9 +27,13 @@ const setup = (claimAttrs = {}) => {
 
 describe("ConcurrentLeavesIntroIntro", () => {
   it("renders the page", () => {
-    const { wrapper } = setup();
+    const { wrapper } = setup(
+      new MockBenefitsApplicationBuilder().continuous().create()
+    );
 
     expect(wrapper).toMatchSnapshot();
+
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it("calls goToNextPage when user submits form", async () => {

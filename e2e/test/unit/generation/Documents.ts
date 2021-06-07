@@ -48,6 +48,11 @@ describe("Documents", function () {
           end_date: "2020-09-01",
         },
       ],
+      caring_leave_metadata: {
+        family_member_first_name: "Clarence",
+        family_member_last_name: "Ellis",
+        family_member_date_of_birth: "1943-05-11",
+      },
     },
   };
   const intermittentAdditions: Partial<ApplicationRequestBody> = {
@@ -65,6 +70,11 @@ describe("Documents", function () {
           frequency_interval_basis: "Weeks",
         },
       ],
+      caring_leave_metadata: {
+        family_member_first_name: "Kimberly",
+        family_member_last_name: "Bryant",
+        family_member_date_of_birth: "1967-01-14",
+      },
     },
   };
   const reducedAdditions: Partial<ApplicationRequestBody> = {
@@ -84,6 +94,11 @@ describe("Documents", function () {
           saturday_off_minutes: 0,
         },
       ],
+      caring_leave_metadata: {
+        family_member_first_name: "Katherine",
+        family_member_last_name: "Johnson",
+        family_member_date_of_birth: "1918-08-26",
+      },
     },
   };
 
@@ -125,7 +140,151 @@ describe("Documents", function () {
     return document;
   }
 
-  it("Should generate an HCP form", async function () {
+  it("Should generate a Caring Leave Certification form", async function () {
+    const document = await generate(claim, {
+      CARING: {},
+    });
+    expect(document).toMatchObject({
+      document_type: hasServicePack
+        ? "Care for a family member form"
+        : "State managed Paid Leave Confirmation",
+    });
+    const values = await parsePDF(document);
+    expect(values).toMatchObject({
+      /*
+       * Assert Data Entered in
+       * Section 1 - Employee Info
+       */
+      "Employee first name": "John",
+      "Employee Last name": "Smith",
+      "Emp. DOB mm": "06",
+      "Emp. DOB dd": "07",
+      "Emp. DOB yyyy": "2020",
+      "Emp. SSI last 4": "0000",
+      "Why are you applying for leave?":
+        "To care for a family member with a serious health condition",
+
+      /*
+       * Assert Data Entered in
+       * Section 2 - Family Member Info
+       */
+      "Family member name: First": "Clarence",
+      "Family member name: Last": "Ellis",
+      "Family member's date of birth: MM": "05",
+      "Family member's date of birth: DD": "11",
+      "Family member's date of birth: yyyy": "1943",
+      "Family member address: Country:": "United States",
+    });
+
+    // Snapshot test to catch any unexpectedly changed values.
+    expect(values).toMatchSnapshot({
+      "Condition start mm": expect.any(String),
+      "Condition start dd": expect.any(String),
+      "Conditiion start yyyy": expect.any(String),
+      "Employee signature date: MM": expect.any(String),
+      "Employee signature date: DD": expect.any(String),
+      "Employee signature date: yyyy": expect.any(String),
+      "Family member address: Street:": expect.any(String),
+      "Family member address: City:": expect.any(String),
+      "Family member address: State:": expect.any(String),
+      "Family member address: Zipcode:": expect.any(String),
+    });
+  });
+
+  it("Should generate an invalid Caring Leave form", async function () {
+    const document = await generate(claim, {
+      CARING: { invalid: true },
+    });
+    const values = await parsePDF(document);
+    // Assert DOB/SSN has correct values.
+    expect(values).toMatchObject({
+      "Emp. SSI last 4": undefined,
+      "Emp. DOB mm": "06",
+      "Emp. DOB dd": "07",
+      "Emp. DOB yyyy": undefined,
+    });
+    expect(values).toMatchSnapshot({
+      "Condition start mm": expect.any(String),
+      "Condition start dd": expect.any(String),
+      "Conditiion start yyyy": expect.any(String),
+      "Employee signature date: MM": expect.any(String),
+      "Employee signature date: DD": expect.any(String),
+      "Employee signature date: yyyy": expect.any(String),
+      "Family member address: Street:": expect.any(String),
+      "Family member address: City:": expect.any(String),
+      "Family member address: State:": expect.any(String),
+      "Family member address: Zipcode:": expect.any(String),
+    });
+  });
+
+  it("Should generate a valid Caring Leave form for a continuous leave claim", async function () {
+    const document = await generate(claim, {
+      CARING: {},
+    });
+    const values = await parsePDF(document);
+    expect(values).toMatchObject({
+      "Continuous leave": true,
+      "Reduced leave schedule": false,
+      "Intermittent leave": false,
+      "Weeks of continuous leave": "4",
+      // Assert Leave Dates
+      "Continuous start dd": "01",
+      "Continuous start mm": "08",
+      "Continuous start yyyy": "2020",
+      "Continuous end dd": "01",
+      "Continuous end mm": "09",
+      "Continuous end yyyy": "2020",
+    });
+  });
+
+  it("Should generate a valid Caring Leave form for an intermittent leave claim", async function () {
+    const document = await generate(
+      { ...claim, ...intermittentAdditions },
+      {
+        CARING: {},
+      }
+    );
+    const values = await parsePDF(document);
+    expect(values).toMatchObject({
+      "Continuous leave": false,
+      "Reduced leave schedule": false,
+      "Intermittent leave": true,
+      Absences: "Once per week",
+      "Times per week": "1",
+      Days: "1",
+      // Assert leave dates Int
+      "Intermittent start dd": "01",
+      "Intermittent start mm": "08",
+      "Intermittent start yyyy": "2020",
+      "Intermittent end dd": "15",
+      "Intermittent end mm": "08",
+      "Intermittent end yyyy": "2020",
+    });
+  });
+
+  it("Should generate a valid Caring Leave form for an reduced leave claim", async function () {
+    const document = await generate(
+      { ...claim, ...reducedAdditions },
+      { CARING: {} }
+    );
+    const values = await parsePDF(document);
+    expect(values).toMatchObject({
+      "Continuous leave": false,
+      "Reduced leave schedule": true,
+      "Intermittent leave": false,
+      "Weeks of a reduced leave schedule": "2",
+      "Hours of reduced leave schedule": "12",
+      // Assert leave dates Int
+      "Reduced start dd": "15",
+      "Reduced start mm": "08",
+      "Reduced start yyyy": "2020",
+      "Reduced end dd": "30",
+      "Reduced end mm": "08",
+      "Reduced end yyyy": "2020",
+    });
+  });
+
+  it("Should generate a HCP form", async function () {
     const document = await generate(claim, {
       HCP: {},
     });

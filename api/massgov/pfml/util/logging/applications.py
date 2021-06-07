@@ -154,7 +154,7 @@ def get_previous_leaves_log_attributes(
 
     reason_values = [
         PreviousLeaveQualifyingReason.PREGNANCY_MATERNITY.previous_leave_qualifying_reason_description,
-        PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_description,
+        PreviousLeaveQualifyingReason.AN_ILLNESS_OR_INJURY.previous_leave_qualifying_reason_description,
         PreviousLeaveQualifyingReason.CARE_FOR_A_FAMILY_MEMBER.previous_leave_qualifying_reason_description,
         PreviousLeaveQualifyingReason.CHILD_BONDING.previous_leave_qualifying_reason_description,
         PreviousLeaveQualifyingReason.MILITARY_CAREGIVER.previous_leave_qualifying_reason_description,

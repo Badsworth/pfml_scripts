@@ -25,7 +25,7 @@ class SftpS3TransferConfig:
     dest_dir: str
     archive_dir: str
     # String representation of the password of the SSH key (my_str0ng_pa$$word).
-    ssh_key_password: str
+    ssh_key_password: Optional[str]
     # String representation of the private key.
     ssh_key: str
 

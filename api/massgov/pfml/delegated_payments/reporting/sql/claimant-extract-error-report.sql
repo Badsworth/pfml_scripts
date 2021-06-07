@@ -24,7 +24,7 @@ WHERE
 		FROM
 			IMPORT_LOG
 		WHERE
-			SOURCE = 'ClaimantExtractStep')
+			SOURCE = 'ClaimantExtractStep') AND ST1.FLOW_ID in (20)
 )
 SELECT
 	CBT.FINEOS_CUSTOMER_NUMBER "Customer Number",

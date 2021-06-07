@@ -16,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import backref, deferred, relationship
+from sqlalchemy.orm import backref, relationship
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
@@ -335,7 +335,6 @@ class Application(Base):
     caring_leave_metadata_id = Column(
         UUID(as_uuid=True), ForeignKey("caring_leave_metadata.caring_leave_metadata_id")
     )
-    has_previous_leaves = deferred(Column(Boolean().evaluates_none()))
     has_previous_leaves_same_reason = Column(Boolean)
     has_previous_leaves_other_reason = Column(Boolean)
     has_concurrent_leave = Column(Boolean)
@@ -920,12 +919,20 @@ class PreviousLeaveQualifyingReason(LookupTable):
         "previous_leave_qualifying_reason_description",
     )
 
-    PREGNANCY_MATERNITY = LkPreviousLeaveQualifyingReason(1, "Pregnancy / Maternity")
-    SERIOUS_HEALTH_CONDITION = LkPreviousLeaveQualifyingReason(2, "Serious health condition")
-    CARE_FOR_A_FAMILY_MEMBER = LkPreviousLeaveQualifyingReason(3, "Care for a family member")
-    CHILD_BONDING = LkPreviousLeaveQualifyingReason(4, "Child bonding")
-    MILITARY_CAREGIVER = LkPreviousLeaveQualifyingReason(5, "Military caregiver")
-    MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(6, "Military exigency family")
+    PREGNANCY_MATERNITY = LkPreviousLeaveQualifyingReason(1, "Pregnancy")
+    AN_ILLNESS_OR_INJURY = LkPreviousLeaveQualifyingReason(2, "An illness or injury")
+    CARE_FOR_A_FAMILY_MEMBER = LkPreviousLeaveQualifyingReason(
+        3, "Caring for a family member with a serious health condition"
+    )
+    CHILD_BONDING = LkPreviousLeaveQualifyingReason(
+        4, "Bonding with my child after birth or placement"
+    )
+    MILITARY_CAREGIVER = LkPreviousLeaveQualifyingReason(
+        5, "Caring for a family member who serves in the armed forces"
+    )
+    MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(
+        6, "Managing family affairs while a family member is on active duty in the armed forces"
+    )
 
 
 def sync_lookup_tables(db_session):

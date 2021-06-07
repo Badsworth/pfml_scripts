@@ -2,7 +2,6 @@ import config from "../config";
 import TestMailVerificationFetcher from "../submission/TestMailVerificationFetcher";
 import AuthenticationManager from "../submission/AuthenticationManager";
 import { CognitoUserPool } from "amazon-cognito-identity-js";
-import { Credentials } from "../types";
 import PortalSubmitter from "../submission/PortalSubmitter";
 import EmployerPool from "../generation/Employer";
 import EmployeePool from "../generation/Employee";
@@ -40,20 +39,6 @@ export function getAuthManager(): AuthenticationManager {
     config("API_BASEURL"),
     getVerificationFetcher()
   );
-}
-
-export function getClaimantCredentials(): Credentials {
-  return {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
-}
-
-export function getLeaveAdminCredentials(fein: string): Credentials {
-  return {
-    username: `gqzap.employer.${fein.replace("-", "")}@inbox.testmail.app`,
-    password: config("EMPLOYER_PORTAL_PASSWORD"),
-  };
 }
 
 export function getPortalSubmitter(): PortalSubmitter {

@@ -92,6 +92,7 @@ export default jest.fn(() => ({
     requireUserRole: jest.fn(),
     updateUser: jest.fn(),
     user: new User({
+      auth_id: "mock_auth_id",
       user_id: "mock_user_id",
       consented_to_data_sharing: true,
       user_leave_administrators: [

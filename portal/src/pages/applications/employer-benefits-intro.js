@@ -1,8 +1,10 @@
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
+import Hint from "../../components/Hint";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { Trans } from "react-i18next";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
@@ -22,6 +24,9 @@ export const EmployerBenefitsIntro = (props) => {
       <Heading level="2" size="1">
         {t("pages.claimsEmployerBenefitsIntro.sectionLabel")}
       </Heading>
+      <Hint>
+        <Trans i18nKey="pages.claimsEmployerBenefitsIntro.intro" />
+      </Hint>
     </QuestionPage>
   );
 };

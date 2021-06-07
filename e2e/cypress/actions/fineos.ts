@@ -134,7 +134,7 @@ export function assertHasTask(name: string): void {
   });
 }
 
-function assertHasDocument(name: string) {
+export function assertHasDocument(name: string): void {
   cy.get("table[id*='DocumentsForCaseListviewWidget']").should((table) => {
     expect(table, `Expected to find a "${name}" document`).to.have.descendants(
       `a:contains("${name}")`
@@ -452,32 +452,6 @@ export function fillAbsencePeriod(claimNumber: string): void {
   cy.get("#PopupContainer input[value='Yes']").click();
 }
 
-export function intermittentFillAbsencePeriod(claimNumber: string): void {
-  assertAdjudicatingClaim(claimNumber);
-  onTab("Evidence");
-  onTab("Certification Periods");
-  cy.get("input[value='Prefill with Requested Absence Periods']").click();
-  cy.get("#PopupContainer").within(() => {
-    cy.get("input[value='Yes']").click();
-  });
-  cy.get("#certificationEpisodicLeaveEntitlementWidget").within(() => {
-    cy.get("input[name*=episodeDuration]").focus().type("{selectall}5").blur();
-    // Wait until the entitlement widget becomes detached from the DOM. At this point, we're in the middle
-    // of a rerender, and we just need to wait a little additional time for the render to complete.
-    cy.root()
-      .should(($el) => !Cypress.dom.isAttached($el))
-      .wait(300);
-  });
-  // This has to be reselected because #certificationEpisodicLeaveEntitlementWidget
-  // is removed and rerendered after episode duration is selected.
-  cy.get(
-    "#certificationEpisodicLeaveEntitlementWidget input[type='button'][value='Apply']"
-  ).click();
-  cy.get("#PopupContainer").within(() => {
-    cy.get("input[value='Yes']").click();
-  });
-}
-
 export function claimAdjudicationFlow(
   claimNumber: string,
   reason: LeaveReason,
@@ -535,7 +509,7 @@ export function intermittentClaimAdjudicationFlow(
   );
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
-  intermittentFillAbsencePeriod(claimNumber);
+  fillAbsencePeriod(claimNumber);
   onTab("Manage Request");
   cy.wait(500);
   cy.get("input[type='submit'][value='Accept']").click();

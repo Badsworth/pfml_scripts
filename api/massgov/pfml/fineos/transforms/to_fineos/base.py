@@ -49,6 +49,11 @@ class EFormAttributeBuilder:
         if attribute_type == "enumValue" and value is not None:
             # enumValue types need to be coerced into a ModelEnum instance
             domain_name = definition["domainName"]
+
+            enum_override = definition.get("enumOverride")
+            if enum_override:
+                value = enum_override[value.name]
+
             value = ModelEnum(domainName=domain_name, instanceValue=value)
 
         attribute = EFormAttribute(name=attribute_name)

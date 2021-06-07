@@ -11,5 +11,25 @@ exports[`EmployerBenefitsIntroIntro renders the page 1`] = `
   >
     Tell us about other benefits and income you will use during your paid leave from PFML.
   </Heading>
+  <Hint>
+    <Trans
+      i18nKey="pages.claimsEmployerBenefitsIntro.intro"
+    />
+  </Hint>
 </QuestionPage>
+`;
+
+exports[`EmployerBenefitsIntroIntro renders the page 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Next, we need to know about any other employer-sponsored benefits you'll use or other sources of income you'll receive during your PFML paid leave period. We can determine your PFML benefit amount once we have this information.
+  </p>,
+  <p
+    key="p-1"
+  >
+    An employer-sponsored benefit is a policy provided by your employer that provides you income while you can’t work. This includes temporary disability insurance, permanent disability insurance, and a family or medical leave policy.
+  </p>,
+]
 `;

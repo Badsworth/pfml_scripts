@@ -1016,10 +1016,10 @@ const pages = {
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
-      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p>",
+      "<strong>Are you taking medical leave for your own serious health condition?</strong><p>You need to have a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p>",
     // TODO (CP-1983) Merge leaveDetails and leaveDetailsWithCaring when showCaringLeave feature flag is not needed
     stepHTMLDescription_leaveDetailsWithCaring:
-      "<strong>Are you taking medical leave?</strong><p>You need to have a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship</caregiver-relationship-link>.</p>",
+      "<strong>Are you taking medical leave for your own serious health condition?</strong><p>You need to have a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship</caregiver-relationship-link>.</p>",
     stepHTMLDescription_medical:
       "<p>You need to provide your completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_otherLeave:
@@ -1349,7 +1349,7 @@ const pages = {
       "Leave is determined based on benefit year (365 days from the start of the first week you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child. <multiple-births-link>Learn more about taking leave for multiple childbirths or placements</multiple-births-link>.",
     bondingTypeNewbornLabel: "Birth",
     caringLeaveLabel: "I need to care for my family member.",
-    medicalLeaveLabel: "I can’t work due to an illness, injury, or pregnancy.",
+    medicalLeaveLabel: "I can’t work due to my illness, injury, or pregnancy.",
     sectionHint: "You can only request one leave at a time.",
     sectionLabel: "Why do you need to take leave?",
     serviceMemberFamilyLeaveLabel:
@@ -1470,6 +1470,8 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsPreviousLeavesIntro: {
+    intro:
+      "<p>In this section, we need to know about some other leave you may have taken between January 1, 2021 and {{startDate}}:</p><ul><li>Any previous leave for the same reason that you are applying for paid leave now</li><li>Any previous leave for a different reason that also qualifies under PFML</li></ul>",
     sectionLabel: "Tell us about your previous leave.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
@@ -1485,7 +1487,7 @@ const pages = {
       "You bonded with your child after birth or placement.",
       "You needed to manage family affairs while a family member is on active duty in the armed forces.",
       "You needed to care for a family member who serves in the armed forces.",
-      "You needed to care for a family member with a serious health condition.",
+      "You needed to care for a family member with a serious health condition and your leave began on or after July 1, 2021.",
     ],
     sectionLabel:
       "Did you take leave between January 1, 2021–{{leaveStartDate}} for a different qualifying reason?",
@@ -1537,8 +1539,10 @@ const pages = {
   claimsPreviousLeavesSameReason: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
+    sectionHint:
+      "Select No if your current paid leave from PFML began on July 1, 2021.",
     sectionLabel:
-      "Did you take any other leave between January 1, 2021–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
+      "Did you take any other leave between {{previousLeaveStartDate}}–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesSameReasonDetails: {
@@ -1618,10 +1622,13 @@ const pages = {
     amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     childBirthDateLabel: "Child’s date of birth",
     childPlacementDateLabel: "Child’s placement date",
+    concurrentLeaveHasConcurrentLeaveLabel: "Concurrent leave?",
+    concurrentLeaveLabel: "Accrued paid leave",
     documentsLoadError: "$t(shared.documentsLoadError)",
     editLink: "Edit",
     employerBenefitEntryLabel:
       "$t(shared.employerBenefitEntryPrefix) {{count}}",
+    employerBenefitIsFullSalaryContinuous: "Full wage replacement",
     employerBenefitLabel: "Employer-sponsored benefits?",
     employerBenefitType_familyOrMedicalLeave:
       "$t(shared.employerBenefitType_familyOrMedicalLeave)",
@@ -1726,10 +1733,13 @@ const pages = {
     pregnancyOrRecentBirth_no: "$t(shared.choiceNo)",
     pregnancyOrRecentBirth_yes: "$t(shared.choiceYes)",
     previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",
-    previousLeaveFromCurrentEmployer_no:
-      "Did not take leave from this employer",
-    previousLeaveFromCurrentEmployer_yes: "Took leave from this employer",
+    previousLeaveHasPreviousLeavesLabel: "Previous leave?",
+    previousLeaveIsForCurrentEmployer_false: "From a different employer",
+    previousLeaveIsForCurrentEmployer_true: "From this employer",
     previousLeaveLabel: "Previous paid or unpaid leave?",
+    previousLeaveLeaveMinutes: "$t(shared.displayTime)",
+    previousLeaveLeaveMinutesLabel: "Total hours taken",
+    previousLeaveLeaveMinutes_noMinutes: "$t(shared.displayTime_noMinutes)",
     previousLeaveReason_activeDutyFamily:
       "Leave was for managing family affairs while a family member was on active duty in the armed forces",
     previousLeaveReason_bonding:
@@ -1739,6 +1749,12 @@ const pages = {
     previousLeaveReason_pregnancy: "Leave was for a pregnancy",
     previousLeaveReason_serviceMemberFamily:
       "Leave was for caring for a family member who serves in the armed forces",
+    previousLeaveType_otherReason: "Leave for a different qualifying reason",
+    previousLeaveType_sameReason: "Leave for the same qualifying reason",
+    previousLeaveWorkedPerWeekMinutes: "$t(shared.displayTime)",
+    previousLeaveWorkedPerWeekMinutesLabel: "Hours worked at time of leave",
+    previousLeaveWorkedPerWeekMinutes_noMinutes:
+      "$t(shared.displayTime_noMinutes)",
     reducedLeaveScheduleLabel: "Hours off per week",
     reducedLeaveScheduleWeeklyTotal: "$t(shared.displayTime)",
     reducedLeaveScheduleWeeklyTotal_noMinutes:
@@ -2200,7 +2216,8 @@ const pages = {
     stepTwoHeading: "2. Get documentation that supports your leave request",
     stepTwoMedicalLeaveBody:
       "<p>Your health care provider must complete the <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>.</p>",
-    stepTwoMedicalLeaveSubhead: "Medical leave",
+    stepTwoMedicalLeaveSubhead:
+      "Medical leave for your own serious health condition",
     title: "Get ready to apply",
   },
   index: {
@@ -2243,7 +2260,7 @@ const pages = {
     dataUsageBody_employer:
       "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to an application with health care providers and contracted private partners.",
     dataUsageBody_user:
-      "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your application with your employer, health care provider(s), and contracted private partners.",
+      "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your application with your employer, employer’s affiliates, health care provider(s), and contracted private partners.",
     dataUsageHeading: "How we use your data",
     fullUserAgreementBody:
       "To find out more about how the Commonwealth might use the information you share with the Department of Family and Medical Leave, please read the <informed-consent-link>DFML Informed Consent Agreement</informed-consent-link> and the <privacy-policy-link>Privacy Policy for Mass.gov</privacy-policy-link>.",
@@ -2460,8 +2477,7 @@ const components = {
     choiceNo: "No (comment required)",
     choiceUnknown: "I don't know",
     choiceYes: "Yes",
-    commentHeading:
-      "Tell us why you think this relationship is inaccurate. (required)",
+    commentHeading: "Tell us why you think this relationship is inaccurate.",
     documentationLabel: "Documentation",
     familyMemberRelationshipHint:
       "This employee has attested the family member relationship is <eligible-relationship-link>a covered relationship</eligible-relationship-link>. If something on the form seems incorrect, add a comment at the end of the page.",
@@ -2484,7 +2500,7 @@ const components = {
       "<p>To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.</p><p>View the family relationship on page 3.</p>",
     warningHeading: "The employee will be denied paid leave.",
     warningLead:
-      "We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied",
+      "We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.",
   },
   employersLeaveSchedule: {
     caption: "This is your employee’s expected leave schedule.",
@@ -2630,12 +2646,6 @@ const components = {
     title: "We’re undergoing maintenance",
   },
   newTag: "New",
-  newsBanner: {
-    // TODO (EMPLOYER-1296): Add Mass.gov link to banner
-    body:
-      "Soon you'll be able to see all the applications you need to review using our new dashboard. Over the next few months we'll be adding more features to the dashboard so you can easily find and manage paid leave applications.",
-    header: "We're making it easier to manage paid leave applications",
-  },
   pagination: {
     nextLabel: "Next",
     previousLabel: "Previous",

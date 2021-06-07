@@ -28,7 +28,7 @@ Array [
     type="Temporary disability insurance"
   />,
   <OtherLeaveEntry
-    amount="$250.00 per month"
+    amount="Full wage replacement"
     dates="8/12/2021 – 12/30/2021"
     key="2"
     label="Benefit 3"
@@ -36,7 +36,7 @@ Array [
     type="Permanent disability insurance"
   />,
   <OtherLeaveEntry
-    amount="$250.00 per month"
+    amount="Full wage replacement"
     dates="8/12/2021 – 12/30/2021"
     key="3"
     label="Benefit 4"
@@ -218,6 +218,30 @@ exports[`Final Review Page when the claim is complete renders Review page with f
     >
       Other leave, benefits, and income
     </ReviewHeading>
+    <ReviewRow
+      label="Previous leave?"
+      level="3"
+    >
+      No
+    </ReviewRow>
+    <PreviousLeaveList
+      entries={Array []}
+      reviewRowLevel="3"
+      startIndex={0}
+      type="sameReason"
+    />
+    <PreviousLeaveList
+      entries={Array []}
+      reviewRowLevel="3"
+      startIndex={0}
+      type="otherReason"
+    />
+    <ReviewRow
+      label="Concurrent leave?"
+      level="3"
+    >
+      No
+    </ReviewRow>
     <ReviewRow
       label="Employer-sponsored benefits?"
       level="3"
@@ -484,6 +508,30 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
     >
       Other leave, benefits, and income
     </ReviewHeading>
+    <ReviewRow
+      label="Previous leave?"
+      level="4"
+    >
+      No
+    </ReviewRow>
+    <PreviousLeaveList
+      entries={Array []}
+      reviewRowLevel="4"
+      startIndex={0}
+      type="sameReason"
+    />
+    <PreviousLeaveList
+      entries={Array []}
+      reviewRowLevel="4"
+      startIndex={0}
+      type="otherReason"
+    />
+    <ReviewRow
+      label="Concurrent leave?"
+      level="4"
+    >
+      No
+    </ReviewRow>
     <ReviewRow
       label="Employer-sponsored benefits?"
       level="4"
@@ -809,17 +857,106 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
       Other leave, benefits, and income
     </ReviewHeading>
     <ReviewRow
+      label="Previous leave?"
+      level="4"
+    >
+      Yes
+    </ReviewRow>
+    <PreviousLeaveList
+      entries={
+        Array [
+          PreviousLeave {
+            "is_for_current_employer": true,
+            "is_for_same_reason_as_leave_reason": null,
+            "leave_end_date": "2021-05-01",
+            "leave_minutes": 1200,
+            "leave_reason": null,
+            "leave_start_date": "2021-07-01",
+            "previous_leave_id": null,
+            "worked_per_week_minutes": 2400,
+          },
+        ]
+      }
+      reviewRowLevel="4"
+      startIndex={0}
+      type="sameReason"
+    />
+    <PreviousLeaveList
+      entries={
+        Array [
+          PreviousLeave {
+            "is_for_current_employer": null,
+            "is_for_same_reason_as_leave_reason": null,
+            "leave_end_date": null,
+            "leave_minutes": null,
+            "leave_reason": null,
+            "leave_start_date": null,
+            "previous_leave_id": null,
+            "worked_per_week_minutes": null,
+          },
+        ]
+      }
+      reviewRowLevel="4"
+      startIndex={1}
+      type="otherReason"
+    />
+    <ReviewRow
+      label="Concurrent leave?"
+      level="4"
+    >
+      Yes
+    </ReviewRow>
+    <ReviewRow
+      label="Accrued paid leave"
+      level="4"
+    >
+      From this employer
+      <br />
+      1/1/2021 – 3/1/2021
+    </ReviewRow>
+    <ReviewRow
       label="Employer-sponsored benefits?"
       level="4"
     >
-      No
+      Yes
     </ReviewRow>
+    <EmployerBenefitList
+      entries={
+        Array [
+          EmployerBenefit {
+            "benefit_amount_dollars": 500,
+            "benefit_amount_frequency": "Per Week",
+            "benefit_end_date": "2021-02-01",
+            "benefit_start_date": "2021-01-01",
+            "benefit_type": "Family or medical leave insurance",
+            "employer_benefit_id": 1,
+            "is_full_salary_continuous": null,
+          },
+        ]
+      }
+      reviewRowLevel="4"
+    />
     <ReviewRow
       label="Other sources of income?"
       level="4"
     >
-      No
+      Yes
     </ReviewRow>
+    <OtherIncomeList
+      entries={
+        Array [
+          OtherIncome {
+            "income_amount_dollars": 125,
+            "income_amount_frequency": "Per Week",
+            "income_end_date": "2021-01-01",
+            "income_start_date": "2021-01-30",
+            "income_type": "Earnings from another employment/self-employment",
+            "other_income_id": null,
+          },
+        ]
+      }
+      reviewRowLevel="4"
+    />
   </div>
   <div
     className="margin-top-6 margin-bottom-2"
@@ -845,6 +982,96 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     Submit Part 1
   </Button>
 </div>
+`;
+
+exports[`PreviousLeaveList renders other reason list 1`] = `
+Array [
+  <ReviewRow
+    key="otherReason-0"
+    label="Previous leave 2"
+    level="4"
+  >
+    Leave for a different qualifying reason
+    <br />
+    From this employer
+    <br />
+    Leave was for caring for a family member
+    <br />
+    7/1/2021 – 5/1/2021
+    <br />
+    Hours worked at time of leave
+    <br />
+    40h
+    <br />
+    Total hours taken
+    <br />
+    20h
+  </ReviewRow>,
+  <ReviewRow
+    key="otherReason-1"
+    label="Previous leave 3"
+    level="4"
+  >
+    Leave for a different qualifying reason
+    <br />
+    From a different employer
+    <br />
+    Leave was for bonding with a child after birth or placement
+    <br />
+    7/1/2021 – 5/1/2021
+    <br />
+    Hours worked at time of leave
+    <br />
+    40h
+    <br />
+    Total hours taken
+    <br />
+    20h
+  </ReviewRow>,
+]
+`;
+
+exports[`PreviousLeaveList renders same reason list 1`] = `
+Array [
+  <ReviewRow
+    key="sameReason-0"
+    label="Previous leave 2"
+    level="4"
+  >
+    Leave for the same qualifying reason
+    <br />
+    From this employer
+    <br />
+    7/1/2021 – 5/1/2021
+    <br />
+    Hours worked at time of leave
+    <br />
+    40h
+    <br />
+    Total hours taken
+    <br />
+    20h
+  </ReviewRow>,
+  <ReviewRow
+    key="sameReason-1"
+    label="Previous leave 3"
+    level="4"
+  >
+    Leave for the same qualifying reason
+    <br />
+    From a different employer
+    <br />
+    7/1/2021 – 5/1/2021
+    <br />
+    Hours worked at time of leave
+    <br />
+    40h
+    <br />
+    Total hours taken
+    <br />
+    20h
+  </ReviewRow>,
+]
 `;
 
 exports[`Reduced leave renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed 1`] = `

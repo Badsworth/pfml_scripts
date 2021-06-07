@@ -68,11 +68,11 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlus Preset - SavilinxAgent",
         project: "PFML",
-        threads: 40,
+        threads: 6,
         duration: seconds(15),
       },
       data: {
-        scenario: "PortalClaimSubmit",
+        scenario: "SavilinxAgent",
         count: 500,
       },
       delay: milliseconds(5),
@@ -95,7 +95,9 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - SavilinxAgent",
         project: "PFML",
-        threads: 40,
+        // Agent traffic assumes that we have 180 real agents processing ~6 claims an hour. Our agents process 3 claims
+        // a minute, or 180/hr. (180 agents * 6 claims per hour) = (6 agents * 180 claims per hour)
+        threads: 6,
         duration: seconds(45),
         rampup: seconds(3),
       },
@@ -103,7 +105,7 @@ const presets: Record<string, Preset> = {
         scenario: "SavilinxAgent",
         count: 500,
       },
-      delay: milliseconds(5), // Starts after 5 minutes.
+      delay: milliseconds(5), // Starts after 5 minutes, to give claims a chance to hit the system.
     },
     {
       flood: {

@@ -12,15 +12,18 @@ from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 MAX_HOURS_WORKED_PER_WEEK = 168
 
 
+# TODO: add tests for all the methods in this file,
+# and move validation testing out of `test_claims.py` and into `test_claim_rules.py`
+# https://lwd.atlassian.net/browse/EMPLOYER-1403
 def get_employer_claim_review_issues(
-    employer_claim_review: EmployerClaimReview,
+    claim_review: EmployerClaimReview,
 ) -> List[ValidationErrorDetail]:
     """Takes in an employer claim review request and outputs any validation issues."""
     return list(
         chain(
-            get_hours_worked_per_week_issues(employer_claim_review.hours_worked_per_week),
-            get_previous_leaves_issues(employer_claim_review.previous_leaves),
-            get_employer_benefits_issues(employer_claim_review.employer_benefits),
+            get_hours_worked_per_week_issues(claim_review.hours_worked_per_week),
+            get_previous_leaves_issues(claim_review.previous_leaves),
+            get_employer_benefits_issues(claim_review.employer_benefits),
         )
     )
 

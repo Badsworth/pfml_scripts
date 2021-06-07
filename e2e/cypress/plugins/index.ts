@@ -10,19 +10,20 @@
 // ***********************************************************
 
 import config, { merged } from "../../src/config";
-import faker from "faker";
 import path from "path";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
-// @todo: Move these utilities into src/.
 import {
   getAuthManager,
-  getClaimantCredentials,
   getEmployeePool,
   getEmployerPool,
   getPortalSubmitter,
   getVerificationFetcher,
-  getLeaveAdminCredentials,
 } from "../../src/util/common";
+import {
+  generateCredentials,
+  getClaimantCredentials,
+  getLeaveAdminCredentials,
+} from "../../src/util/credentials";
 import { Credentials } from "../../src/types";
 import { ApplicationResponse } from "../../src/api";
 
@@ -187,27 +188,4 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     baseUrl: config("PORTAL_BASEURL"),
     env: Object.fromEntries(configEntries),
   };
-}
-
-/**
- * Generates a random set of credentials.
- */
-function generateCredentials(): Credentials {
-  const namespace = config("TESTMAIL_NAMESPACE");
-  const tag = faker.random.alphaNumeric(8);
-  return {
-    username: `${namespace}.${tag}@inbox.testmail.app`,
-    password: generatePassword(),
-  };
-}
-
-function generatePassword(): string {
-  // Password = {uppercase}{lowercase}{random*10){number}{symbol}
-  return (
-    faker.internet.password(1, false, /[A-Z]/) +
-    faker.internet.password(1, false, /[a-z]/) +
-    faker.internet.password(10) +
-    faker.random.number(999) +
-    faker.random.arrayElement(["@#$%^&*"])
-  );
 }

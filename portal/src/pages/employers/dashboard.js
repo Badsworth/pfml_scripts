@@ -22,13 +22,8 @@ import withClaims from "../../hoc/withClaims";
 
 export const Dashboard = (props) => {
   const { appLogic, paginationMeta, user } = props;
-  const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
   const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
   const { t } = useTranslation();
-
-  if (!shouldShowDashboard) {
-    appLogic.portalFlow.goTo(routes.employers.welcome);
-  }
 
   const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
   const hasVerifiableEmployer = user.hasVerifiableEmployer;

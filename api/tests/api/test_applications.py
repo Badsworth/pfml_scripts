@@ -20,6 +20,7 @@ from massgov.pfml.api.util.response import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
+    ConcurrentLeave,
     ContinuousLeavePeriod,
     DocumentType,
     EmploymentStatus,
@@ -1022,7 +1023,7 @@ def test_application_patch_fineos_forbidden(
     assert application.last_name == "Smith"
 
 
-def test_application_patch_employee_ssn(client, user, auth_token, test_db_session):
+def test_application_patch_tax_identifier(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     assert application.tax_identifier
     assert application.tax_identifier.tax_identifier != "123-45-6789"
@@ -1030,7 +1031,7 @@ def test_application_patch_employee_ssn(client, user, auth_token, test_db_sessio
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"employee_ssn": "123-45-6789"},
+        json={"tax_identifier": "123-45-6789"},
     )
 
     assert response.status_code == 200
@@ -1048,7 +1049,7 @@ def test_application_patch_masked_tax_id_has_no_effect(client, user, auth_token,
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"employee_ssn": "***-**-****"},
+        json={"tax_identifier": "***-**-****"},
     )
 
     tests.api.validate_error_response(response, 400)
@@ -2035,6 +2036,87 @@ def test_application_patch_other_income_exceed_limit(client, user, auth_token, t
     assert application.other_incomes == existing_incomes
 
 
+def test_application_patch_concurrent_leave(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "has_concurrent_leave": True,
+            "concurrent_leave": {
+                "is_for_current_employer": True,
+                "leave_start_date": "2021-06-01",
+                "leave_end_date": "2021-07-01",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json().get("data")
+
+    assert data["concurrent_leave"]["is_for_current_employer"] is True
+    assert data["concurrent_leave"]["leave_start_date"] == "2021-06-01"
+    assert data["concurrent_leave"]["leave_end_date"] == "2021-07-01"
+
+
+def test_application_delete_concurrent_leave(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    ConcurrentLeaveFactory.create(application_id=application.application_id)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_concurrent_leave": False, "concurrent_leave": None},
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json().get("data")
+
+    assert getattr(data, "concurrent_leave", None) is None
+
+
+def test_application_patch_concurrent_leave_replaces_existing_leave(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    ConcurrentLeaveFactory.create(
+        application_id=application.application_id,
+        leave_start_date="2021-01-01",
+        leave_end_date="2021-03-01",
+    )
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "has_concurrent_leave": False,
+            "concurrent_leave": {
+                "is_for_current_employer": True,
+                "leave_start_date": "2021-06-01",
+                "leave_end_date": "2021-07-01",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json().get("data")
+
+    assert data["concurrent_leave"]["is_for_current_employer"] is True
+    assert data["concurrent_leave"]["leave_start_date"] == "2021-06-01"
+    assert data["concurrent_leave"]["leave_end_date"] == "2021-07-01"
+
+    assert (
+        test_db_session.query(ConcurrentLeave)
+        .filter(ConcurrentLeave.application_id == application.application_id)
+        .count()
+        == 1
+    )
+
+
 def test_application_patch_concurrent_leave_is_optional(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
@@ -2165,7 +2247,7 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
                     "is_for_current_employer": True,
                     "leave_start_date": "2021-01-01",
                     "leave_end_date": "2021-05-01",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2175,7 +2257,7 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
                     "is_for_current_employer": True,
                     "leave_start_date": "2021-01-01",
                     "leave_end_date": "2021-05-01",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2202,7 +2284,7 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
         assert previous_leave.get("is_for_current_employer") is True
         assert previous_leave.get("leave_start_date") == "2021-01-01"
         assert previous_leave.get("leave_end_date") == "2021-05-01"
-        assert previous_leave.get("leave_reason") == "Pregnancy / Maternity"
+        assert previous_leave.get("leave_reason") == "Pregnancy"
         assert previous_leave.get("worked_per_week_minutes") == 20
         assert previous_leave.get("leave_minutes") == 10
 
@@ -2312,7 +2394,7 @@ def test_application_patch_replace_existing_previous_leave(
                     "is_for_current_employer": False,
                     "leave_start_date": "2021-02-01",
                     "leave_end_date": "2021-06-01",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2322,7 +2404,7 @@ def test_application_patch_replace_existing_previous_leave(
                     "is_for_current_employer": False,
                     "leave_start_date": "2021-02-01",
                     "leave_end_date": "2021-06-01",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2348,7 +2430,7 @@ def test_application_patch_replace_existing_previous_leave(
         assert previous_leave.get("is_for_current_employer") is False
         assert previous_leave.get("leave_start_date") == "2021-02-01"
         assert previous_leave.get("leave_end_date") == "2021-06-01"
-        assert previous_leave.get("leave_reason") == "Pregnancy / Maternity"
+        assert previous_leave.get("leave_reason") == "Pregnancy"
         assert previous_leave.get("worked_per_week_minutes") == 20
         assert previous_leave.get("leave_minutes") == 10
 
@@ -2375,7 +2457,7 @@ def test_application_patch_previous_leave_exceed_limit(client, user, auth_token,
             "is_for_current_employer": False,
             "leave_start_date": "2021-02-01",
             "leave_end_date": "2021-06-01",
-            "leave_reason": "Pregnancy / Maternity",
+            "leave_reason": "Pregnancy",
             "worked_per_week_minutes": 20,
             "leave_minutes": 10,
         }

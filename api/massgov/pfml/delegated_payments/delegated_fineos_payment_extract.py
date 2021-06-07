@@ -183,6 +183,7 @@ class PaymentData:
     payment_end_period: Optional[str] = None
     payment_date: Optional[str] = None
     payment_amount: Optional[Decimal] = None
+    amalgamation_c: Optional[str] = None
 
     claim_type_raw: Optional[str] = None
 
@@ -224,6 +225,11 @@ class PaymentData:
         # Not required as some valid scenarios won't set this (Overpayments)
         self.event_reason = payments_util.validate_csv_input(
             "EVENTREASON", pei_record, self.validation_container, False
+        )
+
+        # Not required, only care if it's set and a specific value
+        self.amalgamation_c = payments_util.validate_csv_input(
+            "AMALGAMATIONC", pei_record, self.validation_container, False
         )
 
         self.payment_date = payments_util.validate_csv_input(
@@ -545,6 +551,7 @@ class PaymentExtractStep(Step):
         STANDARD_VALID_PAYMENT_COUNT = "standard_valid_payment_count"
         TAX_IDENTIFIER_MISSING_IN_DB_COUNT = "tax_identifier_missing_in_db_count"
         ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
+        ADHOC_PAYMENT_COUNT = "adhoc_payment_count"
 
     def run_step(self):
         with tempfile.TemporaryDirectory() as download_directory:
@@ -932,6 +939,14 @@ class PaymentExtractStep(Step):
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
 
+        # A payment is considered adhoc if it's marked as "Adhoc"
+        # This column can be empty/missing, and that's fine. This is used
+        # later in the post-processing step to filter out adhoc payments from
+        # the weekly maximum check.
+        payment.is_adhoc_payment = payment_data.amalgamation_c == "Adhoc"
+        if payment.is_adhoc_payment:
+            self.increment(self.Metrics.ADHOC_PAYMENT_COUNT)
+
         if payment_data.claim_type_raw:
             try:
                 claim_type_mapped = payments_util.get_mapped_claim_type(payment_data.claim_type_raw)
@@ -1164,10 +1179,11 @@ class PaymentExtractStep(Step):
             payment.payment_transaction_type_id
             == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
         ):
-            end_state = (
-                State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT
+            end_state = State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+            message = "Employer reimbursement payment processed"
+            self._manage_pei_writeback_state(
+                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
             )
-            message = "Employer reimbursement added to pending state for FINEOS writeback"
             self.increment(self.Metrics.EMPLOYER_REIMBURSEMENT_COUNT)
 
         # Zero dollar payments are added to the FINEOS writeback + a report
@@ -1175,8 +1191,11 @@ class PaymentExtractStep(Step):
             payment.payment_transaction_type_id
             == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
         ):
-            end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
-            message = "Zero dollar payment added to pending state for FINEOS writeback"
+            end_state = State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
+            message = "Zero dollar payment processed"
+            self._manage_pei_writeback_state(
+                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
+            )
             self.increment(self.Metrics.ZERO_DOLLAR_PAYMENT_COUNT)
 
         # Overpayments are added to to the FINEOS writeback + a report
@@ -1184,8 +1203,11 @@ class PaymentExtractStep(Step):
             payment.payment_transaction_type_id
             == PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
         ):
-            end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
-            message = "Overpayment payment added to pending state for FINEOS writeback"
+            end_state = State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
+            message = "Overpayment payment processed"
+            self._manage_pei_writeback_state(
+                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
+            )
             self.increment(self.Metrics.OVERPAYMENT_COUNT)
 
         # Cancellations are added to the FINEOS writeback + a report
@@ -1193,14 +1215,19 @@ class PaymentExtractStep(Step):
             payment.payment_transaction_type_id
             == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
         ):
-            end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
-            message = "Cancellation payment added to pending state for FINEOS writeback"
+            end_state = State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION
+            message = "Cancellation payment processed"
+            self._manage_pei_writeback_state(
+                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
+            )
             self.increment(self.Metrics.CANCELLATION_COUNT)
 
         else:
             end_state = State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK
             message = "Success"
             self.increment(self.Metrics.STANDARD_VALID_PAYMENT_COUNT)
+
+        # TODO Move call to _manage_pei_writeback_state here
 
         state_log_util.create_finished_state_log(
             end_state=end_state,
@@ -1237,12 +1264,13 @@ class PaymentExtractStep(Step):
             end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
             outcome=state_log_util.build_outcome(message, payment_data.validation_container),
             associated_model=payment,
+            import_log_id=self.get_import_log_id(),
             db_session=self.db_session,
         )
         writeback_details = FineosWritebackDetails(
             payment=payment,
             transaction_status_id=transaction_status.transaction_status_id,
-            import_log_id=cast(int, self.get_import_log_id()),
+            import_log_id=self.get_import_log_id(),
         )
         self.db_session.add(writeback_details)
         logger.info(message, extra=payment_data.get_traceable_details())

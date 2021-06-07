@@ -9,6 +9,7 @@ import { Trans } from "react-i18next";
 import User from "../../models/User";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
+import tracker from "../../services/tracker";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
@@ -26,6 +27,7 @@ export const ConsentToDataSharing = (props) => {
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
     await handleSave();
+    tracker.trackEvent("User consented to data sharing", {});
   });
 
   const roleContext = user.hasEmployerRole ? "employer" : "user";

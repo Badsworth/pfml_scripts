@@ -1,5 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Status displays status 1`] = `
+<StatusRow
+  data-test="status"
+  label="Status"
+>
+  <AbsenceCaseStatusTag
+    status="Approved"
+  />
+</StatusRow>
+`;
+
 exports[`Status renders the page and correct content in Trans component 1`] = `
 <Fragment>
   <BackButton />
@@ -32,26 +43,39 @@ exports[`Status renders the page and correct content in Trans component 1`] = `
     Leave details
   </Heading>
   <StatusRow
+    data-test="id"
     label="Application ID"
   >
     NTN-111-ABS-01
   </StatusRow>
   <StatusRow
+    data-test="status"
+    label="Status"
+  >
+    <AbsenceCaseStatusTag
+      status="Approved"
+    />
+  </StatusRow>
+  <StatusRow
+    data-test="reason"
     label="Leave type"
   >
     Medical leave
   </StatusRow>
   <StatusRow
+    data-test="duration"
     label="Leave duration"
   >
     1/1/2021 – 7/1/2021
   </StatusRow>
   <StatusRow
+    data-test="duration-continuous"
     label="Continuous leave"
   >
     1/1/2021 – 6/1/2021
   </StatusRow>
   <StatusRow
+    data-test="duration-reduced"
     label="Reduced leave schedule"
   >
     2/1/2021 – 7/1/2021
@@ -115,4 +139,58 @@ Array [
   </a>,
   ").",
 ]
+`;
+
+exports[`Status shows the application ID 1`] = `
+<StatusRow
+  data-test="id"
+  label="Application ID"
+>
+  NTN-111-ABS-01
+</StatusRow>
+`;
+
+exports[`Status shows the leave duration 1`] = `
+<StatusRow
+  data-test="duration"
+  label="Leave duration"
+>
+  1/1/2021 – 7/1/2021
+</StatusRow>
+`;
+
+exports[`Status shows the leave duration types 1`] = `
+<StatusRow
+  data-test="duration-continuous"
+  label="Continuous leave"
+>
+  1/1/2021 – 6/1/2021
+</StatusRow>
+`;
+
+exports[`Status shows the leave duration types 2`] = `
+<StatusRow
+  data-test="duration-intermittent"
+  label="Intermittent leave"
+>
+  2/1/2021 – 7/1/2021
+</StatusRow>
+`;
+
+exports[`Status shows the leave duration types 3`] = `
+<StatusRow
+  data-test="duration-reduced"
+  label="Reduced leave schedule"
+>
+  2/1/2021 – 7/1/2021
+</StatusRow>
+`;
+
+exports[`Status shows the leave type 1`] = `
+<StatusRow
+  data-test="reason"
+  label="Leave type"
+>
+  Medical leave
+</StatusRow>
 `;

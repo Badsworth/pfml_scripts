@@ -11,7 +11,7 @@ import {
   WorkPattern,
 } from "../api";
 import faker from "faker";
-import generateLeaveDetails from "./LeaveDetails";
+import generateLeaveDetails, { LeaveDetailsSpec } from "./LeaveDetails";
 import { v4 as uuid } from "uuid";
 import generateDocuments, {
   DehydratedDocument,
@@ -26,12 +26,16 @@ import * as si from "streaming-iterables";
 import ndjson from "ndjson";
 import { StreamWrapper } from "./FileWrapper";
 import { collect, map, AnyIterable } from "streaming-iterables";
+import { OtherIncome } from "../api";
+import { EmployerBenefit, PreviousLeave } from "../_api";
+import { generateOtherIncomes } from "./OtherIncomes";
+import { generateEmployerBenefits } from "./EmployerBenefits";
+import { generatePreviousLeaves } from "./PreviousLeaves";
 
 const pipelineP = promisify(pipeline);
 interface PromiseWithOptionalGeneration<T> extends Promise<T> {
   orGenerateAndSave(gen: () => T): Promise<T>;
 }
-// export type LoadOrGeneratePromise = PromiseWithOptionalGeneration<ClaimPool>;
 /**
  * Specifies how a claim should be generated.
  */
@@ -61,6 +65,12 @@ export type ClaimSpecification = {
   bondingDate?: "far-past" | "past" | "future";
   /** Specify explicit leave dates for the claim. These will be used for the reduced/intermittent/continuous leave periods. */
   leave_dates?: [Date, Date];
+  /** Specify other incomes, if not specified, start & end dates are automatically matched to leave dates*/
+  other_incomes?: OtherIncome[];
+  /** Specify employer benefits, "Accrued Paid Leave" belongs in this field as well. if not specified, start & end dates are automatically matched to leave dates. */
+  employer_benefits?: EmployerBenefit[];
+  /** Specify previous leaves. if not specified, start & end dates are automatically matched to leave dates. */
+  previous_leaves?: PreviousLeave[];
   /** Specify an explicit address to use for the claim. */
   address?: Address;
   /** Specify explicit payment details to be used for the claim. */
@@ -71,11 +81,9 @@ export type ClaimSpecification = {
    * are minutes worked on that day of the week (starting Sunday).
    */
   work_pattern_spec?: WorkPatternSpec;
-  /** Makes a claim for an extremely short time period (1 day). */
-  shortClaim?: boolean;
   /** Optional metadata to be saved verbatim on the claim object. Not submitted in any way. */
   metadata?: GeneratedClaimMetadata;
-};
+} & LeaveDetailsSpec;
 
 export type GeneratedClaimMetadata = Record<string, string | boolean>;
 
@@ -123,6 +131,9 @@ export class ClaimGenerator {
     const address = spec.address ?? this.generateAddress();
     const workPattern = generateWorkPattern(spec.work_pattern_spec);
     const leaveDetails = generateLeaveDetails(spec, workPattern);
+    const other_incomes = generateOtherIncomes(spec, leaveDetails);
+    const employer_benefits = generateEmployerBenefits(spec, leaveDetails);
+    const previous_leaves = generatePreviousLeaves(spec, leaveDetails);
     // @todo: Later, we will want smarter logic for which occupation is picked.
     const occupation = employee.occupations[0];
 
@@ -152,8 +163,10 @@ export class ClaimGenerator {
         (leaveDetails.reduced_schedule_leave_periods?.length ?? 0) > 0,
       has_intermittent_leave_periods:
         (leaveDetails.intermittent_leave_periods?.length ?? 0) > 0,
+      other_incomes,
+      employer_benefits,
+      previous_leaves,
     };
-
     return {
       id: uuid(),
       // @todo: Rename to label?

@@ -105,6 +105,7 @@ module "fineos_bucket_tool_scheduler" {
         "command": [
           "fineos-bucket-tool",
           "--recursive",
+          "--dated-folders",
           "--copy_dir", "${var.fineos_data_export_path}",
           "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/dataexports",
           "--file_prefixes", "all"
@@ -387,3 +388,6 @@ module "weekend_cps_extract_processing_scheduler" {
   }
   JSON
 }
+
+## NOTE: If you are adding a new scheduled event here, please add monitoring by including it
+#        in the list in infra/modules/alarms_api/alarms-aws.tf.

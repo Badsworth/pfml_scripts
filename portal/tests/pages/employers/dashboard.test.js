@@ -83,10 +83,6 @@ const setup = (claims = [], userAttrs = {}, paginationMeta = {}) => {
 };
 
 describe("Employer dashboard", () => {
-  beforeEach(() => {
-    process.env.featureFlags = { employerShowDashboard: true };
-  });
-
   it("renders the page with expected content and pagination components", () => {
     const { wrapper } = setup();
 
@@ -279,13 +275,6 @@ describe("Employer dashboard", () => {
     expect(goToSpy).toHaveBeenCalledWith("/employers/dashboard", {
       page_offset: clickedPageOffset,
     });
-  });
-
-  it("redirects to the Welcome page when employerShowDashboard flag is disabled", () => {
-    process.env.featureFlags = { employerShowDashboard: false };
-    const { goToSpy } = setup();
-
-    expect(goToSpy).toHaveBeenCalledWith(routes.employers.welcome);
   });
 
   describe("when employerShowVerifications flag is enabled", () => {

@@ -36,6 +36,11 @@ export default class Bundler {
         externals: ["@flood/element", "@flood/element-api", "faker"],
         resolve: {
           extensions: [".ts", ".js"],
+          alias: {
+            // Resolves an issue where the default export of node-fetch (.mjs file) mixes import and require(),
+            // tripping up Webpack when it is recompiled by Flood.
+            "node-fetch$": "node-fetch/lib/index.js",
+          },
         },
         module: {
           rules: [

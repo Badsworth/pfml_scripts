@@ -168,12 +168,19 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         if latest_state is not None and latest_state.end_state is not None:
             end_state_id = latest_state.end_state_id
             state_description = str(latest_state.end_state.state_description)
-        if end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT.state_id:
+        if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id:
+            return True
+
+        extra = extra_for_log(check_payment, payment)
+        extra["payments.state"] = end_state_id
+
+        # We will reprocess previously completed payments. We'll either re-update
+        # them to complete, or error them in the rest of the processing.
+        if end_state_id == State.DELEGATED_PAYMENT_COMPLETE.state_id:
+            logger.info("Payment previously processed and marked complete", extra=extra)
             return True
 
         # The latest state for this payment is not compatible with a check return.
-        extra = extra_for_log(check_payment, payment)
-        extra["payments.state"] = end_state_id
         logger.error("unexpected state for check payment", extra=extra)
         self.increment(self.Metrics.PAYMENT_UNEXPECTED_STATE_COUNT)
         self.add_pub_error(
@@ -192,7 +199,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         """Handle a check payment that has been paid."""
         state_log_util.create_finished_state_log(
             payment,
-            State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK,
+            State.DELEGATED_PAYMENT_COMPLETE,
             state_log_util.build_outcome(
                 "Payment complete by paid check",
                 check_paid_date=str(check_payment.paid_date),
@@ -205,6 +212,24 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         logger.info(
             "payment complete by paid check", extra=extra_for_log(check_payment, payment),
         )
+
+        writeback_transaction_status = FineosWritebackTransactionStatus.POSTED
+        state_log_util.create_finished_state_log(
+            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            associated_model=payment,
+            outcome=state_log_util.build_outcome(
+                cast(str, writeback_transaction_status.transaction_status_description,)
+            ),
+            import_log_id=self.get_import_log_id(),
+            db_session=self.db_session,
+        )
+        writeback_details = FineosWritebackDetails(
+            payment=payment,
+            transaction_status_id=writeback_transaction_status.transaction_status_id,
+            import_log_id=self.get_import_log_id(),
+        )
+        self.db_session.add(writeback_details)
+
         self.increment(self.Metrics.PAYMENT_COMPLETE_BY_PAID_CHECK)
 
     def outstanding_check_payment(
@@ -275,4 +300,5 @@ def extra_for_log(
         "payments.check.check_number": check_payment.check_number,
         "payments.check.status": check_payment.status.name,
         "payments.payment_id": str(payment.payment_id),
+        "payments.absence_case_id": payment.claim.fineos_absence_id if payment.claim else None,
     }

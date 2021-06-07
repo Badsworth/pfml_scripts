@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2021-02-23"
+  version: "2021-06-1"
 
 servers:
   - url: /v1
@@ -1569,6 +1569,7 @@ components:
             - "No"
         comment:
           type: string
+          maxLength: 9999
         leave_reason:
           type: string
           nullable: true
@@ -1583,6 +1584,7 @@ components:
         relationship_inaccurate_reason:
           type: string
           nullable: true
+          maxLength: 9999
           example: Their reported info doesn't match my records
       additionalProperties: false
       required:
@@ -1602,6 +1604,9 @@ components:
     ClaimReviewResponse:
       type: object
       properties:
+        concurrent_leave:
+          $ref: "#/components/schemas/ConcurrentLeave"
+          nullable: true
         date_of_birth:
           $ref: "#/components/schemas/MaskedDate"
         employer_benefits:
@@ -1685,13 +1690,13 @@ components:
           type: string
           nullable: true
           enum:
-            - Pregnancy / Maternity
-            - Serious health condition
-            - Care for a family member
-            - Child bonding
-            - Military caregiver
-            - Military exigency family
+            - Pregnancy
+            - Caring for a family member with a serious health condition
+            - Bonding with my child after birth or placement
+            - Caring for a family member who serves in the armed forces
+            - Managing family affairs while a family member is on active duty in the armed forces
             - Unknown
+            - An illness or injury
         worked_per_week_minutes:
           type: integer
           nullable: true
@@ -1715,9 +1720,6 @@ components:
               type: string
               nullable: true
               example: "My bonding leave request"
-            employee_ssn:
-              $ref: "#/components/schemas/SsnItin"
-              nullable: true
             tax_identifier:
               $ref: "#/components/schemas/SsnItin"
               nullable: true
@@ -1855,10 +1857,6 @@ components:
               nullable: true
         - type: object
           properties:
-            employee_ssn:
-              deprecated: true
-              description: "`tax_identifier` is the preferred field for this information"
-              nullable: true
             tax_identifier:
               nullable: true
             employer_fein:

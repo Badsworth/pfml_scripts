@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal
+from enum import Enum
 from itertools import chain
 from typing import Iterable, Optional
 
@@ -13,12 +14,30 @@ from massgov.pfml.fineos.transforms.to_fineos.base import (
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
+class ItemCategory(str, Enum):
+    HARDWARE = "Hardware"
+    BOOKS = "Books"
+    FOOD = "Refreshments"
+
+
+class ShoppingCategory(str, Enum):
+    HARDWARE = "Home improvement"
+    BOOKS = "Books"
+    FOOD = "Food"
+
+
 class PurchaseDataAttributeBuilder(EFormAttributeBuilder):
     ATTRIBUTE_MAP = {
         "purchase_amount": {"name": "purchaseAmount", "type": "decimalValue"},
         "item_description": {"name": "itemDescription", "type": "stringValue"},
         "purchase_date": {"name": "purchaseDate", "type": "dateValue"},
         "item_category": {"name": "itemCategory", "type": "enumValue", "domainName": "category"},
+        "shopping_category": {
+            "name": "shoppingCategory",
+            "type": "enumValue",
+            "domainName": "shopping",
+            "enumOverride": ShoppingCategory,
+        },
     }
 
     JOINING_ATTRIBUTE = {
@@ -43,7 +62,8 @@ class PurchaseData(PydanticBaseModel):
     purchase_amount: Optional[Decimal]
     item_description: Optional[str]
     purchase_date: Optional[date]
-    item_category: Optional[str]
+    item_category: Optional[ItemCategory]
+    shopping_category: Optional[ItemCategory]
 
 
 class PurchaseDataEFormBuilder(EFormBuilder):
@@ -61,7 +81,8 @@ def purchase_data():
         purchase_amount=20,
         item_description="Per Week",
         purchase_date="2020-04-01",
-        item_category="Hardware",
+        item_category=ItemCategory.HARDWARE,
+        shopping_category=ItemCategory.HARDWARE,
     )
 
 
@@ -69,7 +90,7 @@ class TestEFormBuilder:
     def test_purchase_data_eform_builder(self, purchase_data):
         eform = PurchaseDataEFormBuilder.build([purchase_data, purchase_data])
         attributes = eform.eformAttributes
-        assert len(attributes) == 13
+        assert len(attributes) == 15
 
         expected_attributes = [
             {"decimalValue": purchase_data.purchase_amount, "name": "purchaseAmount"},
@@ -78,6 +99,10 @@ class TestEFormBuilder:
             {
                 "name": "itemCategory",
                 "enumValue": {"domainName": "category", "instanceValue": "Hardware"},
+            },
+            {
+                "name": "shoppingCategory",
+                "enumValue": {"domainName": "shopping", "instanceValue": "Home improvement"},
             },
             {
                 "enumValue": {
@@ -99,6 +124,10 @@ class TestEFormBuilder:
                 "enumValue": {"domainName": "category", "instanceValue": "Hardware"},
             },
             {
+                "name": "shoppingCategory2",
+                "enumValue": {"domainName": "shopping", "instanceValue": "Home improvement"},
+            },
+            {
                 "enumValue": {
                     "domainName": "PleaseSelectCreditChequeCash",
                     "instanceValue": "Credit",
@@ -115,7 +144,7 @@ class TestEFormBuilder:
         eform = PurchaseDataEFormBuilder.build([purchase_data])
 
         attributes = eform.eformAttributes
-        assert len(attributes) == 5
+        assert len(attributes) == 6
 
         item_description_attr = eform.get_attribute("itemDescription")
         assert item_description_attr is None
@@ -126,7 +155,7 @@ class TestEFormBuilder:
         eform = PurchaseDataEFormBuilder.build([purchase_data])
 
         attributes = eform.eformAttributes
-        assert len(attributes) == 5
+        assert len(attributes) == 6
 
         item_category_attr = eform.get_attribute("itemCategory")
         assert item_category_attr is None

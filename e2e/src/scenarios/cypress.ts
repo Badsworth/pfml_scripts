@@ -1,5 +1,6 @@
 import { ScenarioSpecification } from "../generation/Scenario";
-import { addWeeks, subWeeks, startOfWeek } from "date-fns";
+import { addWeeks, subWeeks, startOfWeek, addDays } from "date-fns";
+import { getCaringLeaveStartEndDates } from "../../src/util/claims";
 
 /**
  * Cypress Testing Scenarios.
@@ -93,7 +94,7 @@ export const BHAP9: ScenarioSpecification = {
       HCP: {},
       MASSID: {},
     },
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
   },
 };
 
@@ -107,7 +108,7 @@ export const MED_INTER_INEL: ScenarioSpecification = {
       HCP: {},
       MASSID: {},
     },
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: true,
   },
 };
 
@@ -218,7 +219,10 @@ export const BIAP60: ScenarioSpecification = {
       MASSID: {},
       FOSTERPLACEMENT: {},
     },
-    has_intermittent_leave_periods: true,
+    intermittent_leave_spec: {
+      duration: 5,
+      duration_basis: "Days",
+    },
     // This scenario requires a 4 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
     metadata: {
@@ -242,6 +246,7 @@ export const BIAP60ER: ScenarioSpecification = {
   },
 };
 
+const [start, end] = getCaringLeaveStartEndDates();
 export const CCAP90: ScenarioSpecification = {
   employee: {
     wages: 90000,
@@ -251,11 +256,8 @@ export const CCAP90: ScenarioSpecification = {
     label: "CCAP90",
     reason: "Care for a Family Member",
     work_pattern_spec: "0,720,0,720,0,720,0",
-    docs: {},
-    leave_dates: [
-      addWeeks(mostRecentSunday, 9),
-      addWeeks(mostRecentSunday, 13),
-    ],
+    docs: { MASSID: {}, CARING: {} },
+    leave_dates: [start, end],
     metadata: { expected_weekly_payment: "850.00" },
   },
 };
@@ -268,5 +270,75 @@ export const CDENY2: ScenarioSpecification = {
     has_continuous_leave_periods: true,
     reason: "Care for a Family Member",
     docs: {},
+  },
+};
+
+export const MIL_RED_OLB: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "MIL_RED with Other Leaves & Benefits",
+    shortClaim: true,
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+    other_incomes: [
+      {
+        income_type: "Earnings from another employment/self-employment",
+        income_amount_dollars: 200,
+        income_amount_frequency: "Per Week",
+      },
+    ],
+    employer_benefits: [
+      {
+        benefit_amount_dollars: 1000,
+        benefit_amount_frequency: "In Total",
+        benefit_type: "Short-term disability insurance",
+        is_full_salary_continuous: false,
+      },
+      {
+        benefit_type: "Accrued paid leave",
+      },
+    ],
+    previous_leaves: [
+      {
+        type: "other_reason",
+        leave_reason: "Child bonding",
+        is_for_current_employer: true,
+        leave_minutes: 2400,
+        worked_per_week_minutes: 1200,
+        leave_start_date: "2021-01-15",
+        leave_end_date: "2021-01-01",
+      },
+    ],
+  },
+};
+export const MED_PRE: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "MED_PRE",
+    reason: "Serious Health Condition - Employee",
+    pregnant_or_recent_birth: true,
+    shortClaim: true,
+    docs: {
+      MASSID: {},
+      PREGNANCY_MATERNITY_FORM: {},
+    },
+  },
+};
+
+export const CHAP_RFI: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CHAP_RFI",
+    reason: "Care for a Family Member",
+    leave_dates: [start, addDays(start, 2)],
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
   },
 };

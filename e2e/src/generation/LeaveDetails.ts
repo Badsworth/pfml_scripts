@@ -19,19 +19,33 @@ import {
 } from "date-fns";
 import faker from "faker";
 
-type LeaveDetailsSpec = {
+export type LeaveDetailsSpec = {
   reason: ApplicationLeaveDetails["reason"];
   reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
-  // Makes a claim for an extremely short time period (1 day).
+  /** Makes a claim for an extremely short time period (1 day). */
   shortClaim?: boolean;
+  /** Generate an employer notification date that is considered "short notice" by law. */
   shortNotice?: boolean;
+  /** Flag to create a continuous leave period */
   has_continuous_leave_periods?: boolean;
-  // Reduced leave can be specified in a specification. See work_pattern_spec for the expected
-  // format.
+  /** Data to create a reduced leave period. See work_pattern_spec for the expected format. */
   reduced_leave_spec?: string;
-  has_intermittent_leave_periods?: boolean;
+  /**
+   * Data to create an intermittent leave period.
+   *
+   * Acceptable values for this property are:
+   *   * `false` or `undefined`: No intermittent leave period will be added.
+   *   * `true`: An intermittent leave period will be generated automatically.
+   *   * Partial Intermittent Leave period object: Will be merged with the generated defaults into a leave period.
+   *   * Array of Partial Intermittent Leave Period objects: Each item will be merged with the generated defaults into
+   *     multiple leave periods.
+   */
+  intermittent_leave_spec?: IntermittentLeaveSpec | false;
+  /** Flag to make this a medical pre-birth claim. */
   pregnant_or_recent_birth?: boolean;
+  /** Specify explicit leave dates for the claim. These will be used for the reduced/intermittent/continuous leave periods. */
   leave_dates?: [Date, Date];
+  /** Control the date of the bonding event (child birth/adoption/etc) */
   bondingDate?: "far-past" | "past" | "future";
 };
 
@@ -41,8 +55,8 @@ export default function generateLeaveDetails(
 ): ApplicationLeaveDetails {
   const { reason, reason_qualifier } = config;
   const has_continuous_leave_periods =
-    config.has_continuous_leave_periods ||
-    (!config.reduced_leave_spec && !config.has_intermittent_leave_periods);
+    config.has_continuous_leave_periods ??
+    (!config.reduced_leave_spec && !config.intermittent_leave_spec);
   const details: ApplicationLeaveDetails = {
     continuous_leave_periods: has_continuous_leave_periods
       ? generateContinuousLeavePeriods(
@@ -59,10 +73,11 @@ export default function generateLeaveDetails(
           config.leave_dates
         )
       : [],
-    intermittent_leave_periods: config.has_intermittent_leave_periods
+    intermittent_leave_periods: config.intermittent_leave_spec
       ? generateIntermittentLeavePeriods(
           !!config.shortClaim,
           work_pattern,
+          config.intermittent_leave_spec,
           config.leave_dates
         )
       : [],
@@ -190,27 +205,36 @@ function generateContinuousLeavePeriods(
   ];
 }
 
+type IntermittentLeaveSpec =
+  | Partial<IntermittentLeavePeriods>
+  | Partial<IntermittentLeavePeriods>[]
+  | true;
 function generateIntermittentLeavePeriods(
   shortLeave: boolean,
   work_pattern: WorkPattern,
+  periods: IntermittentLeaveSpec,
   leave_dates?: [Date, Date]
 ): IntermittentLeavePeriods[] {
   const [startDate, endDate] =
     leave_dates ??
     generateLeaveDates(work_pattern, shortLeave ? { days: 7 } : undefined);
   const diffInDays = differenceInDays(endDate, startDate);
-
-  return [
-    {
-      start_date: formatISO(startDate, { representation: "date" }),
-      end_date: formatISO(endDate, { representation: "date" }),
-      duration: faker.random.number({ min: 1, max: Math.min(diffInDays, 7) }),
-      duration_basis: "Days",
-      frequency: 1,
-      frequency_interval: 1,
-      frequency_interval_basis: "Weeks",
-    },
-  ];
+  const defaults: IntermittentLeavePeriods = {
+    start_date: formatISO(startDate, { representation: "date" }),
+    end_date: formatISO(endDate, { representation: "date" }),
+    duration: faker.random.number({ min: 1, max: Math.min(diffInDays, 7) }),
+    duration_basis: "Days",
+    frequency: 1,
+    frequency_interval: 1,
+    frequency_interval_basis: "Weeks",
+  };
+  if (periods === true) {
+    return [defaults];
+  } else if (!Array.isArray(periods)) {
+    return [{ ...defaults, ...periods }];
+  } else {
+    return periods.map((period) => ({ ...defaults, ...period }));
+  }
 }
 
 function generateReducedLeavePeriods(

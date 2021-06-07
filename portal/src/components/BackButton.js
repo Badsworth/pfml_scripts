@@ -12,16 +12,27 @@ import { useTranslation } from "../locales/i18n";
 function BackButton(props) {
   const { t } = useTranslation();
   const label = props.label || t("components.backButton.label");
+  const behaveLikeBrowserBackButton = !props.href;
+  const historyApi = props.history || globalThis.history;
+
+  /**
+   * Don't render a Back button if there's no page in the history to go back to
+   */
+  if (
+    behaveLikeBrowserBackButton &&
+    (typeof historyApi === "undefined" || historyApi.length <= 1)
+  ) {
+    return null;
+  }
 
   const handleClick = () => {
-    tracker.trackEvent("BackButton clicked");
-    if (!props.href) {
-      window.history.back();
+    tracker.trackEvent("BackButton clicked", { behaveLikeBrowserBackButton });
+    if (behaveLikeBrowserBackButton) {
+      historyApi.back();
     }
   };
 
   let Component, componentProps;
-
   if (props.href) {
     Component = ButtonLink;
     componentProps = {
@@ -58,6 +69,12 @@ function BackButton(props) {
 BackButton.propTypes = {
   label: PropTypes.string,
   href: PropTypes.string,
+  /**
+   * Pass in the History API instance to be used for
+   * navigating backwards and determining what's in
+   * history. Mostly here to support unit testing.
+   */
+  history: PropTypes.object,
 };
 
 export default BackButton;

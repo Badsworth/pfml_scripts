@@ -54,7 +54,7 @@ from massgov.pfml.util.pydantic.types import Regexes
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 LeaveScheduleDB = Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
-OtherBenefitsDB = Union[EmployerBenefit, OtherIncome, PreviousLeave]
+OtherBenefitsDB = Union[EmployerBenefit, OtherIncome, PreviousLeave, ConcurrentLeave]
 
 
 def process_partially_masked_field(
@@ -327,7 +327,7 @@ def update_from_request(
     for key in body.__fields_set__:
         value = getattr(body, key)
 
-        if key in ("leave_details", "employee_ssn", "tax_identifier"):
+        if key in ("leave_details", "tax_identifier"):
             continue
 
         if key == "mailing_address":
@@ -783,6 +783,9 @@ def set_concurrent_leave(
     api_concurrent_leave: Optional[massgov.pfml.api.models.common.ConcurrentLeave],
     application: Application,
 ) -> None:
+    if application.concurrent_leave:
+        delete_application_other_benefits(ConcurrentLeave, application, db_session)
+
     if not api_concurrent_leave:
         return
 
@@ -880,7 +883,7 @@ def add_or_update_phone(
 def get_or_add_tax_identifier(
     db_session: db.Session, body: ApplicationRequestBody
 ) -> Optional[TaxIdentifier]:
-    tax_identifier = body.tax_identifier or body.employee_ssn
+    tax_identifier = body.tax_identifier
 
     if tax_identifier is None:
         return None

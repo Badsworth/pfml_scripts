@@ -4,8 +4,13 @@ from typing import List, Optional
 
 from pydantic import UUID4
 
-from massgov.pfml.api.models.claims.common import Address, LeaveDetails
-from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
+from massgov.pfml.api.models.claims.common import (
+    Address,
+    EmployerBenefit,
+    LeaveDetails,
+    PreviousLeave,
+)
+from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.db.models.employees import Claim
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
@@ -72,6 +77,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     leave_details: Optional[LeaveDetails]
     middle_name: Optional[str]
     previous_leaves: Optional[List[PreviousLeave]]
+    concurrent_leave: Optional[ConcurrentLeave]
     residential_address: Optional[Address]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
     follow_up_date: Optional[date]
