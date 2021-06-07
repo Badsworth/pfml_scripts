@@ -1,7 +1,7 @@
 import pytest
 
 import tests.api
-from massgov.pfml.db.models.factories import EmployeeFactory
+from massgov.pfml.db.models.factories import EmployeeFactory, TaxIdentifierFactory
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -56,10 +56,10 @@ def test_employees_search_valid(client, employee, consented_user_token):
 
 def test_employees_search_valid_with_middle_name(client, employee, consented_user_token):
     # create identical employee except for middle name
+    # and tax_identifier (which is now enforced as unique)
+    new_tax_id = TaxIdentifierFactory.create()
     EmployeeFactory.create(
-        first_name=employee.first_name,
-        last_name=employee.last_name,
-        tax_identifier=employee.tax_identifier,
+        first_name=employee.first_name, last_name=employee.last_name, tax_identifier=new_tax_id,
     )
 
     body = {

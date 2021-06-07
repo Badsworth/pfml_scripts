@@ -44,7 +44,6 @@ if TYPE_CHECKING:
 else:
     from sqlalchemy.ext.hybrid import hybrid_property as typed_hybrid_property
 
-
 # (PostgreSQLUUID) https://github.com/dropbox/sqlalchemy-stubs/issues/94
 if TYPE_CHECKING:
     PostgreSQLUUID = TypeEngine[uuid.UUID]
@@ -442,9 +441,8 @@ class ExperianAddressPair(Base):
 class Employee(Base):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    # TODO (EMPLOYER-1238): Enforce uniqueness of tax_identifier_id
     tax_identifier_id = Column(
-        UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True
+        UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True, unique=True,
     )
     title_id = Column(Integer, ForeignKey("lk_title.title_id"))
     first_name = Column(Text, nullable=False)
