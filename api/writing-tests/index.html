@@ -765,7 +765,7 @@
                 
                 <h1 id="writing-tests">Writing Tests</h1>
 <p><a href="https://docs.pytest.org">pytest</a> is our test runner, which is simple but
-powerful. If you are new to pytest, reading up on how <a href="https://docs.pytest.org/en/latest/fixture.html">fixtures
+powerful. If you are new to pytest, reading up on how <a href="https://docs.pytest.org/en/latest/explanation/fixtures.html">fixtures
 work</a> in particular might be
 helpful as it's one area that is a bit different than is common with other
 runners (and languages).</p>
@@ -780,7 +780,7 @@ conventions</a>
   without the <code>massgov/pfml/</code> part, so for example:</li>
 <li>The tests for <code>massgov/pfml/api/</code> live under <code>tests/api/</code></li>
 <li><code>massgov/pfml/util/aws/</code> under <code>test/util/aws/</code>.</li>
-<li>Create <code>__init__.py</code> files for each directory. This helps <a href="https://docs.pytest.org/en/latest/goodpractices.html#tests-outside-application-code">avoid name
+<li>Create <code>__init__.py</code> files for each directory. This helps <a href="https://docs.pytest.org/en/stable/goodpractices.html#tests-outside-application-code">avoid name
   conflicts when pytest is resolving
   tests</a>.</li>
 <li>Test files should begin with the <code>test_</code> prefix, followed by the module the
@@ -810,7 +810,7 @@ tests. Scoped <code>conftest.py</code> files can be created that apply only to t
 below them in the directory hierarchy, for example, the <code>tests/db/conftest.py</code>
 file is only loaded for tests under <code>tests/db/</code>.</p>
 <p>More info:
-https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-functions</p>
+https://docs.pytest.org/en/latest/how-to/fixtures.html?highlight=conftest#scope-sharing-fixtures-across-classes-modules-packages-or-session</p>
 <h2 id="helpers">Helpers</h2>
 <p>If there is useful functionality that needs to be shared between tests, but is
 only applicable to testing and is not a fixture, create modules under
