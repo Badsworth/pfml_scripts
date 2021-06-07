@@ -1,4 +1,6 @@
+import { EmployerBenefitType } from "src/models/EmployerBenefit";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import { PreviousLeaveReason } from "src/models/PreviousLeave";
 
 /**
  * Storybook argTypes providing granular controls for
@@ -51,14 +53,14 @@ export const claimArgTypes = {
       options: ["continuous", "reduced", "intermittent", "hybrid"],
     },
   },
-  "Other incomes": {
+  "Previous leaves same reason": {
     defaultValue: "None",
     control: {
       type: "radio",
-      options: ["None", "Unemployment income"],
+      options: ["None", "From current employer", "From other employer"],
     },
   },
-  "Previous leave": {
+  "Previous leaves other reason": {
     defaultValue: "None",
     control: {
       type: "radio",
@@ -67,6 +69,28 @@ export const claimArgTypes = {
         "Medical leave from current employer",
         "Pregnancy leave from other employer",
       ],
+    },
+  },
+
+  "Concurrent leave": {
+    defaultValue: "None",
+    control: {
+      type: "radio",
+      options: ["None", "From current employer"],
+    },
+  },
+  "Employer-sponsored benefit": {
+    defaultValue: "None",
+    control: {
+      type: "radio",
+      options: ["None", "Weekly medical benefit", "Full wage replacement"],
+    },
+  },
+  "Other income": {
+    defaultValue: "None",
+    control: {
+      type: "radio",
+      options: ["None", "From other employer"],
     },
   },
   Payment: {
@@ -146,9 +170,82 @@ export function createClaimFromArgs(args) {
       break;
   }
 
-  switch (args["Other incomes"]) {
-    case "Unemployment income":
-      claim = claim.otherIncomeFromUnemployment();
+  switch (args["Previous leaves same reason"]) {
+    case "From current employer":
+      claim = claim.previousLeavesSameReason([
+        {
+          is_for_current_employer: true,
+          leave_start_date: "2021-05-01",
+          leave_end_date: "2021-07-01",
+          leave_minutes: 5000,
+          worked_per_week_minutes: 10000,
+        },
+      ]);
+      break;
+    case "From other employer":
+      claim = claim.previousLeavesSameReason([
+        {
+          is_for_current_employer: false,
+          leave_start_date: "2021-05-01",
+          leave_end_date: "2021-07-01",
+          leave_minutes: 5000,
+          worked_per_week_minutes: 10000,
+        },
+      ]);
+      break;
+  }
+
+  switch (args["Previous leaves other reason"]) {
+    case "Medical leave from current employer":
+      claim = claim.previousLeavesOtherReason([
+        {
+          is_for_current_employer: true,
+          leave_reason: PreviousLeaveReason.medical,
+          leave_start_date: "2021-05-01",
+          leave_end_date: "2021-07-01",
+          leave_minutes: 5000,
+          worked_per_week_minutes: 10000,
+        },
+      ]);
+      break;
+    case "Pregnancy leave from other employer":
+      claim = claim.previousLeavesOtherReason([
+        {
+          is_for_current_employer: false,
+          leave_reason: PreviousLeaveReason.pregnancy,
+          leave_start_date: "2021-05-01",
+          leave_end_date: "2021-07-01",
+          leave_minutes: 5000,
+          worked_per_week_minutes: 10000,
+        },
+      ]);
+      break;
+  }
+
+  switch (args["Concurrent leave"]) {
+    case "From current employer":
+      claim = claim.concurrentLeave();
+  }
+
+  switch (args["Employer-sponsored benefit"]) {
+    case "Weekly medical benefit":
+      claim = claim.employerBenefit();
+      break;
+    case "Full wage replacement":
+      claim = claim.employerBenefit([
+        {
+          is_full_salary_continuous: true,
+          benefit_start_date: "2021-05-01",
+          benefit_end_date: "2021-07-01",
+          benefit_type: EmployerBenefitType.permanentDisability,
+        },
+      ]);
+      break;
+  }
+
+  switch (args["Other income"]) {
+    case "From other employer":
+      claim = claim.otherIncome();
       break;
     default:
       claim = claim.noOtherIncomes();

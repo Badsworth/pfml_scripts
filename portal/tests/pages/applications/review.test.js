@@ -15,10 +15,15 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../../src/models/OtherIncome";
+
+import PreviousLeave, {
+  PreviousLeaveReason,
+} from "../../../src/models/PreviousLeave";
 import Review, {
   EmployerBenefitList,
   OtherIncomeList,
   OtherLeaveEntry,
+  PreviousLeaveList,
 } from "../../../src/pages/applications/review";
 import { DateTime } from "luxon";
 import { DocumentType } from "../../../src/models/Document";
@@ -42,6 +47,11 @@ describe("Part 1 Review Page", () => {
           .part1Complete()
           .mailingAddress()
           .fixedWorkPattern()
+          .previousLeavesSameReason()
+          .previousLeavesOtherReason()
+          .concurrentLeave()
+          .otherIncome()
+          .employerBenefit()
           .create(),
         diveLevels,
       });
@@ -128,6 +138,9 @@ describe("Final Review Page", () => {
     // But doesn't render when null
     delete claimAttrs.has_other_incomes;
     delete claimAttrs.has_employer_benefits;
+    delete claimAttrs.has_previous_leaves_same_reason;
+    delete claimAttrs.has_previous_leaves_other_reason;
+    delete claimAttrs.has_concurrent_leave;
 
     ({ wrapper } = renderWithAppLogic(Review, {
       claimAttrs,
@@ -497,6 +510,7 @@ describe("EmployerBenefitList", () => {
       benefit_end_date: "2021-12-30",
       benefit_start_date: "2021-08-12",
       benefit_type: EmployerBenefitType.paidLeave,
+      is_full_salary_continuous: false,
     }),
     new EmployerBenefit({
       benefit_amount_dollars: "250",
@@ -504,6 +518,7 @@ describe("EmployerBenefitList", () => {
       benefit_end_date: "2021-12-30",
       benefit_start_date: "2021-08-12",
       benefit_type: EmployerBenefitType.shortTermDisability,
+      is_full_salary_continuous: false,
     }),
     new EmployerBenefit({
       benefit_amount_dollars: "250",
@@ -511,6 +526,7 @@ describe("EmployerBenefitList", () => {
       benefit_end_date: "2021-12-30",
       benefit_start_date: "2021-08-12",
       benefit_type: EmployerBenefitType.permanentDisability,
+      is_full_salary_continuous: true,
     }),
     new EmployerBenefit({
       benefit_amount_dollars: "250",
@@ -518,6 +534,7 @@ describe("EmployerBenefitList", () => {
       benefit_end_date: "2021-12-30",
       benefit_start_date: "2021-08-12",
       benefit_type: EmployerBenefitType.familyOrMedicalLeave,
+      is_full_salary_continuous: true,
     }),
   ];
 
@@ -546,6 +563,72 @@ describe("EmployerBenefitList", () => {
 
       expect(wrapper).toMatchSnapshot();
     });
+  });
+});
+
+describe("PreviousLeaveList", () => {
+  it("renders other reason list", () => {
+    const entries = [
+      new PreviousLeave({
+        is_for_current_employer: true,
+        leave_end_date: "2021-05-01",
+        leave_start_date: "2021-07-01",
+        leave_minutes: 20 * 60,
+        leave_reason: PreviousLeaveReason.care,
+        worked_per_week_minutes: 40 * 60,
+      }),
+      new PreviousLeave({
+        is_for_current_employer: false,
+        leave_end_date: "2021-05-01",
+        leave_start_date: "2021-07-01",
+        leave_minutes: 20 * 60,
+        leave_reason: PreviousLeaveReason.bonding,
+        worked_per_week_minutes: 40 * 60,
+      }),
+    ];
+
+    const wrapper = shallow(
+      <PreviousLeaveList
+        entries={entries}
+        type="otherReason"
+        startIndex={1}
+        reviewRowLevel="4"
+      />
+    );
+
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders same reason list", () => {
+    const entries = [
+      new PreviousLeave({
+        is_for_current_employer: true,
+        leave_end_date: "2021-05-01",
+        leave_start_date: "2021-07-01",
+        leave_minutes: 20 * 60,
+        leave_reason: null,
+        worked_per_week_minutes: 40 * 60,
+      }),
+      new PreviousLeave({
+        is_for_current_employer: false,
+        leave_end_date: "2021-05-01",
+        leave_start_date: "2021-07-01",
+        leave_minutes: 20 * 60,
+        leave_reason: null,
+        worked_per_week_minutes: 40 * 60,
+      }),
+    ];
+
+    const wrapper = shallow(
+      <PreviousLeaveList
+        entries={entries}
+        type="sameReason"
+        startIndex={1}
+        reviewRowLevel="4"
+      />
+    );
+
+    expect(wrapper).toMatchSnapshot();
   });
 });
 

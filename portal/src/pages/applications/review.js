@@ -21,6 +21,7 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../models/OtherIncome";
+import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get, isUndefined } from "lodash";
 
@@ -482,12 +483,11 @@ export const Review = (props) => {
           ? claim.reducedLeaveDateRange()
           : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
-
+      {/* Only hide the border when we're rendering a WeeklyTimeTable */}
       {claim.isReducedSchedule && (
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.reducedLeaveScheduleLabel")}
-          // Only hide the border when we're rendering a WeeklyTimeTable
           noBorder={workPattern.work_pattern_type === WorkPatternType.fixed}
         >
           {workPattern.work_pattern_type === WorkPatternType.fixed && (
@@ -546,7 +546,10 @@ export const Review = (props) => {
       {/* OTHER LEAVE */}
       {/* Conditionally showing this section since it was added after launch, so some claims may not have this section yet. */}
       {(get(claim, "has_employer_benefits") !== null ||
-        get(claim, "has_other_incomes") !== null) && (
+        get(claim, "has_other_incomes") !== null ||
+        get(claim, "has_previous_leaves_same_reason") !== null ||
+        get(claim, "has_previous_leaves_other_reason") !== null ||
+        get(claim, "has_concurrent_leave") !== null) && (
         <div data-test="other-leave">
           <ReviewHeading
             editHref={getStepEditHref(ClaimSteps.otherLeave)}
@@ -555,6 +558,55 @@ export const Review = (props) => {
           >
             {t("pages.claimsReview.stepHeading", { context: "otherLeave" })}
           </ReviewHeading>
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.previousLeaveHasPreviousLeavesLabel")}
+          >
+            {(get(claim, "has_previous_leaves_same_reason") ||
+              get(claim, "has_previous_leaves_other_reason")) === true
+              ? t("pages.claimsReview.otherLeaveChoiceYes")
+              : t("pages.claimsReview.otherLeaveChoiceNo")}
+          </ReviewRow>
+          <PreviousLeaveList
+            entries={get(claim, "previous_leaves_same_reason")}
+            type="sameReason"
+            startIndex={0}
+            reviewRowLevel={reviewRowLevel}
+          />
+          <PreviousLeaveList
+            entries={get(claim, "previous_leaves_other_reason")}
+            type="otherReason"
+            startIndex={get(claim, "previous_leaves_same_reason.length", 0)}
+            reviewRowLevel={reviewRowLevel}
+          />
+
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t(
+              "pages.claimsReview.concurrentLeaveHasConcurrentLeaveLabel"
+            )}
+          >
+            {get(claim, "has_concurrent_leave") === true
+              ? t("pages.claimsReview.otherLeaveChoiceYes")
+              : t("pages.claimsReview.otherLeaveChoiceNo")}
+          </ReviewRow>
+          {get(claim, "concurrent_leave") && (
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.concurrentLeaveLabel")}
+            >
+              {t("pages.claimsReview.previousLeaveIsForCurrentEmployer", {
+                context: String(
+                  get(claim, "concurrent_leave.is_for_current_employer")
+                ),
+              })}
+              <br />
+              {formatDateRange(
+                get(claim, "concurrent_leave.leave_start_date"),
+                get(claim, "concurrent_leave.leave_end_date")
+              )}
+            </ReviewRow>
+          )}
 
           <ReviewRow
             level={reviewRowLevel}
@@ -760,6 +812,69 @@ Review.propTypes = {
   }),
 };
 
+export const PreviousLeaveList = (props) => {
+  const { t } = useTranslation();
+  if (!props.entries) return null;
+
+  return props.entries.map((entry, index) => (
+    <ReviewRow
+      level={props.reviewRowLevel}
+      key={`${props.type}-${index}`}
+      label={t("pages.claimsReview.previousLeaveEntryLabel", {
+        count: props.startIndex + index + 1,
+      })}
+    >
+      {t("pages.claimsReview.previousLeaveType", { context: props.type })}
+      <br />
+      {t("pages.claimsReview.previousLeaveIsForCurrentEmployer", {
+        context: String(get(entry, "is_for_current_employer")),
+      })}
+      <br />
+      {props.type === "otherReason" && (
+        <React.Fragment>
+          {t("pages.claimsReview.previousLeaveReason", {
+            context: findKeyByValue(
+              PreviousLeaveReason,
+              get(entry, "leave_reason")
+            ),
+          })}
+          <br />
+        </React.Fragment>
+      )}
+      {formatDateRange(entry.leave_start_date, entry.leave_end_date)}
+      <br />
+      {t("pages.claimsReview.previousLeaveWorkedPerWeekMinutesLabel")}
+      <br />
+      {t("pages.claimsReview.previousLeaveWorkedPerWeekMinutes", {
+        context:
+          convertMinutesToHours(entry.worked_per_week_minutes).minutes === 0
+            ? "noMinutes"
+            : null,
+        ...convertMinutesToHours(entry.worked_per_week_minutes),
+      })}
+      <br />
+      {t("pages.claimsReview.previousLeaveLeaveMinutesLabel")}
+      <br />
+      {t("pages.claimsReview.previousLeaveLeaveMinutes", {
+        context:
+          convertMinutesToHours(entry.leave_minutes).minutes === 0
+            ? "noMinutes"
+            : null,
+        ...convertMinutesToHours(entry.leave_minutes),
+      })}
+    </ReviewRow>
+  ));
+};
+
+PreviousLeaveList.propTypes = {
+  /** Previous leave type */
+  type: PropTypes.oneOf(["sameReason", "otherReason"]).isRequired,
+  entries: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)).isRequired,
+  /** start index for previous leave label */
+  startIndex: PropTypes.number.isRequired,
+  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
+};
+
 /*
  * Helper component for rendering an array of EmployerBenefit
  * objects.
@@ -782,15 +897,21 @@ export const EmployerBenefitList = (props) => {
       entry.benefit_end_date
     );
 
-    const amount = entry.benefit_amount_dollars
-      ? t("pages.claimsReview.amountPerFrequency", {
-          context: findKeyByValue(
-            EmployerBenefitFrequency,
-            entry.benefit_amount_frequency
-          ),
-          amount: entry.benefit_amount_dollars,
-        })
-      : null;
+    let amount;
+
+    if (entry.is_full_salary_continuous) {
+      amount = t("pages.claimsReview.employerBenefitIsFullSalaryContinuous");
+    } else {
+      amount = entry.benefit_amount_dollars
+        ? t("pages.claimsReview.amountPerFrequency", {
+            context: findKeyByValue(
+              EmployerBenefitFrequency,
+              entry.benefit_amount_frequency
+            ),
+            amount: entry.benefit_amount_dollars,
+          })
+        : null;
+    }
 
     return (
       <OtherLeaveEntry

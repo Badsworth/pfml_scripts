@@ -1622,10 +1622,13 @@ const pages = {
     amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     childBirthDateLabel: "Child’s date of birth",
     childPlacementDateLabel: "Child’s placement date",
+    concurrentLeaveHasConcurrentLeaveLabel: "Concurrent leave?",
+    concurrentLeaveLabel: "Accrued paid leave",
     documentsLoadError: "$t(shared.documentsLoadError)",
     editLink: "Edit",
     employerBenefitEntryLabel:
       "$t(shared.employerBenefitEntryPrefix) {{count}}",
+    employerBenefitIsFullSalaryContinuous: "Full wage replacement",
     employerBenefitLabel: "Employer-sponsored benefits?",
     employerBenefitType_familyOrMedicalLeave:
       "$t(shared.employerBenefitType_familyOrMedicalLeave)",
@@ -1730,10 +1733,13 @@ const pages = {
     pregnancyOrRecentBirth_no: "$t(shared.choiceNo)",
     pregnancyOrRecentBirth_yes: "$t(shared.choiceYes)",
     previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",
-    previousLeaveFromCurrentEmployer_no:
-      "Did not take leave from this employer",
-    previousLeaveFromCurrentEmployer_yes: "Took leave from this employer",
+    previousLeaveHasPreviousLeavesLabel: "Previous leave?",
+    previousLeaveIsForCurrentEmployer_false: "From a different employer",
+    previousLeaveIsForCurrentEmployer_true: "From this employer",
     previousLeaveLabel: "Previous paid or unpaid leave?",
+    previousLeaveLeaveMinutes: "$t(shared.displayTime)",
+    previousLeaveLeaveMinutesLabel: "Total hours taken",
+    previousLeaveLeaveMinutes_noMinutes: "$t(shared.displayTime_noMinutes)",
     previousLeaveReason_activeDutyFamily:
       "Leave was for managing family affairs while a family member was on active duty in the armed forces",
     previousLeaveReason_bonding:
@@ -1743,6 +1749,12 @@ const pages = {
     previousLeaveReason_pregnancy: "Leave was for a pregnancy",
     previousLeaveReason_serviceMemberFamily:
       "Leave was for caring for a family member who serves in the armed forces",
+    previousLeaveType_otherReason: "Leave for a different qualifying reason",
+    previousLeaveType_sameReason: "Leave for the same qualifying reason",
+    previousLeaveWorkedPerWeekMinutes: "$t(shared.displayTime)",
+    previousLeaveWorkedPerWeekMinutesLabel: "Hours worked at time of leave",
+    previousLeaveWorkedPerWeekMinutes_noMinutes:
+      "$t(shared.displayTime_noMinutes)",
     reducedLeaveScheduleLabel: "Hours off per week",
     reducedLeaveScheduleWeeklyTotal: "$t(shared.displayTime)",
     reducedLeaveScheduleWeeklyTotal_noMinutes:

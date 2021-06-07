@@ -25,11 +25,14 @@ import OtherIncome, {
   OtherIncomeType,
 } from "../../src/models/OtherIncome";
 
+import PreviousLeave, {
+  PreviousLeaveReason,
+} from "../../src/models/PreviousLeave";
+
 import Address from "../../src/models/Address";
 import ConcurrentLeave from "../../src/models/ConcurrentLeave";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import LeaveReason from "../../src/models/LeaveReason";
-import PreviousLeave from "../../src/models/PreviousLeave";
 import { set } from "lodash";
 
 export class BaseMockBenefitsApplicationBuilder {
@@ -489,10 +492,24 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    *
    * @returns {MockBenefitsApplicationBuilder}
    */
-  previousLeavesSameReason(attrs = [{}]) {
+  previousLeavesSameReason(attrs) {
     set(this.claimAttrs, "has_previous_leaves_same_reason", true);
-    const previousLeaves = attrs.map((attr) => new PreviousLeave(attr));
-    set(this.claimAttrs, "previous_leaves_same_reason", previousLeaves);
+    set(
+      this.claimAttrs,
+      "previous_leaves_same_reason",
+      attrs
+        ? attrs.map((attr) => new PreviousLeave(attr))
+        : [
+            new PreviousLeave({
+              is_for_current_employer: true,
+              leave_end_date: "2021-05-01",
+              leave_start_date: "2021-07-01",
+              leave_minutes: 20 * 60,
+              leave_reason: null,
+              worked_per_week_minutes: 40 * 60,
+            }),
+          ]
+    );
     return this;
   }
 
@@ -502,8 +519,22 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    */
   previousLeavesOtherReason(attrs = [{}]) {
     set(this.claimAttrs, "has_previous_leaves_other_reason", true);
-    const previousLeaves = attrs.map((attr) => new PreviousLeave(attr));
-    set(this.claimAttrs, "previous_leaves_other_reason", previousLeaves);
+    set(
+      this.claimAttrs,
+      "previous_leaves_other_reason",
+      attrs
+        ? attrs.map((attr) => new PreviousLeave(attr))
+        : [
+            new PreviousLeave({
+              is_for_current_employer: true,
+              leave_end_date: "2021-05-01",
+              leave_start_date: "2021-07-01",
+              leave_minutes: 20 * 60,
+              leave_reason: PreviousLeaveReason.care,
+              worked_per_week_minutes: 40 * 60,
+            }),
+          ]
+    );
     return this;
   }
 
@@ -512,6 +543,9 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    */
   noOtherLeave() {
     set(this.claimAttrs, "has_employer_benefits", false);
+    set(this.claimAttrs, "has_concurrent_leave", false);
+    set(this.claimAttrs, "has_previous_leaves_same_reason", false);
+    set(this.claimAttrs, "has_previous_leaves_other_reason", false);
     this.noOtherIncomes();
     return this;
   }
