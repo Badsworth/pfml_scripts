@@ -85,7 +85,7 @@ export function storeFeatureFlagsFromQuery(searchParams) {
  * @param {string} flagName
  * @param {string} flagValue
  */
-function updateCookieWithFlag(flagName, flagValue) {
+export function updateCookieWithFlag(flagName, flagValue) {
   const cookieFlags = getCookieFlags();
 
   if (flagValue === "reset") delete cookieFlags[flagName];
