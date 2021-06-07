@@ -32,43 +32,5 @@
       { "name": "NR_INSERT_API_KEY", "valueFrom": "/admin/pfml-api/newrelic-insert-api-key" },
       { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key" }
     ]
-  },
-  {
-    "environment": [
-      {
-        "name": "NRIA_OVERRIDE_HOST_ROOT",
-        "value": ""
-      },
-      {
-        "name": "NRIA_IS_FORWARD_ONLY",
-        "value": "true"
-      },
-      {
-        "name": "FARGATE",
-        "value": "true"
-      },
-      {
-        "name": "ENABLE_NRI_ECS",
-        "value": "true"
-      },
-      {
-        "name": "NRIA_PASSTHROUGH_ENVIRONMENT",
-        "value": "ECS_CONTAINER_METADATA_URI,ENABLE_NRI_ECS,FARGATE"
-      },
-      {
-        "name": "NRIA_CUSTOM_ATTRIBUTES",
-        "value": "{\"nrDeployMethod\":\"downloadPage\"}"
-      }
-    ],
-    "secrets": [
-      {
-        "valueFrom": "/service/${app_name}/common/newrelic-license-key",
-        "name": "NRIA_LICENSE_KEY"
-      }
-    ],
-    "cpu": 256,
-    "memoryReservation": 512,
-    "image": "newrelic/infrastructure-bundle:2.4.1",
-    "name": "newrelic-infra"
   }
 ]
