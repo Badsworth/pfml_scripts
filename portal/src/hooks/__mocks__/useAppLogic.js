@@ -1,10 +1,12 @@
 import User, { UserLeaveAdministrator } from "../../models/User";
+
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import ClaimCollection from "../../models/ClaimCollection";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
+import Flag from "../../models/Flag";
 import PaginationMeta from "../../models/PaginationMeta";
 import { uniqueId } from "lodash";
 
@@ -126,4 +128,18 @@ export default jest.fn(() => ({
       ],
     }),
   },
+  featureFlags: {
+    flags: [
+      new Flag({
+        enabled: false,
+        name: "maintenance",
+        options: {
+          page_routes: ["/*"]
+        },
+        start: null,
+        end: null,
+      })
+    ],
+    loadFeatureFlags: jest.fn()
+  }
 }));

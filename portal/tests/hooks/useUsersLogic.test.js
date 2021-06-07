@@ -44,7 +44,6 @@ describe("useUsersLogic", () => {
     // of getCurrentUser and updateUser so this will reference the same
     // jest.fn mocks that are used in the hook.
     usersApi = new UsersApi();
-    console.log("USERS API:", usersApi);
     isLoggedIn = true;
     jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
   });

@@ -33,6 +33,7 @@ function hasMaintenancePage(wrapper) {
 
 describe("PageWrapper", () => {
   const maintenance = {
+    name: null,
     start: null,
     end: null,
     enabled: false,
@@ -148,7 +149,15 @@ describe("PageWrapper", () => {
 
     // Matches sub-pages
     mockRouter.pathname = "/employers/create-account";
-    wrapper = render({ maintenance: { ...maintenance, enabled: true, options: { page_routes: ["/employers/*"] }}});
+    wrapper = render({
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/employers/*"]
+        }
+      }
+    });
     expect(hasMaintenancePage(wrapper)).toBe(true);
   });
 

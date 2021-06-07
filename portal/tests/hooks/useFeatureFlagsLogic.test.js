@@ -1,8 +1,5 @@
-import { NetworkError, UnauthorizedError } from "../../src/errors";
-
 import AdminApi from "../../src/api/AdminApi";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import { NetworkError } from "../../src/errors";
 import { act } from "react-dom/test-utils";
 import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -24,7 +21,7 @@ describe("useFeatureFlagsLogic", () => {
 
   beforeEach(() => {
     adminApi = new AdminApi();
-console.log("ADMIN API:", adminApi);
+
     jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
   });
 
@@ -33,12 +30,11 @@ console.log("ADMIN API:", adminApi);
       renderHook();
     });
 
-    it("fetches maintenance flag from api", async () => {
+     it("fetches maintenance flag from api", async () => {
       await act(async () => {
         await flagsLogic.loadFeatureFlags();
       });
 
-      //expect(adminApi.getFlag).toHaveBeenCalled();
       expect(adminApi.getFlag).toHaveBeenCalledWith("maintenance");
     });
 
@@ -51,5 +47,5 @@ console.log("ADMIN API:", adminApi);
 
       expect(appErrorsLogic.appErrors.items[0].name).toBe("NetworkError");
     });
-  });
+   });
 });

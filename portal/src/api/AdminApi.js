@@ -15,7 +15,7 @@ export default class AdminApi extends BaseApi {
    * @param {string} flag_name - Name of flag to retrieve
    * @returns {Promise<AdminApiResult>}
    */
-  getFlag = async (flag_name) => {
+  getFlag = async flag_name => {
     const { data } = await this.request("GET", "flags/" + flag_name, null, {}, { excludeAuthHeader: true });
 
     if(Array.isArray(data)) {

@@ -23,6 +23,7 @@ describe("admin API", () => {
   const start = DateTime.local().plus({ hours: 5 }).toISO(); // starts in 5 hours
   const end = DateTime.local().plus({ hours: 10 }).toISO(); // ends in 10 hours
   const responseData = {
+    name: null,
     enabled: true,
     end: end,
     start: start, 
