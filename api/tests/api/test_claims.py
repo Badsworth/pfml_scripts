@@ -1595,20 +1595,18 @@ class TestUpdateClaim:
             eform = create_eform_capture[2]["eform"]
             assert eform.eformType == "Employer Response to Leave Request"
 
-        def test_long_relationship_inaccurate_reason_is_valid(
-            self, with_user_leave_admin_link, perform_update, update_caring_leave_claim_body,
-        ):
-            update_caring_leave_claim_body["relationship_inaccurate_reason"] = "a" * 9999
-            response = perform_update(update_caring_leave_claim_body)
+        def test_long_relationship_inaccurate_reason_is_valid(self, approval_request_params):
+            claim_review_body = approval_request_params.body
+            claim_review_body["relationship_inaccurate_reason"] = "a" * 9999
 
+            response = self.perform_update(approval_request_params)
             assert response.status_code == 200
 
-        def test_too_long_relationship_inaccurate_reason_is_invalid(
-            self, with_user_leave_admin_link, perform_update, update_caring_leave_claim_body,
-        ):
-            update_caring_leave_claim_body["relationship_inaccurate_reason"] = "a" * 10000
-            response = perform_update(update_caring_leave_claim_body)
+        def test_too_long_relationship_inaccurate_reason_is_invalid(self, approval_request_params):
+            claim_review_body = approval_request_params.body
+            claim_review_body["relationship_inaccurate_reason"] = "a" * 10000
 
+            response = self.perform_update(approval_request_params)
             assert response.status_code == 400
             assert response.get_json().get("message") == "Request Validation Error"
 
