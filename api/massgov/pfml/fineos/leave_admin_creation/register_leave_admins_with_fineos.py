@@ -36,6 +36,13 @@ def find_user_and_register(
         )
         return
 
+    if not leave_admin.verified:
+        logger.error(
+            "Leave admin not verified: ",
+            extra={"user_id": leave_admin.user_id, "employer_id": leave_admin.employer_id},
+        )
+        return
+
     register_leave_admin_with_fineos(
         # TODO: Set a real admin full name - https://lwd.atlassian.net/browse/EMPLOYER-540
         admin_full_name="Leave Administrator",
