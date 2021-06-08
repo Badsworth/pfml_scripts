@@ -89,7 +89,7 @@ def test_error_if_withholding_amount_is_outside_threshold(
 
     verifications_body["employer_id"] = employer_quarterly_contribution.employer_id
     verifications_body["withholding_amount"] = (
-        employer_quarterly_contribution.employer_total_pfml_contribution + 1
+        employer_quarterly_contribution.employer_total_pfml_contribution + 0.11
     )
     verifications_body["withholding_quarter"] = employer_quarterly_contribution.filing_period
 
@@ -201,7 +201,7 @@ def test_verification_successful_for_data_within_threshold(
 
     verifications_body["employer_id"] = employer_quarterly_contribution.employer_id
     verifications_body["withholding_amount"] = (
-        employer_quarterly_contribution.employer_total_pfml_contribution - 0.01
+        employer_quarterly_contribution.employer_total_pfml_contribution - 0.10
     )
     verifications_body["withholding_quarter"] = employer_quarterly_contribution.filing_period
 

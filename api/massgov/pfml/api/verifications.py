@@ -18,7 +18,7 @@ from massgov.pfml.db.models.verifications import Verification, VerificationType
 
 logger = logging.get_logger(__name__)
 
-WITHHOLDING_THRESHOLD = 0.05
+WITHHOLDING_THRESHOLD = 0.10
 
 
 def verifications():
