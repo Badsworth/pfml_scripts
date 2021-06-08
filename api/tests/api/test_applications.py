@@ -5076,7 +5076,7 @@ def test_application_patch_caring_leave_metadata_family_member_date_of_birth_val
         user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
     )
 
-    # use an invalid date of birth
+    # use an invalid date of birth - more than 150 years in the past
     update_request_body = {
         "leave_details": {
             "caring_leave_metadata": {"family_member_date_of_birth": date(1849, 1, 1).isoformat()}
@@ -5105,3 +5105,45 @@ def test_application_patch_caring_leave_metadata_family_member_date_of_birth_val
     assert message == "Date of birth must be within the past 150 years"
     assert rule == "date_of_birth_within_past_150_years"
     assert error_type == "invalid_year_range"
+
+
+def test_application_patch_caring_leave_metadata_family_member_future_date_of_birth_validation(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(
+        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+    )
+
+    # use an invalid date of birth - more than 7 months in the future
+    update_request_body = {
+        "leave_details": {
+            "caring_leave_metadata": {
+                "family_member_date_of_birth": (
+                    date.today() + relativedelta(months=7, days=1)
+                ).isoformat()
+            }
+        }
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    assert response.status_code == 400
+
+    response_body = response.get_json()
+    errors = response_body.get("errors")
+    assert len(errors) == 1
+
+    error = errors[0]
+    field = error.get("field")
+    message = error.get("message")
+    rule = error.get("rule")
+    error_type = error.get("type")
+
+    assert field == "leave_details.caring_leave_metadata.family_member_date_of_birth"
+    assert message == "Family member's date of birth must be less than 7 months from now"
+    assert rule == "max_7_months_in_future"
+    assert error_type == "future_birth_date"
