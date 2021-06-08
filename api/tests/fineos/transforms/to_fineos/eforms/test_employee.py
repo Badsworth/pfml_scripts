@@ -3,7 +3,7 @@ from datetime import date
 import faker
 
 from massgov.pfml.api.models.applications.common import OtherIncome
-from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.db.models.applications import (
     AmountFrequency,
     EmployerBenefitType,
@@ -25,6 +25,17 @@ def previous_leave():
         leave_end_date=fake.date_between_dates(start_date, date.today()),
         is_for_current_employer=True,
         leave_reason=PreviousLeaveQualifyingReason.PREGNANCY_MATERNITY,
+        worked_per_week_minutes=2430,
+        leave_minutes=3600,
+    )
+
+
+def concurrent_leave():
+    start_date = fake.date_between("-3m", "today")
+    return ConcurrentLeave(
+        leave_start_date=start_date,
+        leave_end_date=fake.date_between_dates(start_date, date.today()),
+        is_for_current_employer=False,
     )
 
 
@@ -338,38 +349,92 @@ def test_other_incomes_benefits_and_awaiting_approval():
 
 
 def test_transform_previous_leaves():
-    leaves = [previous_leave(), previous_leave()]
-    leaves[1].is_for_current_employer = False
-    eform_body = PreviousLeavesEFormBuilder.build(leaves)
-    assert eform_body.eformType == "Other Leaves"
+    previous_leaves = [previous_leave(), previous_leave()]
+    previous_leaves[1].is_for_current_employer = False
+    concurrent_leave_one = concurrent_leave()
+    eform_body = PreviousLeavesEFormBuilder.build(previous_leaves, concurrent_leave_one)
+    assert eform_body.eformType == "Other Leaves - current version"
     expected_attributes = [
-        {"dateValue": leaves[0].leave_start_date.isoformat(), "name": "BeginDate1"},
-        {"dateValue": leaves[0].leave_end_date.isoformat(), "name": "EndDate1"},
+        {
+            "dateValue": previous_leaves[0].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate1",
+        },
+        {
+            "dateValue": previous_leaves[0].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate1",
+        },
         {
             "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
-            "name": "QualifyingReason1",
+            "name": "V2QualifyingReason1",
         },
         {
-            "enumValue": {"domainName": "YesNoUnknown", "instanceValue": "Yes"},
-            "name": "LeaveFromEmployer1",
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2LeaveFromEmployer1",
         },
         {
-            "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
-            "name": "Applies1",
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2Leave1",
         },
-        {"dateValue": leaves[1].leave_start_date.isoformat(), "name": "BeginDate2"},
-        {"dateValue": leaves[1].leave_end_date.isoformat(), "name": "EndDate2"},
+        {"integerValue": 40, "name": "V2HoursWorked1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked1",
+        },
+        {"integerValue": 60, "name": "V2TotalHours1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies1",
+        },
+        {
+            "dateValue": previous_leaves[1].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate2",
+        },
+        {
+            "dateValue": previous_leaves[1].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate2",
+        },
         {
             "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
-            "name": "QualifyingReason2",
+            "name": "V2QualifyingReason2",
         },
         {
-            "enumValue": {"domainName": "YesNoUnknown", "instanceValue": "No"},
-            "name": "LeaveFromEmployer2",
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2LeaveFromEmployer2",
         },
         {
-            "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
-            "name": "Applies2",
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2Leave2",
+        },
+        {"integerValue": 40, "name": "V2HoursWorked2"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked2",
+        },
+        {"integerValue": 60, "name": "V2TotalHours2"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes2",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies2",
+        },
+        {
+            "dateValue": concurrent_leave_one.leave_start_date.isoformat(),
+            "name": "V2AccruedStartDate1",
+        },
+        {"dateValue": concurrent_leave_one.leave_end_date.isoformat(), "name": "V2AccruedEndDate1"},
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2AccruedPLEmployer1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2AccruedPaidLeave1",
         },
     ]
 

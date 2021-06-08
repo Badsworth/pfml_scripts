@@ -4136,7 +4136,7 @@ def test_application_post_submit_creates_previous_leaves_eform(
     filtered = list(filter(lambda cap: cap[0] == "customer_create_eform", captures))
     assert len(filtered) == 1
     create_eform_capture = filtered[0]
-    assert create_eform_capture[2]["eform"].eformType == "Other Leaves"
+    assert create_eform_capture[2]["eform"].eformType == "Other Leaves - current version"
 
 
 def test_application_post_submit_no_previous_leaves_does_not_create_other_leaves_eform(

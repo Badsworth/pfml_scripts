@@ -16,6 +16,7 @@ import datetime
 import mimetypes
 import uuid
 from enum import Enum
+from itertools import chain
 from typing import Dict, List, Optional, Set, Tuple
 
 import phonenumbers
@@ -25,7 +26,7 @@ import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.applications.common import OtherIncome
 from massgov.pfml.api.models.applications.responses import DocumentResponse
-from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.db.models.applications import (
     Application,
     Document,
@@ -1130,6 +1131,26 @@ def resolve_leave_plans(family_exemption: bool, medical_exemption: bool) -> Set[
     return leave_plans
 
 
+def format_other_leaves_data(application: Application) -> Optional[EFormBody]:
+    # Convert from DB models to API models because the API enum models are easier to serialize to strings
+    previous_leave_other_reason_items = map(
+        lambda other_leave: PreviousLeave.from_orm(other_leave),
+        application.previous_leaves_other_reason,
+    )
+    previous_leave_same_reason_items = map(
+        lambda same_leave: PreviousLeave.from_orm(same_leave),
+        application.previous_leaves_same_reason,
+    )
+    previous_leave_items = chain(
+        previous_leave_other_reason_items, previous_leave_same_reason_items
+    )
+    concurrent_leave_item = None
+    if application.concurrent_leave:
+        concurrent_leave_item = ConcurrentLeave.from_orm(application.concurrent_leave)
+
+    return PreviousLeavesEFormBuilder.build(previous_leave_items, concurrent_leave_item)
+
+
 def create_eform(
     application: Application, db_session: massgov.pfml.db.Session, eform: EFormBody
 ) -> None:
@@ -1144,23 +1165,16 @@ def create_other_leaves_and_other_incomes_eforms(
 ) -> None:
     log_attributes = get_application_log_attributes(application)
 
-    # Send previous leaves to fineos
-    if application.previous_leaves_other_reason:
-        # Convert from DB models to API models because the API enum models are easier to serialize to strings
-        previous_leaves_other_reason = map(
-            lambda leave: PreviousLeave.from_orm(leave), application.previous_leaves_other_reason
-        )
-        eform = PreviousLeavesEFormBuilder.build(previous_leaves_other_reason)
-        create_eform(application, db_session, eform)
-        logger.info("Created Other Leaves eform", extra=log_attributes)
-    if application.previous_leaves_same_reason:
-        # Convert from DB models to API models because the API enum models are easier to serialize to strings
-        previous_leaves_same_reason = map(
-            lambda leave: PreviousLeave.from_orm(leave), application.previous_leaves_same_reason
-        )
-        eform = PreviousLeavesEFormBuilder.build(previous_leaves_same_reason)
-        create_eform(application, db_session, eform)
-        logger.info("Created Same Leaves eform", extra=log_attributes)
+    # Send Other Leaves to FINEOS - One eForm contains other reason, same reason and concurrent leaves.
+    if (
+        application.previous_leaves_other_reason
+        or application.previous_leaves_same_reason
+        or application.concurrent_leave
+    ):
+        eform = format_other_leaves_data(application)
+        if eform:
+            create_eform(application, db_session, eform)
+            logger.info("Created Other Leaves eform", extra=log_attributes)
     # Send employer benefits and other incomes to fineos
     if (
         application.employer_benefits
