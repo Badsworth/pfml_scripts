@@ -202,9 +202,13 @@ describe("LeaveDetails", () => {
       expect(wrapper.exists("InputChoiceGroup")).toBe(true);
     });
 
-    it("initially renders with the comment box hidden", () => {
+    it("initially renders with all conditional comment boxes hidden", () => {
       const { wrapper } = setup();
-      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(false);
+      const conditionalContentArray = wrapper.find("ConditionalContent")
+
+      for (const content in conditionalContentArray) {
+        expect(content.prop("visible")).toBe(false);
+      }
     });
 
     it("renders the comment box when user indicates the relationship is inaccurate ", () => {
@@ -218,7 +222,25 @@ describe("LeaveDetails", () => {
         "No"
       );
       wrapper.setProps({ believeRelationshipAccurate: "No" });
-      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
+
+      const relationshipInaccurateElement = wrapper.find("ConditionalContent[data-test='relationship-accurate-no']")
+      expect(relationshipInaccurateElement.prop("visible")).toBe(true);
+    });
+
+    it("renders the comment box when user indicates the relationship status is unknown ", () => {
+      const {
+        wrapper,
+        changeRadioGroup,
+        onChangeBelieveRelationshipAccurateMock,
+      } = setup();
+      changeRadioGroup("believeRelationshipAccurate", "Unknown");
+      expect(onChangeBelieveRelationshipAccurateMock).toHaveBeenCalledWith(
+        "Unknown"
+      );
+      wrapper.setProps({ believeRelationshipAccurate: "Unknown" });
+
+      const relationshipUnknownElement = wrapper.find("ConditionalContent[data-test='relationship-accurate-unknown']")
+      expect(relationshipUnknownElement.prop("visible")).toBe(true);
     });
   });
 });

@@ -97,12 +97,13 @@ exports[`LeaveDetails Caring Leave renders relationship question when showCaring
   />
   <ConditionalContent
     clearField={[Function]}
+    data-test="relationship-accurate-no"
     getField={[Function]}
     updateFields={[Function]}
     visible={false}
   >
     <Alert
-      className="measure-5 margin-bottom-3 margin-top-3"
+      className="measure-5 margin-y-3"
       heading="The employee will be denied paid leave."
       headingSize="3"
       state="warning"
@@ -121,6 +122,17 @@ exports[`LeaveDetails Caring Leave renders relationship question when showCaring
       name="relationshipInaccurateReason"
       onChange={[Function]}
     />
+  </ConditionalContent>
+  <ConditionalContent
+    data-test="relationship-accurate-unknown"
+    visible={false}
+  >
+    <Alert
+      className="measure-5 margin-y-3"
+      state="info"
+    >
+      If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.
+    </Alert>
   </ConditionalContent>
 </Fragment>
 `;

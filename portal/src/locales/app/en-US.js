@@ -2485,6 +2485,9 @@ const components = {
       "Do you believe the listed relationship is described accurately? (Optional)",
     header: "Leave details",
     healthCareProviderFormLink: "$t(shared.certificationFormMedical)",
+    inaccurateRelationshipAlertHeading: "The employee will be denied paid leave.",
+    inaccurateRelationshipAlertLead:
+      "We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.",
     leaveDurationLabel: "Leave duration",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
@@ -2498,9 +2501,8 @@ const components = {
       "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
     recordkeepingInstructions_caringLeave:
       "<p>To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.</p><p>View the family relationship on page 3.</p>",
-    warningHeading: "The employee will be denied paid leave.",
-    warningLead:
-      "We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.",
+    unknownRelationshipAlertLead:
+      "If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.",
   },
   employersLeaveSchedule: {
     caption: "This is your employee’s expected leave schedule.",

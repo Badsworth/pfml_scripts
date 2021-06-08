@@ -183,14 +183,15 @@ const LeaveDetails = (props) => {
               onChangeRelationshipInaccurateReason(event.target.value)
             }
             visible={believeRelationshipAccurate === "No"}
+            data-test="relationship-accurate-no"
           >
             <Alert
               state="warning"
-              heading={t("components.employersLeaveDetails.warningHeading")}
+              heading={t("components.employersLeaveDetails.inaccurateRelationshipAlertHeading")}
               headingSize="3"
-              className="measure-5 margin-bottom-3 margin-top-3"
+              className="measure-5 margin-y-3"
             >
-              {t("components.employersLeaveDetails.warningLead")}
+              {t("components.employersLeaveDetails.inaccurateRelationshipAlertLead")}
             </Alert>
             <FormLabel className="usa-label" htmlFor="comment" small>
               {t("components.employersLeaveDetails.commentHeading")}
@@ -202,6 +203,18 @@ const LeaveDetails = (props) => {
                 onChangeRelationshipInaccurateReason(event.target.value)
               }
             />
+          </ConditionalContent>
+
+          <ConditionalContent
+            visible={believeRelationshipAccurate === "Unknown"}
+            data-test="relationship-accurate-unknown"
+          >
+            <Alert
+              state="info"
+              className="measure-5 margin-y-3"
+            >
+              {t("components.employersLeaveDetails.unknownRelationshipAlertLead")}
+            </Alert>
           </ConditionalContent>
         </React.Fragment>
       )}
