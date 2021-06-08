@@ -53,4 +53,19 @@ describe("Employer welcome", () => {
         .dive()
     ).toMatchSnapshot();
   });
+
+  it("renders caring leave alert when showCaringLeaveType is true", () => {
+    process.env.featureFlags = {
+      showCaringLeaveType: true
+    };
+    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
+
+    expect(wrapper.find("Alert").exists()).toEqual(true);
+
+    expect(
+      wrapper
+        .find(`Trans[i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"]`)
+        .dive()
+    ).toMatchSnapshot();
+  });
 });

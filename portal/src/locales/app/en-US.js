@@ -2173,6 +2173,8 @@ const pages = {
     withholdingAmountLabel: "Paid leave contributions from {{date}}",
   },
   employersWelcome: {
+    caringLeaveInfoAlertBody:
+      "Employees can now take <about-caring-leave-link>paid leave to care for a family member with a serious health condition</about-caring-leave-link>. If your employee applies for this kind of leave, you’ll notice different documents available for your review.",
     checkEmailBody:
       "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
     checkEmailTitle: "Check your email regularly",
@@ -2184,9 +2186,9 @@ const pages = {
     respondTitle: "Respond to applications within 10 business days",
     settingsLink: "Your organizations",
     settingsTitle: "Settings",
-    verificationBody:
+    verificationAlertBody:
       "We require every employer to verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team.",
-    verificationTitle: "Verify your account to continue",
+    verificationAlertTitle: "Verify your account to continue",
     viewApplicationsBody:
       "When you log into your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
     viewApplicationsTitle: "View all applications",

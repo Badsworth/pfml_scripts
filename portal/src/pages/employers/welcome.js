@@ -33,6 +33,8 @@ export const Welcome = ({ appLogic, user }) => {
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
+  const shouldShowVerificationAlert = shouldShowVerifications && hasVerifiableEmployer;
+  const shouldShowCaringLeaveAlert = shouldShowCaringLeave;
 
   return (
     <React.Fragment>
@@ -42,14 +44,15 @@ export const Welcome = ({ appLogic, user }) => {
       <div className="grid-row">
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersWelcome.welcomeTitle")}</Title>
-          {shouldShowVerifications && hasVerifiableEmployer && (
+
+          {shouldShowVerificationAlert && (
             <Alert
               state="warning"
-              heading={t("pages.employersWelcome.verificationTitle")}
+              heading={t("pages.employersWelcome.verificationAlertTitle")}
             >
               <p>
                 <Trans
-                  i18nKey="pages.employersWelcome.verificationBody"
+                  i18nKey="pages.employersWelcome.verificationAlertBody"
                   components={{
                     "your-organizations-link": (
                       <a href={routes.employers.organizations} />
@@ -59,6 +62,22 @@ export const Welcome = ({ appLogic, user }) => {
               </p>
             </Alert>
           )}
+
+          {shouldShowCaringLeaveAlert && (
+            <Alert state="info">
+              <p>
+                <Trans
+                  i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"
+                  components={{
+                    "about-caring-leave-link": (
+                      <a href={routes.external.massgov.benefitsGuide_aboutCaringLeave} />
+                    ),
+                  }}
+                />
+              </p>
+            </Alert>
+          )}
+
           <p>{t("pages.employersWelcome.welcomeBody")}</p>
 
           <Heading level="2">
