@@ -1816,6 +1816,14 @@ def test_other_leave_feature_flagged_rules():
 
     assert (
         Issue(
+            field="has_concurrent_leave",
+            message="has_concurrent_leave is required",
+            type=IssueType.required,
+        )
+        not in issues
+    )
+    assert (
+        Issue(
             field="has_employer_benefits",
             message="has_employer_benefits is required",
             type=IssueType.required,
@@ -1853,6 +1861,14 @@ def test_other_leave_feature_flagged_rules():
 
     assert (
         Issue(
+            field="has_concurrent_leave",
+            message="has_concurrent_leave is required",
+            type=IssueType.required,
+        )
+        in issues
+    )
+    assert (
+        Issue(
             field="has_employer_benefits",
             message="has_employer_benefits is required",
             type=IssueType.required,
@@ -1873,7 +1889,7 @@ def test_other_leave_feature_flagged_rules():
             message="has_previous_leaves_other_reason is required",
             type=IssueType.required,
         )
-        not in issues
+        in issues
     )
     assert (
         Issue(
@@ -1881,7 +1897,7 @@ def test_other_leave_feature_flagged_rules():
             message="has_previous_leaves_same_reason is required",
             type=IssueType.required,
         )
-        not in issues
+        in issues
     )
 
 
