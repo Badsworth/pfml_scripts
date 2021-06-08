@@ -18,7 +18,7 @@ from massgov.pfml.db.models.verifications import Verification, VerificationType
 
 logger = logging.get_logger(__name__)
 
-WITHOLDING_THRESHOLD = 0.05
+WITHHOLDING_THRESHOLD = 0.05
 
 
 def verifications():
@@ -96,7 +96,7 @@ def verifications():
             - employer_quarterly_contribution.employer_total_pfml_contribution
         )
         log_attributes = {**log_attributes, "withholding_amount_delta": withholding_amount_delta}
-        if abs(withholding_amount_delta) > WITHOLDING_THRESHOLD:
+        if abs(withholding_amount_delta) > WITHHOLDING_THRESHOLD:
             logger.info(
                 "Withholding amount is incorrect.", extra=log_attributes,
             )
