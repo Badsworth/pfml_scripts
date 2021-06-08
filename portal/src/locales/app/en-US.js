@@ -69,6 +69,10 @@ const errors = {
       benefit_type: {
         required: "Select the kind of benefit you will use.",
       },
+      is_full_salary_continuous: {
+        required:
+          "Select Yes if this employer-sponsored benefit fully replaces your wages.",
+      },
     },
     employer_fein: {
       pattern:
