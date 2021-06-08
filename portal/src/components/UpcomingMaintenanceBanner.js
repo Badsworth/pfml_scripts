@@ -10,11 +10,22 @@ import classnames from "classnames";
 const UpcomingMaintenanceBanner = (props) => { // props.start, props.end
   const classes = classnames("upcoming-maintenance-banner bg-yellow padding-1 text-center");
 
+  let maintenanceMessage = "";
+  if(!props.start && !props.end) {
+    maintenanceMessage = "components.upcomingMaintenanceBanner.messageWithNoStartAndNoEnd";
+  } else if (!props.start && props.end) {
+    maintenanceMessage = "components.upcomingMaintenanceBanner.messageWithEndAndNoStart";
+  } else if (props.start && !props.end) {
+    maintenanceMessage = "components.upcomingMaintenanceBanner.messageWithStartAndNoEnd";
+  } else {
+    maintenanceMessage = "components.upcomingMaintenanceBanner.messageWithStartAndEnd";
+  }
+
   return (
     <React.Fragment>
       <div role="alert" className={classes}>
         <Trans
-          i18nKey={(props.end) ? "components.upcomingMaintenanceBanner.messageWithStartEnd" : "components.upcomingMaintenanceBanner.messageWithStartNoEnd"}
+          i18nKey={maintenanceMessage}
           components={{
             start: props.start,
             end: props.end

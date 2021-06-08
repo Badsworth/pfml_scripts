@@ -66,11 +66,11 @@ const useAppLogic = () => {
     clearErrors: appErrorsLogic.clearErrors,
     documents,
     employers,
+    featureFlags,
     otherLeaves,
     portalFlow,
     setAppErrors: appErrorsLogic.setAppErrors,
     users,
-    featureFlags,
   };
 };
 

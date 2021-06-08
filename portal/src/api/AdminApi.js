@@ -7,21 +7,18 @@ export default class AdminApi extends BaseApi {
   }
 
   get i18nPrefix() {
-    return "flag";
+    return "flags";
   }
 
   /**
-   * Fetches a feature flag
-   * @param {string} flag_name - Name of flag to retrieve
+   * Fetches all feature flags
    * @returns {Promise<AdminApiResult>}
    */
-  getFlag = async flag_name => {
-    const { data } = await this.request("GET", "flags/" + flag_name, null, {}, { excludeAuthHeader: true });
+  getFlags = async () => {
+    const { data } = await this.request("GET", "flags", null, {}, { excludeAuthHeader: true });
 
-    if(Array.isArray(data)) {
-      return new Flag(data);
-    } else {
-      return [new Flag(data)];
-    }
+    return data.map(flag => {
+      return new Flag(flag);
+    });
   };
 }

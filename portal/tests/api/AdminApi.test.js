@@ -7,7 +7,7 @@ jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
-  response = { data: {}, errors: [], warnings: [] },
+  response = { data: [], errors: [], warnings: [] },
   ok = true,
   status = 200,
 }) => {
@@ -22,15 +22,15 @@ describe("admin API", () => {
   let adminApi;
   const start = DateTime.local().plus({ hours: 5 }).toISO(); // starts in 5 hours
   const end = DateTime.local().plus({ hours: 10 }).toISO(); // ends in 10 hours
-  const responseData = {
-    name: null,
+  const responseData = [{
+    name: "maintenance",
     enabled: true,
-    end: end,
-    start: start, 
+    end,
+    start, 
     options: {
       page_routes: ["/applications/*"]
     }
-  }
+  }];
 
   const accessTokenJwt =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
@@ -63,24 +63,24 @@ describe("admin API", () => {
       it("resolves with the flag in the response", async () => {
         expect.assertions();
 
-        const response = await adminApi.getFlag("maintenance");
+        const response = await adminApi.getFlags();
 
         expect(response[0]).toBeInstanceOf(Flag);
-        expect(response[0]).toEqual(responseData);
+        expect(response).toEqual(responseData);
       });
     });
 
     describe("when the request is unsuccessful", () => {
       beforeEach(() => {
         global.fetch = mockFetch({
-          response: { data: {} },
+          response: { data: [] },
           status: 404,
           ok: false,
         });
       });
 
       it("throws error", async () => {
-        await expect(adminApi.getFlag("abcde")).rejects.toThrow();
+        await expect(adminApi.getFlags()).rejects.toThrow();
       });
     });
   });

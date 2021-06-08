@@ -1,4 +1,5 @@
 import AdminApi from "../../src/api/AdminApi";
+import Flag from "../../src/models/Flag";
 import { NetworkError } from "../../src/errors";
 import { act } from "react-dom/test-utils";
 import { testHook } from "../test-utils";
@@ -9,7 +10,7 @@ import usePortalFlow from "../../src/hooks/usePortalFlow";
 jest.mock("../../src/api/AdminApi");
 
 describe("useFeatureFlagsLogic", () => {
-  let appErrorsLogic, adminApi, flagsLogic, portalFlow;
+  let adminApi, appErrorsLogic, flagsLogic, portalFlow;
   
   function renderHook() {
     testHook(() => {
@@ -25,27 +26,57 @@ describe("useFeatureFlagsLogic", () => {
     jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
   });
 
-  describe("loadFeatureFlags", () => {
+  describe("loadFlags", () => {
     beforeEach(() => {
       renderHook();
     });
 
-     it("fetches maintenance flag from api", async () => {
+     it("fetches flags from the api", async () => {
       await act(async () => {
-        await flagsLogic.loadFeatureFlags();
+        await flagsLogic.loadFlags();
       });
 
-      expect(adminApi.getFlag).toHaveBeenCalledWith("maintenance");
+      expect(adminApi.getFlags).toHaveBeenCalled();
     });
 
     it("throws NetworkError when fetch request fails", async () => {
-      adminApi.getFlag.mockRejectedValueOnce(new NetworkError());
+      adminApi.getFlags.mockRejectedValueOnce(new NetworkError());
 
       await act(async () => {
-        await flagsLogic.loadFeatureFlags();
+        await flagsLogic.loadFlags();
       });
 
       expect(appErrorsLogic.appErrors.items[0].name).toBe("NetworkError");
+    });
+   });
+
+   describe("getFlag", () => {
+    beforeEach(() => {
+      renderHook();
+    });
+
+    it("returns a specified feature flag from the state", async () => {
+      const flagMock = new Flag({
+        name: "maintenance",
+        enabled: true,
+        start: null,
+        end: null,
+        options: {
+            page_routes: ["/*"]
+        }
+      })
+
+      flagsLogic.getFlag = jest.fn().mockImplementation((flag_name) => {        
+        return {
+          ...flagMock,
+          name: flag_name                                                
+        };                                                                            
+      });
+
+      const maintenanceFlag = flagsLogic.getFlag("maintenance");
+
+      expect(flagsLogic.getFlag).toHaveBeenCalledWith("maintenance");
+      expect(maintenanceFlag).toEqual(flagMock);
     });
    });
 });

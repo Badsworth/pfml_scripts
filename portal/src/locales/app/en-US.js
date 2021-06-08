@@ -2677,10 +2677,14 @@ const components = {
       "<strong>Your browser is out of date</strong>. Please <update-link>update your browser</update-link> for more security, speed and the best experience on our site.",
   },
   upcomingMaintenanceBanner: {
-    messageWithStartEnd:
+    messageWithStartAndEnd:
       "We want to make you aware that there will be scheduled site maintenance from <strong>{{start}}</strong> to <strong>{{end}}</strong>. All or parts of the site will be unavailable during this time. We appreciate your patience and understanding.",
-    messageWithStartNoEnd:
+    messageWithEndAndNoStart:
+      "We want to make you aware that the site is currently undergoing maintenance. We project that maintenance will be completed by <strong>{{end}}</strong>. All or parts of the site will be temporarily unavailable. We appreciate your patience and understanding.",
+    messageWithStartAndNoEnd:
       "We want to make you aware that there will be scheduled site maintenance beginning at <strong>{{start}}</strong>. All or parts of the site will be temporarily unavailable. We appreciate your patience and understanding.",
+    messageWithNoStartAndNoEnd:
+      "We want to make you aware that the site is currently undergoing maintenance. All or parts of the site will be temporarily unavailable. We appreciate your patience and understanding.",
   },
   userFeedback: {
     instructions:

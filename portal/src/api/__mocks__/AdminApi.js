@@ -7,22 +7,24 @@
 
 import Flag from "../../models/Flag";
 
-export const getFlagMock = jest.fn().mockResolvedValue((flag_name) => {        
+export const getFlagsMock = jest.fn().mockResolvedValue(() => {        
   return {                                                                      
-    data: new Flag({
-      name: flag_name,
-      enabled: true,
-      start: null,
-      end: null,
-      options: {
-        page_routes: ["/*"]
-      }
-    }),                                                                         
+    data: [
+      new Flag({
+        name: "maintenance",
+        enabled: true,
+        start: null,
+        end: null,
+        options: {
+          page_routes: ["/*"]
+        }
+      })
+    ],                                                                         
     status: 200,                                                                
     success: true,                                                              
   };                                                                            
 });
 
 export default jest.fn().mockImplementation(() => ({
-  getFlag: getFlagMock
+  getFlags: getFlagsMock
 }));

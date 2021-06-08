@@ -16,29 +16,29 @@ describe("useAppLogic", () => {
       clearErrors,
       documents,
       employers,
+      featureFlags,
       otherLeaves,
       portalFlow,
       rest,
       setAppErrors,
-      users,
-      featureFlags;
+      users;
 
     testHook(() => {
       ({
         appErrors,
         _appErrorsLogic,
         auth,
+        benefitsApplications,
         catchError,
         claims,
-        benefitsApplications,
+        clearErrors,
         documents,
         employers,
-        clearErrors,
-        portalFlow,
+        featureFlags,
         otherLeaves,
+        portalFlow,
         setAppErrors,
         users,
-        featureFlags,
         ...rest
       } = useAppLogic());
     });
@@ -76,7 +76,8 @@ describe("useAppLogic", () => {
     expect(users).toEqual(expect.anything());
     expect(featureFlags).toBeInstanceOf(Object);
     expect(featureFlags.flags).toBeInstanceOf(Array);
-    expect(featureFlags.loadFeatureFlags).toBeInstanceOf(Function);
+    expect(featureFlags.getFlag).toBeInstanceOf(Function);
+    expect(featureFlags.loadFlags).toBeInstanceOf(Function);
     // there should be no other properties;
     expect(rest).toEqual({});
   });

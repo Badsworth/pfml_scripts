@@ -4,8 +4,8 @@ import { useState } from "react";
 
 /**
  * Hook that defines feature flags state
- * @param {object} props.appErrorsLogic - Utilities for set application's error  state
- * @returns {object} { flags: Object, loadFeatureFlags: Function }
+ * @param {object} props - Utilities for set application's error state
+ * @returns {object} { flags: Object, getFlag: Function, loadFlags: Function }
  */
 const useFlagsLogic = ({ appErrorsLogic }) => {
     const flagModel = new Flag();
@@ -15,21 +15,31 @@ const useFlagsLogic = ({ appErrorsLogic }) => {
     const adminApi = new AdminApi();
 
     /**
-     * Get current maintenance status from /flags/maintenance and set the result in the state
+     * Get current maintenance status from /flags/maintenance
+     * and set the result in the state
      */
-    const loadFeatureFlags = async () => {
+    const loadFlags = async () => {
         appErrorsLogic.clearErrors();
 
         try {
-            setFlags(await adminApi.getFlag("maintenance"));
+            setFlags(await adminApi.getFlags());
         } catch (error) {
             appErrorsLogic.catchError(error);
         }
     };
 
+    /**
+     * Get and return a specific feature flag from the 
+     * set of flags
+     */
+     const getFlag = flag_name => {
+        return flags.filter(flag => flag.name == flag_name)[0] || null;
+    };
+
     return {
         flags,
-        loadFeatureFlags
+        getFlag,
+        loadFlags
     };
 
 };

@@ -140,6 +140,7 @@ export default jest.fn(() => ({
         end: null,
       })
     ],
-    loadFeatureFlags: jest.fn()
+    getFlag: jest.fn(),
+    loadFlags: jest.fn()
   }
 }));

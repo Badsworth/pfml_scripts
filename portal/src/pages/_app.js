@@ -3,6 +3,7 @@ import "../../styles/app.scss";
 import React, { useEffect, useState } from "react";
 
 import { Auth } from "@aws-amplify/auth";
+import Flag from "../models/Flag";
 import PageWrapper from "../components/PageWrapper";
 import PropTypes from "prop-types";
 import { initializeI18n } from "../locales/i18n";
@@ -121,10 +122,15 @@ export const App = ({ Component, pageProps }) => {
   }, [router.events, appLogic]);
 
   useEffect(() => {
-    appLogic.featureFlags.loadFeatureFlags();
+    appLogic.featureFlags.loadFlags();
   }, []);
 
-  const maintenance = appLogic.featureFlags.flags[0];
+  const maintenance = appLogic.featureFlags.getFlag("maintenance") || new Flag({
+    name: "maintenance",
+    options: {
+      page_routes: []
+    }
+  });
 
   return (
     <PageWrapper

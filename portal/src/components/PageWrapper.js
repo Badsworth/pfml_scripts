@@ -34,15 +34,14 @@ const isInMaintenanceWindow = (start, end) => {
 };
 
 /**
- * @param {string} [start] - ISO 8601 date time
  * @param {string} [end] - ISO 8601 date time
  * @returns {boolean}
  */
- const isBeforeMaintenanceWindow = (start) => {
+ const isBeforeOrInMaintenanceWindow = (end) => {
   const now = DateTime.local();
-  const isBeforeStart = start ? now < DateTime.fromISO(start) : true;
+  const isBeforeEnd = end ? now < DateTime.fromISO(end) : true;
 
-  return isBeforeStart;
+  return isBeforeEnd;
 };
 
 /**
@@ -113,7 +112,7 @@ const PageWrapper = (props) => {
    * Should this page display an upcoming maintenance banner?
    * @type {boolean}
    */
-  const showUpcomingMaintenanceBanner = isBeforeMaintenanceWindow(maintenanceStart) && maintenanceEnabled;
+  const showUpcomingMaintenanceBanner = isBeforeOrInMaintenanceWindow(maintenanceEnd) && maintenanceEnabled;
 
   // Prevent site from being rendered if this feature flag isn't enabled.
   // We render a vague but recognizable message that serves as an indicator
@@ -184,12 +183,6 @@ PageWrapper.propTypes = {
   isLoading: PropTypes.bool,
   /** Maintenance feature flag data */
   maintenance: PropTypes.object,
-  /** Page routes that should render a maintenance page */
-  maintenancePageRoutes: PropTypes.arrayOf(PropTypes.string),
-  /** ISO 8601 date time for maintenance window start */
-  maintenanceStart: PropTypes.string,
-  /** ISO 8601 date time for maintenance window end */
-  maintenanceEnd: PropTypes.string,
 };
 
 export default PageWrapper;
