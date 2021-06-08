@@ -1,4 +1,6 @@
 import { mount, shallow } from "enzyme";
+import AppErrorInfo from "../../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import Feedback from "../../../src/components/employers/Feedback";
 import React from "react";
 import { act } from "react-dom/test-utils";
@@ -198,5 +200,37 @@ describe("Feedback", () => {
       // TODO (EMPLOYER-665): Show file upload
       // expect(wrapper.find(FileCardList).exists()).toEqual(true);
     });
+  });
+
+  it("renders inline error message when the text exceeds the limit", () => {
+    const appErrors = new AppErrorInfoCollection([
+      new AppErrorInfo({
+        field: "comment",
+        type: "maxLength",
+        message:
+          "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
+      }),
+    ]);
+    appLogic.appErrors = appErrors;
+    wrapper = mount(
+      <Feedback
+        appLogic={appLogic}
+        comment="some comment"
+        isDenyingRequest
+        setComment={() => {}}
+      />
+    );
+
+    expect(
+      wrapper.find("ConditionalContent").find("FormLabel").find("span").text()
+    ).toMatchInlineSnapshot(
+      `"Please shorten your comment. We cannot accept comments that are longer than 9999 characters."`
+    );
+    expect(
+      wrapper
+        .find("ConditionalContent")
+        .find("textarea[name='comment']")
+        .hasClass("usa-input--error")
+    ).toEqual(true);
   });
 });

@@ -559,6 +559,9 @@ const errors = {
     fineos_client: "$t(shared.documentsUploadError)",
   },
   employers: {
+    comment: {
+      maxLength: "$t(shared.maxEmployerCommentLengthError)",
+    },
     ein: {
       employer_verification_data_required:
         "$t(shared.ein.employer_verification_data_required)",
@@ -590,6 +593,9 @@ const errors = {
     },
     outstanding_information_request_required:
       "This application has already been reviewed.",
+    relationship_inaccurate_reason: {
+      maxLength: "$t(shared.maxEmployerCommentLengthError)",
+    },
     unauthorized_leave_admin:
       "Sorry, you do not have permission to view that page. To access it, you need to <add-org-link>add that organization</add-org-link> to your account.",
     withholding_amount: {
@@ -784,6 +790,8 @@ const shared = {
   leaveReasonCare: "Care for a family member",
   leaveReasonMedical: "Medical leave",
   leaveReasonServiceMemberFamily: "Military family",
+  maxEmployerCommentLengthError:
+    "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
   maximumReducedLeaveMinutes:
     "Hours you will take off cannot exceed your work schedule.",
   minimumReducedLeaveMinutes:

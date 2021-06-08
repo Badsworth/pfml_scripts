@@ -36,25 +36,30 @@ exports[`Feedback renders the component 1`] = `
     updateFields={[Function]}
     visible={false}
   >
-    <FormLabel
-      className="usa-label"
-      htmlFor="comment"
-      small={true}
+    <div
+      className="usa-form-group"
     >
-      <Trans
-        i18nKey="components.employersFeedback.commentSolicitation"
-        tOptions={
-          Object {
-            "context": "",
+      <FormLabel
+        className="usa-label"
+        errorMsg={null}
+        htmlFor="comment"
+        small={true}
+      >
+        <Trans
+          i18nKey="components.employersFeedback.commentSolicitation"
+          tOptions={
+            Object {
+              "context": "",
+            }
           }
-        }
+        />
+      </FormLabel>
+      <textarea
+        className="usa-textarea margin-top-3"
+        name="comment"
+        onChange={[Function]}
       />
-    </FormLabel>
-    <textarea
-      className="usa-textarea margin-top-3"
-      name="comment"
-      onChange={[Function]}
-    />
+    </div>
   </ConditionalContent>
 </Fragment>
 `;

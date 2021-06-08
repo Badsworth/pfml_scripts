@@ -258,6 +258,7 @@ export const Review = (props) => {
       <p className="margin-top-0">{claim.employer_fein}</p>
       <EmployeeInformation claim={claim} />
       <LeaveDetails
+        appErrors={appErrors}
         claim={claim}
         documents={certificationDocuments}
         downloadDocument={downloadDocument}

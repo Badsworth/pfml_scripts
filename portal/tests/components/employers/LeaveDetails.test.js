@@ -1,5 +1,7 @@
 import Document, { DocumentType } from "../../../src/models/Document";
 import { MockEmployerClaimBuilder, simulateEvents } from "../../test-utils";
+import AppErrorInfo from "../../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import LeaveDetails from "../../../src/components/employers/LeaveDetails";
 import React from "react";
 import ReviewRow from "../../../src/components/ReviewRow";
@@ -29,7 +31,12 @@ describe("LeaveDetails", () => {
   beforeEach(() => {
     claim = new MockEmployerClaimBuilder().completed().create();
     wrapper = shallow(
-      <LeaveDetails claim={claim} documents={[]} downloadDocument={jest.fn()} />
+      <LeaveDetails
+        claim={claim}
+        documents={[]}
+        downloadDocument={jest.fn()}
+        appErrors={new AppErrorInfoCollection()}
+      />
     );
   });
 
@@ -51,6 +58,7 @@ describe("LeaveDetails", () => {
         claim={bondingClaim}
         documents={[]}
         downloadDocument={jest.fn()}
+        appErrors={new AppErrorInfoCollection()}
       />
     );
 
@@ -78,6 +86,7 @@ describe("LeaveDetails", () => {
         claim={claimWithIntermittentLeave}
         documents={[]}
         downloadDocument={jest.fn()}
+        appErrors={new AppErrorInfoCollection()}
       />
     );
     expect(wrapper.find(ReviewRow).last().children().first().text()).toEqual(
@@ -98,6 +107,7 @@ describe("LeaveDetails", () => {
           claim={claim}
           documents={DOCUMENTS}
           downloadDocument={downloadDocumentSpy}
+          appErrors={new AppErrorInfoCollection()}
         />
       );
       return { downloadDocumentSpy, wrapper };
@@ -155,7 +165,7 @@ describe("LeaveDetails", () => {
   });
 
   describe("Caring Leave", () => {
-    const setup = (documents = []) => {
+    const setup = (documents = [], props = {}) => {
       const onChangeBelieveRelationshipAccurateMock = jest.fn();
       const claim = new MockEmployerClaimBuilder()
         .completed()
@@ -170,6 +180,8 @@ describe("LeaveDetails", () => {
             onChangeBelieveRelationshipAccurateMock
           }
           onChangeRelationshipInaccurateReason={jest.fn()}
+          appErrors={new AppErrorInfoCollection()}
+          {...props}
         />
       );
       const { changeRadioGroup } = simulateEvents(wrapper);
@@ -241,6 +253,35 @@ describe("LeaveDetails", () => {
 
       const relationshipUnknownElement = wrapper.find("ConditionalContent[data-test='relationship-accurate-unknown']")
       expect(relationshipUnknownElement.prop("visible")).toBe(true);
+    });
+
+    it("renders inline error message when the text exceeds the limit", () => {
+      const appErrors = new AppErrorInfoCollection([
+        new AppErrorInfo({
+          field: "relationship_inaccurate_reason",
+          type: "maxLength",
+          message:
+            "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
+        }),
+      ]);
+      const { wrapper } = setup([], { appErrors });
+
+      expect(
+        wrapper
+          .find("ConditionalContent")
+          .find("FormLabel")
+          .dive()
+          .find("span")
+          .text()
+      ).toMatchInlineSnapshot(
+        `"Please shorten your comment. We cannot accept comments that are longer than 9999 characters."`
+      );
+      expect(
+        wrapper
+          .find("ConditionalContent")
+          .find("textarea[name='relationshipInaccurateReason']")
+          .hasClass("usa-input--error")
+      ).toEqual(true);
     });
   });
 });

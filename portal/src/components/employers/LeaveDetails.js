@@ -1,4 +1,5 @@
 import Alert from "../Alert";
+import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../Details";
 import Document from "../../models/Document";
@@ -11,6 +12,7 @@ import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { Trans } from "react-i18next";
+import classnames from "classnames";
 import download from "downloadjs";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
@@ -26,6 +28,7 @@ import { useTranslation } from "../../locales/i18n";
 const LeaveDetails = (props) => {
   const { t } = useTranslation();
   const {
+    appErrors,
     believeRelationshipAccurate,
     claim: {
       fineos_absence_id: absenceId,
@@ -41,6 +44,17 @@ const LeaveDetails = (props) => {
 
   const isCaringLeave = reason === LeaveReason.care;
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
+  const errorMsg = appErrors.fieldErrorMessage(
+    "relationship_inaccurate_reason"
+  );
+
+  const inaccurateReasonClasses = classnames("usa-form-group", {
+    "usa-form-group--error": !!errorMsg,
+  });
+
+  const textAreaClasses = classnames("usa-textarea margin-top-3", {
+    "usa-input--error": !!errorMsg,
+  });
 
   return (
     <React.Fragment>
@@ -193,16 +207,23 @@ const LeaveDetails = (props) => {
             >
               {t("components.employersLeaveDetails.inaccurateRelationshipAlertLead")}
             </Alert>
-            <FormLabel className="usa-label" htmlFor="comment" small>
-              {t("components.employersLeaveDetails.commentHeading")}
-            </FormLabel>
-            <textarea
-              className="usa-textarea margin-top-3"
-              name="relationshipInaccurateReason"
-              onChange={(event) =>
-                onChangeRelationshipInaccurateReason(event.target.value)
-              }
-            />
+            <div className={inaccurateReasonClasses}>
+              <FormLabel
+                className="usa-label"
+                htmlFor="relationshipInaccurateReason"
+                small
+                errorMsg={errorMsg}
+              >
+                {t("components.employersLeaveDetails.commentHeading")}
+              </FormLabel>
+              <textarea
+                className={textAreaClasses}
+                name="relationshipInaccurateReason"
+                onChange={(event) =>
+                  onChangeRelationshipInaccurateReason(event.target.value)
+                }
+              />
+            </div>
           </ConditionalContent>
 
           <ConditionalContent
@@ -223,6 +244,7 @@ const LeaveDetails = (props) => {
 };
 
 LeaveDetails.propTypes = {
+  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
   believeRelationshipAccurate: PropTypes.oneOf(["Yes", "Unknown", "No"]),
   claim: PropTypes.instanceOf(EmployerClaim).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),

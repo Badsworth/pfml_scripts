@@ -110,18 +110,23 @@ exports[`LeaveDetails Caring Leave renders relationship question when showCaring
     >
       We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.
     </Alert>
-    <FormLabel
-      className="usa-label"
-      htmlFor="comment"
-      small={true}
+    <div
+      className="usa-form-group"
     >
-      Tell us why you think this relationship is inaccurate.
-    </FormLabel>
-    <textarea
-      className="usa-textarea margin-top-3"
-      name="relationshipInaccurateReason"
-      onChange={[Function]}
-    />
+      <FormLabel
+        className="usa-label"
+        errorMsg={null}
+        htmlFor="relationshipInaccurateReason"
+        small={true}
+      >
+        Tell us why you think this relationship is inaccurate.
+      </FormLabel>
+      <textarea
+        className="usa-textarea margin-top-3"
+        name="relationshipInaccurateReason"
+        onChange={[Function]}
+      />
+    </div>
   </ConditionalContent>
   <ConditionalContent
     data-test="relationship-accurate-unknown"
