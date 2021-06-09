@@ -220,6 +220,23 @@ def test_employer_notified_date_minimum():
     )
 
 
+@freeze_time("2021-01-01")
+def test_employer_notified_date_maximum():
+    test_app = ApplicationFactory.build(
+        employer_notified=True, employer_notification_date=date(2021, 1, 2)
+    )
+    issues = get_conditional_issues(test_app, Headers())
+    assert (
+        Issue(
+            type=IssueType.maximum,
+            rule=IssueRule.conditional,
+            message="employer_notification_date must be today or prior",
+            field="leave_details.employer_notification_date",
+        )
+        in issues
+    )
+
+
 def test_hours_worked_per_week_required():
     test_app = ApplicationFactory.build(
         employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,

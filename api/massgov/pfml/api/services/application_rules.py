@@ -465,6 +465,15 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
                     field="leave_details.employer_notification_date",
                 )
             )
+        elif application.employer_notification_date > date.today():
+            issues.append(
+                Issue(
+                    type=IssueType.maximum,
+                    rule=IssueRule.conditional,
+                    message="employer_notification_date must be today or prior",
+                    field="leave_details.employer_notification_date",
+                )
+            )
 
     if application.work_pattern:
         issues += get_work_pattern_issues(application)
