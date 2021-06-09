@@ -34,6 +34,7 @@ export const fields = [
 export const EmployerBenefitsDetails = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
+  const limit = 6;
 
   const initialEntries = pick(props, fields).claim;
   const useInitialEntries = useRef(true);
@@ -129,8 +130,10 @@ export const EmployerBenefitsDetails = (props) => {
           "pages.claimsEmployerBenefitsDetails.removeButton"
         )}
         render={render}
-        limit={6}
-        limitMessage={t("pages.claimsEmployerBenefitsDetails.limitMessage")}
+        limit={limit}
+        limitMessage={t("pages.claimsEmployerBenefitsDetails.limitMessage", {
+          limit,
+        })}
       />
     </QuestionPage>
   );

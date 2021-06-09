@@ -1186,8 +1186,6 @@ def create_other_leaves_and_other_incomes_eforms(
         employer_benefits = map(
             lambda benefit: EmployerBenefit.from_orm(benefit), application.employer_benefits,
         )
-        eform = OtherIncomesEFormBuilder.build(
-            employer_benefits, other_incomes, application.other_incomes_awaiting_approval,
-        )
+        eform = OtherIncomesEFormBuilder.build(employer_benefits, other_incomes,)
         create_eform(application, db_session, eform)
         logger.info("Created Other Incomes eform", extra=log_attributes)

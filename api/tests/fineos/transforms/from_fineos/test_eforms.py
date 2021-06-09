@@ -32,7 +32,7 @@ def deprecated_other_income_eform():
                     "name": "WRT1",
                     "enumValue": {
                         "domainName": "WageReplacementType",
-                        "instanceValue": "Accrued paid leave",
+                        "instanceValue": "Short-term disability insurance",
                     },
                 },
                 {
@@ -305,7 +305,7 @@ class TestTransformEformBody:
         assert benefit_1["benefit_amount_frequency"] == "Per Month"
         assert benefit_1["benefit_start_date"] == date(2020, 10, 1)
         assert benefit_1["benefit_end_date"] == date(2020, 10, 30)
-        assert benefit_1["benefit_type"] == "Accrued paid leave"
+        assert benefit_1["benefit_type"] == "Short-term disability insurance"
         assert benefit_1["program_type"] == "Non-Employer"
 
         assert type(employer_benefits_list[1]) is EmployerBenefit

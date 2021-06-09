@@ -1673,7 +1673,7 @@ def test_application_patch_add_employer_benefits(client, user, auth_token, test_
         json={
             "employer_benefits": [
                 {
-                    "benefit_type": "Accrued paid leave",
+                    "benefit_type": "Short-term disability insurance",
                     "benefit_start_date": "2021-01-10",
                     "benefit_end_date": "2021-01-20",
                     "benefit_amount_dollars": 400,
@@ -1692,7 +1692,7 @@ def test_application_patch_add_employer_benefits(client, user, auth_token, test_
     assert len(employer_benefits) == 1
     employer_benefit = employer_benefits[0]
     assert employer_benefit.get("employer_benefit_id") is not None
-    assert employer_benefit.get("benefit_type") == "Accrued paid leave"
+    assert employer_benefit.get("benefit_type") == "Short-term disability insurance"
     assert employer_benefit.get("benefit_start_date") == "2021-01-10"
     assert employer_benefit.get("benefit_end_date") == "2021-01-20"
     assert employer_benefit.get("benefit_amount_dollars") == 400
@@ -1783,7 +1783,7 @@ def test_application_patch_replace_existing_employer_benefits(
             "employer_benefits": [
                 {
                     "employer_benefit_id": employer_benefit_id,
-                    "benefit_type": "Accrued paid leave",
+                    "benefit_type": "Short-term disability insurance",
                     "benefit_end_date": "2021-01-20",
                     "benefit_start_date": "2021-01-10",
                     "benefit_amount_dollars": 400,
@@ -1804,7 +1804,7 @@ def test_application_patch_replace_existing_employer_benefits(
     employer_benefit = employer_benefits[0]
     assert employer_benefit.get("employer_benefit_id") != str(employer_benefit_id)
     assert application.employer_benefits[0].employer_benefit_id != str(employer_benefit_id)
-    assert employer_benefit.get("benefit_type") == "Accrued paid leave"
+    assert employer_benefit.get("benefit_type") == "Short-term disability insurance"
     assert employer_benefit.get("benefit_start_date") == "2021-01-10"
     assert employer_benefit.get("benefit_end_date") == "2021-01-20"
     assert employer_benefit.get("benefit_amount_dollars") == 400
@@ -1813,10 +1813,10 @@ def test_application_patch_replace_existing_employer_benefits(
 
 def test_application_patch_employer_benefit_exceed_limit(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    limit = 3
+    limit = 6
 
     benefits = EmployerBenefitFactory.create_batch(
-        size=2, application_id=application.application_id
+        size=5, application_id=application.application_id
     )
     application.employer_benefits = benefits
     test_db_session.add(application)
@@ -1826,7 +1826,7 @@ def test_application_patch_employer_benefit_exceed_limit(client, user, auth_toke
 
     new_benefits = [
         {
-            "benefit_type": "Accrued paid leave",
+            "benefit_type": "Short-term disability insurance",
             "benefit_end_date": "2021-01-20",
             "benefit_start_date": "2021-01-10",
             "benefit_amount_dollars": 400,
@@ -2005,9 +2005,9 @@ def test_application_patch_replace_existing_other_incomes(
 
 def test_application_patch_other_income_exceed_limit(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    limit = 3
+    limit = 6
 
-    incomes = OtherIncomeFactory.create_batch(size=2, application_id=application.application_id,)
+    incomes = OtherIncomeFactory.create_batch(size=5, application_id=application.application_id,)
     application.other_incomes = incomes
     test_db_session.add(application)
     test_db_session.commit()
@@ -4197,7 +4197,7 @@ def test_application_post_submit_creates_other_incomes_eform(
     filtered = list(filter(lambda cap: cap[0] == "customer_create_eform", captures))
     assert len(filtered) == 1
     create_eform_capture = filtered[0]
-    assert create_eform_capture[2]["eform"].eformType == "Other Income"
+    assert create_eform_capture[2]["eform"].eformType == "Other Income - current version"
 
 
 def test_application_post_submit_no_benefits_or_incomes_does_not_create_other_incomes_eform(

@@ -594,7 +594,7 @@ class EmployerBenefitFactory(BaseFactory):
 
     # application_id must be passed into the create() call
     benefit_type_id = (
-        application_models.EmployerBenefitType.ACCRUED_PAID_LEAVE.employer_benefit_type_id
+        application_models.EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id
     )
     benefit_amount_dollars = factory.Faker("random_int")
     benefit_amount_frequency_id = application_models.AmountFrequency.PER_MONTH.amount_frequency_id

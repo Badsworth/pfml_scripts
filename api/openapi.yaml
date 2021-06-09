@@ -1822,13 +1822,13 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/EmployerBenefit"
-              maxItems: 3
+              maxItems: 6
             other_incomes:
               nullable: true
               type: array
               items:
                 $ref: "#/components/schemas/OtherIncome"
-              maxItems: 3
+              maxItems: 6
             phone:
               $ref: "#/components/schemas/Phone"
             has_previous_leaves_other_reason:

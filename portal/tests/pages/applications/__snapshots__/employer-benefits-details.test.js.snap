@@ -181,7 +181,7 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
     }
     headingPrefix="Benefit"
     limit={6}
-    limitMessage="You can only add up to 3 benefits"
+    limitMessage="You can only add up to 6 benefits"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
     removeButtonLabel="Remove benefit"
@@ -223,7 +223,7 @@ exports[`EmployerBenefitsDetails when the user's claim has no employer benefits 
     }
     headingPrefix="Benefit"
     limit={6}
-    limitMessage="You can only add up to 3 benefits"
+    limitMessage="You can only add up to 6 benefits"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
     removeButtonLabel="Remove benefit"

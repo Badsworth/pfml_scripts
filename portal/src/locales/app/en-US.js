@@ -1151,7 +1151,7 @@ const pages = {
       "What is the last day of leave from work that this benefit will pay you for?",
     isFullSalaryContinuousLabel:
       "Does this employer-sponsored benefit fully replace your wages?",
-    limitMessage: "You can only add up to 3 benefits",
+    limitMessage: "You can only add up to {{limit}} benefits",
     removeButton: "Remove benefit",
     sectionLabel:
       "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.",
@@ -1422,7 +1422,7 @@ const pages = {
     cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
     endDateLabel:
       "What is the last day of your leave that this income will pay you for?",
-    limitMessage: "You can only add up to 3 incomes",
+    limitMessage: "You can only add up to {{limit}} incomes",
     removeButton: "Remove income",
     sectionLabel:
       "Tell us about your other sources of income$t(chars.nbsp)during your leave dates for paid$t(chars.nbsp)leave.",
