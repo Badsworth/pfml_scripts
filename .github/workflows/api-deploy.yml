@@ -36,6 +36,11 @@ on:
         description: |
           --------------------------------------
           ⬇️ (Also for staging deploys only) Also deploy the above version to Performance?
+      performLoadTest:
+        required: false
+        default: "true"
+        description: |
+          ⬇️ (For performance deploys only, including extra deploys from staging) Perform a small-scale load test in performance after deployment?
   push:
     branches:
       - main
@@ -287,7 +292,7 @@ jobs:
           curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         -H "Accept: application/vnd.github.v3+json" \
-                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "performance", "version": "${{ env.version }}" } }'
+                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "performance", "version": "${{ env.version }}", "performLoadTest": "${{ github.event.inputs.performLoadTest }}" } }'
           echo "Done."
 
   api-build:
@@ -865,6 +870,29 @@ jobs:
           github_branch: ${{ steps.determine_e2e_ref.outputs.e2e_ref }}
           # Limit to "stable" suite for any environment but test.
           only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
+
+  load-test:
+    name: "Trigger Load Testing"
+    runs-on: ubuntu-latest
+    # We allow load testing to spin up at the same time as E2E tests. The assumption
+    # is that by the time LST spins up, E2E should be completed.
+    needs: [ update-the-deploy-branch, api-release, api-gateway-release ]
+    if: github.event.inputs.deployment_env == 'performance' && github.event.inputs.performLoadTest == 'true'
+    steps:
+      - name: Trigger LST run with Base preset on Flood
+        env:
+          GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          WORKFLOW_NAME: "e2e-flood.yml"
+          E2E_ENVIRONMENT: performance
+          E2E_LST_PRESET: base
+        run: |
+          echo "*** Triggering an LST run against Performance... ***"
+          curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
+                -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: application/vnd.github.v3+json" \
+                -d "{ \"ref\": \"main\", \"inputs\": { \"target_environment\": \"$E2E_ENVIRONMENT\", \"preset\": \"$E2E_LST_PRESET\" } }"
+          echo "Done."
 
   post-e2e-failures-to-slack:
     name: Post E2E failures to Slack
