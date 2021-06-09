@@ -95,6 +95,10 @@ const errors = {
     first_name: {
       required: "Enter a first name.",
     },
+    has_concurrent_leave: {
+      required:
+        "Select yes if you will use any other paid leave during your PFML leave.",
+    },
     has_continuous_leave_periods: {
       required: "Select Yes if you are taking continuous leave.",
     },
@@ -111,6 +115,14 @@ const errors = {
     has_other_incomes: {
       required:
         "Select yes if you will receive income from any other sources during your leave.",
+    },
+    has_previous_leaves_other_reason: {
+      required:
+        "Select yes if you have taken any other leave since January 1, 2021 for a different qualifying reason.",
+    },
+    has_previous_leaves_same_reason: {
+      required:
+        "Select yes if you have taken any other leave for the same qualifying reason.",
     },
     has_reduced_schedule_leave_periods: {
       required: "Select Yes if you are working a reduced schedule.",
