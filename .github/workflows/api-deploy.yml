@@ -657,6 +657,8 @@ jobs:
           stage: "847267539"
           uat: "1114117515"
           training: "980608199"
+          breakfix: "1298450359"
+          cps-preview: "1386420590"
         with:
           apiKey: ${{ env.NEWRELIC_API_KEY }}
           accountId: "2837112"
