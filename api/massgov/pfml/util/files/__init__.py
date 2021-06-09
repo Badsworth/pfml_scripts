@@ -395,8 +395,8 @@ def open_stream(path, mode="r"):
     if is_s3_path(path):
         so_config = Config(
             max_pool_connections=10,
-            connect_timeout=14400,
-            read_timeout=14400,
+            connect_timeout=60,
+            read_timeout=60,
             retries={"max_attempts": 10},
         )
         so_transport_params = {"resource_kwargs": {"config": so_config}}
