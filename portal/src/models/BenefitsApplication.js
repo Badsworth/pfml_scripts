@@ -41,7 +41,6 @@ class BenefitsApplication extends BaseBenefitsApplication {
       mass_id: null,
       // array of OtherIncome objects. See the OtherIncome model
       other_incomes: [],
-      other_incomes_awaiting_approval: null,
       // See PaymentPreference model
       payment_preference: null,
       phone: {

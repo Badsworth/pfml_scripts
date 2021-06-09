@@ -681,8 +681,6 @@ const shared = {
     "Certification of Your Family Member’s Serious Health Condition",
   certificationFormMedical: "Certification of Your Serious Health Condition",
   choiceNo: "No",
-  choicePendingOtherIncomes:
-    "I’ve applied for another benefit that hasn’t been approved$t(chars.nbsp)yet.",
   choiceYes: "Yes",
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
@@ -1394,8 +1392,13 @@ const pages = {
   },
   claimsOtherIncomes: {
     choiceNo: "$t(shared.choiceNo)",
-    choicePendingOtherIncomes: "$t(shared.choicePendingOtherIncomes)",
+    choiceNoHint:
+      "I won't receive other income, or I've applied but it hasn't been approved.",
     choiceYes: "$t(shared.choiceYes)",
+    hintAppliedButNotApprovedDetailsBody:
+      "You only need to report sources of income that you know you will receive. If you have applied but you haven’t been approved yet, you don’t need to report that.<br/><br/>If you won’t receive income from any other sources on this list, select No.<br/><br/>If you are approved later, you will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.",
+    hintAppliedButNotApprovedDetailsLabel:
+      "What if I’ve applied for other income but I haven’t been approved yet?",
     hintHeader: "Other sources of income you must report are:",
     hintList: [
       "Workers Compensation",
@@ -1719,7 +1722,6 @@ const pages = {
     otherIncomeType_workersCompensation:
       "$t(shared.otherIncomeType_workersCompensation)",
     otherLeaveChoiceNo: "$t(shared.choiceNo)",
-    otherLeaveChoicePendingOtherIncomes: "$t(shared.choicePendingOtherIncomes)",
     otherLeaveChoiceYes: "$t(shared.choiceYes)",
     otherLeaveDollarAmount: "{{amount, currency}}",
     partDescription_1:
@@ -2499,7 +2501,8 @@ const components = {
       "Do you believe the listed relationship is described accurately? (Optional)",
     header: "Leave details",
     healthCareProviderFormLink: "$t(shared.certificationFormMedical)",
-    inaccurateRelationshipAlertHeading: "The employee will be denied paid leave.",
+    inaccurateRelationshipAlertHeading:
+      "The employee will be denied paid leave.",
     inaccurateRelationshipAlertLead:
       "We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.",
     leaveDurationLabel: "Leave duration",

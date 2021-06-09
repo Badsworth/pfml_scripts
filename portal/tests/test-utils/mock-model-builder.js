@@ -172,7 +172,6 @@ export class BaseMockBenefitsApplicationBuilder {
           ]
     );
     set(this.claimAttrs, "has_other_incomes", true);
-    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
     return this;
   }
 
@@ -187,7 +186,6 @@ export class BaseMockBenefitsApplicationBuilder {
       }),
     ]);
     set(this.claimAttrs, "has_other_incomes", true);
-    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
     return this;
   }
 
@@ -552,7 +550,6 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
 
   noOtherIncomes() {
     set(this.claimAttrs, "has_other_incomes", false);
-    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
     return this;
   }
 
