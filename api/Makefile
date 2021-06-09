@@ -485,6 +485,9 @@ whats-released-short: ## List latest version tag on release branches
 update-poetry-lock-hash: ## Update metadata.content-hash in poetry.lock
 	$(POETRY_CMD) lock --no-update
 
+experian-generate-layouts: ## Fetch supported layouts from Experian server
+	$(PY_RUN_CMD) ./bin/experian/generate-layouts.py > massgov/pfml/experian/address_validate_soap/layouts.py
+
 help: ## Displays this help screen
 	@grep -Eh '^[[:print:]]+:.*?##' $(MAKEFILE_LIST) | \
 	sort -d | \
