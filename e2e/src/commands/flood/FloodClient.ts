@@ -1,5 +1,5 @@
 import FormData from "form-data";
-import fetch from "node-fetch";
+import fetch, { RequestInfo, RequestInit, Response } from "node-fetch";
 
 type FloodGrid = {
   region: "us-east-1";
@@ -21,7 +21,7 @@ type InternalCreateFloodRequest = {
   grid?: Partial<FloodGrid>;
 };
 
-type CreateFloodResponse = {
+type Flood = {
   uuid: string;
   status: string;
   name: string;
@@ -29,6 +29,16 @@ type CreateFloodResponse = {
   threads: number;
   rampup: number | null;
   duration: number;
+  tag_list: string[];
+  created: string;
+  started: string;
+  stopped: string;
+  _embedded: {
+    results: {
+      name: string;
+      href: string;
+    }[];
+  };
 };
 
 const defaults = {
@@ -45,10 +55,35 @@ export type CreateFloodRequest = Omit<
 export default class FloodClient {
   constructor(private apiToken: string) {}
 
+  fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
+    return fetch(url, {
+      ...init,
+      headers: {
+        ...init?.headers,
+        Authorization:
+          "Basic " + Buffer.from(`${this.apiToken}:`).toString("base64"),
+        Accept: "application/vnd.flood.v2+json",
+      },
+    });
+  }
+
+  async getFloods(): Promise<Flood[]> {
+    const response = await this.fetch("https://api.flood.io/floods");
+    if (response.ok) {
+      const data = await response.json();
+      return data._embedded.floods;
+    }
+    throw new Error(
+      `Flood API request failed with a code of ${response.status}(${
+        response.statusText
+      }): ${await response.text()}`
+    );
+  }
+
   async startFlood(
     config: CreateFloodRequest,
     files: NodeJS.ReadableStream[] = []
-  ): Promise<CreateFloodResponse> {
+  ): Promise<Flood> {
     const body = new FormData();
     const { grid, ...requestedConfig } = config;
     for (const [k, v] of Object.entries({ ...defaults, ...requestedConfig })) {
@@ -72,13 +107,8 @@ export default class FloodClient {
       body.append(`flood[grids][][${k}]`, v);
     }
 
-    const response = await fetch("https://api.flood.io/floods", {
+    const response = await this.fetch("https://api.flood.io/floods", {
       method: "POST",
-      headers: {
-        Authorization:
-          "Basic " + Buffer.from(`${this.apiToken}:`).toString("base64"),
-        Accept: "application/vnd.flood.v2+json",
-      },
       body,
     });
     if (response.ok) {
