@@ -288,7 +288,7 @@ def previous_leave():
     return PreviousLeave(
         leave_start_date="2020-05-15",
         leave_end_date="2020-06-01",
-        leave_reason=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION,
+        leave_reason=PreviousLeaveQualifyingReason.AN_ILLNESS_OR_INJURY,
     )
 
 

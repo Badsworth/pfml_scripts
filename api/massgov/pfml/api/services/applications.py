@@ -360,19 +360,13 @@ def update_from_request(
 
         if key == "previous_leaves_other_reason":
             set_previous_leaves(
-                db_session,
-                body.previous_leaves_other_reason,
-                application,
-                "previous_leaves_other_reason",
+                db_session, body.previous_leaves_other_reason, application, "other_reason",
             )
             continue
 
         if key == "previous_leaves_same_reason":
             set_previous_leaves(
-                db_session,
-                body.previous_leaves_same_reason,
-                application,
-                "previous_leaves_same_reason",
+                db_session, body.previous_leaves_same_reason, application, "same_reason",
             )
             continue
 
@@ -802,15 +796,18 @@ def set_previous_leaves(
     db_session: db.Session,
     api_previous_leaves: Optional[List[claims_common_io.PreviousLeave]],
     application: Application,
-    type: Literal["previous_leaves_same_reason", "previous_leaves_other_reason"],
+    type: Literal["same_reason", "other_reason"],
 ) -> None:
     previous_leave_type = {
-        "previous_leaves_same_reason": PreviousLeaveSameReason,
-        "previous_leaves_other_reason": PreviousLeaveOtherReason,
+        "same_reason": PreviousLeaveSameReason,
+        "other_reason": PreviousLeaveOtherReason,
     }[type]
 
-    if getattr(application, type):
-        delete_application_other_benefits(previous_leave_type, application, db_session)
+    if getattr(application, f"previous_leaves_{type}"):
+        db_session.query(PreviousLeave).filter(
+            PreviousLeave.application_id == application.application_id
+        ).filter(PreviousLeave.type == type).delete(synchronize_session=False)
+        db_session.refresh(application)
 
     if not api_previous_leaves:
         return

@@ -2371,7 +2371,58 @@ def test_application_patch_add_empty_previous_leaves(client, user, auth_token, t
         assert leaves[0].leave_minutes is None
 
 
-def test_application_patch_replace_existing_previous_leave(
+def test_application_patch_replace_existing_previous_leave_same_reason(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    application.previous_leaves_same_reason = PreviousLeaveSameReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "previous_leaves_same_reason": [
+                {
+                    "is_for_current_employer": False,
+                    "leave_start_date": "2021-02-01",
+                    "leave_end_date": "2021-06-01",
+                    "leave_reason": "Pregnancy",
+                    "worked_per_week_minutes": 20,
+                    "leave_minutes": 10,
+                }
+            ],
+        },
+    )
+
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    previous_leaves_other_reason = response_body.get("previous_leaves_other_reason")
+    previous_leaves_same_reason = response_body.get("previous_leaves_same_reason")
+
+    assert len(previous_leaves_other_reason) == 2
+    assert len(previous_leaves_same_reason) == 1
+
+    previous_leave = previous_leaves_same_reason[0]
+    assert previous_leave.get("is_for_current_employer") is False
+    assert previous_leave.get("leave_start_date") == "2021-02-01"
+    assert previous_leave.get("leave_end_date") == "2021-06-01"
+    assert previous_leave.get("leave_reason") == "Pregnancy"
+    assert previous_leave.get("worked_per_week_minutes") == 20
+    assert previous_leave.get("leave_minutes") == 10
+
+
+def test_application_patch_replace_existing_previous_leave_other_reason(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
@@ -2399,16 +2450,6 @@ def test_application_patch_replace_existing_previous_leave(
                     "leave_minutes": 10,
                 }
             ],
-            "previous_leaves_same_reason": [
-                {
-                    "is_for_current_employer": False,
-                    "leave_start_date": "2021-02-01",
-                    "leave_end_date": "2021-06-01",
-                    "leave_reason": "Pregnancy",
-                    "worked_per_week_minutes": 20,
-                    "leave_minutes": 10,
-                }
-            ],
         },
     )
 
@@ -2421,18 +2462,79 @@ def test_application_patch_replace_existing_previous_leave(
     previous_leaves_same_reason = response_body.get("previous_leaves_same_reason")
 
     assert len(previous_leaves_other_reason) == 1
-    assert len(previous_leaves_same_reason) == 1
+    assert len(previous_leaves_same_reason) == 2
 
-    for previous_leave in [
-        previous_leaves_other_reason[0],
-        previous_leaves_same_reason[0],
-    ]:
-        assert previous_leave.get("is_for_current_employer") is False
-        assert previous_leave.get("leave_start_date") == "2021-02-01"
-        assert previous_leave.get("leave_end_date") == "2021-06-01"
-        assert previous_leave.get("leave_reason") == "Pregnancy"
-        assert previous_leave.get("worked_per_week_minutes") == 20
-        assert previous_leave.get("leave_minutes") == 10
+    previous_leave = previous_leaves_other_reason[0]
+    assert previous_leave.get("is_for_current_employer") is False
+    assert previous_leave.get("leave_start_date") == "2021-02-01"
+    assert previous_leave.get("leave_end_date") == "2021-06-01"
+    assert previous_leave.get("leave_reason") == "Pregnancy"
+    assert previous_leave.get("worked_per_week_minutes") == 20
+    assert previous_leave.get("leave_minutes") == 10
+
+
+def test_application_patch_delete_existing_previous_leave_same_reason(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    application.previous_leaves_same_reason = PreviousLeaveSameReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"previous_leaves_same_reason": None,},
+    )
+
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    previous_leaves_other_reason = response_body.get("previous_leaves_other_reason")
+    previous_leaves_same_reason = response_body.get("previous_leaves_same_reason")
+
+    assert len(previous_leaves_other_reason) == 2
+    assert len(previous_leaves_same_reason) == 0
+
+
+def test_application_patch_delete_existing_previous_leave_other_reason(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    application.previous_leaves_same_reason = PreviousLeaveSameReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"previous_leaves_other_reason": None,},
+    )
+
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    previous_leaves_other_reason = response_body.get("previous_leaves_other_reason")
+    previous_leaves_same_reason = response_body.get("previous_leaves_same_reason")
+
+    assert len(previous_leaves_other_reason) == 0
+    assert len(previous_leaves_same_reason) == 2
 
 
 def test_application_patch_previous_leave_exceed_limit(client, user, auth_token, test_db_session):
