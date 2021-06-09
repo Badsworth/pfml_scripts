@@ -29,6 +29,7 @@ export const fields = [
   "claim.employer_benefits[*].benefit_end_date",
   "claim.employer_benefits[*].benefit_start_date",
   "claim.employer_benefits[*].benefit_type",
+  "claim.employer_benefits[*].is_full_salary_continuous",
 ];
 
 export const EmployerBenefitsDetails = (props) => {
