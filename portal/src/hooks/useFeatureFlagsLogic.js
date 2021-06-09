@@ -4,7 +4,7 @@ import { useState } from "react";
 
 /**
  * Hook that defines feature flags state
- * @param {object} props - Utilities for set application's error state
+ * @param {object} props.appErrorsLogic - Utilities for set application's error state
  * @returns {object} { flags: Object, getFlag: Function, loadFlags: Function }
  */
 const useFlagsLogic = ({ appErrorsLogic }) => {
@@ -31,9 +31,11 @@ const useFlagsLogic = ({ appErrorsLogic }) => {
     /**
      * Get and return a specific feature flag from the 
      * set of flags
+     * @param {string} flag_name - Flag name to retrieve
+     * @returns {object|null} { flag } or null
      */
      const getFlag = flag_name => {
-        return flags.filter(flag => flag.name == flag_name)[0] || null;
+        return flags.filter(flag => flag.name === flag_name)[0] || null;
     };
 
     return {

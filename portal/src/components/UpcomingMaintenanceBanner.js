@@ -7,7 +7,7 @@ import classnames from "classnames";
  * Banner displayed at the top of the site to indicate upcoming
  * scheduled maintenance.
  */
-const UpcomingMaintenanceBanner = (props) => { // props.start, props.end
+const UpcomingMaintenanceBanner = (props) => {
   const classes = classnames("upcoming-maintenance-banner bg-yellow padding-1 text-center");
 
   let maintenanceMessage = "";

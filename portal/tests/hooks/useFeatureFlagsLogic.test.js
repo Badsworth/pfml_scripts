@@ -55,7 +55,7 @@ describe("useFeatureFlagsLogic", () => {
       renderHook();
     });
 
-    it("returns a specified feature flag from the state", async () => {
+    it("returns a specified feature flag from the state", () => {
       const flagMock = new Flag({
         name: "maintenance",
         enabled: true,

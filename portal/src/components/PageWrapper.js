@@ -138,7 +138,7 @@ const PageWrapper = (props) => {
   } else {
     pageBody = (
       <section id="page">
-        {(showUpcomingMaintenanceBanner) ? <UpcomingMaintenanceBanner start={maintenanceStartTime} end={maintenanceEndTime} /> : ''}
+        {showUpcomingMaintenanceBanner && (<UpcomingMaintenanceBanner start={maintenanceStartTime} end={maintenanceEndTime} />)}
         {props.children}
       </section>
     );
