@@ -766,6 +766,7 @@ const pages = {
     sessionTimedOut: "You were logged out due to inactivity",
     sessionTimedOutHeading: "Session timed out",
     title: "Log in to your paid leave account",
+    adminTitle: "Log in as an admin",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authResetPassword: {
