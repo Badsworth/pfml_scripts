@@ -20,6 +20,7 @@ def send_dua_reductions_report(db_session: db.Session) -> None:
     dfml_outbound_directory = os.path.join(
         s3_config.s3_bucket_uri, s3_config.s3_dfml_outbound_directory_path
     )
+    error_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dfml_error_directory_path)
 
     reductions_ref_files = _get_dua_reductions_ref_files(dfml_outbound_directory, db_session)
     if len(reductions_ref_files) == 0:
@@ -31,9 +32,31 @@ def send_dua_reductions_report(db_session: db.Session) -> None:
     else:
         reductions_ref_file = reductions_ref_files[0]
 
-    _send_dua_payments_email(reductions_ref_file, db_session, reductions_ref_file.file_location)
-    _update_ref_file(reductions_ref_file, db_session)
-    _update_state_log(reductions_ref_file, db_session)
+    try:
+        _send_dua_payments_email(reductions_ref_file, db_session, reductions_ref_file.file_location)
+        _update_ref_file(reductions_ref_file, db_session)
+        _update_state_log(reductions_ref_file, db_session)
+
+    except Exception:
+        # Move to error directory and update ReferenceFile.
+        filename = os.path.basename(reductions_ref_file.file_location)
+        dest_path = os.path.join(error_dir, filename)
+        payments_util.move_file_and_update_ref_file(db_session, dest_path, reductions_ref_file)
+
+        state_log_util.create_finished_state_log(
+            associated_model=reductions_ref_file,
+            end_state=State.DUA_REDUCTIONS_REPORT_ERROR,
+            outcome=state_log_util.build_outcome(
+                "Error emailing new DUA reductions payments to DFML"
+            ),
+            db_session=db_session,
+        )
+
+        logger.exception("Error emailing new DUA reductions payments to DFML")
+
+        db_session.commit()
+
+        raise
 
 
 def _get_dua_reductions_ref_files(

@@ -23,7 +23,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.payments.payments_util import get_now
+from massgov.pfml.payments.payments_util import get_now, move_file_and_update_ref_file
 from massgov.pfml.payments.sftp_s3_transfer import (
     SftpS3TransferConfig,
     copy_from_sftp_to_s3_and_archive_files,
@@ -233,6 +233,7 @@ def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry)
     s3_config = get_s3_config()
     pending_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dua_pending_directory_path)
     archive_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dua_archive_directory_path)
+    error_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dfml_error_directory_path)
 
     for ref_file in _get_pending_dua_payment_reference_files(pending_dir, db_session):
         log_entry.increment(Metrics.PENDING_DUA_PAYMENT_REFERENCE_FILES_COUNT)
@@ -246,7 +247,22 @@ def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry)
             log_entry.increment(Metrics.TOTAL_DUA_PAYMENT_ROW_COUNT, total_row_count)
 
         except Exception:
-            # TODO: transition to an error state
+            # Move to error directory and update ReferenceFile.
+            filename = os.path.basename(ref_file.file_location)
+            dest_path = os.path.join(error_dir, filename)
+            move_file_and_update_ref_file(db_session, dest_path, ref_file)
+
+            # transition to an error state
+            state_log_util.create_finished_state_log(
+                associated_model=ref_file,
+                end_state=State.DUA_PAYMENT_LIST_ERROR_SAVE_TO_DB,
+                outcome=state_log_util.build_outcome(
+                    "Error loading DIA payment file into database"
+                ),
+                db_session=db_session,
+            )
+            db_session.commit()
+
             log_entry.increment(Metrics.UNSUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT)
 
             # Log exceptions but continue attempting to load other payment files into the database.

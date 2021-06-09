@@ -2115,6 +2115,26 @@ class State(LookupTable):
         183, "Payment Complete with change notification", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    DIA_REDUCTIONS_REPORT_ERROR = LkState(
+        184,
+        "Error sending DIA reductions payments report to DFML",
+        Flow.DFML_DIA_REDUCTION_REPORT.flow_id,
+    )
+
+    DUA_REDUCTIONS_REPORT_ERROR = LkState(
+        185,
+        "Error sending DUA reductions payments report to DFML",
+        Flow.DFML_DUA_REDUCTION_REPORT.flow_id,
+    )
+
+    DIA_PAYMENT_LIST_ERROR_SAVE_TO_DB = LkState(
+        186, "Error saving new DIA payments in database", Flow.DIA_PAYMENT_LIST.flow_id
+    )
+
+    DUA_PAYMENT_LIST_ERROR_SAVE_TO_DB = LkState(
+        187, "Error saving new DUA payments in database", Flow.DUA_PAYMENT_LIST.flow_id
+    )
+
 
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
