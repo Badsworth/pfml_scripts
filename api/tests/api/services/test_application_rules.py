@@ -2104,41 +2104,6 @@ def test_other_income_end_date_must_be_after_start_date():
     ] == issues
 
 
-def test_has_other_incomes_required():
-    test_app = ApplicationFactory.build(
-        other_incomes_awaiting_approval=True, has_other_incomes=False
-    )
-    issues = get_conditional_issues(test_app, Headers())
-    assert [] == issues
-
-    test_app = ApplicationFactory.build(
-        other_incomes_awaiting_approval=True, has_other_incomes=None
-    )
-    issues = get_conditional_issues(test_app, Headers())
-    assert [
-        Issue(
-            type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="has_other_incomes must be set if other_incomes_awaiting_approval is set",
-            field="has_other_incomes",
-        )
-    ] == issues
-
-    test_app = ApplicationFactory.build(
-        other_incomes_awaiting_approval=True, has_other_incomes=True
-    )
-    issues = get_conditional_issues(test_app, Headers())
-    assert (
-        Issue(
-            type=IssueType.conflicting,
-            rule=IssueRule.disallow_has_other_incomes_when_awaiting_approval,
-            message="has_other_incomes must be false if other_incomes_awaiting_approval is set",
-            field="has_other_incomes",
-        )
-        in issues
-    )
-
-
 def test_has_previous_leaves_true_no_leave():
     application = ApplicationFactory.build()
     application.has_previous_leaves_other_reason = True

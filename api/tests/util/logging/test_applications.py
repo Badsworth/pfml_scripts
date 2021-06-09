@@ -41,7 +41,6 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.has_intermittent_leave_periods": "False",
         "application.has_mailing_address": "False",
         "application.has_other_incomes": None,
-        "application.has_other_incomes_awaiting_approval": None,
         "application.has_previous_leaves_other_reason": None,
         "application.has_previous_leaves_same_reason": None,
         "application.has_reduced_schedule_leave_periods": "False",

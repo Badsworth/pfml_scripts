@@ -16,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import backref, relationship
+from sqlalchemy.orm import backref, deferred, relationship
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
@@ -330,7 +330,7 @@ class Application(Base):
     submitted_time = Column(TIMESTAMP(timezone=True))
     has_employer_benefits = Column(Boolean)
     has_other_incomes = Column(Boolean)
-    other_incomes_awaiting_approval = Column(Boolean)
+    other_incomes_awaiting_approval = deferred(Column(Boolean().evaluates_none()))
     has_submitted_payment_preference = Column(Boolean)
     caring_leave_metadata_id = Column(
         UUID(as_uuid=True), ForeignKey("caring_leave_metadata.caring_leave_metadata_id")

@@ -1771,10 +1771,6 @@ components:
               type: boolean
               nullable: true
               example: true
-            other_incomes_awaiting_approval:
-              type: boolean
-              nullable: true
-              example: false
             has_reduced_schedule_leave_periods:
               type: boolean
               nullable: true
@@ -1928,10 +1924,6 @@ components:
           nullable: true
           example: true
         has_submitted_payment_preference:
-          type: boolean
-          nullable: true
-          example: true
-        other_incomes_awaiting_approval:
           type: boolean
           nullable: true
           example: true

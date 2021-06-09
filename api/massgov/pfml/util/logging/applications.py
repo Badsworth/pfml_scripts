@@ -92,14 +92,6 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
             str(dt_value.timestamp()) if dt_value is not None else None
         )
 
-    # Use a different attribute name for other_incomes_awaiting_approval to be consistent with other booleans
-    has_other_incomes_awaiting_approval = application.other_incomes_awaiting_approval
-    result["application.has_other_incomes_awaiting_approval"] = (
-        str(has_other_incomes_awaiting_approval)
-        if has_other_incomes_awaiting_approval is not None
-        else None
-    )
-
     # Use a different attribute name for fineos_absence_id to avoid using vendor specific names
     result["application.absence_case_id"] = (
         application.claim.fineos_absence_id if application.claim else None

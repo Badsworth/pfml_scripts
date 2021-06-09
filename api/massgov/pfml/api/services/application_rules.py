@@ -504,26 +504,6 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
             )
         )
 
-    if application.other_incomes_awaiting_approval:
-        if application.has_other_incomes is None:
-            issues.append(
-                Issue(
-                    type=IssueType.required,
-                    rule=IssueRule.conditional,
-                    message="has_other_incomes must be set if other_incomes_awaiting_approval is set",
-                    field="has_other_incomes",
-                )
-            )
-        elif application.has_other_incomes:
-            issues.append(
-                Issue(
-                    type=IssueType.conflicting,
-                    rule=IssueRule.disallow_has_other_incomes_when_awaiting_approval,
-                    message="has_other_incomes must be false if other_incomes_awaiting_approval is set",
-                    field="has_other_incomes",
-                )
-            )
-
     issues += get_employer_benefits_issues(application)
     issues += get_other_incomes_issues(application)
 
