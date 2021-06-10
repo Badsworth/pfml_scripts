@@ -20,6 +20,12 @@ export default {
         SEND_CODE: routes.auth.resetPassword,
       },
     },
+    [routes.auth.adminLogin]: {
+      on: {
+        LOG_IN: routes.admin.users,
+        UNAUTHORIZED_USER: routes.auth.login,
+      }
+    },
     [routes.auth.login]: {
       on: {
         LOG_IN: routes.applications.index,

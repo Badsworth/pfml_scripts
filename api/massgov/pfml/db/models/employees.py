@@ -1629,6 +1629,7 @@ class Role(LookupTable):
     USER = LkRole(1, "User")
     FINEOS = LkRole(2, "Fineos")
     EMPLOYER = LkRole(3, "Employer")
+    ADMIN = LkRole(4, "Admin")
 
 
 class PaymentMethod(LookupTable):

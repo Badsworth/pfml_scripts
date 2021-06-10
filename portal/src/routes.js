@@ -4,6 +4,9 @@
  * hard-coded into various files.
  */
 const routes = {
+  admin: {
+    users: "/admin/users",
+  },
   api: {
     applications: "/applications",
     claims: "/claims",
@@ -70,6 +73,7 @@ const routes = {
     workPatternType: "/applications/work-pattern-type",
   },
   auth: {
+    adminLogin: "/admin/login",
     createAccount: "/create-account",
     forgotPassword: "/forgot-password",
     login: "/login",

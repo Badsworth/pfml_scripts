@@ -135,6 +135,50 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   };
 
   /**
+   * Log in as admin to Portal with the given username (email) and password.
+   * If the user is authenticated succesffully but is not an admin,
+   * he/she will remain unauthenticated.
+   * If there are any errors, set app errors on the page.
+   * @param {string} username Email address that is used as the username
+   * @param {string} password Password
+   */
+  const loginAdmin = async (username = "", password) => {
+    appErrorsLogic.clearErrors();
+    username = trim(username);
+
+    const validationIssues = combineValidationIssues(
+      validateUsername(username),
+      validatePassword(password)
+    );
+
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      return;
+    }
+
+    try {
+      trackAuthRequest("signIn");
+      await Auth.signIn(username, password);
+      const { user } = await usersApi.getCurrentUser();
+
+      if (user.hasAdminRole) {
+        setIsLoggedIn(true);
+        portalFlow.goTo("/admin/users");
+      } else {
+        await Auth.signOut();
+        portalFlow.goTo("/login");
+      }
+    } catch (error) {
+      if (error.code === "UserNotConfirmedException") {
+        portalFlow.goToPageFor("UNCONFIRMED_ACCOUNT");
+        return;
+      }
+      const authError = getLoginError(error);
+      appErrorsLogic.catchError(authError);
+    }
+  };
+
+  /**
    * Log out of the Portal
    * @param {object} [options]
    * @param {boolean} options.sessionTimedOut Whether the logout occurred automatically as a result of
@@ -340,6 +384,38 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       const { pathWithParams } = portalFlow;
 
       portalFlow.goTo(routes.auth.login, { next: pathWithParams });
+    }
+  };
+
+  /**
+   * Check current session for current user info and if user is admin.
+   * If user is logged in, * set isLoggedIn to true or false depending
+   * on whether the user is logged in.
+   * If the user is not logged in or not and admin, redirect the user to
+   * admin the login page.
+   */
+  const requireAdmin = async () => {
+    let tempIsLoggedIn = isLoggedIn;
+    if (isLoggedIn === null) {
+      const cognitoUserInfo = await Auth.currentUserInfo();
+      const { user } = await usersApi.getCurrentUser();
+
+      tempIsLoggedIn = !!cognitoUserInfo && user.hasAdminRole;
+      setIsLoggedIn(tempIsLoggedIn);
+    }
+
+    assert(tempIsLoggedIn !== null);
+
+    // TODO (CP-733): Update this comment once we move logout functionality into this module
+    // Note that although we don't yet have a logout function that sets isLoggedIn to false,
+    // the logout (signOut) functionality in AuthNav.js forces a page reload which will
+    // reset React in-memory state and set isLoggedIn back to null.
+
+    if (tempIsLoggedIn) return;
+    if (!tempIsLoggedIn && !portalFlow.pathname.match(routes.auth.login)) {
+      const { pathWithParams } = portalFlow;
+
+      portalFlow.goTo(routes.auth.adminLogin, { next: pathWithParams });
     }
   };
 
@@ -564,8 +640,10 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     createEmployerAccount,
     forgotPassword,
     login,
+    loginAdmin,
     logout,
     isLoggedIn,
+    requireAdmin,
     requireLogin,
     resendVerifyAccountCode,
     resetEmployerPasswordAndCreateEmployerApiAccount,
