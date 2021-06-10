@@ -206,7 +206,7 @@ def create_report_new_dia_payments_to_dfml(db_session: db.Session, log_entry: Lo
     state_log_util.create_finished_state_log(
         associated_model=ref_file,
         end_state=State.DIA_REPORT_FOR_DFML_CREATED,
-        outcome=state_log_util.build_outcome("Created payments DFML report for DUA"),
+        outcome=state_log_util.build_outcome("Created payments DFML report for DIA"),
         db_session=db_session,
     )
     db_session.commit()

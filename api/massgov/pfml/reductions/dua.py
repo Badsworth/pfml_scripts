@@ -40,9 +40,9 @@ DuaReductionPaymentAndClaim = Tuple[DuaReductionPayment, Optional[Claim]]
 
 class Metrics:
     PENDING_DUA_PAYMENT_REFERENCE_FILES_COUNT = "pending_dua_payment_reference_files_count"
-    SUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = "successful_dia_payment_reference_files_count"
+    SUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = "successful_dua_payment_reference_files_count"
     UNSUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = (
-        "unsuccessful_dia_payment_reference_files_count"
+        "unsuccessful_dua_payment_reference_files_count"
     )
     NEW_DUA_PAYMENT_ROW_COUNT = "new_dua_payment_row_count"
     TOTAL_DUA_PAYMENT_ROW_COUNT = "total_dua_payment_row_count"
@@ -257,7 +257,7 @@ def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry)
                 associated_model=ref_file,
                 end_state=State.DUA_PAYMENT_LIST_ERROR_SAVE_TO_DB,
                 outcome=state_log_util.build_outcome(
-                    "Error loading DIA payment file into database"
+                    "Error loading DUA payment file into database"
                 ),
                 db_session=db_session,
             )
