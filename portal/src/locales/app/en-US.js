@@ -145,6 +145,8 @@ const errors = {
         family_member_date_of_birth: {
           format:
             "Your family member’s date of birth must include a valid month, day, and year.",
+          future_birth_date:
+            "Family member's date of birth must be less than 7 months from now.",
           invalid_year_range:
             "Your family member’s date of birth must include a valid year.",
           required: "Enter your family member’s date of birth.",
