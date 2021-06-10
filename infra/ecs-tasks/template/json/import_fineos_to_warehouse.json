@@ -23,6 +23,7 @@
       }
     },
     "environment": [
+      { "name": "ENVIRONMENT", "value": "${environment_name}" },
       { "name": "FINEOS_AWS_IAM_ROLE_ARN", "value": "${fineos_aws_iam_role_arn}" },
       { "name": "FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", "value": "${fineos_aws_iam_role_external_id}" },
       { "name": "FINEOS_DATA_EXPORT_PATH", "value": "${fineos_data_export_path}" },
