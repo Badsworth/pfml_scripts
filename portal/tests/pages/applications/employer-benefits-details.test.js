@@ -244,88 +244,24 @@ describe("EmployerBenefitsDetails", () => {
     });
 
     describe("when the user clicks 'Remove'", () => {
-      it("removes the benefit when the benefit isn't saved to the API", async () => {
+      it("removes the benefit", async () => {
         const claimWithBenefits = createClaimWithBenefits();
         const { appLogic, submitForm, wrapper } = setup(claimWithBenefits);
         appLogic.benefitsApplications.update.mockImplementationOnce(
           (applicationId, patchData) => {
             expect(applicationId).toBe(claimWithBenefits.application_id);
-            expect(patchData.employer_benefits).toHaveLength(1);
+            expect(patchData.employer_benefits).toEqual([
+              claimWithBenefits.employer_benefits[1],
+            ]);
           }
         );
 
         await clickFirstRemoveButton(wrapper);
         await submitForm();
 
-        expect(
-          appLogic.otherLeaves.removeEmployerBenefit
-        ).not.toHaveBeenCalled();
-
         expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
-      });
-
-      it("removes the benefit when the benefit is saved to the API and the DELETE request succeeds", async () => {
-        const claimWithBenefits = createClaimWithBenefits();
-        claimWithBenefits.employer_benefits[0].employer_benefit_id =
-          "mock-employer-benefit-id-1";
-
-        const { appLogic, submitForm, wrapper } = setup(claimWithBenefits);
-
-        appLogic.benefitsApplications.update.mockImplementationOnce(
-          (applicationId, patchData) => {
-            expect(applicationId).toBe(claimWithBenefits.application_id);
-            expect(patchData.employer_benefits).toHaveLength(1);
-          }
-        );
-
-        await clickFirstRemoveButton(wrapper);
-        await submitForm();
-
-        const entries = wrapper.find(RepeatableFieldset).prop("entries");
-
-        expect(appLogic.otherLeaves.removeEmployerBenefit).toHaveBeenCalled();
-        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
-        expect(entries).toHaveLength(1);
-        expect(
-          wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-        ).toHaveLength(1);
-      });
-
-      it("does not remove the benefit when the benefit is saved to the API and the DELETE request fails", async () => {
-        const claimWithBenefits = createClaimWithBenefits();
-        claimWithBenefits.employer_benefits[0].employer_benefit_id =
-          "mock-employer-benefit-id-1";
-
-        const { appLogic, submitForm, wrapper } = setup(claimWithBenefits);
-
-        appLogic.otherLeaves.removeEmployerBenefit.mockImplementationOnce(
-          () => false
-        );
-
-        appLogic.benefitsApplications.update.mockImplementationOnce(
-          (applicationId, patchData) => {
-            expect(applicationId).toBe(claimWithBenefits.application_id);
-            expect(patchData.employer_benefits).toHaveLength(2);
-          }
-        );
-
-        await clickFirstRemoveButton(wrapper);
-        expect(appLogic.otherLeaves.removeEmployerBenefit).toHaveBeenCalled();
-
-        await submitForm();
-        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
-
-        const entries = wrapper.find(RepeatableFieldset).prop("entries");
-        expect(entries).toHaveLength(2);
-        expect(
-          wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-        ).toHaveLength(2);
       });
     });
-  });
-
-  describe("when there are validation errors", () => {
-    it.todo("updates the formState with employer_benefit_ids - see CP-1686");
   });
 });
 
