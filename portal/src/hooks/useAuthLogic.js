@@ -6,7 +6,6 @@ import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
 import assert from "assert";
 import { createRouteWithQuery } from "../utils/routeWithParams";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import tracker from "../services/tracker";
 
@@ -169,44 +168,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   };
 
   /**
-   * Shared logic to create an account
-   * @param {string} username Email address that is used as the username
-   * @param {string} password Password
-   * @param {string} [ein] Employer id number (if signing up through Employer Portal)
-   * TODO (CP-1768): Remove this method once account creation requests are sent through API
-   * @private
-   */
-  const createAccountInCognito = async (username, password, ein) => {
-    try {
-      trackAuthRequest("signUp");
-
-      if (ein) {
-        await Auth.signUp({
-          username,
-          password,
-          clientMetadata: {
-            ein,
-          },
-        });
-      } else {
-        await Auth.signUp({ username, password });
-      }
-
-      // Store the username and/or EIN so the user doesn't need to reenter it on the Verify page
-      setAuthData({
-        createAccountUsername: username,
-        createAccountFlow: ein ? "employer" : "claimant",
-        employerIdNumber: ein,
-      });
-
-      portalFlow.goToPageFor("CREATE_ACCOUNT");
-    } catch (error) {
-      const authError = getCreateAccountError(error);
-      appErrorsLogic.catchError(authError);
-    }
-  };
-
-  /**
    * Shared logic to create an account through the API
    * @param {string} email_address
    * @param {string} password Password
@@ -257,26 +218,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} password Password
    */
   const createAccount = async (username = "", password) => {
-    if (isFeatureEnabled("claimantAuthThroughApi")) {
-      await _createAccountInApi(username, password, RoleDescription.claimant);
-      return;
-    }
-
-    // TODO (CP-1768): Remove code below once requests are always sent through API
-    appErrorsLogic.clearErrors();
-    username = trim(username);
-
-    const validationIssues = combineValidationIssues(
-      validateUsername(username),
-      validatePassword(password)
-    );
-
-    if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
-      return;
-    }
-
-    await createAccountInCognito(username, password);
+    await _createAccountInApi(username, password, RoleDescription.claimant);
   };
 
   /**
@@ -287,32 +229,12 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} ein Employer id number (known as EIN or FEIN)
    */
   const createEmployerAccount = async (username = "", password, ein) => {
-    if (isFeatureEnabled("employerAuthThroughApi")) {
-      await _createAccountInApi(
-        username,
-        password,
-        RoleDescription.employer,
-        ein
-      );
-      return;
-    }
-
-    // TODO (CP-1768): Remove code below once requests are always sent through API
-    appErrorsLogic.clearErrors();
-    username = trim(username);
-
-    const validationIssues = combineValidationIssues(
-      validateUsername(username),
-      validatePassword(password),
-      validateEin(ein)
+    await _createAccountInApi(
+      username,
+      password,
+      RoleDescription.employer,
+      ein
     );
-
-    if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
-      return;
-    }
-
-    await createAccountInCognito(username, password, ein);
   };
 
   /**
@@ -460,19 +382,12 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * Shared logic to verify an account
    * @param {string} username Email address that is used as the username
    * @param {string} code Verification code that is emailed to the user
-   * @param {string} ein Employer id number (if signing up through Employer Portal)
    * @private
    */
-  const verifyAccountInCognito = async (username = "", code = "", ein = "") => {
+  const verifyAccountInCognito = async (username = "", code = "") => {
     try {
       trackAuthRequest("confirmSignUp");
-      if (ein) {
-        await Auth.confirmSignUp(username, code, {
-          clientMetadata: { ein },
-        });
-      } else {
-        await Auth.confirmSignUp(username, code);
-      }
+      await Auth.confirmSignUp(username, code);
       portalFlow.goToPageFor(
         "SUBMIT",
         {},
@@ -529,35 +444,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     await verifyAccountInCognito(username, code);
   };
 
-  /**
-   * Verify Employer Portal account with the one time verification code that
-   * was emailed to the user. If there are any errors, set app errors
-   * on the page.
-   * @param {string} username Email address that is used as the username
-   * @param {string} code Verification code that is emailed to the user
-   * @param {string} ein Employer id number (known as EIN or FEIN)
-   */
-  const verifyEmployerAccount = async (username = "", code = "", ein = "") => {
-    appErrorsLogic.clearErrors();
-
-    username = trim(username);
-    code = trim(code);
-    ein = trim(ein);
-
-    const validationIssues = combineValidationIssues(
-      validateCode(code),
-      validateUsername(username),
-      validateEin(ein)
-    );
-
-    if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
-      return;
-    }
-
-    await verifyAccountInCognito(username, code, ein);
-  };
-
   return {
     authData,
     createAccount,
@@ -572,7 +458,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     resetPassword,
     resendForgotPasswordCode,
     verifyAccount,
-    verifyEmployerAccount,
   };
 };
 
@@ -672,37 +557,6 @@ function getLoginError(error) {
   } else if (error.code === "PasswordResetRequiredException") {
     // This error triggers when an admin initiates a password reset
     issue = { field: "password", type: "resetRequiredException" };
-  }
-
-  return new CognitoAuthError(error, issue);
-}
-
-/**
- * Converts an error thrown by the Amplify library's Auth.signUp method into
- * CognitoAuthError.
- * For a list of possible exceptions, see
- * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html#API_SignUp_Errors
- * @param {{ code: string, message: string }} error Error object that was thrown by Amplify's Auth.signUp method
- * @returns {CognitoAuthError}
- */
-function getCreateAccountError(error) {
-  let issue;
-  const errorCodeToIssueMap = {
-    UsernameExistsException: { field: "username", type: "exists" },
-    UnexpectedLambdaException: { field: "ein", type: "invalid" },
-    UserLambdaValidationException: {
-      field: "ein",
-      type: "invalid",
-    },
-  };
-
-  if (
-    error.code === "InvalidParameterException" ||
-    error.code === "InvalidPasswordException"
-  ) {
-    issue = getInvalidPasswordExceptionIssue(error);
-  } else if (errorCodeToIssueMap[error.code]) {
-    issue = errorCodeToIssueMap[error.code];
   }
 
   return new CognitoAuthError(error, issue);

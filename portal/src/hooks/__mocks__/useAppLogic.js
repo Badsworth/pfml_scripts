@@ -23,7 +23,6 @@ export default jest.fn(() => ({
     resetEmployerPasswordAndCreateEmployerApiAccount: jest.fn(),
     resetPassword: jest.fn(),
     verifyAccount: jest.fn(),
-    verifyEmployerAccount: jest.fn(),
   },
   catchError: jest.fn(),
   benefitsApplications: {

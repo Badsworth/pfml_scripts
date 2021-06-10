@@ -948,11 +948,6 @@ const pages = {
       "We sent a new 6-digit verification code to your email address. Enter the new code to verify your email.",
     codeResentHeading: "New verification code sent",
     confirmButton: "Submit",
-    einLabel: "Employer ID number (EIN)",
-    employerAccountLabel:
-      "Are you creating an employer account to manage leave for your company?",
-    employerChoiceNo: "$t(shared.choiceNo)",
-    employerChoiceYes: "$t(shared.choiceYes)",
     lead:
       "We sent a 6-digit verification code to your email address. Enter the code to verify your email.",
     lead_email:

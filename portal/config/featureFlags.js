@@ -7,10 +7,6 @@ const flagsConfig = {
   // Define a default or all feature flags here.
   // Environments will fallback to these default values.
   defaults: {
-    // When this flag is enabled, Claimant Create Account requests will be
-    // sent through the API, rather than directly to Cognito
-    claimantAuthThroughApi: false,
-
     // When this flag is enabled, the user can see the "Employment status"
     // question in the claimant flow (CP-1204)
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
@@ -26,10 +22,6 @@ const flagsConfig = {
     // a X-FF-Require-Other-Leaves header on API requests.
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
-
-    // When this flag is enabled, Employer Create Account requests will be
-    // sent through the API, rather than directly to Cognito
-    employerAuthThroughApi: false,
 
     // When this flag is enabled, "Add Organization" button and navigation to page is enabled
     // TODO (EMPLOYER-913): Remove flag
@@ -77,52 +69,34 @@ const flagsConfig = {
   // The environment keys should use the same envName defined in
   // environment config files.
   "cps-preview": {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
     employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
   development: {
     example: true,
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
     pfmlTerriyay: true,
   },
   test: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
     employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
   stage: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
     employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
-  training: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
-  },
+  training: {},
   performance: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
     employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
   },
-  uat: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
-  },
+  uat: {},
   prod: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
     employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
