@@ -18,7 +18,6 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
-from massgov.pfml.util import feature_gate
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 from massgov.pfml.util.strings import format_fein
 
@@ -26,25 +25,9 @@ from massgov.pfml.util.strings import format_fein
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture(params=["env_var", "feature_gate", "disabled"])
-def test_verification(request, monkeypatch, initialize_factories_session):
-    # This checks that all tests work _both_ with
-    # 1. Verification disabled and no verification record AND
-    # 2. Verification enabled and verification record
-    # TODO: Remove the params behavior after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
-    if request.param == "env_var":
-        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
-        return VerificationFactory.create()
-    elif request.param == "feature_gate":
-        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-        monkeypatch.setattr(
-            feature_gate, "check_enabled", lambda feature_name, user_email: True,
-        )
-
-        return VerificationFactory.create()
-    else:
-        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-        return None
+@pytest.fixture
+def test_verification(initialize_factories_session):
+    return VerificationFactory.create()
 
 
 @pytest.fixture
@@ -84,16 +67,6 @@ class TestVerificationEnforcement:
     def employer(self):
         employer = EmployerFactory.create()
         return employer
-
-    @pytest.fixture(autouse=True, params=["env_var", "feature_gate"])
-    def _enforce_verifications(self, request, monkeypatch, employer_user):
-        if request.param == "env_var":
-            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
-        else:
-            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-            monkeypatch.setattr(
-                feature_gate, "check_enabled", lambda feature_name, user_email: True,
-            )
 
     @pytest.fixture
     def setup_claim(self, test_db_session, employer_user):

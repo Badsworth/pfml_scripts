@@ -60,8 +60,6 @@ services:
       - DASHBOARD_PASSWORD=secret123
       - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG
       - ENABLE_EMPLOYEE_ENDPOINTS=1
-      # Enable this variable to enforce Verification checks; disable to ignore
-      - ENFORCE_LEAVE_ADMIN_VERIFICATION=1
       - FOLDER_PATH=dor_mock
       - FINEOS_FOLDER_PATH=fineos_mock
       # Enable this variable after initial full load

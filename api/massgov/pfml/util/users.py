@@ -5,7 +5,6 @@ import botocore
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import MultipleResultsFound
 
-import massgov.pfml.api.app as app
 import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
@@ -206,8 +205,7 @@ def register_or_update_leave_admin(
         except CognitoPasswordSetFailure:
             return False, "Unable to set Cognito password for user"
 
-    # TODO: Remove this check - https://lwd.atlassian.net/browse/EMPLOYER-962
-    if app.get_config().enforce_verification and not force_registration:
+    if not force_registration:
         return True, "Successfully added user to Cognito and API DB"
 
     retry_count = 0

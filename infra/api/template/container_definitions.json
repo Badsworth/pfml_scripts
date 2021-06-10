@@ -43,7 +43,6 @@
       { "name": "RMV_CLIENT_SERVER_CA_BUNDLE_NAME", "value": "${rmv_client_server_ca_bundle_name}" },
       { "name": "RMV_CHECK_BEHAVIOR", "value": "${rmv_check_behavior}" },
       { "name": "RMV_CHECK_MOCK_SUCCESS", "value": "${rmv_check_mock_success}" },
-      { "name": "ENFORCE_LEAVE_ADMIN_VERIFICATION", "value": "${enforce_leave_admin_verification}" },
       { "name": "FINEOS_CLIENT_CUSTOMER_API_URL", "value": "${fineos_client_customer_api_url}" },
       { "name": "FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL", "value": "${fineos_client_integration_services_api_url}" },
       { "name": "FINEOS_CLIENT_GROUP_CLIENT_API_URL", "value": "${fineos_client_group_client_api_url}" },

@@ -26,7 +26,6 @@ from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministrator
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EmployerClaimReviewEFormBuilder
-from massgov.pfml.util import feature_gate
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import sanitize_fein
@@ -95,12 +94,7 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
                 user_leave_admin, "User has no leave administrator FINEOS ID"
             )
 
-        # TODO: Remove this after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
-        verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
-            feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
-            user_email=current_user.email_address,
-        )
-        if verification_required and not user_leave_admin.verified:
+        if not user_leave_admin.verified:
             raise VerificationRequired(user_leave_admin, "User is not Verified")
 
         return user_leave_admin
@@ -364,15 +358,7 @@ def user_has_access_to_claim(claim: Claim) -> bool:
 
     if can(READ, "EMPLOYER_API") and claim.employer in current_user.employers:
         # User is leave admin for the employer associated with claim
-        # TODO: Remove this after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
-        verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
-            feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
-            user_email=current_user.email_address,
-        )
-
-        if verification_required:
-            return current_user.verified_employer(claim.employer)
-        return True
+        return current_user.verified_employer(claim.employer)
 
     application = claim.application  # type: ignore
 
@@ -423,7 +409,6 @@ def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
 
 
 def get_claims() -> flask.Response:
-    app_config = app.get_config()
     current_user = app.current_user()
     employer_id = flask.request.args.get("employer_id")
     is_employer = can(READ, "EMPLOYER_API")
@@ -434,14 +419,6 @@ def get_claims() -> flask.Response:
             # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims)
             # so if something changes there it probably needs to be changed here
             if is_employer and current_user and current_user.employers:
-                verification_required = (
-                    app_config.enforce_verification
-                    or feature_gate.check_enabled(
-                        feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
-                        user_email=current_user.email_address,
-                    )
-                )
-
                 if employer_id:
                     employers_list = (
                         db_session.query(Employer).filter(Employer.employer_id == employer_id).all()
@@ -449,21 +426,12 @@ def get_claims() -> flask.Response:
                 else:
                     employers_list = list(current_user.employers)
 
-                if verification_required:
-                    employer_ids_list = [
-                        e.employer_id
-                        for e in employers_list
-                        if sanitize_fein(e.employer_fein or "")
-                        not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                        and current_user.verified_employer(e)
-                    ]
-                else:
-                    employer_ids_list = [
-                        e.employer_id
-                        for e in employers_list
-                        if sanitize_fein(e.employer_fein or "")
-                        not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                    ]
+                employer_ids_list = [
+                    e.employer_id
+                    for e in employers_list
+                    if sanitize_fein(e.employer_fein or "") not in CLAIMS_DASHBOARD_BLOCKED_FEINS
+                    and current_user.verified_employer(e)
+                ]
 
                 query = (
                     db_session.query(Claim)

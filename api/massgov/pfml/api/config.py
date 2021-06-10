@@ -27,8 +27,6 @@ class AppConfig:
     cognito_user_pool_client_id: str
     cognito_user_pool_keys_url: str
     enable_employee_endpoints: bool
-    # TODO: Remove this after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
-    enforce_verification: bool
     rmv_check_behavior: RMVCheckBehavior
     rmv_check_mock_success: bool
     enable_application_fraud_check: bool
@@ -46,7 +44,6 @@ def get_config() -> AppConfig:
         cognito_user_pool_client_id=os.environ.get("COGNITO_USER_POOL_CLIENT_ID", ""),
         cognito_user_pool_keys_url=os.environ.get("COGNITO_USER_POOL_KEYS_URL", ""),
         enable_employee_endpoints=os.environ.get("ENABLE_EMPLOYEE_ENDPOINTS", "0") == "1",
-        enforce_verification=os.environ.get("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0") == "1",
         rmv_check_behavior=RMVCheckBehavior(
             os.environ.get("RMV_CHECK_BEHAVIOR", RMVCheckBehavior.MOCK.value)
         ),

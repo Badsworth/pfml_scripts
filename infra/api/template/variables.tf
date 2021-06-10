@@ -192,12 +192,6 @@ variable "rmv_check_mock_success" {
   default     = "1"
 }
 
-variable "enforce_leave_admin_verification" {
-  description = "Specifies if API should enforce Verification for Leave Admins. '0' means no Verifications are checked. '1' prevents requests to Leave Admin APIs without Verification"
-  type        = string
-  default     = "0"
-}
-
 variable "fineos_client_customer_api_url" {
   description = "URL of the FINEOS Customer API"
   type        = string
