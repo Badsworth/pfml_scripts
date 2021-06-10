@@ -62,6 +62,18 @@ class PaymentVoucherCSV:
     removed_or_added_after_audit_of_info: str
     to_be_removed_from_file: str
     amalgamationc: Optional[str]
+    leave_request_start: Optional[str]
+    leave_request_end: Optional[str]
+    prior_overpayments_found: Optional[str]
+    potential_overpayments_on_current_voucher: Optional[str]
+    additional_income_ntns_to_pull: Optional[str]
+    prior_fails_in_dfml_pi_audit: Optional[str]
+    pull_these_ntns_per_dfml_ops: Optional[str]
+    dfml_leave_type_1: Optional[str]
+    exemption_type_1: Optional[str]
+    is_exempt_2: Optional[str]
+    dfml_leave_type_2: Optional[str]
+    exemption_type_2: Optional[str]
     notes: str
 
 
@@ -114,6 +126,18 @@ PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     removed_or_added_after_audit_of_info="REMOVED or ADDED after audit of info",
     to_be_removed_from_file="TO BE REMOVED FROM FILE",
     amalgamationc="AMALGAMATIONC",
+    leave_request_start="Absence Period Start Date",
+    leave_request_end="Absence Period End Date",
+    prior_overpayments_found="Prior Overpayments Found",
+    potential_overpayments_on_current_voucher="Potential Overpayments on Current Voucher",
+    additional_income_ntns_to_pull="Additional Income NTNS to Pull",
+    prior_fails_in_dfml_pi_audit="Prior Fails in DFML PI Audit",
+    pull_these_ntns_per_dfml_ops="Pull these NTNS per DFML OPS",
+    dfml_leave_type_1="DFML LEAVE TYPE1",
+    exemption_type_1="EXEMPTION TYPE1",
+    is_exempt_2="Is exempt 2",
+    dfml_leave_type_2="DFML LEAVE TYPE 2",
+    exemption_type_2="EXEMPTION TYPE 2",
     notes="NOTES:",
 )
 
