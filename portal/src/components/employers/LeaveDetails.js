@@ -55,6 +55,14 @@ const LeaveDetails = (props) => {
     "usa-input--error": !!errorMsg,
   });
 
+  const benefitsGuideLink = {
+    [LeaveReason.care]: routes.external.massgov.benefitsGuide_aboutCaringLeave,
+    [LeaveReason.bonding]:
+      routes.external.massgov.benefitsGuide_aboutBondingLeave,
+    [LeaveReason.medical]:
+      routes.external.massgov.benefitsGuide_aboutMedicalLeave,
+  };
+
   return (
     <React.Fragment>
       <ReviewHeading level="2">
@@ -64,9 +72,11 @@ const LeaveDetails = (props) => {
         level="3"
         label={t("components.employersLeaveDetails.leaveTypeLabel")}
       >
-        {t("components.employersLeaveDetails.leaveReasonValue", {
-          context: findKeyByValue(LeaveReason, reason),
-        })}
+        <a target="_blank" rel="noopener" href={benefitsGuideLink[reason]}>
+          {t("components.employersLeaveDetails.leaveReasonValue", {
+            context: findKeyByValue(LeaveReason, reason),
+          })}
+        </a>
       </ReviewRow>
       <ReviewRow
         level="3"

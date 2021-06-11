@@ -97,8 +97,12 @@ const routes = {
     massgov: {
       benefitsGuide:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide",
+      benefitsGuide_aboutBondingLeave:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-",
       benefitsGuide_aboutCaringLeave:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-",
+      benefitsGuide_aboutMedicalLeave:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-",
       benefitsGuide_seriousHealthCondition:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-",
       benefitsTimeline_2020December2:
