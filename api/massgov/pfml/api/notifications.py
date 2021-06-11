@@ -23,7 +23,6 @@ def notifications_post():
     # Bounce them out if they do not have access
     ensure(CREATE, Notification)
 
-    has_flask_context = flask.has_request_context()
     body = connexion.request.json
     # Use the pydantic models for validation
     notification_request = NotificationRequest.parse_obj(body)
@@ -33,6 +32,8 @@ def notifications_post():
         "notification.source": notification_request.source,
         "notification.trigger": notification_request.trigger,
     }
+    for k, v in log_attributes.items():
+        newrelic.agent.add_custom_parameter(k, v)
 
     with app.db_session() as db_session:
         # Persist the notification to the DB
@@ -56,6 +57,7 @@ def notifications_post():
         )
         if claim:
             log_attributes = {**log_attributes, "claim_id": str(claim.claim_id)}
+            newrelic.agent.add_custom_parameter("claim_id", str(claim.claim_id))
 
         try:
             employer = (
@@ -65,63 +67,16 @@ def notifications_post():
             )
 
             if employer:
-                log_attributes = {**log_attributes, "employer_id": employer.employer_id}
-        except MultipleResultsFound:
-            logger.exception("Multiple employers found for specified FEIN", extra=log_attributes)
-
-            newrelic.agent.record_custom_event(
-                "FineosError",
-                {
+                log_attributes = {
                     **log_attributes,
-                    "error.class": "FINEOSNotificationMultipleResults",
-                    "error.message": "Multiple employers found for specified FEIN",
-                    "request.method": flask.request.method if has_flask_context else None,
-                    "request.uri": flask.request.path if has_flask_context else None,
-                    "request.headers.x-amzn-requestid": flask.request.headers.get(
-                        "x-amzn-requestid", None
-                    ),
-                    "absence-id": notification_request.absence_case_id
-                    if has_flask_context
-                    else None,
-                },
-            )
-
-            return response_util.error_response(
-                status_code=BadRequest,
-                message="Multiple employers found for specified FEIN",
-                errors=[],
-                data={},
-            ).to_api_response()
+                    "employer_id": employer.employer_id,
+                }
+                newrelic.agent.add_custom_parameter("employer_id", employer.employer_id)
+        except MultipleResultsFound:
+            return _err400_multiple_employer_feins_found(notification_request, log_attributes)
 
         if employer is None:
-            logger.warning(
-                "Failed to lookup the specified FEIN to add Claim record on Notification POST request",
-                extra=log_attributes,
-            )
-
-            newrelic.agent.record_custom_event(
-                "FineosError",
-                {
-                    **log_attributes,
-                    "error.class": "FINEOSNotificationInvalidFEIN",
-                    "error.message": "Failed to lookup the specified FEIN to add Claim record on Notification POST request",
-                    "request.method": flask.request.method if has_flask_context else None,
-                    "request.uri": flask.request.path if has_flask_context else None,
-                    "request.headers.x-amzn-requestid": flask.request.headers.get(
-                        "x-amzn-requestid", None
-                    ),
-                    "absence-id": notification_request.absence_case_id
-                    if has_flask_context
-                    else None,
-                },
-            )
-
-            return response_util.error_response(
-                status_code=BadRequest,
-                message="Failed to lookup the specified FEIN to add Claim record on Notification POST request",
-                errors=[],
-                data={},
-            ).to_api_response()
+            return _err400_employer_fein_not_found(notification_request, log_attributes)
 
         if claim is None:
             new_claim = Claim(
@@ -133,6 +88,8 @@ def notifications_post():
             db_session.commit()
 
             log_attributes = {**log_attributes, "claim_id": str(new_claim.claim_id)}
+            newrelic.agent.add_custom_parameter("claim_id", str(new_claim.claim_id))
+
             logger.info("Created Claim from a Notification", extra=log_attributes)
         elif claim.employer_id is None:
             claim.employer_id = employer.employer_id
@@ -146,4 +103,59 @@ def notifications_post():
     logger.info("Sent notification", extra=log_attributes)
     return response_util.success_response(
         message="Successfully started notification process.", status_code=201, data={}
+    ).to_api_response()
+
+
+def _err400_employer_fein_not_found(notification_request, log_attributes):
+    logger.warning(
+        "Failed to lookup the specified FEIN to add Claim record on Notification POST request",
+        extra=log_attributes,
+    )
+
+    newrelic.agent.record_custom_event(
+        "FineosError",
+        {
+            **log_attributes,
+            "error.class": "FINEOSNotificationInvalidFEIN",
+            "error.message": "Failed to lookup the specified FEIN to add Claim record on Notification POST request",
+            "request.method": flask.request.method if flask.has_request_context() else None,
+            "request.uri": flask.request.path if flask.has_request_context() else None,
+            "request.headers.x-amzn-requestid": flask.request.headers.get("x-amzn-requestid", None),
+            "absence-id": notification_request.absence_case_id
+            if flask.has_request_context()
+            else None,
+        },
+    )
+
+    return response_util.error_response(
+        status_code=BadRequest,
+        message="Failed to lookup the specified FEIN to add Claim record on Notification POST request",
+        errors=[],
+        data={},
+    ).to_api_response()
+
+
+def _err400_multiple_employer_feins_found(notification_request, log_attributes):
+    logger.exception("Multiple employers found for specified FEIN", extra=log_attributes)
+
+    newrelic.agent.record_custom_event(
+        "FineosError",
+        {
+            **log_attributes,
+            "error.class": "FINEOSNotificationMultipleResults",
+            "error.message": "Multiple employers found for specified FEIN",
+            "request.method": flask.request.method if flask.has_request_context() else None,
+            "request.uri": flask.request.path if flask.has_request_context() else None,
+            "request.headers.x-amzn-requestid": flask.request.headers.get("x-amzn-requestid", None),
+            "absence-id": notification_request.absence_case_id
+            if flask.has_request_context()
+            else None,
+        },
+    )
+
+    return response_util.error_response(
+        status_code=BadRequest,
+        message="Multiple employers found for specified FEIN",
+        errors=[],
+        data={},
     ).to_api_response()
