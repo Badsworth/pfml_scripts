@@ -4,6 +4,7 @@ import { useState } from "react";
 
 /**
  * Hook that defines feature flags state
+ * @param {object} props
  * @param {object} props.appErrorsLogic - Utilities for set application's error state
  * @returns {object} { flags: Object, getFlag: Function, loadFlags: Function }
  */
