@@ -70,7 +70,11 @@ export const Welcome = ({ appLogic, user }) => {
                   i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"
                   components={{
                     "about-caring-leave-link": (
-                      <a href={routes.external.massgov.benefitsGuide_aboutCaringLeave} />
+                      <a
+                        href={routes.external.massgov.benefitsGuide_aboutCaringLeave}
+                        target="_blank"
+                        rel="noopener"
+                      />
                     ),
                   }}
                 />
