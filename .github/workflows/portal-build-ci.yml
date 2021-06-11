@@ -14,7 +14,10 @@ env:
 
 jobs:
   build_test:
-    name: Build Portal test env
+    name: Check Portal builds successfully
+    strategy:
+      matrix:
+        env: ['test', 'stage', 'prod']
     runs-on: ubuntu-latest
 
     steps:
@@ -29,7 +32,7 @@ jobs:
         run: npm ci --prefix portal
 
       - name: build
-        run: npm run build:test --prefix portal
+        run: npm run build:${{ matrix.env }} --prefix portal
 
   storybook:
     name: Build Storybook
