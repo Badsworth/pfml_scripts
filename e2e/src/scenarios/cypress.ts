@@ -180,7 +180,7 @@ export const MRAP30: ScenarioSpecification = {
     work_pattern_spec: "standard",
     reduced_leave_spec: "0,240,240,240,240,240,0",
     // This scenario requires a 2 week leave time for payment calculation purposes.
-    leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
+    leave_dates: [addWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 3)],
     metadata: { expected_weekly_payment: "230.77" },
   },
 };

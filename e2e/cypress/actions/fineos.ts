@@ -948,3 +948,17 @@ export function triggerNoticeRelease(docType: string): void {
   onTab("Documents");
   assertHasDocument(docType);
 }
+
+/**
+ * Assumes that current page is the amounts pending tab in a paid leave case.
+ * Function will assert that the processing date and period end date are equal
+ */
+export function assertMatchingPaymentDates(): void {
+  cy.get('#amountspendingtabWidget td[id*="processing_date0"]')
+    .invoke("text")
+    .then((processingDate) => {
+      cy.get('#amountspendingtabWidget td[id*="period_end_date0"]')
+        .invoke("text")
+        .should("eq", processingDate);
+    });
+}

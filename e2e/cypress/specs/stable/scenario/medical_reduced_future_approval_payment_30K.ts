@@ -103,6 +103,7 @@ describe("Submit medical application via the web portal: Adjudication Approval &
               `Maximum weekly payment should be: $${claim.metadata?.expected_weekly_payment}`
             ).to.eq(claim.metadata?.expected_weekly_payment as string);
           });
+          fineos.assertMatchingPaymentDates();
         });
       });
     }
