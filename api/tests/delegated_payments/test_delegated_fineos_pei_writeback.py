@@ -150,9 +150,13 @@ def _generate_accepted_payment(
 def _generate_completed_check_payment(test_db_session: db.Session) -> Payment:
     state = State.DELEGATED_PAYMENT_COMPLETE
 
-    return _generate_payment_and_state_with_writeback_details(
+    payment = _generate_payment_and_state_with_writeback_details(
         test_db_session, state, FineosWritebackTransactionStatus.POSTED, PaymentMethod.CHECK
     )
+
+    payment.check.check_posted_date = payment.fineos_extraction_date + timedelta(days=10)
+
+    return payment
 
 
 def _generate_completed_eft_payment_with_change_notification(
@@ -442,21 +446,22 @@ def test_process_payments_for_writeback(
                 record_status
                 == FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.writeback_record_status
             )
-            assert transaction_date == extraction_date
+            assert transaction_date == extraction_date + timedelta(days=2)
         elif i_value in completed_check_payment_i_values:
             assert (
                 transaction_status
                 == FineosWritebackTransactionStatus.POSTED.transaction_status_description
             )
             assert record_status == FineosWritebackTransactionStatus.POSTED.writeback_record_status
-            assert transaction_date == extraction_date
+            # We set the check posted date to 10 days past the extraction date
+            assert transaction_date == extraction_date + timedelta(days=10)
         elif i_value in completed_eft_payment_i_values:
             assert (
                 transaction_status
                 == FineosWritebackTransactionStatus.POSTED.transaction_status_description
             )
             assert record_status == FineosWritebackTransactionStatus.POSTED.writeback_record_status
-            assert transaction_date == extraction_date
+            assert transaction_date == extraction_date + timedelta(days=2)
         else:
             assert (
                 transaction_status

@@ -5,7 +5,7 @@ import uuid
 import xml.dom.minidom as minidom
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 from xml.etree.ElementTree import Element
@@ -37,6 +37,7 @@ from massgov.pfml.db.models.employees import (
     LkClaimType,
     LkReferenceFileType,
     Payment,
+    PaymentMethod,
     PaymentReferenceFile,
     PubEft,
     ReferenceFile,
@@ -50,6 +51,8 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    FineosWritebackTransactionStatus,
+    LkFineosWritebackTransactionStatus,
 )
 from massgov.pfml.util.csv import CSVSourceWrapper
 
@@ -1243,3 +1246,34 @@ def get_traceable_payment_details(payment: Payment) -> Dict[str, Optional[Any]]:
         "absence_case_number": claim.fineos_absence_id if claim else None,
         "fineos_customer_number": employee.fineos_customer_number if employee else None,
     }
+
+
+def get_transaction_status_date(
+    payment: Payment, transaction_status: LkFineosWritebackTransactionStatus
+) -> Optional[date]:
+    transaction_status_date = None
+    # Check payments that have a check posted date should use
+    # that for the transaction status date
+    if payment.check and payment.check.check_posted_date:
+        transaction_status_date = payment.check.check_posted_date
+
+    # Otherwise the transaction status date is calculated from the extraction date
+    elif payment.fineos_extraction_date is not None:
+        # Any payments that we send to PUB should calculate the extraction
+        # date by incrementing based on the type.
+        # Paid -> Sent to PUB (haven't heard back yet)
+        # Posted -> We've heard back, successfully paid (likely a change notification)
+        # Bank Processing Error -> Any PUB error
+        if transaction_status.transaction_status_id in [
+            FineosWritebackTransactionStatus.PAID.transaction_status_id,
+            FineosWritebackTransactionStatus.POSTED.transaction_status_id,
+            FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_id,
+        ]:
+            if payment.disb_method_id == PaymentMethod.CHECK.payment_method_id:
+                transaction_status_date = payment.fineos_extraction_date + timedelta(days=1)
+            else:
+                transaction_status_date = payment.fineos_extraction_date + timedelta(days=2)
+        else:
+            transaction_status_date = payment.fineos_extraction_date
+
+    return transaction_status_date
