@@ -114,14 +114,8 @@ const routes = {
       dfml: "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
       dfmlRegulations:
         "https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1",
-      emergencyBondingRegulationsEmployer:
-        "https://www.mass.gov/pfml-acute-employer",
-      emergencyBondingRegulationsWorker:
-        "https://www.mass.gov/pfml-acute-claimant",
       employerAccount:
         "https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications",
-      // TODO (EMPLOYER-1296): Currently is not being used since there is not content
-      employerDashboard: "https://www.mass.gov/employer-dashboard",
       employerReimbursements:
         "https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits",
       employersGuide:

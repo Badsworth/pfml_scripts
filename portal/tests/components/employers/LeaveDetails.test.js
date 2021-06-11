@@ -48,23 +48,6 @@ describe("LeaveDetails", () => {
     expect(wrapper.exists("InputChoiceGroup")).toBe(false);
   });
 
-  it("renders the emergency regs content when claim is for Bonding", () => {
-    const bondingClaim = new MockEmployerClaimBuilder()
-      .completed()
-      .bondingLeaveReason()
-      .create();
-    const bondingWrapper = shallow(
-      <LeaveDetails
-        claim={bondingClaim}
-        documents={[]}
-        downloadDocument={jest.fn()}
-        appErrors={new AppErrorInfoCollection()}
-      />
-    );
-
-    expect(bondingWrapper.find("Details Trans").dive()).toMatchSnapshot();
-  });
-
   it("renders formatted leave reason as sentence case", () => {
     expect(wrapper.find(ReviewRow).first().children().first().text()).toEqual(
       "Medical leave"
@@ -216,7 +199,7 @@ describe("LeaveDetails", () => {
 
     it("initially renders with all conditional comment boxes hidden", () => {
       const { wrapper } = setup();
-      const conditionalContentArray = wrapper.find("ConditionalContent")
+      const conditionalContentArray = wrapper.find("ConditionalContent");
 
       for (const content in conditionalContentArray) {
         expect(content.prop("visible")).toBe(false);
@@ -235,7 +218,9 @@ describe("LeaveDetails", () => {
       );
       wrapper.setProps({ believeRelationshipAccurate: "No" });
 
-      const relationshipInaccurateElement = wrapper.find("ConditionalContent[data-test='relationship-accurate-no']")
+      const relationshipInaccurateElement = wrapper.find(
+        "ConditionalContent[data-test='relationship-accurate-no']"
+      );
       expect(relationshipInaccurateElement.prop("visible")).toBe(true);
     });
 
@@ -251,7 +236,9 @@ describe("LeaveDetails", () => {
       );
       wrapper.setProps({ believeRelationshipAccurate: "Unknown" });
 
-      const relationshipUnknownElement = wrapper.find("ConditionalContent[data-test='relationship-accurate-unknown']")
+      const relationshipUnknownElement = wrapper.find(
+        "ConditionalContent[data-test='relationship-accurate-unknown']"
+      );
       expect(relationshipUnknownElement.prop("visible")).toBe(true);
     });
 

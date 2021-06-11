@@ -170,21 +170,6 @@ exports[`LeaveDetails renders the component 1`] = `
 </Fragment>
 `;
 
-exports[`LeaveDetails renders the emergency regs content when claim is for Bonding 1`] = `
-Array [
-  "If so, this employee may be eligible to take their paid family leave anytime in 2021, ",
-  <a
-    href="https://www.mass.gov/pfml-acute-employer"
-    key="1"
-    rel="noopener"
-    target="_blank"
-  >
-    due to emergency Covid-19 regulations for hospital workers
-  </a>,
-  ".",
-]
-`;
-
 exports[`LeaveDetails when there are documents renders documentation hint correctly with family relationship 1`] = `
 Array [
   "To meet ",

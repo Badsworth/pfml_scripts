@@ -679,10 +679,6 @@ const shared = {
     passwordError_required: "Enter your password",
   },
   backToLoginLink: "Back to log in",
-  bondingRegsLeavePeriodDetailsLabel:
-    "Do you work in an acute care hospital or the teaching hospital of the University of Massachusetts Medical School?",
-  bondingRegsLeavePeriodDetailsSummary:
-    "If you had a child join your family in 2020, you may be eligible for paid leave anytime in 2021. <emergency-bonding-regs-worker-link>Learn more about emergency Covid-19 regulations for hospital workers.</emergency-bonding-regs-worker-link>",
   certificationFormCare:
     "Certification of Your Family Member’s Serious Health Condition",
   certificationFormMedical: "Certification of Your Serious Health Condition",
@@ -1238,9 +1234,6 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsLeavePeriodContinuous: {
-    bondingRegsDetailsLabel: "$t(shared.bondingRegsLeavePeriodDetailsLabel)",
-    bondingRegsDetailsSummary:
-      "$t(shared.bondingRegsLeavePeriodDetailsSummary)",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
@@ -1268,9 +1261,6 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsLeavePeriodIntermittent: {
-    bondingRegsDetailsLabel: "$t(shared.bondingRegsLeavePeriodDetailsLabel)",
-    bondingRegsDetailsSummary:
-      "$t(shared.bondingRegsLeavePeriodDetailsSummary)",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
@@ -1304,9 +1294,6 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsLeavePeriodReducedSchedule: {
-    bondingRegsDetailsLabel: "$t(shared.bondingRegsLeavePeriodDetailsLabel)",
-    bondingRegsDetailsSummary:
-      "$t(shared.bondingRegsLeavePeriodDetailsSummary)",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
@@ -1369,10 +1356,6 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsNotifiedEmployer: {
-    bondingRegsEmployerNotifiedDetailsLabel:
-      "Do you work in an acute care hospital or the teaching hospital of the University of Massachusetts Medical School?",
-    bondingRegsEmployerNotifiedDetailsSummary:
-      "If so, and you had a child join your family in 2020, you may be eligible for paid leave anytime in 2021. You must get approval from your employer by no later than March 21, 2021 and apply for benefits with the Department of Paid Family and Medical Leave not more than 60 days before your anticipated delayed start date. <emergency-bonding-regs-worker-link>Learn more about emergency Covid-19 regulations for hospital workers</emergency-bonding-regs-worker-link>.",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     employerNotificationDateHint: "This can be an approximate date.",
@@ -2084,7 +2067,6 @@ const pages = {
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
-    // TODO (EMPLOYER-1296): Add Mass.gov link to banner
     betaHeader: "We're making it easier to manage paid leave applications",
     betaMessage:
       "Our dashboard is in beta. You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can <user-feedback-link>use our feedback form</user-feedback-link> to tell us what you think of our new features.",
@@ -2481,10 +2463,6 @@ const components = {
   },
   employersLeaveDetails: {
     applicationIdLabel: "Application ID",
-    bondingRegsReviewDetailsLabel:
-      "Does the employee work at an acute care hospital, or the teaching hospital of the University of Massachusetts Medical School?",
-    bondingRegsReviewDetailsSummary:
-      "If so, this employee may be eligible to take their paid family leave anytime in 2021, <emergency-bonding-regs-employer-link>due to emergency Covid-19 regulations for hospital workers</emergency-bonding-regs-employer-link>.",
     choiceNo: "No (comment required)",
     choiceUnknown: "I don't know",
     choiceYes: "Yes",

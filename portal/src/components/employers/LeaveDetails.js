@@ -1,7 +1,6 @@
 import Alert from "../Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../../components/ConditionalContent";
-import Details from "../Details";
 import Document from "../../models/Document";
 import EmployerClaim from "../../models/EmployerClaim";
 import FormLabel from "../../components/FormLabel";
@@ -61,33 +60,6 @@ const LeaveDetails = (props) => {
       <ReviewHeading level="2">
         {t("components.employersLeaveDetails.header")}
       </ReviewHeading>
-      {props.claim.isBondingLeave && (
-        <div className="measure-6">
-          <Details
-            label={t(
-              "components.employersLeaveDetails.bondingRegsReviewDetailsLabel"
-            )}
-          >
-            <p>
-              <Trans
-                i18nKey="components.employersLeaveDetails.bondingRegsReviewDetailsSummary"
-                components={{
-                  "emergency-bonding-regs-employer-link": (
-                    <a
-                      target="_blank"
-                      rel="noopener"
-                      href={
-                        routes.external.massgov
-                          .emergencyBondingRegulationsEmployer
-                      }
-                    />
-                  ),
-                }}
-              />
-            </p>
-          </Details>
-        </div>
-      )}
       <ReviewRow
         level="3"
         label={t("components.employersLeaveDetails.leaveTypeLabel")}
@@ -201,11 +173,15 @@ const LeaveDetails = (props) => {
           >
             <Alert
               state="warning"
-              heading={t("components.employersLeaveDetails.inaccurateRelationshipAlertHeading")}
+              heading={t(
+                "components.employersLeaveDetails.inaccurateRelationshipAlertHeading"
+              )}
               headingSize="3"
               className="measure-5 margin-y-3"
             >
-              {t("components.employersLeaveDetails.inaccurateRelationshipAlertLead")}
+              {t(
+                "components.employersLeaveDetails.inaccurateRelationshipAlertLead"
+              )}
             </Alert>
             <div className={inaccurateReasonClasses}>
               <FormLabel
@@ -230,11 +206,10 @@ const LeaveDetails = (props) => {
             visible={believeRelationshipAccurate === "Unknown"}
             data-test="relationship-accurate-unknown"
           >
-            <Alert
-              state="info"
-              className="measure-5 margin-y-3"
-            >
-              {t("components.employersLeaveDetails.unknownRelationshipAlertLead")}
+            <Alert state="info" className="measure-5 margin-y-3">
+              {t(
+                "components.employersLeaveDetails.unknownRelationshipAlertLead"
+              )}
             </Alert>
           </ConditionalContent>
         </React.Fragment>

@@ -361,13 +361,6 @@ const DashboardInfoAlert = (props) => {
         <Trans
           i18nKey="pages.employersDashboard.betaMessage"
           components={{
-            "learn-more-link": (
-              <a
-                href={routes.external.massgov.employerDashboard}
-                target="_blank"
-                rel="noopener"
-              />
-            ),
             "user-feedback-link": (
               <a
                 href={routes.external.massgov.feedbackEmployer}
