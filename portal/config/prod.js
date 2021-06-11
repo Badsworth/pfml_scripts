@@ -20,7 +20,7 @@ module.exports = {
   },
   // See docs/portal/maintenance-pages.md
   maintenancePageRoutes: ["/*"], // required
-  maintenanceStart: "2021-06-13T00:00:00-04:00", // optional ISO 8601 datetime
-  maintenanceEnd: "2021-06-13T05:00:00-04:00", // optional ISO 8601 datetime
+  maintenanceStart: "2021-06-13T03:00:00-04:00", // optional ISO 8601 datetime
+  maintenanceEnd: "2021-06-13T09:00:00-04:00", // optional ISO 8601 datetime
   newRelicAppId: "847045300",
 };
