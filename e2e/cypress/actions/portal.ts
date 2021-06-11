@@ -1,8 +1,24 @@
 import {
+  Credentials,
+  ValidPreviousLeave,
+  ValidConcurrentLeave,
+  ValidEmployerBenefit,
+  ValidOtherIncome,
+} from "../../src/types";
+import {
+  isNotNull,
+  assertIsTypedArray,
+  isValidPreviousLeave,
+  isValidConcurrentLeave,
+  isValidEmployerBenefit,
+  isValidOtherIncome,
+} from "../../src/util/typeUtils";
+import {
   ApplicationResponse,
   IntermittentLeavePeriods,
   PaymentPreference,
   PaymentPreferenceRequestBody,
+  ApplicationRequestBody,
   ReducedScheduleLeavePeriods,
   WorkPattern,
   WorkPatternDay,
@@ -11,12 +27,11 @@ import {
   extractDebugInfoFromBody,
   extractDebugInfoFromHeaders,
 } from "../../src/errors";
-
-import { Credentials } from "../../src/types";
 import { config } from "./common";
 import { email } from ".";
-import { inFieldset } from "./common";
+import { inFieldsetLabelled } from "./common";
 import path from "path";
+import { minutesToHoursAndMinutes } from "../../src/util/claims";
 
 export function before(): void {
   // Set the feature flag necessary to see the portal.
@@ -28,7 +43,7 @@ export function before(): void {
       claimantShowMedicalLeaveType: true,
       noMaintenance: true,
       employerShowSelfRegistrationForm: true,
-      claimantShowOtherLeaveStep: false,
+      claimantShowOtherLeaveStep: true,
       claimantAuthThroughApi: true,
       employerShowAddOrganization: true,
       employerShowVerifications: true,
@@ -264,9 +279,10 @@ export function verifyIdentity(application: ApplicationRequestBody): void {
   cy.log("Employer FEIN", application.employer_fein);
   cy.contains("button", "Save and continue").click();
 
-  cy.contains("What is your gender identity?");
-  cy.contains(application.gender as string).click();
-  cy.contains("button", "Save and continue").click();
+  cy.get("[data-cy='gender-form']").within(() => {
+    if (isNotNull(application.gender)) cy.labelled(application.gender).check();
+    cy.contains("button", "Save and continue").click();
+  });
 
   // Added Phone Section behind Feature Flag
   cy.labelled("Phone number").type(application.phone?.phone_number as string);
@@ -557,11 +573,7 @@ export function describeWorkSchedule(
     if (!(typeof workDay?.minutes === "number") || !workDay?.day_of_week) {
       throw new Error("Minutes and day of week must be specified");
     }
-    if (workDay.minutes % 15 !== 0) {
-      throw new Error("Minutes must be multiple of 15");
-    }
-    const hours = Math.floor(workDay.minutes / 60);
-    const minutes = workDay.minutes % 60;
+    const [hours, minutes] = minutesToHoursAndMinutes(workDay.minutes);
     cy.contains("fieldset", workDay.day_of_week).within(() => {
       cy.labelled("Hours").type(hours.toString());
       cy.labelled("minutes").select(minutes.toString(), {
@@ -587,91 +599,11 @@ export function reportOtherBenefits(): void {
     "Will you receive income from any other sources during your leave?"
   ).within(() => cy.labelled("No").click({ force: true }));
   cy.contains("button", "Save and continue").click();
-
-  /* **********
-    Been removed from flow as 2nd November
-
-    cy.contains(
-      "fieldset",
-      "Have you taken paid or unpaid leave since"
-    ).within(() => cy.labelled("No").click({ force: true }));
-    cy.contains("button", "Save and continue").click();
-  */
 }
 
 export function confirmInfo(): void {
   // Usually preceeded by - "I am on the claims Review page"
   cy.contains("Submit Part 1").click();
-}
-
-export function reportOtherLeave(
-  application: ApplicationRequestBody,
-  otherLeave: boolean
-): void {
-  clickChecklistButton("Report other leave, income, and benefits");
-  cy.contains("No").click();
-  cy.contains("button", "Save and continue").click();
-  cy.contains("legend", "Will you receive income from any other sources");
-
-  if (otherLeave) {
-    cy.contains("Yes").click();
-    cy.contains("button", "Save and continue").click();
-    cy.contains("h2", "Tell us about your other sources of income");
-    cy.contains("Workers Compensation").click();
-    if (
-      application.leave_details &&
-      application.leave_details.continuous_leave_periods
-    ) {
-      const leave = application.leave_details.continuous_leave_periods;
-      const startDate = leave?.[0]?.start_date;
-      const endDate = leave?.[0]?.end_date;
-      if (!startDate || !endDate) {
-        throw new Error("Unable to fill in empty dates.");
-      }
-
-      const [startYear, startMonth, startDay] = startDate.split("-");
-      const [endYear, endMonth, endDay] = endDate.split("-");
-      cy.contains(
-        "fieldset",
-        "When will you start receiving this income?"
-      ).within(() => {
-        cy.contains("Month").type(startMonth);
-        cy.contains("Day").type(startDay);
-        cy.contains("Year").type(startYear);
-      });
-      cy.contains(
-        "fieldset",
-        "When will you stop receiving this income?"
-      ).within(() => {
-        cy.contains("Month").type(endMonth);
-        cy.contains("Day").type(endDay);
-        cy.contains("Year").type(endYear);
-      });
-      cy.contains("button", "Save and continue").click();
-      cy.contains("Yes").click();
-      cy.contains("button", "Save and continue").click();
-      cy.contains("h2", "Tell us about previous paid or unpaid leave");
-      cy.contains("Yes").click();
-      cy.contains("An illness or injury").click();
-      cy.contains("fieldset", "When did your leave begin?").within(() => {
-        cy.contains("Month").type("1");
-        cy.contains("Day").type("1");
-        cy.contains("Year").type("2021");
-      });
-      cy.contains("fieldset", "When did your leave end?").within(() => {
-        cy.contains("Month").type("1");
-        cy.contains("Day").type("2");
-        cy.contains("Year").type("2021");
-      });
-      cy.contains("button", "Save and continue").click();
-    }
-  } else {
-    cy.contains("No").click();
-    cy.contains("button", "Save and continue").click();
-    cy.contains("legend", "Have you taken paid or unpaid leave");
-    cy.contains("No").click();
-    cy.contains("button", "Save and continue").click();
-  }
 }
 
 // Payment Section Currently Removed
@@ -709,7 +641,7 @@ export function addPaymentInfo(
     case "Elec Funds Transfer":
       cy.labelled("Routing number").type(routing_number as string);
       cy.labelled("Account number").type(account_number as string);
-      inFieldset("Account type", () => {
+      inFieldsetLabelled("Account type", () => {
         cy.get("input[type='radio']").check(bank_account_type as string, {
           force: true,
         });
@@ -966,38 +898,42 @@ export function confirmEligibleClaimant(): void {
 }
 
 export function submitClaimPartOne(application: ApplicationRequestBody): void {
-  const reason = application.leave_details && application.leave_details.reason;
-  const reasonQualifier =
-    application.leave_details && application.leave_details.reason_qualifier;
+  const reason = application.leave_details?.reason;
+  const reasonQualifier = application?.leave_details?.reason_qualifier;
 
   clickChecklistButton("Verify your identification");
   verifyIdentity(application);
   onPage("checklist");
   clickChecklistButton("Enter employment information");
   enterEmployerInfo(application);
+
   onPage("checklist");
   clickChecklistButton("Enter leave details");
   selectClaimType(application);
-  if (
-    reason === "Serious Health Condition - Employee" ||
-    reason === "Pregnancy/Maternity"
-  ) {
-    answerPregnancyQuestion(application);
-  } else if (reason === "Care for a Family Member") {
-    answerCaringLeaveQuestions(application);
-  } else {
-    enterBondingDateInfo(application);
+
+  switch (reason) {
+    case "Serious Health Condition - Employee":
+    case "Pregnancy/Maternity":
+      answerPregnancyQuestion(application);
+      break;
+
+    case "Care for a Family Member":
+      answerCaringLeaveQuestions(application);
+      break;
+    default:
+      enterBondingDateInfo(application);
+      break;
   }
-  if (reasonQualifier === "Newborn") {
-    answerPregnancyQuestion(application);
-  }
+
+  if (reasonQualifier === "Newborn") answerPregnancyQuestion(application);
+
   answerContinuousLeaveQuestion(application);
   answerReducedLeaveQuestion(application);
   answerIntermittentLeaveQuestion(application);
   onPage("checklist");
-  // @Reminder - This section is currenlty being removed
-  // Will return once development work is complete
-  // reportOtherLeave(application, otherLeave);
+  clickChecklistButton("Report other leave, benefits, and income");
+  reportOtherLeavesAndBenefits(application);
+
   clickChecklistButton("Review and confirm");
   if (reason === "Child Bonding" || reason === "Care for a Family Member") {
     confirmEligibleClaimant();
@@ -1117,19 +1053,10 @@ export function assertZeroWithholdings(): void {
 export function selectClaimFromEmployerDashboard(
   fineosAbsenceId: string,
   status: "Approved" | "Denied" | "Closed" | "--"
-): void {
+): Cypress.Chainable<JQuery<HTMLElement>> {
   cy.get('a[href="/employers/dashboard"]').first().click();
 
-  cy.get("tr")
-    .contains(fineosAbsenceId)
-    .parent()
-    .parent()
-    .contains('td[data-label="Status"]', status);
-  // TODO: once ALL environments include links to the applications, we should uncomment and make an assertion that the link exists
-  // .siblings()
-  // .contains(
-  //   `a[href="/employers/applications/new-application?absence_id=${fineosAbsenceId}"]`
-  // )
+  return cy.contains("tr", fineosAbsenceId).should("contain.text", status);
 }
 
 export function assertUnverifiedEmployerDashboard(): void {
@@ -1141,6 +1068,344 @@ export function goToEmployerDashboard(): void {
   cy.get('a[href="/employers/dashboard/"]').first().click();
 }
 
+/**
+ * Sequentially reports all of the given previous leaves.
+ * Assumes browser is navigated to either
+ * @param previous_leaves
+ */
+function reportPreviousLeaves(previous_leaves: ValidPreviousLeave[]): void {
+  previous_leaves.forEach((leave, index) => {
+    reportPreviousLeave(leave, index);
+    // if there are any more leaves to report - click the button
+    if (index < previous_leaves.length - 1)
+      cy.contains("button", "Add another previous leave").click();
+  });
+  cy.contains("button", "Save and continue").click();
+}
+
+/**
+ * Map the leave reasons accepted by API to current text used by the portal.
+ */
+const leaveReasonMap: Record<ValidPreviousLeave["leave_reason"], string> = {
+  "Caring for a family member with a serious health condition":
+    "Caring for a family member",
+  "An illness or injury": "An illness or injury",
+  Pregnancy: "Pregnancy",
+  "Bonding with my child after birth or placement":
+    "Bonding with my child after birth or placement",
+  "Managing family affairs while a family member is on active duty in the armed forces":
+    "Managing family affairs while a family member was on active duty in the armed forces",
+  "Caring for a family member who serves in the armed forces":
+    "Caring for a family member who served in the armed forces",
+  Unknown: "",
+};
+
+/**
+ * Fills out the previous leave form for the given leave.
+ * @param leave valid previous leave object
+ * @param index the number of the leave being reported
+ */
+function reportPreviousLeave(leave: ValidPreviousLeave, index: number) {
+  inFieldsetLabelled(`Previous leave ${index + 1}`, () => {
+    if (leave.type === "other_reason")
+      cy.labelled(leaveReasonMap[leave.leave_reason]).click({ force: true });
+    inFieldsetLabelled("Did you take leave from this employer?", () => {
+      cy.labelled("Yes").check({ force: true });
+    });
+
+    fillDateFieldset(
+      "What was the first day of this leave?",
+      leave.leave_start_date
+    );
+    fillDateFieldset(
+      "What was the last day of this leave?",
+      leave.leave_end_date
+    );
+
+    inFieldsetLabelled(
+      "How many hours would you normally have worked per week at the time you took this leave?",
+      () => {
+        const [hours, minutes] = minutesToHoursAndMinutes(
+          leave.worked_per_week_minutes
+        );
+        cy.contains("Hours").type(hours.toString());
+        cy.contains("Minutes").type(minutes.toString());
+      }
+    );
+
+    inFieldsetLabelled(
+      "What was the total number of hours you took off?",
+      () => {
+        if (leave.leave_minutes) {
+          const [hours, minutes] = minutesToHoursAndMinutes(
+            leave.leave_minutes
+          );
+          cy.contains("Hours").type(hours.toString());
+          cy.contains("Minutes").type(minutes.toString());
+        }
+      }
+    );
+  });
+}
+
+/**
+ * Report Accrued(Concurrent) leave. Must be navigated to the concurrent leave form.
+ * @param accruedLeave - concurrent leave object with all the required properties.
+ */
+function reportAccruedLeave(accruedLeave: ValidConcurrentLeave): void {
+  inFieldsetLabelled(
+    "Will you use accrued paid leave from this employer?",
+    () => {
+      cy.labelled(accruedLeave.is_for_current_employer ? "Yes" : "No").check({
+        force: true,
+      });
+    }
+  );
+  fillDateFieldset(
+    "What is the first day of this leave",
+    accruedLeave.leave_start_date
+  );
+  fillDateFieldset(
+    "What is the last day of this leave?",
+    accruedLeave.leave_end_date
+  );
+  cy.contains("button", "Save and continue").click();
+}
+
+/**
+ * Fills out the employer-sponsored benefits form for a given benefit.
+ * @param benefit
+ * @param index
+ */
+function reportEmployerBenefit(benefit: ValidEmployerBenefit, index: number) {
+  const benefitTypeMap: Record<ValidEmployerBenefit["benefit_type"], string> = {
+    "Family or medical leave insurance": "Family or medical leave insurance",
+    "Permanent disability insurance": "Permanent disability insurance",
+    "Short-term disability insurance": "Temporary disability insurance",
+    "Accrued paid leave": "",
+    Unknown: "",
+  };
+  inFieldsetLabelled(`Benefit ${index + 1}`, () => {
+    inFieldsetLabelled("What kind of employer-sponsored benefit is it?", () => {
+      cy.labelled(benefitTypeMap[benefit.benefit_type]).click({ force: true });
+    });
+
+    fillDateFieldset(
+      "What is the first day of leave from work that this benefit will pay you for?",
+      benefit.benefit_start_date
+    );
+
+    fillDateFieldset(
+      "What is the last day of leave from work that this benefit will pay you for?",
+      benefit.benefit_end_date
+    );
+
+    inFieldsetLabelled(
+      "Does this employer-sponsored benefit fully replace your wages?",
+      () => {
+        cy.labelled(benefit.is_full_salary_continuous ? "Yes" : "No").click({
+          force: true,
+        });
+      }
+    );
+  });
+}
+
+/**
+ * Report employer benefits. Must be navigated to the employer benefits form.
+ * @param benefits - array of EmployerBenefit objects with all the required properties.
+ */
+function reportEmployerBenefits(benefits: ValidEmployerBenefit[]) {
+  cy.contains(
+    "form",
+    "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave."
+  ).within(() => {
+    benefits.forEach((benefit, index) => {
+      reportEmployerBenefit(benefit, index);
+      // if there are any more leaves to report - click the button
+      if (index < benefits.length - 1)
+        cy.contains("button", "Add another benefit").click();
+    });
+    cy.contains("button", "Save and continue").click();
+  });
+}
+
+const otherIncomeTypeMap: Record<ValidOtherIncome["income_type"], string> = {
+  "Disability benefits under Gov't retirement plan":
+    "Disability benefits under a governmental retirement plan",
+  "Earnings from another employment/self-employment":
+    "Earnings or benefits from another employer, or through self-employment",
+  "Jones Act benefits": "Jones Act benefits",
+  "Railroad Retirement benefits": "Railroad Retirement benefits",
+  "Unemployment Insurance": "Unemployment Insurance",
+  "Workers Compensation": "Workers Compensation",
+  SSDI: "Social Security Disability Insurance",
+};
+
+/**
+ * Fills out the other income form for a given income.
+ * @param income
+ * @param index
+ */
+function reportOtherIncome(income: ValidOtherIncome, index: number): void {
+  inFieldsetLabelled(`Income ${index + 1}`, () => {
+    inFieldsetLabelled("What kind of income is it?", () => {
+      cy.labelled(otherIncomeTypeMap[income.income_type]).click({
+        force: true,
+      });
+    });
+
+    fillDateFieldset(
+      "What is the first day of your leave that this income will pay you for?",
+      income.income_start_date
+    );
+    fillDateFieldset(
+      "What is the last day of your leave that this income will pay you for?",
+      income.income_end_date
+    );
+
+    inFieldsetLabelled("How much will you receive?", () => {
+      cy.labelled("Amount").type(`${income.income_amount_dollars}`);
+
+      const frequencyMap: Record<
+        ValidOtherIncome["income_amount_frequency"],
+        string
+      > = {
+        "In Total": "All at once",
+        "Per Day": "Daily",
+        "Per Week": "Weekly",
+        "Per Month": "Monthly",
+      };
+
+      cy.labelled("Frequency").select(
+        frequencyMap[income.income_amount_frequency]
+      );
+    });
+  });
+}
+
+/**
+ * Report other incomes. Must be navigated to the other incomes form.
+ * @param other_incomes - array of OtherIncome objects with all the required properties.
+ */
+function reportOtherIncomes(other_incomes: ValidOtherIncome[]): void {
+  cy.contains(
+    "form",
+    "Tell us about your other sources of income during your leave dates for paid leave."
+  ).within(() => {
+    other_incomes.forEach((income, index) => {
+      reportOtherIncome(income, index);
+      // if there are any more leaves to report - click the button
+      if (index < other_incomes.length - 1)
+        cy.contains("button", "Add another income").click();
+    });
+    cy.contains("button", "Save and continue").click();
+  });
+}
+
+/**
+ * Report all of the leaves and benefits within the claim.
+ * Assumes starting at the first page of reporting other leaves & benefits.
+ * @param claim
+ */
+function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
+  const { previous_leaves_other_reason, previous_leaves_same_reason } = claim;
+  //Tell us about your previous leave.
+  cy.contains("Save and continue").click();
+
+  // Same reason leaves are reported separately
+  // Did you take other leave for the same reason as in current application?
+  cy.url().should("include", "previous-leaves-same-reason");
+  if (previous_leaves_same_reason?.length) {
+    assertIsTypedArray(previous_leaves_same_reason, isValidPreviousLeave);
+
+    cy.labelled("Yes").click({ force: true });
+    cy.contains("button", "Save and continue").click();
+
+    reportPreviousLeaves(previous_leaves_same_reason);
+  } else {
+    cy.labelled("No").click({ force: true });
+    cy.contains("button", "Save and continue").click();
+  }
+
+  // Did you take other leave for a reason different from current application?
+  cy.url().should("include", "previous-leaves-other-reason");
+  if (previous_leaves_other_reason?.length) {
+    assertIsTypedArray(previous_leaves_other_reason, isValidPreviousLeave);
+
+    cy.labelled("Yes").click({ force: true });
+    cy.contains("button", "Save and continue").click();
+
+    reportPreviousLeaves(previous_leaves_other_reason);
+  } else {
+    cy.labelled("No").click({ force: true });
+    cy.contains("button", "Save and continue").click();
+  }
+
+  cy.contains(
+    "form",
+    "Tell us about the accrued paid leave you'll use during your PFML leave."
+  ).submit();
+
+  cy.contains(
+    "form",
+    "Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?"
+  )
+    .within(() => {
+      cy.labelled(claim.concurrent_leave ? "Yes" : "No").check({ force: true });
+    })
+    .submit();
+  if (isValidConcurrentLeave(claim.concurrent_leave))
+    reportAccruedLeave(claim.concurrent_leave);
+
+  cy.contains(
+    "form",
+    "Tell us about other benefits and income you will use during your paid leave from PFML."
+  ).submit();
+
+  cy.contains(
+    "form",
+    "Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?"
+  ).within(() => {
+    cy.labelled(claim.employer_benefits ? "Yes" : "No").click({ force: true });
+    cy.contains("Save and continue").click();
+  });
+
+  if (claim.employer_benefits?.length) {
+    assertIsTypedArray(claim.employer_benefits, isValidEmployerBenefit);
+    reportEmployerBenefits(claim.employer_benefits);
+  }
+
+  cy.contains(
+    "form",
+    "Will you receive income from any other sources during your leave dates for paid leave?"
+  ).within(() => {
+    cy.labelled(claim.other_incomes ? "Yes" : "No").click({ force: true });
+    cy.contains("Save and continue").click();
+  });
+
+  // Tell us about your other sources of income during your leave dates for paid leave.
+  if (claim.other_incomes?.length) {
+    assertIsTypedArray(claim.other_incomes, isValidOtherIncome);
+    reportOtherIncomes(claim.other_incomes);
+  }
+}
+
+/**
+ * Fills date fieldset component within the portal.
+ * @param caption Fieldset caption
+ * @param date in the format of yyyy-mm-dd
+ * @example
+ * fillDateFieldset("What was the first day of this leave?", "2021-01-17")
+ */
+export function fillDateFieldset(caption: string, date: string): void {
+  const [year, month, day] = date.split("-");
+  inFieldsetLabelled(caption, () => {
+    cy.contains("Month").type(month);
+    cy.contains("Day").type(day);
+    cy.contains("Year").type(year);
+  });
+}
 type UploadAdditonalDocumentOptions =
   | "Massachusetts driver’s license or ID"
   | "Different identification documentation"

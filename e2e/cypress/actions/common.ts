@@ -1,6 +1,14 @@
 import type { ConfigFunction } from "../../src/config";
 
-export function inFieldset(fieldsetLabel: string, cb: () => void): void {
+/**
+ *
+ * @param fieldsetLabel text to identify the fieldset by
+ * @param cb callback to be passed into .within() clause inside this function.
+ */
+export function inFieldsetLabelled(
+  fieldsetLabel: string,
+  cb: (subject: JQuery<HTMLFieldSetElement>) => void
+): void {
   cy.contains("fieldset", fieldsetLabel).within(cb);
 }
 

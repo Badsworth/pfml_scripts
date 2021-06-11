@@ -1,5 +1,5 @@
 import { ScenarioSpecification } from "../generation/Scenario";
-import { addWeeks, subWeeks, startOfWeek, addDays } from "date-fns";
+import { addWeeks, subWeeks, startOfWeek, addDays, formatISO } from "date-fns";
 import { getCaringLeaveStartEndDates } from "../../src/util/claims";
 
 /**
@@ -303,10 +303,10 @@ export const MIL_RED_OLB: ScenarioSpecification = {
         benefit_type: "Accrued paid leave",
       },
     ],
-    previous_leaves: [
+    previous_leaves_other_reason: [
       {
         type: "other_reason",
-        leave_reason: "Child bonding",
+        leave_reason: "Bonding with my child after birth or placement",
         is_for_current_employer: true,
         leave_minutes: 2400,
         worked_per_week_minutes: 1200,
@@ -340,5 +340,45 @@ export const CHAP_RFI: ScenarioSpecification = {
       MASSID: {},
       CARING: {},
     },
+  },
+};
+
+export const BHAP1_OLB: ScenarioSpecification = {
+  employee: BHAP1.employee,
+  claim: {
+    ...BHAP1.claim,
+    leave_dates: [addWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 4)],
+    // Leave start & end dates here and in employer benefits empty so they match the leave dates automatically
+    other_incomes: [
+      {
+        income_type: "Earnings from another employment/self-employment",
+        income_amount_dollars: 200,
+        income_amount_frequency: "Per Week",
+      },
+    ],
+    employer_benefits: [
+      {
+        benefit_amount_dollars: 1000,
+        benefit_amount_frequency: "In Total",
+        benefit_type: "Short-term disability insurance",
+        is_full_salary_continuous: false,
+      },
+    ],
+    previous_leaves_other_reason: [
+      {
+        type: "other_reason",
+        leave_reason: "Bonding with my child after birth or placement",
+        is_for_current_employer: true,
+        leave_minutes: 2400,
+        worked_per_week_minutes: 1200,
+        leave_start_date: formatISO(subWeeks(mostRecentSunday, 2), {
+          representation: "date",
+        }),
+        leave_end_date: formatISO(mostRecentSunday, {
+          representation: "date",
+        }),
+      },
+    ],
+    concurrent_leave: { is_for_current_employer: true },
   },
 };

@@ -47,9 +47,14 @@ const benefitWithoutDates: EmployerBenefit = {
 const previousLeave: PreviousLeave = {
   is_for_current_employer: true,
   type: "same_reason",
-  leave_reason: "Child bonding",
+  leave_reason: "Bonding with my child after birth or placement",
   leave_end_date: "2021-01-01",
   leave_start_date: "2021-02-01",
+};
+const previousLeaveWithoutDates: PreviousLeave = {
+  is_for_current_employer: true,
+  type: "other_reason",
+  leave_reason: "Pregnancy",
 };
 const otherIncomeWithoutDates: OtherIncome = {
   income_type: "SSDI",
@@ -574,63 +579,116 @@ describe("Claim Generator", () => {
     expect(end).toEqual(END_LEAVE);
   });
 
-  it("should allow for addition of previous leaves data to the claim", () => {
-    const previous_leaves: ClaimSpecification["previous_leaves"] = [
-      previousLeave,
-    ];
-    const explicit_dates: ClaimSpecification = {
-      ...intermittent_explicit_dates,
-      previous_leaves,
-    };
-    const claim = ClaimGenerator.generate(employeePool, {}, explicit_dates);
-    expect(claim.claim.previous_leaves).toEqual(previous_leaves);
-  });
+  describe("Other leaves & benefits", () => {
+    it("Should set the previous leave dates if given a previous_leaves_other_reason with unspecified dates", () => {
+      const previous_leaves_other_reason: ClaimSpecification["previous_leaves_other_reason"] = [
+        previousLeaveWithoutDates,
+      ];
+      const explicit_dates: ClaimSpecification = {
+        ...intermittent_explicit_dates,
+        previous_leaves_other_reason,
+      };
+      const claim = ClaimGenerator.generate(employeePool, {}, explicit_dates);
+      expect(claim.claim.previous_leaves_other_reason).toEqual([
+        {
+          ...previousLeaveWithoutDates,
+          leave_start_date: expect.any(String),
+          leave_end_date: expect.any(String),
+        },
+      ]);
+    });
+    it("Should pass through the previous leave spec if given a previous_leaves_same_reason without specified dates", () => {
+      const previous_leaves_same_reason: ClaimSpecification["previous_leaves_same_reason"] = [
+        previousLeave,
+      ];
+      const explicit_dates: ClaimSpecification = {
+        ...intermittent_explicit_dates,
+        previous_leaves_same_reason,
+      };
+      const claim = ClaimGenerator.generate(employeePool, {}, explicit_dates);
+      expect(claim.claim.previous_leaves_same_reason).toEqual(
+        previous_leaves_same_reason
+      );
+    });
+    it("should allow for addition of employer benefits data to the claim and match the benefit dates to leave dates if they are not given", () => {
+      const employer_benefits: ClaimSpecification["employer_benefits"] = [
+        benefitWithExplicitDates,
+        benefitWithoutDates,
+      ];
+      const claimWithEmployerBenefits: ClaimSpecification = {
+        ...intermittent_explicit_dates,
+        employer_benefits,
+      };
+      const claim = ClaimGenerator.generate(
+        employeePool,
+        {},
+        claimWithEmployerBenefits
+      );
+      expect(claim.claim.employer_benefits).toEqual([
+        benefitWithExplicitDates,
+        {
+          ...benefitWithoutDates,
+          benefit_start_date: START_LEAVE,
+          benefit_end_date: END_LEAVE,
+        },
+      ]);
+    });
+    it("should allow for addition of other incomes data to the claim and match the income dates to leave dates if they are not given", () => {
+      const other_incomes: ClaimSpecification["other_incomes"] = [
+        otherIncomeWithDates,
+        otherIncomeWithoutDates,
+      ];
+      const claimWithOtherIncomes: ClaimSpecification = {
+        ...intermittent_explicit_dates,
+        other_incomes,
+      };
+      const claim = ClaimGenerator.generate(
+        employeePool,
+        {},
+        claimWithOtherIncomes
+      );
+      expect(claim.claim.other_incomes).toEqual([
+        otherIncomeWithDates,
+        {
+          ...otherIncomeWithoutDates,
+          income_start_date: START_LEAVE,
+          income_end_date: END_LEAVE,
+        },
+      ]);
+    });
+    it("Should generate a concurrent leave if given the spec", () => {
+      const specWithoutDates: ClaimSpecification = {
+        ...intermittent_explicit_dates,
+        concurrent_leave: { is_for_current_employer: true },
+      };
+      const claimWithoutDate = ClaimGenerator.generate(
+        employeePool,
+        {},
+        specWithoutDates
+      );
+      expect(claimWithoutDate.claim.concurrent_leave).toEqual({
+        is_for_current_employer: true,
+        leave_end_date: END_LEAVE,
+        leave_start_date: START_LEAVE,
+      });
 
-  it("should allow for addition of employer benefits data to the claim and match the benefit dates to leave dates if they are not given", () => {
-    const employer_benefits: ClaimSpecification["employer_benefits"] = [
-      benefitWithExplicitDates,
-      benefitWithoutDates,
-    ];
-    const claimWithEmployerBenefits: ClaimSpecification = {
-      ...intermittent_explicit_dates,
-      employer_benefits,
-    };
-    const claim = ClaimGenerator.generate(
-      employeePool,
-      {},
-      claimWithEmployerBenefits
-    );
-    expect(claim.claim.employer_benefits).toEqual([
-      benefitWithExplicitDates,
-      {
-        ...benefitWithoutDates,
-        benefit_start_date: START_LEAVE,
-        benefit_end_date: END_LEAVE,
-      },
-    ]);
-  });
-  it("should allow for addition of other incomes data to the claim and match the income dates to leave dates if they are not given", () => {
-    const other_incomes: ClaimSpecification["other_incomes"] = [
-      otherIncomeWithDates,
-      otherIncomeWithoutDates,
-    ];
-    const claimWithOtherIncomes: ClaimSpecification = {
-      ...intermittent_explicit_dates,
-      other_incomes,
-    };
-    const claim = ClaimGenerator.generate(
-      employeePool,
-      {},
-      claimWithOtherIncomes
-    );
-    expect(claim.claim.other_incomes).toEqual([
-      otherIncomeWithDates,
-      {
-        ...otherIncomeWithoutDates,
-        income_start_date: START_LEAVE,
-        income_end_date: END_LEAVE,
-      },
-    ]);
+      const specWithDates: ClaimSpecification = {
+        ...intermittent_explicit_dates,
+        concurrent_leave: {
+          is_for_current_employer: true,
+          leave_end_date: "2021-01-02",
+          leave_start_date: "2021-01-02",
+        },
+      };
+      const claimWithDates = ClaimGenerator.generate(
+        employeePool,
+        {},
+        specWithDates
+      );
+      expect(claimWithDates.claim.concurrent_leave).toEqual(
+        specWithDates.concurrent_leave
+      );
+    });
   });
 
   it("Should allow passing in configuration for an intermittent leave period", async () => {

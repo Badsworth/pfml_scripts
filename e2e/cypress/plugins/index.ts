@@ -19,12 +19,12 @@ import {
   getPortalSubmitter,
   getVerificationFetcher,
 } from "../../src/util/common";
+import { Credentials, Scenarios } from "../../src/types";
 import {
   generateCredentials,
   getClaimantCredentials,
   getLeaveAdminCredentials,
 } from "../../src/util/credentials";
-import { Credentials } from "../../src/types";
 import { ApplicationResponse } from "../../src/api";
 
 import fs from "fs";
@@ -127,11 +127,11 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       documentWaiter
     ),
 
-    async generateClaim(scenarioID: string): Promise<DehydratedClaim> {
+    async generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
       if (!(scenarioID in scenarios)) {
         throw new Error(`Invalid scenario: ${scenarioID}`);
       }
-      const scenario = scenarios[scenarioID as keyof typeof scenarios];
+      const scenario = scenarios[scenarioID];
       const claim = ClaimGenerator.generate(
         await getEmployeePool(),
         scenario.employee,

@@ -52,8 +52,10 @@ describe("Claimant can call call-center to submit a claim for leave with other l
                 (documentsPage) => {
                   const {
                     employer_benefits,
-                    previous_leaves,
+                    previous_leaves_other_reason,
+                    previous_leaves_same_reason,
                     other_incomes,
+                    concurrent_leave,
                   } = claim.claim;
                   documentsPage
                     .submitOtherBenefits({
@@ -63,10 +65,9 @@ describe("Claimant can call call-center to submit a claim for leave with other l
                       other_incomes,
                     })
                     .submitOtherLeaves({
-                      previous_leaves,
-                      accrued_leaves: employer_benefits?.filter(
-                        (b) => b.benefit_type === "Accrued paid leave"
-                      ),
+                      previous_leaves_other_reason,
+                      previous_leaves_same_reason,
+                      concurrent_leave,
                     });
                 }
               );

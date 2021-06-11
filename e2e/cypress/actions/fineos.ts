@@ -228,7 +228,7 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
   }
 }
 
-/*
+/**
  * This work-flow is submitting a full bonding/military claim
  * directly into Fineos.
  *

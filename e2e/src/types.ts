@@ -1,4 +1,11 @@
 import { ApplicationLeaveDetails } from "./api";
+import * as scenarios from "./scenarios";
+import {
+  EmployerBenefit,
+  PreviousLeave,
+  ConcurrentLeave,
+  OtherIncome,
+} from "./_api";
 
 export type Credentials = {
   username: string;
@@ -35,33 +42,52 @@ export type SubjectOptions =
   | "review leave hours"
   | "request for additional info";
 
-// Type utils
+export type Scenarios = keyof typeof scenarios;
 
 /**
- * Check whether a given value is neither null nor undefined.
- * @param arg - value to check
- * @example
- * isNotNull(null) => false
- * isNotNull("") => true
+ * Require properties to be neither null nor undefined
  */
-export function isNotNull<T>(arg: T): arg is NonNullable<T> {
-  return arg !== null && arg !== undefined;
-}
+export type RequireNotNull<T, P extends keyof T> = AllNotNull<Pick<T, P>> &
+  Pick<T, Exclude<keyof T, P>>;
 
 /**
- * Check whether a given value is an array where
- * each member is of a specified type
- *
- * @param arr - array to check
- * @param check - type guard to use when evaluating each item
- * @example
- * isTypedArray(["", false, true], isNotNull) => true
+ * Exclude null and undefined from all of the properties of the given type T
  */
-export function isTypedArray<T>(
-  arr: unknown,
-  check: (x: unknown) => x is T
-): arr is T[] {
-  if (!Array.isArray(arr)) return false;
-  if (arr.some((item) => !check(item))) return false;
-  return true;
-}
+export type AllNotNull<T> = Required<
+  {
+    [P in keyof T]: NonNullable<T[P]>;
+  }
+>;
+
+/**
+ * @note Following types are used within typeguards and to limit the amount of property checks & type casts.
+ */
+
+/**
+ * Has all the properties required to submit a previous leave.
+ */
+export type ValidPreviousLeave = Omit<
+  AllNotNull<PreviousLeave>,
+  "previous_leave_id"
+>;
+
+/**
+ * Has all the properties required to submit a concurrent leave.
+ */
+export type ValidConcurrentLeave = Omit<
+  AllNotNull<ConcurrentLeave>,
+  "concurrent_leave_id"
+>;
+
+/**
+ * Has all the properties required to submit an other income.
+ */
+export type ValidOtherIncome = Omit<AllNotNull<OtherIncome>, "other_income_id">;
+
+/**
+ * Has all the properties required to submit an employer benefit.
+ */
+export type ValidEmployerBenefit = Omit<
+  AllNotNull<EmployerBenefit>,
+  "employer_benefit_id"
+>;

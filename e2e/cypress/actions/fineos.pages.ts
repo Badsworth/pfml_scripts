@@ -1,5 +1,16 @@
-import { EmployerBenefit, OtherIncome, PreviousLeave } from "../../src/_api";
-import { isNotNull } from "../../src/types";
+import { OtherIncome } from "../../src/_api";
+import {
+  ValidConcurrentLeave,
+  ValidEmployerBenefit,
+  ValidPreviousLeave,
+} from "../../src/types";
+import {
+  isNotNull,
+  isValidConcurrentLeave,
+  isValidPreviousLeave,
+  assertIsTypedArray,
+  isValidEmployerBenefit,
+} from "../../src/util/typeUtils";
 import {
   dateToMMddyyyy,
   minutesToHoursAndMinutes,
@@ -231,8 +242,10 @@ export class DocumentsPage {
     this.startDocumentCreation("Other Income - current version");
     const alertSpy = cy.spy(window, "alert");
 
-    if (employer_benefits)
+    if (employer_benefits) {
+      assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
       employer_benefits.forEach(this.fillEmployerBenefitData);
+    }
 
     if (other_incomes)
       other_incomes.forEach(this.fillIncomeFromOtherSourcesData);
@@ -307,13 +320,17 @@ export class DocumentsPage {
       );
   }
 
-  private fillEmployerBenefitData(benefit: EmployerBenefit, i: number): void {
+  private fillEmployerBenefitData(
+    benefit: ValidEmployerBenefit,
+    i: number
+  ): void {
     i += 1;
     // The convoluted type is so that we can update the map appropriately when the EmployerBenefit type changes
     const employerBenefitTypeMap: Record<
-      Exclude<NonNullable<typeof benefit.benefit_type>, "Accrued paid leave">,
+      ValidEmployerBenefit["benefit_type"],
       string
     > = {
+      "Accrued paid leave": "Accrued paid leave",
       "Short-term disability insurance":
         "Temporary disability insurance (Long- or Short-term)",
       "Permanent disability insurance": "Permanent disability insurance",
@@ -325,36 +342,31 @@ export class DocumentsPage {
     cy.get(`select[id$=ReceiveWageReplacement${i}]`).select("Yes");
 
     // What kind of employer benefit is it?
-    if (
-      isNotNull(benefit.benefit_type) &&
-      benefit.benefit_type !== "Accrued paid leave"
-    )
-      cy.get(`select[id$=V2WRT${i}]`).select(
-        employerBenefitTypeMap[benefit.benefit_type]
-      );
+    cy.get(`select[id$=V2WRT${i}]`).select(
+      employerBenefitTypeMap[benefit.benefit_type]
+    );
 
     // Is this benefit full salary continuation?
-    if (isNotNull(benefit.is_full_salary_continuous))
-      cy.get(`select[id$=SalaryContinuation${i}]`).select(
-        benefit.is_full_salary_continuous === true ? "Yes" : "No"
-      );
+    cy.get(`select[id$=SalaryContinuation${i}]`).select(
+      benefit.is_full_salary_continuous === true ? "Yes" : "No"
+    );
     // When will you start receiving this income?
-    if (isNotNull(benefit.benefit_start_date))
-      cy.get(`input[type=text][id$=V2StartDate${i}]`).type(
-        `${dateToMMddyyyy(benefit.benefit_start_date)}{enter}`
-      );
+    cy.get(`input[type=text][id$=V2StartDate${i}]`).type(
+      `${dateToMMddyyyy(benefit.benefit_start_date)}{enter}`
+    );
+    /**
+     * @note Following fields are marked as optional in Fineos, but are not optional in the claimant portal.
+     */
     // When will you stop receiving this income? (Optional)
     if (isNotNull(benefit.benefit_end_date))
       cy.get(`input[type=text][id$=V2EndDate${i}]`).type(
         `${dateToMMddyyyy(benefit.benefit_end_date)}{enter}`
       );
-
     // How much will you receive? (Optional)
     if (isNotNull(benefit.benefit_amount_dollars))
       cy.get(`input[type=text][id$=V2Amount${i}]`).type(
         `{selectall}{backspace}${benefit}`
       );
-
     const benefitFrequencyMap = {
       "In Total": "One Time / Lump Sum" as const,
       "Per Day": "Per Day" as const,
@@ -372,21 +384,31 @@ export class DocumentsPage {
   /**
    * Submits other leaves within the "Other Leaves - current version" eForm. If succesfull returns back to the "Documents" page.
    * @todo - make it take other leaves as parameters.
-   * @param previous_leaves
+   * @param previous_leaves_other_reason
    * @param accrued_leaves - All of the accrued paid leaves to be used during the dates of current PFML leave. Currently are listed within the
    * @returns
    */
   submitOtherLeaves({
-    previous_leaves,
-    accrued_leaves,
+    previous_leaves_other_reason,
+    previous_leaves_same_reason,
+    concurrent_leave,
   }: {
-    previous_leaves?: ApplicationRequestBody["previous_leaves"];
-    accrued_leaves?: ApplicationRequestBody["employer_benefits"];
+    previous_leaves_other_reason?: ApplicationRequestBody["previous_leaves_other_reason"];
+    previous_leaves_same_reason?: ApplicationRequestBody["previous_leaves_same_reason"];
+    concurrent_leave?: ApplicationRequestBody["concurrent_leave"];
   }): this {
     this.startDocumentCreation("Other Leaves - current version");
-    // Reports all of the previous leaves
-    if (previous_leaves) previous_leaves.forEach(this.fillPreviousLeaveData);
-    if (accrued_leaves) this.fillAccruedLeaveData(accrued_leaves[0]);
+    // Reports all of the previous leaves with same reason
+    if (previous_leaves_other_reason) {
+      assertIsTypedArray(previous_leaves_other_reason, isValidPreviousLeave);
+      previous_leaves_other_reason.forEach(this.fillPreviousLeaveData);
+    }
+    if (previous_leaves_same_reason) {
+      assertIsTypedArray(previous_leaves_same_reason, isValidPreviousLeave);
+      previous_leaves_same_reason.forEach(this.fillPreviousLeaveData);
+    }
+    if (isValidConcurrentLeave(concurrent_leave))
+      this.fillAccruedLeaveData(concurrent_leave);
     clickBottomWidgetButton();
     this.assertDocumentExists("Other Leaves - current version");
     return this;
@@ -398,23 +420,20 @@ export class DocumentsPage {
    * @param leave
    * @param i
    */
-  private fillAccruedLeaveData(leave: EmployerBenefit) {
+  private fillAccruedLeaveData(leave: ValidConcurrentLeave) {
     // If there's an accrued leave - we just say yes.
     cy.labelled(
       "Will you use any employer-sponsored accrued paid leave for a qualifying reason during this leave?"
     ).select("Yes");
-    // Here it's not yet clear how we are supposed to know that. Since EmployerBenefit type doesn't specify the fein, we assume all accrued leave is from current employer.
     cy.labelled("Will you use accrued paid leave from this employer?").select(
-      "Yes"
+      leave.is_for_current_employer ? "Yes" : "No"
     );
-    if (isNotNull(leave.benefit_start_date))
-      cy.get(`input[type=text][id$=AccruedStartDate1]`).type(
-        `${dateToMMddyyyy(leave.benefit_start_date)}{enter}`
-      );
-    if (isNotNull(leave.benefit_end_date))
-      cy.get(`input[type=text][id$=AccruedEndDate1]`).type(
-        `${dateToMMddyyyy(leave.benefit_end_date)}{enter}`
-      );
+    cy.get(`input[type=text][id$=AccruedStartDate1]`).type(
+      `${dateToMMddyyyy(leave.leave_start_date)}{enter}`
+    );
+    cy.get(`input[type=text][id$=AccruedEndDate1]`).type(
+      `${dateToMMddyyyy(leave.leave_end_date)}{enter}`
+    );
     cy.wait("@ajaxRender").wait(200);
   }
 
@@ -423,17 +442,21 @@ export class DocumentsPage {
    * @param leave
    * @param i
    */
-  private fillPreviousLeaveData(leave: PreviousLeave, i: number) {
+  private fillPreviousLeaveData(leave: ValidPreviousLeave, i: number) {
     // Increment this, because the selectors within the form start from 1
     i += 1;
-    const leaveReasonMap = {
-      "Pregnancy / Maternity": "Pregnancy" as const,
-      "Serious health condition": "An illness or injury" as const,
-      "Care for a family member": "Caring for a family member with a serious health condition" as const,
-      "Child bonding": "Bonding with my child after birth or placement" as const,
-      "Military caregiver": "Caring for a family member who serves in the armed forces" as const,
-      "Military exigency family": "Managing family affairs while a family member is on active duty in the armed forces" as const,
-      Unknown: "Please select" as const,
+    const leaveReasonMap: Record<ValidPreviousLeave["leave_reason"], string> = {
+      Pregnancy: "Pregnancy",
+      "An illness or injury": "An illness or injury",
+      "Caring for a family member with a serious health condition":
+        "Caring for a family member with a serious health condition",
+      "Bonding with my child after birth or placement":
+        "Bonding with my child after birth or placement",
+      "Caring for a family member who serves in the armed forces":
+        "Caring for a family member who serves in the armed forces",
+      "Managing family affairs while a family member is on active duty in the armed forces":
+        "Managing family affairs while a family member is on active duty in the armed forces",
+      Unknown: "Please select",
     };
 
     /*         
@@ -450,47 +473,48 @@ export class DocumentsPage {
     };
     // The eForm also doesn't require you to fill anything at all, and can be submitted essentially empty.
     // So we only fill in the data we were given.
-    if (isNotNull(leave.type))
-      cy.get(`select[id$=V2Leave${i}]`).select(isForSameReason[leave.type]);
+
+    cy.get(`select[id$=V2Leave${i}]`).select(isForSameReason[leave.type]);
     // Why did you need to take leave?
-    if (isNotNull(leave.leave_reason) && leave.leave_reason !== "Unknown")
-      cy.get(`select[id$=QualifyingReason${i}]`).select(
-        leaveReasonMap[leave.leave_reason]
-      );
+
+    cy.get(`select[id$=QualifyingReason${i}]`).select(
+      leaveReasonMap[leave.leave_reason]
+    );
     // Did you take this leave from the same employer as the one you're applying to take paid leave from now?
-    if (isNotNull(leave.is_for_current_employer))
-      cy.get(`select[id$=LeaveFromEmployer${i}]`).select(
-        leave.is_for_current_employer ? "Yes" : "No"
-      );
+
+    cy.get(`select[id$=LeaveFromEmployer${i}]`).select(
+      leave.is_for_current_employer ? "Yes" : "No"
+    );
 
     // What was the first day of this leave?
-    if (isNotNull(leave.leave_start_date))
-      cy.get(`input[type=text][id$=OtherLeavesPastLeaveStartDate${i}]`).type(
-        `${dateToMMddyyyy(leave.leave_start_date)}{enter}`
-      );
+
+    cy.get(`input[type=text][id$=OtherLeavesPastLeaveStartDate${i}]`).type(
+      `${dateToMMddyyyy(leave.leave_start_date)}{enter}`
+    );
     // What was the last day of this leave?
-    if (isNotNull(leave.leave_end_date))
-      cy.get(`input[type=text][id$=OtherLeavesPastLeaveEndDate${i}]`).type(
-        `${dateToMMddyyyy(leave.leave_end_date)}{enter}`
-      );
+
+    cy.get(`input[type=text][id$=OtherLeavesPastLeaveEndDate${i}]`).type(
+      `${dateToMMddyyyy(leave.leave_end_date)}{enter}`
+    );
 
     // How many hours did you work per week on average at the time you took this leave?
-    if (isNotNull(leave.worked_per_week_minutes)) {
-      const [hours, minutes] = minutesToHoursAndMinutes(
-        leave.worked_per_week_minutes
-      );
-      cy.get(`input[type=text][id$=HoursWorked${i}]`).type(`${hours}`);
-      cy.get(`select[id$=MinutesWorked${i}]`).select(
-        `${minutes === 0 ? "00" : minutes}`
-      );
-    }
+
+    const [hoursWorked, minutesWorked] = minutesToHoursAndMinutes(
+      leave.worked_per_week_minutes
+    );
+    cy.get(`input[type=text][id$=HoursWorked${i}]`).type(`${hoursWorked}`);
+    cy.get(`select[id$=MinutesWorked${i}]`).select(
+      `${minutesWorked === 0 ? "00" : minutesWorked}`
+    );
+
     // What was the total number of hours you took off?
-    if (isNotNull(leave.leave_minutes)) {
-      const [hours, minutes] = minutesToHoursAndMinutes(leave.leave_minutes);
-      cy.get(`input[type=text][id$=TotalHours${i}]`).type(`${hours}`);
-      cy.get(`select[id$=TotalMinutes${i}]`).select(
-        `${minutes === 0 ? "00" : minutes}`
-      );
-    }
+
+    const [hoursTotal, minutesTotal] = minutesToHoursAndMinutes(
+      leave.leave_minutes
+    );
+    cy.get(`input[type=text][id$=TotalHours${i}]`).type(`${hoursTotal}`);
+    cy.get(`select[id$=TotalMinutes${i}]`).select(
+      `${minutesTotal === 0 ? "00" : minutesTotal}`
+    );
   }
 }
