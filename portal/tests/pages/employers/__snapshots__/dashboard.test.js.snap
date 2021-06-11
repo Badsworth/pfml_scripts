@@ -142,46 +142,6 @@ Array [
 ]
 `;
 
-exports[`Employer dashboard renders claim rows without links if employer is not registered in FINEOS 1`] = `
-<tr
-  key="NTN-111-ABS-01"
->
-  <th
-    data-label="Employee name"
-    data-test="employee_name"
-    scope="row"
-  >
-    Jane Doe
-  </th>
-  <td
-    data-label="Application ID"
-    key="fineos_absence_id"
-  >
-    NTN-111-ABS-01
-  </td>
-  <td
-    data-label="Employer ID number"
-    key="employer_fein"
-  >
-    **-***0002
-  </td>
-  <td
-    data-label="Application start date"
-    key="created_at"
-  >
-    1/15/2021
-  </td>
-  <td
-    data-label="Status"
-    key="status"
-  >
-    <AbsenceCaseStatusTag
-      status="Approved"
-    />
-  </td>
-</tr>
-`;
-
 exports[`Employer dashboard renders the page with expected content and pagination components 1`] = `
 <Title>
   Dashboard

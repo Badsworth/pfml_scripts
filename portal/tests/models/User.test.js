@@ -285,7 +285,7 @@ describe("User", () => {
     });
   });
 
-  describe("#getVerifiedEmployersNotRegisteredInFineos", () => {
+  describe("#verifiedEmployersNotRegisteredInFineos", () => {
     it("returns a single employer", () => {
       const user = new User({
         user_leave_administrators: [
@@ -294,7 +294,7 @@ describe("User", () => {
         ],
       });
 
-      expect(user.getVerifiedEmployersNotRegisteredInFineos()).toEqual([
+      expect(user.verifiedEmployersNotRegisteredInFineos).toEqual([
         VERIFIED_PENDING_WITHOUT_DATA,
       ]);
     });
@@ -316,7 +316,7 @@ describe("User", () => {
         ],
       });
 
-      expect(user.getVerifiedEmployersNotRegisteredInFineos()).toEqual([
+      expect(user.verifiedEmployersNotRegisteredInFineos).toEqual([
         VERIFIED_PENDING_WITHOUT_DATA,
         VERIFIED_PENDING_WITH_DATA,
       ]);
@@ -327,7 +327,25 @@ describe("User", () => {
         user_leave_administrators: [VERIFIED_REGISTERED_WITH_DATA],
       });
 
-      expect(user.getVerifiedEmployersNotRegisteredInFineos()).toEqual([]);
+      expect(user.verifiedEmployersNotRegisteredInFineos).toEqual([]);
+    });
+  });
+
+  describe("#verifiedEmployers", () => {
+    it("returns only verified employers", () => {
+      const user = new User({
+        user_leave_administrators: [
+          UNVERIFIED_PENDING_WITH_DATA,
+          UNVERIFIED_REGISTERED_WITHOUT_DATA,
+          VERIFIED_REGISTERED_WITH_DATA,
+          VERIFIED_PENDING_WITHOUT_DATA,
+        ],
+      });
+
+      expect(user.verifiedEmployers).toEqual([
+        VERIFIED_REGISTERED_WITH_DATA,
+        VERIFIED_PENDING_WITHOUT_DATA,
+      ]);
     });
   });
 });

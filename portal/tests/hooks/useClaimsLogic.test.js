@@ -25,8 +25,8 @@ const mockPaginatedFetch = (mockResponseData = []) => {
 
 describe("useClaimsLogic", () => {
   function setup() {
-    const { result: appLogic } = renderHook(() => useAppLogic());
-    return { appLogic };
+    const { result: appLogic, waitFor } = renderHook(() => useAppLogic());
+    return { appLogic, waitFor };
   }
 
   beforeAll(() => {
@@ -61,19 +61,69 @@ describe("useClaimsLogic", () => {
       );
     });
 
-    it("only makes api request if all claims have not been loaded", async () => {
+    it("loads page with employer_id filter", async () => {
+      expect.assertions();
+
+      const { appLogic } = setup();
+
+      await act(async () => {
+        mockPaginatedFetch();
+        await appLogic.current.claims.loadPage(1, {
+          employer_id: "mock-employer-id",
+        });
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("?page_offset=1&employer_id=mock-employer-id"),
+        expect.any(Object)
+      );
+    });
+
+    it("it sets isLoadingClaims to true when a page is being loaded", async () => {
+      mockPaginatedFetch();
+      const { appLogic, waitFor } = setup();
+
+      expect(appLogic.current.claims.isLoadingClaims).toBeUndefined();
+
+      await act(async () => {
+        appLogic.current.claims.loadPage(1);
+
+        await waitFor(() => {
+          expect(appLogic.current.claims.isLoadingClaims).toBe(true);
+        });
+      });
+
+      // All loading promises resolved, so claims are loaded by this point
+      expect(appLogic.current.claims.isLoadingClaims).toBe(false);
+    });
+
+    it("only makes api request if a page and filters hasn't been loaded", async () => {
       expect.assertions();
       const { appLogic } = setup();
 
       await act(async () => {
         // this should make an API request since ALL claims haven't been loaded yet
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage();
+        await appLogic.current.claims.loadPage(1);
         expect(global.fetch).toHaveBeenCalled();
 
-        // but this shouldn't, since we've already loaded all claims
+        // but this shouldn't, since we've already loaded this page
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage();
+        await appLogic.current.claims.loadPage(1);
+        expect(global.fetch).not.toHaveBeenCalled();
+
+        // this should make an API request since the filters changed
+        mockPaginatedFetch();
+        await appLogic.current.claims.loadPage(1, {
+          employer_id: "mock-employer-id",
+        });
+        expect(global.fetch).toHaveBeenCalled();
+
+        // but this shouldn't, since we've already loaded all claims with these filters
+        mockPaginatedFetch();
+        await appLogic.current.claims.loadPage(1, {
+          employer_id: "mock-employer-id",
+        });
         expect(global.fetch).not.toHaveBeenCalled();
       });
     });

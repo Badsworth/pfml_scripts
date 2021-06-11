@@ -41,7 +41,9 @@ export default jest.fn(() => ({
     warningsLists: {},
   },
   claims: {
+    activeFilters: {},
     claims: new ClaimCollection(),
+    isLoadingClaims: null,
     paginationMeta: new PaginationMeta(),
     loadPage: jest.fn(),
   },

@@ -27,6 +27,10 @@ const flagsConfig = {
     // TODO (EMPLOYER-913): Remove flag
     employerShowAddOrganization: false,
 
+    // When this flag is enabled, the Leave Admin dashboard shows filter functionality
+    // TODO (EMPLOYER-1412): Remove flag
+    employerShowDashboardEmployerFilter: false,
+
     // When this flag is enabled, file upload is visible on the Review page
     // TODO (EMPLOYER-665): Show file upload once the endpoint is available
     employerShowFileUpload: false,

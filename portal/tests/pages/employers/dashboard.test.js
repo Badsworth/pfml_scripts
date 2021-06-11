@@ -4,22 +4,30 @@ import { renderWithAppLogic, testHook } from "../../test-utils";
 import ClaimCollection from "../../../src/models/ClaimCollection";
 import Dashboard from "../../../src/pages/employers/dashboard";
 import PaginationMeta from "../../../src/models/PaginationMeta";
+import faker from "faker";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
-const verifiedUserLeaveAdministrator = new UserLeaveAdministrator({
+function createUserLeaveAdministrator(attrs = {}) {
+  return new UserLeaveAdministrator({
+    employer_id: faker.datatype.uuid(),
+    employer_dba: faker.company.companyName(),
+    employer_fein: `${faker.finance.account(2)}-${faker.finance.account(7)}`,
+    ...attrs,
+  });
+}
+
+const verifiedUserLeaveAdministrator = createUserLeaveAdministrator({
   employer_dba: "Work Inc",
   employer_fein: "12-3456789",
-  employer_id: "mock-employer-id-1",
   has_fineos_registration: true,
   has_verification_data: true,
   verified: true,
 });
-const verifiableUserLeaveAdministrator = new UserLeaveAdministrator({
+
+const verifiableUserLeaveAdministrator = createUserLeaveAdministrator({
   employer_dba: "Book Bindings 'R Us",
-  employer_fein: "**-***0002",
-  employer_id: "mock-employer-id-2",
   has_fineos_registration: false,
   has_verification_data: true,
   verified: false,
@@ -58,6 +66,7 @@ const setup = (claims = [], userAttrs = {}, paginationMeta = {}) => {
       ...userAttrs,
     });
     appLogic.claims.claims = new ClaimCollection(claims);
+    appLogic.claims.shouldLoadPage = jest.fn().mockReturnValue(false);
     appLogic.claims.paginationMeta = new PaginationMeta({
       page_offset: 1,
       page_size: 25,
@@ -188,7 +197,6 @@ describe("Employer dashboard", () => {
 
     const { wrapper } = setup(claims, userAttrs);
 
-    expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
     expect(wrapper.find("ClaimTableRows").dive().find("a")).toHaveLength(0);
   });
 
@@ -268,7 +276,7 @@ describe("Employer dashboard", () => {
 
   it("changes the page_offset query param when a page navigation button is clicked", () => {
     const { goToSpy, wrapper } = setup();
-    const clickedPageOffset = 3;
+    const clickedPageOffset = "3";
 
     wrapper.find("PaginationNavigation").simulate("click", clickedPageOffset);
 
@@ -305,6 +313,122 @@ describe("Employer dashboard", () => {
       expect(
         wrapper.find("[data-test='verification-instructions-row'] Trans").dive()
       ).toMatchSnapshot();
+    });
+  });
+
+  it("renders organizations filter when there are multiple verified organizations", () => {
+    process.env.featureFlags = { employerShowDashboardEmployerFilter: true };
+
+    const { wrapper: wrapperWithOneVerifiedOrg } = setup([], {
+      user_leave_administrators: [
+        createUserLeaveAdministrator({
+          verified: false,
+        }),
+        createUserLeaveAdministrator({
+          verified: true,
+        }),
+      ],
+    });
+
+    const { wrapper: wrapperWithMultipleVerifiedOrgs } = setup([], {
+      user_leave_administrators: [
+        createUserLeaveAdministrator({
+          has_fineos_registration: false, // this should employer still show in the list
+          verified: true,
+        }),
+        createUserLeaveAdministrator({
+          has_fineos_registration: true,
+          verified: true,
+        }),
+      ],
+    });
+
+    const getEmployerFilterDropdown = (wrapper) =>
+      wrapper.find("Filters").dive().find("Dropdown[name='employer_id']");
+
+    expect(getEmployerFilterDropdown(wrapperWithOneVerifiedOrg).exists()).toBe(
+      false
+    );
+    expect(
+      getEmployerFilterDropdown(wrapperWithMultipleVerifiedOrgs).exists()
+    ).toBe(true);
+  });
+
+  it("updates filter + pagination query params when user selects an Employer filter", () => {
+    process.env.featureFlags = { employerShowDashboardEmployerFilter: true };
+
+    const user_leave_administrators = [
+      createUserLeaveAdministrator({
+        verified: true,
+      }),
+      createUserLeaveAdministrator({
+        verified: true,
+      }),
+    ];
+
+    const { goToSpy, wrapper } = setup(
+      [],
+      {
+        user_leave_administrators,
+      },
+      {
+        page_offset: 2,
+      }
+    );
+
+    wrapper
+      .find("Filters")
+      .dive()
+      .find("Dropdown[name='employer_id']")
+      .simulate("change", {
+        target: {
+          name: "employer_id",
+          value: user_leave_administrators[0].employer_id,
+        },
+      });
+
+    expect(goToSpy).toHaveBeenCalledWith("/employers/dashboard", {
+      employer_id: user_leave_administrators[0].employer_id,
+      page_offset: "1",
+    });
+  });
+
+  it("updates pagination query params when user selects the 'All organizations' Employer filter", () => {
+    process.env.featureFlags = { employerShowDashboardEmployerFilter: true };
+
+    const user_leave_administrators = [
+      createUserLeaveAdministrator({
+        verified: true,
+      }),
+      createUserLeaveAdministrator({
+        verified: true,
+      }),
+    ];
+
+    const { goToSpy, wrapper } = setup(
+      [],
+      {
+        user_leave_administrators,
+      },
+      {
+        page_offset: 2,
+      }
+    );
+
+    const dropdown = wrapper
+      .find("Filters")
+      .dive()
+      .find("Dropdown[name='employer_id']");
+
+    dropdown.simulate("change", {
+      target: {
+        name: "employer_id",
+        value: dropdown.prop("choices")[0].value, // All orgs = first option
+      },
+    });
+
+    expect(goToSpy).toHaveBeenCalledWith("/employers/dashboard", {
+      page_offset: "1",
     });
   });
 });

@@ -10,7 +10,12 @@ import routes from "src/routes";
 import { times } from "lodash";
 
 function createUserLeaveAdministrator(attrs = {}) {
-  return new UserLeaveAdministrator(attrs);
+  return new UserLeaveAdministrator({
+    employer_id: faker.datatype.uuid(),
+    employer_dba: faker.company.companyName(),
+    employer_fein: `${faker.finance.account(2)}-${faker.finance.account(7)}`,
+    ...attrs,
+  });
 }
 
 const verificationScenarios = {
@@ -18,13 +23,11 @@ const verificationScenarios = {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
-          employer_fein: "65-3746025",
           has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
         createUserLeaveAdministrator({
-          employer_fein: "82-9471234",
           has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
@@ -36,7 +39,6 @@ const verificationScenarios = {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
-          employer_fein: "82-9471234",
           has_fineos_registration: false,
           has_verification_data: true,
           verified: true,
@@ -68,13 +70,11 @@ const verificationScenarios = {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
-          employer_fein: "65-3746025",
           has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
         createUserLeaveAdministrator({
-          employer_fein: "82-9471234",
           has_fineos_registration: true,
           has_verification_data: true,
           verified: false,
@@ -86,13 +86,11 @@ const verificationScenarios = {
     user: new User({
       user_leave_administrators: [
         createUserLeaveAdministrator({
-          employer_fein: "65-3746025",
           has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
         createUserLeaveAdministrator({
-          employer_fein: "82-9471234",
           has_fineos_registration: true,
           has_verification_data: false,
           verified: false,
@@ -131,7 +129,6 @@ export default {
 
 export const Default = (args) => {
   const { user } = verificationScenarios[args.verification];
-  const hasMultipleEmployers = user.user_leave_administrators.length > 1;
   const hasNoClaims = args.claims === "No claims";
 
   const claims =
@@ -155,14 +152,11 @@ export const Default = (args) => {
                 first_name: faker.name.firstName(),
                 last_name: faker.name.lastName(),
               }),
-              employer: new ClaimEmployer({
-                employer_dba: hasMultipleEmployers
-                  ? faker.company.companyName()
-                  : "Dunder-Mifflin",
-                employer_fein: hasMultipleEmployers
-                  ? faker.helpers.randomize(["65-3746025", "82-9471234"])
-                  : "82-9471234",
-              }),
+              employer: new ClaimEmployer(
+                faker.helpers.randomize(
+                  user.user_leave_administrators.filter((la) => la.verified)
+                )
+              ),
             })
         );
 

@@ -2,6 +2,7 @@ import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
 import ClaimCollection from "../../models/ClaimCollection";
 import Details from "../../components/Details";
+import Dropdown from "../../components/Dropdown";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
@@ -49,11 +50,44 @@ export const Dashboard = (props) => {
     .filter(([columnKey, isVisible]) => isVisible)
     .map(([columnKey, isVisible]) => columnKey);
 
-  const handlePaginationNavigationClick = (pageOffset) => {
-    appLogic.portalFlow.goTo(appLogic.portalFlow.pathname, {
-      // Update the query param, which triggers a fetch of the new page
-      page_offset: pageOffset,
+  /**
+   * Update the page's query string, to load a different page number,
+   * or change the filter/sort of the loaded claims. The name/value
+   * are merged with the existing query string.
+   * @param {Array<{ name: string, value: number|string }>} paramsToUpdate
+   */
+  const updateClaimsRequestParams = (paramsToUpdate) => {
+    const params = new URLSearchParams(window.location.search);
+
+    paramsToUpdate.forEach(({ name, value }) => {
+      if (!value) {
+        params.delete(name);
+      } else {
+        params.set(name, value);
+      }
     });
+
+    const paramsObj = {};
+    for (const [paramKey, paramValue] of params.entries()) {
+      paramsObj[paramKey] = paramValue;
+    }
+
+    // Our withClaims component watches the query string and
+    // will trigger an API request when it changes.
+    appLogic.portalFlow.goTo(appLogic.portalFlow.pathname, paramsObj);
+  };
+
+  /**
+   * Event handler for when a next/prev pagination button is clicked
+   * @param {number|string} pageOffset - Page number to load
+   */
+  const handlePaginationNavigationClick = (pageOffset) => {
+    updateClaimsRequestParams([
+      {
+        name: "page_offset",
+        value: pageOffset,
+      },
+    ]);
   };
 
   return (
@@ -104,6 +138,15 @@ export const Dashboard = (props) => {
           </ul>
         </Details>
       </section>
+
+      {isFeatureEnabled("employerShowDashboardEmployerFilter") && (
+        <Filters
+          activeFilters={props.activeFilters}
+          updateClaimsRequestParams={updateClaimsRequestParams}
+          user={user}
+        />
+      )}
+
       {paginationMeta.total_records > 0 && (
         <PaginationSummary
           pageOffset={paginationMeta.page_offset}
@@ -165,6 +208,9 @@ export const Dashboard = (props) => {
 };
 
 Dashboard.propTypes = {
+  activeFilters: PropTypes.shape({
+    employer_id: PropTypes.string,
+  }).isRequired,
   appLogic: PropTypes.shape({
     portalFlow: PropTypes.shape({
       getNextPageRoute: PropTypes.func.isRequired,
@@ -265,12 +311,19 @@ const ClaimTableRows = (props) => {
   ));
 };
 
+ClaimTableRows.propTypes = {
+  appLogic: Dashboard.propTypes.appLogic,
+  claims: Dashboard.propTypes.claims,
+  tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
+};
+
 const DashboardInfoAlert = (props) => {
   const { user } = props;
   const { t } = useTranslation();
 
   const getCommaDelimitedEmployerEINs = () => {
-    const employers = user.getVerifiedEmployersNotRegisteredInFineos();
+    const employers = user.verifiedEmployersNotRegisteredInFineos;
     return employers.map((employer) => employer.employer_fein).join(", ");
   };
 
@@ -333,10 +386,55 @@ DashboardInfoAlert.propTypes = {
   user: PropTypes.instanceOf(User).isRequired,
 };
 
-ClaimTableRows.propTypes = {
-  appLogic: Dashboard.propTypes.appLogic,
-  claims: Dashboard.propTypes.claims,
-  tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
+const Filters = (props) => {
+  const { activeFilters, updateClaimsRequestParams, user } = props;
+  const { t } = useTranslation();
+
+  const handleChange = (evt) => {
+    updateClaimsRequestParams([
+      {
+        name: evt.target.name,
+        value: evt.target.value,
+      },
+      {
+        // Reset the page to 1 since filters affect what shows on the first page
+        name: "page_offset",
+        value: "1",
+      },
+    ]);
+  };
+
+  return (
+    <React.Fragment>
+      {user.verifiedEmployers.length > 1 && (
+        <Dropdown
+          hideEmptyChoice
+          choices={[
+            {
+              label: t("pages.employersDashboard.filterOrgsShowAllChoice"),
+              value: "",
+            },
+            ...user.verifiedEmployers.map((employer) => ({
+              label: `${employer.employer_dba} (${employer.employer_fein})`,
+              value: employer.employer_id,
+            })),
+          ]}
+          label={t("pages.employersDashboard.filterOrgsLabel")}
+          smallLabel
+          name="employer_id"
+          onChange={handleChange}
+          value={get(activeFilters, "employer_id", "")}
+        />
+      )}
+    </React.Fragment>
+  );
+};
+
+Filters.propTypes = {
+  activeFilters: PropTypes.shape({
+    employer_id: PropTypes.string,
+  }).isRequired,
+  updateClaimsRequestParams: PropTypes.func.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
 
