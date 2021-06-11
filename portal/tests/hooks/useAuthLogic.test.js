@@ -27,7 +27,6 @@ describe("useAuthLogic", () => {
     requireLogin,
     resendForgotPasswordCode,
     resendVerifyAccountCode,
-    resetEmployerPasswordAndCreateEmployerApiAccount,
     resetPassword,
     setAppErrors,
     username,
@@ -54,7 +53,6 @@ describe("useAuthLogic", () => {
         requireLogin,
         resendVerifyAccountCode,
         resendForgotPasswordCode,
-        resetEmployerPasswordAndCreateEmployerApiAccount,
         resetPassword,
         verifyAccount,
       } = useAuthLogic({
@@ -891,8 +889,7 @@ describe("useAuthLogic", () => {
       expect(Auth.forgotPasswordSubmit).toHaveBeenCalledWith(
         username,
         verificationCode,
-        password,
-        {}
+        password
       );
     });
 
@@ -1112,74 +1109,6 @@ describe("useAuthLogic", () => {
       act(() => {
         setAppErrors([{ message: "Pre-existing error" }]);
         resetPassword(username, verificationCode, password);
-      });
-      expect(appErrors.items).toHaveLength(0);
-    });
-  });
-
-  describe("resetEmployerPasswordAndCreateEmployerApiAccount", () => {
-    it("requires all fields to not be empty and tracks the errors", () => {
-      act(() => {
-        resetEmployerPasswordAndCreateEmployerApiAccount();
-      });
-
-      expect(appErrors.items).toHaveLength(4);
-      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
-          "Enter the 6 digit code sent to your email",
-          "Enter your email address",
-          "Enter your password",
-          "Enter your 9-digit Employer Identification Number.",
-        ]
-      `);
-
-      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
-        issueField: "code",
-        issueType: "required",
-      });
-      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
-        issueField: "username",
-        issueType: "required",
-      });
-      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
-        issueField: "password",
-        issueType: "required",
-      });
-      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
-        issueField: "ein",
-        issueType: "required",
-      });
-
-      expect(Auth.forgotPasswordSubmit).not.toHaveBeenCalled();
-    });
-
-    it("calls Auth.forgotPasswordSubmit with EIN", () => {
-      act(() => {
-        resetEmployerPasswordAndCreateEmployerApiAccount(
-          username,
-          verificationCode,
-          password,
-          "123456789"
-        );
-      });
-
-      expect(Auth.forgotPasswordSubmit).toHaveBeenCalledWith(
-        username,
-        verificationCode,
-        password,
-        { ein: "123456789" }
-      );
-    });
-
-    it("clears existing errors", () => {
-      act(() => {
-        setAppErrors([{ message: "Pre-existing error" }]);
-        resetEmployerPasswordAndCreateEmployerApiAccount(
-          username,
-          verificationCode,
-          password,
-          "123456789"
-        );
       });
       expect(appErrors.items).toHaveLength(0);
     });

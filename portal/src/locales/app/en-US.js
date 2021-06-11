@@ -529,11 +529,6 @@ const errors = {
         "Enter the 6 digit code sent to your email and ensure it does not include any punctuation.",
       required: "Enter the 6 digit code sent to your email",
     },
-    // TODO (CP-1768) Remove these auth.ein strings once requests flow through API
-    ein: {
-      invalid: "Invalid employer ID number. Please try again.",
-      required: "Enter your 9-digit Employer Identification Number.",
-    },
     expiredVerificationCode:
       "Invalid verification code. Please request a new code.",
     incorrectEmailOrPassword: "Incorrect email or password",
@@ -541,10 +536,6 @@ const errors = {
     invalidParametersIncludingMaybePassword:
       "Check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",
     invalidPhoneFormat: "Invalid phone number",
-    isEmployer: {
-      required:
-        "Select Yes if you are you creating an employer account to manage leave for your company.",
-    },
     password: {
       insecure: "$t(shared.auth.passwordError_insecure)",
       invalid: "$t(shared.auth.passwordError_invalid)",
@@ -922,23 +913,15 @@ const pages = {
     codeResent:
       "We sent a new 6 digit verification code to your email address. Enter the new code to reset your password.",
     codeResentHeading: "New verification code sent",
-    einLabel: "Employer ID number (EIN)",
-    employerAccountLabel:
-      "Are you creating an employer account to manage leave for your company?",
-    employerChoiceNo: "$t(shared.choiceNo)",
-    employerChoiceYes: "$t(shared.choiceYes)",
     lead:
       "If an account exists for the email you provide, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
     lead_email:
       "If an account exists for {{emailAddress}}, we emailed a 6 digit verification code to it. Enter the code below to confirm your email and reset your password.",
-    lead_userNotFound:
-      "Our system timed out, so we need you to verify your account again. Enter your email address to receive a new verification code. Then create a new password.",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "New password",
     resendCodeLink: "$t(shared.resendVerificationCodeLink)",
     submitButton: "Set new password",
     title: "Create a new password",
-    title_userNotFound: "Verify your account",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authVerifyAccount: {

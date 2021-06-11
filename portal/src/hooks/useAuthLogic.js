@@ -316,60 +316,21 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   };
 
   /**
-   * Use the post-confirmation hook workaround to create an API user for
-   * Employers through the Cognito Reset Password flow.
-   * @param {string} username - Email address that is used as the username
-   * @param {string} code - verification code
-   * @param {string} password - new password
-   * @param {string} ein Employer id number (if signing up through Employer Portal)
-   */
-  const resetEmployerPasswordAndCreateEmployerApiAccount = async (
-    username = "",
-    code = "",
-    password = "",
-    ein = ""
-  ) => {
-    appErrorsLogic.clearErrors();
-
-    username = trim(username);
-    code = trim(code);
-    ein = trim(ein);
-
-    const validationIssues = combineValidationIssues(
-      validateCode(code),
-      validateUsername(username),
-      validatePassword(password),
-      validateEin(ein)
-    );
-
-    if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
-      return;
-    }
-
-    await resetPasswordInCognito(username, code, password, ein);
-  };
-
-  /**
    * Use a verification code to confirm the user is who they say they are
    * and allow them to reset their password
    * @param {string} username - Email address that is used as the username
    * @param {string} code - verification code
    * @param {string} password - new password
-   * @param {string} [ein] Employer id number (if signing up through Employer Portal)
    * @private
    */
   const resetPasswordInCognito = async (
     username = "",
     code = "",
-    password = "",
-    ein
+    password = ""
   ) => {
     try {
-      const clientMetadata = ein ? { ein } : {};
-
       trackAuthRequest("forgotPasswordSubmit");
-      await Auth.forgotPasswordSubmit(username, code, password, clientMetadata);
+      await Auth.forgotPasswordSubmit(username, code, password);
 
       portalFlow.goToPageFor("SET_NEW_PASSWORD");
     } catch (error) {
@@ -454,7 +415,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     isLoggedIn,
     requireLogin,
     resendVerifyAccountCode,
-    resetEmployerPasswordAndCreateEmployerApiAccount,
     resetPassword,
     resendForgotPasswordCode,
     verifyAccount,
@@ -494,15 +454,6 @@ function validatePassword(password) {
   if (!password) {
     return {
       field: "password",
-      type: "required",
-    };
-  }
-}
-
-function validateEin(ein) {
-  if (!ein) {
-    return {
-      field: "ein",
       type: "required",
     };
   }

@@ -20,7 +20,6 @@ export default jest.fn(() => ({
     requireLogin: jest.fn(),
     resendForgotPasswordCode: jest.fn(),
     resendVerifyAccountCode: jest.fn(),
-    resetEmployerPasswordAndCreateEmployerApiAccount: jest.fn(),
     resetPassword: jest.fn(),
     verifyAccount: jest.fn(),
   },
