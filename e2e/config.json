@@ -87,6 +87,20 @@
     "HAS_FINEOS_SP": "true",
     "FINEOS_HAS_UPDATED_EFORMS": "true"
   },
+  "breakfix": {
+    "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov/",
+    "API_BASEURL": "https://paidleave-api-uat.mass.gov/api/v1",
+    "FINEOS_BASEURL": "https://pfx-claims-webapp.masspfml.fineos.com/",
+    "PORTAL_USERNAME": "joe+pfml+default@lastcallmedia.com",
+    "FINEOS_USERNAME": "OASIS",
+    "COGNITO_POOL": "us-east-1_Bi6tPV5hz",
+    "COGNITO_CLIENTID": "606qc6fmb1sn3pcujrav20h66l",
+    "TESTMAIL_NAMESPACE": "gqzap",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-06-04.json",
+    "EMPLOYERS_FILE": "./employers/e2e-2021-06-04.json",
+    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
+    "HAS_FINEOS_SP": "true"
+  },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
     "COGNITO_POOL": "us-east-1_HpL4XslLg",

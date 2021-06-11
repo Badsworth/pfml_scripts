@@ -64,7 +64,7 @@ export function before(): void {
     /(ajax\/pagerender\.jsp|sharedpages\/ajax\/listviewpagerender\.jsp|AJAXRequestHandler\.do)/
   ).as("ajaxRender");
 
-  if (config("ENVIRONMENT") === "uat") {
+  if (config("ENVIRONMENT") === "uat" && config("ENVIRONMENT") === "breakfix") {
     SSO();
   }
 }
