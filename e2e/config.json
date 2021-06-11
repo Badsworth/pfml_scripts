@@ -89,7 +89,7 @@
   },
   "breakfix": {
     "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov/",
-    "API_BASEURL": "https://paidleave-api-uat.mass.gov/api/v1",
+    "API_BASEURL": "https://paidleave-api-breakfix.eol.mass.gov/api/v1",
     "FINEOS_BASEURL": "https://pfx-claims-webapp.masspfml.fineos.com/",
     "PORTAL_USERNAME": "joe+pfml+default@lastcallmedia.com",
     "FINEOS_USERNAME": "OASIS",
