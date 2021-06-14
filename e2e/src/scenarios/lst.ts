@@ -1,5 +1,6 @@
 import { ScenarioSpecification } from "../generation/Scenario";
 import * as CypressScenarios from "./cypress";
+import { getCaringLeaveStartEndDates } from "../util/claims";
 
 /**
  * Load & Stress Testing Scenarios.
@@ -19,15 +20,20 @@ export const LSTBHAP1: ScenarioSpecification = {
   },
 };
 
-// Portal claim submission with ineligible employee
-export const LSTBHAP4: ScenarioSpecification = {
-  ...CypressScenarios.BHAP1INEL,
+export const LSTCHAP1: ScenarioSpecification = {
+  employee: {
+    wages: "eligible",
+    mass_id: true,
+  },
   claim: {
-    ...CypressScenarios.BHAP1INEL.claim,
-    label: "PortalClaimSubmit",
+    label: "CCAP90",
+    reason: "Care for a Family Member",
+    work_pattern_spec: "0,720,0,720,0,720,0",
+    docs: { MASSID: {}, CARING: {} },
+    leave_dates: getCaringLeaveStartEndDates(),
     employerResponse: {
       hours_worked_per_week: 40,
-      employer_decision: "Deny",
+      employer_decision: "Approve",
     },
   },
 };

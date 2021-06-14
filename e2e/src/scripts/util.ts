@@ -19,7 +19,7 @@ export type PostSubmitCallback = (
  * Submit a batch of claims to the system.
  *
  * The submission process uses async iterables to iterate through the claims to be sent, and send them off to the API.
- * This process will likely be parallelized in the future, so every step in the pipeline should be capable of operating
+ * This process is parallelized, so every step in the pipeline should be capable of operating
  * in parallel (ie: avoiding side effects)
  *
  * @param claims An AsyncInterable containing the claims to be submitted.

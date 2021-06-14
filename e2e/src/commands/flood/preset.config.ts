@@ -42,7 +42,7 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "Base Preset - Portal Claims Normal Traffic",
         project: "PFML",
-        threads: 6,
+        threads: 8,
         duration: seconds(30),
       },
       data: {
@@ -56,7 +56,7 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlus Preset - Portal Claims Normal Traffic",
         project: "PFML",
-        threads: 6,
+        threads: 8,
         duration: seconds(15),
       },
       data: {
@@ -83,7 +83,7 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - Portal Claims Normal Traffic",
         project: "PFML",
-        threads: 6,
+        threads: 8,
         duration: seconds(60),
       },
       data: {
@@ -111,7 +111,7 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - Portal Claims 1st Spike",
         project: "PFML",
-        threads: 20,
+        threads: 24,
         duration: seconds(15),
       },
       data: {
@@ -124,7 +124,7 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - Portal Claims 2nd Spike",
         project: "PFML",
-        threads: 30,
+        threads: 36,
         duration: seconds(15),
       },
       data: {
