@@ -2016,7 +2016,7 @@ const pages = {
   employersClaimsReview: {
     employerIdentifierLabel: "Employer ID number (EIN)",
     instructionsAmendment:
-      "Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end.",
+      "Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end. Changes are not saved until you submit your review.",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
     organizationNameLabel: "Organization",
     submitButton: "Submit",
