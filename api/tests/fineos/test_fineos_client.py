@@ -5,6 +5,7 @@
 import datetime
 import json
 import pathlib
+import re
 import time
 import xml.etree.ElementTree
 from unittest import mock
@@ -617,6 +618,21 @@ def test_get_absence_period_decisions_with_error(caplog, httpserver, fineos_clie
     with pytest.raises(FINEOSClientError):
         fineos_client.get_absence_period_decisions("FINEOS_WEB_ID", "NTN-251-ABS-01")
     assert "FINEOS Client Exception: get_absence_period_decisions" in caplog.text
+
+
+def test_get_fineos_error_method_name(httpserver, fineos_client):
+    httpserver.expect_ordered_request(
+        "/groupclientapi/customers/123456789/customer-info",
+        method="GET",
+        headers={"userid": "FINEOS_WEB_ID", "Content-Type": "application/json"},
+    ).respond_with_data(
+        '{"message": "read_customer_details_error"}', status=400, content_type="application/json"
+    )
+    # capture exception and double check message
+    with pytest.raises(
+        Exception, match=re.escape("(get_customer_info) FINEOSFatalResponseError: 500")
+    ):
+        fineos_client.get_customer_info("FINEOS_WEB_ID", "123456789")
 
 
 def test_get_fineos_correlation_id_with_non_json():

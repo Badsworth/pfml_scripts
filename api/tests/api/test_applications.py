@@ -3100,10 +3100,15 @@ def create_mock_client(err: FINEOSClientError):
             500,
             None,
             FINEOSFatalResponseError(
-                "<ErrorDetails><faultcode>com.fineos.common.exceptions.WSException</faultcode><faultstring>More than One Employee Details Found for the input Search Criteria.</faultstring><detail></detail></ErrorDetails>"
+                method_name="test_name",
+                message="<ErrorDetails><faultcode>com.fineos.common.exceptions.WSException</faultcode><faultstring>More than One Employee Details Found for the input Search Criteria.</faultstring><detail></detail></ErrorDetails>",
             ),
         ),
-        (503, IssueType.fineos_case_error, FINEOSFatalUnavailable(response_status=504)),
+        (
+            503,
+            IssueType.fineos_case_error,
+            FINEOSFatalUnavailable(response_status=504, method_name="test_name"),
+        ),
     ],
 )
 def test_application_post_submit_fineos_register_api_errors(
