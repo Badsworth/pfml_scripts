@@ -73,18 +73,18 @@ export async function withFineosBrowser<T extends unknown>(
       );
       await delay(100000);
     }
-    if (screenshots) {
-      const filename = path.join(screenshots, `${uuid()}.jpg`);
-      try {
-        await page.screenshot({
-          fullPage: true,
-          path: filename,
-        });
-        console.log(`Saving screenshot of error to ${filename}`);
-      } catch (e) {
-        console.error("An err was caught during screenshot capture");
-      }
-    }
+//    if (screenshots) {
+//      const filename = path.join(screenshots, `${uuid()}.jpg`);
+//      try {
+//        await page.screenshot({
+//          fullPage: true,
+//          path: filename,
+//        });
+//        console.log(`Saving screenshot of error to ${filename}`);
+//      } catch (e) {
+//        console.error("An err was caught during screenshot capture");
+//      }
+//    }
     throw e;
   } finally {
     await browser.close();
