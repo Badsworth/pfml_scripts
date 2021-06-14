@@ -25,7 +25,10 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministrator
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
-from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EmployerClaimReviewEFormBuilder
+from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
+    EmployerClaimReviewEFormBuilder,
+    EmployerClaimReviewV1EFormBuilder,
+)
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import sanitize_fein
@@ -205,9 +208,14 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
         complete_claim_review(fineos_web_id, fineos_absence_id)
         logger.info("Completed claim review", extra=log_attributes)
     else:
-        transformed_eform = EmployerClaimReviewEFormBuilder.build(claim_review)
-        create_eform(fineos_web_id, fineos_absence_id, transformed_eform)
-        logger.info("Created eform", extra=log_attributes)
+        if claim_review.uses_second_eform_version:
+            transformed_eform = EmployerClaimReviewEFormBuilder.build(claim_review)
+            create_eform(fineos_web_id, fineos_absence_id, transformed_eform)
+            logger.info("Created v2 eform", extra=log_attributes)
+        else:
+            transformed_eform = EmployerClaimReviewV1EFormBuilder.build(claim_review)
+            create_eform(fineos_web_id, fineos_absence_id, transformed_eform)
+            logger.info("Created eform", extra=log_attributes)
 
     logger.info("Updated claim", extra=log_attributes)
 

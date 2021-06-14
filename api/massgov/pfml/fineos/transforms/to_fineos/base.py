@@ -27,9 +27,6 @@ class EFormAttributeBuilder:
     }
     """
 
-    # Static attribute values that should be added to each eform entry
-    STATIC_ATTRIBUTES: List[Dict[str, Any]] = []
-
     # Static attribute value that should be added for all entries except the last. It won't be added
     # for the final entry in an eform.
     JOINING_ATTRIBUTE: Dict[str, Any] = {}
@@ -70,14 +67,9 @@ class EFormAttributeBuilder:
             attribute = self.to_attribute(value, definition, count, suffix)
             attributes.append(attribute)
 
-        for definition in self.STATIC_ATTRIBUTES:
-            value = definition["instanceValue"]
-            attribute = self.to_attribute(value, definition, count, suffix)
-            attributes.append(attribute)
-
-        """For eForms with multiple entries FINEOS only displays multiple entries after answering
-        yes to a question about additional objects, ex: 'Will the employee receive any other wage replacement?'
-        Here we add any such attributes unless it's the last entry.
+        """The employer v1 eform handles joining attributes differently than other eforms. This logic
+        can be removed when the employer v1 eform is deprecated.
+        https://lwd.atlassian.net/browse/EMPLOYER-1439
         """
         if not is_last and len(self.JOINING_ATTRIBUTE.items()) > 0:
             definition = self.JOINING_ATTRIBUTE

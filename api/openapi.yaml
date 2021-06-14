@@ -1540,11 +1540,18 @@ components:
     EmployerClaimRequestBody:
       type: object
       properties:
+        uses_second_eform_version:
+          type: boolean
         employer_benefits:
           type: array
           items:
             $ref: "#/components/schemas/EmployerBenefit"
           maxItems: 10
+        concurrent_leaves:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConcurrentLeave"
+          maxItems: 1
         previous_leaves:
           type: array
           items:

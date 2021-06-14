@@ -13,7 +13,12 @@ from massgov.pfml.fineos.transforms.to_fineos.base import (
     EFormBody,
     EFormBuilder,
 )
-from massgov.pfml.fineos.transforms.to_fineos.eforms.common import IntermediaryEmployerBenefit
+from massgov.pfml.fineos.transforms.to_fineos.eforms.common import (
+    IntermediaryConcurrentLeave,
+    IntermediaryEmployerBenefit,
+    IntermediaryOtherIncome,
+    IntermediaryPreviousLeave,
+)
 
 
 class EmployerBenefitAttributeBuilder(EFormAttributeBuilder):
@@ -38,16 +43,12 @@ class EmployerBenefitAttributeBuilder(EFormAttributeBuilder):
             "domainName": "WageReplacementType",
             "enumOverride": FineosEmployerBenefitEnum,
         },
-    }
-
-    STATIC_ATTRIBUTES = [
-        {
+        "receive_wage_replacement": {
             "name": "V2ReceiveWageReplacement",
             "type": "enumValue",
             "domainName": "PleaseSelectYesNo",
-            "instanceValue": "Yes",
         },
-    ]
+    }
 
     def __init__(self, target):
         intermediary_target = IntermediaryEmployerBenefit(target)
@@ -77,18 +78,18 @@ class OtherIncomeAttributeBuilder(EFormAttributeBuilder):
             "domainName": "WageReplacementType2",
             "enumOverride": FineosOtherIncomeEnum,
         },
-    }
-
-    STATIC_ATTRIBUTES = [
-        {
+        "receive_wage_replacement": {
             "name": "V2ReceiveWageReplacement",
             "type": "enumValue",
             "domainName": "YesNoI'veApplied",
-            "instanceValue": "Yes",
             # The suffixes here are nonstandard -- they should start with index 7
             "suffixOverride": lambda index: index + 7,
         },
-    ]
+    }
+
+    def __init__(self, target):
+        intermediary_target = IntermediaryOtherIncome(target)
+        super().__init__(intermediary_target)
 
 
 class OtherIncomesEFormBuilder(EFormBuilder):
@@ -115,13 +116,6 @@ class OtherIncomesEFormBuilder(EFormBuilder):
         return EFormBody("Other Income - current version", attributes)
 
 
-class IntermediaryConcurrentLeave:
-    def __init__(self, leave: ConcurrentLeave):
-        self.leave_start_date = leave.leave_start_date
-        self.leave_end_date = leave.leave_end_date
-        self.is_for_current_employer = "Yes" if leave.is_for_current_employer else "No"
-
-
 class ConcurrentLeaveAttributeBuilder(EFormAttributeBuilder):
     ATTRIBUTE_MAP = {
         "leave_start_date": {"name": "V2AccruedStartDate", "type": "dateValue"},
@@ -131,41 +125,16 @@ class ConcurrentLeaveAttributeBuilder(EFormAttributeBuilder):
             "type": "enumValue",
             "domainName": "PleaseSelectYesNo",
         },
-    }
-
-    STATIC_ATTRIBUTES = [
-        {
+        "accrued_paid_leave": {
             "name": "V2AccruedPaidLeave",
             "type": "enumValue",
             "domainName": "PleaseSelectYesNo",
-            "instanceValue": "Yes",
-        }
-    ]
+        },
+    }
 
     def __init__(self, target):
         intermediary_target = IntermediaryConcurrentLeave(target)
         super().__init__(intermediary_target)
-
-
-class IntermediaryPreviousLeave:
-    def __init__(self, leave: PreviousLeave):
-        self.leave_start_date = leave.leave_start_date
-        self.leave_end_date = leave.leave_end_date
-        self.is_for_current_employer = "Yes" if leave.is_for_current_employer else "No"
-        self.is_for_same_reason = "Yes" if leave.type == "same_reason" else "No"
-        self.leave_reason = leave.leave_reason
-        if leave.worked_per_week_minutes:
-            self.worked_per_week_hours = int(leave.worked_per_week_minutes / 60)
-            self.worked_per_week_minutes = format(leave.worked_per_week_minutes % 60, "02d")
-        else:
-            self.worked_per_week_hours = 0
-            self.worked_per_week_minutes = "Please Select"
-        if leave.leave_minutes:
-            self.leave_hours = int(leave.leave_minutes / 60)
-            self.leave_minutes = format(leave.leave_minutes % 60, "02d")
-        else:
-            self.leave_hours = 0
-            self.leave_minutes = "Please Select"
 
 
 class PreviousLeaveAttributeBuilder(EFormAttributeBuilder):
@@ -199,16 +168,8 @@ class PreviousLeaveAttributeBuilder(EFormAttributeBuilder):
             "type": "enumValue",
             "domainName": "15MinuteIncrements",
         },
+        "applies": {"name": "V2Applies", "type": "enumValue", "domainName": "PleaseSelectYesNo",},
     }
-
-    STATIC_ATTRIBUTES = [
-        {
-            "name": "V2Applies",
-            "type": "enumValue",
-            "domainName": "PleaseSelectYesNo",
-            "instanceValue": "Yes",
-        }
-    ]
 
     def __init__(self, target):
         intermediary_target = IntermediaryPreviousLeave(target)
