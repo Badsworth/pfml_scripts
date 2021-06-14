@@ -837,6 +837,17 @@ class UserRole(Base):
     role = relationship(LkRole)
 
 
+class Worksite(Base):
+    __tablename__ = "worksite"
+    worksite_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    worksite_name = Column(Text)
+
+class Department(Base):
+    __tablename__ = "department"
+    department_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    department_worksite_id = Column(UUID(as_uuid=True), ForeignKey("worksite.worksite_id"), nullable=False)
+    department_name = Column(Text)
+
 class UserLeaveAdministrator(Base):
     __tablename__ = "link_user_leave_administrator"
     __table_args__ = (UniqueConstraint("user_id", "employer_id"),)
@@ -877,6 +888,15 @@ class UserLeaveAdministrator(Base):
     def verified(self) -> bool:
         return bool(self.verification_id)
 
+class UserLeaveAdminDepartment(Base):
+    __tablename__ = "link_user_leave_admin_department"
+    __table_args__ = (UniqueConstraint("department_id", "user_id", "employer_id"),)
+    leave_admin_department_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    department_id = Column(UUID(as_uuid=True), ForeignKey("department.department_id"), nullable=False)
+    user_leave_administrator_id = Column(UUID(as_uuid=True), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False)
+    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False)
+    
 
 class WagesAndContributions(Base):
     __tablename__ = "wages_and_contributions"

@@ -271,6 +271,8 @@ class Application(Base):
     __tablename__ = "application"
     application_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False, index=True)
+    worksite_id = Column(UUID(as_uuid=True), ForeignKey("worksite.worksite_id"), nullable=True)
+    department_id = Column(UUID(as_uuid=True), ForeignKey("department.department_id"), nullable=True)
     tax_identifier_id = Column(
         UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True
     )
