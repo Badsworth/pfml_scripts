@@ -163,12 +163,13 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
       if (user.hasAdminRole) {
         setIsLoggedIn(true);
-        portalFlow.goTo("/admin/users");
+        portalFlow.goToPageFor("LOG_IN");
       } else {
         await Auth.signOut();
-        portalFlow.goTo("/login");
+        portalFlow.goToPageFor("UNAUTHORIZED_USER");
       }
     } catch (error) {
+      console.error(error);
       if (error.code === "UserNotConfirmedException") {
         portalFlow.goToPageFor("UNCONFIRMED_ACCOUNT");
         return;
