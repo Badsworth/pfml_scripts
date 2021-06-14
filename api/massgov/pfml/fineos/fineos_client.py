@@ -791,6 +791,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 models.AdditionalData(name="EmploymentStatus", value=employment_status)
             )
 
+        additional_data_set.additional_data.append(
+            models.AdditionalData(name="workSiteId", value="1")
+        )
+        additional_data_set.additional_data.append(
+            models.AdditionalData(name="organizationUnitId", value="1")
+        )
+
         # Put the XML object together properly.
         service_data = models.OccupationDetailUpdateData()
         service_data.additional_data_set = additional_data_set
