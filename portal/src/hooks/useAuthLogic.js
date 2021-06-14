@@ -169,7 +169,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
         portalFlow.goToPageFor("UNAUTHORIZED_USER");
       }
     } catch (error) {
-      console.error(error);
       if (error.code === "UserNotConfirmedException") {
         portalFlow.goToPageFor("UNCONFIRMED_ACCOUNT");
         return;
