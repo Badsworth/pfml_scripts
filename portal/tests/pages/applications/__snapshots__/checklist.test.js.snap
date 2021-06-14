@@ -128,13 +128,31 @@ Array [
 
 exports[`Checklist renders description for Step 3`] = `
 Array [
-  <strong
-    key="strong-0"
+  <p
+    key="p-0"
   >
-    Are you taking medical leave for your own serious health condition?
-  </strong>,
+    If you’re not sure what kind of leave to apply for, 
+    <a
+      href="https://www.mass.gov/which-paid-leave"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      learn more about Paid Family and Medical Leave
+    </a>
+    .
+  </p>,
   <p
     key="p-1"
+  >
+    <strong
+      key="strong-0"
+    >
+      Are you taking medical leave for your own serious health condition?
+    </strong>
+  </p>,
+  <p
+    key="p-2"
   >
     You need to have a completed 
     <a
@@ -148,7 +166,7 @@ Array [
     . Use your health care provider’s answers on the certification form to fill out some parts of the application.
   </p>,
   <p
-    key="p-2"
+    key="p-3"
   >
     If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be easily added to your claim by calling our Contact Center at 
     <a
@@ -160,7 +178,7 @@ Array [
     .
   </p>,
   <p
-    key="p-3"
+    key="p-4"
   >
     <strong
       key="strong-0"
@@ -169,12 +187,12 @@ Array [
     </strong>
   </p>,
   <p
-    key="p-4"
+    key="p-5"
   >
     You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.
   </p>,
   <p
-    key="p-5"
+    key="p-6"
   >
     You also need to know when you want your leave to begin and end.
   </p>,
@@ -338,6 +356,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "ul": <ul
               className="usa-list"
             />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
+            />,
           }
         }
         i18nKey="pages.claimsChecklist.stepHTMLDescription"
@@ -381,6 +404,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "li": <li />,
             "ul": <ul
               className="usa-list"
+            />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
             />,
           }
         }
@@ -426,6 +454,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "ul": <ul
               className="usa-list"
             />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
+            />,
           }
         }
         i18nKey="pages.claimsChecklist.stepHTMLDescription"
@@ -469,6 +502,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "li": <li />,
             "ul": <ul
               className="usa-list"
+            />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
             />,
           }
         }
@@ -532,6 +570,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "ul": <ul
               className="usa-list"
             />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
+            />,
           }
         }
         i18nKey="pages.claimsChecklist.stepHTMLDescription"
@@ -594,6 +637,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "ul": <ul
               className="usa-list"
             />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
+            />,
           }
         }
         i18nKey="pages.claimsChecklist.stepHTMLDescription"
@@ -637,6 +685,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "li": <li />,
             "ul": <ul
               className="usa-list"
+            />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
             />,
           }
         }

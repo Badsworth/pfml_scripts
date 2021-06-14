@@ -92,6 +92,18 @@ exports[`GetReady renders get ready content 1`] = `
       />
       2. Get documentation that supports your leave request
     </Heading>
+    <Trans
+      components={
+        Object {
+          "which-paid-leave-link": <a
+            href="https://www.mass.gov/which-paid-leave"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="pages.getReady.stepTwoWhichPaidLeaveBody"
+    />
     <Heading
       level="3"
     >
@@ -246,6 +258,23 @@ exports[`GetReady renders get ready content 5`] = `
 <p
   key="p-0"
 >
+  If you’re not sure what kind of leave to apply for, 
+  <a
+    href="https://www.mass.gov/which-paid-leave"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    learn more about Paid Family and Medical Leave
+  </a>
+  .
+</p>
+`;
+
+exports[`GetReady renders get ready content 6`] = `
+<p
+  key="p-0"
+>
   Your health care provider must complete the 
   <a
     href="https://www.mass.gov/medical-leave-form"
@@ -257,7 +286,7 @@ exports[`GetReady renders get ready content 5`] = `
 </p>
 `;
 
-exports[`GetReady renders get ready content 6`] = `
+exports[`GetReady renders get ready content 7`] = `
 Array [
   <p
     key="p-0"
@@ -272,7 +301,7 @@ Array [
 ]
 `;
 
-exports[`GetReady renders get ready content 7`] = `
+exports[`GetReady renders get ready content 8`] = `
 Array [
   <p
     key="p-0"
