@@ -1,0 +1,829 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.8">
+    
+    
+      
+        <title>Portal - PFML</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ca7ac06f.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.f1a3b89f.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="PFML" class="md-header__button md-logo" aria-label="PFML" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PFML
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Portal
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/EOLWD/PFML/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    EOLWD/pfml
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="PFML" class="md-nav__button md-logo" aria-label="PFML" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    PFML
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/EOLWD/PFML/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    EOLWD/pfml
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        Massachusetts PFML (Portal and API)
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing.html" class="md-nav__link">
+        Contributing
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-environments.html" class="md-nav__link">
+        Setting up a new environment
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment.html" class="md-nav__link">
+        Deployment
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools.html" class="md-nav__link">
+        Tools
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      <label class="md-nav__link" for="__nav_6">
+        Api
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Api" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Api
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/db-roles-and-users.html" class="md-nav__link">
+        Database Users
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/environment-variables.html" class="md-nav__link">
+        Environment Variables
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/fields-and-validations.html" class="md-nav__link">
+        Fields and validations
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/monitoring.html" class="md-nav__link">
+        API Monitoring
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/ses.html" class="md-nav__link">
+        Ses
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/writing-tests.html" class="md-nav__link">
+        Writing Tests
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
+      
+      <label class="md-nav__link" for="__nav_7">
+        Portal
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Portal" data-md-level="1">
+        <label class="md-nav__title" for="__nav_7">
+          <span class="md-nav__icon md-icon"></span>
+          Portal
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/browser-support.html" class="md-nav__link">
+        Browser support
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/creating-environments.html" class="md-nav__link">
+        Setting up a new environment
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/development.html" class="md-nav__link">
+        Portal Development
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/environment-variables.html" class="md-nav__link">
+        Environment variables
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/error-handling.html" class="md-nav__link">
+        Error handling
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/feature-flags.html" class="md-nav__link">
+        Feature flags
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/internationalization.html" class="md-nav__link">
+        Internationalization
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/maintenance-pages.html" class="md-nav__link">
+        Maintenance pages
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/monitoring.html" class="md-nav__link">
+        Monitoring
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/naming-conventions.html" class="md-nav__link">
+        Naming conventions
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/software-architecture.html" class="md-nav__link">
+        Software Architecture
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/storybook.html" class="md-nav__link">
+        Storybook
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/tests.html" class="md-nav__link">
+        Tests
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/web-analytics.html" class="md-nav__link">
+        Web Analytics
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" checked>
+      
+      <label class="md-nav__link" for="__nav_8">
+        Releases
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Releases" data-md-level="1">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          Releases
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api.html" class="md-nav__link">
+        Api
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+      <a href="portal.html" class="md-nav__link md-nav__link--active">
+        Portal
+      </a>
+      
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/releases/portal.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                  <h1>Portal</h1>
+                
+                <table>
+<thead>
+<tr>
+<th>environment</th>
+<th>release</th>
+<th>deployments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test</td>
+<td><a href="https://github.com/EOLWD/pfml/commits/23349dc2b">23349dc2b</a> (<a href="https://github.com/EOLWD/pfml/compare/portal/v20.0-rc1...23349dc2b">28 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/portal/v20.0-rc1">portal/v20.0-rc1</a>)</td>
+<td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(test)">GitHub</a></td>
+</tr>
+<tr>
+<td>stage</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v19.1">portal/v19.1</a></td>
+<td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(stage)">GitHub</a></td>
+</tr>
+<tr>
+<td>prod</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v19.1">portal/v19.1</a></td>
+<td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(prod)">GitHub</a></td>
+</tr>
+<tr>
+<td>performance</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v20.0-rc1">portal/v20.0-rc1</a></td>
+<td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(performance)">GitHub</a></td>
+</tr>
+<tr>
+<td>training</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v18.0">portal/v18.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(training)">GitHub</a></td>
+</tr>
+<tr>
+<td>uat</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v20.0-rc1">portal/v20.0-rc1</a></td>
+<td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(uat)">GitHub</a></td>
+</tr>
+<tr>
+<td>breakfix</td>
+<td><a href="https://github.com/EOLWD/pfml/commits/9ec91f1cc">9ec91f1cc</a> (<a href="https://github.com/EOLWD/pfml/compare/portal/v15.0-rc1...9ec91f1cc">36 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/portal/v15.0-rc1">portal/v15.0-rc1</a>)</td>
+<td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(breakfix)">GitHub</a></td>
+</tr>
+<tr>
+<td>cps-preview</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v20.0-rc1">portal/v20.0-rc1</a></td>
+<td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(cps-preview)">GitHub</a></td>
+</tr>
+</tbody>
+</table>
+<p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/819036412/Portal+Release+Notes">Confluence</a>.</p>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (EMPLOYER-1416,EMPLOYER-1428,EMPLOYER-1341,CP-2275,CP-2275,CP-2190,CP-2267,CP-2281,CP-2153,CP-2292,CP-2288,CP-2264,CP-2133,EMPLOYER-1399,CP-2279,EMPLOYER-1046,EMPLOYER-1354,CP-2278,EMPLOYER-1362,CP-2102,CP-2227,CP-2268,CP-2136,EMPLOYER-1385,EMPLOYER-1381,EMPLOYER-1370,EMPLOYER-1372,CP-2215,CP-2217,CP-2171)">Jira List</a>):</p>
+<ul>
+<li>fix storybook (<a href="https://github.com/EOLWD/pfml/pull/4369">#4369</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1428">EMPLOYER-1428</a>: Remove broken or obsolete mass.gov links (<a href="https://github.com/EOLWD/pfml/pull/4471">#4471</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1416">EMPLOYER-1416</a>: link leave type to the related page in mass.gov (<a href="https://github.com/EOLWD/pfml/pull/4468">#4468</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1399">EMPLOYER-1399</a>: Leave Admins see welcome banner announcing caring leave (<a href="https://github.com/EOLWD/pfml/pull/4432">#4432</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1385">EMPLOYER-1385</a>: Fix inaccurate New Relic user attributes (<a href="https://github.com/EOLWD/pfml/pull/4379">#4379</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1381">EMPLOYER-1381</a>: Remove dashboard feature flag and obsolete code (<a href="https://github.com/EOLWD/pfml/pull/4402">#4402</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1372">EMPLOYER-1372</a>: content polish (<a href="https://github.com/EOLWD/pfml/pull/4394">#4394</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1370">EMPLOYER-1370</a>: fix the unclickable link (<a href="https://github.com/EOLWD/pfml/pull/4380">#4380</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1362">EMPLOYER-1362</a>: Hide back button when there's no browser history (<a href="https://github.com/EOLWD/pfml/pull/4366">#4366</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1354">EMPLOYER-1354</a>: Show alert when LA answers "IDK' for relationship (<a href="https://github.com/EOLWD/pfml/pull/4426">#4426</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1341">EMPLOYER-1341</a>: Add Organizations filter on dashboard behind feature flag (<a href="https://github.com/EOLWD/pfml/pull/4433">#4433</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1046">EMPLOYER-1046</a>: show error msg when text input succeeds 9999 character (<a href="https://github.com/EOLWD/pfml/pull/4428">#4428</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2292">CP-2292</a>: set maintenance window for 6/20 (<a href="https://github.com/EOLWD/pfml/pull/4447">#4447</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2288">CP-2288</a>: Require is_full_salary_continuous (<a href="https://github.com/EOLWD/pfml/pull/4441">#4441</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2281">CP-2281</a>: employer_notification_date validation message (<a href="https://github.com/EOLWD/pfml/pull/4431">#4431</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2279">CP-2279</a>: Add is_full_salary_continuous error message (<a href="https://github.com/EOLWD/pfml/pull/4427">#4427</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2278">CP-2278</a>: Add ability to toggle feature flags in Storybook (<a href="https://github.com/EOLWD/pfml/pull/4424">#4424</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2275">CP-2275</a>: Remove feature flagged direct-to-Cognito signup code (<a href="https://github.com/EOLWD/pfml/pull/4463">#4463</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2275">CP-2275</a>: Remove UserNotFound workaround on Password Reset page (<a href="https://github.com/EOLWD/pfml/pull/4464">#4464</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2268">CP-2268</a>: Update previous leave reason enum values (<a href="https://github.com/EOLWD/pfml/pull/4383">#4383</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2267">CP-2267</a>: Add family member dob validation error msg (<a href="https://github.com/EOLWD/pfml/pull/4429">#4429</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2264">CP-2264</a>: Remove "I’ve applied for another benefit that hasn’t been approved yet" option (<a href="https://github.com/EOLWD/pfml/pull/4443">#4443</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2227">CP-2227</a>: Setup maintenance page for 6/13/2021 (<a href="https://github.com/EOLWD/pfml/pull/4420">#4420</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2217">CP-2217</a>: Claimants know that they don't need to report caring leave taken before July 1, 2021 (<a href="https://github.com/EOLWD/pfml/pull/4373">#4373</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2215">CP-2215</a>: Content cleanup of medical leave and consent to data share language (<a href="https://github.com/EOLWD/pfml/pull/4403">#4403</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2190">CP-2190</a>: Stop using other leave DELETE endpoints (<a href="https://github.com/EOLWD/pfml/pull/4351">#4351</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2171">CP-2171</a>: Update previous-leaves-intro (<a href="https://github.com/EOLWD/pfml/pull/4350">#4350</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2153">CP-2153</a>: Add missing required field content strings (<a href="https://github.com/EOLWD/pfml/pull/4448">#4448</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2136">CP-2136</a>: Track users with existing, submitted applications who consent to data sharing. (<a href="https://github.com/EOLWD/pfml/pull/4409">#4409</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2133">CP-2133</a>: Integrate with other income v2 eform (<a href="https://github.com/EOLWD/pfml/pull/4362">#4362</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-2102">CP-2102</a>: Update CP review page with new sections (<a href="https://github.com/EOLWD/pfml/pull/4398">#4398</a>)</li>
+<li>Open caring leave link in new window (<a href="https://github.com/EOLWD/pfml/pull/4456">#4456</a>)</li>
+</ul>
+<details>
+<summary>Raw</summary>
+ <br>* fix storybook ([#4369](https://github.com/EOLWD/pfml/pull/4369))
+ <br>* [EMPLOYER-1428](https://lwd.atlassian.net/browse/EMPLOYER-1428): Remove broken or obsolete mass.gov links ([#4471](https://github.com/EOLWD/pfml/pull/4471))
+ <br>* [EMPLOYER-1416](https://lwd.atlassian.net/browse/EMPLOYER-1416): link leave type to the related page in mass.gov ([#4468](https://github.com/EOLWD/pfml/pull/4468))
+ <br>* [EMPLOYER-1399](https://lwd.atlassian.net/browse/EMPLOYER-1399): Leave Admins see welcome banner announcing caring leave ([#4432](https://github.com/EOLWD/pfml/pull/4432))
+ <br>* [EMPLOYER-1385](https://lwd.atlassian.net/browse/EMPLOYER-1385): Fix inaccurate New Relic user attributes ([#4379](https://github.com/EOLWD/pfml/pull/4379))
+ <br>* [EMPLOYER-1381](https://lwd.atlassian.net/browse/EMPLOYER-1381): Remove dashboard feature flag and obsolete code ([#4402](https://github.com/EOLWD/pfml/pull/4402))
+ <br>* [EMPLOYER-1372](https://lwd.atlassian.net/browse/EMPLOYER-1372): content polish ([#4394](https://github.com/EOLWD/pfml/pull/4394))
+ <br>* [EMPLOYER-1370](https://lwd.atlassian.net/browse/EMPLOYER-1370): fix the unclickable link ([#4380](https://github.com/EOLWD/pfml/pull/4380))
+ <br>* [EMPLOYER-1362](https://lwd.atlassian.net/browse/EMPLOYER-1362): Hide back button when there's no browser history ([#4366](https://github.com/EOLWD/pfml/pull/4366))
+ <br>* [EMPLOYER-1354](https://lwd.atlassian.net/browse/EMPLOYER-1354): Show alert when LA answers "IDK' for relationship ([#4426](https://github.com/EOLWD/pfml/pull/4426))
+ <br>* [EMPLOYER-1341](https://lwd.atlassian.net/browse/EMPLOYER-1341): Add Organizations filter on dashboard behind feature flag ([#4433](https://github.com/EOLWD/pfml/pull/4433))
+ <br>* [EMPLOYER-1046](https://lwd.atlassian.net/browse/EMPLOYER-1046): show error msg when text input succeeds 9999 character ([#4428](https://github.com/EOLWD/pfml/pull/4428))
+ <br>* [CP-2292](https://lwd.atlassian.net/browse/CP-2292): set maintenance window for 6/20 ([#4447](https://github.com/EOLWD/pfml/pull/4447))
+ <br>* [CP-2288](https://lwd.atlassian.net/browse/CP-2288): Require is_full_salary_continuous ([#4441](https://github.com/EOLWD/pfml/pull/4441))
+ <br>* [CP-2281](https://lwd.atlassian.net/browse/CP-2281): employer_notification_date validation message ([#4431](https://github.com/EOLWD/pfml/pull/4431))
+ <br>* [CP-2279](https://lwd.atlassian.net/browse/CP-2279): Add is_full_salary_continuous error message ([#4427](https://github.com/EOLWD/pfml/pull/4427))
+ <br>* [CP-2278](https://lwd.atlassian.net/browse/CP-2278): Add ability to toggle feature flags in Storybook ([#4424](https://github.com/EOLWD/pfml/pull/4424))
+ <br>* [CP-2275](https://lwd.atlassian.net/browse/CP-2275): Remove feature flagged direct-to-Cognito signup code ([#4463](https://github.com/EOLWD/pfml/pull/4463))
+ <br>* [CP-2275](https://lwd.atlassian.net/browse/CP-2275): Remove UserNotFound workaround on Password Reset page ([#4464](https://github.com/EOLWD/pfml/pull/4464))
+ <br>* [CP-2268](https://lwd.atlassian.net/browse/CP-2268): Update previous leave reason enum values ([#4383](https://github.com/EOLWD/pfml/pull/4383))
+ <br>* [CP-2267](https://lwd.atlassian.net/browse/CP-2267): Add family member dob validation error msg ([#4429](https://github.com/EOLWD/pfml/pull/4429))
+ <br>* [CP-2264](https://lwd.atlassian.net/browse/CP-2264): Remove "I’ve applied for another benefit that hasn’t been approved yet" option ([#4443](https://github.com/EOLWD/pfml/pull/4443))
+ <br>* [CP-2227](https://lwd.atlassian.net/browse/CP-2227): Setup maintenance page for 6/13/2021 ([#4420](https://github.com/EOLWD/pfml/pull/4420))
+ <br>* [CP-2217](https://lwd.atlassian.net/browse/CP-2217): Claimants know that they don't need to report caring leave taken before July 1, 2021 ([#4373](https://github.com/EOLWD/pfml/pull/4373))
+ <br>* [CP-2215](https://lwd.atlassian.net/browse/CP-2215): Content cleanup of medical leave and consent to data share language ([#4403](https://github.com/EOLWD/pfml/pull/4403))
+ <br>* [CP-2190](https://lwd.atlassian.net/browse/CP-2190): Stop using other leave DELETE endpoints ([#4351](https://github.com/EOLWD/pfml/pull/4351))
+ <br>* [CP-2171](https://lwd.atlassian.net/browse/CP-2171): Update previous-leaves-intro ([#4350](https://github.com/EOLWD/pfml/pull/4350))
+ <br>* [CP-2153](https://lwd.atlassian.net/browse/CP-2153): Add missing required field content strings ([#4448](https://github.com/EOLWD/pfml/pull/4448))
+ <br>* [CP-2136](https://lwd.atlassian.net/browse/CP-2136): Track users with existing, submitted applications who consent to data sharing. ([#4409](https://github.com/EOLWD/pfml/pull/4409))
+ <br>* [CP-2133](https://lwd.atlassian.net/browse/CP-2133): Integrate with other income v2 eform ([#4362](https://github.com/EOLWD/pfml/pull/4362))
+ <br>* [CP-2102](https://lwd.atlassian.net/browse/CP-2102): Update CP review page with new sections ([#4398](https://github.com/EOLWD/pfml/pull/4398))
+ <br>* Open caring leave link in new window ([#4456](https://github.com/EOLWD/pfml/pull/4456))
+</details>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="api.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Api" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Api
+            </div>
+          </div>
+        </a>
+      
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.b0710199.min.js", "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.76f349be.min.js"></script>
+      
+    
+  </body>
+</html>
