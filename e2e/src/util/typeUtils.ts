@@ -4,11 +4,15 @@
  */
 
 import {
+  RequiredKeys,
+  RequireNotNull,
+  ValidClaim,
   ValidConcurrentLeave,
   ValidEmployerBenefit,
   ValidOtherIncome,
   ValidPreviousLeave,
 } from "../types";
+import { DehydratedClaim } from "../generation/Claim";
 
 // GENERIC UTILS
 
@@ -52,7 +56,7 @@ export function assertIsTypedArray<T>(
   console.log(arr, check(arr));
   if (!Array.isArray(arr)) throw new Error(`${arr} is not Array`);
   if (arr.some((item) => !check(item)))
-    throw new Error(`Item ${JSON.stringify(arr)} is not of required type.`);
+    throw new TypeError(`Item ${JSON.stringify(arr)} is not of required type.`);
 }
 
 /**
@@ -60,7 +64,7 @@ export function assertIsTypedArray<T>(
  * @param map - uses an object so that it breaks if the type changes
  * @returns
  */
-export function isObjectType<T>(map: Record<keyof T, string>) {
+export function isObjectType<T>(map: Record<RequiredKeys<T>, string>) {
   return (arg: unknown): arg is T => {
     if (typeof arg !== "object") return false;
     if (!arg) return false;
@@ -124,3 +128,26 @@ export const isValidEmployerBenefit = isObjectType<ValidEmployerBenefit>({
   benefit_type: "",
   is_full_salary_continuous: "",
 });
+
+/**
+ * Asserts the existence of a set of properties on a generated claim
+ * so that we don't have to check them everywhere within the E2E test suite.
+ * @param claim - body of the generated application request.
+ */
+export function assertValidClaim(
+  claim: DehydratedClaim["claim"]
+): asserts claim is ValidClaim {
+  const requiredProps: readonly RequiredKeys<ValidClaim>[] = [
+    "employer_fein",
+    "first_name",
+    "last_name",
+    "date_of_birth",
+    "tax_identifier",
+    "leave_details",
+  ] as const;
+
+  for (const key of requiredProps) {
+    if (!isNotNull(claim[key])) throw new TypeError(`Claim missing ${key}`);
+  }
+  return;
+}

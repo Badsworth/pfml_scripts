@@ -2,6 +2,7 @@ import { fineos, fineosPages, portal } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Submit bonding application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest = it("As a claimant, I should be able to submit a continous bonding application through the portal", () => {
@@ -37,9 +38,8 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
     portal.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
-        portal.login(
-          getLeaveAdminCredentials(claim.claim.employer_fein as string)
-        );
+        assertValidClaim(claim.claim);
+        portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
         portal.selectClaimFromEmployerDashboard(
           submission.fineos_absence_id,
           "--"

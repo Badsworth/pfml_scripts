@@ -3,6 +3,7 @@ import { LeaveReason } from "types";
 import { portal, fineos } from "../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 import { config } from "../../actions/common";
+import { assertValidClaim } from "../../../src/util/typeUtils";
 
 describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
   if (config("HAS_FINEOS_SP") === "true") {
@@ -14,16 +15,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
         cy.visit("/");
         cy.task("generateClaim", "CDENY2").then((claim) => {
           cy.stash("claim", claim);
-          if (
-            !claim.claim.first_name ||
-            !claim.claim.last_name ||
-            !claim.claim.tax_identifier
-          ) {
-            throw new Error(
-              "Claim is missing a first name, last name, or SSN."
-            );
-          }
-
+          assertValidClaim(claim.claim);
           fineos.searchClaimantSSN(claim.claim.tax_identifier);
           fineos.clickBottomWidgetButton("OK");
           fineos.assertOnClaimantPage(
@@ -60,9 +52,8 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
       portal.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<string>("fineos_absence_id").then((fineos_absence_id) => {
-          portal.login(
-            getLeaveAdminCredentials(claim.claim.employer_fein as string)
-          );
+          assertValidClaim(claim.claim);
+          portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
           portal.selectClaimFromEmployerDashboard(fineos_absence_id, "--");
           portal.visitActionRequiredERFormPage(fineos_absence_id);
           portal.respondToLeaveAdminRequest(false, true, false, true);

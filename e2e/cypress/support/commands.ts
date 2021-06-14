@@ -2,7 +2,7 @@
 // For more comprehensive examples of custom
 // commands please read more here:
 // https://on.cypress.io/custom-commands
-// ***********************************************
+// ***********************************************s
 
 /**
  * This command selects an input by the HTML label "for" value.

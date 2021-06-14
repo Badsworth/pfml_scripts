@@ -2,6 +2,7 @@ import { fineos, portal } from "../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 import { Submission } from "../../../src/types";
 import { config } from "../../actions/common";
+import { assertValidClaim } from "../../../src/util/typeUtils";
 
 describe("Submit caring application via the web portal: Adjudication Approval & payment checking", () => {
   if (config("HAS_FINEOS_SP") === "true") {
@@ -38,9 +39,8 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
       portal.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
-          portal.login(
-            getLeaveAdminCredentials(claim.claim.employer_fein as string)
-          );
+          assertValidClaim(claim.claim);
+          portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
           portal.selectClaimFromEmployerDashboard(
             submission.fineos_absence_id,
             "--"

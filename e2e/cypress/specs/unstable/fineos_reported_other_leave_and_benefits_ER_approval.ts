@@ -1,4 +1,5 @@
 import { extractLeavePeriod } from "../../../src/util/claims";
+import { assertValidClaim } from "../../../src/util/typeUtils";
 import { fineos, fineosPages } from "../../actions";
 import { config } from "../../actions/common";
 import { getFineosBaseUrl } from "../../config";
@@ -12,15 +13,7 @@ describe("Claimant can call call-center to submit a claim for leave with other l
         fineos.before();
         cy.visit("/");
         cy.task("generateClaim", "MIL_RED_OLB").then((claim) => {
-          if (
-            !claim.claim.first_name ||
-            !claim.claim.last_name ||
-            !claim.claim.tax_identifier
-          ) {
-            throw new Error(
-              "Claim is missing a first name, last name, or SSN."
-            );
-          }
+          assertValidClaim(claim.claim);
           cy.stash("claim", claim.claim);
           fineos.searchClaimantSSN(claim.claim.tax_identifier);
           fineos.clickBottomWidgetButton("OK");
