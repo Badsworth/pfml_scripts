@@ -76,6 +76,7 @@ export class ClaimEmployer extends BaseModel {
     return {
       employer_dba: null,
       employer_fein: null,
+      employer_id: null,
     };
   }
 }

@@ -244,15 +244,15 @@ describe("User", () => {
     });
   });
 
-  describe("#isEmployerRegisteredInFineos", () => {
+  describe("#isEmployerIdRegisteredInFineos", () => {
     it("returns true if employer has matching ID and is registered in FINEOS", () => {
       const user = new User({
         user_leave_administrators: [VERIFIED_REGISTERED_WITH_DATA],
       });
 
       expect(
-        user.isEmployerRegisteredInFineos(
-          VERIFIED_REGISTERED_WITH_DATA.employer_fein
+        user.isEmployerIdRegisteredInFineos(
+          VERIFIED_REGISTERED_WITH_DATA.employer_id
         )
       ).toEqual(true);
     });
@@ -266,8 +266,8 @@ describe("User", () => {
       });
 
       expect(
-        user.isEmployerRegisteredInFineos(
-          VERIFIED_PENDING_WITHOUT_DATA.employer_fein
+        user.isEmployerIdRegisteredInFineos(
+          VERIFIED_PENDING_WITHOUT_DATA.employer_id
         )
       ).toEqual(false);
     });
@@ -278,8 +278,8 @@ describe("User", () => {
       });
 
       expect(
-        user.isEmployerRegisteredInFineos(
-          VERIFIED_PENDING_WITHOUT_DATA.employer_fein
+        user.isEmployerIdRegisteredInFineos(
+          VERIFIED_PENDING_WITHOUT_DATA.employer_id
         )
       ).toEqual(false);
     });

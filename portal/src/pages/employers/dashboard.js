@@ -256,8 +256,8 @@ const ClaimTableRows = (props) => {
     );
     const employerFein = get(claim, "employer.employer_fein");
     const fullName = get(claim, "employee.fullName", "--");
-    const isEmployerRegisteredInFineos = user.isEmployerRegisteredInFineos(
-      employerFein
+    const isEmployerRegisteredInFineos = user.isEmployerIdRegisteredInFineos(
+      get(claim, "employer.employer_id")
     );
 
     switch (columnKey) {

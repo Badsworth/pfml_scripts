@@ -45,6 +45,7 @@ const getClaims = (leaveAdmin) => {
       employer: new ClaimEmployer({
         employer_dba: leaveAdmin.employer_dba,
         employer_fein: leaveAdmin.employer_fein,
+        employer_id: leaveAdmin.employer_id,
       }),
       fineos_absence_id: "NTN-111-ABS-01",
       claim_status: "Approved",

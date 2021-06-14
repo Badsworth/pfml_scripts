@@ -114,17 +114,15 @@ class User extends BaseModel {
   }
 
   /**
-   * Determines whether an employer FEIN is registered in FINEOS
-   * @param {string} employerFein
+   * Determines whether an employer is registered in FINEOS
+   * @param {string} employerId
    * @returns {boolean}
    */
-  isEmployerRegisteredInFineos(employerFein) {
-    return !!this.user_leave_administrators.find((employer) => {
-      return (
-        employerFein === employer.employer_fein &&
-        employer.has_fineos_registration
-      );
-    });
+  isEmployerIdRegisteredInFineos(employerId) {
+    return this.user_leave_administrators.some(
+      (employer) =>
+        employerId === employer.employer_id && employer.has_fineos_registration
+    );
   }
 }
 
