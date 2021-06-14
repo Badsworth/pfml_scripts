@@ -41,15 +41,18 @@ export async function withFineosBrowser<T extends unknown>(
 
   const start = async () => {
     if (isSSO) {
+      console.log("using sso");
       await page.fill(
         "input[type='email'][name='loginfmt']",
         config("SSO_USERNAME")
       );
+      console.log("filled username");
       await page.click("input[value='Next']");
       await page.fill(
         "input[type='password'][name='passwd']",
         config("SSO_PASSWORD")
       );
+      console.log("filled password");
       await page.click("input[value='Sign in']");
       // Sometimes we end up with a "Do you want to stay logged in" question.
       // This seems inconsistent, so we only look for it if we haven't already found ourselves
@@ -59,6 +62,7 @@ export async function withFineosBrowser<T extends unknown>(
         page.click("input[value='No']", { timeout: 30000 }),
       ]);
     }
+    console.log("should be in fineos");
     await page.waitForSelector("body.PageBody");
   };
 
