@@ -836,15 +836,17 @@ class UserRole(Base):
     user = relationship(User)
     role = relationship(LkRole)
 
-
+# @todo: fineos columns
 class Worksite(Base):
     __tablename__ = "worksite"
     worksite_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    worksite_fineos_id = Column(Text)
     worksite_name = Column(Text)
 
 class Department(Base):
     __tablename__ = "department"
     department_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    department_fineos_id = Column(Text)
     department_worksite_id = Column(UUID(as_uuid=True), ForeignKey("worksite.worksite_id"), nullable=False)
     department_name = Column(Text)
 

@@ -24,6 +24,7 @@ def upgrade():
     op.create_table(
         "worksite",
         sa.Column("worksite_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("worksite_fineos_id", sa.Text(), nullable=False),
         sa.Column("worksite_name", sa.Text(), nullable=True),
         sa.PrimaryKeyConstraint("worksite_id"),
     )
@@ -32,6 +33,7 @@ def upgrade():
         "department",
         sa.Column("department_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("department_worksite_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("department_fineos_id", sa.Text(), nullable=False),
         sa.Column("department_name", sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(["department_worksite_id"], ["worksite.worksite_id"],),
         sa.PrimaryKeyConstraint("department_id"),
@@ -39,13 +41,7 @@ def upgrade():
     
     # application needs worksite id and org unit id
     op.add_column(
-        "application", sa.Column("worksite_id", postgresql.UUID(as_uuid=True), nullable=True)
-    )
-    op.add_column(
         "application", sa.Column("department_id", postgresql.UUID(as_uuid=True), nullable=True)
-    )
-    op.create_foreign_key(
-        "application_worksite_id_fkey", "application", "worksite", ["worksite_id"], ["worksite_id"]
     )
     op.create_foreign_key(
         "application_department_id_fkey", "application", "department", ["department_id"], ["department_id"]
