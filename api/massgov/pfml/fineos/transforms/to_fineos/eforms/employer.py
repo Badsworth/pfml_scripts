@@ -182,18 +182,18 @@ class EmployerClaimReviewEFormBuilder(EFormBuilder):
         previous_leaves = map(
             lambda leave: PreviousLeaveAttributeBuilder(leave), review.previous_leaves
         )
-        concurrent_leaves = map(
-            lambda leave: ConcurrentLeaveAttributeBuilder(leave), review.concurrent_leaves
-        )
         other_info = OtherInfoAttributeBuilder(review)
         attributes = list(
             chain(
                 cls.to_serialized_attributes(employer_benefits, True),
                 cls.to_serialized_attributes(previous_leaves, True),
-                cls.to_serialized_attributes(concurrent_leaves),
                 cls.to_serialized_attributes([other_info]),
             )
         )
+
+        if review.concurrent_leave:
+            concurrent_leave = ConcurrentLeaveAttributeBuilder(review.concurrent_leave)
+            attributes.extend(cls.to_serialized_attributes([concurrent_leave]))
 
         return EFormBody("Employer Response to Leave Request - current version", attributes)
 

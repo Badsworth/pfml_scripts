@@ -230,7 +230,7 @@ class TestEmployerBenefitsReview:
         return EmployerClaimReview(
             uses_second_eform_version=True,
             comment="Test Claim",
-            concurrent_leaves=[],
+            concurrent_leave=None,
             employer_benefits=[employer_benefit, employer_benefit],
             previous_leaves=[],
             hours_worked_per_week=40,
@@ -343,7 +343,7 @@ class TestConcurrentLeaveReview:
         return EmployerClaimReview(
             uses_second_eform_version=True,
             comment="Test Claim",
-            concurrent_leaves=[concurrent_leave],
+            concurrent_leave=concurrent_leave,
             employer_benefits=[],
             previous_leaves=[],
             hours_worked_per_week=40,
@@ -377,7 +377,7 @@ class TestPreviousLeaveReview:
         return EmployerClaimReview(
             uses_second_eform_version=True,
             comment="Test Claim",
-            concurrent_leaves=[],
+            concurrent_leave=None,
             employer_benefits=[],
             previous_leaves=[previous_leave, previous_leave],
             hours_worked_per_week=40,
@@ -460,7 +460,7 @@ class TestOtherInfoReview:
         return EmployerClaimReview(
             uses_second_eform_version=True,
             comment="Test Claim",
-            concurrent_leaves=[],
+            concurrent_leave=None,
             employer_benefits=[],
             previous_leaves=[],
             hours_worked_per_week=40,

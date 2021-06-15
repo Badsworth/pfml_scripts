@@ -49,7 +49,7 @@ class EmployerClaimReview(PydanticBaseModel):
     uses_second_eform_version: bool = False
     comment: Optional[str]
     employer_benefits: List[EmployerBenefit]
-    concurrent_leaves: List[ConcurrentLeave] = []
+    concurrent_leave: Optional[ConcurrentLeave]
     hours_worked_per_week: Optional[Decimal]
     previous_leaves: List[PreviousLeave]
     employer_decision: Optional[str]

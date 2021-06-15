@@ -1547,11 +1547,9 @@ components:
           items:
             $ref: "#/components/schemas/EmployerBenefit"
           maxItems: 10
-        concurrent_leaves:
-          type: array
-          items:
-            $ref: "#/components/schemas/ConcurrentLeave"
-          maxItems: 1
+        concurrent_leave:
+          $ref: "#/components/schemas/ConcurrentLeave"
+          nullable: true
         previous_leaves:
           type: array
           items:
