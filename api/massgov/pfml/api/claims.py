@@ -22,6 +22,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
 )
+from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministrator
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
@@ -240,9 +241,14 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     with app.db_session() as db_session:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
-        claim_review_response = get_claim_as_leave_admin(
-            user_leave_admin.fineos_web_id, fineos_absence_id, employer  # type: ignore
-        )
+        try:
+            claim_review_response = get_claim_as_leave_admin(
+                user_leave_admin.fineos_web_id, fineos_absence_id, employer  # type: ignore
+            )
+        except (ContainsV1AndV2Eforms) as error:
+            return response_util.error_response(
+                status_code=error.status_code, message=error.description, errors=[], data={},
+            ).to_api_response()
 
         if claim_review_response is None:
             logger.error(

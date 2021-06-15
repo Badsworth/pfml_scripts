@@ -83,8 +83,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     follow_up_date: Optional[date]
     is_reviewable: Optional[bool]
     status: Optional[str]
-    contains_version_one_eforms: Optional[bool]
-    contains_version_two_eforms: Optional[bool]
+    uses_second_eform_version: bool
 
 
 class DocumentResponse(PydanticBaseModel):

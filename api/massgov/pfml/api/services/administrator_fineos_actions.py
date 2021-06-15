@@ -15,6 +15,7 @@ from massgov.pfml.api.models.claims.common import (
 )
 from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, DocumentResponse
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
+from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
 from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
@@ -207,6 +208,14 @@ def get_claim_as_leave_admin(
     for eform_summary_obj in eform_summaries:
         eform_summary = eform_summary_obj.dict()
         if eform_summary["eformType"] == EFORM_TYPES["OTHER_INCOME"]:
+            logger.info(
+                "Claim contains an other income eform",
+                extra={
+                    "fineos_user_id": fineos_user_id,
+                    "absence_id": absence_id,
+                    "employer_id": employer.employer_id,
+                },
+            )
             contains_version_one_eforms = True
             eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
             employer_benefits.extend(
@@ -215,12 +224,28 @@ def get_claim_as_leave_admin(
                 if other_income.program_type == "Employer"
             )
         elif eform_summary["eformType"] == EFORM_TYPES["OTHER_INCOME_V2"]:
+            logger.info(
+                "Claim contains an other income V2 eform",
+                extra={
+                    "fineos_user_id": fineos_user_id,
+                    "absence_id": absence_id,
+                    "employer_id": employer.employer_id,
+                },
+            )
             contains_version_two_eforms = True
             eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
             employer_benefits = (
                 employer_benefits + TransformEmployerBenefitsFromOtherIncomeEform.from_fineos(eform)
             )
         elif eform_summary["eformType"] == EFORM_TYPES["OTHER_LEAVES"]:
+            logger.info(
+                "Claim contains an other leaves eform",
+                extra={
+                    "fineos_user_id": fineos_user_id,
+                    "absence_id": absence_id,
+                    "employer_id": employer.employer_id,
+                },
+            )
             contains_version_two_eforms = True
             eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
             previous_leaves.extend(TransformPreviousLeaveFromOtherLeaveEform.from_fineos(eform))
@@ -235,6 +260,21 @@ def get_claim_as_leave_admin(
         )
     else:
         claimant_address = Address()
+
+    if contains_version_one_eforms and contains_version_two_eforms:
+        logger.error(
+            "Contains version one and version two eforms",
+            extra={
+                "fineos_user_id": fineos_user_id,
+                "absence_id": absence_id,
+                "employer_id": employer.employer_id,
+            },
+        )
+        raise ContainsV1AndV2Eforms()
+
+    # Any case that does not contain a V1 eform should use the V2 eforms. Cases that do have V1 eforms should either
+    # use the V1 logic (uses_second_eform_version = False), or error as described above
+    uses_second_eform_version = not contains_version_one_eforms
 
     if follow_up_date is not None and outstanding_requirement_status == "Open":
         is_reviewable = date.today() < follow_up_date
@@ -262,8 +302,7 @@ def get_claim_as_leave_admin(
         status=status,
         follow_up_date=follow_up_date,
         is_reviewable=is_reviewable,
-        contains_version_one_eforms=contains_version_one_eforms,
-        contains_version_two_eforms=contains_version_two_eforms,
+        uses_second_eform_version=uses_second_eform_version,
     )
 
 

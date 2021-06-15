@@ -233,6 +233,7 @@ def paginated_success_response(
 def error_response(
     status_code: Union[
         HTTPException,
+        Type[HTTPException],
         Type[BadRequest],
         Type[PaymentRequired],
         Type[Conflict],

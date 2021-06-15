@@ -12,6 +12,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_leave_details,
     register_leave_admin_with_fineos,
 )
+from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.fineos import FINEOSClient, create_client
@@ -1452,8 +1453,7 @@ def test_get_claim_eform_type_contains_neither_version(
     leave_details = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
-    assert leave_details.contains_version_one_eforms is False
-    assert leave_details.contains_version_two_eforms is False
+    assert leave_details.uses_second_eform_version is True
 
 
 @pytest.mark.integration
@@ -1463,14 +1463,13 @@ def test_get_claim_other_income_eform_type_contains_both_versions(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
-        fineos_user_id,
-        absence_id,
-        employer,
-        fineos_client=mock_fineos_other_income_eform_both_versions,
-    )
-    assert leave_details.contains_version_one_eforms is True
-    assert leave_details.contains_version_two_eforms is True
+    with pytest.raises(ContainsV1AndV2Eforms):
+        get_claim_as_leave_admin(
+            fineos_user_id,
+            absence_id,
+            employer,
+            fineos_client=mock_fineos_other_income_eform_both_versions,
+        )
 
 
 @pytest.mark.integration
@@ -1484,7 +1483,7 @@ def test_get_claim_other_leaves_v2_eform(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform,
     )
 
-    assert leave_details.contains_version_two_eforms is True
+    assert leave_details.uses_second_eform_version is True
     assert leave_details.previous_leaves == [
         PreviousLeave(
             is_for_current_employer=True,
@@ -1588,5 +1587,4 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
     assert leave_details.follow_up_date == date(2021, 2, 1)
     assert leave_details.is_reviewable is False
     assert leave_details.status == "Known"
-    assert leave_details.contains_version_one_eforms is True
-    assert leave_details.contains_version_two_eforms is False
+    assert leave_details.uses_second_eform_version is False
