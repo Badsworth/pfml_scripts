@@ -1068,7 +1068,7 @@ class PaymentExtractStep(Step):
 
             extra["pub_eft_id"] = new_eft.pub_eft_id
             logger.info(
-                "Initiating DELEGATED_EFT flow for employee associated with payment %i",
+                "Initiating DELEGATED_EFT flow for employee associated with payment %s",
                 payment_data.get_payment_message_str(),
                 extra=extra,
             )
