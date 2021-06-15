@@ -61,13 +61,18 @@ const flagsConfig = {
     // When this flag is enabled, the user can apply to take leave to
     // "Care for a family member with a serious health condition" and
     // Leave Admins can review Caring Leave claims
-    // TODO (CP-1989): Remove this flag once caring leave is made available in Production
+    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
     showCaringLeaveType: false,
 
     // When this flag is enabled, the medical leave question numbers for leave periods
     // are updated to reflect the new "Certification of Your Serious Health Condition"
     // TODO (CP-2205): Remove this flag once updated medical leave form is effective
     updateMedicalCertForm: false,
+
+    // When this flag is enabled, the document upload and listing/download features will use
+    // the new plan proofs in FINEOS, expected to roll out on 6/25
+    // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
+    useNewPlanProofs: false,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
@@ -76,17 +81,20 @@ const flagsConfig = {
     employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
+    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   development: {
     example: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
     pfmlTerriyay: true,
+    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   test: {
     employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
+    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   stage: {
     employerShowAddOrganization: true,

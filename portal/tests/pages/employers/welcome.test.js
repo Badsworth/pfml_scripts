@@ -41,6 +41,7 @@ describe("Employer welcome", () => {
   });
 
   it("renders caring leave form link when showCaringLeaveType is true", () => {
+    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
     process.env.featureFlags = { showCaringLeaveType: true };
     testHook(() => {
       appLogic = useAppLogic();
@@ -56,7 +57,7 @@ describe("Employer welcome", () => {
 
   it("renders caring leave alert when showCaringLeaveType is true", () => {
     process.env.featureFlags = {
-      showCaringLeaveType: true
+      showCaringLeaveType: true,
     };
     wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
 
@@ -64,7 +65,9 @@ describe("Employer welcome", () => {
 
     expect(
       wrapper
-        .find(`Trans[i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"]`)
+        .find(
+          `Trans[i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"]`
+        )
         .dive()
     ).toMatchSnapshot();
   });

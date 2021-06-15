@@ -239,14 +239,15 @@ describe("Upload Document", () => {
     `);
   });
 
-  it("renders filtered documents when the document type matches the leave reason with Caring Leave feature flag enabled", () => {
+  it("renders filtered documents when the document type matches the leave reason with useNewPlanProofs flag enabled", () => {
     // When the feature flag is enabled, the component should render the number of documents with a DocType that match the leave reason
     // In this test case, the feature flag is enabled, and the claim has documents with DocTypes that match the leave reason,
     // so the component should render 3 documents attached
+    // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
 
     // create a claim with matching leave reason and doc types
     process.env.featureFlags = {
-      showCaringLeaveType: true,
+      useNewPlanProofs: true,
     };
 
     const { wrapper } = renderWithAppLogic(Review, {
@@ -275,12 +276,14 @@ describe("Upload Document", () => {
     `);
   });
 
-  it("renders filtered documents when the document type doesn't match the leave reason when the caring leave feature flag is enabled", () => {
+  it("renders filtered documents when the document type doesn't match the leave reason when the useNewPlanProofs feature flag is enabled", () => {
     // When the feature flag is enabled, the component should render the number of documents with a DocType that match the leave reason
     // In this test case, the feature flag is enabled, and the claim has documents with DocTypes that don't match the leave reason,
     // so the component should render 0 documents attached
+    // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
+
     process.env.featureFlags = {
-      showCaringLeaveType: true,
+      useNewPlanProofs: true,
     };
 
     // create a claim with mismatched leave reason and doc types
