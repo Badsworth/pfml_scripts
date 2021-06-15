@@ -1565,6 +1565,8 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+                ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
@@ -1641,6 +1643,7 @@ def test_e2e_pub_payments(
                     ]
                 ),
                 "eft_prenote_already_approved_count": 0,
+                "eft_prenote_already_rejected_count": 0,
                 "eft_prenote_count": len(
                     [
                         ScenarioName.PUB_ACH_PRENOTE_RETURN,
