@@ -224,6 +224,28 @@ paths:
           $ref: "#/components/responses/NotFound"
       requestBody:
         $ref: "#/components/requestBodies/EmployeeSearchRequest"
+        
+  /employees/departments/search:
+    post:
+      tags:
+        - HRD
+      summary: Lookup an Employee by SSN/ITIN in HRD dataset
+      operationId: massgov.pfml.api.employees.employee_departments_search
+      responses:
+        "200":
+          description: A successful response returns a 200 status code and a list of employee departments.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/HRDEmployeeResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      requestBody:
+        $ref: "#/components/requestBodies/HRDEmployeeSearchRequest"
 
   /employers/add:
     post:
@@ -1136,6 +1158,12 @@ components:
           schema:
             $ref: "#/components/schemas/EmployeeSearchRequest"
       required: true
+    HRDEmployeeSearchRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/HRDEmployeeSearchRequest"
+      required: true
     EmployeeUpdateRequest:
       content:
         application/json:
@@ -1498,6 +1526,14 @@ components:
           type: string
           example: "1234"
       required: ["first_name", "last_name", "tax_identifier_last4"]
+      
+    HRDEmployeeSearchRequest:
+      type: object
+      properties:
+        tax_identifier:
+          type: string
+          example: "1234"
+      required: ["tax_identifier"]
 
     EmployeeErrorResponse:
       type: object
@@ -1536,6 +1572,29 @@ components:
           type: string
           example: "1234"
       required: ["employee_id", "tax_identifier_last4"]
+
+    HRDEmployeeResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          employee_id:
+            type: string
+            format: uuid
+            example: "009fa369-291b-403f-a85a-15e938c26a7b"
+          full_name:
+            type: string
+            example: "Jane"
+          tax_identifier:
+            type: string
+            example: "1234"
+          department_id:
+            type: string
+            example: "1234"
+          department_name:
+            type: string
+            example: "1234"
+        required: ["employee_id", "tax_identifier"]
 
     EmployerClaimRequestBody:
       type: object

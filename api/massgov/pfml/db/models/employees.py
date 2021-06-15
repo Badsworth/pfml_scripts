@@ -836,7 +836,14 @@ class UserRole(Base):
     user = relationship(User)
     role = relationship(LkRole)
 
-# @todo: fineos columns
+class HRD(Base):
+    __tablename__ = "hrd"
+    employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    department_id = Column(Text)
+    department_name = Column(Text)
+    full_name = Column(Text)
+    tax_identifier = Column(Text)
+
 class Worksite(Base):
     __tablename__ = "worksite"
     worksite_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)

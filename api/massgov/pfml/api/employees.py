@@ -7,7 +7,7 @@ from werkzeug.exceptions import NotFound
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
-from massgov.pfml.db.models.employees import Employee, TaxIdentifier
+from massgov.pfml.db.models.employees import Employee, TaxIdentifier, HRD
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.sqlalchemy import get_or_404
 
@@ -24,6 +24,17 @@ class EmployeeSearchRequest(PydanticBaseModel):
     middle_name: Optional[str]
     last_name: str
     tax_identifier_last4: str
+
+class HRDEmployeeSearchRequest(PydanticBaseModel):
+    tax_identifier: str
+
+
+class HRDEmployeeResponse(PydanticBaseModel):
+    employee_id: UUID4
+    tax_identifier: str
+    full_name: Optional[str]
+    department_id: str
+    department_name: Optional[str]
 
 
 class EmployeeResponse(PydanticBaseModel):
@@ -100,4 +111,25 @@ def employees_search():
 
     return response_util.success_response(
         message="Successfully found employee", data=EmployeeResponse.from_orm(employee).dict(),
+    ).to_api_response()
+
+def employee_departments_search():
+    request = HRDEmployeeSearchRequest.parse_obj(connexion.request.json)
+
+    with app.db_session() as db_session:
+        employees = (
+            db_session.query(HRD)
+            .filter(
+                HRD.tax_identifier == request.tax_identifier
+            ).all()
+        )
+
+    if employees is None or len(employees) == 0:
+        raise NotFound()
+
+    ensure(READ, employees)
+
+    employeesResponse = [HRDEmployeeResponse.from_orm(employee).dict() for employee in employees]
+    return response_util.success_response(
+        message="Successfully found employee departments", data=employeesResponse,
     ).to_api_response()
