@@ -84,8 +84,14 @@ def test_process_nacha_return_file_step_full(
     assert pub_efts[26].prenote_response_reason_code == "C01"
     assert pub_efts[18].prenote_response_reason_code == "C02"
     for pub_eft in pub_efts:
-        if pub_eft.pub_individual_id in {1, 26, 18, 27}:
+        if pub_eft.pub_individual_id in {1, 27}:
             assert pub_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id
+        elif (
+            pub_eft.prenote_response_reason_code
+            and pub_eft.prenote_response_reason_code.startswith("C")
+        ):
+            assert pub_eft.prenote_state_id == PrenoteState.APPROVED.prenote_state_id
+            assert pub_eft.prenote_approved_at is not None
         else:
             assert pub_eft.prenote_state_id == PrenoteState.PENDING_WITH_PUB.prenote_state_id
 
@@ -178,7 +184,8 @@ def test_process_nacha_return_file_step_full(
         "eft_prenote_already_approved_count": 1,
         "eft_prenote_already_rejected_count": 0,
         "eft_prenote_id_not_found_count": 2,
-        "eft_prenote_rejected_count": 4,
+        "eft_prenote_change_notification_count": 2,
+        "eft_prenote_rejected_count": 2,
         "payment_count": 7,
         "payment_complete_with_change_count": 3,
         "payment_id_not_found_count": 3,
@@ -205,6 +212,7 @@ def test_process_nacha_return_file_step_full(
         + expected_metrics["eft_prenote_unexpected_state_count"]  # TODO add scenario
         + expected_metrics["eft_prenote_already_approved_count"]
         + expected_metrics["eft_prenote_already_rejected_count"]
+        + expected_metrics["eft_prenote_change_notification_count"]
         + expected_metrics["eft_prenote_rejected_count"]
     )
 
