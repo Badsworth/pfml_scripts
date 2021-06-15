@@ -93,6 +93,8 @@ const routes = {
     welcome: "/employers/welcome",
   },
   external: {
+    inLocoParentis:
+      "https://www.dol.gov/agencies/whd/fact-sheets/28C-fmla-eldercare",
     massTaxConnect: "https://mtc.dor.state.ma.us/mtc/_/",
     massgov: {
       benefitsGuide:

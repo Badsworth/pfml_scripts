@@ -218,7 +218,7 @@ exports[`Index renders landing page content 1`] = `
               components={
                 Object {
                   "contact-center-phone-link": <a
-                    href="tel:(833) 344‑7365"
+                    href="tel:(833) 344-7365"
                   />,
                 }
               }
@@ -251,7 +251,7 @@ exports[`Index renders landing page content 3`] = `
 Array [
   "Call ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365

@@ -170,7 +170,7 @@ Array [
   >
     If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be easily added to your claim by calling our Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -211,7 +211,7 @@ Array [
   >
     If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -285,7 +285,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
         components={
           Object {
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "mail-fax-instructions-link": <a
               href="https://www.mass.gov/pfmlsubmitinfo"
@@ -345,7 +345,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -394,7 +394,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -443,7 +443,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -492,7 +492,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -559,7 +559,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -626,7 +626,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -675,7 +675,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -727,7 +727,7 @@ exports[`Checklist renders success message after submitting part one 1`] = `
 Array [
   "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365
@@ -740,7 +740,7 @@ exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 1`] 
 Array [
   "Entering payment information here leads to faster processing, but you can also call ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365
@@ -753,7 +753,7 @@ exports[`Checklist when Part 1 is submitted renders different description for Pa
 Array [
   "If you need to edit your information in Part 1, you’ll need to call the Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365
@@ -787,7 +787,7 @@ exports[`Checklist when Part 2 is submitted renders submitted descriptions for P
 Array [
   "If you need to edit your information in Part 2, you’ll need to call the Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365

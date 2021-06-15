@@ -9,7 +9,7 @@ exports[`Footer renders footer with default settings 1`] = `
         "href": "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
         "title": "Department of Family and Medical Leave (DFML)",
       },
-      "phone": "(833) 344‑7365",
+      "phone": "(833) 344-7365",
     }
   }
   description="Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons."

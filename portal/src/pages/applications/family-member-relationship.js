@@ -3,6 +3,7 @@ import BenefitsApplication, {
   RelationshipToCaregiver,
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
+import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -77,18 +78,40 @@ export const FamilyMemberRelationship = (props) => {
         }))}
         label={t("pages.claimsFamilyMemberRelationship.sectionLabel")}
         hint={
-          <Trans
-            i18nKey="pages.claimsFamilyMemberRelationship.sectionHint"
-            components={{
-              "caregiver-relationship-link": (
-                <a
-                  target="_blank"
-                  rel="noopener"
-                  href={routes.external.massgov.caregiverRelationship}
-                />
-              ),
-            }}
-          />
+          <React.Fragment>
+            <Trans
+              i18nKey="pages.claimsFamilyMemberRelationship.sectionHint"
+              components={{
+                "caregiver-relationship-link": (
+                  <a
+                    target="_blank"
+                    rel="noopener"
+                    href={routes.external.massgov.caregiverRelationship}
+                  />
+                ),
+              }}
+            />
+            <Details
+              label={t("pages.claimsFamilyMemberRelationship.detailsLabel")}
+              className="text-bold"
+            >
+              <Trans
+                i18nKey="pages.claimsFamilyMemberRelationship.detailsBody"
+                components={{
+                  "in-loco-parentis-link": (
+                    <a
+                      target="_blank"
+                      rel="noopener"
+                      href={routes.external.inLocoParentis}
+                    />
+                  ),
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
+            </Details>
+          </React.Fragment>
         }
         type="radio"
       />

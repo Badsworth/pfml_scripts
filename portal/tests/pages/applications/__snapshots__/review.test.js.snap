@@ -82,7 +82,7 @@ exports[`Final Review Page when the claim is complete renders Review page with f
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
         }
       }
@@ -328,7 +328,7 @@ exports[`Final Review Page when the claim is complete renders Review page with f
 Array [
   "If you need to make edits to Part 1, you’ll need to call our Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365
@@ -552,7 +552,7 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
         }
       }
@@ -965,7 +965,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
         }
       }

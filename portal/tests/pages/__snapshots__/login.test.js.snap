@@ -63,7 +63,7 @@ exports[`Login renders the page 1`] = `
           components={
             Object {
               "contact-center-phone-link": <a
-                href="tel:(833) 344‑7365"
+                href="tel:(833) 344-7365"
               />,
               "create-employer-account-link": <a
                 className="display-inline-block"
@@ -108,7 +108,7 @@ Array [
   </strong>,
   " Call ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="2"
   >
     (833) 344‑7365
