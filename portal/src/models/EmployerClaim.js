@@ -18,6 +18,9 @@ class EmployerClaim extends BaseBenefitsApplication {
       is_reviewable: null,
       // array of PreviousLeave objects. See the PreviousLeave model
       previous_leaves: [],
+      // does this claim use the old or new version of other leave / income eforms?
+      // Todo(EMPLOYER-1453): remove V1 eform functionality
+      uses_second_eform_version: null,
     });
   }
 }

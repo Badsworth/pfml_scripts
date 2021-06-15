@@ -30,6 +30,17 @@ export default {
         options: ["Bonding", "Medical", "Care"],
       },
     },
+    // Todo(EMPLOYER-1453): remove V1 eform functionality
+    "Claimant EForm Version": {
+      defaultValue: "Version 1 (before 2021-07-14)",
+      control: {
+        type: "radio",
+        options: [
+          "Version 1 (before 2021-07-14)",
+          "Version 2 (after 2021-07-14)",
+        ],
+      },
+    },
     errorTypes: {
       control: {
         type: "check",
@@ -69,6 +80,15 @@ export const Default = (args) => {
       break;
     case "Care":
       claim = claim.caringLeaveReason();
+      break;
+  }
+
+  switch (args["Claimant EForm Version"]) {
+    case "Version 1 (before 2021-07-14)":
+      claim = claim.eformsV1();
+      break;
+    case "Version 2 (after 2021-07-14)":
+      claim = claim.eformsV2();
       break;
   }
 

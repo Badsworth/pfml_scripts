@@ -302,6 +302,24 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   }
 
   /**
+   * Todo(EMPLOYER-1453): remove V1 eform functionality
+   * @returns {MockEmployerClaimBuilder}
+   */
+  eformsV1() {
+    set(this.claimAttrs, "uses_second_eform_version", false);
+    return this;
+  }
+
+  /**
+   * Todo(EMPLOYER-1453): remove V1 eform functionality
+   * @returns {MockEmployerClaimBuilder}
+   */
+  eformsV2() {
+    set(this.claimAttrs, "uses_second_eform_version", true);
+    return this;
+  }
+
+  /**
    * @returns {EmployerClaim}
    */
   create() {
