@@ -578,6 +578,25 @@ def test_disallow_2020_leave_period_start_dates():
     )
 
 
+def test_disallow_caring_leave_before_july():
+    test_app = ApplicationFactory.build(
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+        continuous_leave_periods=[
+            ContinuousLeavePeriodFactory.build(
+                start_date=date(2021, 6, 30), end_date=date(2021, 8, 1)
+            )
+        ],
+    )
+
+    disallow_submission_issue = Issue(
+        message="Caring leave start_date cannot be before 2021-07-01",
+        rule=IssueRule.disallow_caring_leave_before_july,
+    )
+
+    issues = get_leave_periods_issues(test_app)
+    assert disallow_submission_issue in issues
+
+
 def test_disallow_submit_over_60_days_before_start_date():
     test_app = ApplicationFactory.build(
         continuous_leave_periods=[

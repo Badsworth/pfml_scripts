@@ -3239,6 +3239,35 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     ]
 
 
+def test_application_post_submit_caring_leave_app_before_july(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(
+            start_date=date(2021, 6, 30), end_date=date(2022, 1, 30)
+        )
+    ]
+    application.has_continuous_leave_periods = True
+    application.leave_reason_id = LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+
+    test_db_session.commit()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    response_body = response.get_json()
+
+    assert response.status_code == 400
+
+    errors = response_body.get("errors")
+
+    assert {
+        "message": "Caring leave start_date cannot be before 2021-07-01",
+        "rule": "disallow_caring_leave_before_july",
+    } in errors
+
+
 @freeze_time("2020-01-01")
 def test_application_post_submit_app_more_than_60_days_ahead(
     client, user, auth_token, test_db_session
@@ -4392,8 +4421,8 @@ def test_application_post_submit_to_fineos_caring_leave(client, user, auth_token
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2021, 1, 1),
-        end_date=date(2021, 2, 9),
+        start_date=date(2021, 7, 1),
+        end_date=date(2021, 8, 9),
         application_id=application.application_id,
     )
     test_db_session.add(leave_period)

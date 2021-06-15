@@ -26,6 +26,7 @@ from massgov.pfml.db.models.applications import (
 from massgov.pfml.db.models.employees import PaymentMethod
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
+CARING_LEAVE_EARLIEST_START_DATE = date(2021, 7, 1)
 PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
 MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
@@ -794,6 +795,19 @@ def get_leave_period_ranges_issues(application: Application) -> List[Issue]:
             Issue(
                 message=f"Can't submit application more than {MAX_DAYS_IN_ADVANCE_TO_SUBMIT} days in advance of the earliest leave period",
                 rule=IssueRule.disallow_submit_over_60_days_before_start_date,
+            )
+        )
+
+    # Prevent caring leave submissions before 7/1/2021
+    if (
+        application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+        and earliest_start_date is not None
+        and earliest_start_date < CARING_LEAVE_EARLIEST_START_DATE
+    ):
+        issues.append(
+            Issue(
+                message=f"Caring leave start_date cannot be before {CARING_LEAVE_EARLIEST_START_DATE.isoformat()}",
+                rule=IssueRule.disallow_caring_leave_before_july,
             )
         )
 
