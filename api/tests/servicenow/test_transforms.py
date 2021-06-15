@@ -43,7 +43,6 @@ def leave_admin_notification_request_empty_doctype():
         claimant_info=ClaimantInfo(
             customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
         ),
-        document_type="",
         recipient_type="Leave Administrator",
         recipients=[
             RecipientDetails(
