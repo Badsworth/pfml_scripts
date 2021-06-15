@@ -56,6 +56,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
     employee_ssn: Optional[TaxIdUnformattedStr]
     tax_identifier: Optional[TaxIdUnformattedStr]
+    department_id: Optional[str] # @todo: check if this is the correct type
     employer_fein: Optional[FEINUnformattedStr]
     first_name: Optional[str]
     middle_name: Optional[str]
