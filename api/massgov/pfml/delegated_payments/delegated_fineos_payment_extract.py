@@ -60,7 +60,7 @@ from massgov.pfml.payments.payments_util import get_now
 logger = logging.get_logger(__name__)
 
 # waiting period for pending prenote
-PRENOTE_PRENDING_WAITING_PERIOD = 7
+PRENOTE_PRENDING_WAITING_PERIOD = 5
 
 # folder constants
 RECEIVED_FOLDER = "received"
@@ -1035,6 +1035,10 @@ class PaymentExtractStep(Step):
                 and (get_now() - existing_eft.prenote_sent_at).days
                 >= PRENOTE_PRENDING_WAITING_PERIOD
             ):
+                # Set prenote to approved
+                existing_eft.prenote_state_id = PrenoteState.APPROVED.prenote_state_id
+                existing_eft.prenote_approved_at = payments_util.get_now()
+
                 self.increment(self.Metrics.PRENOTE_PAST_WAITING_PERIOD_APPROVED_COUNT)
             else:
                 self.increment(self.Metrics.NOT_APPROVED_PRENOTE_COUNT)

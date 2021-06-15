@@ -1795,16 +1795,16 @@ def test_e2e_pub_payments(
         )
 
     # ===============================================================================
-    # [Day 9 - 7:00 PM] Generate FINEOS extract files
+    # [Day 7 - 7:00 PM] Generate FINEOS extract files
     # ===============================================================================
-    with freeze_time("2021-05-09 18:00:00", tz_offset=5):
+    with freeze_time("2021-05-07 18:00:00", tz_offset=5):
         generate_fineos_extract_files(test_dataset.scenario_dataset)
 
     # ===============================================================================
-    # [Day 9 - 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
+    # [Day 7 - 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
     # ===============================================================================
 
-    with freeze_time("2021-05-09 21:30:00", tz_offset=5):
+    with freeze_time("2021-05-07 21:30:00", tz_offset=5):
         process_fineos_extracts(
             test_dataset, mock_experian_client, test_db_session, test_db_other_session
         )
@@ -1837,6 +1837,27 @@ def test_e2e_pub_payments(
             scenario_names=stage_1_happy_path_scenarios,
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
             db_session=test_db_session,
+        )
+
+        # assert prenote states
+        assert_prenote_state(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+                ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+            ],
+            expected_prenote_state=PrenoteState.APPROVED,
+        )
+
+        assert_prenote_state(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+            ],
+            expected_prenote_state=PrenoteState.REJECTED,
         )
 
         # Writeback
