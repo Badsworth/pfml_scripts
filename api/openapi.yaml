@@ -1083,6 +1083,33 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/VerificationRequest"
 
+  /employers/{user_id}/department:
+    post:
+      tags:
+        - Employers
+      summary: Set a leave admin's departments
+      operationId: massgov.pfml.api.employers.employer_add_departments
+      parameters:
+        - name: user_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+          description: ID of user to update
+          required: true
+      # responses:
+      #   "201":
+      #     description: Checks verification data, and if valid, creates a verification record for a leave admin
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: "#/components/schemas/UserResponse"
+      #   "400":
+      #     $ref: "#/components/responses/BadRequest"
+      # requestBody:
+      #   $ref: "#/components/requestBodies/VerificationRequest"
+      
+
 tags:
   - name: Test Endpoints
   - name: Users

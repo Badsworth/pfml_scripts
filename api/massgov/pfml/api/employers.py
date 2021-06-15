@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     Employer,
     EmployerQuarterlyContribution,
     UserLeaveAdministrator,
+    UserLeaveAdminDepartment,
 )
 from massgov.pfml.util import feature_gate
 from massgov.pfml.util.strings import format_fein, sanitize_fein
@@ -136,3 +137,51 @@ def employer_add_fein() -> flask.Response:
         return response_util.success_response(
             message="Successfully added FEIN to user", status_code=201, data=response_data
         ).to_api_response()
+
+
+def employer_add_departments() -> flask.Response:
+    body = connexion.request.json
+    fein = sanitize_fein(body["employer_fein"])
+    departments = body["departments"]
+
+    current_user = app.current_user()
+    if current_user is None:
+        raise Unauthorized()
+
+    with app.db_session() as db_session:
+
+        employer = (
+            db_session.query(Employer).filter(Employer.employer_fein == fein).one_or_none()
+        )
+
+        if not employer:
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="Invalid FEIN",
+                errors=[
+                    response_util.custom_issue(
+                        type="invalid", message="Invalid FEIN", field="employer_fein",
+                    )
+                ],
+                data={},
+            ).to_api_response()
+
+        leave_admin = (
+            db_session.query(UserLeaveAdministrator).filter(UserLeaveAdministrator.employer_id == employer.employer_id and UserLeaveAdministrator.user_id == current_user.user_id).one()
+        )
+        # @todo: in the UserLeaveAdministrator model to auto fetch departments for the portal
+        
+        for department in departments:
+            newLeaveAdminDepartment = UserLeaveAdminDepartment(
+                department_id=department
+                user_leave_administrator_id=leave_admin.user_leave_administrator_id
+                user_id=current_user.user_id
+                employer_id=employer.employer_id
+            )
+
+            db_session.add(newLeaveAdminDepartment)
+
+        db_session.commit()
+        db_session.refresh(leave_admin)
+        
+    return leave_admin
