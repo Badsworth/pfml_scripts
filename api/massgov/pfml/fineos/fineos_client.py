@@ -758,9 +758,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        employer_fein: Optional[str],
+        department_id: Optional[str]        
     ) -> None:
         xml_body = self._create_update_occupation_payload(
-            occupation_id, employment_status, hours_worked_per_week
+            occupation_id, employment_status, hours_worked_per_week, employer_fein, department_id
         )
         self._wscomposer_request(
             "POST", "webservice", {"config": "OccupationDetailUpdateService"}, xml_body
@@ -771,6 +773,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        employer_fein: Optional[str],
+        department_id: Optional[str]
     ) -> str:
         additional_data_set = models.AdditionalDataSet()
 
@@ -791,12 +795,15 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 models.AdditionalData(name="EmploymentStatus", value=employment_status)
             )
 
-        additional_data_set.additional_data.append(
-            models.AdditionalData(name="workSiteId", value="1")
-        )
-        additional_data_set.additional_data.append(
-            models.AdditionalData(name="organizationUnitId", value="1")
-        )
+        # @todo: get commonwealth, umass, school feins, stored in DB?
+        if employer_fein is not None:
+            if employer_fein is in ["45-7506831", "457506831"]:
+                additional_data_set.additional_data.append(
+                    models.AdditionalData(name="workSiteId", value="1") # @todo: which worksite? are there multiple?
+                )
+                additional_data_set.additional_data.append(
+                    models.AdditionalData(name="organizationUnitId", value=department_id)
+                )
 
         # Put the XML object together properly.
         service_data = models.OccupationDetailUpdateData()
