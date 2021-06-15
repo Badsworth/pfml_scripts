@@ -303,7 +303,7 @@ def get_claim_as_leave_admin(
         hours_worked_per_week=hours_worked_per_week,
         last_name=customer_info["lastName"],
         leave_details=leave_details,
-        middle_name=customer_info["secondName"],
+        middle_name=None if customer_info["secondName"] == "" else customer_info["secondName"],
         previous_leaves=previous_leaves,
         concurrent_leave=concurrent_leave,
         residential_address=claimant_address,
