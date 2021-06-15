@@ -54,7 +54,6 @@ def get_leave_period_log_attributes(application: Application) -> Dict[str, str]:
 def get_application_log_attributes(application: Application) -> Dict[str, Optional[str]]:
     attributes_to_log = [
         "application_id",
-        "employer_id",
         "has_state_id",
         "has_concurrent_leave",
         "has_continuous_leave_periods",

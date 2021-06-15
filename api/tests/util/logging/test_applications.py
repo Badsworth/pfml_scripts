@@ -33,7 +33,6 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.application_id": str(application.application_id),
         "application.completed_time": None,
         "application.completed_time.timestamp": None,
-        "application.employer_id": str(application.employer_id),
         "application.has_concurrent_leave": None,
         "application.has_continuous_leave_periods": "False",
         "application.has_employer_benefits": None,

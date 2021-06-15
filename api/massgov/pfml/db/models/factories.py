@@ -459,16 +459,9 @@ class ApplicationFactory(BaseFactory):
     user = factory.SubFactory(UserFactory)
     user_id = factory.LazyAttribute(lambda a: a.user.user_id)
 
-    # EmployerFactory generates the FEIN, and we want to use the same FEIN
-    # so that EIN validations succeed
-    employer_fein = factory.SelfAttribute("employer.employer_fein")
-    employer = factory.SubFactory(EmployerFactory)
-    employer_id = factory.LazyAttribute(lambda a: a.employer.employer_id)
+    employer_fein = Generators.Fein
 
-    employee = factory.SubFactory(EmployeeFactory, gender_id=1)
-    employee_id = factory.LazyAttribute(lambda a: a.employee.employee_id)
-
-    tax_identifier = factory.SelfAttribute("employee.tax_identifier")
+    tax_identifier = factory.SubFactory(TaxIdentifierFactory)
     tax_identifier_id = factory.LazyAttribute(lambda t: t.tax_identifier.tax_identifier_id)
 
     phone = factory.SubFactory(PhoneFactory)
