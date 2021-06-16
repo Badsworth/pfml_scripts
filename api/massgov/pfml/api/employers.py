@@ -139,7 +139,7 @@ def employer_add_fein() -> flask.Response:
         ).to_api_response()
 
 
-def employer_add_departments() -> flask.Response:
+def employer_add_departments():
     body = connexion.request.json
     fein = sanitize_fein(body["employer_fein"])
     departments = body["departments"]
@@ -172,11 +172,12 @@ def employer_add_departments() -> flask.Response:
         # @todo: in the UserLeaveAdministrator model to auto fetch departments for the portal
         
         for department in departments:
+            # if department not in leave_admin.departments:
             newLeaveAdminDepartment = UserLeaveAdminDepartment(
-                department_id=department
-                user_leave_administrator_id=leave_admin.user_leave_administrator_id
-                user_id=current_user.user_id
-                employer_id=employer.employer_id
+                department_id=department.department_id,
+                user_leave_administrator_id=leave_admin.user_leave_administrator_id,
+                user_id=current_user.user_id,
+                employer_id=employer.employer_id,
             )
 
             db_session.add(newLeaveAdminDepartment)

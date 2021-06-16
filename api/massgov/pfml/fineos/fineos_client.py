@@ -797,7 +797,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         # @todo: get commonwealth, umass, school feins, stored in DB?
         if employer_fein is not None:
-            if employer_fein is in ["45-7506831", "457506831"]:
+            if employer_fein in ["45-7506831", "457506831"]:
                 additional_data_set.additional_data.append(
                     models.AdditionalData(name="workSiteId", value="1") # @todo: which worksite? are there multiple?
                 )
