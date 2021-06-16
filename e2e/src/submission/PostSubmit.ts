@@ -37,9 +37,36 @@ export async function withFineosBrowser<T extends unknown>(
       //intentional no-op on error.
     });
   });
-  await page.goto(config("FINEOS_BASEURL"));
 
+  const debugError = async (e: Error) => {
+    // If we're in debug mode, pause the page wherever the error was thrown.
+    if (debug) {
+      console.error(
+        "Caught error - holding browser window open for debugging.",
+        e
+      );
+      await page.pause();
+    }
+    if (screenshots) {
+      const filename = path.join(screenshots, `${uuid()}.jpg`);
+      await page
+        .screenshot({
+          fullPage: true,
+          path: filename,
+        })
+        .then(() => console.log(`Saved screenshot of error to ${filename}`))
+        .catch((err) =>
+          console.error("An error was caught during screenshot capture", err)
+        );
+    }
+    return Promise.reject(e);
+  };
   const start = async () => {
+    // We have to wait for network idle here because the SAML redirect happens via JS, which is only triggered after
+    // the initial load. So we can't determine whether we've been redirect to SSO unless we wait for network activity
+    // to stop.
+    await page.goto(config("FINEOS_BASEURL"));
+
     if (isSSO) {
       await page.fill(
         "input[type='email'][name='loginfmt']",
@@ -54,41 +81,24 @@ export async function withFineosBrowser<T extends unknown>(
       // Sometimes we end up with a "Do you want to stay logged in" question.
       // This seems inconsistent, so we only look for it if we haven't already found ourselves
       // in Fineos.
-      await Promise.race([
-        page.waitForSelector("body.PageBody", { timeout: 29000 }),
-        page.click("input[value='No']", { timeout: 30000 }),
-      ]);
-    }
-    await page.waitForSelector("body.PageBody");
-  };
-
-  try {
-    await start();
-    return await next(page);
-  } catch (e) {
-    if (debug) {
-      console.log(
-        "Caught error - holding browser window open for debugging.",
-        e
-      );
-      await delay(100000);
-    }
-    if (screenshots) {
-      const filename = path.join(screenshots, `${uuid()}.jpg`);
-      try {
-        await page.screenshot({
-          fullPage: true,
-          path: filename,
-        });
-        console.log(`Saving screenshot of error to ${filename}`);
-      } catch (e) {
-        console.error("An err was caught during screenshot capture");
+      if (/login\.microsoftonline\.com/.test(page.url())) {
+        await page.click("input[value='No']");
       }
     }
-    throw e;
-  } finally {
-    await browser.close();
-  }
+    await page.waitForSelector("body.PageBody");
+    return page;
+  };
+
+  return start()
+    .then(next)
+    .catch(debugError)
+    .finally(async () => {
+      // Note: For whatever reason, we get sporadic crashes when calling browser.close() without page.close().
+      // This sporadic crash is characterized by an ERR_IPC_CHANNEL_CLOSED error. We believe the issue is similar
+      // to https://github.com/microsoft/playwright/issues/5327.
+      await page.close();
+      await browser.close();
+    });
 }
 
 export async function approveClaim(
