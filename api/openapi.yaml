@@ -224,12 +224,13 @@ paths:
           $ref: "#/components/responses/NotFound"
       requestBody:
         $ref: "#/components/requestBodies/EmployeeSearchRequest"
-        
-  /employees/departments/search:
+
+
+  /departments/search:
     post:
       tags:
         - HRD
-      summary: Lookup an Employee by SSN/ITIN in HRD dataset
+      summary: Lookup an Employee/Employer by SSN/ITIN/EmployerID in HRD dataset
       operationId: massgov.pfml.api.employees.employee_departments_search
       responses:
         "200":
@@ -246,6 +247,25 @@ paths:
           $ref: "#/components/responses/NotFound"
       requestBody:
         $ref: "#/components/requestBodies/HRDEmployeeSearchRequest"
+
+
+  /departments/employer:
+    post:
+      tags:
+        - HRD
+      summary: Set a leave admin's departments
+      operationId: massgov.pfml.api.employers.employer_add_departments
+      responses:
+        "201":
+          description: Checks verification data, and if valid, creates a verification record for a leave admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+      requestBody:
+        $ref: "#/components/requestBodies/VerificationRequest"
 
   /employers/add:
     post:
@@ -1083,31 +1103,6 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/VerificationRequest"
 
-  /employers/{user_id}/department:
-    post:
-      tags:
-        - Employers
-      summary: Set a leave admin's departments
-      operationId: massgov.pfml.api.employers.employer_add_departments
-      parameters:
-        - name: user_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-          description: ID of user to update
-          required: true
-      # responses:
-      #   "201":
-      #     description: Checks verification data, and if valid, creates a verification record for a leave admin
-      #     content:
-      #       application/json:
-      #         schema:
-      #           $ref: "#/components/schemas/UserResponse"
-      #   "400":
-      #     $ref: "#/components/responses/BadRequest"
-      # requestBody:
-      #   $ref: "#/components/requestBodies/VerificationRequest"
       
 
 tags:
