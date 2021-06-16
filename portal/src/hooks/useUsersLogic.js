@@ -1,5 +1,7 @@
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
+
+import DepartmentsApi from "../api/DepartmentsApi";
 import { UserNotReceivedError } from "../errors";
 import UsersApi from "../api/UsersApi";
 
@@ -13,7 +15,9 @@ import UsersApi from "../api/UsersApi";
  */
 const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
+  const departmentsApi = new DepartmentsApi();
   const [user, setUser] = useState();
+  const [departments, setDepartments] = useState([]);
 
   /**
    * Update user through a PATCH request to /users
@@ -118,6 +122,18 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     }
   };
 
+  const searchUsersDepartments = async (postData) => {
+    appErrorsLogic.clearErrors();
+
+    try {
+      const { departments } = await departmentsApi.searchDepartment(postData);
+
+      setDepartments(departments);
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
   return {
     convertUser,
     user,
@@ -126,6 +142,8 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     requireUserConsentToDataAgreement,
     requireUserRole,
     setUser,
+    departments,
+    searchUsersDepartments,
   };
 };
 
