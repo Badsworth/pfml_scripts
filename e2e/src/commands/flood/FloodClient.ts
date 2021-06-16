@@ -55,8 +55,8 @@ export type CreateFloodRequest = Omit<
 export default class FloodClient {
   constructor(private apiToken: string) {}
 
-  fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
-    return fetch(url, {
+  async fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
+    const response = await fetch(url, {
       ...init,
       headers: {
         ...init?.headers,
@@ -65,19 +65,19 @@ export default class FloodClient {
         Accept: "application/vnd.flood.v2+json",
       },
     });
+    if (!response.ok) {
+      throw new Error(
+        `Flood API request failed with a code of ${response.status}(${
+          response.statusText
+        }): ${await response.text()}`
+      );
+    }
+    return response;
   }
 
-  async getFloods(): Promise<Flood[]> {
-    const response = await this.fetch("https://api.flood.io/floods");
-    if (response.ok) {
-      const data = await response.json();
-      return data._embedded.floods;
-    }
-    throw new Error(
-      `Flood API request failed with a code of ${response.status}(${
-        response.statusText
-      }): ${await response.text()}`
-    );
+  async getFlood(id: string): Promise<Flood> {
+    const response = await this.fetch(`https://api.flood.io/floods/${id}`);
+    return response.json();
   }
 
   async startFlood(
@@ -111,13 +111,6 @@ export default class FloodClient {
       method: "POST",
       body,
     });
-    if (response.ok) {
-      return response.json();
-    }
-    throw new Error(
-      `Flood creation failed with a code of ${response.status}(${
-        response.statusText
-      }): ${await response.text()}`
-    );
+    return response.json();
   }
 }
