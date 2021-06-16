@@ -43,8 +43,10 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         ACH_RETURN_COUNT = "ach_return_count"
         CHANGE_NOTIFICATION_COUNT = "change_notification_count"
         EFT_PRENOTE_ALREADY_APPROVED_COUNT = "eft_prenote_already_approved_count"
+        EFT_PRENOTE_ALREADY_REJECTED_COUNT = "eft_prenote_already_rejected_count"
         EFT_PRENOTE_COUNT = "eft_prenote_count"
         EFT_PRENOTE_ID_NOT_FOUND_COUNT = "eft_prenote_id_not_found_count"
+        EFT_PRENOTE_CHANGE_NOTIFICATION_COUNT = "eft_prenote_change_notification_count"
         EFT_PRENOTE_REJECTED_COUNT = "eft_prenote_rejected_count"
         EFT_PRENOTE_UNEXPECTED_STATE_COUNT = "eft_prenote_unexpected_state_count"
         PAYMENT_ALREADY_COMPLETE_COUNT = "payment_already_complete_count"
@@ -219,13 +221,75 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 pub_eft=pub_eft,
             )
             return
+        elif pub_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id:
+            # Already rejected
+            message = f"got prenote return but in state {PrenoteState.REJECTED.prenote_state_description} not {PrenoteState.PENDING_WITH_PUB.prenote_state_description}"
+            logger.warning(
+                f"Prenote: {message}", extra=ach_return.get_details_for_log(),
+            )
+            self.increment(self.Metrics.EFT_PRENOTE_ALREADY_REJECTED_COUNT)
 
-        pub_eft.prenote_state_id = PrenoteState.REJECTED.prenote_state_id
-        pub_eft.prenote_response_at = massgov.pfml.util.datetime.utcnow()
-        pub_eft.prenote_response_reason_code = ach_return.return_reason_code
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_PRENOTE,
+                message=message,
+                line_number=ach_return.line_number,
+                raw_data=ach_return.raw_record.data,
+                type_code=ach_return.raw_record.type_code.value,
+                details=ach_return.get_details_for_error(),
+                pub_eft=pub_eft,
+            )
+            return
+
+        # EFT is in PENDING_WITH_PUB state
+
+        # Approve prenote with change notifications
+        change_notification_message = ""
         if ach_return.is_change_notification():
             change_notification = cast(reader.ACHChangeNotification, ach_return)
-            logger.info("change notification %s", change_notification.addenda_information)
+            change_notification_message = (
+                f"Prenote: has change notification: {change_notification.addenda_information}"
+            )
+            logger.info("Prenote: has change notification", extra=ach_return.get_details_for_log())
+
+            self.increment(self.Metrics.EFT_PRENOTE_CHANGE_NOTIFICATION_COUNT)
+
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_PRENOTE,
+                message=change_notification_message,
+                line_number=ach_return.line_number,
+                raw_data=ach_return.raw_record.data,
+                type_code=ach_return.raw_record.type_code.value,
+                details=ach_return.get_details_for_error(),
+                pub_eft=pub_eft,
+            )
+
+            pub_eft.prenote_state_id = PrenoteState.APPROVED.prenote_state_id
+            pub_eft.prenote_response_at = delegated_payments_util.get_now()
+            pub_eft.prenote_approved_at = delegated_payments_util.get_now()
+            pub_eft.prenote_response_reason_code = ach_return.return_reason_code
+
+            return
+
+        # Reject non change notification returns
+        message = "Rejecting prenote with return."
+        logger.warning(
+            f"Prenote: {message}", extra=ach_return.get_details_for_log(),
+        )
+
+        self.add_pub_error(
+            pub_error_type=PubErrorType.ACH_PRENOTE,
+            message=message,
+            line_number=ach_return.line_number,
+            raw_data=ach_return.raw_record.data,
+            type_code=ach_return.raw_record.type_code.value,
+            details=ach_return.get_details_for_error(),
+            pub_eft=pub_eft,
+        )
+
+        pub_eft.prenote_state_id = PrenoteState.REJECTED.prenote_state_id
+        pub_eft.prenote_response_at = delegated_payments_util.get_now()
+        pub_eft.prenote_response_reason_code = ach_return.return_reason_code
+
         self.increment(self.Metrics.EFT_PRENOTE_REJECTED_COUNT)
 
     def process_payment_return(self, pub_individual_id: int, ach_return: reader.ACHReturn) -> None:

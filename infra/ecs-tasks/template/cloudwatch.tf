@@ -332,12 +332,14 @@ module "reductions-send-wage-replacement-payments-to-dfml" {
   ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
 }
 
+# Run pub-payments-process-fineos at 11pm EST (12am EDT) Sunday through Thursday
+# The output files will be available by the start of business Mon-Fri
 module "pub-payments-process-fineos" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_pub_automation_fineos
 
   task_name           = "pub-payments-process-fineos"
-  schedule_expression = "cron(0 15 * * ? *)"
+  schedule_expression = "cron(0 4 ? * MON-FRI *)"
   environment_name    = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
@@ -348,6 +350,41 @@ module "pub-payments-process-fineos" {
   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-process-fineos"].family
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+}
+
+# Run pub-payments-process-fineos claimant extract only
+# at 6am EST (7am EDT) Saturday/Sunday (For Friday/Saturday extract)
+# Runs at 6am instead of 11pm to avoid monthly saturday DB downtime
+module "weekend-pub-payments-process-fineos" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_pub_automation_fineos
+
+  task_name           = "weekend-pub-claimant-extract"
+  schedule_expression = "cron(0 10 ? * SAT-SUN *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["pub-payments-process-fineos"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-process-fineos"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "pub-payments-process-fineos",
+        "command": [
+          "pub-payments-process-fineos",
+          "--steps=claimant-extract"
+        ]
+      }
+    ]
+  }
+  JSON
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -50,6 +50,9 @@ from massgov.pfml.db.models.payments import (
     FineosWritebackTransactionStatus,
 )
 from massgov.pfml.delegated_payments.delegated_config import get_s3_config
+from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import (
+    PRENOTE_PRENDING_WAITING_PERIOD,
+)
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationIssue,
     ValidationReason,
@@ -1930,7 +1933,7 @@ def test_update_eft_existing_eft_matches_and_pending_with_pub(
         prenote_state_id=PrenoteState.PENDING_WITH_PUB.prenote_state_id,
         routing_nbr="1" * 9,
         account_nbr="1" * 9,
-        prenote_sent_at=get_now() - timedelta(10),
+        prenote_sent_at=get_now() - timedelta(PRENOTE_PRENDING_WAITING_PERIOD),
         bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
     )
     EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
@@ -1956,6 +1959,10 @@ def test_update_eft_existing_eft_matches_and_pending_with_pub(
 
     import_log_report = json.loads(payment.fineos_extract_import_log.report)
     assert import_log_report["prenote_past_waiting_period_approved_count"] == 1
+
+    # The payment should now be approved
+    assert pub_eft_record.prenote_state_id == PrenoteState.APPROVED.prenote_state_id
+    assert pub_eft_record.prenote_approved_at is not None
 
     # There should not be a DELEGATED_EFT_SEND_PRENOTE record
     employee_state_logs_after = (

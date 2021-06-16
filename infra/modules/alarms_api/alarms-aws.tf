@@ -13,6 +13,8 @@ locals {
     "payments-payment-voucher-plus",
     "process-cps-error-reports",
     "weekend-cps-extract-processing",
+    "pub-payments-process-fineos",
+    "weekend-pub-claimant-extract"
   ]
 }
 

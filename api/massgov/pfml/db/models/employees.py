@@ -377,6 +377,7 @@ class PubEft(Base):
         onupdate=utc_timestamp_gen,
         server_default=sqlnow(),
     )
+    prenote_approved_at = Column(TIMESTAMP(timezone=True))
     prenote_response_at = Column(TIMESTAMP(timezone=True))
     prenote_sent_at = Column(TIMESTAMP(timezone=True))
     prenote_response_reason_code = Column(Text)

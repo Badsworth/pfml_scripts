@@ -1425,7 +1425,6 @@ def test_e2e_pub_payments(
         )
 
         # == Validate prenote states
-        # TODO should probably be approved - hold for discussions with Mass/DUA/PUB
         assert_prenote_state(
             test_dataset=test_dataset,
             scenario_names=[
@@ -1439,10 +1438,13 @@ def test_e2e_pub_payments(
 
         assert_prenote_state(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-            ],
+            scenario_names=[ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,],
+            expected_prenote_state=PrenoteState.APPROVED,
+        )
+
+        assert_prenote_state(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.PUB_ACH_PRENOTE_RETURN,],
             expected_prenote_state=PrenoteState.REJECTED,
         )
 
@@ -1565,6 +1567,8 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+                ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
@@ -1641,6 +1645,7 @@ def test_e2e_pub_payments(
                     ]
                 ),
                 "eft_prenote_already_approved_count": 0,
+                "eft_prenote_already_rejected_count": 0,
                 "eft_prenote_count": len(
                     [
                         ScenarioName.PUB_ACH_PRENOTE_RETURN,
@@ -1651,12 +1656,10 @@ def test_e2e_pub_payments(
                 "eft_prenote_id_not_found_count": len(
                     [ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,]
                 ),
-                "eft_prenote_rejected_count": len(
-                    [
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                    ]
+                "eft_prenote_change_notification_count": len(
+                    [ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION]
                 ),
+                "eft_prenote_rejected_count": len([ScenarioName.PUB_ACH_PRENOTE_RETURN]),
                 "eft_prenote_unexpected_state_count": 0,
                 "payment_already_complete_count": 0,
                 "payment_complete_with_change_count": len(
@@ -1680,10 +1683,7 @@ def test_e2e_pub_payments(
                 "payment_already_rejected_count": 0,  # TODO add scenario or check this on later days
                 "payment_notification_unexpected_state_count": 0,
                 "payment_rejected_count": len(
-                    [
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                    ]
+                    [ScenarioName.PUB_ACH_MEDICAL_RETURN, ScenarioName.PUB_ACH_FAMILY_RETURN,]
                 ),
                 "payment_unexpected_state_count": 0,
                 "unknown_id_format_count": len(
@@ -1792,16 +1792,16 @@ def test_e2e_pub_payments(
         )
 
     # ===============================================================================
-    # [Day 9 - 7:00 PM] Generate FINEOS extract files
+    # [Day 7 - 7:00 PM] Generate FINEOS extract files
     # ===============================================================================
-    with freeze_time("2021-05-09 18:00:00", tz_offset=5):
+    with freeze_time("2021-05-07 18:00:00", tz_offset=5):
         generate_fineos_extract_files(test_dataset.scenario_dataset)
 
     # ===============================================================================
-    # [Day 9 - 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
+    # [Day 7 - 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
     # ===============================================================================
 
-    with freeze_time("2021-05-09 21:30:00", tz_offset=5):
+    with freeze_time("2021-05-07 21:30:00", tz_offset=5):
         process_fineos_extracts(
             test_dataset, mock_experian_client, test_db_session, test_db_other_session
         )
@@ -1813,6 +1813,7 @@ def test_e2e_pub_payments(
                 ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=test_db_session,
@@ -1820,10 +1821,7 @@ def test_e2e_pub_payments(
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-            ],
+            scenario_names=[ScenarioName.PUB_ACH_PRENOTE_RETURN,],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
             db_session=test_db_session,
         )
@@ -1836,13 +1834,29 @@ def test_e2e_pub_payments(
             db_session=test_db_session,
         )
 
+        # assert prenote states
+        assert_prenote_state(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+                ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+            ],
+            expected_prenote_state=PrenoteState.APPROVED,
+        )
+
+        assert_prenote_state(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.PUB_ACH_PRENOTE_RETURN,],
+            expected_prenote_state=PrenoteState.REJECTED,
+        )
+
         # Writeback
         stage_4_legacy_writeback_scenario_names = []
 
-        stage_4_generic_flow_writeback_scenarios = [
-            ScenarioName.PUB_ACH_PRENOTE_RETURN,
-            ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-        ]
+        stage_4_generic_flow_writeback_scenarios = [ScenarioName.PUB_ACH_PRENOTE_RETURN]
 
         assert_writeback_for_stage(
             test_dataset,
@@ -1857,10 +1871,7 @@ def test_e2e_pub_payments(
             "FineosPeiWritebackStep",
             {
                 "eft_account_information_error_writeback_transaction_status_count": len(
-                    [
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                    ]
+                    [ScenarioName.PUB_ACH_PRENOTE_RETURN]
                 ),
             },
         )
@@ -2513,6 +2524,13 @@ def assert_writeback_for_stage(
                 "transactionStatus"
             ] = transaction_status.transaction_status_description
             expected_csv_row["status"] = transaction_status.writeback_record_status
+
+            transaction_status_date = payments_util.get_transaction_status_date(
+                p, transaction_status
+            )
+            expected_csv_row["transStatusDate"] = transaction_status_date.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
 
         else:
             expected_csv_row["status"] = "Active"
