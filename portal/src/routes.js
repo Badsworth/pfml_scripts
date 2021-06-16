@@ -9,6 +9,7 @@ const routes = {
     claims: "/claims",
     employers: "/employers",
     users: "/users",
+    departments: "/departments",
   },
   applications: {
     address: "/applications/address",
@@ -24,6 +25,7 @@ const routes = {
     employerBenefits: "/applications/employer-benefits",
     employerBenefitsDetails: "/applications/employer-benefits-details",
     employerBenefitsIntro: "/applications/employer-benefits-intro",
+    employerDepartment: "/applications/employer-department",
     employmentStatus: "/applications/employment-status",
     familyMemberDateOfBirth: "/applications/family-member-date-of-birth",
     familyMemberName: "/applications/family-member-name",

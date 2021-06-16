@@ -80,6 +80,7 @@ export const guards = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
+  isCommonWealthEmployee: () => true,
 };
 
 /**
@@ -542,6 +543,31 @@ export default {
         step: ClaimSteps.employerInformation,
         fields: employmentStatusFields,
       },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.employerDepartment,
+            cond: "isCommonWealthEmployee",
+          },
+          {
+            target: routes.applications.notifiedEmployer,
+            cond: "isEmployed",
+          },
+          {
+            target: routes.applications.checklist,
+          },
+        ],
+      },
+    },
+    [routes.applications.employerDepartment]: {
+      // meta: {
+      //   applicableRules: [
+      //     // Show this error after we've gathered SSN and EIN
+      //     "require_employee",
+      //   ],
+      //   step: ClaimSteps.employerInformation,
+      //   fields: employmentStatusFields,
+      // },
       on: {
         CONTINUE: [
           {
