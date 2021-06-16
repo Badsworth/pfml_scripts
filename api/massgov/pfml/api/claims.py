@@ -1,8 +1,10 @@
 import base64
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Set, Union
 
 import connexion
 import flask
+from sqlalchemy import or_
+from sqlalchemy.orm.query import Query
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
@@ -24,7 +26,12 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.applications import Application
-from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministrator
+from massgov.pfml.db.models.employees import (
+    Claim,
+    Employer,
+    LkAbsenceStatus,
+    UserLeaveAdministrator,
+)
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
@@ -37,6 +44,8 @@ from massgov.pfml.util.strings import sanitize_fein
 logger = massgov.pfml.util.logging.get_logger(__name__)
 # HRD Employer FEIN. See https://lwd.atlassian.net/browse/EMPLOYER-1317
 CLAIMS_DASHBOARD_BLOCKED_FEINS = set(["046002284"])
+
+VALID_CLAIM_STATUSES = {"Approved", "Closed", "Declined", "Pending"}
 
 
 class VerificationRequired(Forbidden):
@@ -425,6 +434,7 @@ def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
 def get_claims() -> flask.Response:
     current_user = app.current_user()
     employer_id = flask.request.args.get("employer_id")
+    absence_statuses = parse_absence_statuses(flask.request.args.get("claim_status"))
     is_employer = can(READ, "EMPLOYER_API")
     log_attributes = get_employer_log_attributes(app)
 
@@ -458,6 +468,8 @@ def get_claims() -> flask.Response:
                     .filter(Claim.application.has(Application.user_id == current_user.user_id))  # type: ignore
                     .order_by(pagination_context.order_key)
                 )
+            if len(absence_statuses):
+                query = add_absence_status_filter_to_query(query, absence_statuses)
 
         page = page_for_api_context(pagination_context, query)
 
@@ -481,3 +493,39 @@ def get_claims() -> flask.Response:
         context=pagination_context,
         status_code=200,
     ).to_api_response()
+
+
+def parse_absence_statuses(absence_status_string: Union[str, None]) -> set:
+    if not absence_status_string:
+        return set()
+    absence_statuses = set(absence_status_string.split(","))
+    validate_absence_status(absence_statuses)
+    return absence_statuses
+
+
+def validate_absence_status(absence_statuses: Set[str]) -> None:
+    bad_statuses = absence_statuses - VALID_CLAIM_STATUSES
+    if len(bad_statuses):
+        raise BadRequest(f"Unsupported claim status '{','.join(bad_statuses)}'")
+    return
+
+
+def convert_pending_absence_status(absence_statuses: Set[str]) -> Set[str]:
+    if "Pending" in absence_statuses:
+        absence_statuses.remove("Pending")
+        absence_statuses.update(["Intake In Progress", "In Review", "Adjudication", None])  # type: ignore
+    return absence_statuses
+
+
+def add_absence_status_filter_to_query(query: Query, absence_statuses: Set[str]) -> Query:
+    absence_statuses = convert_pending_absence_status(absence_statuses)
+    query = query.join(
+        LkAbsenceStatus,
+        LkAbsenceStatus.absence_status_id == Claim.fineos_absence_status_id,
+        isouter=True,
+    )
+    filters = [LkAbsenceStatus.absence_status_description.in_(absence_statuses)]
+    if None in absence_statuses:
+        filters.extend([Claim.fineos_absence_status_id.is_(None)])
+    query = query.filter(or_(*filters))
+    return query

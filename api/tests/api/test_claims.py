@@ -2017,3 +2017,116 @@ class TestGetClaimsEndpoint:
         assert len(response_body["data"]) == 5
         for claim in response_body["data"]:
             assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
+
+    # Inner class for testing Claims With Status Filtering
+    class TestClaimsWithStatus:
+        NUM_CLAIM_PER_STATUS = 2
+
+        @pytest.fixture(autouse=True)
+        def load_test_db(self, employer_user, test_verification, test_db_session):
+            employer = EmployerFactory.create()
+            employee = EmployeeFactory.create()
+            for i in range(1, 9):
+                for _ in range(0, self.NUM_CLAIM_PER_STATUS):
+                    if i == 8:  # absence_status_id => NULL
+                        ClaimFactory.create(
+                            employer=employer, employee=employee, claim_type_id=1,
+                        )
+                        continue
+                    ClaimFactory.create(
+                        employer=employer,
+                        employee=employee,
+                        fineos_absence_status_id=i,
+                        claim_type_id=1,
+                    )
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(link)
+            test_db_session.commit()
+
+        def _perform_api_call(self, url, client, employer_auth_token):
+            return client.get(url, headers={"Authorization": f"Bearer {employer_auth_token}"},)
+
+        def _perform_assertions(self, response, status_code, expected_count, valid_statuses):
+            assert response.status_code == status_code
+            response_body = response.get_json()
+            claim_data = response_body.get("data", [])
+            assert len(claim_data) == expected_count
+            for claim in response_body.get("data", []):
+                absence_status = claim.get("fineos_absence_status") or {}
+                absence_status_description = absence_status.get("absence_status_description", None)
+                assert absence_status_description in valid_statuses
+
+        def test_get_claims_with_status_filter_one_claim(self, client, employer_auth_token):
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Approved", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS,
+                valid_statuses=["Approved"],
+            )
+
+        def test_get_claims_with_status_filter_pending(self, client, employer_auth_token):
+            valid_statuses = [
+                "Adjudication",
+                "In Review",
+                "Intake In Progress",
+                None,
+            ]
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Pending", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS * 4,
+                valid_statuses=valid_statuses,
+            )
+
+        def test_get_claims_with_status_filter_multiple_statuses(self, client, employer_auth_token):
+            valid_statuses = ["Approved", "Closed"]
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Approved,Closed", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS * 2,
+                valid_statuses=valid_statuses,
+            )
+
+        def test_get_claims_with_status_filter_multiple_statuses_pending(
+            self, client, employer_auth_token
+        ):
+            valid_statuses = [
+                "Adjudication",
+                "In Review",
+                "Intake In Progress",
+                None,
+                "Closed",
+            ]
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Pending,Closed", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS * 5,
+                valid_statuses=valid_statuses,
+            )
+
+        def test_get_claims_with_status_filter_unsuported_statuses(
+            self, client, employer_auth_token
+        ):
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Unknown", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp, status_code=400, expected_count=0, valid_statuses=["Unknown"]
+            )
