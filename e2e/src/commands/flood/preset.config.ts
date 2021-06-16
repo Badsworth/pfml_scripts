@@ -111,8 +111,12 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - Portal Claims 1st Spike",
         project: "PFML",
-        threads: 24,
         duration: seconds(15),
+        // We want a total of 24 concurrency, split across 2 instances.
+        threads: 12,
+        grid: {
+          instance_quantity: 2,
+        },
       },
       data: {
         scenario: "PortalClaimSubmit",
@@ -124,14 +128,18 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - Portal Claims 2nd Spike",
         project: "PFML",
-        threads: 36,
         duration: seconds(15),
+        // We want a total of 36 concurrency, split across 2 instances.
+        threads: 18,
+        grid: {
+          instance_quantity: 2,
+        },
       },
       data: {
         scenario: "PortalClaimSubmit",
         count: 1000,
       },
-      delay: milliseconds(23), // 23 minute delay.
+      delay: milliseconds(25), // 25 minute delay.
     },
   ],
 };
