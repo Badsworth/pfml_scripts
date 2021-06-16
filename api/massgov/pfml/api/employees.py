@@ -25,17 +25,6 @@ class EmployeeSearchRequest(PydanticBaseModel):
     last_name: str
     tax_identifier_last4: str
 
-class HRDEmployeeSearchRequest(PydanticBaseModel):
-    tax_identifier: str
-
-
-class HRDEmployeeResponse(PydanticBaseModel):
-    employee_id: UUID4
-    tax_identifier: str
-    full_name: Optional[str]
-    department_id: str
-    department_name: Optional[str]
-
 
 class EmployeeResponse(PydanticBaseModel):
     employee_id: UUID4
@@ -55,6 +44,19 @@ class EmployeeResponse(PydanticBaseModel):
             employee_response.tax_identifier_last4 = employee.tax_identifier.tax_identifier_last4
 
         return employee_response
+
+
+class HRDEmployeeSearchRequest(PydanticBaseModel):
+    tax_identifier: Optional[str]
+    employee_id: Optional[str]
+
+
+class HRDEmployeeResponse(PydanticBaseModel):
+    employee_id: UUID4
+    tax_identifier: str
+    full_name: Optional[str]
+    department_id: str
+    department_name: Optional[str]
 
 
 def employees_get(employee_id):
@@ -113,23 +115,34 @@ def employees_search():
         message="Successfully found employee", data=EmployeeResponse.from_orm(employee).dict(),
     ).to_api_response()
 
-def employee_departments_search():
+
+def employees_departments_search():
     request = HRDEmployeeSearchRequest.parse_obj(connexion.request.json)
 
     with app.db_session() as db_session:
-        employees = (
-            db_session.query(HRD)
-            .filter(
-                HRD.tax_identifier == request.tax_identifier
-            ).all()
-        )
+        if request.employee_id:
+            departments_query = (
+                db_session.query(HRD)
+                .filter(
+                    HRD.employee_id == request.employee_id
+                )
+            )
+        elif request.tax_identifier:
+            departments_query = (
+                db_session.query(HRD)
+                .filter(
+                    HRD.tax_identifier == request.tax_identifier
+                )
+            )
+        
+        departments = departments_query.all()
 
-    if employees is None or len(employees) == 0:
+    if departments is None or len(departments) == 0:
         raise NotFound()
 
-    ensure(READ, employees)
+    ensure(READ, departments)
 
-    employeesResponse = [HRDEmployeeResponse.from_orm(employee).dict() for employee in employees]
+    departmentsResponse = [HRDEmployeeResponse.from_orm(department).dict() for department in departments]
     return response_util.success_response(
-        message="Successfully found employee departments", data=employeesResponse,
+        message="Successfully found employee departments", data=departmentsResponse,
     ).to_api_response()
