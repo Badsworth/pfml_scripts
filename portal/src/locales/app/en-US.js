@@ -1374,6 +1374,17 @@ const pages = {
       "Have you told your employer that you are taking$t(chars.nbsp)leave?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
+  claimsEmployerDepartment: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    employerNotificationDateHint: "This can be an approximate date.",
+    employerNotificationLabel: "When did you tell them?",
+    mustNotifyEmployerWarning:
+      "You can continue to enter information about your leave. Before you can submit your application, you must tell your employer that you’re taking$t(chars.nbsp)leave. Notify your employer at least 30 days before the start of your leave if possible.",
+    sectionLabel:
+      "Have you told your employer that you are taking$t(chars.nbsp)leave?",
+    title: "$t(shared.claimsEmploymentInfoTitle)",
+  },
   claimsOtherIncomes: {
     choiceNo: "$t(shared.choiceNo)",
     choiceNoHint:
