@@ -248,8 +248,14 @@ def get_claim_as_leave_admin(
             )
             contains_version_two_eforms = True
             eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
-            previous_leaves.extend(TransformPreviousLeaveFromOtherLeaveEform.from_fineos(eform))
+            previous_leaves.extend(
+                previous_leave
+                for previous_leave in TransformPreviousLeaveFromOtherLeaveEform.from_fineos(eform)
+                if previous_leave.is_for_current_employer
+            )
             concurrent_leave = TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(eform)
+            if concurrent_leave and not concurrent_leave.is_for_current_employer:
+                concurrent_leave = None
     if customer_info["address"] is not None:
         claimant_address = Address(
             line_1=customer_info["address"]["addressLine1"],
