@@ -492,7 +492,7 @@ def mock_fineos_other_leaves_v2_eform():
                     integerValue=None,
                     stringValue=None,
                     enumValue=group_client_api.ModelEnum(
-                        domainName="PleaseSelectYesNo", instanceValue="No"
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
                     ),
                 ),
                 group_client_api.EFormAttribute(
@@ -1776,7 +1776,7 @@ def test_get_claim_other_leaves_v2_eform(
             previous_leave_id=None,
             worked_per_week_minutes=None,
             leave_minutes=None,
-            type=None,
+            type="same_reason",
         ),
         PreviousLeave(
             is_for_current_employer=True,
@@ -1786,7 +1786,7 @@ def test_get_claim_other_leaves_v2_eform(
             previous_leave_id=None,
             worked_per_week_minutes=None,
             leave_minutes=None,
-            type=None,
+            type="same_reason",
         ),
         PreviousLeave(
             is_for_current_employer=True,
@@ -1796,7 +1796,7 @@ def test_get_claim_other_leaves_v2_eform(
             previous_leave_id=None,
             worked_per_week_minutes=None,
             leave_minutes=None,
-            type=None,
+            type="other_reason",
         ),
         PreviousLeave(
             is_for_current_employer=True,
@@ -1806,7 +1806,7 @@ def test_get_claim_other_leaves_v2_eform(
             previous_leave_id=None,
             worked_per_week_minutes=None,
             leave_minutes=None,
-            type=None,
+            type="other_reason",
         ),
         PreviousLeave(
             is_for_current_employer=True,
@@ -1816,7 +1816,7 @@ def test_get_claim_other_leaves_v2_eform(
             previous_leave_id=None,
             worked_per_week_minutes=None,
             leave_minutes=None,
-            type=None,
+            type="other_reason",
         ),
     ]
     assert (
@@ -1828,7 +1828,7 @@ def test_get_claim_other_leaves_v2_eform(
             previous_leave_id=None,
             worked_per_week_minutes=None,
             leave_minutes=None,
-            type=None,
+            type="other_reason",
         )
         not in leave_details.previous_leaves
     )
@@ -1862,7 +1862,7 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
             previous_leave_id=None,
             worked_per_week_minutes=None,
             leave_minutes=None,
-            type=None,
+            type="same_reason",
         )
     ]
     assert leave_details.concurrent_leave is None

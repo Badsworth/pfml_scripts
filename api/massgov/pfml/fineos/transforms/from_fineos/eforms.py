@@ -28,6 +28,11 @@ class TransformOtherLeaveAttributes(TransformEformAttributes):
             "type": "enumValue",
             "embeddedProperty": "instanceValue",
         },
+        "V2Leave": {
+            "name": "is_for_same_reason",
+            "type": "enumValue",
+            "embeddedProperty": "instanceValue",
+        },
     }
 
 
@@ -90,6 +95,10 @@ class TransformPreviousLeaveFromOtherLeaveEform(BaseModel):
     def from_fineos(cls, api_model: EForm) -> List[PreviousLeave]:
         eform = api_model.dict()
         previous_leaves = TransformOtherLeaveAttributes.list_to_props(eform["eformAttributes"])
+        for leave in previous_leaves:
+            leave["type"] = (
+                "same_reason" if leave["is_for_same_reason"] == "Yes" else "other_reason"
+            )
         return [PreviousLeave.parse_obj(leave) for leave in previous_leaves]
 
 

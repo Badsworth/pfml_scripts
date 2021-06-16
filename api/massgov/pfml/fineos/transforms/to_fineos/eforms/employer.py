@@ -119,7 +119,6 @@ class PreviousLeaveAttributeBuilder(EFormAttributeBuilder):
             "type": "enumValue",
             "domainName": "Nature of leave",
         },
-        # TODO: https://lwd.atlassian.net/browse/EMPLOYER-1430
         "is_for_same_reason": {
             "name": "V2PastLeaveSame",
             "type": "enumValue",
