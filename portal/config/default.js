@@ -19,9 +19,9 @@ module.exports = {
   },
   // Enable the maintenance page on these routes:
   // See docs/portal/maintenance-pages.md for details.
-  maintenancePageRoutes: [],
-  maintenanceStart: null,
-  maintenanceEnd: null,
+  maintenancePageRoutes: ["/*"],
+  maintenanceStart: "2021-06-27T03:59:00-04:00",
+  maintenanceEnd: "2021-06-27T05:00:00-04:00",
   newRelicAppId: null,
   gtmConfig: {
     // Google Tag Manager Stage environment
