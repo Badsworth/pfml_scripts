@@ -32,6 +32,7 @@ import { generateOtherIncomes } from "./OtherIncomes";
 import { generateEmployerBenefits } from "./EmployerBenefits";
 import { generatePreviousLeaves } from "./PreviousLeaves";
 import { generateConcurrentLeaves } from "./ConcurrentLeave";
+import { NonEmptyArray } from "../types";
 
 const pipelineP = promisify(pipeline);
 interface PromiseWithOptionalGeneration<T> extends Promise<T> {
@@ -67,15 +68,15 @@ export type ClaimSpecification = {
   /** Specify explicit leave dates for the claim. These will be used for the reduced/intermittent/continuous leave periods. */
   leave_dates?: [Date, Date];
   /** Specify other incomes, if not specified, start & end dates are automatically matched to leave dates*/
-  other_incomes?: OtherIncome[];
+  other_incomes?: NonEmptyArray<OtherIncome>;
   /** Specify employer benefits. if not specified, start & end dates are automatically matched to leave dates. */
-  employer_benefits?: EmployerBenefit[];
+  employer_benefits?: NonEmptyArray<EmployerBenefit>;
   /** Specify concurrent leave. If not specified, start & end dates are automatically matched to leave dates.*/
   concurrent_leave?: ConcurrentLeave;
   /** Specify previous leaves with same reason. if not specified, previous leave length is matched to the length of current leave, and it's set to end 2 weeks before the start of current leave */
-  previous_leaves_other_reason?: PreviousLeave[];
+  previous_leaves_other_reason?: NonEmptyArray<PreviousLeave>;
   /** Specify previous leaves with different reason. if not specified, previous leave length is matched to the length of current leave, and it's set to end 2 weeks before the start of current leave */
-  previous_leaves_same_reason?: PreviousLeave[];
+  previous_leaves_same_reason?: NonEmptyArray<PreviousLeave>;
   /** Specify an explicit address to use for the claim. */
   address?: Address;
   /** Specify explicit payment details to be used for the claim. */
@@ -177,6 +178,12 @@ export class ClaimGenerator {
       previous_leaves_other_reason,
       previous_leaves_same_reason,
       concurrent_leave,
+      // !! is just casting those properties to booleans
+      has_other_incomes: !!other_incomes,
+      has_concurrent_leave: !!concurrent_leave,
+      has_employer_benefits: !!employer_benefits,
+      has_previous_leaves_other_reason: !!previous_leaves_other_reason,
+      has_previous_leaves_same_reason: !!previous_leaves_same_reason,
     };
     return {
       id: uuid(),

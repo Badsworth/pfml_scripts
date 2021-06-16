@@ -65,6 +65,11 @@ export type RequiredKeys<T> = {
 }[keyof T];
 
 /**
+ * Require a typed array to have at least one element.
+ */
+export type NonEmptyArray<T> = [T, ...T[]];
+
+/**
  * @note Following types are used within typeguards and to limit the amount of property checks & type casts.
  */
 

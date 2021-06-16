@@ -5,7 +5,6 @@
 
 import {
   RequiredKeys,
-  RequireNotNull,
   ValidClaim,
   ValidConcurrentLeave,
   ValidEmployerBenefit,
@@ -53,7 +52,6 @@ export function assertIsTypedArray<T>(
   arr: unknown,
   check: (x: unknown) => x is T
 ): asserts arr is T[] {
-  console.log(arr, check(arr));
   if (!Array.isArray(arr)) throw new Error(`${arr} is not Array`);
   if (arr.some((item) => !check(item)))
     throw new TypeError(`Item ${JSON.stringify(arr)} is not of required type.`);
@@ -85,7 +83,7 @@ export function isObjectType<T>(map: Record<RequiredKeys<T>, string>) {
  */
 
 /**
- * Check value for the required concurrent leave properties.
+ * Check value for the required previous leave properties.
  */
 export const isValidPreviousLeave = isObjectType<ValidPreviousLeave>({
   is_for_current_employer: "",
