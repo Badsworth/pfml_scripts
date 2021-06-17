@@ -11,6 +11,7 @@ on:
   pull_request:
     paths:
       - api/**
+      - .github/workflows/api-ci.yml
 
 defaults:
   run:
@@ -28,6 +29,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: pre-load successful image
+        run: |
+          make ecr-login
+          docker pull 498823821309.dkr.ecr.us-east-1.amazonaws.com/pfml-api:ad356e535be39082538fce547ef74e8f89be8c26
+        continue-on-error: true
+        working-directory: ${{ env.working-dir }}
 
       - name: build container
         run: make build
