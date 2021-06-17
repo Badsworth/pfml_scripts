@@ -240,15 +240,15 @@ def test_payment_obj_updates(test_db_session, mock_s3_bucket, initialize_factori
 
     # test that after outbound payment return has been processed, payment object is updated
     # with values from the xml file
-    assert payment_1.disb_amount == "50.00"
-    assert payment_1.disb_check_eft_issue_date == "2020-12-17"
+    assert str(payment_1.disb_amount) == "50.00"
+    assert str(payment_1.disb_check_eft_issue_date) == "2020-12-17"
     assert payment_1.disb_check_eft_number == "00002493873"
     assert payment_1.disb_method.payment_method_description == "Check"
 
-    assert payment_2.disb_amount == "75.00"
-    assert payment_2.disb_check_eft_issue_date == "2020-12-17"
+    assert str(payment_2.disb_amount) == "75.00"
+    assert str(payment_2.disb_check_eft_issue_date) == "2020-12-17"
     assert payment_2.disb_check_eft_number == "0000249123A"
-    assert payment_2.disb_method.payment_method_description == "ACH"
+    assert payment_2.disb_method.payment_method_description == "Elec Funds Transfer"
 
 
 def test_process_outbound_payment_return_with_issues(
