@@ -247,10 +247,10 @@ def test_build_gax_files(
     (dat_filepath, inf_filepath) = gax.build_gax_files(test_db_session, ctr_outbound_path)
 
     # Confirm that we created a database row for each payment we created a document for.
-    test_db_session.query(
+    assert test_db_session.query(
         func.count(CtrDocumentIdentifier.ctr_document_identifier_id)
     ).scalar() == len(payments)
-    test_db_session.query(
+    assert test_db_session.query(
         func.count(PaymentReferenceFile.ctr_document_identifier_id)
     ).scalar() == len(payments)
 

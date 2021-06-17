@@ -1316,7 +1316,7 @@ def test_process_extract_additional_payment_types(
     local_payment_extract_step.run()
 
     # No PUB EFT records should exist
-    len(local_test_db_session.query(PubEft).all()) == 0
+    assert len(local_test_db_session.query(PubEft).all()) == 0
 
     # Zero dollar payment should be in DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
     zero_dollar_payment = (
@@ -1473,7 +1473,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
     local_payment_extract_step.run()
 
     # No PUB EFT records should exist
-    len(local_test_db_session.query(PubEft).all()) == 0
+    assert len(local_test_db_session.query(PubEft).all()) == 0
 
     # Zero dollar payment should be in DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
     zero_dollar_payment = (

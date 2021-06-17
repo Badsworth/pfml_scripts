@@ -108,7 +108,7 @@ def _assert_payment_state(db_session: db.Session, state: LkState, payments: List
 
 def _assert_fineos_writeback_details(db_session: db.Session, payments: List[Payment]) -> None:
     payment_ids = [payment.payment_id for payment in payments]
-    db_session.query(sqlalchemy.func.count(FineosWritebackDetails.payment_id)).filter(
+    assert db_session.query(sqlalchemy.func.count(FineosWritebackDetails.payment_id)).filter(
         FineosWritebackDetails.transaction_status_id
         == FineosWritebackTransactionStatus.ADDRESS_VALIDATION_ERROR.transaction_status_id
     ).filter(FineosWritebackDetails.payment_id.in_(payment_ids)).scalar() == len(payments)
