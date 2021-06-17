@@ -661,6 +661,7 @@ const shared = {
   absenceCaseStatus_denied: "Denied",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
+  amountFrequencyLabel: "Frequency",
   amountFrequency_daily: "Daily",
   amountFrequency_inTotal: "All at once",
   amountFrequency_monthly: "Monthly",
@@ -684,6 +685,8 @@ const shared = {
   certificationFormCare:
     "Certification of Your Family Member’s Serious Health Condition",
   certificationFormMedical: "Certification of Your Serious Health Condition",
+  choiceHint_familyOrMedicalLeave: "For example, a paid parental leave policy",
+  choiceHint_shortTermDisability: "Short-term or long-term disability",
   choiceNo: "No",
   choiceYes: "Yes",
   claimDurationTypeContinuous: "Continuous leave",
@@ -1115,7 +1118,7 @@ const pages = {
   },
   claimsEmployerBenefitsDetails: {
     addButton: "Add another benefit",
-    amountFrequencyLabel: "Frequency",
+    amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
     amountFrequency_daily: "$t(shared.amountFrequency_daily)",
     amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
     amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
@@ -1125,10 +1128,10 @@ const pages = {
     amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.employerBenefitEntryPrefix)",
     choiceHint_familyOrMedicalLeave:
-      "For example, a paid parental leave policy",
+      "$t(shared.choiceHint_familyOrMedicalLeave)",
     choiceHint_paidLeave:
       "For example, vacation time, sick leave, or personal time",
-    choiceHint_shortTermDisability: "Short-term or long-term disability",
+    choiceHint_shortTermDisability: "$t(shared.choiceHint_shortTermDisability)",
     choiceLabel_familyOrMedicalLeave:
       "$t(shared.employerBenefitType_familyOrMedicalLeave)",
     choiceLabel_no: "$t(shared.choiceNo)",
@@ -1399,7 +1402,7 @@ const pages = {
   },
   claimsOtherIncomesDetails: {
     addButton: "Add another income",
-    amountFrequencyLabel: "Frequency",
+    amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
     amountFrequency_daily: "$t(shared.amountFrequency_daily)",
     amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
     amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
@@ -2374,6 +2377,43 @@ const components = {
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
   },
+  employersAmendableEmployerBenefit: {
+    amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
+    benefitAmountDollarsLabel: "Amount",
+    benefitEndDateLabel:
+      "What is the last day of leave from work that this benefit will pay your employee for?",
+    benefitStartDateLabel:
+      "What is the first day of leave from work that this benefit will pay your employee for?",
+    benefitTypeLabel: "What kind of employer-sponsored benefit is it?",
+    cancelAddition: "Cancel addition",
+    choiceHint_familyOrMedicalLeave:
+      "$t(shared.choiceHint_familyOrMedicalLeave)",
+    choiceHint_shortTermDisability: "$t(shared.choiceHint_shortTermDisability)",
+    choiceLabel_familyOrMedicalLeave:
+      "$t(shared.employerBenefitType_familyOrMedicalLeave)",
+    choiceLabel_permanentDisability:
+      "$t(shared.employerBenefitType_permanentDisability)",
+    choiceLabel_shortTermDisability:
+      "$t(shared.employerBenefitType_shortTermDisability)",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    destroyButtonLabel_add: "Cancel addition",
+    destroyButtonLabel_amend: "Cancel amendment",
+    employeeAmountReceivedLabel: "How much will your employee receive?",
+    heading_add: "Add an employer-sponsored benefit",
+    heading_amend: "Amend employer-sponsored benefit",
+    hint:
+      "This addition will get saved when you submit your review at the end of this page.",
+    isFullSalaryContinuousHint:
+      "This means that for the period of time your employee receives this benefit, it will pay them the same amount of money as their wages from while they're not on leave. If this benefit will pay them any other amount, select No.",
+    isFullSalaryContinuousLabel:
+      "Does this employer-sponsored benefit fully replace your employee's wages?",
+    subtitle_add:
+      "This addition will get saved when you submit your review at the end of the page.",
+    subtitle_amend:
+      "This amendment will get saved when you submit your review at the end of the page.",
+    title: "Add an employer-sponsored benefit",
+  },
   employersEmployeeInformation: {
     addressLabel: "Mailing address",
     dobLabel: "Date of birth",
@@ -2389,6 +2429,7 @@ const components = {
       "Did the employee give you at least 30 days notice about their leave?",
   },
   employersEmployerBenefits: {
+    addButton: "Add a benefit",
     amountFrequency: "Select a frequency",
     amountFrequency_daily: "$t(shared.amountFrequency_daily)",
     amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
@@ -2528,6 +2569,7 @@ const components = {
     welcome: "Welcome",
   },
   employersPreviousLeaves: {
+    addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
     commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     explanation:

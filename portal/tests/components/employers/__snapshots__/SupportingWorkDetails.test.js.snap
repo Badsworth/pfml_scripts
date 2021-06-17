@@ -26,7 +26,8 @@ exports[`SupportingWorkDetails renders the component 1`] = `
     >
       <AmendmentForm
         className="input-text-first-child"
-        onCancel={[Function]}
+        destroyButtonLabel="Cancel amendment"
+        onDestroy={[Function]}
       >
         <InputText
           errorMsg={null}

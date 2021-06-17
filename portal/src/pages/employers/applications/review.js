@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { get, isEqual, pick } from "lodash";
+import { get, isEqual, omit, pick } from "lodash";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
@@ -41,8 +41,7 @@ export const Review = (props) => {
     employers: { claim, documents, downloadDocument, loadDocuments },
   } = appLogic;
   const { t } = useTranslation();
-  // TODO (EMPLOYER-718): Remove feature flag
-  const showPreviousLeaves = isFeatureEnabled("employerShowPreviousLeaves");
+  const shouldShowV2 = !!claim.uses_second_eform_version;
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
 
   // explicitly check for false as opposed to falsy values.
@@ -55,6 +54,7 @@ export const Review = (props) => {
   }
 
   const [formState, setFormState] = useState({
+    // base fields
     employerBenefits: [],
     previousLeaves: [],
     amendedBenefits: [],
@@ -66,7 +66,18 @@ export const Review = (props) => {
     employeeNotice: undefined,
     believeRelationshipAccurate: undefined,
     relationshipInaccurateReason: "",
+    // added fields
+    addedBenefits: [],
   });
+
+  const [allEmployerBenefits, setAllEmployerBenefits] = useState([]);
+  useEffect(() => {
+    setAllEmployerBenefits([
+      ...formState.amendedBenefits,
+      ...formState.addedBenefits,
+    ]);
+  }, [formState.amendedBenefits, formState.addedBenefits]);
+
   const isCommentRequired =
     formState.fraud === "Yes" ||
     formState.employerDecision === "Deny" ||
@@ -125,12 +136,41 @@ export const Review = (props) => {
     updateFields({ amendedHours: updatedHoursWorked });
   };
 
-  const handleBenefitInputChange = (updatedBenefit) => {
+  const handleBenefitInputAdd = () => {
+    updateFields({
+      addedBenefits: [
+        ...formState.addedBenefits,
+        new EmployerBenefit({
+          employer_benefit_id: allEmployerBenefits.length,
+        }),
+      ],
+    });
+  };
+
+  const handleBenefitRemove = (benefitToRemove) => {
+    const updatedAddedBenefits = formState.addedBenefits
+      // remove selected benefit
+      .filter(
+        ({ employer_benefit_id }) =>
+          employer_benefit_id !== benefitToRemove.employer_benefit_id
+      )
+      // reassign employer_benefit_id to keep indices accurate
+      .map(
+        (addedBenefit, index) =>
+          new EmployerBenefit({ ...addedBenefit, employer_benefit_id: index })
+      );
+    updateFields({ addedBenefits: updatedAddedBenefits });
+  };
+
+  const handleBenefitInputChange = (
+    updatedBenefit,
+    formStateField = "amendedBenefits"
+  ) => {
     const updatedBenefits = updateAmendments(
-      formState.amendedBenefits,
+      get(formState, formStateField),
       updatedBenefit
     );
-    updateFields({ amendedBenefits: updatedBenefits });
+    updateFields({ [formStateField]: updatedBenefits });
   };
 
   const handlePreviousLeavesChange = (updatedLeave) => {
@@ -172,18 +212,12 @@ export const Review = (props) => {
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
 
+    const employer_benefits = allEmployerBenefits.map((benefit) =>
+      omit(benefit, ["employer_benefit_id"])
+    );
     const amendedHours = formState.amendedHours;
     const previous_leaves = formState.amendedLeaves.map((leave) =>
       pick(leave, ["leave_end_date", "leave_reason", "leave_start_date"])
-    );
-    const employer_benefits = formState.amendedBenefits.map((benefit) =>
-      pick(benefit, [
-        "benefit_amount_dollars",
-        "benefit_amount_frequency",
-        "benefit_end_date",
-        "benefit_start_date",
-        "benefit_type",
-      ])
     );
 
     const payload = {
@@ -194,7 +228,7 @@ export const Review = (props) => {
       hours_worked_per_week: amendedHours,
       previous_leaves,
       has_amendments:
-        !isEqual(formState.amendedBenefits, formState.employerBenefits) ||
+        !isEqual(allEmployerBenefits, formState.employerBenefits) ||
         !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
         !isEqual(amendedHours, claim.hours_worked_per_week),
       uses_second_eform_version: !!claim.uses_second_eform_version,
@@ -292,10 +326,13 @@ export const Review = (props) => {
         <EmployerBenefits
           appErrors={appErrors}
           employerBenefits={formState.employerBenefits}
+          addedBenefits={formState.addedBenefits}
+          onAdd={handleBenefitInputAdd}
           onChange={handleBenefitInputChange}
+          onRemove={handleBenefitRemove}
+          shouldShowV2={shouldShowV2}
         />
-        {/* TODO (EMPLOYER-718): Remove feature flag  */}
-        {showPreviousLeaves && (
+        {shouldShowV2 && (
           <PreviousLeaves
             appErrors={appErrors}
             onChange={handlePreviousLeavesChange}

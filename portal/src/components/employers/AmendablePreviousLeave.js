@@ -66,11 +66,12 @@ const AmendablePreviousLeave = ({ appErrors, leavePeriod, onChange }) => {
             className="padding-top-2 padding-bottom-2 padding-left-0"
           >
             <AmendmentForm
-              onCancel={() => {
+              onDestroy={() => {
                 setIsAmendmentFormDisplayed(false);
                 setAmendment(leavePeriod);
                 onChange(leavePeriod);
               }}
+              destroyButtonLabel={t("components.amendmentForm.cancel")}
             >
               <Heading level="4">
                 {t("components.employersPreviousLeaves.leaveReasonValue", {

@@ -2,7 +2,7 @@
 
 exports[`AmendmentForm renders the component 1`] = `
 <div
-  className="usa-alert usa-alert--info usa-alert--no-icon usa-form c-amendment-form"
+  className="usa-alert usa-alert--info usa-alert--no-icon usa-form c-amendment-form border-y border-y-width-1px border-right border-right-width-1px"
 >
   <div
     className="usa-alert__body"
@@ -14,12 +14,17 @@ exports[`AmendmentForm renders the component 1`] = `
         Testing
       </p>
     </div>
-    <Button
-      className="margin-top-3"
-      variation="unstyled"
+    <div
+      className="border-top border-width-1px margin-top-4 margin-bottom-1 border-base-light"
     >
-      Cancel amendment
-    </Button>
+      <Button
+        className="margin-top-3 text-red"
+        onClick={[MockFunction]}
+        variation="unstyled"
+      >
+        Destroy
+      </Button>
+    </div>
   </div>
 </div>
 `;

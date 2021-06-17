@@ -62,16 +62,43 @@ exports[`EmployerBenefits renders the component 1`] = `
         employerBenefit={
           EmployerBenefit {
             "benefit_amount_dollars": 1000,
-            "benefit_amount_frequency": null,
+            "benefit_amount_frequency": "Per Week",
             "benefit_end_date": "2021-03-01",
             "benefit_start_date": "2021-02-01",
             "benefit_type": "Short-term disability insurance",
             "employer_benefit_id": 0,
-            "is_full_salary_continuous": null,
+            "is_full_salary_continuous": false,
           }
         }
+        isAddedByLeaveAdmin={false}
         key="0"
         onChange={[Function]}
+        onRemove={[Function]}
+        shouldShowV2={false}
+      />
+      <AmendableEmployerBenefit
+        appErrors={
+          AppErrorInfoCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          }
+        }
+        employerBenefit={
+          EmployerBenefit {
+            "benefit_amount_dollars": 2000,
+            "benefit_amount_frequency": "Per Week",
+            "benefit_end_date": "2021-05-11",
+            "benefit_start_date": "2021-05-01",
+            "benefit_type": "Accrued paid leave",
+            "employer_benefit_id": 1,
+            "is_full_salary_continuous": true,
+          }
+        }
+        isAddedByLeaveAdmin={false}
+        key="1"
+        onChange={[Function]}
+        onRemove={[Function]}
+        shouldShowV2={false}
       />
     </tbody>
   </Table>
