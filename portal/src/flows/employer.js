@@ -63,5 +63,10 @@ export default {
     },
     [routes.employers.verificationSuccess]: {},
     [routes.employers.welcome]: {},
+    [routes.employers.departments]: {
+      on: {
+        CONTINUE: routes.employers.welcome,
+      },
+    },
   },
 };
