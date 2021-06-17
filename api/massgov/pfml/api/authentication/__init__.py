@@ -9,6 +9,7 @@ import jose
 import newrelic.agent
 import requests
 from jose import jwt
+from jose.constants import ALGORITHMS
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from werkzeug.exceptions import Unauthorized
 
@@ -41,7 +42,12 @@ def get_url_as_json(url):
 
 
 def _decode_cognito_token(token):
-    decoded_token = jwt.decode(token, public_keys, options=dict(require_exp=True, require_sub=True))
+    decoded_token = jwt.decode(
+        token,
+        public_keys,
+        algorithms=[ALGORITHMS.RS256],
+        options=dict(require_exp=True, require_sub=True),
+    )
     return decoded_token
 
 

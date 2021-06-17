@@ -17,6 +17,7 @@ import moto
 import pytest
 import sqlalchemy
 from jose import jwt
+from jose.constants import ALGORITHMS
 
 import massgov.pfml.api.app
 import massgov.pfml.api.authentication as authentication
@@ -162,37 +163,58 @@ def fineos_user_claims(fineos_user):
 @pytest.fixture(scope="session")
 def auth_key():
     hmac_key = {
-        "kty": "oct",
-        "kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037",
+        "alg": "RS256",
+        "e": "AQAB",
+        "kid": "c7f7e776-bd29-4d00-b110-d4d4a8652815",
+        "kty": "RSA",
+        "n": "iWBm-DQbycUqrPBSD5yk73zxyIr66hBUCyPCShW-btQ-nyBk1E-h4AvtqHpl4Y1aghQDTnn2gLHiRtV_XJtCpK1PEJ3SCqw6wGOEw5bbG7Q88KDvTMUF5k6gzRMHMBTD7lMNPIY-oCuh_Rwvg19hGBD2O6rA2sMHyTB-O2ZwL6M",
         "use": "sig",
-        "alg": "HS256",
-        "k": "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg",
+    }
+
+    return hmac_key
+
+
+@pytest.fixture(scope="session")
+def auth_private_key():
+    hmac_key = {
+        "alg": "RS256",
+        "d": "WC8GyisA73teUpcNxjHCem0U86urN5b1rBTvQglFLfWWoST1NIhNm_lsPGsdfTT0tW1NVhHaV3BYlSm06AFKphL1UtHI0z_xS-CnRuqYljyca1YQWhuFETP01c1tVmA4g8iFGUW_VkQ6QgyHiC_kaz_v8skOLLgLoR6KPeo_yPE",
+        "dp": "i8Sa6tKsKrSGsjE6H98dDiTbc_CDogP2-VgNPN5SMa02rki4972o5WmZhiQvcjxlU7NZbeE3fRiiXHt_E_wZan9MFkk",
+        "dq": "QRYM74mdgrYHqutTmTY5tuEOsddFiE2NFa-qPagjKQKzvUPhl9EZbkm1VR06K1omw0SoFpxMLc4O3K8Z",
+        "e": "AQAB",
+        "kid": "67ad345e-8a77-45bb-8988-22aa2ab8ca62",
+        "kty": "RSA",
+        "n": "iWBm-DQbycUqrPBSD5yk73zxyIr66hBUCyPCShW-btQ-nyBk1E-h4AvtqHpl4Y1aghQDTnn2gLHiRtV_XJtCpK1PEJ3SCqw6wGOEw5bbG7Q88KDvTMUF5k6gzRMHMBTD7lMNPIY-oCuh_Rwvg19hGBD2O6rA2sMHyTB-O2ZwL6M",
+        "p": "o2tSqdoRyCMnzT_CZx1Oq8WCwMo7rWMKFx-wlwaXOoxzqDv0YhjP1t7DqDn5V8yERCVBUP9ZPDIzNmBUQMul7bwIpfs",
+        "q": "1zQdXV-7I2VNSUhzRAYvhJAOFvAKiJv8lJc2_66XNGww0g3og_sBPrGwFsO2stVd-rJ1mZWV8D78LHR5",
+        "qi": "SebQz5QdxAvqGSDUvchSLpxXf0Ry0NhYdBCCMftTwqqVcNjY3GKQ8-YET5Y_dwMmEYM51DCCDolVxBAjbNDlKU7JIjU",
+        "use": "sig",
     }
 
     return hmac_key
 
 
 @pytest.fixture
-def consented_user_token(consented_user_claims, auth_key):
-    encoded = jwt.encode(consented_user_claims, auth_key)
+def consented_user_token(consented_user_claims, auth_private_key):
+    encoded = jwt.encode(consented_user_claims, auth_private_key, algorithm=ALGORITHMS.RS256)
     return encoded
 
 
 @pytest.fixture
-def fineos_user_token(fineos_user_claims, auth_key):
-    encoded = jwt.encode(fineos_user_claims, auth_key)
+def fineos_user_token(fineos_user_claims, auth_private_key):
+    encoded = jwt.encode(fineos_user_claims, auth_private_key, algorithm=ALGORITHMS.RS256)
     return encoded
 
 
 @pytest.fixture
-def auth_token(auth_claims, auth_key):
-    encoded = jwt.encode(auth_claims, auth_key)
+def auth_token(auth_claims, auth_private_key):
+    encoded = jwt.encode(auth_claims, auth_private_key, algorithm=ALGORITHMS.RS256)
     return encoded
 
 
 @pytest.fixture
-def employer_auth_token(employer_claims, auth_key):
-    encoded = jwt.encode(employer_claims, auth_key)
+def employer_auth_token(employer_claims, auth_private_key):
+    encoded = jwt.encode(employer_claims, auth_private_key, algorithm=ALGORITHMS.RS256)
     return encoded
 
 
