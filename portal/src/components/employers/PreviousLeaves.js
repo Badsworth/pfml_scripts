@@ -1,10 +1,10 @@
 import AmendablePreviousLeave from "./AmendablePreviousLeave";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Details from "../Details";
+import Heading from "../Heading";
 import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import React from "react";
-import ReviewHeading from "../ReviewHeading";
 import Table from "../Table";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
@@ -21,9 +21,9 @@ const PreviousLeaves = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading level="2">
+      <Heading level="3">
         {t("components.employersPreviousLeaves.header")}
-      </ReviewHeading>
+      </Heading>
       <p>
         <Trans
           i18nKey="components.employersPreviousLeaves.explanation"
@@ -130,7 +130,9 @@ const PreviousLeaves = (props) => {
           )}
         </tbody>
       </Table>
-      <p>{t("components.employersPreviousLeaves.commentInstructions")}</p>
+      <p className="margin-top-neg-1 padding-left-2">
+        {t("components.employersPreviousLeaves.commentInstructions")}
+      </p>
     </React.Fragment>
   );
 };

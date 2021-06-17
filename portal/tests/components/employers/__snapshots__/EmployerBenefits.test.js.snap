@@ -2,35 +2,28 @@
 
 exports[`EmployerBenefits renders the component 1`] = `
 <Fragment>
-  <ReviewHeading
-    level="2"
+  <Heading
+    level="3"
   >
-    Employer benefits
-  </ReviewHeading>
+    Employer-sponsored benefits
+  </Heading>
+  <p>
+    <Trans
+      components={
+        Object {
+          "reductions-overview-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="components.employersEmployerBenefits.caption"
+    />
+  </p>
   <Table
     className="width-full"
   >
-    <caption>
-      <p
-        className="text-normal"
-      >
-        <Trans
-          components={
-            Object {
-              "reductions-overview-link": <a
-                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-                rel="noopener"
-                target="_blank"
-              />,
-            }
-          }
-          i18nKey="components.employersEmployerBenefits.caption"
-        />
-      </p>
-      <p>
-        Employer-sponsored benefit details
-      </p>
-    </caption>
     <thead>
       <tr>
         <th
@@ -102,7 +95,9 @@ exports[`EmployerBenefits renders the component 1`] = `
       />
     </tbody>
   </Table>
-  <p>
+  <p
+    className="margin-top-neg-1 padding-left-2"
+  >
     If something is incomplete, add a comment at the end of the page.
   </p>
 </Fragment>

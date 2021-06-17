@@ -12,12 +12,14 @@ import EmployerClaim from "../../../models/EmployerClaim";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
+import Heading from "../../../components/Heading";
 import LeaveDetails from "../../../components/employers/LeaveDetails";
 import LeaveReason from "../../../models/LeaveReason";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
 import PreviousLeave from "../../../models/PreviousLeave";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
 import PropTypes from "prop-types";
+import ReviewHeading from "../../../components/ReviewHeading";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -323,6 +325,45 @@ export const Review = (props) => {
           hoursWorkedPerWeek={claim.hours_worked_per_week}
           onChange={handleHoursWorkedChange}
         />
+
+        <ReviewHeading level="2">
+          {t("pages.employersClaimsReview.otherLeavesTitle")}
+        </ReviewHeading>
+        {!shouldShowV2 && (
+          <Trans i18nKey="pages.employersClaimsReview.otherLeavesBodyV1" />
+        )}
+        {shouldShowV2 && (
+          <React.Fragment>
+            <Trans
+              i18nKey="pages.employersClaimsReview.otherLeavesBody"
+              components={{
+                ul: <ul className="usa-list" />,
+                li: <li />,
+              }}
+            />
+            <div className="usa-summary-box" role="complementary">
+              <div className="usa-summary-box__body">
+                <Heading className="usa-summary-box__heading" level="4">
+                  {t("pages.employersClaimsReview.otherLeavesSummaryBoxTitle")}
+                </Heading>
+                <div className="usa-summary-box__text">
+                  <Trans
+                    i18nKey="pages.employersClaimsReview.otherLeavesSummaryBoxBody"
+                    components={{
+                      ul: <ul className="usa-list" />,
+                      li: <li />,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            <PreviousLeaves
+              appErrors={appErrors}
+              onChange={handlePreviousLeavesChange}
+              previousLeaves={formState.previousLeaves}
+            />
+          </React.Fragment>
+        )}
         <EmployerBenefits
           appErrors={appErrors}
           employerBenefits={formState.employerBenefits}
@@ -332,13 +373,7 @@ export const Review = (props) => {
           onRemove={handleBenefitRemove}
           shouldShowV2={shouldShowV2}
         />
-        {shouldShowV2 && (
-          <PreviousLeaves
-            appErrors={appErrors}
-            onChange={handlePreviousLeavesChange}
-            previousLeaves={formState.previousLeaves}
-          />
-        )}
+
         <FraudReport onChange={handleFraudInputChange} />
         <EmployeeNotice
           fraud={formState.fraud}

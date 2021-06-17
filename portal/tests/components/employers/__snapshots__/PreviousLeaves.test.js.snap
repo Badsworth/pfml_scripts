@@ -2,11 +2,11 @@
 
 exports[`PreviousLeaves renders the component 1`] = `
 <Fragment>
-  <ReviewHeading
-    level="2"
+  <Heading
+    level="3"
   >
-    Past leave
-  </ReviewHeading>
+    Previous leaves
+  </Heading>
   <p>
     <Trans
       components={
@@ -135,7 +135,9 @@ exports[`PreviousLeaves renders the component 1`] = `
       />
     </tbody>
   </Table>
-  <p>
+  <p
+    className="margin-top-neg-1 padding-left-2"
+  >
     If something is incomplete, add a comment at the end of the page.
   </p>
 </Fragment>

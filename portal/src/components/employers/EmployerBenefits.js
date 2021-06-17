@@ -2,9 +2,9 @@ import AddButton from "./AddButton";
 import AmendableEmployerBenefit from "./AmendableEmployerBenefit";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import EmployerBenefit from "../../models/EmployerBenefit";
+import Heading from "../Heading";
 import PropTypes from "prop-types";
 import React from "react";
-import ReviewHeading from "../ReviewHeading";
 import Table from "../Table";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
@@ -30,27 +30,24 @@ const EmployerBenefits = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading level="2">
+      <Heading level="3">
         {t("components.employersEmployerBenefits.header")}
-      </ReviewHeading>
+      </Heading>
+      <p>
+        <Trans
+          i18nKey="components.employersEmployerBenefits.caption"
+          components={{
+            "reductions-overview-link": (
+              <a
+                href={routes.external.massgov.reductionsOverview}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
+          }}
+        />
+      </p>
       <Table className="width-full">
-        <caption>
-          <p className="text-normal">
-            <Trans
-              i18nKey="components.employersEmployerBenefits.caption"
-              components={{
-                "reductions-overview-link": (
-                  <a
-                    href={routes.external.massgov.reductionsOverview}
-                    target="_blank"
-                    rel="noopener"
-                  />
-                ),
-              }}
-            />
-          </p>
-          <p>{t("components.employersEmployerBenefits.tableName")}</p>
-        </caption>
         <thead>
           <tr>
             <th scope="col">
@@ -108,7 +105,9 @@ const EmployerBenefits = (props) => {
           )}
         </tbody>
       </Table>
-      <p>{t("components.employersEmployerBenefits.commentInstructions")}</p>
+      <p className="margin-top-neg-1 padding-left-2">
+        {t("components.employersEmployerBenefits.commentInstructions")}
+      </p>
     </React.Fragment>
   );
 };

@@ -2030,6 +2030,14 @@ const pages = {
       "Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end. Changes are not saved until you submit your review.",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
     organizationNameLabel: "Organization",
+    otherLeavesBody:
+      "<p>Please review the leaves and benefits listed in the tables below. If everything looks correct, then there’s no action needed. If something looks incorrect or incomplete, you can:</p><ul><li>Amend reported leaves and benefits.</li><li>Add a leave or benefit that your employee used or will use.</li></ul><p>If you need to remove a leave or benefit, use the comment box at the end of this page.</p>",
+    otherLeavesBodyV1:
+      "<p>Please review the benefits listed below. If everything looks correct, then there’s no action needed. If something looks incorrect or incomplete, you can amend it. If you need to remove or add a benefit, use the comment box at the end of this page.</p>",
+    otherLeavesSummaryBoxBody:
+      "<ul><li>Previous leave for a qualifying reason that they took before their paid leave from PFML</li><li>Accrued paid leave they plan to use during their paid leave from PFML</li><li>Employer-sponsored benefits they plan to use during their paid leave from PFML</li></ul>",
+    otherLeavesSummaryBoxTitle: "Employees are asked to report:",
+    otherLeavesTitle: "Other leaves and benefits",
     submitButton: "Submit",
     submitLoadingMessage: "Submitting… Do not refresh or go back.",
     title: "Review application from {{name}}",
@@ -2444,11 +2452,11 @@ const components = {
     amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     benefitTypeLabel: "Benefit type",
     caption:
-      "Your employee is planning to use these benefits during their leave. Learn more about how paid leave works with <reductions-overview-link>other government and private benefit programs</reductions-overview-link>.",
+      "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
     commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
-    header: "Employer benefits",
+    header: "Employer-sponsored benefits",
     tableName: "Employer-sponsored benefit details",
   },
   employersEmployerDecision: {
@@ -2573,8 +2581,8 @@ const components = {
     commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     explanation:
-      "If your employee took any paid or unpaid leave for a qualifying reason since January 1, 2021, it may <calculate-reductions-link>affect their benefit amount</calculate-reductions-link>.",
-    header: "Past leave",
+      "Your employee has listed leave they have taken for a qualified reason. Only leave since January 1, 2021 is included. This includes both paid leave, such as paid vacation or sick days, and unpaid leave, such as FMLA leave. When possible, verify that a previous leave was for a reason that qualifies for paid leave under PFML.",
+    header: "Previous leaves",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
     leaveReasonValue_care: "$t(shared.leaveReasonMedical)",
