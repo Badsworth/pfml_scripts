@@ -157,7 +157,11 @@ const useAppErrorsLogic = ({ portalFlow }) => {
           i18nKey={issueMessageKey}
           components={{
             "intermittent-leave-guide": (
-              <a href={routes.external.massgov.intermittentLeaveGuide} />
+              <a
+                target="_blank"
+                rel="noreferrer noopener"
+                href={routes.external.massgov.intermittentLeaveGuide}
+              />
             ),
           }}
         />
