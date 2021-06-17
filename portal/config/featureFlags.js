@@ -72,7 +72,7 @@ const flagsConfig = {
     // When this flag is enabled, the document upload and listing/download features will use
     // the new plan proofs in FINEOS, expected to roll out on 6/25
     // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
-    useNewPlanProofs: false,
+    useNewPlanProofs: true,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
@@ -81,20 +81,17 @@ const flagsConfig = {
     employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
-    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   development: {
     example: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
     pfmlTerriyay: true,
-    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   test: {
     employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     employerShowVerifications: true,
-    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   stage: {
     employerShowAddOrganization: true,
