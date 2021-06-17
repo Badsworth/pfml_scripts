@@ -1644,7 +1644,6 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                     ]
                 ),
-                "eft_prenote_already_approved_count": 0,
                 "eft_prenote_already_rejected_count": 0,
                 "eft_prenote_count": len(
                     [

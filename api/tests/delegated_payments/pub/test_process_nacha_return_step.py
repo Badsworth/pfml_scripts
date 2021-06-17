@@ -181,11 +181,10 @@ def test_process_nacha_return_file_step_full(
         "change_notification_count": 6,
         "eft_prenote_count": 7,
         "eft_prenote_unexpected_state_count": 0,
-        "eft_prenote_already_approved_count": 1,
         "eft_prenote_already_rejected_count": 0,
         "eft_prenote_id_not_found_count": 2,
         "eft_prenote_change_notification_count": 2,
-        "eft_prenote_rejected_count": 2,
+        "eft_prenote_rejected_count": 3,
         "payment_count": 7,
         "payment_complete_with_change_count": 3,
         "payment_id_not_found_count": 3,
@@ -210,7 +209,6 @@ def test_process_nacha_return_file_step_full(
     assert pub_error_count[PubErrorType.ACH_PRENOTE.pub_error_type_id] == (
         expected_metrics["eft_prenote_id_not_found_count"]
         + expected_metrics["eft_prenote_unexpected_state_count"]  # TODO add scenario
-        + expected_metrics["eft_prenote_already_approved_count"]
         + expected_metrics["eft_prenote_already_rejected_count"]
         + expected_metrics["eft_prenote_change_notification_count"]
         + expected_metrics["eft_prenote_rejected_count"]
