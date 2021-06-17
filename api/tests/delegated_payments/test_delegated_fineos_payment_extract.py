@@ -1257,7 +1257,7 @@ def test_process_extract_additional_payment_types(
     zero_dollar_data = FineosPaymentData(
         payment_amount="0.00", payment_method="Elec Funds Transfer"
     )
-    add_db_records_from_fineos_data(local_test_db_session, zero_dollar_data)
+    add_db_records_from_fineos_data(local_test_db_session, zero_dollar_data, add_eft=False)
     datasets.append(zero_dollar_data)
 
     # Create an overpayment
@@ -1267,7 +1267,7 @@ def test_process_extract_additional_payment_types(
         event_type="Overpayment", event_reason="Unknown", payment_method="Elec Funds Transfer"
     )
 
-    add_db_records_from_fineos_data(local_test_db_session, overpayment_data)
+    add_db_records_from_fineos_data(local_test_db_session, overpayment_data, add_eft=False)
     datasets.append(overpayment_data)
 
     # Create a cancellation
@@ -1276,28 +1276,30 @@ def test_process_extract_additional_payment_types(
         payment_amount="-123.45",
         payment_method="Elec Funds Transfer",
     )
-    add_db_records_from_fineos_data(local_test_db_session, cancellation_data)
+    add_db_records_from_fineos_data(local_test_db_session, cancellation_data, add_eft=False)
     datasets.append(cancellation_data)
 
     # Unknown - negative payment amount, but PaymentOut
     negative_payment_out_data = FineosPaymentData(
         event_type="PaymentOut", payment_amount="-100.00", payment_method="Elec Funds Transfer"
     )
-    add_db_records_from_fineos_data(local_test_db_session, negative_payment_out_data)
+    add_db_records_from_fineos_data(local_test_db_session, negative_payment_out_data, add_eft=False)
     datasets.append(negative_payment_out_data)
 
     # Unknown - missing payment amount
     no_payment_out_data = FineosPaymentData(
         payment_amount=None, payment_method="Elec Funds Transfer"
     )
-    add_db_records_from_fineos_data(local_test_db_session, no_payment_out_data)
+    add_db_records_from_fineos_data(local_test_db_session, no_payment_out_data, add_eft=False)
     datasets.append(no_payment_out_data)
 
     # Unknown - missing event type
     missing_event_payment_out_data = FineosPaymentData(
         event_type=None, payment_method="Elec Funds Transfer"
     )
-    add_db_records_from_fineos_data(local_test_db_session, missing_event_payment_out_data)
+    add_db_records_from_fineos_data(
+        local_test_db_session, missing_event_payment_out_data, add_eft=False
+    )
     datasets.append(missing_event_payment_out_data)
 
     # Create a record for an employer reimbursement
@@ -1307,7 +1309,9 @@ def test_process_extract_additional_payment_types(
         payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
         payment_method="Elec Funds Transfer",
     )
-    add_db_records_from_fineos_data(local_test_db_session, employer_reimbursement_data)
+    add_db_records_from_fineos_data(
+        local_test_db_session, employer_reimbursement_data, add_eft=False
+    )
     datasets.append(employer_reimbursement_data)
 
     upload_fineos_data(tmp_path, mock_s3_bucket, datasets)
@@ -1425,7 +1429,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         include_payment_details=False,
         include_requested_absence=False,
     )
-    add_db_records_from_fineos_data(local_test_db_session, zero_dollar_data)
+    add_db_records_from_fineos_data(local_test_db_session, zero_dollar_data, add_eft=False)
     datasets.append(zero_dollar_data)
 
     # Create an overpayment
@@ -1439,7 +1443,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         include_payment_details=False,
         include_requested_absence=False,
     )
-    add_db_records_from_fineos_data(local_test_db_session, overpayment_data)
+    add_db_records_from_fineos_data(local_test_db_session, overpayment_data, add_eft=False)
     datasets.append(overpayment_data)
 
     # Create a cancellation
@@ -1451,7 +1455,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         include_payment_details=False,
         include_requested_absence=False,
     )
-    add_db_records_from_fineos_data(local_test_db_session, cancellation_data)
+    add_db_records_from_fineos_data(local_test_db_session, cancellation_data, add_eft=False)
     datasets.append(cancellation_data)
 
     # Create a record for an employer reimbursement
@@ -1464,7 +1468,9 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         include_payment_details=False,
         include_requested_absence=False,
     )
-    add_db_records_from_fineos_data(local_test_db_session, employer_reimbursement_data)
+    add_db_records_from_fineos_data(
+        local_test_db_session, employer_reimbursement_data, add_eft=False
+    )
     datasets.append(employer_reimbursement_data)
 
     upload_fineos_data(tmp_path, mock_s3_bucket, datasets)
