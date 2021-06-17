@@ -4,6 +4,7 @@ import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
+import Dropdown from "../../components/Dropdown";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import PropTypes from "prop-types";
@@ -55,7 +56,23 @@ export const EmployerDepartment = (props) => {
       // onSave={handleSave}
     >
 
-      {isLoading && (<Spinner aria-valuetext={t("components.spinner.label")} />)}
+      {isLoading ? 
+        (<Spinner aria-valuetext={t("components.spinner.label")} />)
+      :
+        (<Dropdown
+          choices={appLogic.users.departments.map(department => {
+            return {
+              label: department,
+              value: department
+            }
+          })}
+          emptyChoiceLabel="- Select a Department -"
+          label="What is your Department"
+          name="department_id"
+          onChange={() => {}}
+          value="a"
+        />)
+    }
       {/* <InputChoiceGroup
         {...getFunctionalInputProps("leave_details.employer_notified")}
         choices={[
