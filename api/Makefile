@@ -260,8 +260,8 @@ lint-flake: ## Run flake8
 lint-mypy: ## Run mypy
 	$(PY_RUN_CMD) mypy massgov bin
 
-lint-security: ## Run security linting
-	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll
+lint-security: ## Run security linting. Skip B104 for gunicorn binding to 0.0.0.0 and migration folder with raw SQL. 
+	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101,B104 -ll -x ./massgov/pfml/db/migrations
 
 lint-spectral: ## Run OpenAPI Spec linting
 	docker run --rm --tty --cap-drop=ALL --network=none --read-only --volume=$(PWD):/tmp:ro \
