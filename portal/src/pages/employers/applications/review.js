@@ -3,6 +3,7 @@ import { get, isEqual, omit, pick } from "lodash";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
+import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
 import DocumentCollection from "../../../models/DocumentCollection";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
@@ -45,7 +46,6 @@ export const Review = (props) => {
   const { t } = useTranslation();
   const shouldShowV2 = !!claim.uses_second_eform_version;
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
-
   // explicitly check for false as opposed to falsy values.
   // temporarily allows the redirect behavior to work even
   // if the API has not been updated to populate the field.
@@ -60,7 +60,9 @@ export const Review = (props) => {
     employerBenefits: [],
     previousLeaves: [],
     amendedBenefits: [],
-    amendedLeaves: [],
+    amendedPreviousLeaves: [],
+    concurrentLeave: claim.concurrent_leave,
+    amendedConcurrentLeave: claim.concurrent_leave,
     amendedHours: 0,
     comment: "",
     employerDecision: "Approve",
@@ -104,11 +106,12 @@ export const Review = (props) => {
       (leave, index) =>
         new PreviousLeave({ ...leave, previous_leave_id: index })
     );
+
     if (claim) {
       updateFields({
         amendedBenefits: indexedEmployerBenefits,
         employerBenefits: indexedEmployerBenefits,
-        amendedLeaves: indexedPreviousLeaves,
+        amendedPreviousLeaves: indexedPreviousLeaves,
         previousLeaves: indexedPreviousLeaves,
         amendedHours: claim.hours_worked_per_week,
       });
@@ -177,10 +180,19 @@ export const Review = (props) => {
 
   const handlePreviousLeavesChange = (updatedLeave) => {
     const updatedPreviousLeaves = updateAmendments(
-      formState.amendedLeaves,
+      formState.amendedPreviousLeaves,
       updatedLeave
     );
-    updateFields({ amendedLeaves: updatedPreviousLeaves });
+    updateFields({ amendedPreviousLeaves: updatedPreviousLeaves });
+  };
+
+  const handleConcurrentLeaveInputChange = (updatedLeave) => {
+    updateFields({
+      amendedConcurrentLeave: {
+        ...formState.amendedConcurrentLeave,
+        ...updatedLeave,
+      },
+    });
   };
 
   const handleFraudInputChange = (updatedFraudInput) => {
@@ -218,12 +230,13 @@ export const Review = (props) => {
       omit(benefit, ["employer_benefit_id"])
     );
     const amendedHours = formState.amendedHours;
-    const previous_leaves = formState.amendedLeaves.map((leave) =>
+    const previous_leaves = formState.amendedPreviousLeaves.map((leave) =>
       pick(leave, ["leave_end_date", "leave_reason", "leave_start_date"])
     );
 
     const payload = {
       comment: formState.comment,
+      concurrent_leave: formState.amendedConcurrentLeave,
       employer_benefits,
       employer_decision: formState.employerDecision,
       fraud: formState.fraud,
@@ -231,7 +244,8 @@ export const Review = (props) => {
       previous_leaves,
       has_amendments:
         !isEqual(allEmployerBenefits, formState.employerBenefits) ||
-        !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
+        !isEqual(formState.amendedPreviousLeaves, formState.previousLeaves) ||
+        !isEqual(formState.amendedConcurrentLeave, formState.concurrentLeave) ||
         !isEqual(amendedHours, claim.hours_worked_per_week),
       uses_second_eform_version: !!claim.uses_second_eform_version,
     };
@@ -361,6 +375,11 @@ export const Review = (props) => {
               appErrors={appErrors}
               onChange={handlePreviousLeavesChange}
               previousLeaves={formState.previousLeaves}
+            />
+            <ConcurrentLeave
+              appErrors={appErrors}
+              concurrentLeave={formState.concurrentLeave}
+              onChange={handleConcurrentLeaveInputChange}
             />
           </React.Fragment>
         )}

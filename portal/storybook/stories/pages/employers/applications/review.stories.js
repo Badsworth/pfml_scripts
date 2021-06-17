@@ -88,7 +88,7 @@ export const Default = (args) => {
       claim = claim.eformsV1();
       break;
     case "Version 2 (after 2021-07-14)":
-      claim = claim.eformsV2();
+      claim = claim.eformsV2().concurrentLeave();
       break;
   }
 

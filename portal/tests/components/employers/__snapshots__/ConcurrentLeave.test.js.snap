@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConcurrentLeave renders the component 1`] = `
+<Fragment>
+  <ReviewHeading
+    level="2"
+  >
+    Concurrent accrued paid leave
+  </ReviewHeading>
+  <p>
+    Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program. There’s a 7-day unpaid waiting period, and employees are allowed to use accrued paid leave to overlap that period.
+  </p>
+  <Table
+    className="width-full"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <AmendableConcurrentLeave
+        appErrors={
+          AppErrorInfoCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          }
+        }
+        concurrentLeave={
+          ConcurrentLeave {
+            "is_for_current_employer": null,
+            "leave_end_date": "2020-03-06",
+            "leave_start_date": "2020-03-01",
+          }
+        }
+        onChange={[Function]}
+      />
+    </tbody>
+  </Table>
+  <p>
+    If something is incomplete, add a comment at the end of the page.
+  </p>
+</Fragment>
+`;

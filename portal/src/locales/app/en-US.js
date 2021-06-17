@@ -2422,6 +2422,13 @@ const components = {
       "This amendment will get saved when you submit your review at the end of the page.",
     title: "Add an employer-sponsored benefit",
   },
+  employersConcurrentLeave: {
+    commentInstructions: "$t(shared.employerInstructions_addComment)",
+    dateRangeLabel: "Date range",
+    explanation:
+      "Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program. There’s a 7-day unpaid waiting period, and employees are allowed to use accrued paid leave to overlap that period.",
+    header: "Concurrent accrued paid leave",
+  },
   employersEmployeeInformation: {
     addressLabel: "Mailing address",
     dobLabel: "Date of birth",
