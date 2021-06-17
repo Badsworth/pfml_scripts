@@ -1727,14 +1727,35 @@ def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, initialize_fact
 
 
 @pytest.mark.integration
-def test_get_claim_eform_type_contains_neither_version(
+def test_get_claim_eform_type_contains_neither_version_no_feature_toggle(
     mock_fineos_period_decisions, initialize_factories_session
 ):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
     leave_details = get_claim_as_leave_admin(
-        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
+        fineos_user_id,
+        absence_id,
+        employer,
+        fineos_client=mock_fineos_period_decisions,
+        default_to_v2=False,
+    )
+    assert leave_details.uses_second_eform_version is False
+
+
+@pytest.mark.integration
+def test_get_claim_eform_type_contains_neither_version_with_feature_toggle(
+    mock_fineos_period_decisions, initialize_factories_session
+):
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details = get_claim_as_leave_admin(
+        fineos_user_id,
+        absence_id,
+        employer,
+        fineos_client=mock_fineos_period_decisions,
+        default_to_v2=True,
     )
     assert leave_details.uses_second_eform_version is True
 

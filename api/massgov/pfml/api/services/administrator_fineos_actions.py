@@ -160,6 +160,7 @@ def get_claim_as_leave_admin(
     absence_id: str,
     employer: Employer,
     fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
+    default_to_v2: Optional[bool] = False,
 ) -> Optional[ClaimReviewResponse]:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
@@ -278,9 +279,11 @@ def get_claim_as_leave_admin(
         )
         raise ContainsV1AndV2Eforms()
 
-    # Any case that does not contain a V1 eform should use the V2 eforms. Cases that do have V1 eforms should either
-    # use the V1 logic (uses_second_eform_version = False), or error as described above
-    uses_second_eform_version = not contains_version_one_eforms
+    # Cases that contain version two eforms should always use V2. Cases that have no eforms should use V2 only if
+    # the feature toggle has been set.
+    uses_second_eform_version = contains_version_two_eforms or (
+        not contains_version_one_eforms and default_to_v2
+    )
 
     if follow_up_date is not None and outstanding_requirement_status == "Open":
         is_reviewable = date.today() < follow_up_date

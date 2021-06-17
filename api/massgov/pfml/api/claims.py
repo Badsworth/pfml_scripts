@@ -241,18 +241,33 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     Calls out to the FINEOS Group Client API to retrieve claim data and returns it.
     The requesting user must be of the EMPLOYER role.
     """
+    default_to_v2 = bool(flask.request.headers.get("X-FF-Default-To-V2", False))
+
     try:
         user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
     except (VerificationRequired, NotAuthorizedForAccess) as error:
         return error.to_api_response()
 
     log_attributes = get_employer_log_attributes(app)
+
+    if not user_leave_admin.fineos_web_id:
+        logger.error(
+            "employer_get_claim_review failure - user leave administrator does not have a fineos_web_id",
+            extra={**log_attributes},
+        )
+        return response_util.error_response(
+            status_code=NotFound, message="ULA does not have a fineos_web_id", errors=[], data={},
+        ).to_api_response()
+
     with app.db_session() as db_session:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
         try:
             claim_review_response = get_claim_as_leave_admin(
-                user_leave_admin.fineos_web_id, fineos_absence_id, employer  # type: ignore
+                user_leave_admin.fineos_web_id,
+                fineos_absence_id,
+                employer,
+                default_to_v2=default_to_v2,
             )
         except (ContainsV1AndV2Eforms) as error:
             return response_util.error_response(

@@ -460,6 +460,11 @@ paths:
             example: "NTN-00-ABS-00"
           description: "FINEOS absence ID of the claim data to be retrieved"
           required: true
+        - name: X-FF-Default-To-V2
+          description: "Checks if we should default to V2 for claims with no eforms"
+          in: header
+          schema:
+            type: string
       responses:
         "200":
           description: A successful request returns a 200 status code.

@@ -341,7 +341,10 @@ class TestGetClaimReview:
 
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            headers={
+                "Authorization": f"Bearer {employer_auth_token}",
+                "X-FF-Default-To-V2": "value_does_not_matter",
+            },
         )
         response_data = response.get_json()["data"]
 
@@ -362,6 +365,60 @@ class TestGetClaimReview:
         assert response_data["residential_address"]["line_2"] == "Suite 3450"
         assert response_data["residential_address"]["state"] == "GA"
         assert response_data["residential_address"]["zip"] == "30303"
+        assert response_data["uses_second_eform_version"] is True
+
+    @freeze_time("2020-12-07")
+    def test_second_eform_version_defaults_to_true_when_ff_is_set(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={
+                "Authorization": f"Bearer {employer_auth_token}",
+                "X-FF-Default-To-V2": "value_does_not_matter",
+            },
+        )
+        response_data = response.get_json()["data"]
+
+        assert response.status_code == 200
+        assert response_data["uses_second_eform_version"] is True
+
+    @freeze_time("2020-12-07")
+    def test_second_eform_version_defaults_to_false_when_ff_is_not_set(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        response_data = response.get_json()["data"]
+
+        assert response.status_code == 200
+        assert response_data["uses_second_eform_version"] is False
 
     @freeze_time("2020-12-07")
     def test_claims_is_reviewable_managed_requirement_status(
