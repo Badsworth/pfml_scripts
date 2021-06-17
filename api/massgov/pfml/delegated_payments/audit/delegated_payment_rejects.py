@@ -157,7 +157,11 @@ class PaymentRejectsStep(Step):
         return payment_rejects_rows
 
     def transition_audit_pending_payment_state(
-        self, payment: Payment, is_rejected_payment: bool, is_skipped_payment: bool
+        self,
+        payment: Payment,
+        is_rejected_payment: bool,
+        is_skipped_payment: bool,
+        rejected_notes: Optional[str] = None,
     ) -> None:
         payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
             payment, Flow.DELEGATED_PAYMENT, self.db_session
@@ -183,7 +187,7 @@ class PaymentRejectsStep(Step):
             state_log_util.create_finished_state_log(
                 payment,
                 State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-                state_log_util.build_outcome("Payment rejected"),
+                state_log_util.build_outcome(f"Payment rejected with notes: {rejected_notes}"),
                 self.db_session,
             )
 
@@ -264,8 +268,10 @@ class PaymentRejectsStep(Step):
                     "Unexpected state - rejects row both rejected and skipped."
                 )
 
+            rejected_notes = payment_rejects_row.rejected_notes
+
             self.transition_audit_pending_payment_state(
-                payment, is_rejected_payment, is_skipped_payment
+                payment, is_rejected_payment, is_skipped_payment, rejected_notes
             )
 
     def _transition_not_sampled_payment_audit_pending_state(self, pending_state: LkState) -> None:

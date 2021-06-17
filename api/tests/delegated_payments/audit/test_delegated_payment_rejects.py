@@ -194,7 +194,9 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         test_db_session,
     )
 
-    payment_rejects_step.transition_audit_pending_payment_state(payment_1, True, False)
+    payment_rejects_step.transition_audit_pending_payment_state(
+        payment_1, True, False, "Example notes"
+    )
 
     payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
         payment_1, Flow.DELEGATED_PAYMENT, test_db_session
@@ -205,7 +207,7 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         payment_state_log.end_state_id
         == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
     )
-    assert payment_state_log.outcome["message"] == "Payment rejected"
+    assert payment_state_log.outcome["message"] == "Payment rejected with notes: Example notes"
 
     expected_writeback_transaction_status = (
         FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
