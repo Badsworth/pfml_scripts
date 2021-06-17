@@ -12,7 +12,7 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-06-04.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
     "HAS_FINEOS_SP": "true",
-    "FINEOS_HAS_UPDATED_EFORMS": "false"
+    "FINEOS_HAS_UPDATED_EFORMS": "true"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -85,7 +85,7 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-06-04.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
     "HAS_FINEOS_SP": "true",
-    "FINEOS_HAS_UPDATED_EFORMS": "true"
+    "FINEOS_HAS_UPDATED_EFORMS": "false"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",

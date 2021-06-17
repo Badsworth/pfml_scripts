@@ -18,7 +18,8 @@ type Result = import("pdf-parse").Result;
 type DehydratedClaim = import("./src/generation/Claim").DehydratedClaim;
 type Employer = import("./src/generation/Employer").Employer;
 type EmployerPickSpec = import("./src/generation/Employer").EmployerPickSpec;
-type pdf = import("pdf-parse").Result
+type pdf = import("pdf-parse").Result;
+type Scenarios = import("./src/types").Scenarios;
 
 declare namespace Cypress {
   interface Cypress {
@@ -27,7 +28,7 @@ declare namespace Cypress {
     runner: Cypress.Runner;
   }
   interface Chainable<Subject = any> {
-    labelled(label: string|RegExp): Chainable<HTMLElement>;
+    labelled(label: string | RegExp): Chainable<HTMLElement>;
     typeMasked(
       text: string,
       options?: Partial<Cypress.TypeOptions>
@@ -37,13 +38,20 @@ declare namespace Cypress {
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
     dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;
-    task(event: "generateClaim", scenario: string): Chainable<DehydratedClaim>;
+    task(
+      event: "generateClaim",
+      scenario: Scenarios
+    ): Chainable<DehydratedClaim>;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(event: "completeSSOLoginFineos"): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
     task(event: "getParsedPDF", filename: string): Promise<pdf>;
     task(event: "deleteDownloadFolder", folderName: string): Chainable<true>;
-    task(event: "getNoticeFileName", folderName: string, options: Partial<Cypress.TypeOptions>): Promise<string[]>
+    task(
+      event: "getNoticeFileName",
+      folderName: string,
+      options: Partial<Cypress.TypeOptions>
+    ): Promise<string[]>;
 
     // Supplying multiple forms of submitClaimToAPI seems to be necessary to provide typing for
     // both forms.
