@@ -1,4 +1,5 @@
 import { IconMail, IconPdf } from "@massds/mayflower-react/dist/Icon";
+
 import Alert from "../../components/Alert";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import Heading from "../../components/Heading";
@@ -30,11 +31,19 @@ export const Welcome = ({ appLogic, user }) => {
     width: 32,
     fill: "currentColor",
   };
+ 
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
   const shouldShowVerificationAlert = shouldShowVerifications && hasVerifiableEmployer;
   const shouldShowCaringLeaveAlert = shouldShowCaringLeave;
+  const employerHasDepartments = user.user_leave_administrators[0].departments.length;
+
+  if(!employerHasDepartments) {
+    appLogic.portalFlow.goTo(routes.employers.departments);
+    
+    return null;
+  }
 
   return (
     <React.Fragment>
