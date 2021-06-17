@@ -231,7 +231,7 @@ paths:
       tags:
         - HRD
       summary: Lookup an Employee/Employer by SSN/ITIN/EmployerID in HRD dataset
-      operationId: massgov.pfml.api.employees.employee_departments_search
+      operationId: massgov.pfml.api.employees.employees_departments_search
       responses:
         "200":
           description: A successful response returns a 200 status code and a list of employee departments.
@@ -242,11 +242,11 @@ paths:
                   - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
-                        $ref: "#/components/schemas/HRDEmployeeResponse"
+                        $ref: "#/components/schemas/DepartmentsResponse"
         "404":
           $ref: "#/components/responses/NotFound"
       requestBody:
-        $ref: "#/components/requestBodies/HRDEmployeeSearchRequest"
+        $ref: "#/components/requestBodies/DepartmentsSearchRequest"
 
 
   /departments/employer:
@@ -1180,11 +1180,11 @@ components:
           schema:
             $ref: "#/components/schemas/EmployeeSearchRequest"
       required: true
-    HRDEmployeeSearchRequest:
+    DepartmentsSearchRequest:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/HRDEmployeeSearchRequest"
+            $ref: "#/components/schemas/DepartmentsSearchRequest"
       required: true
     EmployeeUpdateRequest:
       content:
@@ -1549,7 +1549,7 @@ components:
           example: "1234"
       required: ["first_name", "last_name", "tax_identifier_last4"]
       
-    HRDEmployeeSearchRequest:
+    DepartmentsSearchRequest:
       type: object
       properties:
         tax_identifier:
@@ -1595,28 +1595,18 @@ components:
           example: "1234"
       required: ["employee_id", "tax_identifier_last4"]
 
-    HRDEmployeeResponse:
+    DepartmentsResponse:
       type: array
       items:
         type: object
         properties:
-          employee_id:
-            type: string
-            format: uuid
-            example: "009fa369-291b-403f-a85a-15e938c26a7b"
-          full_name:
-            type: string
-            example: "Jane"
-          tax_identifier:
-            type: string
-            example: "1234"
           department_id:
             type: string
             example: "1234"
           department_name:
             type: string
             example: "1234"
-        required: ["employee_id", "tax_identifier"]
+
 
     EmployerClaimRequestBody:
       type: object

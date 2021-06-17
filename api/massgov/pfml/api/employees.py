@@ -7,7 +7,7 @@ from werkzeug.exceptions import NotFound
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
-from massgov.pfml.db.models.employees import Employee, TaxIdentifier, HRD
+from massgov.pfml.db.models.employees import Employee, TaxIdentifier, HRD, OrganizationUnit
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.sqlalchemy import get_or_404
 
@@ -46,17 +46,15 @@ class EmployeeResponse(PydanticBaseModel):
         return employee_response
 
 
-class HRDEmployeeSearchRequest(PydanticBaseModel):
-    tax_identifier: Optional[str]
-    employee_id: Optional[str]
-
-
-class HRDEmployeeResponse(PydanticBaseModel):
-    employee_id: UUID4
+class DepartmentsSearchRequest(PydanticBaseModel):
     tax_identifier: str
-    full_name: Optional[str]
-    department_id: str
-    department_name: Optional[str]
+
+
+class DepartmentsResponse(PydanticBaseModel):
+    department_id: UUID4
+    department_name: str
+    department_fineos_id: Optional[str]
+    department_worksite_id: Optional[UUID4]
 
 
 def employees_get(employee_id):
@@ -117,32 +115,21 @@ def employees_search():
 
 
 def employees_departments_search():
-    request = HRDEmployeeSearchRequest.parse_obj(connexion.request.json)
+    # request = DepartmentsSearchRequest.parse_obj(connexion.request.json)
+    # ensure(READ, departments)
 
     with app.db_session() as db_session:
-        if request.employee_id:
-            departments_query = (
-                db_session.query(HRD)
-                .filter(
-                    HRD.employee_id == request.employee_id
-                )
-            )
-        elif request.tax_identifier:
-            departments_query = (
-                db_session.query(HRD)
-                .filter(
-                    HRD.tax_identifier == request.tax_identifier
-                )
-            )
+        departments = db_session.query(OrganizationUnit).all()
         
-        departments = departments_query.all()
-
     if departments is None or len(departments) == 0:
         raise NotFound()
 
-    ensure(READ, departments)
+    # logger.info("\n\n\n\n\nDEPARTMENTS\n\n\n\n")
+    # logger.info(departments)
+    # logger.info("\n\n\n\n\nDEPARTMENTS\n\n\n\n")
+    departmentsRes = [DepartmentsResponse.from_orm(department).dict() for department in departments]
 
-    departmentsResponse = [HRDEmployeeResponse.from_orm(department).dict() for department in departments]
+
     return response_util.success_response(
-        message="Successfully found employee departments", data=departmentsResponse,
+        message="Successfully found departments", data= departmentsRes,
     ).to_api_response()

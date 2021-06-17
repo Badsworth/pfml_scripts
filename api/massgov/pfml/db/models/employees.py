@@ -846,19 +846,30 @@ class HRD(Base):
     tax_identifier = Column(Text)
 
 
-class Worksite(Base):
+class Organization(Base):
     __tablename__ = "worksite"
     worksite_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    worksite_fineos_id = Column(Text)
     worksite_name = Column(Text)
+    worksite_fineos_id = Column(Text)
+    
+    def __init__(self, worksite_id, worksite_name, worksite_fineos_id):
+        self.worksite_id = worksite_id
+        self.worksite_name = worksite_name
+        self.worksite_fineos_id = worksite_fineos_id
 
 
-class Department(Base):
+class OrganizationUnit(Base):
     __tablename__ = "department"
     department_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    department_name = Column(Text)
     department_fineos_id = Column(Text)
     department_worksite_id = Column(UUID(as_uuid=True), ForeignKey("worksite.worksite_id"), nullable=False)
-    department_name = Column(Text)
+    
+    def __init__(self, department_id, department_name, department_fineos_id, department_worksite_id):
+        self.department_id = department_id
+        self.department_name = department_name
+        self.department_fineos_id = department_fineos_id
+        self.department_worksite_id = department_worksite_id
 
 
 class UserLeaveAdminDepartment(Base):
@@ -2221,6 +2232,24 @@ class Title(LookupTable):
     SIR = LkTitle(8, "Sir")
 
 
+commonwealth_worksite_id = "02167728-6f06-48b7-aeff-199d1e536c0b"
+
+class Worksite(LookupTable):
+    model = Organization
+    column_names = ("worksite_id", "worksite_name", "worksite_fineos_id")
+
+    COMMON = Organization(commonwealth_worksite_id, "Commonwealth", 1)
+
+
+class Department(LookupTable):
+    model = OrganizationUnit
+    column_names = ("department_id", "department_name", "department_fineos_id", "department_worksite_id")
+
+    COMP = OrganizationUnit("02167728-6f06-48b7-aeff-199d1e536c0a", "Comptroller", 1, commonwealth_worksite_id)
+    FIN = OrganizationUnit("02167728-6f06-48b7-aeff-199d1e536c0c", "Finance", 2, commonwealth_worksite_id)
+    MIL = OrganizationUnit("02167728-6f06-48b7-aeff-199d1e536c0d", "Military", 3, commonwealth_worksite_id)
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     AbsenceStatus.sync_to_database(db_session)
@@ -2246,4 +2275,6 @@ def sync_lookup_tables(db_session):
     PaymentCheckStatus.sync_to_database(db_session)
     PrenoteState.sync_to_database(db_session)
     PubErrorType.sync_to_database(db_session)
+    Worksite.sync_to_database(db_session)
+    Department.sync_to_database(db_session)
     db_session.commit()
