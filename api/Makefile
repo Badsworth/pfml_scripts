@@ -110,6 +110,7 @@ build-app: ## Build app container
 	docker build \
 		--tag $(APP_NAME):latest \
 		--tag $(APP_NAME):$(RELEASE_TAG) \
+		--cache-from 498823821309.dkr.ecr.us-east-1.amazonaws.com/pfml-api:ad356e535be39082538fce547ef74e8f89be8c26 \
 		--target app \
 		--build-arg RUN_USER=$(RUN_USER) \
 		--build-arg RUN_UID=$(RUN_UID) \
