@@ -40,6 +40,7 @@ const DOCUMENTS = new DocumentCollection([
 
 describe("Review", () => {
   const claim = new MockEmployerClaimBuilder()
+    .eformsV2()
     .completed()
     .reviewable()
     .create();
@@ -129,6 +130,7 @@ describe("Review", () => {
         hours_worked_per_week: expect.any(Number),
         previous_leaves: expect.any(Array),
         has_amendments: false,
+        uses_second_eform_version: true,
       }
     );
   });
@@ -153,6 +155,7 @@ describe("Review", () => {
         hours_worked_per_week: expect.any(Number),
         previous_leaves: expect.any(Array),
         has_amendments: false,
+        uses_second_eform_version: true,
         leave_reason: "Serious Health Condition - Employee",
       }
     );
@@ -420,6 +423,7 @@ describe("Review", () => {
         showCaringLeaveType: true,
       };
       const caringLeaveClaim = new MockEmployerClaimBuilder()
+        .eformsV2()
         .completed()
         .caringLeaveReason()
         .reviewable()
@@ -442,6 +446,7 @@ describe("Review", () => {
           hours_worked_per_week: expect.any(Number),
           previous_leaves: expect.any(Array),
           has_amendments: false,
+          uses_second_eform_version: true,
           relationship_inaccurate_reason: expect.any(String),
           leave_reason: "Care for a Family Member",
         }
@@ -474,6 +479,7 @@ describe("Review", () => {
         "NTN-111-ABS-01",
         expect.objectContaining({
           has_amendments: false,
+          uses_second_eform_version: true,
           believe_relationship_accurate: "No",
         })
       );

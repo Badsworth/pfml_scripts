@@ -197,6 +197,7 @@ export const Review = (props) => {
         !isEqual(formState.amendedBenefits, formState.employerBenefits) ||
         !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
         !isEqual(amendedHours, claim.hours_worked_per_week),
+      uses_second_eform_version: !!claim.uses_second_eform_version,
     };
     if (shouldShowCaringLeave) {
       payload.leave_reason = get(claim, "leave_details.reason");
