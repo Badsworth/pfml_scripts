@@ -23,6 +23,7 @@ from massgov.pfml.db.models.employees import (
     LkState,
     Payment,
     PaymentMethod,
+    PaymentTransactionType,
     PrenoteState,
     PubEft,
     ReferenceFile,
@@ -1749,6 +1750,86 @@ def test_validation_zip_code(initialize_factories_session, set_exporter_env_vars
         assert set(
             [ValidationIssue(ValidationReason.INVALID_VALUE, f"PAYMENTPOSTCO: {invalid_zip}")]
         ) == set(payment_data.validation_container.validation_issues)
+
+
+def test_get_payment_transaction_type(initialize_factories_session, set_exporter_env_vars):
+    # get_payment_transaction_type is called as part of the constructor
+    # and sets payment_transaction_type accordingly.
+
+    # note the defaults for FineosPaymentData make a standard payment
+    standard_data = FineosPaymentData()
+    _, payment_data = make_payment_data_from_fineos_data(standard_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_transaction_type.payment_transaction_type_id
+        == PaymentTransactionType.STANDARD.payment_transaction_type_id
+    )
+
+    # Zero Dollar Payment
+    zero_dollar_data = FineosPaymentData(payment_amount="0.00")
+    _, payment_data = make_payment_data_from_fineos_data(zero_dollar_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_transaction_type.payment_transaction_type_id
+        == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+    )
+
+    # Employer Reimbursement
+    employer_reimbursement_data = FineosPaymentData(
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+    )
+    _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_transaction_type.payment_transaction_type_id
+        == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+    )
+
+    # There are multiple values that can create an overpayment
+    for overpayment_event_type in extractor.OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+        # Event reason is always unknown for overpayments in the real data
+        overpayment_data = FineosPaymentData(
+            event_type=overpayment_event_type, event_reason="Unknown"
+        )
+        _, payment_data = make_payment_data_from_fineos_data(overpayment_data)
+        assert not payment_data.validation_container.has_validation_issues()
+        assert (
+            payment_data.payment_transaction_type.payment_transaction_type_id
+            == PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
+        )
+
+    # Cancellation payment
+    cancellation_data = FineosPaymentData(
+        event_type="PaymentOut Cancellation", payment_amount="-100.00"
+    )
+    _, payment_data = make_payment_data_from_fineos_data(cancellation_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_transaction_type.payment_transaction_type_id
+        == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+    )
+
+    ### Various unknown scenarios
+    # Can't be a negative payment when event_type=PaymentOut (the default)
+    negative_payment_data = FineosPaymentData(payment_amount="-100.00")
+    # Event type is always used if payment amount is not 0
+    unknown_event_type_data = FineosPaymentData(event_type="Yet another overpayment event type")
+    # A payment missing everything
+    bare_minimum_payment_data = FineosPaymentData(False, c_value="1000", i_value="1")
+
+    for unknown_data in [negative_payment_data, unknown_event_type_data, bare_minimum_payment_data]:
+        _, payment_data = make_payment_data_from_fineos_data(unknown_data)
+        assert payment_data.validation_container.has_validation_issues()
+        assert (
+            payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE
+            in payment_data.validation_container.get_reasons()
+        )
+        assert (
+            payment_data.payment_transaction_type.payment_transaction_type_id
+            == PaymentTransactionType.UNKNOWN.payment_transaction_type_id
+        )
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
