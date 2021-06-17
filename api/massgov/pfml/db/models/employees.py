@@ -583,6 +583,7 @@ class Payment(Base):
     period_start_date = Column(Date)
     period_end_date = Column(Date)
     payment_date = Column(Date)
+    absence_case_creation_date = Column(Date)
     amount = Column(Numeric(asdecimal=True), nullable=False)
     fineos_pei_c_value = Column(Text, index=True)
     fineos_pei_i_value = Column(Text, index=True)

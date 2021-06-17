@@ -1566,6 +1566,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
             ValidationIssue(
                 ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
                 "Unknown payment scenario encountered. Payment Amount: None, Event Type: None, Event Reason: ",
@@ -1594,6 +1595,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1618,6 +1620,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD6"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1641,6 +1644,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
         ]
     )
 
@@ -1740,8 +1744,8 @@ def test_validation_payment_amount(initialize_factories_session, set_exporter_en
 
 
 def test_validation_zip_code(initialize_factories_session, set_exporter_env_vars):
-    # When doing validation, we verify that payment amount
-    # must be a numeric value
+    # When doing validation, we verify that a zip code must be
+    # either ##### or #####-####
     invalid_zips = ["abcde", "1234567", "-12345", "12345-000"]
 
     for invalid_zip in invalid_zips:

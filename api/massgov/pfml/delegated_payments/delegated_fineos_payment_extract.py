@@ -189,6 +189,7 @@ class PaymentData:
     payment_start_period: Optional[str] = None
     payment_end_period: Optional[str] = None
     payment_date: Optional[str] = None
+    absence_case_creation_date: Optional[str] = None
     payment_amount: Optional[Decimal] = None
     amalgamation_c: Optional[str] = None
 
@@ -471,6 +472,14 @@ class PaymentData:
 
             self.claim_type_raw = payments_util.validate_csv_input(
                 "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
+            )
+
+            self.absence_case_creation_date = payments_util.validate_csv_input(
+                "ABSENCE_CASECREATIONDATE",
+                requested_absence,
+                self.validation_container,
+                True,
+                custom_validator_func=self.payment_period_date_validator,
             )
 
         elif self.is_standard_payment:
@@ -919,6 +928,9 @@ class PaymentExtractStep(Step):
             payment_data.payment_end_period
         )
         payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
+        payment.absence_case_creation_date = payments_util.datetime_str_to_date(
+            payment_data.absence_case_creation_date
+        )
 
         payment.payment_transaction_type_id = (
             payment_data.payment_transaction_type.payment_transaction_type_id

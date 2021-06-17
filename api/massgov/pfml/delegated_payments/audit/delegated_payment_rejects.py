@@ -101,6 +101,9 @@ class PaymentRejectsStep(Step):
                 payment_reject_row = PaymentAuditCSV(
                     pfml_payment_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id),
                     leave_type=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.leave_type),
+                    fineos_customer_number=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number
+                    ),
                     first_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.first_name),
                     last_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.last_name),
                     address_line_1=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.address_line_1),
@@ -123,10 +126,10 @@ class PaymentRejectsStep(Step):
                     absence_case_number=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_number),
                     c_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.c_value),
                     i_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.i_value),
-                    fineos_customer_number=get_row(
-                        row, PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number
-                    ),
                     employer_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_id),
+                    absence_case_creation_date=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_creation_date
+                    ),
                     case_status=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.case_status),
                     leave_request_decision=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision

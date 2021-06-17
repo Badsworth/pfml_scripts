@@ -93,6 +93,7 @@ REQUESTED_ABSENCE_FIELD_NAMES = [
     "LEAVEREQUEST_DECISION",
     "LEAVEREQUEST_ID",
     "ABSENCEREASON_COVERAGE",
+    "ABSENCE_CASECREATIONDATE",
 ]
 
 FINEOS_CLAIMANT_EXPORT_FILES = [EMPLOYEE_FEED_FILE_NAME, REQUESTED_ABSENCE_SOM_FILE_NAME]
@@ -252,6 +253,9 @@ class FineosPaymentData(FineosData):
         self.zip_code = self.get_value("zip_code", fake.zipcode_plus4())
         self.payment_method = self.get_value("payment_method", "Elec Funds Transfer")
         self.payment_date = self.get_value("payment_date", "2021-01-01 12:00:00")
+        self.absence_case_creation_date = self.get_value(
+            "absence_case_creation_date", "2020-12-01 07:00:00"
+        )
         self.payment_amount = self.get_value("payment_amount", "100.00")
         self.routing_nbr = self.get_value("routing_nbr", ssn)
         self.account_nbr = self.get_value("account_nbr", ssn)
@@ -316,6 +320,7 @@ class FineosPaymentData(FineosData):
             requested_absence_record["LEAVEREQUEST_DECISION"] = self.leave_request_decision
             requested_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id
             requested_absence_record["ABSENCEREASON_COVERAGE"] = self.claim_type
+            requested_absence_record["ABSENCE_CASECREATIONDATE"] = self.absence_case_creation_date
 
         return requested_absence_record
 

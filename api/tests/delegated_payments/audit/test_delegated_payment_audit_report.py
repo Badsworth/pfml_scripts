@@ -115,6 +115,10 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
     assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment)
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number]
+        == payment.claim.employee.fineos_customer_number
+    )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.claim.employee.first_name
     assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.claim.employee.last_name
 
@@ -134,12 +138,13 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
     assert row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number] == payment.claim.fineos_absence_id
     assert row[PAYMENT_AUDIT_CSV_HEADERS.c_value] == payment.fineos_pei_c_value
     assert row[PAYMENT_AUDIT_CSV_HEADERS.i_value] == payment.fineos_pei_i_value
-    assert (
-        row[PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number]
-        == payment.claim.employee.fineos_customer_number
-    )
+
     assert row[PAYMENT_AUDIT_CSV_HEADERS.employer_id] == str(
         payment.claim.employer.fineos_employer_id
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_creation_date]
+        == payment.absence_case_creation_date.isoformat()
     )
     assert (
         row[PAYMENT_AUDIT_CSV_HEADERS.case_status]

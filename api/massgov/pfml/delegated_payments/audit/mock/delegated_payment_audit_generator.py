@@ -264,6 +264,7 @@ def create_payment_with_end_state(
     payment_date = datetime.now()
     period_start_date = payment_date - timedelta(days=7)
     period_end_date = payment_date - timedelta(days=1)
+    absence_case_creation_date = payment_date - timedelta(days=30)
 
     payment_amount = round(decimal.Decimal(random.uniform(1, 1000)), 2)
 
@@ -276,6 +277,7 @@ def create_payment_with_end_state(
         payment_date=payment_date,
         period_start_date=period_start_date,
         period_end_date=period_end_date,
+        absence_case_creation_date=absence_case_creation_date,
         experian_address_pair=address_pair,
         leave_request_decision="Approved",
     )
