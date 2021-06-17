@@ -153,6 +153,7 @@ export class UserLeaveAdministrator extends BaseModel {
       has_fineos_registration: null,
       has_verification_data: null,
       verified: null,
+      departments: [],
     };
   }
 }
