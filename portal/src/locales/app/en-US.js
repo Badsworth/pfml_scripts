@@ -2299,19 +2299,10 @@ const components = {
   },
   amendmentForm: {
     cancel: "Cancel amendment",
-    question_benefitAmount: "How much will they receive?",
-    question_benefitEndDate: "When will the employee stop using the benefit?",
-    question_benefitFrequency: "How often will they receive the benefit?",
-    question_benefitStartDate:
-      "When will the employee start using the benefit?",
-    question_leaveEndDate: "When did the leave end?",
     question_leavePeriodDuration:
       "On average, how many hours does the employee work each week?",
     question_leavePeriodDuration_hint:
       "If their schedule varies, tell us the average number of hours worked over the past 52 weeks.",
-    question_leaveStartDate: "When did the leave begin?",
-    question_notificationDate:
-      "When did the employee tell you about their expected leave?",
   },
   applicationCard: {
     actionsHeading: "Actions",
@@ -2390,6 +2381,8 @@ const components = {
     destroyButtonLabel_amend: "Cancel amendment",
     heading_add: "Add an accrued paid leave",
     heading_amend: "Amend accrued paid leave",
+    leaveEndDateLabel: "When did the leave end?",
+    leaveStartDateLabel: "When did the leave begin?",
   },
   employersAmendableEmployerBenefit: {
     amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
@@ -2400,6 +2393,7 @@ const components = {
       "What is the first day of leave from work that this benefit will pay your employee for?",
     benefitTypeLabel: "What kind of employer-sponsored benefit is it?",
     cancelAddition: "Cancel addition",
+    choiceHint_benefitAmountDollars: "How much will your employee receive?",
     choiceHint_familyOrMedicalLeave:
       "$t(shared.choiceHint_familyOrMedicalLeave)",
     choiceHint_shortTermDisability: "$t(shared.choiceHint_shortTermDisability)",
@@ -2427,6 +2421,36 @@ const components = {
     subtitle_amend:
       "This amendment will get saved when you submit your review at the end of the page.",
     title: "Add an employer-sponsored benefit",
+  },
+  employersAmendablePreviousLeave: {
+    addButton: "Add another previous leave",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    destroyButtonLabel_add: "Cancel addition",
+    destroyButtonLabel_amend: "Cancel amendment",
+    heading_add: "Add a new previous leave",
+    heading_amend: "Amend previous leave",
+    isForSameReasonAsLeaveReasonLabel:
+      "Was this leave for the same reason as their paid leave request?",
+    leaveEndDateLabel: "When did the employee's leave end?",
+    leaveReasonLabel: "Why did this employee need to take leave?",
+    // these are similar to, but NOT exactly the same as claimsPreviousLeavesOtherReasonDetails
+    leaveReasonValue_activeDutyFamily:
+      "Managing family affairs while a family member was on active duty in the armed forces",
+    leaveReasonValue_bonding:
+      "Bonding with their child after birth or placement",
+    leaveReasonValue_care: "Caring for a family member",
+    leaveReasonValue_medical: "An illness or injury",
+    leaveReasonValue_pregnancy: "Pregnancy",
+    leaveReasonValue_serviceMemberFamily:
+      "Caring for a family member who served in the armed forces",
+    leaveReason_family: "Family leave",
+    leaveReason_medical: "$t(shared.leaveReasonMedical)",
+    leaveStartDateLabel: "When did the employee's leave start?",
+    subtitle_add:
+      "This addition will get saved when you submit your review at the end of this page.",
+    subtitle_amend:
+      "This amendment will get saved when you submit your review at the end of this page.",
   },
   employersConcurrentLeave: {
     addButton: "Add a concurrent leave",
@@ -2596,14 +2620,7 @@ const components = {
     dateRangeLabel: "Date range",
     explanation:
       "Your employee has listed leave they have taken for a qualified reason. Only leave since January 1, 2021 is included. This includes both paid leave, such as paid vacation or sick days, and unpaid leave, such as FMLA leave. When possible, verify that a previous leave was for a reason that qualifies for paid leave under PFML.",
-    header: "Previous leaves",
-    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_serviceMemberFamily:
-      "$t(shared.leaveReasonServiceMemberFamily)",
+    header: "Previous leave",
     leaveTypeLabel: "Leave type",
     qualifyingReasonContent:
       "An employee or contractor can take paid or unpaid leave to:",

@@ -1,4 +1,3 @@
-import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import { get, pick } from "lodash";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Details from "../../components/Details";
@@ -7,14 +6,14 @@ import Hint from "../../components/Hint";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import InputHours from "../../components/InputHours";
-import LeaveReason from "../../models/LeaveReason";
+import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
 import { Trans } from "react-i18next";
-import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
+import leaveReasonToPreviousLeaveReason from "../../utils/leaveReasonToPreviousLeaveReason";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -34,16 +33,6 @@ export const PreviousLeavesSameReasonDetails = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const limit = 6;
-
-  /**
-   * Converts a LeaveReason to its corresponding PreviousLeaveReason.
-   * @param {string} leaveReason - the application leave reason
-   * @returns {PreviousLeaveReason} the corresponding PreviousLeaveReason
-   */
-  const leaveReasonToPreviousLeaveReason = (leaveReason) => {
-    const previousLeaveReasonKey = findKeyByValue(LeaveReason, leaveReason);
-    return PreviousLeaveReason[previousLeaveReasonKey];
-  };
 
   const initialEntries = pick(props, fields).claim;
   if (initialEntries.previous_leaves_same_reason.length === 0) {

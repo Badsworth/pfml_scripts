@@ -397,7 +397,7 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'has_amendments' to true if leaves are amended", async () => {
+  it("sets 'has_amendments' to true if previous leaves are amended", async () => {
     ({ appLogic, wrapper } = renderComponent("shallow", claimWithV2Eform));
 
     act(() => {
@@ -405,6 +405,20 @@ describe("Review", () => {
         .find("PreviousLeaves")
         .props()
         .onChange(new PreviousLeave({ previous_leave_id: 0 }));
+    });
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ has_amendments: true })
+    );
+  });
+
+  it("sets 'has_amendments' to true if previous leaves are added", async () => {
+    ({ appLogic, wrapper } = renderComponent("shallow", claimWithV2Eform));
+
+    act(() => {
+      wrapper.find("PreviousLeaves").props().onAdd();
     });
     await simulateEvents(wrapper).submitForm();
 

@@ -120,7 +120,9 @@ const AmendableConcurrentLeave = ({
               <InputDate
                 onChange={(e) => amendLeave("leave_start_date", e.target.value)}
                 value={amendment.leave_start_date}
-                label={t("components.amendmentForm.question_leaveStartDate")}
+                label={t(
+                  "components.employersAmendableConcurrentLeave.leaveStartDateLabel"
+                )}
                 errorMsg={startDateErrMsg}
                 name="concurrent_leave.leave_start_date"
                 dayLabel={t("components.form.dateInputDayLabel")}
@@ -131,7 +133,9 @@ const AmendableConcurrentLeave = ({
               <InputDate
                 onChange={(e) => amendLeave("leave_end_date", e.target.value)}
                 value={amendment.leave_end_date}
-                label={t("components.amendmentForm.question_leaveEndDate")}
+                label={t(
+                  "components.employersAmendableConcurrentLeave.leaveEndDateLabel"
+                )}
                 errorMsg={leaveDateErrMsg}
                 name="concurrent_leave.leave_end_date"
                 dayLabel={t("components.form.dateInputDayLabel")}

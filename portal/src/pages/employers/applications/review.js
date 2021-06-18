@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { get, isEqual, omit, pick } from "lodash";
+import { get, isEqual, omit } from "lodash";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
@@ -28,6 +28,7 @@ import { Trans } from "react-i18next";
 import findDocumentsByLeaveReason from "../../../utils/findDocumentsByLeaveReason";
 import formatDateRange from "../../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../../services/featureFlags";
+import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
 import routes from "../../../routes";
 import updateAmendments from "../../../utils/updateAmendments";
 import useThrottledHandler from "../../../hooks/useThrottledHandler";
@@ -73,8 +74,17 @@ export const Review = (props) => {
     relationshipInaccurateReason: "",
     // added fields
     addedBenefits: [],
+    addedPreviousLeaves: [],
     addedConcurrentLeave: null,
   });
+
+  const [allPreviousLeaves, setAllPreviousLeaves] = useState([]);
+  useEffect(() => {
+    setAllPreviousLeaves([
+      ...formState.amendedPreviousLeaves,
+      ...formState.addedPreviousLeaves,
+    ]);
+  }, [formState.amendedPreviousLeaves, formState.addedPreviousLeaves]);
 
   const [allEmployerBenefits, setAllEmployerBenefits] = useState([]);
   useEffect(() => {
@@ -180,12 +190,59 @@ export const Review = (props) => {
     updateFields({ [formStateField]: updatedBenefits });
   };
 
-  const handlePreviousLeavesChange = (updatedLeave) => {
+  const handlePreviousLeaveAdd = () => {
+    updateFields({
+      addedPreviousLeaves: [
+        ...formState.addedPreviousLeaves,
+        new PreviousLeave({
+          is_for_current_employer: true,
+          previous_leave_id: allPreviousLeaves.length,
+        }),
+      ],
+    });
+  };
+
+  const handlePreviousLeaveRemove = (leaveToRemove) => {
+    const updatedAddedLeaves = formState.addedPreviousLeaves
+      // remove selected leave
+      .filter(
+        ({ previous_leave_id }) =>
+          previous_leave_id !== leaveToRemove.previous_leave_id
+      )
+      // reassign previous_leave_id to keep indices accurate
+      .map(
+        (addedLeave, index) =>
+          new PreviousLeave({ ...addedLeave, previous_leave_id: index })
+      );
+    updateFields({ addedPreviousLeaves: updatedAddedLeaves });
+  };
+
+  const handlePreviousLeavesChange = (
+    updatedLeave,
+    formStateField = "amendedPreviousLeaves"
+  ) => {
+    const originalPreviousLeave = get(
+      formState,
+      `previousLeaves.[${updatedLeave.previous_leave_id}]`
+    );
+
+    if (updatedLeave.is_for_same_reason_as_leave_reason === true) {
+      updatedLeave.leave_reason = leaveReasonToPreviousLeaveReason(
+        claim.leave_details.reason
+      );
+    } else if (
+      updatedLeave.is_for_same_reason_as_leave_reason === false &&
+      // leave admin did not cancel amendment.
+      !isEqual(updatedLeave, originalPreviousLeave)
+    ) {
+      updatedLeave.leave_reason = undefined;
+    }
+    // don't revert previous leave reason if the amendment is canceled
     const updatedPreviousLeaves = updateAmendments(
-      formState.amendedPreviousLeaves,
+      get(formState, formStateField),
       updatedLeave
     );
-    updateFields({ amendedPreviousLeaves: updatedPreviousLeaves });
+    updateFields({ [formStateField]: updatedPreviousLeaves });
   };
 
   const handleConcurrentLeaveAdd = () => {
@@ -249,8 +306,8 @@ export const Review = (props) => {
       omit(benefit, ["employer_benefit_id"])
     );
     const amendedHours = formState.amendedHours;
-    const previous_leaves = formState.amendedPreviousLeaves.map((leave) =>
-      pick(leave, ["leave_end_date", "leave_reason", "leave_start_date"])
+    const previous_leaves = allPreviousLeaves.map((leave) =>
+      omit(leave, ["previous_leave_id"])
     );
 
     const payload = {
@@ -263,7 +320,7 @@ export const Review = (props) => {
       previous_leaves,
       has_amendments:
         !isEqual(allEmployerBenefits, formState.employerBenefits) ||
-        !isEqual(formState.amendedPreviousLeaves, formState.previousLeaves) ||
+        !isEqual(allPreviousLeaves, formState.previousLeaves) ||
         !isEqual(concurrent_leave, formState.concurrentLeave) ||
         !isEqual(amendedHours, claim.hours_worked_per_week),
       uses_second_eform_version: !!claim.uses_second_eform_version,
@@ -392,8 +449,12 @@ export const Review = (props) => {
             </div>
             <PreviousLeaves
               appErrors={appErrors}
-              onChange={handlePreviousLeavesChange}
               previousLeaves={formState.previousLeaves}
+              addedPreviousLeaves={formState.addedPreviousLeaves}
+              onAdd={handlePreviousLeaveAdd}
+              onChange={handlePreviousLeavesChange}
+              onRemove={handlePreviousLeaveRemove}
+              shouldShowV2={shouldShowV2}
             />
             <ConcurrentLeave
               appErrors={appErrors}

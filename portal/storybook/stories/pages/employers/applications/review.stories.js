@@ -69,6 +69,7 @@ export const Default = (args) => {
 
   let claim = new MockEmployerClaimBuilder()
     .completed(isIntermittent)
+    .previousLeaves()
     .reviewable();
 
   switch (args["Leave reason"]) {

@@ -19,6 +19,7 @@ exports[`AmendmentForm renders the component 1`] = `
     >
       <Button
         className="margin-top-3 text-red"
+        data-test="amendment-destroy-button"
         onClick={[MockFunction]}
         variation="unstyled"
       >

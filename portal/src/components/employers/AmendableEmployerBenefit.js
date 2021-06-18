@@ -268,7 +268,7 @@ const AmendableEmployerBenefit = ({
                   choices={[
                     {
                       checked:
-                        get(amendment, "is_full_salary_continuous") === "true",
+                        get(amendment, "is_full_salary_continuous") === true,
                       label: t(
                         "components.employersAmendableEmployerBenefit.choiceYes"
                       ),
@@ -276,7 +276,7 @@ const AmendableEmployerBenefit = ({
                     },
                     {
                       checked:
-                        get(amendment, "is_full_salary_continuous") === "false",
+                        get(amendment, "is_full_salary_continuous") === false,
                       label: t(
                         "components.employersAmendableEmployerBenefit.choiceNo"
                       ),

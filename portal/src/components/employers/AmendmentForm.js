@@ -25,6 +25,7 @@ export const AmendmentForm = ({
         <div className="usa-alert__text">{children}</div>
         <div className="border-top border-width-1px margin-top-4 margin-bottom-1 border-base-light">
           <Button
+            data-test="amendment-destroy-button"
             variation="unstyled"
             className="margin-top-3 text-red"
             onClick={onDestroy}

@@ -302,6 +302,41 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   }
 
   /**
+   * @returns {MockEmployerClaimBuilder}
+   */
+  previousLeaves(attrs) {
+    set(
+      this.claimAttrs,
+      "previous_leaves",
+      attrs
+        ? attrs.map((attr) => new PreviousLeave(attr))
+        : [
+            new PreviousLeave({
+              is_for_current_employer: true,
+              is_for_same_reason_as_leave_reason: false,
+              leave_minutes: 2400,
+              leave_reason: PreviousLeaveReason.serviceMemberFamily,
+              leave_start_date: "2020-03-01",
+              leave_end_date: "2020-03-06",
+              previous_leave_id: 0,
+              worked_per_week_minutes: 1440,
+            }),
+            new PreviousLeave({
+              is_for_current_employer: true,
+              is_for_same_reason_as_leave_reason: true,
+              leave_minutes: 4800,
+              leave_reason: PreviousLeaveReason.bonding,
+              leave_start_date: "2020-05-01",
+              leave_end_date: "2020-05-10",
+              previous_leave_id: 1,
+              worked_per_week_minutes: 960,
+            }),
+          ]
+    );
+    return this;
+  }
+
+  /**
    * Todo(EMPLOYER-1453): remove V1 eform functionality
    * @returns {MockEmployerClaimBuilder}
    */
