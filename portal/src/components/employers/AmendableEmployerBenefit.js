@@ -50,6 +50,10 @@ const AmendableEmployerBenefit = ({
       // happens if a user starts typing a date, then removes it
       // these fields aren't required, and sending an empty string returns an "invalid date" error
       return value === "" ? null : value;
+    } else if (value === "true") {
+      return true;
+    } else if (value === "false") {
+      return false;
     }
 
     return value;

@@ -1,3 +1,4 @@
+import AddButton from "./AddButton";
 import AmendableConcurrentLeave from "./AmendableConcurrentLeave";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeaveModel from "../../models/ConcurrentLeave";
@@ -14,7 +15,14 @@ import { useTranslation } from "../../locales/i18n";
 
 const ConcurrentLeave = (props) => {
   const { t } = useTranslation();
-  const { appErrors, concurrentLeave, onChange } = props;
+  const {
+    addedConcurrentLeave,
+    appErrors,
+    concurrentLeave,
+    onAdd,
+    onChange,
+    onRemove,
+  } = props;
 
   return (
     <React.Fragment>
@@ -25,7 +33,7 @@ const ConcurrentLeave = (props) => {
       <Table className="width-full">
         <thead>
           <tr>
-            <th scope="col">
+            <th scope="col" colSpan="2">
               {t("components.employersConcurrentLeave.dateRangeLabel")}
             </th>
           </tr>
@@ -35,12 +43,33 @@ const ConcurrentLeave = (props) => {
             <AmendableConcurrentLeave
               appErrors={appErrors}
               concurrentLeave={concurrentLeave}
+              isAddedByLeaveAdmin={false}
               onChange={onChange}
+              onRemove={onRemove}
             />
           ) : (
             <tr>
               <th scope="row">{t("shared.noneReported")}</th>
               <td colSpan="3" />
+            </tr>
+          )}
+          {addedConcurrentLeave && !concurrentLeave && (
+            <AmendableConcurrentLeave
+              appErrors={appErrors}
+              concurrentLeave={addedConcurrentLeave}
+              isAddedByLeaveAdmin
+              onChange={onChange}
+              onRemove={onRemove}
+            />
+          )}
+          {!concurrentLeave && !addedConcurrentLeave && (
+            <tr>
+              <td colSpan="2" className="padding-y-2 padding-left-0">
+                <AddButton
+                  label={t("components.employersConcurrentLeave.addButton")}
+                  onClick={onAdd}
+                />
+              </td>
             </tr>
           )}
         </tbody>
@@ -51,9 +80,12 @@ const ConcurrentLeave = (props) => {
 };
 
 ConcurrentLeave.propTypes = {
+  addedConcurrentLeave: PropTypes.instanceOf(ConcurrentLeaveModel),
   appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  onChange: PropTypes.func.isRequired,
   concurrentLeave: PropTypes.instanceOf(ConcurrentLeaveModel),
+  onAdd: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onRemove: PropTypes.func.isRequired,
 };
 
 export default ConcurrentLeave;

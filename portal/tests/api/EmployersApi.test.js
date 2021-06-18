@@ -159,7 +159,7 @@ describe("EmployersApi", () => {
         );
       });
 
-      it("sends GET request with headers to /employers/claim/{absenceId}/review", async() => {
+      it("sends GET request with headers to /employers/claim/{absenceId}/review", async () => {
         process.env.featureFlags = { claimantShowOtherLeaveStep: true };
 
         await employersApi.getClaim(absenceId);
@@ -174,7 +174,7 @@ describe("EmployersApi", () => {
             method: "GET",
           })
         );
-      })
+      });
 
       it("resolves with claim", async () => {
         const response = await employersApi.getClaim(absenceId);

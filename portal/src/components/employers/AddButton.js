@@ -6,21 +6,21 @@ import React from "react";
  * Generic "add" button used on the leave administrator review page to add
  * previous leaves, concurrent leaves and employer benefits.
  */
-const AddButton = (props) => {
+const AddButton = ({ disabled = false, label, onClick }) => {
   return (
     <Button
       name="add-entry-button"
-      onClick={props.onClick}
+      onClick={onClick}
       variation="outline"
-      disabled={props.disabled}
+      disabled={disabled}
     >
-      {props.label}
+      {label}
     </Button>
   );
 };
 
 AddButton.propTypes = {
-  disabled: PropTypes.bool.isRequired,
+  disabled: PropTypes.bool,
   label: PropTypes.string.isRequired,
   onClick: PropTypes.func.isRequired,
 };

@@ -1,75 +1,137 @@
-import AmendButton from "../../../src/components/employers/AmendButton";
 import AmendableConcurrentLeave from "../../../src/components/employers/AmendableConcurrentLeave";
-import AmendmentForm from "../../../src/components/employers/AmendmentForm";
-import Button from "../../../src/components/Button";
-import ConcurrentLeave from "../../../src/models/ConcurrentLeave";
-import InputDate from "../../../src/components/InputDate";
+import ConcurrentLeaveModel from "../../../src/models/ConcurrentLeave";
 import React from "react";
 import { shallow } from "enzyme";
 import { testHook } from "../../test-utils";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
 describe("AmendableConcurrentLeave", () => {
-  const concurrentLeave = new ConcurrentLeave({
+  const concurrentLeave = new ConcurrentLeaveModel({
+    is_for_current_employer: true,
     leave_start_date: "2020-03-01",
     leave_end_date: "2020-03-06",
   });
   const onChange = jest.fn();
+  const onRemove = jest.fn();
 
   let appLogic, wrapper;
 
-  beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
+  describe("for claimant-submitted concurrent leaves", () => {
+    function clickAmendButton(wrapper) {
+      wrapper
+        .find("ConcurrentLeaveDetailsRow")
+        .dive()
+        .find("AmendButton")
+        .simulate("click");
+    }
+
+    beforeEach(() => {
+      testHook(() => {
+        appLogic = useAppLogic();
+      });
+
+      wrapper = shallow(
+        <AmendableConcurrentLeave
+          appErrors={appLogic.appErrors}
+          concurrentLeave={concurrentLeave}
+          isAddedByLeaveAdmin={false}
+          onChange={onChange}
+          onRemove={onRemove}
+        />
+      );
     });
 
-    wrapper = shallow(
-      <AmendableConcurrentLeave
-        appErrors={appLogic.appErrors}
-        concurrentLeave={concurrentLeave}
-        onChange={onChange}
-      />
-    );
+    it("renders the component", () => {
+      expect(wrapper).toMatchSnapshot();
+    });
+
+    it("renders an AmendmentForm if user clicks on AmendButton", () => {
+      clickAmendButton(wrapper);
+
+      expect(wrapper.find("AmendmentForm").exists()).toEqual(true);
+    });
+
+    it("updates start and end dates in the AmendmentForm", () => {
+      clickAmendButton(wrapper);
+      wrapper
+        .find("InputDate")
+        .first()
+        .simulate("change", { target: { value: "2020-10-10" } });
+      wrapper
+        .find("InputDate")
+        .last()
+        .simulate("change", { target: { value: "2020-10-20" } });
+
+      expect(onChange).toHaveBeenCalledTimes(2);
+      expect(wrapper.find("InputDate").first().prop("value")).toEqual(
+        "2020-10-10"
+      );
+      expect(wrapper.find("InputDate").last().prop("value")).toEqual(
+        "2020-10-20"
+      );
+    });
+
+    it("formats empty dates to null instead of an empty string", () => {
+      clickAmendButton(wrapper);
+      wrapper
+        .find("InputDate")
+        .first()
+        .simulate("change", { target: { value: "" } });
+
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({ leave_start_date: null }),
+        "amendedConcurrentLeave"
+      );
+    });
+
+    it("restores original value on cancel", () => {
+      clickAmendButton(wrapper);
+      wrapper
+        .find("InputDate")
+        .first()
+        .simulate("change", { target: { value: "2020-10-10" } });
+
+      expect(wrapper.find("InputDate").first().prop("value")).toEqual(
+        "2020-10-10"
+      );
+
+      wrapper.find("AmendmentForm").dive().find("Button").simulate("click");
+
+      clickAmendButton(wrapper);
+      expect(wrapper.find("InputDate").first().prop("value")).toEqual(
+        "2020-03-01"
+      );
+    });
   });
 
-  it("renders the component", () => {
-    expect(wrapper).toMatchSnapshot();
-  });
+  describe("for admin-added concurrent leaves", () => {
+    beforeEach(() => {
+      testHook(() => {
+        appLogic = useAppLogic();
+      });
 
-  it("renders an AmendmentForm if user clicks on AmendButton", () => {
-    wrapper.find(AmendButton).simulate("click");
+      wrapper = shallow(
+        <AmendableConcurrentLeave
+          appErrors={appLogic.appErrors}
+          concurrentLeave={concurrentLeave}
+          isAddedByLeaveAdmin
+          onChange={onChange}
+          onRemove={onRemove}
+        />
+      );
+    });
 
-    expect(wrapper.find(AmendmentForm).exists()).toEqual(true);
-  });
+    it("renders the component", () => {
+      expect(wrapper).toMatchSnapshot();
+    });
 
-  it("updates start and end dates in the AmendmentForm", () => {
-    wrapper.find(AmendButton).simulate("click");
-    wrapper
-      .find(InputDate)
-      .first()
-      .simulate("change", { target: { value: "2020-10-10" } });
-    wrapper
-      .find(InputDate)
-      .last()
-      .simulate("change", { target: { value: "2020-10-20" } });
+    it("does not show any ConcurrentLeaveDetailsRow components", () => {
+      expect(wrapper.find("ConcurrentLeaveDetailsRow").exists()).toBe(false);
+    });
 
-    expect(onChange).toHaveBeenCalledTimes(2);
-    expect(wrapper.find(InputDate).first().prop("value")).toEqual("2020-10-10");
-    expect(wrapper.find(InputDate).last().prop("value")).toEqual("2020-10-20");
-  });
-
-  it("restores original value on cancel", () => {
-    wrapper.find(AmendButton).simulate("click");
-    wrapper
-      .find(InputDate)
-      .first()
-      .simulate("change", { target: { value: "2020-10-10" } });
-
-    expect(wrapper.find(InputDate).first().prop("value")).toEqual("2020-10-10");
-
-    wrapper.find(AmendmentForm).dive().find(Button).simulate("click");
-
-    wrapper.find(AmendButton).simulate("click");
-    expect(wrapper.find(InputDate).first().prop("value")).toEqual("2020-03-01");
+    it("calls 'onRemove' value on cancel", () => {
+      wrapper.find("AmendmentForm").dive().find("Button").simulate("click");
+      expect(onRemove).toHaveBeenCalled();
+    });
   });
 });

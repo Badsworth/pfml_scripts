@@ -2385,6 +2385,12 @@ const components = {
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
   },
+  employersAmendableConcurrentLeave: {
+    destroyButtonLabel_add: "Cancel addition",
+    destroyButtonLabel_amend: "Cancel amendment",
+    heading_add: "Add an accrued paid leave",
+    heading_amend: "Amend accrued paid leave",
+  },
   employersAmendableEmployerBenefit: {
     amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
     benefitAmountDollarsLabel: "Amount",
@@ -2423,6 +2429,7 @@ const components = {
     title: "Add an employer-sponsored benefit",
   },
   employersConcurrentLeave: {
+    addButton: "Add a concurrent leave",
     commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     explanation:

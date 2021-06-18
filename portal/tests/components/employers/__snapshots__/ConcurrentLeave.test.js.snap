@@ -16,6 +16,7 @@ exports[`ConcurrentLeave renders the component 1`] = `
     <thead>
       <tr>
         <th
+          colSpan="2"
           scope="col"
         >
           Date range
@@ -32,12 +33,14 @@ exports[`ConcurrentLeave renders the component 1`] = `
         }
         concurrentLeave={
           ConcurrentLeave {
-            "is_for_current_employer": null,
+            "is_for_current_employer": true,
             "leave_end_date": "2020-03-06",
             "leave_start_date": "2020-03-01",
           }
         }
+        isAddedByLeaveAdmin={false}
         onChange={[Function]}
+        onRemove={[Function]}
       />
     </tbody>
   </Table>

@@ -4,6 +4,7 @@ import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
+import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
 import DocumentCollection from "../../../models/DocumentCollection";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
@@ -57,12 +58,12 @@ export const Review = (props) => {
 
   const [formState, setFormState] = useState({
     // base fields
-    employerBenefits: [],
-    previousLeaves: [],
-    amendedBenefits: [],
-    amendedPreviousLeaves: [],
     concurrentLeave: claim.concurrent_leave,
     amendedConcurrentLeave: claim.concurrent_leave,
+    employerBenefits: [],
+    amendedBenefits: [],
+    previousLeaves: [],
+    amendedPreviousLeaves: [],
     amendedHours: 0,
     comment: "",
     employerDecision: "Approve",
@@ -72,6 +73,7 @@ export const Review = (props) => {
     relationshipInaccurateReason: "",
     // added fields
     addedBenefits: [],
+    addedConcurrentLeave: null,
   });
 
   const [allEmployerBenefits, setAllEmployerBenefits] = useState([]);
@@ -186,10 +188,25 @@ export const Review = (props) => {
     updateFields({ amendedPreviousLeaves: updatedPreviousLeaves });
   };
 
-  const handleConcurrentLeaveInputChange = (updatedLeave) => {
+  const handleConcurrentLeaveAdd = () => {
     updateFields({
-      amendedConcurrentLeave: {
-        ...formState.amendedConcurrentLeave,
+      addedConcurrentLeave: new ConcurrentLeaveModel({
+        is_for_current_employer: true,
+      }),
+    });
+  };
+
+  const handleConcurrentLeaveRemove = () => {
+    updateFields({ addedConcurrentLeave: null });
+  };
+
+  const handleConcurrentLeaveInputChange = (
+    updatedLeave,
+    formStateField = "amendedConcurrentLeave"
+  ) => {
+    updateFields({
+      [formStateField]: {
+        ...get(formState, formStateField),
         ...updatedLeave,
       },
     });
@@ -226,6 +243,8 @@ export const Review = (props) => {
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
 
+    const concurrent_leave =
+      formState.amendedConcurrentLeave || formState.addedConcurrentLeave;
     const employer_benefits = allEmployerBenefits.map((benefit) =>
       omit(benefit, ["employer_benefit_id"])
     );
@@ -236,7 +255,7 @@ export const Review = (props) => {
 
     const payload = {
       comment: formState.comment,
-      concurrent_leave: formState.amendedConcurrentLeave,
+      concurrent_leave,
       employer_benefits,
       employer_decision: formState.employerDecision,
       fraud: formState.fraud,
@@ -245,7 +264,7 @@ export const Review = (props) => {
       has_amendments:
         !isEqual(allEmployerBenefits, formState.employerBenefits) ||
         !isEqual(formState.amendedPreviousLeaves, formState.previousLeaves) ||
-        !isEqual(formState.amendedConcurrentLeave, formState.concurrentLeave) ||
+        !isEqual(concurrent_leave, formState.concurrentLeave) ||
         !isEqual(amendedHours, claim.hours_worked_per_week),
       uses_second_eform_version: !!claim.uses_second_eform_version,
     };
@@ -378,8 +397,12 @@ export const Review = (props) => {
             />
             <ConcurrentLeave
               appErrors={appErrors}
+              addedConcurrentLeave={formState.addedConcurrentLeave}
               concurrentLeave={formState.concurrentLeave}
+              onAdd={handleConcurrentLeaveAdd}
               onChange={handleConcurrentLeaveInputChange}
+              onRemove={handleConcurrentLeaveRemove}
+              shouldShowV2={shouldShowV2}
             />
           </React.Fragment>
         )}
@@ -392,7 +415,6 @@ export const Review = (props) => {
           onRemove={handleBenefitRemove}
           shouldShowV2={shouldShowV2}
         />
-
         <FraudReport onChange={handleFraudInputChange} />
         <EmployeeNotice
           fraud={formState.fraud}

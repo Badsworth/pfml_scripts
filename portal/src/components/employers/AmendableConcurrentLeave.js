@@ -4,6 +4,7 @@ import AmendmentForm from "./AmendmentForm";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
 import ConditionalContent from "../ConditionalContent";
+import Heading from "../Heading";
 import InputDate from "../InputDate";
 import PropTypes from "prop-types";
 import formatDateRange from "../../utils/formatDateRange";
@@ -14,19 +15,39 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const AmendableConcurrentLeave = ({ appErrors, concurrentLeave, onChange }) => {
+const AmendableConcurrentLeave = ({
+  appErrors,
+  concurrentLeave,
+  isAddedByLeaveAdmin,
+  onChange,
+  onRemove,
+}) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(concurrentLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
     false
   );
 
+  const getFormattedValue = (field, value) => {
+    if (field === "leave_start_date" || field === "leave_end_date") {
+      // happens if a user starts typing a date, then removes it
+      // these fields aren't required, and sending an empty string returns an "invalid date" error
+      return value === "" ? null : value;
+    }
+
+    return value;
+  };
+
   const amendLeave = (field, value) => {
+    const formStateField = isAddedByLeaveAdmin
+      ? "addedConcurrentLeave"
+      : "amendedConcurrentLeave";
+    const formattedValue = getFormattedValue(field, value);
     setAmendment({
       ...amendment,
       [field]: value,
     });
-    onChange({ [field]: value });
+    onChange({ [field]: formattedValue }, formStateField);
   };
 
   const startDateErrMsg = appErrors.fieldErrorMessage(
@@ -36,33 +57,66 @@ const AmendableConcurrentLeave = ({ appErrors, concurrentLeave, onChange }) => {
     `concurrent_leave.leave_end_date`
   );
 
+  const handleCancelAmendment = () => {
+    setIsAmendmentFormDisplayed(false);
+    setAmendment(concurrentLeave);
+    onChange(concurrentLeave);
+  };
+
+  const handleDeleteAddition = () => {
+    onRemove(amendment);
+  };
+
+  const addOrAmend = isAddedByLeaveAdmin ? "add" : "amend";
+
+  const additionFormClasses = "bg-white";
+  const amendmentFormClasses = "bg-base-lightest border-base-lighter";
+  const className = isAddedByLeaveAdmin
+    ? additionFormClasses
+    : amendmentFormClasses;
+
+  const onDestroy = isAddedByLeaveAdmin
+    ? handleDeleteAddition
+    : handleCancelAmendment;
+
+  const ConcurrentLeaveDetailsRow = () => (
+    <tr>
+      <th scope="row">
+        {formatDateRange(
+          concurrentLeave.leave_start_date,
+          concurrentLeave.leave_end_date
+        )}
+      </th>
+      <td>
+        <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
+      </td>
+    </tr>
+  );
+
   return (
     <React.Fragment>
-      <tr>
-        <th scope="row">
-          {formatDateRange(
-            concurrentLeave.leave_start_date,
-            concurrentLeave.leave_end_date
-          )}
-        </th>
-        <td>
-          <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
-        </td>
-      </tr>
-      <ConditionalContent visible={isAmendmentFormDisplayed}>
+      {!isAddedByLeaveAdmin && <ConcurrentLeaveDetailsRow />}
+      <ConditionalContent
+        visible={isAddedByLeaveAdmin || isAmendmentFormDisplayed}
+      >
         <tr>
           <td
             colSpan="3"
             className="padding-top-2 padding-bottom-2 padding-left-0"
           >
             <AmendmentForm
-              onDestroy={() => {
-                setIsAmendmentFormDisplayed(false);
-                setAmendment(concurrentLeave);
-                onChange(concurrentLeave);
-              }}
-              destroyButtonLabel={t("components.amendmentForm.cancel")}
+              className={className}
+              onDestroy={onDestroy}
+              destroyButtonLabel={t(
+                "components.employersAmendableConcurrentLeave.destroyButtonLabel",
+                { context: addOrAmend }
+              )}
             >
+              <Heading level="4">
+                {t("components.employersAmendableConcurrentLeave.heading", {
+                  context: addOrAmend,
+                })}
+              </Heading>
               <InputDate
                 onChange={(e) => amendLeave("leave_start_date", e.target.value)}
                 value={amendment.leave_start_date}
@@ -96,7 +150,9 @@ const AmendableConcurrentLeave = ({ appErrors, concurrentLeave, onChange }) => {
 AmendableConcurrentLeave.propTypes = {
   appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
   concurrentLeave: PropTypes.instanceOf(ConcurrentLeave).isRequired,
+  isAddedByLeaveAdmin: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
+  onRemove: PropTypes.func.isRequired,
 };
 
 export default AmendableConcurrentLeave;

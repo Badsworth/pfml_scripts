@@ -42,10 +42,8 @@ const DOCUMENTS = new DocumentCollection([
 describe("Review", () => {
   const baseClaimBuilder = new MockEmployerClaimBuilder()
     .completed()
-    .reviewable()
-    .eformsV1();
-
-  const claimWithV1Eform = baseClaimBuilder.create();
+    .reviewable();
+  const claimWithV1Eform = baseClaimBuilder.eformsV1().create();
   const claimWithV2Eform = baseClaimBuilder.eformsV2().create();
   const query = { absence_id: "NTN-111-ABS-01" };
 
@@ -86,6 +84,7 @@ describe("Review", () => {
     components.forEach((component) => {
       expect(wrapper.find(component).exists()).toBe(true);
     });
+    expect(wrapper.find("ConcurrentLeave").exists()).toBe(false);
     expect(wrapper.find("PreviousLeaves").exists()).toBe(false);
   });
 

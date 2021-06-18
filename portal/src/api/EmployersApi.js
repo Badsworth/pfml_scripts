@@ -49,11 +49,16 @@ export default class EmployersApi extends BaseApi {
    * @returns {Promise<EmployersAPISingleResult>}
    */
   getClaim = async (absenceId) => {
-    const headers = {}
+    const headers = {};
     if (isFeatureEnabled("claimantShowOtherLeaveStep")) {
-      headers["X-FF-Default-To-V2"] = true
+      headers["X-FF-Default-To-V2"] = true;
     }
-    const { data } = await this.request("GET", `claims/${absenceId}/review`, null, headers);
+    const { data } = await this.request(
+      "GET",
+      `claims/${absenceId}/review`,
+      null,
+      headers
+    );
 
     return {
       claim: new EmployerClaim(data),
