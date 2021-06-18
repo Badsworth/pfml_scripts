@@ -225,6 +225,50 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/EmployeeSearchRequest"
 
+
+  /employers/{user_id}/toggle_leave_admin:
+    post:
+      tags:
+        - Employers
+      summary: Add an FEIN to the logged in Leave Administrator
+      operationId: massgov.pfml.api.employers.toggle_leave_admin
+      parameters:
+        - name: user_id
+          in: path
+          schema:
+            type: string
+          description: ID of User
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                employer_fein:
+                  type: string
+                  example: "12-3456789"
+                  nullable: false
+      responses:
+        "200":
+          description: FEIN added without errors
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                            example: True
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+
   /employers/add:
     post:
       tags:

@@ -624,6 +624,35 @@ class FINEOSClient(client.AbstractFINEOSClient):
         set_empty_dates_to_none(json, ["dateOfBirth"])
         return models.group_client_api.CustomerInfo.parse_obj(json)
 
+
+    def toggle_leave_admin(
+        self, user_id: str
+    ):
+        data = { "enabled": False }
+        groupClientUserId = "pfml_leave_admin_a1025565-a039-4a8b-a011-8ee1565c2c2a"
+        try:
+            response = self._group_client_api(
+                "POST",
+                f"groupClient/group-client-users/{groupClientUserId}/edit",
+                user_id,
+                "get_customer_info",
+                data=json.dumps(data)
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: toggle_leave_admin",
+                extra={"method_name": "toggle_leave_admin"},
+                exc_info=error,
+            )
+            error.method_name = "toggle_leave_admin"
+            raise error
+            
+        jsonres = response.json()
+
+        logger.info(jsonres)
+        return jsonres
+
+
     def get_customer_occupations(
         self, user_id: str, customer_id: str
     ) -> models.group_client_api.CustomerOccupations:

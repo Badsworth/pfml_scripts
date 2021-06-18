@@ -130,3 +130,21 @@ def employer_add_fein() -> flask.Response:
         return response_util.success_response(
             message="Successfully added FEIN to user", status_code=201, data=response_data
         ).to_api_response()
+
+def toggle_leave_admin(user_id):
+    body = connexion.request.json
+    fein = sanitize_fein(body["employer_fein"])
+
+    with app.db_session() as db_session:
+        employer = (
+            db_session.query(Employer).filter(Employer.employer_fein == fein).one()
+        )
+        
+        leave_admin = (
+            db_session.query(UserLeaveAdministrator).filter(UserLeaveAdministrator.employer_id == employer.employer_id and UserLeaveAdministrator.user_id == user_id).one()
+        )
+
+        
+        fineos = massgov.pfml.fineos.create_client()
+        logger.info(f'\n\n LEAVE ADMIN \n {leave_admin.fineos_web_id}\n\n')
+        fineos.toggle_leave_admin(leave_admin.fineos_web_id)
