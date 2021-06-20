@@ -3319,8 +3319,8 @@ def test_application_post_submit_ssn_fraud_error(
     # in the call center as they may be cases of fraud.
 
     # consented_user will have a different IDs, create another app with it
-    assert user.active_directory_id != consented_user.active_directory_id
-    assert user.active_directory_id != employer_user.active_directory_id
+    assert user.sub_id != consented_user.sub_id
+    assert user.sub_id != employer_user.sub_id
 
     employer = EmployerFactory.create()
     employee = EmployeeFactory.create()

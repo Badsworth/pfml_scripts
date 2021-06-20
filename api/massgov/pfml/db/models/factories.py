@@ -100,7 +100,7 @@ class UserFactory(BaseFactory):
         model = employee_models.User
 
     user_id = Generators.UuidObj
-    active_directory_id = factory.Faker("uuid4")
+    sub_id = factory.Faker("uuid4")
     email_address = factory.Faker("email")
 
     @factory.post_generation
