@@ -27,7 +27,7 @@ export default {
       defaultValue: "Medical",
       control: {
         type: "radio",
-        options: ["Bonding", "Medical", "Care"],
+        options: ["Bonding", "Medical", "Care", "Pregnancy"],
       },
     },
     // Todo(EMPLOYER-1453): remove V1 eform functionality
@@ -82,6 +82,9 @@ export const Default = (args) => {
     case "Care":
       claim = claim.caringLeaveReason();
       break;
+    case "Pregnancy":
+      claim = claim.pregnancyLeaveReason();
+      break;
   }
 
   switch (args["Claimant EForm Version"]) {
@@ -97,7 +100,10 @@ export const Default = (args) => {
     appErrors: getAppErrorInfoCollection(errorTypes),
     employers: {
       claim: claim.create(),
-      documents: getDocuments(documentationOption),
+      documents: getDocuments(
+        documentationOption,
+        claim.create().leave_details.reason
+      ),
       downloadDocument: () => {},
       loadClaim: () => {},
       loadDocuments: () => {},
@@ -109,7 +115,7 @@ export const Default = (args) => {
   return <Review appLogic={appLogic} query={query} user={user} />;
 };
 
-function getDocuments(documentation) {
+function getDocuments(documentation, leaveReason) {
   const isWithoutDocumentation = documentation.includes(
     "without documentation"
   );
@@ -117,9 +123,9 @@ function getDocuments(documentation) {
     application_id: "mock-application-id",
     content_type: "application/pdf",
     created_at: "2020-01-02",
-    document_type: DocumentType.certification.medicalCertification,
+    document_type: DocumentType.certification[leaveReason],
     fineos_document_id: 202020,
-    name: "Your Document",
+    name: `${leaveReason} document`,
   };
 
   return isWithoutDocumentation

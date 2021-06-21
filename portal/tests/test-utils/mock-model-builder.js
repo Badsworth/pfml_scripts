@@ -155,6 +155,11 @@ export class BaseMockBenefitsApplicationBuilder {
     return this;
   }
 
+  pregnancyLeaveReason() {
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.pregnancy);
+    return this;
+  }
+
   otherIncome(attrs) {
     set(
       this.claimAttrs,
