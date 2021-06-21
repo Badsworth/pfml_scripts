@@ -275,12 +275,6 @@ class Application(Base):
     nickname = Column(Text)
     requestor = Column(Integer)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), nullable=True, unique=True)
-    employee_id = deferred(
-        Column(UUID(as_uuid=True).evaluates_none(), ForeignKey("employee.employee_id"), index=True)
-    )
-    employer_id = deferred(
-        Column(UUID(as_uuid=True).evaluates_none(), ForeignKey("employer.employer_id"), index=True)
-    )
     has_mailing_address = Column(Boolean)
     mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True)
     residential_address_id = Column(
