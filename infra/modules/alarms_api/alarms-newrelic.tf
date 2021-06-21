@@ -103,12 +103,12 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
       SELECT filter(
         count(error.message), 
         WHERE NOT (
-          error.message LIKE 'expected 200, but got 403' 
+          error.message LIKE '%expected 200, but got 403'
           AND request.uri LIKE '%applications%/documents' 
           AND request.method LIKE 'GET'
         )
         AND NOT (
-          error.message LIKE 'expected 200, but got 422' 
+          error.message LIKE '%expected 200, but got 422'
           AND request.uri LIKE '%applications%/documents' 
           AND request.method LIKE 'POST'
         )
