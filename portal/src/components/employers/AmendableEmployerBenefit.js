@@ -70,7 +70,7 @@ const AmendableEmployerBenefit = ({
     const formattedValue = getFormattedValue(field, value);
     setAmendment({
       ...amendment,
-      [field]: value, // display commmas in field
+      [field]: formattedValue, // display commmas in field
     });
     onChange(
       {
@@ -286,7 +286,7 @@ const AmendableEmployerBenefit = ({
                 />
                 <ConditionalContent
                   visible={
-                    get(amendment, "is_full_salary_continuous") === "false"
+                    get(amendment, "is_full_salary_continuous") === false
                   }
                 >
                   <Fieldset>
