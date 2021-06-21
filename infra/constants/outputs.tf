@@ -19,16 +19,17 @@ output "newrelic_log_ingestion_arn" {
 #       https://lwd.atlassian.net/wiki/spaces/DD/pages/272072807/Tagging+Standards.
 output "environment_tags" {
   value = {
-    "test"        = "test"
-    "stage"       = "stage"
-    "prod"        = "prod"
-    "nonprod"     = "stage"
-    "performance" = "qa"
-    "training"    = "train"
-    "uat"         = "uat"
-    "breakfix"    = "qa"
-    "cps-preview" = "qa"
-    "adhoc"       = "test"
+    "test"                = "test"
+    "stage"               = "stage"
+    "prod"                = "prod"
+    "nonprod"             = "stage"
+    "performance"         = "qa"
+    "training"            = "train"
+    "uat"                 = "uat"
+    "breakfix"            = "qa"
+    "cps-preview"         = "qa"
+    "adhoc"               = "test"
+    "smx-cognito-restore" = "qa"
   }
 }
 
@@ -39,14 +40,15 @@ output "environment_tags" {
 #
 output "environment_shorthand" {
   value = {
-    "test"        = "test"
-    "stage"       = "stage"
-    "prod"        = "prod"
-    "performance" = "perf"
-    "training"    = "train"
-    "uat"         = "uat"
-    "breakfix"    = "bfx"
-    "cps-preview" = "cpspr"
+    "test"                = "test"
+    "stage"               = "stage"
+    "prod"                = "prod"
+    "performance"         = "perf"
+    "training"            = "train"
+    "uat"                 = "uat"
+    "breakfix"            = "bfx"
+    "cps-preview"         = "cpspr"
+    "smx-cognito-restore" = "smxco"
   }
 }
 
