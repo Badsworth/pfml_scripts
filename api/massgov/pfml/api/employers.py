@@ -169,18 +169,21 @@ def employer_add_departments():
         leave_admin = (
             db_session.query(UserLeaveAdministrator).filter(UserLeaveAdministrator.employer_id == employer.employer_id and UserLeaveAdministrator.user_id == current_user.user_id).one()
         )
-        # @todo: in the UserLeaveAdministrator model to auto fetch departments for the portal
         
-        for department in departments:
-            # if department not in leave_admin.departments:
-            newLeaveAdminDepartment = UserLeaveAdminDepartment(
-                department_id=department.department_id,
-                user_leave_administrator_id=leave_admin.user_leave_administrator_id,
-                user_id=current_user.user_id,
-                employer_id=employer.employer_id,
-            )
+        leave_admin_departments = [
+            department.department_id for department in leave_admin.departments
+        ]
 
-            db_session.add(newLeaveAdminDepartment)
+        for department in departments:
+            # @todo: check if departments sent by the portal are real departments
+            if department.department_id not in leave_admin_departments:
+                newLeaveAdminDepartment = UserLeaveAdminDepartment(
+                    department_id=department.department_id,
+                    user_leave_administrator_id=leave_admin.user_leave_administrator_id,
+                    user_id=current_user.user_id,
+                    employer_id=employer.employer_id,
+                )
+                db_session.add(newLeaveAdminDepartment)
 
         db_session.commit()
         db_session.refresh(leave_admin)

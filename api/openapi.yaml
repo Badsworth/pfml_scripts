@@ -257,7 +257,7 @@ paths:
       operationId: massgov.pfml.api.employers.employer_add_departments
       responses:
         "201":
-          description: Checks verification data, and if valid, creates a verification record for a leave admin
+          description: Checks
           content:
             application/json:
               schema:
@@ -265,7 +265,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
       requestBody:
-        $ref: "#/components/requestBodies/VerificationRequest"
+        $ref: "#/components/requestBodies/LeaveAdminDepartmentsRequest"
 
   /employers/add:
     post:
@@ -1222,6 +1222,12 @@ components:
           schema:
             $ref: "#/components/schemas/VerificationRequest"
       required: true
+    LeaveAdminDepartmentsRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/LeaveAdminDepartmentsRequest"
+      required: true
     PaymentPreferenceRequestBody:
       content:
         application/json:
@@ -1467,6 +1473,8 @@ components:
           type: boolean
         verified:
           type: boolean
+        departments:
+          $ref: "#/components/schemas/DepartmentsResponse"
 
     UserCreateRequest:
       type: object
@@ -3014,6 +3022,28 @@ components:
         - employer_id
         - withholding_amount
         - withholding_quarter
+
+    LeaveAdminDepartmentsRequest:
+      type: object
+      properties:
+        employer_fein:
+          type: string
+          example: "12-3456789"
+        departments:
+          type: array
+          items:
+            type: object
+            properties:
+              department_id:
+                type: string
+                format: uuid
+                example: "5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32"
+              department_name:
+                type: string
+                example: "Finance"
+      required:
+        - employer_fein
+        - departments
 
     SsnItin:
       type: string
