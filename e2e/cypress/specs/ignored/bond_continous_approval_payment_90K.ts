@@ -1,13 +1,13 @@
-import { portal, fineos } from "../../actions";
+import { fineos, fineosPages, portal } from "../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 import { Submission } from "../../../src/types";
 import { config } from "../../actions/common";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 
-describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
-  const submissionTest = it("As a claimant, I should be able to submit a intermittent bonding application through the portal", () => {
+describe("Submit bonding application via the web portal: Adjudication Approval & payment checking", () => {
+  const submissionTest = it("As a claimant, I should be able to submit a continous bonding application through the portal", () => {
     portal.before();
-    cy.task("generateClaim", "BIAP60").then((claim) => {
+    cy.task("generateClaim", "BCAP90").then((claim) => {
       cy.stash("claim", claim);
       const application: ApplicationRequestBody = claim.claim;
       const paymentPreference = claim.paymentPreference;
@@ -51,24 +51,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
   });
 
   it(
-    "CSR rep will approve intermittent bonding application",
-    { retries: 0, baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass();
-      fineos.before();
-      cy.visit("/");
-      cy.unstash<Submission>("submission").then((submission) => {
-        fineos.intermittentClaimAdjudicationFlow(
-          submission.fineos_absence_id,
-          "Child Bonding",
-          true
-        );
-      });
-    }
-  );
-
-  it(
-    "CSR rep will record actual hours reported by employee",
+    "CSR rep will approve continuous bonding application",
     { retries: 0, baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();
@@ -76,19 +59,33 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
       cy.visit("/");
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
-          fineos.visitClaim(submission.fineos_absence_id);
-          fineos.assertClaimStatus("Approved");
-          fineos.submitIntermittentActualHours(
-            claim.metadata?.spanHoursStart as string,
-            claim.metadata?.spanHoursEnd as string
+          const claimPage = fineosPages.ClaimPage.visit(
+            submission.fineos_absence_id
           );
+          claimPage.adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              // Receive all of the claim documentation.
+              claim.documents.forEach((document) => {
+                evidence.receive(document.document_type);
+              });
+            });
+            adjudication.certificationPeriods((cert) => cert.prefill());
+            adjudication.acceptLeavePlan();
+          });
+          claimPage.shouldHaveStatus("Applicability", "Applicable");
+          claimPage.shouldHaveStatus("Eligibility", "Met");
+          claimPage.shouldHaveStatus("Evidence", "Satisfied");
+          claimPage.shouldHaveStatus("Availability", "Time Available");
+          claimPage.shouldHaveStatus("Restriction", "Passed");
+          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
+          claimPage.approve();
         });
       });
     }
   );
 
   it(
-    "Should be able to confirm the weekly payment amount for a intermittent schedule",
+    "Should be able to confirm the weekly payment amount",
     { baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();
@@ -100,7 +97,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
           fineos.checkPaymentPreference(claim);
           fineos.visitClaim(submission.fineos_absence_id);
           fineos.assertClaimStatus("Approved");
-          fineos.getIntermittentPaymentAmount().then((amount) => {
+          fineos.getPaymentAmount().then((amount) => {
             expect(
               amount,
               `Maximum weekly payment should be: $${claim.metadata?.expected_weekly_payment}`
