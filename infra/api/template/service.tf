@@ -93,5 +93,6 @@ data "template_file" "container_definitions" {
     portal_base_url                            = var.portal_base_url
     enable_application_fraud_check             = var.enable_application_fraud_check
     release_version                            = var.release_version
+    new_plan_proofs_active_at                  = var.new_plan_proofs_active_at
   }
 }
