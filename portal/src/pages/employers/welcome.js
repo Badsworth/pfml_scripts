@@ -31,6 +31,7 @@ export const Welcome = ({ appLogic, user }) => {
     fill: "currentColor",
   };
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
+  const shouldShowOtherLeave = isFeatureEnabled("claimantShowOtherLeaveStep");
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
   const shouldShowCaringLeaveAlert = shouldShowCaringLeave;
 
@@ -78,6 +79,14 @@ export const Welcome = ({ appLogic, user }) => {
                     ),
                   }}
                 />
+              </p>
+            </Alert>
+          )}
+
+          {shouldShowOtherLeave && (
+            <Alert state="info">
+              <p>
+                <Trans i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody" />
               </p>
             </Alert>
           )}

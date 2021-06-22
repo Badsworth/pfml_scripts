@@ -87,6 +87,8 @@ Array [
 ]
 `;
 
+exports[`Employer welcome renders other leave alert when claimantShowOtherLeaveStep is true 1`] = `"The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed."`;
+
 exports[`Employer welcome renders page 1`] = `
 <Fragment>
   <div
