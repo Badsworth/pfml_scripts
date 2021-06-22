@@ -93,6 +93,7 @@ const errors = {
     fineos_case_error:
       "There was a problem when trying to send your information to our system. Try submitting this information again.",
     first_name: {
+      maxLength: "First name must be 50 characters or fewer.",
       required: "Enter a first name.",
     },
     has_concurrent_leave: {
@@ -138,6 +139,7 @@ const errors = {
       type: "The average hours you work each week must be a number.",
     },
     last_name: {
+      maxLength: "Last name must be 50 characters or fewer.",
       required: "Enter a last name.",
     },
     leave_details: {
@@ -311,6 +313,9 @@ const errors = {
       pattern:
         "License or ID number must be 9 characters, and may begin with S or SA.",
       required: "Enter your license or ID number.",
+    },
+    middle_name: {
+      maxLength: "Middle name must be 50 characters or fewer.",
     },
     other_incomes: {
       income_amount_dollars: {
