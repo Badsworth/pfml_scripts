@@ -206,6 +206,7 @@ export const Dashboard = (props) => {
 
 Dashboard.propTypes = {
   activeFilters: PropTypes.shape({
+    claim_status: PropTypes.string,
     employer_id: PropTypes.string,
   }).isRequired,
   appLogic: PropTypes.shape({
@@ -422,6 +423,7 @@ const Filters = (props) => {
 
 Filters.propTypes = {
   activeFilters: PropTypes.shape({
+    claim_status: PropTypes.string,
     employer_id: PropTypes.string,
   }).isRequired,
   updateClaimsRequestParams: PropTypes.func.isRequired,

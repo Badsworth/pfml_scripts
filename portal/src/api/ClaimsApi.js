@@ -16,7 +16,9 @@ export default class ClaimsApi extends BaseApi {
   /**
    * Fetches a page of claims for a user
    * @param {number|string} pageOffset - Page number to load
-   * @param {{ employer_id: string }} [filters]
+   * @param {object} [filters]
+   * @param {string} [filters.claim_status] - Comma-separated list of statuses
+   * @param {string} [filters.employer_id]
    * @returns {Promise<{ claims: ClaimCollection, paginationMeta: PaginationMeta }>}
    */
   getClaims = async (pageOffset = 1, filters = {}) => {
