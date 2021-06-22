@@ -52,6 +52,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiPaymentDetails,
 )
 from massgov.pfml.util.csv import CSVSourceWrapper
+from massgov.pfml.util.routing_number_validation import validate_routing_number
 
 logger = logging.get_logger(__package__)
 
@@ -148,6 +149,7 @@ class ValidationReason(str, Enum):
     CLAIMANT_MISMATCH = "ClaimantMismatch"
     CLAIM_NOT_ID_PROOFED = "ClaimNotIdProofed"
     PAYMENT_EXCEEDS_PAY_PERIOD_CAP = "PaymentExceedsPayPeriodCap"
+    ROUTING_NUMBER_FAILS_CHECKSUM = "RoutingNumberFailsChecksum"
 
 
 @dataclass(frozen=True, eq=True)
@@ -241,6 +243,13 @@ def lookup_validator(
 def zip_code_validator(zip_code: str) -> Optional[ValidationReason]:
     if not re.match(Regexes.ZIP_CODE, zip_code):
         return ValidationReason.INVALID_VALUE
+    return None
+
+
+def routing_number_validator(routing_number: str) -> Optional[ValidationReason]:
+    if not validate_routing_number(routing_number):
+        return ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM
+
     return None
 
 
