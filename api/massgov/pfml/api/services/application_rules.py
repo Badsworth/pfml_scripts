@@ -1171,8 +1171,8 @@ def validate_application_state(
             Issue(message="Request by current user not allowed", rule=IssueRule.disallow_attempts,)
         )
 
-    logger.warning(
-        "Fraud detected. Multiple applications found for specified Tax id",
-        extra={"Application ID": existing_application.application_id},
-    )
+        logger.warning(
+            "Fraud detected. Multiple applications found for specified Tax id",
+            extra={"application.application_id": existing_application.application_id},
+        )
     return issues
