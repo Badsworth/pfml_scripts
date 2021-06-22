@@ -1,6 +1,6 @@
 locals {
-  cert_domain = lookup(module.constants.cert_domains, var.environment_name)
-  domain      = lookup(module.constants.domains, var.environment_name)
+  cert_domain = lookup(module.constants.cert_domains, var.environment_name, null)
+  domain      = lookup(module.constants.domains, var.environment_name, null)
 }
 
 // NOTE: These must be requested through the AWS Console instead of terraform in order
