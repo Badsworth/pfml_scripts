@@ -2226,8 +2226,11 @@ def process_fineos_extracts(
     log_entry_db_session: db.Session,
 ):
     with mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_client",
+        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
         return_value=mock_experian_client,
+    ), mock.patch(
+        "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
+        return_value=None,
     ):
         run_fineos_ecs_task(
             db_session=db_session,
