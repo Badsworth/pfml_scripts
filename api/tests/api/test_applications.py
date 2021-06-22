@@ -3319,8 +3319,8 @@ def test_application_post_submit_ssn_fraud_error(
     # in the call center as they may be cases of fraud.
 
     # consented_user will have a different IDs, create another app with it
-    assert user.active_directory_id != consented_user.active_directory_id
-    assert user.active_directory_id != employer_user.active_directory_id
+    assert user.sub_id != consented_user.sub_id
+    assert user.sub_id != employer_user.sub_id
 
     employer = EmployerFactory.create()
     employee = EmployeeFactory.create()
@@ -5006,6 +5006,84 @@ def test_application_patch_benefits_empty_arrays(
     assert response.status_code == 200
     assert len(response_body.get("previous_leaves_same_reason")) == 0
     assert len(application.previous_leaves_same_reason) == 0
+
+
+# TODO: refactor existing update_application tests to use this class and fixtures
+# https://lwd.atlassian.net/browse/CP-2331
+class TestApplicationsUpdate:
+    @pytest.fixture
+    def application(self, user):
+        application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+        EmployerBenefitFactory.create(application_id=application.application_id)
+
+        return application
+
+    @pytest.fixture
+    def update_application_body(self):
+        return {}
+
+    # Collects the params necessary for making a request with a valid application update
+    # to the mock API client
+    @pytest.fixture
+    def request_params(self, application, auth_token, update_application_body):
+        class UpdateApplicationRequestParams(object):
+            __slots__ = ["application_id", "auth_token", "body"]
+
+            def __init__(self, application_id, auth_token, body):
+                self.application_id = application_id
+                self.auth_token = auth_token
+                self.body = body
+
+        return UpdateApplicationRequestParams(
+            application.application_id, auth_token, update_application_body
+        )
+
+    # Submits an application update request with the given params
+    def perform_update(self, client, request_params):
+        return client.patch(
+            "/v1/applications/{}".format(request_params.application_id),
+            headers={"Authorization": f"Bearer {request_params.auth_token}"},
+            json=request_params.body,
+        )
+
+    def test_first_name_too_long(self, client, request_params):
+        first_name = "a" * 51
+
+        update_application_body = request_params.body
+        update_application_body["first_name"] = first_name
+
+        response = self.perform_update(client, request_params)
+        assert response.status_code == 400
+
+        errors = response.get_json().get("errors")
+        error = next((e for e in errors if e.get("field") == "first_name"), None)
+        assert error.get("type") == "maxLength"
+
+    def test_middle_name_too_long(self, client, request_params):
+        middle_name = "a" * 51
+
+        update_application_body = request_params.body
+        update_application_body["middle_name"] = middle_name
+
+        response = self.perform_update(client, request_params)
+        assert response.status_code == 400
+
+        errors = response.get_json().get("errors")
+        error = next((e for e in errors if e.get("field") == "middle_name"), None)
+        assert error.get("type") == "maxLength"
+
+    def test_last_name_too_long(self, client, request_params):
+        last_name = "a" * 51
+
+        update_application_body = request_params.body
+        update_application_body["last_name"] = last_name
+
+        response = self.perform_update(client, request_params)
+        assert response.status_code == 400
+
+        errors = response.get_json().get("errors")
+        error = next((e for e in errors if e.get("field") == "last_name"), None)
+        assert error.get("type") == "maxLength"
 
 
 def test_application_post_submit_app_creates_claim(client, user, auth_token, test_db_session):

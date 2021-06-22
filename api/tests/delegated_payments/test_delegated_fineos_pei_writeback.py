@@ -5,10 +5,12 @@ from typing import Tuple
 
 import faker
 import pytest
+from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_fineos_pei_writeback as writeback
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     Flow,
@@ -206,6 +208,7 @@ def validate_writeback_sent_state(db_session: db.Session, payment: Payment):
     ),
     ids=["state_payments"],
 )
+@freeze_time("2021-01-01 12:00:00")
 def test_process_payments_for_writeback(
     local_fineos_pei_writeback_step,
     local_test_db_session,
@@ -408,6 +411,7 @@ def test_process_payments_for_writeback(
     )
     prog = re.compile(expected_line_pattern)
     assert len(all_payments) == len(writeback_file_lines)
+    now = payments_util.get_now().date()
 
     for line in writeback_file_lines:
         # Expect that each line will match our pattern.
@@ -429,14 +433,14 @@ def test_process_payments_for_writeback(
             )
             assert record_status == FineosWritebackTransactionStatus.PAID.writeback_record_status
             assert transaction_number != ""
-            assert transaction_date == (extraction_date + timedelta(days=1))
+            assert transaction_date.date() == now
         elif i_value in accepted_eft_payments_i_values:
             assert (
                 transaction_status
                 == FineosWritebackTransactionStatus.PAID.transaction_status_description
             )
             assert record_status == FineosWritebackTransactionStatus.PAID.writeback_record_status
-            assert transaction_date == (extraction_date + timedelta(days=2))
+            assert transaction_date.date() == now
         elif i_value in errored_payments_i_values:
             assert (
                 transaction_status
@@ -446,7 +450,7 @@ def test_process_payments_for_writeback(
                 record_status
                 == FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.writeback_record_status
             )
-            assert transaction_date == extraction_date + timedelta(days=2)
+            assert transaction_date.date() == now
         elif i_value in completed_check_payment_i_values:
             assert (
                 transaction_status
@@ -461,7 +465,7 @@ def test_process_payments_for_writeback(
                 == FineosWritebackTransactionStatus.POSTED.transaction_status_description
             )
             assert record_status == FineosWritebackTransactionStatus.POSTED.writeback_record_status
-            assert transaction_date == extraction_date + timedelta(days=2)
+            assert transaction_date.date() == now
         else:
             assert (
                 transaction_status
@@ -470,7 +474,7 @@ def test_process_payments_for_writeback(
             assert (
                 record_status == FineosWritebackTransactionStatus.PROCESSED.writeback_record_status
             )
-            assert transaction_date == extraction_date
+            assert transaction_date.date() == now
 
 
 def test_process_payments_for_writeback_no_payments_ready_for_writeback(

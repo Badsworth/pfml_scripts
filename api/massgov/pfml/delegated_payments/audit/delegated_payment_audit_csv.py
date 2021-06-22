@@ -10,6 +10,7 @@ class PaymentAuditCSV(AbstractRecord):
 
     pfml_payment_id: Optional[str]
     leave_type: Optional[str]
+    fineos_customer_number: Optional[str]
     first_name: Optional[str]
     last_name: Optional[str]
     address_line_1: Optional[str]
@@ -26,8 +27,8 @@ class PaymentAuditCSV(AbstractRecord):
     absence_case_number: Optional[str]
     c_value: Optional[str]
     i_value: Optional[str]
-    fineos_customer_number: Optional[str]
     employer_id: Optional[str]
+    absence_case_creation_date: Optional[str]
     case_status: Optional[str]
     leave_request_decision: Optional[str]
     check_description: Optional[str]
@@ -43,6 +44,7 @@ class PaymentAuditCSV(AbstractRecord):
 PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     pfml_payment_id="PFML Payment Id",
     leave_type="Leave type",
+    fineos_customer_number="Customer Number",
     first_name="First Name",
     last_name="Last Name",
     address_line_1="Address Line 1",
@@ -59,8 +61,8 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     absence_case_number="Absence Case Number",
     c_value="C Value",
     i_value="I Value",
-    fineos_customer_number="Customer Number",
     employer_id="Employer ID",
+    absence_case_creation_date="Absence Case Creation Date",
     case_status="Case Status",
     leave_request_decision="Leave Request Decision",
     check_description="Check Memo",

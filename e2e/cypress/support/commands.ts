@@ -3,7 +3,7 @@
 // commands please read more here:
 // https://on.cypress.io/custom-commands
 // ***********************************************s
-
+import "@testing-library/cypress/add-commands";
 /**
  * This command selects an input by the HTML label "for" value.
  */

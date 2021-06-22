@@ -9,6 +9,21 @@ exports[`Index renders the page 1`] = `
   <Title>
     Your organizations
   </Title>
+  <Alert
+    heading="Verify your account"
+    state="warning"
+  >
+    <p>
+      <Trans
+        components={
+          Object {
+            "your-organizations-link": <React.Fragment />,
+          }
+        }
+        i18nKey="pages.employersOrganizations.verificationBody"
+      />
+    </p>
+  </Alert>
   <p
     data-test="future-availability-message"
   >
@@ -78,10 +93,27 @@ exports[`Index renders the page 1`] = `
 `;
 
 exports[`Index when "account_converted" query parameter is enabled shows a success message telling the user they are now a leave admin 1`] = `
-<Alert
-  heading="Success"
-  state="success"
->
-  Your account type is now converted.
-</Alert>
+Array [
+  <Alert
+    heading="Success"
+    state="success"
+  >
+    Your account type is now converted.
+  </Alert>,
+  <Alert
+    heading="Verify your account"
+    state="warning"
+  >
+    <p>
+      <Trans
+        components={
+          Object {
+            "your-organizations-link": <React.Fragment />,
+          }
+        }
+        i18nKey="pages.employersOrganizations.verificationBody"
+      />
+    </p>
+  </Alert>,
+]
 `;

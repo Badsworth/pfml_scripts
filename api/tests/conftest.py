@@ -93,7 +93,7 @@ def auth_claims_unit():
 @pytest.fixture
 def auth_claims(auth_claims_unit, user):
     auth_claims = auth_claims_unit.copy()
-    auth_claims["sub"] = str(user.active_directory_id)
+    auth_claims["sub"] = str(user.sub_id)
 
     return auth_claims
 
@@ -102,7 +102,7 @@ def auth_claims(auth_claims_unit, user):
 def employer_claims(employer_user):
     claims = {
         "exp": datetime.now() + timedelta(days=1),
-        "sub": str(employer_user.active_directory_id),
+        "sub": str(employer_user.sub_id),
     }
 
     return claims
@@ -143,7 +143,7 @@ def consented_user_claims(consented_user):
     claims = {
         "a": "b",
         "exp": datetime.now() + timedelta(days=1),
-        "sub": str(consented_user.active_directory_id),
+        "sub": str(consented_user.sub_id),
     }
 
     return claims
@@ -154,7 +154,7 @@ def fineos_user_claims(fineos_user):
     claims = {
         "a": "b",
         "exp": datetime.now() + timedelta(days=1),
-        "sub": str(fineos_user.active_directory_id),
+        "sub": str(fineos_user.sub_id),
     }
 
     return claims

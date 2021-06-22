@@ -2,6 +2,7 @@ from typing import Dict, Optional, Tuple
 
 import boto3
 import botocore
+from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import MultipleResultsFound
 
@@ -34,7 +35,7 @@ def create_user(
     employer_for_leave_admin: Optional[Employer],
 ) -> User:
     """Create API records for a new user (claimant or leave admin)"""
-    user = User(active_directory_id=auth_id, email_address=email_address,)
+    user = User(sub_id=auth_id, email_address=email_address,)
 
     try:
         db_session.add(user)
@@ -108,10 +109,12 @@ def register_user(
         )
     except CognitoUserExistsValidationError as error:
         # Cognito user already exists, but confirm we have DB records for the user. If we do then reraise the error (bc claimant is trying to create a duplicate account) and if we don't then continue to create the DB records (bc somehow this step failed the last time).
-        if error.active_directory_id:
-            auth_id = error.active_directory_id
+        if error.active_directory_id or error.sub_id:
+            auth_id = str(error.sub_id if error.sub_id else error.active_directory_id)
             existing_user = (
-                db_session.query(User).filter(User.active_directory_id == auth_id).one_or_none()
+                db_session.query(User)
+                .filter(or_(User.active_directory_id == auth_id, User.sub_id == auth_id,))
+                .one_or_none()
             )
 
             if existing_user is not None:
@@ -165,7 +168,12 @@ def register_or_update_leave_admin(
         try:
             user = (
                 db_session.query(User)
-                .filter(User.active_directory_id == existing_cognito_id)
+                .filter(
+                    or_(
+                        User.active_directory_id == existing_cognito_id,
+                        User.sub_id == existing_cognito_id,
+                    )
+                )
                 .one_or_none()
             )
         except MultipleResultsFound:

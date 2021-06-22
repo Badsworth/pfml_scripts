@@ -42,6 +42,7 @@ const LeaveDetails = (props) => {
   } = props;
 
   const isCaringLeave = reason === LeaveReason.care;
+  const isPregnancy = reason === LeaveReason.pregnancy;
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
   const errorMsg = appErrors.fieldErrorMessage(
     "relationship_inaccurate_reason"
@@ -71,12 +72,19 @@ const LeaveDetails = (props) => {
       <ReviewRow
         level="3"
         label={t("components.employersLeaveDetails.leaveTypeLabel")}
+        data-test="leave-type"
       >
-        <a target="_blank" rel="noopener" href={benefitsGuideLink[reason]}>
-          {t("components.employersLeaveDetails.leaveReasonValue", {
+        {isPregnancy ? (
+          t("components.employersLeaveDetails.leaveReasonValue", {
             context: findKeyByValue(LeaveReason, reason),
-          })}
-        </a>
+          })
+        ) : (
+          <a target="_blank" rel="noopener" href={benefitsGuideLink[reason]}>
+            {t("components.employersLeaveDetails.leaveReasonValue", {
+              context: findKeyByValue(LeaveReason, reason),
+            })}
+          </a>
+        )}
       </ReviewRow>
       <ReviewRow
         level="3"

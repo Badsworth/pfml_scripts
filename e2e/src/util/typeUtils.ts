@@ -4,6 +4,7 @@
  */
 
 import {
+  NonEmptyArray,
   RequiredKeys,
   ValidClaim,
   ValidConcurrentLeave,
@@ -51,8 +52,9 @@ export function hasProp<K extends PropertyKey>(
 export function assertIsTypedArray<T>(
   arr: unknown,
   check: (x: unknown) => x is T
-): asserts arr is T[] {
+): asserts arr is NonEmptyArray<T> {
   if (!Array.isArray(arr)) throw new Error(`${arr} is not Array`);
+  if (!arr.length) throw new Error(`${arr} should not be empty.`);
   if (arr.some((item) => !check(item)))
     throw new TypeError(`Item ${JSON.stringify(arr)} is not of required type.`);
 }

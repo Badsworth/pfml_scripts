@@ -1,8 +1,8 @@
-import { fineos, portal } from "../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
-import { Submission } from "../../../src/types";
-import { config } from "../../actions/common";
-import { assertValidClaim } from "../../../src/util/typeUtils";
+import { fineos, portal } from "../../../actions";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Submit caring application via the web portal: Adjudication Approval & payment checking", () => {
   if (config("HAS_FINEOS_SP") === "true") {

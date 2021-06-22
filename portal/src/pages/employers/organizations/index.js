@@ -21,7 +21,6 @@ export const Index = (props) => {
     user_leave_administrators,
   } = appLogic.users.user;
   const accountConverted = query?.account_converted === "true";
-  const showVerifications = isFeatureEnabled("employerShowVerifications");
   const showAddOrganization = isFeatureEnabled("employerShowAddOrganization");
 
   const nearFutureAvailabilityContext = showAddOrganization
@@ -43,7 +42,7 @@ export const Index = (props) => {
           {t("pages.employersOrganizations.convertDescription")}
         </Alert>
       )}
-      {showVerifications && hasVerifiableEmployer && (
+      {hasVerifiableEmployer && (
         <Alert
           state="warning"
           heading={t("pages.employersOrganizations.verificationTitle")}

@@ -4,7 +4,7 @@ import {
   getCertificationDocumentType,
   getDocumentReviewTaskName,
 } from "../../src/util/documents";
-import { LeaveReason } from "../../src/types";
+import { LeaveReason, ValidClaim } from "../../src/types";
 import { config } from "./common";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
@@ -169,10 +169,10 @@ export function assertAdjudicatingClaim(claimId: string): void {
 /**
  * Helper to switch to a particular tab.
  */
-export function onTab(label: string): void {
+export function onTab(label: string, wait = 50): void {
   cy.contains(".TabStrip td", label).click().should("have.class", "TabOn");
   // Wait on any in-flight Ajax to complete, then add a very slight delay for rendering to occur.
-  cy.wait("@ajaxRender").wait(50);
+  cy.wait("@ajaxRender").wait(wait);
 }
 
 /**
@@ -197,7 +197,7 @@ export function uploadDocument(
 ): void {
   const docName = documentType.replace(" ", "_");
   cy.get('input[value="Add"]').click();
-  cy.get("table[class='TabStrip']").contains("div", "Search").click();
+  onTab("Search");
   cy.labelled("Business Type").type(businessType);
   cy.get("input[value='Search']").click();
   clickBottomWidgetButton();
@@ -238,8 +238,8 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
 export function createNotification(
   startDate: Date,
   endDate: Date,
-  claimType?: "military" | "bonding" | "caring",
-  application?: ApplicationRequestBody
+  claimType?: "military" | "bonding" | "caring" | "medical",
+  application?: ValidClaim
 ): void {
   const clickNext = (timeout?: number) =>
     cy
@@ -253,6 +253,29 @@ export function createNotification(
   );
   clickNext();
   switch (claimType) {
+    case "medical":
+      cy.contains(
+        "div",
+        "Sickness, treatment required for a medical condition or any other medical procedure"
+      )
+        .prev()
+        .find("input")
+        .click();
+
+      clickNext();
+      cy.findByLabelText("Absence relates to").select("Employee");
+      wait();
+      cy.wait(100);
+      cy.findByLabelText("Absence reason").select(
+        "Serious Health Condition - Employee"
+      );
+      wait();
+      cy.wait(100);
+      cy.findByLabelText("Qualifier 1").select("Not Work Related");
+      wait();
+      cy.wait(100);
+      cy.findByLabelText("Qualifier 2").select("Sickness");
+      break;
     case "military":
       cy.contains("div", "Out of work for another reason")
         .prev()
@@ -427,8 +450,10 @@ export function markEvidence(
   reason = "Evidence has been reviewed and approved"
 ): void {
   onTab("Evidence");
-  cy.contains(".ListTable td", evidenceType).click();
-  cy.get("input[type='submit'][value='Manage Evidence']").click();
+  cy.contains(".ListTable td", evidenceType).click({ force: true });
+  cy.get("input[type='submit'][value='Manage Evidence']").click({
+    force: true,
+  });
   // Focus inside popup. Note: There should be no need for an explicit wait here because
   // Cypress will not move on until the popup has been rendered.
   cy.get(".WidgetPanel_PopupWidget").within(() => {
@@ -437,7 +462,7 @@ export function markEvidence(
     cy.labelled("Evidence Decision Reason").type(
       `{selectall}{backspace}${reason}`
     );
-    cy.get("input[type='button'][value='OK']").click();
+    cy.get("input[type='button'][value='OK']").click({ force: true });
     // Wait till modal has fully closed before moving on.
     cy.get("#disablingLayer").should("not.exist");
   });

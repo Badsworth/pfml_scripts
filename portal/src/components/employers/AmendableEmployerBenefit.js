@@ -50,6 +50,10 @@ const AmendableEmployerBenefit = ({
       // happens if a user starts typing a date, then removes it
       // these fields aren't required, and sending an empty string returns an "invalid date" error
       return value === "" ? null : value;
+    } else if (value === "true") {
+      return true;
+    } else if (value === "false") {
+      return false;
     }
 
     return value;
@@ -66,7 +70,7 @@ const AmendableEmployerBenefit = ({
     const formattedValue = getFormattedValue(field, value);
     setAmendment({
       ...amendment,
-      [field]: value, // display commmas in field
+      [field]: formattedValue, // display commmas in field
     });
     onChange(
       {
@@ -264,7 +268,7 @@ const AmendableEmployerBenefit = ({
                   choices={[
                     {
                       checked:
-                        get(amendment, "is_full_salary_continuous") === "true",
+                        get(amendment, "is_full_salary_continuous") === true,
                       label: t(
                         "components.employersAmendableEmployerBenefit.choiceYes"
                       ),
@@ -272,7 +276,7 @@ const AmendableEmployerBenefit = ({
                     },
                     {
                       checked:
-                        get(amendment, "is_full_salary_continuous") === "false",
+                        get(amendment, "is_full_salary_continuous") === false,
                       label: t(
                         "components.employersAmendableEmployerBenefit.choiceNo"
                       ),
@@ -282,7 +286,7 @@ const AmendableEmployerBenefit = ({
                 />
                 <ConditionalContent
                   visible={
-                    get(amendment, "is_full_salary_continuous") === "false"
+                    get(amendment, "is_full_salary_continuous") === false
                   }
                 >
                   <Fieldset>

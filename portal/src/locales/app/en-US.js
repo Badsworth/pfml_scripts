@@ -93,6 +93,7 @@ const errors = {
     fineos_case_error:
       "There was a problem when trying to send your information to our system. Try submitting this information again.",
     first_name: {
+      maxLength: "First name must be 50 characters or fewer.",
       required: "Enter a first name.",
     },
     has_concurrent_leave: {
@@ -138,6 +139,7 @@ const errors = {
       type: "The average hours you work each week must be a number.",
     },
     last_name: {
+      maxLength: "Last name must be 50 characters or fewer.",
       required: "Enter a last name.",
     },
     leave_details: {
@@ -311,6 +313,9 @@ const errors = {
       pattern:
         "License or ID number must be 9 characters, and may begin with S or SA.",
       required: "Enter your license or ID number.",
+    },
+    middle_name: {
+      maxLength: "Middle name must be 50 characters or fewer.",
     },
     other_incomes: {
       income_amount_dollars: {
@@ -800,6 +805,7 @@ const shared = {
   leaveReasonBonding: "Bond with a child",
   leaveReasonCare: "Care for a family member",
   leaveReasonMedical: "Medical leave",
+  leaveReasonPregnancy: "Medical leave for pregnancy or birth",
   leaveReasonServiceMemberFamily: "Military family",
   maxEmployerCommentLengthError:
     "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
@@ -1094,7 +1100,7 @@ const pages = {
     intro:
       "<p>Next, we need to know about paid leave from your employer that you plan to use between {{startDate}} and {{endDate}}. This includes paid vacation time, sick time, personal time, and other paid time off provided by your employer. It does not include family or medical leave provided by your employer, or through a short- or long-term disability program. We’ll ask about that later.</p><p>When your PFML leave begins, there is a 7-day waiting period before PFML payments start. During this 7-day waiting period, you can use paid time off from your employer with no impact to your PFML benefit.</p><p>After the 7-day waiting period, you cannot use both paid leave from your employer and paid leave from PFML on the same days. In some cases, using accrued paid leave after the 7-day waiting period has ended can cause your PFML benefits to stop. You will need to re-apply to receive PFML benefits again. To avoid this, use accrued paid leave only at the start or end of your PFML leave.</p>",
     sectionLabel:
-      "Tell us about the accrued paid leave you'll use during your PFML leave.",
+      "Tell us about the accrued paid leave you'll use during your paid leave from PFML.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsDateOfBirth: {
@@ -1148,7 +1154,7 @@ const pages = {
     limitMessage: "You can only add up to {{limit}} benefits",
     removeButton: "Remove benefit",
     sectionLabel:
-      "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.",
+      "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave from PFML.",
     startDateLabel:
       "What is the first day of leave from work that this benefit will pay you for?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -1415,7 +1421,7 @@ const pages = {
     limitMessage: "You can only add up to {{limit}} incomes",
     removeButton: "Remove income",
     sectionLabel:
-      "Tell us about your other sources of income$t(chars.nbsp)during your leave dates for paid$t(chars.nbsp)leave.",
+      "Tell us about your other sources of income during your leave dates for paid leave from PFML.",
     startDateLabel:
       "What is the first day of your leave that this income will pay you for?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -2179,6 +2185,8 @@ const pages = {
     learnMoreLinks:
       "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
     learnMoreTitle: "Learn more",
+    otherLeaveInfoAlertBody:
+      "The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed.",
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
     respondTitle: "Respond to applications within 10 business days",
@@ -2299,19 +2307,10 @@ const components = {
   },
   amendmentForm: {
     cancel: "Cancel amendment",
-    question_benefitAmount: "How much will they receive?",
-    question_benefitEndDate: "When will the employee stop using the benefit?",
-    question_benefitFrequency: "How often will they receive the benefit?",
-    question_benefitStartDate:
-      "When will the employee start using the benefit?",
-    question_leaveEndDate: "When did the leave end?",
     question_leavePeriodDuration:
       "On average, how many hours does the employee work each week?",
     question_leavePeriodDuration_hint:
       "If their schedule varies, tell us the average number of hours worked over the past 52 weeks.",
-    question_leaveStartDate: "When did the leave begin?",
-    question_notificationDate:
-      "When did the employee tell you about their expected leave?",
   },
   applicationCard: {
     actionsHeading: "Actions",
@@ -2385,6 +2384,14 @@ const components = {
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
   },
+  employersAmendableConcurrentLeave: {
+    destroyButtonLabel_add: "Cancel addition",
+    destroyButtonLabel_amend: "Cancel amendment",
+    heading_add: "Add an accrued paid leave",
+    heading_amend: "Amend accrued paid leave",
+    leaveEndDateLabel: "When did the leave end?",
+    leaveStartDateLabel: "When did the leave begin?",
+  },
   employersAmendableEmployerBenefit: {
     amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
     benefitAmountDollarsLabel: "Amount",
@@ -2394,6 +2401,7 @@ const components = {
       "What is the first day of leave from work that this benefit will pay your employee for?",
     benefitTypeLabel: "What kind of employer-sponsored benefit is it?",
     cancelAddition: "Cancel addition",
+    choiceHint_benefitAmountDollars: "How much will your employee receive?",
     choiceHint_familyOrMedicalLeave:
       "$t(shared.choiceHint_familyOrMedicalLeave)",
     choiceHint_shortTermDisability: "$t(shared.choiceHint_shortTermDisability)",
@@ -2421,6 +2429,44 @@ const components = {
     subtitle_amend:
       "This amendment will get saved when you submit your review at the end of the page.",
     title: "Add an employer-sponsored benefit",
+  },
+  employersAmendablePreviousLeave: {
+    addButton: "Add another previous leave",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    destroyButtonLabel_add: "Cancel addition",
+    destroyButtonLabel_amend: "Cancel amendment",
+    heading_add: "Add a new previous leave",
+    heading_amend: "Amend previous leave",
+    isForSameReasonAsLeaveReasonLabel:
+      "Was this leave for the same reason as their paid leave request?",
+    leaveEndDateLabel: "When did the employee's leave end?",
+    leaveReasonLabel: "Why did this employee need to take leave?",
+    // these are similar to, but NOT exactly the same as claimsPreviousLeavesOtherReasonDetails
+    leaveReasonValue_activeDutyFamily:
+      "Managing family affairs while a family member was on active duty in the armed forces",
+    leaveReasonValue_bonding:
+      "Bonding with their child after birth or placement",
+    leaveReasonValue_care: "Caring for a family member",
+    leaveReasonValue_medical: "An illness or injury",
+    leaveReasonValue_pregnancy: "Pregnancy",
+    leaveReasonValue_serviceMemberFamily:
+      "Caring for a family member who served in the armed forces",
+    leaveReason_family: "Family leave",
+    leaveReason_medical: "$t(shared.leaveReasonMedical)",
+    leaveStartDateLabel: "When did the employee's leave start?",
+    subtitle_add:
+      "This addition will get saved when you submit your review at the end of this page.",
+    subtitle_amend:
+      "This amendment will get saved when you submit your review at the end of this page.",
+  },
+  employersConcurrentLeave: {
+    addButton: "Add a concurrent leave",
+    commentInstructions: "$t(shared.employerInstructions_addComment)",
+    dateRangeLabel: "Date range",
+    explanation:
+      "Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program. There’s a 7-day unpaid waiting period, and employees are allowed to use accrued paid leave to overlap that period.",
+    header: "Concurrent accrued paid leave",
   },
   employersEmployeeInformation: {
     addressLabel: "Mailing address",
@@ -2542,7 +2588,7 @@ const components = {
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
     leaveReasonValue_care: "$t(shared.leaveReasonCare)",
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonPregnancy)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveTypeLabel: "Leave type",
@@ -2582,14 +2628,7 @@ const components = {
     dateRangeLabel: "Date range",
     explanation:
       "Your employee has listed leave they have taken for a qualified reason. Only leave since January 1, 2021 is included. This includes both paid leave, such as paid vacation or sick days, and unpaid leave, such as FMLA leave. When possible, verify that a previous leave was for a reason that qualifies for paid leave under PFML.",
-    header: "Previous leaves",
-    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_serviceMemberFamily:
-      "$t(shared.leaveReasonServiceMemberFamily)",
+    header: "Previous leave",
     leaveTypeLabel: "Leave type",
     qualifyingReasonContent:
       "An employee or contractor can take paid or unpaid leave to:",

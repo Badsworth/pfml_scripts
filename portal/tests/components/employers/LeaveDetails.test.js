@@ -48,10 +48,46 @@ describe("LeaveDetails", () => {
     expect(wrapper.exists("InputChoiceGroup")).toBe(false);
   });
 
-  it("renders formatted leave reason as sentence case", () => {
-    expect(wrapper.find(ReviewRow).first().children().first().text()).toEqual(
-      "Medical leave"
+  it("renders leave reason as link when reason is not pregnancy", () => {
+    expect(wrapper.find("ReviewRow[data-test='leave-type']").children())
+      .toMatchInlineSnapshot(`
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
+        rel="noopener"
+        target="_blank"
+      >
+        Medical leave
+      </a>
+    `);
+  });
+
+  it("does not render leave reason as link when reason is pregnancy", () => {
+    const claimWithPregnancyLeave = new MockEmployerClaimBuilder()
+      .completed()
+      .pregnancyLeaveReason()
+      .create();
+    const wrapper = shallow(
+      <LeaveDetails
+        claim={claimWithPregnancyLeave}
+        documents={[]}
+        downloadDocument={jest.fn()}
+        appErrors={new AppErrorInfoCollection()}
+      />
     );
+
+    expect(
+      wrapper.find("ReviewRow[data-test='leave-type']").children()
+    ).toMatchInlineSnapshot(`"Medical leave for pregnancy or birth"`);
+  });
+
+  it("renders formatted leave reason as sentence case", () => {
+    expect(
+      wrapper
+        .find("ReviewRow[data-test='leave-type']")
+        .children()
+        .first()
+        .text()
+    ).toEqual("Medical leave");
   });
 
   it("renders formatted date range for leave duration", () => {

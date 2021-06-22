@@ -28,7 +28,7 @@ class UserResponse(PydanticBaseModel):
     """Response object for a given User result """
 
     user_id: UUID4
-    auth_id: str = Field(alias="active_directory_id")
+    auth_id: str = Field(alias="sub_id")
     email_address: str
     consented_to_data_sharing: bool
     roles: List[RoleResponse]

@@ -23,13 +23,10 @@ import withClaims from "../../hoc/withClaims";
 
 export const Dashboard = (props) => {
   const { appLogic, paginationMeta, user } = props;
-  const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
   const { t } = useTranslation();
 
   const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
-  const showVerificationRowInPlaceOfClaims =
-    shouldShowVerifications && hasOnlyUnverifiedEmployers;
 
   const tableColumnVisibility = {
     employee_name: true,
@@ -96,7 +93,7 @@ export const Dashboard = (props) => {
       <Title>{t("pages.employersDashboard.title")}</Title>
 
       <div className="measure-6">
-        {shouldShowVerifications && hasVerifiableEmployer && (
+        {hasVerifiableEmployer && (
           <Alert
             state="warning"
             heading={t("pages.employersDashboard.verificationTitle")}
@@ -172,7 +169,7 @@ export const Dashboard = (props) => {
           </tr>
         </thead>
         <tbody>
-          {showVerificationRowInPlaceOfClaims && (
+          {hasOnlyUnverifiedEmployers && (
             <tr data-test="verification-instructions-row">
               <td colSpan={tableColumnKeys.length}>
                 <Trans
@@ -186,7 +183,7 @@ export const Dashboard = (props) => {
               </td>
             </tr>
           )}
-          {!showVerificationRowInPlaceOfClaims && (
+          {!hasOnlyUnverifiedEmployers && (
             <ClaimTableRows
               appLogic={props.appLogic}
               claims={props.claims}
@@ -209,6 +206,7 @@ export const Dashboard = (props) => {
 
 Dashboard.propTypes = {
   activeFilters: PropTypes.shape({
+    claim_status: PropTypes.string,
     employer_id: PropTypes.string,
   }).isRequired,
   appLogic: PropTypes.shape({
@@ -425,6 +423,7 @@ const Filters = (props) => {
 
 Filters.propTypes = {
   activeFilters: PropTypes.shape({
+    claim_status: PropTypes.string,
     employer_id: PropTypes.string,
   }).isRequired,
   updateClaimsRequestParams: PropTypes.func.isRequired,

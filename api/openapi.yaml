@@ -1752,14 +1752,17 @@ components:
             first_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "John"
             middle_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "Jake"
             last_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "Doe"
             date_of_birth:
               $ref: "#/components/schemas/DateOrMaskedDate"

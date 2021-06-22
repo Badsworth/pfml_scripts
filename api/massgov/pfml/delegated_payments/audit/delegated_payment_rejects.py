@@ -101,6 +101,9 @@ class PaymentRejectsStep(Step):
                 payment_reject_row = PaymentAuditCSV(
                     pfml_payment_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id),
                     leave_type=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.leave_type),
+                    fineos_customer_number=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number
+                    ),
                     first_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.first_name),
                     last_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.last_name),
                     address_line_1=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.address_line_1),
@@ -123,10 +126,10 @@ class PaymentRejectsStep(Step):
                     absence_case_number=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_number),
                     c_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.c_value),
                     i_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.i_value),
-                    fineos_customer_number=get_row(
-                        row, PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number
-                    ),
                     employer_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_id),
+                    absence_case_creation_date=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_creation_date
+                    ),
                     case_status=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.case_status),
                     leave_request_decision=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision
@@ -157,7 +160,11 @@ class PaymentRejectsStep(Step):
         return payment_rejects_rows
 
     def transition_audit_pending_payment_state(
-        self, payment: Payment, is_rejected_payment: bool, is_skipped_payment: bool
+        self,
+        payment: Payment,
+        is_rejected_payment: bool,
+        is_skipped_payment: bool,
+        rejected_notes: Optional[str] = None,
     ) -> None:
         payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
             payment, Flow.DELEGATED_PAYMENT, self.db_session
@@ -183,7 +190,7 @@ class PaymentRejectsStep(Step):
             state_log_util.create_finished_state_log(
                 payment,
                 State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-                state_log_util.build_outcome("Payment rejected"),
+                state_log_util.build_outcome(f"Payment rejected with notes: {rejected_notes}"),
                 self.db_session,
             )
 
@@ -264,8 +271,10 @@ class PaymentRejectsStep(Step):
                     "Unexpected state - rejects row both rejected and skipped."
                 )
 
+            rejected_notes = payment_rejects_row.rejected_notes
+
             self.transition_audit_pending_payment_state(
-                payment, is_rejected_payment, is_skipped_payment
+                payment, is_rejected_payment, is_skipped_payment, rejected_notes
             )
 
     def _transition_not_sampled_payment_audit_pending_state(self, pending_state: LkState) -> None:

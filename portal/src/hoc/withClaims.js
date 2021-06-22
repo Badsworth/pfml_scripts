@@ -26,12 +26,13 @@ const withClaims = (Component) => {
     const { isLoadingClaims } = appLogic.claims;
     const requestedPageOffset = query.page_offset;
     const requestedFilters = {};
+    if (query.claim_status) requestedFilters.claim_status = query.claim_status;
     if (query.employer_id) requestedFilters.employer_id = query.employer_id;
 
     useEffect(() => {
       appLogic.claims.loadPage(requestedPageOffset, requestedFilters);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoadingClaims, requestedPageOffset, requestedFilters.employer_id]);
+    }, [isLoadingClaims, requestedPageOffset, Object.values(requestedFilters)]);
 
     if (isLoadingClaims) {
       return (
@@ -67,6 +68,7 @@ const withClaims = (Component) => {
       }).isRequired,
     }).isRequired,
     query: PropTypes.shape({
+      claim_status: PropTypes.string,
       employer_id: PropTypes.string,
       page_offset: PropTypes.string,
     }),

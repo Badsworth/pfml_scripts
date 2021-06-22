@@ -4,6 +4,7 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../../test-utils";
+import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
 import EmployerBenefit from "../../../../src/models/EmployerBenefit";
 import LeaveReason from "../../../../src/models/LeaveReason";
@@ -42,7 +43,7 @@ describe("Review", () => {
   const baseClaimBuilder = new MockEmployerClaimBuilder()
     .completed()
     .reviewable();
-  const claimWithV1Eform = baseClaimBuilder.create();
+  const claimWithV1Eform = baseClaimBuilder.eformsV1().create();
   const claimWithV2Eform = baseClaimBuilder.eformsV2().create();
   const query = { absence_id: "NTN-111-ABS-01" };
 
@@ -83,12 +84,14 @@ describe("Review", () => {
     components.forEach((component) => {
       expect(wrapper.find(component).exists()).toBe(true);
     });
+    expect(wrapper.find("ConcurrentLeave").exists()).toBe(false);
     expect(wrapper.find("PreviousLeaves").exists()).toBe(false);
   });
 
   it("renders the page for v2 eforms", () => {
     ({ wrapper } = renderComponent("shallow", claimWithV2Eform));
     const components = [
+      "ConcurrentLeave",
       "EmployeeInformation",
       "EmployerBenefits",
       "EmployerDecision",
@@ -146,6 +149,7 @@ describe("Review", () => {
         fraud: undefined, // undefined by default
         hours_worked_per_week: expect.any(Number),
         previous_leaves: expect.any(Array),
+        concurrent_leave: null,
         has_amendments: false,
         uses_second_eform_version: true,
       }
@@ -171,6 +175,7 @@ describe("Review", () => {
         fraud: undefined, // undefined by default
         hours_worked_per_week: expect.any(Number),
         previous_leaves: expect.any(Array),
+        concurrent_leave: null,
         has_amendments: false,
         uses_second_eform_version: true,
         leave_reason: "Serious Health Condition - Employee",
@@ -259,6 +264,68 @@ describe("Review", () => {
 
   it.todo("sets 'employer_benefits' based on EmployerBenefits");
 
+  it("sends concurrent leave if uses_second_eform_version is true", async () => {
+    const claimWithConcurrentLeave = baseClaimBuilder
+      .eformsV2()
+      .concurrentLeave()
+      .create();
+
+    ({ appLogic, wrapper } = renderComponent(
+      "mount",
+      claimWithConcurrentLeave
+    ));
+
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({
+        concurrent_leave: new ConcurrentLeave({
+          is_for_current_employer: true,
+          leave_start_date: "2021-01-01",
+          leave_end_date: "2021-03-01",
+        }),
+      })
+    );
+  });
+
+  it("sends amended concurrent leave if uses_second_eform_version is true", async () => {
+    const claim = new MockEmployerClaimBuilder()
+      .completed()
+      .reviewable()
+      .eformsV2()
+      .concurrentLeave()
+      .create();
+
+    ({ appLogic, wrapper } = renderComponent("mount", claim));
+
+    act(() => {
+      wrapper
+        .find("ConcurrentLeave")
+        .props()
+        .onChange(
+          new ConcurrentLeave({
+            is_for_current_employer: false,
+            leave_start_date: "2021-10-10",
+            leave_end_date: "2021-10-17",
+          })
+        );
+    });
+
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({
+        concurrent_leave: new ConcurrentLeave({
+          is_for_current_employer: false,
+          leave_start_date: "2021-10-10",
+          leave_end_date: "2021-10-17",
+        }),
+      })
+    );
+  });
+
   it("does not redirect if is_reviewable is true", () => {
     expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
   });
@@ -330,7 +397,7 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'has_amendments' to true if leaves are amended", async () => {
+  it("sets 'has_amendments' to true if previous leaves are amended", async () => {
     ({ appLogic, wrapper } = renderComponent("shallow", claimWithV2Eform));
 
     act(() => {
@@ -338,6 +405,20 @@ describe("Review", () => {
         .find("PreviousLeaves")
         .props()
         .onChange(new PreviousLeave({ previous_leave_id: 0 }));
+    });
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ has_amendments: true })
+    );
+  });
+
+  it("sets 'has_amendments' to true if previous leaves are added", async () => {
+    ({ appLogic, wrapper } = renderComponent("shallow", claimWithV2Eform));
+
+    act(() => {
+      wrapper.find("PreviousLeaves").props().onAdd();
     });
     await simulateEvents(wrapper).submitForm();
 
@@ -479,6 +560,7 @@ describe("Review", () => {
           fraud: undefined, // undefined by default
           hours_worked_per_week: expect.any(Number),
           previous_leaves: expect.any(Array),
+          concurrent_leave: null,
           has_amendments: false,
           uses_second_eform_version: true,
           relationship_inaccurate_reason: expect.any(String),

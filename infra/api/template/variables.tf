@@ -298,3 +298,9 @@ variable "release_version" {
   type        = string
   default     = ""
 }
+
+variable "new_plan_proofs_active_at" {
+  description = "ISO 8601 formatted date string, should explicitly set UTC offset (+00:00)"
+  type        = string
+  default     = "2021-06-21 00:00:00+00:00"
+}

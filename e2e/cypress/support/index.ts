@@ -14,6 +14,8 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+require("cypress-grep")();
 import "./commands";
 import "./dependents";
 import "cypress-file-upload";

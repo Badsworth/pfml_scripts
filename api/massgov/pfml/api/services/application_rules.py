@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from werkzeug.datastructures import Headers
 
 import massgov.pfml.db as db
+import massgov.pfml.util.logging
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.services.applications import (
     ContinuousLeavePeriod,
@@ -31,6 +32,8 @@ PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
 MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
 MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def get_application_issues(application: Application, headers: Headers) -> List[Issue]:
@@ -1168,4 +1171,8 @@ def validate_application_state(
             Issue(message="Request by current user not allowed", rule=IssueRule.disallow_attempts,)
         )
 
+        logger.warning(
+            "Fraud detected. Multiple applications found for specified Tax id",
+            extra={"application.application_id": existing_application.application_id},
+        )
     return issues

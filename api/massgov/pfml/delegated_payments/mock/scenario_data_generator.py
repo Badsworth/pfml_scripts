@@ -29,6 +29,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     PubEftFactory,
 )
+from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
 from massgov.pfml.delegated_payments.mock.scenarios import (
     ScenarioDescriptor,
     ScenarioName,
@@ -200,7 +201,7 @@ def generate_scenario_data_in_db(
         )
         pub_eft = PubEftFactory.create(
             pub_eft_id=uuid.uuid4(),
-            routing_nbr=ssn,
+            routing_nbr=generate_routing_nbr_from_ssn(ssn),
             account_nbr=ssn,
             bank_account_type_id=scenario_descriptor.account_type.bank_account_type_id,
             prenote_state_id=prenote_state.prenote_state_id,
