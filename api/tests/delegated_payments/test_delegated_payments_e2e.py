@@ -2524,9 +2524,7 @@ def assert_writeback_for_stage(
             ] = transaction_status.transaction_status_description
             expected_csv_row["status"] = transaction_status.writeback_record_status
 
-            transaction_status_date = payments_util.get_transaction_status_date(
-                p, transaction_status
-            )
+            transaction_status_date = payments_util.get_transaction_status_date(p)
             expected_csv_row["transStatusDate"] = transaction_status_date.strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
