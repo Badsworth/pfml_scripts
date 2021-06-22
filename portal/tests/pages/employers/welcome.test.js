@@ -25,8 +25,7 @@ describe("Employer welcome", () => {
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
-  it("displays links to Organizations page when employerShowVerifications is true", () => {
-    process.env.featureFlags = { employerShowVerifications: true };
+  it("displays links to Organizations page", () => {
     wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
 
     expect(wrapper.find("Alert").exists()).toEqual(true);

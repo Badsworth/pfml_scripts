@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Employer welcome displays links to Organizations page when employerShowVerifications is true 1`] = `
+exports[`Employer welcome displays links to Organizations page 1`] = `
 <h2
   className="font-heading-md text-bold"
 >
@@ -8,7 +8,7 @@ exports[`Employer welcome displays links to Organizations page when employerShow
 </h2>
 `;
 
-exports[`Employer welcome displays links to Organizations page when employerShowVerifications is true 2`] = `
+exports[`Employer welcome displays links to Organizations page 2`] = `
 <h2
   className="font-heading-md text-bold"
 >
@@ -16,7 +16,7 @@ exports[`Employer welcome displays links to Organizations page when employerShow
 </h2>
 `;
 
-exports[`Employer welcome displays links to Organizations page when employerShowVerifications is true 3`] = `
+exports[`Employer welcome displays links to Organizations page 3`] = `
 <ul
   className="usa-list desktop:font-body-2xs desktop:padding-top-05"
   key="0"
@@ -105,6 +105,23 @@ exports[`Employer welcome renders page 1`] = `
       <Title>
         Welcome
       </Title>
+      <Alert
+        heading="Verify your account to continue"
+        state="warning"
+      >
+        <p>
+          <Trans
+            components={
+              Object {
+                "your-organizations-link": <a
+                  href="/employers/organizations"
+                />,
+              }
+            }
+            i18nKey="pages.employersWelcome.verificationAlertBody"
+          />
+        </p>
+      </Alert>
       <p>
         Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.
       </p>
@@ -207,6 +224,25 @@ exports[`Employer welcome renders page 1`] = `
       <Heading
         level="2"
       >
+        Settings
+      </Heading>
+      <ul
+        className="usa-list desktop:font-body-2xs desktop:padding-top-05"
+      >
+        <li>
+          <Link
+            href="/employers/organizations"
+          >
+            <a>
+              Your organizations
+            </a>
+          </Link>
+          <NewTag />
+        </li>
+      </ul>
+      <Heading
+        level="2"
+      >
         Learn more
       </Heading>
       <Trans
@@ -237,6 +273,19 @@ exports[`Employer welcome renders page 1`] = `
 
 exports[`Employer welcome renders page 2`] = `
 Array [
+  "We require every employer to verify paid leave contributions when creating an account. You need to ",
+  <a
+    href="/employers/organizations"
+    key="1"
+  >
+    complete this process
+  </a>,
+  " to review applications from your team.",
+]
+`;
+
+exports[`Employer welcome renders page 3`] = `
+Array [
   "When you log into your account you can now use the ",
   <a
     href="/employers/dashboard"
@@ -248,7 +297,7 @@ Array [
 ]
 `;
 
-exports[`Employer welcome renders page 3`] = `
+exports[`Employer welcome renders page 4`] = `
 Array [
   "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the ",
   <a
@@ -263,7 +312,7 @@ Array [
 ]
 `;
 
-exports[`Employer welcome renders page 4`] = `
+exports[`Employer welcome renders page 5`] = `
 <ul
   className="usa-list desktop:font-body-2xs desktop:padding-top-05"
   key="0"

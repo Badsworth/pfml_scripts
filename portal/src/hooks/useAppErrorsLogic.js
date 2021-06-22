@@ -12,7 +12,6 @@ import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import React from "react";
 import { Trans } from "react-i18next";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import tracker from "../services/tracker";
 import useCollectionState from "./useCollectionState";
@@ -55,10 +54,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       handleDocumentsError(error);
     } else if (error instanceof CognitoAuthError) {
       handleCognitoAuthError(error);
-    } else if (
-      error instanceof LeaveAdminForbiddenError &&
-      isFeatureEnabled("employerShowVerifications")
-    ) {
+    } else if (error instanceof LeaveAdminForbiddenError) {
       handleLeaveAdminForbiddenError(error);
     } else {
       console.error(error);
