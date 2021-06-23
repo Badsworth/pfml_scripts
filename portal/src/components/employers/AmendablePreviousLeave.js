@@ -122,7 +122,7 @@ const AmendablePreviousLeave = ({
       >
         <tr>
           <td
-            colSpan="1"
+            colSpan="2"
             className="padding-top-2 padding-bottom-2 padding-left-0"
           >
             <AmendmentForm
@@ -133,7 +133,7 @@ const AmendablePreviousLeave = ({
               )}
               onDestroy={onDestroy}
             >
-              <Heading level="4">
+              <Heading level="4" size="3">
                 {t("components.employersAmendablePreviousLeave.heading", {
                   context: addOrAmend,
                 })}

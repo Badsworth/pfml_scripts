@@ -2391,6 +2391,10 @@ const components = {
     heading_amend: "Amend accrued paid leave",
     leaveEndDateLabel: "When did the leave end?",
     leaveStartDateLabel: "When did the leave begin?",
+    subtitle_add:
+      "This addition will get saved when you submit your review at the end of this page.",
+    subtitle_amend:
+      "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
   },
   employersAmendableEmployerBenefit: {
     amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
@@ -2427,7 +2431,7 @@ const components = {
     subtitle_add:
       "This addition will get saved when you submit your review at the end of the page.",
     subtitle_amend:
-      "This amendment will get saved when you submit your review at the end of the page.",
+      "This amendment will get saved when you submit your review. To remove this benefit, include a comment at the end of the page.",
     title: "Add an employer-sponsored benefit",
   },
   employersAmendablePreviousLeave: {
@@ -2458,11 +2462,10 @@ const components = {
     subtitle_add:
       "This addition will get saved when you submit your review at the end of this page.",
     subtitle_amend:
-      "This amendment will get saved when you submit your review at the end of this page.",
+      "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
   },
   employersConcurrentLeave: {
     addButton: "Add a concurrent leave",
-    commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     explanation:
       "Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program. There’s a 7-day unpaid waiting period, and employees are allowed to use accrued paid leave to overlap that period.",
@@ -2499,7 +2502,6 @@ const components = {
     benefitTypeLabel: "Benefit type",
     caption:
       "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
-    commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
     header: "Employer-sponsored benefits",
@@ -2624,7 +2626,6 @@ const components = {
   },
   employersPreviousLeaves: {
     addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
-    commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     explanation:
       "Your employee has listed leave they have taken for a qualified reason. Only leave since January 1, 2021 is included. This includes both paid leave, such as paid vacation or sick days, and unpaid leave, such as FMLA leave. When possible, verify that a previous leave was for a reason that qualifies for paid leave under PFML.",

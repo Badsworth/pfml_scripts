@@ -105,9 +105,6 @@ const EmployerBenefits = (props) => {
           )}
         </tbody>
       </Table>
-      <p className="margin-top-neg-1 padding-left-2">
-        {t("components.employersEmployerBenefits.commentInstructions")}
-      </p>
     </React.Fragment>
   );
 };
