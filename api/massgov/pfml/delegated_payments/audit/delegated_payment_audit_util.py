@@ -37,9 +37,9 @@ class PaymentAuditData:
 
     payment: Payment
     is_first_time_payment: bool
-    is_previously_errored_payment: bool
-    is_previously_rejected_payment: bool
-    number_of_times_in_rejected_or_error_state: int
+    previously_errored_payment_count: int
+    previously_rejected_payment_count: int
+    previously_skipped_payment_count: int
     rejected_by_program_integrity: Optional[bool] = None
     rejected_notes: str = ""
     skipped_by_program_integrity: Optional[bool] = None
@@ -147,13 +147,9 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         else None,
         check_description=check_description,
         is_first_time_payment=bool_to_str[payment_audit_data.is_first_time_payment],
-        is_previously_errored_payment=bool_to_str[payment_audit_data.is_previously_errored_payment],
-        is_previously_rejected_payment=bool_to_str[
-            payment_audit_data.is_previously_rejected_payment
-        ],
-        number_of_times_in_rejected_or_error_state=str(
-            payment_audit_data.number_of_times_in_rejected_or_error_state
-        ),
+        previously_errored_payment_count=str(payment_audit_data.previously_errored_payment_count),
+        previously_rejected_payment_count=str(payment_audit_data.previously_rejected_payment_count),
+        previously_skipped_payment_count=str(payment_audit_data.previously_skipped_payment_count),
         rejected_by_program_integrity=bool_to_str[payment_audit_data.rejected_by_program_integrity],
         rejected_notes=payment_audit_data.rejected_notes,
         skipped_by_program_integrity=bool_to_str[payment_audit_data.skipped_by_program_integrity],
