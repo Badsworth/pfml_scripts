@@ -1219,7 +1219,8 @@ function reportEmployerBenefit(benefit: ValidEmployerBenefit, index: number) {
 function reportEmployerBenefits(benefits: ValidEmployerBenefit[]) {
   cy.contains(
     "form",
-    "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave."
+    // BC for "leave dates for paid leave" -> "leave dates for paid leave from PFML" text change.
+    /Tell us about employer-sponsored benefits you will use during your leave dates for paid leave( from PFML)?\./
   ).within(() => {
     benefits.forEach((benefit, index) => {
       reportEmployerBenefit(benefit, index);
@@ -1292,7 +1293,8 @@ function reportOtherIncome(income: ValidOtherIncome, index: number): void {
 function reportOtherIncomes(other_incomes: ValidOtherIncome[]): void {
   cy.contains(
     "form",
-    "Tell us about your other sources of income during your leave dates for paid leave."
+    // BC for "leave dates for paid leave" -> "leave dates for paid leave from PFML" text change.
+    /Tell us about your other sources of income during your leave dates for paid leave( from PFML)?\./
   ).within(() => {
     other_incomes.forEach((income, index) => {
       reportOtherIncome(income, index);
