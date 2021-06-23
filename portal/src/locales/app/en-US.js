@@ -1235,7 +1235,7 @@ const pages = {
     frequencyBasisLabel:
       "How often might you need to be absent from work (frequency interval)?",
     frequencyHint_care:
-      "Your answers must match Questions 28 and 29 in the $t(shared.certificationFormCare).",
+      "Your answers must match the intermittent leave section in the $t(shared.certificationFormCare).",
     frequencyHint_medical:
       "Your answers must match the intermittent leave section in the $t(shared.certificationFormMedical).",
     frequencyHint_updateMedicalCertForm:
@@ -1256,7 +1256,7 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 23 in the $t(shared.certificationFormCare).",
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormMedical).",
     datesLead_updateMedicalCertForm:
@@ -1265,7 +1265,7 @@ const pages = {
       "Enter the start and end dates for your continuous leave.",
     endDateLabel: "Last day of leave",
     hasLeaveHint_care:
-      "Your answer must match the corresponding checkbox of Question 21 in the $t(shared.certificationFormCare).",
+      "Your answer must match the $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
       "Your answer must match the $t(shared.certificationFormMedical).",
     hasLeaveHint_updateMedicalCertForm:
@@ -1283,7 +1283,7 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 27 in the $t(shared.certificationFormCare).",
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormMedical).",
     datesLead_updateMedicalCertForm:
@@ -1296,7 +1296,7 @@ const pages = {
     hasLeaveHint_bonding:
       "For example, you need to take time off for: <ul><li>Court dates for your foster child</li><li>Social worker visits</li><li>Gaps in your childcare</li></ul>",
     hasLeaveHint_care:
-      "Your answer must match the corresponding checkbox of Question 21 in the $t(shared.certificationFormCare).",
+      "Your answer must match the $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
       "Your answer must match the $t(shared.certificationFormMedical).",
     hasLeaveHint_updateMedicalCertForm:
@@ -1316,7 +1316,7 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 25 in the $t(shared.certificationFormCare).",
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormMedical).",
     datesLead_updateMedicalCertForm:
@@ -1327,7 +1327,7 @@ const pages = {
     endDateLabel_medical:
       "Last day of leave or re$t(chars.nbhyphen)evaluation date",
     hasLeaveHint_care:
-      "Your answer must match the corresponding checkbox of Question 21 in the $t(shared.certificationFormCare).",
+      "Your answer must match the $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
       "Your answer must match the $t(shared.certificationFormMedical).",
     hasLeaveHint_updateMedicalCertForm:
@@ -1604,7 +1604,7 @@ const pages = {
     inputHoursLabel_weekly: "Hours off per week",
     lead: "Enter 0 for days you won’t work a reduced schedule.",
     leadCertGuidance_care:
-      "The total number of hours you enter must match Question 26 in the $t(shared.certificationFormCare).",
+      "The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormCare).",
     leadCertGuidance_medical:
       "The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormMedical).",
     leadCertGuidance_updateMedicalCertForm:
