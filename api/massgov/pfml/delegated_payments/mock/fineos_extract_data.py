@@ -15,7 +15,6 @@ from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_
 from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     INVALID_ADDRESS,
     MATCH_ADDRESS,
-    MULTI_MATCH_ADDRESS,
     NO_MATCH_ADDRESS,
     ScenarioData,
 )
@@ -472,8 +471,6 @@ def generate_payment_extract_files(
 
         if scenario_descriptor.fineos_extract_address_valid:
             mock_address = MATCH_ADDRESS
-        elif scenario_descriptor.fineos_extract_address_multiple_matches:
-            mock_address = MULTI_MATCH_ADDRESS
         else:
             if scenario_descriptor.fineos_extract_address_valid_after_fix and round > 1:
                 mock_address = MATCH_ADDRESS

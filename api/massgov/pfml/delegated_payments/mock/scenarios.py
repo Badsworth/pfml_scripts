@@ -24,9 +24,7 @@ class ScenarioName(Enum):
     HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION = "HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION"
 
     HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
-    HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN = (
-        "HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN"
-    )
+
     HAPPY_PATH_CHECK_FAMILY_RETURN_PAID = "PUB_CHECK_FAMILY_RETURN_PAID"
     HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING = "PUB_CHECK_FAMILY_RETURN_OUTSTANDING"
     HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE = "PUB_CHECK_FAMILY_RETURN_FUTURE"
@@ -138,7 +136,6 @@ class ScenarioDescriptor:
     # prior_verified_address: bool = False TODO add when available
     fineos_extract_address_valid: bool = True
     fineos_extract_address_valid_after_fix: bool = False
-    fineos_extract_address_multiple_matches: bool = False
 
     leave_request_decision: str = "Approved"
 
@@ -234,12 +231,6 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         payment_method=PaymentMethod.CHECK,
         fineos_extract_address_valid=False,
         pub_check_response=False,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
-        payment_method=PaymentMethod.CHECK,
-        fineos_extract_address_valid=False,
-        fineos_extract_address_multiple_matches=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
