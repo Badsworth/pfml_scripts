@@ -89,26 +89,11 @@ describe("Index", () => {
     `);
   });
 
-  describe('when "employerShowAddOrganization" feature flag is enabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowAddOrganization: true };
-      wrapper = shallow(<Index appLogic={appLogic} />).dive();
-    });
-
-    it("shows the correct future availability statement", () => {
-      const futureAvaiabilityMessage = wrapper.find(
-        '[data-test="future-availability-message"]'
-      );
-      expect(futureAvaiabilityMessage.text()).toContain(
-        "You can manage leave for these organizations."
-      );
-    });
-
-    it("displays a button linked to Add Organization page", () => {
-      const button = wrapper.find("ButtonLink");
-      expect(button.exists()).toBe(true);
-      expect(button.prop("href")).toBe(routes.employers.addOrganization);
-    });
+  it("displays a button linked to Add Organization page", () => {
+    wrapper = shallow(<Index appLogic={appLogic} />).dive();
+    const button = wrapper.find("ButtonLink");
+    expect(button.exists()).toBe(true);
+    expect(button.prop("href")).toBe(routes.employers.addOrganization);
   });
 
   it("shows an Alert telling the user to start verification if there are unverified employers", () => {

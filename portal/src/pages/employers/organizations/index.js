@@ -8,7 +8,6 @@ import Table from "../../../components/Table";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import User from "../../../models/User";
-import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
@@ -21,11 +20,6 @@ export const Index = (props) => {
     user_leave_administrators,
   } = appLogic.users.user;
   const accountConverted = query?.account_converted === "true";
-  const showAddOrganization = isFeatureEnabled("employerShowAddOrganization");
-
-  const nearFutureAvailabilityContext = showAddOrganization
-    ? "inviteMembers"
-    : "addOrganization";
 
   return (
     <React.Fragment>
@@ -58,9 +52,7 @@ export const Index = (props) => {
         </Alert>
       )}
       <p data-test="future-availability-message">
-        {t("pages.employersOrganizations.nearFutureAvailability", {
-          context: nearFutureAvailabilityContext,
-        })}
+        {t("pages.employersOrganizations.nearFutureAvailability")}
       </p>
 
       <Table responsive className="width-full">
@@ -91,11 +83,9 @@ export const Index = (props) => {
           )}
         </tbody>
       </Table>
-      {showAddOrganization && (
-        <ButtonLink href={routes.employers.addOrganization}>
-          {t("pages.employersOrganizations.addOrganizationButton")}
-        </ButtonLink>
-      )}
+      <ButtonLink href={routes.employers.addOrganization}>
+        {t("pages.employersOrganizations.addOrganizationButton")}
+      </ButtonLink>
     </React.Fragment>
   );
 };

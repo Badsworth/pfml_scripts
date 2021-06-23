@@ -23,10 +23,6 @@ const flagsConfig = {
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
 
-    // When this flag is enabled, "Add Organization" button and navigation to page is enabled
-    // TODO (EMPLOYER-913): Remove flag
-    employerShowAddOrganization: false,
-
     // When this flag is enabled, the Leave Admin dashboard shows filter functionality
     // TODO (EMPLOYER-1412): Remove flag
     employerShowDashboardEmployerFilter: false,
@@ -74,7 +70,6 @@ const flagsConfig = {
   // The environment keys should use the same envName defined in
   // environment config files.
   "cps-preview": {
-    employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
@@ -85,22 +80,18 @@ const flagsConfig = {
     useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   test: {
-    employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   stage: {
-    employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
   },
   training: {},
   performance: {
-    employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
   },
   uat: {},
   prod: {
-    employerShowAddOrganization: true,
     employerShowSelfRegistrationForm: true,
     pfmlTerriyay: true,
   },

@@ -2133,9 +2133,7 @@ const pages = {
     convertDescription: "Your account type is now converted.",
     convertHeading: "Success",
     einTableHeader: "Employer ID number (EIN)",
-    nearFutureAvailability_addOrganization:
-      "You'll be able to add more organizations to your account in the near future.",
-    nearFutureAvailability_inviteMembers:
+    nearFutureAvailability:
       "You can manage leave for these organizations. In the future, you’ll be able to invite other members of your team to review applications.",
     organizationsTableHeader: "Organization",
     title: "Your organizations",
