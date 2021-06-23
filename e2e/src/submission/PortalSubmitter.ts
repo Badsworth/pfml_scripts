@@ -170,7 +170,6 @@ export default class PortalSubmitter {
     await patchEmployersClaimsByFineos_absence_idReview(
       { fineos_absence_id },
       {
-        ...data,
         ...response,
         employer_benefits: [
           ...data.employer_benefits,
