@@ -33,7 +33,8 @@ export const Welcome = ({ appLogic, user }) => {
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const shouldShowOtherLeave = isFeatureEnabled("claimantShowOtherLeaveStep");
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
-  const shouldShowCaringLeaveAlert = shouldShowCaringLeave;
+  const shouldShowCaringLeaveAlert =
+    shouldShowCaringLeave && !shouldShowOtherLeave;
 
   return (
     <React.Fragment>
