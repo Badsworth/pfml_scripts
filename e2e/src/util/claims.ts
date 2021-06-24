@@ -137,3 +137,12 @@ export function getCaringLeaveStartEndDates(): [Date, Date] {
   const end = addWeeks(start, 2);
   return [start, end];
 }
+
+/**
+ * Format an ISO date to an "M/d/yyyy" format, used in the LA portal.
+ * @param date
+ * @returns
+ */
+export function dateToReviewFormat(date: string): string {
+  return format(parseISO(date), "M/d/yyyy");
+}

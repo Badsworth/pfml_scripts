@@ -31,7 +31,10 @@ import { config } from "./common";
 import { email } from ".";
 import { inFieldsetLabelled } from "./common";
 import path from "path";
-import { minutesToHoursAndMinutes } from "../../src/util/claims";
+import {
+  dateToReviewFormat,
+  minutesToHoursAndMinutes,
+} from "../../src/util/claims";
 
 export function before(): void {
   // Set the feature flag necessary to see the portal.
@@ -582,23 +585,6 @@ export function describeWorkSchedule(
       });
     });
   }
-  cy.contains("button", "Save and continue").click();
-}
-
-export function reportOtherBenefits(): void {
-  // Preceeded by - "I am on the claims Checklist page";
-  // Preceeded by - "I click on the checklist button called {string}"
-  //                with the label "Report other leave and benefits"
-  cy.contains(
-    "fieldset",
-    "Will you use any employer-sponsored benefits during your leave?"
-  ).within(() => cy.labelled("No").click({ force: true }));
-  cy.contains("button", "Save and continue").click();
-
-  cy.contains(
-    "fieldset",
-    "Will you receive income from any other sources during your leave?"
-  ).within(() => cy.labelled("No").click({ force: true }));
   cy.contains("button", "Save and continue").click();
 }
 
@@ -1173,19 +1159,19 @@ function reportAccruedLeave(accruedLeave: ValidConcurrentLeave): void {
   cy.contains("button", "Save and continue").click();
 }
 
+const benefitTypeMap: Record<ValidEmployerBenefit["benefit_type"], string> = {
+  "Family or medical leave insurance": "Family or medical leave insurance",
+  "Permanent disability insurance": "Permanent disability insurance",
+  "Short-term disability insurance": "Temporary disability insurance",
+  "Accrued paid leave": "",
+  Unknown: "",
+};
 /**
  * Fills out the employer-sponsored benefits form for a given benefit.
  * @param benefit
  * @param index
  */
 function reportEmployerBenefit(benefit: ValidEmployerBenefit, index: number) {
-  const benefitTypeMap: Record<ValidEmployerBenefit["benefit_type"], string> = {
-    "Family or medical leave insurance": "Family or medical leave insurance",
-    "Permanent disability insurance": "Permanent disability insurance",
-    "Short-term disability insurance": "Temporary disability insurance",
-    "Accrued paid leave": "",
-    Unknown: "",
-  };
   inFieldsetLabelled(`Benefit ${index + 1}`, () => {
     inFieldsetLabelled("What kind of employer-sponsored benefit is it?", () => {
       cy.labelled(benefitTypeMap[benefit.benefit_type]).click({ force: true });
@@ -1290,6 +1276,7 @@ function reportOtherIncome(income: ValidOtherIncome, index: number): void {
  * Report other incomes. Must be navigated to the other incomes form.
  * @param other_incomes - array of OtherIncome objects with all the required properties.
  */
+"Tell us about your other sources of income during your leave dates for paid leave from PFML.";
 function reportOtherIncomes(other_incomes: ValidOtherIncome[]): void {
   cy.contains(
     "form",
@@ -1431,4 +1418,228 @@ export function uploadAdditionalDocument(
     addLeaveDocs(docName);
   }
   cy.contains("You successfully submitted your documents");
+}
+
+/**
+ * @note Following section is related to claim amendments & review by Leave Admins
+ * All of the functions assume you are navigated to the claim review page.
+ */
+
+const leaveAdminLeaveResponMap: Record<
+  ValidPreviousLeave["leave_reason"],
+  string
+> = {
+  "An illness or injury": "An illness or injury",
+  "Bonding with my child after birth or placement":
+    "Bonding with their child after birth or placement",
+  "Caring for a family member who serves in the armed forces":
+    "Caring for a family member who served in the armed forces",
+  "Caring for a family member with a serious health condition":
+    "Caring for a family member",
+  "Managing family affairs while a family member is on active duty in the armed forces":
+    "Managing family affairs while a family member was on active duty in the armed forces",
+  Pregnancy: "Pregnancy",
+  Unknown: "",
+};
+
+export function amendWorkingHours(amendedHours: number): void {
+  cy.findByText("Weekly hours worked")
+    .parent()
+    .parent()
+    .findByText("Amend")
+    .click();
+  cy.findByLabelText(
+    "On average, how many hours does the employee work each week?"
+  ).type(`{selectAll}{backspace}${amendedHours}`);
+}
+
+/**
+ * In the LA review screen we find the needed leave by the combination of it's dates & leave reason
+ */
+type LeaveIdentifier = Pick<
+  ValidPreviousLeave,
+  "leave_start_date" | "leave_end_date" | "leave_reason"
+>;
+/**
+ * Finds a past leave and amends it with given information.
+ * @param identifier Leave dates and leave reason in an object.
+ * @param amendments Full data of the amended leave, think of PUT instead of PATCH.
+ */
+export function amendPreviousLeave(
+  identifier: LeaveIdentifier,
+  amendedLeave: ValidPreviousLeave
+): void {
+  // Setup the regex template
+  // There's no unqiue identifier for listed leaves, so we have to use a combination of dates and reason.
+  const template = `${dateToReviewFormat(
+    identifier.leave_start_date
+  )}.*${dateToReviewFormat(identifier.leave_end_date)}.*${
+    leaveAdminLeaveResponMap[identifier.leave_reason]
+  }`;
+  const selector = new RegExp(template);
+  cy.contains("tr", selector).findByText("Amend").click();
+  // The next table row will now contain the amendment form.
+  cy.contains("tr", selector)
+    .next()
+    .within(() => fillPreviousLeaveData(amendedLeave));
+}
+
+export function addPreviousLeave(leave: ValidPreviousLeave): void {
+  cy.findByText("Add another previous leave").click();
+  // The table's second to last row will be the new leave form.
+  // The last row is the "Add another previous leave" button
+  cy.contains("tbody", "Add a new previous leave")
+    .children()
+    .eq(-2)
+    .within(() => {
+      fillPreviousLeaveData(leave);
+    });
+}
+
+export function assertPreviousLeave(leave: ValidPreviousLeave): void {
+  const template = `${dateToReviewFormat(
+    leave.leave_start_date
+  )}.*${dateToReviewFormat(leave.leave_end_date)}.*${
+    leaveAdminLeaveResponMap[leave.leave_reason]
+  }`;
+  const selector = new RegExp(template);
+
+  cy.contains("table", "Leave type").within(() => {
+    cy.contains("tr", selector).should(($tr) => {
+      expect($tr.html()).to.match(selector);
+    });
+  });
+}
+
+function fillPreviousLeaveData(leave: ValidPreviousLeave): void {
+  const isForSameReason = leave.type === "same_reason";
+  // Select leave type
+  inFieldsetLabelled(
+    "Was this leave for the same reason as their paid leave request?",
+    () => cy.findByText(isForSameReason ? "Yes" : "No").click()
+  );
+  // Select leave reason if needed
+  if (!isForSameReason)
+    inFieldsetLabelled("Why did this employee need to take leave?", () =>
+      cy.findByText(`${leaveAdminLeaveResponMap[leave.leave_reason]}`).click()
+    );
+  // Fill start date
+  fillDateFieldset(
+    "When did the employee's leave start?",
+    leave.leave_start_date
+  );
+  // Fill end date
+  fillDateFieldset("When did the employee's leave end?", leave.leave_end_date);
+}
+
+export function assertEmployerBenefit(benefit: ValidEmployerBenefit): void {
+  const template = `${dateToReviewFormat(
+    benefit.benefit_start_date
+  )}.*${dateToReviewFormat(benefit.benefit_end_date)}.*${benefit.benefit_type}`;
+  const selector = new RegExp(template);
+  cy.contains("table", "Benefit type").within(($table) => {
+    expect($table.html()).to.match(selector);
+  });
+}
+
+export function addEmployerBenefit(benefit: ValidEmployerBenefit): void {
+  cy.findByText("Add a benefit").click();
+  // The table's second to last row will be the new benefit form.
+  // The last row is the "Add another previous leave" button
+  cy.contains("tbody", "Add an employer-sponsored benefit")
+    .children()
+    .eq(-2)
+    .within(() => {
+      fillEmployerBenefitData(benefit);
+    });
+}
+
+export function amendEmployerBenefit(
+  identifier: Pick<
+    ValidEmployerBenefit,
+    "benefit_start_date" | "benefit_end_date" | "benefit_type"
+  >,
+  amendedBenefit: ValidEmployerBenefit
+): void {
+  // Setup the regex template
+  // There's no unqiue identifier for listed leaves, so we have to use a combination of dates and reason.
+  const template = `${dateToReviewFormat(
+    identifier.benefit_start_date
+  )}.*${dateToReviewFormat(identifier.benefit_end_date)}.*${
+    benefitTypeMap[amendedBenefit.benefit_type]
+  }`;
+  const selector = new RegExp(template);
+  cy.contains("tr", selector).findByText("Amend").click();
+  // The next table row will now contain the amendment form.
+  cy.contains("tr", selector)
+    .next()
+    .within(() => fillEmployerBenefitData(amendedBenefit));
+}
+
+function fillEmployerBenefitData(benefit: ValidEmployerBenefit): void {
+  benefit.benefit_type;
+  inFieldsetLabelled("What kind of employer-sponsored benefit is it?", () =>
+    cy.findByText(benefitTypeMap[benefit.benefit_type]).click()
+  );
+  fillDateFieldset(
+    "What is the first day of leave from work that this benefit will pay your employee for?",
+    benefit.benefit_start_date
+  );
+  fillDateFieldset(
+    "What is the last day of leave from work that this benefit will pay your employee for?",
+    benefit.benefit_end_date
+  );
+  const isSalaryReplacement = benefit.is_full_salary_continuous;
+  inFieldsetLabelled(
+    "Does this employer-sponsored benefit fully replace your employee's wages?",
+    () => cy.findByText(isSalaryReplacement ? "Yes" : "No").click()
+  );
+  if (!isSalaryReplacement)
+    inFieldsetLabelled("How much will your employee receive?", () => {
+      cy.findByLabelText("Amount").type(
+        `{selectAll}{backspace}${benefit.benefit_amount_dollars}`
+      );
+
+      /**
+       * @todo
+       * Check if other selects in LA and claimant portals also
+       * have the 'value' attribute of their options match the API types.
+       * If so - it may make sense to create a custom comman for this and get rid of some of those maps.
+       */
+      const frequencyMap: Record<
+        ValidEmployerBenefit["benefit_amount_frequency"],
+        string
+      > = {
+        "Per Day": "Daily",
+        "Per Week": "Weekly",
+        "Per Month": "Monthly",
+        "In Total": "All at once",
+        Unknown: "Unknown",
+      };
+      cy.findByLabelText("Frequency").select(
+        frequencyMap[benefit.benefit_amount_frequency]
+      );
+    });
+}
+
+export function addConcurrentLeave(leave: ValidConcurrentLeave): void {
+  cy.findByText("Add a concurrent leave").click();
+  cy.contains("tr", "Add an accrued paid leave").within(() => {
+    fillDateFieldset("When did the leave begin?", leave.leave_start_date);
+    fillDateFieldset("When did the leave end?", leave.leave_end_date);
+  });
+}
+
+export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
+  const template = `${dateToReviewFormat(
+    leave.leave_start_date
+  )}.*${dateToReviewFormat(leave.leave_end_date)}`;
+  const selector = new RegExp(template);
+
+  cy.findByText("Concurrent accrued paid leave")
+    .next()
+    .next()
+    .should(($table) => {
+      expect($table.html()).to.match(selector);
+    });
 }

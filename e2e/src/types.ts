@@ -1,4 +1,4 @@
-import { ApplicationLeaveDetails } from "./api";
+import { ApplicationLeaveDetails, ApplicationRequestBody } from "./api";
 import * as scenarios from "./scenarios";
 import {
   EmployerBenefit,
@@ -45,6 +45,23 @@ export type SubjectOptions =
 
 export type Scenarios = keyof typeof scenarios;
 
+export type PersonalIdentificationDetails = {
+  id_number_type: "Social Security Number" | "ID" | "ITIN";
+  date_of_birth: string;
+  gender: NonNullable<ApplicationRequestBody["gender"]>;
+  marital_status:
+    | "Unknown"
+    | "Single"
+    | "Married"
+    | "Divorced"
+    | "Widowed"
+    | "Separated";
+};
+
+/**
+ * @note UTILITY TYPES
+ */
+
 /**
  * Require properties in P to be neither null nor undefined within T
  */
@@ -60,6 +77,7 @@ export type AllNotNull<T> = Required<
   }
 >;
 
+/**Get a union of non-optional keys of type */
 export type RequiredKeys<T> = {
   [k in keyof T]-?: undefined extends T[k] ? never : k;
 }[keyof T];
