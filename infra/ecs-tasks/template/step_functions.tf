@@ -5,10 +5,83 @@
 #
 # State machine for daily DOR FINEOS ETL.
 #
+locals {
+  # Allow first step to either generate mock data _or_ import employees from FINEOS
+  st_states_details_list = {
+    "fineos_import_employee_updates" = {
+      comment                = "FINEOS employee updates import to RDS",
+      task_definition_suffix = "fineos-import-employee-updates",
+      overrides = jsonencode({
+
+        "ContainerOverrides" : [
+          {
+            "Name" : "fineos-import-employee-updates",
+            "Environment" : [
+              {
+                "Name" : "SFN_EXECUTION_ID",
+                "Value.$" : "$$.Execution.Id"
+              }
+            ]
+          }
+        ]
+        }
+      )
+    },
+    "dor_generate" = {
+      comment                = "Generate fake DOR data to S3 (non-prod)",
+      task_definition_suffix = "dor-import",
+      overrides = jsonencode({
+        "ContainerOverrides" : [
+          {
+            "Name" : "dor-import",
+            "Command" : [
+              "dor-generate",
+              "--folder=s3://massgov-pfml-test-agency-transfer/dor/received",
+              "--count=1000"
+            ]
+          }
+        ]
+      })
+    }
+  }
+
+  # Get the right details based on the two variables
+  st_decrypt_value = jsonencode({ "Name" : "DECRYPT", "Value" : tostring(var.st_decrypt_dor_data) })
+  st_states_name   = var.st_use_mock_dor_data ? "dor_generate" : "fineos_import_employee_updates"
+  st_state_details = local.st_states_details_list[local.st_states_name]
+
+  # Pass the details into the step functions definition 
+  dor_fineos_etl_definition = templatefile("${path.module}/step_function/dor_fineos_etl.json",
+    {
+      app_name = "pfml-api"
+
+      st_states_name            = local.st_states_name
+      st_states_comment         = local.st_state_details.comment
+      st_task_definition_suffix = local.st_state_details.task_definition_suffix
+      st_overrides              = local.st_state_details.overrides
+      st_decrypt_value          = local.st_decrypt_value
+      st_file_limit_specified   = var.st_file_limit_specified
+
+      cluster_arn           = data.aws_ecs_cluster.cluster.arn
+      environment_name      = var.environment_name
+      security_group        = data.aws_security_group.tasks.id
+      subnet_1              = var.app_subnet_ids[0]
+      subnet_2              = var.app_subnet_ids[1]
+      sns_failure_topic_arn = data.aws_sns_topic.task_failure.arn
+
+      task_failure_notification_enabled = true
+  })
+}
+
+################### Original ####################
+
+#
+# State machine for daily DOR FINEOS ETL.
+#
 resource "aws_sfn_state_machine" "dor_fineos_etl" {
   name       = "${local.app_name}-${var.environment_name}-dor-fineos-etl"
   role_arn   = aws_iam_role.step_functions_execution.arn
-  definition = var.dor_fineos_etl_definition
+  definition = local.dor_fineos_etl_definition
 
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]

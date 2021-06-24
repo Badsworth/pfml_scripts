@@ -45,6 +45,9 @@ module "api" {
   source = "../../template"
 
   environment_name                      = local.environment_name
+  st_use_mock_dor_data    = false
+  st_decrypt_dor_data     = false
+  st_file_limit_specified = true
   service_app_count                     = 2
   service_max_app_count                 = 10
   service_docker_tag                    = local.service_docker_tag
@@ -93,6 +96,5 @@ module "api" {
   # TODO: Connect to ServiceNow. Usually in nonprod you'll connect to stage.
   service_now_base_url = "https://savilinxstage.servicenowservices.com"
 
-  dor_fineos_etl_definition                        = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 }
