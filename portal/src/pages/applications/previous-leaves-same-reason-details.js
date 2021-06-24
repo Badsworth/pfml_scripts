@@ -6,6 +6,7 @@ import Hint from "../../components/Hint";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import InputHours from "../../components/InputHours";
+import LeaveReason from "../../models/LeaveReason";
 import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -54,6 +55,11 @@ export const PreviousLeavesSameReasonDetails = (props) => {
   );
 
   const leaveStartDate = formatDate(claim.leaveStartDate).full();
+
+  const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
+  const previousLeaveStartDate = isCaringLeave
+    ? formatDate("2021-07-01").full()
+    : formatDate("2021-01-01").full();
 
   const handleSave = () => {
     appLogic.benefitsApplications.update(claim.application_id, formState);
@@ -105,6 +111,7 @@ export const PreviousLeavesSameReasonDetails = (props) => {
 
       <Hint className="margin-bottom-3">
         {t("pages.claimsPreviousLeavesSameReasonDetails.sectionHint", {
+          previousLeaveStartDate,
           leaveStartDate,
         })}
       </Hint>

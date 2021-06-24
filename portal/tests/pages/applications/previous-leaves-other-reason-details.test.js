@@ -131,6 +131,31 @@ const createClaimWithPreviousLeaves = () =>
     ])
     .create();
 
+const createClaimWithPreviousLeaves_care = () =>
+  new MockBenefitsApplicationBuilder()
+    .caringLeaveReason()
+    .continuous()
+    .employed()
+    .previousLeavesOtherReason([
+      {
+        leave_end_date: "2021-01-26",
+        leave_minutes: 1500,
+        leave_reason: PreviousLeaveReason.care,
+        leave_start_date: "2021-01-01",
+        previous_leave_id: 89,
+        worked_per_week_minutes: 2400,
+      },
+      {
+        leave_end_date: "2020-12-13",
+        leave_minutes: 1200,
+        leave_reason: PreviousLeaveReason.bonding,
+        leave_start_date: "2020-11-21",
+        previous_leave_id: 9,
+        worked_per_week_minutes: 2400,
+      },
+    ])
+    .create();
+
 describe("PreviousLeavesOtherReasonDetails", () => {
   describe("when the user has no previous leaves reported", () => {
     let wrapper;
@@ -205,6 +230,27 @@ describe("PreviousLeavesOtherReasonDetails", () => {
       expect(wrapper).toMatchSnapshot();
       expect(firstCard).toMatchSnapshot();
       expect(inputHoursHint.find("Trans").dive()).toMatchSnapshot();
+
+      expect(wrapper.find("Hint")).toMatchInlineSnapshot(`
+        <Hint
+          className="margin-bottom-3"
+        >
+          Enter details about each period of leave taken between January 1, 2021 and January 1, 2021. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.
+        </Hint>
+      `);
+    });
+
+    it("changes hint date when leave reason is caring leave", () => {
+      const claimWithPreviousLeaves_care = createClaimWithPreviousLeaves_care();
+      const { wrapper } = setup(claimWithPreviousLeaves_care);
+
+      expect(wrapper.find("Hint")).toMatchInlineSnapshot(`
+        <Hint
+          className="margin-bottom-3"
+        >
+          Enter details about each period of leave taken between July 1, 2021 and January 1, 2021. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.
+        </Hint>
+      `);
     });
 
     it("adds an empty previous leave when the user clicks Add Previous Leave", async () => {
