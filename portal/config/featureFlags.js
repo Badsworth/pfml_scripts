@@ -35,10 +35,6 @@ const flagsConfig = {
     // TODO (EMPLOYER-718): Remove flag
     employerShowPreviousLeaves: false,
 
-    // When this flag is enabled, the form on Employer Create Account page is visible
-    // TODO (EMPLOYER-718): Remove flag
-    employerShowSelfRegistrationForm: false,
-
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
     noMaintenance: false,
@@ -70,29 +66,21 @@ const flagsConfig = {
   // The environment keys should use the same envName defined in
   // environment config files.
   "cps-preview": {
-    employerShowSelfRegistrationForm: true,
     useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   development: {
     example: true,
-    employerShowSelfRegistrationForm: true,
     pfmlTerriyay: true,
     useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   test: {
-    employerShowSelfRegistrationForm: true,
     useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
-  stage: {
-    employerShowSelfRegistrationForm: true,
-  },
+  stage: {},
   training: {},
-  performance: {
-    employerShowSelfRegistrationForm: true,
-  },
+  performance: {},
   uat: {},
   prod: {
-    employerShowSelfRegistrationForm: true,
     pfmlTerriyay: true,
   },
 };

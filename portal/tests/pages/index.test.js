@@ -17,8 +17,7 @@ describe("Index", () => {
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
-  it("does show employer information when employerShowSelfRegistrationForm is true", () => {
-    process.env.featureFlags = { employerShowSelfRegistrationForm: true };
+  it("shows employer information ", () => {
     const { wrapper } = renderWithAppLogic(Index, {
       diveLevels: 0,
     });

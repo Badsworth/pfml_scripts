@@ -906,8 +906,6 @@ const pages = {
       "<strong>Need to apply for paid leave? <create-account-link>Create an account</create-account-link></strong>",
     createEmployerAccount:
       "<strong>Are you a Massachusetts employer? <create-employer-account-link>Create an employer account</create-employer-account-link></strong>",
-    createEmployerAccount_contactCallCenter:
-      "<strong>Are you a Massachusetts employer?</strong> Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to create an employer account.",
     forgotPasswordLink: "Forgot your password?",
     loginButton: "Log in",
     passwordLabel: "$t(shared.passwordLabel)",
@@ -1967,12 +1965,6 @@ const pages = {
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     leadBackground:
       "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave.",
-    leadBackground_accountCreationContactCenter:
-      "Please call us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to create an account for your organization.",
-    leadBackground_accountCreationInstructions:
-      "You'll need the following information to <account-creation-link>get started</account-creation-link>:",
-    leadBackground_accountCreationList:
-      "<ul><li>Work email address: An email address can only be associated with one account.</li><li>Password: Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.</li><li>Employer ID number (EIN): A 9-digit number assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.</li></ul>",
     leadMultipleCompanies:
       "If you manage leave for multiple companies, please create an account for one using the form below. You’ll be able to add more companies to your account in the portal.",
     nextStep: "We’ll send you a 6-digit code to verify your email address.",
@@ -2247,10 +2239,7 @@ const pages = {
     createAccountHeading: "Choose an account type",
     createAccountHint:
       "You can create an account as a worker or as an employer.",
-    employerCardBody_contactCenter:
-      "Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to create an employer account.",
-    employerCardBody_massEmployer: "Are you a Massachusetts employer?",
-    employerCardBody_selfRegister: "Manage leave for your team.",
+    employerCardBody: "Manage leave for your team.",
     employerCreateAccountButton: "Create an employer account",
     employerHeading: "Employers",
     seoTitle:
