@@ -143,6 +143,57 @@ describe("AmendableEmployerBenefit", () => {
       ).toEqual("$0.00 (frequency unknown)");
     });
 
+    it("renders fullSalaryContinuous when is_full_salary_continuous is true", () => {
+      const fullSalaryContinuousPaidLeave = new EmployerBenefit({
+        benefit_amount_dollars: null,
+        benefit_amount_frequency: null,
+        benefit_end_date: "2021-03-01",
+        benefit_start_date: "2021-02-01",
+        benefit_type: EmployerBenefitType.paidLeave,
+        employer_benefit_id: 0,
+        is_full_salary_continuous: true,
+      });
+      const wrapper = shallow(
+        <AmendableEmployerBenefit
+          appErrors={appLogic.appErrors}
+          isAddedByLeaveAdmin={false}
+          employerBenefit={fullSalaryContinuousPaidLeave}
+          onChange={onChange}
+          onRemove={onRemove}
+          shouldShowV2
+        />
+      );
+
+      expect(
+        wrapper.find("BenefitDetailsRow").dive().find("td").at(1).text()
+      ).toEqual("Full salary continuous");
+    });
+
+    it("renders noAmountReported when benefit_amount_dollars is null and is_full_salary_continuous is falsy", () => {
+      const nullPaidLeave = new EmployerBenefit({
+        benefit_amount_dollars: null,
+        benefit_amount_frequency: EmployerBenefitFrequency.monthly,
+        benefit_end_date: "2021-03-01",
+        benefit_start_date: "2021-02-01",
+        benefit_type: EmployerBenefitType.paidLeave,
+        employer_benefit_id: 0,
+      });
+      const wrapper = shallow(
+        <AmendableEmployerBenefit
+          appErrors={appLogic.appErrors}
+          isAddedByLeaveAdmin={false}
+          employerBenefit={nullPaidLeave}
+          onChange={onChange}
+          onRemove={onRemove}
+          shouldShowV2
+        />
+      );
+
+      expect(
+        wrapper.find("BenefitDetailsRow").dive().find("td").at(1).text()
+      ).toEqual("No amount reported");
+    });
+
     it("renders an AmendmentForm if user clicks on AmendButton", () => {
       clickAmendButton(wrapper);
 

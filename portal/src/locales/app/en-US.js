@@ -2491,7 +2491,9 @@ const components = {
       "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
+    fullSalaryContinuous: "Full salary continuous",
     header: "Employer-sponsored benefits",
+    noAmountReported: "No amount reported",
     tableName: "Employer-sponsored benefit details",
   },
   employersEmployerDecision: {

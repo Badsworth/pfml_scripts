@@ -930,7 +930,25 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
             "benefit_start_date": "2021-01-01",
             "benefit_type": "Family or medical leave insurance",
             "employer_benefit_id": 1,
-            "is_full_salary_continuous": null,
+            "is_full_salary_continuous": false,
+          },
+          EmployerBenefit {
+            "benefit_amount_dollars": null,
+            "benefit_amount_frequency": null,
+            "benefit_end_date": "2021-02-01",
+            "benefit_start_date": "2021-01-01",
+            "benefit_type": "Short-term disability insurance",
+            "employer_benefit_id": 2,
+            "is_full_salary_continuous": true,
+          },
+          EmployerBenefit {
+            "benefit_amount_dollars": null,
+            "benefit_amount_frequency": "Per Week",
+            "benefit_end_date": "2021-02-01",
+            "benefit_start_date": "2021-01-01",
+            "benefit_type": "Permanent disability insurance",
+            "employer_benefit_id": 3,
+            "is_full_salary_continuous": false,
           },
         ]
       }
