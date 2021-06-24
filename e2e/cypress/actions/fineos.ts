@@ -708,19 +708,6 @@ export function closeTask(task: string): void {
   cy.get('input[type="submit"][value="Close"]').click();
 }
 
-export function claimExtensionAdjudicationFlow(
-  claimNumber: string,
-  reason: LeaveReason
-): void {
-  visitClaim(claimNumber);
-  cy.get("input[type='submit'][value='Adjudicate']").click();
-  markEvidence(
-    getCertificationDocumentType(reason, config("HAS_FINEOS_SP") === "true")
-  );
-  markEvidence("Identification Proof");
-  checkStatus(claimNumber, "Evidence", "Satisfied");
-}
-
 export function checkHoursWorkedPerWeek(
   claimNumber: string,
   hours_worked_per_week: number
@@ -789,6 +776,8 @@ export function claimAddTimeAfterApproval(
   cy.get(
     "input[name='timeOffAbsencePeriodDetailsWidget_un19_endDateAllDay_CHECKBOX']"
   ).click();
+  cy.wait(500);
+  cy.wait("@ajaxRender");
   cy.get("input[title='OK']").click();
 
   clickBottomWidgetButton("Next");
