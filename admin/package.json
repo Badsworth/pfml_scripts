@@ -8,6 +8,7 @@
     "start": "next start",
     "type-check": "tsc --pretty --noEmit",
     "format": "prettier --write . '**/*.{js,json,md,mdx,scss,css,yaml,yml,ts,tsx,jsx}'",
+    "test": "jest",
     "lint": "next lint"
   },
   "dependencies": {
@@ -17,10 +18,15 @@
     "react-helmet": "^6.1.0"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.14.5",
+    "@types/jest": "^26.0.23",
     "@types/react": "17.0.11",
     "@types/react-helmet": "^6.1.1",
     "eslint": "7.29.0",
     "eslint-config-next": "11.0.1",
+    "jest": "^27.0.5",
+    "sass": "^1.35.1",
+    "ts-node": "^10.0.0",
     "typescript": "4.3.4"
   }
 }

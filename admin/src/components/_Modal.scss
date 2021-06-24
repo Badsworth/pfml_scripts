@@ -1,0 +1,53 @@
+.modal {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+}
+.modal__background {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.3);
+}
+.modal__content {
+  position: relative;
+  z-index: 10;
+  width: 70%;
+  max-width: 350px;
+  margin: 10% auto 0;
+  padding: 0.5em 1em;
+  background: white;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
+}
+.modal__content h1 {
+  margin: 0;
+}
+.modal__action-buttons {
+  text-align: center;
+}
+.modal__action-buttons button {
+  padding: 1em 0;
+  width: 40%;
+  max-width: 150px;
+  border: 0;
+  color: white;
+  background: tan;
+}
+.modal__action-buttons--stacked button {
+  display: block;
+  margin: 0 auto 1em;
+}
+.modal__action-buttons--stacked button:last-child {
+  margin-bottom: 0;
+}
+.modal__title {
+  font-size: 20px;
+}
+.modal__copy {
+  font-size: 12px;
+}
