@@ -211,12 +211,6 @@ describe("LeaveDetails", () => {
       };
     };
 
-    it("does not render relationship question when showCaringLeaveType flag is false", () => {
-      // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
-      const { wrapper } = setup();
-      expect(wrapper.exists("InputChoiceGroup")).toBe(false);
-    });
-
     it("renders documentation hint correctly with family relationship", () => {
       const { wrapper } = setup(DOCUMENTS);
       const documentsHint = wrapper
@@ -227,9 +221,7 @@ describe("LeaveDetails", () => {
       expect(documentsHint).toMatchSnapshot();
     });
 
-    it("renders relationship question when showCaringLeaveType flag is true", () => {
-      // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
-      process.env.featureFlags = { showCaringLeaveType: true };
+    it("renders the relationship question", () => {
       const { wrapper } = setup();
       expect(wrapper).toMatchSnapshot();
       expect(wrapper.exists("InputChoiceGroup")).toBe(true);

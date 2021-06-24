@@ -24,7 +24,7 @@ Array [
 ]
 `;
 
-exports[`LeaveDetails Caring Leave renders relationship question when showCaringLeaveType flag is true 1`] = `
+exports[`LeaveDetails Caring Leave renders the relationship question 1`] = `
 <Fragment>
   <ReviewHeading
     level="2"
