@@ -61,7 +61,7 @@ describe("useClaimsLogic", () => {
       );
     });
 
-    it("loads page with employer_id filter", async () => {
+    it("loads page with filters", async () => {
       expect.assertions();
 
       const { appLogic } = setup();
@@ -69,12 +69,15 @@ describe("useClaimsLogic", () => {
       await act(async () => {
         mockPaginatedFetch();
         await appLogic.current.claims.loadPage(1, {
+          claim_status: "Approved,Pending",
           employer_id: "mock-employer-id",
         });
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("?page_offset=1&employer_id=mock-employer-id"),
+        expect.stringContaining(
+          "?page_offset=1&claim_status=Approved%2CPending&employer_id=mock-employer-id"
+        ),
         expect.any(Object)
       );
     });

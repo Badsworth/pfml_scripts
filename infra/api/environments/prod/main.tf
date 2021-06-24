@@ -85,5 +85,6 @@ module "api" {
 
   fineos_import_employee_updates_input_directory_path = "s3://fin-somprod-data-export/PRD/dataexports"
 
-  release_version = var.release_version
+  release_version           = var.release_version
+  new_plan_proofs_active_at = "2021-06-26 00:00:00+00:00"
 }

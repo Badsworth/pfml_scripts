@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AddOrganization when "employerShowAddOrganization" is enabled renders the page 1`] = `
+exports[`AddOrganization renders the page 1`] = `
 <form
   className="usa-form"
   method="post"

@@ -162,7 +162,7 @@ const AmendableEmployerBenefit = ({
         visible={isAddedByLeaveAdmin || isAmendmentFormDisplayed}
       >
         <tr>
-          <td colSpan="1" className="padding-y-2 padding-left-0">
+          <td colSpan="4" className="padding-y-2 padding-left-0">
             <AmendmentForm
               className={className}
               destroyButtonLabel={t(
@@ -171,7 +171,7 @@ const AmendableEmployerBenefit = ({
               )}
               onDestroy={onDestroy}
             >
-              <Heading level="4">
+              <Heading level="4" size="3">
                 {t("components.employersAmendableEmployerBenefit.heading", {
                   context: addOrAmend,
                 })}

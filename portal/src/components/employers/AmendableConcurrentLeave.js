@@ -112,11 +112,16 @@ const AmendableConcurrentLeave = ({
                 { context: addOrAmend }
               )}
             >
-              <Heading level="4">
+              <Heading level="4" size="3">
                 {t("components.employersAmendableConcurrentLeave.heading", {
                   context: addOrAmend,
                 })}
               </Heading>
+              <p>
+                {t("components.employersAmendableConcurrentLeave.subtitle", {
+                  context: addOrAmend,
+                })}
+              </p>
               <InputDate
                 onChange={(e) => amendLeave("leave_start_date", e.target.value)}
                 value={amendment.leave_start_date}

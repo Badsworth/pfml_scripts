@@ -93,6 +93,7 @@ const errors = {
     fineos_case_error:
       "There was a problem when trying to send your information to our system. Try submitting this information again.",
     first_name: {
+      maxLength: "First name must be 50 characters or fewer.",
       required: "Enter a first name.",
     },
     has_concurrent_leave: {
@@ -138,6 +139,7 @@ const errors = {
       type: "The average hours you work each week must be a number.",
     },
     last_name: {
+      maxLength: "Last name must be 50 characters or fewer.",
       required: "Enter a last name.",
     },
     leave_details: {
@@ -311,6 +313,9 @@ const errors = {
       pattern:
         "License or ID number must be 9 characters, and may begin with S or SA.",
       required: "Enter your license or ID number.",
+    },
+    middle_name: {
+      maxLength: "Middle name must be 50 characters or fewer.",
     },
     other_incomes: {
       income_amount_dollars: {
@@ -1095,7 +1100,7 @@ const pages = {
     intro:
       "<p>Next, we need to know about paid leave from your employer that you plan to use between {{startDate}} and {{endDate}}. This includes paid vacation time, sick time, personal time, and other paid time off provided by your employer. It does not include family or medical leave provided by your employer, or through a short- or long-term disability program. We’ll ask about that later.</p><p>When your PFML leave begins, there is a 7-day waiting period before PFML payments start. During this 7-day waiting period, you can use paid time off from your employer with no impact to your PFML benefit.</p><p>After the 7-day waiting period, you cannot use both paid leave from your employer and paid leave from PFML on the same days. In some cases, using accrued paid leave after the 7-day waiting period has ended can cause your PFML benefits to stop. You will need to re-apply to receive PFML benefits again. To avoid this, use accrued paid leave only at the start or end of your PFML leave.</p>",
     sectionLabel:
-      "Tell us about the accrued paid leave you'll use during your PFML leave.",
+      "Tell us about the accrued paid leave you'll use during your paid leave from PFML.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsDateOfBirth: {
@@ -1149,7 +1154,7 @@ const pages = {
     limitMessage: "You can only add up to {{limit}} benefits",
     removeButton: "Remove benefit",
     sectionLabel:
-      "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.",
+      "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave from PFML.",
     startDateLabel:
       "What is the first day of leave from work that this benefit will pay you for?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -1230,7 +1235,7 @@ const pages = {
     frequencyBasisLabel:
       "How often might you need to be absent from work (frequency interval)?",
     frequencyHint_care:
-      "Your answers must match Questions 28 and 29 in the $t(shared.certificationFormCare).",
+      "Your answers must match the intermittent leave section in the $t(shared.certificationFormCare).",
     frequencyHint_medical:
       "Your answers must match the intermittent leave section in the $t(shared.certificationFormMedical).",
     frequencyHint_updateMedicalCertForm:
@@ -1251,7 +1256,7 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 23 in the $t(shared.certificationFormCare).",
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormMedical).",
     datesLead_updateMedicalCertForm:
@@ -1260,7 +1265,7 @@ const pages = {
       "Enter the start and end dates for your continuous leave.",
     endDateLabel: "Last day of leave",
     hasLeaveHint_care:
-      "Your answer must match the corresponding checkbox of Question 21 in the $t(shared.certificationFormCare).",
+      "Your answer must match the $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
       "Your answer must match the $t(shared.certificationFormMedical).",
     hasLeaveHint_updateMedicalCertForm:
@@ -1278,7 +1283,7 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 27 in the $t(shared.certificationFormCare).",
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormMedical).",
     datesLead_updateMedicalCertForm:
@@ -1291,7 +1296,7 @@ const pages = {
     hasLeaveHint_bonding:
       "For example, you need to take time off for: <ul><li>Court dates for your foster child</li><li>Social worker visits</li><li>Gaps in your childcare</li></ul>",
     hasLeaveHint_care:
-      "Your answer must match the corresponding checkbox of Question 21 in the $t(shared.certificationFormCare).",
+      "Your answer must match the $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
       "Your answer must match the $t(shared.certificationFormMedical).",
     hasLeaveHint_updateMedicalCertForm:
@@ -1311,7 +1316,7 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 25 in the $t(shared.certificationFormCare).",
+      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormMedical).",
     datesLead_updateMedicalCertForm:
@@ -1322,7 +1327,7 @@ const pages = {
     endDateLabel_medical:
       "Last day of leave or re$t(chars.nbhyphen)evaluation date",
     hasLeaveHint_care:
-      "Your answer must match the corresponding checkbox of Question 21 in the $t(shared.certificationFormCare).",
+      "Your answer must match the $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
       "Your answer must match the $t(shared.certificationFormMedical).",
     hasLeaveHint_updateMedicalCertForm:
@@ -1416,7 +1421,7 @@ const pages = {
     limitMessage: "You can only add up to {{limit}} incomes",
     removeButton: "Remove income",
     sectionLabel:
-      "Tell us about your other sources of income$t(chars.nbsp)during your leave dates for paid$t(chars.nbsp)leave.",
+      "Tell us about your other sources of income during your leave dates for paid leave from PFML.",
     startDateLabel:
       "What is the first day of your leave that this income will pay you for?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -1599,7 +1604,7 @@ const pages = {
     inputHoursLabel_weekly: "Hours off per week",
     lead: "Enter 0 for days you won’t work a reduced schedule.",
     leadCertGuidance_care:
-      "The total number of hours you enter must match Question 26 in the $t(shared.certificationFormCare).",
+      "The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormCare).",
     leadCertGuidance_medical:
       "The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormMedical).",
     leadCertGuidance_updateMedicalCertForm:
@@ -2128,9 +2133,7 @@ const pages = {
     convertDescription: "Your account type is now converted.",
     convertHeading: "Success",
     einTableHeader: "Employer ID number (EIN)",
-    nearFutureAvailability_addOrganization:
-      "You'll be able to add more organizations to your account in the near future.",
-    nearFutureAvailability_inviteMembers:
+    nearFutureAvailability:
       "You can manage leave for these organizations. In the future, you’ll be able to invite other members of your team to review applications.",
     organizationsTableHeader: "Organization",
     title: "Your organizations",
@@ -2180,6 +2183,8 @@ const pages = {
     learnMoreLinks:
       "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
     learnMoreTitle: "Learn more",
+    otherLeaveInfoAlertBody:
+      "The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed.",
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
     respondTitle: "Respond to applications within 10 business days",
@@ -2384,6 +2389,10 @@ const components = {
     heading_amend: "Amend accrued paid leave",
     leaveEndDateLabel: "When did the leave end?",
     leaveStartDateLabel: "When did the leave begin?",
+    subtitle_add:
+      "This addition will get saved when you submit your review at the end of this page.",
+    subtitle_amend:
+      "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
   },
   employersAmendableEmployerBenefit: {
     amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
@@ -2420,7 +2429,7 @@ const components = {
     subtitle_add:
       "This addition will get saved when you submit your review at the end of the page.",
     subtitle_amend:
-      "This amendment will get saved when you submit your review at the end of the page.",
+      "This amendment will get saved when you submit your review. To remove this benefit, include a comment at the end of the page.",
     title: "Add an employer-sponsored benefit",
   },
   employersAmendablePreviousLeave: {
@@ -2451,11 +2460,10 @@ const components = {
     subtitle_add:
       "This addition will get saved when you submit your review at the end of this page.",
     subtitle_amend:
-      "This amendment will get saved when you submit your review at the end of this page.",
+      "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
   },
   employersConcurrentLeave: {
     addButton: "Add a concurrent leave",
-    commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     explanation:
       "Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program. There’s a 7-day unpaid waiting period, and employees are allowed to use accrued paid leave to overlap that period.",
@@ -2492,7 +2500,6 @@ const components = {
     benefitTypeLabel: "Benefit type",
     caption:
       "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
-    commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
     header: "Employer-sponsored benefits",
@@ -2617,7 +2624,6 @@ const components = {
   },
   employersPreviousLeaves: {
     addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
-    commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
     explanation:
       "Your employee has listed leave they have taken for a qualified reason. Only leave since January 1, 2021 is included. This includes both paid leave, such as paid vacation or sick days, and unpaid leave, such as FMLA leave. When possible, verify that a previous leave was for a reason that qualifies for paid leave under PFML.",

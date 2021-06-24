@@ -8,13 +8,18 @@ def validate_routing_number(routing_number: str) -> bool:
     if len(routing_number) != 9:
         return False
 
+    n = compute_checksum(routing_number)
+    if n != 0 and n % 10 == 0:
+        return True
+    else:
+        return False
+
+
+def compute_checksum(routing_number: str) -> int:
     n = 0
     for i in range(0, len(routing_number), 3):
         n += int(routing_number[i]) * 3
         n += int(routing_number[i + 1]) * 7
         n += int(routing_number[i + 2])
 
-    if n != 0 and n % 10 == 0:
-        return True
-    else:
-        return False
+    return n

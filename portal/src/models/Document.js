@@ -29,10 +29,12 @@ export const DocumentType = {
   approvalNotice: "Approval Notice",
   certification: {
     certificationForm: "Certification Form",
+    [LeaveReason.activeDutyFamily]: "Military exigency form",
     [LeaveReason.care]: "Care for a family member form",
     [LeaveReason.bonding]: "Child bonding evidence form",
     [LeaveReason.medical]: "Own serious health condition form",
     [LeaveReason.pregnancy]: "Pregnancy/Maternity form",
+    [LeaveReason.serviceMemberFamily]: "Care for a family member form",
     medicalCertification: "State managed Paid Leave Confirmation", // TODO (CP-2029): Remove this legacy type once claims filed before 7/1/2021 are adjudicated
   },
   denialNotice: "Denial Notice",

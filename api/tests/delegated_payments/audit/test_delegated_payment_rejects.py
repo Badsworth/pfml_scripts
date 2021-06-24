@@ -95,9 +95,9 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
     payment_audit_data = PaymentAuditData(
         payment=payment,
         is_first_time_payment=True,
-        is_previously_rejected_payment=True,
-        is_previously_errored_payment=True,
-        number_of_times_in_rejected_or_error_state=0,
+        previously_rejected_payment_count=1,
+        previously_errored_payment_count=1,
+        previously_skipped_payment_count=0,
     )
     payment_rejects_row = build_audit_report_row(payment_audit_data)
 
@@ -158,9 +158,9 @@ def test_valid_combination_of_reject_and_skip(
     payment_audit_data = PaymentAuditData(
         payment=payment,
         is_first_time_payment=True,
-        is_previously_rejected_payment=True,
-        is_previously_errored_payment=True,
-        number_of_times_in_rejected_or_error_state=0,
+        previously_rejected_payment_count=1,
+        previously_errored_payment_count=1,
+        previously_skipped_payment_count=0,
     )
 
     payment_rejects_row = build_audit_report_row(payment_audit_data)

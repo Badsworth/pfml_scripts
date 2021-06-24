@@ -165,14 +165,6 @@ describe("Employer dashboard", () => {
     ).toMatchSnapshot();
   });
 
-  it("does not render a banner if there are any unverified employers that are not registered in FINEOS", () => {
-    const { wrapper } = setup([], {
-      user_leave_administrators: [verifiableUserLeaveAdministrator],
-    });
-
-    expect(wrapper.find("Alert").exists()).toEqual(false);
-  });
-
   it("renders a table of claims with links if employer is registered in FINEOS", () => {
     const claims = getClaims(verifiedUserLeaveAdministrator);
     const userAttrs = {
@@ -190,10 +182,14 @@ describe("Employer dashboard", () => {
   });
 
   it("renders claim rows without links if employer is not registered in FINEOS", () => {
-    const claims = getClaims(verifiableUserLeaveAdministrator);
+    const verifiedButNotInFineos = {
+      ...verifiableUserLeaveAdministrator,
+      verified: true,
+    };
+    const claims = getClaims(verifiedButNotInFineos);
 
     const userAttrs = {
-      user_leave_administrators: [verifiableUserLeaveAdministrator],
+      user_leave_administrators: [verifiedButNotInFineos],
     };
 
     const { wrapper } = setup(claims, userAttrs);
@@ -208,7 +204,9 @@ describe("Employer dashboard", () => {
       return claim;
     });
 
-    const { wrapper } = setup(claims);
+    const { wrapper } = setup(claims, {
+      user_leave_administrators: [verifiedUserLeaveAdministrator],
+    });
 
     expect(
       wrapper
@@ -255,10 +253,16 @@ describe("Employer dashboard", () => {
   });
 
   it("renders a 'no results' message in the table, and no pagination components when no claims are present", () => {
-    const { wrapper } = setup([], undefined, {
-      total_records: 0,
-      total_pages: 1,
-    });
+    const { wrapper } = setup(
+      [],
+      {
+        user_leave_administrators: [verifiedUserLeaveAdministrator],
+      },
+      {
+        total_records: 0,
+        total_pages: 1,
+      }
+    );
 
     expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
     expect(wrapper.find("PaginationSummary").exists()).toBe(false);
@@ -286,35 +290,26 @@ describe("Employer dashboard", () => {
     });
   });
 
-  describe("when employerShowVerifications flag is enabled", () => {
-    beforeEach(() => {
-      process.env.featureFlags = {
-        ...process.env.featureFlags,
-        employerShowVerifications: true,
-      };
+  it("renders the banner if there are any unverified employers", () => {
+    const { wrapper } = setup([], {
+      user_leave_administrators: [
+        // Mix of verified and unverified
+        verifiedUserLeaveAdministrator,
+        verifiableUserLeaveAdministrator,
+      ],
+    });
+    expect(wrapper.find("Alert").exists()).toEqual(true);
+  });
+
+  it("renders instructions if there are no verified employers", () => {
+    const { wrapper } = setup([], {
+      // No verified employers
+      user_leave_administrators: [verifiableUserLeaveAdministrator],
     });
 
-    it("renders the banner if there are any unverified employers", () => {
-      const { wrapper } = setup([], {
-        user_leave_administrators: [
-          // Mix of verified and unverified
-          verifiedUserLeaveAdministrator,
-          verifiableUserLeaveAdministrator,
-        ],
-      });
-      expect(wrapper.find("Alert").exists()).toEqual(true);
-    });
-
-    it("renders instructions if there are no verified employers", () => {
-      const { wrapper } = setup([], {
-        // No verified employers
-        user_leave_administrators: [verifiableUserLeaveAdministrator],
-      });
-
-      expect(
-        wrapper.find("[data-test='verification-instructions-row'] Trans").dive()
-      ).toMatchSnapshot();
-    });
+    expect(
+      wrapper.find("[data-test='verification-instructions-row'] Trans").dive()
+    ).toMatchSnapshot();
   });
 
   it("renders organizations filter when there are multiple verified organizations", () => {

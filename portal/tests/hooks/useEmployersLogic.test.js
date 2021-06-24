@@ -143,7 +143,6 @@ describe("useEmployersLogic", () => {
       });
 
       it("catches instances of LeaveAdminForbiddenError", async () => {
-        process.env.featureFlags = { employerShowVerifications: true };
         const catchErrorSpy = jest.spyOn(appErrorsLogic, "catchError");
         getClaimMock.mockImplementationOnce(() => {
           // eslint-disable-next-line no-throw-literal

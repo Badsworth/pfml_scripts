@@ -51,7 +51,7 @@ export type ClaimSpecification = {
   /** An object describing documentation that should accompany the claim. */
   docs?: DocumentGenerationSpec;
   /** Describes the employer response that accompanies this claim */
-  employerResponse?: GeneratedEmployerResponse;
+  employerResponse?: EmployerResponseSpec;
   /** Generate an employer notification date that is considered "short notice" by law. */
   shortNotice?: boolean;
   /** Flag to make this a continuous leave claim */
@@ -93,10 +93,13 @@ export type ClaimSpecification = {
 
 export type GeneratedClaimMetadata = Record<string, string | boolean>;
 
-export type GeneratedEmployerResponse = Pick<
+export type EmployerResponseSpec = Omit<
   EmployerClaimRequestBody,
-  "hours_worked_per_week" | "employer_decision" | "fraud" | "comment"
->;
+  "employer_benefits" | "previous_leaves"
+> & {
+  employer_benefits?: EmployerBenefit[];
+  previous_leaves?: PreviousLeave[];
+};
 
 // Represents a single claim that will be issued to the system.
 export type GeneratedClaim = {
@@ -104,7 +107,7 @@ export type GeneratedClaim = {
   scenario: string;
   claim: ApplicationRequestBody;
   documents: DocumentWithPromisedFile[];
-  employerResponse?: GeneratedEmployerResponse | null;
+  employerResponse?: EmployerClaimRequestBody | null;
   paymentPreference: PaymentPreferenceRequestBody;
   metadata?: GeneratedClaimMetadata;
 };
@@ -138,11 +141,18 @@ export class ClaimGenerator {
     const workPattern = generateWorkPattern(spec.work_pattern_spec);
     const leaveDetails = generateLeaveDetails(spec, workPattern);
     const other_incomes = generateOtherIncomes(spec, leaveDetails);
-    const employer_benefits = generateEmployerBenefits(spec, leaveDetails);
-    const {
-      previous_leaves_other_reason,
-      previous_leaves_same_reason,
-    } = generatePreviousLeaves(spec, leaveDetails);
+    const employer_benefits = generateEmployerBenefits(
+      spec.employer_benefits,
+      leaveDetails
+    );
+    const previous_leaves_other_reason = generatePreviousLeaves(
+      spec.previous_leaves_other_reason,
+      leaveDetails
+    );
+    const previous_leaves_same_reason = generatePreviousLeaves(
+      spec.previous_leaves_same_reason,
+      leaveDetails
+    );
     const concurrent_leave = generateConcurrentLeaves(spec, leaveDetails);
     // @todo: Later, we will want smarter logic for which occupation is picked.
     const occupation = employee.occupations[0];
@@ -195,8 +205,24 @@ export class ClaimGenerator {
       paymentPreference: {
         payment_preference: spec.payment ?? this.generatePaymentPreference(),
       },
-      employerResponse: spec.employerResponse ?? null,
+      employerResponse: spec.employerResponse
+        ? this.generateEmployerResponse(spec.employerResponse, leaveDetails)
+        : null,
       metadata: spec.metadata,
+    };
+  }
+
+  private static generateEmployerResponse(
+    response: EmployerResponseSpec,
+    leaveDetails: ApplicationLeaveDetails
+  ): EmployerClaimRequestBody {
+    return {
+      ...response,
+      employer_benefits:
+        generateEmployerBenefits(response.employer_benefits, leaveDetails) ??
+        [],
+      previous_leaves:
+        generatePreviousLeaves(response.previous_leaves, leaveDetails) ?? [],
     };
   }
 

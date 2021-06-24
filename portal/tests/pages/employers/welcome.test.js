@@ -25,8 +25,7 @@ describe("Employer welcome", () => {
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
-  it("displays links to Organizations page when employerShowVerifications is true", () => {
-    process.env.featureFlags = { employerShowVerifications: true };
+  it("displays links to Organizations page", () => {
     wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
 
     expect(wrapper.find("Alert").exists()).toEqual(true);
@@ -68,6 +67,21 @@ describe("Employer welcome", () => {
         .find(
           `Trans[i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"]`
         )
+        .dive()
+    ).toMatchSnapshot();
+  });
+
+  it("renders other leave alert when claimantShowOtherLeaveStep is true", () => {
+    process.env.featureFlags = {
+      claimantShowOtherLeaveStep: true,
+    };
+    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
+
+    expect(wrapper.find("Alert").exists()).toEqual(true);
+
+    expect(
+      wrapper
+        .find(`Trans[i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody"]`)
         .dive()
     ).toMatchSnapshot();
   });

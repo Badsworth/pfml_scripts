@@ -117,6 +117,43 @@ module "fineos_bucket_tool_scheduler" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# run at 3:30pm EST (4:30pm EDT) (8:30pm UTC) and 6:30pm EST (7:30pm EDT) (11:30pm UTC)
+module "fineos_extract_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name           = "fineos-report-extracts-tool"
+  schedule_expression = "cron(30 20,23 * * ? *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.fineos_bucket_tool_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "fineos-bucket-tool",
+        "command": [
+          "fineos-bucket-tool",
+          "--recursive",
+          "--dated-folders",
+          "--copy_dir", "${var.fineos_data_export_path}",
+          "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/reportExtracts",
+          "--file_prefixes", "all"
+        ]
+      }
+    ]
+  }
+  JSON
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run import-fineos-to-warehouse at 10pm EST (11pm EDT) (3am UTC +1 day)
 module "import_fineos_to_warehouse" {
   source     = "../../modules/ecs_task_scheduler"

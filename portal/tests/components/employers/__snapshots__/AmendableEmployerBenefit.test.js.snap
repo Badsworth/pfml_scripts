@@ -8,7 +8,7 @@ exports[`AmendableEmployerBenefit for added benefits renders the component witho
     <tr>
       <td
         className="padding-y-2 padding-left-0"
-        colSpan="1"
+        colSpan="4"
       >
         <AmendmentForm
           className="bg-white"
@@ -17,6 +17,7 @@ exports[`AmendableEmployerBenefit for added benefits renders the component witho
         >
           <Heading
             level="4"
+            size="3"
           >
             Add an employer-sponsored benefit
           </Heading>
@@ -179,7 +180,7 @@ exports[`AmendableEmployerBenefit for amended benefits renders the component wit
     <tr>
       <td
         className="padding-y-2 padding-left-0"
-        colSpan="1"
+        colSpan="4"
       >
         <AmendmentForm
           className="bg-base-lightest border-base-lighter"
@@ -188,11 +189,12 @@ exports[`AmendableEmployerBenefit for amended benefits renders the component wit
         >
           <Heading
             level="4"
+            size="3"
           >
             Amend employer-sponsored benefit
           </Heading>
           <p>
-            This amendment will get saved when you submit your review at the end of the page.
+            This amendment will get saved when you submit your review. To remove this benefit, include a comment at the end of the page.
           </p>
           <ConditionalContent
             visible={true}

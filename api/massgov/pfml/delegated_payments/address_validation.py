@@ -1,9 +1,12 @@
 import enum
+import os
 import re
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+import massgov.pfml.experian.address_validate_soap.client as soap_api
+import massgov.pfml.experian.address_validate_soap.models as sm
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
@@ -15,6 +18,10 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.experian.address_validate_soap.service import (
+    address_to_experian_verification_search,
+    experian_verification_response_to_address,
+)
 from massgov.pfml.experian.physical_address.client import Client
 from massgov.pfml.experian.physical_address.client.models.search import (
     AddressSearchV1Request,
@@ -53,6 +60,8 @@ class Constants:
 
 
 class AddressValidationStep(Step):
+    use_experian_soap_client: bool = False
+
     class Metrics(str, enum.Enum):
         EXPERIAN_SEARCH_EXCEPTION_COUNT = "experian_search_exception_count"
         INVALID_EXPERIAN_FORMAT = "invalid_experian_format"
@@ -65,12 +74,17 @@ class AddressValidationStep(Step):
         VERIFIED_EXPERIAN_MATCH = "verified_experian_match"
 
     def run_step(self) -> None:
+        self.use_experian_soap_client = os.environ.get("USE_EXPERIAN_SOAP_CLIENT", "0") == "1"
+
         try:
-            experian_client = _get_experian_client()
+            experian_rest_client = _get_experian_rest_client()
+            experian_soap_client = _get_experian_soap_client()
 
             payments = _get_payments_awaiting_address_validation(self.db_session)
             for payment in payments:
-                self._validate_address_for_payment(payment, experian_client)
+                self._validate_address_for_payment(
+                    payment, experian_rest_client, experian_soap_client
+                )
                 self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
 
             self.db_session.commit()
@@ -82,7 +96,9 @@ class AddressValidationStep(Step):
 
         return None
 
-    def _validate_address_for_payment(self, payment: Payment, experian_client: Client) -> None:
+    def _validate_address_for_payment(
+        self, payment: Payment, experian_rest_client: Client, experian_soap_client: soap_api.Client
+    ) -> None:
         address_pair = payment.experian_address_pair
 
         # already validated
@@ -101,10 +117,21 @@ class AddressValidationStep(Step):
 
             return None
 
-        # No response
+        # When we fully switch over to using the SOAP API,
+        # we can remove this check and just make it the normal behavior
+        if self.use_experian_soap_client:
+            self._process_address_via_soap_api(experian_soap_client, payment, address_pair)
+        else:
+            self._process_address_via_rest_api(experian_rest_client, payment, address_pair)
+
+        return None
+
+    def _process_address_via_rest_api(
+        self, experian_rest_client: Client, payment: Payment, address_pair: ExperianAddressPair
+    ) -> None:
         address = address_pair.fineos_address
         try:
-            response = _experian_response_for_address(experian_client, address)
+            response = _experian_rest_response_for_address(experian_rest_client, address)
         except Exception as e:
             logger.exception(
                 "An exception occurred when querying the address for payment ID %s: %s"
@@ -139,7 +166,7 @@ class AddressValidationStep(Step):
         if result.confidence == Confidence.VERIFIED_MATCH:
             self.increment(self.Metrics.VERIFIED_EXPERIAN_MATCH)
 
-            formatted_address = _formatted_address_for_match(experian_client, address, result)
+            formatted_address = _formatted_address_for_match(experian_rest_client, address, result)
             if formatted_address is None:
                 end_state = Constants.ERROR_STATE
                 message = Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE
@@ -163,7 +190,7 @@ class AddressValidationStep(Step):
             self.increment(self.Metrics.MULTIPLE_EXPERIAN_MATCHES)
 
             end_state, message = _get_end_state_and_message_for_multiple_matches(
-                result, experian_client, address_pair
+                result, experian_rest_client, address_pair
             )
             self._create_end_state_by_payment_type(
                 payment=payment,
@@ -184,11 +211,86 @@ class AddressValidationStep(Step):
             message=Constants.MESSAGE_INVALID_EXPERIAN_RESPONSE,
         )
 
+    def _process_address_via_soap_api(
+        self,
+        experian_soap_client: soap_api.Client,
+        payment: Payment,
+        address_pair: ExperianAddressPair,
+    ) -> None:
+        address = address_pair.fineos_address
+
+        try:
+            response = _experian_soap_response_for_address(experian_soap_client, address)
+
+        except Exception as e:
+            logger.exception(
+                "An exception occurred when querying the address for payment ID %s: %s"
+                % (payment.payment_id, type(e).__name__)
+            )
+
+            self._create_end_state_by_payment_type(
+                payment=payment,
+                address=address,
+                address_validation_result=None,
+                end_state=Constants.ERROR_STATE,
+                message=Constants.MESSAGE_EXPERIAN_EXCEPTION_FORMAT.format(type(e).__name__),
+            )
+            self.increment(self.Metrics.EXPERIAN_SEARCH_EXCEPTION_COUNT)
+            return None
+
+        # Address was verified
+        if response.verify_level == sm.VerifyLevel.VERIFIED:
+            self.increment(self.Metrics.VERIFIED_EXPERIAN_MATCH)
+            formatted_address = experian_verification_response_to_address(response)
+
+            if not self._does_experian_soap_address_have_all_parts(address):
+                end_state = Constants.ERROR_STATE
+                message = Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE
+                self.increment(self.Metrics.INVALID_EXPERIAN_FORMAT)
+
+            else:
+                address_pair.experian_address = formatted_address
+
+                end_state = Constants.SUCCESS_STATE
+                message = Constants.MESSAGE_VALID_ADDRESS
+                self.increment(self.Metrics.VALID_EXPERIAN_FORMAT)
+
+            self._create_end_state_by_payment_type(
+                payment=payment,
+                address=address,
+                address_validation_result=response,
+                end_state=end_state,
+                message=message,
+            )
+            return None
+
+        # Experian returned a non-verified scenario, all of these
+        # are cases that are considered errors
+        self.increment(self.Metrics.NO_EXPERIAN_MATCH_COUNT)
+        self._create_end_state_by_payment_type(
+            payment=payment,
+            address=address,
+            address_validation_result=response,
+            end_state=Constants.ERROR_STATE,
+            message=Constants.MESSAGE_INVALID_ADDRESS,
+        )
+
+    def _does_experian_soap_address_have_all_parts(self, address: Address) -> bool:
+        if (
+            not address.address_line_one
+            or not address.city
+            or not address.zip_code
+            or not address.geo_state_id
+        ):
+            return False
+
+        return True
+
     def _create_end_state_by_payment_type(
         self,
         payment: Payment,
         address: Address,
-        address_validation_result: Optional[AddressSearchV1Result],
+        address_validation_result: Optional[Union[AddressSearchV1Result, sm.SearchResponse]],
         end_state: LkState,
         message: str,
     ) -> None:
@@ -229,8 +331,12 @@ class AddressValidationStep(Step):
         self.db_session.add(writeback_details)
 
 
-def _get_experian_client() -> Client:
+def _get_experian_rest_client() -> Client:
     return Client()
+
+
+def _get_experian_soap_client() -> soap_api.Client:
+    return soap_api.Client()
 
 
 def _get_payments_awaiting_address_validation(db_session: db.Session) -> List[Payment]:
@@ -247,9 +353,18 @@ def _address_has_been_validated(address_pair: ExperianAddressPair) -> bool:
     return address_pair.experian_address is not None
 
 
-def _experian_response_for_address(client: Client, address: Address) -> AddressSearchV1Response:
+def _experian_rest_response_for_address(
+    experian_rest_client: Client, address: Address
+) -> AddressSearchV1Response:
     request_formatted_address: AddressSearchV1Request = address_to_experian_search_request(address)
-    return client.search(request_formatted_address)
+    return experian_rest_client.search(request_formatted_address)
+
+
+def _experian_soap_response_for_address(
+    experian_soap_client: soap_api.Client, address: Address
+) -> sm.SearchResponse:
+    request = address_to_experian_verification_search(address)
+    return experian_soap_client.search(request)
 
 
 def _formatted_address_for_match(
@@ -282,21 +397,37 @@ def _formatted_address_for_match(
 
 
 def _outcome_for_search_result(
-    result: Optional[AddressSearchV1Result], msg: str, address: Address,
+    result: Optional[Union[AddressSearchV1Result, sm.SearchResponse]], msg: str, address: Address,
 ) -> Dict[str, Any]:
 
-    confidence_value = (
-        result.confidence.value if result and result.confidence else Constants.UNKNOWN
-    )
-    outcome: Dict[str, Any] = _build_experian_outcome(msg, address, confidence_value)
+    if isinstance(result, sm.SearchResponse):
+        verify_level = result.verify_level.value if result.verify_level else Constants.UNKNOWN
 
-    if result and result.suggestions is not None:
-        for i, suggestion in enumerate(result.suggestions):
-            # Start list of output addresses at 1.
-            label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + str(1 + i)
-            outcome[Constants.EXPERIAN_RESULT_KEY][label] = suggestion.text
+        # The address passed into this is the incoming address validated.
+        outcome = _build_experian_outcome(msg, address, verify_level)
 
-    return outcome
+        # Right now we only have the one result.
+        response_address = experian_verification_response_to_address(result)
+        if response_address:
+            label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + "1"
+            outcome[Constants.EXPERIAN_RESULT_KEY][
+                label
+            ] = address_to_experian_suggestion_text_format(response_address)
+
+        return outcome
+    else:
+        confidence_value = (
+            result.confidence.value if result and result.confidence else Constants.UNKNOWN
+        )
+        outcome = _build_experian_outcome(msg, address, confidence_value)
+
+        if result and result.suggestions is not None:
+            for i, suggestion in enumerate(result.suggestions):
+                # Start list of output addresses at 1.
+                label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + str(1 + i)
+                outcome[Constants.EXPERIAN_RESULT_KEY][label] = suggestion.text
+
+        return outcome
 
 
 def _build_experian_outcome(msg: str, address: Address, confidence: str) -> Dict[str, Any]:

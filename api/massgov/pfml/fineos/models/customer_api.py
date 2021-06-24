@@ -3557,6 +3557,8 @@ class FuturePayment(BaseModel):
 
 
 class Customer(BaseModel):
+    # TODO: Surface a more useful error message to users when validation fails
+    # https://lwd.atlassian.net/browse/CP-2330
     firstName: str = Field(..., description="Person's first name.", max_length=50, min_length=0)
     lastName: str = Field(..., description="Person's last name.", max_length=50, min_length=0)
     secondName: Optional[str] = Field(

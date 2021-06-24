@@ -571,6 +571,7 @@ class Claim(Base):
     employee = relationship("Employee", back_populates="claims")
     employer = relationship("Employer", back_populates="claims")
     state_logs = relationship("StateLog", back_populates="claim")
+    payments: "Query[Payment]" = dynamic_loader("Payment", back_populates="claim")
 
 
 class Payment(Base):
@@ -626,7 +627,7 @@ class Payment(Base):
         server_default=sqlnow(),
     )
 
-    claim = relationship(Claim)
+    claim = relationship("Claim", back_populates="payments")
     claim_type = relationship(LkClaimType)
     payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)

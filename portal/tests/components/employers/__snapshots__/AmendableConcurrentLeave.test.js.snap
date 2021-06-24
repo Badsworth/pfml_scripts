@@ -17,9 +17,13 @@ exports[`AmendableConcurrentLeave for admin-added concurrent leaves renders the 
         >
           <Heading
             level="4"
+            size="3"
           >
             Add an accrued paid leave
           </Heading>
+          <p>
+            This addition will get saved when you submit your review at the end of this page.
+          </p>
           <InputDate
             dayLabel="Day"
             errorMsg={null}
@@ -67,9 +71,13 @@ exports[`AmendableConcurrentLeave for claimant-submitted concurrent leaves rende
         >
           <Heading
             level="4"
+            size="3"
           >
             Amend accrued paid leave
           </Heading>
+          <p>
+            This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.
+          </p>
           <InputDate
             dayLabel="Day"
             errorMsg={null}
