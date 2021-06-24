@@ -745,9 +745,6 @@ export function claimAddTimeAfterApproval(
     "MM/dd/yyyy"
   );
 
-  visitClaim(claimNumber);
-  onTab("Absence Hub");
-
   cy.get("a[title='Register a Leave Extension or Transition']").click({
     force: true,
     timeout: 30000,
@@ -782,14 +779,18 @@ export function claimAddTimeAfterApproval(
 
   clickBottomWidgetButton("Next");
   cy.wait(500);
+  cy.wait("@ajaxRender");
   clickBottomWidgetButton("Next");
   cy.wait(500);
+  cy.wait("@ajaxRender");
   clickBottomWidgetButton("Next");
   cy.wait(500);
+  cy.wait("@ajaxRender");
   clickBottomWidgetButton("Next");
   cy.wait(500);
+  cy.wait("@ajaxRender");
   clickBottomWidgetButton("OK");
-  cy.wait(1000);
+  cy.wait(5000);
 }
 
 export function addBondingLeaveFlow(timeStamp: Date): void {
