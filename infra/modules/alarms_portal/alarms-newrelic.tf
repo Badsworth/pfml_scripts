@@ -31,6 +31,8 @@ locals {
     "training"    = local.low_priority_channel_key,
     "stage"       = local.low_priority_channel_key,
     "uat"         = local.low_priority_channel_key,
+    "breakfix"    = local.low_priority_channel_key,
+    "cps-preview" = local.low_priority_channel_key,
     "prod"        = local.high_priority_channel_key,
   }
 }
@@ -367,7 +369,7 @@ module "portal_synthetic_ping_failure" {
   source = "../newrelic_single_error_alarm"
 
   # ignore performance and training environments
-  enabled     = contains(["prod", "stage", "test"], var.environment_name)
+  enabled     = contains(["prod", "stage", "test", "breakfix", "cps-preview"], var.environment_name)
   name        = "Portal synthetic ping failed"
   policy_id   = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
   fill_option = "none"
@@ -379,7 +381,7 @@ module "portal_synthetic_login_failure" {
   source = "../newrelic_single_error_alarm"
 
   # ignore performance and training environments
-  enabled     = contains(["prod", "stage", "test"], var.environment_name)
+  enabled     = contains(["prod", "stage", "test", "breakfix", "cps-preview"], var.environment_name)
   name        = "Portal scripted synthetic login failed"
   policy_id   = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
   fill_option = "none"
