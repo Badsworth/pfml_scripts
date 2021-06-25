@@ -3,6 +3,7 @@ import generateDocuments from "../../../src/generation/documents";
 import ClaimPool, {
   ClaimGenerator,
   ClaimSpecification,
+  EmployerResponseSpec,
   GeneratedClaim,
 } from "../../../src/generation/Claim";
 import EmployeePool from "../../../src/generation/Employee";
@@ -571,6 +572,26 @@ describe("Claim Generator", () => {
         benefit_start_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
         benefit_end_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
       });
+    });
+  });
+
+  it("Should support generating concurrent_leave on employer response", () => {
+    const employerResponse: EmployerResponseSpec = {
+      hours_worked_per_week: 40,
+      fraud: "No",
+      employer_decision: "Approve",
+      comment: "Test test",
+      concurrent_leave: { is_for_current_employer: true },
+    };
+    const claim = ClaimGenerator.generate(
+      employeePool,
+      {},
+      { ...medical, employerResponse }
+    );
+    expect(claim.employerResponse?.concurrent_leave).toMatchObject({
+      is_for_current_employer: true,
+      leave_start_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+      leave_end_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
     });
   });
 

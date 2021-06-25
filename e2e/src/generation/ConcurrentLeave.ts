@@ -1,14 +1,13 @@
 import { ConcurrentLeave } from "../api";
 import { getLeavePeriod } from "../util/claims";
 import { ApplicationLeaveDetails } from "../_api";
-import { ClaimSpecification } from "./Claim";
 
 /**
  * Generates concurrent leave for the claim. Prefills start & end dates to be the same as leave dates.
  * @param spec - Claim specification, will use the data given if has concurrent_leave listed.
  */
 export function generateConcurrentLeaves(
-  { concurrent_leave }: ClaimSpecification,
+  concurrent_leave: ConcurrentLeave | undefined,
   leave_details: ApplicationLeaveDetails
 ): ConcurrentLeave | undefined {
   // if spec doesn't specify concurrent leave - return nothing
