@@ -251,7 +251,7 @@ export const TRNER1: ScenarioSpecification = {
       fraud: "No",
       employer_decision: "Approve",
       hours_worked_per_week: 40,
-      leave_reason: "An illness or injury",
+      leave_reason: "Serious Health Condition - Employee",
       previous_leaves: [
         {
           leave_reason: "An illness or injury",
@@ -280,8 +280,7 @@ export const TRNER2: ScenarioSpecification = {
       fraud: "No",
       employer_decision: "Approve",
       hours_worked_per_week: 40,
-      leave_reason:
-        "Caring for a family member with a serious health condition",
+      leave_reason: "Care for a Family Member",
       believe_relationship_accurate: "Yes",
       comment: "STD weekly $50",
     },
@@ -304,7 +303,12 @@ export const TRNER3: ScenarioSpecification = {
       fraud: "No",
       employer_decision: "Approve",
       hours_worked_per_week: 40,
-      leave_reason: "Bonding with my child after birth or placement",
+      leave_reason: "Child Bonding",
+      concurrent_leave: {
+        is_for_current_employer: true,
+        leave_start_date: "2021-08-01",
+        leave_end_date: "2021-08-30",
+      },
     },
   },
 };
