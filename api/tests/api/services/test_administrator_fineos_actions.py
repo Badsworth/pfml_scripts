@@ -1909,7 +1909,7 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
     assert leave_details.employer_id == employer.employer_id
     assert leave_details.fineos_absence_id == absence_id
     assert leave_details.first_name == "Bud"
-    assert leave_details.middle_name == ""
+    assert leave_details.middle_name == None
     assert leave_details.last_name == "Baxter"
     assert leave_details.hours_worked_per_week == 37.5
     assert leave_details.leave_details.reason == "Serious Health Condition - Employee"

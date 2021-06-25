@@ -837,7 +837,6 @@ def test_application_patch_residential_address_line_2_masked(
     first_update_request_body = {
         "residential_address": {
             "line_1": "Mt. Greylock",
-            "line_2": "",
             "city": "Adams",
             "state": "MA",
             "zip": "01220",

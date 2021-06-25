@@ -202,7 +202,6 @@ def test_notifications_post_leave_admin_empty_str_document_type(
     client, test_db_session, fineos_user_token, employer
 ):
     leave_admin_body_empty_str_document_type = copy.deepcopy(leave_admin_body)
-    leave_admin_body_empty_str_document_type["document_type"] = ""
     response = client.post(
         "/v1/notifications",
         headers={"Authorization": f"Bearer {fineos_user_token}"},
