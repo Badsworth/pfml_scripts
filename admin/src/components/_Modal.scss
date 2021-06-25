@@ -1,9 +1,10 @@
+/** @define modal */
 .modal {
-  position: fixed;
-  top: 0;
   bottom: 0;
-  right: 0;
   left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
 }
 .modal__background {
   position: absolute;
@@ -24,26 +25,8 @@
   background: white;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
 }
-.modal__content h1 {
-  margin: 0;
-}
 .modal__action-buttons {
   text-align: center;
-}
-.modal__action-buttons button {
-  padding: 1em 0;
-  width: 40%;
-  max-width: 150px;
-  border: 0;
-  color: white;
-  background: tan;
-}
-.modal__action-buttons--stacked button {
-  display: block;
-  margin: 0 auto 1em;
-}
-.modal__action-buttons--stacked button:last-child {
-  margin-bottom: 0;
 }
 .modal__title {
   font-size: 20px;
