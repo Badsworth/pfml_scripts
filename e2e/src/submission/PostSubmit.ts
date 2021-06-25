@@ -242,3 +242,24 @@ async function approvePlanEligibility(page: playwright.Page): Promise<void> {
   ]);
   await delay(150);
 }
+
+export async function addTask(
+  page: playwright.Page,
+  taskName:
+    | "Escalate Employer Reported Other Income"
+    | "Escalate employer reported past leave"
+    | "Escalate employer reported accrued paid leave (PTO)"
+    | "Escalate Employer Reported Fraud"
+): Promise<void> {
+  await page.click(`input[title="Add a task to this case"]`);
+  await page.waitForNavigation();
+  // Search for the task type
+  await actions.labelled(page, `Find Work Types Named`).then(async (el) => {
+    await el.type(`${taskName}`);
+    await el.press("Enter");
+  });
+  // Create task
+  await page.click(`input[title="${taskName}"]`);
+  await page.click("#footerButtonsBar input[value='Next']");
+  await page.waitForNavigation();
+}
