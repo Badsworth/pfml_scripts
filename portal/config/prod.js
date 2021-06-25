@@ -20,7 +20,7 @@ module.exports = {
   },
   // See docs/portal/maintenance-pages.md
   maintenancePageRoutes: ["/*"],
-  maintenanceStart: "2021-06-25T19:59:00-04:00",
-  maintenanceEnd: null,
+  maintenanceStart: "2021-06-27T03:59:00-04:00",
+  maintenanceEnd: "2021-06-27T05:00:00-04:00",
   newRelicAppId: "847045300",
 };
