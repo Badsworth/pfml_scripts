@@ -12,6 +12,10 @@
   width: auto;
 }
 
+.modal:not([open]) {
+  display: none;
+}
+
 .modal__background {
   background: rgba(0, 0, 0, 0.3);
   bottom: 0;
