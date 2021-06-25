@@ -10,7 +10,7 @@ export default function Home() {
         <title>Dashboard</title>
       </Helmet>
       <h1>h1 HTML5 Kitchen Sink</h1>
-      <Modal title="Enable Caring Leave Type" />
+      <Modal title="Enable Caring Leave Type" body="Lorum ipsum" />
     </>
   );
 }

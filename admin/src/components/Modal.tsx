@@ -1,23 +1,23 @@
 type Props = {
   title: string;
+  body: string;
 };
 
-const Modal = ({ title }: Props) => {
+const Modal = ({ title, body }: Props) => {
   return (
-    <div className="modal" tabIndex={0}>
+    <dialog open className="modal">
       <div className="modal__background"></div>
       <div className="modal__content">
-        <div className="modal__title">{title}?</div>
-        <div className="modal__copy">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        <h2 className="modal__title">{title}?</h2>
+        <div className="modal__body">
+          <p>{body}</p>
         </div>
         <div className="modal__action-buttons modal__action-buttons--stacked">
-          <button>Continue</button>
-          <button>Cancel</button>
+          <button className="btn"><span className="btn__text">Continue</span></button>
+          <button className="btn"><span className="btn__text">Cancel</span></button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 };
 

@@ -1,36 +1,46 @@
 /** @define modal */
 .modal {
+  background: none;
+  border: none;
   bottom: 0;
+  display: flex;
+  height: auto;
   left: 0;
   position: fixed;
   right: 0;
   top: 0;
+  width: auto;
 }
+
 .modal__background {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  left: 0;
-  z-index: 1;
   background: rgba(0, 0, 0, 0.3);
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
 }
+
 .modal__content {
-  position: relative;
-  z-index: 10;
-  width: 70%;
-  max-width: 350px;
-  margin: 10% auto 0;
-  padding: 0.5em 1em;
   background: white;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
+  margin: auto;
+  max-width: 350px;
+  padding: 0.5em 1em;
+  position: relative;
+  width: 70%;
+  z-index: 10;
 }
+
 .modal__action-buttons {
   text-align: center;
 }
+
 .modal__title {
-  font-size: 20px;
+  font-size: 1.25em;
 }
-.modal__copy {
-  font-size: 12px;
+
+.modal__body {
+  font-size: 0.75em;
 }
