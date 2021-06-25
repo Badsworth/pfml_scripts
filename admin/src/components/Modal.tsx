@@ -13,8 +13,12 @@ const Modal = ({ title, body }: Props) => {
           <p>{body}</p>
         </div>
         <div className="modal__action-buttons modal__action-buttons--stacked">
-          <button className="btn"><span className="btn__text">Continue</span></button>
-          <button className="btn"><span className="btn__text">Cancel</span></button>
+          <button className="btn">
+            <span className="btn__text">Continue</span>
+          </button>
+          <button className="btn">
+            <span className="btn__text">Cancel</span>
+          </button>
         </div>
       </div>
     </dialog>
