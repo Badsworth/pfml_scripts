@@ -708,8 +708,8 @@ class DocumentFactory(BaseFactory):
     size_bytes = random.randint(1989, 24_072_020)
 
     is_stored_in_s3 = False
-    name = ""
-    description = ""
+    name = "Passport.png"
+    description = "Passport"
 
 
 class WorkPatternFixedFactory(BaseFactory):
