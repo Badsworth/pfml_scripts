@@ -2630,7 +2630,7 @@ const components = {
     qualifyingReason_bondWithChild:
       "Bond with a child after birth or placement",
     qualifyingReason_careForFamilyMedical:
-      "Care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>",
+      "Care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link> since July 1, 2021",
     qualifyingReason_careForFamilyMilitary:
       "Care for a family member who serves in the armed forces",
     qualifyingReason_manageHealth:
