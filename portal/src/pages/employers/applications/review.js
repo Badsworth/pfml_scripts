@@ -6,6 +6,7 @@ import Button from "../../../components/Button";
 import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
 import DocumentCollection from "../../../models/DocumentCollection";
+import { DocumentType } from "../../../models/Document";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
 import EmployerBenefit from "../../../models/EmployerBenefit";
@@ -25,9 +26,8 @@ import ReviewHeading from "../../../components/ReviewHeading";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import findDocumentsByLeaveReason from "../../../utils/findDocumentsByLeaveReason";
+import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import formatDateRange from "../../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../../services/featureFlags";
 import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
 import routes from "../../../routes";
 import updateAmendments from "../../../utils/updateAmendments";
@@ -46,8 +46,8 @@ export const Review = (props) => {
     employers: { claim, documents, downloadDocument, loadDocuments },
   } = appLogic;
   const { t } = useTranslation();
+
   const shouldShowV2 = !!claim.uses_second_eform_version;
-  const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
   // explicitly check for false as opposed to falsy values.
   // temporarily allows the redirect behavior to work even
   // if the API has not been updated to populate the field.
@@ -140,10 +140,15 @@ export const Review = (props) => {
 
   // only cert forms should be shown
   const allDocuments = documents ? documents.items : [];
-  const certificationDocuments = findDocumentsByLeaveReason(
-    allDocuments,
-    get(claim, "leave_details.reason")
-  );
+
+  // TODO (CP-1983): Remove caring leave feature flag check
+  // after turning on caring leave feature flag, use `findDocumentsByLeaveReason`
+  // instead of `findDocumentsByTypes`
+  const leaveReason = get(claim, "leave_details.reason");
+  const certificationDocuments = findDocumentsByTypes(allDocuments, [
+    DocumentType.certification[leaveReason],
+    DocumentType.certification.medicalCertification,
+  ]);
 
   const updateFields = (fields) => {
     setFormState({ ...formState, ...fields });
@@ -323,13 +328,11 @@ export const Review = (props) => {
         !isEqual(allPreviousLeaves, formState.previousLeaves) ||
         !isEqual(concurrent_leave, formState.concurrentLeave) ||
         !isEqual(amendedHours, claim.hours_worked_per_week),
+      leave_reason: leaveReason,
       uses_second_eform_version: !!claim.uses_second_eform_version,
     };
-    if (shouldShowCaringLeave) {
-      payload.leave_reason = get(claim, "leave_details.reason");
-    }
 
-    if (shouldShowCaringLeave && isCaringLeave) {
+    if (isCaringLeave) {
       const parsedRelationshipComment =
         formState.believeRelationshipAccurate === "No"
           ? formState.relationshipInaccurateReason

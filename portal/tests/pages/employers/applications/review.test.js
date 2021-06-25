@@ -151,37 +151,10 @@ describe("Review", () => {
         previous_leaves: expect.any(Array),
         concurrent_leave: null,
         has_amendments: false,
-        uses_second_eform_version: true,
-      }
-    );
-  });
-
-  it("submits a claim with leave_reason when useNewPlanProofs and showCaringLeaveType is on", async () => {
-    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
-    // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
-    process.env.featureFlags = {
-      useNewPlanProofs: true,
-      showCaringLeaveType: true,
-    };
-    ({ wrapper, appLogic } = renderComponent("mount"));
-    await simulateEvents(wrapper).submitForm();
-
-    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
-      "NTN-111-ABS-01",
-      {
-        comment: expect.any(String),
-        employer_benefits: expect.any(Array),
-        employer_decision: "Approve", // "Approve" by default
-        fraud: undefined, // undefined by default
-        hours_worked_per_week: expect.any(Number),
-        previous_leaves: expect.any(Array),
-        concurrent_leave: null,
-        has_amendments: false,
-        uses_second_eform_version: true,
         leave_reason: "Serious Health Condition - Employee",
+        uses_second_eform_version: true,
       }
     );
-    process.env.featureFlags = {};
   });
 
   it("sets 'comment' based on the Feedback", async () => {
@@ -504,22 +477,7 @@ describe("Review", () => {
         expect(appLogic.employers.loadDocuments).not.toHaveBeenCalled();
       });
 
-      it("shows only medical cert when feature flag is false", () => {
-        render();
-        const documents = wrapper.find("LeaveDetails").props().documents;
-        expect(documents.length).toBe(1);
-        expect(documents.map((document) => document.name)).toEqual([
-          "Medical cert doc",
-        ]);
-      });
-
-      it("shows medical cert and caring cert when showCaringLeaveType and useNewPlanProofs feature flags are true", () => {
-        // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
-        // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
-        process.env.featureFlags = {
-          showCaringLeaveType: true,
-          useNewPlanProofs: true,
-        };
+      it("shows medical cert and caring cert ", () => {
         render();
         const documents = wrapper.find("LeaveDetails").props().documents;
         expect(documents.length).toBe(2);
@@ -532,11 +490,7 @@ describe("Review", () => {
   });
 
   describe("Caring Leave", () => {
-    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
     beforeEach(() => {
-      process.env.featureFlags = {
-        showCaringLeaveType: true,
-      };
       const caringLeaveClaim = new MockEmployerClaimBuilder()
         .eformsV2()
         .completed()
