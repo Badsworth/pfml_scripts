@@ -596,6 +596,7 @@ export default {
             target: routes.applications.checklist,
           },
         ],
+        CHECKLIST: routes.applications.checklist,
         ...checklistEvents,
       },
     },

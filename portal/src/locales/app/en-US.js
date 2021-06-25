@@ -1699,6 +1699,8 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     mailingAddressLabel: "Mailing address",
+    missingRequiredFieldError:
+      "We’ve added some new questions since you last updated your application. Return to the <checklist-link>checklist</checklist-link> to make sure you’ve completed every step.",
     numberOfFilesLabel: "$t(shared.filesUploaded)",
     otherIncomeEntryLabel: "$t(shared.otherIncomeEntryPrefix) {{count}}",
     otherIncomeLabel: "Other sources of income?",
