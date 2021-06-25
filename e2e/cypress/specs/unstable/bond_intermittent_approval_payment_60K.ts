@@ -1,8 +1,8 @@
-import { portal, fineos } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
-import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
-import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { portal, fineos } from "../../actions";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
+import { Submission } from "../../../src/types";
+import { config } from "../../actions/common";
+import { assertValidClaim } from "../../../src/util/typeUtils";
 
 describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
   const submissionTest = it("As a claimant, I should be able to submit a intermittent bonding application through the portal", () => {
