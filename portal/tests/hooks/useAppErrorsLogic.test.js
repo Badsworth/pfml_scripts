@@ -515,6 +515,8 @@ describe("useAppErrorsLogic", () => {
             Object {
               "mass-gov-form-link": <a
                 href="https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error"
+                rel="noreferrer noopener"
+                target="_blank"
               />,
             }
           }

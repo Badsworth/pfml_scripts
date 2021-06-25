@@ -139,7 +139,11 @@ const useAppErrorsLogic = ({ portalFlow }) => {
           i18nKey={issueMessageKey}
           components={{
             "mass-gov-form-link": (
-              <a href="https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error" />
+              <a
+                target="_blank"
+                rel="noreferrer noopener"
+                href={routes.external.massgov.caseCreationErrorGuide}
+              />
             ),
           }}
         />

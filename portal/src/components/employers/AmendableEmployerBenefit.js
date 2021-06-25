@@ -107,7 +107,15 @@ const AmendableEmployerBenefit = ({
     const {
       benefit_amount_dollars,
       benefit_amount_frequency,
+      is_full_salary_continuous,
     } = employerBenefit;
+
+    if (is_full_salary_continuous) {
+      return t("components.employersEmployerBenefits.fullSalaryContinuous");
+    } else if (benefit_amount_dollars === null) {
+      return t("components.employersEmployerBenefits.noAmountReported");
+    }
+
     return t("components.employersEmployerBenefits.amountPerFrequency", {
       context: findKeyByValue(
         EmployerBenefitFrequency,

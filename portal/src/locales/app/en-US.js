@@ -739,7 +739,7 @@ const shared = {
     limitMessage: "You can only add up to {{limit}} leaves",
     removeButton: "Remove this previous leave",
     sectionHint:
-      "Enter details about each period of leave taken between January 1, 2021 and {{leaveStartDate}}. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.",
+      "Enter details about each period of leave taken between {{previousLeaveStartDate}} and {{leaveStartDate}}. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.",
     sectionLabel: "Tell us about your previous leave",
     workedPerWeekMinutesDetails:
       "If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
@@ -2491,7 +2491,9 @@ const components = {
       "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
+    fullSalaryContinuous: "Full salary continuous",
     header: "Employer-sponsored benefits",
+    noAmountReported: "No amount reported",
     tableName: "Employer-sponsored benefit details",
   },
   employersEmployerDecision: {

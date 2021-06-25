@@ -95,10 +95,11 @@ export type GeneratedClaimMetadata = Record<string, string | boolean>;
 
 export type EmployerResponseSpec = Omit<
   EmployerClaimRequestBody,
-  "employer_benefits" | "previous_leaves"
+  "employer_benefits" | "previous_leaves" | "concurrent_leave"
 > & {
   employer_benefits?: EmployerBenefit[];
   previous_leaves?: PreviousLeave[];
+  concurrent_leave?: ConcurrentLeave;
 };
 
 // Represents a single claim that will be issued to the system.
@@ -140,7 +141,10 @@ export class ClaimGenerator {
     const address = spec.address ?? this.generateAddress();
     const workPattern = generateWorkPattern(spec.work_pattern_spec);
     const leaveDetails = generateLeaveDetails(spec, workPattern);
-    const other_incomes = generateOtherIncomes(spec, leaveDetails);
+    const other_incomes = generateOtherIncomes(
+      spec.other_incomes,
+      leaveDetails
+    );
     const employer_benefits = generateEmployerBenefits(
       spec.employer_benefits,
       leaveDetails
@@ -153,7 +157,10 @@ export class ClaimGenerator {
       spec.previous_leaves_same_reason,
       leaveDetails
     );
-    const concurrent_leave = generateConcurrentLeaves(spec, leaveDetails);
+    const concurrent_leave = generateConcurrentLeaves(
+      spec.concurrent_leave,
+      leaveDetails
+    );
     // @todo: Later, we will want smarter logic for which occupation is picked.
     const occupation = employee.occupations[0];
 
@@ -223,6 +230,10 @@ export class ClaimGenerator {
         [],
       previous_leaves:
         generatePreviousLeaves(response.previous_leaves, leaveDetails) ?? [],
+      concurrent_leave: generateConcurrentLeaves(
+        response.concurrent_leave,
+        leaveDetails
+      ),
     };
   }
 
