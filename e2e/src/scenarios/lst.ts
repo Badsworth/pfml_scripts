@@ -1,7 +1,7 @@
 import { ScenarioSpecification } from "../generation/Scenario";
 import * as CypressScenarios from "./cypress";
 import { getCaringLeaveStartEndDates } from "../util/claims";
-import { EmployerClaimRequestBody } from "../_api";
+import { EmployerResponseSpec } from "../generation/Claim";
 
 /**
  * Load & Stress Testing Scenarios.
@@ -36,7 +36,7 @@ const otherLeavesAndBenefitsProps: Partial<ScenarioSpecification["claim"]> = {
   concurrent_leave: { is_for_current_employer: true },
 };
 
-const employerResponseLeavesAndBenefits: Partial<EmployerClaimRequestBody> = {
+const employerResponseLeavesAndBenefits: Partial<EmployerResponseSpec> = {
   employer_benefits: [
     {
       benefit_amount_dollars: 200,
