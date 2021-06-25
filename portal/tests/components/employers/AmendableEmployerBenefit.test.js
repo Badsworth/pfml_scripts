@@ -29,6 +29,17 @@ describe("AmendableEmployerBenefit", () => {
     "is-full-salary-continuous-input",
   ];
 
+  // traverse up through the DOM and make sure all ConditionalContents have visible === true
+  function isElementVisible(element) {
+    const conditionalContentParents = element.parents("ConditionalContent");
+    if (
+      conditionalContentParents.someWhere((el) => el.prop("visible") === false)
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   it("does not show v2 exclusive fields in v1", () => {
     testHook(() => {
       appLogic = useAppLogic();
@@ -45,12 +56,8 @@ describe("AmendableEmployerBenefit", () => {
     );
 
     for (const field of v2ExclusiveFields) {
-      expect(
-        wrapper
-          .find({ "data-test": field })
-          .closest("ConditionalContent")
-          .prop("visible")
-      ).toBe(false);
+      const element = wrapper.find({ "data-test": field });
+      expect(isElementVisible(element)).toBe(false);
     }
   });
 
@@ -70,12 +77,8 @@ describe("AmendableEmployerBenefit", () => {
     );
 
     for (const field of v2ExclusiveFields) {
-      expect(
-        wrapper
-          .find({ "data-test": field })
-          .closest("ConditionalContent")
-          .prop("visible")
-      ).toBe(true);
+      const element = wrapper.find({ "data-test": field });
+      expect(isElementVisible(element)).toBe(true);
     }
   });
 

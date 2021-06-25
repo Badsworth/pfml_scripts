@@ -276,53 +276,54 @@ const AmendableEmployerBenefit = ({
                     },
                   ]}
                 />
-                <ConditionalContent
-                  visible={
-                    get(amendment, "is_full_salary_continuous") === false
-                  }
-                >
-                  <Fieldset>
-                    <FormLabel
-                      component="legend"
-                      small
-                      optionalText={t("components.form.optional")}
-                    >
-                      {t(
-                        "components.employersAmendableEmployerBenefit.employeeAmountReceivedLabel"
-                      )}
-                    </FormLabel>
-                    <InputCurrency
-                      name={getFieldPath("benefit_amount_dollars")}
-                      data-test="benefit-amount-dollars-input"
-                      smallLabel
-                      label={t(
-                        "components.employersAmendableEmployerBenefit.benefitAmountDollarsLabel"
-                      )}
-                      labelClassName="text-normal"
-                      width="small"
-                      errorMsg={getErrorMessage("benefit_amount_dollars")}
-                      value={get(amendment, "benefit_amount_dollars")}
-                      onChange={(e) => {
-                        amendBenefit("benefit_amount_dollars", e);
-                      }}
-                    />
-                    <Dropdown
-                      name={getFieldPath("benefit_amount_frequency")}
-                      data-test="benefit-amount-frequency-input"
-                      smallLabel
-                      label={t(
-                        "components.employersAmendableEmployerBenefit.amountFrequencyLabel"
-                      )}
-                      labelClassName="text-normal"
-                      choices={getAllBenefitFrequencies()}
-                      errorMsg={getErrorMessage("benefit_amount_frequency")}
-                      value={get(amendment, "benefit_amount_frequency")}
-                      onChange={(e) => {
-                        amendBenefit("benefit_amount_frequency", e);
-                      }}
-                    />
-                  </Fieldset>
-                </ConditionalContent>
+              </ConditionalContent>
+              <ConditionalContent
+                visible={
+                  !shouldShowV2 ||
+                  get(amendment, "is_full_salary_continuous") === false
+                }
+              >
+                <Fieldset>
+                  <FormLabel
+                    component="legend"
+                    small
+                    optionalText={t("components.form.optional")}
+                  >
+                    {t(
+                      "components.employersAmendableEmployerBenefit.employeeAmountReceivedLabel"
+                    )}
+                  </FormLabel>
+                  <InputCurrency
+                    name={getFieldPath("benefit_amount_dollars")}
+                    data-test="benefit-amount-dollars-input"
+                    smallLabel
+                    label={t(
+                      "components.employersAmendableEmployerBenefit.benefitAmountDollarsLabel"
+                    )}
+                    labelClassName="text-normal"
+                    width="small"
+                    errorMsg={getErrorMessage("benefit_amount_dollars")}
+                    value={get(amendment, "benefit_amount_dollars")}
+                    onChange={(e) => {
+                      amendBenefit("benefit_amount_dollars", e);
+                    }}
+                  />
+                  <Dropdown
+                    name={getFieldPath("benefit_amount_frequency")}
+                    data-test="benefit-amount-frequency-input"
+                    smallLabel
+                    label={t(
+                      "components.employersAmendableEmployerBenefit.amountFrequencyLabel"
+                    )}
+                    labelClassName="text-normal"
+                    choices={getAllBenefitFrequencies()}
+                    errorMsg={getErrorMessage("benefit_amount_frequency")}
+                    value={get(amendment, "benefit_amount_frequency")}
+                    onChange={(e) => {
+                      amendBenefit("benefit_amount_frequency", e);
+                    }}
+                  />
+                </Fieldset>
               </ConditionalContent>
             </AmendmentForm>
           </td>
