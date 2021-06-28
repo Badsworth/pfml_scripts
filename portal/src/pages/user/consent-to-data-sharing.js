@@ -39,7 +39,7 @@ export const ConsentToDataSharing = (props) => {
         {t("pages.userConsentToDataSharing.intro")}
         {
           // Caring leave type is behind a feature flag until 7/1 launch
-          // TODO (CP-1989): Remove showCaringLeaveType feature flag and combine .updatedMessage into .intro
+          // TODO (CP-2311): Remove showCaringLeaveType feature flag and combine .updatedMessage into .intro
           isFeatureEnabled("showCaringLeaveType") &&
             " " + t("pages.userConsentToDataSharing.updatedMessage")
         }

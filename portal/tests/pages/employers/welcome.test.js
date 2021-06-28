@@ -40,7 +40,7 @@ describe("Employer welcome", () => {
   });
 
   it("renders caring leave form link when showCaringLeaveType is true", () => {
-    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
+    // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
     process.env.featureFlags = { showCaringLeaveType: true };
     testHook(() => {
       appLogic = useAppLogic();

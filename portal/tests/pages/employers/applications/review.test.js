@@ -157,7 +157,7 @@ describe("Review", () => {
   });
 
   it("submits a claim with leave_reason when useNewPlanProofs and showCaringLeaveType is on", async () => {
-    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
+    // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
     // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
     process.env.featureFlags = {
       useNewPlanProofs: true,
@@ -514,7 +514,7 @@ describe("Review", () => {
       });
 
       it("shows medical cert and caring cert when showCaringLeaveType and useNewPlanProofs feature flags are true", () => {
-        // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
+        // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
         // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
         process.env.featureFlags = {
           showCaringLeaveType: true,
@@ -532,7 +532,7 @@ describe("Review", () => {
   });
 
   describe("Caring Leave", () => {
-    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
+    // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
     beforeEach(() => {
       process.env.featureFlags = {
         showCaringLeaveType: true,

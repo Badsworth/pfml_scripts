@@ -212,7 +212,7 @@ describe("LeaveDetails", () => {
     };
 
     it("does not render relationship question when showCaringLeaveType flag is false", () => {
-      // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
+      // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
       const { wrapper } = setup();
       expect(wrapper.exists("InputChoiceGroup")).toBe(false);
     });
@@ -228,7 +228,7 @@ describe("LeaveDetails", () => {
     });
 
     it("renders relationship question when showCaringLeaveType flag is true", () => {
-      // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
+      // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
       process.env.featureFlags = { showCaringLeaveType: true };
       const { wrapper } = setup();
       expect(wrapper).toMatchSnapshot();
