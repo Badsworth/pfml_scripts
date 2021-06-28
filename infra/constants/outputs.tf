@@ -86,7 +86,8 @@ output "nonprod_admin_roles" {
     "arn:aws:iam::498823821309:role/AWS-498823821309-Infrastructure-Admin",
     "arn:aws:iam::498823821309:role/ci-run-deploys",
     "arn:aws:iam::498823821309:role/AWS-498823821309-NonPROD-Admins",
-    "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-infrastructure-admin_9049548fba1c97b7"
+    "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-infrastructure-admin_9049548fba1c97b7",
+    "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-nonprod-admins_d9b2995c1106dfbb"
   ]
 }
 
