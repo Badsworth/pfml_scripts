@@ -66,23 +66,24 @@ const flagsConfig = {
   // The environment keys should use the same envName defined in
   // environment config files.
   "cps-preview": {
+    employerShowDashboardFilters: true,
     useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   development: {
     example: true,
+    employerShowDashboardFilters: true,
     pfmlTerriyay: true,
     useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   test: {
+    employerShowDashboardFilters: true,
     useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
-  stage: {},
-  training: {},
-  performance: {},
-  uat: {},
-  prod: {
-    pfmlTerriyay: true,
-  },
+  stage: { employerShowDashboardFilters: true },
+  training: { employerShowDashboardFilters: true },
+  performance: { employerShowDashboardFilters: true },
+  uat: { employerShowDashboardFilters: true },
+  prod: { employerShowDashboardFilters: true, pfmlTerriyay: true },
 };
 
 /**
