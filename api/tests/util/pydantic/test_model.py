@@ -18,7 +18,4 @@ def test_reject_empty_string_value():
         Sample(first_name="test", middle_name="")
 
     with pytest.raises(ValueError):
-        Sample(first_name="test", middle_name=" ")
-
-    with pytest.raises(ValueError):
-        Sample(first_name=" ")
+        Sample(first_name="", middle_name="")
