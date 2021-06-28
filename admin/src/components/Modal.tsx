@@ -7,10 +7,10 @@ type Props = {
   handleContinueCallback: Function;
 };
 
-const Modal = ({ title, body, handleContinueCallback }: Props) => {
+const Modal = ({ title, body, handleCancelCallback, handleContinueCallback }: Props) => {
   const handleCancel = (event: MouseEvent) => {
     event.preventDefault();
-    handleContinueCallback(event);
+    handleCancelCallback(event);
   };
 
   const handleContinue = (event: MouseEvent) => {
