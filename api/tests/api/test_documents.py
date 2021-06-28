@@ -17,6 +17,7 @@ pytestmark = pytest.mark.integration
 CERTIFICATION_FORM_DATA = {
     "document_type": "Certification Form",
     "name": "certification_form.png",
+    "description": None
 }
 
 VALID_FORM_DATA = {
@@ -212,7 +213,6 @@ def test_document_upload_invalid_form_data(
         auth_token=consented_user_token,
         form_data=document_upload_payload_helper(MISSING_DOCUMENT_TYPE_FORM_DATA, valid_file()),
     )
-
     assert response["status_code"] == 400
     assert response["errors"] is not None
     assert len(response["errors"]) == 1
@@ -610,6 +610,7 @@ def test_document_upload_plan_proofs_state_managed_paid_leave_confirmation(
     STATE_MANAGED_PAID_LEAVE_CONFIRMATION_FORM_DATA = {
         "document_type": "State managed Paid Leave Confirmation",
         "name": "certification_form.png",
+        "description": None,
     }
 
     response = document_upload_helper(
@@ -622,10 +623,9 @@ def test_document_upload_plan_proofs_state_managed_paid_leave_confirmation(
     )
 
     assert response["status_code"] == 200
-
     response_data = response["data"]
+
     assert response_data["content_type"] == "image/png"
-    assert response_data["description"] == ""
     assert response_data["document_type"] == "State managed Paid Leave Confirmation"
     assert response_data["fineos_document_id"] == "3011"  # See massgov/pfml/fineos/mock_client.py
     assert response_data["name"] == "certification_form.png"
@@ -648,7 +648,6 @@ def test_document_upload_plan_proofs_care_for_a_family_member_form(
 
     response_data = response["data"]
     assert response_data["content_type"] == "image/png"
-    assert response_data["description"] == ""
     assert (
         response_data["document_type"]
         == DocumentType.CARE_FOR_A_FAMILY_MEMBER_FORM.document_type_description
@@ -674,7 +673,6 @@ def test_document_upload_plan_proofs_pregnancy_maternity_form(
 
     response_data = response["data"]
     assert response_data["content_type"] == "image/png"
-    assert response_data["description"] == ""
     assert (
         response_data["document_type"]
         == DocumentType.PREGNANCY_MATERNITY_FORM.document_type_description
@@ -700,7 +698,6 @@ def test_document_upload_plan_proofs_child_bonding_evidence_form(
 
     response_data = response["data"]
     assert response_data["content_type"] == "image/png"
-    assert response_data["description"] == ""
     assert (
         response_data["document_type"]
         == DocumentType.CHILD_BONDING_EVIDENCE_FORM.document_type_description
@@ -726,7 +723,6 @@ def test_document_upload_plan_proofs_own_serious_health_condition_form(
 
     response_data = response["data"]
     assert response_data["content_type"] == "image/png"
-    assert response_data["description"] == ""
     assert (
         response_data["document_type"]
         == DocumentType.OWN_SERIOUS_HEALTH_CONDITION_FORM.document_type_description
@@ -774,7 +770,6 @@ def test_documents_get_date_created(
                 "dateCreated": "2020-09-01",
                 "name": "ID Document",
                 "originalFilename": "test.png",
-                "receivedDate": "",
             }
         )
         return mocked_document

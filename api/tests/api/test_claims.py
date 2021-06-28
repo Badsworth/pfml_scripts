@@ -1197,7 +1197,6 @@ class TestUpdateClaim:
         test_db_session.commit()
 
         update_request_body = {
-            "comment": "",
             "employer_benefits": [],
             "employer_decision": "Approve",
             "fraud": "Yes",
