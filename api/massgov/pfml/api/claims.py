@@ -271,7 +271,15 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
             )
         except (ContainsV1AndV2Eforms) as error:
             return response_util.error_response(
-                status_code=error.status_code, message=error.description, errors=[], data={},
+                status_code=error.status_code,
+                message=error.description,
+                errors=[
+                    response_util.custom_issue(
+                        message="Claim contains both V1 and V2 eforms.",
+                        type="contains_v1_and_v2_eforms",
+                    )
+                ],
+                data={},
             ).to_api_response()
 
         if claim_review_response is None:
