@@ -257,6 +257,50 @@ class LkTitle(Base):
         self.title_description = title_description
 
 
+class LkLeaveRequestDecision(Base):
+    __tablename__ = "lk_leave_request_decision"
+    leave_request_decision_id = Column(Integer, primary_key=True, autoincrement=True)
+    leave_request_decision_description = Column(Text)
+
+    def __init__(self, leave_request_decision_id, leave_request_decision_description):
+        self.leave_request_decision_id = leave_request_decision_id
+        self.leave_request_decision_description = leave_request_decision_description
+
+
+class AbsencePeriod(Base):
+    __tablename__ = "absence_period"
+    absence_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
+    fineos_absence_period_id = Column(Integer, nullable=False, index=True, unique=True)
+    fineos_leave_request_id = Column(Integer)
+    absence_period_start_date = Column(Date, nullable=False)
+    absence_period_end_date = Column(Date, nullable=False)
+    leave_request_decision_id = Column(
+        Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id"), nullable=False
+    )
+    is_id_proofed = Column(Boolean)
+    claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"), nullable=False)
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    claim = relationship("Claim")
+    claim_type = relationship(LkClaimType)
+    leave_request_decision = relationship(LkLeaveRequestDecision)
+
+
 class AuthorizedRepresentative(Base):
     __tablename__ = "authorized_representative"
     authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -612,6 +656,7 @@ class Payment(Base):
         server_default=payment_individual_id_seq.next_value(),
     )
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
+    leave_request_id = Column(UUID(as_uuid=True), ForeignKey("absence_period.absence_period_id"))
 
     created_at = Column(
         TIMESTAMP(timezone=True),
@@ -2213,6 +2258,16 @@ class Title(LookupTable):
     DR = LkTitle(6, "Dr")
     MADAM = LkTitle(7, "Madam")
     SIR = LkTitle(8, "Sir")
+
+
+class LeaveRequestDecision(LookupTable):
+    model = LkLeaveRequestDecision
+    column_names = ("leave_request_decision_id", "leave_request_decision_description")
+
+    PENDING = LkLeaveRequestDecision(1, "Pending")
+    IN_REVIEW = LkLeaveRequestDecision(2, "In Review")
+    APPROVED = LkLeaveRequestDecision(3, "Approved")
+    DENIED = LkLeaveRequestDecision(4, "Denied")
 
 
 def sync_lookup_tables(db_session):
