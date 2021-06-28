@@ -1049,42 +1049,64 @@ Array [
     label="Previous leave 2"
     level="4"
   >
-    Leave for a different qualifying reason
-    <br />
-    From this employer
-    <br />
-    Leave was for caring for a family member
-    <br />
-    7/1/2021 – 5/1/2021
-    <br />
-    Hours worked at time of leave
-    <br />
-    40h
-    <br />
-    Total hours taken
-    <br />
-    20h
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 – 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for a different qualifying reason
+      </li>
+      <li>
+        From this employer
+      </li>
+      <li>
+        Leave was for caring for a family member
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours taken: 
+        20h
+      </li>
+    </ul>
   </ReviewRow>,
   <ReviewRow
     key="otherReason-1"
     label="Previous leave 3"
     level="4"
   >
-    Leave for a different qualifying reason
-    <br />
-    From a different employer
-    <br />
-    Leave was for bonding with a child after birth or placement
-    <br />
-    7/1/2021 – 5/1/2021
-    <br />
-    Hours worked at time of leave
-    <br />
-    40h
-    <br />
-    Total hours taken
-    <br />
-    20h
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 – 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for a different qualifying reason
+      </li>
+      <li>
+        From a different employer
+      </li>
+      <li>
+        Leave was for bonding with a child after birth or placement
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours taken: 
+        20h
+      </li>
+    </ul>
   </ReviewRow>,
 ]
 `;
@@ -1096,38 +1118,58 @@ Array [
     label="Previous leave 2"
     level="4"
   >
-    Leave for the same qualifying reason
-    <br />
-    From this employer
-    <br />
-    7/1/2021 – 5/1/2021
-    <br />
-    Hours worked at time of leave
-    <br />
-    40h
-    <br />
-    Total hours taken
-    <br />
-    20h
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 – 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for the same qualifying reason
+      </li>
+      <li>
+        From this employer
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours taken: 
+        20h
+      </li>
+    </ul>
   </ReviewRow>,
   <ReviewRow
     key="sameReason-1"
     label="Previous leave 3"
     level="4"
   >
-    Leave for the same qualifying reason
-    <br />
-    From a different employer
-    <br />
-    7/1/2021 – 5/1/2021
-    <br />
-    Hours worked at time of leave
-    <br />
-    40h
-    <br />
-    Total hours taken
-    <br />
-    20h
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 – 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for the same qualifying reason
+      </li>
+      <li>
+        From a different employer
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours taken: 
+        20h
+      </li>
+    </ul>
   </ReviewRow>,
 ]
 `;

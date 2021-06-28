@@ -1745,7 +1745,7 @@ const pages = {
     previousLeaveIsForCurrentEmployer_true: "From this employer",
     previousLeaveLabel: "Previous paid or unpaid leave?",
     previousLeaveLeaveMinutes: "$t(shared.displayTime)",
-    previousLeaveLeaveMinutesLabel: "Total hours taken",
+    previousLeaveLeaveMinutesLabel: "Total hours taken: ",
     previousLeaveLeaveMinutes_noMinutes: "$t(shared.displayTime_noMinutes)",
     previousLeaveReason_activeDutyFamily:
       "Leave was for managing family affairs while a family member was on active duty in the armed forces",
@@ -1759,7 +1759,7 @@ const pages = {
     previousLeaveType_otherReason: "Leave for a different qualifying reason",
     previousLeaveType_sameReason: "Leave for the same qualifying reason",
     previousLeaveWorkedPerWeekMinutes: "$t(shared.displayTime)",
-    previousLeaveWorkedPerWeekMinutesLabel: "Hours worked at time of leave",
+    previousLeaveWorkedPerWeekMinutesLabel: "Hours worked at time of leave: ",
     previousLeaveWorkedPerWeekMinutes_noMinutes:
       "$t(shared.displayTime_noMinutes)",
     reducedLeaveScheduleLabel: "Hours off per week",

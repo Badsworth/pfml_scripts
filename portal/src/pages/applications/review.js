@@ -868,44 +868,49 @@ export const PreviousLeaveList = (props) => {
         count: props.startIndex + index + 1,
       })}
     >
-      {t("pages.claimsReview.previousLeaveType", { context: props.type })}
-      <br />
-      {t("pages.claimsReview.previousLeaveIsForCurrentEmployer", {
-        context: String(get(entry, "is_for_current_employer")),
-      })}
-      <br />
-      {props.type === "otherReason" && (
-        <React.Fragment>
-          {t("pages.claimsReview.previousLeaveReason", {
-            context: findKeyByValue(
-              PreviousLeaveReason,
-              get(entry, "leave_reason")
-            ),
+      <p className="text-base-darker margin-top-1">
+        {formatDateRange(entry.leave_start_date, entry.leave_end_date)}
+      </p>
+      <ul className="usa-list margin-top-1">
+        <li>
+          {t("pages.claimsReview.previousLeaveType", { context: props.type })}
+        </li>
+        <li>
+          {t("pages.claimsReview.previousLeaveIsForCurrentEmployer", {
+            context: String(get(entry, "is_for_current_employer")),
           })}
-          <br />
-        </React.Fragment>
-      )}
-      {formatDateRange(entry.leave_start_date, entry.leave_end_date)}
-      <br />
-      {t("pages.claimsReview.previousLeaveWorkedPerWeekMinutesLabel")}
-      <br />
-      {t("pages.claimsReview.previousLeaveWorkedPerWeekMinutes", {
-        context:
-          convertMinutesToHours(entry.worked_per_week_minutes).minutes === 0
-            ? "noMinutes"
-            : null,
-        ...convertMinutesToHours(entry.worked_per_week_minutes),
-      })}
-      <br />
-      {t("pages.claimsReview.previousLeaveLeaveMinutesLabel")}
-      <br />
-      {t("pages.claimsReview.previousLeaveLeaveMinutes", {
-        context:
-          convertMinutesToHours(entry.leave_minutes).minutes === 0
-            ? "noMinutes"
-            : null,
-        ...convertMinutesToHours(entry.leave_minutes),
-      })}
+        </li>
+        {props.type === "otherReason" && (
+          <li>
+            {t("pages.claimsReview.previousLeaveReason", {
+              context: findKeyByValue(
+                PreviousLeaveReason,
+                get(entry, "leave_reason")
+              ),
+            })}
+          </li>
+        )}
+        <li>
+          {t("pages.claimsReview.previousLeaveWorkedPerWeekMinutesLabel")}
+          {t("pages.claimsReview.previousLeaveWorkedPerWeekMinutes", {
+            context:
+              convertMinutesToHours(entry.worked_per_week_minutes).minutes === 0
+                ? "noMinutes"
+                : null,
+            ...convertMinutesToHours(entry.worked_per_week_minutes),
+          })}
+        </li>
+        <li>
+          {t("pages.claimsReview.previousLeaveLeaveMinutesLabel")}
+          {t("pages.claimsReview.previousLeaveLeaveMinutes", {
+            context:
+              convertMinutesToHours(entry.leave_minutes).minutes === 0
+                ? "noMinutes"
+                : null,
+            ...convertMinutesToHours(entry.leave_minutes),
+          })}
+        </li>
+      </ul>
     </ReviewRow>
   ));
 };
