@@ -595,4 +595,28 @@ describe("useAppErrorsLogic", () => {
       expect(appErrorsLogic.appErrors.items).toHaveLength(0);
     });
   });
+
+  describe("clearRequiredFieldErrors", () => {
+    it("removes required field errors", () => {
+      act(() => {
+        appErrorsLogic.setAppErrors(
+          new AppErrorInfoCollection([
+            new AppErrorInfo(),
+            new AppErrorInfo({ type: "required" }),
+          ])
+        );
+      });
+
+      act(() => {
+        appErrorsLogic.clearRequiredFieldErrors();
+      });
+
+      expect(appErrorsLogic.appErrors.items).toHaveLength(1);
+      expect(
+        appErrorsLogic.appErrors.items.some(
+          (error) => error.type === "required"
+        )
+      ).toBe(false);
+    });
+  });
 });

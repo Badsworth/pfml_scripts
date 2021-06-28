@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CaringLeave renders family member's relationship 1`] = `
+exports[`Review Page CaringLeave renders family member's relationship 1`] = `
 <ReviewRow
   label="Family member's relationship"
   level="4"
@@ -9,7 +9,7 @@ exports[`CaringLeave renders family member's relationship 1`] = `
 </ReviewRow>
 `;
 
-exports[`EmployerBenefitList when all data are present renders all data fields 1`] = `
+exports[`Review Page EmployerBenefitList when all data are present renders all data fields 1`] = `
 Array [
   <OtherLeaveEntry
     amount="$250.00 per month"
@@ -46,7 +46,7 @@ Array [
 ]
 `;
 
-exports[`EmployerBenefitList when amount fields are missing doesn't render missing data 1`] = `
+exports[`Review Page EmployerBenefitList when amount fields are missing doesn't render missing data 1`] = `
 <OtherLeaveEntry
   amount={null}
   dates="8/12/2021 – 12/30/2021"
@@ -57,7 +57,7 @@ exports[`EmployerBenefitList when amount fields are missing doesn't render missi
 />
 `;
 
-exports[`Final Review Page when the claim is complete renders Review page with final review page content and only edit links for Part 2/3 sections 1`] = `
+exports[`Review Page Final Review Page when the claim is complete renders Review page with final review page content and only edit links for Part 2/3 sections 1`] = `
 <div
   className="measure-6"
 >
@@ -324,7 +324,7 @@ exports[`Final Review Page when the claim is complete renders Review page with f
 </div>
 `;
 
-exports[`Final Review Page when the claim is complete renders Review page with final review page content and only edit links for Part 2/3 sections 2`] = `
+exports[`Review Page Final Review Page when the claim is complete renders Review page with final review page content and only edit links for Part 2/3 sections 2`] = `
 Array [
   "If you need to make edits to Part 1, you’ll need to call our Contact Center at ",
   <a
@@ -342,19 +342,19 @@ Array [
 ]
 `;
 
-exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 1`] = `"Estimated 2 absences per month, each lasting 3 days."`;
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 1`] = `"Estimated 2 absences per month, each lasting 3 days."`;
 
-exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 2`] = `"Estimated 2 absences per week, each lasting 3 days."`;
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 2`] = `"Estimated 2 absences per week, each lasting 3 days."`;
 
-exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 3`] = `"Estimated 2 absences per month, each lasting 3 days."`;
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 3`] = `"Estimated 2 absences per month, each lasting 3 days."`;
 
-exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 4`] = `"Estimated 2 absences per month, each lasting 3 hours."`;
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 4`] = `"Estimated 2 absences per month, each lasting 3 hours."`;
 
-exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 5`] = `"Estimated 2 absences per week, each lasting 3 hours."`;
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 5`] = `"Estimated 2 absences per week, each lasting 3 hours."`;
 
-exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 6`] = `"Estimated 2 absences per month, each lasting 3 hours."`;
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 6`] = `"Estimated 2 absences per month, each lasting 3 hours."`;
 
-exports[`Leave reason When the reason is caring leave renders caring leave details 1`] = `
+exports[`Review Page Leave reason When the reason is caring leave renders caring leave details 1`] = `
 <div
   className="measure-6"
 >
@@ -375,7 +375,7 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
     Review and confirm: Tell us about yourself and your leave
   </Heading>
   <ReviewHeading
-    editHref="/applications?claim_id=mock_application_id"
+    editHref="/applications/name?claim_id=mock_application_id"
     editText="Edit"
     level="3"
   >
@@ -426,7 +426,7 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
     7/17/****
   </ReviewRow>
   <ReviewHeading
-    editHref="/applications?claim_id=mock_application_id"
+    editHref="/applications/employment-status?claim_id=mock_application_id"
     editText="Edit"
     level="3"
   >
@@ -451,7 +451,7 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
     Each week I work the same number of hours on the same days.
   </ReviewRow>
   <ReviewHeading
-    editHref="/applications?claim_id=mock_application_id"
+    editHref="/applications/leave-reason?claim_id=mock_application_id"
     editText="Edit"
     level="3"
   >
@@ -571,7 +571,7 @@ exports[`Leave reason When the reason is caring leave renders caring leave detai
 </div>
 `;
 
-exports[`OtherIncomeList when all data are present renders all data fields 1`] = `
+exports[`Review Page OtherIncomeList when all data are present renders all data fields 1`] = `
 Array [
   <OtherLeaveEntry
     amount="$250.00 per month"
@@ -632,7 +632,7 @@ Array [
 ]
 `;
 
-exports[`OtherIncomeList when amount fields are missing doesn't render missing data 1`] = `
+exports[`Review Page OtherIncomeList when amount fields are missing doesn't render missing data 1`] = `
 <OtherLeaveEntry
   amount={null}
   dates="8/12/2021 – 12/30/2021"
@@ -643,7 +643,7 @@ exports[`OtherIncomeList when amount fields are missing doesn't render missing d
 />
 `;
 
-exports[`OtherLeaveEntry when all data are present renders all data fields 1`] = `
+exports[`Review Page OtherLeaveEntry when all data are present renders all data fields 1`] = `
 <ReviewRow
   label="Benefit 1"
   level="4"
@@ -656,7 +656,7 @@ exports[`OtherLeaveEntry when all data are present renders all data fields 1`] =
 </ReviewRow>
 `;
 
-exports[`OtherLeaveEntry when amount is missing doesn't render missing data 1`] = `
+exports[`Review Page OtherLeaveEntry when amount is missing doesn't render missing data 1`] = `
 <ReviewRow
   label="Benefit 1"
   level="4"
@@ -668,7 +668,47 @@ exports[`OtherLeaveEntry when amount is missing doesn't render missing data 1`] 
 </ReviewRow>
 `;
 
-exports[`Part 1 Review Page when all data is present renders Review page with Part 1 content and edit links 1`] = `
+exports[`Review Page Part 1 Review Page renders a custom Alert when there are missing required fields 1`] = `
+<Alert
+  className="margin-bottom-3"
+>
+  <div
+    className="usa-alert usa-alert--error margin-bottom-3"
+    tabIndex="-1"
+  >
+    <div
+      className="usa-alert__body"
+      role="region"
+    >
+      <div
+        className="usa-alert__text"
+      >
+        <Trans
+          components={
+            Object {
+              "checklist-link": <a
+                href="/applications/checklist?claim_id=mock_application_id"
+              />,
+            }
+          }
+          i18nKey="pages.claimsReview.missingRequiredFieldError"
+        >
+          We’ve added some new questions since you last updated your application. Return to the 
+          <a
+            href="/applications/checklist?claim_id=mock_application_id"
+            key="1"
+          >
+            checklist
+          </a>
+           to make sure you’ve completed every step.
+        </Trans>
+      </div>
+    </div>
+  </div>
+</Alert>
+`;
+
+exports[`Review Page Part 1 Review Page when all data is present renders Review page with Part 1 content and edit links 1`] = `
 <div
   className="measure-6"
 >
@@ -1002,97 +1042,139 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
 </div>
 `;
 
-exports[`PreviousLeaveList renders other reason list 1`] = `
+exports[`Review Page PreviousLeaveList renders other reason list 1`] = `
 Array [
   <ReviewRow
     key="otherReason-0"
     label="Previous leave 2"
     level="4"
   >
-    Leave for a different qualifying reason
-    <br />
-    From this employer
-    <br />
-    Leave was for caring for a family member
-    <br />
-    7/1/2021 – 5/1/2021
-    <br />
-    Hours worked at time of leave
-    <br />
-    40h
-    <br />
-    Total hours taken
-    <br />
-    20h
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 – 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for a different qualifying reason
+      </li>
+      <li>
+        From this employer
+      </li>
+      <li>
+        Leave was for caring for a family member
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours taken: 
+        20h
+      </li>
+    </ul>
   </ReviewRow>,
   <ReviewRow
     key="otherReason-1"
     label="Previous leave 3"
     level="4"
   >
-    Leave for a different qualifying reason
-    <br />
-    From a different employer
-    <br />
-    Leave was for bonding with a child after birth or placement
-    <br />
-    7/1/2021 – 5/1/2021
-    <br />
-    Hours worked at time of leave
-    <br />
-    40h
-    <br />
-    Total hours taken
-    <br />
-    20h
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 – 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for a different qualifying reason
+      </li>
+      <li>
+        From a different employer
+      </li>
+      <li>
+        Leave was for bonding with a child after birth or placement
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours taken: 
+        20h
+      </li>
+    </ul>
   </ReviewRow>,
 ]
 `;
 
-exports[`PreviousLeaveList renders same reason list 1`] = `
+exports[`Review Page PreviousLeaveList renders same reason list 1`] = `
 Array [
   <ReviewRow
     key="sameReason-0"
     label="Previous leave 2"
     level="4"
   >
-    Leave for the same qualifying reason
-    <br />
-    From this employer
-    <br />
-    7/1/2021 – 5/1/2021
-    <br />
-    Hours worked at time of leave
-    <br />
-    40h
-    <br />
-    Total hours taken
-    <br />
-    20h
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 – 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for the same qualifying reason
+      </li>
+      <li>
+        From this employer
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours taken: 
+        20h
+      </li>
+    </ul>
   </ReviewRow>,
   <ReviewRow
     key="sameReason-1"
     label="Previous leave 3"
     level="4"
   >
-    Leave for the same qualifying reason
-    <br />
-    From a different employer
-    <br />
-    7/1/2021 – 5/1/2021
-    <br />
-    Hours worked at time of leave
-    <br />
-    40h
-    <br />
-    Total hours taken
-    <br />
-    20h
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 – 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for the same qualifying reason
+      </li>
+      <li>
+        From a different employer
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours taken: 
+        20h
+      </li>
+    </ul>
   </ReviewRow>,
 ]
 `;
 
-exports[`Reduced leave renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed 1`] = `
+exports[`Review Page Reduced leave renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed 1`] = `
 <ReviewRow
   label="Hours off per week"
   level="4"
@@ -1136,7 +1218,7 @@ exports[`Reduced leave renders WeeklyTimeTable for the reduced leave period when
 </ReviewRow>
 `;
 
-exports[`Reduced leave renders total time for the reduced leave period when work pattern is Variable 1`] = `
+exports[`Review Page Reduced leave renders total time for the reduced leave period when work pattern is Variable 1`] = `
 <ReviewRow
   label="Hours off per week"
   level="4"
@@ -1146,13 +1228,13 @@ exports[`Reduced leave renders total time for the reduced leave period when work
 </ReviewRow>
 `;
 
-exports[`Work patterns has internationalized strings for each work pattern type 1`] = `"Each week I work the same number of hours on the same days."`;
+exports[`Review Page Work patterns has internationalized strings for each work pattern type 1`] = `"Each week I work the same number of hours on the same days."`;
 
-exports[`Work patterns has internationalized strings for each work pattern type 2`] = `"My schedule is not consistent from week to week."`;
+exports[`Review Page Work patterns has internationalized strings for each work pattern type 2`] = `"My schedule is not consistent from week to week."`;
 
-exports[`Work patterns shows average weekly hours if work pattern type is variable 1`] = `"40h"`;
+exports[`Review Page Work patterns shows average weekly hours if work pattern type is variable 1`] = `"40h"`;
 
-exports[`Work patterns shows work pattern days if work pattern type is fixed 1`] = `
+exports[`Review Page Work patterns shows work pattern days if work pattern type is fixed 1`] = `
 <WeeklyTimeTable
   days={
     Array [

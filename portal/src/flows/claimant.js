@@ -130,7 +130,10 @@ export default {
     [routes.user.consentToDataSharing]: {
       meta: {},
       on: {
-        CONTINUE: routes.applications.getReady,
+        // Route to Applications page to support users who are re-consenting.
+        // If they're new users with no claims, the Applications page will
+        // handle redirecting them.
+        CONTINUE: routes.applications.index,
       },
     },
     [routes.applications.index]: {
@@ -596,6 +599,7 @@ export default {
             target: routes.applications.checklist,
           },
         ],
+        CHECKLIST: routes.applications.checklist,
         ...checklistEvents,
       },
     },

@@ -21,7 +21,7 @@ export const TRNOI1: ScenarioSpecification = {
     other_incomes: [
       {
         income_type: "Workers Compensation",
-        income_start_date: "2021-01-04",
+        income_start_date: "2021-04-01",
         income_end_date: "2021-07-16",
         income_amount_dollars: 500,
         income_amount_frequency: "Per Week",
@@ -54,7 +54,7 @@ export const TRNOI2: ScenarioSpecification = {
       {
         benefit_type: "Short-term disability insurance",
         benefit_start_date: "2021-06-07",
-        benefit_end_date: "2021-10-10",
+        benefit_end_date: "2021-10-01",
         benefit_amount_dollars: 100,
         benefit_amount_frequency: "Per Week",
       },
@@ -106,7 +106,7 @@ export const TRNOI4: ScenarioSpecification = {
     leave_dates: [parseISO("2021-08-15"), parseISO("2021-11-01")],
     docs: {
       MASSID: {},
-      HCP: {},
+      PREGNANCY_MATERNITY_FORM: {},
     },
     employerResponse: {
       has_amendments: false,
@@ -241,7 +241,7 @@ export const TRNOL4: ScenarioSpecification = {
     leave_dates: [parseISO("2021-08-15"), parseISO("2021-11-01")],
     docs: {
       MASSID: {},
-      HCP: {},
+      PREGNANCY_MATERNITY_FORM: {},
     },
     employerResponse: {
       has_amendments: false,
@@ -301,7 +301,6 @@ export const TRNER2: ScenarioSpecification = {
     leave_dates: [parseISO("2021-07-15"), parseISO("2021-09-15")],
     docs: {
       MASSID: {},
-      // HCP: {},
       CARING: {},
     },
     employerResponse: {
@@ -324,6 +323,7 @@ export const TRNER3: ScenarioSpecification = {
   claim: {
     label: "TRNER3",
     reason: "Child Bonding",
+    reason_qualifier: "Newborn",
     work_pattern_spec: "standard",
     leave_dates: [parseISO("2021-08-01"), parseISO("2021-10-15")],
     docs: {

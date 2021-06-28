@@ -1,9 +1,9 @@
-import { mount, shallow } from "enzyme";
 import { App } from "../../src/pages/_app";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import { merge } from "lodash";
 import { mockRouterEvents } from "next/router";
+import { mount } from "enzyme";
 import tracker from "../../src/services/tracker";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -16,27 +16,26 @@ jest.mock("lodash/uniqueId", () => {
   return jest.fn().mockReturnValue("mocked-for-snapshots");
 });
 
-function render(customProps = {}, mountComponent = false) {
-  const props = Object.assign(
-    {
-      Component: () => <div>Hello world</div>,
-    },
-    customProps
+function render() {
+  const TestComponent = () => (
+    <div>
+      <h1 tabIndex="-1" className="js-title">
+        Page title
+      </h1>
+    </div>
   );
 
-  const component = <App {...props} />;
+  const component = <App Component={TestComponent} />;
   const container = document.createElement("div");
   container.id = "enzymeContainer";
   document.body.appendChild(container);
 
   return {
-    props,
-    wrapper: mountComponent
-      ? mount(component, {
-          // attachTo the body so document.activeElement works (https://github.com/enzymejs/enzyme/issues/2337#issuecomment-608984530)
-          attachTo: container,
-        })
-      : shallow(component),
+    // Mount so useEffect is triggered
+    wrapper: mount(component, {
+      // attachTo the body so document.activeElement works (https://github.com/enzymejs/enzyme/issues/2337#issuecomment-608984530)
+      attachTo: container,
+    }),
   };
 }
 
@@ -49,32 +48,50 @@ describe("App", () => {
     process.env.featureFlags = {
       pfmlTerriyay: true,
     };
+
+    // Reset the focused element
+    document.activeElement.blur();
   });
 
   describe("Router events", () => {
+    const triggerRouterEvent = async (
+      eventName,
+      url = "/foo",
+      options = {}
+    ) => {
+      const routeChangeStart = mockRouterEvents.find(
+        (evt) => evt.name === eventName
+      );
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        routeChangeStart.callback(url, options);
+      });
+    };
+
     it("sets isLoading to true when a route change starts", async () => {
       expect.assertions();
 
-      // We need to mount the component so that useEffect is called
-      const mountComponent = true;
-      const { wrapper } = render({}, mountComponent);
-
-      const routeChangeStart = mockRouterEvents.find(
-        (evt) => evt.name === "routeChangeStart"
-      );
-      await act(async () => {
-        // Wait for repaint
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        // Trigger routeChangeStart
-        routeChangeStart.callback();
-      });
-
+      const { wrapper } = render();
+      await triggerRouterEvent("routeChangeStart");
       wrapper.update();
 
       expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(true);
     });
 
-    it("tracks page view when user loading and route change starts", () => {
+    it("does not set isLoading to true when a SHALLOW route change starts", async () => {
+      expect.assertions();
+      const { wrapper } = render();
+
+      await triggerRouterEvent("routeChangeStart", undefined, {
+        shallow: true,
+      });
+      wrapper.update();
+
+      expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(false);
+    });
+
+    it("tracks page view when user loading and route change starts", async () => {
       // Overwrite isLoggedIn to simulate a scenario where the route event is
       // triggered before the page has loaded auth info
       useAppLogic.mockImplementationOnce(() =>
@@ -88,17 +105,11 @@ describe("App", () => {
 
       // We need to mount the component so that useEffect is called
       const mountComponent = true;
-      render({}, mountComponent);
+      render(mountComponent);
 
       // Include query string to confirm it's tracked in the event
       const newUrl = "/claims?claim_id=123";
-      const routeChangeStart = mockRouterEvents.find(
-        (evt) => evt.name === "routeChangeStart"
-      );
-
-      act(() => {
-        routeChangeStart.callback(newUrl);
-      });
+      await triggerRouterEvent("routeChangeStart", newUrl);
 
       expect(tracker.startPageView).toHaveBeenCalledTimes(1);
       expect(tracker.startPageView).toHaveBeenCalledWith("/claims", {
@@ -107,20 +118,12 @@ describe("App", () => {
       });
     });
 
-    it("tracks page view when user loaded and route change starts", () => {
-      // We need to mount the component so that useEffect is called
-      const mountComponent = true;
-      render({}, mountComponent);
+    it("tracks page view when user loaded and route change starts", async () => {
+      render();
 
       // Include query string to confirm it's tracked in the event
       const newUrl = "/claims?claim_id=123";
-      const routeChangeStart = mockRouterEvents.find(
-        (evt) => evt.name === "routeChangeStart"
-      );
-
-      act(() => {
-        routeChangeStart.callback(newUrl);
-      });
+      await triggerRouterEvent("routeChangeStart", newUrl);
 
       expect(tracker.startPageView).toHaveBeenCalledTimes(1);
       expect(tracker.startPageView).toHaveBeenCalledWith("/claims", {
@@ -131,7 +134,7 @@ describe("App", () => {
       });
     });
 
-    it("tracks page view and user isn't authenticated and route change starts", () => {
+    it("tracks page view and user isn't authenticated and route change starts", async () => {
       // Overwrite user to simulate a scenario where the user isn't authenticated
       useAppLogic.mockImplementationOnce(() =>
         merge(
@@ -142,19 +145,11 @@ describe("App", () => {
           }
         )
       );
+      render();
 
-      // We need to mount the component so that useEffect is called
-      const mountComponent = true;
-      render({}, mountComponent);
       // Include query string to confirm it's tracked in the event
       const newUrl = "/claims?claim_id=123";
-      const routeChangeStart = mockRouterEvents.find(
-        (evt) => evt.name === "routeChangeStart"
-      );
-
-      act(() => {
-        routeChangeStart.callback(newUrl);
-      });
+      await triggerRouterEvent("routeChangeStart", newUrl);
 
       expect(tracker.startPageView).toHaveBeenCalledTimes(1);
       expect(tracker.startPageView).toHaveBeenCalledWith("/claims", {
@@ -165,123 +160,71 @@ describe("App", () => {
 
     it("sets isLoading to false when a route change completes", async () => {
       expect.assertions();
+      const { wrapper } = render();
 
-      // We need to mount the component so that useEffect is called
-      const mountComponent = true;
-      const { wrapper } = render({}, mountComponent);
-      const newUrl = "/claims?claim_id=123";
-
-      const routeChangeStart = mockRouterEvents.find(
-        (evt) => evt.name === "routeChangeStart"
-      );
-      const routeChangeComplete = mockRouterEvents.find(
-        (evt) => evt.name === "routeChangeComplete"
-      );
-
-      await act(async () => {
-        // Wait for repaint
-        await new Promise((resolve) => setTimeout(resolve, 0));
-
-        // Trigger routeChangeStart
-        routeChangeStart.callback(newUrl);
-        // Trigger routeChangeComplete
-        routeChangeComplete.callback(newUrl);
-
-        wrapper.update();
-      });
+      await triggerRouterEvent("routeChangeStart");
+      await triggerRouterEvent("routeChangeComplete");
+      wrapper.update();
 
       expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(false);
     });
 
     it("sets isLoading to false when a route change throws an error", async () => {
       expect.assertions();
+      const { wrapper } = render();
 
-      // We need to mount the component so that useEffect is called
-      const mountComponent = true;
-      const { wrapper } = render({}, mountComponent);
-
-      const routeChangeStart = mockRouterEvents.find(
-        (evt) => evt.name === "routeChangeStart"
-      );
-      const routeChangeError = mockRouterEvents.find(
-        (evt) => evt.name === "routeChangeError"
-      );
-      await act(async () => {
-        // Wait for repaint
-        await new Promise((resolve) => setTimeout(resolve, 0));
-
-        // Trigger routeChangeStart
-        routeChangeStart.callback();
-        // Trigger routeChangeError
-        routeChangeError.callback();
-
-        wrapper.update();
-      });
+      await triggerRouterEvent("routeChangeStart");
+      await triggerRouterEvent("routeChangeError");
 
       expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(false);
     });
 
     it("scrolls to the top of the window after a route change", async () => {
       expect.assertions(1);
+      render();
 
-      // Mount the component so that useEffect is called.
-      const mountComponent = true;
-      const { wrapper } = render({}, mountComponent);
-
-      const routeChangeStart = mockRouterEvents.find(
-        (evt) => evt.name === "routeChangeStart"
-      );
-      const routeChangeComplete = mockRouterEvents.find(
-        (evt) => evt.name === "routeChangeComplete"
-      );
-
-      await act(async () => {
-        // Wait for repaint
-        await new Promise((resolve) => setTimeout(resolve, 0));
-
-        // Trigger routeChangeStart
-        routeChangeStart.callback();
-        // Trigger routeChangeComplete
-        routeChangeComplete.callback();
-
-        wrapper.update();
-      });
+      await triggerRouterEvent("routeChangeStart");
+      await triggerRouterEvent("routeChangeComplete");
 
       expect(scrollToSpy).toHaveBeenCalled();
     });
 
-    it("moves focus to .js-title after a route change completes", () => {
+    it("does not scroll to the top of the window after a SHALLOW route change", async () => {
       expect.assertions(1);
+      render();
 
-      // Mount the component so that useEffect is called.
-      const mountComponent = true;
-      // Create page content that includes the h1 with expected markup
-      const TestComponent = () => (
-        <div>
-          <h1 tabIndex="-1" className="js-title">
-            Page title
-          </h1>
-        </div>
-      );
-      const { wrapper } = render(
-        {
-          Component: TestComponent,
-        },
-        mountComponent
-      );
+      await triggerRouterEvent("routeChangeStart", undefined, {
+        shallow: true,
+      });
+      await triggerRouterEvent("routeChangeComplete", undefined, {
+        shallow: true,
+      });
 
-      const routeChangeComplete = mockRouterEvents.find(
-        (evt) => evt.name === "routeChangeComplete"
-      );
+      expect(scrollToSpy).not.toHaveBeenCalled();
+    });
 
-      act(() => {
-        // Trigger routeChangeComplete
-        routeChangeComplete.callback();
+    it("moves focus to .js-title after a route change completes", async () => {
+      expect.assertions(1);
+      const { wrapper } = render();
+
+      await triggerRouterEvent("routeChangeComplete");
+
+      const h1 = wrapper.find("h1").last().getDOMNode();
+
+      expect(document.activeElement).toEqual(h1);
+    });
+
+    it("does not move focus to .js-title after a route change completes", async () => {
+      expect.assertions(1);
+      const { wrapper } = render();
+
+      await triggerRouterEvent("routeChangeComplete", undefined, {
+        shallow: true,
       });
 
       const h1 = wrapper.find("h1").last().getDOMNode();
 
-      expect(document.activeElement).toBe(h1);
+      expect(document.activeElement).not.toEqual(h1);
     });
   });
 });

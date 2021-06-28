@@ -13,7 +13,7 @@ import useHandleInputChange from "./useHandleInputChange";
  * @returns {(fieldName: string, config: { fallbackValue: * }) => { errorMsg: string, name: string, onChange: Function, value: boolean|number|string }}
  */
 function useFunctionalInputProps({ appErrors, formState, updateFields }) {
-  const handleInputChange = useHandleInputChange(updateFields);
+  const handleInputChange = useHandleInputChange(updateFields, formState);
 
   return function getFunctionalInputProps(
     fieldName,

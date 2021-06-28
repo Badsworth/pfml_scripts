@@ -71,6 +71,20 @@ const useAppErrorsLogic = ({ portalFlow }) => {
   };
 
   /**
+   * Convenience method for removing required field errors. This is used by the review page
+   * to hide required field errors and instead display a more user-friendly message to users
+   * that they need to go back and complete all required fields
+   * @callback clearErrorsFunction
+   */
+  const clearRequiredFieldErrors = () => {
+    const remainingErrors = appErrors.items.filter(
+      (error) => error.type !== "required"
+    );
+
+    setAppErrors(() => new AppErrorInfoCollection(remainingErrors));
+  };
+
+  /**
    * Convert an API error/warning into a user friendly message
    * @param {object} issue - API error/warning
    * @param {string} issue.field
@@ -346,6 +360,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
     setAppErrors,
     catchError,
     clearErrors,
+    clearRequiredFieldErrors,
   };
 };
 
