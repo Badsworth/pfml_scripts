@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AmendableEmployerBenefit for added benefits renders the component without a table row 1`] = `
+exports[`AmendableEmployerBenefit for added benefits renders the component without a table row and with a visible amendment form 1`] = `
 <Fragment>
   <ConditionalContent
     visible={true}
@@ -50,6 +50,7 @@ exports[`AmendableEmployerBenefit for added benefits renders the component witho
                   },
                 ]
               }
+              data-test="benefit-type-input"
               label="What kind of employer-sponsored benefit is it?"
               name="employer_benefits[0].benefit_type"
               onChange={[Function]}
@@ -58,6 +59,7 @@ exports[`AmendableEmployerBenefit for added benefits renders the component witho
             />
           </ConditionalContent>
           <InputDate
+            data-test="benefit-start-date-input"
             dayLabel="Day"
             errorMsg={null}
             label="What is the first day of leave from work that this benefit will pay your employee for?"
@@ -69,6 +71,7 @@ exports[`AmendableEmployerBenefit for added benefits renders the component witho
             yearLabel="Year"
           />
           <InputDate
+            data-test="benefit-end-date-input"
             dayLabel="Day"
             errorMsg={null}
             label="What is the last day of leave from work that this benefit will pay your employee for?"
@@ -98,6 +101,7 @@ exports[`AmendableEmployerBenefit for added benefits renders the component witho
                   },
                 ]
               }
+              data-test="is-full-salary-continuous-input"
               errorMsg={null}
               hint="This means that for the period of time your employee receives this benefit, it will pay them the same amount of money as their wages from while they're not on leave. If this benefit will pay them any other amount, select No."
               label="Does this employer-sponsored benefit fully replace your employee's wages?"
@@ -107,62 +111,64 @@ exports[`AmendableEmployerBenefit for added benefits renders the component witho
               smallLabel={true}
               type="radio"
             />
-            <ConditionalContent
-              visible={false}
-            >
-              <Fieldset>
-                <FormLabel
-                  component="legend"
-                  optionalText="(optional)"
-                  small={true}
-                >
-                  How much will your employee receive?
-                </FormLabel>
-                <InputCurrency
-                  errorMsg={null}
-                  label="Amount"
-                  labelClassName="text-normal"
-                  name="employer_benefits[0].benefit_amount_dollars"
-                  onChange={[Function]}
-                  smallLabel={true}
-                  value={1000}
-                  width="small"
-                />
-                <Dropdown
-                  choices={
-                    Array [
-                      Object {
-                        "label": "Daily",
-                        "value": "Per Day",
-                      },
-                      Object {
-                        "label": "Weekly",
-                        "value": "Per Week",
-                      },
-                      Object {
-                        "label": "Monthly",
-                        "value": "Per Month",
-                      },
-                      Object {
-                        "label": "All at once",
-                        "value": "In Total",
-                      },
-                      Object {
-                        "label": "Unknown",
-                        "value": "Unknown",
-                      },
-                    ]
-                  }
-                  errorMsg={null}
-                  label="Frequency"
-                  labelClassName="text-normal"
-                  name="employer_benefits[0].benefit_amount_frequency"
-                  onChange={[Function]}
-                  smallLabel={true}
-                  value="Per Month"
-                />
-              </Fieldset>
-            </ConditionalContent>
+          </ConditionalContent>
+          <ConditionalContent
+            visible={false}
+          >
+            <Fieldset>
+              <FormLabel
+                component="legend"
+                optionalText="(optional)"
+                small={true}
+              >
+                How much will your employee receive?
+              </FormLabel>
+              <InputCurrency
+                data-test="benefit-amount-dollars-input"
+                errorMsg={null}
+                label="Amount"
+                labelClassName="text-normal"
+                name="employer_benefits[0].benefit_amount_dollars"
+                onChange={[Function]}
+                smallLabel={true}
+                value={1000}
+                width="small"
+              />
+              <Dropdown
+                choices={
+                  Array [
+                    Object {
+                      "label": "Daily",
+                      "value": "Per Day",
+                    },
+                    Object {
+                      "label": "Weekly",
+                      "value": "Per Week",
+                    },
+                    Object {
+                      "label": "Monthly",
+                      "value": "Per Month",
+                    },
+                    Object {
+                      "label": "All at once",
+                      "value": "In Total",
+                    },
+                    Object {
+                      "label": "Unknown",
+                      "value": "Unknown",
+                    },
+                  ]
+                }
+                data-test="benefit-amount-frequency-input"
+                errorMsg={null}
+                label="Frequency"
+                labelClassName="text-normal"
+                name="employer_benefits[0].benefit_amount_frequency"
+                onChange={[Function]}
+                smallLabel={true}
+                value="Per Month"
+              />
+            </Fieldset>
           </ConditionalContent>
         </AmendmentForm>
       </td>
@@ -171,7 +177,7 @@ exports[`AmendableEmployerBenefit for added benefits renders the component witho
 </Fragment>
 `;
 
-exports[`AmendableEmployerBenefit for amended benefits renders the component with a table row for existing data 1`] = `
+exports[`AmendableEmployerBenefit for amended benefits renders the component with a table row for existing data and with the amendment form hidden 1`] = `
 <Fragment>
   <BenefitDetailsRow />
   <ConditionalContent
@@ -222,6 +228,7 @@ exports[`AmendableEmployerBenefit for amended benefits renders the component wit
                   },
                 ]
               }
+              data-test="benefit-type-input"
               label="What kind of employer-sponsored benefit is it?"
               name="employer_benefits[0].benefit_type"
               onChange={[Function]}
@@ -230,6 +237,7 @@ exports[`AmendableEmployerBenefit for amended benefits renders the component wit
             />
           </ConditionalContent>
           <InputDate
+            data-test="benefit-start-date-input"
             dayLabel="Day"
             errorMsg={null}
             label="What is the first day of leave from work that this benefit will pay your employee for?"
@@ -241,6 +249,7 @@ exports[`AmendableEmployerBenefit for amended benefits renders the component wit
             yearLabel="Year"
           />
           <InputDate
+            data-test="benefit-end-date-input"
             dayLabel="Day"
             errorMsg={null}
             label="What is the last day of leave from work that this benefit will pay your employee for?"
@@ -270,6 +279,7 @@ exports[`AmendableEmployerBenefit for amended benefits renders the component wit
                   },
                 ]
               }
+              data-test="is-full-salary-continuous-input"
               errorMsg={null}
               hint="This means that for the period of time your employee receives this benefit, it will pay them the same amount of money as their wages from while they're not on leave. If this benefit will pay them any other amount, select No."
               label="Does this employer-sponsored benefit fully replace your employee's wages?"
@@ -279,62 +289,64 @@ exports[`AmendableEmployerBenefit for amended benefits renders the component wit
               smallLabel={true}
               type="radio"
             />
-            <ConditionalContent
-              visible={false}
-            >
-              <Fieldset>
-                <FormLabel
-                  component="legend"
-                  optionalText="(optional)"
-                  small={true}
-                >
-                  How much will your employee receive?
-                </FormLabel>
-                <InputCurrency
-                  errorMsg={null}
-                  label="Amount"
-                  labelClassName="text-normal"
-                  name="employer_benefits[0].benefit_amount_dollars"
-                  onChange={[Function]}
-                  smallLabel={true}
-                  value={1000}
-                  width="small"
-                />
-                <Dropdown
-                  choices={
-                    Array [
-                      Object {
-                        "label": "Daily",
-                        "value": "Per Day",
-                      },
-                      Object {
-                        "label": "Weekly",
-                        "value": "Per Week",
-                      },
-                      Object {
-                        "label": "Monthly",
-                        "value": "Per Month",
-                      },
-                      Object {
-                        "label": "All at once",
-                        "value": "In Total",
-                      },
-                      Object {
-                        "label": "Unknown",
-                        "value": "Unknown",
-                      },
-                    ]
-                  }
-                  errorMsg={null}
-                  label="Frequency"
-                  labelClassName="text-normal"
-                  name="employer_benefits[0].benefit_amount_frequency"
-                  onChange={[Function]}
-                  smallLabel={true}
-                  value="Per Month"
-                />
-              </Fieldset>
-            </ConditionalContent>
+          </ConditionalContent>
+          <ConditionalContent
+            visible={false}
+          >
+            <Fieldset>
+              <FormLabel
+                component="legend"
+                optionalText="(optional)"
+                small={true}
+              >
+                How much will your employee receive?
+              </FormLabel>
+              <InputCurrency
+                data-test="benefit-amount-dollars-input"
+                errorMsg={null}
+                label="Amount"
+                labelClassName="text-normal"
+                name="employer_benefits[0].benefit_amount_dollars"
+                onChange={[Function]}
+                smallLabel={true}
+                value={1000}
+                width="small"
+              />
+              <Dropdown
+                choices={
+                  Array [
+                    Object {
+                      "label": "Daily",
+                      "value": "Per Day",
+                    },
+                    Object {
+                      "label": "Weekly",
+                      "value": "Per Week",
+                    },
+                    Object {
+                      "label": "Monthly",
+                      "value": "Per Month",
+                    },
+                    Object {
+                      "label": "All at once",
+                      "value": "In Total",
+                    },
+                    Object {
+                      "label": "Unknown",
+                      "value": "Unknown",
+                    },
+                  ]
+                }
+                data-test="benefit-amount-frequency-input"
+                errorMsg={null}
+                label="Frequency"
+                labelClassName="text-normal"
+                name="employer_benefits[0].benefit_amount_frequency"
+                onChange={[Function]}
+                smallLabel={true}
+                value="Per Month"
+              />
+            </Fieldset>
           </ConditionalContent>
         </AmendmentForm>
       </td>

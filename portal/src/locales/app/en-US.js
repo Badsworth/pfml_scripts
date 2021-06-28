@@ -1699,6 +1699,8 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     mailingAddressLabel: "Mailing address",
+    missingRequiredFieldError:
+      "We’ve added some new questions since you last updated your application. Return to the <checklist-link>checklist</checklist-link> to make sure you’ve completed every step.",
     numberOfFilesLabel: "$t(shared.filesUploaded)",
     otherIncomeEntryLabel: "$t(shared.otherIncomeEntryPrefix) {{count}}",
     otherIncomeLabel: "Other sources of income?",
@@ -1743,7 +1745,7 @@ const pages = {
     previousLeaveIsForCurrentEmployer_true: "From this employer",
     previousLeaveLabel: "Previous paid or unpaid leave?",
     previousLeaveLeaveMinutes: "$t(shared.displayTime)",
-    previousLeaveLeaveMinutesLabel: "Total hours taken",
+    previousLeaveLeaveMinutesLabel: "Total hours taken: ",
     previousLeaveLeaveMinutes_noMinutes: "$t(shared.displayTime_noMinutes)",
     previousLeaveReason_activeDutyFamily:
       "Leave was for managing family affairs while a family member was on active duty in the armed forces",
@@ -1757,7 +1759,7 @@ const pages = {
     previousLeaveType_otherReason: "Leave for a different qualifying reason",
     previousLeaveType_sameReason: "Leave for the same qualifying reason",
     previousLeaveWorkedPerWeekMinutes: "$t(shared.displayTime)",
-    previousLeaveWorkedPerWeekMinutesLabel: "Hours worked at time of leave",
+    previousLeaveWorkedPerWeekMinutesLabel: "Hours worked at time of leave: ",
     previousLeaveWorkedPerWeekMinutes_noMinutes:
       "$t(shared.displayTime_noMinutes)",
     reducedLeaveScheduleLabel: "Hours off per week",
@@ -2628,7 +2630,7 @@ const components = {
     qualifyingReason_bondWithChild:
       "Bond with a child after birth or placement",
     qualifyingReason_careForFamilyMedical:
-      "Care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>",
+      "Care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link> since July 1, 2021",
     qualifyingReason_careForFamilyMilitary:
       "Care for a family member who serves in the armed forces",
     qualifyingReason_manageHealth:

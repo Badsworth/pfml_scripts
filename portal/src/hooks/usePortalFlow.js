@@ -87,6 +87,19 @@ const usePortalFlow = () => {
     goToPageFor(event, context, params);
   };
 
+  /**
+   * Change the query params of the current page
+   * @param {object} params - query parameters to append to page route
+   */
+  const updateQuery = (params) => {
+    const url = createRouteWithQuery(pathname, params);
+    router.push(url, undefined, {
+      // Prevent unnecessary scroll position changes or other
+      // actions that are taken when a page changes
+      shallow: true,
+    });
+  };
+
   return {
     page,
     pathname,
@@ -95,6 +108,7 @@ const usePortalFlow = () => {
     goTo,
     goToNextPage,
     goToPageFor,
+    updateQuery,
   };
 };
 

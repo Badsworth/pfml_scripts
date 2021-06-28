@@ -582,6 +582,9 @@ export function submitIntermittentActualHours(
 
     cy.labelled("Absence end date")
       .focus()
+      // @bc: During a debug session there was a odd failure
+      // this wait helps prevent typing in wrong field
+      .wait(1000)
       .type(`{selectall}{backspace}${endDateFormatted}`)
       .blur()
       // Wait for this element to be detached, then rerendered after being blurred.
