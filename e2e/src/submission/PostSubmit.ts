@@ -176,6 +176,21 @@ export async function closeDocuments(
   for (const document of claim.documents) {
     await closeTask(page, getDocumentReviewTaskName(document.document_type));
   }
+
+  if (claim.employerResponse?.has_amendments) {
+    await closeTask(page, "Employer Conflict Reported");
+    if (claim.employerResponse.concurrent_leave)
+      await addTask(
+        page,
+        "Escalate employer reported accrued paid leave (PTO)"
+      );
+    if (claim.employerResponse.previous_leaves.length)
+      await addTask(page, "Escalate employer reported past leave");
+    if (claim.employerResponse.employer_benefits.length)
+      await addTask(page, "Escalate Employer Reported Other Income");
+  } else if (claim.employerResponse?.employer_decision === "Approve") {
+    await closeTask(page, "Employer Approval Received");
+  }
 }
 
 export async function closeTask(

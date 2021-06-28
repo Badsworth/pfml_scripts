@@ -27,6 +27,9 @@ export const TRNOI1: ScenarioSpecification = {
         income_amount_frequency: "Per Week",
       },
     ],
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
   },
 };
 
@@ -56,6 +59,9 @@ export const TRNOI2: ScenarioSpecification = {
         benefit_amount_frequency: "Per Week",
       },
     ],
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
   },
 };
 
@@ -85,6 +91,9 @@ export const TRNOI3: ScenarioSpecification = {
         income_amount_frequency: "Per Month",
       },
     ],
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
   },
 };
 
@@ -114,6 +123,9 @@ export const TRNOI4: ScenarioSpecification = {
         benefit_amount_frequency: "Per Month",
       },
     ],
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
   },
 };
 
@@ -145,6 +157,9 @@ export const TRNOL1: ScenarioSpecification = {
         leave_minutes: 2400,
       },
     ],
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
   },
 };
 
@@ -176,6 +191,9 @@ export const TRNOL2: ScenarioSpecification = {
         leave_minutes: 2400,
       },
     ],
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
   },
 };
 
@@ -207,6 +225,9 @@ export const TRNOL3: ScenarioSpecification = {
         leave_minutes: 2400,
       },
     ],
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
   },
 };
 
@@ -231,6 +252,9 @@ export const TRNOL4: ScenarioSpecification = {
       is_for_current_employer: true,
       leave_start_date: "2021-07-01",
       leave_end_date: "2021-08-30",
+    },
+    metadata: {
+      postSubmit: "APPROVEDOCS",
     },
   },
 };
@@ -261,6 +285,9 @@ export const TRNER1: ScenarioSpecification = {
         },
       ],
     },
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+    },
   },
 };
 
@@ -283,6 +310,9 @@ export const TRNER2: ScenarioSpecification = {
       leave_reason: "Care for a Family Member",
       believe_relationship_accurate: "Yes",
       comment: "STD weekly $50",
+    },
+    metadata: {
+      postSubmit: "APPROVEDOCS",
     },
   },
 };
@@ -309,6 +339,9 @@ export const TRNER3: ScenarioSpecification = {
         leave_start_date: "2021-08-01",
         leave_end_date: "2021-08-30",
       },
+    },
+    metadata: {
+      postSubmit: "APPROVEDOCS",
     },
   },
 };

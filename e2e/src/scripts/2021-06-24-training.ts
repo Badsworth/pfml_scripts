@@ -78,25 +78,21 @@ import { ScenarioSpecification } from "../generation/Scenario";
 
   // Part 1: Employer generation.
   try {
-    employerPool = await EmployerPool.load(
-      "../../employers/e2e-2021-06-04.json"
-    );
+    employerPool = await EmployerPool.load(storage.employers);
   } catch (e) {
     if (e.code !== "ENOENT") throw e;
     // @todo Choose number of employers to generate.
     (employerPool = EmployerPool.generate(30)),
       await employerPool.save(storage.employers);
     // <!-- @default
-    await EmployerIndex.write(employerPool, storage.dir + "/employers.csv");
-    await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
+    // await EmployerIndex.write(employerPool, storage.dir + "/employers.csv");
+    // await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
     // @default -->
   }
 
   // Part 2: Employee generation.
   try {
-    employeePool = await EmployeePool.load(
-      "../../employees/e2e-2021-06-04.json"
-    );
+    employeePool = await EmployeePool.load(storage.employees);
   } catch (e) {
     if (e.code !== "ENOENT") throw e;
     // Define the kinds of employees we need to support. Each type of employee is generated as its own pool,
