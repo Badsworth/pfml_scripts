@@ -7,10 +7,12 @@
 /* eslint-disable */
 
 export const defaults: RequestOptions = {
-  baseUrl: "/v1",
+  baseUrl: "http://localhost:1550/v1"
 };
 export const servers = {
-  developmentServer: "/v1",
+  developmentServer: "http://localhost:1550/v1",
+  testServer: "https://paidleave-api-test.mass.gov/api",
+  stageServer: "https://paidleave-api-stage.mass.gov/api"
 };
 export type RequestOptions = {
   baseUrl?: string;
