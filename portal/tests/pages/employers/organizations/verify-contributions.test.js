@@ -37,60 +37,44 @@ describe("VerifyContributions", () => {
     });
   }
 
-  describe('when "employerShowVerifications" feature flag is disabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowVerifications: false };
-      ({ wrapper, appLogic } = render());
-    });
+  beforeEach(() => {
+    ({ wrapper, appLogic } = render());
+  });
 
-    it("redirects to the employer welcome page", () => {
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        routes.employers.welcome
-      );
+  it("renders the page", () => {
+    expect(wrapper).toMatchSnapshot();
+    wrapper.find("Trans").forEach((trans) => {
+      expect(trans.dive()).toMatchSnapshot();
     });
   });
 
-  describe('when "employerShowVerifications" feature flag is enabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowVerifications: true };
-      ({ wrapper, appLogic } = render());
-    });
+  it("submits withholding data with correct values", async () => {
+    ({ changeField, submitForm } = simulateEvents(wrapper));
+    changeField("withholdingAmount", "1,234.560");
+    await submitForm();
 
-    it("renders the page", () => {
-      expect(wrapper).toMatchSnapshot();
-      wrapper.find("Trans").forEach((trans) => {
-        expect(trans.dive()).toMatchSnapshot();
-      });
-    });
+    expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith(
+      {
+        employer_id: "mock_employer_id",
+        withholding_amount: 1234.56,
+        withholding_quarter: "2011-11-20",
+      },
+      query.next
+    );
+  });
 
-    it("submits withholding data with correct values", async () => {
-      ({ changeField, submitForm } = simulateEvents(wrapper));
-      changeField("withholdingAmount", "1,234.560");
-      await submitForm();
+  it("submits withholding data as 0 if input is invalid", async () => {
+    ({ changeField, submitForm } = simulateEvents(wrapper));
+    changeField("withholdingAmount", null);
+    await submitForm();
 
-      expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith(
-        {
-          employer_id: "mock_employer_id",
-          withholding_amount: 1234.56,
-          withholding_quarter: "2011-11-20",
-        },
-        query.next
-      );
-    });
-
-    it("submits withholding data as 0 if input is invalid", async () => {
-      ({ changeField, submitForm } = simulateEvents(wrapper));
-      changeField("withholdingAmount", null);
-      await submitForm();
-
-      expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith(
-        {
-          employer_id: "mock_employer_id",
-          withholding_amount: 0,
-          withholding_quarter: "2011-11-20",
-        },
-        query.next
-      );
-    });
+    expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith(
+      {
+        employer_id: "mock_employer_id",
+        withholding_amount: 0,
+        withholding_quarter: "2011-11-20",
+      },
+      query.next
+    );
   });
 });

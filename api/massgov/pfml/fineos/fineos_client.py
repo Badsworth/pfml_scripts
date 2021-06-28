@@ -962,13 +962,22 @@ class FINEOSClient(client.AbstractFINEOSClient):
     def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         header_content_type = None
 
-        response = self._customer_api(
-            "GET",
-            f"customer/cases/{absence_id}/documents",
-            user_id,
-            "get_documents",
-            header_content_type=header_content_type,
-        )
+        try:
+            response = self._customer_api(
+                "GET",
+                f"customer/cases/{absence_id}/documents",
+                user_id,
+                "get_documents",
+                header_content_type=header_content_type,
+            )
+        except exception.FINEOSClientBadResponse as finres:
+            # See API-1198
+            if finres.response_status == requests.codes.FORBIDDEN:
+                logger.warning(
+                    "FINEOS API responded with 403. Returning empty documents list",
+                    extra={"absence_id": absence_id, "user_id": user_id,},
+                )
+                return []
 
         documents = response.json()
 

@@ -95,4 +95,16 @@ describe("Button", () => {
       `);
     });
   });
+
+  it("accepts aria props", () => {
+    const { wrapper } = render({
+      "aria-controls": "foo",
+      "aria-expanded": "false",
+    });
+
+    const button = wrapper.find("button");
+
+    expect(button.prop("aria-controls")).toBe("foo");
+    expect(button.prop("aria-expanded")).toBe("false");
+  });
 });

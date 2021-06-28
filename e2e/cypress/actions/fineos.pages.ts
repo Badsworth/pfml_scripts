@@ -1,6 +1,8 @@
-import { OtherIncome } from "../../src/_api";
+import { Address, OtherIncome } from "../../src/_api";
 import {
+  AllNotNull,
   NonEmptyArray,
+  PersonalIdentificationDetails,
   ValidConcurrentLeave,
   ValidEmployerBenefit,
   ValidOtherIncome,
@@ -24,13 +26,13 @@ import {
   assertHasDocument,
   clickBottomWidgetButton,
   denyClaim,
-  markEvidence,
   onTab,
   triggerNoticeRelease,
   visitClaim,
 } from "./fineos";
 
 import { DocumentUploadRequest } from "../../src/api";
+import { fineos } from ".";
 
 type StatusCategory =
   | "Applicability"
@@ -145,8 +147,31 @@ class AdjudicationPage {
 }
 
 class EvidencePage {
-  receive(...args: Parameters<typeof markEvidence>): this {
-    markEvidence(...args);
+  receive(
+    evidenceType: string,
+    receipt = "Received",
+    decision = "Satisfied",
+    reason = "Evidence has been reviewed and approved"
+  ): this {
+    cy.findByText(evidenceType).click();
+    cy.contains("tr", evidenceType).should("have.class", "ListRowSelected");
+    cy.findByText("Manage Evidence").click({
+      force: true,
+    });
+    // Focus inside popup. Note: There should be no need for an explicit wait here because
+    // Cypress will not move on until the popup has been rendered.
+    cy.get(".WidgetPanel_PopupWidget").within(() => {
+      cy.findByLabelText("Evidence Receipt").select(receipt);
+      cy.findByLabelText("Evidence Decision").select(decision);
+      cy.findByLabelText("Evidence Decision Reason").type(
+        `{selectall}{backspace}${reason}`
+      );
+      cy.findByText("OK").click({ force: true });
+      // Wait till modal has fully closed before moving on.
+    });
+    cy.wait(100);
+    cy.get("#disablingLayer").should("not.be.visible");
+    cy.get("#disablingLayerForAjaxPopupWidget").should("not.be.visible");
     return this;
   }
   requestAdditionalInformation(
@@ -179,6 +204,51 @@ class CertificationPeriodsPage {
 class TasksPage {
   assertTaskExists(name: string): this {
     assertHasTask(name);
+    return this;
+  }
+
+  /**
+   * Adds a task to a claim and asserts it has been assigned to DFML Program Integrity
+   * @param name name of the task to be added
+   */
+  add(
+    name:
+      | "Escalate Employer Reported Other Income"
+      | "Escalate employer reported past leave"
+      | "Escalate employer reported accrued paid leave (PTO)"
+      | "Escalate Employer Reported Fraud"
+  ): this {
+    cy.findByTitle(`Add a task to this case`).click({ force: true });
+    // Search for the task type
+    cy.findByLabelText(`Find Work Types Named`).type(`${name}{enter}`);
+    // Create task
+    cy.findByTitle(name, { exact: false }).click({ force: true });
+    clickBottomWidgetButton("Next");
+    return this;
+  }
+
+  assertIsAssignedToUser(taskName: string, userName: string): this {
+    // Find  task
+    cy.contains("tbody", "This case and its subcases").within(() => {
+      cy.findByText(taskName).click();
+    });
+    // Assert it's assigned to given user
+    cy.get(`span[id^="BasicDetailsUsersDeptWidget"][id$="AssignedTo"]`).should(
+      "contain.text",
+      `${userName}`
+    );
+    return this;
+  }
+  assertIsAssignedToDepartment(taskName: string, departmentName: string): this {
+    // Find  task
+    cy.contains("tbody", "This case and its subcases").within(() => {
+      cy.findByText(taskName).click();
+    });
+    // Assert it's in given department
+    cy.get(`span[id^="BasicDetailsUsersDeptWidget"][id$="Department"]`).should(
+      "contain.text",
+      `${departmentName}`
+    );
     return this;
   }
 
@@ -778,5 +848,55 @@ class PaidLeavePage {
     return `${new Intl.NumberFormat("en-US", {
       style: "decimal",
     }).format(num)}.00`;
+  }
+}
+
+export class ClaimantPage {
+  static visit(ssn: string): ClaimantPage {
+    fineos.searchClaimantSSN(ssn);
+    fineos.clickBottomWidgetButton("OK");
+    return new ClaimantPage();
+  }
+  /**
+   * Changes the personal identification details of the claimant.
+   * @param changes Object with one or more of propreties to edit.
+   */
+  editPersonalIdentification(
+    changes: Partial<PersonalIdentificationDetails>
+  ): this {
+    cy.get(`#personalIdentificationCardWidget`)
+      .findByTitle("Edit")
+      .click({ force: true });
+    cy.get(`#cardEditPopupWidget_PopupWidgetWrapper`).within(() => {
+      if (changes.id_number_type)
+        cy.findByLabelText(`Identification number type`).select(
+          changes.id_number_type
+        );
+
+      if (changes.date_of_birth)
+        cy.findByLabelText(`Date of birth`).type(
+          `{selectAll}{backspace}${changes.date_of_birth}`
+        );
+
+      if (changes.gender) cy.findByLabelText(`Gender`).select(changes.gender);
+
+      if (changes.marital_status)
+        cy.findByLabelText(`Marital status`).select(changes.marital_status);
+      cy.findByText("OK").click({ force: true });
+    });
+    return this;
+  }
+
+  addAddress(address: AllNotNull<Address>): this {
+    cy.findByText(`+ Add address`).click({ force: true });
+    cy.get(`#addressPopupWidget_PopupWidgetWrapper`).within(() => {
+      cy.findByLabelText(`Address line 1`).type(`${address.line_1}`);
+      cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
+      cy.findByLabelText(`City`).type(`${address.city}`);
+      cy.findByLabelText(`State`).select(`${address.state}`);
+      cy.findByLabelText(`Zip code`).type(`${address.zip}`);
+      cy.findByTitle("OK").click({ force: true });
+    });
+    return this;
   }
 }

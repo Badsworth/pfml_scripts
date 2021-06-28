@@ -31,10 +31,10 @@ export const Welcome = ({ appLogic, user }) => {
     fill: "currentColor",
   };
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
-  const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
+  const shouldShowOtherLeave = isFeatureEnabled("claimantShowOtherLeaveStep");
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
-  const shouldShowVerificationAlert = shouldShowVerifications && hasVerifiableEmployer;
-  const shouldShowCaringLeaveAlert = shouldShowCaringLeave;
+  const shouldShowCaringLeaveAlert =
+    shouldShowCaringLeave && !shouldShowOtherLeave;
 
   return (
     <React.Fragment>
@@ -45,7 +45,7 @@ export const Welcome = ({ appLogic, user }) => {
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersWelcome.welcomeTitle")}</Title>
 
-          {shouldShowVerificationAlert && (
+          {hasVerifiableEmployer && (
             <Alert
               state="warning"
               heading={t("pages.employersWelcome.verificationAlertTitle")}
@@ -71,13 +71,23 @@ export const Welcome = ({ appLogic, user }) => {
                   components={{
                     "about-caring-leave-link": (
                       <a
-                        href={routes.external.massgov.benefitsGuide_aboutCaringLeave}
+                        href={
+                          routes.external.massgov.benefitsGuide_aboutCaringLeave
+                        }
                         target="_blank"
                         rel="noopener"
                       />
                     ),
                   }}
                 />
+              </p>
+            </Alert>
+          )}
+
+          {shouldShowOtherLeave && (
+            <Alert state="info">
+              <p>
+                <Trans i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody" />
               </p>
             </Alert>
           )}
@@ -141,21 +151,17 @@ export const Welcome = ({ appLogic, user }) => {
         </div>
         <div className="grid-col-fill" />
         <aside className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1">
-          {shouldShowVerifications && (
-            <React.Fragment>
-              <Heading level="2">
-                {t("pages.employersWelcome.settingsTitle")}
-              </Heading>
-              <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05">
-                <li>
-                  <Link href={routes.employers.organizations}>
-                    <a>{t("pages.employersWelcome.settingsLink")}</a>
-                  </Link>
-                  <NewTag />
-                </li>
-              </ul>
-            </React.Fragment>
-          )}
+          <Heading level="2">
+            {t("pages.employersWelcome.settingsTitle")}
+          </Heading>
+          <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05">
+            <li>
+              <Link href={routes.employers.organizations}>
+                <a>{t("pages.employersWelcome.settingsLink")}</a>
+              </Link>
+              <NewTag />
+            </li>
+          </ul>
           <Heading level="2">
             {t("pages.employersWelcome.learnMoreTitle")}
           </Heading>

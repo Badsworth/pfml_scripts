@@ -18,6 +18,10 @@ function InputChoiceGroup({ type = "checkbox", ...props }) {
     "usa-form-group--error": hasError,
   });
 
+  const fieldWrapperClasses = classnames({
+    "margin-top-3": !props.smallLabel,
+  });
+
   return (
     <Fieldset className={formGroupClasses}>
       <FormLabel
@@ -30,7 +34,7 @@ function InputChoiceGroup({ type = "checkbox", ...props }) {
         {props.label}
       </FormLabel>
 
-      <div className="margin-top-3">
+      <div className={fieldWrapperClasses}>
         {props.choices.map((choice) => (
           <InputChoice
             key={choice.value}

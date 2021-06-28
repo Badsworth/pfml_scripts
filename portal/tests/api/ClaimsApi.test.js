@@ -48,11 +48,11 @@ describe("ClaimsApi", () => {
       const claimsApi = new ClaimsApi();
       await claimsApi.getClaims(2, {
         employer_id: "mock-employer-id",
-        status: "Approved",
+        claim_status: "Approved,Pending",
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/claims?page_offset=2&employer_id=mock-employer-id&status=Approved`,
+        `${process.env.apiUrl}/claims?page_offset=2&employer_id=mock-employer-id&claim_status=Approved%2CPending`,
         expect.objectContaining({
           headers: expect.any(Object),
           method: "GET",

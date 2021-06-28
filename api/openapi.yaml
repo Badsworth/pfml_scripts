@@ -30,6 +30,24 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
 
+  /flags:
+    get:
+      security:
+        - {} # no authentication option
+      tags:
+        - Feature Flags
+      summary: Get feature flags
+      operationId: massgov.pfml.api.flags.flags_get
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and list of flags.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlagsResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableError"
+
   /users:
     post:
       security:
@@ -1085,6 +1103,7 @@ tags:
   - name: Financial Eligibility
   - name: ID Proofing
   - name: Notifications
+  - name: Feature Flags
 
 components:
   securitySchemes:
@@ -1377,6 +1396,37 @@ components:
           nullable: true
           pattern: '^[0-9]{5}((?:-[0-9]{4})?|(?:-\*{4})?)$'
           example: "12345"
+
+    FlagResponse:
+      type: object
+      properties:
+        start:
+          type: string
+          nullable: true
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"
+        end:
+          type: string
+          nullable: true
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"
+        name:
+          type: string
+          example: "maintenance"
+        options:
+          type: object
+          example:
+            page_routes:
+             - "/applications/*"
+             - "/employers/*"
+        enabled:
+          type: boolean
+          example: false
+
+    FlagsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/FlagResponse"
 
     UserResponse:
       type: object
@@ -1752,14 +1802,17 @@ components:
             first_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "John"
             middle_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "Jake"
             last_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "Doe"
             date_of_birth:
               $ref: "#/components/schemas/DateOrMaskedDate"

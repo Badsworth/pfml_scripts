@@ -3,6 +3,7 @@ import generateDocuments from "../../../src/generation/documents";
 import ClaimPool, {
   ClaimGenerator,
   ClaimSpecification,
+  EmployerResponseSpec,
   GeneratedClaim,
 } from "../../../src/generation/Claim";
 import EmployeePool from "../../../src/generation/Employee";
@@ -523,7 +524,75 @@ describe("Claim Generator", () => {
       {},
       { ...medical, employerResponse }
     );
-    expect(claim.employerResponse).toEqual(employerResponse);
+    expect(claim.employerResponse).toEqual({
+      ...employerResponse,
+      employer_benefits: [],
+      previous_leaves: [],
+    });
+  });
+
+  it("Should support generating previous_leaves on employer response", async () => {
+    const employerResponse = {
+      hours_worked_per_week: 40,
+      fraud: "No" as const,
+      employer_decision: "Approve" as const,
+      comment: "Test test",
+      previous_leaves: [previousLeaveWithoutDates, previousLeave],
+    };
+    const claim = ClaimGenerator.generate(
+      employeePool,
+      {},
+      { ...medical, employerResponse }
+    );
+    expect(claim.employerResponse?.previous_leaves).toHaveLength(2);
+    claim.employerResponse?.previous_leaves.forEach((previous_leave) => {
+      expect(previous_leave).toMatchObject({
+        leave_start_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+        leave_end_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+      });
+    });
+  });
+
+  it("Should support generating employer_benefits on employer response", async () => {
+    const employerResponse = {
+      hours_worked_per_week: 40,
+      fraud: "No" as const,
+      employer_decision: "Approve" as const,
+      comment: "Test test",
+      employer_benefits: [benefitWithExplicitDates, benefitWithoutDates],
+    };
+    const claim = ClaimGenerator.generate(
+      employeePool,
+      {},
+      { ...medical, employerResponse }
+    );
+    expect(claim.employerResponse?.employer_benefits).toHaveLength(2);
+    claim.employerResponse?.employer_benefits.forEach((benefit) => {
+      expect(benefit).toMatchObject({
+        benefit_start_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+        benefit_end_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+      });
+    });
+  });
+
+  it("Should support generating concurrent_leave on employer response", () => {
+    const employerResponse: EmployerResponseSpec = {
+      hours_worked_per_week: 40,
+      fraud: "No",
+      employer_decision: "Approve",
+      comment: "Test test",
+      concurrent_leave: { is_for_current_employer: true },
+    };
+    const claim = ClaimGenerator.generate(
+      employeePool,
+      {},
+      { ...medical, employerResponse }
+    );
+    expect(claim.employerResponse?.concurrent_leave).toMatchObject({
+      is_for_current_employer: true,
+      leave_start_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+      leave_end_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+    });
   });
 
   it("Should use the provided field data", async () => {

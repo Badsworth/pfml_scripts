@@ -148,7 +148,7 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
     level="2"
     size="1"
   >
-    Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.
+    Tell us about employer-sponsored benefits you will use during your leave dates for paid leave from PFML.
   </Heading>
   <LeaveDatesAlert
     endDate="2021-06-01"
@@ -199,7 +199,7 @@ exports[`EmployerBenefitsDetails when the user's claim has no employer benefits 
     level="2"
     size="1"
   >
-    Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.
+    Tell us about employer-sponsored benefits you will use during your leave dates for paid leave from PFML.
   </Heading>
   <LeaveDatesAlert
     endDate="2021-06-01"

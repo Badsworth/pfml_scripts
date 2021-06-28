@@ -10,7 +10,6 @@ import { Trans } from "react-i18next";
 import User from "../../../models/User";
 import Withholding from "../../../models/Withholding";
 import formatDateRange from "../../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
@@ -28,10 +27,6 @@ export const VerifyContributions = (props) => {
   const employer = user.user_leave_administrators.find((employer) => {
     return employer.employer_id === query.employer_id;
   });
-
-  if (!isFeatureEnabled("employerShowVerifications")) {
-    appLogic.portalFlow.goTo(routes.employers.welcome);
-  }
 
   const { formState, updateFields } = useFormState({
     withholdingAmount: 0,

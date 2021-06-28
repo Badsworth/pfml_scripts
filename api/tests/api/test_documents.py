@@ -1,9 +1,11 @@
 import copy
 import io
+from datetime import datetime, timedelta
 
 import pytest
 
 import massgov.pfml.fineos.mock_client
+from massgov.pfml.api.app import get_app_config
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.db.models.applications import DocumentType, LeaveReason
 from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory, DocumentFactory
@@ -71,6 +73,12 @@ MILITARY_EXIGENCY_FORM_DATA = {
 }
 
 
+@pytest.fixture(autouse=True)
+def make_new_plan_proofs_active(monkeypatch, app):
+    current_config = app.app.config["app_config"]
+    current_config.new_plan_proofs_active_at = datetime.now() - timedelta(days=1)
+
+
 def valid_file():
     return (io.BytesIO(b"abcdef"), "test.png")
 
@@ -94,6 +102,7 @@ def document_upload_helper(client, user, auth_token, form_data, leave_reason_id=
         claim=claim,
         leave_reason_id=leave_reason_id,
         pregnant_or_recent_birth=pregnant_or_recent_birth,
+        submitted_time=datetime.now(),
     )
 
     response = client.post(
@@ -369,6 +378,74 @@ def test_old_document_type_saved(client, consented_user, consented_user_token, t
     assert response_data["name"] == "care_test.png"
     assert response_data["user_id"] == str(consented_user.user_id)
     assert response_data["created_at"] is not None
+
+
+# TODO: (API-1647) This test should also be removed once State manage Paid Leave Confirmation is obsolete
+def test_use_old_doc_type_before_plan_proofs_active(
+    client, consented_user, consented_user_token, test_db_session, app
+):
+    # When the new service pack is live, ALL existing claims should use the old doc types
+    # Even claims where only part 1 is submitted and there are no existing documents
+
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+
+    application = ApplicationFactory.create(
+        user=consented_user,
+        claim=claim,
+        submitted_time=get_app_config(app).new_plan_proofs_active_at - timedelta(days=1),
+    )
+
+    # POST a document with one of the new document types
+    response = client.post(
+        "/v1/applications/{}/documents".format(application.application_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+        content_type="multipart/form-data",
+        data=document_upload_payload_helper(CARE_FOR_A_FAMILY_MEMBER_FORM_DATA, valid_file()),
+    ).get_json()
+
+    assert response["status_code"] == 200
+
+    response_data = response["data"]
+    # Assert that the document has the old, rather than the new, document type
+    assert response_data["document_type"] == "State managed Paid Leave Confirmation"
+    assert response_data["content_type"] == "image/png"
+    assert response_data["description"] == "Care for a family member form"
+
+
+# TODO: (API-1647) This test should also be removed once State manage Paid Leave Confirmation is obsolete
+def test_use_new_doc_type_after_plan_proofs_active(
+    client, consented_user, consented_user_token, test_db_session, app
+):
+    # When the new service pack is live, ALL existing claims should use the old doc types
+    # Even claims where only part 1 is submitted and there are no existing documents
+
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+
+    application = ApplicationFactory.create(
+        user=consented_user,
+        claim=claim,
+        submitted_time=get_app_config(app).new_plan_proofs_active_at + timedelta(days=1),
+    )
+
+    # POST a document with one of the new document types
+    response = client.post(
+        "/v1/applications/{}/documents".format(application.application_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+        content_type="multipart/form-data",
+        data=document_upload_payload_helper(CARE_FOR_A_FAMILY_MEMBER_FORM_DATA, valid_file()),
+    ).get_json()
+
+    assert response["status_code"] == 200
+
+    response_data = response["data"]
+    # Assert that the document has the new document type, rather than State managed Paid Leave Confirmation
+    assert response_data["document_type"] == "Care for a family member form"
+    assert response_data["content_type"] == "image/png"
+    assert response_data["description"] == "Care for a family member form"
 
 
 # TODO: (API-1647) This test should also be removed once State manage Paid Leave Confirmation is obsolete

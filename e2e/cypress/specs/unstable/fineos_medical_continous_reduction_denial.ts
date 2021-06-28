@@ -1,11 +1,13 @@
-import { Submission } from "../../../src/types";
-import { extractLeavePeriod } from "../../../src/util/claims";
+import { AllNotNull, Submission } from "../../../src/types";
+import { dateToMMddyyyy, extractLeavePeriod } from "../../../src/util/claims";
 import {
   assertIsTypedArray,
   assertValidClaim,
+  isValidConcurrentLeave,
   isValidEmployerBenefit,
-  isValidOtherIncome,
+  isValidPreviousLeave,
 } from "../../../src/util/typeUtils";
+import { Address } from "../../../src/_api";
 import { fineos, fineosPages, portal } from "../../actions";
 import { config } from "../../actions/common";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
@@ -21,12 +23,18 @@ describe("Claimant can call call-center to submit a claim for leave with other l
         cy.task("generateClaim", "CONTINUOUS_MEDICAL_OLB").then((claim) => {
           cy.stash("claim", claim);
           assertValidClaim(claim.claim);
-          fineos.searchClaimantSSN(claim.claim.tax_identifier);
-          fineos.clickBottomWidgetButton("OK");
-          fineos.assertOnClaimantPage(
-            claim.claim.first_name,
-            claim.claim.last_name
+          const claimantPage = fineosPages.ClaimantPage.visit(
+            claim.claim.tax_identifier
           );
+          // This is done in case the claimant is missing DOB or an address.
+          claimantPage
+            .editPersonalIdentification({
+              date_of_birth: dateToMMddyyyy(claim.claim.date_of_birth),
+            })
+            .addAddress({
+              ...(claim.claim.mailing_address as AllNotNull<Address>),
+            });
+
           const [startDate, endDate] = extractLeavePeriod(
             claim.claim,
             "continuous_leave_periods"
@@ -75,10 +83,7 @@ describe("Claimant can call call-center to submit a claim for leave with other l
         });
       }
     );
-    /**
-     * @todo Functionality needed for these tests will be available starting June 18th.
-     */
-    const erApproval = it("LA can review and approve a claim", () => {
+    it("LA can review and deny the claim", () => {
       cy.dependsOnPreviousPass([claimSubmission]);
       portal.before();
       cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
@@ -86,51 +91,24 @@ describe("Claimant can call call-center to submit a claim for leave with other l
           assertValidClaim(claim);
           portal.login(getLeaveAdminCredentials(claim.employer_fein));
           portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
-          portal.respondToLeaveAdminRequest(false, true, true, false);
+          // Check we have the previous leave from fineos
+          assertIsTypedArray(
+            claim.previous_leaves_other_reason,
+            isValidPreviousLeave
+          );
+          portal.assertPreviousLeave(claim.previous_leaves_other_reason[0]);
+          // Check we have the employer benefits from fineos
+          assertIsTypedArray(claim.employer_benefits, isValidEmployerBenefit);
+          portal.assertEmployerBenefit(claim.employer_benefits[0]);
+
+          // Check we have concurrent leave from fineos
+          if (isValidConcurrentLeave(claim.concurrent_leave))
+            portal.assertConcurrentLeave(claim.concurrent_leave);
+          // Deny the claim
+          portal.respondToLeaveAdminRequest(false, true, false, false);
         });
       });
     });
-    xit(
-      "CPS agent can approve the claim and check for possible reductions",
-      { baseUrl: getFineosBaseUrl() },
-      () => {
-        cy.dependsOnPreviousPass([claimSubmission, erApproval]);
-        fineos.before();
-        cy.visit("/");
-        cy.unstash<DehydratedClaim>("claim").then(({ claim, documents }) => {
-          cy.unstash<Submission>("submission").then((submission) => {
-            assertValidClaim(claim);
-            fineosPages.ClaimPage.visit(submission.fineos_absence_id)
-              .adjudicate((adjudication) => {
-                adjudication
-                  .evidence((evidence) => {
-                    documents.forEach(({ document_type }) => {
-                      evidence.receive(document_type);
-                    });
-                  })
-                  .certificationPeriods((certification) => {
-                    certification.prefill();
-                  })
-                  .acceptLeavePlan();
-              })
-              .approve()
-              .paidLeave((leaveCase) => {
-                const { other_incomes, employer_benefits } = claim;
-                assertIsTypedArray(other_incomes, isValidOtherIncome);
-                assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
-                leaveCase
-                  .applyReductions({ other_incomes, employer_benefits })
-                  .assertPaymentsMade([{ net_payment_amount: 1100 }])
-                  .assertPaymentAllocations([
-                    { net_payment_amount: 550 },
-                    { net_payment_amount: 550 },
-                  ])
-                  .assertAmountsPending([{ net_payment_amount: 550 }]);
-              });
-          });
-        });
-      }
-    );
   } else {
     it("Does not run", () => {
       cy.log(

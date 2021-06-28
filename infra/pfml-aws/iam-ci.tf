@@ -44,6 +44,7 @@ data "aws_iam_policy_document" "trust_assume_role_policy" {
       identifiers = [
         "arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer",
         "arn:aws:iam::498823821309:role/AWS-498823821309-Infrastructure-Admin",
+        module.constants.infra_admin_sso_arn,
         aws_iam_user.github_actions.arn,
       ]
     }

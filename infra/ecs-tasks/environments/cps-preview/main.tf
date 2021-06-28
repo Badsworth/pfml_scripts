@@ -31,10 +31,13 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name   = "cps-preview"
-  service_docker_tag = local.service_docker_tag
-  vpc_id             = data.aws_vpc.vpc.id
-  app_subnet_ids     = data.aws_subnet_ids.vpc_app.ids
+  environment_name        = "cps-preview"
+  st_use_mock_dor_data    = false
+  st_decrypt_dor_data     = false
+  st_file_limit_specified = true
+  service_docker_tag      = local.service_docker_tag
+  vpc_id                  = data.aws_vpc.vpc.id
+  app_subnet_ids          = data.aws_subnet_ids.vpc_app.ids
 
   cognito_user_pool_id = "us-east-1_1OVYp4aZo"
 
@@ -92,6 +95,5 @@ module "tasks" {
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
-  dor_fineos_etl_definition          = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 }

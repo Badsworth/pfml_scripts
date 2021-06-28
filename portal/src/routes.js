@@ -115,6 +115,8 @@ const routes = {
       caregiverCertificationForm: "https://www.mass.gov/family-caring-form",
       caregiverRelationship:
         "https://www.mass.gov/family-caring-leave-relationships",
+      caseCreationErrorGuide:
+        "https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error",
       consentAgreement:
         "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
       dfml: "https://www.mass.gov/orgs/department-of-family-and-medical-leave",

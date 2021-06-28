@@ -43,7 +43,7 @@ class PurchaseDataAttributeBuilder(EFormAttributeBuilder):
     JOINING_ATTRIBUTE = {
         "name": "PurchaseAdditionalItem",
         "type": "enumValue",
-        "domainName": "PleaseSelectYesNoUnknown",
+        "domainName": "PleaseSelectYesNo",
         "instanceValue": "Yes",
     }
 
@@ -95,7 +95,7 @@ class TestEFormBuilder:
                 "enumValue": {"domainName": "shopping", "instanceValue": "Home improvement"},
             },
             {
-                "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
+                "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
                 "name": "PurchaseAdditionalItem",
             },
             {"decimalValue": purchase_data.purchase_amount, "name": "purchaseAmount2"},

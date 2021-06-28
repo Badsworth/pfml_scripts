@@ -25,7 +25,9 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
   /**
    * Load a page of claims for the authenticated user
    * @param {number|string} [pageOffset] - Page number to load
-   * @param {{ employer_id: string }} [filters]
+   * @param {object} [filters]
+   * @param {string} [filters.claim_status] - Comma-separated list of statuses
+   * @param {string} [filters.employer_id]
    */
   const loadPage = async (pageOffset = 1, filters = {}) => {
     if (

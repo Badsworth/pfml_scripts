@@ -17,6 +17,7 @@ data "aws_iam_policy_document" "prod_tfstate_s3_kms_key" {
         "arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer",
         "arn:aws:iam::498823821309:role/AWS-498823821309-Infrastructure-Admin",
         "arn:aws:iam::498823821309:role/ci-run-deploys",
+        module.constants.infra_admin_sso_arn
       ]
     }
   }

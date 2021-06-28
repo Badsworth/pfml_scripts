@@ -155,6 +155,11 @@ export class BaseMockBenefitsApplicationBuilder {
     return this;
   }
 
+  pregnancyLeaveReason() {
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.pregnancy);
+    return this;
+  }
+
   otherIncome(attrs) {
     set(
       this.claimAttrs,
@@ -224,6 +229,25 @@ export class BaseMockBenefitsApplicationBuilder {
               benefit_start_date: "2021-01-01",
               benefit_type: EmployerBenefitType.familyOrMedicalLeave,
               employer_benefit_id: 1,
+              is_full_salary_continuous: false,
+            }),
+            new EmployerBenefit({
+              benefit_amount_dollars: null,
+              benefit_amount_frequency: null,
+              benefit_end_date: "2021-02-01",
+              benefit_start_date: "2021-01-01",
+              benefit_type: EmployerBenefitType.shortTermDisability,
+              employer_benefit_id: 2,
+              is_full_salary_continuous: true,
+            }),
+            new EmployerBenefit({
+              benefit_amount_dollars: null,
+              benefit_amount_frequency: EmployerBenefitFrequency.weekly,
+              benefit_end_date: "2021-02-01",
+              benefit_start_date: "2021-01-01",
+              benefit_type: EmployerBenefitType.permanentDisability,
+              employer_benefit_id: 3,
+              is_full_salary_continuous: false,
             }),
           ]
     );

@@ -32,6 +32,7 @@ exports[`LeaveDetails Caring Leave renders relationship question when showCaring
     Leave details
   </ReviewHeading>
   <ReviewRow
+    data-test="leave-type"
     label="Leave type"
     level="3"
   >
@@ -156,6 +157,7 @@ exports[`LeaveDetails renders the component 1`] = `
     Leave details
   </ReviewHeading>
   <ReviewRow
+    data-test="leave-type"
     label="Leave type"
     level="3"
   >

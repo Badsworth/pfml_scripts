@@ -30,7 +30,7 @@ class EmployerBenefitV1AttributeBuilder(EFormAttributeBuilder):
     JOINING_ATTRIBUTE = {
         "name": "ReceiveWageReplacement",
         "type": "enumValue",
-        "domainName": "PleaseSelectYesNoUnknown",
+        "domainName": "PleaseSelectYesNo",
         "instanceValue": "Yes",
     }
 

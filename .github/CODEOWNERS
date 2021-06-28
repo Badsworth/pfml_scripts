@@ -25,7 +25,7 @@
 /api/**/api/validation/                                @antxaddis @kyeah
 /api/**/cognito*/                                      @sharonwarner
 /api/**/db/                                            @doshitan @jamesbursa
-/api/**/delegated_payments/                            @chouinar
+/api/**/delegated_payments/                            @chouinar @antxaddis
 /api/**/dor/                                           @antxaddis @mhuneke
 /api/**/fineos/                                        @doshitan @oscarAtNava
 /api/**/formstack/                                     @sharonwarner

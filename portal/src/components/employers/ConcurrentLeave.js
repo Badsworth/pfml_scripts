@@ -2,9 +2,9 @@ import AddButton from "./AddButton";
 import AmendableConcurrentLeave from "./AmendableConcurrentLeave";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeaveModel from "../../models/ConcurrentLeave";
+import Heading from "../Heading";
 import PropTypes from "prop-types";
 import React from "react";
-import ReviewHeading from "../ReviewHeading";
 import Table from "../Table";
 import { useTranslation } from "../../locales/i18n";
 
@@ -26,9 +26,9 @@ const ConcurrentLeave = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading level="2">
+      <Heading level="3">
         {t("components.employersConcurrentLeave.header")}
-      </ReviewHeading>
+      </Heading>
       <p>{t("components.employersConcurrentLeave.explanation")}</p>
       <Table className="width-full">
         <thead>
@@ -74,7 +74,6 @@ const ConcurrentLeave = (props) => {
           )}
         </tbody>
       </Table>
-      <p>{t("components.employersConcurrentLeave.commentInstructions")}</p>
     </React.Fragment>
   );
 };

@@ -170,7 +170,9 @@ export function assertAdjudicatingClaim(claimId: string): void {
  * Helper to switch to a particular tab.
  */
 export function onTab(label: string, wait = 50): void {
-  cy.contains(".TabStrip td", label).click().should("have.class", "TabOn");
+  cy.contains(".TabStrip td", label)
+    .click({ force: true })
+    .should("have.class", "TabOn");
   // Wait on any in-flight Ajax to complete, then add a very slight delay for rendering to occur.
   cy.wait("@ajaxRender").wait(wait);
 }
@@ -334,7 +336,7 @@ export function createNotification(
       .find("span.slider")
       .click();
     clickNext();
-    cy.labelled("Absence status").select("Estimated");
+    cy.labelled("Absence status").select("Known");
     wait();
     cy.labelled("Absence start date").type(
       `${format(startDate, "MM/dd/yyyy")}{enter}`
@@ -580,6 +582,9 @@ export function submitIntermittentActualHours(
 
     cy.labelled("Absence end date")
       .focus()
+      // @bc: During a debug session there was a odd failure
+      // this wait helps prevent typing in wrong field
+      .wait(1000)
       .type(`{selectall}{backspace}${endDateFormatted}`)
       .blur()
       // Wait for this element to be detached, then rerendered after being blurred.

@@ -138,14 +138,14 @@ class PaymentRejectsStep(Step):
                     is_first_time_payment=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment
                     ),
-                    is_previously_errored_payment=get_row(
-                        row, PAYMENT_AUDIT_CSV_HEADERS.is_previously_errored_payment
+                    previously_errored_payment_count=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.previously_errored_payment_count
                     ),
-                    is_previously_rejected_payment=get_row(
-                        row, PAYMENT_AUDIT_CSV_HEADERS.is_previously_rejected_payment
+                    previously_rejected_payment_count=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.previously_rejected_payment_count
                     ),
-                    number_of_times_in_rejected_or_error_state=get_row(
-                        row, PAYMENT_AUDIT_CSV_HEADERS.number_of_times_in_rejected_or_error_state
+                    previously_skipped_payment_count=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.previously_skipped_payment_count
                     ),
                     rejected_by_program_integrity=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity

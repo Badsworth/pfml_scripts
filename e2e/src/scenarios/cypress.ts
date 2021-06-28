@@ -396,27 +396,27 @@ export const BHAP1_OLB: ScenarioSpecification = {
       FOSTERPLACEMENT: {},
     },
     // Create a leave in progress, so we can check adjustments for both made and future payments.
-    leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 3)],
+    leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
     // Leave start & end dates here and in employer benefits empty so they match the leave dates automatically
     other_incomes: [
       {
-        income_type: "Earnings from another employment/self-employment",
+        income_type: "SSDI",
         income_amount_dollars: 200,
         income_amount_frequency: "Per Week",
       },
     ],
     employer_benefits: [
       {
-        benefit_amount_dollars: 100,
-        benefit_amount_frequency: "Per Week",
-        benefit_type: "Short-term disability insurance",
-        is_full_salary_continuous: false,
+        benefit_amount_dollars: 500,
+        benefit_amount_frequency: "In Total",
+        benefit_type: "Family or medical leave insurance",
+        is_full_salary_continuous: true,
       },
     ],
     previous_leaves_other_reason: [
       {
         type: "other_reason",
-        leave_reason: "Bonding with my child after birth or placement",
+        leave_reason: "An illness or injury",
         is_for_current_employer: true,
         leave_minutes: 2400,
         worked_per_week_minutes: 1200,

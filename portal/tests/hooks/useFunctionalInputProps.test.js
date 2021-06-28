@@ -120,6 +120,25 @@ describe("useFunctionalInputProps", () => {
     expect(props.errorMsg).toBe(issue.msg);
   });
 
+  it("doesn't require appErrors to be defined", () => {
+    let getFunctionalInputProps;
+
+    testHook(() => {
+      const { formState, updateFields } = useFormState({
+        employer_notified: true,
+      });
+
+      getFunctionalInputProps = useFunctionalInputProps({
+        formState,
+        updateFields,
+      });
+    });
+
+    const props = getFunctionalInputProps("employer_notified");
+
+    expect(props.errorMsg).toBeUndefined();
+  });
+
   it("sets the name and onChange props", () => {
     const name = "first_name";
     let getFunctionalInputProps;

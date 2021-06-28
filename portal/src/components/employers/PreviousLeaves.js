@@ -166,9 +166,6 @@ const PreviousLeaves = (props) => {
           )}
         </tbody>
       </Table>
-      <p className="margin-top-neg-1 padding-left-2">
-        {t("components.employersPreviousLeaves.commentInstructions")}
-      </p>
     </React.Fragment>
   );
 };

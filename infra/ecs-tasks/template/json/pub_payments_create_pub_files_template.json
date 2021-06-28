@@ -53,6 +53,7 @@
       "secrets": [
         { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
         { "name": "NR_INSERT_API_KEY", "valueFrom": "/admin/pfml-api/newrelic-insert-api-key" },
+        { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},
         { "name": "DFML_PUB_ROUTING_NUMBER", "valueFrom": "/service/${app_name}/${environment_name}/dfml_pub_routing_number" },
         { "name": "DFML_PUB_ACCOUNT_NUMBER", "valueFrom": "/service/${app_name}/${environment_name}/dfml_pub_account_number" }
       ]

@@ -271,7 +271,15 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
             )
         except (ContainsV1AndV2Eforms) as error:
             return response_util.error_response(
-                status_code=error.status_code, message=error.description, errors=[], data={},
+                status_code=error.status_code,
+                message=error.description,
+                errors=[
+                    response_util.custom_issue(
+                        message="Claim contains both V1 and V2 eforms.",
+                        type="contains_v1_and_v2_eforms",
+                    )
+                ],
+                data={},
             ).to_api_response()
 
         if claim_review_response is None:
@@ -484,6 +492,8 @@ def get_claims() -> flask.Response:
                     .order_by(pagination_context.order_key)
                 )
             if len(absence_statuses):
+                absence_statuses = convert_pending_absence_status(absence_statuses)
+                log_attributes.update({"filter.absence_statuses": absence_statuses})  # type: ignore
                 query = add_absence_status_filter_to_query(query, absence_statuses)
 
         page = page_for_api_context(pagination_context, query)
@@ -513,7 +523,7 @@ def get_claims() -> flask.Response:
 def parse_absence_statuses(absence_status_string: Union[str, None]) -> set:
     if not absence_status_string:
         return set()
-    absence_statuses = set(absence_status_string.split(","))
+    absence_statuses = set(absence_status_string.strip().split(","))
     validate_absence_status(absence_statuses)
     return absence_statuses
 
@@ -533,7 +543,6 @@ def convert_pending_absence_status(absence_statuses: Set[str]) -> Set[str]:
 
 
 def add_absence_status_filter_to_query(query: Query, absence_statuses: Set[str]) -> Query:
-    absence_statuses = convert_pending_absence_status(absence_statuses)
     query = query.join(
         LkAbsenceStatus,
         LkAbsenceStatus.absence_status_id == Claim.fineos_absence_status_id,

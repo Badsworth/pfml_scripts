@@ -141,7 +141,7 @@ class TestV1EmployerEformFunctionality:
             },
             {"name": "BenefitType", "stringValue": employer_benefits[0].benefit_type},
             {
-                "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
+                "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
                 "name": "ReceiveWageReplacement",
             },
             {"decimalValue": employer_benefits[1].benefit_amount_dollars, "name": "Amount2"},
