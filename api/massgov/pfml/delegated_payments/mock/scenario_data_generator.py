@@ -49,7 +49,7 @@ fake.seed_instance(1212)
 
 MATCH_ADDRESS = {
     "line_1": "20 South Ave",
-    "line_2": "",
+    "line_2": None,
     "city": "Burlington",
     "state": "MA",
     "zip": "01803",
@@ -57,7 +57,7 @@ MATCH_ADDRESS = {
 
 NO_MATCH_ADDRESS = {
     "line_1": "123 Main St",
-    "line_2": "",
+    "line_2": None,
     "city": "Burlington",
     "state": "MA",
     "zip": "01803",
@@ -65,7 +65,7 @@ NO_MATCH_ADDRESS = {
 
 INVALID_ADDRESS = {
     "line_1": "20 South Ave",
-    "line_2": "",
+    "line_2": None,
     "city": "Burlington",
     "state": "XA",
     "zip": "01803",
