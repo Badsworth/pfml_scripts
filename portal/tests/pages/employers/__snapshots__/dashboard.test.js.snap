@@ -142,6 +142,121 @@ Array [
 ]
 `;
 
+exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 1`] = `
+<Button
+  aria-controls="filters"
+  aria-expanded="false"
+  onClick={[Function]}
+  variation="outline"
+>
+  Show filters (2)
+</Button>
+`;
+
+exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 2`] = `
+<Button
+  aria-controls="filters"
+  aria-expanded="false"
+  onClick={[Function]}
+  variation="outline"
+>
+  Show filters
+</Button>
+`;
+
+exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 3`] = `
+<Button
+  aria-controls="filters"
+  aria-expanded="true"
+  onClick={[Function]}
+  variation="outline"
+>
+  Hide filters
+</Button>
+`;
+
+exports[`Employer dashboard renders filters when feature flags are enabled 1`] = `
+<Fragment>
+  <Button
+    aria-controls="filters"
+    aria-expanded="false"
+    onClick={[Function]}
+    variation="outline"
+  >
+    Show filters
+  </Button>
+  <form
+    className="bg-primary-lighter margin-top-2 padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
+    hidden={true}
+    id="filters"
+    onSubmit={[Function]}
+  >
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "label": "Approved",
+            "value": "Approved",
+          },
+          Object {
+            "checked": false,
+            "label": "Closed",
+            "value": "Closed",
+          },
+          Object {
+            "checked": false,
+            "label": "Denied",
+            "value": "Declined",
+          },
+          Object {
+            "checked": false,
+            "label": "--",
+            "value": "Pending",
+          },
+        ]
+      }
+      label="Status"
+      name="claim_status"
+      onChange={[Function]}
+      smallLabel={true}
+      type="checkbox"
+      value=""
+    />
+    <Dropdown
+      choices={
+        Array [
+          Object {
+            "label": "All organizations",
+            "value": "",
+          },
+          Object {
+            "label": "Work Inc (11-3456789)",
+            "value": "mock-id-1",
+          },
+          Object {
+            "label": "Acme (22-3456789)",
+            "value": "mock-id-2",
+          },
+        ]
+      }
+      hideEmptyChoice={true}
+      label="Organizations"
+      name="employer_id"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+    />
+    <Button
+      disabled={true}
+      type="submit"
+    >
+      Apply filters
+    </Button>
+  </form>
+</Fragment>
+`;
+
 exports[`Employer dashboard renders instructions if there are no verified employers 1`] = `
 Array [
   "You have not verified any organizations. ",
