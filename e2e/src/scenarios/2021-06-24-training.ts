@@ -21,7 +21,7 @@ export const TRNOI1: ScenarioSpecification = {
     other_incomes: [
       {
         income_type: "Workers Compensation",
-        income_start_date: "2021-01-04",
+        income_start_date: "2021-04-01",
         income_end_date: "2021-07-16",
         income_amount_dollars: 500,
         income_amount_frequency: "Per Week",
@@ -54,7 +54,7 @@ export const TRNOI2: ScenarioSpecification = {
       {
         benefit_type: "Short-term disability insurance",
         benefit_start_date: "2021-06-07",
-        benefit_end_date: "2021-10-10",
+        benefit_end_date: "2021-10-01",
         benefit_amount_dollars: 100,
         benefit_amount_frequency: "Per Week",
       },
