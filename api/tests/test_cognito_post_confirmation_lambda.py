@@ -66,7 +66,7 @@ def test_main_success(test_db_session, claimant_event_dict, logging_fix):
 
     created_user = (
         test_db_session.query(User)
-        .filter(User.active_directory_id == claimant_event_dict["request"]["userAttributes"]["sub"])
+        .filter(User.sub_id == claimant_event_dict["request"]["userAttributes"]["sub"])
         .one()
     )
 
@@ -100,9 +100,7 @@ def test_lib_success(test_db_session, claimant_event_dict):
     response = lib.handler(test_db_session, event, {})
 
     created_user = (
-        test_db_session.query(User)
-        .filter(User.active_directory_id == event.request.userAttributes["sub"])
-        .one()
+        test_db_session.query(User).filter(User.sub_id == event.request.userAttributes["sub"]).one()
     )
 
     assert created_user.email_address == event.request.userAttributes["email"]
@@ -119,7 +117,7 @@ def test_lib_skip_non_post_confirmation_event(test_db_session, claimant_event_di
 
     user_that_should_not_exist = (
         test_db_session.query(User)
-        .filter(User.active_directory_id == event.request.userAttributes["sub"])
+        .filter(User.sub_id == event.request.userAttributes["sub"])
         .one_or_none()
     )
 
@@ -127,7 +125,7 @@ def test_lib_skip_non_post_confirmation_event(test_db_session, claimant_event_di
     assert response == event
 
 
-def test_user_active_directory_id_uniqueness(test_db_session, claimant_event_dict):
+def test_user_sub_id_uniqueness(test_db_session, claimant_event_dict):
     event1 = lib.PostConfirmationEvent(**claimant_event_dict)
 
     # create second event with different email address
@@ -140,17 +138,17 @@ def test_user_active_directory_id_uniqueness(test_db_session, claimant_event_dic
     # user is created as normal
     created_user_initial = (
         test_db_session.query(User)
-        .filter(User.active_directory_id == event1.request.userAttributes["sub"])
+        .filter(User.sub_id == event1.request.userAttributes["sub"])
         .one()
     )
 
     # a second request for same user comes in
     lib.handler(test_db_session, event2, {})
 
-    # there should still only be one User record with the requested `active_directory_id`
+    # there should still only be one User record with the requested `sub_id`
     created_user_after_second_request = (
         test_db_session.query(User)
-        .filter(User.active_directory_id == event2.request.userAttributes["sub"])
+        .filter(User.sub_id == event2.request.userAttributes["sub"])
         .one()
     )
 
@@ -177,9 +175,7 @@ def test_leave_admin_handler(test_db_session, leave_admin_event_dict, logging_fi
 
     created_user = (
         test_db_session.query(User)
-        .filter(
-            User.active_directory_id == leave_admin_event_dict["request"]["userAttributes"]["sub"]
-        )
+        .filter(User.sub_id == leave_admin_event_dict["request"]["userAttributes"]["sub"])
         .one()
     )
 
@@ -205,9 +201,9 @@ def test_leave_admin_create(test_db_session):
 
     lib.leave_admin_create(test_db_session, "UUID", "fake@fake.com", employer.employer_fein, {})
 
-    created_user = test_db_session.query(User).filter(User.active_directory_id == "UUID").one()
+    created_user = test_db_session.query(User).filter(User.sub_id == "UUID").one()
 
-    assert created_user.active_directory_id == "UUID"
+    assert created_user.sub_id == "UUID"
     assert created_user.email_address == "fake@fake.com"
     assert created_user.roles[0].role_id == Role.EMPLOYER.role_id
 
@@ -230,9 +226,9 @@ def test_register_fineos_updates_ula_record(test_db_session):
 
     lib.leave_admin_create(test_db_session, "UUID", "fake@fake.com", employer.employer_fein, {})
 
-    created_user = test_db_session.query(User).filter(User.active_directory_id == "UUID").one()
+    created_user = test_db_session.query(User).filter(User.sub_id == "UUID").one()
 
-    assert created_user.active_directory_id == "UUID"
+    assert created_user.sub_id == "UUID"
     assert created_user.email_address == "fake@fake.com"
     assert created_user.roles[0].role_id == Role.EMPLOYER.role_id
 
@@ -279,7 +275,7 @@ def test_leave_admin_create_existing_user(test_db_session, caplog, leave_admin_e
 
     employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
     existing_user = User(
-        active_directory_id="604fd58c-adda-4dbf-ad9e-ee4952c11866", email_address="user@example.com"
+        sub_id="604fd58c-adda-4dbf-ad9e-ee4952c11866", email_address="user@example.com"
     )
 
     test_db_session.add(employer)
@@ -303,7 +299,7 @@ def test_forgot_password_handler(test_db_session, forgot_password_event_dict):
 
     app_user = (
         test_db_session.query(User)
-        .filter(User.active_directory_id == event.request.userAttributes["sub"])
+        .filter(User.sub_id == event.request.userAttributes["sub"])
         .one_or_none()
     )
 
@@ -312,9 +308,7 @@ def test_forgot_password_handler(test_db_session, forgot_password_event_dict):
     response = lib.handler(test_db_session, event, {})
 
     created_app_user = (
-        test_db_session.query(User)
-        .filter(User.active_directory_id == event.request.userAttributes["sub"])
-        .one()
+        test_db_session.query(User).filter(User.sub_id == event.request.userAttributes["sub"]).one()
     )
 
     assert created_app_user.email_address == event.request.userAttributes["email"]

@@ -8,7 +8,6 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
@@ -35,10 +34,6 @@ export const CreateAccount = (props) => {
     formState,
     updateFields,
   });
-
-  const showSelfRegistration = isFeatureEnabled(
-    "employerShowSelfRegistrationForm"
-  );
 
   return (
     <form className="usa-form" onSubmit={handleSubmit} method="post">
@@ -98,18 +93,6 @@ export const CreateAccount = (props) => {
             {t("pages.authCreateAccount.logInFooterLink")}
           </a>
         </Link>
-        {!showSelfRegistration && (
-          <p>
-            <Trans
-              i18nKey="pages.authCreateAccount.createEmployerAccount"
-              components={{
-                "contact-center-phone-link": (
-                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                ),
-              }}
-            />
-          </p>
-        )}
       </div>
     </form>
   );

@@ -25,58 +25,7 @@ describe("Employer welcome", () => {
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
-  describe("when employerShowDashboard is false", () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowDashboard: false };
-      testHook(() => {
-        appLogic = useAppLogic();
-      });
-
-      wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-    });
-
-    it("does not show the navigation bar", () => {
-      expect(wrapper.find("EmployerNavigationTabs").exists()).toBe(false);
-    });
-
-    it("does not show the View Applications list item", () => {
-      const viewApplicationsTitle = wrapper.find('Heading[level="2"]').first();
-      expect(viewApplicationsTitle.dive().text()).not.toContain(
-        "View all applications"
-      );
-    });
-  });
-
-  describe("when employerShowDashboard is true", () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowDashboard: true };
-      testHook(() => {
-        appLogic = useAppLogic();
-      });
-
-      wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-    });
-
-    it("does not display the news banner", () => {
-      wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-
-      expect(wrapper.find("NewsBanner").exists()).toEqual(false);
-    });
-
-    it("shows the navigation bar", () => {
-      expect(wrapper.find("EmployerNavigationTabs").exists()).toBe(true);
-    });
-
-    it("shows the View Applications list item", () => {
-      const viewApplicationsTitle = wrapper.find('Heading[level="2"]').first();
-      expect(viewApplicationsTitle.dive().text()).toContain(
-        "View all applications"
-      );
-    });
-  });
-
-  it("displays links to Organizations page when employerShowVerifications is true", () => {
-    process.env.featureFlags = { employerShowVerifications: true };
+  it("displays links to Organizations page", () => {
     wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
 
     expect(wrapper.find("Alert").exists()).toEqual(true);
@@ -91,6 +40,7 @@ describe("Employer welcome", () => {
   });
 
   it("renders caring leave form link when showCaringLeaveType is true", () => {
+    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
     process.env.featureFlags = { showCaringLeaveType: true };
     testHook(() => {
       appLogic = useAppLogic();
@@ -102,5 +52,53 @@ describe("Employer welcome", () => {
         .find(`Trans[i18nKey="pages.employersWelcome.viewFormsBody"]`)
         .dive()
     ).toMatchSnapshot();
+  });
+
+  it("renders caring leave alert when showCaringLeaveType is true", () => {
+    process.env.featureFlags = {
+      showCaringLeaveType: true,
+    };
+    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
+
+    expect(wrapper.find("Alert").exists()).toEqual(true);
+
+    expect(
+      wrapper
+        .find(
+          `Trans[i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"]`
+        )
+        .dive()
+    ).toMatchSnapshot();
+  });
+
+  it("renders other leave alert when claimantShowOtherLeaveStep is true", () => {
+    process.env.featureFlags = {
+      claimantShowOtherLeaveStep: true,
+    };
+    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
+
+    expect(wrapper.find("Alert").exists()).toEqual(true);
+
+    expect(
+      wrapper
+        .find(`Trans[i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody"]`)
+        .dive()
+    ).toMatchSnapshot();
+  });
+
+  it("does not render caring leave alert when showCaringLeaveType is true AND claimantShowOtherLeaveStep is true", () => {
+    process.env.featureFlags = {
+      showCaringLeaveType: true,
+      claimantShowOtherLeaveStep: true,
+    };
+    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
+
+    expect(
+      wrapper
+        .find(
+          `Trans[i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"]`
+        )
+        .exists()
+    ).toEqual(false);
   });
 });

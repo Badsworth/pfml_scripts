@@ -19,8 +19,8 @@ module.exports = {
     preview: "env-3",
   },
   // See docs/portal/maintenance-pages.md
-  maintenancePageRoutes: ["/*"], // required
-  maintenanceStart: "2021-06-13T03:59:00-04:00", // optional ISO 8601 datetime
-  maintenanceEnd: "2021-06-13T05:00:00-04:00", // optional ISO 8601 datetime
+  maintenancePageRoutes: ["/*"],
+  maintenanceStart: "2021-06-25T19:59:00-04:00",
+  maintenanceEnd: null,
   newRelicAppId: "847045300",
 };

@@ -1,42 +1,110 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AmendablePreviousLeave renders the component 1`] = `
+exports[`AmendablePreviousLeave for added leaves renders the component without a table row 1`] = `
 <Fragment>
-  <tr>
-    <th
-      scope="row"
-    >
-      3/1/2020 – 3/6/2020
-    </th>
-    <td>
-      Bond with a child
-    </td>
-    <td>
-      <AmendButton
-        onClick={[Function]}
-      />
-    </td>
-  </tr>
   <ConditionalContent
-    visible={false}
+    visible={true}
   >
     <tr>
       <td
         className="padding-top-2 padding-bottom-2 padding-left-0"
-        colSpan="3"
+        colSpan="2"
       >
         <AmendmentForm
-          onCancel={[Function]}
+          className="bg-white"
+          destroyButtonLabel="Cancel addition"
+          onDestroy={[Function]}
         >
           <Heading
             level="4"
+            size="3"
           >
-            Bond with a child
+            Add a new previous leave
           </Heading>
+          <p>
+            This addition will get saved when you submit your review at the end of this page.
+          </p>
+          <ConditionalContent
+            visible={true}
+          >
+            <InputChoiceGroup
+              choices={
+                Array [
+                  Object {
+                    "checked": false,
+                    "label": "Yes",
+                    "value": "true",
+                  },
+                  Object {
+                    "checked": true,
+                    "label": "No",
+                    "value": "false",
+                  },
+                ]
+              }
+              errorMsg={null}
+              label="Was this leave for the same reason as their paid leave request?"
+              name="previous_leaves[0].is_for_same_reason_as_leave_reason"
+              onChange={[Function]}
+              smallLabel={true}
+              type="radio"
+            />
+          </ConditionalContent>
+          <ConditionalContent
+            visible={true}
+          >
+            <InputChoiceGroup
+              choices={
+                Array [
+                  Object {
+                    "checked": false,
+                    "hint": "Medical leave",
+                    "label": "An illness or injury",
+                    "value": "An illness or injury",
+                  },
+                  Object {
+                    "checked": false,
+                    "hint": "Medical leave",
+                    "label": "Pregnancy",
+                    "value": "Pregnancy",
+                  },
+                  Object {
+                    "checked": false,
+                    "hint": "Family leave",
+                    "label": "Bonding with their child after birth or placement",
+                    "value": "Bonding with my child after birth or placement",
+                  },
+                  Object {
+                    "checked": false,
+                    "hint": "Family leave",
+                    "label": "Caring for a family member",
+                    "value": "Caring for a family member with a serious health condition",
+                  },
+                  Object {
+                    "checked": false,
+                    "hint": "Family leave",
+                    "label": "Managing family affairs while a family member was on active duty in the armed forces",
+                    "value": "Managing family affairs while a family member is on active duty in the armed forces",
+                  },
+                  Object {
+                    "checked": true,
+                    "hint": "Family leave",
+                    "label": "Caring for a family member who served in the armed forces",
+                    "value": "Caring for a family member who serves in the armed forces",
+                  },
+                ]
+              }
+              label="Why did this employee need to take leave?"
+              name="previous_leaves[0].leave_reason"
+              onChange={[Function]}
+              smallLabel={true}
+              type="radio"
+            />
+          </ConditionalContent>
           <InputDate
             dayLabel="Day"
             errorMsg={null}
-            label="When did the leave begin?"
+            label="When did the employee's leave start?"
             monthLabel="Month"
             name="previous_leaves[0].leave_start_date"
             onChange={[Function]}
@@ -47,7 +115,138 @@ exports[`AmendablePreviousLeave renders the component 1`] = `
           <InputDate
             dayLabel="Day"
             errorMsg={null}
-            label="When did the leave end?"
+            label="When did the employee's leave end?"
+            monthLabel="Month"
+            name="previous_leaves[0].leave_end_date"
+            onChange={[Function]}
+            smallLabel={true}
+            value="2020-03-06"
+            yearLabel="Year"
+          />
+        </AmendmentForm>
+      </td>
+    </tr>
+  </ConditionalContent>
+</Fragment>
+`;
+
+exports[`AmendablePreviousLeave for amended leaves renders the component with a table row for existing data 1`] = `
+<Fragment>
+  <LeaveDetailsRow />
+  <ConditionalContent
+    visible={false}
+  >
+    <tr>
+      <td
+        className="padding-top-2 padding-bottom-2 padding-left-0"
+        colSpan="2"
+      >
+        <AmendmentForm
+          className="bg-base-lightest border-base-lighter"
+          destroyButtonLabel="Cancel amendment"
+          onDestroy={[Function]}
+        >
+          <Heading
+            level="4"
+            size="3"
+          >
+            Amend previous leave
+          </Heading>
+          <p>
+            This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.
+          </p>
+          <ConditionalContent
+            visible={true}
+          >
+            <InputChoiceGroup
+              choices={
+                Array [
+                  Object {
+                    "checked": false,
+                    "label": "Yes",
+                    "value": "true",
+                  },
+                  Object {
+                    "checked": true,
+                    "label": "No",
+                    "value": "false",
+                  },
+                ]
+              }
+              errorMsg={null}
+              label="Was this leave for the same reason as their paid leave request?"
+              name="previous_leaves[0].is_for_same_reason_as_leave_reason"
+              onChange={[Function]}
+              smallLabel={true}
+              type="radio"
+            />
+          </ConditionalContent>
+          <ConditionalContent
+            visible={true}
+          >
+            <InputChoiceGroup
+              choices={
+                Array [
+                  Object {
+                    "checked": false,
+                    "hint": "Medical leave",
+                    "label": "An illness or injury",
+                    "value": "An illness or injury",
+                  },
+                  Object {
+                    "checked": false,
+                    "hint": "Medical leave",
+                    "label": "Pregnancy",
+                    "value": "Pregnancy",
+                  },
+                  Object {
+                    "checked": false,
+                    "hint": "Family leave",
+                    "label": "Bonding with their child after birth or placement",
+                    "value": "Bonding with my child after birth or placement",
+                  },
+                  Object {
+                    "checked": false,
+                    "hint": "Family leave",
+                    "label": "Caring for a family member",
+                    "value": "Caring for a family member with a serious health condition",
+                  },
+                  Object {
+                    "checked": false,
+                    "hint": "Family leave",
+                    "label": "Managing family affairs while a family member was on active duty in the armed forces",
+                    "value": "Managing family affairs while a family member is on active duty in the armed forces",
+                  },
+                  Object {
+                    "checked": true,
+                    "hint": "Family leave",
+                    "label": "Caring for a family member who served in the armed forces",
+                    "value": "Caring for a family member who serves in the armed forces",
+                  },
+                ]
+              }
+              label="Why did this employee need to take leave?"
+              name="previous_leaves[0].leave_reason"
+              onChange={[Function]}
+              smallLabel={true}
+              type="radio"
+            />
+          </ConditionalContent>
+          <InputDate
+            dayLabel="Day"
+            errorMsg={null}
+            label="When did the employee's leave start?"
+            monthLabel="Month"
+            name="previous_leaves[0].leave_start_date"
+            onChange={[Function]}
+            smallLabel={true}
+            value="2020-03-01"
+            yearLabel="Year"
+          />
+          <InputDate
+            dayLabel="Day"
+            errorMsg={null}
+            label="When did the employee's leave end?"
             monthLabel="Month"
             name="previous_leaves[0].leave_end_date"
             onChange={[Function]}

@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from werkzeug.datastructures import Headers
 
 import massgov.pfml.db as db
+import massgov.pfml.util.logging
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.services.applications import (
     ContinuousLeavePeriod,
@@ -26,10 +27,13 @@ from massgov.pfml.db.models.applications import (
 from massgov.pfml.db.models.employees import PaymentMethod
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
+CARING_LEAVE_EARLIEST_START_DATE = date(2021, 7, 1)
 PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
 MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
 MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def get_application_issues(application: Application, headers: Headers) -> List[Issue]:
@@ -465,6 +469,15 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
                     field="leave_details.employer_notification_date",
                 )
             )
+        elif application.employer_notification_date > date.today():
+            issues.append(
+                Issue(
+                    type=IssueType.maximum,
+                    rule=IssueRule.conditional,
+                    message="employer_notification_date must be today or prior",
+                    field="leave_details.employer_notification_date",
+                )
+            )
 
     if application.work_pattern:
         issues += get_work_pattern_issues(application)
@@ -504,26 +517,6 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
             )
         )
 
-    if application.other_incomes_awaiting_approval:
-        if application.has_other_incomes is None:
-            issues.append(
-                Issue(
-                    type=IssueType.required,
-                    rule=IssueRule.conditional,
-                    message="has_other_incomes must be set if other_incomes_awaiting_approval is set",
-                    field="has_other_incomes",
-                )
-            )
-        elif application.has_other_incomes:
-            issues.append(
-                Issue(
-                    type=IssueType.conflicting,
-                    rule=IssueRule.disallow_has_other_incomes_when_awaiting_approval,
-                    message="has_other_incomes must be false if other_incomes_awaiting_approval is set",
-                    field="has_other_incomes",
-                )
-            )
-
     issues += get_employer_benefits_issues(application)
     issues += get_other_incomes_issues(application)
 
@@ -535,7 +528,13 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
     if require_other_leaves_fields:
         # TODO (CP-1674): Move these rules into the "always required" set once the
         # X-FF-Require-Other-Leaves header is obsolete.
-        for field in ["has_employer_benefits", "has_other_incomes"]:
+        for field in [
+            "has_concurrent_leave",
+            "has_employer_benefits",
+            "has_other_incomes",
+            "has_previous_leaves_other_reason",
+            "has_previous_leaves_same_reason",
+        ]:
             val = deepgetattr(application, field)
             if val is None:
                 issues.append(
@@ -799,6 +798,19 @@ def get_leave_period_ranges_issues(application: Application) -> List[Issue]:
             Issue(
                 message=f"Can't submit application more than {MAX_DAYS_IN_ADVANCE_TO_SUBMIT} days in advance of the earliest leave period",
                 rule=IssueRule.disallow_submit_over_60_days_before_start_date,
+            )
+        )
+
+    # Prevent caring leave submissions before 7/1/2021
+    if (
+        application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+        and earliest_start_date is not None
+        and earliest_start_date < CARING_LEAVE_EARLIEST_START_DATE
+    ):
+        issues.append(
+            Issue(
+                message=f"Caring leave start_date cannot be before {CARING_LEAVE_EARLIEST_START_DATE.isoformat()}",
+                rule=IssueRule.disallow_caring_leave_before_july,
             )
         )
 
@@ -1159,4 +1171,8 @@ def validate_application_state(
             Issue(message="Request by current user not allowed", rule=IssueRule.disallow_attempts,)
         )
 
+        logger.warning(
+            "Fraud detected. Multiple applications found for specified Tax id",
+            extra={"application.application_id": existing_application.application_id},
+        )
     return issues

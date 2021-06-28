@@ -1,15 +1,15 @@
 import enum
 import os
-from typing import Iterable, List
+from datetime import date
+from typing import Iterable, List, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
+from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
-    Flow,
-    LatestStateLog,
     LkState,
     Payment,
     ReferenceFile,
@@ -109,6 +109,40 @@ class PaymentAuditReportStep(Step):
 
         logger.info("Done setting sampled payments to sent state: %i", len(state_logs))
 
+    def previously_audit_sent_count(self, payment: Payment) -> int:
+        other_claim_payments = _get_other_claim_payments_for_payment(payment)
+        previous_states = [State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT]
+        return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
+
+    def previously_errored_payment_count(self, payment: Payment) -> int:
+        other_claim_payments = _get_other_claim_payments_for_payment(
+            payment, same_payment_period=True
+        )
+        previous_states = [
+            State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
+        ]
+        return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
+
+    def previously_rejected_payment_count(self, payment: Payment) -> int:
+        other_claim_payments = _get_other_claim_payments_for_payment(
+            payment, same_payment_period=True
+        )
+        previous_states = [
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+        ]
+        return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
+
+    def previously_skipped_payment_count(self, payment: Payment) -> int:
+        other_claim_payments = _get_other_claim_payments_for_payment(
+            payment, same_payment_period=True
+        )
+        previous_states = [
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+        ]
+        return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
+
     def build_payment_audit_data_set(
         self, payments: Iterable[Payment]
     ) -> Iterable[PaymentAuditData]:
@@ -118,68 +152,17 @@ class PaymentAuditReportStep(Step):
 
         for payment in payments:
             self.increment(self.Metrics.PAYMENT_COUNT)
+
             # populate payment audit data by inspecting the currently sampled payment's history
-            is_first_time_payment = False
-            is_previously_errored_payment = False
-            is_previously_rejected_payment = False
-            number_of_times_in_rejected_or_error_state = 0
-
-            payment_history = (
-                self.db_session.query(Payment)
-                .filter(
-                    Payment.fineos_pei_c_value == payment.fineos_pei_c_value,
-                    Payment.fineos_pei_i_value == payment.fineos_pei_i_value,
-                )
-                .all()
-            )
-
-            if len(payment_history) == 1:
-                is_first_time_payment = True
-            else:
-                payment_history_ids = [p.payment_id for p in payment_history]
-                expected_end_states = [
-                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
-                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id,
-                ]
-
-                payment_error_or_rejected_state_log_history = (
-                    self.db_session.query(StateLog)
-                    .join(LatestStateLog)
-                    .join(LkState, StateLog.end_state_id == LkState.state_id)
-                    .filter(
-                        LkState.flow_id == Flow.DELEGATED_PAYMENT.flow_id,
-                        LatestStateLog.payment_id.in_(payment_history_ids),
-                        StateLog.end_state_id.in_(expected_end_states),
-                    )
-                    .all()
-                )
-
-                payment_state_history = [
-                    sl.end_state_id for sl in payment_error_or_rejected_state_log_history
-                ]
-
-                if (
-                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
-                    in payment_state_history
-                ):
-                    is_previously_errored_payment = True
-
-                if (
-                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
-                    in payment_state_history
-                ):
-                    is_previously_rejected_payment = True
-
-                number_of_times_in_rejected_or_error_state = len(
-                    payment_error_or_rejected_state_log_history
-                )
+            previously_audit_sent_count = self.previously_audit_sent_count(payment)
+            is_first_time_payment = previously_audit_sent_count == 0
 
             payment_audit_data = PaymentAuditData(
                 payment=payment,
                 is_first_time_payment=is_first_time_payment,
-                is_previously_errored_payment=is_previously_errored_payment,
-                is_previously_rejected_payment=is_previously_rejected_payment,
-                number_of_times_in_rejected_or_error_state=number_of_times_in_rejected_or_error_state,
+                previously_errored_payment_count=self.previously_errored_payment_count(payment),
+                previously_rejected_payment_count=self.previously_rejected_payment_count(payment),
+                previously_skipped_payment_count=self.previously_skipped_payment_count(payment),
             )
             payment_audit_data_set.append(payment_audit_data)
 
@@ -251,3 +234,38 @@ class PaymentAuditReportStep(Step):
 
             # We do not want to run any subsequent steps if this fails
             raise
+
+
+def _get_state_log_count_in_state(
+    payments: List[Payment], states: List[LkState], db_session: db.Session
+) -> int:
+    payment_ids = [p.payment_id for p in payments]
+    state_ids = [s.state_id for s in states]
+
+    audit_report_sent_state_other_payments = (
+        db_session.query(StateLog)
+        .filter(StateLog.end_state_id.in_(state_ids), StateLog.payment_id.in_(payment_ids),)
+        .all()
+    )
+    return len(audit_report_sent_state_other_payments)
+
+
+def _get_other_claim_payments_for_payment(
+    payment: Payment, same_payment_period: bool = False
+) -> List[Payment]:
+    all_claim_payments = payment.claim.payments.all()
+    other_claim_payments: List[Payment] = list(
+        filter(lambda p: p.payment_id != payment.payment_id, all_claim_payments)
+    )
+
+    if same_payment_period:
+        payment_date_tuple = _get_date_tuple(payment)
+        other_claim_payments = list(
+            filter(lambda p: _get_date_tuple(p) == payment_date_tuple, other_claim_payments)
+        )
+
+    return other_claim_payments
+
+
+def _get_date_tuple(payment: Payment) -> Tuple[date, date]:
+    return (cast(date, payment.period_start_date), cast(date, payment.period_end_date))

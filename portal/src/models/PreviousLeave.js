@@ -25,12 +25,14 @@ class PreviousLeave extends BaseModel {
  * @enum {string}
  */
 export const PreviousLeaveReason = {
-  activeDutyFamily: "Military exigency family",
-  bonding: "Child bonding",
-  care: "Care for a family member",
-  medical: "Serious health condition",
-  pregnancy: "Pregnancy / Maternity",
-  serviceMemberFamily: "Military caregiver",
+  activeDutyFamily:
+    "Managing family affairs while a family member is on active duty in the armed forces",
+  bonding: "Bonding with my child after birth or placement",
+  care: "Caring for a family member with a serious health condition",
+  medical: "An illness or injury",
+  pregnancy: "Pregnancy",
+  serviceMemberFamily:
+    "Caring for a family member who serves in the armed forces",
   // Unknown may be displayed to Leave Admins, but isn't
   // an option we display to Claimants
   unknown: "Unknown",

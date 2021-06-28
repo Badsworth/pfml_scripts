@@ -1,6 +1,7 @@
 import { fineos } from "../../../actions";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { getFineosBaseUrl } from "../../../config";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
   it(
@@ -10,13 +11,7 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
       fineos.before();
       cy.visit("/");
       cy.task("generateClaim", "MIL_RED").then((claim) => {
-        if (
-          !claim.claim.first_name ||
-          !claim.claim.last_name ||
-          !claim.claim.tax_identifier
-        ) {
-          throw new Error("Claim is missing a first name, last name, or SSN.");
-        }
+        assertValidClaim(claim.claim);
 
         fineos.searchClaimantSSN(claim.claim.tax_identifier);
         fineos.clickBottomWidgetButton("OK");

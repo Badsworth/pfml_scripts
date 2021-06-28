@@ -63,7 +63,7 @@ exports[`Login renders the page 1`] = `
           components={
             Object {
               "contact-center-phone-link": <a
-                href="tel:(833) 344‑7365"
+                href="tel:(833) 344-7365"
               />,
               "create-employer-account-link": <a
                 className="display-inline-block"
@@ -72,11 +72,6 @@ exports[`Login renders the page 1`] = `
             }
           }
           i18nKey="pages.authLogin.createEmployerAccount"
-          tOptions={
-            Object {
-              "context": "contactCallCenter",
-            }
-          }
         />
       </p>
     </div>
@@ -100,21 +95,18 @@ exports[`Login renders the page 2`] = `
 `;
 
 exports[`Login renders the page 3`] = `
-Array [
-  <strong
-    key="strong-0"
-  >
-    Are you a Massachusetts employer?
-  </strong>,
-  " Call ",
+<strong
+  key="strong-0"
+>
+  Are you a Massachusetts employer? 
   <a
-    href="tel:(833) 344‑7365"
-    key="2"
+    className="display-inline-block"
+    href="/employers/create-account"
+    key="1"
   >
-    (833) 344‑7365
-  </a>,
-  " to create an employer account.",
-]
+    Create an employer account
+  </a>
+</strong>
 `;
 
 exports[`Login when account-verified query param is true displays verification success message 1`] = `

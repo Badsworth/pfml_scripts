@@ -13,7 +13,7 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "p": <p />,
         }
@@ -52,7 +52,7 @@ Array [
   >
     If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365

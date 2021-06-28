@@ -18,7 +18,6 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
-from massgov.pfml.util import feature_gate
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 from massgov.pfml.util.strings import format_fein
 
@@ -26,25 +25,9 @@ from massgov.pfml.util.strings import format_fein
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture(params=["env_var", "feature_gate", "disabled"])
-def test_verification(request, monkeypatch, initialize_factories_session):
-    # This checks that all tests work _both_ with
-    # 1. Verification disabled and no verification record AND
-    # 2. Verification enabled and verification record
-    # TODO: Remove the params behavior after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
-    if request.param == "env_var":
-        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
-        return VerificationFactory.create()
-    elif request.param == "feature_gate":
-        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-        monkeypatch.setattr(
-            feature_gate, "check_enabled", lambda feature_name, user_email: True,
-        )
-
-        return VerificationFactory.create()
-    else:
-        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-        return None
+@pytest.fixture
+def test_verification(initialize_factories_session):
+    return VerificationFactory.create()
 
 
 @pytest.fixture
@@ -68,7 +51,7 @@ def update_claim_body():
             {
                 "leave_end_date": "2021-02-06",
                 "leave_start_date": "2021-01-25",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             }
         ],
         "leave_reason": "Pregnancy/Maternity",
@@ -84,16 +67,6 @@ class TestVerificationEnforcement:
     def employer(self):
         employer = EmployerFactory.create()
         return employer
-
-    @pytest.fixture(autouse=True, params=["env_var", "feature_gate"])
-    def _enforce_verifications(self, request, monkeypatch, employer_user):
-        if request.param == "env_var":
-            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
-        else:
-            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-            monkeypatch.setattr(
-                feature_gate, "check_enabled", lambda feature_name, user_email: True,
-            )
 
     @pytest.fixture
     def setup_claim(self, test_db_session, employer_user):
@@ -368,7 +341,10 @@ class TestGetClaimReview:
 
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            headers={
+                "Authorization": f"Bearer {employer_auth_token}",
+                "X-FF-Default-To-V2": "value_does_not_matter",
+            },
         )
         response_data = response.get_json()["data"]
 
@@ -389,6 +365,60 @@ class TestGetClaimReview:
         assert response_data["residential_address"]["line_2"] == "Suite 3450"
         assert response_data["residential_address"]["state"] == "GA"
         assert response_data["residential_address"]["zip"] == "30303"
+        assert response_data["uses_second_eform_version"] is True
+
+    @freeze_time("2020-12-07")
+    def test_second_eform_version_defaults_to_true_when_ff_is_set(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={
+                "Authorization": f"Bearer {employer_auth_token}",
+                "X-FF-Default-To-V2": "value_does_not_matter",
+            },
+        )
+        response_data = response.get_json()["data"]
+
+        assert response.status_code == 200
+        assert response_data["uses_second_eform_version"] is True
+
+    @freeze_time("2020-12-07")
+    def test_second_eform_version_defaults_to_false_when_ff_is_not_set(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        response_data = response.get_json()["data"]
+
+        assert response.status_code == 200
+        assert response_data["uses_second_eform_version"] is False
 
     @freeze_time("2020-12-07")
     def test_claims_is_reviewable_managed_requirement_status(
@@ -645,7 +675,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2021-02-06",
                     "leave_start_date": "2021-01-25",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }
@@ -744,7 +774,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2021-01-05",
                     "leave_start_date": "2020-12-06",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }
@@ -767,7 +797,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2021-01-05",
                     "leave_start_date": "2021-02-06",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }
@@ -809,7 +839,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2021-02-06",
                     "leave_start_date": "2021-01-25",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }
@@ -877,87 +907,87 @@ class TestUpdateClaim:
             {
                 "leave_end_date": "2020-10-04",
                 "leave_start_date": "2020-10-01",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-10-06",
                 "leave_start_date": "2020-10-05",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-10-15",
                 "leave_start_date": "2020-10-10",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-10-20",
                 "leave_start_date": "2020-10-16",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-10-30",
                 "leave_start_date": "2020-10-25",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-11-05",
                 "leave_start_date": "2020-11-01",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-11-10",
                 "leave_start_date": "2020-11-08",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-11-15",
                 "leave_start_date": "2020-11-11",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2020-12-01",
                 "leave_start_date": "2020-11-20",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-01-05",
                 "leave_start_date": "2020-12-06",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-01-15",
                 "leave_start_date": "2021-01-10",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-01-20",
                 "leave_start_date": "2021-01-16",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-01-30",
                 "leave_start_date": "2021-01-25",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-02-05",
                 "leave_start_date": "2021-02-01",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-02-10",
                 "leave_start_date": "2021-02-06",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-02-15",
                 "leave_start_date": "2021-02-11",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
             {
                 "leave_end_date": "2021-02-20",
                 "leave_start_date": "2021-02-16",
-                "leave_reason": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy",
             },
         ]
 
@@ -1001,7 +1031,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2021-02-06",
                     "leave_start_date": "2021-01-25",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }
@@ -1134,7 +1164,7 @@ class TestUpdateClaim:
                 {
                     "leave_end_date": "2020-02-06",
                     "leave_start_date": "2020-01-25",
-                    "leave_reason": "Pregnancy / Maternity",
+                    "leave_reason": "Pregnancy",
                 }
             ],
         }
@@ -1373,14 +1403,92 @@ class TestUpdateClaim:
         )
         assert capture[1][0] == "create_eform"
 
+    def test_long_comment_is_valid(
+        self,
+        client,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+        update_claim_body,
+    ):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        update_claim_body["comment"] = "a" * 9999
+
+        response = client.patch(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=update_claim_body,
+        )
+
+        assert response.status_code == 200
+
+    def test_too_long_comment_is_invalid(
+        self,
+        client,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+        update_claim_body,
+    ):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        update_claim_body["comment"] = "a" * 10000
+
+        response = client.patch(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=update_claim_body,
+        )
+
+        assert response.status_code == 400
+        assert response.get_json().get("message") == "Request Validation Error"
+
+        errors = response.get_json().get("errors")
+        error = next(
+            (e for e in errors if e.get("field") == "comment" and e.get("type") == "maxLength"),
+            None,
+        )
+        assert error is not None
+
     # Inner class for testing Caring Leave scenarios
     # TODO: add tests for the logging data: https://lwd.atlassian.net/browse/EMPLOYER-1389
     class TestCaringLeave:
-        @pytest.fixture()
-        def employer(self, initialize_factories_session):
+        @pytest.fixture(autouse=True)
+        def with_mock_client_capture(self):
+            massgov.pfml.fineos.mock_client.start_capture()
+
+        @pytest.fixture(autouse=True)
+        def with_user_leave_admin(self, user_leave_admin, test_db_session):
+            # persist a ULA associated with this employer
+            test_db_session.add(user_leave_admin)
+            test_db_session.commit()
+
+        @pytest.fixture
+        def employer(self):
             return EmployerFactory.create()
 
-        @pytest.fixture()
+        @pytest.fixture
         def user_leave_admin(self, employer_user, employer, test_verification):
             return UserLeaveAdministrator(
                 user_id=employer_user.user_id,
@@ -1389,61 +1497,61 @@ class TestUpdateClaim:
                 verification=test_verification,
             )
 
-        @pytest.fixture()
-        def with_user_leave_admin_link(self, user_leave_admin, test_db_session):
-            test_db_session.add(user_leave_admin)
-            test_db_session.commit()
-
-        @pytest.fixture()
-        def with_mock_client_capture(self):
-            massgov.pfml.fineos.mock_client.start_capture()
-
-        @pytest.fixture()
+        @pytest.fixture
         def claim(self, employer):
             return ClaimFactory.create(employer_id=employer.employer_id)
 
-        @pytest.fixture()
-        def update_caring_leave_claim_body(self, update_claim_body):
+        @pytest.fixture
+        def claim_review_body(self, update_claim_body):
             update_claim_body["leave_reason"] = "Care for a Family Member"
             update_claim_body["believe_relationship_accurate"] = "Yes"
             update_claim_body["fraud"] = "No"
-            update_claim_body["comment"] = ""
+            del update_claim_body["comment"]
 
             return update_claim_body
 
-        @pytest.fixture()
-        def perform_update(self, client, claim, employer_auth_token):
-            def update_claim_review(update_caring_leave_claim_body):
-                return client.patch(
-                    f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-                    headers={"Authorization": f"Bearer {employer_auth_token}"},
-                    json=update_caring_leave_claim_body,
-                )
+        # Collects the params necessary for making a request with an approved claim review
+        # to the mock API client
+        @pytest.fixture
+        def approval_request_params(self, client, claim, employer_auth_token, claim_review_body):
+            class SubmitClaimReviewRequestParams(object):
+                __slots__ = ["client", "absence_id", "auth_token", "body"]
 
-            return update_claim_review
+                def __init__(self, client, absence_id, auth_token, body):
+                    self.client = client
+                    self.absence_id = absence_id
+                    self.auth_token = auth_token
+                    self.body = body
 
-        def test_response_status(
-            self,
-            with_user_leave_admin_link,
-            with_mock_client_capture,
-            perform_update,
-            update_caring_leave_claim_body,
-        ):
-            response = perform_update(update_caring_leave_claim_body)
+            return SubmitClaimReviewRequestParams(
+                client, claim.fineos_absence_id, employer_auth_token, claim_review_body
+            )
+
+        # Submits a claim_review request with the given params
+        def perform_update(self, request_params):
+            client = request_params.client
+
+            return client.patch(
+                f"/v1/employers/claims/{request_params.absence_id}/review",
+                headers={"Authorization": f"Bearer {request_params.auth_token}"},
+                json=request_params.body,
+            )
+
+        def test_with_approval_and_no_issues_response_status_is_200(self, approval_request_params):
+            response = self.perform_update(approval_request_params)
             assert response.status_code == 200
 
-        def test_employer_confirmation_sent(
-            self,
-            with_user_leave_admin_link,
-            with_mock_client_capture,
-            perform_update,
-            update_caring_leave_claim_body,
-            claim,
+        def test_with_approval_and_no_issues_employer_confirmation_sent(
+            self, approval_request_params, claim
         ):
-            perform_update(update_caring_leave_claim_body)
+            self.perform_update(approval_request_params)
 
-            capture = massgov.pfml.fineos.mock_client.get_capture()
-            assert capture[1] == (
+            captures = massgov.pfml.fineos.mock_client.get_capture()
+            update_outstanding_info_capture = next(
+                (c for c in captures if c[0] == "update_outstanding_information_as_received"), None
+            )
+
+            assert update_outstanding_info_capture == (
                 "update_outstanding_information_as_received",
                 "fake-fineos-web-id",
                 {
@@ -1454,45 +1562,95 @@ class TestUpdateClaim:
                 },
             )
 
-        def test_create_eform_and_attributes_with_inaccurate_relation_and_no_comment(
-            self,
-            with_user_leave_admin_link,
-            with_mock_client_capture,
-            perform_update,
-            update_caring_leave_claim_body,
+        def test_with_inaccurate_relationship_response_status_is_200(self, approval_request_params):
+            claim_review_body = approval_request_params.body
+            claim_review_body["believe_relationship_accurate"] = "No"
+            claim_review_body["relationship_inaccurate_reason"] = "A good reason"
+
+            response = self.perform_update(approval_request_params)
+
+            assert response.status_code == 200
+
+        def test_with_inaccurate_relationship_it_creates_eform_with_attributes(
+            self, approval_request_params
         ):
-            update_caring_leave_claim_body["believe_relationship_accurate"] = "No"
-            update_caring_leave_claim_body["relationship_inaccurate_reason"] = "No reason, lol"
-            perform_update(update_caring_leave_claim_body)
+            claim_review_body = approval_request_params.body
+            claim_review_body["believe_relationship_accurate"] = "No"
+            claim_review_body["relationship_inaccurate_reason"] = "A good reason"
+
+            self.perform_update(approval_request_params)
+
+            captures = massgov.pfml.fineos.mock_client.get_capture()
+
+            create_eform_capture = next((c for c in captures if c[0] == "create_eform"), None)
+            assert create_eform_capture is not None
+
+            eform = create_eform_capture[2]["eform"]
+            assert eform.eformType == "Employer Response to Leave Request"
+
+            assert eform.get_attribute("NatureOfLeave") is not None
+            assert eform.get_attribute("BelieveAccurate") is not None
+            assert eform.get_attribute("WhyInaccurate") is not None
+
+        def test_with_inaccurate_relationship_and_no_comment_it_creates_eform(
+            self, approval_request_params
+        ):
+            claim_review_body = approval_request_params.body
+            claim_review_body["believe_relationship_accurate"] = "No"
+            claim_review_body["relationship_inaccurate_reason"] = "A good reason"
+            self.perform_update(approval_request_params)
 
             captures = massgov.pfml.fineos.mock_client.get_capture()
             assert len(captures) >= 2
 
-            handler, fineos_web_id, params = captures[1]
-            assert handler == "create_eform"
+            create_eform_capture = next((c for c in captures if c[0] == "create_eform"), None)
+            assert create_eform_capture is not None
 
-            eform = params["eform"]
+            eform = create_eform_capture[2]["eform"]
             assert eform.eformType == "Employer Response to Leave Request"
 
-        def test_create_eform_with_comment_and_accurate_relationship(
-            self,
-            with_user_leave_admin_link,
-            with_mock_client_capture,
-            perform_update,
-            update_caring_leave_claim_body,
+        def test_with_accurate_relationship_and_comment_it_creates_eform(
+            self, approval_request_params
         ):
-            update_caring_leave_claim_body["comment"] = "comment"
-            perform_update(update_caring_leave_claim_body)
+            claim_review_body = approval_request_params.body
+            claim_review_body["comment"] = "comment"
+
+            self.perform_update(approval_request_params)
 
             captures = massgov.pfml.fineos.mock_client.get_capture()
-            assert len(captures) >= 2
 
-            handler, fineos_web_id, params = captures[1]
-            assert handler == "create_eform"
-            assert fineos_web_id == "fake-fineos-web-id"
+            create_eform_capture = next((c for c in captures if c[0] == "create_eform"), None)
+            assert create_eform_capture is not None
 
-            eform = params["eform"]
+            eform = create_eform_capture[2]["eform"]
             assert eform.eformType == "Employer Response to Leave Request"
+
+        def test_long_relationship_inaccurate_reason_is_valid(self, approval_request_params):
+            claim_review_body = approval_request_params.body
+            claim_review_body["relationship_inaccurate_reason"] = "a" * 9999
+
+            response = self.perform_update(approval_request_params)
+            assert response.status_code == 200
+
+        def test_too_long_relationship_inaccurate_reason_is_invalid(self, approval_request_params):
+            claim_review_body = approval_request_params.body
+            claim_review_body["relationship_inaccurate_reason"] = "a" * 10000
+
+            response = self.perform_update(approval_request_params)
+            assert response.status_code == 400
+            assert response.get_json().get("message") == "Request Validation Error"
+
+            errors = response.get_json().get("errors")
+            error = next(
+                (
+                    e
+                    for e in errors
+                    if e.get("field") == "relationship_inaccurate_reason"
+                    and e.get("type") == "maxLength"
+                ),
+                None,
+            )
+            assert error is not None
 
 
 def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> bool:
@@ -1916,3 +2074,116 @@ class TestGetClaimsEndpoint:
         assert len(response_body["data"]) == 5
         for claim in response_body["data"]:
             assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
+
+    # Inner class for testing Claims With Status Filtering
+    class TestClaimsWithStatus:
+        NUM_CLAIM_PER_STATUS = 2
+
+        @pytest.fixture(autouse=True)
+        def load_test_db(self, employer_user, test_verification, test_db_session):
+            employer = EmployerFactory.create()
+            employee = EmployeeFactory.create()
+            for i in range(1, 9):
+                for _ in range(0, self.NUM_CLAIM_PER_STATUS):
+                    if i == 8:  # absence_status_id => NULL
+                        ClaimFactory.create(
+                            employer=employer, employee=employee, claim_type_id=1,
+                        )
+                        continue
+                    ClaimFactory.create(
+                        employer=employer,
+                        employee=employee,
+                        fineos_absence_status_id=i,
+                        claim_type_id=1,
+                    )
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(link)
+            test_db_session.commit()
+
+        def _perform_api_call(self, url, client, employer_auth_token):
+            return client.get(url, headers={"Authorization": f"Bearer {employer_auth_token}"},)
+
+        def _perform_assertions(self, response, status_code, expected_count, valid_statuses):
+            assert response.status_code == status_code
+            response_body = response.get_json()
+            claim_data = response_body.get("data", [])
+            assert len(claim_data) == expected_count
+            for claim in response_body.get("data", []):
+                absence_status = claim.get("fineos_absence_status") or {}
+                absence_status_description = absence_status.get("absence_status_description", None)
+                assert absence_status_description in valid_statuses
+
+        def test_get_claims_with_status_filter_one_claim(self, client, employer_auth_token):
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Approved", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS,
+                valid_statuses=["Approved"],
+            )
+
+        def test_get_claims_with_status_filter_pending(self, client, employer_auth_token):
+            valid_statuses = [
+                "Adjudication",
+                "In Review",
+                "Intake In Progress",
+                None,
+            ]
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Pending", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS * 4,
+                valid_statuses=valid_statuses,
+            )
+
+        def test_get_claims_with_status_filter_multiple_statuses(self, client, employer_auth_token):
+            valid_statuses = ["Approved", "Closed"]
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Approved,Closed", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS * 2,
+                valid_statuses=valid_statuses,
+            )
+
+        def test_get_claims_with_status_filter_multiple_statuses_pending(
+            self, client, employer_auth_token
+        ):
+            valid_statuses = [
+                "Adjudication",
+                "In Review",
+                "Intake In Progress",
+                None,
+                "Closed",
+            ]
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Pending,Closed", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS * 5,
+                valid_statuses=valid_statuses,
+            )
+
+        def test_get_claims_with_status_filter_unsuported_statuses(
+            self, client, employer_auth_token
+        ):
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Unknown", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp, status_code=400, expected_count=0, valid_statuses=["Unknown"]
+            )

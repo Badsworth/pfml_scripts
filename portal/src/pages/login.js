@@ -8,7 +8,6 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
@@ -44,10 +43,6 @@ export const Login = (props) => {
     formState,
     updateFields,
   });
-  const showSelfRegistration = isFeatureEnabled(
-    "employerShowSelfRegistrationForm"
-  );
-
   return (
     <React.Fragment>
       {accountVerified && (
@@ -130,9 +125,6 @@ export const Login = (props) => {
                 "contact-center-phone-link": (
                   <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
                 ),
-              }}
-              tOptions={{
-                context: showSelfRegistration ? null : "contactCallCenter",
               }}
             />
           </p>

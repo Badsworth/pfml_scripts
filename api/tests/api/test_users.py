@@ -66,7 +66,7 @@ def test_users_post_claimant(
 
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
-    assert user.active_directory_id is not None
+    assert user.sub_id is not None
 
     # User added to user pool
     cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
@@ -98,7 +98,7 @@ def test_users_post_employer(
 
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
-    assert user.active_directory_id is not None
+    assert user.sub_id is not None
 
     # Employer records added to DB
     assert len(user.roles) == 1
@@ -215,11 +215,11 @@ def test_users_post_cognito_user_exists_error(
     test_db_session,
     valid_claimant_creation_request_body,
 ):
-    existing_user = UserFactory.create(active_directory_id=str(uuid.uuid4()))
+    existing_user = UserFactory.create(sub_id=str(uuid.uuid4()))
 
     def sign_up(**kwargs):
         raise CognitoUserExistsValidationError(
-            "Username already exists", existing_user.active_directory_id
+            "Username already exists", existing_user.active_directory_id, existing_user.sub_id
         )
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
@@ -426,7 +426,15 @@ def test_users_convert_employer_bad_fein(client, user, auth_token):
         headers={"Authorization": f"Bearer {auth_token}"},
         json=body,
     )
-    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400)
+    errors = response.get_json().get("errors")
+
+    assert {
+        "field": "employer_fein",
+        "message": "Invalid FEIN",
+        "rule": "",
+        "type": "require_employer",
+    } in errors
 
 
 def test_users_unauthorized_convert_employer(
@@ -444,7 +452,6 @@ def test_users_unauthorized_convert_employer(
 
     tests.api.validate_error_response(response, 403)
 
-    # test_db_session.refresh(user_2)
     assert len(user_2.user_leave_administrators) == 0
 
 
@@ -461,7 +468,6 @@ def test_users_unauthorized_patch(client, user, auth_token, test_db_session):
 
     tests.api.validate_error_response(response, 403)
 
-    # test_db_session.refresh(user_2)
     assert user_2.consented_to_data_sharing is False
 
 

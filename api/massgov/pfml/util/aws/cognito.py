@@ -54,13 +54,15 @@ class CognitoUserExistsValidationError(CognitoValidationError):
     Attributes:
         message -- Cognito's explanation of the error
         active_directory_id -- Existing user's ID attribute
+        sub_id -- Existing user's ID attribute
         issue -- used for communicating the error to the user
     """
 
-    __slots__ = ["active_directory_id", "issue", "message"]
+    __slots__ = ["active_directory_id", "sub_id", "issue", "message"]
 
-    def __init__(self, message: str, active_directory_id: Optional[str]):
+    def __init__(self, message: str, active_directory_id: Optional[str], sub_id: Optional[str]):
         self.active_directory_id = active_directory_id
+        self.sub_id = sub_id
         self.message = message
         self.issue = Issue(field="email_address", type=IssueType.exists, message=message)
 
@@ -142,7 +144,7 @@ def create_verified_cognito_leave_admin_account(
 ) -> User:
     """Create Cognito and API records for a leave admin with a verified email and temporary password"""
 
-    active_directory_id: Optional[str] = None
+    sub_id: Optional[str] = None
     if cognito_client is None:
         cognito_client = create_cognito_client()
     temp_password = generate_temp_password()
@@ -164,10 +166,10 @@ def create_verified_cognito_leave_admin_account(
 
     for attr in cognito_user["User"]["Attributes"]:
         if attr["Name"] == ACTIVE_DIRECTORY_ATTRIBUTE:
-            active_directory_id = attr["Value"]
+            sub_id = attr["Value"]
             break
 
-    if active_directory_id is None:
+    if sub_id is None:
         raise CognitoSubNotFound("Cognito did not return an ID for the user!")
 
     try:
@@ -179,9 +181,9 @@ def create_verified_cognito_leave_admin_account(
         raise CognitoPasswordSetFailure("Unable to set password for user")
 
     log_attributes = {
-        "auth_id": active_directory_id,
+        "auth_id": sub_id,
     }
-    return leave_admin_create(db_session, active_directory_id, email, fein, log_attributes)
+    return leave_admin_create(db_session, sub_id, email, fein, log_attributes)
 
 
 def create_cognito_account(
@@ -195,7 +197,7 @@ def create_cognito_account(
 
     Returns
     -------
-    active_directory_id
+    sub_id
         Cognito user sub (id)
 
     Raises
@@ -258,7 +260,7 @@ def create_cognito_account(
         existing_auth_id = lookup_cognito_account_id(
             email_address, cognito_user_pool_id, cognito_client
         )
-        raise CognitoUserExistsValidationError(message, existing_auth_id) from error
+        raise CognitoUserExistsValidationError(message, None, existing_auth_id) from error
     except botocore.exceptions.ClientError as error:
         logger.warning(
             # Alarm policy may be configured based on this message. Check before changing it.

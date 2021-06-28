@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 1`] = `
+exports[`CreateAccount renders the page 1`] = `
 <Fragment>
   <form
     className="usa-form"
@@ -132,7 +132,7 @@ exports[`CreateAccount when employerShowSelfRegistrationForm is set to true rend
 </Fragment>
 `;
 
-exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 2`] = `
+exports[`CreateAccount renders the page 2`] = `
 Array [
   "Workers who wish to apply for paid leave should follow ",
   <a
@@ -145,7 +145,7 @@ Array [
 ]
 `;
 
-exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 3`] = `
+exports[`CreateAccount renders the page 3`] = `
 <ul
   className="usa-list"
   key="0"
@@ -168,7 +168,7 @@ exports[`CreateAccount when employerShowSelfRegistrationForm is set to true rend
 </ul>
 `;
 
-exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 4`] = `
+exports[`CreateAccount renders the page 4`] = `
 Array [
   "Have an account? ",
   <a
@@ -181,7 +181,7 @@ Array [
 ]
 `;
 
-exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 5`] = `
+exports[`CreateAccount renders the page 5`] = `
 Array [
   "Need to apply for paid leave? ",
   <a

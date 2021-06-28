@@ -73,10 +73,12 @@ export const App = ({ Component, pageProps }) => {
      */
     const handleRouteChangeStart = (url = "") => {
       const [routeName, queryString] = url.split("?");
-
       const pageAttributes = {
         ...getPageAttributesFromQueryString(queryString),
-        ...getPageAttributesFromUser(appLogic.users.user),
+        ...getPageAttributesForUser(
+          appLogic.auth.isLoggedIn,
+          appLogic.users.user
+        ),
       };
       tracker.startPageView(routeName, pageAttributes);
 
@@ -114,7 +116,7 @@ export const App = ({ Component, pageProps }) => {
       router.events.off("routeChangeComplete", handleRouteChangeComplete);
       router.events.off("routeChangeError", handleRouteChangeEnd);
     };
-  }, [router, appLogic]);
+  }, [router.events, appLogic]);
 
   return (
     <PageWrapper
@@ -157,9 +159,12 @@ function getPageAttributesFromQueryString(queryString) {
 
 /**
  * Given the current user object, returns an object containing custom attributes to send to New Relic.
+ * @param {?boolean} isLoggedIn
  * @param {?User} user The user object or null
  */
-function getPageAttributesFromUser(user) {
+function getPageAttributesForUser(isLoggedIn, user) {
+  if (isLoggedIn === null) return { "user.is_logged_in": "loading" };
+
   if (!user) {
     return {
       "user.is_logged_in": false,

@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 import json
-import os
 import uuid
 
+import rsa
 from jose import jwk
-from jose.constants import ALGORITHMS
 
-secret = os.urandom(256 // 8)
-key = jwk.construct(secret, ALGORITHMS.HS256)
+(pubkey, privkey) = rsa.newkeys(1024)
 
-raw_key = key.to_dict()
 
-full_key = {**raw_key, **{"kid": str(uuid.uuid4()), "use": "sig"}}
+pub_key = jwk.construct(pubkey.save_pkcs1(), "RS256")
+raw_key1 = pub_key.to_dict()
 
-json.dump({"keys": [full_key]}, open("jwks.json", "w"), sort_keys=True, indent=4)
+pri_key = jwk.construct(privkey.save_pkcs1(), "RS256")
+raw_key2 = pri_key.to_dict()
+
+full_key1 = {**raw_key1, **{"kid": str(uuid.uuid4()), "use": "sig"}}
+full_key2 = {**raw_key2, **{"kid": str(uuid.uuid4()), "use": "sig"}}
+
+
+json.dump({"keys": [full_key1, full_key2]}, open("jwks.json", "w"), sort_keys=True, indent=4)

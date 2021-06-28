@@ -243,7 +243,7 @@ jwt: jwks.json
 # so the path is prefixed with `api/`.
 # See https://help.github.com/en/actions/reference/workflow-commands-for-github-actions
 ifdef CI
- FLAKE8_FORMAT := '::warning file=api/%(path)s,line=%(row)d,col=%(col)d::%(code)s %(text)s'
+ FLAKE8_FORMAT := '::warning file=api/%(path)s,line=%(row)d,col=%(col)d::%(path)s:%(row)d:%(col)d: %(code)s %(text)s'
 else
  FLAKE8_FORMAT := default
 endif
@@ -404,13 +404,13 @@ endef
 ifdef CI
  XDIST := -n auto --dist=loadfile --max-worker-restart=0 -x
 else
- XDIST := 
+ XDIST :=
 endif
 
 test: ## Run tests, set $args to pass flags to `pytest`
 	$(call run_tests, $(args))
 
-test-coverage: ## Run tests run 
+test-coverage: ## Run tests run
 	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest $(XDIST) $(args)
 	$(PY_RUN_CMD) coverage report
 
@@ -484,6 +484,9 @@ whats-released-short: ## List latest version tag on release branches
 
 update-poetry-lock-hash: ## Update metadata.content-hash in poetry.lock
 	$(POETRY_CMD) lock --no-update
+
+experian-generate-layouts: ## Fetch supported layouts from Experian server
+	$(PY_RUN_CMD) ./bin/experian/generate-layouts.py > massgov/pfml/experian/address_validate_soap/layouts.py
 
 help: ## Displays this help screen
 	@grep -Eh '^[[:print:]]+:.*?##' $(MAKEFILE_LIST) | \

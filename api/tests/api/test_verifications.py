@@ -77,12 +77,7 @@ def test_error_if_withholding_data_not_in_db(
 
 
 def test_error_if_withholding_amount_is_outside_threshold(
-    caplog,
-    client,
-    employer_auth_token,
-    test_db_session,
-    employer_quarterly_contribution,
-    employer_user,
+    client, employer_auth_token, test_db_session, employer_quarterly_contribution, employer_user,
 ):
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
@@ -94,7 +89,7 @@ def test_error_if_withholding_amount_is_outside_threshold(
 
     verifications_body["employer_id"] = employer_quarterly_contribution.employer_id
     verifications_body["withholding_amount"] = (
-        employer_quarterly_contribution.employer_total_pfml_contribution + 1
+        employer_quarterly_contribution.employer_total_pfml_contribution + 0.11
     )
     verifications_body["withholding_quarter"] = employer_quarterly_contribution.filing_period
 
@@ -106,7 +101,6 @@ def test_error_if_withholding_amount_is_outside_threshold(
 
     assert response.status_code == 400
     tests.api.validate_error_response(response, 400, message="Withholding amount is incorrect.")
-    assert "Withholding amount is incorrect." in caplog.text
 
 
 def test_verification_successful_for_valid_data(
@@ -207,7 +201,7 @@ def test_verification_successful_for_data_within_threshold(
 
     verifications_body["employer_id"] = employer_quarterly_contribution.employer_id
     verifications_body["withholding_amount"] = (
-        employer_quarterly_contribution.employer_total_pfml_contribution - 0.01
+        employer_quarterly_contribution.employer_total_pfml_contribution - 0.10
     )
     verifications_body["withholding_quarter"] = employer_quarterly_contribution.filing_period
 

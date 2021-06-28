@@ -27,7 +27,18 @@ export default {
       defaultValue: "Medical",
       control: {
         type: "radio",
-        options: ["Bonding", "Medical", "Care"],
+        options: ["Bonding", "Medical", "Care", "Pregnancy"],
+      },
+    },
+    // Todo(EMPLOYER-1453): remove V1 eform functionality
+    "Claimant EForm Version": {
+      defaultValue: "Version 1 (before 2021-07-14)",
+      control: {
+        type: "radio",
+        options: [
+          "Version 1 (before 2021-07-14)",
+          "Version 2 (after 2021-07-14)",
+        ],
       },
     },
     errorTypes: {
@@ -58,6 +69,7 @@ export const Default = (args) => {
 
   let claim = new MockEmployerClaimBuilder()
     .completed(isIntermittent)
+    .previousLeaves()
     .reviewable();
 
   switch (args["Leave reason"]) {
@@ -70,13 +82,28 @@ export const Default = (args) => {
     case "Care":
       claim = claim.caringLeaveReason();
       break;
+    case "Pregnancy":
+      claim = claim.pregnancyLeaveReason();
+      break;
+  }
+
+  switch (args["Claimant EForm Version"]) {
+    case "Version 1 (before 2021-07-14)":
+      claim = claim.eformsV1();
+      break;
+    case "Version 2 (after 2021-07-14)":
+      claim = claim.eformsV2().concurrentLeave();
+      break;
   }
 
   const appLogic = {
     appErrors: getAppErrorInfoCollection(errorTypes),
     employers: {
       claim: claim.create(),
-      documents: getDocuments(documentationOption),
+      documents: getDocuments(
+        documentationOption,
+        claim.create().leave_details.reason
+      ),
       downloadDocument: () => {},
       loadClaim: () => {},
       loadDocuments: () => {},
@@ -88,7 +115,7 @@ export const Default = (args) => {
   return <Review appLogic={appLogic} query={query} user={user} />;
 };
 
-function getDocuments(documentation) {
+function getDocuments(documentation, leaveReason) {
   const isWithoutDocumentation = documentation.includes(
     "without documentation"
   );
@@ -96,9 +123,9 @@ function getDocuments(documentation) {
     application_id: "mock-application-id",
     content_type: "application/pdf",
     created_at: "2020-01-02",
-    document_type: DocumentType.certification.medicalCertification,
+    document_type: DocumentType.certification[leaveReason],
     fineos_document_id: 202020,
-    name: "Your Document",
+    name: `${leaveReason} document`,
   };
 
   return isWithoutDocumentation

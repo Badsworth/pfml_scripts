@@ -4,12 +4,15 @@ from datetime import date
 import pytest
 
 import massgov.pfml.fineos.mock_client
+from massgov.pfml.api.models.claims.common import PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.api.services.administrator_fineos_actions import (
     EFORM_TYPES,
     get_claim_as_leave_admin,
     get_leave_details,
     register_leave_admin_with_fineos,
 )
+from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.fineos import FINEOSClient, create_client
@@ -232,14 +235,1098 @@ def mock_fineos_period_decisions(period_decisions):
 
 
 @pytest.fixture
-def mock_fineos_other_leaves_eform_both_versions(period_decisions):
+def mock_fineos_other_leaves_v2_eform():
+    def mock_eform(*args, **kwargs):
+        return group_client_api.EForm(
+            eformType="Other Leaves - current version",
+            eformId=12345,
+            eformAttributes=[
+                group_client_api.EFormAttribute(
+                    name="V2Spacer1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer5",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer7",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer6",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer9",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2AccruedPLEmployer1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Leave5",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="No"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalHours5",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=60,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer8",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Leave6",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="No"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalHours6",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=60,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Leave3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="No"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalHours3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=40,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Leave4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="No"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalHours4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=45,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalHours1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=45,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalHours2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=60,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2AccruedEndDate1",
+                    booleanValue=None,
+                    dateValue=date(2021, 6, 18),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2MinutesWorked3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="45"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2MinutesWorked4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="15"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2MinutesWorked5",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="30"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2MinutesWorked6",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="15"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Leave1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Leave2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2MinutesWorked1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="15"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2MinutesWorked2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="30"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2QualifyingReason5",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="QualifyingReasons",
+                        instanceValue="Caring for a family member who serves in the armed forces",
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2QualifyingReason6",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="QualifyingReasons",
+                        instanceValue="Managing family affairs while a family member is on active duty in the armed forces",
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2AccruedReasons",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="This includes vacation time, sick time, personal time. Reminder: you can use accrued paid leave for the 7-day waiting period with no impact to your PFML benefit.\n\nThe following are qualifying reasons for taking paid or unpaid leave: \n\nYou had a serious health condition, including illness, injury, or pregnancy. If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care. \n\nYou bonded with your child after birth or placement. \n\nYou needed to manage family affairs while a family member is on active duty in the armed forces. \n\nYou needed to care for a family member who serves in the armed forces. \n\nYou needed to care for a family member with a serious health condition.",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2AccruedPaidLeave1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2LeaveFromEmployer3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2LeaveFromEmployer2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2LeaveFromEmployer1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2LeaveFromEmployer6",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="No"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2LeaveFromEmployer5",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2LeaveFromEmployer4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Header1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="Previous leaves",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Header2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="Employer-sponsored Accrued Paid Leave",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveEndDate1",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 4),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveEndDate3",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 15),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveEndDate2",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 12),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveEndDate5",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 22),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveEndDate4",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 19),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveEndDate6",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 26),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalMinutes3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="15"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalMinutes4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="15"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalMinutes5",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="45"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalMinutes6",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="30"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalMinutes1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="45"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalMinutes2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="30"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2QualifyingReason1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="QualifyingReasons", instanceValue="Pregnancy"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2QualifyingReason2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="QualifyingReasons", instanceValue=" An illness or injury"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2QualifyingReason3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="QualifyingReasons",
+                        instanceValue="Caring for a family member with a serious health condition",
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2QualifyingReason4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="QualifyingReasons",
+                        instanceValue="Bonding with my child after birth or placement",
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Applies1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Applies3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Applies2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Applies5",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Applies4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveStartDate2",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 11),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Applies7",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="No"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveStartDate1",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 1),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Applies6",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveStartDate4",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 18),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveStartDate3",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 14),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveStartDate6",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 25),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveStartDate5",
+                    booleanValue=None,
+                    dateValue=date(2021, 1, 20),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2HoursWorked2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=40,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2HoursWorked1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=40,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer10",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Reasons",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="You had a serious health condition, including illness, injury, or pregnancy. If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care. \n\nYou bonded with your child after birth or placement. \n\nYou needed to manage family affairs while a family member is on active duty in the armed forces. \n\nYou needed to care for a family member who serves in the armed forces. \n\nYou needed to care for a family member with a serious health condition.",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2AccruedStartDate1",
+                    booleanValue=None,
+                    dateValue=date(2021, 6, 4),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2HoursWorked6",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=40,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2HoursWorked5",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=40,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2HoursWorked4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=40,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2HoursWorked3",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=40,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+            ],
+        )
+
     def mock_eform_summary(*args, **kwargs):
         return [
             group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_LEAVES"]),
-            group_client_api.EFormSummary(eformId=12354, eformType=EFORM_TYPES["OTHER_LEAVES_V2"]),
         ]
 
     mock_client = create_client()
+    mock_client.get_eform = mock_eform
+    mock_client.get_eform_summary = mock_eform_summary
+
+    return mock_client
+
+
+@pytest.fixture
+def mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform():
+    def mock_eform(*args, **kwargs):
+        return group_client_api.EForm(
+            eformType="Other Leaves - current version",
+            eformId=1234,
+            eformAttributes=[
+                group_client_api.EFormAttribute(
+                    name="V2Spacer1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer5",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer4",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer7",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer6",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer9",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2AccruedPLEmployer1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="No"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer8",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalHours1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=60,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2AccruedEndDate1",
+                    booleanValue=None,
+                    dateValue=date(2021, 4, 12),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Leave1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2MinutesWorked1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="00"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2AccruedReasons",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="This includes vacation time, sick time, personal time. Reminder: you can use accrued paid leave for the 7-day waiting period with no impact to your PFML benefit.\n\nThe following are qualifying reasons for taking paid or unpaid leave: \n\nYou had a serious health condition, including illness, injury, or pregnancy. If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care. \n\nYou bonded with your child after birth or placement. \n\nYou needed to manage family affairs while a family member is on active duty in the armed forces. \n\nYou needed to care for a family member who serves in the armed forces. \n\nYou needed to care for a family member with a serious health condition.",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2AccruedPaidLeave1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2LeaveFromEmployer1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Header1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="Previous leaves",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Header2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="Employer-sponsored Accrued Paid Leave",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveEndDate1",
+                    booleanValue=None,
+                    dateValue=date(2021, 3, 8),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2TotalMinutes1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="15MinuteIncrements", instanceValue="00"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2QualifyingReason1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="QualifyingReasons", instanceValue="Pregnancy"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Applies1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="Yes"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Applies2",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=group_client_api.ModelEnum(
+                        domainName="PleaseSelectYesNo", instanceValue="No"
+                    ),
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2OtherLeavesPastLeaveStartDate1",
+                    booleanValue=None,
+                    dateValue=date(2021, 3, 1),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2HoursWorked1",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=40,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Spacer10",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2Reasons",
+                    booleanValue=None,
+                    dateValue=None,
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue="You had a serious health condition, including illness, injury, or pregnancy. If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care. \n\nYou bonded with your child after birth or placement. \n\nYou needed to manage family affairs while a family member is on active duty in the armed forces. \n\nYou needed to care for a family member who serves in the armed forces. \n\nYou needed to care for a family member with a serious health condition.",
+                    enumValue=None,
+                ),
+                group_client_api.EFormAttribute(
+                    name="V2AccruedStartDate1",
+                    booleanValue=None,
+                    dateValue=date(2021, 4, 5),
+                    decimalValue=None,
+                    integerValue=None,
+                    stringValue=None,
+                    enumValue=None,
+                ),
+            ],
+        )
+
+    def mock_eform_summary(*args, **kwargs):
+        return [
+            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_LEAVES"]),
+        ]
+
+    mock_client = create_client()
+    mock_client.get_eform = mock_eform
     mock_client.get_eform_summary = mock_eform_summary
 
     return mock_client
@@ -640,22 +1727,8 @@ def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, initialize_fact
 
 
 @pytest.mark.integration
-def test_get_claim_eform_type_contains_neither_version(
+def test_get_claim_eform_type_contains_neither_version_no_feature_toggle(
     mock_fineos_period_decisions, initialize_factories_session
-):
-    fineos_user_id = "Friendly_HR"
-    absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
-        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
-    )
-    assert leave_details.contains_version_one_eforms is False
-    assert leave_details.contains_version_two_eforms is False
-
-
-@pytest.mark.integration
-def test_get_claim_other_leaves_eform_type_contains_both_versions(
-    mock_fineos_other_leaves_eform_both_versions, initialize_factories_session
 ):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
@@ -664,10 +1737,27 @@ def test_get_claim_other_leaves_eform_type_contains_both_versions(
         fineos_user_id,
         absence_id,
         employer,
-        fineos_client=mock_fineos_other_leaves_eform_both_versions,
+        fineos_client=mock_fineos_period_decisions,
+        default_to_v2=False,
     )
-    assert leave_details.contains_version_one_eforms is True
-    assert leave_details.contains_version_two_eforms is True
+    assert leave_details.uses_second_eform_version is False
+
+
+@pytest.mark.integration
+def test_get_claim_eform_type_contains_neither_version_with_feature_toggle(
+    mock_fineos_period_decisions, initialize_factories_session
+):
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details = get_claim_as_leave_admin(
+        fineos_user_id,
+        absence_id,
+        employer,
+        fineos_client=mock_fineos_period_decisions,
+        default_to_v2=True,
+    )
+    assert leave_details.uses_second_eform_version is True
 
 
 @pytest.mark.integration
@@ -677,14 +1767,126 @@ def test_get_claim_other_income_eform_type_contains_both_versions(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
+    with pytest.raises(ContainsV1AndV2Eforms):
+        get_claim_as_leave_admin(
+            fineos_user_id,
+            absence_id,
+            employer,
+            fineos_client=mock_fineos_other_income_eform_both_versions,
+        )
+
+
+@pytest.mark.integration
+def test_get_claim_other_leaves_v2_eform(
+    mock_fineos_other_leaves_v2_eform, initialize_factories_session
+):
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details = get_claim_as_leave_admin(
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform,
+    )
+
+    assert leave_details.uses_second_eform_version is True
+    assert leave_details.previous_leaves == [
+        PreviousLeave(
+            is_for_current_employer=True,
+            leave_start_date=date(2021, 1, 1),
+            leave_end_date=date(2021, 1, 4),
+            leave_reason="Pregnancy",
+            previous_leave_id=None,
+            worked_per_week_minutes=None,
+            leave_minutes=None,
+            type="same_reason",
+        ),
+        PreviousLeave(
+            is_for_current_employer=True,
+            leave_start_date=date(2021, 1, 11),
+            leave_end_date=date(2021, 1, 12),
+            leave_reason="An illness or injury",
+            previous_leave_id=None,
+            worked_per_week_minutes=None,
+            leave_minutes=None,
+            type="same_reason",
+        ),
+        PreviousLeave(
+            is_for_current_employer=True,
+            leave_start_date=date(2021, 1, 14),
+            leave_end_date=date(2021, 1, 15),
+            leave_reason="Caring for a family member with a serious health condition",
+            previous_leave_id=None,
+            worked_per_week_minutes=None,
+            leave_minutes=None,
+            type="other_reason",
+        ),
+        PreviousLeave(
+            is_for_current_employer=True,
+            leave_start_date=date(2021, 1, 18),
+            leave_end_date=date(2021, 1, 19),
+            leave_reason="Bonding with my child after birth or placement",
+            previous_leave_id=None,
+            worked_per_week_minutes=None,
+            leave_minutes=None,
+            type="other_reason",
+        ),
+        PreviousLeave(
+            is_for_current_employer=True,
+            leave_start_date=date(2021, 1, 20),
+            leave_end_date=date(2021, 1, 22),
+            leave_reason="Caring for a family member who serves in the armed forces",
+            previous_leave_id=None,
+            worked_per_week_minutes=None,
+            leave_minutes=None,
+            type="other_reason",
+        ),
+    ]
+    assert (
+        PreviousLeave(
+            is_for_current_employer=False,
+            leave_start_date=date(2021, 1, 25),
+            leave_end_date=date(2021, 1, 26),
+            leave_reason="Managing family affairs while a family member is on active duty in the armed forces",
+            previous_leave_id=None,
+            worked_per_week_minutes=None,
+            leave_minutes=None,
+            type="other_reason",
+        )
+        not in leave_details.previous_leaves
+    )
+    assert leave_details.concurrent_leave == ConcurrentLeave(
+        is_for_current_employer=True,
+        leave_start_date=date(2021, 6, 4),
+        leave_end_date=date(2021, 6, 18),
+    )
+
+
+@pytest.mark.integration
+def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
+    mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform, initialize_factories_session
+):
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
     leave_details = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
-        fineos_client=mock_fineos_other_income_eform_both_versions,
+        fineos_client=mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform,
     )
-    assert leave_details.contains_version_one_eforms is True
-    assert leave_details.contains_version_two_eforms is True
+
+    assert leave_details.previous_leaves == [
+        PreviousLeave(
+            is_for_current_employer=True,
+            leave_start_date=date(2021, 3, 1),
+            leave_end_date=date(2021, 3, 8),
+            leave_reason="Pregnancy",
+            previous_leave_id=None,
+            worked_per_week_minutes=None,
+            leave_minutes=None,
+            type="same_reason",
+        )
+    ]
+    assert leave_details.concurrent_leave is None
 
 
 @pytest.mark.integration
@@ -721,5 +1923,4 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
     assert leave_details.follow_up_date == date(2021, 2, 1)
     assert leave_details.is_reviewable is False
     assert leave_details.status == "Known"
-    assert leave_details.contains_version_one_eforms is True
-    assert leave_details.contains_version_two_eforms is False
+    assert leave_details.uses_second_eform_version is False

@@ -17,7 +17,6 @@ import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDateRange from "../../../utils/formatDateRange";
 import { get } from "lodash";
-import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../../src/routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
@@ -46,8 +45,6 @@ export const Status = (props) => {
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,
   ]);
-
-  const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
 
   return (
     <React.Fragment>
@@ -79,15 +76,22 @@ export const Status = (props) => {
       <Heading level="2">
         {t("pages.employersClaimsStatus.leaveDetailsLabel")}
       </Heading>
-      <StatusRow label={t("pages.employersClaimsStatus.applicationIdLabel")}>
+      <StatusRow
+        data-test="id"
+        label={t("pages.employersClaimsStatus.applicationIdLabel")}
+      >
         {absenceId}
       </StatusRow>
-      {shouldShowDashboard && (
-        <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
-          <AbsenceCaseStatusTag status={claim.status} />
-        </StatusRow>
-      )}
-      <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>
+      <StatusRow
+        data-test="status"
+        label={t("pages.employersClaimsStatus.statusLabel")}
+      >
+        <AbsenceCaseStatusTag status={claim.status} />
+      </StatusRow>
+      <StatusRow
+        data-test="reason"
+        label={t("pages.employersClaimsStatus.leaveReasonLabel")}
+      >
         {t("pages.employersClaimsStatus.leaveReasonValue", {
           context: findKeyByValue(
             LeaveReason,
@@ -95,11 +99,15 @@ export const Status = (props) => {
           ),
         })}
       </StatusRow>
-      <StatusRow label={t("pages.employersClaimsStatus.leaveDurationLabel")}>
+      <StatusRow
+        data-test="duration"
+        label={t("pages.employersClaimsStatus.leaveDurationLabel")}
+      >
         {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
       </StatusRow>
       {isContinuous && (
         <StatusRow
+          data-test="duration-continuous"
           label={t("pages.employersClaimsStatus.leaveDurationLabel_continuous")}
         >
           {claim.continuousLeaveDateRange()}
@@ -107,6 +115,7 @@ export const Status = (props) => {
       )}
       {isIntermittent && (
         <StatusRow
+          data-test="duration-intermittent"
           label={t(
             "pages.employersClaimsStatus.leaveDurationLabel_intermittent"
           )}
@@ -116,6 +125,7 @@ export const Status = (props) => {
       )}
       {isReducedSchedule && (
         <StatusRow
+          data-test="duration-reduced"
           label={t("pages.employersClaimsStatus.leaveDurationLabel_reduced")}
         >
           {claim.reducedLeaveDateRange()}

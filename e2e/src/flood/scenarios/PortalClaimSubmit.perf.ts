@@ -8,6 +8,11 @@ import {
 } from "../../util/credentials";
 import TestMailVerificationFetcher from "../../submission/TestMailVerificationFetcher";
 import { fetchJSON, fetchFormData } from "../fetch";
+import pRetry from "p-retry";
+import type {
+  EmployerClaimRequestBody,
+  GETEmployersClaimsByFineosAbsenceIdReviewResponse,
+} from "../../_api";
 
 let authToken: string;
 let username: string;
@@ -58,6 +63,10 @@ export const steps: Cfg.StoredStep[] = [
     test: submitApplication,
   },
   {
+    name: "Submit payment preference",
+    test: submitPaymentPreference,
+  },
+  {
     name: "Upload documents",
     test: uploadDocuments,
   },
@@ -66,25 +75,22 @@ export const steps: Cfg.StoredStep[] = [
     test: completeApplication,
   },
   {
-    name: "Point of Contact fills employer response",
-    options: { waitTimeout: 300000 },
+    name: "Leave Admin Login",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
-      if (data.employerResponse?.employer_decision !== "Approve") return;
-      const employerResponseStep = employerResponse(fineosId);
-      console.info(employerResponseStep.name);
-      await employerResponseStep.test(browser, data);
+      await (
+        await Util.waitForElement(browser, By.visibleText("Log out"))
+      ).click();
+      const fein = data.claim.employer_fein;
+      if (!fein) throw new Error("No FEIN was found on this claim");
+      const { username, password } = getLeaveAdminCredentials(fein);
+      // Log in on Portal as Leave Admin
+      authToken = await login(browser, username, password);
     },
   },
   {
-    name: "Assign tasks to specific Agent",
-    test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
-      // we don't want to run this step on a real Flood
-      if (!ENV.FLOOD_LOAD_TEST) {
-        const assignTasksStep = Util.assignTasks(fineosId);
-        console.info(assignTasksStep.name);
-        await assignTasksStep.test(browser, data);
-      }
-    },
+    name: "Leave Admin submits employer response",
+    options: { waitTimeout: 300000 },
+    test: submitEmployerResponse,
   },
 ];
 
@@ -157,108 +163,64 @@ async function login(
   return cookie.value;
 }
 
-function employerResponse(fineosId: string): Cfg.StoredStep {
-  return {
-    name: `Point of Contact responds to "${fineosId}"`,
-    test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
-      await setFeatureFlags(browser);
-      let error;
-      for (let i = 0; i < 6; i++) {
-        await (
-          await Util.waitForElement(browser, By.visibleText("Log out"))
-        ).click();
-        const fein = data.claim.employer_fein;
-        if (!fein) throw new Error("No FEIN was found on this claim");
-        const { username, password } = getLeaveAdminCredentials(fein);
-        // Log in on Portal as Leave Admin
-        authToken = await login(browser, username, password);
+async function submitEmployerResponse(
+  browser: Browser,
+  data: Cfg.LSTSimClaim
+): Promise<void> {
+  if (!data.employerResponse) return;
 
-        await (
-          await Util.waitForElement(browser, By.linkText("Dashboard"))
-        ).click();
-
-        await Util.findClaimOnEmployerDashboard(browser, fineosId);
-        // // Review submited application via direct link on Portal
-        error = await Util.maybeFindElement(
-          browser,
-          By.visibleText("An error occurred")
-        );
-        if (error) {
-          // Waits 20 seconds for FINEOS to catch up.
-          // Will wait 120 seconds total over entire For loop.
-          await browser.wait(20000);
-        } else {
-          break;
-        }
-      }
-
-      // Are you the right person? true | false
-      await (await Util.waitForElement(browser, By.visibleText("Yes"))).click();
-
-      // Click "Agree and submit" button
-      await (
-        await Util.waitForElement(browser, By.visibleText("Agree and submit"))
-      ).click();
-      await browser.waitForNavigation();
-      // Suspect of fraud? Yes | No
-      const isSus = Math.random() * 100 <= 5;
-      await (
-        await Util.waitForElement(
-          browser,
-          By.css(`[name='isFraud'][value='${isSus ? "Yes" : "No"}'] + label`)
-        )
-      ).click();
-      // Given 30 days notice? Yes | No
-      const employerNotified = data.claim.leave_details?.employer_notified;
-      await (
-        await Util.waitForElement(
-          browser,
-          By.css(
-            `[name='employeeNotice'][value='${
-              employerNotified ? "Yes" : "No"
-            }'] + label`
-          )
-        )
-      ).click();
-      // Leave request response? Approve | Deny
-      const isApproved = !isSus && employerNotified;
-      await (
-        await Util.waitForElement(
-          browser,
-          By.css(
-            `[name='employerDecision'][value="${
-              isApproved ? "Approve" : "Deny"
-            }"] + label`
-          )
-        )
-      ).click();
-      // Any concerns? true | false
-      await (
-        await Util.waitForElement(
-          browser,
-          By.css("[name='shouldShowCommentBox'][value='false'] + label")
-        )
-      ).click();
-      // Provides required comment as needed.
-      if (!isApproved) {
-        await (
-          await Util.waitForElement(browser, By.css('textarea[name="comment"]'))
-        ).type("PFML - Denied for LST purposes");
-      }
-      // Click "Submit"
-      await (
-        await Util.waitForElement(browser, By.css("button[type='submit']"))
-      ).click();
-      await browser.waitForNavigation();
-      // Check if review was successful
-      await Util.waitForElement(
+  const employerResponse = data.employerResponse;
+  const review = await pRetry(
+    async () => {
+      const fetchedResponse = await fetchJSON(
         browser,
-        By.visibleText("Thanks for reviewing the application")
+        authToken,
+        `${config("API_BASEURL")}/employers/claims/${fineosId}/review`
       );
-      await Util.waitForElement(browser, By.visibleText(fineosId));
-      // @todo?: Possibly check back on fineos claim if employer response showed up
+      if (fetchedResponse.status_code !== 200) {
+        if (
+          fetchedResponse.data &&
+          fetchedResponse.data.message ===
+            "Claim does not exist for given absence ID"
+        ) {
+          throw new Error(
+            `Unable to find claim as leave admin for ${fineosId}.`
+          );
+        }
+        throw new pRetry.AbortError(
+          `Hit an unknown error fetching leave admin response`
+        );
+      }
+      return fetchedResponse as GETEmployersClaimsByFineosAbsenceIdReviewResponse;
     },
-  };
+    { retries: 20, maxRetryTime: 30000 }
+  );
+  const body = {
+    ...employerResponse,
+    employer_benefits: [
+      ...(review.data?.employer_benefits ?? []),
+      ...(employerResponse.employer_benefits ?? []),
+    ],
+    previous_leaves: [
+      ...(review.data?.previous_leaves ?? []),
+      ...(employerResponse.previous_leaves ?? []),
+    ],
+  } as EmployerClaimRequestBody;
+  const res = await fetchJSON(
+    browser,
+    authToken,
+    `${config("API_BASEURL")}/employers/claims/${fineosId}/review`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }
+  );
+  if (res.status_code !== 200) {
+    throw new Error(
+      `Unable to update application: ${JSON.stringify(res, null, 2)}`
+    );
+  }
+  console.log("Submitted employer response");
 }
 
 const isNode = !!(typeof process !== "undefined" && process.version);
@@ -371,12 +333,36 @@ function getClaimParts(
         phone_type: "Cell",
       },
     },
-    // { temp: { has_employer_benefits: false } },
-    // { temp: { has_other_incomes: false } },
-    // { temp: { has_previous_leaves: false } },
-    // {
-    //   payment_preferences: claim.payment_preferences,
-    // },
+    {
+      has_previous_leaves_same_reason: claim.has_previous_leaves_same_reason,
+    },
+    {
+      previous_leaves_same_reason: claim.previous_leaves_same_reason,
+    },
+    {
+      has_previous_leaves_other_reason: claim.has_previous_leaves_other_reason,
+    },
+    {
+      previous_leaves_other_reason: claim.previous_leaves_other_reason,
+    },
+    {
+      has_concurrent_leave: claim.has_concurrent_leave,
+    },
+    {
+      concurrent_leave: claim.concurrent_leave,
+    },
+    {
+      has_employer_benefits: claim.has_employer_benefits,
+    },
+    {
+      employer_benefits: claim.employer_benefits,
+    },
+    {
+      has_other_incomes: claim.has_other_incomes,
+    },
+    {
+      other_incomes: claim.other_incomes,
+    },
   ];
 }
 
@@ -435,6 +421,33 @@ async function submitApplication(browser: Browser): Promise<void> {
     );
   }
   console.info("Submitted application", res.status_code);
+}
+
+async function submitPaymentPreference(browser: Browser): Promise<void> {
+  const res = await fetchJSON(
+    browser,
+    authToken,
+    `${config(
+      "API_BASEURL"
+    )}/applications/${applicationId}/submit_payment_preference`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        payment_preference: {
+          payment_method: "Elec Funds Transfer",
+          routing_number: "011401533",
+          account_number: "5555555555",
+          bank_account_type: "Checking",
+        },
+      }),
+    }
+  );
+  if (res.status_code !== 201) {
+    throw new Error(
+      `Unable to submit application: ${JSON.stringify(res, null, 2)}`
+    );
+  }
+  console.info("Payment preferences updated", res.status_code);
 }
 
 async function uploadDocuments(

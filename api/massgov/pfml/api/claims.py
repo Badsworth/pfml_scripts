@@ -1,8 +1,10 @@
 import base64
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Set, Union
 
 import connexion
 import flask
+from sqlalchemy import or_
+from sqlalchemy.orm.query import Query
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
@@ -22,11 +24,19 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
 )
+from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.applications import Application
-from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministrator
+from massgov.pfml.db.models.employees import (
+    Claim,
+    Employer,
+    LkAbsenceStatus,
+    UserLeaveAdministrator,
+)
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
-from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EmployerClaimReviewEFormBuilder
-from massgov.pfml.util import feature_gate
+from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
+    EmployerClaimReviewEFormBuilder,
+    EmployerClaimReviewV1EFormBuilder,
+)
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import sanitize_fein
@@ -34,6 +44,8 @@ from massgov.pfml.util.strings import sanitize_fein
 logger = massgov.pfml.util.logging.get_logger(__name__)
 # HRD Employer FEIN. See https://lwd.atlassian.net/browse/EMPLOYER-1317
 CLAIMS_DASHBOARD_BLOCKED_FEINS = set(["046002284"])
+
+VALID_CLAIM_STATUSES = {"Approved", "Closed", "Declined", "Pending"}
 
 
 class VerificationRequired(Forbidden):
@@ -95,12 +107,7 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
                 user_leave_admin, "User has no leave administrator FINEOS ID"
             )
 
-        # TODO: Remove this after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
-        verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
-            feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
-            user_email=current_user.email_address,
-        )
-        if verification_required and not user_leave_admin.verified:
+        if not user_leave_admin.verified:
             raise VerificationRequired(user_leave_admin, "User is not Verified")
 
         return user_leave_admin
@@ -211,9 +218,14 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
         complete_claim_review(fineos_web_id, fineos_absence_id)
         logger.info("Completed claim review", extra=log_attributes)
     else:
-        transformed_eform = EmployerClaimReviewEFormBuilder.build(claim_review)
-        create_eform(fineos_web_id, fineos_absence_id, transformed_eform)
-        logger.info("Created eform", extra=log_attributes)
+        if claim_review.uses_second_eform_version:
+            transformed_eform = EmployerClaimReviewEFormBuilder.build(claim_review)
+            create_eform(fineos_web_id, fineos_absence_id, transformed_eform)
+            logger.info("Created v2 eform", extra=log_attributes)
+        else:
+            transformed_eform = EmployerClaimReviewV1EFormBuilder.build(claim_review)
+            create_eform(fineos_web_id, fineos_absence_id, transformed_eform)
+            logger.info("Created eform", extra=log_attributes)
 
     logger.info("Updated claim", extra=log_attributes)
 
@@ -229,18 +241,38 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     Calls out to the FINEOS Group Client API to retrieve claim data and returns it.
     The requesting user must be of the EMPLOYER role.
     """
+    default_to_v2 = bool(flask.request.headers.get("X-FF-Default-To-V2", False))
+
     try:
         user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
     except (VerificationRequired, NotAuthorizedForAccess) as error:
         return error.to_api_response()
 
     log_attributes = get_employer_log_attributes(app)
+
+    if not user_leave_admin.fineos_web_id:
+        logger.error(
+            "employer_get_claim_review failure - user leave administrator does not have a fineos_web_id",
+            extra={**log_attributes},
+        )
+        return response_util.error_response(
+            status_code=NotFound, message="ULA does not have a fineos_web_id", errors=[], data={},
+        ).to_api_response()
+
     with app.db_session() as db_session:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
-        claim_review_response = get_claim_as_leave_admin(
-            user_leave_admin.fineos_web_id, fineos_absence_id, employer  # type: ignore
-        )
+        try:
+            claim_review_response = get_claim_as_leave_admin(
+                user_leave_admin.fineos_web_id,
+                fineos_absence_id,
+                employer,
+                default_to_v2=default_to_v2,
+            )
+        except (ContainsV1AndV2Eforms) as error:
+            return response_util.error_response(
+                status_code=error.status_code, message=error.description, errors=[], data={},
+            ).to_api_response()
 
         if claim_review_response is None:
             logger.error(
@@ -364,15 +396,7 @@ def user_has_access_to_claim(claim: Claim) -> bool:
 
     if can(READ, "EMPLOYER_API") and claim.employer in current_user.employers:
         # User is leave admin for the employer associated with claim
-        # TODO: Remove this after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
-        verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
-            feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
-            user_email=current_user.email_address,
-        )
-
-        if verification_required:
-            return current_user.verified_employer(claim.employer)
-        return True
+        return current_user.verified_employer(claim.employer)
 
     application = claim.application  # type: ignore
 
@@ -423,9 +447,9 @@ def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
 
 
 def get_claims() -> flask.Response:
-    app_config = app.get_config()
     current_user = app.current_user()
     employer_id = flask.request.args.get("employer_id")
+    absence_statuses = parse_absence_statuses(flask.request.args.get("claim_status"))
     is_employer = can(READ, "EMPLOYER_API")
     log_attributes = get_employer_log_attributes(app)
 
@@ -434,14 +458,6 @@ def get_claims() -> flask.Response:
             # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims)
             # so if something changes there it probably needs to be changed here
             if is_employer and current_user and current_user.employers:
-                verification_required = (
-                    app_config.enforce_verification
-                    or feature_gate.check_enabled(
-                        feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
-                        user_email=current_user.email_address,
-                    )
-                )
-
                 if employer_id:
                     employers_list = (
                         db_session.query(Employer).filter(Employer.employer_id == employer_id).all()
@@ -449,21 +465,12 @@ def get_claims() -> flask.Response:
                 else:
                     employers_list = list(current_user.employers)
 
-                if verification_required:
-                    employer_ids_list = [
-                        e.employer_id
-                        for e in employers_list
-                        if sanitize_fein(e.employer_fein or "")
-                        not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                        and current_user.verified_employer(e)
-                    ]
-                else:
-                    employer_ids_list = [
-                        e.employer_id
-                        for e in employers_list
-                        if sanitize_fein(e.employer_fein or "")
-                        not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                    ]
+                employer_ids_list = [
+                    e.employer_id
+                    for e in employers_list
+                    if sanitize_fein(e.employer_fein or "") not in CLAIMS_DASHBOARD_BLOCKED_FEINS
+                    and current_user.verified_employer(e)
+                ]
 
                 query = (
                     db_session.query(Claim)
@@ -476,6 +483,10 @@ def get_claims() -> flask.Response:
                     .filter(Claim.application.has(Application.user_id == current_user.user_id))  # type: ignore
                     .order_by(pagination_context.order_key)
                 )
+            if len(absence_statuses):
+                absence_statuses = convert_pending_absence_status(absence_statuses)
+                log_attributes.update({"filter.absence_statuses": absence_statuses})  # type: ignore
+                query = add_absence_status_filter_to_query(query, absence_statuses)
 
         page = page_for_api_context(pagination_context, query)
 
@@ -499,3 +510,38 @@ def get_claims() -> flask.Response:
         context=pagination_context,
         status_code=200,
     ).to_api_response()
+
+
+def parse_absence_statuses(absence_status_string: Union[str, None]) -> set:
+    if not absence_status_string:
+        return set()
+    absence_statuses = set(absence_status_string.strip().split(","))
+    validate_absence_status(absence_statuses)
+    return absence_statuses
+
+
+def validate_absence_status(absence_statuses: Set[str]) -> None:
+    bad_statuses = absence_statuses - VALID_CLAIM_STATUSES
+    if len(bad_statuses):
+        raise BadRequest(f"Unsupported claim status '{','.join(bad_statuses)}'")
+    return
+
+
+def convert_pending_absence_status(absence_statuses: Set[str]) -> Set[str]:
+    if "Pending" in absence_statuses:
+        absence_statuses.remove("Pending")
+        absence_statuses.update(["Intake In Progress", "In Review", "Adjudication", None])  # type: ignore
+    return absence_statuses
+
+
+def add_absence_status_filter_to_query(query: Query, absence_statuses: Set[str]) -> Query:
+    query = query.join(
+        LkAbsenceStatus,
+        LkAbsenceStatus.absence_status_id == Claim.fineos_absence_status_id,
+        isouter=True,
+    )
+    filters = [LkAbsenceStatus.absence_status_description.in_(absence_statuses)]
+    if None in absence_statuses:
+        filters.extend([Claim.fineos_absence_status_id.is_(None)])
+    query = query.filter(or_(*filters))
+    return query

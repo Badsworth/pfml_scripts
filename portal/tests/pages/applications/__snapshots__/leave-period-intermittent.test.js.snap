@@ -89,26 +89,6 @@ exports[`LeavePeriodIntermittent renders the page with bonding leave content 1`]
         }
       />
     </Lead>
-    <div
-      className="measure-6"
-    >
-      <Details
-        label="Do you work in an acute care hospital or the teaching hospital of the University of Massachusetts Medical School?"
-      >
-        <Trans
-          components={
-            Object {
-              "emergency-bonding-regs-worker-link": <a
-                href="https://www.mass.gov/pfml-acute-claimant"
-                rel="noopener"
-                target="_blank"
-              />,
-            }
-          }
-          i18nKey="pages.claimsLeavePeriodIntermittent.bondingRegsDetailsSummary"
-        />
-      </Details>
-    </div>
     <InputDate
       dayLabel="Day"
       example="mm / dd / yyyy"
@@ -145,20 +125,6 @@ Array [
     key="br-2"
   />,
   "Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
-]
-`;
-
-exports[`LeavePeriodIntermittent renders the page with bonding leave content 3`] = `
-Array [
-  "If you had a child join your family in 2020, you may be eligible for paid leave anytime in 2021. ",
-  <a
-    href="https://www.mass.gov/pfml-acute-claimant"
-    key="1"
-    rel="noopener"
-    target="_blank"
-  >
-    Learn more about emergency Covid-19 regulations for hospital workers.
-  </a>,
 ]
 `;
 

@@ -2,12 +2,13 @@
 
 exports[`Success renders Success page 1`] = `
 <Fragment>
+  <BackButton
+    href="/employers/dashboard"
+    label="Back to Dashboard"
+  />
   <Title>
     Thanks for reviewing the application
   </Title>
-  <NewsBanner
-    className="margin-bottom-2"
-  />
   <Trans
     i18nKey="pages.employersClaimsSuccess.applicationIdLabel"
     values={
@@ -37,11 +38,4 @@ exports[`Success renders Success page 1`] = `
     url="https://www.mass.gov/paidleave-employer-feedback"
   />
 </Fragment>
-`;
-
-exports[`Success when dashboard feature flag is enabled renders back button to dashboard 1`] = `
-<BackButton
-  href="/employers/dashboard"
-  label="Back to Dashboard"
-/>
 `;

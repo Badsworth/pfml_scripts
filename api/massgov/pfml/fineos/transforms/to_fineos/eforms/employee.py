@@ -2,168 +2,174 @@ from itertools import chain
 from typing import Iterable, Optional
 
 from massgov.pfml.api.models.applications.common import OtherIncome
-from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
+from massgov.pfml.fineos.transforms.common import (
+    FineosAmountFrequencyEnum,
+    FineosEmployerBenefitEnum,
+    FineosOtherIncomeEnum,
+)
 from massgov.pfml.fineos.transforms.to_fineos.base import (
     EFormAttributeBuilder,
     EFormBody,
     EFormBuilder,
 )
+from massgov.pfml.fineos.transforms.to_fineos.eforms.common import (
+    IntermediaryConcurrentLeave,
+    IntermediaryEmployerBenefit,
+    IntermediaryOtherIncome,
+    IntermediaryPreviousLeave,
+)
 
 
 class EmployerBenefitAttributeBuilder(EFormAttributeBuilder):
     ATTRIBUTE_MAP = {
-        "benefit_start_date": {"name": "StartDate", "type": "dateValue"},
-        "benefit_end_date": {"name": "EndDate", "type": "dateValue"},
-        "benefit_amount_dollars": {"name": "Amount", "type": "decimalValue"},
-        "benefit_amount_frequency": {"name": "Frequency", "type": "stringValue"},
+        "benefit_start_date": {"name": "V2StartDate", "type": "dateValue"},
+        "benefit_end_date": {"name": "V2EndDate", "type": "dateValue"},
+        "benefit_amount_dollars": {"name": "V2Amount", "type": "decimalValue"},
+        "benefit_amount_frequency": {
+            "name": "V2Frequency",
+            "type": "enumValue",
+            "domainName": "FrequencyEforms",
+            "enumOverride": FineosAmountFrequencyEnum,
+        },
+        "is_full_salary_continuous": {
+            "name": "V2SalaryContinuation",
+            "type": "enumValue",
+            "domainName": "PleaseSelectYesNo",
+        },
         "benefit_type": {
-            "name": "WRT",
+            "name": "V2WRT",
             "type": "enumValue",
             "domainName": "WageReplacementType",
-            # The suffixes here are nonstandard -- they should increase by 2 eg WRT1, WRT3, WRT5
-            "suffixOverride": lambda index: 2 * index + 1,
+            "enumOverride": FineosEmployerBenefitEnum,
+        },
+        "receive_wage_replacement": {
+            "name": "V2ReceiveWageReplacement",
+            "type": "enumValue",
+            "domainName": "PleaseSelectYesNo",
         },
     }
 
-    STATIC_ATTRIBUTES = [
-        {
-            "name": "WRT",
-            "type": "enumValue",
-            "domainName": "WageReplacementType2",
-            "instanceValue": "Please Select",
-            # The suffixes here are nonstandard -- they should increase by 2 eg WRT2, WRT4, WRT6
-            "suffixOverride": lambda index: 2 * index + 2,
-        },
-        {
-            "name": "ProgramType",
-            "type": "enumValue",
-            "domainName": "Program Type",
-            "instanceValue": "Employer",
-        },
-        {
-            "name": "ReceiveWageReplacement",
-            "type": "enumValue",
-            "domainName": "YesNoI'veApplied",
-            "instanceValue": "Yes",
-        },
-    ]
+    def __init__(self, target):
+        intermediary_target = IntermediaryEmployerBenefit(target)
+        super().__init__(intermediary_target)
 
 
 class OtherIncomeAttributeBuilder(EFormAttributeBuilder):
     ATTRIBUTE_MAP = {
-        "income_start_date": {"name": "StartDate", "type": "dateValue"},
-        "income_end_date": {"name": "EndDate", "type": "dateValue"},
-        "income_amount_dollars": {"name": "Amount", "type": "decimalValue"},
-        "income_amount_frequency": {"name": "Frequency", "type": "stringValue"},
+        "income_start_date": {
+            "name": "V2OtherIncomeNonEmployerBenefitStartDate",
+            "type": "dateValue",
+        },
+        "income_end_date": {"name": "V2OtherIncomeNonEmployerBenefitEndDate", "type": "dateValue"},
+        "income_amount_dollars": {
+            "name": "V2OtherIncomeNonEmployerBenefitAmount",
+            "type": "decimalValue",
+        },
+        "income_amount_frequency": {
+            "name": "V2OtherIncomeNonEmployerBenefitFrequency",
+            "type": "enumValue",
+            "domainName": "FrequencyEforms",
+            "enumOverride": FineosAmountFrequencyEnum,
+        },
         "income_type": {
-            "name": "WRT",
+            "name": "V2OtherIncomeNonEmployerBenefitWRT",
             "type": "enumValue",
             "domainName": "WageReplacementType2",
-            # The suffixes here are nonstandard -- they should increase by 2 eg WRT2, WRT4, WRT6
-            "suffixOverride": lambda index: 2 * index + 2,
+            "enumOverride": FineosOtherIncomeEnum,
+        },
+        "receive_wage_replacement": {
+            "name": "V2ReceiveWageReplacement",
+            "type": "enumValue",
+            "domainName": "YesNoI'veApplied",
+            # The suffixes here are nonstandard -- they should start with index 7
+            "suffixOverride": lambda index: index + 7,
         },
     }
 
-    STATIC_ATTRIBUTES = [
-        {
-            "name": "WRT",
-            "type": "enumValue",
-            "domainName": "WageReplacementType",
-            "instanceValue": "Please Select",
-            # The suffixes here are nonstandard -- they should increase by 2 eg WRT1, WRT3, WRT5
-            "suffixOverride": lambda index: 2 * index + 1,
-        },
-        {
-            "name": "ProgramType",
-            "type": "enumValue",
-            "domainName": "Program Type",
-            "instanceValue": "Non-Employer",
-        },
-        {
-            "name": "ReceiveWageReplacement",
-            "type": "enumValue",
-            "domainName": "YesNoI'veApplied",
-            "instanceValue": "Yes",
-        },
-    ]
-
-
-class OtherIncomeAwaitingApprovalAttributeBuilder(EFormAttributeBuilder):
-    STATIC_ATTRIBUTES = [
-        {
-            "name": "ReceiveWageReplacement",
-            "type": "enumValue",
-            "domainName": "YesNoI'veApplied",
-            "instanceValue": "I've applied, but haven't been approved",
-        },
-    ]
-
-    def __init__(self):
-        super().__init__(None)
+    def __init__(self, target):
+        intermediary_target = IntermediaryOtherIncome(target)
+        super().__init__(intermediary_target)
 
 
 class OtherIncomesEFormBuilder(EFormBuilder):
     @classmethod
     def build(
-        cls,
-        employer_benefits: Iterable[EmployerBenefit],
-        other_incomes: Iterable[OtherIncome],
-        other_incomes_awaiting_approval: Optional[bool],
+        cls, employer_benefits: Iterable[EmployerBenefit], other_incomes: Iterable[OtherIncome]
     ) -> EFormBody:
 
-        other_income_builders: Iterable[EFormAttributeBuilder] = []
-        if other_incomes_awaiting_approval:
-            other_income_builders = [OtherIncomeAwaitingApprovalAttributeBuilder()]
-        else:
-            other_income_builders = map(
-                lambda income: OtherIncomeAttributeBuilder(income), other_incomes
-            )
+        other_income_builders = map(
+            lambda income: OtherIncomeAttributeBuilder(income), other_incomes
+        )
 
         employer_benefit_builders = map(
             lambda benefit: EmployerBenefitAttributeBuilder(benefit), employer_benefits,
         )
 
         attributes = list(
-            cls.to_serialized_attributes(
-                list(chain(employer_benefit_builders, other_income_builders)), False
-            ),
+            chain(
+                cls.to_serialized_attributes(employer_benefit_builders, True),
+                cls.to_serialized_attributes(other_income_builders, True),
+            )
         )
 
-        return EFormBody("Other Income", attributes)
+        return EFormBody("Other Income - current version", attributes)
 
 
-class IntermediaryPreviousLeave:
-    def __init__(self, leave: PreviousLeave):
-        self.leave_start_date = leave.leave_start_date
-        self.leave_end_date = leave.leave_end_date
-        self.is_for_current_employer = "Yes" if leave.is_for_current_employer else "No"
-        self.leave_reason = leave.leave_reason
+class ConcurrentLeaveAttributeBuilder(EFormAttributeBuilder):
+    ATTRIBUTE_MAP = {
+        "leave_start_date": {"name": "V2AccruedStartDate", "type": "dateValue"},
+        "leave_end_date": {"name": "V2AccruedEndDate", "type": "dateValue"},
+        "is_for_current_employer": {
+            "name": "V2AccruedPLEmployer",
+            "type": "enumValue",
+            "domainName": "PleaseSelectYesNo",
+        },
+        "accrued_paid_leave": {
+            "name": "V2AccruedPaidLeave",
+            "type": "enumValue",
+            "domainName": "PleaseSelectYesNo",
+        },
+    }
+
+    def __init__(self, target):
+        intermediary_target = IntermediaryConcurrentLeave(target)
+        super().__init__(intermediary_target)
 
 
 class PreviousLeaveAttributeBuilder(EFormAttributeBuilder):
     ATTRIBUTE_MAP = {
-        "leave_start_date": {"name": "BeginDate", "type": "dateValue"},
-        "leave_end_date": {"name": "EndDate", "type": "dateValue"},
+        "leave_start_date": {"name": "V2OtherLeavesPastLeaveStartDate", "type": "dateValue"},
+        "leave_end_date": {"name": "V2OtherLeavesPastLeaveEndDate", "type": "dateValue"},
         "leave_reason": {
-            "name": "QualifyingReason",
+            "name": "V2QualifyingReason",
             "type": "enumValue",
             "domainName": "QualifyingReasons",
         },
         "is_for_current_employer": {
-            "name": "LeaveFromEmployer",
+            "name": "V2LeaveFromEmployer",
             "type": "enumValue",
-            "domainName": "YesNoUnknown",
+            "domainName": "PleaseSelectYesNo",
         },
-    }
-
-    STATIC_ATTRIBUTES = [
-        {
-            "name": "Applies",
+        "is_for_same_reason": {
+            "name": "V2Leave",
             "type": "enumValue",
-            "domainName": "PleaseSelectYesNoUnknown",
-            "instanceValue": "Yes",
-        }
-    ]
+            "domainName": "PleaseSelectYesNo",
+        },
+        "worked_per_week_hours": {"name": "V2HoursWorked", "type": "integerValue"},
+        "worked_per_week_minutes": {
+            "name": "V2MinutesWorked",
+            "type": "enumValue",
+            "domainName": "15MinuteIncrements",
+        },
+        "leave_hours": {"name": "V2TotalHours", "type": "integerValue"},
+        "leave_minutes": {
+            "name": "V2TotalMinutes",
+            "type": "enumValue",
+            "domainName": "15MinuteIncrements",
+        },
+        "applies": {"name": "V2Applies", "type": "enumValue", "domainName": "PleaseSelectYesNo",},
+    }
 
     def __init__(self, target):
         intermediary_target = IntermediaryPreviousLeave(target)
@@ -172,8 +178,45 @@ class PreviousLeaveAttributeBuilder(EFormAttributeBuilder):
 
 class PreviousLeavesEFormBuilder(EFormBuilder):
     @classmethod
-    def build(cls, previous_leaves: Iterable[PreviousLeave]) -> EFormBody:
-        transforms = map(lambda leave: PreviousLeaveAttributeBuilder(leave), previous_leaves)
-        attributes = list(chain(cls.to_serialized_attributes(list(transforms), True),))
+    def build(
+        cls, previous_leaves: Iterable[PreviousLeave], concurrent_leave: Optional[ConcurrentLeave]
+    ) -> Optional[EFormBody]:
+        previous_leave_transforms = (
+            map(
+                lambda previous_leave: PreviousLeaveAttributeBuilder(previous_leave),
+                previous_leaves,
+            )
+            if previous_leaves
+            else None
+        )
 
-        return EFormBody("Other Leaves", attributes)
+        concurrent_leave_transforms = None
+        if concurrent_leave:
+            concurrent_leaves = [concurrent_leave]
+            concurrent_leave_transforms = map(
+                lambda concurrent_leave_item: ConcurrentLeaveAttributeBuilder(
+                    concurrent_leave_item
+                ),
+                concurrent_leaves,
+            )
+
+        attributes = None
+
+        if previous_leave_transforms and concurrent_leave_transforms:
+            attributes = list(
+                chain(
+                    cls.to_serialized_attributes(list(previous_leave_transforms), True),
+                    cls.to_serialized_attributes(concurrent_leave_transforms, True),
+                )
+            )
+        else:
+            if previous_leave_transforms:
+                attributes = list(
+                    chain(cls.to_serialized_attributes(list(previous_leave_transforms), True),)
+                )
+            if concurrent_leave_transforms:
+                attributes = list(
+                    chain(cls.to_serialized_attributes(concurrent_leave_transforms, True),)
+                )
+
+        return EFormBody("Other Leaves - current version", attributes) if attributes else None

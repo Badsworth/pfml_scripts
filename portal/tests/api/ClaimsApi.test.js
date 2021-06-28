@@ -42,6 +42,24 @@ describe("ClaimsApi", () => {
       );
     });
 
+    it("includes filters in request", async () => {
+      mockFetch();
+
+      const claimsApi = new ClaimsApi();
+      await claimsApi.getClaims(2, {
+        employer_id: "mock-employer-id",
+        claim_status: "Approved,Pending",
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/claims?page_offset=2&employer_id=mock-employer-id&claim_status=Approved%2CPending`,
+        expect.objectContaining({
+          headers: expect.any(Object),
+          method: "GET",
+        })
+      );
+    });
+
     it("returns response as instances of ClaimCollection and PaginationMeta", async () => {
       const mockResponseData = [
         {

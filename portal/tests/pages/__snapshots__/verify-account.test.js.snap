@@ -44,48 +44,6 @@ exports[`VerifyAccount renders the empty page 1`] = `
       Send a new code
     </Button>
   </div>
-  <InputChoiceGroup
-    choices={
-      Array [
-        Object {
-          "checked": false,
-          "label": "Yes",
-          "value": "true",
-        },
-        Object {
-          "checked": false,
-          "label": "No",
-          "value": "false",
-        },
-      ]
-    }
-    label="Are you creating an employer account to manage leave for your company?"
-    name="isEmployer"
-    onChange={[Function]}
-    smallLabel={true}
-    type="radio"
-    value=""
-  />
-  <ConditionalContent
-    clearField={[Function]}
-    fieldNamesClearedWhenHidden={
-      Array [
-        "ein",
-      ]
-    }
-    getField={[Function]}
-    updateFields={[Function]}
-    visible={null}
-  >
-    <InputText
-      label="Employer ID number (EIN)"
-      mask="fein"
-      name="ein"
-      onChange={[Function]}
-      smallLabel={true}
-      value=""
-    />
-  </ConditionalContent>
   <Button
     loading={false}
     type="submit"

@@ -60,7 +60,7 @@ from massgov.pfml.payments.payments_util import get_now
 logger = logging.get_logger(__name__)
 
 # waiting period for pending prenote
-PRENOTE_PRENDING_WAITING_PERIOD = 7
+PRENOTE_PRENDING_WAITING_PERIOD = 5
 
 # folder constants
 RECEIVED_FOLDER = "received"
@@ -81,9 +81,16 @@ expected_file_names = [
 ]
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
+# There are multiple types of overpayments
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
-    ["Overpayment", "Overpayment Actual Recovery", "Overpayment Recovery", "Overpayment Adjustment"]
-)  # There are multiple types of overpayments
+    [
+        "Overpayment",
+        "Overpayment Actual Recovery",
+        "Overpayment Recovery",
+        "Overpayment Adjustment",
+        "Overpayment Recovery Reverse",
+    ]
+)
 PAYMENT_OUT_TRANSACTION_TYPE = "PaymentOut"
 AUTO_ALT_EVENT_REASON = "Automatic Alternate Payment"
 
@@ -182,7 +189,9 @@ class PaymentData:
     payment_start_period: Optional[str] = None
     payment_end_period: Optional[str] = None
     payment_date: Optional[str] = None
+    absence_case_creation_date: Optional[str] = None
     payment_amount: Optional[Decimal] = None
+    amalgamation_c: Optional[str] = None
 
     claim_type_raw: Optional[str] = None
 
@@ -224,6 +233,11 @@ class PaymentData:
         # Not required as some valid scenarios won't set this (Overpayments)
         self.event_reason = payments_util.validate_csv_input(
             "EVENTREASON", pei_record, self.validation_container, False
+        )
+
+        # Not required, only care if it's set and a specific value
+        self.amalgamation_c = payments_util.validate_csv_input(
+            "AMALGAMATIONC", pei_record, self.validation_container, False
         )
 
         self.payment_date = payments_util.validate_csv_input(
@@ -341,6 +355,7 @@ class PaymentData:
             eft_required,
             min_length=9,
             max_length=9,
+            custom_validator_func=payments_util.routing_number_validator,
         )
         self.account_nbr = payments_util.validate_csv_input(
             "PAYEEACCOUNTN", pei_record, self.validation_container, eft_required, max_length=40
@@ -460,6 +475,14 @@ class PaymentData:
                 "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
             )
 
+            self.absence_case_creation_date = payments_util.validate_csv_input(
+                "ABSENCE_CASECREATIONDATE",
+                requested_absence,
+                self.validation_container,
+                True,
+                custom_validator_func=self.payment_period_date_validator,
+            )
+
         elif self.is_standard_payment:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET,
@@ -545,6 +568,7 @@ class PaymentExtractStep(Step):
         STANDARD_VALID_PAYMENT_COUNT = "standard_valid_payment_count"
         TAX_IDENTIFIER_MISSING_IN_DB_COUNT = "tax_identifier_missing_in_db_count"
         ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
+        ADHOC_PAYMENT_COUNT = "adhoc_payment_count"
 
     def run_step(self):
         with tempfile.TemporaryDirectory() as download_directory:
@@ -905,6 +929,9 @@ class PaymentExtractStep(Step):
             payment_data.payment_end_period
         )
         payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
+        payment.absence_case_creation_date = payments_util.datetime_str_to_date(
+            payment_data.absence_case_creation_date
+        )
 
         payment.payment_transaction_type_id = (
             payment_data.payment_transaction_type.payment_transaction_type_id
@@ -931,6 +958,14 @@ class PaymentExtractStep(Step):
         payment.fineos_extraction_date = payments_util.get_now().date()
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
+
+        # A payment is considered adhoc if it's marked as "Adhoc"
+        # This column can be empty/missing, and that's fine. This is used
+        # later in the post-processing step to filter out adhoc payments from
+        # the weekly maximum check.
+        payment.is_adhoc_payment = payment_data.amalgamation_c == "Adhoc"
+        if payment.is_adhoc_payment:
+            self.increment(self.Metrics.ADHOC_PAYMENT_COUNT)
 
         if payment_data.claim_type_raw:
             try:
@@ -1020,6 +1055,10 @@ class PaymentExtractStep(Step):
                 and (get_now() - existing_eft.prenote_sent_at).days
                 >= PRENOTE_PRENDING_WAITING_PERIOD
             ):
+                # Set prenote to approved
+                existing_eft.prenote_state_id = PrenoteState.APPROVED.prenote_state_id
+                existing_eft.prenote_approved_at = payments_util.get_now()
+
                 self.increment(self.Metrics.PRENOTE_PAST_WAITING_PERIOD_APPROVED_COUNT)
             else:
                 self.increment(self.Metrics.NOT_APPROVED_PRENOTE_COUNT)
@@ -1049,7 +1088,7 @@ class PaymentExtractStep(Step):
 
             extra["pub_eft_id"] = new_eft.pub_eft_id
             logger.info(
-                "Initiating DELEGATED_EFT flow for employee associated with payment %i",
+                "Initiating DELEGATED_EFT flow for employee associated with payment %s",
                 payment_data.get_payment_message_str(),
                 extra=extra,
             )
@@ -1249,12 +1288,13 @@ class PaymentExtractStep(Step):
             end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
             outcome=state_log_util.build_outcome(message, payment_data.validation_container),
             associated_model=payment,
+            import_log_id=self.get_import_log_id(),
             db_session=self.db_session,
         )
         writeback_details = FineosWritebackDetails(
             payment=payment,
             transaction_status_id=transaction_status.transaction_status_id,
-            import_log_id=cast(int, self.get_import_log_id()),
+            import_log_id=self.get_import_log_id(),
         )
         self.db_session.add(writeback_details)
         logger.info(message, extra=payment_data.get_traceable_details())

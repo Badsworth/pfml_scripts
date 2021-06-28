@@ -55,6 +55,7 @@ describe("LeaveReasonPage", () => {
   });
 
   it("renders the page without military leave and caring leave options when type feature flags are disabled", () => {
+    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
     process.env.featureFlags = {
       claimantShowMilitaryLeaveTypes: false,
       showCaringLeaveType: false,

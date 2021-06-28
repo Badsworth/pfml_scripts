@@ -22,15 +22,21 @@ from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, Valida
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import FEINUnformattedStr, MassIdStr, TaxIdUnformattedStr
 
+MAX_FUTURE_BIRTH_MONTHS = 7
+
+MAX_BIRTH_YEARS = 150
+
+MIN_AGE = 14
+
 
 def max_date_of_birth_validator(date_of_birth, field):
     error_list = []
-    if date_of_birth.year < date.today().year - 150:
+    if date_of_birth.year < date.today().year - MAX_BIRTH_YEARS:
         error_list.append(
             ValidationErrorDetail(
-                message="Date of birth must be within the past 150 years",
+                message=f"Date of birth must be within the past {MAX_BIRTH_YEARS} years",
                 type="invalid_year_range",
-                rule="date_of_birth_within_past_150_years",
+                rule=f"date_of_birth_within_past_{MAX_BIRTH_YEARS}_years",
                 field=field,
             )
         )
@@ -40,12 +46,27 @@ def max_date_of_birth_validator(date_of_birth, field):
 
 def min_date_of_birth_validator(date_of_birth, field):
     error_list = []
-    if date_of_birth > date.today() - relativedelta(years=14):
+    if date_of_birth > date.today() - relativedelta(years=MIN_AGE):
         error_list.append(
             ValidationErrorDetail(
-                message="The person taking leave must be at least 14 years old",
+                message=f"The person taking leave must be at least {MIN_AGE} years old",
                 type="invalid_age",
-                rule="older_than_14",
+                rule=f"older_than_{MIN_AGE}",
+                field=field,
+            )
+        )
+    return error_list
+
+
+def future_date_of_birth_validator(date_of_birth, field):
+    error_list = []
+
+    if date_of_birth > date.today() + relativedelta(months=MAX_FUTURE_BIRTH_MONTHS):
+        error_list.append(
+            ValidationErrorDetail(
+                message=f"Family member's date of birth must be less than {MAX_FUTURE_BIRTH_MONTHS} months from now",
+                type="future_birth_date",
+                rule=f"max_{MAX_FUTURE_BIRTH_MONTHS}_months_in_future",
                 field=field,
             )
         )
@@ -54,7 +75,6 @@ def min_date_of_birth_validator(date_of_birth, field):
 
 class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
-    employee_ssn: Optional[TaxIdUnformattedStr]
     tax_identifier: Optional[TaxIdUnformattedStr]
     department_id: Optional[str] # @todo: check if this is the correct type
     employer_fein: Optional[FEINUnformattedStr]
@@ -79,7 +99,6 @@ class ApplicationRequestBody(PydanticBaseModel):
     has_employer_benefits: Optional[bool]
     employer_benefits: Optional[List[EmployerBenefit]]
     has_other_incomes: Optional[bool]
-    other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
     phone: Optional[Phone]
     previous_leaves_other_reason: Optional[List[PreviousLeave]]
@@ -117,6 +136,15 @@ class ApplicationRequestBody(PydanticBaseModel):
             or not leave_details.caring_leave_metadata.family_member_date_of_birth
         ):
             return leave_details
+
+        future_date_of_birth_issue = future_date_of_birth_validator(
+            leave_details.caring_leave_metadata.family_member_date_of_birth,
+            "leave_details.caring_leave_metadata.family_member_date_of_birth",
+        )
+        if future_date_of_birth_issue:
+            raise ValidationException(
+                errors=future_date_of_birth_issue, message="Validation error", data={}
+            )
 
         max_date_of_birth_issue = max_date_of_birth_validator(
             leave_details.caring_leave_metadata.family_member_date_of_birth,

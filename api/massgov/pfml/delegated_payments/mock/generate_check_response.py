@@ -1,4 +1,5 @@
 import argparse
+import datetime
 from dataclasses import asdict, dataclass
 from random import randint
 from typing import List, Optional, Union
@@ -152,14 +153,16 @@ class PubCheckResponseGenerator:
             payee_name=_format_employee_name_for_ez_check(employee),
         )
 
+        response_date = (
+            payment.payment_date + datetime.timedelta(days=10) if payment.payment_date else None
+        )
+
         if scenario_descriptor.pub_check_paid_response:
             paid_entry = PaidCheckResponseData(
                 response_type="Debits",
                 type_detail="Check",
                 posted_amount=str(payment.amount),
-                posted_date=str(payment.payment_date.strftime("%m/%d/%Y"))
-                if payment.payment_date
-                else None,
+                posted_date=str(response_date.strftime("%m/%d/%Y")) if response_date else None,
                 **asdict(check_response_data_common),
             )
             self.paid_checks.append(paid_entry)
@@ -169,9 +172,7 @@ class PubCheckResponseGenerator:
                 response_type="Outstanding",
                 type_detail=scenario_descriptor.pub_check_outstanding_response_status.value,
                 issued_amount=str(payment.amount),
-                issued_date=str(payment.payment_date.strftime("%m/%d/%Y"))
-                if payment.payment_date
-                else None,
+                issued_date=str(response_date.strftime("%m/%d/%Y")) if response_date else None,
                 **asdict(check_response_data_common),
             )
             self.outstanding_checks.append(outstanding_entry)

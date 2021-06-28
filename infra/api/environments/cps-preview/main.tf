@@ -60,9 +60,8 @@ module "api" {
     "https://paidleave-cps-preview.eol.mass.gov",
     "https://paidleave-api-cps-preview.eol.mass.gov",
   ]
-  enforce_leave_admin_verification = "1"
-  enable_application_fraud_check   = "0"
-  release_version                  = var.release_version
+  enable_application_fraud_check = "0"
+  release_version                = var.release_version
 
   cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_1OVYp4aZo"
   cognito_user_pool_id        = "us-east-1_1OVYp4aZo"

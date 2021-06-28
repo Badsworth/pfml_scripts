@@ -479,6 +479,7 @@ def has_previous_state_managed_paid_leave(existing_application, db_session):
 
 
 def document_upload(application_id, body, file):
+
     with app.db_session() as db_session:
         # Get the referenced application or return 404
         existing_application = get_or_404(db_session, Application, application_id)
@@ -535,8 +536,15 @@ def document_upload(application_id, body, file):
                 ].document_type_description
 
         if document_type not in ID_DOCS:
-            # check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
-            if has_previous_state_managed_paid_leave(existing_application, db_session):
+            # Check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
+            # Because existng claims where only part 1 has been submitted should continue using old doc type, submitted_time
+            # rather than existing docs should be examined
+
+            if has_previous_state_managed_paid_leave(existing_application, db_session) or (
+                existing_application.submitted_time
+                and existing_application.submitted_time
+                < app.get_app_config().new_plan_proofs_active_at
+            ):
                 document_type = (
                     DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_description
                 )

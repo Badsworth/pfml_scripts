@@ -100,7 +100,7 @@ class UserFactory(BaseFactory):
         model = employee_models.User
 
     user_id = Generators.UuidObj
-    active_directory_id = factory.Faker("uuid4")
+    sub_id = factory.Faker("uuid4")
     email_address = factory.Faker("email")
 
     @factory.post_generation
@@ -459,16 +459,9 @@ class ApplicationFactory(BaseFactory):
     user = factory.SubFactory(UserFactory)
     user_id = factory.LazyAttribute(lambda a: a.user.user_id)
 
-    # EmployerFactory generates the FEIN, and we want to use the same FEIN
-    # so that EIN validations succeed
-    employer_fein = factory.SelfAttribute("employer.employer_fein")
-    employer = factory.SubFactory(EmployerFactory)
-    employer_id = factory.LazyAttribute(lambda a: a.employer.employer_id)
+    employer_fein = Generators.Fein
 
-    employee = factory.SubFactory(EmployeeFactory, gender_id=1)
-    employee_id = factory.LazyAttribute(lambda a: a.employee.employee_id)
-
-    tax_identifier = factory.SelfAttribute("employee.tax_identifier")
+    tax_identifier = factory.SubFactory(TaxIdentifierFactory)
     tax_identifier_id = factory.LazyAttribute(lambda t: t.tax_identifier.tax_identifier_id)
 
     phone = factory.SubFactory(PhoneFactory)
@@ -594,7 +587,7 @@ class EmployerBenefitFactory(BaseFactory):
 
     # application_id must be passed into the create() call
     benefit_type_id = (
-        application_models.EmployerBenefitType.ACCRUED_PAID_LEAVE.employer_benefit_type_id
+        application_models.EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id
     )
     benefit_amount_dollars = factory.Faker("random_int")
     benefit_amount_frequency_id = application_models.AmountFrequency.PER_MONTH.amount_frequency_id

@@ -23,7 +23,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.payments.payments_util import get_now
+from massgov.pfml.payments.payments_util import get_now, move_file_and_update_ref_file
 from massgov.pfml.payments.sftp_s3_transfer import (
     SftpS3TransferConfig,
     copy_from_sftp_to_s3_and_archive_files,
@@ -40,9 +40,9 @@ DuaReductionPaymentAndClaim = Tuple[DuaReductionPayment, Optional[Claim]]
 
 class Metrics:
     PENDING_DUA_PAYMENT_REFERENCE_FILES_COUNT = "pending_dua_payment_reference_files_count"
-    SUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = "successful_dia_payment_reference_files_count"
+    SUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = "successful_dua_payment_reference_files_count"
     UNSUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = (
-        "unsuccessful_dia_payment_reference_files_count"
+        "unsuccessful_dua_payment_reference_files_count"
     )
     NEW_DUA_PAYMENT_ROW_COUNT = "new_dua_payment_row_count"
     TOTAL_DUA_PAYMENT_ROW_COUNT = "total_dua_payment_row_count"
@@ -70,6 +70,10 @@ class Constants:
     # cases over time), so the field has been repurposed to hold the customer
     # number to avoid DUA needing to change anything on their end.
     CASE_ID_FIELD = "CASE_ID"
+
+    # We changed the primary key from being by absence case to being by customer
+    # number. This is the first column in the DUA report.
+    CUSTOMER_ID_FIELD = "CUSTOMER_ID"
     EMPR_FEIN_FIELD = "EMPR_FEIN"
     WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD = "PAYMENT_DATE"
     RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD = "BENEFIT_WEEK_START_DATE"
@@ -97,7 +101,7 @@ class Constants:
     ]
 
     DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
-        CASE_ID_FIELD: "fineos_customer_number",
+        CUSTOMER_ID_FIELD: "fineos_customer_number",
         WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: "payment_date",
         RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD: "request_week_begin_date",
         WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD: "gross_payment_amount_cents",
@@ -229,6 +233,7 @@ def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry)
     s3_config = get_s3_config()
     pending_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dua_pending_directory_path)
     archive_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dua_archive_directory_path)
+    error_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dfml_error_directory_path)
 
     for ref_file in _get_pending_dua_payment_reference_files(pending_dir, db_session):
         log_entry.increment(Metrics.PENDING_DUA_PAYMENT_REFERENCE_FILES_COUNT)
@@ -242,7 +247,22 @@ def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry)
             log_entry.increment(Metrics.TOTAL_DUA_PAYMENT_ROW_COUNT, total_row_count)
 
         except Exception:
-            # TODO: transition to an error state
+            # Move to error directory and update ReferenceFile.
+            filename = os.path.basename(ref_file.file_location)
+            dest_path = os.path.join(error_dir, filename)
+            move_file_and_update_ref_file(db_session, dest_path, ref_file)
+
+            # transition to an error state
+            state_log_util.create_finished_state_log(
+                associated_model=ref_file,
+                end_state=State.DUA_PAYMENT_LIST_ERROR_SAVE_TO_DB,
+                outcome=state_log_util.build_outcome(
+                    "Error loading DUA payment file into database"
+                ),
+                db_session=db_session,
+            )
+            db_session.commit()
+
             log_entry.increment(Metrics.UNSUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT)
 
             # Log exceptions but continue attempting to load other payment files into the database.
@@ -447,7 +467,7 @@ def _format_reduction_payments_for_report(
 
     for payment, claim in reduction_payments:
         info = {
-            Constants.CASE_ID_FIELD: payment.fineos_customer_number,
+            Constants.CUSTOMER_ID_FIELD: payment.fineos_customer_number,
             Constants.WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: _format_date_for_report(
                 payment.payment_date
             ),

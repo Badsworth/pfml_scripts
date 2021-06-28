@@ -68,7 +68,7 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
           "is_for_same_reason_as_leave_reason": null,
           "leave_end_date": "2021-01-26",
           "leave_minutes": 1500,
-          "leave_reason": "Care for a family member",
+          "leave_reason": "Caring for a family member with a serious health condition",
           "leave_start_date": "2021-01-01",
           "previous_leave_id": 89,
           "worked_per_week_minutes": 2400,
@@ -78,7 +78,7 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
           "is_for_same_reason_as_leave_reason": null,
           "leave_end_date": "2020-12-13",
           "leave_minutes": 1200,
-          "leave_reason": "Child bonding",
+          "leave_reason": "Bonding with my child after birth or placement",
           "leave_start_date": "2020-11-21",
           "previous_leave_id": 9,
           "worked_per_week_minutes": 2400,
@@ -104,32 +104,32 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
         Object {
           "checked": false,
           "label": "An illness or injury",
-          "value": "Serious health condition",
+          "value": "An illness or injury",
         },
         Object {
           "checked": false,
           "label": "Pregnancy",
-          "value": "Pregnancy / Maternity",
+          "value": "Pregnancy",
         },
         Object {
           "checked": false,
           "label": "Bonding with my child after birth or placement",
-          "value": "Child bonding",
+          "value": "Bonding with my child after birth or placement",
         },
         Object {
           "checked": true,
           "label": "Caring for a family member",
-          "value": "Care for a family member",
+          "value": "Caring for a family member with a serious health condition",
         },
         Object {
           "checked": false,
           "label": "Managing family affairs while a family member was on active duty in the armed forces",
-          "value": "Military exigency family",
+          "value": "Managing family affairs while a family member is on active duty in the armed forces",
         },
         Object {
           "checked": false,
           "label": "Caring for a family member who served in the armed forces",
-          "value": "Military caregiver",
+          "value": "Caring for a family member who serves in the armed forces",
         },
       ]
     }
@@ -139,7 +139,7 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
     onChange={[Function]}
     smallLabel={true}
     type="radio"
-    value="Care for a family member"
+    value="Caring for a family member with a serious health condition"
   />
   <InputChoiceGroup
     choices={

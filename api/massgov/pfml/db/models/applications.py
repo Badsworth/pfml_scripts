@@ -23,8 +23,6 @@ from massgov.pfml.db.models.employees import (
     Address,
     Claim,
     ClaimType,
-    Employee,
-    Employer,
     LkBankAccountType,
     LkGender,
     LkOccupation,
@@ -278,10 +276,6 @@ class Application(Base):
     nickname = Column(Text)
     requestor = Column(Integer)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), nullable=True, unique=True)
-    # TODO (EMPLOYER-1213) Remove employee_id and employer_id from Application table.
-    # We store these on the Claim instead.
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
-    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True)
     has_mailing_address = Column(Boolean)
     mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True)
     residential_address_id = Column(
@@ -331,12 +325,11 @@ class Application(Base):
     submitted_time = Column(TIMESTAMP(timezone=True))
     has_employer_benefits = Column(Boolean)
     has_other_incomes = Column(Boolean)
-    other_incomes_awaiting_approval = Column(Boolean)
+    other_incomes_awaiting_approval = deferred(Column(Boolean().evaluates_none()))
     has_submitted_payment_preference = Column(Boolean)
     caring_leave_metadata_id = Column(
         UUID(as_uuid=True), ForeignKey("caring_leave_metadata.caring_leave_metadata_id")
     )
-    has_previous_leaves = deferred(Column(Boolean().evaluates_none()))
     has_previous_leaves_same_reason = Column(Boolean)
     has_previous_leaves_other_reason = Column(Boolean)
     has_concurrent_leave = Column(Boolean)
@@ -344,8 +337,6 @@ class Application(Base):
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
     claim = relationship(Claim, backref=backref("application", uselist=False))
-    employer = relationship(Employer)
-    employee = relationship(Employee)
     occupation = relationship(LkOccupation)
     gender = relationship(LkGender)
     leave_reason = relationship(LkLeaveReason)
@@ -921,12 +912,20 @@ class PreviousLeaveQualifyingReason(LookupTable):
         "previous_leave_qualifying_reason_description",
     )
 
-    PREGNANCY_MATERNITY = LkPreviousLeaveQualifyingReason(1, "Pregnancy / Maternity")
-    SERIOUS_HEALTH_CONDITION = LkPreviousLeaveQualifyingReason(2, "Serious health condition")
-    CARE_FOR_A_FAMILY_MEMBER = LkPreviousLeaveQualifyingReason(3, "Care for a family member")
-    CHILD_BONDING = LkPreviousLeaveQualifyingReason(4, "Child bonding")
-    MILITARY_CAREGIVER = LkPreviousLeaveQualifyingReason(5, "Military caregiver")
-    MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(6, "Military exigency family")
+    PREGNANCY_MATERNITY = LkPreviousLeaveQualifyingReason(1, "Pregnancy")
+    AN_ILLNESS_OR_INJURY = LkPreviousLeaveQualifyingReason(2, "An illness or injury")
+    CARE_FOR_A_FAMILY_MEMBER = LkPreviousLeaveQualifyingReason(
+        3, "Caring for a family member with a serious health condition"
+    )
+    CHILD_BONDING = LkPreviousLeaveQualifyingReason(
+        4, "Bonding with my child after birth or placement"
+    )
+    MILITARY_CAREGIVER = LkPreviousLeaveQualifyingReason(
+        5, "Caring for a family member who serves in the armed forces"
+    )
+    MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(
+        6, "Managing family affairs while a family member is on active duty in the armed forces"
+    )
 
 
 def sync_lookup_tables(db_session):

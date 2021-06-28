@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { get, isEqual, pick } from "lodash";
+import { get, isEqual, omit } from "lodash";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
+import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
+import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
 import DocumentCollection from "../../../models/DocumentCollection";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
@@ -12,18 +14,21 @@ import EmployerClaim from "../../../models/EmployerClaim";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
+import Heading from "../../../components/Heading";
 import LeaveDetails from "../../../components/employers/LeaveDetails";
 import LeaveReason from "../../../models/LeaveReason";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
 import PreviousLeave from "../../../models/PreviousLeave";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
 import PropTypes from "prop-types";
+import ReviewHeading from "../../../components/ReviewHeading";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import findDocumentsByLeaveReason from "../../../utils/findDocumentsByLeaveReason";
 import formatDateRange from "../../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../../services/featureFlags";
+import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
 import routes from "../../../routes";
 import updateAmendments from "../../../utils/updateAmendments";
 import useThrottledHandler from "../../../hooks/useThrottledHandler";
@@ -41,10 +46,8 @@ export const Review = (props) => {
     employers: { claim, documents, downloadDocument, loadDocuments },
   } = appLogic;
   const { t } = useTranslation();
-  // TODO (EMPLOYER-718): Remove feature flag
-  const showPreviousLeaves = isFeatureEnabled("employerShowPreviousLeaves");
+  const shouldShowV2 = !!claim.uses_second_eform_version;
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
-
   // explicitly check for false as opposed to falsy values.
   // temporarily allows the redirect behavior to work even
   // if the API has not been updated to populate the field.
@@ -55,10 +58,13 @@ export const Review = (props) => {
   }
 
   const [formState, setFormState] = useState({
+    // base fields
+    concurrentLeave: claim.concurrent_leave,
+    amendedConcurrentLeave: claim.concurrent_leave,
     employerBenefits: [],
-    previousLeaves: [],
     amendedBenefits: [],
-    amendedLeaves: [],
+    previousLeaves: [],
+    amendedPreviousLeaves: [],
     amendedHours: 0,
     comment: "",
     employerDecision: "Approve",
@@ -66,7 +72,28 @@ export const Review = (props) => {
     employeeNotice: undefined,
     believeRelationshipAccurate: undefined,
     relationshipInaccurateReason: "",
+    // added fields
+    addedBenefits: [],
+    addedPreviousLeaves: [],
+    addedConcurrentLeave: null,
   });
+
+  const [allPreviousLeaves, setAllPreviousLeaves] = useState([]);
+  useEffect(() => {
+    setAllPreviousLeaves([
+      ...formState.amendedPreviousLeaves,
+      ...formState.addedPreviousLeaves,
+    ]);
+  }, [formState.amendedPreviousLeaves, formState.addedPreviousLeaves]);
+
+  const [allEmployerBenefits, setAllEmployerBenefits] = useState([]);
+  useEffect(() => {
+    setAllEmployerBenefits([
+      ...formState.amendedBenefits,
+      ...formState.addedBenefits,
+    ]);
+  }, [formState.amendedBenefits, formState.addedBenefits]);
+
   const isCommentRequired =
     formState.fraud === "Yes" ||
     formState.employerDecision === "Deny" ||
@@ -91,11 +118,12 @@ export const Review = (props) => {
       (leave, index) =>
         new PreviousLeave({ ...leave, previous_leave_id: index })
     );
+
     if (claim) {
       updateFields({
         amendedBenefits: indexedEmployerBenefits,
         employerBenefits: indexedEmployerBenefits,
-        amendedLeaves: indexedPreviousLeaves,
+        amendedPreviousLeaves: indexedPreviousLeaves,
         previousLeaves: indexedPreviousLeaves,
         amendedHours: claim.hours_worked_per_week,
       });
@@ -125,20 +153,120 @@ export const Review = (props) => {
     updateFields({ amendedHours: updatedHoursWorked });
   };
 
-  const handleBenefitInputChange = (updatedBenefit) => {
-    const updatedBenefits = updateAmendments(
-      formState.amendedBenefits,
-      updatedBenefit
-    );
-    updateFields({ amendedBenefits: updatedBenefits });
+  const handleBenefitInputAdd = () => {
+    updateFields({
+      addedBenefits: [
+        ...formState.addedBenefits,
+        new EmployerBenefit({
+          employer_benefit_id: allEmployerBenefits.length,
+        }),
+      ],
+    });
   };
 
-  const handlePreviousLeavesChange = (updatedLeave) => {
+  const handleBenefitRemove = (benefitToRemove) => {
+    const updatedAddedBenefits = formState.addedBenefits
+      // remove selected benefit
+      .filter(
+        ({ employer_benefit_id }) =>
+          employer_benefit_id !== benefitToRemove.employer_benefit_id
+      )
+      // reassign employer_benefit_id to keep indices accurate
+      .map(
+        (addedBenefit, index) =>
+          new EmployerBenefit({ ...addedBenefit, employer_benefit_id: index })
+      );
+    updateFields({ addedBenefits: updatedAddedBenefits });
+  };
+
+  const handleBenefitInputChange = (
+    updatedBenefit,
+    formStateField = "amendedBenefits"
+  ) => {
+    const updatedBenefits = updateAmendments(
+      get(formState, formStateField),
+      updatedBenefit
+    );
+    updateFields({ [formStateField]: updatedBenefits });
+  };
+
+  const handlePreviousLeaveAdd = () => {
+    updateFields({
+      addedPreviousLeaves: [
+        ...formState.addedPreviousLeaves,
+        new PreviousLeave({
+          is_for_current_employer: true,
+          previous_leave_id: allPreviousLeaves.length,
+        }),
+      ],
+    });
+  };
+
+  const handlePreviousLeaveRemove = (leaveToRemove) => {
+    const updatedAddedLeaves = formState.addedPreviousLeaves
+      // remove selected leave
+      .filter(
+        ({ previous_leave_id }) =>
+          previous_leave_id !== leaveToRemove.previous_leave_id
+      )
+      // reassign previous_leave_id to keep indices accurate
+      .map(
+        (addedLeave, index) =>
+          new PreviousLeave({ ...addedLeave, previous_leave_id: index })
+      );
+    updateFields({ addedPreviousLeaves: updatedAddedLeaves });
+  };
+
+  const handlePreviousLeavesChange = (
+    updatedLeave,
+    formStateField = "amendedPreviousLeaves"
+  ) => {
+    const originalPreviousLeave = get(
+      formState,
+      `previousLeaves.[${updatedLeave.previous_leave_id}]`
+    );
+
+    if (updatedLeave.is_for_same_reason_as_leave_reason === true) {
+      updatedLeave.leave_reason = leaveReasonToPreviousLeaveReason(
+        claim.leave_details.reason
+      );
+    } else if (
+      updatedLeave.is_for_same_reason_as_leave_reason === false &&
+      // leave admin did not cancel amendment.
+      !isEqual(updatedLeave, originalPreviousLeave)
+    ) {
+      updatedLeave.leave_reason = undefined;
+    }
+    // don't revert previous leave reason if the amendment is canceled
     const updatedPreviousLeaves = updateAmendments(
-      formState.amendedLeaves,
+      get(formState, formStateField),
       updatedLeave
     );
-    updateFields({ amendedLeaves: updatedPreviousLeaves });
+    updateFields({ [formStateField]: updatedPreviousLeaves });
+  };
+
+  const handleConcurrentLeaveAdd = () => {
+    updateFields({
+      addedConcurrentLeave: new ConcurrentLeaveModel({
+        is_for_current_employer: true,
+      }),
+    });
+  };
+
+  const handleConcurrentLeaveRemove = () => {
+    updateFields({ addedConcurrentLeave: null });
+  };
+
+  const handleConcurrentLeaveInputChange = (
+    updatedLeave,
+    formStateField = "amendedConcurrentLeave"
+  ) => {
+    updateFields({
+      [formStateField]: {
+        ...get(formState, formStateField),
+        ...updatedLeave,
+      },
+    });
   };
 
   const handleFraudInputChange = (updatedFraudInput) => {
@@ -172,31 +300,30 @@ export const Review = (props) => {
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
 
-    const amendedHours = formState.amendedHours;
-    const previous_leaves = formState.amendedLeaves.map((leave) =>
-      pick(leave, ["leave_end_date", "leave_reason", "leave_start_date"])
+    const concurrent_leave =
+      formState.amendedConcurrentLeave || formState.addedConcurrentLeave;
+    const employer_benefits = allEmployerBenefits.map((benefit) =>
+      omit(benefit, ["employer_benefit_id"])
     );
-    const employer_benefits = formState.amendedBenefits.map((benefit) =>
-      pick(benefit, [
-        "benefit_amount_dollars",
-        "benefit_amount_frequency",
-        "benefit_end_date",
-        "benefit_start_date",
-        "benefit_type",
-      ])
+    const amendedHours = formState.amendedHours;
+    const previous_leaves = allPreviousLeaves.map((leave) =>
+      omit(leave, ["previous_leave_id"])
     );
 
     const payload = {
       comment: formState.comment,
+      concurrent_leave,
       employer_benefits,
       employer_decision: formState.employerDecision,
       fraud: formState.fraud,
       hours_worked_per_week: amendedHours,
       previous_leaves,
       has_amendments:
-        !isEqual(formState.amendedBenefits, formState.employerBenefits) ||
-        !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
+        !isEqual(allEmployerBenefits, formState.employerBenefits) ||
+        !isEqual(allPreviousLeaves, formState.previousLeaves) ||
+        !isEqual(concurrent_leave, formState.concurrentLeave) ||
         !isEqual(amendedHours, claim.hours_worked_per_week),
+      uses_second_eform_version: !!claim.uses_second_eform_version,
     };
     if (shouldShowCaringLeave) {
       payload.leave_reason = get(claim, "leave_details.reason");
@@ -258,6 +385,7 @@ export const Review = (props) => {
       <p className="margin-top-0">{claim.employer_fein}</p>
       <EmployeeInformation claim={claim} />
       <LeaveDetails
+        appErrors={appErrors}
         claim={claim}
         documents={certificationDocuments}
         downloadDocument={downloadDocument}
@@ -287,19 +415,67 @@ export const Review = (props) => {
           hoursWorkedPerWeek={claim.hours_worked_per_week}
           onChange={handleHoursWorkedChange}
         />
+
+        <ReviewHeading level="2">
+          {t("pages.employersClaimsReview.otherLeavesTitle")}
+        </ReviewHeading>
+        {!shouldShowV2 && (
+          <Trans i18nKey="pages.employersClaimsReview.otherLeavesBodyV1" />
+        )}
+        {shouldShowV2 && (
+          <React.Fragment>
+            <Trans
+              i18nKey="pages.employersClaimsReview.otherLeavesBody"
+              components={{
+                ul: <ul className="usa-list" />,
+                li: <li />,
+              }}
+            />
+            <div className="usa-summary-box" role="complementary">
+              <div className="usa-summary-box__body">
+                <Heading className="usa-summary-box__heading" level="4">
+                  {t("pages.employersClaimsReview.otherLeavesSummaryBoxTitle")}
+                </Heading>
+                <div className="usa-summary-box__text">
+                  <Trans
+                    i18nKey="pages.employersClaimsReview.otherLeavesSummaryBoxBody"
+                    components={{
+                      ul: <ul className="usa-list" />,
+                      li: <li />,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            <PreviousLeaves
+              appErrors={appErrors}
+              previousLeaves={formState.previousLeaves}
+              addedPreviousLeaves={formState.addedPreviousLeaves}
+              onAdd={handlePreviousLeaveAdd}
+              onChange={handlePreviousLeavesChange}
+              onRemove={handlePreviousLeaveRemove}
+              shouldShowV2={shouldShowV2}
+            />
+            <ConcurrentLeave
+              appErrors={appErrors}
+              addedConcurrentLeave={formState.addedConcurrentLeave}
+              concurrentLeave={formState.concurrentLeave}
+              onAdd={handleConcurrentLeaveAdd}
+              onChange={handleConcurrentLeaveInputChange}
+              onRemove={handleConcurrentLeaveRemove}
+              shouldShowV2={shouldShowV2}
+            />
+          </React.Fragment>
+        )}
         <EmployerBenefits
           appErrors={appErrors}
           employerBenefits={formState.employerBenefits}
+          addedBenefits={formState.addedBenefits}
+          onAdd={handleBenefitInputAdd}
           onChange={handleBenefitInputChange}
+          onRemove={handleBenefitRemove}
+          shouldShowV2={shouldShowV2}
         />
-        {/* TODO (EMPLOYER-718): Remove feature flag  */}
-        {showPreviousLeaves && (
-          <PreviousLeaves
-            appErrors={appErrors}
-            onChange={handlePreviousLeavesChange}
-            previousLeaves={formState.previousLeaves}
-          />
-        )}
         <FraudReport onChange={handleFraudInputChange} />
         <EmployeeNotice
           fraud={formState.fraud}

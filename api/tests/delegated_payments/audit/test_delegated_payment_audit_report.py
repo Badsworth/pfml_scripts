@@ -1,6 +1,7 @@
 import csv
 import os
 import tempfile
+from datetime import date
 from typing import List
 
 import pytest
@@ -10,6 +11,7 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import Payment, ReferenceFile, ReferenceFileType, State
+from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
@@ -40,6 +42,267 @@ def payment_audit_report_step(initialize_factories_session, test_db_session, tes
     return PaymentAuditReportStep(
         db_session=test_db_session, log_entry_db_session=test_db_other_session
     )
+
+
+def test_is_first_time_payment(
+    initialize_factories_session, test_db_session, test_db_other_session
+):
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+    claim = ClaimFactory.create()
+    payment = PaymentFactory.create(claim=claim)
+    state_log_util.create_finished_state_log(
+        payment,
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+        state_log_util.build_outcome("test"),
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_audit_sent_count(payment) == 0
+
+    previous_error_payment = PaymentFactory.create(claim=claim)
+    state_log_util.create_finished_state_log(
+        previous_error_payment,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+        state_log_util.build_outcome("test"),
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_audit_sent_count(payment) == 0
+
+    previous_rejected_payment = PaymentFactory.create(claim=claim)
+    state_log_util.create_finished_state_log(
+        previous_rejected_payment,
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+        state_log_util.build_outcome("test"),
+        test_db_session,
+    )
+    state_log_util.create_finished_state_log(
+        previous_rejected_payment,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+        state_log_util.build_outcome("test"),
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_audit_sent_count(payment) == 1
+
+    previous_bank_error_payment = PaymentFactory.create(claim=claim)
+    state_log_util.create_finished_state_log(
+        previous_bank_error_payment,
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+        state_log_util.build_outcome("test"),
+        test_db_session,
+    )
+    state_log_util.create_finished_state_log(
+        previous_bank_error_payment,
+        State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+        state_log_util.build_outcome("test"),
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_audit_sent_count(payment) == 2
+
+
+def test_previously_errored_payment_count(
+    initialize_factories_session, test_db_session, test_db_other_session
+):
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+    outcome = state_log_util.build_outcome("test")
+
+    period_start_date = date(2021, 1, 16)
+    period_end_date = date(2021, 1, 28)
+
+    other_period_start_date = date(2021, 1, 1)
+    other_period_end_date = date(2021, 1, 15)
+
+    # state the payment for audit
+    claim = ClaimFactory.create()
+    payment = PaymentFactory.create(
+        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
+    )
+    state_log_util.create_finished_state_log(
+        payment,
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+        outcome,
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 0
+
+    # confirm that errors for payments in other periods for the same claim are not counted
+    other_period_erroed_payment = PaymentFactory.create(
+        claim=claim,
+        period_start_date=other_period_start_date,
+        period_end_date=other_period_end_date,
+    )
+    state_log_util.create_finished_state_log(
+        other_period_erroed_payment,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+        outcome,
+        test_db_session,
+    )
+
+    other_period_erroed_payment_restarted = PaymentFactory.create(
+        claim=claim,
+        period_start_date=other_period_start_date,
+        period_end_date=other_period_end_date,
+    )
+    state_log_util.create_finished_state_log(
+        other_period_erroed_payment_restarted,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
+        outcome,
+        test_db_session,
+    )
+
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 0
+
+    # check errored payments in the same payment period are counted
+
+    same_period_address_error = PaymentFactory.create(
+        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
+    )
+    state_log_util.create_finished_state_log(
+        same_period_address_error,
+        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+        outcome,
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 1
+
+    same_period_erroed_payment = PaymentFactory.create(
+        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
+    )
+    state_log_util.create_finished_state_log(
+        same_period_erroed_payment,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+        outcome,
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 2
+
+    same_period_erroed_payment_restarted = PaymentFactory.create(
+        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
+    )
+    state_log_util.create_finished_state_log(
+        same_period_erroed_payment_restarted,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
+        outcome,
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 3
+
+    # each restart will be counted
+    same_period_erroed_payment_restarted_2 = PaymentFactory.create(
+        claim=claim,
+        fineos_pei_c_value=same_period_erroed_payment_restarted.fineos_pei_c_value,
+        fineos_pei_i_value=same_period_erroed_payment_restarted.fineos_pei_c_value,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    )
+    state_log_util.create_finished_state_log(
+        same_period_erroed_payment_restarted_2,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
+        outcome,
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 4
+
+
+def test_previously_rejected_payment_count(
+    initialize_factories_session, test_db_session, test_db_other_session
+):
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+    outcome = state_log_util.build_outcome("test")
+
+    period_start_date = date(2021, 1, 16)
+    period_end_date = date(2021, 1, 28)
+
+    other_period_start_date = date(2021, 1, 1)
+    other_period_end_date = date(2021, 1, 15)
+
+    # state the payment for audit
+    claim = ClaimFactory.create()
+    payment = PaymentFactory.create(
+        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
+    )
+    state_log_util.create_finished_state_log(
+        payment,
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+        outcome,
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_rejected_payment_count(payment) == 0
+
+    # confirm that rejects for payments in other periods for the same claim are not counted
+    other_period_rejected_payment = PaymentFactory.create(
+        claim=claim,
+        period_start_date=other_period_start_date,
+        period_end_date=other_period_end_date,
+    )
+    state_log_util.create_finished_state_log(
+        other_period_rejected_payment,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+        outcome,
+        test_db_session,
+    )
+
+    other_period_rejected_payment_restarted = PaymentFactory.create(
+        claim=claim,
+        period_start_date=other_period_start_date,
+        period_end_date=other_period_end_date,
+    )
+    state_log_util.create_finished_state_log(
+        other_period_rejected_payment_restarted,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+        outcome,
+        test_db_session,
+    )
+
+    assert payment_audit_report_step.previously_rejected_payment_count(payment) == 0
+
+    # check errored payments in the same payment period are counted
+    same_period_rejected_payment = PaymentFactory.create(
+        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
+    )
+    state_log_util.create_finished_state_log(
+        same_period_rejected_payment,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+        outcome,
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_rejected_payment_count(payment) == 1
+
+    # skips are counted separately
+    same_period_rejected_payment_restarted = PaymentFactory.create(
+        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
+    )
+    state_log_util.create_finished_state_log(
+        same_period_rejected_payment_restarted,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+        outcome,
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_rejected_payment_count(payment) == 1
+    assert payment_audit_report_step.previously_skipped_payment_count(payment) == 1
+
+    # each restart will be counted
+    same_period_rejected_payment_restarted_2 = PaymentFactory.create(
+        claim=claim,
+        fineos_pei_c_value=same_period_rejected_payment_restarted.fineos_pei_c_value,
+        fineos_pei_i_value=same_period_rejected_payment_restarted.fineos_pei_c_value,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    )
+    state_log_util.create_finished_state_log(
+        same_period_rejected_payment_restarted_2,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+        outcome,
+        test_db_session,
+    )
+    assert payment_audit_report_step.previously_skipped_payment_count(payment) == 2
 
 
 def test_write_audit_report(tmp_path, test_db_session, initialize_factories_session):
@@ -88,33 +351,52 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
 ):
     payment_audit_data: PaymentAuditData = audit_scenario_data.payment_audit_data
     scenario_descriptor = AUDIT_SCENARIO_DESCRIPTORS[audit_scenario_data.scenario_name]
+    previous_rejection_count = len(
+        list(
+            filter(
+                lambda s: s == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+                scenario_descriptor.previous_rejection_states,
+            )
+        )
+    )
+    previously_skipped_payment_count = len(
+        list(
+            filter(
+                lambda s: s == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+                scenario_descriptor.previous_rejection_states,
+            )
+        )
+    )
+
+    error_msg = f"Error validaing payment audit scenario data - scenario name: {audit_scenario_data.scenario_name}"
 
     validate_payment_audit_csv_row_by_payment(row, payment_audit_data.payment)
 
     assert (
         row[PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment]
         == bool_to_str[scenario_descriptor.is_first_time_payment]
+    ), error_msg
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.previously_errored_payment_count] == str(
+        len(scenario_descriptor.previous_error_states)
+    ), error_msg
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.previously_rejected_payment_count] == str(
+        previous_rejection_count
+    ), error_msg
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.previously_skipped_payment_count] == str(
+        previously_skipped_payment_count
     )
-    assert (
-        row[PAYMENT_AUDIT_CSV_HEADERS.is_previously_errored_payment]
-        == bool_to_str[scenario_descriptor.is_previously_errored_payment]
-    )
-    assert (
-        row[PAYMENT_AUDIT_CSV_HEADERS.is_previously_rejected_payment]
-        == bool_to_str[scenario_descriptor.is_previously_rejected_payment]
-    )
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.number_of_times_in_rejected_or_error_state] == str(
-        scenario_descriptor.number_of_times_in_error_state
-        + scenario_descriptor.number_of_times_in_rejected_state
-    )
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] == ""
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes] == ""
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity] == ""
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] == "", error_msg
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes] == "", error_msg
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity] == "", error_msg
 
 
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
     assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment)
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number]
+        == payment.claim.employee.fineos_customer_number
+    )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.claim.employee.first_name
     assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.claim.employee.last_name
 
@@ -134,12 +416,13 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
     assert row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number] == payment.claim.fineos_absence_id
     assert row[PAYMENT_AUDIT_CSV_HEADERS.c_value] == payment.fineos_pei_c_value
     assert row[PAYMENT_AUDIT_CSV_HEADERS.i_value] == payment.fineos_pei_i_value
-    assert (
-        row[PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number]
-        == payment.claim.employee.fineos_customer_number
-    )
+
     assert row[PAYMENT_AUDIT_CSV_HEADERS.employer_id] == str(
         payment.claim.employer.fineos_employer_id
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_creation_date]
+        == payment.absence_case_creation_date.isoformat()
     )
     assert (
         row[PAYMENT_AUDIT_CSV_HEADERS.case_status]

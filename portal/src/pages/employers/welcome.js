@@ -5,7 +5,6 @@ import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
 import Link from "next/link";
 import NewTag from "../../components/NewTag";
-import { NewsBanner } from "../../components/employers/NewsBanner";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
@@ -32,28 +31,28 @@ export const Welcome = ({ appLogic, user }) => {
     fill: "currentColor",
   };
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
-  const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
-  const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
+  const shouldShowOtherLeave = isFeatureEnabled("claimantShowOtherLeaveStep");
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
+  const shouldShowCaringLeaveAlert =
+    shouldShowCaringLeave && !shouldShowOtherLeave;
 
   return (
     <React.Fragment>
-      {shouldShowDashboard && (
-        <div className="grid-row">
-          <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
-        </div>
-      )}
+      <div className="grid-row">
+        <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
+      </div>
       <div className="grid-row">
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersWelcome.welcomeTitle")}</Title>
-          {shouldShowVerifications && hasVerifiableEmployer && (
+
+          {hasVerifiableEmployer && (
             <Alert
               state="warning"
-              heading={t("pages.employersWelcome.verificationTitle")}
+              heading={t("pages.employersWelcome.verificationAlertTitle")}
             >
               <p>
                 <Trans
-                  i18nKey="pages.employersWelcome.verificationBody"
+                  i18nKey="pages.employersWelcome.verificationAlertBody"
                   components={{
                     "your-organizations-link": (
                       <a href={routes.employers.organizations} />
@@ -63,26 +62,51 @@ export const Welcome = ({ appLogic, user }) => {
               </p>
             </Alert>
           )}
-          {!shouldShowDashboard && <NewsBanner />}
-          <p>{t("pages.employersWelcome.welcomeBody")}</p>
 
-          {shouldShowDashboard && (
-            <React.Fragment>
-              <Heading level="2">
-                <Icon name="list" size={4} {...iconProps} />
-                {t("pages.employersWelcome.viewApplicationsTitle")}
-                <NewTag />
-              </Heading>
+          {shouldShowCaringLeaveAlert && (
+            <Alert state="info">
               <p>
                 <Trans
-                  i18nKey="pages.employersWelcome.viewApplicationsBody"
+                  i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"
                   components={{
-                    "dashboard-link": <a href={routes.employers.dashboard} />,
+                    "about-caring-leave-link": (
+                      <a
+                        href={
+                          routes.external.massgov.benefitsGuide_aboutCaringLeave
+                        }
+                        target="_blank"
+                        rel="noopener"
+                      />
+                    ),
                   }}
                 />
               </p>
-            </React.Fragment>
+            </Alert>
           )}
+
+          {shouldShowOtherLeave && (
+            <Alert state="info">
+              <p>
+                <Trans i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody" />
+              </p>
+            </Alert>
+          )}
+
+          <p>{t("pages.employersWelcome.welcomeBody")}</p>
+
+          <Heading level="2">
+            <Icon name="list" size={4} {...iconProps} />
+            {t("pages.employersWelcome.viewApplicationsTitle")}
+            <NewTag />
+          </Heading>
+          <p>
+            <Trans
+              i18nKey="pages.employersWelcome.viewApplicationsBody"
+              components={{
+                "dashboard-link": <a href={routes.employers.dashboard} />,
+              }}
+            />
+          </p>
 
           <Heading level="2">
             <IconMail {...iconProps} />
@@ -127,21 +151,17 @@ export const Welcome = ({ appLogic, user }) => {
         </div>
         <div className="grid-col-fill" />
         <aside className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1">
-          {shouldShowVerifications && (
-            <React.Fragment>
-              <Heading level="2">
-                {t("pages.employersWelcome.settingsTitle")}
-              </Heading>
-              <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05">
-                <li>
-                  <Link href={routes.employers.organizations}>
-                    <a>{t("pages.employersWelcome.settingsLink")}</a>
-                  </Link>
-                  <NewTag />
-                </li>
-              </ul>
-            </React.Fragment>
-          )}
+          <Heading level="2">
+            {t("pages.employersWelcome.settingsTitle")}
+          </Heading>
+          <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05">
+            <li>
+              <Link href={routes.employers.organizations}>
+                <a>{t("pages.employersWelcome.settingsLink")}</a>
+              </Link>
+              <NewTag />
+            </li>
+          </ul>
           <Heading level="2">
             {t("pages.employersWelcome.learnMoreTitle")}
           </Heading>

@@ -84,8 +84,14 @@ def test_process_nacha_return_file_step_full(
     assert pub_efts[26].prenote_response_reason_code == "C01"
     assert pub_efts[18].prenote_response_reason_code == "C02"
     for pub_eft in pub_efts:
-        if pub_eft.pub_individual_id in {1, 26, 18, 27}:
+        if pub_eft.pub_individual_id in {1, 27}:
             assert pub_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id
+        elif (
+            pub_eft.prenote_response_reason_code
+            and pub_eft.prenote_response_reason_code.startswith("C")
+        ):
+            assert pub_eft.prenote_state_id == PrenoteState.APPROVED.prenote_state_id
+            assert pub_eft.prenote_approved_at is not None
         else:
             assert pub_eft.prenote_state_id == PrenoteState.PENDING_WITH_PUB.prenote_state_id
 
@@ -112,9 +118,9 @@ def test_process_nacha_return_file_step_full(
     # Payment states.
     expected_states = {
         46: (State.DELEGATED_PAYMENT_ERROR_FROM_BANK, "R05", 7, None),
-        61: (State.DELEGATED_PAYMENT_COMPLETE, "C01", 9, "4000401234"),
-        68: (State.DELEGATED_PAYMENT_COMPLETE, "C02", 11, "100234567"),
-        75: (State.DELEGATED_PAYMENT_COMPLETE, "C05", 13, "22"),
+        61: (State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION, "C01", 9, "4000401234"),
+        68: (State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION, "C02", 11, "100234567"),
+        75: (State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION, "C05", 13, "22"),
     }
     for payment in payments:
         local_test_db_session.refresh(payment)
@@ -138,29 +144,35 @@ def test_process_nacha_return_file_step_full(
             assert len(payment.reference_files) == 1
             assert payment.reference_files[0].reference_file == reference_file
 
-            if expected_state == State.DELEGATED_PAYMENT_ERROR_FROM_BANK:
-                writeback_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-                    payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
-                )
-                assert (
-                    writeback_state_log.end_state.state_id
-                    == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
-                )
+            writeback_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
+                payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
+            )
+            assert (
+                writeback_state_log.end_state.state_id
+                == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+            )
 
-                writeback_details = (
-                    local_test_db_session.query(FineosWritebackDetails)
-                    .filter(FineosWritebackDetails.payment_id == payment.payment_id)
-                    .one_or_none()
-                )
-                assert writeback_details
+            writeback_details = (
+                local_test_db_session.query(FineosWritebackDetails)
+                .filter(FineosWritebackDetails.payment_id == payment.payment_id)
+                .one_or_none()
+            )
+            assert writeback_details
+            transaction_status_id = writeback_details.transaction_status_id
+            if expected_state == State.DELEGATED_PAYMENT_ERROR_FROM_BANK:
                 assert (
-                    writeback_details.transaction_status_id
+                    transaction_status_id
                     == FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_id
+                )
+            else:
+                assert (
+                    transaction_status_id
+                    == FineosWritebackTransactionStatus.POSTED.transaction_status_id
                 )
 
         else:
             # Not in test file - state unchanged.
-            assert state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_id
+            assert state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id
             assert payment.reference_files == []
 
     # Metrics collected.
@@ -168,9 +180,11 @@ def test_process_nacha_return_file_step_full(
         "ach_return_count": 8,
         "change_notification_count": 6,
         "eft_prenote_count": 7,
-        "eft_prenote_already_approved_count": 1,
+        "eft_prenote_unexpected_state_count": 0,
+        "eft_prenote_already_rejected_count": 0,
         "eft_prenote_id_not_found_count": 2,
-        "eft_prenote_rejected_count": 4,
+        "eft_prenote_change_notification_count": 2,
+        "eft_prenote_rejected_count": 3,
         "payment_count": 7,
         "payment_complete_with_change_count": 3,
         "payment_id_not_found_count": 3,
@@ -194,8 +208,10 @@ def test_process_nacha_return_file_step_full(
 
     assert pub_error_count[PubErrorType.ACH_PRENOTE.pub_error_type_id] == (
         expected_metrics["eft_prenote_id_not_found_count"]
-        + expected_metrics["eft_prenote_already_approved_count"]
-        # expected_metrics["eft_prenote_unexpected_state_count"] # TODO
+        + expected_metrics["eft_prenote_unexpected_state_count"]  # TODO add scenario
+        + expected_metrics["eft_prenote_already_rejected_count"]
+        + expected_metrics["eft_prenote_change_notification_count"]
+        + expected_metrics["eft_prenote_rejected_count"]
     )
 
     assert pub_error_count[PubErrorType.ACH_RETURN.pub_error_type_id] == (
@@ -354,11 +370,11 @@ def payment_sent_to_pub_factory(pub_individual_id, test_db_session):
     test_db_session.commit()
 
     massgov.pfml.api.util.state_log_util.create_finished_state_log(
-        end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+        end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
         associated_model=payment,
         db_session=test_db_session,
         outcome=massgov.pfml.api.util.state_log_util.build_outcome(
-            "Generated state DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT"
+            "Generated state DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT"
         ),
     )
 

@@ -1,6 +1,7 @@
 {
   "globals": {
     // Trackers loaded globally
-    "newrelic": "readonly"
+    "newrelic": "readonly",
+    "globalThis": "readonly"
   }
 }

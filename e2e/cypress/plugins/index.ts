@@ -19,12 +19,12 @@ import {
   getPortalSubmitter,
   getVerificationFetcher,
 } from "../../src/util/common";
+import { Credentials, Scenarios } from "../../src/types";
 import {
   generateCredentials,
   getClaimantCredentials,
   getLeaveAdminCredentials,
 } from "../../src/util/credentials";
-import { Credentials } from "../../src/types";
 import { ApplicationResponse } from "../../src/api";
 
 import fs from "fs";
@@ -53,6 +53,9 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     config("API_BASEURL"),
     authenticator
   );
+  // Keep a static cache of the SSO login cookies. This allows us to skip double-logins
+  // in envrionments that use SSO. Double logins are a side effect of changing the baseUrl.
+  let ssoCookies: string;
 
   // Declare tasks here.
   on("task", {
@@ -113,25 +116,27 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     },
 
     async completeSSOLoginFineos(): Promise<string> {
-      return postSubmit.withFineosBrowser(
-        async (page) => {
-          const cookies = await page.context().cookies();
-          return JSON.stringify(cookies);
-        },
-        false,
-        path.join(__dirname, "..", "screenshots")
-      );
+      if (ssoCookies === undefined) {
+        ssoCookies = await postSubmit.withFineosBrowser(
+          async (page) => {
+            return JSON.stringify(await page.context().cookies());
+          },
+          false,
+          path.join(__dirname, "..", "screenshots")
+        );
+      }
+      return ssoCookies;
     },
 
     waitForClaimDocuments: documentWaiter.waitForClaimDocuments.bind(
       documentWaiter
     ),
 
-    async generateClaim(scenarioID: string): Promise<DehydratedClaim> {
+    async generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
       if (!(scenarioID in scenarios)) {
         throw new Error(`Invalid scenario: ${scenarioID}`);
       }
-      const scenario = scenarios[scenarioID as keyof typeof scenarios];
+      const scenario = scenarios[scenarioID];
       const claim = ClaimGenerator.generate(
         await getEmployeePool(),
         scenario.employee,

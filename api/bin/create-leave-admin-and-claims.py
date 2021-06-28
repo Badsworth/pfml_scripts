@@ -46,9 +46,7 @@ def main():
 
     print_record("Employer", employer)
     print_record("User", user)
-    print(
-        f"\nYou can create a JWT for this user by running `make jwt auth_id={user.active_directory_id}`"
-    )
+    print(f"\nYou can create a JWT for this user by running `make jwt auth_id={user.sub_id}`")
 
 
 if __name__ == "__main__":

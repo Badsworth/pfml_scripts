@@ -44,7 +44,6 @@ if TYPE_CHECKING:
 else:
     from sqlalchemy.ext.hybrid import hybrid_property as typed_hybrid_property
 
-
 # (PostgreSQLUUID) https://github.com/dropbox/sqlalchemy-stubs/issues/94
 if TYPE_CHECKING:
     PostgreSQLUUID = TypeEngine[uuid.UUID]
@@ -378,6 +377,7 @@ class PubEft(Base):
         onupdate=utc_timestamp_gen,
         server_default=sqlnow(),
     )
+    prenote_approved_at = Column(TIMESTAMP(timezone=True))
     prenote_response_at = Column(TIMESTAMP(timezone=True))
     prenote_sent_at = Column(TIMESTAMP(timezone=True))
     prenote_response_reason_code = Column(Text)
@@ -442,9 +442,8 @@ class ExperianAddressPair(Base):
 class Employee(Base):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    # TODO (EMPLOYER-1238): Enforce uniqueness of tax_identifier_id
     tax_identifier_id = Column(
-        UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True
+        UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True, unique=True,
     )
     title_id = Column(Integer, ForeignKey("lk_title.title_id"))
     first_name = Column(Text, nullable=False)
@@ -572,6 +571,7 @@ class Claim(Base):
     employee = relationship("Employee", back_populates="claims")
     employer = relationship("Employer", back_populates="claims")
     state_logs = relationship("StateLog", back_populates="claim")
+    payments: "Query[Payment]" = dynamic_loader("Payment", back_populates="claim")
 
 
 class Payment(Base):
@@ -584,9 +584,11 @@ class Payment(Base):
     period_start_date = Column(Date)
     period_end_date = Column(Date)
     payment_date = Column(Date)
+    absence_case_creation_date = Column(Date)
     amount = Column(Numeric(asdecimal=True), nullable=False)
     fineos_pei_c_value = Column(Text, index=True)
     fineos_pei_i_value = Column(Text, index=True)
+    is_adhoc_payment = Column(Boolean, default=False, server_default="FALSE")
     fineos_extraction_date = Column(Date)
     disb_check_eft_number = Column(Text)
     disb_check_eft_issue_date = Column(Date)
@@ -625,7 +627,7 @@ class Payment(Base):
         server_default=sqlnow(),
     )
 
-    claim = relationship(Claim)
+    claim = relationship("Claim", back_populates="payments")
     claim_type = relationship(LkClaimType)
     payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
@@ -771,7 +773,8 @@ class HealthCareProviderAddress(Base):
 class User(Base):
     __tablename__ = "user"
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    active_directory_id = Column(Text, index=True, unique=True)
+    active_directory_id = Column(Text, index=True, unique=True)  # renaming to sub_id
+    sub_id = Column(Text, index=True, unique=True)
     email_address = Column(Text)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
 
@@ -1983,11 +1986,11 @@ class State(LookupTable):
         139, "PUB Transaction sent - EFT", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT = LkState(
+    DEPRECATED_DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT = LkState(
         158, "FINEOS Writeback sent - Check", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT = LkState(
+    DEPRECATED_DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT = LkState(
         159, "FINEOS Writeback sent - EFT", Flow.DELEGATED_PAYMENT.flow_id
     )
 
@@ -2071,11 +2074,11 @@ class State(LookupTable):
     )
 
     # 2nd writeback to FINEOS for successful checks
-    DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK = LkState(
-        160, "Add to FINEOS Writeback #2 - Check", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_ADD_CHECK = LkState(
+        160, "DEPRECATED STATE - Add to FINEOS Writeback #2 - Check", Flow.DELEGATED_PAYMENT.flow_id
     )
-    DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK = LkState(
-        161, "FINEOS Writeback #2 sent - Check", Flow.DELEGATED_PAYMENT.flow_id
+    DEPRECATED_DELEGATED_PAYMENT_FINEOS_WRITEBACK_2_SENT_CHECK = LkState(
+        161, "DEPRECATED STATE - FINEOS Writeback #2 sent - Check", Flow.DELEGATED_PAYMENT.flow_id
     )
 
     DELEGATED_PAYMENT_POST_PROCESSING_CHECK = LkState(
@@ -2154,6 +2157,32 @@ class State(LookupTable):
     # Replaces deprecated DEPRECATED_ADD_TO_ERRORED_PEI_WRITEBACK and DEPREACTED_ERRORED_PEI_WRITEBACK_SENT states as part of transition to generic writeback flow
     DELEGATED_PAYMENT_ERROR_FROM_BANK = LkState(
         182, "Payment Errored from Bank", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    # This state signifies that a payment was successfully sent, but the
+    # bank told us it had issues that may prevent payment in the future
+    DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION = LkState(
+        183, "Payment Complete with change notification", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DIA_REDUCTIONS_REPORT_ERROR = LkState(
+        184,
+        "Error sending DIA reductions payments report to DFML",
+        Flow.DFML_DIA_REDUCTION_REPORT.flow_id,
+    )
+
+    DUA_REDUCTIONS_REPORT_ERROR = LkState(
+        185,
+        "Error sending DUA reductions payments report to DFML",
+        Flow.DFML_DUA_REDUCTION_REPORT.flow_id,
+    )
+
+    DIA_PAYMENT_LIST_ERROR_SAVE_TO_DB = LkState(
+        186, "Error saving new DIA payments in database", Flow.DIA_PAYMENT_LIST.flow_id
+    )
+
+    DUA_PAYMENT_LIST_ERROR_SAVE_TO_DB = LkState(
+        187, "Error saving new DUA payments in database", Flow.DUA_PAYMENT_LIST.flow_id
     )
 
 

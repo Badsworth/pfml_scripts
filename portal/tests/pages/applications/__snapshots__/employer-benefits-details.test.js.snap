@@ -148,7 +148,7 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
     level="2"
     size="1"
   >
-    Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.
+    Tell us about employer-sponsored benefits you will use during your leave dates for paid leave from PFML.
   </Heading>
   <LeaveDatesAlert
     endDate="2021-06-01"
@@ -181,7 +181,7 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
     }
     headingPrefix="Benefit"
     limit={6}
-    limitMessage="You can only add up to 3 benefits"
+    limitMessage="You can only add up to 6 benefits"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
     removeButtonLabel="Remove benefit"
@@ -199,7 +199,7 @@ exports[`EmployerBenefitsDetails when the user's claim has no employer benefits 
     level="2"
     size="1"
   >
-    Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.
+    Tell us about employer-sponsored benefits you will use during your leave dates for paid leave from PFML.
   </Heading>
   <LeaveDatesAlert
     endDate="2021-06-01"
@@ -223,7 +223,7 @@ exports[`EmployerBenefitsDetails when the user's claim has no employer benefits 
     }
     headingPrefix="Benefit"
     limit={6}
-    limitMessage="You can only add up to 3 benefits"
+    limitMessage="You can only add up to 6 benefits"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
     removeButtonLabel="Remove benefit"

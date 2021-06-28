@@ -1,10 +1,11 @@
 import { get, pick } from "lodash";
 import BenefitsApplication from "../../models/BenefitsApplication";
-import { DateTime } from "luxon";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -21,15 +22,13 @@ export const PreviousLeavesSameReason = (props) => {
     formState,
     updateFields,
   });
-  let leaveStartDate =
-    get(claim, "leave_details.continuous_leave_periods[0].start_date") ||
-    get(claim, "leave_details.intermittent_leave_periods[0].start_date");
 
-  if (leaveStartDate) {
-    leaveStartDate = DateTime.fromISO(leaveStartDate).toLocaleString(
-      DateTime.DATE_FULL
-    );
-  }
+  const leaveStartDate = formatDate(claim.leaveStartDate).full();
+
+  const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
+  const previousLeaveStartDate = isCaringLeave
+    ? formatDate("2021-07-01").full()
+    : formatDate("2021-01-01").full();
 
   const handleSave = () => {
     const patchData = { ...formState };
@@ -62,7 +61,11 @@ export const PreviousLeavesSameReason = (props) => {
             value: "false",
           },
         ]}
+        hint={
+          isCaringLeave && t("pages.claimsPreviousLeavesSameReason.sectionHint")
+        }
         label={t("pages.claimsPreviousLeavesSameReason.sectionLabel", {
+          previousLeaveStartDate,
           leaveStartDate,
         })}
       />

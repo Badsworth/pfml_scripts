@@ -1,7 +1,16 @@
-import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
+import {
+  Locator,
+  Browser,
+  By,
+  ElementHandle,
+  Until,
+  BaseLocator,
+} from "@flood/element";
+import { EvalLocator } from "@flood/element-core/dist/src/page/locators/EvalLocator";
 import * as Cfg from "./config";
 import { getFamilyLeavePlanProp } from "./tasks/ApproveClaim";
 import { actions } from "./scenarios/SavilinxAgent.perf";
+import { EvaluateFn } from "puppeteer";
 
 export const formatDate = (d: string | null | undefined): string =>
   new Intl.DateTimeFormat("en-US", {
@@ -37,6 +46,63 @@ export function byButtonText(text: string): Locator {
     const buttons = [...document.querySelectorAll("button")];
     return buttons.find((button) => button.innerText.match(text));
   }, text);
+}
+
+type SelectorEvaluator = EvaluateFn<string | undefined>;
+export function byContains(selector: string, text: string): Locator {
+  const findMany = (selector: string, text: string) =>
+    Array.from(document.querySelectorAll(selector)).filter((candidate) =>
+      candidate.textContent?.match(text)
+    );
+  const findOne = (selector: string, text: string) =>
+    Array.from(document.querySelectorAll(selector)).find((candidate) =>
+      candidate.textContent?.match(text)
+    );
+
+  return new BaseLocator(
+    new EvalLocator(
+      findOne as SelectorEvaluator,
+      findMany as SelectorEvaluator,
+      [selector, text]
+    ),
+    `byContains(${selector}, ${text})`
+  );
+}
+
+export function byLabelled(labelText: string): Locator {
+  const findMany = (text: string) => {
+    const results = Array.from(document.querySelectorAll("label"))
+      .filter((label) => label.textContent === text)
+      .map((label) => {
+        const labelFor = label.getAttribute("for");
+        if (labelFor !== null) {
+          return document.getElementById(labelFor);
+        }
+      })
+      .filter((i) => i);
+    return results;
+  };
+  const findOne = (text: string) => {
+    const results = Array.from(document.querySelectorAll("label"))
+      .filter((label) => label.textContent === text)
+      .map((label) => {
+        const labelFor = label.getAttribute("for");
+        if (labelFor !== null) {
+          return document.getElementById(labelFor);
+        }
+      })
+      .filter((i) => i);
+    return results.pop();
+  };
+
+  return new BaseLocator(
+    new EvalLocator(
+      findOne as SelectorEvaluator,
+      findMany as SelectorEvaluator,
+      [labelText]
+    ),
+    `By.labelled("${labelText}")`
+  );
 }
 
 export const waitForElement = async (

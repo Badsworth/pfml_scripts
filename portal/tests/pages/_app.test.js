@@ -2,13 +2,16 @@ import { mount, shallow } from "enzyme";
 import { App } from "../../src/pages/_app";
 import React from "react";
 import { act } from "react-dom/test-utils";
+import { merge } from "lodash";
 import { mockRouterEvents } from "next/router";
 import tracker from "../../src/services/tracker";
+import useAppLogic from "../../src/hooks/useAppLogic";
 
 // see https://github.com/vercel/next.js/issues/5416
 jest.mock("next/dynamic", () => () => (_props) => null);
 jest.mock("../../src/services/tracker");
 jest.mock("../../src/api/UsersApi");
+jest.mock("../../src/hooks/useAppLogic");
 jest.mock("lodash/uniqueId", () => {
   return jest.fn().mockReturnValue("mocked-for-snapshots");
 });
@@ -71,7 +74,96 @@ describe("App", () => {
       expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(true);
     });
 
-    it("sets isLoading to false and sets New Relic route name when a route change completes", async () => {
+    it("tracks page view when user loading and route change starts", () => {
+      // Overwrite isLoggedIn to simulate a scenario where the route event is
+      // triggered before the page has loaded auth info
+      useAppLogic.mockImplementationOnce(() =>
+        merge(
+          { ...useAppLogic() },
+          {
+            auth: { isLoggedIn: null },
+          }
+        )
+      );
+
+      // We need to mount the component so that useEffect is called
+      const mountComponent = true;
+      render({}, mountComponent);
+
+      // Include query string to confirm it's tracked in the event
+      const newUrl = "/claims?claim_id=123";
+      const routeChangeStart = mockRouterEvents.find(
+        (evt) => evt.name === "routeChangeStart"
+      );
+
+      act(() => {
+        routeChangeStart.callback(newUrl);
+      });
+
+      expect(tracker.startPageView).toHaveBeenCalledTimes(1);
+      expect(tracker.startPageView).toHaveBeenCalledWith("/claims", {
+        query_claim_id: "123",
+        "user.is_logged_in": "loading",
+      });
+    });
+
+    it("tracks page view when user loaded and route change starts", () => {
+      // We need to mount the component so that useEffect is called
+      const mountComponent = true;
+      render({}, mountComponent);
+
+      // Include query string to confirm it's tracked in the event
+      const newUrl = "/claims?claim_id=123";
+      const routeChangeStart = mockRouterEvents.find(
+        (evt) => evt.name === "routeChangeStart"
+      );
+
+      act(() => {
+        routeChangeStart.callback(newUrl);
+      });
+
+      expect(tracker.startPageView).toHaveBeenCalledTimes(1);
+      expect(tracker.startPageView).toHaveBeenCalledWith("/claims", {
+        query_claim_id: "123",
+        "user.auth_id": "mock_auth_id",
+        "user.has_employer_role": false,
+        "user.is_logged_in": true,
+      });
+    });
+
+    it("tracks page view and user isn't authenticated and route change starts", () => {
+      // Overwrite user to simulate a scenario where the user isn't authenticated
+      useAppLogic.mockImplementationOnce(() =>
+        merge(
+          { ...useAppLogic() },
+          {
+            auth: { isLoggedIn: false },
+            users: { user: null },
+          }
+        )
+      );
+
+      // We need to mount the component so that useEffect is called
+      const mountComponent = true;
+      render({}, mountComponent);
+      // Include query string to confirm it's tracked in the event
+      const newUrl = "/claims?claim_id=123";
+      const routeChangeStart = mockRouterEvents.find(
+        (evt) => evt.name === "routeChangeStart"
+      );
+
+      act(() => {
+        routeChangeStart.callback(newUrl);
+      });
+
+      expect(tracker.startPageView).toHaveBeenCalledTimes(1);
+      expect(tracker.startPageView).toHaveBeenCalledWith("/claims", {
+        query_claim_id: "123",
+        "user.is_logged_in": false,
+      });
+    });
+
+    it("sets isLoading to false when a route change completes", async () => {
       expect.assertions();
 
       // We need to mount the component so that useEffect is called
@@ -99,11 +191,6 @@ describe("App", () => {
       });
 
       expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(false);
-      expect(tracker.startPageView).toHaveBeenCalledTimes(1);
-      expect(tracker.startPageView).toHaveBeenCalledWith(
-        "/claims",
-        expect.objectContaining({ query_claim_id: "123" })
-      );
     });
 
     it("sets isLoading to false when a route change throws an error", async () => {

@@ -132,193 +132,94 @@ describe("withEmployerClaim", () => {
   });
 
   describe("when user has verifiable employer", () => {
-    describe('and "employerShowVerifications" feature flag is off', () => {
-      let claim;
+    let claim;
 
-      beforeEach(() => {
-        process.env.featureFlags = { employerShowVerifications: false };
-
-        claim = new MockEmployerClaimBuilder().completed().create();
-        appLogic.employers.claim = claim;
-        appLogic.portalFlow.pathWithParams = "test-route";
-      });
-
-      it("does not redirect to the Verify Contributions page if employer id matches", () => {
-        render(appLogic);
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-
-      it("does not redirect to Verify Contributions page if employer is verifiable", () => {
-        appLogic.users.user = user;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-
-      it("does not redirect to Verify Contributions page if employer id does not match", () => {
-        const userWithUnverifiedDiffEmployer = new User({
-          user_id: "mock_user_id",
-          consented_to_data_sharing: true,
-          user_leave_administrators: [
-            new UserLeaveAdministrator({
-              employer_dba: "Test Company",
-              employer_fein: "1298391823",
-              employer_id: "different_id",
-              has_verification_data: true,
-              verified: false,
-            }),
-          ],
-        });
-        appLogic.users.user = userWithUnverifiedDiffEmployer;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
+    beforeEach(() => {
+      claim = new MockEmployerClaimBuilder().completed().create();
+      appLogic.employers.claim = claim;
+      appLogic.portalFlow.pathWithParams = "test-route";
     });
 
-    describe('and "employerShowVerifications" feature flag is on', () => {
-      let claim;
+    it("redirects to Verify Contributions page if employer id matches", () => {
+      render(appLogic);
 
-      beforeEach(() => {
-        process.env.featureFlags = { employerShowVerifications: true };
+      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+        "/employers/organizations/verify-contributions",
+        {
+          employer_id: "dda903f-f093f-ff900",
+          next: "test-route",
+        }
+      );
+    });
 
-        claim = new MockEmployerClaimBuilder().completed().create();
-        appLogic.employers.claim = claim;
-        appLogic.portalFlow.pathWithParams = "test-route";
+    it("does not redirect to Verify Contributions page if employer is verified", () => {
+      appLogic.users.user = user;
+
+      render(appLogic);
+
+      expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+    });
+
+    it("does not redirect to Verify Contributions page if employer id does not match", () => {
+      const unverifiedUserWithVerificationData = new User({
+        user_id: "mock_user_id",
+        consented_to_data_sharing: true,
+        user_leave_administrators: [
+          new UserLeaveAdministrator({
+            employer_dba: "Test Company",
+            employer_fein: "1298391823",
+            employer_id: "different_id",
+            has_verification_data: true,
+            verified: false,
+          }),
+        ],
       });
+      appLogic.users.user = unverifiedUserWithVerificationData;
 
-      it("redirects to Verify Contributions page if employer id matches", () => {
-        render(appLogic);
+      render(appLogic);
 
-        expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-          "/employers/organizations/verify-contributions",
-          {
-            employer_id: "dda903f-f093f-ff900",
-            next: "test-route",
-          }
-        );
-      });
-
-      it("does not redirect to Verify Contributions page if employer is verified", () => {
-        appLogic.users.user = user;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-
-      it("does not redirect to Verify Contributions page if employer id does not match", () => {
-        const unverifiedUserWithVerificationData = new User({
-          user_id: "mock_user_id",
-          consented_to_data_sharing: true,
-          user_leave_administrators: [
-            new UserLeaveAdministrator({
-              employer_dba: "Test Company",
-              employer_fein: "1298391823",
-              employer_id: "different_id",
-              has_verification_data: true,
-              verified: false,
-            }),
-          ],
-        });
-        appLogic.users.user = unverifiedUserWithVerificationData;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
+      expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
     });
   });
 
   describe("when user has employer that cannot be verified", () => {
-    describe('and "employerShowVerifications" feature flag is off', () => {
-      let claim;
+    let claim;
 
-      beforeEach(() => {
-        process.env.featureFlags = { employerShowVerifications: false };
-
-        claim = new MockEmployerClaimBuilder()
-          .completed()
-          .employer_id("io19fj9-00jjf-uiw3r")
-          .create();
-        appLogic.employers.claim = claim;
-        appLogic.portalFlow.pathWithParams = "test-route";
-      });
-
-      it("does not redirect to the Cannot Verify page if employer id matches", () => {
-        render(appLogic);
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-
-      it("does not redirect to the Cannot Verify page if employer is not verifiable", () => {
-        appLogic.users.user = user;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-
-      it("does not redirect to Cannot Verify page if employer id does not match", () => {
-        const userWithDiffUnverifiableEmployer = new User({
-          user_leave_administrators: [
-            new UserLeaveAdministrator({
-              employer_id: "different_id",
-              has_verification_data: false,
-              verified: false,
-            }),
-          ],
-        });
-        appLogic.users.user = userWithDiffUnverifiableEmployer;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
+    beforeEach(() => {
+      claim = new MockEmployerClaimBuilder()
+        .completed()
+        .employer_id("io19fj9-00jjf-uiw3r")
+        .create();
+      appLogic.employers.claim = claim;
+      appLogic.portalFlow.pathWithParams = "test-route";
     });
 
-    describe('and "employerShowVerifications" feature flag is on', () => {
-      let claim;
+    it("redirects to Cannot Verify page if employer id matches", () => {
+      render(appLogic);
 
-      beforeEach(() => {
-        process.env.featureFlags = { employerShowVerifications: true };
+      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+        "/employers/organizations/cannot-verify",
+        {
+          employer_id: "io19fj9-00jjf-uiw3r",
+        }
+      );
+    });
 
-        claim = new MockEmployerClaimBuilder()
-          .completed()
-          .employer_id("io19fj9-00jjf-uiw3r")
-          .create();
-        appLogic.employers.claim = claim;
-        appLogic.portalFlow.pathWithParams = "test-route";
+    it("does not redirect to Cannot Verify page if employer id does not match", () => {
+      const unverifiedUserWithoutVerificationData = new User({
+        user_leave_administrators: [
+          new UserLeaveAdministrator({
+            employer_id: "different_id",
+            has_verification_data: false,
+            verified: false,
+          }),
+        ],
       });
+      appLogic.users.user = unverifiedUserWithoutVerificationData;
 
-      it("redirects to Cannot Verify page if employer id matches", () => {
-        render(appLogic);
+      render(appLogic);
 
-        expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-          "/employers/organizations/cannot-verify",
-          {
-            employer_id: "io19fj9-00jjf-uiw3r",
-          }
-        );
-      });
-
-      it("does not redirect to Cannot Verify page if employer id does not match", () => {
-        const unverifiedUserWithoutVerificationData = new User({
-          user_leave_administrators: [
-            new UserLeaveAdministrator({
-              employer_id: "different_id",
-              has_verification_data: false,
-              verified: false,
-            }),
-          ],
-        });
-        appLogic.users.user = unverifiedUserWithoutVerificationData;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
+      expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
     });
   });
 });

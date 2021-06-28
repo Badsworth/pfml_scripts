@@ -32,10 +32,17 @@ exports[`LeaveDetails Caring Leave renders relationship question when showCaring
     Leave details
   </ReviewHeading>
   <ReviewRow
+    data-test="leave-type"
     label="Leave type"
     level="3"
   >
-    Care for a family member
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
+      rel="noopener"
+      target="_blank"
+    >
+      Care for a family member
+    </a>
   </ReviewRow>
   <ReviewRow
     label="Application ID"
@@ -73,7 +80,11 @@ exports[`LeaveDetails Caring Leave renders relationship question when showCaring
       <Trans
         components={
           Object {
-            "eligible-relationship-link": <a />,
+            "eligible-relationship-link": <a
+              href="https://www.mass.gov/family-caring-leave-relationships"
+              rel="noopener"
+              target="_blank"
+            />,
           }
         }
         i18nKey="components.employersLeaveDetails.familyMemberRelationshipHint"
@@ -93,30 +104,47 @@ exports[`LeaveDetails Caring Leave renders relationship question when showCaring
   />
   <ConditionalContent
     clearField={[Function]}
+    data-test="relationship-accurate-no"
     getField={[Function]}
     updateFields={[Function]}
     visible={false}
   >
     <Alert
-      className="measure-5 margin-bottom-3 margin-top-3"
+      className="measure-5 margin-y-3"
       heading="The employee will be denied paid leave."
       headingSize="3"
       state="warning"
     >
-      We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied
+      We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.
     </Alert>
-    <FormLabel
-      className="usa-label"
-      htmlFor="comment"
-      small={true}
+    <div
+      className="usa-form-group"
     >
-      Tell us why you think this relationship is inaccurate. (required)
-    </FormLabel>
-    <textarea
-      className="usa-textarea margin-top-3"
-      name="relationshipInaccurateReason"
-      onChange={[Function]}
-    />
+      <FormLabel
+        className="usa-label"
+        errorMsg={null}
+        htmlFor="relationshipInaccurateReason"
+        small={true}
+      >
+        Tell us why you think this relationship is inaccurate.
+      </FormLabel>
+      <textarea
+        className="usa-textarea margin-top-3"
+        name="relationshipInaccurateReason"
+        onChange={[Function]}
+      />
+    </div>
+  </ConditionalContent>
+  <ConditionalContent
+    data-test="relationship-accurate-unknown"
+    visible={false}
+  >
+    <Alert
+      className="measure-5 margin-y-3"
+      state="info"
+    >
+      If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.
+    </Alert>
   </ConditionalContent>
 </Fragment>
 `;
@@ -129,10 +157,17 @@ exports[`LeaveDetails renders the component 1`] = `
     Leave details
   </ReviewHeading>
   <ReviewRow
+    data-test="leave-type"
     label="Leave type"
     level="3"
   >
-    Medical leave
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
+      rel="noopener"
+      target="_blank"
+    >
+      Medical leave
+    </a>
   </ReviewRow>
   <ReviewRow
     label="Application ID"
@@ -147,21 +182,6 @@ exports[`LeaveDetails renders the component 1`] = `
     1/1/2021 – 7/1/2021
   </ReviewRow>
 </Fragment>
-`;
-
-exports[`LeaveDetails renders the emergency regs content when claim is for Bonding 1`] = `
-Array [
-  "If so, this employee may be eligible to take their paid family leave anytime in 2021, ",
-  <a
-    href="https://www.mass.gov/pfml-acute-employer"
-    key="1"
-    rel="noopener"
-    target="_blank"
-  >
-    due to emergency Covid-19 regulations for hospital workers
-  </a>,
-  ".",
-]
 `;
 
 exports[`LeaveDetails when there are documents renders documentation hint correctly with family relationship 1`] = `

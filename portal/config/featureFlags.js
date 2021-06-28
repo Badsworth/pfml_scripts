@@ -7,10 +7,6 @@ const flagsConfig = {
   // Define a default or all feature flags here.
   // Environments will fallback to these default values.
   defaults: {
-    // When this flag is enabled, Claimant Create Account requests will be
-    // sent through the API, rather than directly to Cognito
-    claimantAuthThroughApi: false,
-
     // When this flag is enabled, the user can see the "Employment status"
     // question in the claimant flow (CP-1204)
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
@@ -27,17 +23,9 @@ const flagsConfig = {
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
 
-    // When this flag is enabled, Employer Create Account requests will be
-    // sent through the API, rather than directly to Cognito
-    employerAuthThroughApi: false,
-
-    // When this flag is enabled, "Add Organization" button and navigation to page is enabled
-    // TODO (EMPLOYER-913): Remove flag
-    employerShowAddOrganization: false,
-
-    // When this flag is enabled, dashboard-related features (including adjudication status on Status page) are displayed
-    // TODO (EMPLOYER-1054): Remove flag
-    employerShowDashboard: false,
+    // When this flag is enabled, the Leave Admin dashboard shows filter functionality
+    // TODO (EMPLOYER-1412): Remove flag
+    employerShowDashboardEmployerFilter: false,
 
     // When this flag is enabled, file upload is visible on the Review page
     // TODO (EMPLOYER-665): Show file upload once the endpoint is available
@@ -46,14 +34,6 @@ const flagsConfig = {
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
     // TODO (EMPLOYER-718): Remove flag
     employerShowPreviousLeaves: false,
-
-    // When this flag is enabled, the form on Employer Create Account page is visible
-    // TODO (EMPLOYER-718): Remove flag
-    employerShowSelfRegistrationForm: false,
-
-    // When this flag is enabled, links to Verification flow is visible and Verification pages are enabled
-    // TODO (EMPLOYER-852): Remove flag
-    employerShowVerifications: false,
 
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
@@ -69,74 +49,38 @@ const flagsConfig = {
     // When this flag is enabled, the user can apply to take leave to
     // "Care for a family member with a serious health condition" and
     // Leave Admins can review Caring Leave claims
-    // TODO (CP-1989): Remove this flag once caring leave is made available in Production
+    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
     showCaringLeaveType: false,
 
     // When this flag is enabled, the medical leave question numbers for leave periods
     // are updated to reflect the new "Certification of Your Serious Health Condition"
     // TODO (CP-2205): Remove this flag once updated medical leave form is effective
     updateMedicalCertForm: false,
+
+    // When this flag is enabled, the document upload and listing/download features will use
+    // the new plan proofs in FINEOS, expected to roll out on 6/25
+    // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
+    useNewPlanProofs: false,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
   "cps-preview": {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowDashboard: true,
-    employerShowSelfRegistrationForm: true,
-    employerShowVerifications: true,
+    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   development: {
     example: true,
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
-    employerShowDashboard: true,
-    employerShowVerifications: true,
     pfmlTerriyay: true,
+    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   test: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowDashboard: true,
-    employerShowSelfRegistrationForm: true,
-    employerShowVerifications: true,
+    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
-  stage: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowDashboard: true,
-    employerShowSelfRegistrationForm: true,
-    employerShowVerifications: true,
-  },
-  training: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
-    employerShowDashboard: true,
-  },
-  performance: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowDashboard: true,
-    employerShowSelfRegistrationForm: true,
-    employerShowVerifications: true,
-  },
-  uat: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
-    employerShowDashboard: true,
-  },
+  stage: {},
+  training: {},
+  performance: {},
+  uat: {},
   prod: {
-    claimantAuthThroughApi: true,
-    employerAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowDashboard: true,
-    employerShowSelfRegistrationForm: true,
-    employerShowVerifications: true,
     pfmlTerriyay: true,
   },
 };

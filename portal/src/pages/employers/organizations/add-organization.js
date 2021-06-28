@@ -5,7 +5,6 @@ import InputText from "../../../components/InputText";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
-import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
@@ -16,10 +15,6 @@ import withUser from "../../../hoc/withUser";
 export const AddOrganization = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
-
-  if (!isFeatureEnabled("employerShowAddOrganization")) {
-    appLogic.portalFlow.goTo(routes.employers.welcome);
-  }
 
   const { formState, updateFields } = useFormState({
     ein: "",

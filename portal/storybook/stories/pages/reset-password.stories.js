@@ -10,11 +10,7 @@ export default {
       defaultValue: "With cached email",
       control: {
         type: "radio",
-        options: [
-          "With cached email",
-          "Without cached email",
-          "Redirect from UserNotFoundError",
-        ],
+        options: ["With cached email", "Without cached email"],
       },
     },
   },
@@ -22,13 +18,9 @@ export default {
 
 export const Page = (args) => {
   const authData = {};
-  const query = {};
 
   if (args.scenario === "With cached email") {
     authData.resetPasswordUsername = "test@example.com";
-  }
-  if (args.scenario === "Redirect from UserNotFoundError") {
-    query["user-not-found"] = "true";
   }
 
   const appLogic = {
@@ -40,5 +32,5 @@ export const Page = (args) => {
     appErrors: new AppErrorInfoCollection(),
   };
 
-  return <ResetPassword appLogic={appLogic} query={query} />;
+  return <ResetPassword appLogic={appLogic} />;
 };

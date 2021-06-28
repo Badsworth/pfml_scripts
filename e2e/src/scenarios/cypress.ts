@@ -1,5 +1,5 @@
 import { ScenarioSpecification } from "../generation/Scenario";
-import { addWeeks, subWeeks, startOfWeek } from "date-fns";
+import { addWeeks, subWeeks, startOfWeek, addDays } from "date-fns";
 import { getCaringLeaveStartEndDates } from "../../src/util/claims";
 
 /**
@@ -180,7 +180,7 @@ export const MRAP30: ScenarioSpecification = {
     work_pattern_spec: "standard",
     reduced_leave_spec: "0,240,240,240,240,240,0",
     // This scenario requires a 2 week leave time for payment calculation purposes.
-    leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
+    leave_dates: [addWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 3)],
     metadata: { expected_weekly_payment: "230.77" },
   },
 };
@@ -273,6 +273,49 @@ export const CDENY2: ScenarioSpecification = {
   },
 };
 
+export const MIL_RED_OLB: ScenarioSpecification = {
+  employee: { mass_id: true, wages: 90000 },
+  claim: {
+    label: "MIL_RED with Other Leaves & Benefits",
+    leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 3)],
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
+    docs: {
+      MASSID: {},
+      FOSTERPLACEMENT: {},
+    },
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+    employerResponse: {
+      hours_worked_per_week: 20,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+    other_incomes: [
+      {
+        income_type: "Earnings from another employment/self-employment",
+        income_amount_dollars: 200,
+        income_amount_frequency: "Per Week",
+      },
+    ],
+    employer_benefits: [
+      {
+        benefit_amount_dollars: 1000,
+        benefit_amount_frequency: "In Total",
+        benefit_type: "Short-term disability insurance",
+        is_full_salary_continuous: false,
+      },
+    ],
+    previous_leaves_other_reason: [
+      {
+        type: "other_reason",
+        leave_reason: "Bonding with my child after birth or placement",
+        is_for_current_employer: true,
+        leave_minutes: 2400,
+        worked_per_week_minutes: 1200,
+      },
+    ],
+  },
+};
 export const MED_PRE: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -292,10 +335,94 @@ export const CHAP_RFI: ScenarioSpecification = {
   claim: {
     label: "CHAP_RFI",
     reason: "Care for a Family Member",
-    shortClaim: true,
+    leave_dates: [start, addDays(start, 2)],
     docs: {
       MASSID: {},
       CARING: {},
     },
+  },
+};
+
+export const CONTINUOUS_MEDICAL_OLB: ScenarioSpecification = {
+  employee: { mass_id: true, wages: 90000 },
+  claim: {
+    label: "CONTINUOUS MEDICAL LEAVE WITH OTHER LEAVES & BENEFITS",
+    reason: "Serious Health Condition - Employee",
+    docs: {
+      MASSID: {},
+      HCP: {},
+    },
+    work_pattern_spec: "standard",
+    // Create a leave in progress, so we can check adjustments for both made and future payments.
+    leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 3)],
+    // Leave start & end dates here and in employer benefits empty so they match the leave dates automatically
+    other_incomes: [
+      {
+        income_type: "Earnings from another employment/self-employment",
+        income_amount_dollars: 200,
+        income_amount_frequency: "Per Week",
+      },
+    ],
+    employer_benefits: [
+      {
+        benefit_amount_dollars: 100,
+        benefit_amount_frequency: "Per Week",
+        benefit_type: "Short-term disability insurance",
+        is_full_salary_continuous: false,
+      },
+    ],
+    previous_leaves_other_reason: [
+      {
+        type: "other_reason",
+        leave_reason: "Bonding with my child after birth or placement",
+        is_for_current_employer: true,
+        leave_minutes: 2400,
+        worked_per_week_minutes: 1200,
+      },
+    ],
+    concurrent_leave: { is_for_current_employer: true },
+    metadata: { expected_weekly_payment: "850.00" },
+  },
+};
+
+export const BHAP1_OLB: ScenarioSpecification = {
+  employee: { mass_id: true, wages: 90000 },
+  claim: {
+    label: "BHAP1_OLB",
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
+    docs: {
+      MASSID: {},
+      FOSTERPLACEMENT: {},
+    },
+    // Create a leave in progress, so we can check adjustments for both made and future payments.
+    leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
+    // Leave start & end dates here and in employer benefits empty so they match the leave dates automatically
+    other_incomes: [
+      {
+        income_type: "SSDI",
+        income_amount_dollars: 200,
+        income_amount_frequency: "Per Week",
+      },
+    ],
+    employer_benefits: [
+      {
+        benefit_amount_dollars: 500,
+        benefit_amount_frequency: "In Total",
+        benefit_type: "Family or medical leave insurance",
+        is_full_salary_continuous: true,
+      },
+    ],
+    previous_leaves_other_reason: [
+      {
+        type: "other_reason",
+        leave_reason: "An illness or injury",
+        is_for_current_employer: true,
+        leave_minutes: 2400,
+        worked_per_week_minutes: 1200,
+      },
+    ],
+    concurrent_leave: { is_for_current_employer: true },
+    metadata: { expected_weekly_payment: "850.00" },
   },
 };

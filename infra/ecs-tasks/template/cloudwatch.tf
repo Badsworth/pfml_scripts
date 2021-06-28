@@ -117,6 +117,43 @@ module "fineos_bucket_tool_scheduler" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# run at 3:30pm EST (4:30pm EDT) (8:30pm UTC) and 6:30pm EST (7:30pm EDT) (11:30pm UTC)
+module "fineos_extract_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name           = "fineos-report-extracts-tool"
+  schedule_expression = "cron(30 20,23 * * ? *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.fineos_bucket_tool_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "fineos-bucket-tool",
+        "command": [
+          "fineos-bucket-tool",
+          "--recursive",
+          "--dated-folders",
+          "--copy_dir", "${var.fineos_data_export_path}",
+          "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/reportExtracts",
+          "--file_prefixes", "all"
+        ]
+      }
+    ]
+  }
+  JSON
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run import-fineos-to-warehouse at 10pm EST (11pm EDT) (3am UTC +1 day)
 module "import_fineos_to_warehouse" {
   source     = "../../modules/ecs_task_scheduler"
@@ -332,12 +369,14 @@ module "reductions-send-wage-replacement-payments-to-dfml" {
   ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
 }
 
+# Run pub-payments-process-fineos at 10pm EST (11pm EDT) Sunday through Thursday
+# The output files will be available by the start of business Mon-Fri
 module "pub-payments-process-fineos" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_pub_automation_fineos
 
   task_name           = "pub-payments-process-fineos"
-  schedule_expression = "cron(0 15 * * ? *)"
+  schedule_expression = "cron(0 3 ? * MON-FRI *)"
   environment_name    = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
@@ -348,6 +387,41 @@ module "pub-payments-process-fineos" {
   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-process-fineos"].family
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+}
+
+# Run pub-payments-process-fineos claimant extract only
+# at 6am EST (7am EDT) Saturday/Sunday (For Friday/Saturday extract)
+# Runs at 6am instead of 11pm to avoid monthly saturday DB downtime
+module "weekend-pub-payments-process-fineos" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_pub_automation_fineos
+
+  task_name           = "weekend-pub-claimant-extract"
+  schedule_expression = "cron(0 10 ? * SAT-SUN *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["pub-payments-process-fineos"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-process-fineos"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "pub-payments-process-fineos",
+        "command": [
+          "pub-payments-process-fineos",
+          "--steps=claimant-extract"
+        ]
+      }
+    ]
+  }
+  JSON
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -388,3 +462,6 @@ module "weekend_cps_extract_processing_scheduler" {
   }
   JSON
 }
+
+## NOTE: If you are adding a new scheduled event here, please add monitoring by including it
+#        in the list in infra/modules/alarms_api/alarms-aws.tf.

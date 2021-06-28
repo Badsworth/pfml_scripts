@@ -31,10 +31,13 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name   = "test"
-  service_docker_tag = local.service_docker_tag
-  vpc_id             = data.aws_vpc.vpc.id
-  app_subnet_ids     = data.aws_subnet_ids.vpc_app.ids
+  environment_name        = "test"
+  st_use_mock_dor_data    = true
+  st_decrypt_dor_data     = false
+  st_file_limit_specified = false
+  service_docker_tag      = local.service_docker_tag
+  vpc_id                  = data.aws_vpc.vpc.id
+  app_subnet_ids          = data.aws_subnet_ids.vpc_app.ids
 
   cognito_user_pool_id                       = "us-east-1_HhQSLYSIe"
   fineos_client_integration_services_api_url = "https://dt2-api.masspfml.fineos.com/integration-services/"
@@ -86,8 +89,11 @@ module "tasks" {
   enable_recurring_payments_schedule = false
   enable_register_admins_job         = true
 
+  enable_pub_automation_fineos           = false
+  enable_pub_automation_create_pub_files = false
+  enable_pub_automation_process_returns  = false
+
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
-  dor_fineos_etl_definition          = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 }

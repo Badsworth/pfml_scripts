@@ -295,9 +295,10 @@ describe("UploadCertification", () => {
       );
     });
 
-    it("uses Certification Form as the doc type when the caring leave feature flag is enabled", async () => {
+    it("uses Certification Form as the doc type when the useNewPlanProofs flag is enabled", async () => {
+      // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
       process.env.featureFlags = {
-        showCaringLeaveType: true,
+        useNewPlanProofs: true,
       };
 
       const { appLogic, claim, submitForm, wrapper } = setup({
@@ -327,7 +328,7 @@ describe("UploadCertification", () => {
       );
 
       process.env.featureFlags = {
-        showCaringLeaveType: false,
+        useNewPlanProofs: false,
       };
     });
   });

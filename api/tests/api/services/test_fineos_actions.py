@@ -26,10 +26,13 @@ from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
     CaringLeaveMetadataFactory,
+    ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
     EmployeeFactory,
     EmployerFactory,
     PaymentPreferenceFactory,
+    PreviousLeaveOtherReasonFactory,
+    PreviousLeaveSameReasonFactory,
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
 )
@@ -947,3 +950,313 @@ def test_determine_relationship_qualifiers(user, test_db_session):
         absence_case.primaryRelQualifier2
         == RelationshipQualifier.UNDISCLOSED.relationship_qualifier_description
     )
+
+
+def test_format_other_leaves_data_no_leaves(user, test_db_session):
+    application: Application = ApplicationFactory.create(user=user)
+    # Application without Other Leaves - No EForm generated.
+    eform = fineos_actions.format_other_leaves_data(application)
+    assert eform is None
+
+
+def test_format_other_leaves_data_only_other_reason(user, test_db_session):
+    application: Application = ApplicationFactory.create(user=user)
+    application.previous_leaves_other_reason = [
+        PreviousLeaveOtherReasonFactory.create(
+            application_id=application.application_id,
+            is_for_current_employer=False,
+            worked_per_week_minutes=2430,
+            leave_minutes=3600,
+        ),
+    ]
+    application.has_previous_leaves_other_reason = True
+
+    eform = fineos_actions.format_other_leaves_data(application)
+    assert eform is not None
+    assert eform.eformType == "Other Leaves - current version"
+    expected_attributes = [
+        {
+            "dateValue": application.previous_leaves_other_reason[0].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate1",
+        },
+        {
+            "dateValue": application.previous_leaves_other_reason[0].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate1",
+        },
+        {
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "name": "V2QualifyingReason1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2LeaveFromEmployer1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2Leave1",
+        },
+        {"integerValue": 40, "name": "V2HoursWorked1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked1",
+        },
+        {"integerValue": 60, "name": "V2TotalHours1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies1",
+        },
+    ]
+
+    assert eform.eformAttributes == expected_attributes
+
+
+def test_format_other_leaves_data_only_same_reason(user, test_db_session):
+    application: Application = ApplicationFactory.create(user=user)
+    application.previous_leaves_same_reason = [
+        PreviousLeaveSameReasonFactory.create(
+            application_id=application.application_id,
+            is_for_current_employer=True,
+            worked_per_week_minutes=2430,
+            leave_minutes=3600,
+        ),
+    ]
+    application.has_previous_leaves_same_reason = True
+
+    eform = fineos_actions.format_other_leaves_data(application)
+    assert eform is not None
+    assert eform.eformType == "Other Leaves - current version"
+    expected_attributes = [
+        {
+            "dateValue": application.previous_leaves_same_reason[0].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate1",
+        },
+        {
+            "dateValue": application.previous_leaves_same_reason[0].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate1",
+        },
+        {
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "name": "V2QualifyingReason1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2LeaveFromEmployer1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Leave1",
+        },
+        {"integerValue": 40, "name": "V2HoursWorked1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked1",
+        },
+        {"integerValue": 60, "name": "V2TotalHours1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies1",
+        },
+    ]
+
+    assert eform.eformAttributes == expected_attributes
+
+
+def test_format_other_leaves_data_only_concurrent_leave(user, test_db_session):
+    application: Application = ApplicationFactory.create(user=user)
+    application.concurrent_leave = ConcurrentLeaveFactory.create(
+        application_id=application.application_id, is_for_current_employer=False,
+    )
+    application.has_concurrent_leave = True
+
+    eform = fineos_actions.format_other_leaves_data(application)
+    assert eform is not None
+    assert eform.eformType == "Other Leaves - current version"
+    expected_attributes = [
+        {
+            "dateValue": application.concurrent_leave.leave_start_date.isoformat(),
+            "name": "V2AccruedStartDate1",
+        },
+        {
+            "dateValue": application.concurrent_leave.leave_end_date.isoformat(),
+            "name": "V2AccruedEndDate1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2AccruedPLEmployer1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2AccruedPaidLeave1",
+        },
+    ]
+
+    assert eform.eformAttributes == expected_attributes
+
+
+def test_format_other_leaves_data_all_present(user, test_db_session):
+    application: Application = ApplicationFactory.create(user=user)
+    application.previous_leaves_other_reason = [
+        PreviousLeaveOtherReasonFactory.create(
+            application_id=application.application_id,
+            is_for_current_employer=False,
+            worked_per_week_minutes=2430,
+            leave_minutes=3600,
+        ),
+        PreviousLeaveOtherReasonFactory.create(
+            application_id=application.application_id,
+            is_for_current_employer=False,
+            worked_per_week_minutes=2430,
+            leave_minutes=3600,
+        ),
+    ]
+    application.has_previous_leaves_other_reason = True
+
+    application.previous_leaves_same_reason = [
+        PreviousLeaveSameReasonFactory.create(
+            application_id=application.application_id,
+            is_for_current_employer=True,
+            worked_per_week_minutes=2430,
+            leave_minutes=3600,
+        ),
+    ]
+    application.has_previous_leaves_other_reason = True
+
+    application.concurrent_leave = ConcurrentLeaveFactory.create(
+        application_id=application.application_id, is_for_current_employer=False,
+    )
+    application.has_concurrent_leave = True
+
+    eform = fineos_actions.format_other_leaves_data(application)
+    assert eform is not None
+    assert eform.eformType == "Other Leaves - current version"
+
+    expected_attributes = [
+        {
+            "dateValue": application.previous_leaves_other_reason[0].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate1",
+        },
+        {
+            "dateValue": application.previous_leaves_other_reason[0].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate1",
+        },
+        {
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "name": "V2QualifyingReason1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2LeaveFromEmployer1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2Leave1",
+        },
+        {"integerValue": 40, "name": "V2HoursWorked1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked1",
+        },
+        {"integerValue": 60, "name": "V2TotalHours1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies1",
+        },
+        {
+            "dateValue": application.previous_leaves_other_reason[1].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate2",
+        },
+        {
+            "dateValue": application.previous_leaves_other_reason[1].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate2",
+        },
+        {
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "name": "V2QualifyingReason2",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2LeaveFromEmployer2",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2Leave2",
+        },
+        {"integerValue": 40, "name": "V2HoursWorked2"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked2",
+        },
+        {"integerValue": 60, "name": "V2TotalHours2"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes2",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies2",
+        },
+        {
+            "dateValue": application.previous_leaves_same_reason[0].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate3",
+        },
+        {
+            "dateValue": application.previous_leaves_same_reason[0].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate3",
+        },
+        {
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "name": "V2QualifyingReason3",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2LeaveFromEmployer3",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Leave3",
+        },
+        {"integerValue": 40, "name": "V2HoursWorked3"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked3",
+        },
+        {"integerValue": 60, "name": "V2TotalHours3"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes3",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies3",
+        },
+        {
+            "dateValue": application.concurrent_leave.leave_start_date.isoformat(),
+            "name": "V2AccruedStartDate1",
+        },
+        {
+            "dateValue": application.concurrent_leave.leave_end_date.isoformat(),
+            "name": "V2AccruedEndDate1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2AccruedPLEmployer1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2AccruedPaidLeave1",
+        },
+    ]
+
+    assert eform.eformAttributes == expected_attributes

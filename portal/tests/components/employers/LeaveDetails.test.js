@@ -1,5 +1,7 @@
 import Document, { DocumentType } from "../../../src/models/Document";
 import { MockEmployerClaimBuilder, simulateEvents } from "../../test-utils";
+import AppErrorInfo from "../../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import LeaveDetails from "../../../src/components/employers/LeaveDetails";
 import React from "react";
 import ReviewRow from "../../../src/components/ReviewRow";
@@ -29,7 +31,12 @@ describe("LeaveDetails", () => {
   beforeEach(() => {
     claim = new MockEmployerClaimBuilder().completed().create();
     wrapper = shallow(
-      <LeaveDetails claim={claim} documents={[]} downloadDocument={jest.fn()} />
+      <LeaveDetails
+        claim={claim}
+        documents={[]}
+        downloadDocument={jest.fn()}
+        appErrors={new AppErrorInfoCollection()}
+      />
     );
   });
 
@@ -41,26 +48,46 @@ describe("LeaveDetails", () => {
     expect(wrapper.exists("InputChoiceGroup")).toBe(false);
   });
 
-  it("renders the emergency regs content when claim is for Bonding", () => {
-    const bondingClaim = new MockEmployerClaimBuilder()
+  it("renders leave reason as link when reason is not pregnancy", () => {
+    expect(wrapper.find("ReviewRow[data-test='leave-type']").children())
+      .toMatchInlineSnapshot(`
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
+        rel="noopener"
+        target="_blank"
+      >
+        Medical leave
+      </a>
+    `);
+  });
+
+  it("does not render leave reason as link when reason is pregnancy", () => {
+    const claimWithPregnancyLeave = new MockEmployerClaimBuilder()
       .completed()
-      .bondingLeaveReason()
+      .pregnancyLeaveReason()
       .create();
-    const bondingWrapper = shallow(
+    const wrapper = shallow(
       <LeaveDetails
-        claim={bondingClaim}
+        claim={claimWithPregnancyLeave}
         documents={[]}
         downloadDocument={jest.fn()}
+        appErrors={new AppErrorInfoCollection()}
       />
     );
 
-    expect(bondingWrapper.find("Details Trans").dive()).toMatchSnapshot();
+    expect(
+      wrapper.find("ReviewRow[data-test='leave-type']").children()
+    ).toMatchInlineSnapshot(`"Medical leave for pregnancy or birth"`);
   });
 
   it("renders formatted leave reason as sentence case", () => {
-    expect(wrapper.find(ReviewRow).first().children().first().text()).toEqual(
-      "Medical leave"
-    );
+    expect(
+      wrapper
+        .find("ReviewRow[data-test='leave-type']")
+        .children()
+        .first()
+        .text()
+    ).toEqual("Medical leave");
   });
 
   it("renders formatted date range for leave duration", () => {
@@ -78,6 +105,7 @@ describe("LeaveDetails", () => {
         claim={claimWithIntermittentLeave}
         documents={[]}
         downloadDocument={jest.fn()}
+        appErrors={new AppErrorInfoCollection()}
       />
     );
     expect(wrapper.find(ReviewRow).last().children().first().text()).toEqual(
@@ -98,6 +126,7 @@ describe("LeaveDetails", () => {
           claim={claim}
           documents={DOCUMENTS}
           downloadDocument={downloadDocumentSpy}
+          appErrors={new AppErrorInfoCollection()}
         />
       );
       return { downloadDocumentSpy, wrapper };
@@ -155,7 +184,7 @@ describe("LeaveDetails", () => {
   });
 
   describe("Caring Leave", () => {
-    const setup = (documents = []) => {
+    const setup = (documents = [], props = {}) => {
       const onChangeBelieveRelationshipAccurateMock = jest.fn();
       const claim = new MockEmployerClaimBuilder()
         .completed()
@@ -170,6 +199,8 @@ describe("LeaveDetails", () => {
             onChangeBelieveRelationshipAccurateMock
           }
           onChangeRelationshipInaccurateReason={jest.fn()}
+          appErrors={new AppErrorInfoCollection()}
+          {...props}
         />
       );
       const { changeRadioGroup } = simulateEvents(wrapper);
@@ -181,6 +212,7 @@ describe("LeaveDetails", () => {
     };
 
     it("does not render relationship question when showCaringLeaveType flag is false", () => {
+      // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
       const { wrapper } = setup();
       expect(wrapper.exists("InputChoiceGroup")).toBe(false);
     });
@@ -196,15 +228,20 @@ describe("LeaveDetails", () => {
     });
 
     it("renders relationship question when showCaringLeaveType flag is true", () => {
+      // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
       process.env.featureFlags = { showCaringLeaveType: true };
       const { wrapper } = setup();
       expect(wrapper).toMatchSnapshot();
       expect(wrapper.exists("InputChoiceGroup")).toBe(true);
     });
 
-    it("initially renders with the comment box hidden", () => {
+    it("initially renders with all conditional comment boxes hidden", () => {
       const { wrapper } = setup();
-      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(false);
+      const conditionalContentArray = wrapper.find("ConditionalContent");
+
+      for (const content in conditionalContentArray) {
+        expect(content.prop("visible")).toBe(false);
+      }
     });
 
     it("renders the comment box when user indicates the relationship is inaccurate ", () => {
@@ -218,7 +255,58 @@ describe("LeaveDetails", () => {
         "No"
       );
       wrapper.setProps({ believeRelationshipAccurate: "No" });
-      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
+
+      const relationshipInaccurateElement = wrapper.find(
+        "ConditionalContent[data-test='relationship-accurate-no']"
+      );
+      expect(relationshipInaccurateElement.prop("visible")).toBe(true);
+    });
+
+    it("renders the comment box when user indicates the relationship status is unknown ", () => {
+      const {
+        wrapper,
+        changeRadioGroup,
+        onChangeBelieveRelationshipAccurateMock,
+      } = setup();
+      changeRadioGroup("believeRelationshipAccurate", "Unknown");
+      expect(onChangeBelieveRelationshipAccurateMock).toHaveBeenCalledWith(
+        "Unknown"
+      );
+      wrapper.setProps({ believeRelationshipAccurate: "Unknown" });
+
+      const relationshipUnknownElement = wrapper.find(
+        "ConditionalContent[data-test='relationship-accurate-unknown']"
+      );
+      expect(relationshipUnknownElement.prop("visible")).toBe(true);
+    });
+
+    it("renders inline error message when the text exceeds the limit", () => {
+      const appErrors = new AppErrorInfoCollection([
+        new AppErrorInfo({
+          field: "relationship_inaccurate_reason",
+          type: "maxLength",
+          message:
+            "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
+        }),
+      ]);
+      const { wrapper } = setup([], { appErrors });
+
+      expect(
+        wrapper
+          .find("ConditionalContent")
+          .find("FormLabel")
+          .dive()
+          .find("span")
+          .text()
+      ).toMatchInlineSnapshot(
+        `"Please shorten your comment. We cannot accept comments that are longer than 9999 characters."`
+      );
+      expect(
+        wrapper
+          .find("ConditionalContent")
+          .find("textarea[name='relationshipInaccurateReason']")
+          .hasClass("usa-input--error")
+      ).toEqual(true);
     });
   });
 });

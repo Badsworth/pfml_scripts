@@ -11,17 +11,13 @@ exports[`OtherIncomes renders the page 1`] = `
         Object {
           "checked": false,
           "label": "Yes",
-          "value": "yes",
+          "value": "true",
         },
         Object {
           "checked": false,
+          "hint": "I won't receive other income, or I've applied but it hasn't been approved.",
           "label": "No",
-          "value": "no",
-        },
-        Object {
-          "checked": false,
-          "label": "I’ve applied for another benefit that hasn’t been approved yet.",
-          "value": "pending",
+          "value": "false",
         },
       ]
     }
@@ -59,6 +55,20 @@ exports[`OtherIncomes renders the page 1`] = `
             Earnings or benefits from another employer, or through self-employment
           </li>
         </ul>
+        <Details
+          label="What if I’ve applied for other income but I haven’t been approved yet?"
+        >
+          <Trans
+            components={
+              Object {
+                "contact-center-phone-link": <a
+                  href="tel:(833) 344-7365"
+                />,
+              }
+            }
+            i18nKey="pages.claimsOtherIncomes.hintAppliedButNotApprovedDetailsBody"
+          />
+        </Details>
       </React.Fragment>
     }
     label="Will you receive income from any other sources during your leave dates for paid leave?"

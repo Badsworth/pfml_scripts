@@ -21,15 +21,19 @@ export function logSubmissions(
 ): AsyncGenerator<SubmissionResult> {
   const [start] = process.hrtime();
   let processed = 0;
+  let errors = 0;
   return tap((result: SubmissionResult) => {
     const [now] = process.hrtime();
     processed++;
+    const elapsed = now - start;
+    const cpm = ((processed / elapsed) * 60).toPrecision(1);
     if (result.error) {
+      errors++;
       log(
         result.claim,
         `Submission ended in an error. (${processed} claims in ${formatTime(
           now - start
-        )})`,
+        )}, ${cpm}/minute, ${formatPercent(errors / processed)} error rate)`,
         result.error
       );
     } else {
@@ -37,7 +41,9 @@ export function logSubmissions(
         result.claim,
         `Submission completed for ${
           result.result?.fineos_absence_id
-        }. (${processed} claims in ${formatTime(now - start)})`
+        }. (${processed} claims in ${formatTime(
+          now - start
+        )}, ${cpm}/minute, ${formatPercent(errors / processed)} error rate)`
       );
     }
   }, results);
@@ -126,8 +132,12 @@ export function watchFailures(
 function formatTime(seconds: number): string {
   const parts = [
     Math.floor(seconds / 60 / 60),
-    Math.floor(seconds / 60),
+    Math.floor((seconds / 60) % 60),
     Math.floor(seconds % 60),
   ];
   return parts.map((part) => part.toString().padStart(2, "0")).join(":");
+}
+
+function formatPercent(decimal: number): string {
+  return (decimal * 100).toPrecision(2) + "%";
 }

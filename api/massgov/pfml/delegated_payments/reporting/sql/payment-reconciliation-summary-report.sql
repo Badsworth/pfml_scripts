@@ -19,26 +19,44 @@ WITH PAYMENT_BATCH_TRANSACTIONS AS (
 	LEFT OUTER JOIN EMPLOYEE E ON C.EMPLOYEE_ID = E.EMPLOYEE_ID
     INNER JOIN STATE_LOG SL ON P.PAYMENT_ID = SL.PAYMENT_ID
     INNER JOIN LK_STATE ST1 ON SL.END_STATE_ID = ST1.STATE_ID
-    WHERE P.FINEOS_EXTRACT_IMPORT_LOG_ID = (SELECT MAX(IMPORT_LOG_ID)
+    WHERE ST1.FLOW_ID in (21)
+      AND P.FINEOS_EXTRACT_IMPORT_LOG_ID = (SELECT MAX(IMPORT_LOG_ID)
                                             FROM IMPORT_LOG
                                             WHERE SOURCE = 'PaymentExtractStep'))
 SELECT CASE
-         WHEN PBT.CURRENT_STATE_ID IN (149, 150) THEN 'Employer Reimbursment'
-         WHEN PBT.CURRENT_STATE_ID IN (158) THEN 'PUB Check'
-         WHEN PBT.CURRENT_STATE_ID IN (159) THEN 'PUB ACH'
-         WHEN PBT.CURRENT_STATE_ID IN (120) THEN 'Payment Error'
-         WHEN PBT.CURRENT_STATE_ID IN (132) THEN 'Payment Reject'
+         WHEN PBT.CURRENT_STATE_ID IN (148) THEN 'Employer Reimbursment'
+         WHEN PBT.CURRENT_STATE_ID IN (137) THEN 'PUB Check'
+         WHEN PBT.CURRENT_STATE_ID IN (139) THEN 'PUB ACH'
+         WHEN PBT.CURRENT_STATE_ID IN (120, 180) THEN 'Payment Error'
+         WHEN PBT.CURRENT_STATE_ID IN (132, 181) THEN 'Payment Reject'
          WHEN PBT.CURRENT_STATE_ID IN (101) THEN 'Claimant Error'
-         WHEN PBT.CURRENT_STATE_ID IN (123, 124) THEN 'Zero Dollar Payment'
-         WHEN PBT.CURRENT_STATE_ID IN (126, 127) THEN 'Overpayment'
-         WHEN PBT.CURRENT_STATE_ID IN (146, 147) THEN 'Payment Cancellation'
-         WHEN PBT.CURRENT_STATE_ID IN (140, 141) THEN 'PUB Error'
-         WHEN PBT.CURRENT_STATE_ID IN (114, 115) THEN 'PUB EFT Error'
+         WHEN PBT.CURRENT_STATE_ID IN (122) THEN 'Zero Dollar Payment'
+         WHEN PBT.CURRENT_STATE_ID IN (125) THEN 'Overpayment'
+         WHEN PBT.CURRENT_STATE_ID IN (145) THEN 'Payment Cancellation'
          WHEN PBT.CURRENT_STATE_ID IN (156) THEN 'Address Validation Error'
+         WHEN PBT.CURRENT_STATE_ID IN (182) THEN 'PUB Error'
+         WHEN PBT.CURRENT_STATE_ID IN (183) THEN 'PUB Change Notification'
+         WHEN PBT.CURRENT_STATE_ID IN (144) THEN 'PUB Payment Successful'
          ELSE 'Unmapped State ID - ' || PBT.CURRENT_STATE_ID
-	   END "Payment Status", 
+       END "Payment Status", 
        COUNT(*) "Payment Records"
 FROM PAYMENT_BATCH_TRANSACTIONS PBT
 WHERE PBT.IS_CURRENT = 'Y'
-GROUP BY PBT.CURRENT_STATE_ID
+GROUP BY 
+       CASE
+         WHEN PBT.CURRENT_STATE_ID IN (148) THEN 'Employer Reimbursment'
+         WHEN PBT.CURRENT_STATE_ID IN (137) THEN 'PUB Check'
+         WHEN PBT.CURRENT_STATE_ID IN (139) THEN 'PUB ACH'
+         WHEN PBT.CURRENT_STATE_ID IN (120, 180) THEN 'Payment Error'
+         WHEN PBT.CURRENT_STATE_ID IN (132, 181) THEN 'Payment Reject'
+         WHEN PBT.CURRENT_STATE_ID IN (101) THEN 'Claimant Error'
+         WHEN PBT.CURRENT_STATE_ID IN (122) THEN 'Zero Dollar Payment'
+         WHEN PBT.CURRENT_STATE_ID IN (125) THEN 'Overpayment'
+         WHEN PBT.CURRENT_STATE_ID IN (145) THEN 'Payment Cancellation'
+         WHEN PBT.CURRENT_STATE_ID IN (156) THEN 'Address Validation Error'
+         WHEN PBT.CURRENT_STATE_ID IN (182) THEN 'PUB Error'
+         WHEN PBT.CURRENT_STATE_ID IN (183) THEN 'PUB Change Notification'
+         WHEN PBT.CURRENT_STATE_ID IN (144) THEN 'PUB Payment Successful'
+         ELSE 'Unmapped State ID - ' || PBT.CURRENT_STATE_ID
+       END
 ORDER BY COUNT(*) DESC

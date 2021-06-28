@@ -1,4 +1,5 @@
 import type { Credentials } from "../src/types";
+import { config } from "./actions/common";
 
 /**
  * Returns a URL for Fineos with embedded username and password.
@@ -35,5 +36,12 @@ export function getLeaveAdminCredentials(fein: string): Credentials {
   return {
     username: `gqzap.employer.${fein.replace("-", "")}@inbox.testmail.app`,
     password,
+  };
+}
+
+export function getClaimantCredentials(): Credentials {
+  return {
+    username: config("PORTAL_USERNAME"),
+    password: config("PORTAL_PASSWORD"),
   };
 }

@@ -62,7 +62,7 @@ exports[`IntermittentFrequency displays Alert about having form when claim is Me
 
 exports[`IntermittentFrequency displays Lead text with form context when claim is for Medical or Caring leave 1`] = `
 <Lead>
-  Your answers must match Questions 28 and 29 in the Certification of Your Family Member’s Serious Health Condition.
+  Your answers must match the intermittent leave section in the Certification of Your Family Member’s Serious Health Condition.
 </Lead>
 `;
 

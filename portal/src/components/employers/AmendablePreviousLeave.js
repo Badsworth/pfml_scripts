@@ -5,10 +5,12 @@ import AmendmentForm from "./AmendmentForm";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
 import Heading from "../Heading";
+import InputChoiceGroup from "../InputChoiceGroup";
 import InputDate from "../InputDate";
 import PropTypes from "prop-types";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
+import { get } from "lodash";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -16,99 +18,282 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const AmendablePreviousLeave = ({ appErrors, leavePeriod, onChange }) => {
+const AmendablePreviousLeave = ({
+  appErrors,
+  isAddedByLeaveAdmin,
+  onChange,
+  onRemove,
+  previousLeave,
+  shouldShowV2,
+}) => {
   const { t } = useTranslation();
-  const [amendment, setAmendment] = useState(leavePeriod);
+  const [amendment, setAmendment] = useState(previousLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
     false
   );
 
-  const amendLeave = (id, field, value) => {
-    setAmendment({
-      ...amendment,
-      [field]: value,
-    });
-    onChange({ previous_leave_id: id, [field]: value });
+  const getFieldPath = (field) =>
+    `previous_leaves[${amendment.previous_leave_id}].${field}`;
+
+  const getErrorMessage = (field) =>
+    appErrors.fieldErrorMessage(getFieldPath(field));
+
+  const getFormattedValue = (field, value) => {
+    if (field === "leave_start_date" || field === "leave_end_date") {
+      // happens if a user starts typing a date, then removes it
+      // these fields aren't required, and sending an empty string returns an "invalid date" error
+      return value === "" ? null : value;
+    } else if (value === "true") {
+      return true;
+    } else if (value === "false") {
+      return false;
+    }
+
+    return value;
   };
 
-  const startDateErrMsg = appErrors.fieldErrorMessage(
-    `previous_leaves[${leavePeriod.previous_leave_id}].leave_start_date`
-  );
-  const leaveDateErrMsg = appErrors.fieldErrorMessage(
-    `previous_leaves[${leavePeriod.previous_leave_id}].leave_end_date`
+  const amendLeave = (field, value) => {
+    const formStateField = isAddedByLeaveAdmin
+      ? "addedPreviousLeaves"
+      : "amendedPreviousLeaves";
+    const formattedValue = getFormattedValue(field, value);
+    setAmendment({
+      ...amendment,
+      [field]: formattedValue,
+    });
+    onChange(
+      {
+        previous_leave_id: previousLeave.previous_leave_id,
+        [field]: formattedValue,
+      },
+      formStateField
+    );
+  };
+
+  const handleCancelAmendment = () => {
+    setIsAmendmentFormDisplayed(false);
+    setAmendment(previousLeave);
+    onChange(previousLeave, "amendedPreviousLeaves");
+  };
+
+  const handleDeleteAddition = () => {
+    onRemove(amendment);
+  };
+
+  const addOrAmend = isAddedByLeaveAdmin ? "add" : "amend";
+
+  const additionFormClasses = "bg-white";
+  const amendmentFormClasses = "bg-base-lightest border-base-lighter";
+  const className = isAddedByLeaveAdmin
+    ? additionFormClasses
+    : amendmentFormClasses;
+
+  const onDestroy = isAddedByLeaveAdmin
+    ? handleDeleteAddition
+    : handleCancelAmendment;
+
+  const LeaveDetailsRow = () => (
+    <tr>
+      <th scope="row">
+        {formatDateRange(
+          previousLeave.leave_start_date,
+          previousLeave.leave_end_date
+        )}
+      </th>
+      <td>
+        {t("components.employersAmendablePreviousLeave.leaveReasonValue", {
+          context: findKeyByValue(
+            PreviousLeaveReason,
+            previousLeave.leave_reason
+          ),
+        })}
+      </td>
+      <td>
+        <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
+      </td>
+    </tr>
   );
 
   return (
     <React.Fragment>
-      <tr>
-        <th scope="row">
-          {formatDateRange(
-            leavePeriod.leave_start_date,
-            leavePeriod.leave_end_date
-          )}
-        </th>
-        <td>
-          {t("components.employersPreviousLeaves.leaveReasonValue", {
-            context: findKeyByValue(
-              PreviousLeaveReason,
-              leavePeriod.leave_reason
-            ),
-          })}
-        </td>
-        <td>
-          <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
-        </td>
-      </tr>
-      <ConditionalContent visible={isAmendmentFormDisplayed}>
+      {!isAddedByLeaveAdmin && <LeaveDetailsRow />}
+      <ConditionalContent
+        visible={isAddedByLeaveAdmin || isAmendmentFormDisplayed}
+      >
         <tr>
           <td
-            colSpan="3"
+            colSpan="2"
             className="padding-top-2 padding-bottom-2 padding-left-0"
           >
             <AmendmentForm
-              onCancel={() => {
-                setIsAmendmentFormDisplayed(false);
-                setAmendment(leavePeriod);
-                onChange(leavePeriod);
-              }}
+              className={className}
+              destroyButtonLabel={t(
+                "components.employersAmendablePreviousLeave.destroyButtonLabel",
+                { context: addOrAmend }
+              )}
+              onDestroy={onDestroy}
             >
-              <Heading level="4">
-                {t("components.employersPreviousLeaves.leaveReasonValue", {
-                  context: findKeyByValue(
-                    PreviousLeaveReason,
-                    leavePeriod.leave_reason
-                  ),
+              <Heading level="4" size="3">
+                {t("components.employersAmendablePreviousLeave.heading", {
+                  context: addOrAmend,
                 })}
               </Heading>
-              <InputDate
-                onChange={(e) =>
-                  amendLeave(
-                    leavePeriod.previous_leave_id,
-                    "leave_start_date",
-                    e.target.value
-                  )
+              <p>
+                {t("components.employersAmendablePreviousLeave.subtitle", {
+                  context: addOrAmend,
+                })}
+              </p>
+              <ConditionalContent visible={shouldShowV2}>
+                <InputChoiceGroup
+                  name={getFieldPath("is_for_same_reason_as_leave_reason")}
+                  smallLabel
+                  label={t(
+                    "components.employersAmendablePreviousLeave.isForSameReasonAsLeaveReasonLabel"
+                  )}
+                  onChange={(e) => {
+                    amendLeave(
+                      "is_for_same_reason_as_leave_reason",
+                      e.target.value
+                    );
+                  }}
+                  errorMsg={getErrorMessage(
+                    "is_for_same_reason_as_leave_reason"
+                  )}
+                  type="radio"
+                  choices={[
+                    {
+                      checked:
+                        get(amendment, "is_for_same_reason_as_leave_reason") ===
+                        true,
+                      label: t(
+                        "components.employersAmendablePreviousLeave.choiceYes"
+                      ),
+                      value: "true",
+                    },
+                    {
+                      checked:
+                        get(amendment, "is_for_same_reason_as_leave_reason") ===
+                        false,
+                      label: t(
+                        "components.employersAmendablePreviousLeave.choiceNo"
+                      ),
+                      value: "false",
+                    },
+                  ]}
+                />
+              </ConditionalContent>
+              <ConditionalContent
+                visible={
+                  get(amendment, "is_for_same_reason_as_leave_reason") === false
                 }
+              >
+                <InputChoiceGroup
+                  name={getFieldPath("leave_reason")}
+                  smallLabel
+                  label={t(
+                    "components.employersAmendablePreviousLeave.leaveReasonLabel"
+                  )}
+                  choices={[
+                    {
+                      label: t(
+                        "components.employersAmendablePreviousLeave.leaveReasonValue_medical"
+                      ),
+                      hint: t(
+                        "components.employersAmendablePreviousLeave.leaveReason_medical"
+                      ),
+                      value: PreviousLeaveReason.medical,
+                      checked:
+                        get(amendment, "leave_reason") ===
+                        PreviousLeaveReason.medical,
+                    },
+                    {
+                      label: t(
+                        "components.employersAmendablePreviousLeave.leaveReasonValue_pregnancy"
+                      ),
+                      hint: t(
+                        "components.employersAmendablePreviousLeave.leaveReason_medical"
+                      ),
+                      value: PreviousLeaveReason.pregnancy,
+                      checked:
+                        get(amendment, "leave_reason") ===
+                        PreviousLeaveReason.pregnancy,
+                    },
+                    {
+                      label: t(
+                        "components.employersAmendablePreviousLeave.leaveReasonValue_bonding"
+                      ),
+                      hint: t(
+                        "components.employersAmendablePreviousLeave.leaveReason_family"
+                      ),
+                      value: PreviousLeaveReason.bonding,
+                      checked:
+                        get(amendment, "leave_reason") ===
+                        PreviousLeaveReason.bonding,
+                    },
+                    {
+                      label: t(
+                        "components.employersAmendablePreviousLeave.leaveReasonValue_care"
+                      ),
+                      hint: t(
+                        "components.employersAmendablePreviousLeave.leaveReason_family"
+                      ),
+                      value: PreviousLeaveReason.care,
+                      checked:
+                        get(amendment, "leave_reason") ===
+                        PreviousLeaveReason.care,
+                    },
+                    {
+                      label: t(
+                        "components.employersAmendablePreviousLeave.leaveReasonValue_activeDutyFamily"
+                      ),
+                      hint: t(
+                        "components.employersAmendablePreviousLeave.leaveReason_family"
+                      ),
+                      value: PreviousLeaveReason.activeDutyFamily,
+                      checked:
+                        get(amendment, "leave_reason") ===
+                        PreviousLeaveReason.activeDutyFamily,
+                    },
+                    {
+                      label: t(
+                        "components.employersAmendablePreviousLeave.leaveReasonValue_serviceMemberFamily"
+                      ),
+                      hint: t(
+                        "components.employersAmendablePreviousLeave.leaveReason_family"
+                      ),
+                      value: PreviousLeaveReason.serviceMemberFamily,
+                      checked:
+                        get(amendment, "leave_reason") ===
+                        PreviousLeaveReason.serviceMemberFamily,
+                    },
+                  ]}
+                  type="radio"
+                  onChange={(e) => {
+                    amendLeave("leave_reason", e.target.value);
+                  }}
+                />
+              </ConditionalContent>
+              <InputDate
+                onChange={(e) => amendLeave("leave_start_date", e.target.value)}
                 value={amendment.leave_start_date}
-                label={t("components.amendmentForm.question_leaveStartDate")}
-                errorMsg={startDateErrMsg}
-                name={`previous_leaves[${leavePeriod.previous_leave_id}].leave_start_date`}
+                label={t(
+                  "components.employersAmendablePreviousLeave.leaveStartDateLabel"
+                )}
+                errorMsg={getErrorMessage("leave_start_date")}
+                name={getFieldPath("leave_start_date")}
                 dayLabel={t("components.form.dateInputDayLabel")}
                 monthLabel={t("components.form.dateInputMonthLabel")}
                 yearLabel={t("components.form.dateInputYearLabel")}
                 smallLabel
               />
               <InputDate
-                onChange={(e) =>
-                  amendLeave(
-                    leavePeriod.previous_leave_id,
-                    "leave_end_date",
-                    e.target.value
-                  )
-                }
+                onChange={(e) => amendLeave("leave_end_date", e.target.value)}
                 value={amendment.leave_end_date}
-                label={t("components.amendmentForm.question_leaveEndDate")}
-                errorMsg={leaveDateErrMsg}
-                name={`previous_leaves[${leavePeriod.previous_leave_id}].leave_end_date`}
+                label={t(
+                  "components.employersAmendablePreviousLeave.leaveEndDateLabel"
+                )}
+                errorMsg={getErrorMessage("leave_end_date")}
+                name={getFieldPath("leave_end_date")}
                 dayLabel={t("components.form.dateInputDayLabel")}
                 monthLabel={t("components.form.dateInputMonthLabel")}
                 yearLabel={t("components.form.dateInputYearLabel")}
@@ -124,8 +309,11 @@ const AmendablePreviousLeave = ({ appErrors, leavePeriod, onChange }) => {
 
 AmendablePreviousLeave.propTypes = {
   appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  leavePeriod: PropTypes.instanceOf(PreviousLeave).isRequired,
+  isAddedByLeaveAdmin: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
+  onRemove: PropTypes.func.isRequired,
+  previousLeave: PropTypes.instanceOf(PreviousLeave).isRequired,
+  shouldShowV2: PropTypes.bool.isRequired,
 };
 
 export default AmendablePreviousLeave;

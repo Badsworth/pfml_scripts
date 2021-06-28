@@ -20,10 +20,8 @@ export default jest.fn(() => ({
     requireLogin: jest.fn(),
     resendForgotPasswordCode: jest.fn(),
     resendVerifyAccountCode: jest.fn(),
-    resetEmployerPasswordAndCreateEmployerApiAccount: jest.fn(),
     resetPassword: jest.fn(),
     verifyAccount: jest.fn(),
-    verifyEmployerAccount: jest.fn(),
   },
   catchError: jest.fn(),
   benefitsApplications: {
@@ -43,11 +41,14 @@ export default jest.fn(() => ({
     warningsLists: {},
   },
   claims: {
+    activeFilters: {},
     claims: new ClaimCollection(),
+    isLoadingClaims: null,
     paginationMeta: new PaginationMeta(),
     loadPage: jest.fn(),
   },
   clearErrors: jest.fn(),
+  clearRequiredFieldErrors: jest.fn(),
   documents: {
     attach: jest.fn((application_id, files, documentType) => {
       const uploadPromises = [];
@@ -92,6 +93,7 @@ export default jest.fn(() => ({
     requireUserRole: jest.fn(),
     updateUser: jest.fn(),
     user: new User({
+      auth_id: "mock_auth_id",
       user_id: "mock_user_id",
       consented_to_data_sharing: true,
       user_leave_administrators: [

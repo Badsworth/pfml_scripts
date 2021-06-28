@@ -49,11 +49,12 @@ const SupportingWorkDetails = (props) => {
         <p className="margin-top-0">{hoursWorkedPerWeek}</p>
         <ConditionalContent visible={isAmendmentFormDisplayed}>
           <AmendmentForm
-            onCancel={() => {
+            onDestroy={() => {
               setIsAmendmentFormDisplayed(false);
               setAmendment(hoursWorkedPerWeek);
               onChange(hoursWorkedPerWeek);
             }}
+            destroyButtonLabel={t("components.amendmentForm.cancel")}
             className="input-text-first-child"
           >
             <InputText

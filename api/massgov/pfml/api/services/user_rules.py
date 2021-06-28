@@ -8,9 +8,7 @@ from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Employer, Role, User
 
 
-def get_users_convert_employer_issues(
-    user: User, employer: Optional[Employer], db_session: db.Session
-) -> List[Issue]:
+def get_users_convert_employer_issues(user: User, db_session: db.Session) -> List[Issue]:
     """Validate that the Employer a user is signing up to administer is valid"""
     issues = []
 

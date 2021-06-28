@@ -145,6 +145,13 @@ export const Checklist = (props) => {
               "contact-center-phone-link": (
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
               ),
+              "which-paid-leave-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.whichPaidLeave}
+                />
+              ),
               "healthcare-provider-form-link": (
                 <a
                   target="_blank"

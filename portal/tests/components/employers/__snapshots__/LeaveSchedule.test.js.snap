@@ -193,7 +193,7 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
             components={
               Object {
                 "contact-center-phone-link": <a
-                  href="tel:(833) 344‑7365"
+                  href="tel:(833) 344-7365"
                 />,
               }
             }
@@ -210,7 +210,7 @@ exports[`LeaveSchedule renders reduced schedule 2`] = `
 Array [
   "Download the attached documentation or contact us at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365

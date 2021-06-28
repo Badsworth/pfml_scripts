@@ -388,12 +388,15 @@ describe("useAppErrorsLogic", () => {
       });
     });
 
-    describe('when "employerShowVerifications" feature flag is disabled', () => {
-      describe("LeaveAdminForbiddenError is not thrown", () => {
-        let goToSpy;
+    describe("LeaveAdminForbiddenError is thrown", () => {
+      let goToSpy;
+      beforeEach(() => {
+        goToSpy = jest.spyOn(portalFlow, "goTo");
+        portalFlow.pathWithParams = "/foo?bar=true";
+      });
+
+      describe("when has_verification_data is true", () => {
         beforeEach(() => {
-          process.env.featureFlags = { employerShowVerifications: false };
-          goToSpy = jest.spyOn(portalFlow, "goTo");
           act(() => {
             appErrorsLogic.catchError(
               new LeaveAdminForbiddenError(
@@ -405,104 +408,69 @@ describe("useAppErrorsLogic", () => {
           });
         });
 
-        it("displays a generic message and does not redirect", () => {
-          expect(appErrorsLogic.appErrors.items).toHaveLength(1);
-          expect(
-            appErrorsLogic.appErrors.items[0].message
-          ).toMatchInlineSnapshot(
-            `"Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365."`
+        it("tracks the event", () => {
+          expect(tracker.trackEvent).toHaveBeenCalledWith(
+            "LeaveAdminForbiddenError",
+            {
+              errorMessage: "User is not Verified",
+              errorName: "LeaveAdminForbiddenError",
+              employerId: "some-employer-id",
+              hasVerificationData: true,
+            }
           );
-          expect(goToSpy).not.toHaveBeenCalled();
+        });
+
+        it("redirects to verify contributions page", () => {
+          expect(goToSpy).toHaveBeenCalledWith(
+            "/employers/organizations/verify-contributions",
+            {
+              employer_id: "some-employer-id",
+              next: "/foo?bar=true",
+            }
+          );
+        });
+
+        it("does not add the error to appErrors collection", () => {
+          expect(appErrorsLogic.appErrors.items).toHaveLength(0);
         });
       });
-    });
 
-    describe('when "employerShowVerifications" feature flag is enabled', () => {
-      describe("LeaveAdminForbiddenError is thrown", () => {
-        let goToSpy;
+      describe("when has_verification_data is false", () => {
         beforeEach(() => {
-          process.env.featureFlags = { employerShowVerifications: true };
-          goToSpy = jest.spyOn(portalFlow, "goTo");
-          portalFlow.pathWithParams = "/foo?bar=true";
-        });
-
-        describe("when has_verification_data is true", () => {
-          beforeEach(() => {
-            act(() => {
-              appErrorsLogic.catchError(
-                new LeaveAdminForbiddenError(
-                  "some-employer-id",
-                  true,
-                  "User is not Verified"
-                )
-              );
-            });
-          });
-
-          it("tracks the event", () => {
-            expect(tracker.trackEvent).toHaveBeenCalledWith(
-              "LeaveAdminForbiddenError",
-              {
-                errorMessage: "User is not Verified",
-                errorName: "LeaveAdminForbiddenError",
-                employerId: "some-employer-id",
-                hasVerificationData: true,
-              }
+          act(() => {
+            appErrorsLogic.catchError(
+              new LeaveAdminForbiddenError(
+                "some-employer-id",
+                false,
+                "User is not Verified"
+              )
             );
-          });
-
-          it("redirects to verify contributions page", () => {
-            expect(goToSpy).toHaveBeenCalledWith(
-              "/employers/organizations/verify-contributions",
-              {
-                employer_id: "some-employer-id",
-                next: "/foo?bar=true",
-              }
-            );
-          });
-
-          it("does not add the error to appErrors collection", () => {
-            expect(appErrorsLogic.appErrors.items).toHaveLength(0);
           });
         });
 
-        describe("when has_verification_data is false", () => {
-          beforeEach(() => {
-            act(() => {
-              appErrorsLogic.catchError(
-                new LeaveAdminForbiddenError(
-                  "some-employer-id",
-                  false,
-                  "User is not Verified"
-                )
-              );
-            });
-          });
+        it("tracks the event", () => {
+          expect(tracker.trackEvent).toHaveBeenCalledWith(
+            "LeaveAdminForbiddenError",
+            {
+              errorMessage: "User is not Verified",
+              errorName: "LeaveAdminForbiddenError",
+              employerId: "some-employer-id",
+              hasVerificationData: false,
+            }
+          );
+        });
 
-          it("tracks the event", () => {
-            expect(tracker.trackEvent).toHaveBeenCalledWith(
-              "LeaveAdminForbiddenError",
-              {
-                errorMessage: "User is not Verified",
-                errorName: "LeaveAdminForbiddenError",
-                employerId: "some-employer-id",
-                hasVerificationData: false,
-              }
-            );
-          });
+        it("redirects to cannot verify page", () => {
+          expect(goToSpy).toHaveBeenCalledWith(
+            "/employers/organizations/cannot-verify",
+            {
+              employer_id: "some-employer-id",
+            }
+          );
+        });
 
-          it("redirects to cannot verify page", () => {
-            expect(goToSpy).toHaveBeenCalledWith(
-              "/employers/organizations/cannot-verify",
-              {
-                employer_id: "some-employer-id",
-              }
-            );
-          });
-
-          it("does not add the error to appErrors collection", () => {
-            expect(appErrorsLogic.appErrors.items).toHaveLength(0);
-          });
+        it("does not add the error to appErrors collection", () => {
+          expect(appErrorsLogic.appErrors.items).toHaveLength(0);
         });
       });
     });
@@ -547,6 +515,8 @@ describe("useAppErrorsLogic", () => {
             Object {
               "mass-gov-form-link": <a
                 href="https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error"
+                rel="noreferrer noopener"
+                target="_blank"
               />,
             }
           }
@@ -623,6 +593,30 @@ describe("useAppErrorsLogic", () => {
       });
 
       expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+    });
+  });
+
+  describe("clearRequiredFieldErrors", () => {
+    it("removes required field errors", () => {
+      act(() => {
+        appErrorsLogic.setAppErrors(
+          new AppErrorInfoCollection([
+            new AppErrorInfo(),
+            new AppErrorInfo({ type: "required" }),
+          ])
+        );
+      });
+
+      act(() => {
+        appErrorsLogic.clearRequiredFieldErrors();
+      });
+
+      expect(appErrorsLogic.appErrors.items).toHaveLength(1);
+      expect(
+        appErrorsLogic.appErrors.items.some(
+          (error) => error.type === "required"
+        )
+      ).toBe(false);
     });
   });
 });

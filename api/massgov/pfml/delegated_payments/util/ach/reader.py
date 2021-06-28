@@ -96,7 +96,6 @@ class ACHReturn:
     def get_details_for_log(self) -> Dict[str, Any]:
         return {
             "type_code": self.raw_record.type_code.value,
-            "raw_data": self.raw_record.data,
             "ach_id_number": self.id_number,
             "reason_code": self.return_reason_code,
         }
@@ -114,14 +113,6 @@ class ACHChangeNotification(ACHReturn):
 
     def is_change_notification(self):
         return True
-
-    def get_details_for_log(self) -> Dict[str, Any]:
-        ach_return_details = super().get_details_for_log()
-        return {**ach_return_details, "addenda_information": self.addenda_information}
-
-    def get_details_for_error(self) -> Dict[str, Any]:
-        ach_return_details = super().get_details_for_error()
-        return {**ach_return_details, "addenda_information": self.addenda_information}
 
 
 @dataclasses.dataclass

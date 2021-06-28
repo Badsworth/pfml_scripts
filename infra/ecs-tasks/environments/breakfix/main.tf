@@ -31,22 +31,26 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name   = "breakfix"
-  service_docker_tag = local.service_docker_tag
-  vpc_id             = data.aws_vpc.vpc.id
-  app_subnet_ids     = data.aws_subnet_ids.vpc_app.ids
+  environment_name        = "breakfix"
+  st_decrypt_dor_data     = false
+  st_use_mock_dor_data    = false
+  st_file_limit_specified = true
+  service_docker_tag      = local.service_docker_tag
+  vpc_id                  = data.aws_vpc.vpc.id
+  app_subnet_ids          = data.aws_subnet_ids.vpc_app.ids
 
-  cognito_user_pool_id = "us-east-1_Bi6tPV5hz"
+  cognito_user_pool_id                       = "us-east-1_Bi6tPV5hz"
+  fineos_client_customer_api_url             = "https://pfx-api.masspfml.fineos.com/customerapi/"
+  fineos_client_integration_services_api_url = "https://pfx-api.masspfml.fineos.com/integration-services/"
+  fineos_client_group_client_api_url         = "https://pfx-api.masspfml.fineos.com/groupclientapi/"
+  fineos_client_wscomposer_api_url           = "https://pfx-api.masspfml.fineos.com/integration-services/wscomposer/"
+  fineos_client_wscomposer_user_id           = "OASIS"
+  fineos_client_oauth2_url                   = "https://pfx-api.masspfml.fineos.com/oauth2/token"
+  fineos_client_oauth2_client_id             = "470dvu60ij99vpgsm8dug3nuhg"
 
-  # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url          = "https://pfx-api.masspfml.fineos.com/integration-services/"
-  fineos_client_customer_api_url                      = "https://pfx-api.masspfml.fineos.com/customerapi/"
-  fineos_client_group_client_api_url                  = "https://pfx-api.masspfml.fineos.com/groupclientapi/"
-  fineos_client_wscomposer_api_url                    = "https://pfx-api.masspfml.fineos.com/integration-services/wscomposer/"
-  fineos_client_oauth2_url                            = "https://pfx-api.masspfml.fineos.com/oauth2/token"
-  fineos_client_oauth2_client_id                      = "470dvu60ij99vpgsm8dug3nuhg"
-  fineos_aws_iam_role_arn                             = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
-  fineos_aws_iam_role_external_id                     = "8jFBtjr4UA@"
+  fineos_aws_iam_role_arn         = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
+  fineos_aws_iam_role_external_id = "8jFBtjr4UA@"
+
   fineos_eligibility_feed_output_directory_path       = "s3://fin-sompre-data-import/PFX/"
   fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/PFX/dataexports"
 
@@ -58,6 +62,7 @@ module "tasks" {
   pfml_ctr_inbound_path    = "s3://massgov-pfml-breakfix-agency-transfer/ctr/inbound"
   pfml_ctr_outbound_path   = "s3://massgov-pfml-breakfix-agency-transfer/ctr/outbound"
   pfml_error_reports_path  = "s3://massgov-pfml-breakfix-agency-transfer/error-reports/outbound"
+  pfml_voucher_output_path = "s3://massgov-pfml-breakfix-agency-transfer/payments/manual-payment-voucher"
 
   dfml_project_manager_email_address     = "mass-pfml-payments-test-email@navapbc.com"
   pfml_email_address                     = "PFML_DoNotReply@eol.mass.gov"
@@ -66,16 +71,15 @@ module "tasks" {
   ctr_gax_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
   ctr_vcc_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
+  agency_reductions_email_address        = "mass-pfml-payments-test-email@navapbc.com"
 
   # These can be kept blank.
   ctr_data_mart_host     = ""
   ctr_data_mart_username = ""
 
-  # TODO: Values from FINEOS.
-  fineos_data_export_path  = "s3://fin-sompre-data-export/PFX/dataexports"
-  fineos_data_import_path  = "s3://fin-sompre-data-import/PFX/peiupdate"
-  fineos_error_export_path = "s3://fin-sompre-data-export/PFX/errorExtracts"
-
+  fineos_data_export_path   = "s3://fin-sompre-data-export/PFX/dataexports"
+  fineos_data_import_path   = "s3://fin-sompre-data-import/PFX/peiupdate"
+  fineos_error_export_path  = "s3://fin-sompre-data-export/PFX/errorExtracts"
   pfml_fineos_inbound_path  = "s3://massgov-pfml-breakfix-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path = "s3://massgov-pfml-breakfix-agency-transfer/cps/outbound"
 
@@ -91,6 +95,5 @@ module "tasks" {
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
-  # dor_fineos_etl_definition          = local.dor_fineos_etl_definition
-  # dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
+  dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 }

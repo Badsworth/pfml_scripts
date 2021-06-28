@@ -6,14 +6,48 @@ from massgov.pfml.api.models.users.requests import (
     UserLeaveAdminRequest,
 )
 from massgov.pfml.api.services.user_rules import (
+    get_users_convert_employer_issues,
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.employees import Role
-from massgov.pfml.db.models.factories import EmployerFactory, EmployerOnlyRequiredFactory
+from massgov.pfml.db.models.factories import (
+    ApplicationFactory,
+    EmployerFactory,
+    EmployerOnlyRequiredFactory,
+    UserFactory,
+)
 
 fake = faker.Faker()
+
+
+def test_get_users_convert_employer_already_employer(test_db_session, initialize_factories_session):
+    user = UserFactory.create(roles=[Role.EMPLOYER])
+    issues = get_users_convert_employer_issues(user, test_db_session)
+    assert (
+        Issue(
+            type=IssueType.conflicting,
+            field="user_leave_administrator.employer_fein",
+            message="You're already an employer!",
+        )
+        in issues
+    )
+
+
+def test_get_users_convert_employer_existing_applications(
+    user, test_db_session, initialize_factories_session
+):
+    ApplicationFactory.create(user=user,)
+    issues = get_users_convert_employer_issues(user, test_db_session)
+    assert (
+        Issue(
+            type=IssueType.conflicting,
+            field="applications",
+            message="Your account has submitted applications!",
+        )
+        in issues
+    )
 
 
 def test_get_users_post_required_fields_issues_always_required_fields():

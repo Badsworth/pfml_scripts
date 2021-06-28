@@ -13,6 +13,11 @@ class PaymentRequired(HTTPException):
     description = "Payment required"
 
 
+class ContainsV1AndV2Eforms(HTTPException):
+    status_code = HTTPException
+    description = "Claim contains both V1 and V2 eforms."
+
+
 @dataclass
 class ValidationErrorDetail:
     type: str

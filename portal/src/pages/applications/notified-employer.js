@@ -2,14 +2,11 @@ import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
-import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { Trans } from "react-i18next";
-import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -48,28 +45,6 @@ export const NotifiedEmployer = (props) => {
     >
       <InputChoiceGroup
         {...getFunctionalInputProps("leave_details.employer_notified")}
-        hint={
-          <Details
-            label={t(
-              "pages.claimsNotifiedEmployer.bondingRegsEmployerNotifiedDetailsLabel"
-            )}
-          >
-            <Trans
-              i18nKey="pages.claimsNotifiedEmployer.bondingRegsEmployerNotifiedDetailsSummary"
-              components={{
-                "emergency-bonding-regs-worker-link": (
-                  <a
-                    target="_blank"
-                    rel="noopener"
-                    href={
-                      routes.external.massgov.emergencyBondingRegulationsWorker
-                    }
-                  />
-                ),
-              }}
-            />
-          </Details>
-        }
         choices={[
           {
             checked: employer_notified === true,

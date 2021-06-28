@@ -6,10 +6,11 @@ import pytest
 import tests.api
 from massgov.pfml.db.models.applications import Notification
 from massgov.pfml.db.models.employees import Claim
-from massgov.pfml.db.models.factories import EmployerFactory
+from massgov.pfml.db.models.factories import EmployeeWithFineosNumberFactory, EmployerFactory
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
+
 
 leave_admin_body = {
     "absence_case_id": "NTN-111-ABS-01",
@@ -99,6 +100,7 @@ def test_notifications_post_leave_admin(client, test_db_session, fineos_user_tok
     assert associated_claim is not None
     assert associated_claim.employer_id is not None
     assert associated_claim.fineos_absence_id == "NTN-111-ABS-01"
+    assert associated_claim.employee_id is None
 
 
 def test_notifications_update_claims(client, test_db_session, fineos_user_token, employer):
@@ -118,6 +120,7 @@ def test_notifications_update_claims(client, test_db_session, fineos_user_token,
     )
     assert claim_record
     assert claim_record.employer_id == employer.employer_id
+    assert claim_record.employee_id is None
 
 
 def test_notifications_post_leave_admin_no_document_type(
@@ -153,6 +156,46 @@ def test_notifications_invalid_fein_error(client, test_db_session, fineos_user_t
         400,
         message="Failed to lookup the specified FEIN to add Claim record on Notification POST request",
     )
+
+
+def test_notification_post_employee(client, test_db_session, fineos_user_token, employer):
+    employee = EmployeeWithFineosNumberFactory.create()
+    body = copy.deepcopy(leave_admin_body)
+    body["claimant_info"]["customer_id"] = employee.fineos_customer_number
+    response = client.post(
+        "/v1/notifications", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body,
+    )
+    assert response.status_code == 201
+    claim_record = (
+        test_db_session.query(Claim)
+        .filter(Claim.fineos_absence_id == body["absence_case_id"])
+        .one_or_none()
+    )
+    assert claim_record
+    assert claim_record.employee_id is not None
+    assert claim_record.employer_id == employer.employer_id
+    assert claim_record.employee_id == employee.employee_id
+
+
+def test_notifications_update_claims_employee(client, test_db_session, fineos_user_token, employer):
+    employee = EmployeeWithFineosNumberFactory.create()
+    body = copy.deepcopy(leave_admin_body)
+    body["claimant_info"]["customer_id"] = employee.fineos_customer_number
+    existing_claim = Claim(fineos_absence_id=leave_admin_body["absence_case_id"])
+    test_db_session.add(existing_claim)
+    test_db_session.commit()
+    response = client.post(
+        "/v1/notifications", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body,
+    )
+    assert response.status_code == 201
+    claim_record = (
+        test_db_session.query(Claim)
+        .filter(Claim.fineos_absence_id == body["absence_case_id"])
+        .one_or_none()
+    )
+    assert claim_record
+    assert claim_record.employer_id == employer.employer_id
+    assert claim_record.employee_id == employee.employee_id
 
 
 def test_notifications_post_leave_admin_empty_str_document_type(

@@ -515,8 +515,9 @@ class MaximumWeeklyBenefitAmount(Base):
 
 class FineosWritebackDetails(Base):
     __tablename__ = "fineos_writeback_details"
+    fineos_writeback_details_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     payment_id = Column(
-        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, primary_key=True
+        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=False
     )
 
     transaction_status_id = Column(
@@ -531,6 +532,7 @@ class FineosWritebackDetails(Base):
         default=utc_timestamp_gen,
         server_default=sqlnow(),
     )
+    writeback_sent_at = Column(TIMESTAMP(timezone=True), nullable=True,)
 
     payment = relationship(Payment)
     transaction_status = relationship("LkFineosWritebackTransactionStatus")
@@ -599,6 +601,8 @@ class FineosWritebackTransactionStatus(LookupTable):
         9, "Bank Processing Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
     PROCESSED = LkFineosWritebackTransactionStatus(10, "Processed", ACTIVE_WRITEBACK_RECORD_STATUS)
+    PAID = LkFineosWritebackTransactionStatus(11, "Paid", ACTIVE_WRITEBACK_RECORD_STATUS)
+    POSTED = LkFineosWritebackTransactionStatus(12, "Posted", ACTIVE_WRITEBACK_RECORD_STATUS)
 
 
 def sync_lookup_tables(db_session):

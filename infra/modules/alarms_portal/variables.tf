@@ -1,7 +1,7 @@
 # variable for different environments 
 
 variable "environment_name" {
-  description = "Name of the environment (dev, sandbox, test, uat, stage, prod)"
+  description = "Name of the environment (dev, sandbox, test, uat, stage, prod, breakfix, cps-preview)"
   type        = string
 }
 

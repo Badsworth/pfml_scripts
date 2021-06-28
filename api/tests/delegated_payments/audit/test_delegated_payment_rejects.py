@@ -95,9 +95,9 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
     payment_audit_data = PaymentAuditData(
         payment=payment,
         is_first_time_payment=True,
-        is_previously_rejected_payment=True,
-        is_previously_errored_payment=True,
-        number_of_times_in_rejected_or_error_state=0,
+        previously_rejected_payment_count=1,
+        previously_errored_payment_count=1,
+        previously_skipped_payment_count=0,
     )
     payment_rejects_row = build_audit_report_row(payment_audit_data)
 
@@ -158,9 +158,9 @@ def test_valid_combination_of_reject_and_skip(
     payment_audit_data = PaymentAuditData(
         payment=payment,
         is_first_time_payment=True,
-        is_previously_rejected_payment=True,
-        is_previously_errored_payment=True,
-        number_of_times_in_rejected_or_error_state=0,
+        previously_rejected_payment_count=1,
+        previously_errored_payment_count=1,
+        previously_skipped_payment_count=0,
     )
 
     payment_rejects_row = build_audit_report_row(payment_audit_data)
@@ -194,7 +194,9 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         test_db_session,
     )
 
-    payment_rejects_step.transition_audit_pending_payment_state(payment_1, True, False)
+    payment_rejects_step.transition_audit_pending_payment_state(
+        payment_1, True, False, "Example notes"
+    )
 
     payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
         payment_1, Flow.DELEGATED_PAYMENT, test_db_session
@@ -205,7 +207,7 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         payment_state_log.end_state_id
         == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
     )
-    assert payment_state_log.outcome["message"] == "Payment rejected"
+    assert payment_state_log.outcome["message"] == "Payment rejected with notes: Example notes"
 
     expected_writeback_transaction_status = (
         FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION

@@ -5,6 +5,8 @@ from typing import Dict, List, Optional
 import faker
 
 import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.experian.address_validate_soap.client as soap_api
+import massgov.pfml.experian.address_validate_soap.models as sm
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
@@ -29,13 +31,13 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     PubEftFactory,
 )
+from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
 from massgov.pfml.delegated_payments.mock.scenarios import (
     ScenarioDescriptor,
     ScenarioName,
     get_scenario_by_name,
 )
-from massgov.pfml.experian.physical_address.client.mock import MockClient
-from massgov.pfml.experian.physical_address.client.models import Confidence
+from massgov.pfml.experian.address_validate_soap.mock_caller import MockVerificationZeepCaller
 
 logger = logging.get_logger(__name__)
 
@@ -48,14 +50,6 @@ fake.seed_instance(1212)
 MATCH_ADDRESS = {
     "line_1": "20 South Ave",
     "line_2": "",
-    "city": "Burlington",
-    "state": "MA",
-    "zip": "01803",
-}
-
-MULTI_MATCH_ADDRESS = {
-    "line_1": "374 Multi St",
-    "line_2": "aPt 123",
     "city": "Burlington",
     "state": "MA",
     "zip": "01803",
@@ -116,7 +110,7 @@ class ScenarioDataConfig:
 # == Common Utils ==
 
 
-def get_mock_address_client() -> MockClient:
+def get_mock_address_client() -> soap_api.Client:
     def parse_address(mock_address: Dict) -> Address:
         state = GeoState.description_to_db_instance.get(mock_address["state"], GeoState.MA)
 
@@ -128,21 +122,17 @@ def get_mock_address_client() -> MockClient:
             zip_code=mock_address["zip"],
         )
 
-    client = MockClient(fallback_confidence=Confidence.NO_MATCHES)
+    mock_caller = MockVerificationZeepCaller(sm.VerifyLevel.STREET_PARTIAL)
 
     # add valid address
     valid_address = parse_address(MATCH_ADDRESS)
-    client.add_mock_address_response(valid_address, Confidence.VERIFIED_MATCH)
+    mock_caller.add_mock_search_response(valid_address, sm.VerifyLevel.VERIFIED)
 
     # add no match address
-    invalid_address = parse_address(NO_MATCH_ADDRESS)
-    client.add_mock_address_response(invalid_address, Confidence.NO_MATCHES)
+    no_match_address = parse_address(NO_MATCH_ADDRESS)
+    mock_caller.add_mock_search_response(no_match_address, sm.VerifyLevel.NONE)
 
-    # add multi match address
-    multi_match_address = parse_address(MULTI_MATCH_ADDRESS)
-    client.add_mock_address_response(multi_match_address, Confidence.MULTIPLE_MATCHES)
-
-    return client
+    return soap_api.Client(mock_caller)
 
 
 # == Helpers ==
@@ -200,7 +190,7 @@ def generate_scenario_data_in_db(
         )
         pub_eft = PubEftFactory.create(
             pub_eft_id=uuid.uuid4(),
-            routing_nbr=ssn,
+            routing_nbr=generate_routing_nbr_from_ssn(ssn),
             account_nbr=ssn,
             bank_account_type_id=scenario_descriptor.account_type.bank_account_type_id,
             prenote_state_id=prenote_state.prenote_state_id,

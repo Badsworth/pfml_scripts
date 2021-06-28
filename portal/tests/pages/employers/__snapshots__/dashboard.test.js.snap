@@ -142,44 +142,17 @@ Array [
 ]
 `;
 
-exports[`Employer dashboard renders claim rows without links if employer is not registered in FINEOS 1`] = `
-<tr
-  key="NTN-111-ABS-01"
->
-  <th
-    data-label="Employee name"
-    data-test="employee_name"
-    scope="row"
+exports[`Employer dashboard renders instructions if there are no verified employers 1`] = `
+Array [
+  "You have not verified any organizations. ",
+  <a
+    href="/employers/organizations"
+    key="1"
   >
-    Jane Doe
-  </th>
-  <td
-    data-label="Application ID"
-    key="fineos_absence_id"
-  >
-    NTN-111-ABS-01
-  </td>
-  <td
-    data-label="Employer ID number"
-    key="employer_fein"
-  >
-    **-***0002
-  </td>
-  <td
-    data-label="Application start date"
-    key="created_at"
-  >
-    1/15/2021
-  </td>
-  <td
-    data-label="Status"
-    key="status"
-  >
-    <AbsenceCaseStatusTag
-      status="Approved"
-    />
-  </td>
-</tr>
+    Complete this process
+  </a>,
+  " to review applications.",
+]
 `;
 
 exports[`Employer dashboard renders the page with expected content and pagination components 1`] = `
@@ -241,6 +214,19 @@ Array [
 `;
 
 exports[`Employer dashboard renders the page with expected content and pagination components 7`] = `
+Array [
+  "You have not verified any organizations. ",
+  <a
+    href="/employers/organizations"
+    key="1"
+  >
+    Complete this process
+  </a>,
+  " to review applications.",
+]
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 8`] = `
 <Details
   label="Status descriptions"
 >
@@ -271,7 +257,7 @@ exports[`Employer dashboard renders the page with expected content and paginatio
 </Details>
 `;
 
-exports[`Employer dashboard renders the page with expected content and pagination components 8`] = `
+exports[`Employer dashboard renders the page with expected content and pagination components 9`] = `
 <PaginationSummary
   pageOffset={1}
   pageSize={25}
@@ -279,23 +265,10 @@ exports[`Employer dashboard renders the page with expected content and paginatio
 />
 `;
 
-exports[`Employer dashboard renders the page with expected content and pagination components 9`] = `
+exports[`Employer dashboard renders the page with expected content and pagination components 10`] = `
 <PaginationNavigation
   onClick={[Function]}
   pageOffset={1}
   totalPages={3}
 />
-`;
-
-exports[`Employer dashboard when employerShowVerifications flag is enabled renders instructions if there are no verified employers 1`] = `
-Array [
-  "You have not verified any organizations. ",
-  <a
-    href="/employers/organizations"
-    key="1"
-  >
-    Complete this process
-  </a>,
-  " to review applications.",
-]
 `;

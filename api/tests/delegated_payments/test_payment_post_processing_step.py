@@ -42,12 +42,13 @@ def _create_payment_container(
     end_date=None,
     has_processed_state=False,
     has_errored_state=False,
+    is_adhoc_payment=False,
     payment_transaction_type=PaymentTransactionType.STANDARD,
 ):
     if not start_date:
         start_date = date(2021, 1, 1)
     if not end_date:
-        end_date = date(2021, 1, 8)
+        end_date = date(2021, 1, 7)
 
     claim = ClaimFactory.create(employee=employee)
     payment = PaymentFactory.create(
@@ -55,6 +56,7 @@ def _create_payment_container(
         amount=amount,
         period_start_date=start_date,
         period_end_date=end_date,
+        is_adhoc_payment=is_adhoc_payment,
         payment_transaction_type_id=payment_transaction_type.payment_transaction_type_id,
     )
 
@@ -128,31 +130,31 @@ def test_get_maximum_amount_for_period(payment_post_processing_step):
 
     # Period is exactly a week
     amount = payment_post_processing_step._get_maximum_amount_for_period(
-        date(2021, 1, 1), date(2021, 1, 8)
+        date(2021, 1, 1), date(2021, 1, 7)
     )
     assert amount == Decimal("850.00")
 
     # Period is part of two weeks
     amount = payment_post_processing_step._get_maximum_amount_for_period(
-        date(2021, 1, 1), date(2021, 1, 11)
+        date(2021, 1, 1), date(2021, 1, 8)
     )
     assert amount == Decimal("1700.00")
 
     # Period is exactly two weeks
     amount = payment_post_processing_step._get_maximum_amount_for_period(
-        date(2021, 1, 1), date(2021, 1, 15)
+        date(2021, 1, 1), date(2021, 1, 14)
     )
     assert amount == Decimal("1700.00")
 
     # Period is part of three weeks
     amount = payment_post_processing_step._get_maximum_amount_for_period(
-        date(2021, 1, 1), date(2021, 1, 18)
+        date(2021, 1, 1), date(2021, 1, 15)
     )
     assert amount == Decimal("2550.00")
 
     # Period is exactly three weeks
     amount = payment_post_processing_step._get_maximum_amount_for_period(
-        date(2021, 1, 1), date(2021, 1, 22)
+        date(2021, 1, 1), date(2021, 1, 21)
     )
     assert amount == Decimal("2550.00")
 
@@ -206,6 +208,71 @@ def test_validate_payments_not_exceeding_cap(payment_post_processing_step, local
     assert payment_container3.validation_container.has_validation_issues()
 
 
+def test_validate_payments_not_exceeding_cap_adhoc_payments(
+    payment_post_processing_step, local_test_db_session
+):
+    employee = EmployeeFactory.create()
+
+    # New payments that are being processed, but are all adhoc
+    # Will all be accepted
+    payment_container1 = _create_payment_container(
+        employee, Decimal("5000.00"), local_test_db_session, is_adhoc_payment=True
+    )
+    payment_container2 = _create_payment_container(
+        employee, Decimal("5000.00"), local_test_db_session, is_adhoc_payment=True
+    )
+    # Not adhoc, will still be accepted as they sum to less than the cap
+    payment_container3 = _create_payment_container(
+        employee, Decimal("425.00"), local_test_db_session, is_adhoc_payment=False
+    )
+    payment_container4 = _create_payment_container(
+        employee, Decimal("425.00"), local_test_db_session, is_adhoc_payment=False
+    )
+
+    # Prior adhoc payments don't factor into the calculation either
+    _create_payment_container(
+        employee,
+        Decimal("850.00"),
+        local_test_db_session,
+        has_processed_state=True,
+        is_adhoc_payment=True,
+    )
+
+    payment_post_processing_step._validate_payments_not_exceeding_cap(
+        employee.employee_id,
+        [payment_container1, payment_container2, payment_container3, payment_container4],
+    )
+
+    # None of the payments failed, as adhoc payments don't factor into the calculation
+    assert not payment_container1.validation_container.has_validation_issues()
+    assert not payment_container2.validation_container.has_validation_issues()
+    assert not payment_container3.validation_container.has_validation_issues()
+    assert not payment_container4.validation_container.has_validation_issues()
+
+    # Note adding one more non-adhoc payment will still cause something to fail.
+    payment_container5 = _create_payment_container(
+        employee, Decimal("1.00"), local_test_db_session, is_adhoc_payment=False
+    )
+
+    payment_post_processing_step._validate_payments_not_exceeding_cap(
+        employee.employee_id,
+        [
+            payment_container1,
+            payment_container2,
+            payment_container3,
+            payment_container4,
+            payment_container5,
+        ],
+    )
+
+    # The smallest one fails validation.
+    assert not payment_container1.validation_container.has_validation_issues()
+    assert not payment_container2.validation_container.has_validation_issues()
+    assert not payment_container3.validation_container.has_validation_issues()
+    assert not payment_container4.validation_container.has_validation_issues()
+    assert payment_container5.validation_container.has_validation_issues()
+
+
 def test_get_all_active_payments_associated_with_employee(
     payment_post_processing_step, local_test_db_session
 ):
@@ -250,28 +317,28 @@ def test_validate_payments_not_exceeding_cap_multiple_pay_periods(
         Decimal("800.00"),
         local_test_db_session,
         start_date=date(2021, 1, 1),
-        end_date=date(2021, 1, 8),
+        end_date=date(2021, 1, 7),
     )
     payment_container2 = _create_payment_container(
         employee,
         Decimal("800.00"),
         local_test_db_session,
         start_date=date(2021, 2, 1),
-        end_date=date(2021, 2, 8),
+        end_date=date(2021, 2, 7),
     )
     payment_container3 = _create_payment_container(
         employee,
         Decimal("800.00"),
         local_test_db_session,
         start_date=date(2021, 3, 1),
-        end_date=date(2021, 3, 8),
+        end_date=date(2021, 3, 7),
     )
     payment_container4 = _create_payment_container(
         employee,
         Decimal("1200.00"),
         local_test_db_session,
         start_date=date(2021, 4, 1),
-        end_date=date(2021, 4, 8),
+        end_date=date(2021, 4, 7),
     )
 
     # Send all of the payments. Only the last one will fail
@@ -387,7 +454,7 @@ def test_validate_payment_cap_for_period(payment_post_processing_step, local_tes
     This test validates that the logic for choosing payments to pay is correct.
     """
     start_date = date(2021, 1, 1)
-    end_date = date(2021, 1, 8)  # Exactly one week, so cap is $850
+    end_date = date(2021, 1, 7)  # Exactly one week, so cap is $850
     # All values well under the cap
     group = _create_employee_payment_group(
         prior_amounts=["100.00", "100.00"], current_amounts=["100.00", "100.00"]

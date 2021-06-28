@@ -4,22 +4,30 @@ import { renderWithAppLogic, testHook } from "../../test-utils";
 import ClaimCollection from "../../../src/models/ClaimCollection";
 import Dashboard from "../../../src/pages/employers/dashboard";
 import PaginationMeta from "../../../src/models/PaginationMeta";
+import faker from "faker";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
-const verifiedUserLeaveAdministrator = new UserLeaveAdministrator({
+function createUserLeaveAdministrator(attrs = {}) {
+  return new UserLeaveAdministrator({
+    employer_id: faker.datatype.uuid(),
+    employer_dba: faker.company.companyName(),
+    employer_fein: `${faker.finance.account(2)}-${faker.finance.account(7)}`,
+    ...attrs,
+  });
+}
+
+const verifiedUserLeaveAdministrator = createUserLeaveAdministrator({
   employer_dba: "Work Inc",
   employer_fein: "12-3456789",
-  employer_id: "mock-employer-id-1",
   has_fineos_registration: true,
   has_verification_data: true,
   verified: true,
 });
-const verifiableUserLeaveAdministrator = new UserLeaveAdministrator({
+
+const verifiableUserLeaveAdministrator = createUserLeaveAdministrator({
   employer_dba: "Book Bindings 'R Us",
-  employer_fein: "**-***0002",
-  employer_id: "mock-employer-id-2",
   has_fineos_registration: false,
   has_verification_data: true,
   verified: false,
@@ -37,6 +45,7 @@ const getClaims = (leaveAdmin) => {
       employer: new ClaimEmployer({
         employer_dba: leaveAdmin.employer_dba,
         employer_fein: leaveAdmin.employer_fein,
+        employer_id: leaveAdmin.employer_id,
       }),
       fineos_absence_id: "NTN-111-ABS-01",
       claim_status: "Approved",
@@ -58,6 +67,7 @@ const setup = (claims = [], userAttrs = {}, paginationMeta = {}) => {
       ...userAttrs,
     });
     appLogic.claims.claims = new ClaimCollection(claims);
+    appLogic.claims.shouldLoadPage = jest.fn().mockReturnValue(false);
     appLogic.claims.paginationMeta = new PaginationMeta({
       page_offset: 1,
       page_size: 25,
@@ -83,10 +93,6 @@ const setup = (claims = [], userAttrs = {}, paginationMeta = {}) => {
 };
 
 describe("Employer dashboard", () => {
-  beforeEach(() => {
-    process.env.featureFlags = { employerShowDashboard: true };
-  });
-
   it("renders the page with expected content and pagination components", () => {
     const { wrapper } = setup();
 
@@ -159,14 +165,6 @@ describe("Employer dashboard", () => {
     ).toMatchSnapshot();
   });
 
-  it("does not render a banner if there are any unverified employers that are not registered in FINEOS", () => {
-    const { wrapper } = setup([], {
-      user_leave_administrators: [verifiableUserLeaveAdministrator],
-    });
-
-    expect(wrapper.find("Alert").exists()).toEqual(false);
-  });
-
   it("renders a table of claims with links if employer is registered in FINEOS", () => {
     const claims = getClaims(verifiedUserLeaveAdministrator);
     const userAttrs = {
@@ -184,15 +182,18 @@ describe("Employer dashboard", () => {
   });
 
   it("renders claim rows without links if employer is not registered in FINEOS", () => {
-    const claims = getClaims(verifiableUserLeaveAdministrator);
+    const verifiedButNotInFineos = {
+      ...verifiableUserLeaveAdministrator,
+      verified: true,
+    };
+    const claims = getClaims(verifiedButNotInFineos);
 
     const userAttrs = {
-      user_leave_administrators: [verifiableUserLeaveAdministrator],
+      user_leave_administrators: [verifiedButNotInFineos],
     };
 
     const { wrapper } = setup(claims, userAttrs);
 
-    expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
     expect(wrapper.find("ClaimTableRows").dive().find("a")).toHaveLength(0);
   });
 
@@ -203,7 +204,9 @@ describe("Employer dashboard", () => {
       return claim;
     });
 
-    const { wrapper } = setup(claims);
+    const { wrapper } = setup(claims, {
+      user_leave_administrators: [verifiedUserLeaveAdministrator],
+    });
 
     expect(
       wrapper
@@ -250,10 +253,16 @@ describe("Employer dashboard", () => {
   });
 
   it("renders a 'no results' message in the table, and no pagination components when no claims are present", () => {
-    const { wrapper } = setup([], undefined, {
-      total_records: 0,
-      total_pages: 1,
-    });
+    const { wrapper } = setup(
+      [],
+      {
+        user_leave_administrators: [verifiedUserLeaveAdministrator],
+      },
+      {
+        total_records: 0,
+        total_pages: 1,
+      }
+    );
 
     expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
     expect(wrapper.find("PaginationSummary").exists()).toBe(false);
@@ -272,7 +281,7 @@ describe("Employer dashboard", () => {
 
   it("changes the page_offset query param when a page navigation button is clicked", () => {
     const { goToSpy, wrapper } = setup();
-    const clickedPageOffset = 3;
+    const clickedPageOffset = "3";
 
     wrapper.find("PaginationNavigation").simulate("click", clickedPageOffset);
 
@@ -281,41 +290,141 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("redirects to the Welcome page when employerShowDashboard flag is disabled", () => {
-    process.env.featureFlags = { employerShowDashboard: false };
-    const { goToSpy } = setup();
-
-    expect(goToSpy).toHaveBeenCalledWith(routes.employers.welcome);
+  it("renders the banner if there are any unverified employers", () => {
+    const { wrapper } = setup([], {
+      user_leave_administrators: [
+        // Mix of verified and unverified
+        verifiedUserLeaveAdministrator,
+        verifiableUserLeaveAdministrator,
+      ],
+    });
+    expect(wrapper.find("Alert").exists()).toEqual(true);
   });
 
-  describe("when employerShowVerifications flag is enabled", () => {
-    beforeEach(() => {
-      process.env.featureFlags = {
-        ...process.env.featureFlags,
-        employerShowVerifications: true,
-      };
+  it("renders instructions if there are no verified employers", () => {
+    const { wrapper } = setup([], {
+      // No verified employers
+      user_leave_administrators: [verifiableUserLeaveAdministrator],
     });
 
-    it("renders the banner if there are any unverified employers", () => {
-      const { wrapper } = setup([], {
-        user_leave_administrators: [
-          // Mix of verified and unverified
-          verifiedUserLeaveAdministrator,
-          verifiableUserLeaveAdministrator,
-        ],
-      });
-      expect(wrapper.find("Alert").exists()).toEqual(true);
+    expect(
+      wrapper.find("[data-test='verification-instructions-row'] Trans").dive()
+    ).toMatchSnapshot();
+  });
+
+  it("renders organizations filter when there are multiple verified organizations", () => {
+    process.env.featureFlags = { employerShowDashboardEmployerFilter: true };
+
+    const { wrapper: wrapperWithOneVerifiedOrg } = setup([], {
+      user_leave_administrators: [
+        createUserLeaveAdministrator({
+          verified: false,
+        }),
+        createUserLeaveAdministrator({
+          verified: true,
+        }),
+      ],
     });
 
-    it("renders instructions if there are no verified employers", () => {
-      const { wrapper } = setup([], {
-        // No verified employers
-        user_leave_administrators: [verifiableUserLeaveAdministrator],
+    const { wrapper: wrapperWithMultipleVerifiedOrgs } = setup([], {
+      user_leave_administrators: [
+        createUserLeaveAdministrator({
+          has_fineos_registration: false, // this should employer still show in the list
+          verified: true,
+        }),
+        createUserLeaveAdministrator({
+          has_fineos_registration: true,
+          verified: true,
+        }),
+      ],
+    });
+
+    const getEmployerFilterDropdown = (wrapper) =>
+      wrapper.find("Filters").dive().find("Dropdown[name='employer_id']");
+
+    expect(getEmployerFilterDropdown(wrapperWithOneVerifiedOrg).exists()).toBe(
+      false
+    );
+    expect(
+      getEmployerFilterDropdown(wrapperWithMultipleVerifiedOrgs).exists()
+    ).toBe(true);
+  });
+
+  it("updates filter + pagination query params when user selects an Employer filter", () => {
+    process.env.featureFlags = { employerShowDashboardEmployerFilter: true };
+
+    const user_leave_administrators = [
+      createUserLeaveAdministrator({
+        verified: true,
+      }),
+      createUserLeaveAdministrator({
+        verified: true,
+      }),
+    ];
+
+    const { goToSpy, wrapper } = setup(
+      [],
+      {
+        user_leave_administrators,
+      },
+      {
+        page_offset: 2,
+      }
+    );
+
+    wrapper
+      .find("Filters")
+      .dive()
+      .find("Dropdown[name='employer_id']")
+      .simulate("change", {
+        target: {
+          name: "employer_id",
+          value: user_leave_administrators[0].employer_id,
+        },
       });
 
-      expect(
-        wrapper.find("[data-test='verification-instructions-row'] Trans").dive()
-      ).toMatchSnapshot();
+    expect(goToSpy).toHaveBeenCalledWith("/employers/dashboard", {
+      employer_id: user_leave_administrators[0].employer_id,
+      page_offset: "1",
+    });
+  });
+
+  it("updates pagination query params when user selects the 'All organizations' Employer filter", () => {
+    process.env.featureFlags = { employerShowDashboardEmployerFilter: true };
+
+    const user_leave_administrators = [
+      createUserLeaveAdministrator({
+        verified: true,
+      }),
+      createUserLeaveAdministrator({
+        verified: true,
+      }),
+    ];
+
+    const { goToSpy, wrapper } = setup(
+      [],
+      {
+        user_leave_administrators,
+      },
+      {
+        page_offset: 2,
+      }
+    );
+
+    const dropdown = wrapper
+      .find("Filters")
+      .dive()
+      .find("Dropdown[name='employer_id']");
+
+    dropdown.simulate("change", {
+      target: {
+        name: "employer_id",
+        value: dropdown.prop("choices")[0].value, // All orgs = first option
+      },
+    });
+
+    expect(goToSpy).toHaveBeenCalledWith("/employers/dashboard", {
+      page_offset: "1",
     });
   });
 });

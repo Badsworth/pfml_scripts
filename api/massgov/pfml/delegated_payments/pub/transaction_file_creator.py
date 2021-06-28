@@ -14,6 +14,7 @@ from massgov.pfml.db.models.employees import (
     PubEft,
     State,
 )
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     add_eft_prenote_to_nacha_file,
@@ -51,7 +52,7 @@ class TransactionFileCreatorStep(Step):
 
             # Check and positive pay
             self.check_file, self.positive_pay_file = pub_check.create_check_file(
-                self.db_session, self.increment
+                self.db_session, self.increment, self.get_import_log_id()
             )
 
             # Send the file
@@ -148,12 +149,29 @@ class TransactionFileCreatorStep(Step):
         # transition states
         for payment in payments:
             self.increment(self.Metrics.ACH_PAYMENT_COUNT)
+
+            outcome = state_log_util.build_outcome("PUB transaction sent")
             state_log_util.create_finished_state_log(
                 associated_model=payment,
                 end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
-                outcome=state_log_util.build_outcome("PUB transaction sent"),
+                outcome=outcome,
                 db_session=self.db_session,
             )
+
+            transaction_status = FineosWritebackTransactionStatus.PAID
+            state_log_util.create_finished_state_log(
+                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+                outcome=outcome,
+                associated_model=payment,
+                import_log_id=self.get_import_log_id(),
+                db_session=self.db_session,
+            )
+            writeback_details = FineosWritebackDetails(
+                payment=payment,
+                transaction_status_id=transaction_status.transaction_status_id,
+                import_log_id=self.get_import_log_id(),
+            )
+            self.db_session.add(writeback_details)
 
         logger.info("Done adding ACH payments to PUB transaction file: %i", len(payments))
 

@@ -145,6 +145,8 @@ class ScenarioOutput:
         vendor_invoice_date = ""
         vendor_invoice_number = ""
         absence_case_creation_date = ""
+        leave_request_start = None
+        leave_request_end = None
 
         # Override with values if they are accessible.
         try:
@@ -188,6 +190,19 @@ class ScenarioOutput:
             absence_case_creation_date = self.scenario_data.absence_case_creation_date.strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
+
+        if self.scenario_data.absence_case_creation_date:
+            absence_case_creation_date = self.scenario_data.absence_case_creation_date.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+
+        if self.scenario_data.leave_request_start:
+            leave_request_start = self.scenario_data.leave_request_start.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+
+        if self.scenario_data.leave_request_end:
+            leave_request_end = self.scenario_data.leave_request_end.strftime("%Y-%m-%d %H:%M:%S")
 
         # Construct and return the dictionary.
         return {
@@ -245,6 +260,18 @@ class ScenarioOutput:
             "removed_or_added_after_audit_of_info": "",
             "to_be_removed_from_file": "",
             "amalgamationc": None,
+            "leave_request_start": leave_request_start,
+            "leave_request_end": leave_request_end,
+            "prior_overpayments_found": "",
+            "potential_overpayments_on_current_voucher": "",
+            "additional_income_ntns_to_pull": "",
+            "prior_fails_in_dfml_pi_audit": "",
+            "pull_these_ntns_per_dfml_ops": "",
+            "dfml_leave_type_1": "",
+            "exemption_type_1": "",
+            "is_exempt_2": "",
+            "dfml_leave_type_2": "",
+            "exemption_type_2": "",
             "notes": "",
         }
 

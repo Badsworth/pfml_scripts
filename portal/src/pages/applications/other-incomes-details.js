@@ -2,7 +2,6 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../models/OtherIncome";
-import React, { useEffect, useRef } from "react";
 import { get, pick } from "lodash";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Dropdown from "../../components/Dropdown";
@@ -15,6 +14,7 @@ import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
+import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -33,9 +33,9 @@ export const fields = [
 export const OtherIncomesDetails = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
+  const limit = 6;
 
   const initialEntries = pick(props, fields).claim;
-  const useInitialEntries = useRef(true);
   // If the claim doesn't have any relevant entries, pre-populate the first one
   // so that it renders in the RepeatableFieldset below
   if (initialEntries.other_incomes.length === 0) {
@@ -43,19 +43,6 @@ export const OtherIncomesDetails = (props) => {
   }
   const { formState, updateFields } = useFormState(initialEntries);
   const other_incomes = get(formState, "other_incomes");
-
-  useEffect(() => {
-    // Don't bother calling updateFields() when the page first renders
-    if (useInitialEntries.current) {
-      useInitialEntries.current = false;
-      return;
-    }
-
-    // When there's a validation error, we get back the list of other_incomes with other_income_ids from the API
-    // When claim.other_leaves updates, we also need to update the formState values to include the other_income_ids,
-    // so on subsequent submits, we don't create new other_income records
-    updateFields({ other_incomes: claim.other_incomes });
-  }, [claim.other_incomes, updateFields]);
 
   const handleSave = () =>
     appLogic.benefitsApplications.update(claim.application_id, formState);
@@ -66,23 +53,10 @@ export const OtherIncomesDetails = (props) => {
     updateFields({ other_incomes: updatedEntries });
   };
 
-  const otherLeaves = appLogic.otherLeaves;
-  const handleRemoveClick = async (entry, index) => {
-    let entrySavedToApi = !!entry.other_income_id;
-    if (entrySavedToApi) {
-      // Try to delete the entry from the API
-      const success = await otherLeaves.removeOtherIncome(
-        claim.application_id,
-        entry.other_income_id
-      );
-      entrySavedToApi = !success;
-    }
-
-    if (!entrySavedToApi) {
-      const updatedEntries = [...other_incomes];
-      updatedEntries.splice(index, 1);
-      updateFields({ other_incomes: updatedEntries });
-    }
+  const handleRemoveClick = (entry, index) => {
+    const updatedIncomes = [...other_incomes];
+    updatedIncomes.splice(index, 1);
+    updateFields({ other_incomes: updatedIncomes });
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -124,8 +98,10 @@ export const OtherIncomesDetails = (props) => {
         onRemoveClick={handleRemoveClick}
         removeButtonLabel={t("pages.claimsOtherIncomesDetails.removeButton")}
         render={render}
-        limit={3}
-        limitMessage={t("pages.claimsOtherIncomesDetails.limitMessage")}
+        limit={limit}
+        limitMessage={t("pages.claimsOtherIncomesDetails.limitMessage", {
+          limit,
+        })}
       />
     </QuestionPage>
   );

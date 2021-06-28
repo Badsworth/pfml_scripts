@@ -12,7 +12,6 @@ import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import React from "react";
 import { Trans } from "react-i18next";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import tracker from "../services/tracker";
 import useCollectionState from "./useCollectionState";
@@ -55,10 +54,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       handleDocumentsError(error);
     } else if (error instanceof CognitoAuthError) {
       handleCognitoAuthError(error);
-    } else if (
-      error instanceof LeaveAdminForbiddenError &&
-      isFeatureEnabled("employerShowVerifications")
-    ) {
+    } else if (error instanceof LeaveAdminForbiddenError) {
       handleLeaveAdminForbiddenError(error);
     } else {
       console.error(error);
@@ -72,6 +68,20 @@ const useAppErrorsLogic = ({ portalFlow }) => {
    */
   const clearErrors = () => {
     setAppErrors(() => new AppErrorInfoCollection());
+  };
+
+  /**
+   * Convenience method for removing required field errors. This is used by the review page
+   * to hide required field errors and instead display a more user-friendly message to users
+   * that they need to go back and complete all required fields
+   * @callback clearErrorsFunction
+   */
+  const clearRequiredFieldErrors = () => {
+    const remainingErrors = appErrors.items.filter(
+      (error) => error.type !== "required"
+    );
+
+    setAppErrors(() => new AppErrorInfoCollection(remainingErrors));
   };
 
   /**
@@ -143,7 +153,11 @@ const useAppErrorsLogic = ({ portalFlow }) => {
           i18nKey={issueMessageKey}
           components={{
             "mass-gov-form-link": (
-              <a href="https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error" />
+              <a
+                target="_blank"
+                rel="noreferrer noopener"
+                href={routes.external.massgov.caseCreationErrorGuide}
+              />
             ),
           }}
         />
@@ -157,7 +171,11 @@ const useAppErrorsLogic = ({ portalFlow }) => {
           i18nKey={issueMessageKey}
           components={{
             "intermittent-leave-guide": (
-              <a href={routes.external.massgov.intermittentLeaveGuide} />
+              <a
+                target="_blank"
+                rel="noreferrer noopener"
+                href={routes.external.massgov.intermittentLeaveGuide}
+              />
             ),
           }}
         />
@@ -342,6 +360,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
     setAppErrors,
     catchError,
     clearErrors,
+    clearRequiredFieldErrors,
   };
 };
 

@@ -1,6 +1,28 @@
 import requests
 import json
 import os
+import sys
+import re
+
+# Ignoring a task requires adding its name minus "pfml-api-<environment>-" to 
+# the TASKS_TO_IGNORE list below
+TASKS_TO_IGNORE = [
+
+    # DOR Fineos ETL tasks.
+    # The pfml-api-<environment>-dor-fineos-etl step function handles retries and failure notifications
+    "dor-import",
+    "load-employers-to-fineos",
+    "fineos-eligibility-feed-export",
+    "fineos-import-employee-updates",
+
+    # The Leave Admin registration job runs every 15 minutes, so we avoid spamming
+    # and will use PagerDuty for notifications as defined in INFRA-ABC.
+    "register-leave-admins-with-fineos",
+
+    # The PFML API is a service that will rotate containers when health checks
+    # are failing. We should know about issues due to deployment failures.
+    "pfml-api(-[a-z]+){1,2}$"
+]
 
 # --------------------------------------------------------------------------- #
 #                       Format slackbot message                               #
@@ -74,8 +96,7 @@ def terriyay_message(event_detail):
             )
             return response
         except requests.exceptions.RequestException as error:
-            print(error)
-            exit(1)
+            sys.exit(error)
 
 # --------------------------------------------------------------------------- #
 #                                Lambda Handler                               #
@@ -83,16 +104,25 @@ def terriyay_message(event_detail):
 
 def lambda_handler(event, context=None):
     
-    event_detail = event["detail"]
+    event_detail = event['detail']
+    
+    # event['detail']['group'] (or event_detail['group']) looks like 'system:pfml-api-<environment>-<task name>'
+    # Removes all but task name from the event_detail['group']
+    task_name = event_detail['group'][event_detail['group'].rindex(':')+1:]
+    
+    if any(re.match(task_to_ignore, task_name) for task_to_ignore in TASKS_TO_IGNORE):
+        return {
+            "ECSTaskFailureIgnored" : f"{task_name}"
+        }
 
     # Send event detail to slackbot, capture response from slackbot API
     response = terriyay_message(event_detail)
 
     json_response = json.loads(response.text)
 
-    status_message = "Slack call successful" if json_response["ok"] else f"Error from slackbot: {json_response['error']}"
+    status_message = "Slack call successful" if json_response['ok'] else f"Error from slackbot: {json_response['error']}"
     
 
     return {
-        'slackCallStatus': status_message
+        "slackCallStatus": status_message
     }

@@ -21,8 +21,10 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../models/OtherIncome";
+import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
+import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
-import { compact, get, isUndefined } from "lodash";
+import { compact, get, isUndefined, pick } from "lodash";
 
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
@@ -33,7 +35,6 @@ import HeadingPrefix from "../../components/HeadingPrefix";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
-import React from "react";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
 import Spinner from "../../components/Spinner";
@@ -49,6 +50,7 @@ import formatDateRange from "../../utils/formatDateRange";
 import getI18nContextForIntermittentFrequencyDuration from "../../utils/getI18nContextForIntermittentFrequencyDuration";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
+import tracker from "../../services/tracker";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
@@ -80,7 +82,7 @@ export const Review = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
 
-  const { appErrors } = appLogic;
+  const { appErrors, clearRequiredFieldErrors } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
     appErrors,
     claim.application_id
@@ -130,6 +132,7 @@ export const Review = (props) => {
   };
 
   const handleSubmit = useThrottledHandler(async () => {
+    setShowNewFieldError(false);
     if (usePartOneReview) {
       await appLogic.benefitsApplications.submit(claim.application_id);
       return;
@@ -143,8 +146,54 @@ export const Review = (props) => {
   const reviewHeadingLevel = usePartOneReview ? "3" : "2";
   const reviewRowLevel = usePartOneReview ? "4" : "3";
 
+  // If there are any required field errors then display a custom error message and clear the required
+  // field errors so they don't render in the default error boundary. This can happen if a user reached
+  // the review page just before we a deployed a new question or page, or if the user somehow skipped  a
+  // page with required fields.
+  const [showNewFieldError, setShowNewFieldError] = useState(false);
+  useEffect(() => {
+    if (appErrors.items.some((error) => error.type === "required")) {
+      const missingFields = appErrors.items
+        .filter((error) => error.type === "required")
+        .map((error) => pick(error, ["name", "field", "meta", "rule", "type"]));
+
+      tracker.trackEvent("Missing required fields", { missingFields });
+
+      clearRequiredFieldErrors();
+      if (!showNewFieldError) {
+        // Display a custom error alert with a link back to the checklist
+        setShowNewFieldError(true);
+      }
+    }
+  }, [
+    appErrors.items,
+    showNewFieldError,
+    setShowNewFieldError,
+    clearRequiredFieldErrors,
+  ]);
+
   return (
     <div className="measure-6">
+      {showNewFieldError && (
+        <Alert className="margin-bottom-3">
+          <Trans
+            i18nKey="pages.claimsReview.missingRequiredFieldError"
+            components={{
+              "checklist-link": (
+                <a
+                  href={appLogic.portalFlow.getNextPageRoute(
+                    "CHECKLIST",
+                    { claim },
+                    {
+                      claim_id: claim.application_id,
+                    }
+                  )}
+                />
+              ),
+            }}
+          />
+        </Alert>
+      )}
       <BackButton />
 
       <Title hidden>{t("pages.claimsReview.title")}</Title>
@@ -482,12 +531,11 @@ export const Review = (props) => {
           ? claim.reducedLeaveDateRange()
           : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
-
+      {/* Only hide the border when we're rendering a WeeklyTimeTable */}
       {claim.isReducedSchedule && (
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.reducedLeaveScheduleLabel")}
-          // Only hide the border when we're rendering a WeeklyTimeTable
           noBorder={workPattern.work_pattern_type === WorkPatternType.fixed}
         >
           {workPattern.work_pattern_type === WorkPatternType.fixed && (
@@ -546,7 +594,10 @@ export const Review = (props) => {
       {/* OTHER LEAVE */}
       {/* Conditionally showing this section since it was added after launch, so some claims may not have this section yet. */}
       {(get(claim, "has_employer_benefits") !== null ||
-        get(claim, "has_other_incomes") !== null) && (
+        get(claim, "has_other_incomes") !== null ||
+        get(claim, "has_previous_leaves_same_reason") !== null ||
+        get(claim, "has_previous_leaves_other_reason") !== null ||
+        get(claim, "has_concurrent_leave") !== null) && (
         <div data-test="other-leave">
           <ReviewHeading
             editHref={getStepEditHref(ClaimSteps.otherLeave)}
@@ -555,6 +606,55 @@ export const Review = (props) => {
           >
             {t("pages.claimsReview.stepHeading", { context: "otherLeave" })}
           </ReviewHeading>
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.previousLeaveHasPreviousLeavesLabel")}
+          >
+            {(get(claim, "has_previous_leaves_same_reason") ||
+              get(claim, "has_previous_leaves_other_reason")) === true
+              ? t("pages.claimsReview.otherLeaveChoiceYes")
+              : t("pages.claimsReview.otherLeaveChoiceNo")}
+          </ReviewRow>
+          <PreviousLeaveList
+            entries={get(claim, "previous_leaves_same_reason")}
+            type="sameReason"
+            startIndex={0}
+            reviewRowLevel={reviewRowLevel}
+          />
+          <PreviousLeaveList
+            entries={get(claim, "previous_leaves_other_reason")}
+            type="otherReason"
+            startIndex={get(claim, "previous_leaves_same_reason.length", 0)}
+            reviewRowLevel={reviewRowLevel}
+          />
+
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t(
+              "pages.claimsReview.concurrentLeaveHasConcurrentLeaveLabel"
+            )}
+          >
+            {get(claim, "has_concurrent_leave") === true
+              ? t("pages.claimsReview.otherLeaveChoiceYes")
+              : t("pages.claimsReview.otherLeaveChoiceNo")}
+          </ReviewRow>
+          {get(claim, "concurrent_leave") && (
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.concurrentLeaveLabel")}
+            >
+              {t("pages.claimsReview.previousLeaveIsForCurrentEmployer", {
+                context: String(
+                  get(claim, "concurrent_leave.is_for_current_employer")
+                ),
+              })}
+              <br />
+              {formatDateRange(
+                get(claim, "concurrent_leave.leave_start_date"),
+                get(claim, "concurrent_leave.leave_end_date")
+              )}
+            </ReviewRow>
+          )}
 
           <ReviewRow
             level={reviewRowLevel}
@@ -577,14 +677,9 @@ export const Review = (props) => {
             label={t("pages.claimsReview.otherIncomeLabel")}
           >
             {get(claim, "has_other_incomes") === true &&
-              get(claim, "other_incomes_awaiting_approval") === false &&
               t("pages.claimsReview.otherLeaveChoiceYes")}
             {get(claim, "has_other_incomes") === false &&
-              get(claim, "other_incomes_awaiting_approval") === false &&
               t("pages.claimsReview.otherLeaveChoiceNo")}
-            {get(claim, "has_other_incomes") === false &&
-              get(claim, "other_incomes_awaiting_approval") === true &&
-              t("pages.claimsReview.otherLeaveChoicePendingOtherIncomes")}
           </ReviewRow>
 
           {get(claim, "has_other_incomes") && (
@@ -748,6 +843,7 @@ Review.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
     benefitsApplications: PropTypes.object.isRequired,
+    clearRequiredFieldErrors: PropTypes.func.isRequired,
     portalFlow: PropTypes.shape({
       getNextPageRoute: PropTypes.func.isRequired,
     }).isRequired,
@@ -758,6 +854,69 @@ Review.propTypes = {
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
+};
+
+export const PreviousLeaveList = (props) => {
+  const { t } = useTranslation();
+  if (!props.entries) return null;
+
+  return props.entries.map((entry, index) => (
+    <ReviewRow
+      level={props.reviewRowLevel}
+      key={`${props.type}-${index}`}
+      label={t("pages.claimsReview.previousLeaveEntryLabel", {
+        count: props.startIndex + index + 1,
+      })}
+    >
+      {t("pages.claimsReview.previousLeaveType", { context: props.type })}
+      <br />
+      {t("pages.claimsReview.previousLeaveIsForCurrentEmployer", {
+        context: String(get(entry, "is_for_current_employer")),
+      })}
+      <br />
+      {props.type === "otherReason" && (
+        <React.Fragment>
+          {t("pages.claimsReview.previousLeaveReason", {
+            context: findKeyByValue(
+              PreviousLeaveReason,
+              get(entry, "leave_reason")
+            ),
+          })}
+          <br />
+        </React.Fragment>
+      )}
+      {formatDateRange(entry.leave_start_date, entry.leave_end_date)}
+      <br />
+      {t("pages.claimsReview.previousLeaveWorkedPerWeekMinutesLabel")}
+      <br />
+      {t("pages.claimsReview.previousLeaveWorkedPerWeekMinutes", {
+        context:
+          convertMinutesToHours(entry.worked_per_week_minutes).minutes === 0
+            ? "noMinutes"
+            : null,
+        ...convertMinutesToHours(entry.worked_per_week_minutes),
+      })}
+      <br />
+      {t("pages.claimsReview.previousLeaveLeaveMinutesLabel")}
+      <br />
+      {t("pages.claimsReview.previousLeaveLeaveMinutes", {
+        context:
+          convertMinutesToHours(entry.leave_minutes).minutes === 0
+            ? "noMinutes"
+            : null,
+        ...convertMinutesToHours(entry.leave_minutes),
+      })}
+    </ReviewRow>
+  ));
+};
+
+PreviousLeaveList.propTypes = {
+  /** Previous leave type */
+  type: PropTypes.oneOf(["sameReason", "otherReason"]).isRequired,
+  entries: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)).isRequired,
+  /** start index for previous leave label */
+  startIndex: PropTypes.number.isRequired,
+  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
 };
 
 /*
@@ -782,15 +941,21 @@ export const EmployerBenefitList = (props) => {
       entry.benefit_end_date
     );
 
-    const amount = entry.benefit_amount_dollars
-      ? t("pages.claimsReview.amountPerFrequency", {
-          context: findKeyByValue(
-            EmployerBenefitFrequency,
-            entry.benefit_amount_frequency
-          ),
-          amount: entry.benefit_amount_dollars,
-        })
-      : null;
+    let amount;
+
+    if (entry.is_full_salary_continuous) {
+      amount = t("pages.claimsReview.employerBenefitIsFullSalaryContinuous");
+    } else {
+      amount = entry.benefit_amount_dollars
+        ? t("pages.claimsReview.amountPerFrequency", {
+            context: findKeyByValue(
+              EmployerBenefitFrequency,
+              entry.benefit_amount_frequency
+            ),
+            amount: entry.benefit_amount_dollars,
+          })
+        : null;
+    }
 
     return (
       <OtherLeaveEntry

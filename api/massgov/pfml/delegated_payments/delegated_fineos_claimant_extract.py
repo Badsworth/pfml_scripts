@@ -265,6 +265,7 @@ class ClaimantData:
                 eft_required,
                 min_length=9,
                 max_length=9,
+                custom_validator_func=payments_util.routing_number_validator,
             )
 
             self.account_nbr = payments_util.validate_csv_input(

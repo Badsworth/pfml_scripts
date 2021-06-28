@@ -5,7 +5,6 @@ import VerifyAccount from "../../src/pages/verify-account";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
 import { simulateEvents } from "../test-utils";
-import tracker from "../../src/services/tracker";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 jest.mock("../../src/services/tracker");
@@ -14,9 +13,7 @@ jest.mock("../../src/hooks/useAppLogic");
 describe("VerifyAccount", () => {
   let appLogic,
     changeField,
-    changeRadioGroup,
     click,
-    ein,
     resolveResendVerifyAccountCodeMock,
     submitForm,
     username,
@@ -27,9 +24,7 @@ describe("VerifyAccount", () => {
     act(() => {
       wrapper = shallow(<VerifyAccount appLogic={appLogic} />);
     });
-    ({ changeField, click, changeRadioGroup, submitForm } = simulateEvents(
-      wrapper
-    ));
+    ({ changeField, click, submitForm } = simulateEvents(wrapper));
   }
 
   beforeEach(() => {
@@ -40,7 +35,6 @@ describe("VerifyAccount", () => {
       });
     });
 
-    ein = "12-3456789";
     username = "test@example.com";
     verificationCode = "123456";
     render();
@@ -50,33 +44,10 @@ describe("VerifyAccount", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("prevents submission when isEmployer isn't set when EIN fields are visible", async () => {
-    await submitForm();
-
-    expect(appLogic.setAppErrors).toHaveBeenCalledTimes(1);
-    expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
-      issueField: "isEmployer",
-      issueType: "required",
-    });
-
-    expect(appLogic.auth.verifyAccount).not.toHaveBeenCalled();
-    expect(appLogic.auth.verifyEmployerAccount).not.toHaveBeenCalled();
-
-    changeRadioGroup("isEmployer", "false");
-    await submitForm();
-
-    expect(appLogic.auth.verifyAccount).toHaveBeenCalled();
-  });
-
   it("submits empty strings if user has not entered values yet", async () => {
-    changeRadioGroup("isEmployer", "true");
     await submitForm();
 
-    expect(appLogic.auth.verifyEmployerAccount).toHaveBeenCalledWith(
-      "",
-      "",
-      ""
-    );
+    expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith("", "");
   });
 
   describe("when authData.username is set", () => {
@@ -96,17 +67,15 @@ describe("VerifyAccount", () => {
       );
     });
 
-    describe("when user is not an employer and the form is submitted", () => {
-      it("calls verifyAccount", async () => {
-        changeField("code", verificationCode);
-        changeRadioGroup("isEmployer", "false");
+    it("calls verifyAccount when form is submitted", async () => {
+      changeField("code", verificationCode);
 
-        await submitForm();
-        expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
-          username,
-          verificationCode
-        );
-      });
+      await submitForm();
+
+      expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
+        username,
+        verificationCode
+      );
     });
   });
 
@@ -123,99 +92,12 @@ describe("VerifyAccount", () => {
       );
     });
 
-    describe("when user is not an employer and the form is submitted", () => {
-      it("calls verifyAccount", async () => {
-        changeField("username", username);
-        changeField("code", verificationCode);
-        changeRadioGroup("isEmployer", "false");
-        await submitForm();
-        expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
-          username,
-          verificationCode
-        );
-      });
-    });
-  });
-
-  describe("when authData.employerIdNumber is set", () => {
-    beforeEach(() => {
-      appLogic.auth.authData = {
-        createAccountUsername: username,
-        createAccountFlow: "employer",
-        employerIdNumber: ein,
-      };
-      render();
-    });
-
-    it("does not render a checkbox for user to state whether they're an employer", () => {
-      expect(wrapper.find("InputChoiceGroup[name='isEmployer']").exists()).toBe(
-        false
-      );
-    });
-
-    it("calls verifyEmployerAccount upon form submission", async () => {
-      changeField("code", verificationCode);
-      await submitForm();
-      expect(appLogic.auth.verifyEmployerAccount).toHaveBeenCalledWith(
-        username,
-        verificationCode,
-        ein
-      );
-    });
-  });
-
-  describe("when employerIdNumber and createAccountFlow are not set in authData", () => {
-    it("renders a checkbox for user to state whether they're an employer", () => {
-      expect(wrapper.find("InputChoiceGroup[name='isEmployer']").exists()).toBe(
-        true
-      );
-    });
-
-    it("displays an employer id number field if user selects checkbox", () => {
-      changeRadioGroup("isEmployer", "true");
-      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
-    });
-
-    it("hides the employer id number field is user deselects checkbox", () => {
-      changeRadioGroup("isEmployer", "false");
-      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(false);
-    });
-
-    it("calls verifyEmployerAccount upon form submission", async () => {
-      changeRadioGroup("isEmployer", "true");
-      changeField("code", verificationCode);
-      changeField("username", username);
-      changeField("ein", ein);
-      await submitForm();
-      expect(appLogic.auth.verifyEmployerAccount).toHaveBeenCalledWith(
-        username,
-        verificationCode,
-        ein
-      );
-    });
-  });
-
-  describe("when authData.employerIdNumber is not set and createAccountFlow is 'claimant'", () => {
-    beforeEach(() => {
-      appLogic.auth.authData = {
-        createAccountUsername: username,
-        createAccountFlow: "claimant",
-      };
-      render();
-    });
-
-    it("does not render a checkbox for user to state whether they're an employer", () => {
-      expect(wrapper.find("InputChoiceGroup[name='isEmployer']").exists()).toBe(
-        false
-      );
-    });
-
     it("calls verifyAccount when form is submitted", async () => {
+      changeField("username", username);
       changeField("code", verificationCode);
       await submitForm();
-
       expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
-        "test@example.com",
+        username,
         verificationCode
       );
     });

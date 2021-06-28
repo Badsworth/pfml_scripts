@@ -42,7 +42,7 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "Base Preset - Portal Claims Normal Traffic",
         project: "PFML",
-        threads: 6,
+        threads: 8,
         duration: seconds(30),
       },
       data: {
@@ -56,7 +56,7 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlus Preset - Portal Claims Normal Traffic",
         project: "PFML",
-        threads: 6,
+        threads: 8,
         duration: seconds(15),
       },
       data: {
@@ -68,11 +68,11 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlus Preset - SavilinxAgent",
         project: "PFML",
-        threads: 40,
+        threads: 6,
         duration: seconds(15),
       },
       data: {
-        scenario: "PortalClaimSubmit",
+        scenario: "SavilinxAgent",
         count: 500,
       },
       delay: milliseconds(5),
@@ -83,7 +83,7 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - Portal Claims Normal Traffic",
         project: "PFML",
-        threads: 6,
+        threads: 8,
         duration: seconds(60),
       },
       data: {
@@ -95,7 +95,9 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - SavilinxAgent",
         project: "PFML",
-        threads: 40,
+        // Agent traffic assumes that we have 180 real agents processing ~6 claims an hour. Our agents process 3 claims
+        // a minute, or 180/hr. (180 agents * 6 claims per hour) = (6 agents * 180 claims per hour)
+        threads: 6,
         duration: seconds(45),
         rampup: seconds(3),
       },
@@ -103,14 +105,18 @@ const presets: Record<string, Preset> = {
         scenario: "SavilinxAgent",
         count: 500,
       },
-      delay: milliseconds(5), // Starts after 5 minutes.
+      delay: milliseconds(5), // Starts after 5 minutes, to give claims a chance to hit the system.
     },
     {
       flood: {
         name: "BasePlusSpikes Preset - Portal Claims 1st Spike",
         project: "PFML",
-        threads: 20,
         duration: seconds(15),
+        // We want a total of 24 concurrency, split across 2 instances.
+        threads: 12,
+        grid: {
+          instance_quantity: 2,
+        },
       },
       data: {
         scenario: "PortalClaimSubmit",
@@ -122,14 +128,18 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "BasePlusSpikes Preset - Portal Claims 2nd Spike",
         project: "PFML",
-        threads: 30,
         duration: seconds(15),
+        // We want a total of 36 concurrency, split across 2 instances.
+        threads: 18,
+        grid: {
+          instance_quantity: 2,
+        },
       },
       data: {
         scenario: "PortalClaimSubmit",
         count: 1000,
       },
-      delay: milliseconds(23), // 23 minute delay.
+      delay: milliseconds(25), // 25 minute delay.
     },
   ],
 };

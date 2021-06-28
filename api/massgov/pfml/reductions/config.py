@@ -13,6 +13,7 @@ class ReductionsS3Config(PydanticBaseSettings):
     # S3 directory paths are relative to the root of the bucket but should not have leading slashes.
     s3_dfml_archive_directory_path: str = "reductions/dfml/archive"
     s3_dfml_outbound_directory_path: str = "reductions/dfml/outbound"
+    s3_dfml_error_directory_path: str = "reductions/dfml/error"
     s3_dia_archive_directory_path: str = "reductions/dia/archive"
     s3_dia_outbound_directory_path: str = "reductions/dia/outbound"
     s3_dia_pending_directory_path: str = "reductions/dia/pending"

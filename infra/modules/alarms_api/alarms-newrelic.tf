@@ -32,6 +32,8 @@ locals {
     "training"    = local.low_priority_channel_key,
     "stage"       = local.low_priority_channel_key,
     "uat"         = local.low_priority_channel_key,
+    "breakfix"    = local.low_priority_channel_key,
+    "cps-preview" = local.low_priority_channel_key,
     "prod"        = local.high_priority_channel_key,
   }
 }
@@ -103,12 +105,12 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
       SELECT filter(
         count(error.message), 
         WHERE NOT (
-          error.message LIKE 'expected 200, but got 403' 
+          error.message LIKE '%expected 200, but got 403'
           AND request.uri LIKE '%applications%/documents' 
           AND request.method LIKE 'GET'
         )
         AND NOT (
-          error.message LIKE 'expected 200, but got 422' 
+          error.message LIKE '%expected 200, but got 422'
           AND request.uri LIKE '%applications%/documents' 
           AND request.method LIKE 'POST'
         )
@@ -118,7 +120,7 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
       FROM Transaction, TransactionError
       WHERE appName='PFML-API-${upper(var.environment_name)}'
         AND (name IS NULL or name NOT LIKE '%push_db')
-        AND (transactionType IS NULL or transactionType = 'Web')
+        AND (transactionName LIKE 'WebTransaction%' or transactionType = 'Web')
     NRQL
     evaluation_offset = 1 # offset by one window
   }

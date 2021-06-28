@@ -87,16 +87,21 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
             files.map((file) => fs.createReadStream(file))
           );
           logger.info(
-            `Flood launched as "${response.name}": ${response.permalink}`
+            `Flood launched as "${response.name}": ${response.permalink}.`
           );
+          return response.uuid;
         };
         deployments.push(deploy);
       }
     }
 
     if (args.deploy && deployments.length > 0) {
-      await Promise.all(deployments.map((deployment) => deployment()));
-      logger.info("All tests have been triggered");
+      const ids = await Promise.all(deployments.map((deploy) => deploy()));
+      logger.info(
+        `All floods have been triggered. You can generate a report of this run using: npm run cli -- flood-report ${ids.join(
+          ","
+        )}`
+      );
     }
   },
 };

@@ -37,9 +37,9 @@ class PaymentAuditData:
 
     payment: Payment
     is_first_time_payment: bool
-    is_previously_errored_payment: bool
-    is_previously_rejected_payment: bool
-    number_of_times_in_rejected_or_error_state: int
+    previously_errored_payment_count: int
+    previously_rejected_payment_count: int
+    previously_skipped_payment_count: int
     rejected_by_program_integrity: Optional[bool] = None
     rejected_notes: str = ""
     skipped_by_program_integrity: Optional[bool] = None
@@ -112,6 +112,9 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
         leave_type=get_leave_type(payment),
+        fineos_customer_number=employee.fineos_customer_number
+        if employee.fineos_customer_number
+        else None,
         first_name=employee.first_name,
         last_name=employee.last_name,
         address_line_1=address.address_line_one if address else None,
@@ -132,10 +135,10 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         absence_case_number=claim.fineos_absence_id,
         c_value=payment.fineos_pei_c_value,
         i_value=payment.fineos_pei_i_value,
-        fineos_customer_number=employee.fineos_customer_number
-        if employee.fineos_customer_number
-        else None,
         employer_id=str(employer.fineos_employer_id) if employer else None,
+        absence_case_creation_date=payment.absence_case_creation_date.isoformat()
+        if payment.absence_case_creation_date
+        else None,
         case_status=claim.fineos_absence_status.absence_status_description
         if claim.fineos_absence_status
         else None,
@@ -144,13 +147,9 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         else None,
         check_description=check_description,
         is_first_time_payment=bool_to_str[payment_audit_data.is_first_time_payment],
-        is_previously_errored_payment=bool_to_str[payment_audit_data.is_previously_errored_payment],
-        is_previously_rejected_payment=bool_to_str[
-            payment_audit_data.is_previously_rejected_payment
-        ],
-        number_of_times_in_rejected_or_error_state=str(
-            payment_audit_data.number_of_times_in_rejected_or_error_state
-        ),
+        previously_errored_payment_count=str(payment_audit_data.previously_errored_payment_count),
+        previously_rejected_payment_count=str(payment_audit_data.previously_rejected_payment_count),
+        previously_skipped_payment_count=str(payment_audit_data.previously_skipped_payment_count),
         rejected_by_program_integrity=bool_to_str[payment_audit_data.rejected_by_program_integrity],
         rejected_notes=payment_audit_data.rejected_notes,
         skipped_by_program_integrity=bool_to_str[payment_audit_data.skipped_by_program_integrity],

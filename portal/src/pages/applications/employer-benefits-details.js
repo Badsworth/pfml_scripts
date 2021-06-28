@@ -2,7 +2,6 @@ import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
-import React, { useEffect, useRef } from "react";
 import { get, pick } from "lodash";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -16,6 +15,7 @@ import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
+import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -29,14 +29,15 @@ export const fields = [
   "claim.employer_benefits[*].benefit_end_date",
   "claim.employer_benefits[*].benefit_start_date",
   "claim.employer_benefits[*].benefit_type",
+  "claim.employer_benefits[*].is_full_salary_continuous",
 ];
 
 export const EmployerBenefitsDetails = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
+  const limit = 6;
 
   const initialEntries = pick(props, fields).claim;
-  const useInitialEntries = useRef(true);
   // If the claim doesn't have any employer benefits pre-populate the first one so that
   // it renders in the RepeatableFieldset below
   if (initialEntries.employer_benefits.length === 0) {
@@ -44,18 +45,6 @@ export const EmployerBenefitsDetails = (props) => {
   }
   const { formState, updateFields } = useFormState(initialEntries);
   const employer_benefits = get(formState, "employer_benefits");
-
-  useEffect(() => {
-    // Don't bother calling updateFields() when the page first renders
-    if (useInitialEntries.current) {
-      useInitialEntries.current = false;
-      return;
-    }
-    // When there's a validation error, we get back the list of employer_benefits with employer_benefit_ids from the API
-    // When claim.employer_benefits updates, we also need to update the formState values to include the employer_benefit_ids,
-    // so on subsequent submits, we don't create new employer_benefit records
-    updateFields({ employer_benefits: claim.employer_benefits });
-  }, [claim.employer_benefits, updateFields]);
 
   const handleSave = () =>
     appLogic.benefitsApplications.update(claim.application_id, formState);
@@ -66,23 +55,10 @@ export const EmployerBenefitsDetails = (props) => {
     updateFields({ employer_benefits: updatedEntries });
   };
 
-  const otherLeaves = appLogic.otherLeaves;
-  const handleRemoveClick = async (entry, index) => {
-    let entrySavedToApi = !!entry.employer_benefit_id;
-    if (entrySavedToApi) {
-      // Try to delete the entry from the API
-      const success = await otherLeaves.removeEmployerBenefit(
-        claim.application_id,
-        entry.employer_benefit_id
-      );
-      entrySavedToApi = !success;
-    }
-
-    if (!entrySavedToApi) {
-      const updatedEntries = [...employer_benefits];
-      updatedEntries.splice(index, 1);
-      updateFields({ employer_benefits: updatedEntries });
-    }
+  const handleRemoveClick = (entry, index) => {
+    const updatedBenefits = [...employer_benefits];
+    updatedBenefits.splice(index, 1);
+    updateFields({ employer_benefits: updatedBenefits });
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -129,8 +105,10 @@ export const EmployerBenefitsDetails = (props) => {
           "pages.claimsEmployerBenefitsDetails.removeButton"
         )}
         render={render}
-        limit={6}
-        limitMessage={t("pages.claimsEmployerBenefitsDetails.limitMessage")}
+        limit={limit}
+        limitMessage={t("pages.claimsEmployerBenefitsDetails.limitMessage", {
+          limit,
+        })}
       />
     </QuestionPage>
   );

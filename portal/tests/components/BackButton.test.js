@@ -3,12 +3,37 @@ import React from "react";
 import { shallow } from "enzyme";
 import tracker from "../../src/services/tracker";
 
+function mockHistoryApi(length) {
+  class MockHistory {
+    back() {}
+
+    get length() {
+      return length;
+    }
+  }
+
+  return new MockHistory();
+}
+
 describe("<BackButton>", () => {
+  beforeEach(() => {
+    // Simulate browser history so the button thinks there's a page to go back to
+    history.pushState({}, "Mock page");
+    history.pushState({}, "Mock page");
+  });
+
   it("renders the back button", () => {
     const wrapper = shallow(<BackButton />);
 
     expect(wrapper.name()).toBe("Button");
     expect(wrapper.dive().text()).toBe("Back");
+  });
+
+  it("does not render the back button when there's no page to go back to", () => {
+    const mockHistory = mockHistoryApi(1);
+
+    const wrapper = shallow(<BackButton history={mockHistory} />);
+    expect(wrapper.isEmptyRender()).toBe(true);
   });
 
   describe("when clicked", () => {
@@ -29,7 +54,9 @@ describe("<BackButton>", () => {
 
       wrapper.simulate("click");
 
-      expect(spy).toHaveBeenCalledWith("BackButton clicked");
+      expect(spy).toHaveBeenCalledWith("BackButton clicked", {
+        behaveLikeBrowserBackButton: true,
+      });
     });
   });
 
@@ -59,7 +86,9 @@ describe("<BackButton>", () => {
 
       wrapper.simulate("click");
 
-      expect(spy).toHaveBeenCalledWith("BackButton clicked");
+      expect(spy).toHaveBeenCalledWith("BackButton clicked", {
+        behaveLikeBrowserBackButton: false,
+      });
     });
   });
 });

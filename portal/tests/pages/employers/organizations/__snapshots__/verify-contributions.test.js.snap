@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`VerifyContributions when "employerShowVerifications" feature flag is enabled renders the page 1`] = `
+exports[`VerifyContributions renders the page 1`] = `
 <form
   className="usa-form"
   method="post"
@@ -93,7 +93,7 @@ exports[`VerifyContributions when "employerShowVerifications" feature flag is en
 </form>
 `;
 
-exports[`VerifyContributions when "employerShowVerifications" feature flag is enabled renders the page 2`] = `
+exports[`VerifyContributions renders the page 2`] = `
 Array [
   <strong
     key="strong-0"
@@ -104,7 +104,7 @@ Array [
 ]
 `;
 
-exports[`VerifyContributions when "employerShowVerifications" feature flag is enabled renders the page 3`] = `
+exports[`VerifyContributions renders the page 3`] = `
 Array [
   <strong
     key="strong-0"
@@ -115,7 +115,7 @@ Array [
 ]
 `;
 
-exports[`VerifyContributions when "employerShowVerifications" feature flag is enabled renders the page 4`] = `
+exports[`VerifyContributions renders the page 4`] = `
 Array [
   "We need more information to verify your identity. We require every employer to verify recent ",
   <a
@@ -130,7 +130,7 @@ Array [
 ]
 `;
 
-exports[`VerifyContributions when "employerShowVerifications" feature flag is enabled renders the page 5`] = `
+exports[`VerifyContributions renders the page 5`] = `
 Array [
   "Log into ",
   <a

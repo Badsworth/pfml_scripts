@@ -100,6 +100,19 @@ export const GetReady = (props) => {
           {t("pages.getReady.stepTwoHeading")}
         </Heading>
 
+        <Trans
+          i18nKey="pages.getReady.stepTwoWhichPaidLeaveBody"
+          components={{
+            "which-paid-leave-link": (
+              <a
+                target="_blank"
+                rel="noopener"
+                href={routes.external.massgov.whichPaidLeave}
+              />
+            ),
+          }}
+        />
+
         <Heading level="3">
           {t("pages.getReady.stepTwoMedicalLeaveSubhead")}
         </Heading>
