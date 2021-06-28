@@ -1,6 +1,8 @@
 import copy
 import datetime
+from datetime import date
 
+import factory  # this is from the factory_boy package
 import pytest
 from freezegun import freeze_time
 
@@ -8,7 +10,7 @@ import massgov.pfml.api.claims
 import massgov.pfml.fineos.mock_client
 import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
-from massgov.pfml.db.models.employees import UserLeaveAdministrator
+from massgov.pfml.db.models.employees import Claim, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import (
     ApplicationFactory,
     ClaimFactory,
@@ -1937,6 +1939,134 @@ class TestGetClaimsEndpoint:
                     raise AssertionError(
                         f"tag: {tag}\n{key} value was '{actual_value}', not expected {expected_value}"
                     )
+
+    # Inner class for testing Claims With Status Filtering
+    class TestClaimsOrder:
+        @pytest.fixture(autouse=True)
+        def load_test_db(self, employer_user, test_verification, test_db_session):
+            employer = EmployerFactory.create()
+            employee = EmployeeFactory.create()
+
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(link)
+
+            other_employer = EmployerFactory.create()
+            other_employee = EmployeeFactory.create()
+
+            other_link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=other_employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(other_link)
+
+            for _ in range(5):
+                ClaimFactory.create(
+                    employer=employer,
+                    employee=employee,
+                    fineos_absence_status_id=1,
+                    claim_type_id=1,
+                )
+                ClaimFactory.create(
+                    employer=other_employer,
+                    employee=other_employee,
+                    fineos_absence_status_id=1,
+                    claim_type_id=1,
+                    created_at=factory.Faker(
+                        "date_between_dates",
+                        date_start=date(2021, 1, 1),
+                        date_end=date(2021, 1, 15),
+                    ),
+                )
+                ClaimFactory.create(
+                    employer=other_employer,
+                    employee=other_employee,
+                    fineos_absence_status_id=1,
+                    claim_type_id=1,
+                    created_at=factory.Faker(
+                        "date_between_dates",
+                        date_start=date(2021, 1, 1),
+                        date_end=date(2021, 1, 15),
+                    ),
+                )
+                claim = Claim(employer=employer, fineos_absence_status_id=1, claim_type_id=1,)
+                test_db_session.add(claim)
+            self.claims_count = 20
+            test_db_session.commit()
+
+        def _perform_api_call(self, request, client, employer_auth_token):
+            query_string = "&".join([f"{key}={value}" for key, value in request.items()])
+            return client.get(
+                f"/v1/claims?{query_string}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+
+        def _assert_data_order(self, data, desc=True):
+            if desc:
+                for i in range(0, len(data) - 1):
+                    assert data[i] >= data[i + 1]
+            else:
+                for i in range(0, len(data) - 1):
+                    assert data[i] <= data[i + 1]
+
+        def test_get_claims_with_order_default(self, client, employer_auth_token):
+            request = {}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = [d["created_at"] for d in response_body.get("data", [])]
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=True)
+
+        def test_get_claims_with_order_default_asc(self, client, employer_auth_token):
+            request = {"order_direction": "ascending"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = [d["created_at"] for d in response_body.get("data", [])]
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=False)
+
+        def test_get_claims_with_order_unsupported_key(self, client, employer_auth_token):
+            request = {"order_by": "unsupported"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 400
+
+        def _extract_employee_name(self, response_body):
+            data = []
+            for d in response_body.get("data", []):
+                employee = d["employee"] or {}
+                name = (
+                    employee.get("last_name", " ")
+                    + employee.get("first_name", " ")
+                    + employee.get("middle_name", " ")
+                )
+                data.append(name)
+            return data
+
+        def test_get_claims_with_order_employee_asc(self, client, employer_auth_token):
+            request = {"order_direction": "ascending", "order_by": "employee"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = self._extract_employee_name(response_body)
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=False)
+
+        def test_get_claims_with_order_employee_desc(self, client, employer_auth_token):
+            request = {"order_direction": "descending", "order_by": "employee"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = self._extract_employee_name(response_body)
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=True)
 
     def test_get_claims_for_employer_id(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification

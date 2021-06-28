@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional, Set, Union
 
 import connexion
 import flask
-from sqlalchemy import or_
+from sqlalchemy import Column, asc, desc, or_
 from sqlalchemy.orm.query import Query
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
@@ -28,6 +28,7 @@ from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import (
     Claim,
+    Employee,
     Employer,
     LkAbsenceStatus,
     UserLeaveAdministrator,
@@ -37,7 +38,11 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
 )
-from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
+from massgov.pfml.util.paginate.paginator import (
+    OrderDirection,
+    PaginationAPIContext,
+    page_for_api_context,
+)
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import sanitize_fein
 
@@ -480,17 +485,12 @@ def get_claims() -> flask.Response:
                     and current_user.verified_employer(e)
                 ]
 
-                query = (
-                    db_session.query(Claim)
-                    .order_by(pagination_context.order_key)
-                    .filter(Claim.employer_id.in_(employer_ids_list))
-                )
+                query = db_session.query(Claim).filter(Claim.employer_id.in_(employer_ids_list))
             else:
-                query = (
-                    db_session.query(Claim)
-                    .filter(Claim.application.has(Application.user_id == current_user.user_id))  # type: ignore
-                    .order_by(pagination_context.order_key)
+                query = db_session.query(Claim).filter(
+                    Claim.application.has(Application.user_id == current_user.user_id)  # type: ignore
                 )
+            query = add_order_by(pagination_context, query)
             if len(absence_statuses):
                 absence_statuses = convert_pending_absence_status(absence_statuses)
                 log_attributes.update({"filter.absence_statuses": absence_statuses})  # type: ignore
@@ -518,6 +518,31 @@ def get_claims() -> flask.Response:
         context=pagination_context,
         status_code=200,
     ).to_api_response()
+
+
+def asc_null_first(order_key: Column) -> Column:
+    return asc(order_key).nullsfirst()
+
+
+def desc_null_last(order_key: Column) -> Column:
+    return desc(order_key).nullslast()
+
+
+def add_order_by(context: PaginationAPIContext, query: Query) -> Query:
+    is_asc = context.order_direction == OrderDirection.asc.value
+    if context.order_key is Claim.employee:
+        sort_fn = asc_null_first if is_asc else desc_null_last
+        order_keys = [
+            sort_fn(Employee.last_name),
+            sort_fn(Employee.first_name),
+            sort_fn(Employee.middle_name),
+        ]
+        return query.join(Claim.employee, isouter=True).order_by(*order_keys)
+    elif context.order_by in Claim.__table__.columns:
+        # only set direction is order_by is column in entity and not a foreign key i.e reference in model
+        order_key = context.order_key.asc() if is_asc else context.order_key.desc()
+        return query.order_by(order_key)
+    return query
 
 
 def parse_absence_statuses(absence_status_string: Union[str, None]) -> set:
