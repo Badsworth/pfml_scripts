@@ -17,7 +17,7 @@ pytestmark = pytest.mark.integration
 CERTIFICATION_FORM_DATA = {
     "document_type": "Certification Form",
     "name": "certification_form.png",
-    "description": None
+    "description": None,
 }
 
 VALID_FORM_DATA = {
