@@ -74,7 +74,7 @@ export const TRNOI3: ScenarioSpecification = {
     leave_dates: [parseISO("2021-08-01"), parseISO("2021-10-15")],
     docs: {
       MASSID: {},
-      HCP: {},
+      PREGNANCY_MATERNITY_FORM: {},
     },
     employerResponse: {
       has_amendments: false,
@@ -202,11 +202,12 @@ export const TRNOL3: ScenarioSpecification = {
   claim: {
     label: "TRNOL3",
     reason: "Child Bonding",
+    reason_qualifier: "Newborn",
     work_pattern_spec: "standard",
     leave_dates: [parseISO("2021-08-01"), parseISO("2021-10-15")],
     docs: {
       MASSID: {},
-      HCP: {},
+      BIRTHCERTIFICATE: {},
     },
     employerResponse: {
       has_amendments: false,
@@ -300,7 +301,8 @@ export const TRNER2: ScenarioSpecification = {
     leave_dates: [parseISO("2021-07-15"), parseISO("2021-09-15")],
     docs: {
       MASSID: {},
-      HCP: {},
+      // HCP: {},
+      CARING: {},
     },
     employerResponse: {
       has_amendments: true,
