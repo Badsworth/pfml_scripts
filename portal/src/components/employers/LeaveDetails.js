@@ -15,7 +15,6 @@ import classnames from "classnames";
 import download from "downloadjs";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
@@ -43,7 +42,6 @@ const LeaveDetails = (props) => {
 
   const isCaringLeave = reason === LeaveReason.care;
   const isPregnancy = reason === LeaveReason.pregnancy;
-  const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
   const errorMsg = appErrors.fieldErrorMessage(
     "relationship_inaccurate_reason"
   );
@@ -131,7 +129,7 @@ const LeaveDetails = (props) => {
           ))}
         </ReviewRow>
       )}
-      {shouldShowCaringLeave && isCaringLeave && (
+      {isCaringLeave && (
         <React.Fragment>
           <InputChoiceGroup
             smallLabel

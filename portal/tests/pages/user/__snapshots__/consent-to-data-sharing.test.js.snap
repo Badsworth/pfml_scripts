@@ -13,6 +13,7 @@ exports[`ConsentToDataSharing shows the correct content for non-employers 1`] = 
     className="margin-bottom-2"
   >
     The information you provide on this website will be used to administer the Paid Family and Medical Leave program.
+    To continue using this website, you must agree to the terms of the user agreements updated as of June 25, 2021.
   </p>
   <Accordion>
     <AccordionItem
@@ -98,6 +99,7 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
     className="margin-bottom-2"
   >
     The information you provide on this website will be used to administer the Paid Family and Medical Leave program.
+    To continue using this website, you must agree to the terms of the user agreements updated as of June 25, 2021.
   </p>
   <Accordion>
     <AccordionItem

@@ -2290,7 +2290,7 @@ const pages = {
       "The information you provide on this website will be used to administer the Paid Family and Medical Leave program.",
     title: "How this website uses your information",
     updatedMessage:
-      "To continue using this website, you must agree to the terms of the user agreements updated as of July$t(chars.nbsp)1,$t(chars.nbsp)2021.",
+      "To continue using this website, you must agree to the terms of the user agreements updated as of June$t(chars.nbsp)25,$t(chars.nbsp)2021.",
   },
 };
 
