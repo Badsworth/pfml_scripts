@@ -1,0 +1,12 @@
+{
+  "test": {
+    "baseUrl": "https://paidleave-api-test.mass.gov/api/v1"
+  },
+  "stage": {
+    "baseUrl": "https://paidleave-api-stage.mass.gov/api/v1"
+  },
+  "development": {
+    "baseUrl": "http://localhost:1550/v1"
+  }
+}
+
