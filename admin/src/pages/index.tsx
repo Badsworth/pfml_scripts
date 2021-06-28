@@ -5,11 +5,11 @@ import { useState } from "react";
 export default function Home() {
   const [showModal, setShowModal] = useState(false);
 
-  const modalContinueCallback = () => {
+  const modalCancelCallback = () => {
     setShowModal(false);
   };
 
-  const modalCancelCallback = () => {
+  const modalContinueCallback = () => {
     setShowModal(false);
   };
 
