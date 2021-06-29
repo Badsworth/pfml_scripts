@@ -7,10 +7,19 @@ import configs from "./config.json";
  *
  * The actual (generated) API code lives in ./_api.ts.
  */
-const environments = ["test", "stage", "training", "performance", "uat", "cps-preview", "development"] as const;
+const environments = [
+  "test",
+  "stage",
+  "training",
+  "performance",
+  "uat",
+  "cps-preview",
+  "development",
+] as const;
 export type Environment = typeof environments[number];
 
-const env: Environment = (process.env.BUILD_ENV || "development") as Environment;
+const env: Environment = (process.env.BUILD_ENV ||
+  "development") as Environment;
 
 const _fetch = http.fetch;
 http.fetch = (
@@ -18,9 +27,9 @@ http.fetch = (
 ): ReturnType<typeof http.fetch> => {
   args[1] = {
     baseUrl: (configs as {
-      [key: string]: RequestOptions
-    })[env].baseUrl
-  }
+      [key: string]: RequestOptions;
+    })[env].baseUrl,
+  };
   return _fetch(...args).catch((e) => {
     throw e;
   });

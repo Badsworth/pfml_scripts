@@ -7,12 +7,10 @@
 /* eslint-disable */
 
 export const defaults: RequestOptions = {
-  baseUrl: "http://localhost:1550/v1"
+  baseUrl: "v1",
 };
 export const servers = {
   developmentServer: "http://localhost:1550/v1",
-  testServer: "https://paidleave-api-test.mass.gov/api",
-  stageServer: "https://paidleave-api-stage.mass.gov/api"
 };
 export type RequestOptions = {
   baseUrl?: string;
@@ -548,7 +546,9 @@ export interface GETEmployersClaimsByFineosAbsenceIdReviewResponse
   data?: ClaimReviewResponse;
 }
 export interface EmployerClaimRequestBody {
+  uses_second_eform_version?: boolean;
   employer_benefits: EmployerBenefit[];
+  concurrent_leave?: ConcurrentLeave | null;
   previous_leaves: PreviousLeave[];
   has_amendments?: boolean;
   hours_worked_per_week: number | null;
@@ -714,7 +714,6 @@ export interface ApplicationResponse {
   has_reduced_schedule_leave_periods?: boolean | null;
   has_other_incomes?: boolean | null;
   has_submitted_payment_preference?: boolean | null;
-  other_incomes_awaiting_approval?: boolean | null;
   has_state_id?: boolean | null;
   has_mailing_address?: boolean | null;
   mailing_address?: Address | null;
@@ -779,7 +778,6 @@ export interface ApplicationRequestBody {
   has_employer_benefits?: boolean | null;
   has_intermittent_leave_periods?: boolean | null;
   has_other_incomes?: boolean | null;
-  other_incomes_awaiting_approval?: boolean | null;
   has_reduced_schedule_leave_periods?: boolean | null;
   has_state_id?: boolean | null;
   mass_id?: MassId | null;
@@ -1153,12 +1151,14 @@ export async function getClaims(
     order_by,
     order_direction,
     employer_id,
+    claim_status,
   }: {
     page_size?: number;
     page_offset?: number;
     order_by?: string;
     order_direction?: "ascending" | "descending";
     employer_id?: string;
+    claim_status?: string;
   } = {},
   options?: RequestOptions,
 ): Promise<ApiResponse<GETClaimsResponse>> {
@@ -1170,6 +1170,7 @@ export async function getClaims(
         order_by,
         order_direction,
         employer_id,
+        claim_status,
       }),
     )}`,
     {
