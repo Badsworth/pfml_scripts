@@ -55,7 +55,7 @@ class LkAbsenceStatus(Base):
     __tablename__ = "lk_absence_status"
     absence_status_id = Column(Integer, primary_key=True, autoincrement=True)
     absence_status_description = Column(Text)
-    sort_order = Column(Integer, default=0, nullable=False)
+    sort_order = Column(Integer, default=0, nullable=True)
     # use to set order when sorting (non alphabetic) by absence status
 
     def __init__(self, absence_status_id, absence_status_description, sort_order):
