@@ -22,7 +22,7 @@ const errors = {
   applications: {
     concurrent_leave: {
       is_for_current_employer: {
-        required: "Select yes if your leave is from this employer.",
+        required: "Select Yes if your leave is from this employer.",
       },
       leave_end_date: {
         format:
@@ -83,7 +83,7 @@ const errors = {
     },
     employer_notified: {
       required:
-        "Select yes if you told your employer that you are taking leave.",
+        "Select Yes if you told your employer that you are taking leave.",
     },
     employment_status: {
       required: "Enter your employment status.",
@@ -98,39 +98,39 @@ const errors = {
     },
     has_concurrent_leave: {
       required:
-        "Select yes if you will use any other paid leave during your PFML leave.",
+        "Select Yes if you will use any other paid leave during your PFML leave.",
     },
     has_continuous_leave_periods: {
       required: "Select Yes if you are taking continuous leave.",
     },
     has_employer_benefits: {
       required:
-        "Select yes if you will you use any employer-sponsored benefits during your leave.",
+        "Select Yes if you will you use any employer-sponsored benefits during your leave.",
     },
     has_intermittent_leave_periods: {
       required: "Select Yes if you are taking intermittent leave.",
     },
     has_mailing_address: {
-      required: "Select yes if you get your mail at this address.",
+      required: "Select Yes if you get your mail at this address.",
     },
     has_other_incomes: {
       required:
-        "Select yes if you will receive income from any other sources during your leave.",
+        "Select Yes if you will receive income from any other sources during your leave.",
     },
     has_previous_leaves_other_reason: {
       required:
-        "Select yes if you have taken any other leave since January 1, 2021 for a different qualifying reason.",
+        "Select Yes if you have taken any other leave since January 1, 2021 for a different qualifying reason.",
     },
     has_previous_leaves_same_reason: {
       required:
-        "Select yes if you have taken any other leave for the same qualifying reason.",
+        "Select Yes if you have taken any other leave for the same qualifying reason.",
     },
     has_reduced_schedule_leave_periods: {
       required: "Select Yes if you are working a reduced schedule.",
     },
     has_state_id: {
       required:
-        "Select yes if you have a Massachusetts driver’s license or ID card.",
+        "Select Yes if you have a Massachusetts driver's license or ID card.",
     },
     hours_worked_per_week: {
       maximum: "The average hours you work each week must be less than 168.",
@@ -196,7 +196,7 @@ const errors = {
       },
       employer_notified: {
         required:
-          "Select yes if you told your employer that you are taking leave",
+          "Select Yes if you told your employer that you are taking leave",
       },
       intermittent_leave_periods: {
         duration: {
@@ -233,7 +233,7 @@ const errors = {
       },
       pregnant_or_recent_birth: {
         required:
-          "Select yes if are you taking medical leave because you are pregnant or recently gave birth.",
+          "Select Yes if are you taking medical leave because you are pregnant or recently gave birth.",
       },
       reason: {
         required: "Select the reason for taking paid leave.",
@@ -706,7 +706,7 @@ const shared = {
     addButton: "Add another previous leave",
     errors: {
       isForCurrentEmployer_required:
-        "Select yes if your leave is from this employer.",
+        "Select Yes if your leave is from this employer.",
       leaveEndDate_format:
         "The date your leave ended must include a valid month, day, and year.",
       leaveEndDate_invalidDateRange:
@@ -1290,8 +1290,7 @@ const pages = {
     datesSectionLabel:
       "Enter the start and end dates for your intermittent leave.",
     endDateLabel: "Last day of leave",
-    endDateLabel_medical:
-      "Last day of leave or re$t(chars.nbhyphen)evaluation date",
+    endDateLabel_medical: "Last day of leave",
     hasLeaveHint_bonding:
       "For example, you need to take time off for: <ul><li>Court dates for your foster child</li><li>Social worker visits</li><li>Gaps in your childcare</li></ul>",
     hasLeaveHint_care:
@@ -1323,8 +1322,7 @@ const pages = {
     datesSectionLabel:
       "Enter the start and end dates for your reduced leave schedule.",
     endDateLabel: "Last day of leave",
-    endDateLabel_medical:
-      "Last day of leave or re$t(chars.nbhyphen)evaluation date",
+    endDateLabel_medical: "Last day of leave",
     hasLeaveHint_care:
       "Your answer must match the $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
@@ -1749,7 +1747,7 @@ const pages = {
     previousLeaveHasPreviousLeavesLabel: "Previous leave?",
     previousLeaveLabel: "Previous paid or unpaid leave?",
     previousLeaveLeaveMinutes: "$t(shared.displayTime)",
-    previousLeaveLeaveMinutesLabel: "Total hours taken: ",
+    previousLeaveLeaveMinutesLabel: "Total hours of leave taken: ",
     previousLeaveLeaveMinutes_noMinutes: "$t(shared.displayTime_noMinutes)",
     previousLeaveReason_activeDutyFamily:
       "Leave was for managing family affairs while a family member was on active duty in the armed forces",
