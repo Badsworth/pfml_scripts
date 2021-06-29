@@ -551,6 +551,35 @@ describe("useAppErrorsLogic", () => {
       `);
     });
 
+    it("returns Trans component when error type is contains_v1_and_v2_eforms", () => {
+      const issues = [
+        {
+          message: "Claim contains both V1 and V2 eforms.",
+          type: "contains_v1_and_v2_eforms",
+        },
+      ];
+
+      act(() => {
+        appErrorsLogic.catchError(new ValidationError(issues, "employers"));
+      });
+
+      expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(`
+        <Trans
+          components={
+            Object {
+              "contact-center-phone-link": <a
+                href="tel:(833) 344-7365"
+              />,
+              "h3": <h3 />,
+              "li": <li />,
+              "ul": <ul />,
+            }
+          }
+          i18nKey="errors.employers.contains_v1_and_v2_eforms"
+        />
+      `);
+    });
+
     it("returns Trans component when error type is employer_verification_data_required", () => {
       const issues = [
         {

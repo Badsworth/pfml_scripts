@@ -164,6 +164,24 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       );
     }
 
+    if (type === "contains_v1_and_v2_eforms") {
+      return (
+        <Trans
+          i18nKey={issueMessageKey}
+          components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
+            /* The h3 header has content defined in en-US.js. */
+            /* eslint-disable jsx-a11y/heading-has-content */
+            h3: <h3 />,
+            ul: <ul />,
+            li: <li />
+          }}
+          />
+      );
+    }
+
     // TODO (CP-1532): Remove once links in error messages are fully supported
     if (type === "intermittent_interval_maximum") {
       return (
