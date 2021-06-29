@@ -144,8 +144,8 @@ module "fineos_extract_scheduler" {
           "fineos-bucket-tool",
           "--recursive",
           "--dated-folders",
-          "--copy_dir", "${var.fineos_data_export_path}",
-          "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/reportExtracts",
+          "--copy_dir", "${var.fineos_report_export_path}",
+          "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/dataexports",
           "--file_prefixes", "all"
         ]
       }

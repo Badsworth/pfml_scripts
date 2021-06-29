@@ -73,6 +73,11 @@ variable "fineos_aws_iam_role_external_id" {
   default     = ""
 }
 
+variable "fineos_report_export_path" {
+  description = "Location for additional FINEOS exports"
+  type        = string
+  default     = ""
+}
 variable "fineos_eligibility_feed_output_directory_path" {
   description = "Location the FINEOS Eligibility Feed export should write output to"
   type        = string
