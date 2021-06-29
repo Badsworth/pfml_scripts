@@ -1,4 +1,5 @@
 import { MouseEvent } from "react";
+import Button from './Button';
 
 type Props = {
   title: string;
@@ -32,12 +33,8 @@ const Modal = ({
           <p>{body}</p>
         </div>
         <div className="modal__action-buttons modal__action-buttons--stacked">
-          <button className="btn" onClick={handleContinue}>
-            <span className="btn__text">Continue</span>
-          </button>
-          <button className="btn" onClick={handleCancel}>
-            <span className="btn__text">Cancel</span>
-          </button>
+            <Button additionalClasses="" callback={handleContinue}>Continue</Button>
+            <Button additionalClasses="btn-cancel" callback={handleCancel}>Cancel</Button>
         </div>
       </div>
     </dialog>

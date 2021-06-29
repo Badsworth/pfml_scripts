@@ -1,6 +1,7 @@
 import Modal from "../components/Modal";
 import { Helmet } from "react-helmet";
 import { useState } from "react";
+import Button from '../components/Button';
 
 export default function Home() {
   const [showModal, setShowModal] = useState(false);
@@ -19,9 +20,7 @@ export default function Home() {
         <title>Dashboard</title>
       </Helmet>
       <h1>h1 HTML5 Kitchen Sink</h1>
-      <button onClick={() => setShowModal(true)}>
-        <span>Click to open</span>
-      </button>
+      <Button callback={() => setShowModal(true)}>Click to Open</Button>
       {showModal && (
         <Modal
           title="Enable Caring Leave Type"
