@@ -358,7 +358,7 @@ class PaymentData:
             custom_validator_func=payments_util.routing_number_validator,
         )
         self.account_nbr = payments_util.validate_csv_input(
-            "PAYEEACCOUNTN", pei_record, self.validation_container, eft_required, max_length=40
+            "PAYEEACCOUNTN", pei_record, self.validation_container, eft_required, max_length=17
         )
         self.raw_account_type = payments_util.validate_csv_input(
             "PAYEEACCOUNTT",

@@ -269,7 +269,7 @@ class ClaimantData:
             )
 
             self.account_nbr = payments_util.validate_csv_input(
-                "ACCOUNTNO", employee_feed, self.validation_container, eft_required, max_length=40,
+                "ACCOUNTNO", employee_feed, self.validation_container, eft_required, max_length=17,
             )
 
             self.account_type = payments_util.validate_csv_input(
