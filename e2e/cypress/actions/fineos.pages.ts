@@ -540,9 +540,9 @@ export class DocumentsPage {
       Unknown: "Please select",
     };
 
-    /*         
+    /*
     Because the labels are the same for every leave you report, we have to get creative with selectors
-    Each input has a unique id, with the number of leave being reported attached at the end. 
+    Each input has a unique id, with the number of leave being reported attached at the end.
     */
     //  Did you take any other leave between January 1, 2021 and the first day of the leave you're requesting for the same reason or a different qualifying reason as the leave you're requesting?
     cy.get(`select[id$=V2Applies${i}]`).select("Yes");
@@ -844,10 +844,28 @@ class PaidLeavePage {
     return this;
   }
 
+  /**
+   *  Asserts processing and end dates match.
+   */
+  assertMatchingPaymentDates(): this {
+    this.onTab("Financials", "Payment History", "Amounts Pending");
+    cy.contains("table.WidgetPanel", "Amounts Pending").within(() => {
+      cy.get('td[id*="processing_date0"]')
+        .invoke("text")
+        .then((processingDate) => {
+          cy.get('td[id*="period_end_date0"]')
+            .invoke("text")
+            .should("eq", processingDate);
+        });
+    });
+    return this;
+  }
+
   private numToPaymentFormat(num: number): string {
+    const decimal = num % 1 ? "" : ".00";
     return `${new Intl.NumberFormat("en-US", {
       style: "decimal",
-    }).format(num)}.00`;
+    }).format(num)}${decimal}`;
   }
 }
 

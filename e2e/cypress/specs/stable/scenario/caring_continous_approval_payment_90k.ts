@@ -1,4 +1,4 @@
-import { fineos, portal } from "../../../actions";
+import { fineos, fineosPages, portal } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
@@ -78,15 +78,17 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
 
         cy.unstash<DehydratedClaim>("claim").then((claim) => {
           cy.unstash<Submission>("submission").then((submission) => {
-            fineos.checkPaymentPreference(claim);
-            fineos.visitClaim(submission.fineos_absence_id);
-            fineos.assertClaimStatus("Approved");
-            fineos.getPaymentAmount().then((amount) => {
-              expect(
-                amount,
-                `Maximum weekly payment should be: $${claim.metadata?.expected_weekly_payment}`
-              ).to.eq(claim.metadata?.expected_weekly_payment as string);
-            });
+            const payment = (claim.metadata
+              ?.expected_weekly_payment as unknown) as number;
+            fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+              (leaveCase) => {
+                leaveCase.assertAmountsPending([
+                  {
+                    net_payment_amount: payment,
+                  },
+                ]);
+              }
+            );
           });
         });
       }
