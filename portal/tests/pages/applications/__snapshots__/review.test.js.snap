@@ -648,11 +648,21 @@ exports[`Review Page OtherLeaveEntry when all data are present renders all data 
   label="Benefit 1"
   level="4"
 >
-  Medical or family leave
-  <br />
-  07-22-2020 - 09-22-2020
-  <br />
-  $250 per month
+  <p
+    className="text-base-darker margin-top-1"
+  >
+    07-22-2020 - 09-22-2020
+  </p>
+  <ul
+    className="usa-list margin-top-1"
+  >
+    <li>
+      Medical or family leave
+    </li>
+    <li>
+      $250 per month
+    </li>
+  </ul>
 </ReviewRow>
 `;
 
@@ -661,10 +671,18 @@ exports[`Review Page OtherLeaveEntry when amount is missing doesn't render missi
   label="Benefit 1"
   level="4"
 >
-  Medical or family leave
-  <br />
-  07-22-2020 - 09-22-2020
-  <br />
+  <p
+    className="text-base-darker margin-top-1"
+  >
+    07-22-2020 - 09-22-2020
+  </p>
+  <ul
+    className="usa-list margin-top-1"
+  >
+    <li>
+      Medical or family leave
+    </li>
+  </ul>
 </ReviewRow>
 `;
 
@@ -950,9 +968,18 @@ exports[`Review Page Part 1 Review Page when all data is present renders Review 
       label="Accrued paid leave"
       level="4"
     >
-      From this employer
-      <br />
-      1/1/2021 – 3/1/2021
+      <p
+        className="text-base-darker margin-top-1"
+      >
+        1/1/2021 – 3/1/2021
+      </p>
+      <ul
+        className="usa-list margin-top-1"
+      >
+        <li>
+          From this employer
+        </li>
+      </ul>
     </ReviewRow>
     <ReviewRow
       label="Employer-sponsored benefits?"
