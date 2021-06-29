@@ -7,6 +7,7 @@ import Details from "../../components/Details";
 import Dropdown from "../../components/Dropdown";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import Link from "next/link";
 import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
 import PaginationSummary from "../../components/PaginationSummary";
@@ -270,13 +271,17 @@ const ClaimTableRows = (props) => {
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
         return isEmployerRegisteredInFineos ? (
-          <a href={claimRoute}>{get(claim, columnKey)}</a>
+          <Link href={claimRoute}>
+            <a>{get(claim, columnKey)}</a>
+          </Link>
         ) : (
           get(claim, columnKey)
         );
       case "employee_name":
         return isEmployerRegisteredInFineos ? (
-          <a href={claimRoute}>{fullName}</a>
+          <Link href={claimRoute}>
+            <a>{fullName}</a>
+          </Link>
         ) : (
           fullName
         );

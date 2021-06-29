@@ -116,6 +116,14 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
 
     try {
       await employersApi.submitClaimReview(absenceId, data);
+
+      // Clear the cached claim so its data, most notably is_reviewable,
+      // is refetched from the API if it's requested again. We do this
+      // since the API's submitClaimReview response doesn't include
+      // all of the data we need (because it doesn't call out to FINEOS
+      // to retrieve that data).
+      setClaim(null);
+
       const params = { absence_id: absenceId };
       portalFlow.goToNextPage({}, params);
     } catch (error) {

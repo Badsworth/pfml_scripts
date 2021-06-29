@@ -226,7 +226,7 @@ describe("Employer dashboard", () => {
       wrapper
         .find("ClaimTableRows")
         .dive()
-        .find('[data-test="employee_name"]')
+        .find('[data-test="employee_name"] a')
         .text()
     ).toBe("--");
   });
