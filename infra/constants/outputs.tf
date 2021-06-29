@@ -13,6 +13,13 @@ output "newrelic_log_ingestion_arn" {
   value = "arn:aws:lambda:us-east-1:498823821309:function:newrelic-log-ingestion"
 }
 
+output "infra_admin_sso_arn" {
+  # ARN of the new AWS-managed SSO profile for Infra-Admins.
+  # This ARN should be used in place of 'arn:aws:iam::498823821309:role/AWS-498823821309-Infrastructure-Admin'
+  # and all similar ARNs after July 1st, 2021.
+  value = "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-infrastructure-admin_9049548fba1c97b7"
+}
+
 # Mapping of different environments/VPC names to EOTSS-mandated AWS tags.
 #
 # NOTE: This needs to be approved from the list of tags in
@@ -69,6 +76,7 @@ output "prod_admin_roles" {
     "arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer",
     "arn:aws:iam::498823821309:role/AWS-498823821309-Infrastructure-Admin",
     "arn:aws:iam::498823821309:role/ci-run-deploys",
+    "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-infrastructure-admin_9049548fba1c97b7"
   ]
 }
 
@@ -78,6 +86,8 @@ output "nonprod_admin_roles" {
     "arn:aws:iam::498823821309:role/AWS-498823821309-Infrastructure-Admin",
     "arn:aws:iam::498823821309:role/ci-run-deploys",
     "arn:aws:iam::498823821309:role/AWS-498823821309-NonPROD-Admins",
+    "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-infrastructure-admin_9049548fba1c97b7",
+    "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-nonprod-admins_d9b2995c1106dfbb"
   ]
 }
 
