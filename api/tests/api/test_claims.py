@@ -1976,7 +1976,7 @@ class TestGetClaimsEndpoint:
                 ClaimFactory.create(
                     employer=other_employer,
                     employee=other_employee,
-                    fineos_absence_status_id=1,
+                    fineos_absence_status_id=2,
                     claim_type_id=1,
                     created_at=factory.Faker(
                         "date_between_dates",
@@ -1987,7 +1987,7 @@ class TestGetClaimsEndpoint:
                 ClaimFactory.create(
                     employer=other_employer,
                     employee=other_employee,
-                    fineos_absence_status_id=1,
+                    fineos_absence_status_id=7,
                     claim_type_id=1,
                     created_at=factory.Faker(
                         "date_between_dates",
@@ -1995,7 +1995,7 @@ class TestGetClaimsEndpoint:
                         date_end=date(2021, 1, 15),
                     ),
                 )
-                claim = Claim(employer=employer, fineos_absence_status_id=1, claim_type_id=1,)
+                claim = Claim(employer=employer, fineos_absence_status_id=6, claim_type_id=1,)
                 test_db_session.add(claim)
             self.claims_count = 20
             test_db_session.commit()
@@ -2065,6 +2065,32 @@ class TestGetClaimsEndpoint:
             assert response.status_code == 200
             response_body = response.get_json()
             data = self._extract_employee_name(response_body)
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=True)
+
+        def test_get_claims_with_order_fineos_absence_status_asc(self, client, employer_auth_token):
+            request = {"order_direction": "ascending", "order_by": "fineos_absence_status"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = [
+                d["fineos_absence_status"].get("sort_order", 0)
+                for d in response_body.get("data", [])
+            ]
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=False)
+
+        def test_get_claims_with_order_fineos_absence_status_desc(
+            self, client, employer_auth_token
+        ):
+            request = {"order_direction": "descending", "order_by": "fineos_absence_status"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = [
+                d["fineos_absence_status"].get("sort_order", 0)
+                for d in response_body.get("data", [])
+            ]
             assert len(data) == self.claims_count
             self._assert_data_order(data, desc=True)
 

@@ -55,10 +55,13 @@ class LkAbsenceStatus(Base):
     __tablename__ = "lk_absence_status"
     absence_status_id = Column(Integer, primary_key=True, autoincrement=True)
     absence_status_description = Column(Text)
+    sort_order = Column(Integer, default=0, nullable=False)
+    # use to set order when sorting (non alphabetic) by absence status
 
-    def __init__(self, absence_status_id, absence_status_description):
+    def __init__(self, absence_status_id, absence_status_description, sort_order):
         self.absence_status_id = absence_status_id
         self.absence_status_description = absence_status_description
+        self.sort_order = sort_order
 
 
 class LkAddressType(Base):
@@ -1279,15 +1282,15 @@ class PubErrorType(LookupTable):
 
 class AbsenceStatus(LookupTable):
     model = LkAbsenceStatus
-    column_names = ("absence_status_id", "absence_status_description")
+    column_names = ("absence_status_id", "absence_status_description", "sort_order")
 
-    ADJUDICATION = LkAbsenceStatus(1, "Adjudication")
-    APPROVED = LkAbsenceStatus(2, "Approved")
-    CLOSED = LkAbsenceStatus(3, "Closed")
-    COMPLETED = LkAbsenceStatus(4, "Completed")
-    DECLINED = LkAbsenceStatus(5, "Declined")
-    IN_REVIEW = LkAbsenceStatus(6, "In Review")
-    INTAKE_IN_PROGRESS = LkAbsenceStatus(7, "Intake In Progress")
+    ADJUDICATION = LkAbsenceStatus(1, "Adjudication", 2)
+    APPROVED = LkAbsenceStatus(2, "Approved", 5)
+    CLOSED = LkAbsenceStatus(3, "Closed", 7)
+    COMPLETED = LkAbsenceStatus(4, "Completed", 6)
+    DECLINED = LkAbsenceStatus(5, "Declined", 4)
+    IN_REVIEW = LkAbsenceStatus(6, "In Review", 3)
+    INTAKE_IN_PROGRESS = LkAbsenceStatus(7, "Intake In Progress", 1)
 
 
 class AddressType(LookupTable):

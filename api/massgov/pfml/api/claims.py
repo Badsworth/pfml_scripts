@@ -538,6 +538,12 @@ def add_order_by(context: PaginationAPIContext, query: Query) -> Query:
             sort_fn(Employee.middle_name),
         ]
         return query.join(Claim.employee, isouter=True).order_by(*order_keys)
+
+    elif context.order_key is Claim.fineos_absence_status:
+        sort_fn = asc_null_first if is_asc else desc_null_last
+        order_key = sort_fn(LkAbsenceStatus.sort_order)
+        return query.join(Claim.fineos_absence_status, isouter=True).order_by(order_key)
+
     elif context.order_by in Claim.__table__.columns:
         # only set direction is order_by is column in entity and not a foreign key i.e reference in model
         order_key = context.order_key.asc() if is_asc else context.order_key.desc()
