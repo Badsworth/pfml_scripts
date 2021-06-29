@@ -1549,6 +1549,8 @@ const pages = {
       "Select No if your current paid leave from PFML began on July 1, 2021.",
     sectionLabel:
       "Did you take any other leave between {{previousLeaveStartDate}}–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
+    sectionLabel_caring:
+      "Did you take any other leave between {{previousLeaveStartDate}} and the first day of the leave you are applying for, for the same reason as you are applying?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesSameReasonDetails: {

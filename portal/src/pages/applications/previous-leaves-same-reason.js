@@ -65,6 +65,7 @@ export const PreviousLeavesSameReason = (props) => {
           isCaringLeave && t("pages.claimsPreviousLeavesSameReason.sectionHint")
         }
         label={t("pages.claimsPreviousLeavesSameReason.sectionLabel", {
+          context: isCaringLeave ? "caring" : undefined,
           previousLeaveStartDate,
           leaveStartDate,
         })}
