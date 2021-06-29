@@ -57,6 +57,7 @@ export const TRNOI2: ScenarioSpecification = {
         benefit_end_date: "2021-10-01",
         benefit_amount_dollars: 100,
         benefit_amount_frequency: "Per Week",
+        is_full_salary_continuous: false,
       },
     ],
     metadata: {
@@ -121,6 +122,7 @@ export const TRNOI4: ScenarioSpecification = {
         benefit_end_date: "2021-12-01",
         benefit_amount_dollars: 100,
         benefit_amount_frequency: "Per Month",
+        is_full_salary_continuous: false,
       },
     ],
     metadata: {
@@ -203,6 +205,7 @@ export const TRNOL3: ScenarioSpecification = {
     label: "TRNOL3",
     reason: "Child Bonding",
     reason_qualifier: "Newborn",
+    bondingDate: "past",
     work_pattern_spec: "standard",
     leave_dates: [parseISO("2021-08-01"), parseISO("2021-10-15")],
     docs: {
@@ -324,6 +327,7 @@ export const TRNER3: ScenarioSpecification = {
     label: "TRNER3",
     reason: "Child Bonding",
     reason_qualifier: "Newborn",
+    bondingDate: "past",
     work_pattern_spec: "standard",
     leave_dates: [parseISO("2021-08-01"), parseISO("2021-10-15")],
     docs: {
