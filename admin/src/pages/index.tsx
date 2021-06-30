@@ -1,5 +1,5 @@
 import Modal from "../components/Modal";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import Button from '../components/Button';
 
