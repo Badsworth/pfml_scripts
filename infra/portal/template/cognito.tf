@@ -37,9 +37,7 @@ resource "aws_cognito_user_pool" "claimants_pool" {
 
   # Use aliases (for provisioned concurrency) in perf and prod. Elsewhere, use the lambda's $LATEST version directly.
   lambda_config {
-    custom_message    = aws_lambda_function.cognito_custom_message.arn
-    post_confirmation = var.cognito_enable_provisioned_concurrency ? data.aws_lambda_alias.cognito_post_confirmation__latest[0].arn : data.aws_lambda_function.cognito_post_confirmation[0].arn
-    pre_sign_up       = var.cognito_enable_provisioned_concurrency ? data.aws_lambda_alias.cognito_pre_signup__latest[0].arn : data.aws_lambda_function.cognito_pre_signup[0].arn
+    custom_message = aws_lambda_function.cognito_custom_message.arn
   }
 
   password_policy {
