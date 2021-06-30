@@ -1,8 +1,8 @@
 import * as React from "react";
 import * as renderer from "react-test-renderer";
-import Modal from "../../src/components/Modal";
+import ConfirmationDialog from "../../src/components/ConfirmationDialog";
 
-it("SubjectToBeTested renders correctly", () => {
+it("ConfirmationDialog component renders correctly", () => {
   const modalCancelCallback = () => {};
 
   const modalContinueCallback = () => {};
@@ -13,6 +13,6 @@ it("SubjectToBeTested renders correctly", () => {
     handleCancelCallback: modalCancelCallback,
     handleContinueCallback: modalContinueCallback,
   };
-  const tree = renderer.create(<Modal {...props} />).toJSON();
+  const tree = renderer.create(<ConfirmationDialog {...props} />).toJSON();
   expect(tree).toMatchSnapshot();
 });

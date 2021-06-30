@@ -1,16 +1,15 @@
 import "../../styles/index.scss";
-import Head from "next/head";
-import { HelmetProvider } from "react-helmet-async";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 import type { AppProps } from "next/app";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <HelmetProvider>
       <div className="page">
-        <Head>
+        <Helmet htmlAttributes={{ lang: "en" }}>
           <title>Admin Portal</title>
           <link rel="icon" href="/favicon.ico" />
-        </Head>
+        </Helmet>
 
         <header className="page__header">LOGO HERE</header>
         <aside className="page__sidebar">

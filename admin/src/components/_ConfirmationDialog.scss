@@ -1,5 +1,5 @@
-/** @define modal */
-.modal {
+/** @define confirmation-dialog */
+.confirmation-dialog {
   background: none;
   border: none;
   bottom: 0;
@@ -12,11 +12,11 @@
   width: auto;
 }
 
-.modal:not([open]) {
+.confirmation-dialog:not([open]) {
   display: none;
 }
 
-.modal__background {
+.confirmation-dialog__background {
   background: rgba(0, 0, 0, 0.3);
   bottom: 0;
   left: 0;
@@ -26,7 +26,7 @@
   z-index: 1;
 }
 
-.modal__content {
+.confirmation-dialog__content {
   background: white;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
   margin: auto;
@@ -37,14 +37,14 @@
   z-index: 10;
 }
 
-.modal__action-buttons {
+.confirmation-dialog__action-buttons {
   text-align: center;
 }
 
-.modal__title {
+.confirmation-dialog__title {
   font-size: 1.25em;
 }
 
-.modal__body {
+.confirmation-dialog__body {
   font-size: 0.75em;
 }

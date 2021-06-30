@@ -2,5 +2,6 @@
 @use '_colors';
 @use '_globals';
 @use '_page_sidebar';
-@use '../src/components/Modal';
+@use '../src/components/ConfirmationDialog';
+@use '../src/components/SlideOut';
 @use '../src/components/Button';

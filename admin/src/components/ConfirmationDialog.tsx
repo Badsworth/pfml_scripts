@@ -8,7 +8,7 @@ type Props = {
   handleContinueCallback: Function;
 };
 
-const Modal = ({
+const ConfirmationDialog = ({
   title,
   body,
   handleCancelCallback,
@@ -25,17 +25,15 @@ const Modal = ({
   };
 
   return (
-    <dialog open className="modal">
-      <div className="modal__background"></div>
-      <div className="modal__content">
-        <h2 className="modal__title">{title}?</h2>
-        <div className="modal__body">
+    <dialog open className="confirmation-dialog">
+      <div className="confirmation-dialog__background"></div>
+      <div className="confirmation-dialog__content">
+        <h2 className="confirmation-dialog__title">{title}?</h2>
+        <div className="confirmation-dialog__body">
           <p>{body}</p>
         </div>
-        <div className="modal__action-buttons modal__action-buttons--stacked">
-          <Button additionalClasses="" callback={handleContinue}>
-            Continue
-          </Button>
+        <div className="confirmation-dialog__action-buttons confirmation-dialog__action-buttons--stacked">
+          <Button callback={handleContinue}>Continue</Button>
           <Button additionalClasses="btn-cancel" callback={handleCancel}>
             Cancel
           </Button>
@@ -45,4 +43,4 @@ const Modal = ({
   );
 };
 
-export default Modal;
+export default ConfirmationDialog;
