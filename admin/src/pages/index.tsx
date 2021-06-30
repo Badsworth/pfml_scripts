@@ -1,7 +1,7 @@
 import Modal from "../components/Modal";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
-import Button from '../components/Button';
+import Button from "../components/Button";
 
 export default function Home() {
   const [showModal, setShowModal] = useState(false);
