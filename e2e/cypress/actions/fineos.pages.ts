@@ -87,6 +87,11 @@ export class ClaimPage {
     onTab("Absence Hub");
     return this;
   }
+  benefitsExtension(cb: (page: BenefitsExtensionPage) => unknown): this {
+    cy.findByText("Add Time").click({ force: true });
+    cb(new BenefitsExtensionPage());
+    return this;
+  }
   shouldHaveStatus(category: StatusCategory, expected: string): this {
     const selector =
       category === "PlanDecision"
@@ -141,7 +146,7 @@ class AdjudicationPage {
   }
   acceptLeavePlan() {
     this.onTab("Manage Request");
-    cy.wait(50);
+    cy.wait(150);
     cy.get("input[type='submit'][value='Accept']").click();
   }
 }
@@ -866,6 +871,52 @@ class PaidLeavePage {
     return `${new Intl.NumberFormat("en-US", {
       style: "decimal",
     }).format(num)}${decimal}`;
+  }
+}
+
+class BenefitsExtensionPage {
+  private continue(text = "Next") {
+    clickBottomWidgetButton(text);
+    cy.wait("@ajaxRender");
+    cy.wait(150);
+  }
+
+  private enterExtensionLeaveDates(newStartDate: string, newEndDate: string) {
+    cy.labelled("Absence status").select("Known");
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un19_startDate']").type(
+      `{selectall}{backspace}${newStartDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un19_endDate']").type(
+      `{selectall}{backspace}${newEndDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get(
+      "input[name='timeOffAbsencePeriodDetailsWidget_un19_startDateAllDay_CHECKBOX']"
+    ).click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get(
+      "input[name='timeOffAbsencePeriodDetailsWidget_un19_endDateAllDay_CHECKBOX']"
+    ).click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[title='OK']").click();
+  }
+
+  extendLeave(newStartDate: string, newEndDate: string): this {
+    onTab("Capture Additional Time");
+    // This assumes the claim is continuos
+    cy.findByTitle("Add Time Off Period").click();
+    this.enterExtensionLeaveDates(newStartDate, newEndDate);
+    this.continue();
+    this.continue();
+    this.continue();
+    this.continue();
+    this.continue("OK");
+    return this;
   }
 }
 

@@ -41,7 +41,8 @@ export type SubjectOptions =
   | "denial (claimant)"
   | "approval (claimant)"
   | "review leave hours"
-  | "request for additional info";
+  | "request for additional info"
+  | "extension of benefits";
 
 export type Scenarios = keyof typeof scenarios;
 

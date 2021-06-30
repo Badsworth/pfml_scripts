@@ -1040,10 +1040,10 @@ export function assertZeroWithholdings(): void {
 export function selectClaimFromEmployerDashboard(
   fineosAbsenceId: string,
   status: "Approved" | "Denied" | "Closed" | "--"
-): Cypress.Chainable<JQuery<HTMLElement>> {
-  cy.get('a[href="/employers/dashboard"]').first().click();
-
-  return cy.contains("tr", fineosAbsenceId).should("contain.text", status);
+): void {
+  goToEmployerDashboard();
+  cy.contains("tr", fineosAbsenceId).should("contain.text", status);
+  cy.findByText(fineosAbsenceId).click();
 }
 
 export function assertUnverifiedEmployerDashboard(): void {
@@ -1055,6 +1055,10 @@ export function goToEmployerDashboard(): void {
   cy.get('a[href="/employers/dashboard/"]').first().click();
 }
 
+export function assertLeaveDatesAsLA(startDate: string, endDate: string): void {
+  cy.findByText("Leave duration").parent().contains(startDate);
+  cy.findByText("Leave duration").parent().contains(endDate);
+}
 /**
  * Sequentially reports all of the given previous leaves.
  * Assumes browser is navigated to either

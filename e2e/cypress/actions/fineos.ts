@@ -169,10 +169,11 @@ export function assertAdjudicatingClaim(claimId: string): void {
 /**
  * Helper to switch to a particular tab.
  */
-export function onTab(label: string, wait = 50): void {
-  cy.contains(".TabStrip td", label)
-    .click({ force: true })
-    .should("have.class", "TabOn");
+export function onTab(label: string, wait = 150): void {
+  cy.contains(".TabStrip td", label).click({ force: true }).wait(wait);
+  // experieincing failures due to this assertion when chained with click
+  // we should wait for the specified wait period before making this assertion to avoid this error
+  cy.contains(".TabStrip td", label).should("have.class", "TabOn");
   // Wait on any in-flight Ajax to complete, then add a very slight delay for rendering to occur.
   cy.wait("@ajaxRender").wait(wait);
 }

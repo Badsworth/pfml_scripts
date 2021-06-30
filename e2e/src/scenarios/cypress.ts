@@ -426,3 +426,15 @@ export const BHAP1_OLB: ScenarioSpecification = {
     metadata: { expected_weekly_payment: "850.00" },
   },
 };
+
+export const CHAP_ER: ScenarioSpecification = {
+  ...CHAP_RFI,
+  claim: {
+    ...CHAP_RFI.claim,
+    label: "CHAP_ER",
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
+  },
+};
