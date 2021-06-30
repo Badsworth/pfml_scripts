@@ -619,6 +619,10 @@ class Claim(Base):
     employer = relationship("Employer", back_populates="claims")
     state_logs = relationship("StateLog", back_populates="claim")
     payments: "Query[Payment]" = dynamic_loader("Payment", back_populates="claim")
+    managed_requirements = cast(
+        Optional[List["ManagedRequirement"]],
+        relationship("ManagedRequirement", back_populates="claim"),
+    )
 
 
 class Payment(Base):
@@ -927,6 +931,85 @@ class UserLeaveAdministrator(Base):
     @typed_hybrid_property
     def verified(self) -> bool:
         return bool(self.verification_id)
+
+
+class LkManagedRequirementStatus(Base):
+    __tablename__ = "lk_managed_requirement_status"
+    managed_requirement_status_id = Column(Integer, primary_key=True, autoincrement=True)
+    managed_requirement_status_description = Column(Text)
+
+    def __init__(self, managed_requirement_status_id, managed_requirement_status_description):
+        self.managed_requirement_status_id = managed_requirement_status_id
+        self.managed_requirement_status_description = managed_requirement_status_description
+
+
+class LkManagedRequirementCategory(Base):
+    __tablename__ = "lk_managed_requirement_category"
+    managed_requirement_category_id = Column(Integer, primary_key=True, autoincrement=True)
+    managed_requirement_category_description = Column(Text)
+
+    def __init__(self, managed_requirement_category_id, managed_requirement_category_description):
+        self.managed_requirement_category_id = managed_requirement_category_id
+        self.managed_requirement_category_description = managed_requirement_category_description
+
+
+class LkManagedRequirementType(Base):
+    __tablename__ = "lk_managed_requirement_type"
+    managed_requirement_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    managed_requirement_type_description = Column(Text)
+
+    def __init__(self, managed_requirement_type_id, managed_requirement_type_description):
+        self.managed_requirement_type_id = managed_requirement_type_id
+        self.managed_requirement_type_description = managed_requirement_type_description
+
+
+class ManagedRequirement(Base):
+    """PFML-relevant data from a Managed Requirement in Fineos. Example managed requirement is an Employer info request."""
+
+    __tablename__ = "managed_requirement"
+    managed_requirement_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
+    respondent_user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"))
+    fineos_managed_requirement_id = Column(Text, unique=True, nullable=False)
+    follow_up_date = Column(Date)
+    responded_at = Column(TIMESTAMP(timezone=True))
+    managed_requirement_status_id = Column(
+        Integer,
+        ForeignKey("lk_managed_requirement_status.managed_requirement_status_id"),
+        nullable=False,
+    )
+    managed_requirement_category_id = Column(
+        Integer,
+        ForeignKey("lk_managed_requirement_category.managed_requirement_category_id"),
+        nullable=False,
+    )
+    managed_requirement_type_id = Column(
+        Integer,
+        ForeignKey("lk_managed_requirement_type.managed_requirement_type_id"),
+        nullable=False,
+    )
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    managed_requirement_status = relationship(LkManagedRequirementStatus)
+    managed_requirement_category = relationship(LkManagedRequirementCategory)
+    managed_requirement_type = relationship(LkManagedRequirementType)
+
+    claim = relationship("Claim", back_populates="managed_requirements")
+    respondent_user = relationship(User)
 
 
 class WagesAndContributions(Base):
@@ -1627,6 +1710,29 @@ class ClaimType(LookupTable):
     FAMILY_LEAVE = LkClaimType(1, "Family Leave")
     MEDICAL_LEAVE = LkClaimType(2, "Medical Leave")
     MILITARY_LEAVE = LkClaimType(3, "Military Leave")
+
+
+class ManagedRequirementStatus(LookupTable):
+    model = LkManagedRequirementStatus
+    column_names = ("managed_requirement_status_id", "managed_requirement_status_description")
+
+    OPEN = LkManagedRequirementStatus(1, "Open")
+    COMPLETE = LkManagedRequirementStatus(2, "Complete")
+    SUPPRESSED = LkManagedRequirementStatus(3, "Suppressed")
+
+
+class ManagedRequirementCategory(LookupTable):
+    model = LkManagedRequirementCategory
+    column_names = ("managed_requirement_category_id", "managed_requirement_category_description")
+
+    EMPLOYER_CONFIRMATION = LkManagedRequirementCategory(1, "Employer Confirmation")
+
+
+class ManagedRequirementType(LookupTable):
+    model = LkManagedRequirementType
+    column_names = ("managed_requirement_type_id", "managed_requirement_type_description")
+
+    EMPLOYER_CONFIRMATION = LkManagedRequirementType(1, "Employer Confirmation of Leave Data")
 
 
 class Race(LookupTable):
