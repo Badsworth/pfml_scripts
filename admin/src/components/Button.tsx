@@ -1,12 +1,13 @@
-import { MouseEvent } from 'react';
+import React from 'react';
 
 type Props = {
-    additionalClasses: string;
+    additionalClasses?: string;
     callback: Function;
+    children: React.ReactNode;
 }
 
 const Button= ({ additionalClasses = "", callback, children }: Props) => {
-    const handleOnClick = (event: MouseEvent) => {
+    const handleOnClick = (event: React.MouseEvent) => {
         event.preventDefault();
 
         callback(event);
