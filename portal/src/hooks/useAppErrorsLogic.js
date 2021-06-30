@@ -176,9 +176,9 @@ const useAppErrorsLogic = ({ portalFlow }) => {
             /* eslint-disable jsx-a11y/heading-has-content */
             h3: <h3 />,
             ul: <ul />,
-            li: <li />
+            li: <li />,
           }}
-          />
+        />
       );
     }
 

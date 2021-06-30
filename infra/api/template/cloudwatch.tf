@@ -33,39 +33,6 @@ resource "aws_lambda_permission" "ecs_permission_service_logging" {
   source_arn    = "${aws_cloudwatch_log_group.service_logs.arn}:*"
 }
 
-# ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_cloudwatch_log_group" "lambda_cognito_presignup" {
-  name = "/aws/lambda/${aws_lambda_function.cognito_pre_signup.function_name}"
-
-  tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
-  })
-}
-
-resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cognito_presignup" {
-  name            = "nr_lambda_cognito_presignup"
-  log_group_name  = aws_cloudwatch_log_group.lambda_cognito_presignup.name
-  filter_pattern  = ""
-  destination_arn = local.newrelic_log_ingestion_lambda
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_cloudwatch_log_group" "lambda_cognito_postconf" {
-  name = "/aws/lambda/${aws_lambda_function.cognito_post_confirmation.function_name}"
-
-  tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
-  })
-}
-
-resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cognito_postconf" {
-  name            = "nr_lambda_cognito_postconf"
-  log_group_name  = aws_cloudwatch_log_group.lambda_cognito_postconf.name
-  filter_pattern  = ""
-  destination_arn = local.newrelic_log_ingestion_lambda
-}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
