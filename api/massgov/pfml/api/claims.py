@@ -118,7 +118,7 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
         return user_leave_admin
 
 
-def get_employer_log_attributes(app: connexion.FlaskApp) -> Dict[str, int]:
+def get_employer_log_attributes(app: connexion.FlaskApp) -> Dict[str, Any]:
     """
     Determine the requesting user's employer relationships & verification status
     """
@@ -491,9 +491,16 @@ def get_claims() -> flask.Response:
                     Claim.application.has(Application.user_id == current_user.user_id)  # type: ignore
                 )
             query = add_order_by(pagination_context, query)
+
             if len(absence_statuses):
+                # Log the values from the query params rather than the enum groups they
+                # might equate to, since what is sent into the API will be more familiar
+                # to New Relic users since it aligns closer to what Portal users see
+                log_attributes.update(
+                    {"filter.absence_statuses": ", ".join(sorted(absence_statuses))}
+                )
+
                 absence_statuses = convert_pending_absence_status(absence_statuses)
-                log_attributes.update({"filter.absence_statuses": absence_statuses})  # type: ignore
                 query = add_absence_status_filter_to_query(query, absence_statuses)
 
         page = page_for_api_context(pagination_context, query)
