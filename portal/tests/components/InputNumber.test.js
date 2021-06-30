@@ -1,4 +1,5 @@
-import InputNumber from "../../src/components/InputNumber";
+import InputNumber, { isAllowedValue } from "../../src/components/InputNumber";
+
 import React from "react";
 import { shallow } from "enzyme";
 
@@ -57,174 +58,124 @@ describe("InputNumber", () => {
     expect(wrapper.prop("inputMode")).toBe("decimal");
   });
 
-  describe("when valueType is not set", () => {
-    const { props, wrapper } = render();
+  describe("with an allowed value", () => {
+    const { props, wrapper } = render({ valueType: "integer" });
+    const value = "123"
 
-    it("allows empty fields", () => {
-      const newValue = "";
-
+    it("calls onChange", () => {
       wrapper.simulate("change", {
-        target: {
-          value: newValue,
-        },
+        target: { value },
       });
 
       expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ target: { value: newValue } })
+        expect.objectContaining({ target: { value } })
       );
     });
+  });
 
-    it("allows comma-delimited numbers", () => {
-      const newValue = "1,234";
+  describe("with a disallowed value", () => {
+    const { props, wrapper } = render({ valueType: "integer" });
+    const value = "abc"
 
-      wrapper.simulate("change", {
-        target: {
-          value: newValue,
-        },
-      });
-
-      expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ target: { value: newValue } })
-      );
-    });
-
-    it("allows numbers starting with a hyphen (negative numbers)", () => {
-      const newValue = "-";
-
-      wrapper.simulate("change", {
-        target: {
-          value: newValue,
-        },
-      });
-
-      expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ target: { value: newValue } })
-      );
-    });
-
-    it("allows entering a decimal", () => {
-      const newValue = "12.3";
-
-      wrapper.simulate("change", {
-        target: {
-          value: newValue,
-        },
-      });
-
-      expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ target: { value: newValue } })
-      );
-    });
-
-    it("prevents hyphen-delimited numbers", () => {
-      const newValue = "123-123-123";
-
+    it("does not call onChange", () => {
       wrapper.simulate("change", {
         stopPropagation: jest.fn(),
-        target: {
-          value: newValue,
-        },
-      });
-
-      expect(props.onChange).not.toHaveBeenCalled();
-    });
-
-    it("prevents letters", () => {
-      const newValue = "123a";
-
-      wrapper.simulate("change", {
-        stopPropagation: jest.fn(),
-        target: {
-          value: newValue,
-        },
+        target: { value },
       });
 
       expect(props.onChange).not.toHaveBeenCalled();
     });
   });
+});
 
-  describe("when valueType is 'integer'", () => {
-    const { props, wrapper } = render({ valueType: "integer" });
+
+describe("isAllowedValue", () => {
+  const allowDecimals = true;
+  const allowNegative = true;
+
+  describe("when decimals are allowed", () => {
+    const allowDecimals = true;
 
     it("allows empty fields", () => {
-      const newValue = "";
-
-      wrapper.simulate("change", {
-        target: {
-          value: newValue,
-        },
-      });
-
-      expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ target: { value: newValue } })
-      );
+      const isAllowed = isAllowedValue("", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(true);
     });
 
     it("allows comma-delimited numbers", () => {
-      const newValue = "1,234";
-
-      wrapper.simulate("change", {
-        target: {
-          value: newValue,
-        },
-      });
-
-      expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ target: { value: newValue } })
-      );
+      const isAllowed = isAllowedValue("1,234", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(true);
     });
 
     it("allows numbers starting with a hyphen (negative numbers)", () => {
-      const newValue = "-";
-
-      wrapper.simulate("change", {
-        target: {
-          value: newValue,
-        },
-      });
-
-      expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ target: { value: newValue } })
-      );
+      const isAllowed = isAllowedValue("-1", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(true);
     });
 
-    it("prevents entering a decimal", () => {
-      const newValue = "12.3";
-
-      wrapper.simulate("change", {
-        stopPropagation: jest.fn(),
-        target: {
-          value: newValue,
-        },
-      });
-
-      expect(props.onChange).not.toHaveBeenCalled();
+    it("allows entering a decimal", () => {
+      const isAllowed = isAllowedValue("12.3", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(true);
     });
 
     it("prevents hyphen-delimited numbers", () => {
-      const newValue = "123-123-123";
-
-      wrapper.simulate("change", {
-        stopPropagation: jest.fn(),
-        target: {
-          value: newValue,
-        },
-      });
-
-      expect(props.onChange).not.toHaveBeenCalled();
+      const isAllowed = isAllowedValue("123-123-123", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(false);
     });
 
     it("prevents letters", () => {
-      const newValue = "123a";
+      const isAllowed = isAllowedValue("123a", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(false);
+    });
+  });
 
-      wrapper.simulate("change", {
-        stopPropagation: jest.fn(),
-        target: {
-          value: newValue,
-        },
-      });
+  describe("when decimals are not allowed", () => {
+    const allowDecimals = false;
 
-      expect(props.onChange).not.toHaveBeenCalled();
+    it("allows empty fields", () => {
+      const isAllowed = isAllowedValue("", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(true);
+    });
+
+    it("allows comma-delimited numbers", () => {
+      const isAllowed = isAllowedValue("1,234", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(true);
+    });
+
+    it("allows numbers starting with a hyphen (negative numbers)", () => {
+      const isAllowed = isAllowedValue("-1", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(true);
+    });
+
+    it("prevents entering a decimal", () => {
+      const isAllowed = isAllowedValue("12.3", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(false);
+    });
+
+    it("prevents hyphen-delimited numbers", () => {
+      const isAllowed = isAllowedValue("123-123-123", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(false);
+    });
+
+    it("prevents letters", () => {
+      const isAllowed = isAllowedValue("123a", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(false);
+    });
+  });
+
+  describe("when negatives are allowed", () => {
+    const allowNegative = true;
+
+    it("allows numbers starting with a hyphen (negative numbers)", () => {
+      const isAllowed = isAllowedValue("-1", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(true);
+    });
+  });
+
+  describe("when negatives are not allowed", () => {
+    const allowNegative = false;
+
+    it("prevents numbers starting with a hyphen (negative numbers)", () => {
+      const isAllowed = isAllowedValue("-1", allowDecimals, allowNegative);
+      expect(isAllowed).toBe(false);
     });
   });
 });

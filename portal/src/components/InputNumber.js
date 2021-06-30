@@ -8,18 +8,17 @@ import React from "react";
  */
 function InputNumber(props) {
   const valueType = props.valueType;
+  const allowDecimals = !(valueType === "integer")
+  const allowNegative = props.allowNegative;
+
   const inputMode = valueType === "integer" ? "numeric" : "decimal";
 
   const handleChange = (event) => {
     if (!props.onChange) return;
     const value = event.target.value;
-    const allowedCharactersRegex =
-      // disallow "." for integers
-      valueType === "integer" ? /^-?[\d,]*/g : /^-?[\d.,]*/g;
 
-    // Match against only the characters we want to allow entering,
-    // and don't call onChange if the value includes any disallowed characters
-    if (value && value.match(allowedCharactersRegex)[0] !== value) {
+    // Don't call onChange if the value includes any disallowed characters
+    if (value && !isAllowedValue(value, allowDecimals, allowNegative)) {
       event.stopPropagation();
       return;
     }
@@ -37,7 +36,63 @@ function InputNumber(props) {
   );
 }
 
+/**
+ * Checks if the given value is allowed in this input field.
+ * @function isAllowedValue
+ * @param {string} value - The user-generated input.
+ * @param {boolean} allowDecimals - Controls whether or not numbers with decimals are allowed.
+ * @param {boolean} allowNegative - Controls whether or not negative numbers are allowed.
+ */
+export function isAllowedValue(value, allowDecimals, allowNegative) {
+  if (!isNumber(value, allowDecimals)) {
+    return false
+  }
+
+  if (!allowNegative && isNegative(value)) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Checks if the given value is a number.
+ * Allows digits, ie "123"
+ * Allows commas, ie "1,234"
+ * Allows optional leading hyphens for negative numbers, ie "-123"
+ * Optionally allows decimals, ie "1,234.56"
+ * @function isNumber
+ * @param {string} value - The user-generated input.
+ * @param {boolean} allowDecimals - Controls whether or not numbers with decimals are allowed.
+ */
+function isNumber(value, allowDecimals) {
+  // digits, with optional commas, and optional leading hyphen for negatives
+  const digits = /^-?[\d,]*/g;
+
+  // digits, with optional commas, decimals, and leading hyphen for negatives
+  const digitsWithDecimals = /^-?[\d,.]*/g;
+
+  const allowedCharacters = allowDecimals ? digitsWithDecimals : digits;
+
+  const matches = value.match(allowedCharacters)
+  return matches != null && matches[0] === value;
+}
+
+/**
+ * Checks if the given value is a negative number.
+ * @function isNumber
+ * @param {string} value - The user-generated input.
+ */
+function isNegative(value) {
+  return value.charAt(0) === "-"
+}
+
 InputNumber.propTypes = {
+  /**
+   * Whether or not to allow negative numbers.
+   * If set to true, `onChange` will be skipped if a negative number is input.
+   */
+  allowNegative: PropTypes.bool,
   /**
    * HTML input `autocomplete` attribute
    */
