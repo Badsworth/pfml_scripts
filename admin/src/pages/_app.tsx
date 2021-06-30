@@ -12,11 +12,20 @@ function MyApp({ Component, pageProps }: AppProps) {
 
       <header className="page__header">LOGO HERE</header>
       <aside className="page__sidebar">
-        <nav>
-          <ul>
-            <li>Hey there!</li>
+        <nav className="menu">
+          <ul className="menu__list">
+            <li className="menu__list-item">
+                <a href="#" className="menu__link">Nav Item One</a>
+            </li>
+            <li className="menu__list-item">
+                <a href="#" className="menu__link">Nav Item Two</a>
+            </li>
+            <li className="menu__list-item">
+                <a href="#" className="menu__link">Nav Item Three</a>
+            </li>
           </ul>
         </nav>
+
       </aside>
       <main className="page__main">
         <Component {...pageProps} />
