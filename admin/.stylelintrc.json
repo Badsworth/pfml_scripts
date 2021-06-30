@@ -9,6 +9,7 @@
     "declaration-property-value-disallowed-list": {
       "/^border/": []
     },
-    "color-named": "always-where-possible"
+    "color-named": "never",
+    "scss/dollar-variable-pattern": "^[a-zA-Z]"
   }
 }
