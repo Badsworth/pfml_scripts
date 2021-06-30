@@ -365,7 +365,7 @@ class Employer(Base):
 class EmployerQuarterlyContribution(Base):
     __tablename__ = "employer_quarterly_contribution"
     employer_id = Column(
-        UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True, primary_key=True
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True, primary_key=True
     )
     filing_period = Column(Date, primary_key=True)
     employer_total_pfml_contribution = Column(Numeric(asdecimal=True), nullable=False)
