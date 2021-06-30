@@ -180,6 +180,46 @@ data "aws_iam_policy_document" "iam_policy_lambda_assumed_role" {
   }
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for the Cognito Pre Signup Lambda
+
+resource "aws_iam_role" "cognito_pre_signup_lambda_role" {
+  name_prefix        = "massgov-pfml-${local.shorthand_env_name}-cog-pr-si-"
+  assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_pre_signup_lambda_role_vpc_execution" {
+  role       = aws_iam_role.cognito_pre_signup_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_cognito_pre_signup_lambda_role_attachment" {
+  role       = aws_iam_role.cognito_pre_signup_lambda_role.name
+  policy_arn = aws_iam_policy.db_user_pfml_api.arn
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for the Cognito Post Confirmation Lambda
+
+resource "aws_iam_role" "cognito_post_confirmation_lambda_role" {
+  name_prefix        = "massgov-pfml-${local.shorthand_env_name}-cog-po-con-"
+  assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_post_confirmation_lambda_role_vpc_execution" {
+  role       = aws_iam_role.cognito_post_confirmation_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_cognito_post_confirmation_lambda_role_attachment" {
+  role       = aws_iam_role.cognito_post_confirmation_lambda_role.name
+  policy_arn = aws_iam_policy.db_user_pfml_api.arn
+}
+
+resource "aws_iam_role_policy_attachment" "access_ssm_post_confirmation_lambda_role_attachment" {
+  role       = aws_iam_role.cognito_post_confirmation_lambda_role.name
+  policy_arn = aws_iam_policy.access_ssm_policy.arn
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for FINEOS Eligibility Feed Lambda

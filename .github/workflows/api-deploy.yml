@@ -331,11 +331,79 @@ jobs:
         run: make release
         working-directory: ${{ env.working-dir }}
 
+  lambda-builds:
+    name: Build lambdas
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        component: ["cognito_pre_signup", "cognito_post_confirmation"]
+
+    env:
+      infra-working-dir: ./api/lambdas
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Check if lambda packages exist in S3 before the build
+        id: s3-check
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+        continue-on-error: true
+        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
+
+      - name: Echo message about the package
+        if: steps.s3-check.outcome == 'success'
+        run: echo "The Lambda package already exists in S3 bucket; skipping rebuild."
+
+      - name: Install API Package Dependencies
+        if: steps.s3-check.outcome == 'failure'
+        run: pip install wheel setuptools poetry
+        working-directory: ${{ env.working-dir }}
+
+      - name: Build API package
+        if: steps.s3-check.outcome == 'failure'
+        run: poetry build
+        working-directory: ${{ env.working-dir }}
+
+      - name: Install Lambda CLI Dependencies
+        if: steps.s3-check.outcome == 'failure'
+        run: pip install aws-sam-cli
+        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
+
+      - name: Lambda Build, Package and Upload to S3
+        if: steps.s3-check.outcome == 'failure'
+        run: make release
+        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
+
+      - name: Rename Lambda S3 Package
+        id: rename
+        if: steps.s3-check.outcome == 'failure'
+        run: |
+          aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
+
   check-step-function-management:
     # TODO: Remove this job: https://lwd.atlassian.net/browse/INFRA-504
     name: (temp) Manage Step Functions
     runs-on: ubuntu-latest
-    needs: [update-the-deploy-branch, api-build, deploy-info]
+    needs: [update-the-deploy-branch, api-build, lambda-builds, deploy-info]
     env:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
     steps:
@@ -390,7 +458,7 @@ jobs:
     runs-on: ubuntu-latest
     # This step doesn't really depend on lambda-builds, but for good measure we should
     # make sure everything builds before we deploy any updates to ECS tasks or services.
-    needs: [update-the-deploy-branch, api-build, deploy-info, check-step-function-management]
+    needs: [update-the-deploy-branch, api-build, lambda-builds, deploy-info, check-step-function-management]
 
     env:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
@@ -482,6 +550,8 @@ jobs:
 
     env:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_release_version: ${{ github.event.inputs.version || 'main' }}
 
     steps:
