@@ -566,32 +566,35 @@ export function submitIntermittentActualHours(
     cy.wait("@ajaxRender");
     // Wait for focus to be captured on the "Last Day Worked" field. This happens automatically, and only occurs
     // when the popup is ready for interaction. Annoyingly, it gets captured 2x on render, forcing us to wait as well.
-    cy.labelled("Last Day Worked").should("have.focus").wait(250);
+    cy.labelled("Last Day Worked")
+      .should("have.focus")
+      .wait("@ajaxRender")
+      .wait(150);
 
     const mostRecentSunday = startOfWeek(new Date());
     const startDate = subDays(mostRecentSunday, 13);
     const startDateFormatted = format(startDate, "MM/dd/yyyy");
     const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
 
-    cy.labelled("Absence start date")
-      .focus()
+    cy.findByLabelText("Absence start date")
+      .should("not.be.disabled")
       .type(`{selectall}{backspace}${startDateFormatted}`)
-      .blur()
+      .blur({ force: true })
       // Wait for this element to be detached, then rerendered after being blurred.
       .should(($el) => Cypress.dom.isDetached($el))
-      .wait(100);
+      .wait("@ajaxRender")
+      .wait(250);
 
-    cy.labelled("Absence end date")
-      .focus()
-      // @bc: During a debug session there was a odd failure
-      // this wait helps prevent typing in wrong field
-      .wait(1000)
-      .type(`{selectall}{backspace}${endDateFormatted}`)
-      .blur()
+    cy.findByLabelText("Absence end date")
+      .should("not.be.disabled")
+      .type(`{selectall}{backspace}${endDateFormatted}`, { delay: 25 })
+      .blur({ force: true })
       // Wait for this element to be detached, then rerendered after being blurred.
       .should(($el) => Cypress.dom.isDetached($el))
-      .wait(100);
+      .wait("@ajaxRender")
+      .wait(250);
 
+    cy.wait(200);
     cy.get(
       "input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursStartDate']"
     ).type(`{selectall}{backspace}${timeSpanHoursStart}`);
