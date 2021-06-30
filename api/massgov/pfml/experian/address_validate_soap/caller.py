@@ -78,7 +78,7 @@ class LazyZeepApiCaller(LazyApiCaller, ApiCaller):
         url = urllib.parse.urljoin(self.soap_endpoint, "?WSDL")
         # The Experian WSDL unfortunately includes some schemas that require
         # forbid_entities to be turned off
-        settings = zeep.Settings(forbid_entities=False)
+        settings = zeep.Settings(forbid_entities=False, force_https=True)
 
         service_proxy = zeep.Client(
             url, settings=settings, transport=Transport(session=self.session)
