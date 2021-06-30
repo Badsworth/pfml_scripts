@@ -658,7 +658,7 @@
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.11.0">api/v2.11.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.12.0">api/v2.12.0</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -694,40 +694,30 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (API-1743,INFRA-523,EMPLOYER-1400,INFRA-530,PUB-249,PUB-250,EMPLOYER-1390,API-1712,PUB-247,EMPLOYER-1437,PFMLPB-1425,INFRA-411,EMPLOYER-1454,CP-2135)">Jira List</a>):</p>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (API-1743,INFRA-523,EMPLOYER-1400,INFRA-530,PUB-249,PUB-250,EMPLOYER-1390,API-1712,PUB-247,EMPLOYER-1437)">Jira List</a>):</p>
 <ul>
-<li>change domain name (<a href="https://github.com/EOLWD/pfml/pull/4590">#4590</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-250">PUB-250</a>: Validate account numbers do not exceed 17 characters. (<a href="https://github.com/EOLWD/pfml/pull/4635">#4635</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-249">PUB-249</a>: Add number of weeks for a payment period in audit report. (<a href="https://github.com/EOLWD/pfml/pull/4636">#4636</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-247">PUB-247</a>: Move non-standard payment reports to the first ECS task. (<a href="https://github.com/EOLWD/pfml/pull/4624">#4624</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PFMLPB-1425">PFMLPB-1425</a>: Add maintenance/feature flag endpoint to API (<a href="https://github.com/EOLWD/pfml/pull/4396">#4396</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-530">INFRA-530</a>: Patch Copy Command (<a href="https://github.com/EOLWD/pfml/pull/4634">#4634</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-523">INFRA-523</a>: [2/2] Remove Cognito Lambda Triggers (<a href="https://github.com/EOLWD/pfml/pull/4640">#4640</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1454">EMPLOYER-1454</a>: Update create-user so user has consented to data sharing (<a href="https://github.com/EOLWD/pfml/pull/4501">#4501</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1437">EMPLOYER-1437</a>: Changing error type for FE error handling (<a href="https://github.com/EOLWD/pfml/pull/4619">#4619</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1400">EMPLOYER-1400</a>: Claims endpoint supports sorting results by Absence Status (<a href="https://github.com/EOLWD/pfml/pull/4632">#4632</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1390">EMPLOYER-1390</a>: Employee name sorting on claims endpoint (<a href="https://github.com/EOLWD/pfml/pull/4514">#4514</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-2135">CP-2135</a>: Clear consent_to_data_sharing column with migration (<a href="https://github.com/EOLWD/pfml/pull/4567">#4567</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1749">API-1749</a>: Fix breakfix ecs-tasks config after INFRA-411 (<a href="https://github.com/EOLWD/pfml/pull/4604">#4604</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-1743">API-1743</a>: fix DOR import exception when a duplicate employer contribution line is present (<a href="https://github.com/EOLWD/pfml/pull/4598">#4598</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-1712">API-1712</a>: Add Absence Period database tables and columns (<a href="https://github.com/EOLWD/pfml/pull/4602">#4602</a>)</li>
 <li>Employer-1400: RE Claims endpoint supports sorting results by Absence Status (Fixes issue)  (<a href="https://github.com/EOLWD/pfml/pull/4645">#4645</a>)</li>
 </ul>
 <details>
 <summary>Raw</summary>
- <br>* change domain name ([#4590](https://github.com/EOLWD/pfml/pull/4590))
  <br>* [PUB-250](https://lwd.atlassian.net/browse/PUB-250): Validate account numbers do not exceed 17 characters. ([#4635](https://github.com/EOLWD/pfml/pull/4635))
  <br>* [PUB-249](https://lwd.atlassian.net/browse/PUB-249): Add number of weeks for a payment period in audit report. ([#4636](https://github.com/EOLWD/pfml/pull/4636))
  <br>* [PUB-247](https://lwd.atlassian.net/browse/PUB-247): Move non-standard payment reports to the first ECS task. ([#4624](https://github.com/EOLWD/pfml/pull/4624))
- <br>* [PFMLPB-1425](https://lwd.atlassian.net/browse/PFMLPB-1425): Add maintenance/feature flag endpoint to API ([#4396](https://github.com/EOLWD/pfml/pull/4396))
  <br>* [INFRA-530](https://lwd.atlassian.net/browse/INFRA-530): Patch Copy Command ([#4634](https://github.com/EOLWD/pfml/pull/4634))
  <br>* [INFRA-523](https://lwd.atlassian.net/browse/INFRA-523): [2/2] Remove Cognito Lambda Triggers ([#4640](https://github.com/EOLWD/pfml/pull/4640))
- <br>* [EMPLOYER-1454](https://lwd.atlassian.net/browse/EMPLOYER-1454): Update create-user so user has consented to data sharing ([#4501](https://github.com/EOLWD/pfml/pull/4501))
  <br>* [EMPLOYER-1437](https://lwd.atlassian.net/browse/EMPLOYER-1437): Changing error type for FE error handling ([#4619](https://github.com/EOLWD/pfml/pull/4619))
  <br>* [EMPLOYER-1400](https://lwd.atlassian.net/browse/EMPLOYER-1400): Claims endpoint supports sorting results by Absence Status ([#4632](https://github.com/EOLWD/pfml/pull/4632))
  <br>* [EMPLOYER-1390](https://lwd.atlassian.net/browse/EMPLOYER-1390): Employee name sorting on claims endpoint ([#4514](https://github.com/EOLWD/pfml/pull/4514))
- <br>* [CP-2135](https://lwd.atlassian.net/browse/CP-2135): Clear consent_to_data_sharing column with migration ([#4567](https://github.com/EOLWD/pfml/pull/4567))
- <br>* [API-1749](https://lwd.atlassian.net/browse/API-1749): Fix breakfix ecs-tasks config after INFRA-411 ([#4604](https://github.com/EOLWD/pfml/pull/4604))
  <br>* [API-1743](https://lwd.atlassian.net/browse/API-1743): fix DOR import exception when a duplicate employer contribution line is present ([#4598](https://github.com/EOLWD/pfml/pull/4598))
  <br>* [API-1712](https://lwd.atlassian.net/browse/API-1712): Add Absence Period database tables and columns ([#4602](https://github.com/EOLWD/pfml/pull/4602))
  <br>* Employer-1400: RE Claims endpoint supports sorting results by Absence Status (Fixes issue)  ([#4645](https://github.com/EOLWD/pfml/pull/4645))
