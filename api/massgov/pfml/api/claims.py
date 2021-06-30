@@ -462,6 +462,7 @@ def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
 def get_claims() -> flask.Response:
     current_user = app.current_user()
     employer_id = flask.request.args.get("employer_id")
+    search_string = flask.request.args.get("search", type=str)
     absence_statuses = parse_absence_statuses(flask.request.args.get("claim_status"))
     is_employer = can(READ, "EMPLOYER_API")
     log_attributes = get_employer_log_attributes(app)
@@ -503,6 +504,10 @@ def get_claims() -> flask.Response:
                 absence_statuses = convert_pending_absence_status(absence_statuses)
                 query = add_absence_status_filter_to_query(query, absence_statuses)
 
+            if search_string:
+                search_string = search_string.strip()
+                query = add_search_filter_to_query(query, search_string)
+
         page = page_for_api_context(pagination_context, query)
 
     logger.info(
@@ -514,6 +519,7 @@ def get_claims() -> flask.Response:
             "pagination.page_offset": pagination_context.page_offset,
             "pagination.total_pages": page.total_pages,
             "pagination.total_records": page.total_records,
+            "filter.search_string": search_string,
             **log_attributes,
         },
     )
@@ -589,5 +595,17 @@ def add_absence_status_filter_to_query(query: Query, absence_statuses: Set[str])
     filters = [LkAbsenceStatus.absence_status_description.in_(absence_statuses)]
     if None in absence_statuses:
         filters.extend([Claim.fineos_absence_status_id.is_(None)])
+    query = query.filter(or_(*filters))
+    return query
+
+
+def add_search_filter_to_query(query: Query, search_string: str) -> Query:
+    query = query.join(Employee, Employee.employee_id == Claim.employee_id, isouter=True,)
+    filters = [
+        Claim.fineos_absence_id.ilike(f"%{search_string}%"),
+        Employee.first_name.ilike(f"%{search_string}%"),
+        Employee.middle_name.ilike(f"%{search_string}%"),
+        Employee.last_name.ilike(f"%{search_string}%"),
+    ]
     query = query.filter(or_(*filters))
     return query
