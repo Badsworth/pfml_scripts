@@ -7,14 +7,9 @@
  */
 
 import dataDirectory from "../generation/DataDirectory";
-import path from "path";
 import EmployeePool from "../generation/Employee";
 import EmployerPool from "../generation/Employer";
 import ClaimPool from "../generation/Claim";
-import EmployerIndex from "../generation/writers/EmployerIndex";
-import DOR from "../generation/writers/DOR";
-import EmployeeIndex from "../generation/writers/EmployeeIndex";
-import * as scenarios from "../scenarios";
 import {
   TRNER1,
   TRNER2,
@@ -72,12 +67,10 @@ import config from "../config";
   const storage = dataDirectory("2021-06-25-OLB_training_claims");
   // <!-- @default
   await storage.prepare();
-  let employerPool: EmployerPool;
-  let employeePool: EmployeePool;
   let claimPool: ClaimPool;
   // @default -->
 
-  employeePool = await EmployeePool.load(config("EMPLOYEES_FILE"));
+  const employeePool = await EmployeePool.load(config("EMPLOYEES_FILE"));
 
   // Part 3: Claim generation.
   try {
