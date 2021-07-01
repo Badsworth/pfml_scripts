@@ -8,7 +8,6 @@
 
 import dataDirectory from "../generation/DataDirectory";
 import EmployeePool from "../generation/Employee";
-import EmployerPool from "../generation/Employer";
 import ClaimPool from "../generation/Claim";
 import {
   TRNER1,
