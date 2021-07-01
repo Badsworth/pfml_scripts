@@ -29,6 +29,7 @@ import {
   TRNOL4,
 } from "../scenarios/2021-06-24-training";
 import { ScenarioSpecification } from "../generation/Scenario";
+import config from "../config";
 
 /**
  * @summary
@@ -68,7 +69,7 @@ import { ScenarioSpecification } from "../generation/Scenario";
  */
 (async () => {
   // @todo Rename the data directory as needed.
-  const storage = dataDirectory("2021-06-25-OLB_training_claims>");
+  const storage = dataDirectory("2021-06-25-OLB_training_claims");
   // <!-- @default
   await storage.prepare();
   let employerPool: EmployerPool;
@@ -76,53 +77,7 @@ import { ScenarioSpecification } from "../generation/Scenario";
   let claimPool: ClaimPool;
   // @default -->
 
-  // Part 1: Employer generation.
-  try {
-    employerPool = await EmployerPool.load(storage.employers);
-  } catch (e) {
-    if (e.code !== "ENOENT") throw e;
-    // @todo Choose number of employers to generate.
-    (employerPool = EmployerPool.generate(30)),
-      await employerPool.save(storage.employers);
-    // <!-- @default
-    // await EmployerIndex.write(employerPool, storage.dir + "/employers.csv");
-    // await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
-    // @default -->
-  }
-
-  // Part 2: Employee generation.
-  try {
-    employeePool = await EmployeePool.load(storage.employees);
-  } catch (e) {
-    if (e.code !== "ENOENT") throw e;
-    // Define the kinds of employees we need to support. Each type of employee is generated as its own pool,
-    // then we merge them all together.
-    employeePool = EmployeePool.merge(
-      // @todo Choose number of employees to generate.
-      EmployeePool.generate(90, employerPool, {
-        // @todo Define employee parameters.
-        // Usually just the `wages` property.
-        wages: "eligible",
-        // @todo OPTIONAL: Add `metadata` property for ad hoc needs.
-        metadata: { hair: "grey" },
-      }),
-      // @todo OPTIONAL: Add more employees with different properties.
-      // @example Wages set to "ineligible" vs "eligible".
-      EmployeePool.generate(10, employerPool, { wages: "ineligible" })
-    );
-    // <!-- @default
-    await employeePool.save(storage.employees);
-    await DOR.writeEmployeesFile(
-      employerPool,
-      employeePool,
-      storage.dorFile("DORDFML")
-    );
-    await EmployeeIndex.write(
-      employeePool,
-      path.join(storage.dir, "employees.csv")
-    );
-    // @default -->
-  }
+  employeePool = await EmployeePool.load(config("EMPLOYEES_FILE"));
 
   // Part 3: Claim generation.
   try {
@@ -146,17 +101,17 @@ import { ScenarioSpecification } from "../generation/Scenario";
     const generate = (spec: ScenarioSpecification, count: number) =>
       ClaimPool.generate(employeePool, spec.employee, spec.claim, count);
     claimPool = ClaimPool.merge(
-      generate(TRNOI1, 25),
-      generate(TRNOI2, 25),
-      generate(TRNOI3, 25),
-      generate(TRNOI4, 25),
-      generate(TRNOL1, 25),
-      generate(TRNOL2, 25),
-      generate(TRNOL3, 25),
-      generate(TRNOL4, 25),
-      generate(TRNER1, 25),
-      generate(TRNER2, 25),
-      generate(TRNER3, 25)
+      generate(TRNOI1, 1),
+      generate(TRNOI2, 1),
+      generate(TRNOI3, 1),
+      generate(TRNOI4, 1),
+      generate(TRNOL1, 1),
+      generate(TRNOL2, 1),
+      generate(TRNOL3, 1),
+      generate(TRNOL4, 1),
+      generate(TRNER1, 1),
+      generate(TRNER2, 1),
+      generate(TRNER3, 1)
     );
     // <!-- @default
     await claimPool.save(storage.claims, storage.documents);

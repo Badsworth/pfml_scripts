@@ -210,7 +210,7 @@ export const TRNOL3: ScenarioSpecification = {
     leave_dates: [parseISO("2021-08-01"), parseISO("2021-10-15")],
     docs: {
       MASSID: {},
-      HCP: {},
+      BIRTHCERTIFICATE: {},
     },
     employerResponse: {
       has_amendments: false,
@@ -332,7 +332,7 @@ export const TRNER3: ScenarioSpecification = {
     leave_dates: [parseISO("2021-08-01"), parseISO("2021-10-15")],
     docs: {
       MASSID: {},
-      HCP: {},
+      BIRTHCERTIFICATE: {},
     },
     employerResponse: {
       has_amendments: true,

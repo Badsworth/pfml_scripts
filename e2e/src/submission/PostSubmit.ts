@@ -266,7 +266,7 @@ export async function addTask(
     | "Escalate employer reported accrued paid leave (PTO)"
     | "Escalate Employer Reported Fraud"
 ): Promise<void> {
-  await page.click(`input[title="Add a task to this case"]`);
+  await page.click(`input[title="Add a task to this case"][type=submit]`);
   await page.waitForNavigation();
   // Search for the task type
   await actions.labelled(page, `Find Work Types Named`).then(async (el) => {
@@ -274,7 +274,7 @@ export async function addTask(
     await el.press("Enter");
   });
   // Create task
-  await page.click(`input[title="${taskName}"]`);
+  await page.click(`td[title="${taskName}"]`);
   await page.click("#footerButtonsBar input[value='Next']");
   await page.waitForNavigation();
 }
