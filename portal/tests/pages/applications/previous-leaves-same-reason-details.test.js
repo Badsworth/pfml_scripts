@@ -42,7 +42,6 @@ const setup = (claimAttrs = DEFAULT_CLAIM_ATTRS) => {
 
 const previousLeaveData = {
   is_for_current_employer: true,
-  is_for_same_reason_as_leave_reason: null,
   leave_end_date: "2021-06-11",
   leave_minutes: 840,
   leave_reason: PreviousLeaveReason.bonding,
@@ -182,7 +181,7 @@ describe("PreviousLeavesSameReasonDetails", () => {
       const entries = wrapper.find("RepeatableFieldset").prop("entries");
       expect(entries).toHaveLength(2);
       expect(entries).toEqual([
-        previousLeaveData,
+        new PreviousLeave({ ...previousLeaveData }),
         new PreviousLeave({ leave_reason: PreviousLeaveReason.bonding }),
       ]);
 

@@ -1,5 +1,6 @@
 import PreviousLeave, {
   PreviousLeaveReason,
+  PreviousLeaveType,
 } from "../../../src/models/PreviousLeave";
 import PreviousLeaves from "../../../src/components/employers/PreviousLeaves";
 import React from "react";
@@ -10,22 +11,22 @@ import useAppLogic from "../../../src/hooks/useAppLogic";
 const PREVIOUS_LEAVES = [
   new PreviousLeave({
     is_for_current_employer: true,
-    is_for_same_reason_as_leave_reason: false,
     leave_minutes: 2400,
     leave_reason: PreviousLeaveReason.serviceMemberFamily,
     leave_start_date: "2020-03-01",
     leave_end_date: "2020-03-06",
     previous_leave_id: 0,
+    type: PreviousLeaveType.otherReason,
     worked_per_week_minutes: 1440,
   }),
   new PreviousLeave({
     is_for_current_employer: true,
-    is_for_same_reason_as_leave_reason: true,
     leave_minutes: 4800,
     leave_reason: PreviousLeaveReason.bonding,
     leave_start_date: "2020-05-01",
     leave_end_date: "2020-05-10",
     previous_leave_id: 1,
+    type: PreviousLeaveType.sameReason,
     worked_per_week_minutes: 960,
   }),
 ];

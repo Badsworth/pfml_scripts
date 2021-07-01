@@ -41,9 +41,7 @@ export const PreviousLeavesSameReasonDetails = (props) => {
       claim.leave_details.reason
     );
     initialEntries.previous_leaves_same_reason = [
-      new PreviousLeave({
-        leave_reason,
-      }),
+      new PreviousLeave({ leave_reason }),
     ];
   }
 
