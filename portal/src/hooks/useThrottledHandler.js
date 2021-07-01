@@ -20,7 +20,6 @@ const useThrottledHandler = (asyncHandler) => {
     if (isThrottled) return;
 
     setIsThrottled(true);
-    // eslint-disable-next-line standard/no-callback-literal
     const resultPromise = asyncHandler(...args);
 
     // enforce that handler must return a promise

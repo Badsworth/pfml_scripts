@@ -53,7 +53,7 @@ describe("InputText", () => {
     const label1 = wrapper1.find("FormLabel");
     const input2 = wrapper2.find(".usa-input");
 
-    const idRegex = new RegExp("InputText[0-9]+");
+    const idRegex = /InputText[0-9]+/;
 
     expect(input1.prop("id")).toMatch(idRegex);
     expect(input1.prop("id")).not.toBe(input2.prop("id"));
