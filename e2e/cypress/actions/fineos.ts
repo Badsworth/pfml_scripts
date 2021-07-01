@@ -968,6 +968,26 @@ export function triggerNoticeRelease(docType: string): void {
 }
 
 /**
+ * Adding a  Historical Absence case
+ */
+export function addHistoricalAbsenceCase(claimNumber: string): void {
+  cy.contains("Options").click();
+  cy.contains("Add Historical Absence").click();
+  cy.findByLabelText("Absence relates to").select("Employee");
+  wait();
+  cy.wait(100);
+  cy.findByLabelText("Absence reason").select(
+    "Serious Health Condition - Employee"
+  );
+  wait();
+  cy.wait(100);
+  cy.findByLabelText("Qualifier 1").select("Not Work Related");
+  wait();
+  cy.wait(100);
+  cy.findByLabelText("Qualifier 2").select("Sickness");
+}
+
+/**
  * Assumes that current page is the amounts pending tab in a paid leave case.
  * Function will assert that the processing date and period end date are equal
  */
