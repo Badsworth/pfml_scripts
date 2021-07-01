@@ -799,7 +799,7 @@
 </ul>
 <h2 id="testing-monitoring-changes-in-test">Testing Monitoring Changes in TEST</h2>
 <p>It's often desirable to test changes to monitoring in the TEST environment during feature development. Since monitoring changes for all environments are combined into a single configuration, terraform actions must specifically target certain resources.</p>
-<p>Almost all alarms are built through the <code>infra/modules/alarms_api</code> and <code>infra/modules/alarms_portal</code> folders, which are re-used across multiple environments:</p>
+<p>Almost all alarms are built through the <a href="https://github.com/EOLWD/pfml/tree/main/infra/modules/alarms_api">infra/modules/alarms_api</a> and <a href="https://github.com/EOLWD/pfml/tree/main/infra/modules/alarms_portal">infra/modules/alarms_portal</a> modules, which are used within <a href="https://github.com/EOLWD/pfml/tree/main/infra/monitoring/alarms.tf">infra/monitoring/alarms.tf</a>:</p>
 <div class="highlight"><pre><span></span><code><span class="kr">module</span> <span class="nv">&quot;alarms_api&quot;</span> <span class="p">{</span>
   <span class="na">for_each</span> <span class="o">=</span> <span class="nf">toset</span><span class="p">(</span><span class="nv">local.environments</span><span class="p">)</span>
   <span class="na">source</span>   <span class="o">=</span> <span class="s2">&quot;../modules/alarms_api&quot;</span>
@@ -807,8 +807,8 @@
   <span class="p">...</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>To update the set of alarms for a single environment, you can target the alarms module with a particular key:</p>
-<div class="highlight"><pre><span></span><code><span class="err">$</span> <span class="err">terraform</span> <span class="err">apply</span> <span class="err">--target</span> <span class="nv">module.alarms_api</span><span class="p">[</span><span class="err">\</span><span class="s2">&quot;test\&quot;</span><span class="p">]</span>
+<p>To update the set of alarms for a single environment, go into the <code>infra/monitoring</code> root module and target the alarms module with a particular key:</p>
+<div class="highlight"><pre><span></span><code><span class="err">$</span> <span class="err">terraform</span> <span class="err">apply</span> <span class="err">--target</span> <span class="nv">module.alarms_api</span><span class="p">[</span><span class="err">\</span><span class="s2">&quot;test\&quot;] --target module.alarms_portal[\&quot;test\&quot;</span><span class="p">]</span>
 </code></pre></div>
 <p>The terraform plan should indicate that <em>only</em> test alarms will be updated.</p>
                 
