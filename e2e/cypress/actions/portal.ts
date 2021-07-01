@@ -853,7 +853,8 @@ export function respondToLeaveAdminRequest(
   }
 
   cy.contains("button", "Submit").click();
-  cy.contains("Thanks for reviewing the application");
+  // This step can take a while.
+  cy.contains("Thanks for reviewing the application", { timeout: 30000 });
 }
 
 export function checkNoticeForLeaveAdmin(
