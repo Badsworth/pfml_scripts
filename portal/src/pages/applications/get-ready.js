@@ -120,7 +120,11 @@ export const GetReady = (props) => {
           i18nKey="pages.getReady.stepTwoMedicalLeaveBody"
           components={{
             "healthcare-provider-form-link": (
-              <a href={routes.external.massgov.healthcareProviderForm} />
+              <a
+                href={routes.external.massgov.healthcareProviderForm}
+                target="_blank"
+                rel="noopener"
+              />
             ),
           }}
         />
@@ -145,6 +149,8 @@ export const GetReady = (props) => {
                 "caregiver-certification-form-link": (
                   <a
                     href={routes.external.massgov.caregiverCertificationForm}
+                    target="_blank"
+                    rel="noopener"
                   />
                 ),
               }}
@@ -163,12 +169,20 @@ export const GetReady = (props) => {
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
             ),
             "medical-bonding-link": (
-              <a href={routes.external.massgov.medicalBonding} />
+              <a
+                href={routes.external.massgov.medicalBonding}
+                target="_blank"
+                rel="noopener"
+              />
             ),
             ul: <ul className="usa-list" />,
             li: <li />,
             "tax-liability-link": (
-              <a href={routes.external.massgov.taxLiability} />
+              <a
+                href={routes.external.massgov.taxLiability}
+                target="_blank"
+                rel="noopener"
+              />
             ),
           }}
         />
