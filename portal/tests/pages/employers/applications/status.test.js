@@ -145,17 +145,12 @@ describe("Status", () => {
     const continuousRow = wrapper.find(
       "StatusRow[data-test='duration-continuous']"
     );
-    const intermittentRow = wrapper.find(
-      "StatusRow[data-test='duration-intermittent']"
-    );
     const reducedScheduleRow = wrapper.find(
       "StatusRow[data-test='duration-reduced']"
     );
 
     expect(continuousRow.exists()).toBe(true);
     expect(continuousRow).toMatchSnapshot();
-    expect(intermittentRow.exists()).toBe(true);
-    expect(intermittentRow).toMatchSnapshot();
     expect(reducedScheduleRow.exists()).toBe(true);
     expect(reducedScheduleRow).toMatchSnapshot();
   });
