@@ -34,6 +34,8 @@ import updateAmendments from "../../../utils/updateAmendments";
 import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
+import useFormState from "../../../hooks/useFormState";
+import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 
 export const Review = (props) => {
   // TODO (EMPLOYER-583) add frontend validation
@@ -57,15 +59,29 @@ export const Review = (props) => {
     });
   }
 
-  const [formState, setFormState] = useState({
+  // Generate id based on index for employer benefit, previous leave (id is not provided by BE)
+  // Note: these indices are used to properly display inline errors and amend employer benefits and
+  // previous leaves. If employer_benefit_id and previous_leave_id no longer match the indices, then
+  // the functionality described above will need to be reimplemented.
+  const indexedEmployerBenefits = claim.employer_benefits.map(
+    (benefit, index) =>
+      new EmployerBenefit({ ...benefit, employer_benefit_id: index })
+  );
+  const indexedPreviousLeaves = claim.previous_leaves.map(
+    (leave, index) => new PreviousLeave({ ...leave, previous_leave_id: index })
+  );
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const { formState, updateFields } = useFormState({
     // base fields
     concurrentLeave: claim.concurrent_leave,
     amendedConcurrentLeave: claim.concurrent_leave,
-    employerBenefits: [],
-    amendedBenefits: [],
-    previousLeaves: [],
-    amendedPreviousLeaves: [],
-    amendedHours: 0,
+    employerBenefits: indexedEmployerBenefits,
+    amendedBenefits: indexedEmployerBenefits,
+    previousLeaves: indexedPreviousLeaves,
+    amendedPreviousLeaves: indexedPreviousLeaves,
+    // TODO confirm error behavior.
+    hours_worked_per_week: claim.hours_worked_per_week,
     comment: "",
     employerDecision: "Approve",
     fraud: undefined,
@@ -77,6 +93,17 @@ export const Review = (props) => {
     addedPreviousLeaves: [],
     addedConcurrentLeave: null,
   });
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
+
+  // TODO delete this
+  useEffect(() => {
+    console.log(formState);
+  }, [formState]);
 
   const [allPreviousLeaves, setAllPreviousLeaves] = useState([]);
   useEffect(() => {
@@ -106,32 +133,6 @@ export const Review = (props) => {
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
 
   useEffect(() => {
-    // Generate id based on index for employer benefit, previous leave (id is not provided by BE)
-    // Note: these indices are used to properly display inline errors and amend employer benefits and
-    // previous leaves. If employer_benefit_id and previous_leave_id no longer match the indices, then
-    // the functionality described above will need to be reimplemented.
-    const indexedEmployerBenefits = claim.employer_benefits.map(
-      (benefit, index) =>
-        new EmployerBenefit({ ...benefit, employer_benefit_id: index })
-    );
-    const indexedPreviousLeaves = claim.previous_leaves.map(
-      (leave, index) =>
-        new PreviousLeave({ ...leave, previous_leave_id: index })
-    );
-
-    if (claim) {
-      updateFields({
-        amendedBenefits: indexedEmployerBenefits,
-        employerBenefits: indexedEmployerBenefits,
-        amendedPreviousLeaves: indexedPreviousLeaves,
-        previousLeaves: indexedPreviousLeaves,
-        amendedHours: claim.hours_worked_per_week,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [claim]);
-
-  useEffect(() => {
     if (!documents) {
       loadDocuments(absenceId);
     }
@@ -149,10 +150,6 @@ export const Review = (props) => {
     DocumentType.certification[leaveReason],
     DocumentType.certification.medicalCertification,
   ]);
-
-  const updateFields = (fields) => {
-    setFormState({ ...formState, ...fields });
-  };
 
   const handleHoursWorkedChange = (updatedHoursWorked) => {
     updateFields({ amendedHours: updatedHoursWorked });
@@ -415,6 +412,7 @@ export const Review = (props) => {
       >
         <SupportingWorkDetails
           appErrors={appErrors}
+          getFunctionalInputProps={getFunctionalInputProps}
           hoursWorkedPerWeek={claim.hours_worked_per_week}
           onChange={handleHoursWorkedChange}
         />
