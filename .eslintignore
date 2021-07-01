@@ -14,3 +14,4 @@ portal/out
 portal/out-storybook
 # Subdirectories with their own lint process
 e2e/
+admin/
