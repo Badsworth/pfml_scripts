@@ -485,10 +485,7 @@ export function claimAdjudicationFlow(
   reason: LeaveReason,
   ERresponse = false
 ): void {
-  const docType = getCertificationDocumentType(
-    reason,
-    config("HAS_FINEOS_SP") === "true"
-  );
+  const docType = getCertificationDocumentType(reason);
 
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
@@ -532,9 +529,7 @@ export function intermittentClaimAdjudicationFlow(
   assertClaimStatus("Adjudication");
   cy.get("input[type='submit'][value='Adjudicate']").click();
   checkStatus(claimNumber, "Eligibility", "Met");
-  markEvidence(
-    getCertificationDocumentType(reason, config("HAS_FINEOS_SP") === "true")
-  );
+  markEvidence(getCertificationDocumentType(reason));
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
   fillAbsencePeriod(claimNumber);
@@ -625,10 +620,7 @@ export function mailedDocumentMarkEvidenceRecieved(
   assertClaimStatus("Adjudication");
   onTab("Documents");
   assertHasDocument("Identification Proof");
-  const documentType = getCertificationDocumentType(
-    reason,
-    config("HAS_FINEOS_SP") === "true"
-  );
+  const documentType = getCertificationDocumentType(reason);
   uploadDocument("HCP", documentType);
   onTab("Documents");
   assertHasDocument(documentType);
@@ -657,10 +649,7 @@ export function reviewMailedDocumentsWithTasks(
   uploadDocument("MA_ID", "Identification proof");
   onTab("Documents");
   assertHasDocument("Identification Proof");
-  const documentType = getCertificationDocumentType(
-    reason,
-    config("HAS_FINEOS_SP") === "true"
-  );
+  const documentType = getCertificationDocumentType(reason);
   uploadDocument("HCP", documentType);
   onTab("Documents");
   cy.wait(150);
@@ -720,9 +709,7 @@ export function claimExtensionAdjudicationFlow(
 ): void {
   visitClaim(claimNumber);
   cy.get("input[type='submit'][value='Adjudicate']").click();
-  markEvidence(
-    getCertificationDocumentType(reason, config("HAS_FINEOS_SP") === "true")
-  );
+  markEvidence(getCertificationDocumentType(reason));
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
 }

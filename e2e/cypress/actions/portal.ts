@@ -51,9 +51,8 @@ export function before(): void {
       employerShowAddOrganization: true,
       employerShowVerifications: true,
       employerShowDashboard: true,
-      useNewPlanProofs: config("HAS_FINEOS_SP") === "true",
-      // Only show caring leave on environments with the service pack.
-      showCaringLeaveType: config("HAS_FINEOS_SP") === "true",
+      useNewPlanProofs: true,
+      showCaringLeaveType: true,
     }),
     { log: true }
   );

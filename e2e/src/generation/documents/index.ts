@@ -10,40 +10,30 @@ import PersonalLetter from "./PersonalLetter";
 import CatPicture from "./CatPicture";
 import CaringLeaveProviderForm from "./CaringLeaveProviderForm";
 import FileWrapper from "../FileWrapper";
-import config from "../../config";
 import { getCertificationDocumentType } from "../../util/documents";
-
-const hasServicePack = config("HAS_FINEOS_SP") === "true";
 
 export const generators = {
   MASSID: new MassID("Identification Proof"),
   OOSID: new OutOfStateID("Identification Proof"),
-  PREBIRTH: new PrebirthLetter(
-    getCertificationDocumentType("Child Bonding", hasServicePack)
-  ),
+  PREBIRTH: new PrebirthLetter(getCertificationDocumentType("Child Bonding")),
   HCP: new HealthCareProviderForm(
-    getCertificationDocumentType(
-      "Serious Health Condition - Employee",
-      hasServicePack
-    )
+    getCertificationDocumentType("Serious Health Condition - Employee")
   ),
   BIRTHCERTIFICATE: new BirthCertificate(
-    getCertificationDocumentType("Child Bonding", hasServicePack)
+    getCertificationDocumentType("Child Bonding")
   ),
   ADOPTIONCERT: new AdoptionCertificate(
-    getCertificationDocumentType("Child Bonding", hasServicePack)
+    getCertificationDocumentType("Child Bonding")
   ),
   FOSTERPLACEMENT: new FosterPlacementLetter(
-    getCertificationDocumentType("Child Bonding", hasServicePack)
+    getCertificationDocumentType("Child Bonding")
   ),
   PERSONALLETTER: new PersonalLetter(
-    getCertificationDocumentType("Child Bonding", hasServicePack)
+    getCertificationDocumentType("Child Bonding")
   ),
-  CATPIC: new CatPicture(
-    getCertificationDocumentType("Child Bonding", hasServicePack)
-  ),
+  CATPIC: new CatPicture(getCertificationDocumentType("Child Bonding")),
   CARING: new CaringLeaveProviderForm(
-    getCertificationDocumentType("Care for a Family Member", hasServicePack)
+    getCertificationDocumentType("Care for a Family Member")
   ),
   PREGNANCY_MATERNITY_FORM: new HealthCareProviderForm(
     "Pregnancy/Maternity form"

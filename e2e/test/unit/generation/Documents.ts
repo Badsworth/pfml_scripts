@@ -8,12 +8,10 @@ import generateDocuments, {
   DocumentWithPromisedFile,
 } from "../../../src/generation/documents";
 import { ApplicationRequestBody } from "../../../src/api";
-import config from "../../../src/config";
 import { collect } from "streaming-iterables";
 
 describe("Documents", function () {
   let tempDir: string;
-  const hasServicePack = config("HAS_FINEOS_SP") === "true";
 
   beforeAll(async () => {
     tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "documents"));
@@ -145,9 +143,7 @@ describe("Documents", function () {
       CARING: {},
     });
     expect(document).toMatchObject({
-      document_type: hasServicePack
-        ? "Care for a family member form"
-        : "State managed Paid Leave Confirmation",
+      document_type: "Care for a family member form",
     });
     const values = await parsePDF(document);
     expect(values).toMatchObject({
@@ -289,9 +285,7 @@ describe("Documents", function () {
       HCP: {},
     });
     expect(document).toMatchObject({
-      document_type: hasServicePack
-        ? "Own serious health condition form"
-        : "State managed Paid Leave Confirmation",
+      document_type: "Own serious health condition form",
     });
     const values = await parsePDF(document);
     expect(values).toMatchObject({
