@@ -26,7 +26,7 @@ function spreadMinutesOverWeek(minutesWorkedPerWeek) {
         i === Math.ceil(remainderIncrements) - 1 ? remainderMinutes : 0;
       dailyMinutes.push(
         Math.floor(incrementsPerDay) * incrementMinutes + // even distribution
-          extraFullIncrementMinutes + // extra 15-minute increments
+        extraFullIncrementMinutes + // extra 15-minute increments
           extraPartialIncrementMinutes // leftover minutes
       );
     } else {
