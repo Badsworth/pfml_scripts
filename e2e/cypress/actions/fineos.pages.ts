@@ -956,11 +956,13 @@ export class ClaimantPage {
     return this;
   }
 
-  addAddress(address: AllNotNull<Address>): this {
+  addAddress(address: Address): this {
     cy.findByText(`+ Add address`).click({ force: true });
     cy.get(`#addressPopupWidget_PopupWidgetWrapper`).within(() => {
       cy.findByLabelText(`Address line 1`).type(`${address.line_1}`);
-      cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
+      if (address.line_2) {
+        cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
+      }
       cy.findByLabelText(`City`).type(`${address.city}`);
       cy.findByLabelText(`State`).select(`${address.state}`);
       cy.findByLabelText(`Zip code`).type(`${address.zip}`);

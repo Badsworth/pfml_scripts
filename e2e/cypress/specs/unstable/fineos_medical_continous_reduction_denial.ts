@@ -1,4 +1,4 @@
-import { AllNotNull, Submission } from "../../../src/types";
+import { Submission } from "../../../src/types";
 import { dateToMMddyyyy, extractLeavePeriod } from "../../../src/util/claims";
 import {
   assertIsTypedArray,
@@ -32,7 +32,7 @@ describe("Claimant can call call-center to submit a claim for leave with other l
               date_of_birth: dateToMMddyyyy(claim.claim.date_of_birth),
             })
             .addAddress({
-              ...(claim.claim.mailing_address as AllNotNull<Address>),
+              ...(claim.claim.mailing_address as Address),
             });
 
           const [startDate, endDate] = extractLeavePeriod(
