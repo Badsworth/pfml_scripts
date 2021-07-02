@@ -159,6 +159,8 @@ const routes = {
       verifyEmployer: "https://www.mass.gov/pfml-verify-employer",
       whatToExpect:
         "https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits",
+      whenCanIUsePFML:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-",
       whichPaidLeave: "https://www.mass.gov/which-paid-leave",
       zeroBalanceEmployer: "https://www.mass.gov/pfml-zero-balance-employer",
     },
