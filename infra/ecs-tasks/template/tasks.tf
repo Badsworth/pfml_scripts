@@ -5,20 +5,63 @@
 #
 # "${local.app_name}-your-task-name" = {
 #   command = ["the-command-name"],
-#   task_role = null
+#   env = [
+#     local.db_access,
+#     ...
+#   ]
 # }
 #
-# The command name usually comes from pyproject.toml.
+# The command name comes from pyproject.toml.
+#
+# Application AWS Permissions
+# ===========================
 #
 # The task_role should be defined, but can be null if your running task does not need
 # to be assigned an IAM role for additional permissions to AWS resources.
 # If not null, it should have a task_role_arn stored in it for the aws_ecs_task_definition.
 #
+# Configuring Environment Variables and Secrets
+# =============================================
+#
+# If your task requires unique SSM / secretsmanager permissions, please define and specify an
+# execution_role for your task.
+#
+# Use the "env" key to specify the environment variables needed by your ECS task. Shared groups of variables
+# are stored as locals in task_config.tf and can be used:
+#
+# env = [ local.db_access ]
+#
+# If you need unique variables, you can specify them inline:
+#
+# env = [
+#   local.db_access,
+#   { name: "COOL_ENDPOINT_URL", value: "something" }
+# ]
+#
+# You can also specify secrets that are pulled from parameter store using the "valueFrom" key:
+#
+# env = [
+#   local.db_access,
+#   { name: "COOL_ENDPOINT_URL", value: "something" },
+#   { name: "COOL_ENDPOINT_SECRET_KEY", valueFrom: "/service/pfml-api/test/cool_endpoint_secret_key" }
+# ]
+#
+# Note that AWS ECS provides protections against duplicate or invalid keys. This won't be caught at the PR stage,
+# but a terraform apply will indicate any AWS errors, e.g.:
+#
+# Error: ClientException: Duplicate secret names found: DB_NESSUS_PASSWORD. Each secret name must be unique.
+#
+# Resource Limits
+# ===============
+#
 # CPU and memory defaults are 512 (CPU units) and 1024 (MB).
 # If you need more resources than this, add "cpu" or "memory" keys to your ECS task's
 # entry in locals.tasks. The defaults will be used if these keys are absent.
 #
-# Once this is done, apply your terraform changes and test your new ECS task in the test environment.
+# Testing ECS Tasks
+# =================
+#
+# Once you're ready, apply your terraform changes and test your new ECS task in the test environment.
 #
 # From the root of the git repository (example):
 #
@@ -27,106 +70,107 @@
 locals {
   tasks = {
     "db-migrate-up" = {
-      command = ["db-migrate-up"]
+      command = ["db-migrate-up"],
+      env     = [local.db_access]
     },
 
     "db-migrate-down" = {
       command = ["db-migrate-down"]
+      env     = [local.db_access]
     }
 
     "db-admin-create-db-users" = {
-      command             = ["db-admin-create-db-users"],
-      containers_template = "db_admin_create_db_users.json"
+      command = ["db-admin-create-db-users"]
+      env = [
+        local.db_access,
+        { name : "DB_NESSUS_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/db-nessus-password" }
+      ]
     },
 
     "db-create-fineos-user" = {
-      command = ["db-create-fineos-user"]
+      command = ["db-create-fineos-user"],
+      env = [
+        local.db_access,
+        { name : "COGNITO_FINEOS_APP_CLIENT_ID", valueFrom : "/service/${local.app_name}/${var.environment_name}/cognito_fineos_app_client_id" },
+        { name : "COGNITO_INTERNAL_FINEOS_ROLE_APP_CLIENT_ID", valueFrom : "/service/${local.app_name}/${var.environment_name}/cognito_internal_fineos_role_app_client_id" }
+      ]
     },
 
     "execute-sql" = {
-      command             = ["execute-sql"]
-      containers_template = "execute_sql_template.json"
-      task_role           = aws_iam_role.task_execute_sql_task_role.arn
-      vars = {
-        s3_export_bucket = "massgov-pfml-${var.environment_name}-execute-sql-export"
-      }
+      command   = ["execute-sql"]
+      task_role = aws_iam_role.task_execute_sql_task_role.arn
+      env = [
+        local.db_access,
+        { name : "S3_EXPORT_BUCKET", value : "massgov-pfml-${var.environment_name}-execute-sql-export" }
+      ]
     },
 
     "bulk-user-import" = {
-      command             = ["bulk-user-import"]
-      containers_template = "bulk_user_import_template.json"
-      task_role           = aws_iam_role.task_bulk_import_task_role.arn
-      vars = {
-        fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
-        fineos_client_customer_api_url             = var.fineos_client_customer_api_url
-        fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
-        fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
-        fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
-        fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
-        fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
-        cognito_user_pool_id                       = var.cognito_user_pool_id
-        process_csv_data_bucket_name               = aws_s3_bucket.bulk_user_import.bucket # massgov-pfml-${environment_name}-bulk-user-import
-      }
+      command   = ["bulk-user-import"]
+      task_role = aws_iam_role.task_bulk_import_task_role.arn
+      env = [
+        local.db_access,
+        local.fineos_api_access,
+        { name : "PROCESS_CSV_DATA_BUCKET_NAME", value : "${aws_s3_bucket.bulk_user_import.bucket}" },
+        { name : "COGNITO_IDENTITY_POOL_ID", value : "${var.cognito_user_pool_id}" }
+      ]
     },
 
     "dor-import" = {
-      command             = ["dor-import"],
-      task_role           = aws_iam_role.dor_import_task_role.arn,
-      execution_role      = aws_iam_role.dor_import_execution_role.arn,
-      cpu                 = "4096",
-      memory              = "18432",
-      containers_template = "dor_import_template.json"
+      command        = ["dor-import"],
+      task_role      = aws_iam_role.dor_import_task_role.arn,
+      execution_role = aws_iam_role.dor_import_execution_role.arn,
+      cpu            = 4096,
+      memory         = 18432,
+      env = [
+        local.db_access,
+        { name : "DECRYPT", value : "true" },
+        { name : "FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor/received" },
+        { name : "GPG_DECRYPTION_KEY", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key" },
+        { name : "GPG_DECRYPTION_KEY_PASSPHRASE", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key_passphrase" }
+      ]
     },
 
     "fineos-import-employee-updates" = {
-      command             = ["fineos-import-employee-updates"]
-      task_role           = aws_iam_role.fineos_import_employee_updates_task_role.arn
-      cpu                 = "2048"
-      memory              = "9216"
-      containers_template = "fineos_import_employee_updates_template.json"
-      vars = {
-        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
-        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-        input_directory_path            = var.fineos_import_employee_updates_input_directory_path
-      }
+      command   = ["fineos-import-employee-updates"]
+      task_role = aws_iam_role.fineos_import_employee_updates_task_role.arn
+      cpu       = 2048
+      memory    = 9216
+      env = [
+        local.db_access,
+        local.fineos_s3_access
+      ]
     },
 
     "register-leave-admins-with-fineos" = {
-      command             = ["register-leave-admins-with-fineos"]
-      task_role           = aws_iam_role.register_admins_task_role.arn,
-      cpu                 = "4096",
-      memory              = "18432",
-      containers_template = "register_leave_admins_with_fineos.json"
-      vars = {
-        fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
-        fineos_client_customer_api_url             = var.fineos_client_customer_api_url
-        fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
-        fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
-        fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
-        fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
-        fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
-      }
+      command   = ["register-leave-admins-with-fineos"]
+      task_role = aws_iam_role.register_admins_task_role.arn,
+      cpu       = 4096,
+      memory    = 18432,
+      env = [
+        local.db_access,
+        local.fineos_api_access
+      ]
     }
 
     "load-employers-to-fineos" = {
-      command             = ["load-employers-to-fineos"]
-      containers_template = "load_employers_to_fineos_template.json"
-      vars = {
-        fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
-        fineos_client_customer_api_url             = var.fineos_client_customer_api_url
-        fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
-        fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
-        fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
-        fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
-        fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
-      }
+      command = ["load-employers-to-fineos"]
+      env = [
+        local.db_access,
+        local.fineos_api_access
+      ]
     },
 
     "reductions-process-agency-data" = {
-      command             = ["reductions-process-agency-data"]
-      containers_template = "reductions_process_agency_data.json"
-      task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
-      execution_role      = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
+      command        = ["reductions-process-agency-data"]
+      task_role      = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
+      execution_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders,
+        local.emails_reductions
+      ]
       vars = {
         eolwd_moveit_sftp_uri               = var.eolwd_moveit_sftp_uri,
         pfml_email_address                  = var.pfml_email_address
@@ -137,145 +181,118 @@ locals {
     },
 
     "reductions-send-claimant-lists" = {
-      command             = ["reductions-send-claimant-lists-to-agencies"]
-      containers_template = "reductions_send_claimant_lists_to_agencies.json"
-      task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
-      execution_role      = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
-      vars = {
-        eolwd_moveit_sftp_uri = var.eolwd_moveit_sftp_uri
-      }
+      command        = ["reductions-send-claimant-lists-to-agencies"]
+      task_role      = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
+      execution_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
     },
 
     "pub-payments-create-pub-files" = {
-      command             = ["pub-payments-create-pub-files"]
-      containers_template = "pub_payments_create_pub_files_template.json"
-      task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-create-pub-files"
-      vars = {
-        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
-        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-
-        fineos_data_import_path = var.fineos_data_import_path
-        fineos_data_export_path = var.fineos_data_export_path
-      }
+      command   = ["pub-payments-create-pub-files"]
+      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-create-pub-files"
+      env = [
+        local.db_access,
+        local.fineos_s3_access,
+        local.pub_s3_folders,
+        { name : "PUB_PAYMENT_STARTING_CHECK_NUMBER", value : "106" },
+        { name : "DFML_PUB_ROUTING_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_routing_number" },
+        { name : "DFML_PUB_ACCOUNT_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_account_number" }
+      ]
     },
 
     "pub-payments-process-pub-returns" = {
-      command             = ["pub-payments-process-pub-returns"]
-      containers_template = "pub_payments_process_pub_returns_template.json"
-      task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-process-pub-returns"
-      vars = {
-        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
-        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-
-        fineos_data_import_path = var.fineos_data_import_path
-      }
+      command   = ["pub-payments-process-pub-returns"]
+      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-process-pub-returns"
+      env = [
+        local.db_access,
+        local.fineos_s3_access,
+        local.pub_s3_folders
+      ]
     },
 
     "fineos-eligibility-feed-export" = {
-      command             = ["fineos-eligibility-feed-export"]
-      containers_template = "fineos_eligibility_feed_export_template.json"
-      task_role           = aws_iam_role.fineos_eligibility_feed_export_task_role.arn
-      cpu                 = "4096"
-      memory              = "8192"
-      vars = {
-        fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
-        fineos_client_customer_api_url             = var.fineos_client_customer_api_url
-        fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
-        fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
-        fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
-        fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
-        fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
-
-        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
-        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-
-        output_directory_path = var.fineos_eligibility_feed_output_directory_path
-      }
+      command   = ["fineos-eligibility-feed-export"]
+      task_role = aws_iam_role.fineos_eligibility_feed_export_task_role.arn
+      cpu       = 4096
+      memory    = 8192
+      env = [
+        local.db_access,
+        local.fineos_api_access,
+        local.fineos_s3_access
+      ]
     }
 
     "payments-ctr-process" = {
-      command             = ["payments-ctr-process"]
-      containers_template = "payments_ctr_process_template.json"
-      task_role           = aws_iam_role.payments_ctr_process_task_role.arn
-      execution_role      = aws_iam_role.payments_ctr_import_execution_role.arn
-      cpu                 = "2048"
-      memory              = "16384"
-      vars = {
-        eolwd_moveit_sftp_uri    = var.eolwd_moveit_sftp_uri
-        ctr_moveit_incoming_path = var.ctr_moveit_incoming_path
-        ctr_moveit_archive_path  = var.ctr_moveit_archive_path
-        ctr_moveit_outgoing_path = var.ctr_moveit_outgoing_path
-        pfml_ctr_inbound_path    = var.pfml_ctr_inbound_path
-        pfml_ctr_outbound_path   = var.pfml_ctr_outbound_path
-        pfml_error_reports_path  = var.pfml_error_reports_path
-
-        dfml_project_manager_email_address     = var.dfml_project_manager_email_address
-        pfml_email_address                     = var.pfml_email_address
-        ctr_gax_bievnt_email_address           = var.ctr_gax_bievnt_email_address
-        ctr_vcc_bievnt_email_address           = var.ctr_vcc_bievnt_email_address
-        dfml_business_operations_email_address = var.dfml_business_operations_email_address
-
-        ctr_data_mart_host     = var.ctr_data_mart_host
-        ctr_data_mart_username = var.ctr_data_mart_username
-      }
+      command        = ["payments-ctr-process"]
+      task_role      = aws_iam_role.payments_ctr_process_task_role.arn
+      execution_role = aws_iam_role.payments_ctr_import_execution_role.arn
+      cpu            = 2048
+      memory         = 16384
+      env = [
+        local.db_access,
+        local.datamart_access,
+        local.eolwd_moveit_access,
+        local.emails_ctr,
+        { name : "PFML_ERROR_REPORTS_PATH", value : "${var.pfml_error_reports_path}" },
+        { name : "CTR_MOVEIT_INCOMING_PATH", value : "${var.ctr_moveit_incoming_path}" },
+        { name : "CTR_MOVEIT_OUTGOING_PATH", value : "${var.ctr_moveit_outgoing_path}" },
+        { name : "CTR_MOVEIT_ARCHIVE_PATH", value : "${var.ctr_moveit_archive_path}" },
+        { name : "PFML_CTR_INBOUND_PATH", value : "${var.pfml_ctr_inbound_path}" },
+        { name : "PFML_CTR_OUTBOUND_PATH", value : "${var.pfml_ctr_outbound_path}" }
+      ]
     },
 
     "payments-fineos-process" = {
-      command             = ["payments-fineos-process"]
-      containers_template = "payments_fineos_process_template.json"
-      task_role           = aws_iam_role.payments_fineos_process_task_role.arn
-      cpu                 = "2048"
-      memory              = "16384"
-      vars = {
-        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
-        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-
-        fineos_data_export_path   = var.fineos_data_export_path
-        fineos_data_import_path   = var.fineos_data_import_path
-        pfml_fineos_inbound_path  = var.pfml_fineos_inbound_path
-        pfml_fineos_outbound_path = var.pfml_fineos_outbound_path
-        pfml_error_reports_path   = var.pfml_error_reports_path
-
-        fineos_vendor_max_history_date  = var.fineos_vendor_max_history_date
-        fineos_payment_max_history_date = var.fineos_payment_max_history_date
-
-        dfml_project_manager_email_address = var.dfml_project_manager_email_address
-      }
+      command   = ["payments-fineos-process"]
+      task_role = aws_iam_role.payments_fineos_process_task_role.arn
+      cpu       = 2048
+      memory    = 16384
+      env = [
+        local.db_access,
+        local.fineos_s3_access,
+        local.emails_ctr,
+        { name : "FINEOS_PAYMENT_MAX_HISTORY_DATE", value : "${var.fineos_payment_max_history_date}" },
+        { name : "FINEOS_VENDOR_MAX_HISTORY_DATE", value : "${var.fineos_vendor_max_history_date}" },
+        { name : "PFML_FINEOS_INBOUND_PATH", value : "${var.pfml_fineos_inbound_path}" },
+        { name : "PFML_FINEOS_OUTBOUND_PATH", value : "${var.pfml_fineos_outbound_path}" },
+        { name : "PFML_ERROR_REPORTS_PATH", value : "${var.pfml_error_reports_path}" },
+      ]
     },
 
     "pub-payments-process-fineos" = {
-      command             = ["pub-payments-process-fineos"]
-      containers_template = "pub_payments_process_fineos_template.json"
-      task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-fineos"
-      cpu                 = "2048"
-      memory              = "16384"
-      vars = {
-        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
-        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-
-        fineos_data_export_path = var.fineos_data_export_path
-        fineos_data_import_path = var.fineos_data_import_path
-      }
+      command   = ["pub-payments-process-fineos"]
+      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-fineos"
+      cpu       = 2048
+      memory    = 16384
+      env = [
+        local.db_access,
+        local.fineos_s3_access,
+        local.pub_s3_folders,
+        { name : "FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
+        { name : "FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
+        { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" }
+      ]
     },
 
     "fineos-test-vendor-export-generate" = {
-      command             = ["fineos-test-vendor-export-generate"]
-      task_role           = aws_iam_role.payments_fineos_process_task_role.arn
-      containers_template = "fineos_test_vendor_export_generate.json"
-      vars = {
-        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
-        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-      }
+      command   = ["fineos-test-vendor-export-generate"]
+      task_role = aws_iam_role.payments_fineos_process_task_role.arn
+      env = [
+        local.db_access,
+        local.fineos_s3_access
+      ]
     },
 
     "fineos-bucket-tool" = {
-      command             = ["fineos-bucket-tool"]
-      containers_template = "fineos_bucket_tool.json"
-      task_role           = aws_iam_role.fineos_bucket_tool_role.arn
-      vars = {
-        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
-        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-      }
+      command   = ["fineos-bucket-tool"]
+      task_role = aws_iam_role.fineos_bucket_tool_role.arn
+      env = [
+        local.fineos_s3_access
+      ]
     },
 
     "cps-errors" = {
@@ -285,63 +302,53 @@ locals {
     },
 
     "payments-rotate-data-mart-password" = {
-      command             = ["payments-rotate-data-mart-password"]
-      containers_template = "payments_rotate_data_mart_password_template.json"
-      task_role           = aws_iam_role.payments_ctr_process_task_role.arn
-      vars = {
-        ctr_data_mart_host     = var.ctr_data_mart_host
-        ctr_data_mart_username = var.ctr_data_mart_username
-      }
+      command   = ["payments-rotate-data-mart-password"]
+      task_role = aws_iam_role.payments_ctr_process_task_role.arn
+      env = [
+        local.datamart_access,
+        { name : "CTR_DATA_MART_PASSWORD_OLD", valueFrom : "/service/${local.app_name}/${var.environment_name}/ctr-data-mart-password-old" }
+      ]
     },
 
     "payments-ctr-vc-code-cleanup" = {
-      command             = ["payments-ctr-vc-code-cleanup"]
-      containers_template = "payments_ctr_vc_code_cleanup_template.json"
-      task_role           = aws_iam_role.payments_ctr_process_task_role.arn
-      vars = {
-        ctr_data_mart_host     = var.ctr_data_mart_host
-        ctr_data_mart_username = var.ctr_data_mart_username
-      }
+      command   = ["payments-ctr-vc-code-cleanup"]
+      task_role = aws_iam_role.payments_ctr_process_task_role.arn
+      env = [
+        local.db_access,
+        local.datamart_access
+      ]
     },
 
     "payments-payment-voucher-plus" = {
-      command             = ["payments-payment-voucher-plus"]
-      containers_template = "payments_payment_voucher_plus_template.json"
-      task_role           = aws_iam_role.payments_fineos_process_task_role.arn
-      cpu                 = "2048"
-      memory              = "16384"
-      vars = {
-        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
-        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-
-        fineos_data_export_path  = var.fineos_data_export_path
-        pfml_fineos_inbound_path = var.pfml_fineos_inbound_path
-        pfml_error_reports_path  = var.pfml_error_reports_path
-        pfml_voucher_output_path = var.pfml_voucher_output_path
-
-        fineos_vendor_max_history_date = var.fineos_vendor_max_history_date
-
-        pfml_email_address                     = var.pfml_email_address
-        dfml_business_operations_email_address = var.dfml_business_operations_email_address
-
-        ctr_data_mart_host     = var.ctr_data_mart_host
-        ctr_data_mart_username = var.ctr_data_mart_username
-      }
+      command   = ["payments-payment-voucher-plus"]
+      task_role = aws_iam_role.payments_fineos_process_task_role.arn
+      cpu       = 2048
+      memory    = 16384
+      env = [
+        local.db_access,
+        local.datamart_access,
+        local.fineos_s3_access,
+        local.emails_ctr,
+        { name : "PFML_ERROR_REPORTS_PATH", value : "${var.pfml_error_reports_path}" },
+        { name : "PFML_VOUCHER_OUTPUT_PATH", value : "${var.pfml_voucher_output_path}" },
+        { name : "FINEOS_VENDOR_MAX_HISTORY_DATE", value : "${var.fineos_vendor_max_history_date}" },
+        { name : "PFML_FINEOS_INBOUND_PATH", value : "${var.pfml_fineos_inbound_path}" }
+      ]
     },
-
     "transmogrify-state" = {
-      command = ["transmogrify-state"]
+      command = ["transmogrify-state"],
+      env = [
+        local.db_access
+      ]
     },
 
     "import-fineos-to-warehouse" = {
-      command             = ["import-fineos-to-warehouse"]
-      containers_template = "import_fineos_to_warehouse.json"
-      task_role           = aws_iam_role.fineos_bucket_tool_role.arn
-      vars = {
-        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
-        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-        fineos_data_export_path         = var.fineos_data_export_path
-      }
+      command   = ["import-fineos-to-warehouse"]
+      task_role = aws_iam_role.fineos_bucket_tool_role.arn
+      env = [
+        local.fineos_s3_access,
+        { name : "BI_WAREHOUSE_PATH", value : "s3://massgov-pfml-${var.environment_name}-business-intelligence-tool/warehouse/raw/fineos/" }
+      ]
     },
   }
 }
@@ -350,47 +357,55 @@ data "aws_ecr_repository" "app" {
   name = local.app_name
 }
 
-# this resource is used as a template to provision each ECS task in locals.tasks
+# this resource is used as a template to provision each ECS task in local.tasks
 resource "aws_ecs_task_definition" "ecs_tasks" {
   for_each                 = local.tasks
   family                   = "${local.app_name}-${var.environment_name}-${each.key}"
   task_role_arn            = lookup(each.value, "task_role", null)
   execution_role_arn       = lookup(each.value, "execution_role", aws_iam_role.task_executor.arn)
-  container_definitions    = data.template_file.task_container_definitions[each.key].rendered
-  cpu                      = lookup(each.value, "cpu", "512")
-  memory                   = lookup(each.value, "memory", "1024")
+  cpu                      = tostring(lookup(each.value, "cpu", 512))
+  memory                   = tostring(lookup(each.value, "memory", 1024))
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
 
   tags = merge(module.constants.common_tags, {
     environment = var.environment_name
   })
-}
 
-data "template_file" "task_container_definitions" {
-  for_each = local.tasks
-  template = file("${path.module}/json/${lookup(each.value, "containers_template", "default_template.json")}")
+  container_definitions = jsonencode([
+    {
+      name                   = each.key,
+      image                  = format("%s:%s", data.aws_ecr_repository.app.repository_url, var.service_docker_tag),
+      command                = each.value.command,
+      cpu                    = lookup(each.value, "cpu", 512),
+      memory                 = lookup(each.value, "memory", 1024),
+      networkMode            = "awsvpc",
+      essential              = true,
+      readonlyRootFilesystem = false, # False by default; some tasks write local files.
+      linuxParameters = {
+        capabilities = {
+          drop = ["ALL"]
+        },
+        initProcessEnabled = true
+      },
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs_tasks.name,
+          "awslogs-region"        = data.aws_region.current.name,
+          "awslogs-stream-prefix" = var.environment_name
+        }
+      },
 
-  vars = merge({
-    app_name                   = local.app_name
-    task_name                  = each.key
-    command                    = jsonencode(each.value.command)
-    cpu                        = lookup(each.value, "cpu", "512")
-    memory                     = lookup(each.value, "memory", "1024")
-    db_host                    = data.aws_db_instance.default.address
-    db_name                    = data.aws_db_instance.default.db_name
-    db_username                = data.aws_db_instance.default.master_username
-    logging_level              = var.logging_level
-    docker_image               = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
-    environment_name           = var.environment_name
-    cloudwatch_logs_group_name = aws_cloudwatch_log_group.ecs_tasks.name
-    aws_region                 = data.aws_region.current.name
-
-    pfml_email_address                     = var.pfml_email_address
-    bounce_forwarding_email_address        = var.bounce_forwarding_email_address
-    bounce_forwarding_email_address_arn    = var.bounce_forwarding_email_address_arn
-    ctr_gax_bievnt_email_address           = var.ctr_gax_bievnt_email_address
-    ctr_vcc_bievnt_email_address           = var.ctr_vcc_bievnt_email_address
-    dfml_business_operations_email_address = var.dfml_business_operations_email_address
-  }, lookup(each.value, "vars", {}))
+      # Split env into static environment variables or secrets based on whether they contain "value" or "valueFrom"
+      # I know, it's not very readable but this is how terraform is.
+      #
+      # We use !contains("value") for secrets instead of contains("valueFrom") so that any items with typos are
+      # caught and error out when trying to apply the task definition. Otherwise, anything with a typo could
+      # silently cause env vars to go missing which would definitely confuse someone for a day or two.
+      #
+      environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
+      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
+    }
+  ])
 }
