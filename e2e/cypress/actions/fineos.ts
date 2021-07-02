@@ -185,7 +185,7 @@ export function onTab(label: string, wait = 150): void {
  * it will be called often. Try to find a better way to determine if we can move
  * on with processing (element detection).
  */
-function wait() {
+export function wait(): void {
   cy.wait("@ajaxRender");
   cy.get("#disablingLayer").should("not.be.visible");
 }
