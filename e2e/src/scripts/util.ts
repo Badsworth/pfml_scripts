@@ -9,6 +9,12 @@ import {
   watchFailures,
 } from "../submission/iterable";
 import { getPortalSubmitter } from "../util/common";
+import {
+  approveClaim,
+  withFineosBrowser,
+  denyClaim,
+  closeDocuments,
+} from "../submission/PostSubmit";
 
 export type PostSubmitCallback = (
   claim: GeneratedClaim,
@@ -45,3 +51,34 @@ export async function submit(
     consume
   );
 }
+
+export const postSubmit: PostSubmitCallback = async (claim, response) => {
+  const { metadata } = claim;
+  if (metadata && "postSubmit" in metadata) {
+    // Open a puppeteer browser for the duration of this callback.
+    await withFineosBrowser(async (page) => {
+      const { fineos_absence_id } = response;
+      if (!fineos_absence_id)
+        throw new Error(
+          `No fineos_absence_id was found on this response: ${JSON.stringify(
+            response
+          )}`
+        );
+      switch (metadata.postSubmit) {
+        case "APPROVE":
+          await approveClaim(page, claim, fineos_absence_id);
+          break;
+        case "DENY":
+          await denyClaim(page, fineos_absence_id);
+          break;
+        case "APPROVEDOCS":
+          await closeDocuments(page, claim, fineos_absence_id);
+          break;
+        default:
+          throw new Error(
+            `Unknown claim.metadata.postSubmit property: ${metadata.postSubmit}`
+          );
+      }
+    });
+  }
+};
