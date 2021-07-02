@@ -171,13 +171,6 @@ locals {
         local.reductions_folders,
         local.emails_reductions
       ]
-      vars = {
-        eolwd_moveit_sftp_uri               = var.eolwd_moveit_sftp_uri,
-        pfml_email_address                  = var.pfml_email_address
-        bounce_forwarding_email_address     = var.bounce_forwarding_email_address
-        bounce_forwarding_email_address_arn = var.bounce_forwarding_email_address_arn
-        agency_reductions_email_address     = var.agency_reductions_email_address
-      }
     },
 
     "reductions-send-claimant-lists" = {
