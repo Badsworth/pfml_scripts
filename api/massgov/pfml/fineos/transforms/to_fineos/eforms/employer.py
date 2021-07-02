@@ -15,9 +15,11 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.common import (
     IntermediaryConcurrentLeave,
     IntermediaryEmployerBenefit,
     IntermediaryPreviousLeave,
+    IntermediaryV1EmployerBenefit,
 )
 
 
+# TODO (EMPLOYER-1425): Remove v1 eform functionality when they are no longer used in FINEOS
 class EmployerBenefitV1AttributeBuilder(EFormAttributeBuilder):
     ATTRIBUTE_MAP = {
         "benefit_amount_dollars": {"name": "Amount", "type": "decimalValue"},
@@ -25,16 +27,23 @@ class EmployerBenefitV1AttributeBuilder(EFormAttributeBuilder):
         "benefit_start_date": {"name": "EmployerBenefitStartDate", "type": "dateValue"},
         "benefit_end_date": {"name": "EmployerBenefitEndDate", "type": "dateValue"},
         "benefit_type": {"name": "BenefitType", "type": "stringValue"},
+        # Note: the first instance of this field isn't actually used by FINEOS but it simplifies our code to send it anyway.
+        # FINEOS will ignore its value. For example, in order to represent 3 employer benefits we only need to send:
+        #   - ReceiveWageReplacement2
+        #   - ReceiveWageReplacement3
+        "receive_wage_replacement": {
+            "name": "ReceiveWageReplacement",
+            "type": "enumValue",
+            "domainName": "PleaseSelectYesNo",
+        },
     }
 
-    JOINING_ATTRIBUTE = {
-        "name": "ReceiveWageReplacement",
-        "type": "enumValue",
-        "domainName": "PleaseSelectYesNo",
-        "instanceValue": "Yes",
-    }
+    def __init__(self, target):
+        intermediary_target = IntermediaryV1EmployerBenefit(target)
+        super().__init__(intermediary_target)
 
 
+# TODO (EMPLOYER-1425): Remove v1 eform functionality when they are no longer used in FINEOS
 class OtherInfoV1AttributeBuilder(EFormAttributeBuilder):
     ATTRIBUTE_MAP = {
         "comment": {"name": "Comment", "type": "stringValue"},
@@ -59,6 +68,7 @@ class OtherInfoV1AttributeBuilder(EFormAttributeBuilder):
         super().__init__(intermediary_target)
 
 
+# TODO (EMPLOYER-1425): Remove v1 eform functionality when they are no longer used in FINEOS
 class EmployerClaimReviewV1EFormBuilder(EFormBuilder):
     @classmethod
     def build(cls, review: EmployerClaimReview) -> EFormBody:
