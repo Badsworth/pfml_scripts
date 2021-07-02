@@ -50,7 +50,12 @@ from massgov.pfml.db.models.applications import (
     OtherIncome,
     PreviousLeave,
 )
-from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSFatalUnavailable, FINEOSNotFound
+from massgov.pfml.fineos.exception import (
+    FINEOSClientBadResponse,
+    FINEOSClientError,
+    FINEOSFatalUnavailable,
+    FINEOSNotFound,
+)
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.sqlalchemy import get_or_404
 
@@ -571,18 +576,24 @@ def document_upload(application_id, body, file):
                 "document_upload - document uploaded to claims processing system",
                 extra=log_attributes,
             )
-        except ValueError as ve:
+        except Exception as err:
             logger.warning(
                 "document_upload failure - failure uploading document to claims processing system",
                 extra=log_attributes,
                 exc_info=True,
             )
-            return response_util.error_response(
-                status_code=BadRequest,
-                message=str(ve),
-                errors=[response_util.custom_issue("fineos_client", str(ve))],
-                data=document_details.dict(),
-            ).to_api_response()
+
+            if isinstance(err, FINEOSClientBadResponse) and err.response_status == 422:
+                message = "Issue encountered while attempting to upload the document."
+                return response_util.error_response(
+                    status_code=BadRequest,
+                    message=message,
+                    errors=[response_util.custom_issue("fineos_client", message)],
+                    data=document_details.dict(),
+                ).to_api_response()
+
+            # Bubble any other issues up to the API error handlers
+            raise
 
         # Insert a document metadata row
         document.application_id = existing_application.application_id

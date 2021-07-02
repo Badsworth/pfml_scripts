@@ -905,25 +905,21 @@ def upload_document(
     description: str,
     db_session: massgov.pfml.db.Session,
 ) -> massgov.pfml.fineos.models.customer_api.Document:
-    try:
-        fineos = massgov.pfml.fineos.create_client()
+    fineos = massgov.pfml.fineos.create_client()
 
-        fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
-        absence_id = get_fineos_absence_id_from_application(application)
+    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    absence_id = get_fineos_absence_id_from_application(application)
 
-        fineos_document = fineos.upload_document(
-            fineos_user_id,
-            absence_id,
-            document_type,
-            file_content,
-            file_name,
-            content_type,
-            description,
-        )
-        return fineos_document
-    except massgov.pfml.fineos.FINEOSClientError:
-        logger.exception("FINEOS Client Exception")
-        raise ValueError("FINEOS Client Exception")
+    fineos_document = fineos.upload_document(
+        fineos_user_id,
+        absence_id,
+        document_type,
+        file_content,
+        file_name,
+        content_type,
+        description,
+    )
+    return fineos_document
 
 
 def fineos_document_response_to_document_response(
