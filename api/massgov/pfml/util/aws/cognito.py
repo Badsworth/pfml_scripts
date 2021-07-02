@@ -12,7 +12,7 @@ from massgov.pfml.api.util.response import Issue, IssueType
 from massgov.pfml.cognito_post_confirmation_lambda.lib import leave_admin_create
 from massgov.pfml.db.models.employees import User
 
-ACTIVE_DIRECTORY_ATTRIBUTE = "sub"
+USER_ID_ATTRIBUTE = "sub"
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
@@ -53,15 +53,13 @@ class CognitoUserExistsValidationError(CognitoValidationError):
 
     Attributes:
         message -- Cognito's explanation of the error
-        active_directory_id -- Existing user's ID attribute
         sub_id -- Existing user's ID attribute
         issue -- used for communicating the error to the user
     """
 
-    __slots__ = ["active_directory_id", "sub_id", "issue", "message"]
+    __slots__ = ["sub_id", "issue", "message"]
 
-    def __init__(self, message: str, active_directory_id: Optional[str], sub_id: Optional[str]):
-        self.active_directory_id = active_directory_id
+    def __init__(self, message: str, sub_id: Optional[str]):
         self.sub_id = sub_id
         self.message = message
         self.issue = Issue(field="email_address", type=IssueType.exists, message=message)
@@ -128,7 +126,7 @@ def lookup_cognito_account_id(
 
     if response and response["UserAttributes"]:
         for attr in response["UserAttributes"]:
-            if attr["Name"] == ACTIVE_DIRECTORY_ATTRIBUTE:
+            if attr["Name"] == USER_ID_ATTRIBUTE:
                 return attr["Value"]
 
         raise CognitoSubNotFound("Cognito did not return an ID for the user!")
@@ -165,7 +163,7 @@ def create_verified_cognito_leave_admin_account(
         raise CognitoAccountCreationFailure("Unable to create account for user")
 
     for attr in cognito_user["User"]["Attributes"]:
-        if attr["Name"] == ACTIVE_DIRECTORY_ATTRIBUTE:
+        if attr["Name"] == USER_ID_ATTRIBUTE:
             sub_id = attr["Value"]
             break
 
@@ -260,7 +258,7 @@ def create_cognito_account(
         existing_auth_id = lookup_cognito_account_id(
             email_address, cognito_user_pool_id, cognito_client
         )
-        raise CognitoUserExistsValidationError(message, None, existing_auth_id) from error
+        raise CognitoUserExistsValidationError(message, existing_auth_id) from error
     except botocore.exceptions.ClientError as error:
         logger.warning(
             # Alarm policy may be configured based on this message. Check before changing it.

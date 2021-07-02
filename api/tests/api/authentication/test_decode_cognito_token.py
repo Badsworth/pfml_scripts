@@ -143,10 +143,7 @@ def test_current_user_is_set_successfully(client, app, user, auth_token):
             "/v1/users/current", headers={"Authorization": f"Bearer {auth_token}"}
         )
 
-        if g.current_user.user_id:
-            assert g.current_user.sub_id == user.sub_id
-        else:
-            assert g.current_user.active_directory_id == user.sub_id
+        assert g.current_user.sub_id == user.sub_id
         assert g.current_user.user_id == user.user_id
         assert response.status_code == 200
 
