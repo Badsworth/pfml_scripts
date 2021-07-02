@@ -55,7 +55,7 @@ const SupportingWorkDetails = (props) => {
               onChange(hoursWorkedPerWeek);
             }}
             destroyButtonLabel={t("components.amendmentForm.cancel")}
-            className="input-text-first-child"
+            className="bg-base-lightest border-base-lighter"
           >
             <InputText
               onChange={(e) => amendDuration(e.target.value)}
@@ -69,6 +69,7 @@ const SupportingWorkDetails = (props) => {
               name="hours_worked_per_week"
               width="small"
               smallLabel
+              formGroupClassName="margin-top-1"
             />
           </AmendmentForm>
         </ConditionalContent>

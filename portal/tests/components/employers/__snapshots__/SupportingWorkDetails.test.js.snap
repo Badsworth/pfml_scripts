@@ -25,12 +25,13 @@ exports[`SupportingWorkDetails renders the component 1`] = `
       visible={false}
     >
       <AmendmentForm
-        className="input-text-first-child"
+        className="bg-base-lightest border-base-lighter"
         destroyButtonLabel="Cancel amendment"
         onDestroy={[Function]}
       >
         <InputText
           errorMsg={null}
+          formGroupClassName="margin-top-1"
           hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
           label="On average, how many hours does the employee work each week?"
           mask="hours"
