@@ -122,13 +122,17 @@ locals {
       }
     },
 
-    "reductions-retrieve-payment-lists" = {
-      command             = ["reductions-retrieve-payment-lists-from-agencies"]
-      containers_template = "reductions_retrieve_payment_lists_from_agencies.json"
+    "reductions-process-agency-data" = {
+      command             = ["reductions-process-agency-data"]
+      containers_template = "reductions_process_agency_data.json"
       task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
       execution_role      = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
       vars = {
-        eolwd_moveit_sftp_uri = var.eolwd_moveit_sftp_uri
+        eolwd_moveit_sftp_uri               = var.eolwd_moveit_sftp_uri,
+        pfml_email_address                  = var.pfml_email_address
+        bounce_forwarding_email_address     = var.bounce_forwarding_email_address
+        bounce_forwarding_email_address_arn = var.bounce_forwarding_email_address_arn
+        agency_reductions_email_address     = var.agency_reductions_email_address
       }
     },
 
@@ -139,16 +143,6 @@ locals {
       execution_role      = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
       vars = {
         eolwd_moveit_sftp_uri = var.eolwd_moveit_sftp_uri
-      }
-    },
-
-    "reductions-send-wage-replacement" = {
-      command             = ["reductions-send-wage-replacement-payments-to-dfml"]
-      containers_template = "reductions_send_wage_replacement_payments_to_dfml.json"
-      task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
-      execution_role      = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
-      vars = {
-        agency_reductions_email_address = var.agency_reductions_email_address
       }
     },
 

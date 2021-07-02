@@ -33,7 +33,12 @@
 
       { "name": "MOVEIT_SFTP_URI", "value": "${eolwd_moveit_sftp_uri}" },
       { "name": "MOVEIT_DIA_INBOUND_PATH", "value": "/DFML/DIA/Inbound" },
-      { "name": "MOVEIT_DUA_INBOUND_PATH", "value": "/DFML/DUA/Outbound" }
+      { "name": "MOVEIT_DUA_INBOUND_PATH", "value": "/DFML/DUA/Outbound" },
+
+      { "name": "PFML_EMAIL_ADDRESS", "value": "${pfml_email_address}" },
+      { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS", "value": "${bounce_forwarding_email_address}" },
+      { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "value": "${bounce_forwarding_email_address_arn}" },
+      { "name": "AGENCY_REDUCTIONS_EMAIL_ADDRESS", "value": "${agency_reductions_email_address}" }
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
