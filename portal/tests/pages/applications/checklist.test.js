@@ -6,6 +6,7 @@ import Checklist from "../../../src/pages/applications/checklist";
 import { DocumentType } from "../../../src/models/Document";
 import LeaveReason from "../../../src/models/LeaveReason";
 import { mockRouter } from "next/router";
+import { mount } from "enzyme";
 import routes from "../../../src/routes";
 
 function renderStepListDescription(stepListWrapper) {
@@ -362,6 +363,60 @@ describe("Checklist", () => {
       });
       expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
       expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
+    });
+  });
+
+  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
+  describe("when Part 1 is submitted w/o Other Leave data", () => {
+    it("passes submittedContent to Other Leave step", () => {
+      process.env.featureFlags = {
+        claimantShowOtherLeaveStep: true,
+      };
+
+      const claim = new MockBenefitsApplicationBuilder()
+        .submitted()
+        .nullOtherLeave()
+        .create();
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: claim,
+        diveLevels,
+        query: {
+          "part-one-submitted": "true",
+        },
+      });
+
+      const otherLeaveStep = wrapper
+        .find("Step")
+        .at(3)
+        .prop("submittedContent");
+      const otherLeaveStepProp = mount(otherLeaveStep);
+
+      expect(otherLeaveStepProp).toMatchSnapshot();
+    });
+  });
+
+  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
+  describe("when Part 1 is submitted w/ Other Leave data", () => {
+    it("does not pass submittedContent to Other Leave step", () => {
+      process.env.featureFlags = {
+        claimantShowOtherLeaveStep: true,
+      };
+
+      const claim = new MockBenefitsApplicationBuilder().submitted().create();
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: claim,
+        diveLevels,
+        query: {
+          "part-one-submitted": "true",
+        },
+      });
+
+      const otherLeaveStep = wrapper
+        .find("Step")
+        .at(3)
+        .prop("submittedContent");
+
+      expect(otherLeaveStep).toBeNull();
     });
   });
 });

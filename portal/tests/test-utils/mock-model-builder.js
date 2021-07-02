@@ -651,6 +651,16 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
     return this;
   }
 
+  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
+  nullOtherLeave() {
+    set(this.claimAttrs, "has_employer_benefits", null);
+    set(this.claimAttrs, "has_concurrent_leave", null);
+    set(this.claimAttrs, "has_previous_leaves_same_reason", null);
+    set(this.claimAttrs, "has_previous_leaves_other_reason", null);
+    set(this.claimAttrs, "has_other_incomes", null);
+    return this;
+  }
+
   /**
    * @returns {MockBenefitsApplicationBuilder}
    */

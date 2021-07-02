@@ -44,10 +44,16 @@ const scenarios = {
   "Part 1 ready for review": {
     claim: new MockBenefitsApplicationBuilder().noOtherLeave().create(),
   },
-  "Part 1 submitted, payments not started": {
+  "Part 1 submitted": {
+    claim: new MockBenefitsApplicationBuilder().submitted().create(),
+    query: {
+      "part-one-submitted": "true",
+    },
+  },
+  "Part 1 submitted, null Other Leave": {
     claim: new MockBenefitsApplicationBuilder()
-      .noOtherLeave()
       .submitted()
+      .nullOtherLeave()
       .create(),
     query: {
       "part-one-submitted": "true",
