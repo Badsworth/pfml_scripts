@@ -152,6 +152,28 @@ def get_claim_log_attributes(claim: Optional[Claim]) -> Dict[str, Any]:
     return {"leave_reason": leave_reason}
 
 
+def get_claim_review_log_attributes(claim_review: Optional[EmployerClaimReview]) -> Dict[str, Any]:
+    if claim_review is None:
+        return {}
+
+    relationship_accurate_val = (
+        claim_review.believe_relationship_accurate.value
+        if claim_review.believe_relationship_accurate
+        else None
+    )
+
+    return {
+        "claim_request.believe_relationship_accurate": relationship_accurate_val,
+        "claim_request.employer_decision": claim_review.employer_decision,
+        "claim_request.fraud": claim_review.fraud,
+        "claim_request.has_amendments": claim_review.has_amendments,
+        "claim_request.has_comment": str(bool(claim_review.comment)),
+        "claim_request.num_previous_leaves": len(claim_review.previous_leaves),
+        "claim_request.num_employer_benefits": len(claim_review.employer_benefits),
+        "claim_request.num_concurrent_leave": 1 if claim_review.concurrent_leave else 0,
+    }
+
+
 @requires(READ, "EMPLOYER_API")
 def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     body = connexion.request.json
@@ -175,20 +197,10 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     log_attributes: Dict[str, Union[bool, str, int, None]]
 
-    relationship_accurate_val = (
-        claim_review.believe_relationship_accurate.value
-        if claim_review.believe_relationship_accurate
-        else None
-    )
-
     log_attributes = {
         "absence_case_id": fineos_absence_id,
         "user_leave_admin.employer_id": user_leave_admin.employer_id,
-        "claim_request.believe_relationship_accurate": relationship_accurate_val,
-        "claim_request.employer_decision": claim_review.employer_decision,
-        "claim_request.fraud": claim_review.fraud,
-        "claim_request.has_amendments": claim_review.has_amendments,
-        "claim_request.has_comment": str(bool(claim_review.comment)),
+        **get_claim_review_log_attributes(claim_review),
         **get_employer_log_attributes(app),
         **get_claim_log_attributes(claim),
     }
