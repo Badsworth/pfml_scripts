@@ -40,14 +40,18 @@ class FineosAbsenceStatusResponse(PydanticBaseModel):
 class ClaimTypeResponse(PydanticBaseModel):
     claim_type_description: str
 
+
 class ManagedRequirementStatusResponse(PydanticBaseModel):
     managed_requirement_status_description: str
+
 
 class ManagedRequirementCategoryResponse(PydanticBaseModel):
     managed_requirement_category_description: str
 
+
 class ManagedRequirementTypeResponse(PydanticBaseModel):
     managed_requirement_type_description: str
+
 
 class ManagedRequirementResponse(PydanticBaseModel):
     follow_up_date: Optional[date]
@@ -56,6 +60,7 @@ class ManagedRequirementResponse(PydanticBaseModel):
     managed_requirement_category: ManagedRequirementCategoryResponse
     managed_requirement_type: ManagedRequirementTypeResponse
     created_at: Optional[date]
+
 
 class ClaimResponse(PydanticBaseModel):
     fineos_absence_id: Optional[str]

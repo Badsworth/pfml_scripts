@@ -2218,8 +2218,7 @@ components:
         managed_requirements:
             type: array
             items:
-              $ref: "#components/schemas/ManagedRequirementResponse"
-
+              $ref: "#/components/schemas/ManagedRequirementResponse"
     ClaimsResponse:
       type: array
       items:

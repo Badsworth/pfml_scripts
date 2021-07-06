@@ -9,9 +9,16 @@ from jose.constants import ALGORITHMS
 
 import massgov.pfml.api.claims
 import massgov.pfml.fineos.mock_client
+import massgov.pfml.util.datetime as datetime_util
 import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
-from massgov.pfml.db.models.employees import Claim, ManagedRequirementType, ManagedRequirementStatus, Role, UserLeaveAdministrator
+from massgov.pfml.db.models.employees import (
+    Claim,
+    ManagedRequirementStatus,
+    ManagedRequirementType,
+    Role,
+    UserLeaveAdministrator,
+)
 from massgov.pfml.db.models.factories import (
     ApplicationFactory,
     ClaimFactory,
@@ -25,7 +32,6 @@ from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 from massgov.pfml.util.strings import format_fein
-import massgov.pfml.util.datetime as datetime_util
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -2351,36 +2357,33 @@ class TestGetClaimsEndpoint:
     class TestClaimsWithManagedRequirements:
 
         NUM_VALID_MANAGED_REQUIREMENTS = 2
+
         @freeze_time("2020-12-07")
         @pytest.fixture(autouse=True)
         def load_test_db(self, employer_user, test_verification, test_db_session):
             employer = EmployerFactory.create()
             employee = EmployeeFactory.create()
             claim = ClaimFactory.create(
-                employer=employer,
-                employee=employee,
-                fineos_absence_status_id=1,
-                claim_type_id=1,
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
             )
-            for _ in range(0, self.NUM_VALID_MANAGED_REQUIREMENTS): # valid managed requirements
+            for _ in range(0, self.NUM_VALID_MANAGED_REQUIREMENTS):  # valid managed requirements
                 ManagedRequirementFactory.create(
                     claim=claim,
                     managed_requirement_type=ManagedRequirementType.EMPLOYER_CONFIRMATION,
-                    managed_requirement_status= ManagedRequirementStatus.OPEN,
-                    follow_up_date=datetime(year=2020, month=12, day=7)
+                    managed_requirement_status=ManagedRequirementStatus.OPEN,
+                    follow_up_date=datetime(year=2020, month=12, day=7),
                 )
-            
-            for _ in range(0, self.NUM_VALID_MANAGED_REQUIREMENTS): # follow up date in the past
+
+            for _ in range(0, self.NUM_VALID_MANAGED_REQUIREMENTS):  # follow up date in the past
+                ManagedRequirementFactory.create(
+                    claim=claim, follow_up_date=datetime(year=2020, month=12, day=6)
+                )
+
+            for _ in range(0, self.NUM_VALID_MANAGED_REQUIREMENTS):  # status is not open
                 ManagedRequirementFactory.create(
                     claim=claim,
-                    follow_up_date=datetime(year=2020, month=12, day=6)
-                )
-            
-            for _ in range(0, self.NUM_VALID_MANAGED_REQUIREMENTS): # status is not open
-                ManagedRequirementFactory.create(
-                    claim=claim,
-                    managed_requirement_status= ManagedRequirementStatus.COMPLETE,
-                    follow_up_date=datetime(year=2020, month=12, day=9)
+                    managed_requirement_status=ManagedRequirementStatus.COMPLETE,
+                    follow_up_date=datetime(year=2020, month=12, day=9),
                 )
 
             link = UserLeaveAdministrator(
@@ -2393,7 +2396,9 @@ class TestGetClaimsEndpoint:
             test_db_session.commit()
 
         def test_claim_managed_requirements(self, client, employer_auth_token):
-            resp = client.get("/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"})
+            resp = client.get(
+                "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
+            )
             assert resp.status_code == 200
             response_body = resp.get_json()
             claim_data = response_body.get("data")
@@ -2402,8 +2407,14 @@ class TestGetClaimsEndpoint:
             assert len(claim.get("managed_requirements", [])) == self.NUM_VALID_MANAGED_REQUIREMENTS
             for req in claim["managed_requirements"]:
                 assert req["follow_up_date"] >= datetime_util.utcnow()
-                assert req["managed_requirement_type"]["managed_requirement_type_description"] == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_description
-                assert req["managed_requirement_status"]["managed_requirement_status_description"] == ManagedRequirementStatus.OPEN.managed_requirement_status_description
+                assert (
+                    req["managed_requirement_type"]["managed_requirement_type_description"]
+                    == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_description
+                )
+                assert (
+                    req["managed_requirement_status"]["managed_requirement_status_description"]
+                    == ManagedRequirementStatus.OPEN.managed_requirement_status_description
+                )
 
     # Inner class for testing Claims Search
     class TestClaimsSearch:

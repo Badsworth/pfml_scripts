@@ -3,15 +3,14 @@ from typing import Any, Dict, Optional, Set, Union
 
 import connexion
 import flask
-from sqlalchemy import Column, asc, desc, or_, and_
+from sqlalchemy import Column, and_, asc, desc, or_
 from sqlalchemy.orm.query import Query
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
-
-import massgov.pfml.util.datetime as datetime_util
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.services.claim_rules as claim_rules
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
@@ -34,11 +33,9 @@ from massgov.pfml.db.models.employees import (
     Employee,
     Employer,
     LkAbsenceStatus,
-    LkManagedRequirementCategory,
-    # LkManagedRequirementType,
-    ManagedRequirementType,
-    ManagedRequirementStatus,
     ManagedRequirement,
+    ManagedRequirementStatus,
+    ManagedRequirementType,
     UserLeaveAdministrator,
 )
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
@@ -515,7 +512,6 @@ def get_claims() -> flask.Response:
                 query = add_search_filter_to_query(query, search_string)
             query = add_filter_managed_requirements(query)
         page = page_for_api_context(pagination_context, query)
-    logger.info("page data", extra={"data": [ClaimResponse().serialize(value) for value in page.values]})
     logger.info(
         "get_claims success",
         extra={
@@ -624,10 +620,13 @@ def add_search_filter_to_query(query: Query, search_string: str) -> Query:
     query = query.filter(or_(*filters))
     return query
 
-def add_filter_managed_requirements(query :Query) -> Query:
+
+def add_filter_managed_requirements(query: Query) -> Query:
     filters = [
-        ManagedRequirement.managed_requirement_type_id == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
-        ManagedRequirement.managed_requirement_status_id == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
-        ManagedRequirement.follow_up_date >= datetime_util.utcnow()
+        ManagedRequirement.managed_requirement_type_id
+        == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+        ManagedRequirement.managed_requirement_status_id
+        == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+        ManagedRequirement.follow_up_date >= datetime_util.utcnow(),
     ]
     return query.filter(and_(*filters))
