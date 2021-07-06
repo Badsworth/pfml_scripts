@@ -5,6 +5,7 @@ import flask
 import puremagic
 from flask import Response
 from puremagic import PureError
+from pydantic import ValidationError
 from sqlalchemy import desc
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
 
@@ -307,6 +308,14 @@ def applications_submit(application_id):
         if not existing_application.claim:
             try:
                 send_to_fineos(existing_application, db_session, current_user)
+            # TODO (CP-2350): improve handling of FINEOS validation rules
+            except ValidationError as e:
+                logger.warning(
+                    "applications_submit failure - application failed FINEOS validation",
+                    extra=log_attributes,
+                )
+                raise e
+
             except Exception as e:
                 logger.warning(
                     "applications_submit failure - failure sending application to claims processing system",
@@ -314,10 +323,10 @@ def applications_submit(application_id):
                     exc_info=True,
                 )
 
-                if not isinstance(e, FINEOSClientError):
-                    raise e
+                if isinstance(e, FINEOSClientError):
+                    return get_fineos_submit_issues_response(e, existing_application)
 
-                return get_fineos_submit_issues_response(e, existing_application)
+                raise e
 
             logger.info(
                 "applications_submit - application sent to claims processing system",

@@ -145,34 +145,49 @@ def test_determine_absence_period_status_reduced(user, test_db_session):
     assert status == "estimated"
 
 
-def test_send_to_fineos(user, test_db_session):
-    employee = EmployeeFactory.create()
-    employer = EmployerFactory.create()
-    application = ApplicationFactory.create(
-        tax_identifier=employee.tax_identifier,
-        employer_fein=employer.employer_fein,
-        user=user,
-        work_pattern=WorkPatternFixedFactory.create(),
-    )
+class TestSendToFineos:
+    # autouse the initialize_factories_session fixture
+    @pytest.fixture(autouse=True)
+    def setup(self, initialize_factories_session):
+        return
 
-    # create leave period to ensure the code that sets the "status" for the absence period is triggered
-    continuous_leave_period = ContinuousLeavePeriodFactory.create()
-    application.continuous_leave_periods.append(continuous_leave_period)
+    @pytest.fixture
+    def employee(self):
+        return EmployeeFactory.create()
 
-    assert application.claim_id is None
+    @pytest.fixture
+    def employer(self):
+        return EmployerFactory.create()
 
-    fineos_actions.send_to_fineos(application, test_db_session, user)
-    updated_application = test_db_session.query(Application).get(application.application_id)
-    claim = updated_application.claim
+    @pytest.fixture
+    def application(self, employee, employer, user):
+        application = ApplicationFactory.create(
+            tax_identifier=employee.tax_identifier,
+            employer_fein=employer.employer_fein,
+            user=user,
+            work_pattern=WorkPatternFixedFactory.create(),
+        )
 
-    assert claim.absence_period_start_date is not None
-    assert claim.absence_period_end_date is not None
-    assert claim.fineos_absence_id.startswith("NTN")
-    assert claim.fineos_absence_id.__contains__("ABS")
-    assert claim.fineos_notification_id is not None
-    assert claim.fineos_notification_id.startswith("NTN")
-    assert claim.employee == employee
-    assert claim.employer == employer
+        # create leave period to ensure the code that sets the "status" for the absence period is triggered
+        continuous_leave_period = ContinuousLeavePeriodFactory.create()
+        application.continuous_leave_periods.append(continuous_leave_period)
+
+        return application
+
+    def test_valid_application(self, application, employee, employer, test_db_session, user):
+        fineos_actions.send_to_fineos(application, test_db_session, user)
+
+        updated_application = test_db_session.query(Application).get(application.application_id)
+        claim = updated_application.claim
+
+        assert claim.absence_period_start_date is not None
+        assert claim.absence_period_end_date is not None
+        assert claim.fineos_absence_id.startswith("NTN")
+        assert claim.fineos_absence_id.__contains__("ABS")
+        assert claim.fineos_notification_id is not None
+        assert claim.fineos_notification_id.startswith("NTN")
+        assert claim.employee == employee
+        assert claim.employer == employer
 
 
 def test_document_upload(user, test_db_session):
