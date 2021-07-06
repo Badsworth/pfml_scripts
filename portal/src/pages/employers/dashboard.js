@@ -1,3 +1,4 @@
+import { get, pick } from "lodash";
 import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
@@ -7,6 +8,7 @@ import Details from "../../components/Details";
 import Dropdown from "../../components/Dropdown";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputText from "../../components/InputText";
 import Link from "next/link";
 import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
@@ -18,8 +20,8 @@ import Title from "../../components/Title";
 import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
+import classnames from "classnames";
 import formatDateRange from "../../utils/formatDateRange";
-import { get } from "lodash";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
@@ -142,6 +144,10 @@ export const Dashboard = (props) => {
         </Details>
       </section>
 
+      <Search
+        initialValue={get(props.activeFilters, "search", "")}
+        updatePageQuery={updatePageQuery}
+      />
       <Filters
         activeFilters={props.activeFilters}
         showFilters={props.query["show-filters"] === "true"}
@@ -390,13 +396,14 @@ DashboardInfoAlert.propTypes = {
 };
 
 const Filters = (props) => {
-  const { activeFilters, showFilters, updatePageQuery, user } = props;
+  const filterFields = ["claim_status", "employer_id"];
+  const { showFilters, updatePageQuery, user } = props;
   const { t } = useTranslation();
 
-  const initialFormState = { ...activeFilters };
-  if (activeFilters.claim_status) {
+  const initialFormState = { ...pick(props.activeFilters, filterFields) };
+  if (initialFormState.claim_status) {
     // Convert checkbox field query param into array, to conform to how we manage checkbox form state
-    initialFormState.claim_status = activeFilters.claim_status.split(",");
+    initialFormState.claim_status = initialFormState.claim_status.split(",");
   }
 
   const { formState, updateFields } = useFormState(initialFormState);
@@ -405,7 +412,7 @@ const Filters = (props) => {
     updateFields,
   });
 
-  const activeFiltersCount = Object.values(activeFilters).length;
+  const activeFiltersCount = Object.values(initialFormState).length;
   const filtersContainerId = "filters";
 
   const handleSubmit = (evt) => {
@@ -429,7 +436,7 @@ const Filters = (props) => {
   const handleFilterReset = () => {
     const params = [];
 
-    Object.keys(activeFilters).forEach((name) => {
+    Object.keys(initialFormState).forEach((name) => {
       // Reset by setting to an empty string
       params.push({ name, value: "" });
     });
@@ -462,23 +469,34 @@ const Filters = (props) => {
 
   return (
     <React.Fragment>
-      <Button
-        aria-controls={filtersContainerId}
-        aria-expanded={showFilters.toString()}
-        onClick={handleFilterToggleClick}
-        variation="outline"
+      <div
+        className={classnames({
+          // When search is enabled, we visually display this as if it's
+          // part of the same gray container box
+          "margin-bottom-2": !isFeatureEnabled("employerShowDashboardSearch"),
+          "padding-bottom-3 bg-base-lightest padding-x-3": isFeatureEnabled(
+            "employerShowDashboardSearch"
+          ),
+        })}
       >
-        {activeFiltersCount > 0 && !showFilters
-          ? t("pages.employersDashboard.filtersShowWithCount", {
-              count: activeFiltersCount,
-            })
-          : t("pages.employersDashboard.filtersToggle", {
-              context: showFilters ? "expanded" : undefined,
-            })}
-      </Button>
+        <Button
+          aria-controls={filtersContainerId}
+          aria-expanded={showFilters.toString()}
+          onClick={handleFilterToggleClick}
+          variation="outline"
+        >
+          {activeFiltersCount > 0 && !showFilters
+            ? t("pages.employersDashboard.filtersShowWithCount", {
+                count: activeFiltersCount,
+              })
+            : t("pages.employersDashboard.filtersToggle", {
+                context: showFilters ? "expanded" : undefined,
+              })}
+        </Button>
+      </div>
 
       <form
-        className="bg-primary-lighter margin-top-2 padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
+        className="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
         hidden={!showFilters}
         id={filtersContainerId}
         onSubmit={handleSubmit}
@@ -547,6 +565,60 @@ Filters.propTypes = {
   showFilters: PropTypes.bool,
   updatePageQuery: PropTypes.func.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
+};
+
+const Search = (props) => {
+  const { initialValue, updatePageQuery } = props;
+  const { t } = useTranslation();
+
+  const { formState, updateFields } = useFormState({ search: initialValue });
+  const getFunctionalInputProps = useFunctionalInputProps({
+    formState,
+    updateFields,
+  });
+
+  const handleSubmit = (evt) => {
+    evt.preventDefault();
+
+    updatePageQuery([
+      {
+        name: "search",
+        value: get(formState, "search", ""),
+      },
+      {
+        // Reset the page to 1 since search affects what shows on the first page
+        name: "page_offset",
+        value: "1",
+      },
+    ]);
+  };
+
+  if (!isFeatureEnabled("employerShowDashboardSearch")) return null;
+
+  return (
+    <div className="bg-base-lightest padding-x-3 padding-top-1px padding-bottom-2">
+      <form className="usa-form grid-row" onSubmit={handleSubmit}>
+        <div className="grid-col-fill tablet:grid-col-auto">
+          <InputText
+            {...getFunctionalInputProps("search")}
+            label={t("pages.employersDashboard.searchLabel")}
+            smallLabel
+          />
+        </div>
+        <div className="grid-col-auto flex-align-self-end">
+          <Button className="width-auto" type="submit">
+            {t("pages.employersDashboard.searchSubmit")}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+Search.propTypes = {
+  /** The current search value */
+  initialValue: PropTypes.string,
+  updatePageQuery: PropTypes.func.isRequired,
 };
 
 export default withClaims(Dashboard);

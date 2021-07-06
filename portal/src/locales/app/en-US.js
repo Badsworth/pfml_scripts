@@ -2118,6 +2118,8 @@ const pages = {
     instructions:
       "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
+    searchLabel: "Search for employee name or application ID",
+    searchSubmit: "Search",
     startDateTooltip: "When an employee started a new leave application",
     statusDescription_approved:
       "<strong>Approved:</strong> DFML has approved this leave request.",

@@ -24,8 +24,12 @@ const flagsConfig = {
     claimantShowOtherLeaveStep: false,
 
     // When this flag is enabled, the Leave Admin dashboard shows filter functionality
-    // TODO (EMPLOYER-1412): Remove flag
+    // TODO (EMPLOYER-1499): Remove flag
     employerShowDashboardFilters: false,
+
+    // When this flag is enabled, the Leave Admin dashboard supports search functionality
+    // TODO (EMPLOYER-1500): Remove flag
+    employerShowDashboardSearch: false,
 
     // When this flag is enabled, file upload is visible on the Review page
     // TODO (EMPLOYER-665): Show file upload once the endpoint is available
