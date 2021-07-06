@@ -2358,7 +2358,6 @@ class TestGetClaimsEndpoint:
 
         NUM_VALID_MANAGED_REQUIREMENTS = 2
 
-        @freeze_time("2020-12-07")
         @pytest.fixture(autouse=True)
         def load_test_db(self, employer_user, test_verification, test_db_session):
             employer = EmployerFactory.create()
@@ -2371,19 +2370,16 @@ class TestGetClaimsEndpoint:
                     claim=claim,
                     managed_requirement_type=ManagedRequirementType.EMPLOYER_CONFIRMATION,
                     managed_requirement_status=ManagedRequirementStatus.OPEN,
-                    follow_up_date=datetime(year=2020, month=12, day=7),
                 )
 
             for _ in range(0, self.NUM_VALID_MANAGED_REQUIREMENTS):  # follow up date in the past
                 ManagedRequirementFactory.create(
-                    claim=claim, follow_up_date=datetime(year=2020, month=12, day=6)
+                    claim=claim, follow_up_date=datetime_util.utcnow() - timedelta(days=3)
                 )
 
             for _ in range(0, self.NUM_VALID_MANAGED_REQUIREMENTS):  # status is not open
                 ManagedRequirementFactory.create(
-                    claim=claim,
-                    managed_requirement_status=ManagedRequirementStatus.COMPLETE,
-                    follow_up_date=datetime(year=2020, month=12, day=9),
+                    claim=claim, managed_requirement_status=ManagedRequirementStatus.COMPLETE,
                 )
 
             link = UserLeaveAdministrator(
@@ -2406,13 +2402,13 @@ class TestGetClaimsEndpoint:
             claim = response_body["data"][0]
             assert len(claim.get("managed_requirements", [])) == self.NUM_VALID_MANAGED_REQUIREMENTS
             for req in claim["managed_requirements"]:
-                assert req["follow_up_date"] >= datetime_util.utcnow()
+                assert req["follow_up_date"] >= datetime_util.utcnow().strftime("%Y-%m-%d")
                 assert (
-                    req["managed_requirement_type"]["managed_requirement_type_description"]
+                    req["managed_requirement_type_description"]
                     == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_description
                 )
                 assert (
-                    req["managed_requirement_status"]["managed_requirement_status_description"]
+                    req["managed_requirement_status_description"]
                     == ManagedRequirementStatus.OPEN.managed_requirement_status_description
                 )
 

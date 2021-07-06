@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional, Set, Union
 import connexion
 import flask
 from sqlalchemy import Column, and_, asc, desc, or_
+from sqlalchemy.orm import contains_eager
 from sqlalchemy.orm.query import Query
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
@@ -623,10 +624,13 @@ def add_search_filter_to_query(query: Query, search_string: str) -> Query:
 
 def add_filter_managed_requirements(query: Query) -> Query:
     filters = [
+        ManagedRequirement.claim_id == Claim.claim_id,
         ManagedRequirement.managed_requirement_type_id
         == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
         ManagedRequirement.managed_requirement_status_id
         == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
         ManagedRequirement.follow_up_date >= datetime_util.utcnow(),
     ]
-    return query.filter(and_(*filters))
+    query = query.outerjoin(ManagedRequirement, and_(*filters))
+    query = query.options(contains_eager("managed_requirements"))
+    return query
