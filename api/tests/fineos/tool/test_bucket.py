@@ -47,6 +47,23 @@ def test_validation_copy_dir_to_dir(mock_s3_bucket):
         run_tool(["--to_dir", "s3://some-bucket/"])
 
 
+def test_validation_archive_without_source_and_dest(mock_s3_bucket):
+    with pytest.raises(
+        RuntimeError, match="Must specify --archive_dir with both --copy_dir and --to_dir"
+    ):
+        run_tool(["--archive_dir", "s3://some-archive"])
+
+    with pytest.raises(
+        RuntimeError, match="Must specify --archive_dir with both --copy_dir and --to_dir"
+    ):
+        run_tool(["--archive_dir", "s3://some-archive", "--copy_dir", "s3://some-source-bucket"])
+
+    with pytest.raises(
+        RuntimeError, match="Must specify --archive_dir with both --copy_dir and --to_dir"
+    ):
+        run_tool(["--archive_dir", "s3://some-archive", "--to_dir", "s3://some-dest-bucket"])
+
+
 def test_validation_copy_dir_opts(mock_s3_bucket):
     with pytest.raises(
         RuntimeError, match=r"The following options are only valid when using copy_dir.*"
@@ -245,4 +262,92 @@ def test_copy_dir_file_prefixes(mock_s3_bucket, mock_fineos_s3_bucket):
     assert copied_items == {
         "2021-01-02-01-02-03/2021-01-02-01-02-03-filename2.txt",
         "2021-01-03-01-02-03-filename2.txt",
+    }
+
+
+def test_copy_dir_with_archival_filter(mock_s3_bucket, mock_fineos_s3_bucket):
+    s3 = boto3.resource("s3")
+    s3_fineos = boto3.resource("s3")
+
+    # Create files in the source bucket that should be copied over
+    create_mock_s3_files(
+        mock_fineos_s3_bucket,
+        "nested/key/in/filename.txt",
+        "nested/key/in/filename2.txt",
+        "filename.txt",
+        "filename2.txt",
+        "antique.txt",
+        "archaic.txt",
+    )
+
+    # Create archived files in the dest bucket that should NOT be copied over
+    create_mock_s3_files(mock_s3_bucket, "processed/antique.txt", "processed/archaic.txt")
+
+    args = parse_args(
+        [
+            "--copy_dir",
+            f"s3://{mock_fineos_s3_bucket}",
+            "--to_dir",
+            f"s3://{mock_s3_bucket}/received",
+            "--archive_dir",
+            f"s3://{mock_s3_bucket}/processed",
+            "--recursive",
+        ]
+    )
+
+    # Run the tool
+    bucket_tool(args, s3, s3_fineos, boto3, None)
+
+    copied_items = set(map(lambda x: x.key, s3.Bucket(name=mock_s3_bucket).objects.all()))
+
+    assert "received/antique.txt" not in copied_items and "received/archaic.txt" not in copied_items
+    assert copied_items == {
+        "received/nested/key/in/filename.txt",
+        "received/nested/key/in/filename2.txt",
+        "received/filename.txt",
+        "received/filename2.txt",
+        "processed/antique.txt",
+        "processed/archaic.txt",
+    }
+
+
+def test_copy_dir_with_empty_archival_dir(mock_s3_bucket, mock_fineos_s3_bucket):
+    s3 = boto3.resource("s3")
+    s3_fineos = boto3.resource("s3")
+
+    # Create files in the source bucket that should be copied over
+    create_mock_s3_files(
+        mock_fineos_s3_bucket,
+        "nested/key/in/filename.txt",
+        "nested/key/in/filename2.txt",
+        "filename.txt",
+        "filename2.txt",
+        "antique.txt",
+        "archaic.txt",
+    )
+
+    # There are NO files in the dest bucket's archive_dir, so ALL files in the source bucket should be copied over
+    args = parse_args(
+        [
+            "--copy_dir",
+            f"s3://{mock_fineos_s3_bucket}",
+            "--to_dir",
+            f"s3://{mock_s3_bucket}/received",
+            "--archive_dir",
+            f"s3://{mock_s3_bucket}/processed",
+            "--recursive",
+        ]
+    )
+
+    # Run the tool
+    bucket_tool(args, s3, s3_fineos, boto3, None)
+
+    copied_items = set(map(lambda x: x.key, s3.Bucket(name=mock_s3_bucket).objects.all()))
+    assert copied_items == {
+        "received/nested/key/in/filename.txt",
+        "received/nested/key/in/filename2.txt",
+        "received/filename.txt",
+        "received/filename2.txt",
+        "received/antique.txt",
+        "received/archaic.txt",
     }

@@ -203,6 +203,7 @@ module "fineos_error_extract_scheduler" {
           "--dated-folders",
           "--copy_dir", "${var.fineos_error_export_path}",
           "--to_dir", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/cps-errors/received/",
+          "--archive_dir", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/cps-errors/processed/",
           "--file_prefixes", "all"
         ]
       }
