@@ -94,12 +94,24 @@ describe("PreviousLeaves", () => {
     expect(wrapper.find("AmendablePreviousLeave").length).toBe(2);
   });
 
-  it("displays the 'Add leave' button", () => {
+  it("displays the first 'Add leave' button", () => {
+    const wrapper = render({
+      previousLeaves: [],
+    });
+
+    expect(
+      wrapper.find("AddButton").dive().find("Button").dive().text()
+    ).toMatchInlineSnapshot(`"Add a previous leave"`);
+  });
+
+  it("displays the subsequent 'Add leave' button", () => {
     const wrapper = render({
       previousLeaves: [],
       addedPreviousLeaves: PREVIOUS_LEAVES,
     });
 
-    expect(wrapper.find("AddButton").exists()).toBe(true);
+    expect(
+      wrapper.find("AddButton").dive().find("Button").dive().text()
+    ).toMatchInlineSnapshot(`"Add another previous leave"`);
   });
 });

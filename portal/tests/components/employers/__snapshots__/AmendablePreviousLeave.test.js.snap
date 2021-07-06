@@ -19,7 +19,7 @@ exports[`AmendablePreviousLeave for added leaves renders the component without a
             level="4"
             size="3"
           >
-            Add a new previous leave
+            Add a previous leave
           </Heading>
           <p>
             This addition will get saved when you submit your review at the end of this page.

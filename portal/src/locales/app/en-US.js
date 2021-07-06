@@ -2440,12 +2440,13 @@ const components = {
     title: "Add an employer-sponsored benefit",
   },
   employersAmendablePreviousLeave: {
-    addButton: "Add another previous leave",
+    addButton_first: "Add a previous leave",
+    addButton_subsequent: "Add another previous leave",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     destroyButtonLabel_add: "Cancel addition",
     destroyButtonLabel_amend: "Cancel amendment",
-    heading_add: "Add a new previous leave",
+    heading_add: "Add a previous leave",
     heading_amend: "Amend previous leave",
     isForSameReasonAsLeaveReasonLabel:
       "Was this leave for the same reason as their paid leave request?",
@@ -2470,7 +2471,7 @@ const components = {
       "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
   },
   employersConcurrentLeave: {
-    addButton: "Add a concurrent leave",
+    addButton: "Add an accrued paid leave",
     dateRangeLabel: "Date range",
     explanation:
       "Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program. There’s a 7-day unpaid waiting period, and employees are allowed to use accrued paid leave to overlap that period.",
@@ -2491,7 +2492,8 @@ const components = {
       "Did the employee give you at least 30 days notice about their leave?",
   },
   employersEmployerBenefits: {
-    addButton: "Add a benefit",
+    addButton_first: "Add an employer-sponsored benefit",
+    addButton_subsequent: "Add another employer-sponsored benefit",
     amountFrequency: "Select a frequency",
     amountFrequency_daily: "$t(shared.amountFrequency_daily)",
     amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",

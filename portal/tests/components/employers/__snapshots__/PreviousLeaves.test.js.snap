@@ -146,7 +146,7 @@ exports[`PreviousLeaves renders the component 1`] = `
         >
           <AddButton
             disabled={false}
-            label="Add another previous leave"
+            label="Add a previous leave"
             onClick={[Function]}
           />
         </td>
