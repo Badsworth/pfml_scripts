@@ -63,13 +63,13 @@ import config from "../config";
  */
 (async () => {
   // @todo Rename the data directory as needed.
-  const storage = dataDirectory("2021-06-25-OLB_training_claims");
+  const storage = dataDirectory("2021-07-06-training");
   // <!-- @default
   await storage.prepare();
   let claimPool: ClaimPool;
   // @default -->
 
-  const employeePool = await EmployeePool.load(config("EMPLOYEES_FILE"));
+  const employeePool = await EmployeePool.load(storage.employees);
 
   // Part 3: Claim generation.
   try {
@@ -91,7 +91,7 @@ import config from "../config";
      */
 
     const generate = (spec: ScenarioSpecification, count: number) =>
-      ClaimPool.generate(employeePool, spec.employee, spec.claim, count);
+      ClaimPool.generate(employeePool, spec.employee, spec.claim, count * 1.15);
     claimPool = ClaimPool.merge(
       generate(TRNOI1, 25),
       generate(TRNOI2, 25),
@@ -101,9 +101,9 @@ import config from "../config";
       generate(TRNOL2, 25),
       generate(TRNOL3, 25),
       generate(TRNOL4, 25),
-      generate(TRNER1, 25),
-      generate(TRNER2, 25),
-      generate(TRNER3, 25)
+      generate(TRNER1, 50),
+      generate(TRNER2, 50),
+      generate(TRNER3, 50)
     );
     // <!-- @default
     await claimPool.save(storage.claims, storage.documents);
