@@ -93,17 +93,17 @@ import config from "../config";
     const generate = (spec: ScenarioSpecification, count: number) =>
       ClaimPool.generate(employeePool, spec.employee, spec.claim, count);
     claimPool = ClaimPool.merge(
-      generate(TRNOI1, 1),
-      generate(TRNOI2, 1),
-      generate(TRNOI3, 1),
-      generate(TRNOI4, 1),
-      generate(TRNOL1, 1),
-      generate(TRNOL2, 1),
-      generate(TRNOL3, 1),
-      generate(TRNOL4, 1),
-      generate(TRNER1, 1),
-      generate(TRNER2, 1),
-      generate(TRNER3, 1)
+      generate(TRNOI1, 25),
+      generate(TRNOI2, 25),
+      generate(TRNOI3, 25),
+      generate(TRNOI4, 25),
+      generate(TRNOL1, 25),
+      generate(TRNOL2, 25),
+      generate(TRNOL3, 25),
+      generate(TRNOL4, 25),
+      generate(TRNER1, 25),
+      generate(TRNER2, 25),
+      generate(TRNER3, 25)
     );
     // <!-- @default
     await claimPool.save(storage.claims, storage.documents);
