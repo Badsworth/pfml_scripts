@@ -34,7 +34,7 @@ exports[`VerifyContributions renders the page 1`] = `
         Object {
           "mass-tax-connect-link": <a
             href="https://mtc.dor.state.ma.us/mtc/_/"
-            rel="noopener"
+            rel="noreferrer noopener"
             target="_blank"
           />,
         }
@@ -54,7 +54,7 @@ exports[`VerifyContributions renders the page 1`] = `
           "li": <li />,
           "mass-tax-connect-link": <a
             href="https://mtc.dor.state.ma.us/mtc/_/"
-            rel="noopener"
+            rel="noreferrer noopener"
             target="_blank"
           />,
           "ol": <ol
@@ -62,7 +62,7 @@ exports[`VerifyContributions renders the page 1`] = `
           />,
           "recent-filing-periods-link": <a
             href="https://www.mass.gov/info-details/preparing-to-verify-your-employer-paid-family-and-medical-leave-account"
-            rel="noopener"
+            rel="noreferrer noopener"
             target="_blank"
           />,
         }
@@ -121,7 +121,7 @@ Array [
   <a
     href="https://mtc.dor.state.ma.us/mtc/_/"
     key="1"
-    rel="noopener"
+    rel="noreferrer noopener"
     target="_blank"
   >
     MassTaxConnect
@@ -136,7 +136,7 @@ Array [
   <a
     href="https://mtc.dor.state.ma.us/mtc/_/"
     key="1"
-    rel="noopener"
+    rel="noreferrer noopener"
     target="_blank"
   >
     MassTaxConnect
@@ -153,58 +153,84 @@ Array [
       <strong
         key="strong-1"
       >
-        Accounts
+        Summary
       </strong>
-       tab, select 
+       page, scroll down to the 
       <strong
         key="strong-3"
       >
         Paid Family and Medical Leave
+      </strong>
+       section on the left. In the 
+      <strong
+        key="strong-5"
+      >
+        Account
+      </strong>
+       portion, select 
+      <strong
+        key="strong-7"
+      >
+        Returns
       </strong>
       .
     </li>
     <li
       key="1"
     >
-      On the 
+      Choose 
       <strong
         key="strong-1"
       >
-        Periods
+        the last period
       </strong>
-       tab, select 
+       for which a return has been 
       <strong
         key="strong-3"
       >
-        11/20/2011
+        received
       </strong>
-      . If you don't have access to MassTaxConnect, we recommend asking your payroll department to copy the data from the 
-      <a
-        href="https://www.mass.gov/info-details/preparing-to-verify-your-employer-paid-family-and-medical-leave-account"
-        key="5"
-        rel="noopener"
-        target="_blank"
-      >
-        4 most recent filing periods
-      </a>
-      .
+      . For example, if you remitted your contributions for 3-31-2021, and the return has been processed and designated as ‘received’, you can use the amount from that period to verify your account. If you have not yet remitted your contributions or it is still being processed, use the amount from the most recent period for which you filed that has been processed.
     </li>
     <li
       key="2"
+    >
+      Go into the return. Click 
+      <strong
+        key="strong-1"
+      >
+        View or Amend Return
+      </strong>
+      . Then select 
+      <strong
+        key="strong-3"
+      >
+        Next
+      </strong>
+       at the bottom. Look to 
+      <strong
+        key="strong-5"
+      >
+        line 6
+      </strong>
+       and you will find the 
+      <strong
+        key="strong-7"
+      >
+        Total Contributions Due
+      </strong>
+      .
+    </li>
+    <li
+      key="3"
     >
       Copy the 
       <strong
         key="strong-1"
       >
-        Tax
+        Total Contributions Due
       </strong>
-       amount from the 
-      <strong
-        key="strong-3"
-      >
-        Summary
-      </strong>
-       section.
+       amount for verification.
     </li>
   </ol>,
   "If you have any questions about your paid leave contributions, please contact the Department of Revenue at ",
