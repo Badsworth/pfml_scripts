@@ -186,8 +186,7 @@ export function deleteDownloadsFolder(): void {
  */
 export function downloadLegalNotice(
   noticeType: string,
-  claim_id: string,
-  expectedNumPages: number
+  claim_id: string
 ): void {
   const downloadsFolder = Cypress.config("downloadsFolder");
   cy.task("getNoticeFileName", downloadsFolder, { timeout: 20000 }).then(
@@ -212,10 +211,6 @@ export function downloadLegalNotice(
             "Application ID:",
             "\n"
           );
-          expect(
-            pdf.numpages,
-            `This legal notice .pdf file should have ${pdf.numpages} pages`
-          ).to.equal(expectedNumPages);
           expect(
             application_id_from_notice,
             `The claim_id within the legal notice should be: ${application_id_from_notice}`
