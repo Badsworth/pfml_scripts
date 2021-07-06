@@ -282,6 +282,44 @@ resource "newrelic_nrql_alert_condition" "rds_low_storage_space" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# Alerts relating to abnormal traffic against the /notifications endpoint, where FINEOS POSTs new claims
+
+resource "newrelic_nrql_alert_condition" "notifications_endpoint_infinite_email_spam" {
+  # CRIT: ≥ 5 transactions to this endpoint in 15 minutes, for the same absence case ID and recipient type
+  # Traffic surges have happened in the past for the same absence case ID, but different recipient types
+
+  description    = <<-TXT
+    There's too much traffic on the notifications endpoint for a specific absence case ID & specific type of recipient.
+    This usually means FINEOS is stuck in an infinite loop and is sending huge quantities of emails to a real human.
+    This alarm *SHOULD* never go off, now that FINEOS has released their 6/26/2021 service pack, but one never knows...
+  TXT
+  name           = "(${upper(var.environment_name)}) Notifications endpoint spam alert"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  enabled        = true
+
+  aggregation_window           = 900    # 15 minutes
+  violation_time_limit_seconds = 172800 # 72 hours; longest surge yet recorded lasted about four days
+
+  nrql {
+    query             = <<-NRQL
+      SELECT count(*) FROM Transaction
+      WHERE appName = 'PFML-API-${upper(var.environment_name)}' AND request.uri = '/v1/notifications'
+      FACET notification.absence_case_id, notification.recipient_type
+    NRQL
+    evaluation_offset = 1
+  }
+
+  critical {
+    threshold             = 4   # to emulate a 'greater than or equal to 5' threshold
+    threshold_duration    = 900 # 15 minutes
+    operator              = "above"
+    threshold_occurrences = "all"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 # Alarms relating to problems in the payments pipeline
 
 module "payments_errors_from_fineos" {
