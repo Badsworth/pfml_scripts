@@ -2172,6 +2172,24 @@ components:
         employer_fein:
           type: string
 
+    ManagedRequirementResponse:
+      type: object
+      properties:
+        follow_up_date:
+          format: date
+          example: "1970-06-01"
+        responded_at:
+          format: date
+          example: "1970-06-01"
+        managed_requirement_status:
+          format: string
+        managed_requirement_category:
+          format: string
+        managed_requirement_type:
+          format: string
+        created_at:
+          format: date
+
     ClaimResponse:
       type: object
       properties:
@@ -2197,6 +2215,10 @@ components:
           format: string
         created_at:
           format: date
+        managed_requirements:
+            type: array
+            items:
+              $ref: "#components/schemas/ManagedRequirementResponse"
 
     ClaimsResponse:
       type: array

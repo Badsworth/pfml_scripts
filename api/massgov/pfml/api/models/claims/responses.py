@@ -40,6 +40,22 @@ class FineosAbsenceStatusResponse(PydanticBaseModel):
 class ClaimTypeResponse(PydanticBaseModel):
     claim_type_description: str
 
+class ManagedRequirementStatusResponse(PydanticBaseModel):
+    managed_requirement_status_description: str
+
+class ManagedRequirementCategoryResponse(PydanticBaseModel):
+    managed_requirement_category_description: str
+
+class ManagedRequirementTypeResponse(PydanticBaseModel):
+    managed_requirement_type_description: str
+
+class ManagedRequirementResponse(PydanticBaseModel):
+    follow_up_date: Optional[date]
+    responded_at: Optional[date]
+    managed_requirement_status: ManagedRequirementStatusResponse
+    managed_requirement_category: ManagedRequirementCategoryResponse
+    managed_requirement_type: ManagedRequirementTypeResponse
+    created_at: Optional[date]
 
 class ClaimResponse(PydanticBaseModel):
     fineos_absence_id: Optional[str]
@@ -53,6 +69,7 @@ class ClaimResponse(PydanticBaseModel):
     claim_type: Optional[ClaimTypeResponse]
     claim_type_description: Optional[str]
     created_at: Optional[date]
+    managed_requirements: Optional[List[ManagedRequirementResponse]]
 
     @classmethod
     def from_orm(cls, claim: Claim) -> "ClaimResponse":
