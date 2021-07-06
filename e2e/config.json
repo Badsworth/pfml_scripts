@@ -38,7 +38,8 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-06-04.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-06-04.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
+    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
+    "FINEOS_HAS_UPDATED_EFORMS": "true"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
