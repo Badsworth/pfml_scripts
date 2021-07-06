@@ -29,9 +29,17 @@ exports[`SupportingWorkDetails renders the component 1`] = `
         destroyButtonLabel="Cancel amendment"
         onDestroy={[Function]}
       >
+        <Heading
+          level="4"
+          size="3"
+        >
+          Amend weekly hours worked
+        </Heading>
+        <p>
+          This amendment will get saved when you submit your review.
+        </p>
         <InputText
           errorMsg={null}
-          formGroupClassName="margin-top-1"
           hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
           label="On average, how many hours does the employee work each week?"
           mask="hours"

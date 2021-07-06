@@ -2315,10 +2315,6 @@ const components = {
   },
   amendmentForm: {
     cancel: "Cancel amendment",
-    question_leavePeriodDuration:
-      "On average, how many hours does the employee work each week?",
-    question_leavePeriodDuration_hint:
-      "If their schedule varies, tell us the average number of hours worked over the past 52 weeks.",
   },
   applicationCard: {
     actionsHeading: "Actions",
@@ -2658,6 +2654,13 @@ const components = {
   },
   employersSupportingWorkDetails: {
     header: "Supporting work details",
+    heading_amend: "Amend weekly hours worked",
+    leavePeriodDurationHint:
+      "If their schedule varies, tell us the average number of hours worked over the past 52 weeks.",
+    leavePeriodDurationLabel:
+      "On average, how many hours does the employee work each week?",
+    subtitle_amend:
+      "This amendment will get saved when you submit your review.",
     weeklyHoursWorkedLabel: "Weekly hours worked",
   },
   errorBoundary: {
