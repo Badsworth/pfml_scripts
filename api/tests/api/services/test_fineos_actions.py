@@ -1054,7 +1054,10 @@ def test_format_other_leaves_data_only_same_reason(user, test_db_session):
             "name": "V2OtherLeavesPastLeaveEndDate1",
         },
         {
-            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "enumValue": {
+                "domainName": "QualifyingReasons",
+                "instanceValue": "An illness or injury",
+            },
             "name": "V2QualifyingReason1",
         },
         {
@@ -1231,7 +1234,10 @@ def test_format_other_leaves_data_all_present(user, test_db_session):
             "name": "V2OtherLeavesPastLeaveEndDate3",
         },
         {
-            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "enumValue": {
+                "domainName": "QualifyingReasons",
+                "instanceValue": "An illness or injury",
+            },
             "name": "V2QualifyingReason3",
         },
         {

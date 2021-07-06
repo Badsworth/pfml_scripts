@@ -25,6 +25,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReasonQualifier,
     OtherIncome,
     PreviousLeaveOtherReason,
+    PreviousLeaveSameReason,
     WorkPatternDay,
 )
 from massgov.pfml.db.models.employees import PaymentMethod
@@ -2269,6 +2270,36 @@ def test_previous_leave_no_issues():
 
 
 def test_previous_leave_missing_fields():
+    test_app = ApplicationFactory.build(previous_leaves_same_reason=[PreviousLeaveSameReason()])
+    issues = get_conditional_issues(test_app, Headers())
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_same_reason[0].leave_start_date is required",
+            field="previous_leaves_same_reason[0].leave_start_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_same_reason[0].leave_end_date is required",
+            field="previous_leaves_same_reason[0].leave_end_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_same_reason[0].is_for_current_employer is required",
+            field="previous_leaves_same_reason[0].is_for_current_employer",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_same_reason[0].leave_minutes is required",
+            field="previous_leaves_same_reason[0].leave_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_same_reason[0].worked_per_week_minutes is required",
+            field="previous_leaves_same_reason[0].worked_per_week_minutes",
+        ),
+    ] == issues
+
     test_app = ApplicationFactory.build(previous_leaves_other_reason=[PreviousLeaveOtherReason()])
     issues = get_conditional_issues(test_app, Headers())
     assert [
@@ -2289,11 +2320,6 @@ def test_previous_leave_missing_fields():
         ),
         Issue(
             type=IssueType.required,
-            message="previous_leaves_other_reason[0].leave_reason is required",
-            field="previous_leaves_other_reason[0].leave_reason",
-        ),
-        Issue(
-            type=IssueType.required,
             message="previous_leaves_other_reason[0].leave_minutes is required",
             field="previous_leaves_other_reason[0].leave_minutes",
         ),
@@ -2301,6 +2327,11 @@ def test_previous_leave_missing_fields():
             type=IssueType.required,
             message="previous_leaves_other_reason[0].worked_per_week_minutes is required",
             field="previous_leaves_other_reason[0].worked_per_week_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_other_reason[0].leave_reason is required",
+            field="previous_leaves_other_reason[0].leave_reason",
         ),
     ] == issues
 
