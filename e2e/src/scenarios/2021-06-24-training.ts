@@ -182,17 +182,12 @@ export const TRNOL2: ScenarioSpecification = {
       employer_decision: "Approve",
       hours_worked_per_week: 40,
     },
-    previous_leaves_same_reason: [
-      {
-        type: "same_reason",
-        leave_reason: "An illness or injury",
-        is_for_current_employer: true,
-        leave_start_date: "2021-06-01",
-        leave_end_date: "2021-07-15",
-        worked_per_week_minutes: 2400,
-        leave_minutes: 2400,
-      },
-    ],
+    concurrent_leave: {
+      is_for_current_employer: true,
+      leave_start_date: "2021-08-01",
+      leave_end_date: "2021-08-30",
+    },
+
     metadata: {
       postSubmit: "APPROVEDOCS",
     },
@@ -332,7 +327,7 @@ export const TRNER3: ScenarioSpecification = {
     leave_dates: [parseISO("2021-08-01"), parseISO("2021-10-15")],
     docs: {
       MASSID: {},
-      HCP: {},
+      BIRTHCERTIFICATE: {},
     },
     employerResponse: {
       has_amendments: true,

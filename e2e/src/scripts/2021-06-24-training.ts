@@ -7,14 +7,8 @@
  */
 
 import dataDirectory from "../generation/DataDirectory";
-import path from "path";
 import EmployeePool from "../generation/Employee";
-import EmployerPool from "../generation/Employer";
 import ClaimPool from "../generation/Claim";
-import EmployerIndex from "../generation/writers/EmployerIndex";
-import DOR from "../generation/writers/DOR";
-import EmployeeIndex from "../generation/writers/EmployeeIndex";
-import * as scenarios from "../scenarios";
 import {
   TRNER1,
   TRNER2,
@@ -29,6 +23,7 @@ import {
   TRNOL4,
 } from "../scenarios/2021-06-24-training";
 import { ScenarioSpecification } from "../generation/Scenario";
+import config from "../config";
 
 /**
  * @summary
@@ -68,61 +63,13 @@ import { ScenarioSpecification } from "../generation/Scenario";
  */
 (async () => {
   // @todo Rename the data directory as needed.
-  const storage = dataDirectory("2021-06-25-OLB_training_claims>");
+  const storage = dataDirectory("2021-06-25-OLB_training_claims");
   // <!-- @default
   await storage.prepare();
-  let employerPool: EmployerPool;
-  let employeePool: EmployeePool;
   let claimPool: ClaimPool;
   // @default -->
 
-  // Part 1: Employer generation.
-  try {
-    employerPool = await EmployerPool.load(storage.employers);
-  } catch (e) {
-    if (e.code !== "ENOENT") throw e;
-    // @todo Choose number of employers to generate.
-    (employerPool = EmployerPool.generate(30)),
-      await employerPool.save(storage.employers);
-    // <!-- @default
-    // await EmployerIndex.write(employerPool, storage.dir + "/employers.csv");
-    // await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
-    // @default -->
-  }
-
-  // Part 2: Employee generation.
-  try {
-    employeePool = await EmployeePool.load(storage.employees);
-  } catch (e) {
-    if (e.code !== "ENOENT") throw e;
-    // Define the kinds of employees we need to support. Each type of employee is generated as its own pool,
-    // then we merge them all together.
-    employeePool = EmployeePool.merge(
-      // @todo Choose number of employees to generate.
-      EmployeePool.generate(90, employerPool, {
-        // @todo Define employee parameters.
-        // Usually just the `wages` property.
-        wages: "eligible",
-        // @todo OPTIONAL: Add `metadata` property for ad hoc needs.
-        metadata: { hair: "grey" },
-      }),
-      // @todo OPTIONAL: Add more employees with different properties.
-      // @example Wages set to "ineligible" vs "eligible".
-      EmployeePool.generate(10, employerPool, { wages: "ineligible" })
-    );
-    // <!-- @default
-    await employeePool.save(storage.employees);
-    await DOR.writeEmployeesFile(
-      employerPool,
-      employeePool,
-      storage.dorFile("DORDFML")
-    );
-    await EmployeeIndex.write(
-      employeePool,
-      path.join(storage.dir, "employees.csv")
-    );
-    // @default -->
-  }
+  const employeePool = await EmployeePool.load(config("EMPLOYEES_FILE"));
 
   // Part 3: Claim generation.
   try {
