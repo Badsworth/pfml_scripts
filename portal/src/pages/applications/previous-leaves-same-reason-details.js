@@ -14,7 +14,6 @@ import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
 import { Trans } from "react-i18next";
 import formatDate from "../../utils/formatDate";
-import leaveReasonToPreviousLeaveReason from "../../utils/leaveReasonToPreviousLeaveReason";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -25,7 +24,6 @@ export const fields = [
   "claim.previous_leaves_same_reason[*].is_for_current_employer",
   "claim.previous_leaves_same_reason[*].leave_end_date",
   "claim.previous_leaves_same_reason[*].leave_minutes",
-  "claim.previous_leaves_same_reason[*].leave_reason",
   "claim.previous_leaves_same_reason[*].leave_start_date",
   "claim.previous_leaves_same_reason[*].worked_per_week_minutes",
 ];
@@ -37,12 +35,7 @@ export const PreviousLeavesSameReasonDetails = (props) => {
 
   const initialEntries = pick(props, fields).claim;
   if (initialEntries.previous_leaves_same_reason.length === 0) {
-    const leave_reason = leaveReasonToPreviousLeaveReason(
-      claim.leave_details.reason
-    );
-    initialEntries.previous_leaves_same_reason = [
-      new PreviousLeave({ leave_reason }),
-    ];
+    initialEntries.previous_leaves_same_reason = [new PreviousLeave()];
   }
 
   // default to one existing previous leave.
@@ -64,13 +57,10 @@ export const PreviousLeavesSameReasonDetails = (props) => {
   };
 
   const handleAddClick = () => {
-    const leave_reason = leaveReasonToPreviousLeaveReason(
-      claim.leave_details.reason
-    );
     updateFields({
       previous_leaves_same_reason: [
         ...previous_leaves_same_reason,
-        new PreviousLeave({ leave_reason }),
+        new PreviousLeave(),
       ],
     });
   };
