@@ -1135,6 +1135,88 @@ class TestUpdateClaim:
         assert errors[0].get("type") == "maxItems"
         assert errors[0].get("field") == "employer_benefits"
 
+    def test_employer_update_claim_review_validates_v1_employer_benefits_length(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        base_request = {
+            "comment": "comment",
+            # employer_benefits intentionally excluded
+            "employer_decision": "Approve",
+            "fraud": "Yes",
+            "has_amendments": False,
+            "hours_worked_per_week": 40,
+            "previous_leaves": [
+                {
+                    "leave_end_date": "2021-02-06",
+                    "leave_start_date": "2021-01-25",
+                    "leave_reason": "Pregnancy",
+                }
+            ],
+            "uses_second_eform_version": False,
+        }
+
+        request_with_5_employer_benefits = {
+            **base_request,
+            "employer_benefits": [
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+            ],
+        }
+        response = client.patch(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=request_with_5_employer_benefits,
+        )
+
+        errors = response.get_json().get("errors")
+        assert response.status_code == 400
+        assert errors[0].get("message") == "Employer benefits cannot exceed limit of 4"
+        assert errors[0].get("type") == "maximum"
+
     def test_employer_update_claim_review_validates_multiple_fields_at_once(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification
     ):
