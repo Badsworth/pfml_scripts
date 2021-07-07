@@ -53,9 +53,6 @@ exports[`GetReady renders get ready content 1`] = `
     <Trans
       components={
         Object {
-          "benefits-timeline-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
-          />,
           "contact-center-phone-link": <a
             href="tel:(833) 344-7365"
           />,

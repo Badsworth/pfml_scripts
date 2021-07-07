@@ -107,8 +107,6 @@ const routes = {
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-",
       benefitsGuide_seriousHealthCondition:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-",
-      benefitsTimeline_2020December2:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-",
       calculateHours: "https://www.mass.gov/pfml-calculate-hours",
       calculateReductions:
         "https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits#-calculate-any-reductions-",

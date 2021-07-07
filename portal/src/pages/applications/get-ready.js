@@ -77,11 +77,6 @@ export const GetReady = (props) => {
             "contact-center-phone-link": (
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
             ),
-            "benefits-timeline-link": (
-              <a
-                href={routes.external.massgov.benefitsTimeline_2020December2}
-              />
-            ),
             ul: <ul className="usa-list" />,
             li: <li />,
           }}
