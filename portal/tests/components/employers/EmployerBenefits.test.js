@@ -57,9 +57,18 @@ describe("EmployerBenefits", () => {
     });
   });
 
-  it("renders the component", () => {
+  it("renders the component for v1 eforms", () => {
     const wrapper = render();
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+  });
+
+  it("renders the component for v2 eforms", () => {
+    const wrapper = render({
+      shouldShowV2: true,
+    });
+    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it("displays 'None reported' if no benefits are reported", () => {

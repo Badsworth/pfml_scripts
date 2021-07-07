@@ -2512,8 +2512,10 @@ const components = {
     amountPerFrequency_unknown: "$t(shared.amountPerFrequency_unknown)",
     amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     benefitTypeLabel: "Benefit type",
-    caption:
-      "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
+    caption_v1:
+      "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, paid time off (PTO) or accrued paid leave, and family or medical leave benefits such as a parental leave program. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
+    caption_v2:
+      "Your employee is planning to use these benefits during their paid leave under PFML. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. For paid time off (PTO) and other accrued paid leave your employee will use, review “Concurrent accrued paid leave” above. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
     fullSalaryContinuous: "Full salary continuous",

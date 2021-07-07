@@ -36,6 +36,9 @@ const EmployerBenefits = (props) => {
       <p>
         <Trans
           i18nKey="components.employersEmployerBenefits.caption"
+          tOptions={{
+            context: shouldShowV2 ? "v2" : "v1",
+          }}
           components={{
             "reductions-overview-link": (
               <a
