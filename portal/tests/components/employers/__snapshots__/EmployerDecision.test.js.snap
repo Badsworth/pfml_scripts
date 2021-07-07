@@ -40,11 +40,12 @@ exports[`EmployerDecision renders the component 1`] = `
         Have you approved or denied this leave request?
       </ReviewHeading>
     }
-    name="employerDecision"
+    name="employer_decision"
     onChange={[Function]}
     smallLabel={true}
     smallabel={true}
     type="radio"
+    value=""
   />
 </Fragment>
 `;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
@@ -7,33 +7,24 @@ import routes from "../../routes";
 import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "../../locales/i18n";
 
-const EmployerDecision = ({ fraud, onChange = () => {} }) => {
+const EmployerDecision = (props) => {
   const { t } = useTranslation();
-  const [employerDecision, setEmployerDecision] = useState();
   // keep track of previous value for fraud prop to know when to clear employer decision
-  const previouslyFraud = usePreviousValue(fraud);
-
-  const handleOnChange = (event) => {
-    setEmployerDecision(event.target.value);
-  };
+  const previouslyFraud = usePreviousValue(props.fraud);
 
   useEffect(() => {
-    onChange(employerDecision);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employerDecision]);
-
-  useEffect(() => {
-    if (fraud === "Yes") {
-      setEmployerDecision("Deny");
-    } else if (fraud === "No" && previouslyFraud === "Yes") {
-      setEmployerDecision(undefined);
+    if (props.fraud === "Yes") {
+      props.updateFields({ employer_decision: "Deny" });
+    } else if (props.fraud === "No" && previouslyFraud === "Yes") {
+      props.updateFields({ employer_decision: undefined });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fraud]);
+  }, [props.fraud]);
 
   return (
     <React.Fragment>
       <InputChoiceGroup
+        {...props.getFunctionalInputProps("employer_decision")}
         smallLabel
         label={
           <ReviewHeading level="2">
@@ -58,19 +49,17 @@ const EmployerDecision = ({ fraud, onChange = () => {} }) => {
         smallabel
         choices={[
           {
-            checked: employerDecision === "Approve",
-            disabled: fraud === "Yes",
+            checked: props.employerDecision === "Approve",
+            disabled: props.fraud === "Yes",
             label: t("components.employersEmployerDecision.choiceApprove"),
             value: "Approve",
           },
           {
-            checked: employerDecision === "Deny",
+            checked: props.employerDecision === "Deny",
             label: t("components.employersEmployerDecision.choiceDeny"),
             value: "Deny",
           },
         ]}
-        name="employerDecision"
-        onChange={handleOnChange}
         type="radio"
       />
     </React.Fragment>
@@ -78,8 +67,10 @@ const EmployerDecision = ({ fraud, onChange = () => {} }) => {
 };
 
 EmployerDecision.propTypes = {
+  employerDecision: PropTypes.oneOf(["Approve", "Deny"]),
   fraud: PropTypes.string,
-  onChange: PropTypes.func.isRequired,
+  getFunctionalInputProps: PropTypes.func.isRequired,
+  updateFields: PropTypes.func.isRequired,
 };
 
 export default EmployerDecision;

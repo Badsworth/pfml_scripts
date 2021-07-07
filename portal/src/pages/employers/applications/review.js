@@ -31,11 +31,11 @@ import formatDateRange from "../../../utils/formatDateRange";
 import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
 import routes from "../../../routes";
 import updateAmendments from "../../../utils/updateAmendments";
+import useFormState from "../../../hooks/useFormState";
+import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
-import useFormState from "../../../hooks/useFormState";
-import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 
 export const Review = (props) => {
   // TODO (EMPLOYER-583) add frontend validation
@@ -71,7 +71,6 @@ export const Review = (props) => {
     (leave, index) => new PreviousLeave({ ...leave, previous_leave_id: index })
   );
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const { formState, updateFields } = useFormState({
     // base fields
     concurrentLeave: claim.concurrent_leave,
@@ -83,7 +82,7 @@ export const Review = (props) => {
     // TODO confirm error behavior.
     hours_worked_per_week: claim.hours_worked_per_week,
     comment: "",
-    employerDecision: "Approve",
+    employer_decision: "Approve",
     fraud: undefined,
     employeeNotice: undefined,
     believeRelationshipAccurate: undefined,
@@ -99,11 +98,6 @@ export const Review = (props) => {
     formState,
     updateFields,
   });
-
-  // TODO delete this
-  useEffect(() => {
-    console.log(formState);
-  }, [formState]);
 
   const [allPreviousLeaves, setAllPreviousLeaves] = useState([]);
   useEffect(() => {
@@ -123,7 +117,7 @@ export const Review = (props) => {
 
   const isCommentRequired =
     formState.fraud === "Yes" ||
-    formState.employerDecision === "Deny" ||
+    formState.employer_decision === "Deny" ||
     formState.employeeNotice === "No";
 
   const isSubmitDisabled =
@@ -150,10 +144,6 @@ export const Review = (props) => {
     DocumentType.certification[leaveReason],
     DocumentType.certification.medicalCertification,
   ]);
-
-  const handleHoursWorkedChange = (updatedHoursWorked) => {
-    updateFields({ amendedHours: updatedHoursWorked });
-  };
 
   const handleBenefitInputAdd = () => {
     updateFields({
@@ -279,10 +269,6 @@ export const Review = (props) => {
     updateFields({ employeeNotice: updatedEmployeeNotice });
   };
 
-  const handleEmployerDecisionChange = (updatedEmployerDecision) => {
-    updateFields({ employerDecision: updatedEmployerDecision });
-  };
-
   const handleBelieveRelationshipAccurateChange = (
     updatedBelieveRelationshipAccurate
   ) => {
@@ -307,7 +293,6 @@ export const Review = (props) => {
     const employer_benefits = allEmployerBenefits.map((benefit) =>
       omit(benefit, ["employer_benefit_id"])
     );
-    const amendedHours = formState.amendedHours;
     const previous_leaves = allPreviousLeaves.map((leave) =>
       omit(leave, ["previous_leave_id"])
     );
@@ -316,15 +301,15 @@ export const Review = (props) => {
       comment: formState.comment,
       concurrent_leave,
       employer_benefits,
-      employer_decision: formState.employerDecision,
+      employer_decision: formState.employer_decision,
       fraud: formState.fraud,
-      hours_worked_per_week: amendedHours,
+      hours_worked_per_week: formState.hours_worked_per_week,
       previous_leaves,
       has_amendments:
         !isEqual(allEmployerBenefits, formState.employerBenefits) ||
         !isEqual(allPreviousLeaves, formState.previousLeaves) ||
         !isEqual(concurrent_leave, formState.concurrentLeave) ||
-        !isEqual(amendedHours, claim.hours_worked_per_week),
+        !isEqual(claim.hours_worked_per_week, formState.hours_worked_per_week),
       leave_reason: leaveReason,
       uses_second_eform_version: !!claim.uses_second_eform_version,
     };
@@ -411,10 +396,9 @@ export const Review = (props) => {
         onKeyDown={handleKeyDown}
       >
         <SupportingWorkDetails
-          appErrors={appErrors}
           getFunctionalInputProps={getFunctionalInputProps}
-          hoursWorkedPerWeek={claim.hours_worked_per_week}
-          onChange={handleHoursWorkedChange}
+          initialHoursWorkedPerWeek={claim.hours_worked_per_week}
+          updateFields={updateFields}
         />
 
         <ReviewHeading level="2">
@@ -483,13 +467,15 @@ export const Review = (props) => {
           onChange={handleEmployeeNoticeChange}
         />
         <EmployerDecision
+          employerDecision={formState.employer_decision}
           fraud={formState.fraud}
-          onChange={handleEmployerDecisionChange}
+          getFunctionalInputProps={getFunctionalInputProps}
+          updateFields={updateFields}
         />
         <Feedback
           appLogic={props.appLogic}
           isReportingFraud={formState.fraud === "Yes"}
-          isDenyingRequest={formState.employerDecision === "Deny"}
+          isDenyingRequest={formState.employer_decision === "Deny"}
           isEmployeeNoticeInsufficient={formState.employeeNotice === "No"}
           comment={formState.comment}
           setComment={(comment) => updateFields({ comment })}

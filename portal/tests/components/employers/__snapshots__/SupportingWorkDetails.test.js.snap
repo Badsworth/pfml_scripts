@@ -1,6 +1,52 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`SupportingWorkDetails renders the component 1`] = `
+exports[`SupportingWorkDetails opens the AmendmentForm when the amend button is clicked 1`] = `
+<Fragment>
+  <ReviewHeading
+    level="2"
+  >
+    Supporting work details
+  </ReviewHeading>
+  <ReviewRow
+    action={
+      <AmendButton
+        onClick={[Function]}
+      />
+    }
+    label="Weekly hours worked"
+    level="3"
+  >
+    <p
+      className="margin-top-0"
+    >
+      30
+    </p>
+    <ConditionalContent
+      visible={true}
+    >
+      <AmendmentForm
+        className="input-text-first-child"
+        destroyButtonLabel="Cancel amendment"
+        onDestroy={[Function]}
+      >
+        <InputNumber
+          hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
+          label="On average, how many hours does the employee work each week?"
+          mask="hours"
+          name="hours_worked_per_week"
+          onChange={[Function]}
+          smallLabel={true}
+          value={30}
+          valueType="integer"
+          width="small"
+        />
+      </AmendmentForm>
+    </ConditionalContent>
+  </ReviewRow>
+</Fragment>
+`;
+
+exports[`SupportingWorkDetails renders the component with the AmendmentForm closed 1`] = `
 <Fragment>
   <ReviewHeading
     level="2"
@@ -29,8 +75,7 @@ exports[`SupportingWorkDetails renders the component 1`] = `
         destroyButtonLabel="Cancel amendment"
         onDestroy={[Function]}
       >
-        <InputText
-          errorMsg={null}
+        <InputNumber
           hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
           label="On average, how many hours does the employee work each week?"
           mask="hours"
@@ -38,6 +83,7 @@ exports[`SupportingWorkDetails renders the component 1`] = `
           onChange={[Function]}
           smallLabel={true}
           value={30}
+          valueType="integer"
           width="small"
         />
       </AmendmentForm>

@@ -171,12 +171,12 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'employer_decision' if the employer denys", async () => {
+  it("sets 'employer_decision' if the employer denies", async () => {
     act(() => {
-      const setEmployerDecision = wrapper
+      const updateFields = wrapper
         .find("EmployerDecision")
-        .prop("onChange");
-      setEmployerDecision("Deny");
+        .prop("updateFields");
+      updateFields({ employer_decision: "Deny" });
     });
 
     await simulateEvents(wrapper).submitForm();
@@ -189,10 +189,10 @@ describe("Review", () => {
 
   it("sets 'employer_decision' if the employer approves", async () => {
     act(() => {
-      const setEmployerDecision = wrapper
+      const updateFields = wrapper
         .find("EmployerDecision")
-        .prop("onChange");
-      setEmployerDecision("Approve");
+        .prop("updateFields");
+      updateFields({ employer_decision: "Approve" });
     });
 
     await simulateEvents(wrapper).submitForm();
@@ -219,10 +219,10 @@ describe("Review", () => {
 
   it("sets 'hours_worked_per_week' based on SupportingWorkDetails", async () => {
     act(() => {
-      const setAmendedHours = wrapper
+      const updateFields = wrapper
         .find("SupportingWorkDetails")
-        .prop("onChange");
-      setAmendedHours(50.5);
+        .prop("updateFields");
+      updateFields({ hours_worked_per_week: 50.5 });
     });
 
     await simulateEvents(wrapper).submitForm();
@@ -403,7 +403,10 @@ describe("Review", () => {
 
   it("sets 'has_amendments' to true if hours are amended", async () => {
     act(() => {
-      wrapper.find("SupportingWorkDetails").props().onChange(60);
+      wrapper
+        .find("SupportingWorkDetails")
+        .props()
+        .updateFields({ hours_worked_per_week: 60 });
     });
     await simulateEvents(wrapper).submitForm();
 
