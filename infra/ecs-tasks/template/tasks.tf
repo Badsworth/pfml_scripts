@@ -215,7 +215,8 @@ locals {
       env = [
         local.db_access,
         local.fineos_api_access,
-        local.fineos_s3_access
+        local.fineos_s3_access,
+        { "name" : "OUTPUT_DIRECTORY_PATH", "value" : "${var.fineos_eligibility_feed_output_directory_path}" }
       ]
     }
 
