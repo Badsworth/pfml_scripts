@@ -275,6 +275,7 @@ export class DocumentsPage {
     assertHasDocument(documentName);
     return this;
   }
+
   /**
    * Goes through the document upload process and returns back to the documents page
    * @param documentName
@@ -309,6 +310,83 @@ export class DocumentsPage {
     onTab("Search");
     cy.labelled("Business Type").type(`${documentType}{enter}`);
     clickBottomWidgetButton();
+  }
+
+  submitLegacyEmployerBenefits(
+    benefits: (ValidEmployerBenefit | ValidOtherIncome)[]
+  ): this {
+    this.startDocumentCreation(`Other Income`);
+    benefits.forEach(this.fillLegacyEmployerBenefit);
+    clickBottomWidgetButton();
+    this.assertDocumentExists("Other Income");
+    return this;
+  }
+
+  private fillLegacyEmployerBenefit(
+    benefitOrIncome: ValidEmployerBenefit | ValidOtherIncome,
+    index: number
+  ) {
+    // Will you receive wage replacement during your leave?
+    cy.get(`select[id$=_ReceiveWageReplacement${index > 0 ? index + 1 : ""}]`)
+      .should("be.visible")
+      .select(`Yes`);
+    // Through what type of program will you receive your wage replacement benefit?
+    cy.get(`select[id$=_ProgramType${index > 0 ? index + 1 : ""}]`)
+      .should("be.visible")
+      .select(
+        isValidOtherIncome(benefitOrIncome) ? `Non-Employer` : `Employer`
+      );
+    // Choose type of wage replacement
+    // This one is either bugged or is working in a mysterious way. Skips even indexes
+    cy.get(
+      `select[id$=_WRT${
+        index > 0
+          ? index * 2 + (isValidOtherIncome(benefitOrIncome) ? 2 : 1)
+          : index + 1
+      }]`
+    )
+      .should("be.visible")
+      .select(
+        `${
+          isValidOtherIncome(benefitOrIncome)
+            ? benefitOrIncome.income_type
+            : benefitOrIncome.benefit_type
+        }`
+      );
+    // When will you start receiving this income?
+    cy.get(
+      `input[type=text][id$=_StartDate${index > 0 ? index + 1 : ""}]`
+    ).type(
+      `${dateToMMddyyyy(
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_start_date
+          : benefitOrIncome.benefit_start_date
+      )}{enter}`
+    );
+    // When will you stop receiving this income?
+    cy.get(`input[type=text][id$=_EndDate${index > 0 ? index + 1 : ""}]`).type(
+      `${dateToMMddyyyy(
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_end_date
+          : benefitOrIncome.benefit_end_date
+      )}{enter}`
+    );
+
+    cy.get(`input[type=text][id$=_Amount${index > 0 ? index + 1 : ""}]`).type(
+      `{selectall}{backspace}${
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_amount_dollars
+          : benefitOrIncome.benefit_amount_dollars
+      }`
+    );
+
+    cy.get(`select[id$=_Frequency${index > 0 ? index + 1 : ""}]`).select(
+      `${
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_amount_frequency
+          : benefitOrIncome.benefit_amount_frequency
+      }`
+    );
   }
 
   /**

@@ -16,13 +16,11 @@ const NavigationTabs = ({ activePath, tabs }) => {
               "display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card",
               {
                 // inactive page link
-                "text-base-dark hover:text-primary hover:text-underline": !isActive(
-                  tab
-                ),
+                "text-base-dark hover:text-primary hover:text-underline":
+                  !isActive(tab),
                 // active page link
-                "border-primary border-bottom-05 text-bold text-primary": isActive(
-                  tab
-                ),
+                "border-primary border-bottom-05 text-bold text-primary":
+                  isActive(tab),
               }
             )}
           >

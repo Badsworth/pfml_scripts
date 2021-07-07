@@ -329,6 +329,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={1}
       status="completed"
       stepHref="/applications/name?claim_id=mock_application_id"
+      submittedContent={null}
       title="Verify your identification"
     >
       <Trans
@@ -378,6 +379,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={2}
       status="completed"
       stepHref="/applications/employment-status?claim_id=mock_application_id"
+      submittedContent={null}
       title="Enter employment information"
     >
       <Trans
@@ -427,6 +429,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={3}
       status="completed"
       stepHref="/applications/leave-reason?claim_id=mock_application_id"
+      submittedContent={null}
       title="Enter leave details"
     >
       <Trans
@@ -476,6 +479,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={4}
       status="not_started"
       stepHref="/applications/review?claim_id=mock_application_id"
+      submittedContent={null}
       title="Review and confirm"
     >
       <Trans
@@ -543,6 +547,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={5}
       status="disabled"
       stepHref="/applications/payment-method?claim_id=mock_application_id"
+      submittedContent={null}
       title="Add payment information"
     >
       <Trans
@@ -610,6 +615,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={6}
       status="disabled"
       stepHref="/applications/upload-id?claim_id=mock_application_id"
+      submittedContent={null}
       title="Upload identification document"
     >
       <Trans
@@ -659,6 +665,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={7}
       status="disabled"
       stepHref="/applications/upload-certification?claim_id=mock_application_id"
+      submittedContent={null}
       title="Upload leave certification documents"
     >
       <Trans
@@ -765,6 +772,97 @@ Array [
     NTN-111-ABS-01
   </strong>,
   ".",
+]
+`;
+
+exports[`Checklist when Part 1 is submitted w/o Other Leave data passes submittedContent to Other Leave step 1`] = `
+Array [
+  <Trans
+    components={
+      Object {
+        "contact-center-phone-link": <a
+          href="tel:(833) 344-7365"
+        />,
+      }
+    }
+    i18nKey="pages.claimsChecklist.otherLeaveSubmittedIntro"
+  >
+    <p
+      key="p-0"
+    >
+      If you have any other leaves, benefits, or income to report, call the Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+        key="1"
+      >
+        (833) 344‑7365
+      </a>
+      .
+    </p>
+  </Trans>,
+  <Details
+    label="What do I need to report?"
+  >
+    <details
+      className="c-details"
+    >
+      <summary
+        className="margin-bottom-2 text-primary text-underline font-ui-xs"
+      >
+        What do I need to report?
+      </summary>
+      <div
+        className="margin-bottom-2"
+      >
+        <Trans
+          components={
+            Object {
+              "li": <li />,
+              "ul": <ul
+                className="usa-list"
+              />,
+              "when-can-i-use-pfml": <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+              />,
+            }
+          }
+          i18nKey="pages.claimsChecklist.otherLeaveSubmittedDetailsBody"
+        >
+          <ul
+            className="usa-list"
+            key="0"
+          >
+            <li
+              key="0"
+            >
+              You have already taken leave to care for a family member since July 1, 2021
+            </li>
+            <li
+              key="1"
+            >
+              You have already taken leave since January 1, 2021 
+              <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+                key="1"
+              >
+                for any other reason that qualifies for PFML
+              </a>
+            </li>
+            <li
+              key="2"
+            >
+              You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)
+            </li>
+            <li
+              key="3"
+            >
+              You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)
+            </li>
+          </ul>
+        </Trans>
+      </div>
+    </details>
+  </Details>,
 ]
 `;
 

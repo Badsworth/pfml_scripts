@@ -161,11 +161,8 @@ describe("LeavePeriodIntermittent", () => {
 
   it("sends intermittent leave dates and ID to the api when the claim already has data", async () => {
     const claim = new MockBenefitsApplicationBuilder().intermittent().create();
-    const {
-      end_date,
-      start_date,
-      leave_period_id,
-    } = claim.leave_details.intermittent_leave_periods[0];
+    const { end_date, start_date, leave_period_id } =
+      claim.leave_details.intermittent_leave_periods[0];
 
     const { appLogic, wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
       claimAttrs: claim,
@@ -197,9 +194,8 @@ describe("LeavePeriodIntermittent", () => {
       claimAttrs: claim,
     });
 
-    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
-      wrapper
-    );
+    const { changeField, changeRadioGroup, submitForm } =
+      simulateEvents(wrapper);
 
     changeRadioGroup("has_intermittent_leave_periods", true);
     changeField(

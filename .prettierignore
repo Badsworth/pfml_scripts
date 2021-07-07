@@ -3,6 +3,7 @@ out
 .terraform
 __snapshots__
 new-relic.js
+.mypy_cache
 
 # Some of these are "invalid" in the eyes of Prettier and will result in Prettier failing
 infra/api/template/**/*.json

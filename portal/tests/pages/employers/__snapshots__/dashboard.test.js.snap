@@ -181,16 +181,20 @@ exports[`Employer dashboard renders filters toggle button with expected label an
 
 exports[`Employer dashboard renders filters when feature flags are enabled 1`] = `
 <Fragment>
-  <Button
-    aria-controls="filters"
-    aria-expanded="false"
-    onClick={[Function]}
-    variation="outline"
+  <div
+    className="margin-bottom-2"
   >
-    Show filters
-  </Button>
+    <Button
+      aria-controls="filters"
+      aria-expanded="false"
+      onClick={[Function]}
+      variation="outline"
+    >
+      Show filters
+    </Button>
+  </div>
   <form
-    className="bg-primary-lighter margin-top-2 padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
+    className="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
     hidden={true}
     id="filters"
     onSubmit={[Function]}
@@ -272,6 +276,39 @@ Array [
   </a>,
   " to review applications.",
 ]
+`;
+
+exports[`Employer dashboard renders search section when feature flags are enabled 1`] = `
+<div
+  className="bg-base-lightest padding-x-3 padding-top-1px padding-bottom-2"
+>
+  <form
+    className="usa-form grid-row"
+    onSubmit={[Function]}
+  >
+    <div
+      className="grid-col-fill tablet:grid-col-auto"
+    >
+      <InputText
+        label="Search for employee name or application ID"
+        name="search"
+        onChange={[Function]}
+        smallLabel={true}
+        value="Initial search field value"
+      />
+    </div>
+    <div
+      className="grid-col-auto flex-align-self-end"
+    >
+      <Button
+        className="width-auto"
+        type="submit"
+      >
+        Search
+      </Button>
+    </div>
+  </form>
+</div>
 `;
 
 exports[`Employer dashboard renders the page with expected content and pagination components 1`] = `

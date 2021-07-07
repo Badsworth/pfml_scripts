@@ -2325,26 +2325,25 @@ class TestGetClaimsEndpoint:
                 "Intake In Progress",
                 None,
                 "Closed",
+                "Completed",
             ]
             resp = self._perform_api_call(
-                "/v1/claims?claim_status=Pending,Closed", client, employer_auth_token
+                "/v1/claims?claim_status=Pending,Closed,Completed", client, employer_auth_token
             )
             self._perform_assertions(
                 resp,
                 status_code=200,
-                expected_count=self.NUM_CLAIM_PER_STATUS * 5,
+                expected_count=self.NUM_CLAIM_PER_STATUS * 6,
                 valid_statuses=valid_statuses,
             )
 
-        def test_get_claims_with_status_filter_unsuported_statuses(
+        def test_get_claims_with_status_filter_unsupported_statuses(
             self, client, employer_auth_token
         ):
             resp = self._perform_api_call(
                 "/v1/claims?claim_status=Unknown", client, employer_auth_token
             )
-            self._perform_assertions(
-                resp, status_code=400, expected_count=0, valid_statuses=["Unknown"]
-            )
+            self._perform_assertions(resp, status_code=400, expected_count=0, valid_statuses=[])
 
     # Inner class for testing Claims Search
     class TestClaimsSearch:

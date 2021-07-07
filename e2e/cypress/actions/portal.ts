@@ -4,6 +4,7 @@ import {
   ValidConcurrentLeave,
   ValidEmployerBenefit,
   ValidOtherIncome,
+  FeatureFlags,
 } from "../../src/types";
 import {
   isNotNull,
@@ -36,24 +37,43 @@ import {
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
 
-export function before(): void {
+/**
+ *
+ * @param flags set feature flags you want to override from defaults
+ * @default {
+    pfmlTerriyay: true,
+    claimantShowAuth: true,
+    claimantShowMedicalLeaveType: true,
+    noMaintenance: true,
+    employerShowSelfRegistrationForm: true,
+    claimantShowOtherLeaveStep: true,
+    claimantAuthThroughApi: true,
+    employerShowAddOrganization: true,
+    employerShowVerifications: true,
+    employerShowDashboard: true,
+    useNewPlanProofs: config("HAS_FINEOS_SP") === "true",
+    showCaringLeaveType: config("HAS_FINEOS_SP") === "true",
+  }
+ */
+export function before(flags?: Partial<FeatureFlags>): void {
   // Set the feature flag necessary to see the portal.
+  const defaults: FeatureFlags = {
+    pfmlTerriyay: true,
+    claimantShowAuth: true,
+    claimantShowMedicalLeaveType: true,
+    noMaintenance: true,
+    employerShowSelfRegistrationForm: true,
+    claimantShowOtherLeaveStep: true,
+    claimantAuthThroughApi: true,
+    employerShowAddOrganization: true,
+    employerShowVerifications: true,
+    employerShowDashboard: true,
+    useNewPlanProofs: true,
+    showCaringLeaveType: true,
+  };
   cy.setCookie(
     "_ff",
-    JSON.stringify({
-      pfmlTerriyay: true,
-      claimantShowAuth: true,
-      claimantShowMedicalLeaveType: true,
-      noMaintenance: true,
-      employerShowSelfRegistrationForm: true,
-      claimantShowOtherLeaveStep: true,
-      claimantAuthThroughApi: true,
-      employerShowAddOrganization: true,
-      employerShowVerifications: true,
-      employerShowDashboard: true,
-      useNewPlanProofs: true,
-      showCaringLeaveType: true,
-    }),
+    JSON.stringify(flags ? { ...defaults, ...flags } : defaults),
     { log: true }
   );
 
@@ -166,8 +186,7 @@ export function deleteDownloadsFolder(): void {
  */
 export function downloadLegalNotice(
   noticeType: string,
-  claim_id: string,
-  expectedNumPages: number
+  claim_id: string
 ): void {
   const downloadsFolder = Cypress.config("downloadsFolder");
   cy.task("getNoticeFileName", downloadsFolder, { timeout: 20000 }).then(
@@ -192,10 +211,6 @@ export function downloadLegalNotice(
             "Application ID:",
             "\n"
           );
-          expect(
-            pdf.numpages,
-            `This legal notice .pdf file should have ${pdf.numpages} pages`
-          ).to.equal(expectedNumPages);
           expect(
             application_id_from_notice,
             `The claim_id within the legal notice should be: ${application_id_from_notice}`
@@ -853,7 +868,8 @@ export function respondToLeaveAdminRequest(
   }
 
   cy.contains("button", "Submit").click();
-  cy.contains("Thanks for reviewing the application");
+  // This step can take a while.
+  cy.contains("Thanks for reviewing the application", { timeout: 30000 });
 }
 
 export function checkNoticeForLeaveAdmin(
@@ -1546,7 +1562,10 @@ export function assertEmployerBenefit(benefit: ValidEmployerBenefit): void {
 }
 
 export function addEmployerBenefit(benefit: ValidEmployerBenefit): void {
-  cy.findByText("Add a benefit").click();
+  // BC: Add a benefit -> Add an employer-sponsored benefit.
+  cy.findByText(
+    /(Add a benefit|Add an(other)? employer-sponsored benefit)/
+  ).click();
   // The table's second to last row will be the new benefit form.
   // The last row is the "Add another previous leave" button
   cy.contains("tbody", "Add an employer-sponsored benefit")
@@ -1554,6 +1573,62 @@ export function addEmployerBenefit(benefit: ValidEmployerBenefit): void {
     .eq(-2)
     .within(() => {
       fillEmployerBenefitData(benefit);
+    });
+}
+
+export function amendLegacyBenefit(
+  identifier: Pick<
+    ValidEmployerBenefit,
+    "benefit_start_date" | "benefit_end_date" | "benefit_type"
+  >,
+  amendedBenefit: ValidEmployerBenefit
+): void {
+  // Setup the regex template
+  // There's no unqiue identifier for listed leaves, so we have to use a combination of dates and reason.
+  const template = `${dateToReviewFormat(
+    identifier.benefit_start_date
+  )}.*${dateToReviewFormat(identifier.benefit_end_date)}.*${
+    benefitTypeMap[amendedBenefit.benefit_type]
+  }`;
+  const selector = new RegExp(template);
+  cy.contains("tr", selector).findByText("Amend").click();
+  // The next table row will now contain the amendment form.
+  cy.contains("tr", selector)
+    .next()
+    .within(() => {
+      fillDateFieldset(
+        "What is the first day of leave from work that this benefit will pay your employee for?",
+        amendedBenefit.benefit_start_date
+      );
+      fillDateFieldset(
+        "What is the last day of leave from work that this benefit will pay your employee for?",
+        amendedBenefit.benefit_end_date
+      );
+      inFieldsetLabelled("How much will your employee receive?", () => {
+        cy.findByLabelText("Amount").type(
+          `{selectAll}{backspace}${amendedBenefit.benefit_amount_dollars}`
+        );
+
+        /**
+         * @todo
+         * Check if other selects in LA and claimant portals also
+         * have the 'value' attribute of their options match the API types.
+         * If so - it may make sense to create a custom comman for this and get rid of some of those maps.
+         */
+        const frequencyMap: Record<
+          ValidEmployerBenefit["benefit_amount_frequency"],
+          string
+        > = {
+          "Per Day": "Daily",
+          "Per Week": "Weekly",
+          "Per Month": "Monthly",
+          "In Total": "All at once",
+          Unknown: "Unknown",
+        };
+        cy.findByLabelText("Frequency").select(
+          frequencyMap[amendedBenefit.benefit_amount_frequency]
+        );
+      });
     });
 }
 
@@ -1576,11 +1651,12 @@ export function amendEmployerBenefit(
   // The next table row will now contain the amendment form.
   cy.contains("tr", selector)
     .next()
-    .within(() => fillEmployerBenefitData(amendedBenefit));
+    .within(() => {
+      fillEmployerBenefitData(amendedBenefit);
+    });
 }
 
 function fillEmployerBenefitData(benefit: ValidEmployerBenefit): void {
-  benefit.benefit_type;
   inFieldsetLabelled("What kind of employer-sponsored benefit is it?", () =>
     cy.findByText(benefitTypeMap[benefit.benefit_type]).click()
   );

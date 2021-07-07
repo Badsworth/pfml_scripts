@@ -18,16 +18,18 @@ initializeI18n();
 // https://github.com/vercel/next.js/issues/16864#issuecomment-733627294
 addDecorator(withNextRouter());
 
+const CustomContainer = ({ children, context }) => (
+  <DocsContainer context={context}>
+    <Anchor storyId={context.id} />
+    {children}
+  </DocsContainer>
+);
+
 export const parameters = {
   docs: {
     // Prevent Storybook from scrolling to the bottom of a long story
     // https://github.com/storybookjs/storybook/issues/10983#issuecomment-708599819
-    container: ({ children, context }) => (
-      <DocsContainer context={context}>
-        <Anchor storyId={context.id} />
-        {children}
-      </DocsContainer>
-    ),
+    container: CustomContainer,
   },
   options: {
     // Sort stories alphabetically

@@ -1,0 +1,68 @@
+/** @define slide-out */
+.slide-out {
+  background: none;
+  border: none;
+  bottom: 0;
+  display: flex;
+  height: auto;
+  justify-content: flex-end;
+  left: 0;
+  padding: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: auto;
+}
+
+.slide-out:not([open]) {
+  display: none;
+}
+
+.slide-out__background {
+  background: rgba(0, 0, 0, 0.3);
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
+}
+
+.slide-out__header {
+  align-items: flex-start;
+  display: flex;
+}
+
+.slide-out__content {
+  animation: animateIn 0.5s forwards;
+  background: white;
+  box-sizing: border-box;
+  height: 100%;
+  max-width: 350px;
+  padding: 0.5em 1em;
+  position: relative;
+  transform: translateX(100%);
+  width: 20%;
+  z-index: 10;
+}
+
+.slide-out__title {
+  flex: 1 1 auto;
+  font-size: 1.25em;
+  margin: 0;
+  padding-right: 10px;
+}
+
+.slide-out__body {
+  font-size: 0.75em;
+}
+
+@keyframes animateIn {
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`EmployerBenefits renders the component 1`] = `
+exports[`EmployerBenefits renders the component for v1 eforms 1`] = `
 <Fragment>
   <Heading
     level="3"
@@ -19,6 +19,11 @@ exports[`EmployerBenefits renders the component 1`] = `
         }
       }
       i18nKey="components.employersEmployerBenefits.caption"
+      tOptions={
+        Object {
+          "context": "v1",
+        }
+      }
     />
   </p>
   <Table
@@ -96,4 +101,147 @@ exports[`EmployerBenefits renders the component 1`] = `
     </tbody>
   </Table>
 </Fragment>
+`;
+
+exports[`EmployerBenefits renders the component for v1 eforms 2`] = `
+Array [
+  "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, paid time off (PTO) or accrued paid leave, and family or medical leave benefits such as a parental leave program. ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    Learn more about how these affect payments.
+  </a>,
+]
+`;
+
+exports[`EmployerBenefits renders the component for v2 eforms 1`] = `
+<Fragment>
+  <Heading
+    level="3"
+  >
+    Employer-sponsored benefits
+  </Heading>
+  <p>
+    <Trans
+      components={
+        Object {
+          "reductions-overview-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="components.employersEmployerBenefits.caption"
+      tOptions={
+        Object {
+          "context": "v2",
+        }
+      }
+    />
+  </p>
+  <Table
+    className="width-full"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th
+          scope="col"
+        >
+          Benefit type
+        </th>
+        <th
+          colSpan="2"
+          scope="col"
+        >
+          Details
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <AmendableEmployerBenefit
+        appErrors={
+          AppErrorInfoCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          }
+        }
+        employerBenefit={
+          EmployerBenefit {
+            "benefit_amount_dollars": 1000,
+            "benefit_amount_frequency": "Per Week",
+            "benefit_end_date": "2021-03-01",
+            "benefit_start_date": "2021-02-01",
+            "benefit_type": "Short-term disability insurance",
+            "employer_benefit_id": 0,
+            "is_full_salary_continuous": false,
+          }
+        }
+        isAddedByLeaveAdmin={false}
+        key="0"
+        onChange={[Function]}
+        onRemove={[Function]}
+        shouldShowV2={true}
+      />
+      <AmendableEmployerBenefit
+        appErrors={
+          AppErrorInfoCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          }
+        }
+        employerBenefit={
+          EmployerBenefit {
+            "benefit_amount_dollars": 2000,
+            "benefit_amount_frequency": "Per Week",
+            "benefit_end_date": "2021-05-11",
+            "benefit_start_date": "2021-05-01",
+            "benefit_type": "Accrued paid leave",
+            "employer_benefit_id": 1,
+            "is_full_salary_continuous": true,
+          }
+        }
+        isAddedByLeaveAdmin={false}
+        key="1"
+        onChange={[Function]}
+        onRemove={[Function]}
+        shouldShowV2={true}
+      />
+      <tr>
+        <td
+          className="padding-y-2 padding-left-0"
+          colSpan="4"
+        >
+          <AddButton
+            disabled={false}
+            label="Add an employer-sponsored benefit"
+            onClick={[Function]}
+          />
+        </td>
+      </tr>
+    </tbody>
+  </Table>
+</Fragment>
+`;
+
+exports[`EmployerBenefits renders the component for v2 eforms 2`] = `
+Array [
+  "Your employee is planning to use these benefits during their paid leave under PFML. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. For paid time off (PTO) and other accrued paid leave your employee will use, review “Concurrent accrued paid leave” above. ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    Learn more about how these affect payments.
+  </a>,
+]
 `;

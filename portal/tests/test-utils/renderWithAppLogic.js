@@ -60,9 +60,8 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
     application_id: "mock_application_id",
     ...options.claimAttrs,
   });
-  appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
-    [claim]
-  );
+  appLogic.benefitsApplications.benefitsApplications =
+    new BenefitsApplicationCollection([claim]);
   appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings = jest
     .fn()
     .mockReturnValue(options.hasLoadedBenefitsApplicationAndWarnings || true);

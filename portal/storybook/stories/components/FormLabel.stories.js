@@ -16,8 +16,7 @@ export const Default = (args) => {
 
 Default.args = {
   inputId: "ssn",
-  hint:
-    "Don’t have an Social Security Number? Use your Individual Taxpayer Identification Number.",
+  hint: "Don’t have an Social Security Number? Use your Individual Taxpayer Identification Number.",
   example: "For example: 999-99-9999",
   optionalText: "Optional",
   children: "What’s your Social Security Number?",

@@ -93,7 +93,7 @@ describe("Request for More Information (notifications/notices)", () => {
             .should("be.visible")
             .click();
         });
-        portal.downloadLegalNotice("Request", submission.fineos_absence_id, 3);
+        portal.downloadLegalNotice("Request", submission.fineos_absence_id);
         portal.uploadAdditionalDocument(
           submission.fineos_absence_id,
           "Certification",

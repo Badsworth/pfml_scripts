@@ -8,7 +8,7 @@ import React from "react";
  */
 function InputNumber(props) {
   const valueType = props.valueType;
-  const allowDecimals = !(valueType === "integer")
+  const allowDecimals = !(valueType === "integer");
   const allowNegative = props.allowNegative;
 
   const inputMode = valueType === "integer" ? "numeric" : "decimal";
@@ -45,7 +45,7 @@ function InputNumber(props) {
  */
 export function isAllowedValue(value, allowDecimals, allowNegative) {
   if (!isNumber(value, allowDecimals)) {
-    return false
+    return false;
   }
 
   if (!allowNegative && isNegative(value)) {
@@ -74,7 +74,7 @@ function isNumber(value, allowDecimals) {
 
   const allowedCharacters = allowDecimals ? digitsWithDecimals : digits;
 
-  const matches = value.match(allowedCharacters)
+  const matches = value.match(allowedCharacters);
   return matches != null && matches[0] === value;
 }
 
@@ -84,7 +84,7 @@ function isNumber(value, allowDecimals) {
  * @param {string} value - The user-generated input.
  */
 function isNegative(value) {
-  return value.charAt(0) === "-"
+  return value.charAt(0) === "-";
 }
 
 InputNumber.propTypes = {

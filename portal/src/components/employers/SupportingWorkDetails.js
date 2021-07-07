@@ -3,6 +3,7 @@ import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import ConditionalContent from "../ConditionalContent";
 import InputNumber from "../InputNumber";
+import Heading from "../Heading";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
@@ -49,13 +50,21 @@ const SupportingWorkDetails = (props) => {
               setIsAmendmentFormDisplayed(false);
             }}
             destroyButtonLabel={t("components.amendmentForm.cancel")}
-            className="input-text-first-child"
+            className="bg-base-lightest border-base-lighter"
           >
+            <Heading level="4" size="3">
+              {t("components.employersSupportingWorkDetails.heading_amend")}
+            </Heading>
+            <p>
+              {t("components.employersSupportingWorkDetails.subtitle_amend")}
+            </p>
             <InputNumber
               {...props.getFunctionalInputProps("hours_worked_per_week")}
-              label={t("components.amendmentForm.question_leavePeriodDuration")}
+              label={t(
+                "components.employersSupportingWorkDetails.leavePeriodDurationLabel"
+              )}
               hint={t(
-                "components.amendmentForm.question_leavePeriodDuration_hint"
+                "components.employersSupportingWorkDetails.leavePeriodDurationHint"
               )}
               mask="hours"
               width="small"

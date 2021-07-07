@@ -2258,7 +2258,6 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
                     "is_for_current_employer": True,
                     "leave_start_date": "2021-01-01",
                     "leave_end_date": "2021-05-01",
-                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2285,9 +2284,11 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
         assert previous_leave.get("is_for_current_employer") is True
         assert previous_leave.get("leave_start_date") == "2021-01-01"
         assert previous_leave.get("leave_end_date") == "2021-05-01"
-        assert previous_leave.get("leave_reason") == "Pregnancy"
         assert previous_leave.get("worked_per_week_minutes") == 20
         assert previous_leave.get("leave_minutes") == 10
+
+    assert previous_leaves_other_reason[0].get("leave_reason") == "Pregnancy"
+    assert previous_leaves_same_reason[0].get("leave_reason") is None
 
 
 def test_application_patch_add_empty_array_for_previous_leaves(
@@ -2395,7 +2396,6 @@ def test_application_patch_replace_existing_previous_leave_same_reason(
                     "is_for_current_employer": False,
                     "leave_start_date": "2021-02-01",
                     "leave_end_date": "2021-06-01",
-                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2418,7 +2418,7 @@ def test_application_patch_replace_existing_previous_leave_same_reason(
     assert previous_leave.get("is_for_current_employer") is False
     assert previous_leave.get("leave_start_date") == "2021-02-01"
     assert previous_leave.get("leave_end_date") == "2021-06-01"
-    assert previous_leave.get("leave_reason") == "Pregnancy"
+    assert previous_leave.get("leave_reason") is None
     assert previous_leave.get("worked_per_week_minutes") == 20
     assert previous_leave.get("leave_minutes") == 10
 
@@ -4289,6 +4289,9 @@ def test_application_post_submit_creates_previous_leaves_eform(
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
+    application.previous_leaves_same_reason = [
+        PreviousLeaveSameReasonFactory.create(application_id=application.application_id)
+    ]
     application.previous_leaves_other_reason = [
         PreviousLeaveOtherReasonFactory.create(application_id=application.application_id)
     ]
@@ -4306,6 +4309,11 @@ def test_application_post_submit_creates_previous_leaves_eform(
     assert len(filtered) == 1
     create_eform_capture = filtered[0]
     assert create_eform_capture[2]["eform"].eformType == "Other Leaves - current version"
+    eform_attributes = create_eform_capture[2]["eform"].eformAttributes
+    previous_leave_reason = next(
+        (attr for attr in eform_attributes if attr["name"] == "V2QualifyingReason2"), None
+    )
+    assert previous_leave_reason["enumValue"]["instanceValue"] == "An illness or injury"
 
 
 def test_application_post_submit_no_previous_leaves_does_not_create_other_leaves_eform(

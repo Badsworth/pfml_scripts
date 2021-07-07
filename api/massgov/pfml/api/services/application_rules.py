@@ -340,6 +340,12 @@ def get_previous_leaves_other_reason_issues(application: Application) -> List[Is
     else:
         for index, leave in enumerate(application.previous_leaves_other_reason, 0):
             issues += get_previous_leave_issues(leave, f"previous_leaves_other_reason[{index}]")
+            issues += check_required_fields(
+                f"previous_leaves_other_reason[{index}]",
+                leave,
+                ["leave_reason_id"],
+                {"leave_reason_id": "leave_reason"},
+            )
 
     return issues
 
@@ -373,13 +379,10 @@ def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Iss
         "leave_start_date",
         "leave_end_date",
         "is_for_current_employer",
-        "leave_reason_id",
         "leave_minutes",
         "worked_per_week_minutes",
     ]
-    issues += check_required_fields(
-        leave_path, leave, required_fields, {"leave_reason_id": "leave_reason"}
-    )
+    issues += check_required_fields(leave_path, leave, required_fields)
 
     if leave.worked_per_week_minutes and leave.worked_per_week_minutes > MAX_MINUTES_IN_WEEK:
         issues.append(

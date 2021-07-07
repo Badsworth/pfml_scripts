@@ -2,14 +2,18 @@ import logging  # noqa: B1
 import pathlib
 
 import connexion
+import pytest
+from pydantic import ValidationError
 
 from massgov.pfml.api.util.response import success_response
 from massgov.pfml.api.validation import (
     add_error_handlers_to_app,
+    convert_pydantic_error_to_validation_exception,
     get_custom_validator_map,
     log_validation_error,
 )
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.fineos.models.customer_api import Customer
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 INVALID_USER = {"first_name": 123, "interests": ["sports", "activity", "sports"]}
@@ -173,3 +177,56 @@ def test_log_validation_error_unexpected_exception_handling(caplog):
             "Request Validation Exception (field: anything, type: format, rule: anything)",
         ),
     ]
+
+
+class TestConvertPydanticErrorToValidationException:
+    @pytest.fixture
+    def validation_error_first_name(self):
+        try:
+            Customer(firstName="a" * 51)
+        except ValidationError as e:
+            return e
+
+    @pytest.fixture
+    def validation_error_multiple_issues(self):
+        try:
+            Customer(firstName="a" * 51, lastName="a" * 51)
+        except ValidationError as e:
+            return e
+
+    def test_validation_error_name_too_long(self, validation_error_first_name):
+        validation_exception = convert_pydantic_error_to_validation_exception(
+            validation_error_first_name
+        )
+        assert validation_exception is not None
+
+        errors = validation_exception.errors
+        error_detail = next((e for e in errors if e.field == "firstName"), None)
+
+        assert error_detail is not None
+        assert (
+            error_detail.message
+            == 'Error in field: "firstName". Ensure this value has at most 50 characters.'
+        )
+
+    def test_validation_error_multiple_issues(self, validation_error_multiple_issues):
+        validation_exception = convert_pydantic_error_to_validation_exception(
+            validation_error_multiple_issues
+        )
+        assert validation_exception is not None
+
+        errors = validation_exception.errors
+
+        error_detail = next((e for e in errors if e.field == "firstName"), None)
+        assert error_detail is not None
+        assert (
+            error_detail.message
+            == 'Error in field: "firstName". Ensure this value has at most 50 characters.'
+        )
+
+        error_detail = next((e for e in errors if e.field == "lastName"), None)
+        assert error_detail is not None
+        assert (
+            error_detail.message
+            == 'Error in field: "lastName". Ensure this value has at most 50 characters.'
+        )

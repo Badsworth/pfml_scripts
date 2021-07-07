@@ -15,10 +15,8 @@ import withUser from "../../../hoc/withUser";
 export const Index = (props) => {
   const { appLogic, query } = props;
   const { t } = useTranslation();
-  const {
-    hasVerifiableEmployer,
-    user_leave_administrators,
-  } = appLogic.users.user;
+  const { hasVerifiableEmployer, user_leave_administrators } =
+    appLogic.users.user;
   const accountConverted = query?.account_converted === "true";
 
   return (

@@ -99,28 +99,21 @@ export const Status = (props) => {
           ),
         })}
       </StatusRow>
-      <StatusRow
-        data-test="duration"
-        label={t("pages.employersClaimsStatus.leaveDurationLabel")}
-      >
-        {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
-      </StatusRow>
+      {/* TODO (EMPLOYER-448): Show leave duration and the intermittent leave period dates when API returns them to Portal */}
+      {!isIntermittent && (
+        <StatusRow
+          data-test="duration"
+          label={t("pages.employersClaimsStatus.leaveDurationLabel")}
+        >
+          {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
+        </StatusRow>
+      )}
       {isContinuous && (
         <StatusRow
           data-test="duration-continuous"
           label={t("pages.employersClaimsStatus.leaveDurationLabel_continuous")}
         >
           {claim.continuousLeaveDateRange()}
-        </StatusRow>
-      )}
-      {isIntermittent && (
-        <StatusRow
-          data-test="duration-intermittent"
-          label={t(
-            "pages.employersClaimsStatus.leaveDurationLabel_intermittent"
-          )}
-        >
-          {claim.intermittentLeaveDateRange()}
         </StatusRow>
       )}
       {isReducedSchedule && (

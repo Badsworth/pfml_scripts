@@ -335,6 +335,45 @@ describe("Employer dashboard", () => {
     ).toMatchSnapshot();
   });
 
+  it("does not render search section when no search feature flag is enabled", () => {
+    const { wrapper } = setup();
+
+    expect(wrapper.find("Search").dive().isEmptyRender()).toBe(true);
+  });
+
+  it("renders search section when feature flags are enabled", () => {
+    process.env.featureFlags = {
+      employerShowDashboardSearch: true,
+    };
+
+    const { wrapper } = setup({
+      activeFilters: {
+        search: "Initial search field value",
+      },
+    });
+
+    expect(wrapper.find("Search").dive()).toMatchSnapshot();
+  });
+
+  it("updates search param when a search is performed", async () => {
+    process.env.featureFlags = {
+      employerShowDashboardSearch: true,
+    };
+
+    const { updateQuerySpy, wrapper } = setup();
+
+    const search = wrapper.find("Search").dive();
+    const { changeField, submitForm } = simulateEvents(search);
+
+    changeField("search", "Bud Baxter");
+    await submitForm();
+
+    expect(updateQuerySpy).toHaveBeenCalledWith({
+      page_offset: "1",
+      search: "Bud Baxter",
+    });
+  });
+
   it("does not render filters when no filter feature flags are enabled", () => {
     const { wrapper } = setup();
 
@@ -540,9 +579,8 @@ describe("Employer dashboard", () => {
     });
 
     const filtersWrapper = wrapper.find("Filters").dive();
-    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
-      filtersWrapper
-    );
+    const { changeField, changeRadioGroup, submitForm } =
+      simulateEvents(filtersWrapper);
 
     changeRadioGroup("claim_status", "Approved");
     changeField("employer_id", user_leave_administrators[0].employer_id);

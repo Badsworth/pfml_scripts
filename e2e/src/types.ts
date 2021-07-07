@@ -8,6 +8,21 @@ import {
 } from "./_api";
 import { DehydratedClaim } from "./generation/Claim";
 
+export type FeatureFlags = {
+  pfmlTerriyay: boolean;
+  claimantShowAuth: boolean;
+  claimantShowMedicalLeaveType: boolean;
+  noMaintenance: boolean;
+  employerShowSelfRegistrationForm: boolean;
+  claimantShowOtherLeaveStep: boolean;
+  claimantAuthThroughApi: boolean;
+  employerShowAddOrganization: boolean;
+  employerShowVerifications: boolean;
+  employerShowDashboard: boolean;
+  useNewPlanProofs: boolean;
+  showCaringLeaveType: boolean;
+};
+
 export type Credentials = {
   username: string;
   password: string;

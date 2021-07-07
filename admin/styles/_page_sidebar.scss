@@ -1,0 +1,28 @@
+/* Navigation */
+.menu__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu__link {
+  text-decoration: none;
+}
+
+/* Settings */
+.settings {
+  border-top: 1px solid #000;
+  flex: 1 1 auto;
+}
+
+.settings__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Environment Flag */
+.environment__label {
+  font-weight: 700;
+  text-transform: uppercase;
+}

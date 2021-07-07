@@ -25,10 +25,19 @@ exports[`SupportingWorkDetails opens the AmendmentForm when the amend button is 
       visible={true}
     >
       <AmendmentForm
-        className="input-text-first-child"
+        className="bg-base-lightest border-base-lighter"
         destroyButtonLabel="Cancel amendment"
         onDestroy={[Function]}
       >
+        <Heading
+          level="4"
+          size="3"
+        >
+          Amend weekly hours worked
+        </Heading>
+        <p>
+          This amendment will get saved when you submit your review.
+        </p>
         <InputNumber
           hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
           label="On average, how many hours does the employee work each week?"
@@ -37,7 +46,7 @@ exports[`SupportingWorkDetails opens the AmendmentForm when the amend button is 
           onChange={[Function]}
           smallLabel={true}
           value={30}
-          valueType="integer"
+          valueType="float"
           width="small"
         />
       </AmendmentForm>
@@ -71,10 +80,19 @@ exports[`SupportingWorkDetails renders the component with the AmendmentForm clos
       visible={false}
     >
       <AmendmentForm
-        className="input-text-first-child"
+        className="bg-base-lightest border-base-lighter"
         destroyButtonLabel="Cancel amendment"
         onDestroy={[Function]}
       >
+        <Heading
+          level="4"
+          size="3"
+        >
+          Amend weekly hours worked
+        </Heading>
+        <p>
+          This amendment will get saved when you submit your review.
+        </p>
         <InputNumber
           hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
           label="On average, how many hours does the employee work each week?"
@@ -83,7 +101,7 @@ exports[`SupportingWorkDetails renders the component with the AmendmentForm clos
           onChange={[Function]}
           smallLabel={true}
           value={30}
-          valueType="integer"
+          valueType="float"
           width="small"
         />
       </AmendmentForm>

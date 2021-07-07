@@ -24,9 +24,8 @@ const AmendableConcurrentLeave = ({
 }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(concurrentLeave);
-  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
-    false
-  );
+  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
+    useState(false);
 
   const getFormattedValue = (field, value) => {
     if (field === "leave_start_date" || field === "leave_end_date") {

@@ -15,6 +15,7 @@ import findKeyByValue from "../utils/findKeyByValue";
 import formatDateRange from "../utils/formatDateRange";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routeWithParams from "../utils/routeWithParams";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
@@ -329,33 +330,56 @@ function ApplicationActions(props) {
   const showResumeButton = !claim.isCompleted && !hasDenialNotice;
   const showUploadButton = claim.isCompleted || hasDenialNotice;
 
+  /**
+   * Which Other Leave instructions to display on ApplicationCard
+   * TODO (CP-2354) Remove CC guidance for claims with Part 1 submitted without reductions data
+   */
+  const hasReductionsData =
+    get(claim, "has_employer_benefits") !== null ||
+    get(claim, "has_other_incomes") !== null ||
+    get(claim, "has_previous_leaves_same_reason") !== null ||
+    get(claim, "has_previous_leaves_other_reason") !== null ||
+    get(claim, "has_concurrent_leave") !== null;
+  const reductionsEnabled = isFeatureEnabled("claimantShowOtherLeaveStep");
+  // Show no instructions by default
+  let reductionsI18nKey = null;
+  // After launch, show new instructions on completed claims
+  if (reductionsEnabled && claim.isCompleted) {
+    reductionsI18nKey = "components.applicationCard.reductionsInstructions";
+  }
+  // After launch, show prompt to report if Part 1 was submitted with null reductions data
+  else if (reductionsEnabled && !hasReductionsData && claim.isSubmitted) {
+    reductionsI18nKey =
+      "components.applicationCard.reductionsInstructions_missingData";
+  }
+  // Before launch, show old instructions on completed claims
+  else if (claim.isCompleted) {
+    reductionsI18nKey = "components.applicationCard.reductionsInstructions_old";
+  }
+
   return (
     <div>
       <Heading level="3" weight="normal">
         {t("components.applicationCard.actionsHeading")}
       </Heading>
 
-      {claim.isCompleted && (
-        <React.Fragment>
-          <p>
-            <Trans
-              i18nKey="components.applicationCard.reductionsInstructionsIntro"
-              components={{
-                "contact-center-phone-link": (
-                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                ),
-                "reductions-overview-link": (
-                  <a href={routes.external.massgov.reductionsOverview} />
-                ),
-              }}
-            />
-          </p>
-
-          <ul className="usa-list">
-            <li>{t("components.applicationCard.reductionsInstruction_1")}</li>
-            <li>{t("components.applicationCard.reductionsInstruction_2")}</li>
-          </ul>
-        </React.Fragment>
+      {reductionsI18nKey && (
+        <Trans
+          i18nKey={reductionsI18nKey}
+          components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
+            "when-can-i-use-pfml": (
+              <a href={routes.external.massgov.whenCanIUsePFML} />
+            ),
+            "reductions-overview-link": (
+              <a href={routes.external.massgov.reductionsOverview} />
+            ),
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
       )}
 
       {showBondingLeaveDocRequirement && (

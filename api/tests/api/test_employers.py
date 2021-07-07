@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
+from freezegun import freeze_time
 
 import tests.api
 from massgov.pfml.db.models.employees import EmployerQuarterlyContribution, UserLeaveAdministrator
@@ -184,6 +185,7 @@ def test_employers_receive_409_if_duplicate_fein(
     assert response.status_code == 409
 
 
+@freeze_time("2021-05-01")
 def test_employers_receive_200_and_most_recent_date_from_get_withholding_dates(
     client, employer_user, employer_auth_token, test_db_session
 ):

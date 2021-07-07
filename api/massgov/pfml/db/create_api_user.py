@@ -6,7 +6,6 @@
 # Usage: ./bin/run-ecs-task/run-task.sh <env> db-create-fineos-user <firstname>.<lastname>
 #
 from pydantic import BaseSettings, Field
-from sqlalchemy import or_
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm.session import Session
 
@@ -30,9 +29,7 @@ def create_fineos_user_helper(db_session: Session) -> None:
 
     for client_name, client_id in config.__dict__.items():
         try:
-            db_session.query(User).filter(
-                or_(User.sub_id == client_id, User.active_directory_id == client_id,)
-            ).one()
+            db_session.query(User).filter(User.sub_id == client_id).one()
             logger.info("App client for %s already exists", client_name)
 
         except NoResultFound:

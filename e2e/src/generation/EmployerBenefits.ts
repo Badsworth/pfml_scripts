@@ -6,6 +6,9 @@ import { ApplicationLeaveDetails } from "../_api";
  * Generates employer benefits for the claim. Prefills start & end dates to be the same as leave dates.
  * @param spec - Employer benefit specification.
  */
+export function generateEmployerBenefits<
+  T extends EmployerBenefit[] | undefined
+>(employer_benefits: T, leave_details: ApplicationLeaveDetails): T;
 export function generateEmployerBenefits(
   employer_benefits: EmployerBenefit[] | undefined,
   leave_details: ApplicationLeaveDetails

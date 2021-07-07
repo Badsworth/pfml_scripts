@@ -8,6 +8,7 @@ import { promisify } from "util";
 import { pipeline, Readable } from "stream";
 import JSONStream from "JSONStream";
 import shuffle from "./shuffle";
+import { concat, collect } from "streaming-iterables";
 
 const pipelineP = promisify(pipeline);
 interface PromiseWithOptionalGeneration<T> extends Promise<T> {
@@ -196,8 +197,8 @@ export default class EmployeePool implements Iterable<Employee> {
    *
    * @param pools
    */
-  static merge(...pools: EmployeePool[]): EmployeePool {
-    return new this(pools.map((p) => p.employees).flat(1));
+  static merge(...pools: Iterable<Employee>[]): EmployeePool {
+    return new this(collect(concat(...pools)));
   }
 
   constructor(private employees: Employee[], used?: string[]) {

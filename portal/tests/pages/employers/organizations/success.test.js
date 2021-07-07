@@ -63,8 +63,7 @@ describe("Success", () => {
     it("navigates to New Application page based on next param", () => {
       const queryWithNextParam = {
         employer_id: "mock_employer_id",
-        next:
-          "/employers/applications/new-application/?absence_id=mock_absence_id",
+        next: "/employers/applications/new-application/?absence_id=mock_absence_id",
       };
       renderPage(queryWithNextParam);
 

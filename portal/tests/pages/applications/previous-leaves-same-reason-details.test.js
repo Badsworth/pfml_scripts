@@ -3,10 +3,8 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
-import PreviousLeave, {
-  PreviousLeaveReason,
-} from "../../../src/models/PreviousLeave";
 import { initial, isEqual, last } from "lodash";
+import PreviousLeave from "../../../src/models/PreviousLeave";
 import PreviousLeavesSameReasonDetails from "../../../src/pages/applications/previous-leaves-same-reason-details";
 import React from "react";
 import { shallow } from "enzyme";
@@ -42,10 +40,8 @@ const setup = (claimAttrs = DEFAULT_CLAIM_ATTRS) => {
 
 const previousLeaveData = {
   is_for_current_employer: true,
-  is_for_same_reason_as_leave_reason: null,
   leave_end_date: "2021-06-11",
   leave_minutes: 840,
-  leave_reason: PreviousLeaveReason.bonding,
   leave_start_date: "2021-05-06",
   previous_leave_id: null,
   worked_per_week_minutes: 1920,
@@ -116,7 +112,6 @@ const createClaimWithPreviousLeaves = () =>
       {
         leave_end_date: "2021-01-26",
         leave_minutes: 25,
-        leave_reason: PreviousLeaveReason.bonding,
         leave_start_date: "2021-01-01",
         previous_leave_id: 89,
         worked_per_week_minutes: 40,
@@ -124,7 +119,6 @@ const createClaimWithPreviousLeaves = () =>
       {
         leave_end_date: "2020-12-13",
         leave_minutes: 20,
-        leave_reason: PreviousLeaveReason.bonding,
         leave_start_date: "2020-11-21",
         previous_leave_id: 9,
         worked_per_week_minutes: 40,
@@ -141,7 +135,6 @@ const createClaimWithPreviousLeaves_care = () =>
       {
         leave_end_date: "2021-01-26",
         leave_minutes: 25,
-        leave_reason: PreviousLeaveReason.care,
         leave_start_date: "2021-01-01",
         previous_leave_id: 89,
         worked_per_week_minutes: 40,
@@ -149,7 +142,6 @@ const createClaimWithPreviousLeaves_care = () =>
       {
         leave_end_date: "2020-12-13",
         leave_minutes: 20,
-        leave_reason: PreviousLeaveReason.care,
         leave_start_date: "2020-11-21",
         previous_leave_id: 9,
         worked_per_week_minutes: 40,
@@ -169,9 +161,7 @@ describe("PreviousLeavesSameReasonDetails", () => {
       const entries = wrapper.find("RepeatableFieldset").prop("entries");
 
       expect(entries).toHaveLength(1);
-      expect(entries[0]).toEqual(
-        new PreviousLeave({ leave_reason: PreviousLeaveReason.bonding })
-      );
+      expect(entries[0]).toEqual(new PreviousLeave());
     });
 
     it("adds an empty previous leave when the user clicks Add Previous Leave", async () => {
@@ -182,8 +172,8 @@ describe("PreviousLeavesSameReasonDetails", () => {
       const entries = wrapper.find("RepeatableFieldset").prop("entries");
       expect(entries).toHaveLength(2);
       expect(entries).toEqual([
-        previousLeaveData,
-        new PreviousLeave({ leave_reason: PreviousLeaveReason.bonding }),
+        new PreviousLeave({ ...previousLeaveData }),
+        new PreviousLeave(),
       ]);
 
       expect(
@@ -200,9 +190,7 @@ describe("PreviousLeavesSameReasonDetails", () => {
 
       const entries = wrapper.find("RepeatableFieldset").prop("entries");
       expect(entries).toHaveLength(1);
-      expect(entries).toEqual([
-        new PreviousLeave({ leave_reason: PreviousLeaveReason.bonding }),
-      ]);
+      expect(entries).toEqual([new PreviousLeave()]);
 
       expect(
         wrapper.find("RepeatableFieldset").dive().find("RepeatableFieldsetCard")
@@ -265,9 +253,7 @@ describe("PreviousLeavesSameReasonDetails", () => {
       expect(oldEntries).toEqual([
         ...claimWithPreviousLeaves.previous_leaves_same_reason,
       ]);
-      expect(newEntry).toEqual(
-        new PreviousLeave({ leave_reason: PreviousLeaveReason.bonding })
-      );
+      expect(newEntry).toEqual(new PreviousLeave());
 
       expect(
         wrapper.find("RepeatableFieldset").dive().find("RepeatableFieldsetCard")
@@ -286,7 +272,7 @@ describe("PreviousLeavesSameReasonDetails", () => {
       expect(entries).toHaveLength(2);
       expect(entries).toEqual([
         claimWithPreviousLeaves.previous_leaves_same_reason[1],
-        new PreviousLeave({ leave_reason: PreviousLeaveReason.bonding }),
+        new PreviousLeave(),
       ]);
       expect(
         wrapper.find("RepeatableFieldset").dive().find("RepeatableFieldsetCard")

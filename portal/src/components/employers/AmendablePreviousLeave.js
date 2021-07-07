@@ -1,4 +1,7 @@
-import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
+import PreviousLeave, {
+  PreviousLeaveReason,
+  PreviousLeaveType,
+} from "../../models/PreviousLeave";
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
@@ -28,9 +31,8 @@ const AmendablePreviousLeave = ({
 }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(previousLeave);
-  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
-    false
-  );
+  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
+    useState(false);
 
   const getFieldPath = (field) =>
     `previous_leaves[${amendment.previous_leave_id}].${field}`;
@@ -145,46 +147,40 @@ const AmendablePreviousLeave = ({
               </p>
               <ConditionalContent visible={shouldShowV2}>
                 <InputChoiceGroup
-                  name={getFieldPath("is_for_same_reason_as_leave_reason")}
+                  name={getFieldPath("type")}
                   smallLabel
                   label={t(
                     "components.employersAmendablePreviousLeave.isForSameReasonAsLeaveReasonLabel"
                   )}
                   onChange={(e) => {
-                    amendLeave(
-                      "is_for_same_reason_as_leave_reason",
-                      e.target.value
-                    );
+                    amendLeave("type", e.target.value);
                   }}
-                  errorMsg={getErrorMessage(
-                    "is_for_same_reason_as_leave_reason"
-                  )}
+                  errorMsg={getErrorMessage("type")}
                   type="radio"
                   choices={[
                     {
                       checked:
-                        get(amendment, "is_for_same_reason_as_leave_reason") ===
-                        true,
+                        get(amendment, "type") === PreviousLeaveType.sameReason,
                       label: t(
                         "components.employersAmendablePreviousLeave.choiceYes"
                       ),
-                      value: "true",
+                      value: PreviousLeaveType.sameReason,
                     },
                     {
                       checked:
-                        get(amendment, "is_for_same_reason_as_leave_reason") ===
-                        false,
+                        get(amendment, "type") ===
+                        PreviousLeaveType.otherReason,
                       label: t(
                         "components.employersAmendablePreviousLeave.choiceNo"
                       ),
-                      value: "false",
+                      value: PreviousLeaveType.otherReason,
                     },
                   ]}
                 />
               </ConditionalContent>
               <ConditionalContent
                 visible={
-                  get(amendment, "is_for_same_reason_as_leave_reason") === false
+                  get(amendment, "type") === PreviousLeaveType.otherReason
                 }
               >
                 <InputChoiceGroup

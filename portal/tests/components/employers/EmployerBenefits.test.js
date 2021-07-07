@@ -57,9 +57,18 @@ describe("EmployerBenefits", () => {
     });
   });
 
-  it("renders the component", () => {
+  it("renders the component for v1 eforms", () => {
     const wrapper = render();
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+  });
+
+  it("renders the component for v2 eforms", () => {
+    const wrapper = render({
+      shouldShowV2: true,
+    });
+    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it("displays 'None reported' if no benefits are reported", () => {
@@ -85,14 +94,27 @@ describe("EmployerBenefits", () => {
       expect(wrapper.find("AmendableEmployerBenefit").length).toBe(2);
     });
 
-    it("displays the 'Add benefit' button", () => {
+    it("displays the first 'Add benefit' button", () => {
+      const wrapper = render({
+        employerBenefits: [],
+        shouldShowV2: true,
+      });
+
+      expect(
+        wrapper.find("AddButton").dive().find("Button").dive().text()
+      ).toMatchInlineSnapshot(`"Add an employer-sponsored benefit"`);
+    });
+
+    it("displays the subsequent 'Add benefit' button", () => {
       const wrapper = render({
         addedBenefits: BENEFITS,
         employerBenefits: [],
         shouldShowV2: true,
       });
 
-      expect(wrapper.find("AddButton").exists()).toBe(true);
+      expect(
+        wrapper.find("AddButton").dive().find("Button").dive().text()
+      ).toMatchInlineSnapshot(`"Add another employer-sponsored benefit"`);
     });
   });
 

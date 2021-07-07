@@ -19,7 +19,7 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
   // Pagination info associated with the current collection of claims
   const [paginationMeta, setPaginationMeta] = useState(new PaginationMeta());
 
-  // Track which filters are activated for the collection of claims
+  // Track the search and filter params currently applied for the collection of claims
   const [activeFilters, setActiveFilters] = useState({});
 
   /**
@@ -28,6 +28,7 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
    * @param {object} [filters]
    * @param {string} [filters.claim_status] - Comma-separated list of statuses
    * @param {string} [filters.employer_id]
+   * @param {string} [filters.search]
    */
   const loadPage = async (pageOffset = 1, filters = {}) => {
     if (
