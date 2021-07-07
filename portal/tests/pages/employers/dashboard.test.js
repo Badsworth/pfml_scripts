@@ -579,9 +579,8 @@ describe("Employer dashboard", () => {
     });
 
     const filtersWrapper = wrapper.find("Filters").dive();
-    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
-      filtersWrapper
-    );
+    const { changeField, changeRadioGroup, submitForm } =
+      simulateEvents(filtersWrapper);
 
     changeRadioGroup("claim_status", "Approved");
     changeField("employer_id", user_leave_administrators[0].employer_id);

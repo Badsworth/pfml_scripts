@@ -20,9 +20,8 @@ const SupportingWorkDetails = (props) => {
   const { appErrors, hoursWorkedPerWeek, onChange } = props;
   const errorMsg = appErrors.fieldErrorMessage("hours_worked_per_week");
   const [amendment, setAmendment] = useState(hoursWorkedPerWeek);
-  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
-    false
-  );
+  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
+    useState(false);
   const amendDuration = (value) => {
     // Same logic as AmendableEmployerBenefit
     // Invalid input will default to 0, validation error message is upcoming

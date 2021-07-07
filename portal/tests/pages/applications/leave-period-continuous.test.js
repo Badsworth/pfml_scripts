@@ -84,11 +84,8 @@ describe("LeavePeriodContinuous", () => {
 
   it("sends continuous leave dates and ID to the api when the claim has leave data", async () => {
     const claim = new MockBenefitsApplicationBuilder().continuous().create();
-    const {
-      end_date,
-      start_date,
-      leave_period_id,
-    } = claim.leave_details.continuous_leave_periods[0];
+    const { end_date, start_date, leave_period_id } =
+      claim.leave_details.continuous_leave_periods[0];
 
     const { appLogic, wrapper } = renderWithAppLogic(LeavePeriodContinuous, {
       claimAttrs: claim,
@@ -117,9 +114,8 @@ describe("LeavePeriodContinuous", () => {
       claimAttrs: claim,
     });
 
-    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
-      wrapper
-    );
+    const { changeField, changeRadioGroup, submitForm } =
+      simulateEvents(wrapper);
 
     changeRadioGroup("has_continuous_leave_periods", "true");
     changeField(

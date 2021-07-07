@@ -67,10 +67,8 @@ describe("ScheduleFixed", () => {
     }
     await submitForm();
 
-    const {
-      hours_worked_per_week,
-      work_pattern,
-    } = appLogic.benefitsApplications.update.mock.calls[0][1];
+    const { hours_worked_per_week, work_pattern } =
+      appLogic.benefitsApplications.update.mock.calls[0][1];
 
     expect(hours_worked_per_week).toEqual(MINUTES_WORKED_PER_WEEK / 60);
     expect(work_pattern.work_pattern_days.length).toEqual(7);

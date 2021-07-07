@@ -181,10 +181,10 @@ describe("InputHours", () => {
       target: createInputElement({ ...input.props(), value: "1" }),
     });
 
-    expect(updateFields).toHaveBeenCalledTimes(1)
+    expect(updateFields).toHaveBeenCalledTimes(1);
     expect(updateFields).toHaveBeenCalledWith(
       expect.objectContaining({
-        minutes: 60
+        minutes: 60,
       })
     );
   });
