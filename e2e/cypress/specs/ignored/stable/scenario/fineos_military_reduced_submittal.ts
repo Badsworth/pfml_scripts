@@ -1,7 +1,7 @@
-import { fineos } from "../../../actions";
-import { extractLeavePeriod } from "../../../../src/util/claims";
-import { getFineosBaseUrl } from "../../../config";
-import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { fineos } from "../../../../actions";
+import { extractLeavePeriod } from "../../../../../src/util/claims";
+import { getFineosBaseUrl } from "../../../../config";
+import { assertValidClaim } from "../../../../../src/util/typeUtils";
 
 describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
   it(

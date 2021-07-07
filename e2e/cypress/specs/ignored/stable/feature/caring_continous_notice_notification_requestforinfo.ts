@@ -1,8 +1,8 @@
-import { fineos, portal, email, fineosPages } from "../../../actions";
-import { getFineosBaseUrl } from "../../../config";
-import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
-import { findCertificationDoc } from "../../../../src/util/documents";
+import { fineos, portal, email, fineosPages } from "../../../../actions";
+import { getFineosBaseUrl } from "../../../../config";
+import { Submission } from "../../../../../src/types";
+import { config } from "../../../../actions/common";
+import { findCertificationDoc } from "../../../../../src/util/documents";
 
 describe("Request for More Information (notifications/notices)", () => {
   after(() => {

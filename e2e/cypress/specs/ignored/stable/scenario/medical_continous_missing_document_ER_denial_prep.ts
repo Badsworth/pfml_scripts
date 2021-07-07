@@ -1,8 +1,8 @@
-import { fineos, portal } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
-import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
-import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { fineos, portal } from "../../../../actions";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../../config";
+import { Submission } from "../../../../../src/types";
+import { config } from "../../../../actions/common";
+import { assertValidClaim } from "../../../../../src/util/typeUtils";
 
 describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
   const submissionTest = it("As a claimant, I should be able to submit a continous bonding application through the portal", () => {

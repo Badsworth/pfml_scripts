@@ -1,4 +1,4 @@
-import { portal } from "../../../actions";
+import { portal } from "../../../../actions";
 
 describe("Leave Admin Self-Registration", () => {
   const register = it("Leave administrators should be able to self-register on the portal.", () => {

@@ -1,13 +1,13 @@
-import { portal, fineos, fineosPages } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
-import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
-import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { fineos, fineosPages, portal } from "../../../../actions";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../../config";
+import { Submission } from "../../../../../src/types";
+import { config } from "../../../../actions/common";
+import { assertValidClaim } from "../../../../../src/util/typeUtils";
 
-describe("Submit medical application via the web portal: Adjudication Approval & payment checking", () => {
-  const submissionTest = it("As a claimant, I should be able to submit a reduced medical application through the portal", () => {
+describe("Submit caring application via the web portal: Adjudication Approval & payment checking", () => {
+  const submissionTest = it("As a claimant, I should be able to submit a continous caring application through the portal", () => {
     portal.before();
-    cy.task("generateClaim", "MRAP30").then((claim) => {
+    cy.task("generateClaim", "CCAP90").then((claim) => {
       cy.stash("claim", claim);
       const application: ApplicationRequestBody = claim.claim;
       const paymentPreference = claim.paymentPreference;
@@ -45,47 +45,30 @@ describe("Submit medical application via the web portal: Adjudication Approval &
           "--"
         );
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
-        portal.respondToLeaveAdminRequest(false, true, true);
+        portal.respondToLeaveAdminRequest(false, true, true, true);
       });
     });
   });
 
   it(
-    "CSR rep will approve reduced medical application",
+    "CSR rep will approve continous caring application",
     { retries: 0, baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();
       cy.visit("/");
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          const claimPage = fineosPages.ClaimPage.visit(
-            submission.fineos_absence_id
-          );
-          claimPage.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              // Receive all of the claim documentation.
-              claim.documents.forEach((document) => {
-                evidence.receive(document.document_type);
-              });
-            });
-            adjudication.certificationPeriods((cert) => cert.prefill());
-            adjudication.acceptLeavePlan();
-          });
-          claimPage.shouldHaveStatus("Applicability", "Applicable");
-          claimPage.shouldHaveStatus("Eligibility", "Met");
-          claimPage.shouldHaveStatus("Evidence", "Satisfied");
-          claimPage.shouldHaveStatus("Availability", "Time Available");
-          claimPage.shouldHaveStatus("Restriction", "Passed");
-          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          claimPage.approve();
-        });
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineos.claimAdjudicationFlow(
+          submission.fineos_absence_id,
+          "Care for a Family Member",
+          true
+        );
       });
     }
   );
 
   it(
-    "Should be able to confirm the weekly payment amount for a reduced schedule",
+    "Should be able to confirm the weekly payment amount",
     { baseUrl: getFineosBaseUrl() },
     () => {
       cy.dependsOnPreviousPass();
@@ -98,9 +81,11 @@ describe("Submit medical application via the web portal: Adjudication Approval &
             ?.expected_weekly_payment as unknown) as number;
           fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
             (leaveCase) => {
-              leaveCase
-                .assertAmountsPending([{ net_payment_amount: payment }])
-                .assertMatchingPaymentDates();
+              leaveCase.assertAmountsPending([
+                {
+                  net_payment_amount: payment,
+                },
+              ]);
             }
           );
         });

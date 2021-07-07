@@ -1,5 +1,5 @@
-import { portal } from "../../../actions";
-import { config } from "../../../actions/common";
+import { portal } from "../../../../actions";
+import { config } from "../../../../actions/common";
 
 describe("Submit medical pre-birth application via the web portal", () => {
   it("As a claimant, I should be able to submit a continuous medical pre-birth application through the portal", () => {

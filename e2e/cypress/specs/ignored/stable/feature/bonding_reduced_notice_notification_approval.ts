@@ -1,11 +1,11 @@
-import { fineos, portal, email, fineosPages } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
-import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
+import { fineos, portal, email, fineosPages } from "../../../../actions";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../../config";
+import { Submission } from "../../../../../src/types";
+import { config } from "../../../../actions/common";
 import {
   findCertificationDoc,
   getDocumentReviewTaskName,
-} from "../../../../src/util/documents";
+} from "../../../../../src/util/documents";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
