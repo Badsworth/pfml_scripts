@@ -59,11 +59,10 @@ export const MIL_RED: ScenarioSpecification = {
   claim: {
     label: "MIL_RED",
     shortClaim: true,
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    reason: "Care for a Family Member",
     docs: {
-      HCP: {},
       MASSID: {},
+      CARING: {},
     },
     reduced_leave_spec: "0,240,240,240,240,240,0",
   },
