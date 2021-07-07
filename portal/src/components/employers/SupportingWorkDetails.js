@@ -15,12 +15,12 @@ import { useTranslation } from "../../locales/i18n";
 
 const SupportingWorkDetails = (props) => {
   const { t } = useTranslation();
-  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
-    false
-  );
+  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
+    useState(false);
 
-  // TODO make sure this updates the value in the form as well.
-  // TOOD jsdoc
+  /**
+   * Cancels an amendment to hours_worked_per_week by restoring the initial value.
+   */
   const handleCancel = () => {
     props.updateFields({
       hours_worked_per_week: props.initialHoursWorkedPerWeek,
@@ -60,7 +60,7 @@ const SupportingWorkDetails = (props) => {
               mask="hours"
               width="small"
               smallLabel
-              valueType="integer"
+              valueType="float"
             />
           </AmendmentForm>
         </ConditionalContent>
