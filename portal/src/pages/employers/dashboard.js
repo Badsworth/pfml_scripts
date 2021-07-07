@@ -522,13 +522,9 @@ const Filters = (props) => {
 
         {user.verifiedEmployers.length > 1 && (
           <Dropdown
+            autocomplete
             {...getFunctionalInputProps("employer_id")}
-            hideEmptyChoice
             choices={[
-              {
-                label: t("pages.employersDashboard.filterOrgsShowAllChoice"),
-                value: "",
-              },
               ...user.verifiedEmployers.map((employer) => ({
                 label: `${employer.employer_dba} (${employer.employer_fein})`,
                 value: employer.employer_id,

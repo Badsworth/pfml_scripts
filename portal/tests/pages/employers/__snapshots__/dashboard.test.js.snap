@@ -232,12 +232,9 @@ exports[`Employer dashboard renders filters when feature flags are enabled 1`] =
       value=""
     />
     <Dropdown
+      autocomplete={true}
       choices={
         Array [
-          Object {
-            "label": "All organizations",
-            "value": "",
-          },
           Object {
             "label": "Work Inc (11-3456789)",
             "value": "mock-id-1",
@@ -248,7 +245,6 @@ exports[`Employer dashboard renders filters when feature flags are enabled 1`] =
           },
         ]
       }
-      hideEmptyChoice={true}
       label="Organizations"
       name="employer_id"
       onChange={[Function]}
