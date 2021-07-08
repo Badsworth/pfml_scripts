@@ -40,7 +40,7 @@ const EmployerDecision = (props) => {
                 <a
                   href={routes.external.massgov.employersGuide}
                   target="_blank"
-                  rel="noopener"
+                  rel="noreferrer noopener"
                 />
               ),
             }}

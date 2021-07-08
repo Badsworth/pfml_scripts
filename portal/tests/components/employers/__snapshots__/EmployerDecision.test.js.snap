@@ -25,7 +25,7 @@ exports[`EmployerDecision renders the component 1`] = `
           Object {
             "mass-employer-role-link": <a
               href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
-              rel="noopener"
+              rel="noreferrer noopener"
               target="_blank"
             />,
           }
