@@ -1,7 +1,7 @@
 PFML End to End Testing
 =======================
 
-Here you will find the end-to-end testing code for this project. Testing efforts on this project have been broken into three groups
+Here you will find the end-to-end testing code for this project. Testing efforts on this project have been broken into three groups:
 
 * **[End to End](#end-to-end-tests)** - Tests application functionality from a user (employee, CSR) perspective across multiple components using [Cypress](https://www.cypress.io/). This test type is browser based, and runs nightly in CI to ensure continuity of functionality.
 * **[Data Generation](#data-generation)** - Generates ad-hoc data to be used for manual testing and training activities (Employers, Employees, and Claims).

@@ -78,16 +78,16 @@ jobs:
           echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
           echo "only_stable=${{github.event.inputs.only_stable }}" >> $GITHUB_ENV
 
-      # # Run Cypress tests.
-      # - name: Cypress Tests (Stable)
-      #   uses: cypress-io/github-action@v2
-      #   with:
-      #     spec: "cypress/specs/stable/**"
-      #     record: true
-      #     parallel: true
-      #     working-directory: e2e
-      #     group: Stable
-      #     tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
+      # Run Cypress tests.
+      - name: Cypress Tests (Stable)
+        uses: cypress-io/github-action@v2
+        with:
+          spec: "cypress/specs/stable/**"
+          record: true
+          parallel: true
+          working-directory: e2e
+          group: Stable
+          tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
 
       # Run Cypress tests.
       - name: Cypress Tests (Unstable)
