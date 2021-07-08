@@ -81,7 +81,6 @@ export const Review = (props) => {
     amendedBenefits: indexedEmployerBenefits,
     previousLeaves: indexedPreviousLeaves,
     amendedPreviousLeaves: indexedPreviousLeaves,
-    // TODO confirm error behavior.
     hours_worked_per_week: claim.hours_worked_per_week,
     comment: "",
     employer_decision: "Approve",
