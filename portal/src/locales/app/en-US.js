@@ -2500,8 +2500,6 @@ const components = {
     heading: "Have you approved or denied this leave request?",
   },
   employersFeedback: {
-    addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
-    addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     commentSolicitation: "Please tell us more.",
@@ -2511,10 +2509,7 @@ const components = {
       "Please tell us why you denied this leave request.",
     commentSolicitation_fraud:
       "Please tell us why you believe this is fraudulent.",
-    fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
     instructionsLabel: "Do you have any additional comments or concerns?",
-    supportingDocumentationLabel:
-      "If you have any supporting documentation, please attach it for review.",
   },
   employersFraudReport: {
     alertBody:

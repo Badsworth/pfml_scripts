@@ -31,10 +31,6 @@ const flagsConfig = {
     // TODO (EMPLOYER-1500): Remove flag
     employerShowDashboardSearch: false,
 
-    // When this flag is enabled, file upload is visible on the Review page
-    // TODO (EMPLOYER-665): Show file upload once the endpoint is available
-    employerShowFileUpload: false,
-
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
     // TODO (EMPLOYER-718): Remove flag
     employerShowPreviousLeaves: false,
