@@ -85,8 +85,6 @@ module "api" {
   cognito_user_pool_arn                               = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_HhQSLYSIe"
   cognito_user_pool_id                                = "us-east-1_HhQSLYSIe"
   cognito_user_pool_client_id                         = "7sjb96tvg8251lrq5vdk7de9"
-  cognito_post_confirmation_lambda_artifact_s3_key    = local.cognito_post_confirmation_lambda_artifact_s3_key
-  cognito_pre_signup_lambda_artifact_s3_key           = local.cognito_pre_signup_lambda_artifact_s3_key
   cognito_user_pool_keys_url                          = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HhQSLYSIe/.well-known/jwks.json"
   cognito_enable_provisioned_concurrency              = false
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"

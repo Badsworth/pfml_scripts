@@ -69,8 +69,6 @@ module "api" {
   cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_1OVYp4aZo/.well-known/jwks.json"
   portal_base_url             = "https://paidleave-cps-preview.eol.mass.gov"
 
-  cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
-  cognito_pre_signup_lambda_artifact_s3_key        = local.cognito_pre_signup_lambda_artifact_s3_key
 
   logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
 
