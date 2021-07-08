@@ -13,7 +13,8 @@
     "lint:js": "eslint --ext .js ./",
     "lint:tf": "./bin/tf-fmt.sh",
     "lint": "npm run lint:js -- --fix && npm run lint:tf",
-    "prettier": "prettier --write '**/*.{js,json,md,mdx,scss,yaml,yml}'"
+    "portal:format": "prettier --write 'portal/**/*.{js,json,md,mdx,scss,yaml,yml}'",
+    "portal:format-check": "prettier --check 'portal/**/*.{js,json,md,mdx,scss,yaml,yml}'"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",

@@ -38,7 +38,7 @@ import {
 } from "../../src/util/claims";
 
 /**
- * 
+ *
  * @param flags set feature flags you want to override from defaults
  * @default {
     pfmlTerriyay: true,
@@ -1562,7 +1562,10 @@ export function assertEmployerBenefit(benefit: ValidEmployerBenefit): void {
 }
 
 export function addEmployerBenefit(benefit: ValidEmployerBenefit): void {
-  cy.findByText("Add a benefit").click();
+  // BC: Add a benefit -> Add an employer-sponsored benefit.
+  cy.findByText(
+    /(Add a benefit|Add an(other)? employer-sponsored benefit)/
+  ).click();
   // The table's second to last row will be the new benefit form.
   // The last row is the "Add another previous leave" button
   cy.contains("tbody", "Add an employer-sponsored benefit")

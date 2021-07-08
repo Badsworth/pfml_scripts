@@ -1,8 +1,16 @@
+import React, { useEffect } from "react";
 import FormLabel from "./FormLabel";
 import PropTypes from "prop-types";
-import React from "react";
 import classnames from "classnames";
 import useUniqueId from "../hooks/useUniqueId";
+
+// Only load USWDS comboBox JS on client-side since it
+// references `window`, which isn't available during
+// the Node.js-based build process ("server-side")
+let comboBox = null;
+if (typeof window !== "undefined") {
+  comboBox = require("uswds/src/js/components/combo-box");
+}
 
 /**
  * A dropdown (`select`) allows users to select one option from a temporary modal menu.
@@ -13,6 +21,16 @@ import useUniqueId from "../hooks/useUniqueId";
 function Dropdown(props) {
   const hasError = !!props.errorMsg;
   const inputId = useUniqueId("Dropdown");
+  const { autocomplete } = props;
+  useEffect(() => {
+    if (autocomplete && comboBox) {
+      comboBox.on();
+
+      return () => {
+        comboBox.off();
+      };
+    }
+  }, [autocomplete]);
 
   const fieldClasses = classnames(
     "usa-select maxw-mobile-lg",
@@ -30,6 +48,8 @@ function Dropdown(props) {
     }
   );
 
+  const comboBoxClasses = classnames({ "usa-combo-box": autocomplete });
+
   return (
     <div className={formGroupClasses}>
       <FormLabel
@@ -42,31 +62,37 @@ function Dropdown(props) {
       >
         {props.label}
       </FormLabel>
+      <div className={comboBoxClasses} data-default-value={props.value}>
+        <select
+          className={fieldClasses}
+          id={inputId}
+          name={props.name}
+          onChange={props.onChange}
+          value={props.value}
+          aria-labelledby={`${inputId}_label ${inputId}_hint`}
+        >
+          {/* Include a blank initial option which will be chosen if no option has been selected yet */}
+          {!props.hideEmptyChoice && (
+            <option value="">{props.emptyChoiceLabel}</option>
+          )}
 
-      <select
-        className={fieldClasses}
-        id={inputId}
-        name={props.name}
-        onChange={props.onChange}
-        value={props.value}
-        aria-labelledby={`${inputId}_label ${inputId}_hint`}
-      >
-        {/* Include a blank initial option which will be chosen if no option has been selected yet */}
-        {!props.hideEmptyChoice && (
-          <option value="">{props.emptyChoiceLabel}</option>
-        )}
-
-        {props.choices.map((choice) => (
-          <option key={choice.value} value={choice.value}>
-            {choice.label}
-          </option>
-        ))}
-      </select>
+          {props.choices.map((choice) => (
+            <option key={choice.value} value={choice.value}>
+              {choice.label}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }
 
 Dropdown.propTypes = {
+  /**
+   * Enable combo-box function, help users select an item from a large list of options.
+   * [USWDS Reference ↗](https://designsystem.digital.gov/components/combo-box/)
+   */
+  autocomplete: PropTypes.bool,
   /**
    * List of choices to be rendered in the dropdown
    */

@@ -1,16 +1,16 @@
-import { portal, fineos, fineosPages } from "../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
+import { portal, fineos, fineosPages } from "../../../actions";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import {
   Submission,
   ValidEmployerBenefit,
   ValidOtherIncome,
-} from "../../../src/types";
-import { assertValidClaim } from "../../../src/util/typeUtils";
-import { getSubmissionFromApiResponse } from "../../../src/util/claims";
-import { generateEmployerBenefits } from "../../../src/generation/EmployerBenefits";
-import { clickBottomWidgetButton } from "../../actions/fineos";
-import { generateOtherIncomes } from "../../../src/generation/OtherIncomes";
-import { config } from "../../actions/common";
+} from "../../../../src/types";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { getSubmissionFromApiResponse } from "../../../../src/util/claims";
+import { generateEmployerBenefits } from "../../../../src/generation/EmployerBenefits";
+import { clickBottomWidgetButton } from "../../../actions/fineos";
+import { generateOtherIncomes } from "../../../../src/generation/OtherIncomes";
+import { config } from "../../../actions/common";
 (config("FINEOS_HAS_UPDATED_EFORMS") === "true" ? xdescribe : describe)(
   "Legacy employer benefit",
   () => {

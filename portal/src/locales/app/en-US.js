@@ -453,13 +453,19 @@ const errors = {
     },
     residential_address: {
       city: {
+        maxLength: "City must be 40 characters or fewer.",
         required: "Enter a city for your residential address.",
       },
       line_1: {
+        maxLength: "Address must be 40 characters or fewer.",
         required: "Enter the street address for your residential address.",
+      },
+      line_2: {
+        maxLength: "Address line 2 must be 40 characters or fewer.",
       },
       required: "Enter a residential address.",
       state: {
+        maxLength: "State must be 40 characters or fewer.",
         required: "Enter a state for your residential address.",
       },
       zip: {
@@ -2103,8 +2109,9 @@ const pages = {
     betaHeader: "We're making it easier to manage paid leave applications",
     betaMessage:
       "Our dashboard is in beta. You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can <user-feedback-link>use our feedback form</user-feedback-link> to tell us what you think of our new features.",
+    filterNavLabel: "Filters:",
     filterOrgsLabel: "Organizations",
-    filterOrgsShowAllChoice: "All organizations",
+    filterRemove: "Remove filter:",
     filterStatusChoice_Approved: "$t(shared.absenceCaseStatus_approved)",
     filterStatusChoice_Closed: "$t(shared.absenceCaseStatus_closed)",
     filterStatusChoice_Declined: "$t(shared.absenceCaseStatus_denied)",

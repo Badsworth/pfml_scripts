@@ -10,6 +10,7 @@
       "/^border/": []
     },
     "color-named": "never",
-    "scss/dollar-variable-pattern": "^[a-zA-Z]"
+    "scss/dollar-variable-pattern": "^[a-zA-Z]",
+    "scss/at-mixin-pattern": "^[A-Z].*$"
   }
 }
