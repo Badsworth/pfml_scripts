@@ -1,8 +1,8 @@
-import { extractLeavePeriod } from "../../../../../src/util/claims";
+import { extractLeavePeriod } from "../../../../src/util/claims";
 import { LeaveReason } from "types";
-import { portal, fineos } from "../../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../../config";
-import { assertValidClaim } from "../../../../../src/util/typeUtils";
+import { portal, fineos } from "../../../actions";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
   const fineosSubmission = it(
