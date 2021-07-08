@@ -96,12 +96,6 @@ variable "logging_level" {
   default     = ""
 }
 
-variable "cognito_user_pool_id" {
-  description = "Cognito User Pool ID"
-  type        = string
-  default     = ""
-}
-
 variable "fineos_data_export_path" {
   description = "FINEOS generates data export files for PFML API to pick up"
   type        = string

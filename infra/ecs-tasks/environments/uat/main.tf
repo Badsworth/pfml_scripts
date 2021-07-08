@@ -39,7 +39,6 @@ module "tasks" {
   vpc_id                  = data.aws_vpc.vpc.id
   app_subnet_ids          = data.aws_subnet_ids.vpc_app.ids
 
-  cognito_user_pool_id                       = "us-east-1_29j6fKBDT"
   fineos_client_customer_api_url             = "https://uat-api.masspfml.fineos.com/customerapi/"
   fineos_client_integration_services_api_url = "https://uat-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url         = "https://uat-api.masspfml.fineos.com/groupclientapi/"

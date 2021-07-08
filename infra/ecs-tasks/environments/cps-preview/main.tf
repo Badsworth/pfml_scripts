@@ -39,7 +39,6 @@ module "tasks" {
   vpc_id                  = data.aws_vpc.vpc.id
   app_subnet_ids          = data.aws_subnet_ids.vpc_app.ids
 
-  cognito_user_pool_id = "us-east-1_1OVYp4aZo"
 
   # TODO: These values are provided by FINEOS.
   fineos_client_integration_services_api_url          = "https://dt3-api.masspfml.fineos.com/integration-services/"

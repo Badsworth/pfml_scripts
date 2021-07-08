@@ -105,17 +105,6 @@ locals {
       ]
     },
 
-    "bulk-user-import" = {
-      command   = ["bulk-user-import"]
-      task_role = aws_iam_role.task_bulk_import_task_role.arn
-      env = [
-        local.db_access,
-        local.fineos_api_access,
-        { name : "PROCESS_CSV_DATA_BUCKET_NAME", value : "${aws_s3_bucket.bulk_user_import.bucket}" },
-        { name : "COGNITO_IDENTITY_POOL_ID", value : "${var.cognito_user_pool_id}" }
-      ]
-    },
-
     "dor-import" = {
       command        = ["dor-import"],
       task_role      = aws_iam_role.dor_import_task_role.arn,
