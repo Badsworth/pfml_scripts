@@ -1,7 +1,9 @@
-@use '_icons';
-@use '_colors';
-@use '_globals';
-@use '_page_sidebar';
-@use '../src/components/ConfirmationDialog';
-@use '../src/components/SlideOut';
-@use '../src/components/Button';
+@import 'reset';
+@import 'fonts';
+@import 'icons';
+@import 'colors';
+@import 'globals';
+@import 'page_sidebar';
+@import '../src/components/ConfirmationDialog';
+@import '../src/components/SlideOut';
+@import '../src/components/Button';
