@@ -825,16 +825,6 @@ const shared = {
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
   noneReported: "None reported",
-  noticeDate: "Posted {{date}}",
-  noticeName: "Other notice", // it should fallback to this if we receive an unexpected or undefined enum
-  noticeName_approvalNotice: "Approval notice",
-  noticeName_denialNotice: "Denial notice",
-  noticeName_pdf: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
-  noticeName_pdf_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
-  noticeName_pdf_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
-  noticeName_pdf_requestForInfoNotice:
-    "Request for more information $t(shared.pdfNoticeSuffix)",
-  noticeName_requestForInfoNotice: "Request for more information",
   otherIncomeEntryPrefix: "Income",
   otherIncomeType_jonesAct: "Jones Act benefits",
   otherIncomeType_otherEmployer:
@@ -2069,17 +2059,6 @@ const pages = {
     leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    noticeDate: "$t(shared.noticeDate)",
-    noticeName: "$t(shared.noticeName)",
-    noticeName_approvalNotice: "$t(shared.noticeName_approvalNotice)",
-    noticeName_denialNotice: "$t(shared.noticeName_denialNotice)",
-    noticeName_pdf: "$t(shared.noticeName_pdf)",
-    noticeName_pdf_approvalNotice: "$t(shared.noticeName_pdf_approvalNotice)",
-    noticeName_pdf_denialNotice: "$t(shared.noticeName_pdf_denialNotice)",
-    noticeName_pdf_requestForInfoNotice:
-      "$t(shared.noticeName_pdf_requestForInfoNotice)",
-    noticeName_requestForInfoNotice:
-      "$t(shared.noticeName_requestForInfoNotice)",
     noticesLabel: "Notices",
     statusLabel: "Status",
     title: "Application status for {{name}}",
@@ -2333,17 +2312,6 @@ const components = {
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    noticeDate: "$t(shared.noticeDate)",
-    noticeName: "$t(shared.noticeName)",
-    noticeName_approvalNotice: "$t(shared.noticeName_approvalNotice)",
-    noticeName_denialNotice: "$t(shared.noticeName_denialNotice)",
-    noticeName_pdf: "$t(shared.noticeName_pdf)",
-    noticeName_pdf_approvalNotice: "$t(shared.noticeName_pdf_approvalNotice)",
-    noticeName_pdf_denialNotice: "$t(shared.noticeName_pdf_denialNotice)",
-    noticeName_pdf_requestForInfoNotice:
-      "$t(shared.noticeName_pdf_requestForInfoNotice)",
-    noticeName_requestForInfoNotice:
-      "$t(shared.noticeName_requestForInfoNotice)",
     noticesDownload:
       "When you click the notice link, the file will download to your device.",
     noticesFallback:
@@ -2384,6 +2352,14 @@ const components = {
     body_id:
       "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
     header: "Document Requirements:",
+  },
+  downloadableDocument: {
+    createdAtDate: "Posted {{date}}",
+    noticeName: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
+    noticeName_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
+    noticeName_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
+    noticeName_requestForInfoNotice:
+      "Request for more information $t(shared.pdfNoticeSuffix)",
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
@@ -2583,13 +2559,13 @@ const components = {
     choiceUnknown: "I don't know",
     choiceYes: "Yes",
     commentHeading: "Tell us why you think this relationship is inaccurate.",
+    documentName: "Your employee's certification document",
     documentationLabel: "Documentation",
     familyMemberRelationshipHint:
       "This employee has attested the family member relationship is <eligible-relationship-link>a covered relationship</eligible-relationship-link>. If something on the form seems incorrect, add a comment at the end of the page.",
     familyMemberRelationshipLabel:
       "Do you believe the listed relationship is described accurately? (Optional)",
     header: "Leave details",
-    healthCareProviderFormLink: "$t(shared.certificationFormMedical)",
     inaccurateRelationshipAlertHeading:
       "The employee will be denied paid leave.",
     inaccurateRelationshipAlertLead:
