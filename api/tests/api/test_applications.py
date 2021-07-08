@@ -5027,13 +5027,15 @@ class TestApplicationsUpdate:
         return application
 
     @pytest.fixture
-    def update_application_body(self):
-        return {}
+    def address(self):
+        return massgov.pfml.api.models.applications.common.Address(
+            line_1="123 Main St.", city="Boston", state="Massachusetts", zip="02111"
+        )
 
     # Collects the params necessary for making a request with a valid application update
     # to the mock API client
     @pytest.fixture
-    def request_params(self, application, auth_token, update_application_body):
+    def request_params(self, application, auth_token):
         class UpdateApplicationRequestParams(object):
             __slots__ = ["application_id", "auth_token", "body"]
 
@@ -5042,9 +5044,7 @@ class TestApplicationsUpdate:
                 self.auth_token = auth_token
                 self.body = body
 
-        return UpdateApplicationRequestParams(
-            application.application_id, auth_token, update_application_body
-        )
+        return UpdateApplicationRequestParams(application.application_id, auth_token, {})
 
     # Submits an application update request with the given params
     def perform_update(self, client, request_params):
@@ -5054,44 +5054,50 @@ class TestApplicationsUpdate:
             json=request_params.body,
         )
 
-    def test_first_name_too_long(self, client, request_params):
-        first_name = "a" * 51
+    def test_success(self, client, request_params):
+        request_body = {}
+        request_body["first_name"] = "Foo"
+        request_params.body = request_body
 
-        update_application_body = request_params.body
-        update_application_body["first_name"] = first_name
+        response = self.perform_update(client, request_params)
+        assert response.status_code == 200
+
+    @pytest.mark.parametrize("name_field", ["first_name", "middle_name", "last_name"])
+    def test_name_field_too_long(self, client, request_params, name_field):
+        name = "a" * 51
+
+        request_body = {}
+        request_body[name_field] = name
+        request_params.body = request_body
 
         response = self.perform_update(client, request_params)
         assert response.status_code == 400
 
         errors = response.get_json().get("errors")
-        error = next((e for e in errors if e.get("field") == "first_name"), None)
+        assert len(errors) == 1
+
+        error = errors[0]
         assert error.get("type") == "maxLength"
+        assert error.get("field") == name_field
 
-    def test_middle_name_too_long(self, client, request_params):
-        middle_name = "a" * 51
+    @pytest.mark.parametrize("address_field", ["line_1", "line_2", "city", "state"])
+    def test_address_field_too_long(self, client, request_params, address, address_field):
+        address_dict = address.__dict__
+        address_dict[address_field] = "a" * 41
 
-        update_application_body = request_params.body
-        update_application_body["middle_name"] = middle_name
+        request_body = {}
+        request_body["residential_address"] = address_dict
+        request_params.body = request_body
 
         response = self.perform_update(client, request_params)
         assert response.status_code == 400
 
         errors = response.get_json().get("errors")
-        error = next((e for e in errors if e.get("field") == "middle_name"), None)
+        assert len(errors) == 1
+
+        error = errors[0]
         assert error.get("type") == "maxLength"
-
-    def test_last_name_too_long(self, client, request_params):
-        last_name = "a" * 51
-
-        update_application_body = request_params.body
-        update_application_body["last_name"] = last_name
-
-        response = self.perform_update(client, request_params)
-        assert response.status_code == 400
-
-        errors = response.get_json().get("errors")
-        error = next((e for e in errors if e.get("field") == "last_name"), None)
-        assert error.get("type") == "maxLength"
+        assert error.get("field") == f"residential_address.{address_field}"
 
 
 def test_application_post_submit_app_creates_claim(client, user, auth_token, test_db_session):

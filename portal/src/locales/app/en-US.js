@@ -453,13 +453,19 @@ const errors = {
     },
     residential_address: {
       city: {
+        maxLength: "City must be 40 characters or fewer.",
         required: "Enter a city for your residential address.",
       },
       line_1: {
+        maxLength: "Address must be 40 characters or fewer.",
         required: "Enter the street address for your residential address.",
+      },
+      line_2: {
+        maxLength: "Address line 2 must be 40 characters or fewer.",
       },
       required: "Enter a residential address.",
       state: {
+        maxLength: "State must be 40 characters or fewer.",
         required: "Enter a state for your residential address.",
       },
       zip: {
