@@ -49,14 +49,6 @@ data "aws_iam_policy_document" "kinesis_aws_waf_policy" {
       values   = ["${aws_s3_bucket.smx_kinesis_firewall_ingest.arn}/*"]
     }
   }
-  # Lambda Permissions
-  statement {
-    effect = "Allow"
-    actions = [
-      "lambda:InvokeFunction"
-    ]
-    resources = [aws_lambda_function.scrub_ip_addresses_lambda.arn]
-  }
 }
 
 data "aws_iam_policy_document" "kinesis_firehose_stream_assume_role" {
