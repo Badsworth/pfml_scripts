@@ -1,88 +1,104 @@
-import AmendButton from "../../../src/components/employers/AmendButton";
-import AmendmentForm from "../../../src/components/employers/AmendmentForm";
-import Button from "../../../src/components/Button";
-import InputText from "../../../src/components/InputText";
+import { simulateEvents, testHook } from "../../test-utils";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
-import ReviewRow from "../../../src/components/ReviewRow";
 import SupportingWorkDetails from "../../../src/components/employers/SupportingWorkDetails";
 import { shallow } from "enzyme";
-import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
 describe("SupportingWorkDetails", () => {
   const hoursWorkedPerWeek = 30;
-  const onChange = jest.fn();
-  let appLogic, wrapper;
+  const updateFields = jest.fn();
+  let getFunctionalInputProps;
 
   beforeEach(() => {
     testHook(() => {
-      appLogic = useAppLogic();
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors: new AppErrorInfoCollection(),
+        formState: { hours_worked_per_week: hoursWorkedPerWeek },
+        updateFields,
+      });
     });
-    wrapper = shallow(
-      <SupportingWorkDetails
-        appErrors={appLogic.appErrors}
-        hoursWorkedPerWeek={hoursWorkedPerWeek}
-        onChange={onChange}
-      />
-    );
   });
 
-  it("renders the component", () => {
+  function render() {
+    return shallow(
+      <SupportingWorkDetails
+        getFunctionalInputProps={getFunctionalInputProps}
+        initialHoursWorkedPerWeek={hoursWorkedPerWeek}
+        updateFields={updateFields}
+      />
+    );
+  }
+
+  function clickAmendButton(wrapper) {
+    wrapper.find("ReviewRow").dive(3).find("AmendButton").simulate("click");
+  }
+
+  function clickCancelAmendmentButton(wrapper) {
+    wrapper
+      .find("AmendmentForm")
+      .dive()
+      .find({ "data-test": "amendment-destroy-button" })
+      .simulate("click");
+  }
+
+  function isElementVisible(element) {
+    return element
+      .parents("ConditionalContent")
+      .everyWhere((el) => el.prop("visible") === true);
+  }
+
+  it("renders the component with the AmendmentForm closed", () => {
+    const wrapper = render();
+    expect(isElementVisible(wrapper.find("AmendmentForm"))).toBe(false);
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("has a ReviewRow that takes in an AmendButton", () => {
-    expect(
-      wrapper.find(ReviewRow).first().render().find(".amend-text").text()
-    ).toEqual("Amend");
+  it("renders the initial weekly hours in the ReviewRow", () => {
+    const wrapper = render();
+    expect(wrapper.find("p").first().text()).toEqual("30");
   });
 
-  it("renders weekly hours", () => {
-    expect(wrapper.find("p").first().text()).toEqual(
-      hoursWorkedPerWeek.toString()
-    );
+  it("opens the AmendmentForm when the amend button is clicked", () => {
+    const wrapper = render();
+
+    clickAmendButton(wrapper);
+
+    expect(isElementVisible(wrapper.find("AmendmentForm"))).toBe(true);
+    expect(wrapper).toMatchSnapshot();
   });
 
-  it("renders amended value on change", () => {
-    wrapper.find(ReviewRow).first().dive(3).find(AmendButton).simulate("click");
-    wrapper.find(InputText).simulate("change", { target: { value: "10" } });
+  it("updates the form state on change", () => {
+    const wrapper = render();
+    clickAmendButton(wrapper);
 
-    expect(onChange).toHaveBeenCalled();
+    const { changeField } = simulateEvents(wrapper);
+    changeField("hours_worked_per_week", 10);
+
+    expect(updateFields).toHaveBeenCalledWith({ hours_worked_per_week: 10 });
   });
 
-  it("hides amendment form and clears value on cancel", () => {
-    wrapper.find(ReviewRow).first().dive(3).find(AmendButton).simulate("click");
-    wrapper.find(InputText).simulate("change", { target: { value: "10" } });
-    wrapper.find(AmendmentForm).dive().find(Button).simulate("click");
+  describe("when amendment is canceled", () => {
+    it("hides the amendment form", () => {
+      const wrapper = render();
+      clickAmendButton(wrapper);
 
-    expect(onChange).toHaveBeenCalledTimes(2);
-  });
+      clickCancelAmendmentButton(wrapper);
 
-  it("formats empty, zero, invalid amount values to 0", () => {
-    wrapper.find(ReviewRow).first().dive(3).find(AmendButton).simulate("click");
-    wrapper.find(InputText).simulate("change", { target: { value: "" } });
-    expect(onChange).toHaveBeenCalledWith(0);
+      expect(isElementVisible(wrapper.find("AmendmentForm"))).toBe(false);
+    });
 
-    wrapper.find(InputText).simulate("change", { target: { value: "0" } });
-    expect(onChange).toHaveBeenCalledWith(0);
+    it("restores hours_worked_per_week to its intial value", () => {
+      const wrapper = render();
+      clickAmendButton(wrapper);
+      const { changeField } = simulateEvents(wrapper);
+      changeField("hours_worked_per_week", 10);
 
-    wrapper.find(InputText).simulate("change", { target: { value: "hello" } });
-    expect(onChange).toHaveBeenCalledWith(0);
-  });
+      clickCancelAmendmentButton(wrapper);
 
-  it("formats decimal amount values", () => {
-    wrapper.find(ReviewRow).first().dive(3).find(AmendButton).simulate("click");
-    wrapper
-      .find(InputText)
-      .simulate("change", { target: { value: "100.5000" } });
-
-    expect(onChange).toHaveBeenCalledWith(100.5);
-  });
-
-  it("formats amount values without commas", () => {
-    wrapper.find(ReviewRow).first().dive(3).find(AmendButton).simulate("click");
-    wrapper.find(InputText).simulate("change", { target: { value: "1000" } });
-
-    expect(onChange).toHaveBeenCalledWith(1000);
+      expect(updateFields).toHaveBeenCalledTimes(2);
+      expect(updateFields).toHaveBeenCalledWith({ hours_worked_per_week: 10 });
+      expect(updateFields).toHaveBeenCalledWith({ hours_worked_per_week: 30 });
+    });
   });
 });
