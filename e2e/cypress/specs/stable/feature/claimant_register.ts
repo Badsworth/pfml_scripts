@@ -1,4 +1,4 @@
-import { portal } from "../../../../actions";
+import { portal } from "../../../actions";
 
 describe("Claimant Registration", () => {
   it("Should allow a new claimant to register", () => {
