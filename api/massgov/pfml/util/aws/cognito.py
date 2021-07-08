@@ -9,7 +9,6 @@ import botocore
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
 from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.cognito_post_confirmation_lambda.lib import leave_admin_create
 from massgov.pfml.db.models.employees import User
 
 USER_ID_ATTRIBUTE = "sub"
@@ -131,57 +130,6 @@ def lookup_cognito_account_id(
 
         raise CognitoSubNotFound("Cognito did not return an ID for the user!")
     return None
-
-
-def create_verified_cognito_leave_admin_account(
-    db_session: db.Session,
-    email: str,
-    fein: str,
-    cognito_user_pool_id: str,
-    cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
-) -> User:
-    """Create Cognito and API records for a leave admin with a verified email and temporary password"""
-
-    sub_id: Optional[str] = None
-    if cognito_client is None:
-        cognito_client = create_cognito_client()
-    temp_password = generate_temp_password()
-
-    try:
-        cognito_user = cognito_client.admin_create_user(
-            UserPoolId=cognito_user_pool_id,
-            Username=email,
-            UserAttributes=[
-                {"Name": "email", "Value": email},
-                {"Name": "email_verified", "Value": "true"},
-            ],
-            DesiredDeliveryMediums=["EMAIL"],
-            MessageAction="SUPPRESS",
-        )
-    except botocore.exceptions.ClientError as exc:
-        logger.warning("Unable to create account for user", exc_info=exc)
-        raise CognitoAccountCreationFailure("Unable to create account for user")
-
-    for attr in cognito_user["User"]["Attributes"]:
-        if attr["Name"] == USER_ID_ATTRIBUTE:
-            sub_id = attr["Value"]
-            break
-
-    if sub_id is None:
-        raise CognitoSubNotFound("Cognito did not return an ID for the user!")
-
-    try:
-        cognito_client.admin_set_user_password(
-            UserPoolId=cognito_user_pool_id, Username=email, Password=temp_password, Permanent=True
-        )
-    except botocore.exceptions.ClientError as exc:
-        logger.warning("Unable to set password for user", exc_info=exc)
-        raise CognitoPasswordSetFailure("Unable to set password for user")
-
-    log_attributes = {
-        "auth_id": sub_id,
-    }
-    return leave_admin_create(db_session, sub_id, email, fein, log_attributes)
 
 
 def create_cognito_account(

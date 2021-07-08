@@ -33,7 +33,6 @@
 /api/**/reductions/                                    @mhuneke @doshitan
 /api/**/rmv/                                           @doshitan @kyeah
 /api/**/servicenow/                                    @sharonwarner
-/api/**/user_import/                                   @sharonwarner
 /api/lambdas/                                          @paz-focus @sharonwarner
 /api/?ocker*                                           @jamesbursa @kyeah
 /api/Makefile                                          @doshitan @kyeah
