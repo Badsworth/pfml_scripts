@@ -6,13 +6,9 @@ export default {
   component: Dropdown,
 };
 
-const OPTIONS = [
-  "apple",
-  "banana",
-  "cherry",
-  "grapefruit",
-  "peach",
-].map((fruit) => ({ label: fruit, value: fruit[0] }));
+const OPTIONS = ["apple", "banana", "cherry", "grapefruit", "peach"].map(
+  (fruit) => ({ label: fruit, value: fruit[0] })
+);
 
 export const Default = (args) => {
   // Setup super simple state management for the change handler and this controlled form component
