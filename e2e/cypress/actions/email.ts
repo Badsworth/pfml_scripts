@@ -1,5 +1,6 @@
+import { truncateSync } from "fs";
 import { SubjectOptions } from "types";
-import { GetEmailsOpts } from "../../src/submission/TestMailClient";
+import { Email, GetEmailsOpts } from "../../src/submission/TestMailClient";
 
 /**
  * This function wraps the getEmails() task to provide better timeout handling.
@@ -12,7 +13,7 @@ export function getEmails(
   opts: GetEmailsOpts,
   timeout = 30000
 ): Cypress.Chainable<Email[]> {
-  return cy.task(
+  return cy.task<Email[]>(
     "getEmails",
     {
       ...opts,
@@ -20,6 +21,12 @@ export function getEmails(
     },
     { timeout: timeout + 1000 }
   );
+  // .then((emails) => {
+  //   if (!emails.length) cy.log("No email found");
+  //   // if no email is found write empty string to the document
+  //   // this will cause failures for assertions in the emails
+  //   return cy.document().invoke("write", emails[0].html);
+  // });
 }
 
 export const getNotificationSubject = function (
