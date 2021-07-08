@@ -1,6 +1,8 @@
 /* 
   Note: Parts of the test are commented out due to functionality not being ready
   for testing.  Once feature is ready for testing we'll remove comments
+
+  This file also contains other util functions/variables specifically for integration tests
 */
 
 export const pdf = [
