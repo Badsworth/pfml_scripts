@@ -8,10 +8,7 @@ import { merge } from "lodash";
 import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
 describe("EmployerDecision", () => {
-  const updateFields = jest.fn().mockImplementation((arg) => {
-    if (arg.employer_decision) {
-    }
-  });
+  const updateFields = jest.fn();
   let getFunctionalInputProps;
 
   beforeEach(() => {
