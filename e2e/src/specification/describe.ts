@@ -51,8 +51,8 @@ function describeCertificationDocs(spec: ScenarioSpecification["claim"]) {
   }
   return matchingDocs
     .map((key) => {
-      const config = spec.docs?.[key as keyof typeof generators];
-      const invalid = config && "invalid" in config && config.invalid;
+      const config = spec.docs?.[key as keyof typeof spec.docs];
+      const invalid = (config as { invalid?: boolean } | undefined)?.invalid;
       return `${key}${invalid ? " (invalid)" : ""}`;
     })
     .join(", ");
@@ -68,8 +68,8 @@ function describeIDProofDocs(spec: ScenarioSpecification["claim"]) {
   }
   return matchingDocs
     .map((key) => {
-      const config = spec.docs?.[key as keyof typeof generators];
-      const invalid = config && "invalid" in config && config.invalid;
+      const config = spec.docs?.[key as keyof typeof spec.docs];
+      const invalid = (config as { invalid?: boolean } | undefined)?.invalid;
       return `${key}${invalid ? " (invalid)" : ""}`;
     })
     .join(", ");

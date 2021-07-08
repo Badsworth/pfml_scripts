@@ -11,7 +11,10 @@ import {
   WorkPattern,
 } from "../api";
 import faker from "faker";
-import generateLeaveDetails, { LeaveDetailsSpec } from "./LeaveDetails";
+import generateLeaveDetails, {
+  LeaveDetailsSpec,
+  LeaveReasons,
+} from "./LeaveDetails";
 import { v4 as uuid } from "uuid";
 import generateDocuments, {
   DehydratedDocument,
@@ -38,18 +41,28 @@ const pipelineP = promisify(pipeline);
 interface PromiseWithOptionalGeneration<T> extends Promise<T> {
   orGenerateAndSave(gen: () => T): Promise<T>;
 }
+
 /**
  * Specifies how a claim should be generated.
  */
-export type ClaimSpecification = {
+export interface ClaimSpecification<T extends LeaveReasons = LeaveReasons>
+  extends LeaveDetailsSpec<T> {
   /** A human-readable name or ID for this type of claim. */
   label: string;
-  /** Reason for leave. */
-  reason: ApplicationLeaveDetails["reason"];
-  /** The qualifier for the leave reason */
-  reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
   /** An object describing documentation that should accompany the claim. */
-  docs?: DocumentGenerationSpec;
+  docs?: Pick<DocumentGenerationSpec, "MASSID"> &
+    (T extends "Child Bonding"
+      ? Pick<DocumentGenerationSpec, "FOSTERPLACEMENT">
+      : T extends "Care for a Family Member"
+      ? Pick<DocumentGenerationSpec, "CARING">
+      : T extends "Pregnancy/Maternity"
+      ? Pick<
+          DocumentGenerationSpec,
+          "BIRTHCERTIFICATE" | "PREGNANCY_MATERNITY_FORM" | "PREBIRTH"
+        >
+      : T extends "Serious Health Condition - Employee"
+      ? Pick<DocumentGenerationSpec, "HCP" | "PREGNANCY_MATERNITY_FORM">
+      : undefined);
   /** Describes the employer response that accompanies this claim */
   employerResponse?: EmployerResponseSpec;
   /** Generate an employer notification date that is considered "short notice" by law. */
@@ -63,8 +76,6 @@ export type ClaimSpecification = {
   reduced_leave_spec?: string;
   /** Flag to make this an intermittent leave claim */
   has_intermittent_leave_periods?: boolean;
-  pregnant_or_recent_birth?: boolean;
-  bondingDate?: "far-past" | "past" | "future";
   /** Specify explicit leave dates for the claim. These will be used for the reduced/intermittent/continuous leave periods. */
   leave_dates?: [Date, Date];
   /** Specify other incomes, if not specified, start & end dates are automatically matched to leave dates*/
@@ -89,7 +100,7 @@ export type ClaimSpecification = {
   work_pattern_spec?: WorkPatternSpec;
   /** Optional metadata to be saved verbatim on the claim object. Not submitted in any way. */
   metadata?: GeneratedClaimMetadata;
-} & LeaveDetailsSpec;
+}
 
 export type GeneratedClaimMetadata = Record<string, string | boolean>;
 

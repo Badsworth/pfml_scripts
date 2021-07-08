@@ -19,9 +19,21 @@ import {
 } from "date-fns";
 import faker from "faker";
 
-export type LeaveDetailsSpec = {
-  reason: ApplicationLeaveDetails["reason"];
-  reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
+/**Leave reasons expected by the API */
+export type ApiLeaveReasons = NonNullable<ApplicationLeaveDetails["reason"]>;
+/**Leave reasons which can only be chosen by CPS Agent in Fineos */
+export type FineosLeaveReasons =
+  | "Military Caregiver"
+  | "Military Exigency Family";
+export type LeaveReasons = ApiLeaveReasons | FineosLeaveReasons;
+
+export type LeaveDetailsSpec<T extends LeaveReasons = LeaveReasons> = {
+  /** Reason for leave. */
+  reason: T;
+  /** The qualifier for the leave reason */
+  reason_qualifier?: T extends "Child Bonding"
+    ? NonNullable<ApplicationLeaveDetails["reason_qualifier"]>
+    : undefined | null;
   /** Makes a claim for an extremely short time period (1 day). */
   shortClaim?: boolean;
   /** Generate an employer notification date that is considered "short notice" by law. */
@@ -83,7 +95,7 @@ export default function generateLeaveDetails(
       : [],
     pregnant_or_recent_birth: !!config.pregnant_or_recent_birth,
     employer_notified: true,
-    reason,
+    reason: reason as ApplicationLeaveDetails["reason"],
     reason_qualifier: reason_qualifier ?? null,
     caring_leave_metadata:
       reason === "Care for a Family Member"
