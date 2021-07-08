@@ -25,22 +25,24 @@ jobs:
         environment: [ "test", "stage", "performance", "training", "uat", "cps-preview" ]
     steps:
       - uses: actions/checkout@v2
-      - uses: rlespinasse/github-slug-action@v3.x
-        
+      - name: Set output
+        id: vars
+        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
+
+      - name: "Trigger Manual Cypress Run in ${{ matrix.environment }}"
         if: github.event_name == 'workflow_dispatch'
         uses: ./.github/actions/trigger-cypress
-        name: "Trigger Cypress Run in ${{ matrix.environment }}"
         with:
           target_environment: "${{ matrix.environment }}"
           cypress_tags: ${{ github.event.inputs.cypress_tags }}
           github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          github_branch: ${{ env.GITHUB_REF_SLUG }}
+          github_branch: ${{ steps.vars.outputs.short_ref }}
           wait_for_results: "false"
           only_stable: 'false'
 
+      - name: "Trigger Scheduled Cypress Run in ${{ matrix.environment }}"
         if: github.event_name == 'schedule'
         uses: ./.github/actions/trigger-cypress
-        name: "Trigger Cypress Run in ${{ matrix.environment }}"
         with:
           target_environment: "${{ matrix.environment }}"
           cypress_tags: ${{ format('Morning Run ({0})', matrix.environment) }}
