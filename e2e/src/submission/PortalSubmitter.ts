@@ -129,7 +129,7 @@ export default class PortalSubmitter {
     };
   }
 
-  protected async submitEmployerResponse(
+  async submitEmployerResponse(
     employerCredentials: Credentials,
     fineos_absence_id: string,
     response: EmployerClaimRequestBody

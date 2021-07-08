@@ -60,7 +60,7 @@ describe("InputNumber", () => {
 
   describe("with an allowed value", () => {
     const { props, wrapper } = render({ valueType: "integer" });
-    const value = "123"
+    const value = "123";
 
     it("calls onChange", () => {
       wrapper.simulate("change", {
@@ -75,7 +75,7 @@ describe("InputNumber", () => {
 
   describe("with a disallowed value", () => {
     const { props, wrapper } = render({ valueType: "integer" });
-    const value = "abc"
+    const value = "abc";
 
     it("does not call onChange", () => {
       wrapper.simulate("change", {
@@ -87,7 +87,6 @@ describe("InputNumber", () => {
     });
   });
 });
-
 
 describe("isAllowedValue", () => {
   const allowDecimals = true;
@@ -117,7 +116,11 @@ describe("isAllowedValue", () => {
     });
 
     it("prevents hyphen-delimited numbers", () => {
-      const isAllowed = isAllowedValue("123-123-123", allowDecimals, allowNegative);
+      const isAllowed = isAllowedValue(
+        "123-123-123",
+        allowDecimals,
+        allowNegative
+      );
       expect(isAllowed).toBe(false);
     });
 
@@ -151,7 +154,11 @@ describe("isAllowedValue", () => {
     });
 
     it("prevents hyphen-delimited numbers", () => {
-      const isAllowed = isAllowedValue("123-123-123", allowDecimals, allowNegative);
+      const isAllowed = isAllowedValue(
+        "123-123-123",
+        allowDecimals,
+        allowNegative
+      );
       expect(isAllowed).toBe(false);
     });
 

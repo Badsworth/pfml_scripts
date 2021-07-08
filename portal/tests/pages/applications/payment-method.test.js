@@ -100,13 +100,8 @@ describe("PaymentMethod", () => {
   });
 
   it("submits payment preference fields for direct deposit when the data is newly entered", async () => {
-    const {
-      appLogic,
-      changeField,
-      changeRadioGroup,
-      claim,
-      submitForm,
-    } = setup();
+    const { appLogic, changeField, changeRadioGroup, claim, submitForm } =
+      setup();
     const account_number = "987654321";
     const bank_account_type = BankAccountType.checking;
     const payment_method = PaymentPreferenceMethod.ach;

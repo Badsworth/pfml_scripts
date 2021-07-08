@@ -29,9 +29,8 @@ describe("ConvertToEmployer", () => {
         ...options.user,
       });
       appLogic.users.convertUser = jest.fn((user_id, postData) => null);
-      appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
-        options.claims
-      );
+      appLogic.benefitsApplications.benefitsApplications =
+        new BenefitsApplicationCollection(options.claims);
       appLogic.benefitsApplications.hasLoadedAll = true;
     });
 

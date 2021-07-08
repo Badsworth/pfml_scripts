@@ -453,13 +453,19 @@ const errors = {
     },
     residential_address: {
       city: {
+        maxLength: "City must be 40 characters or fewer.",
         required: "Enter a city for your residential address.",
       },
       line_1: {
+        maxLength: "Address must be 40 characters or fewer.",
         required: "Enter the street address for your residential address.",
+      },
+      line_2: {
+        maxLength: "Address line 2 must be 40 characters or fewer.",
       },
       required: "Enter a residential address.",
       state: {
+        maxLength: "State must be 40 characters or fewer.",
         required: "Enter a state for your residential address.",
       },
       zip: {
@@ -894,8 +900,7 @@ const pages = {
   authForgotPassword: {
     backToLoginLink: "$t(shared.backToLoginLink)",
     codeLabel: "$t(shared.verificationCodeLabel)",
-    lead:
-      "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
+    lead: "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
     submitButton: "Send code",
     title: "Forgot your password?",
     usernameLabel: "$t(shared.usernameLabel)",
@@ -922,8 +927,7 @@ const pages = {
     codeResent:
       "We sent a new 6 digit verification code to your email address. Enter the new code to reset your password.",
     codeResentHeading: "New verification code sent",
-    lead:
-      "If an account exists for the email you provide, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
+    lead: "If an account exists for the email you provide, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
     lead_email:
       "If an account exists for {{emailAddress}}, we emailed a 6 digit verification code to it. Enter the code below to confirm your email and reset your password.",
     passwordHint: "$t(shared.passwordHint)",
@@ -940,8 +944,7 @@ const pages = {
       "We sent a new 6-digit verification code to your email address. Enter the new code to verify your email.",
     codeResentHeading: "New verification code sent",
     confirmButton: "Submit",
-    lead:
-      "We sent a 6-digit verification code to your email address. Enter the code to verify your email.",
+    lead: "We sent a 6-digit verification code to your email address. Enter the code to verify your email.",
     lead_email:
       "We sent a 6 digit verification code to {{emailAddress}}. Enter the code to verify your email.",
     resendCodeLink: "Send a new code",
@@ -954,8 +957,7 @@ const pages = {
     hasMailingAddressHint:
       "We may send notices to this address. If you choose to get your payments through paper checks, we will mail the checks to this address.",
     hasMailingAddressLabel: "Do you get your mail at this address?",
-    hint:
-      "We will use this as your residential address for any previous applications you have submitted. If you are part of an Address Confidentiality Program, please provide your substitute address.",
+    hint: "We will use this as your residential address for any previous applications you have submitted. If you are part of an Address Confidentiality Program, please provide your substitute address.",
     mailingAddressHint:
       "We will use this as your mailing address for any previous applications you have submitted.",
     mailingAddressLabel: "What is your mailing address?",
@@ -971,16 +973,14 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsBondingLeaveAttestation: {
-    lead:
-      "<p>This paid leave applies to parents of children who have joined their family in the past 12 months via:</p><ul><li>Birth</li><li>Foster placement</li><li>Adoption</li></ul>",
+    lead: "<p>This paid leave applies to parents of children who have joined their family in the past 12 months via:</p><ul><li>Birth</li><li>Foster placement</li><li>Adoption</li></ul>",
     submitApplicationButton: "$t(shared.submitApplicationButton)",
     title: "Confirm that you are an eligible parent",
     truthAttestation:
       "I agree that I am a new parent by one of the routes listed and can provide certification to support this relationship.",
   },
   claimsCaringLeaveAttestation: {
-    lead:
-      "This paid leave applies to caregivers with an <caregiver-relationship-link>eligible family relationship</caregiver-relationship-link>.",
+    lead: "This paid leave applies to caregivers with an <caregiver-relationship-link>eligible family relationship</caregiver-relationship-link>.",
     submitApplicationButton: "$t(shared.submitApplicationButton)",
     title: "Confirm that you are an eligible caregiver",
     truthAttestation_child:
@@ -1373,8 +1373,7 @@ const pages = {
   claimsName: {
     firstNameLabel: "First name",
     lastNameLabel: "Last name",
-    lead:
-      "Fill out your name as it appears on official documents like your driver’s license or W$t(chars.nbhyphen)2.",
+    lead: "Fill out your name as it appears on official documents like your driver’s license or W$t(chars.nbhyphen)2.",
     middleNameLabel: "Middle name",
     sectionLabel: "What’s your name?",
     title: "$t(shared.claimsVerifyIdTitle)",
@@ -1475,8 +1474,7 @@ const pages = {
   claimsPhoneNumber: {
     choiceCell: "Mobile",
     choicePhone: "Landline",
-    lead:
-      "If we need to contact you, we will reach out by phone or mail. We will also use this number for any previous applications you have submitted.",
+    lead: "If we need to contact you, we will reach out by phone or mail. We will also use this number for any previous applications you have submitted.",
     phoneNumberHint:
       "Don’t have a personal phone number? Enter a number where we might be able to reach you (for example, a work phone number, or a friend’s phone number).",
     phoneNumberLabel: "Phone number",
@@ -1825,14 +1823,12 @@ const pages = {
     heading: "How many hours do you work on average each week?",
     hoursLabel: "$t(shared.hoursLabel)",
     inputHoursLabel: "Average weekly hours",
-    lead:
-      "We’ll confirm your hours with your employer after you submit your application. Learn more about <calculate-hours-link>how we use this number</calculate-hours-link> and how to figure out your average.",
+    lead: "We’ll confirm your hours with your employer after you submit your application. Learn more about <calculate-hours-link>how we use this number</calculate-hours-link> and how to figure out your average.",
     minutesLabel: "$t(shared.minutesLabel)",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsSsn: {
-    lead:
-      "Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number (ITIN).",
+    lead: "Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number (ITIN).",
     sectionLabel: "What’s your Social Security Number?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
@@ -1993,15 +1989,13 @@ const pages = {
   },
   employersAuthFinishAccountSetup: {
     createAccountFooterLink: "Create a new account",
-    lead:
-      "Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.",
+    lead: "Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.",
     submitButton: "Submit",
     title: "Finish setting up your account",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   employersCannotVerify: {
-    body:
-      "We can't verify this account because this organization hasn't submitted contributions through MassTaxConnect. Call the Department of Revenue at <dor-phone-link>$t(shared.departmentOfRevenuePhoneNumber)</dor-phone-link> to make arrangements to submit contributions. Once you do that, you'll be able to review leave applications on the next business day. Learn more about <learn-more-link>verifying your account</learn-more-link> on Mass.gov.",
+    body: "We can't verify this account because this organization hasn't submitted contributions through MassTaxConnect. Call the Department of Revenue at <dor-phone-link>$t(shared.departmentOfRevenuePhoneNumber)</dor-phone-link> to make arrangements to submit contributions. Once you do that, you'll be able to review leave applications on the next business day. Learn more about <learn-more-link>verifying your account</learn-more-link> on Mass.gov.",
     companyNameLabel: "<strong>Organization:</strong> {{employerDba}}",
     employerIdNumberLabel:
       "<strong>Employer ID number (EIN):</strong> {{employerFein}}",
@@ -2103,8 +2097,9 @@ const pages = {
     betaHeader: "We're making it easier to manage paid leave applications",
     betaMessage:
       "Our dashboard is in beta. You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can <user-feedback-link>use our feedback form</user-feedback-link> to tell us what you think of our new features.",
+    filterNavLabel: "Filters:",
     filterOrgsLabel: "Organizations",
-    filterOrgsShowAllChoice: "All organizations",
+    filterRemove: "Remove filter:",
     filterStatusChoice_Approved: "$t(shared.absenceCaseStatus_approved)",
     filterStatusChoice_Closed: "$t(shared.absenceCaseStatus_closed)",
     filterStatusChoice_Declined: "$t(shared.absenceCaseStatus_denied)",
@@ -2187,8 +2182,7 @@ const pages = {
       "Log into <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Summary</strong> page, scroll down to the <strong>Paid Family and Medical Leave</strong> section on the left. In the <strong>Account</strong> portion, select <strong>Returns</strong>.</li><li>Choose <strong>the last period</strong> for which a return has been <strong>received</strong>. For example, if you remitted your contributions for 3-31-2021, and the return has been processed and designated as ‘received’, you can use the amount from that period to verify your account. If you have not yet remitted your contributions or it is still being processed, use the amount from the most recent period for which you filed that has been processed.</li><li>Go into the return. Click <strong>View or Amend Return</strong>. Then select <strong>Next</strong> at the bottom. Look to <strong>line 6</strong> and you will find the <strong>Total Contributions Due</strong>.</li><li>Copy the <strong>Total Contributions Due</strong> amount for verification.</li></ol>If you have any questions about your paid leave contributions, please contact the Department of Revenue at <dor-phone-link><strong>$t(shared.departmentOfRevenuePhoneNumber)</strong></dor-phone-link> from 9am-4pm ET.",
     employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
-    lead:
-      "We need more information to verify your identity. We require every employer to verify recent <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> data when creating an account. This helps protect your employees and your company information.",
+    lead: "We need more information to verify your identity. We require every employer to verify recent <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> data when creating an account. This helps protect your employees and your company information.",
     submitButton: "Submit",
     title: "Verify your paid leave contributions from MassTaxConnect",
     withholdingAmountHint: "Include the full amount with dollars and cents.",
@@ -2432,8 +2426,7 @@ const components = {
     employeeAmountReceivedLabel: "How much will your employee receive?",
     heading_add: "Add an employer-sponsored benefit",
     heading_amend: "Amend employer-sponsored benefit",
-    hint:
-      "This addition will get saved when you submit your review at the end of this page.",
+    hint: "This addition will get saved when you submit your review at the end of this page.",
     isFullSalaryContinuousHint:
       "This means that for the period of time your employee receives this benefit, it will pay them the same amount of money as their wages from while they're not on leave. If this benefit will pay them any other amount, select No.",
     isFullSalaryContinuousLabel:
@@ -2754,8 +2747,7 @@ const components = {
     heading: "Your leave dates for paid leave",
   },
   maintenanceTakeover: {
-    lead:
-      "This page is currently unavailable while the site is undergoing maintenance. Please check back$t(chars.nbsp)shortly.",
+    lead: "This page is currently unavailable while the site is undergoing maintenance. Please check back$t(chars.nbsp)shortly.",
     scheduled:
       "We are performing scheduled maintenance to improve functionality and our overall service. Paid leave applications will be back online on <strong>{{scheduledRemovalDayAndTime}}</strong>.<br/><br/>When we are back, you will be able to access your existing applications or create a new one. Employers will be able to respond to information requests. We appreciate your understanding and patience. To get ready, review <what-to-expect-link>what to expect when you apply for paid family and medical leave benefits</what-to-expect-link>.",
     title: "We’re undergoing maintenance",

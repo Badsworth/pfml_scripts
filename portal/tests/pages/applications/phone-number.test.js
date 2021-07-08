@@ -50,13 +50,8 @@ describe("PhoneNumber", () => {
   });
 
   it("calls claims.update when the form is successfully submitted with newly entered data", () => {
-    const {
-      appLogic,
-      changeField,
-      changeRadioGroup,
-      claim,
-      submitForm,
-    } = setup();
+    const { appLogic, changeField, changeRadioGroup, claim, submitForm } =
+      setup();
 
     changeRadioGroup("phone.phone_type", phone_type);
     changeField("phone.phone_number", phone_number);

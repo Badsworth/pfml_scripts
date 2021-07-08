@@ -53,9 +53,8 @@ export const ScheduleVariable = (props) => {
     if (!minutesWorkedPerWeek) {
       work_pattern_days = [];
     } else {
-      ({ work_pattern_days } = WorkPattern.createWithWeek(
-        minutesWorkedPerWeek
-      ));
+      ({ work_pattern_days } =
+        WorkPattern.createWithWeek(minutesWorkedPerWeek));
       hours_worked_per_week = round(minutesWorkedPerWeek / 60, 2);
     }
 

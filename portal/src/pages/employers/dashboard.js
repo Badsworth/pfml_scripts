@@ -1,4 +1,4 @@
-import { get, pick } from "lodash";
+import { find, get, pick } from "lodash";
 import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
@@ -7,6 +7,7 @@ import ClaimCollection from "../../models/ClaimCollection";
 import Details from "../../components/Details";
 import Dropdown from "../../components/Dropdown";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
+import Icon from "../../components/Icon";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import Link from "next/link";
@@ -412,8 +413,12 @@ const Filters = (props) => {
     updateFields,
   });
 
-  const activeFiltersCount = Object.values(initialFormState).length;
   const filtersContainerId = "filters";
+  let activeFiltersCount = Object.values(initialFormState).length;
+  if (initialFormState.claim_status) {
+    // Count each selected status as an active filter
+    activeFiltersCount += initialFormState.claim_status.length - 1;
+  }
 
   const handleSubmit = (evt) => {
     evt.preventDefault();
@@ -425,6 +430,10 @@ const Filters = (props) => {
 
     updatePageQuery([
       ...params,
+      {
+        name: "show-filters",
+        value: false,
+      },
       {
         // Reset the page to 1 since filters affect what shows on the first page
         name: "page_offset",
@@ -443,6 +452,26 @@ const Filters = (props) => {
 
     updatePageQuery([
       ...params,
+      {
+        // Reset the page to 1 since filters affect what shows on the first page
+        name: "page_offset",
+        value: "1",
+      },
+    ]);
+  };
+
+  /**
+   * Click event handler for an individual filter's removal button.
+   * @param {string} name - Filter query param name
+   * @param {string|Array} value - Leave empty to remove filter, or pass in the updated
+   *  value if the filter is a checkbox field
+   */
+  const handleRemoveFilterClick = (name, value = "") => {
+    updatePageQuery([
+      {
+        name,
+        value,
+      },
       {
         // Reset the page to 1 since filters affect what shows on the first page
         name: "page_offset",
@@ -522,13 +551,9 @@ const Filters = (props) => {
 
         {user.verifiedEmployers.length > 1 && (
           <Dropdown
+            autocomplete
             {...getFunctionalInputProps("employer_id")}
-            hideEmptyChoice
             choices={[
-              {
-                label: t("pages.employersDashboard.filterOrgsShowAllChoice"),
-                value: "",
-              },
               ...user.verifiedEmployers.map((employer) => ({
                 label: `${employer.employer_dba} (${employer.employer_fein})`,
                 value: employer.employer_id,
@@ -553,6 +578,43 @@ const Filters = (props) => {
           </Button>
         )}
       </form>
+
+      {activeFiltersCount > 0 && (
+        <div className="margin-top-1 margin-bottom-4" data-test="filters-menu">
+          <strong className="margin-right-2 display-inline-block">
+            {t("pages.employersDashboard.filterNavLabel")}
+          </strong>
+          {initialFormState.employer_id && (
+            <FilterMenuButton
+              data-test="employer_id"
+              onClick={() => handleRemoveFilterClick("employer_id")}
+            >
+              {
+                find(user.verifiedEmployers, {
+                  employer_id: initialFormState.employer_id,
+                }).employer_dba
+              }
+            </FilterMenuButton>
+          )}
+          {initialFormState.claim_status &&
+            initialFormState.claim_status.map((status) => (
+              <FilterMenuButton
+                data-test={`claim_status_${status}`}
+                key={status}
+                onClick={() =>
+                  handleRemoveFilterClick(
+                    "claim_status",
+                    initialFormState.claim_status.filter((s) => s !== status)
+                  )
+                }
+              >
+                {t("pages.employersDashboard.filterStatusChoice", {
+                  context: status,
+                })}
+              </FilterMenuButton>
+            ))}
+        </div>
+      )}
     </React.Fragment>
   );
 };
@@ -565,6 +627,35 @@ Filters.propTypes = {
   showFilters: PropTypes.bool,
   updatePageQuery: PropTypes.func.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
+};
+
+const FilterMenuButton = (props) => {
+  const { t } = useTranslation();
+
+  return (
+    <Button
+      className="text-bold text-no-underline hover:text-underline margin-right-2"
+      onClick={props.onClick}
+      type="button"
+      variation="unstyled"
+    >
+      <Icon
+        name="cancel"
+        size={3}
+        className="text-ttop margin-top-neg-1px margin-right-05"
+        fill="currentColor"
+      />
+      <span className="usa-sr-only">
+        {t("pages.employersDashboard.filterRemove")}
+      </span>
+      {props.children}
+    </Button>
+  );
+};
+
+FilterMenuButton.propTypes = {
+  children: PropTypes.node.isRequired,
+  onClick: PropTypes.func.isRequired,
 };
 
 const Search = (props) => {

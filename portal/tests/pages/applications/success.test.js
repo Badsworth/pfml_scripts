@@ -23,12 +23,13 @@ describe("Success", () => {
       .pregnant()
       .absenceId()
       .create(),
-    "Medical (Pregnant, applying in advance)": new MockBenefitsApplicationBuilder()
-      .continuous({ start_date: futureDate })
-      .medicalLeaveReason()
-      .pregnant()
-      .absenceId()
-      .create(),
+    "Medical (Pregnant, applying in advance)":
+      new MockBenefitsApplicationBuilder()
+        .continuous({ start_date: futureDate })
+        .medicalLeaveReason()
+        .pregnant()
+        .absenceId()
+        .create(),
     "Family (Bonding Newborn)": new MockBenefitsApplicationBuilder()
       .continuous({ start_date: "2020-01-01" })
       .bondingBirthLeaveReason()

@@ -33,9 +33,8 @@ export const EmploymentStatus = (props) => {
     initialFormState.employment_status = EmploymentStatusEnum.employed;
   }
 
-  const { formState, getField, updateFields, clearField } = useFormState(
-    initialFormState
-  );
+  const { formState, getField, updateFields, clearField } =
+    useFormState(initialFormState);
   const employment_status = get(formState, "employment_status");
 
   const handleSave = () =>

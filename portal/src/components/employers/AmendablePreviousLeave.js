@@ -31,9 +31,8 @@ const AmendablePreviousLeave = ({
 }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(previousLeave);
-  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
-    false
-  );
+  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
+    useState(false);
 
   const getFieldPath = (field) =>
     `previous_leaves[${amendment.previous_leave_id}].${field}`;

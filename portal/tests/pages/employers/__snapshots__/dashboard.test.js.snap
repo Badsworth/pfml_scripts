@@ -232,12 +232,9 @@ exports[`Employer dashboard renders filters when feature flags are enabled 1`] =
       value=""
     />
     <Dropdown
+      autocomplete={true}
       choices={
         Array [
-          Object {
-            "label": "All organizations",
-            "value": "",
-          },
           Object {
             "label": "Work Inc (11-3456789)",
             "value": "mock-id-1",
@@ -248,7 +245,6 @@ exports[`Employer dashboard renders filters when feature flags are enabled 1`] =
           },
         ]
       }
-      hideEmptyChoice={true}
       label="Organizations"
       name="employer_id"
       onChange={[Function]}
@@ -427,4 +423,37 @@ exports[`Employer dashboard renders the page with expected content and paginatio
   pageOffset={1}
   totalPages={3}
 />
+`;
+
+exports[`Employer dashboard shows buttons for removing active filters 1`] = `
+<div
+  className="margin-top-1 margin-bottom-4"
+  data-test="filters-menu"
+>
+  <strong
+    className="margin-right-2 display-inline-block"
+  >
+    Filters:
+  </strong>
+  <FilterMenuButton
+    data-test="employer_id"
+    onClick={[Function]}
+  >
+    Acme Co
+  </FilterMenuButton>
+  <FilterMenuButton
+    data-test="claim_status_Approved"
+    key="Approved"
+    onClick={[Function]}
+  >
+    Approved
+  </FilterMenuButton>
+  <FilterMenuButton
+    data-test="claim_status_Closed"
+    key="Closed"
+    onClick={[Function]}
+  >
+    Closed
+  </FilterMenuButton>
+</div>
 `;

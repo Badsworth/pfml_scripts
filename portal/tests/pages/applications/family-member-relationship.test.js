@@ -2,11 +2,10 @@ import { renderWithAppLogic, simulateEvents } from "../../test-utils";
 import FamilyMemberRelationship from "../../../src/pages/applications/family-member-relationship";
 
 const setup = (claimAttrs = {}) => {
-  const {
-    appLogic,
-    claim,
-    wrapper,
-  } = renderWithAppLogic(FamilyMemberRelationship, { claimAttrs });
+  const { appLogic, claim, wrapper } = renderWithAppLogic(
+    FamilyMemberRelationship,
+    { claimAttrs }
+  );
 
   const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
 
