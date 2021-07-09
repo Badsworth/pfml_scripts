@@ -497,10 +497,6 @@ const Filters = (props) => {
     ]);
   };
 
-  if (!isFeatureEnabled("employerShowDashboardFilters")) {
-    return null;
-  }
-
   return (
     <React.Fragment>
       <div
