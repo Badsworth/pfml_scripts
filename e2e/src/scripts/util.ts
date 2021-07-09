@@ -1,5 +1,5 @@
 import { consume, pipeline } from "streaming-iterables";
-import { GeneratedClaim } from "../generation/Claim";
+import { GeneratedClaim, DehydratedClaim } from "../generation/Claim";
 import ClaimStateTracker from "../submission/ClaimStateTracker";
 import { ApplicationResponse } from "../api";
 import {
@@ -11,15 +11,17 @@ import {
 import { getPortalSubmitter } from "../util/common";
 import {
   approveClaim,
-  withFineosBrowser,
   denyClaim,
   closeDocuments,
 } from "../submission/PostSubmit";
+import { Fineos } from "../submission/fineos.pages";
 
 export type PostSubmitCallback = (
   claim: GeneratedClaim,
   response: ApplicationResponse
-) => Promise<void>;
+) =>
+  | Promise<void>
+  | ((claim: DehydratedClaim, response: ApplicationResponse) => Promise<void>);
 
 /**
  * Submit a batch of claims to the system.
@@ -55,15 +57,14 @@ export async function submit(
 export const postSubmit: PostSubmitCallback = async (claim, response) => {
   const { metadata } = claim;
   if (metadata && "postSubmit" in metadata) {
-    // Open a puppeteer browser for the duration of this callback.
-    await withFineosBrowser(async (page) => {
-      const { fineos_absence_id } = response;
-      if (!fineos_absence_id)
-        throw new Error(
-          `No fineos_absence_id was found on this response: ${JSON.stringify(
-            response
-          )}`
-        );
+    const { fineos_absence_id } = response;
+    if (!fineos_absence_id)
+      throw new Error(
+        `No fineos_absence_id was found on this response: ${JSON.stringify(
+          response
+        )}`
+      );
+    await Fineos.withBrowser(async (page) => {
       switch (metadata.postSubmit) {
         case "APPROVE":
           await approveClaim(page, claim, fineos_absence_id);
