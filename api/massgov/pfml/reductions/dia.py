@@ -18,13 +18,13 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.payments.payments_util import get_now
+from massgov.pfml.payments.payments_util import get_now, move_file_and_update_ref_file
 from massgov.pfml.payments.sftp_s3_transfer import (
     SftpS3TransferConfig,
     copy_from_sftp_to_s3_and_archive_files,
     copy_to_sftp_and_archive_s3_files,
 )
-from massgov.pfml.reductions.common import get_claimants_for_outbound
+from massgov.pfml.reductions.common import AgencyLoadResult, get_claimants_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.batch.log import LogEntry
 from massgov.pfml.util.files import upload_to_s3
@@ -408,13 +408,16 @@ def _load_dia_payment_from_reference_file(
     return new_row_count, total_row_count
 
 
-def load_new_dia_payments(db_session: db.Session, log_entry: LogEntry) -> None:
+def load_new_dia_payments(db_session: db.Session, log_entry: LogEntry) -> AgencyLoadResult:
     s3_config = get_s3_config()
     pending_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dia_pending_directory_path)
     archive_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dia_archive_directory_path)
+    error_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dfml_error_directory_path)
 
+    result = AgencyLoadResult()
     for ref_file in _get_pending_dia_payment_reference_files(pending_dir, db_session):
         log_entry.increment(Metrics.PENDING_DIA_PAYMENT_REFERENCE_FILES_COUNT)
+        result.found_pending_files = True
 
         try:
             new_row_count, total_row_count = _load_dia_payment_from_reference_file(
@@ -425,7 +428,21 @@ def load_new_dia_payments(db_session: db.Session, log_entry: LogEntry) -> None:
             log_entry.increment(Metrics.TOTAL_DIA_PAYMENT_ROW_COUNT, total_row_count)
 
         except Exception:
-            # TODO: transition to an error state
+            # Move to error directory and update ReferenceFile.
+            filename = os.path.basename(ref_file.file_location)
+            dest_path = os.path.join(error_dir, filename)
+            move_file_and_update_ref_file(db_session, dest_path, ref_file)
+
+            # transition to an error state
+            state_log_util.create_finished_state_log(
+                associated_model=ref_file,
+                end_state=State.DIA_PAYMENT_LIST_ERROR_SAVE_TO_DB,
+                outcome=state_log_util.build_outcome(
+                    "Error loading DIA payment file into database"
+                ),
+                db_session=db_session,
+            )
+            db_session.commit()
 
             log_entry.increment(Metrics.UNSUCCESSFUL_DIA_PAYMENT_REFERENCE_FILES_COUNT)
 
@@ -437,3 +454,5 @@ def load_new_dia_payments(db_session: db.Session, log_entry: LogEntry) -> None:
                     "reference_file_id": ref_file.reference_file_id,
                 },
             )
+
+    return result

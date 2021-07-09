@@ -3,8 +3,8 @@ import LeaveReason from "../../src/models/LeaveReason";
 import findDocumentsByLeaveReason from "../../src/utils/findDocumentsByLeaveReason";
 
 describe("findDocumentsByLeaveReason", () => {
-  describe("when the showCaringLeave feature flag is on", () => {
-    // TODO (CP-1989): Remove feature flag and refactor tests
+  describe("when the useNewPlanProofs feature flag is on", () => {
+    // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
     const documentsList = [
       new Document({
         document_type: DocumentType.certification[LeaveReason.medical],
@@ -16,7 +16,7 @@ describe("findDocumentsByLeaveReason", () => {
 
     beforeEach(() => {
       process.env.featureFlags = {
-        showCaringLeaveType: true,
+        useNewPlanProofs: true,
       };
     });
 
@@ -48,8 +48,8 @@ describe("findDocumentsByLeaveReason", () => {
     });
   });
 
-  describe("when the showCaringLeave feature flag is off", () => {
-    // TODO (CP-1989): Remove feature flag-related tests
+  describe("when the useNewPlanProofs feature flag is off", () => {
+    // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
     const documentsList = [
       new Document({
         document_type: DocumentType.certification.medicalCertification,
@@ -70,7 +70,7 @@ describe("findDocumentsByLeaveReason", () => {
 
     it("only filters using the State managed Paid Leave Confirmation document type", () => {
       process.env.featureFlags = {
-        showCaringLeaveType: false,
+        useNewPlanProofs: false,
       };
       const documents = findDocumentsByLeaveReason(
         documentsList,
@@ -81,5 +81,41 @@ describe("findDocumentsByLeaveReason", () => {
         DocumentType.certification.medicalCertification
       );
     });
+  });
+
+  it("decouples plan proof filtering from showCaringLeaveType flag", () => {
+    // When useNewPlanProofs is false but showCaringLeaveType is true, the new plan proofs should not be used in filtering
+    // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
+    // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
+    const documentsList = [
+      new Document({
+        document_type: DocumentType.certification.medicalCertification,
+      }),
+      new Document({
+        document_type: DocumentType.certification[LeaveReason.medical],
+      }),
+      new Document({
+        document_type: DocumentType.certification[LeaveReason.care],
+      }),
+      new Document({
+        document_type: DocumentType.certification[LeaveReason.bonding],
+      }),
+      new Document({
+        document_type: DocumentType.certification[LeaveReason.pregnancy],
+      }),
+    ];
+
+    process.env.featureFlags = {
+      useNewPlanProofs: false,
+      showCaringLeaveType: true,
+    };
+    const documents = findDocumentsByLeaveReason(
+      documentsList,
+      LeaveReason.medical
+    );
+    expect(documents).toHaveLength(1);
+    expect(documents[0].document_type).toEqual(
+      DocumentType.certification.medicalCertification
+    );
   });
 });

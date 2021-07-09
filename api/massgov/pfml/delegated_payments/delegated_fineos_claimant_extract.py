@@ -265,10 +265,11 @@ class ClaimantData:
                 eft_required,
                 min_length=9,
                 max_length=9,
+                custom_validator_func=payments_util.routing_number_validator,
             )
 
             self.account_nbr = payments_util.validate_csv_input(
-                "ACCOUNTNO", employee_feed, self.validation_container, eft_required, max_length=40,
+                "ACCOUNTNO", employee_feed, self.validation_container, eft_required, max_length=17,
             )
 
             self.account_type = payments_util.validate_csv_input(

@@ -30,7 +30,7 @@ exports[`Confirmation renders the page 1`] = `
     components={
       Object {
         "contact-center-phone-link": <a
-          href="tel:(833) 344‑7365"
+          href="tel:(833) 344-7365"
         />,
         "li": <li />,
         "p": <p />,
@@ -100,7 +100,7 @@ Array [
     >
       Otherwise, please ask them to call us at 
       <a
-        href="tel:(833) 344‑7365"
+        href="tel:(833) 344-7365"
         key="1"
       >
         (833) 344‑7365

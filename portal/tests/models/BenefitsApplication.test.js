@@ -137,13 +137,7 @@ describe("Claim", () => {
         });
 
         expect(map(workPattern2.work_pattern_days, "minutes")).toEqual([
-          675,
-          675,
-          675,
-          675,
-          670,
-          660,
-          660,
+          675, 675, 675, 675, 670, 660, 660,
         ]);
       });
 
@@ -159,13 +153,7 @@ describe("Claim", () => {
         const workPattern = WorkPattern.createWithWeek(77 * 60 + 18); // 77 hours and 18 minutes
 
         expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
-          675,
-          663,
-          660,
-          660,
-          660,
-          660,
-          660,
+          675, 663, 660, 660, 660, 660, 660,
         ]);
       });
 
@@ -183,13 +171,7 @@ describe("Claim", () => {
         const workPattern = WorkPattern.createWithWeek(70 * 60 + 4); // 70 hours and 4 minutes
 
         expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
-          604,
-          600,
-          600,
-          600,
-          600,
-          600,
-          600,
+          604, 600, 600, 600, 600, 600, 600,
         ]);
       });
 

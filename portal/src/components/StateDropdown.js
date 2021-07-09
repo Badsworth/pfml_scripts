@@ -38,7 +38,8 @@ StateDropdown.propTypes = {
    */
   label: PropTypes.node.isRequired,
   /**
-   * HTML input `name` attribute */
+   * HTML input `name` attribute
+   */
   name: PropTypes.string.isRequired,
   /**
    * HTML input `onChange` attribute

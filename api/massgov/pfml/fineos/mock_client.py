@@ -237,7 +237,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         _capture_call("register_api_user", None, employee_registration=employee_registration)
 
         if employee_registration.national_insurance_no == "999999999":
-            raise exception.FINEOSClientBadResponse(requests.codes.ok, 400)
+            raise exception.FINEOSClientBadResponse("register_api_user", requests.codes.ok, 400)
         else:
             pass
 
@@ -519,7 +519,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 "denial notice",
                 "employer response additional documentation",
                 "care for a family member form",
-                "own serious health condition",
+                "own serious health condition form",
                 "pregnancy/maternity form",
                 "child bonding evidence form",
                 "military exigency form",
@@ -610,7 +610,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
         if user_id == "USER_WITH_EXISTING_WORK_PATTERN":
-            raise exception.FINEOSClientBadResponse(200, 403)
+            raise exception.FINEOSClientBadResponse("add_week_based_work_pattern", 200, 403)
         else:
             return week_based_work_pattern
 
@@ -641,11 +641,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         if employer_create_or_update.employer_fein == "999999999":
             raise exception.FINEOSFatalResponseError(
+                "create_or_update_employer",
                 Exception(
                     "Employer not created. Response Code: 422, "
                     "Party alias pfml_api_21ecb120-9a9a-4f8d-968d-e710b120e148 for alias "
                     "type Unknown already exists for customer 2569"
-                )
+                ),
             )
 
         return (

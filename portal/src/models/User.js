@@ -25,9 +25,7 @@ class User extends BaseModel {
    * @returns {boolean}
    */
   get hasOnlyUnverifiedEmployers() {
-    return this.user_leave_administrators.every(
-      (employer) => !employer.verified
-    );
+    return this.verifiedEmployers.length === 0;
   }
 
   /**
@@ -45,7 +43,7 @@ class User extends BaseModel {
    * @returns {boolean}
    */
   get hasVerifiedEmployerNotRegisteredInFineos() {
-    return !!this.getVerifiedEmployersNotRegisteredInFineos().length;
+    return !!this.verifiedEmployersNotRegisteredInFineos.length;
   }
 
   /**
@@ -80,10 +78,20 @@ class User extends BaseModel {
    * Returns list of verified employers that are not registered in FINEOS
    * @returns {UserLeaveAdministrator[]}
    */
-  getVerifiedEmployersNotRegisteredInFineos() {
+  get verifiedEmployersNotRegisteredInFineos() {
     return this.user_leave_administrators.filter(
       (employer) =>
         employer.has_fineos_registration === false && employer.verified === true
+    );
+  }
+
+  /**
+   * Returns list of verified employers
+   * @returns {UserLeaveAdministrator[]}
+   */
+  get verifiedEmployers() {
+    return this.user_leave_administrators.filter(
+      (employer) => employer.verified === true
     );
   }
 
@@ -106,17 +114,15 @@ class User extends BaseModel {
   }
 
   /**
-   * Determines whether an employer FEIN is registered in FINEOS
-   * @param {string} employerFein
+   * Determines whether an employer is registered in FINEOS
+   * @param {string} employerId
    * @returns {boolean}
    */
-  isEmployerRegisteredInFineos(employerFein) {
-    return !!this.user_leave_administrators.find((employer) => {
-      return (
-        employerFein === employer.employer_fein &&
-        employer.has_fineos_registration
-      );
-    });
+  isEmployerIdRegisteredInFineos(employerId) {
+    return this.user_leave_administrators.some(
+      (employer) =>
+        employerId === employer.employer_id && employer.has_fineos_registration
+    );
   }
 }
 

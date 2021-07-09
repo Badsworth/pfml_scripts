@@ -50,6 +50,8 @@ jobs:
   check-flood:
     name: "Check Flood Bundling"
     runs-on: ubuntu-latest
+    outputs:
+      flood-files-changed: ${{ steps.changed-files.outputs.any_changed }}
     env:
       CYPRESS_INSTALL_BINARY: 0
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
@@ -73,3 +75,41 @@ jobs:
         run: node_modules/.bin/element compile data/flood/latest/index.ts
       - name: "Check compiled script is runnable"
         run: node index_compiled.js
+      - name: "Check if flood files have been changed"
+        id: changed-files
+        uses: tj-actions/changed-files@v8.1
+        with:
+          files: "e2e/src/flood/**"
+
+  check-lst-scenarios:
+    name: "Run scenarios if any flood code has changed"
+    runs-on: ubuntu-latest
+    needs: check-flood
+    env:
+      CYPRESS_INSTALL_BINARY: 0
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+      E2E_FLOOD_API_TOKEN: ${{ secrets.E2E_FLOOD_API_TOKEN }}
+      E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+      E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+      E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+      E2E_FINEOS_USERS: ${{ secrets.E2E_FINEOS_USERS }}
+    if: needs.check-flood.flood-files-changed == 'true'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with: { node-version: 12.x }
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
+      - name: "Generate Base data"
+        run: E2E_ENVIRONMENT=performance npm run cli -- flood base
+      - name: "Generate Leave Admin data"
+        run: E2E_ENVIRONMENT=performance npm run cli -- flood leaveAdmin
+      - name: "Run PortalClaimSubmit scenario"
+        run: node_modules/.bin/element run src/flood/scenarios/PortalClaimSubmit.perf.ts
+      - name: "Run LeaveAdminSelfReg scenario"
+        run: node_modules/.bin/element run src/flood/scenarios/LeaveAdminSelfReg.perf.ts
+      - name: "Run SavilinxAgent scenario"
+        run: node_modules/.bin/element run src/flood/scenarios/SavilinxAgent.perf.ts

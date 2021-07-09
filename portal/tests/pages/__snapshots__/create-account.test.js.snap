@@ -1,67 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CreateAccount displays employer-specific content when employerShowSelfRegistrationForm is false 1`] = `
-Array [
-  <p
-    key="0"
-  >
-    You can apply online if you’re currently employed in Massachusetts.
-  </p>,
-  <p
-    key="1"
-  >
-    If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at 
-    <a
-      href="tel:(833) 344‑7365"
-      key="1"
-    >
-      (833) 344‑7365
-    </a>
-    .
-  </p>,
-  <p
-    key="2"
-  >
-    <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
-      key="0"
-    >
-      Learn more about the paid leave benefit timeline.
-    </a>
-  </p>,
-]
-`;
-
-exports[`CreateAccount displays employer-specific content when employerShowSelfRegistrationForm is false 2`] = `
-Array [
-  "Need to create an employer account? ",
-  <a
-    href="/employers/create-account"
-    key="1"
-  >
-    Register to manage leave for your team.
-  </a>,
-]
-`;
-
-exports[`CreateAccount displays employer-specific content when employerShowSelfRegistrationForm is false 3`] = `
-Array [
-  <strong
-    key="strong-0"
-  >
-    Are you a Massachusetts employer?
-  </strong>,
-  " Call ",
-  <a
-    href="tel:(833) 344‑7365"
-    key="2"
-  >
-    (833) 344‑7365
-  </a>,
-  " to create an employer account.",
-]
-`;
-
 exports[`CreateAccount renders the empty page 1`] = `
 <form
   className="usa-form"
@@ -78,10 +16,7 @@ exports[`CreateAccount renders the empty page 1`] = `
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
-          />,
-          "mass-benefits-timeline-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
+            href="tel:(833) 344-7365"
           />,
           "p": <p />,
         }
@@ -145,18 +80,6 @@ exports[`CreateAccount renders the empty page 1`] = `
         Log in
       </a>
     </Link>
-    <p>
-      <Trans
-        components={
-          Object {
-            "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
-            />,
-          }
-        }
-        i18nKey="pages.authCreateAccount.createEmployerAccount"
-      />
-    </p>
   </div>
 </form>
 `;
@@ -173,22 +96,12 @@ Array [
   >
     If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
     </a>
     .
-  </p>,
-  <p
-    key="2"
-  >
-    <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
-      key="0"
-    >
-      Learn more about the paid leave benefit timeline.
-    </a>
   </p>,
 ]
 `;
@@ -202,23 +115,5 @@ Array [
   >
     Register to manage leave for your team.
   </a>,
-]
-`;
-
-exports[`CreateAccount renders the empty page 4`] = `
-Array [
-  <strong
-    key="strong-0"
-  >
-    Are you a Massachusetts employer?
-  </strong>,
-  " Call ",
-  <a
-    href="tel:(833) 344‑7365"
-    key="2"
-  >
-    (833) 344‑7365
-  </a>,
-  " to create an employer account.",
 ]
 `;

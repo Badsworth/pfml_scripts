@@ -1,6 +1,5 @@
 import csv
 import dataclasses
-import datetime
 import enum
 import os
 import uuid
@@ -17,7 +16,6 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     LkState,
     Payment,
-    PaymentMethod,
     PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
@@ -25,7 +23,6 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
-    FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
 )
 from massgov.pfml.delegated_payments.delegated_payments_util import get_now
@@ -186,25 +183,7 @@ class FineosPeiWritebackStep(Step):
                 )
                 self.increment(f"{metric_name}_writeback_transaction_status_count")
 
-                if state_log.end_state_id == State.DELEGATED_PAYMENT_COMPLETE.state_id:
-                    transaction_status_date = payment.check.check_posted_date
-
-                transaction_status_date = None
-                if payment.fineos_extraction_date is not None:
-                    if (
-                        transaction_status.transaction_status_id
-                        == FineosWritebackTransactionStatus.PAID.transaction_status_id
-                    ):
-                        if payment.disb_method_id == PaymentMethod.CHECK.payment_method_id:
-                            transaction_status_date = (
-                                payment.fineos_extraction_date + datetime.timedelta(days=1)
-                            )
-                        else:
-                            transaction_status_date = (
-                                payment.fineos_extraction_date + datetime.timedelta(days=2)
-                            )
-                    else:
-                        transaction_status_date = payment.fineos_extraction_date
+                transaction_status_date = payments_util.get_transaction_status_date(payment)
 
                 writeback_record = PeiWritebackRecord(
                     pei_C_Value=payment.fineos_pei_c_value,

@@ -9,7 +9,7 @@ module.exports = {
   domain: "paidleave-stage.mass.gov",
   newRelicAppId: "847043861",
   // See docs/portal/maintenance-pages.md
-  maintenancePageRoutes: ["/*"], // required
-  maintenanceStart: "2021-06-13T00:00:00-04:00", // optional ISO 8601 datetime
-  maintenanceEnd: "2021-06-13T05:00:00-04:00", // optional ISO 8601 datetime
+  maintenancePageRoutes: ["/*"],
+  maintenanceStart: "2021-07-18T03:59:00-04:00",
+  maintenanceEnd: "2021-07-18T05:00:00-04:00",
 };

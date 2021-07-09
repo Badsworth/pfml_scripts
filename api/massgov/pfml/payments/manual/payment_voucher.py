@@ -472,6 +472,9 @@ def write_row_to_output(
     leave_type: Optional[str] = ""
     activity_code: Optional[str] = ""
     case_status: Optional[str] = ""
+    leave_request_start: Optional[str] = None
+    leave_request_end: Optional[str] = None
+
     if (
         payment_data.leave_request_id is not None
         and payment_data.leave_request_id in voucher_extract_data.vbi_requested_absence.indexed_data
@@ -484,6 +487,8 @@ def write_row_to_output(
         absence_case_creation_date = vbi_requested_absence.get("ABSENCE_CASECREATIONDATE")
         absence_reason_name = vbi_requested_absence.get("ABSENCEREASON_NAME")
         case_status = vbi_requested_absence.get("ABSENCE_CASESTATUS")
+        leave_request_start = vbi_requested_absence.get("ABSENCEPERIOD_START")
+        leave_request_end = vbi_requested_absence.get("ABSENCEPERIOD_END")
 
         try:
             leave_type = get_leave_type(vbi_requested_absence)
@@ -600,6 +605,18 @@ def write_row_to_output(
         removed_or_added_after_audit_of_info="",
         to_be_removed_from_file="",
         amalgamationc=payment_data.amalgamationc,
+        leave_request_start=leave_request_start,
+        leave_request_end=leave_request_end,
+        prior_overpayments_found="",
+        potential_overpayments_on_current_voucher="",
+        additional_income_ntns_to_pull="",
+        prior_fails_in_dfml_pi_audit="",
+        pull_these_ntns_per_dfml_ops="",
+        dfml_leave_type_1="",
+        exemption_type_1="",
+        is_exempt_2="",
+        dfml_leave_type_2="",
+        exemption_type_2="",
         notes="",
     )
     output_csv.writerow(asdict(payment_row))

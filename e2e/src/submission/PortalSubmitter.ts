@@ -17,11 +17,12 @@ import {
   postApplicationsByApplication_idSubmit_application,
   postApplicationsByApplication_idComplete_application,
   postApplicationsByApplication_idSubmit_payment_preference,
+  EmployerClaimRequestBody,
 } from "../api";
 import pRetry from "p-retry";
 import AuthenticationManager from "./AuthenticationManager";
 import { Credentials } from "../types";
-import { GeneratedClaim, GeneratedEmployerResponse } from "../generation/Claim";
+import { GeneratedClaim } from "../generation/Claim";
 import { DocumentWithPromisedFile } from "../generation/documents";
 
 if (!global.FormData) {
@@ -128,10 +129,10 @@ export default class PortalSubmitter {
     };
   }
 
-  protected async submitEmployerResponse(
+  async submitEmployerResponse(
     employerCredentials: Credentials,
     fineos_absence_id: string,
-    response: GeneratedEmployerResponse
+    response: EmployerClaimRequestBody
   ): Promise<void> {
     const options = await this.getOptions(employerCredentials);
     // When we go to submit employer response, we need to first fetch the review doc.
@@ -169,9 +170,12 @@ export default class PortalSubmitter {
     await patchEmployersClaimsByFineos_absence_idReview(
       { fineos_absence_id },
       {
-        employer_benefits: data.employer_benefits,
-        previous_leaves: data.previous_leaves,
         ...response,
+        employer_benefits: [
+          ...data.employer_benefits,
+          ...response.employer_benefits,
+        ],
+        previous_leaves: [...data.previous_leaves, ...response.previous_leaves],
       },
       options
     );

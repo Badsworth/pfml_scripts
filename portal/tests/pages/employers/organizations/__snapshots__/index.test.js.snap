@@ -9,10 +9,25 @@ exports[`Index renders the page 1`] = `
   <Title>
     Your organizations
   </Title>
+  <Alert
+    heading="Verify your account"
+    state="warning"
+  >
+    <p>
+      <Trans
+        components={
+          Object {
+            "your-organizations-link": <React.Fragment />,
+          }
+        }
+        i18nKey="pages.employersOrganizations.verificationBody"
+      />
+    </p>
+  </Alert>
   <p
     data-test="future-availability-message"
   >
-    You'll be able to add more organizations to your account in the near future.
+    You can manage leave for these organizations. In the future, you’ll be able to invite other members of your team to review applications.
   </p>
   <Table
     className="width-full"
@@ -74,14 +89,36 @@ exports[`Index renders the page 1`] = `
       />
     </tbody>
   </Table>
+  <ButtonLink
+    href="/employers/organizations/add-organization"
+  >
+    Add organization
+  </ButtonLink>
 </Fragment>
 `;
 
 exports[`Index when "account_converted" query parameter is enabled shows a success message telling the user they are now a leave admin 1`] = `
-<Alert
-  heading="Success"
-  state="success"
->
-  Your account type is now converted.
-</Alert>
+Array [
+  <Alert
+    heading="Success"
+    state="success"
+  >
+    Your account type is now converted.
+  </Alert>,
+  <Alert
+    heading="Verify your account"
+    state="warning"
+  >
+    <p>
+      <Trans
+        components={
+          Object {
+            "your-organizations-link": <React.Fragment />,
+          }
+        }
+        i18nKey="pages.employersOrganizations.verificationBody"
+      />
+    </p>
+  </Alert>,
+]
 `;

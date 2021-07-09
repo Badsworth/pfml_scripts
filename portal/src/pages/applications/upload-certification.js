@@ -79,8 +79,9 @@ export const UploadCertification = (props) => {
     }
 
     // To enable backwards-compabitility, the document type when uploading will switch from State managed Paid Leave Confirmation to Certification Form
-    // when the showCaringLeaveType flag is enabled; the API will set the plan proof on the document upload to FINEOS when Certification Form is used
-    const documentType = isFeatureEnabled("showCaringLeaveType")
+    // when the useNewPlanProofs flag is enabled; the API will set the plan proof on the document upload to FINEOS when Certification Form is used
+
+    const documentType = isFeatureEnabled("useNewPlanProofs")
       ? DocumentType.certification.certificationForm
       : DocumentType.certification.medicalCertification;
 

@@ -35,7 +35,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
@@ -66,7 +66,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "ul": <ul
@@ -112,7 +112,7 @@ Array [
   >
     Call the Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -183,7 +183,7 @@ exports[`Success renders content tailored to Caring Leave 4`] = `
   >
     If you need to end your leave early, you must call the DFML Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -228,7 +228,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
@@ -259,7 +259,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "ul": <ul
@@ -305,7 +305,7 @@ Array [
   >
     Call the Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -403,7 +403,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
         components={
           Object {
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
           }
         }
@@ -430,7 +430,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
@@ -461,7 +461,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "ul": <ul
@@ -509,7 +509,7 @@ Array [
   >
     Call the Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -576,7 +576,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 5`
   >
     If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -619,7 +619,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
         components={
           Object {
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
           }
         }
@@ -646,7 +646,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
@@ -677,7 +677,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "ul": <ul
@@ -711,7 +711,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
           components={
             Object {
               "contact-center-phone-link": <a
-                href="tel:(833) 344‑7365"
+                href="tel:(833) 344-7365"
               />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
@@ -755,7 +755,7 @@ Array [
   >
     Call the Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -822,7 +822,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 5`]
   >
     If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -841,7 +841,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 6`]
 Array [
   "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365
@@ -892,7 +892,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
@@ -923,7 +923,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "ul": <ul
@@ -957,7 +957,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
           components={
             Object {
               "contact-center-phone-link": <a
-                href="tel:(833) 344‑7365"
+                href="tel:(833) 344-7365"
               />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
@@ -999,7 +999,7 @@ Array [
   >
     Call the Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -1073,7 +1073,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 5`] = `
 Array [
   "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365
@@ -1124,7 +1124,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
@@ -1155,7 +1155,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "ul": <ul
@@ -1201,7 +1201,7 @@ Array [
   >
     Call the Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -1306,7 +1306,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
@@ -1337,7 +1337,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "ul": <ul
@@ -1371,7 +1371,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
           components={
             Object {
               "contact-center-phone-link": <a
-                href="tel:(833) 344‑7365"
+                href="tel:(833) 344-7365"
               />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
@@ -1413,7 +1413,7 @@ Array [
   >
     Call the Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -1494,7 +1494,7 @@ Array [
   </a>,
   " by calling our Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="3"
   >
     (833) 344‑7365
@@ -1531,7 +1531,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
         components={
           Object {
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
           }
         }
@@ -1558,7 +1558,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
@@ -1589,7 +1589,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "ul": <ul
@@ -1623,7 +1623,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
           components={
             Object {
               "contact-center-phone-link": <a
-                href="tel:(833) 344‑7365"
+                href="tel:(833) 344-7365"
               />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
@@ -1662,7 +1662,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
 Array [
   "You must call the Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365
@@ -1678,7 +1678,7 @@ Array [
   >
     Call the Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -1733,7 +1733,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
   >
     When your leave begins, call the DFML Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -1765,11 +1765,59 @@ Array [
   </a>,
   " by calling our Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="3"
   >
     (833) 344‑7365
   </a>,
   ".",
+]
+`;
+
+exports[`Success renders reportReductionsMessage when feature flag on and !hasReductionsData 1`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Call the Contact Center at 
+    <a
+      href="tel:(833) 344-7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     if any of these are true:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      You have already taken leave to care for a family member since July 1, 2021
+    </li>
+    <li
+      key="1"
+    >
+      You have already taken leave since January 1, 2021 for 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+        key="1"
+      >
+        any other reason that qualifies for PFML
+      </a>
+    </li>
+    <li
+      key="2"
+    >
+      You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)
+    </li>
+    <li
+      key="3"
+    >
+      You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)
+    </li>
+  </ul>,
 ]
 `;

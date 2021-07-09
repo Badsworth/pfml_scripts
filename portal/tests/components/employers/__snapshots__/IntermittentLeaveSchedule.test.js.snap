@@ -14,7 +14,7 @@ exports[`IntermittentLeaveSchedule renders a regular intermittent leave period 1
         components={
           Object {
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
           }
         }
@@ -39,7 +39,7 @@ exports[`IntermittentLeaveSchedule renders an irregular intermittent leave perio
         components={
           Object {
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
           }
         }
@@ -54,7 +54,7 @@ exports[`IntermittentLeaveSchedule renders an irregular intermittent leave perio
 Array [
   "Download the attached documentation or contact us at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365

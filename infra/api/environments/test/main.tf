@@ -94,7 +94,6 @@ module "api" {
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-test/rmv_client_certificate-zWimpc"
   rmv_check_behavior                                  = "fully_mocked"
   rmv_check_mock_success                              = "1"
-  enforce_leave_admin_verification                    = "1"
   fineos_client_integration_services_api_url          = "https://dt2-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url                  = "https://dt2-api.masspfml.fineos.com/groupclientapi/"
   fineos_client_customer_api_url                      = "https://dt2-api.masspfml.fineos.com/customerapi/"

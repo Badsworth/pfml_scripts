@@ -87,13 +87,8 @@ describe("useCollectionState", () => {
           { testId: "123" },
           { testId: "456" },
         ]);
-        ({
-          collection,
-          setCollection,
-          addItem,
-          updateItem,
-          removeItem,
-        } = useCollectionState(initialCollection));
+        ({ collection, setCollection, addItem, updateItem, removeItem } =
+          useCollectionState(initialCollection));
       });
     });
 

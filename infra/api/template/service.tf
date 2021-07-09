@@ -82,7 +82,6 @@ data "template_file" "container_definitions" {
     rmv_client_server_ca_bundle_name           = var.rmv_client_server_ca_bundle_name
     rmv_check_behavior                         = var.rmv_check_behavior
     rmv_check_mock_success                     = var.rmv_check_mock_success
-    enforce_leave_admin_verification           = var.enforce_leave_admin_verification
     fineos_client_customer_api_url             = var.fineos_client_customer_api_url
     fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
     fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
@@ -94,5 +93,6 @@ data "template_file" "container_definitions" {
     portal_base_url                            = var.portal_base_url
     enable_application_fraud_check             = var.enable_application_fraud_check
     release_version                            = var.release_version
+    new_plan_proofs_active_at                  = var.new_plan_proofs_active_at
   }
 }

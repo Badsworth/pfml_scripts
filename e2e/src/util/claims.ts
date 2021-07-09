@@ -1,5 +1,9 @@
-import { ApplicationLeaveDetails, ApplicationRequestBody } from "../_api";
-import { isNotNull, LeavePeriods } from "../types";
+import {
+  ApplicationLeaveDetails,
+  ApplicationRequestBody,
+  ApplicationResponse,
+} from "../_api";
+import { LeavePeriods, Submission } from "../types";
 import {
   max,
   addDays,
@@ -9,6 +13,7 @@ import {
   addWeeks,
 } from "date-fns";
 import faker from "faker";
+import { isNotNull } from "./typeUtils";
 
 export function extractLeavePeriod(
   { leave_details }: ApplicationRequestBody,
@@ -19,6 +24,31 @@ export function extractLeavePeriod(
   } else throw new Error("Missing leave details");
 }
 
+export function AssertFullApplicationResponse(
+  response: ApplicationResponse
+): asserts response is ApplicationResponse &
+  Required<Pick<ApplicationResponse, "application_id" | "fineos_absence_id">> {
+  if (!response.application_id)
+    throw new Error("API Response missing Application ID");
+  if (!response.fineos_absence_id)
+    throw new Error("API Response missing Fineos Absence ID");
+}
+
+/**
+ * Extracts relevant submission data from an API response.
+ * @param apiResponse API response coming from the PMFL API
+ * @returns submission object with current timestamp
+ */
+export function getSubmissionFromApiResponse(
+  apiResponse: ApplicationResponse
+): Submission {
+  AssertFullApplicationResponse(apiResponse);
+  return {
+    application_id: apiResponse.application_id,
+    fineos_absence_id: apiResponse.fineos_absence_id,
+    timestamp_from: Date.now(),
+  };
+}
 /**
  * Converts an amount of minutes to hours + minutes, throws an error if the remainder of minutes is not a multiple of increment
  * @param totalMinutes
@@ -106,4 +136,13 @@ export function getCaringLeaveStartEndDates(): [Date, Date] {
   const start = startOfWeek(faker.date.between(minStartDate, maxStartDate));
   const end = addWeeks(start, 2);
   return [start, end];
+}
+
+/**
+ * Format an ISO date to an "M/d/yyyy" format, used in the LA portal.
+ * @param date
+ * @returns
+ */
+export function dateToReviewFormat(date: string): string {
+  return format(parseISO(date), "M/d/yyyy");
 }

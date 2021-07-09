@@ -61,9 +61,15 @@ Runs all linters and fails on errors. Does not attempt to auto-fix ESLint errors
 
 Lint JS files using [ESLint](https://eslint.org/).
 
-#### `npm run prettier`
+#### `npm run portal:format`
 
-Automatically format files using [Prettier](https://prettier.io/).
+Automatically format Portal files using [Prettier](https://prettier.io/).
+
+This can be ran in a pull request by adding a comment with a bod of:
+
+```
+/gh portal format
+```
 
 ## API
 
@@ -73,10 +79,11 @@ See [api/README.md](/api/README.md).
 
 ```
 └── .github                 🗂 GitHub actions and templates
+└── api                     🔑 Admin portal
 └── api                     🔀 Integration API
 └── bin                     🤖 Developer scripts
 └── docs                    🔖 Developer documentation
 └── e2e                     🏁 End-to-end & business simulation tests
 └── infra                   🌲 Infrastructure config
-└── portal                  🚪 Claimant portal web app
+└── portal                  🚪 Claimant and Employer portal
 ```

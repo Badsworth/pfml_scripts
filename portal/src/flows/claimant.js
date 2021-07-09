@@ -130,7 +130,10 @@ export default {
     [routes.user.consentToDataSharing]: {
       meta: {},
       on: {
-        CONTINUE: routes.applications.getReady,
+        // Route to Applications page to support users who are re-consenting.
+        // If they're new users with no claims, the Applications page will
+        // handle redirecting them.
+        CONTINUE: routes.applications.index,
       },
     },
     [routes.applications.index]: {
@@ -316,7 +319,10 @@ export default {
     },
     [routes.applications.leavePeriodContinuous]: {
       meta: {
-        applicableRules: ["disallow_12mo_continuous_leave_period"],
+        applicableRules: [
+          "disallow_12mo_continuous_leave_period",
+          "disallow_caring_leave_before_july",
+        ],
         step: ClaimSteps.leaveDetails,
         fields: leavePeriodContinuousFields,
       },
@@ -326,7 +332,10 @@ export default {
     },
     [routes.applications.leavePeriodReducedSchedule]: {
       meta: {
-        applicableRules: ["disallow_12mo_reduced_leave_period"],
+        applicableRules: [
+          "disallow_12mo_reduced_leave_period",
+          "disallow_caring_leave_before_july",
+        ],
         step: ClaimSteps.leaveDetails,
         fields: leavePeriodReducedScheduleFields,
       },
@@ -348,6 +357,7 @@ export default {
         fields: leavePeriodIntermittentFields,
         applicableRules: [
           "disallow_12mo_intermittent_leave_period",
+          "disallow_caring_leave_before_july",
           // This page is after the Continuous and Reduced Schedule pages,
           // so on this page is where we can surface validation issues
           // related to the following rules:
@@ -589,6 +599,7 @@ export default {
             target: routes.applications.checklist,
           },
         ],
+        CHECKLIST: routes.applications.checklist,
         ...checklistEvents,
       },
     },

@@ -6,6 +6,7 @@ import Checklist from "../../../src/pages/applications/checklist";
 import { DocumentType } from "../../../src/models/Document";
 import LeaveReason from "../../../src/models/LeaveReason";
 import { mockRouter } from "next/router";
+import { mount } from "enzyme";
 import routes from "../../../src/routes";
 
 function renderStepListDescription(stepListWrapper) {
@@ -291,13 +292,13 @@ describe("Checklist", () => {
       expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
     });
 
-    it("renders certification doc step as completed when the document type matches the leave reason when Caring Leave feature flag is turned on", () => {
+    it("renders certification doc step as completed when the document type matches the leave reason when useNewPlanProofs feature flag is turned on", () => {
       // When the feature flag is enabled, the component should mark this step as completed when there are documents with a DocType that match the leave reason
       // In this test case, the feature flag is enabled, and the claim has documents with DocTypes that match the leave reason,
       // so the component should render this step as completed
-
+      // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
       process.env.featureFlags = {
-        showCaringLeaveType: true,
+        useNewPlanProofs: true,
       };
 
       const claim = new MockBenefitsApplicationBuilder()
@@ -317,13 +318,14 @@ describe("Checklist", () => {
       expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
     });
 
-    it("renders certification doc step as incomplete when the document type does not match the leave reason when Caring Leave feature flag is turned on", () => {
+    it("renders certification doc step as incomplete when the document type does not match the leave reason when useNewPlanProofs flag is turned on", () => {
       // When the feature flag is enabled, the component should mark this step as completed when there are documents with a DocType that match the leave reason
       // In this test case, the feature flag is enabled, and the claim has documents with DocTypes that don't match the leave reason,
       // so the component should render this step as incomplete
+      // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
 
       process.env.featureFlags = {
-        showCaringLeaveType: true,
+        useNewPlanProofs: true,
       };
 
       const claim = new MockBenefitsApplicationBuilder()
@@ -361,6 +363,60 @@ describe("Checklist", () => {
       });
       expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
       expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
+    });
+  });
+
+  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
+  describe("when Part 1 is submitted w/o Other Leave data", () => {
+    it("passes submittedContent to Other Leave step", () => {
+      process.env.featureFlags = {
+        claimantShowOtherLeaveStep: true,
+      };
+
+      const claim = new MockBenefitsApplicationBuilder()
+        .submitted()
+        .nullOtherLeave()
+        .create();
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: claim,
+        diveLevels,
+        query: {
+          "part-one-submitted": "true",
+        },
+      });
+
+      const otherLeaveStep = wrapper
+        .find("Step")
+        .at(3)
+        .prop("submittedContent");
+      const otherLeaveStepProp = mount(otherLeaveStep);
+
+      expect(otherLeaveStepProp).toMatchSnapshot();
+    });
+  });
+
+  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
+  describe("when Part 1 is submitted w/ Other Leave data", () => {
+    it("does not pass submittedContent to Other Leave step", () => {
+      process.env.featureFlags = {
+        claimantShowOtherLeaveStep: true,
+      };
+
+      const claim = new MockBenefitsApplicationBuilder().submitted().create();
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: claim,
+        diveLevels,
+        query: {
+          "part-one-submitted": "true",
+        },
+      });
+
+      const otherLeaveStep = wrapper
+        .find("Step")
+        .at(3)
+        .prop("submittedContent");
+
+      expect(otherLeaveStep).toBeNull();
     });
   });
 });

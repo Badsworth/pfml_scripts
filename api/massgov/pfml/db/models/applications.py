@@ -23,8 +23,6 @@ from massgov.pfml.db.models.employees import (
     Address,
     Claim,
     ClaimType,
-    Employee,
-    Employer,
     LkBankAccountType,
     LkGender,
     LkOccupation,
@@ -277,10 +275,6 @@ class Application(Base):
     nickname = Column(Text)
     requestor = Column(Integer)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), nullable=True, unique=True)
-    # TODO (EMPLOYER-1213) Remove employee_id and employer_id from Application table.
-    # We store these on the Claim instead.
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
-    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True)
     has_mailing_address = Column(Boolean)
     mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True)
     residential_address_id = Column(
@@ -330,7 +324,6 @@ class Application(Base):
     submitted_time = Column(TIMESTAMP(timezone=True))
     has_employer_benefits = Column(Boolean)
     has_other_incomes = Column(Boolean)
-    other_incomes_awaiting_approval = Column(Boolean)
     has_submitted_payment_preference = Column(Boolean)
     caring_leave_metadata_id = Column(
         UUID(as_uuid=True), ForeignKey("caring_leave_metadata.caring_leave_metadata_id")
@@ -342,8 +335,6 @@ class Application(Base):
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
     claim = relationship(Claim, backref=backref("application", uselist=False))
-    employer = relationship(Employer)
-    employee = relationship(Employee)
     occupation = relationship(LkOccupation)
     gender = relationship(LkGender)
     leave_reason = relationship(LkLeaveReason)

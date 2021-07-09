@@ -27,6 +27,7 @@ import OtherIncome, {
 
 import PreviousLeave, {
   PreviousLeaveReason,
+  PreviousLeaveType,
 } from "../../src/models/PreviousLeave";
 
 import Address from "../../src/models/Address";
@@ -155,6 +156,11 @@ export class BaseMockBenefitsApplicationBuilder {
     return this;
   }
 
+  pregnancyLeaveReason() {
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.pregnancy);
+    return this;
+  }
+
   otherIncome(attrs) {
     set(
       this.claimAttrs,
@@ -172,7 +178,6 @@ export class BaseMockBenefitsApplicationBuilder {
           ]
     );
     set(this.claimAttrs, "has_other_incomes", true);
-    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
     return this;
   }
 
@@ -187,7 +192,6 @@ export class BaseMockBenefitsApplicationBuilder {
       }),
     ]);
     set(this.claimAttrs, "has_other_incomes", true);
-    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
     return this;
   }
 
@@ -226,6 +230,34 @@ export class BaseMockBenefitsApplicationBuilder {
               benefit_start_date: "2021-01-01",
               benefit_type: EmployerBenefitType.familyOrMedicalLeave,
               employer_benefit_id: 1,
+              is_full_salary_continuous: false,
+            }),
+            new EmployerBenefit({
+              benefit_amount_dollars: 200,
+              benefit_amount_frequency: EmployerBenefitFrequency.unknown,
+              benefit_end_date: "2021-02-01",
+              benefit_start_date: "2021-01-01",
+              benefit_type: EmployerBenefitType.familyOrMedicalLeave,
+              employer_benefit_id: 2,
+              is_full_salary_continuous: false,
+            }),
+            new EmployerBenefit({
+              benefit_amount_dollars: 0,
+              benefit_amount_frequency: EmployerBenefitFrequency.unknown,
+              benefit_end_date: "2021-02-01",
+              benefit_start_date: "2021-01-01",
+              benefit_type: EmployerBenefitType.shortTermDisability,
+              employer_benefit_id: 3,
+              is_full_salary_continuous: true,
+            }),
+            new EmployerBenefit({
+              benefit_amount_dollars: 0,
+              benefit_amount_frequency: EmployerBenefitFrequency.unknown,
+              benefit_end_date: "2021-02-01",
+              benefit_start_date: "2021-01-01",
+              benefit_type: EmployerBenefitType.permanentDisability,
+              employer_benefit_id: 4,
+              is_full_salary_continuous: false,
             }),
           ]
     );
@@ -300,6 +332,59 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
    */
   status(status = null) {
     set(this.claimAttrs, "status", status);
+    return this;
+  }
+
+  /**
+   * @returns {MockEmployerClaimBuilder}
+   */
+  previousLeaves(attrs) {
+    set(
+      this.claimAttrs,
+      "previous_leaves",
+      attrs
+        ? attrs.map((attr) => new PreviousLeave(attr))
+        : [
+            new PreviousLeave({
+              is_for_current_employer: true,
+              leave_minutes: 2400,
+              leave_reason: PreviousLeaveReason.serviceMemberFamily,
+              leave_start_date: "2020-03-01",
+              leave_end_date: "2020-03-06",
+              previous_leave_id: 0,
+              type: PreviousLeaveType.otherReason,
+              worked_per_week_minutes: 1440,
+            }),
+            new PreviousLeave({
+              is_for_current_employer: true,
+              leave_minutes: 4800,
+              leave_reason: PreviousLeaveReason.bonding,
+              leave_start_date: "2020-05-01",
+              leave_end_date: "2020-05-10",
+              previous_leave_id: 1,
+              type: PreviousLeaveType.sameReason,
+              worked_per_week_minutes: 960,
+            }),
+          ]
+    );
+    return this;
+  }
+
+  /**
+   * Todo(EMPLOYER-1453): remove V1 eform functionality
+   * @returns {MockEmployerClaimBuilder}
+   */
+  eformsV1() {
+    set(this.claimAttrs, "uses_second_eform_version", false);
+    return this;
+  }
+
+  /**
+   * Todo(EMPLOYER-1453): remove V1 eform functionality
+   * @returns {MockEmployerClaimBuilder}
+   */
+  eformsV2() {
+    set(this.claimAttrs, "uses_second_eform_version", true);
     return this;
   }
 
@@ -498,7 +583,10 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
       this.claimAttrs,
       "previous_leaves_same_reason",
       attrs
-        ? attrs.map((attr) => new PreviousLeave(attr))
+        ? attrs.map(
+            (attr) =>
+              new PreviousLeave({ ...attr, type: PreviousLeaveType.sameReason })
+          )
         : [
             new PreviousLeave({
               is_for_current_employer: true,
@@ -506,6 +594,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
               leave_start_date: "2021-07-01",
               leave_minutes: 20 * 60,
               leave_reason: null,
+              type: PreviousLeaveType.sameReason,
               worked_per_week_minutes: 40 * 60,
             }),
           ]
@@ -523,7 +612,13 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
       this.claimAttrs,
       "previous_leaves_other_reason",
       attrs
-        ? attrs.map((attr) => new PreviousLeave(attr))
+        ? attrs.map(
+            (attr) =>
+              new PreviousLeave({
+                ...attr,
+                type: PreviousLeaveType.otherReason,
+              })
+          )
         : [
             new PreviousLeave({
               is_for_current_employer: true,
@@ -531,6 +626,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
               leave_start_date: "2021-07-01",
               leave_minutes: 20 * 60,
               leave_reason: PreviousLeaveReason.care,
+              type: PreviousLeaveType.otherReason,
               worked_per_week_minutes: 40 * 60,
             }),
           ]
@@ -552,7 +648,16 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
 
   noOtherIncomes() {
     set(this.claimAttrs, "has_other_incomes", false);
-    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
+    return this;
+  }
+
+  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
+  nullOtherLeave() {
+    set(this.claimAttrs, "has_employer_benefits", null);
+    set(this.claimAttrs, "has_concurrent_leave", null);
+    set(this.claimAttrs, "has_previous_leaves_same_reason", null);
+    set(this.claimAttrs, "has_previous_leaves_other_reason", null);
+    set(this.claimAttrs, "has_other_incomes", null);
     return this;
   }
 

@@ -37,12 +37,4 @@ describe("CreateAccount", () => {
       expect(appLogic.auth.createAccount).toHaveBeenCalledWith(email, password);
     });
   });
-
-  it("displays employer-specific content when employerShowSelfRegistrationForm is false", () => {
-    process.env.featureFlags = { employerShowSelfRegistrationForm: false };
-
-    wrapper.find("Trans").forEach((trans) => {
-      expect(trans.dive()).toMatchSnapshot();
-    });
-  });
 });

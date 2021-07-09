@@ -10,7 +10,11 @@ from pydantic import UUID4, root_validator
 import massgov.pfml.db.models.applications as db_application_models
 import massgov.pfml.db.models.employees as db_employee_models
 import massgov.pfml.util.pydantic.mask as mask
-from massgov.pfml.api.models.common import AmountFrequency, LookupEnum
+from massgov.pfml.api.models.common import (
+    AmountFrequency,
+    LookupEnum,
+    PreviousLeaveQualifyingReason,
+)
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
@@ -53,6 +57,21 @@ class LeaveReason(str, LookupEnum):
     @classmethod
     def get_lookup_model(cls):
         return db_application_models.LkLeaveReason
+
+    @classmethod
+    def to_previous_leave_qualifying_reason(
+        cls, leave_reason: "LeaveReason"
+    ) -> PreviousLeaveQualifyingReason:
+        if leave_reason == LeaveReason.pregnancy:
+            return PreviousLeaveQualifyingReason.PREGNANCY_MATERNITY
+        elif leave_reason == LeaveReason.child_bonding:
+            return PreviousLeaveQualifyingReason.CHILD_BONDING
+        elif leave_reason == LeaveReason.serious_health_condition_employee:
+            return PreviousLeaveQualifyingReason.AN_ILLNESS_OR_INJURY
+        elif leave_reason == LeaveReason.caring_leave:
+            return PreviousLeaveQualifyingReason.CARE_FOR_A_FAMILY_MEMBER
+        else:
+            raise ValueError("unexpected value reason mapping -- was a new value added recently?")
 
 
 class LeaveReasonQualifier(str, LookupEnum):

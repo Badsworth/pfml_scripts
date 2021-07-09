@@ -54,8 +54,8 @@ def get_leave_period_log_attributes(application: Application) -> Dict[str, str]:
 def get_application_log_attributes(application: Application) -> Dict[str, Optional[str]]:
     attributes_to_log = [
         "application_id",
-        "employer_id",
         "has_state_id",
+        "has_concurrent_leave",
         "has_continuous_leave_periods",
         "has_employer_benefits",
         "has_future_child_date",
@@ -90,14 +90,6 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         result[f"application.{name}.timestamp"] = (
             str(dt_value.timestamp()) if dt_value is not None else None
         )
-
-    # Use a different attribute name for other_incomes_awaiting_approval to be consistent with other booleans
-    has_other_incomes_awaiting_approval = application.other_incomes_awaiting_approval
-    result["application.has_other_incomes_awaiting_approval"] = (
-        str(has_other_incomes_awaiting_approval)
-        if has_other_incomes_awaiting_approval is not None
-        else None
-    )
 
     # Use a different attribute name for fineos_absence_id to avoid using vendor specific names
     result["application.absence_case_id"] = (

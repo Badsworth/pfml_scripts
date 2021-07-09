@@ -9,7 +9,7 @@ exports[`ConcurrentLeavesIntroIntro renders the page 1`] = `
     level="2"
     size="1"
   >
-    Tell us about the accrued paid leave you'll use during your PFML leave.
+    Tell us about the accrued paid leave you'll use during your paid leave from PFML.
   </Heading>
   <Hint>
     <Trans

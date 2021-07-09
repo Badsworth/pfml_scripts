@@ -46,13 +46,8 @@ describe("StateId", () => {
 
   it("calls claims.update when the form is submitted", async () => {
     const mass_id = "sa3456789";
-    const {
-      appLogic,
-      changeField,
-      changeRadioGroup,
-      claim,
-      submitForm,
-    } = setup({ has_state_id: false });
+    const { appLogic, changeField, changeRadioGroup, claim, submitForm } =
+      setup({ has_state_id: false });
 
     // Existing data
     await submitForm();

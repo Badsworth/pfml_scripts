@@ -32,6 +32,8 @@ locals {
     "training"    = local.low_priority_channel_key,
     "stage"       = local.low_priority_channel_key,
     "uat"         = local.low_priority_channel_key,
+    "breakfix"    = local.low_priority_channel_key,
+    "cps-preview" = local.low_priority_channel_key,
     "prod"        = local.high_priority_channel_key,
   }
 }
@@ -74,7 +76,7 @@ resource "newrelic_alert_policy_channel" "pfml_prod_low_priority_alerts" {
 
 resource "newrelic_nrql_alert_condition" "api_error_rate" {
   # WARN: error rate above 5% in any five-minute period
-  # CRIT: error rate above 10% in any five-minute period
+  # CRIT: error rate above 10% in two five-minute periods
   #
   # These should be tuned down once we can better distinguish
   # certain types of errors.
@@ -98,17 +100,21 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
     #
     # Also ignore the following transactions:
     # - push_db (This is a before_request method that New Relic breaks out as a separate transaction)
+    # - 503 errors (captured in a separate alarm with a higher threshold)
+    #
+    # Note that 504 errors are not mentioned here because 504s are not reflected in Transaction/TransactionError.
+    # 504s come from the API Gateway, which sit in front of the API servers.
     #
     query             = <<-NRQL
       SELECT filter(
         count(error.message), 
         WHERE NOT (
-          error.message LIKE 'expected 200, but got 403' 
+          error.message LIKE '%expected 200, but got 403'
           AND request.uri LIKE '%applications%/documents' 
           AND request.method LIKE 'GET'
         )
         AND NOT (
-          error.message LIKE 'expected 200, but got 422' 
+          error.message LIKE '%expected 200, but got 422'
           AND request.uri LIKE '%applications%/documents' 
           AND request.method LIKE 'POST'
         )
@@ -118,7 +124,8 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
       FROM Transaction, TransactionError
       WHERE appName='PFML-API-${upper(var.environment_name)}'
         AND (name IS NULL or name NOT LIKE '%push_db')
-        AND (transactionType IS NULL or transactionType = 'Web')
+        AND numeric(response.status) != 503
+        AND (transactionName LIKE 'WebTransaction%' or transactionType = 'Web')
     NRQL
     evaluation_offset = 1 # offset by one window
   }
@@ -135,6 +142,48 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
   critical {
     threshold_duration    = 600 # ten minutes (2 windows)
     threshold             = 10  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "all"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "api_network_error_rate" {
+  # WARN: error rate above 10% in any five-minute period
+  # CRIT: error rate above 20% in two five-minute periods
+  #
+  name               = "API high rate of 503 network errors"
+  policy_id          = newrelic_alert_policy.api_alerts.id
+  type               = "static"
+  value_function     = "single_value"
+  enabled            = true
+  aggregation_window = 300 # 5-minute window
+
+  nrql {
+    query             = <<-NRQL
+      SELECT filter(
+          count(*),
+          WHERE numeric(response.status) = 503
+        ) * 100 / uniqueCount(traceId)
+      FROM Transaction
+      WHERE appName='PFML-API-${upper(var.environment_name)}'
+        AND name NOT LIKE '%push_db'
+        AND transactionType = 'web'
+    NRQL
+    evaluation_offset = 1 # offset by one window
+  }
+
+  violation_time_limit_seconds = 86400 # 24 hours
+
+  warning {
+    threshold_duration    = 300 # five minutes
+    threshold             = 10  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 600 # ten minutes (2 windows)
+    threshold             = 20  # units: percentage
     operator              = "above"
     threshold_occurrences = "all"
   }
@@ -233,289 +282,38 @@ resource "newrelic_nrql_alert_condition" "rds_low_storage_space" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Alerts relating to errors from FINEOS
+# Alerts relating to abnormal traffic against the /notifications endpoint, where FINEOS POSTs new claims
 
-resource "newrelic_nrql_alert_condition" "fineos_aggregated_5xx_rate" {
-  # WARN: FINEOS responses that are 5XXs exceed 10% at least once in the last 5 minutes
-  # CRIT: FINEOS responses that are 5XXs exceed 33% for all of the last 5 minutes
-  name           = "FINEOS 5XXs response rate too high"
+resource "newrelic_nrql_alert_condition" "notifications_endpoint_infinite_email_spam" {
+  # CRIT: ≥ 5 transactions to this endpoint in 15 minutes, for the same absence case ID and recipient type
+  # Traffic surges have happened in the past for the same absence case ID, but different recipient types
+
+  description    = <<-TXT
+    There's too much traffic on the notifications endpoint for a specific absence case ID & specific type of recipient.
+    This usually means FINEOS is stuck in an infinite loop and is sending huge quantities of emails to a real human.
+    This alarm *SHOULD* never go off, now that FINEOS has released their 6/26/2021 service pack, but one never knows...
+  TXT
+  name           = "(${upper(var.environment_name)}) Notifications endpoint spam alert"
   policy_id      = newrelic_alert_policy.api_alerts.id
   type           = "static"
   value_function = "single_value"
   enabled        = true
 
-  nrql {
-    query             = <<-NRQL
-      SELECT percentage(
-        COUNT(*), WHERE http.statusCode >= 500 OR error.class IS NOT NULL
-      ) FROM Span
-      WHERE name LIKE 'External/%-api.masspfml.fineos.com/requests/'
-      AND appName = 'PFML-API-${upper(var.environment_name)}'
-    NRQL
-    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
-  }
-
-  violation_time_limit_seconds = 86400 # 24 hours
-
-  warning {
-    threshold_duration    = 300 # five minutes
-    threshold             = 10  # units: percentage
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
-
-  critical {
-    threshold_duration    = 300 # five minutes
-    threshold             = 33  # units: percentage
-    operator              = "above"
-    threshold_occurrences = "all"
-  }
-}
-
-resource "newrelic_nrql_alert_condition" "fineos_aggregated_4xx_rate" {
-  # WARN: % FINEOS responses that are 4XXs exceed 10% for 5 minutes
-  # CRIT: % FINEOS responses that are 4XXs exceed 33% for 5 minutes
-  name           = "FINEOS 4XXs response rate too high"
-  policy_id      = newrelic_alert_policy.api_alerts.id
-  type           = "static"
-  value_function = "single_value"
-  enabled        = true
+  aggregation_window           = 900    # 15 minutes
+  violation_time_limit_seconds = 172800 # 72 hours; longest surge yet recorded lasted about four days
 
   nrql {
     query             = <<-NRQL
-      SELECT percentage(
-        COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500 OR error.class IS NOT NULL
-      ) FROM Span
-      WHERE name LIKE 'External/%-api.masspfml.fineos.com/requests/'
-      AND appName = 'PFML-API-${upper(var.environment_name)}'
+      SELECT count(*) FROM Transaction
+      WHERE appName = 'PFML-API-${upper(var.environment_name)}' AND request.uri = '/v1/notifications'
+      FACET notification.absence_case_id, notification.recipient_type
     NRQL
-    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
-  }
-
-  violation_time_limit_seconds = 86400 # 24 hours
-
-  warning {
-    threshold             = 10
-    threshold_duration    = 300 # 5 minutes
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
+    evaluation_offset = 1
   }
 
   critical {
-    threshold             = 33
-    threshold_duration    = 300 # 5 minutes
-    operator              = "above"
-    threshold_occurrences = "all"
-  }
-}
-
-resource "newrelic_nrql_alert_condition" "fineos_claim-submission_5xx_rate" {
-  # CONDITION: Percentage of 5xx responses from all FINEOS endpoints used by the API's 'submit_application' endpoint
-  # CRIT: This percentage is > 33% for at least 5 minutes
-  # WARN: This percentage is > 10% for any 1 minute in a 5 minute window
-
-  name                         = "[5xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
-  policy_id                    = newrelic_alert_policy.api_alerts.id
-  type                         = "static"
-  value_function               = "single_value"
-  enabled                      = true
-  violation_time_limit_seconds = 86400 # 24 hours
-
-  nrql {
-    query = <<-NRQL
-      SELECT percentage(
-        COUNT(*), WHERE http.statusCode >= 500 OR error.class IS NOT NULL
-      ) FROM Span
-      WHERE http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/ReadEmployer'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/webservice'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/updateCustomerDetails'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/startAbsence'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/updateCustomerContactDetails'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/%/reflexive-questions'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/cases/%/occupations'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/occupations/%/week-based-work-pattern%'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/notifications/%/complete-intake'
-      AND appName = 'PFML-API-${upper(var.environment_name)}'
-    NRQL
-
-    evaluation_offset = 3
-  }
-
-  warning {
-    threshold_duration    = 300 # five minutes
-    threshold             = 10  # units: percentage
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
-
-  critical {
-    threshold_duration    = 300 # five minutes
-    threshold             = 33  # units: percentage
-    operator              = "above"
-    threshold_occurrences = "all"
-  }
-}
-
-resource "newrelic_nrql_alert_condition" "fineos_claim-submission_4xx_rate" {
-  # CONDITION: Percentage of 4xx responses from all FINEOS endpoints used by the API's 'submit_application' endpoint
-  # CRIT: This percentage is > 33% for at least 5 minutes
-  # WARN: This percentage is > 10% for any 1 minute in a 5 minute window
-
-  name                         = "[4xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
-  policy_id                    = newrelic_alert_policy.api_alerts.id
-  type                         = "static"
-  value_function               = "single_value"
-  enabled                      = true
-  violation_time_limit_seconds = 86400 # 24 hours
-
-  nrql {
-    query = <<-NRQL
-      SELECT percentage(
-        COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500 OR error.class IS NOT NULL
-      ) FROM Span
-      WHERE http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/ReadEmployer'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/webservice'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/updateCustomerDetails'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/startAbsence'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/updateCustomerContactDetails'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/%/reflexive-questions'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/cases/%/occupations'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/occupations/%/week-based-work-pattern%'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/notifications/%/complete-intake'
-      AND appName = 'PFML-API-${upper(var.environment_name)}'
-    NRQL
-
-    evaluation_offset = 3
-  }
-
-  warning {
-    threshold_duration    = 300 # five minutes
-    threshold             = 10  # units: percentage
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
-
-  critical {
-    threshold_duration    = 300 # five minutes
-    threshold             = 33  # units: percentage
-    operator              = "above"
-    threshold_occurrences = "all"
-  }
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Alerts relating to errors in the /notifications endpoint where FINEOS POSTs new claims
-
-resource "newrelic_nrql_alert_condition" "notifications_endpoint_error_rate" {
-  # WARN: % Error responses exceed 10% at least once in 5 minutes
-  # CRIT: % Error responses exceed 33% for a continuous 5 minute window
-  name           = "Notifications endpoint error rate too high"
-  policy_id      = newrelic_alert_policy.api_alerts.id
-  type           = "static"
-  value_function = "single_value"
-  enabled        = true
-
-  nrql {
-    query             = <<-NRQL
-      SELECT percentage(
-        COUNT(*), WHERE response.statusCode >= 400 OR error.class IS NOT NULL
-      ) FROM Span
-      WHERE name LIKE 'POST paidleave-api-%.mass.gov:80/api/v1/notifications'
-      AND appName = 'PFML-API-${upper(var.environment_name)}'
-    NRQL
-    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
-  }
-
-  violation_time_limit_seconds = 86400 # 24 hours
-
-  warning {
-    threshold             = 10
-    threshold_duration    = 300 # 5 minutes
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
-
-  critical {
-    threshold             = 33
-    threshold_duration    = 300 # 5 minutes
-    operator              = "above"
-    threshold_occurrences = "all"
-  }
-}
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Alerts relating to errors from ServiceNow
-
-resource "newrelic_nrql_alert_condition" "servicenow_4xx_rate" {
-  # WARN: ServiceNow responses that are 4XXs exceed 10% at least once in the last 5 minutes
-  # CRIT: ServiceNow responses that are 4XXs exceed 33% for all of the last 5 minutes
-  name           = "ServiceNow error response rate too high"
-  policy_id      = newrelic_alert_policy.api_alerts.id
-  type           = "static"
-  value_function = "single_value"
-  enabled        = true
-
-  nrql {
-    query             = <<-NRQL
-      SELECT percentage(
-        COUNT(*), WHERE http.statusCode >= 400 AND http.statusCode < 500 OR error.class IS NOT NULL
-      ) FROM Span
-      WHERE name LIKE 'External/savilinx.servicenowservices.com/requests/'
-      AND appName = 'PFML-API-${upper(var.environment_name)}'
-    NRQL
-    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
-  }
-
-  violation_time_limit_seconds = 86400 # 24 hours
-
-  warning {
-    threshold_duration    = 300 # five minutes
-    threshold             = 10  # units: percentage
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
-
-  critical {
-    threshold_duration    = 300 # five minutes
-    threshold             = 33  # units: percentage
-    operator              = "above"
-    threshold_occurrences = "all"
-  }
-}
-
-resource "newrelic_nrql_alert_condition" "servicenow_5xx_rate" {
-  # WARN: ServiceNow responses that are 5XXs exceed 10% at least once in the last 5 minutes
-  # CRIT: ServiceNow responses that are 5XXs exceed 33% for all of the last 5 minutes
-  name           = "ServiceNow error response rate too high"
-  policy_id      = newrelic_alert_policy.api_alerts.id
-  type           = "static"
-  value_function = "single_value"
-  enabled        = true
-
-  nrql {
-    query             = <<-NRQL
-      SELECT percentage(
-        COUNT(*), WHERE http.statusCode >= 500 OR error.class IS NOT NULL
-      ) FROM Span
-      WHERE name LIKE 'External/savilinx.servicenowservices.com/requests/'
-      AND appName = 'PFML-API-${upper(var.environment_name)}'
-    NRQL
-    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
-  }
-
-  violation_time_limit_seconds = 86400 # 24 hours
-
-  warning {
-    threshold_duration    = 300 # five minutes
-    threshold             = 10  # units: percentage
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
-
-  critical {
-    threshold_duration    = 300 # five minutes
-    threshold             = 33  # units: percentage
+    threshold             = 4   # to emulate a 'greater than or equal to 5' threshold
+    threshold_duration    = 900 # 15 minutes
     operator              = "above"
     threshold_occurrences = "all"
   }
@@ -587,48 +385,6 @@ module "pub_delegated_payments_ecs_task_failures" {
       AND aws.logStream LIKE '${var.environment_name}/pub-payments%'
       AND message LIKE 'Traceback%'
   NRQL
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Alarms relating to RMV 5xxs
-
-resource "newrelic_nrql_alert_condition" "rmv_5xx_rate" {
-  # WARN: RMV responses that are 5XXs exceed 10% at least once in the last 5 minutes
-  # CRIT: RMV responses that are 5XXs exceed 33% for all of the last 5 minutes
-  name           = "RMV error response rate too high"
-  policy_id      = newrelic_alert_policy.api_alerts.id
-  type           = "static"
-  value_function = "single_value"
-  fill_option    = "last_value"
-  enabled        = true
-
-  # the extra error.class filter is here to catch SSL or timeout errors that do not possess an HTTP status code
-  nrql {
-    query             = <<-NRQL
-      SELECT percentage(
-        COUNT(*), WHERE http.statusCode >= 500 OR error.class IS NOT NULL
-      ) FROM Span
-      WHERE name LIKE 'External/atlas-%'
-      AND appName = 'PFML-API-${upper(var.environment_name)}'
-    NRQL
-    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
-  }
-
-  violation_time_limit_seconds = 86400 # 24 hours
-
-  warning {
-    threshold_duration    = 300 # five minutes
-    threshold             = 10  # units: percentage
-    operator              = "above"
-    threshold_occurrences = "at_least_once"
-  }
-
-  critical {
-    threshold_duration    = 300 # five minutes
-    threshold             = 33  # units: percentage
-    operator              = "above"
-    threshold_occurrences = "all"
-  }
 }
 
 # ------------------------------------------------------------------------------------------------------------------------------

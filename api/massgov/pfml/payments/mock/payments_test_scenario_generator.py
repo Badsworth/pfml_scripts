@@ -633,6 +633,8 @@ class ScenarioData:
     payment_event_type: str
     absence_case_creation_date: str
     absence_reason_name: str
+    leave_request_start: Optional[str]
+    leave_request_end: Optional[str]
 
     def __repr__(self):
         return (
@@ -797,6 +799,9 @@ def generate_scenario_data_db(
             emp_ref_file = EmployeeReferenceFileFactory.create(employee=employee)
             emp_ref_file.reference_file.ctr_batch_identifier = CtrBatchIdentifierFactory.create()
 
+        leave_request_start = None  # fake.date_time()
+        leave_request_end = None  # fake.date_time()
+
         if (
             scenario_descriptor.missing_from_vbi_requestedabsence
             or scenario_descriptor.missing_from_vpeiclaimdetails
@@ -847,6 +852,8 @@ def generate_scenario_data_db(
         payment_event_type=payment_event_type,
         absence_case_creation_date=absence_case_creation_date,
         absence_reason_name=absence_reason_name,
+        leave_request_start=leave_request_start,
+        leave_request_end=leave_request_end,
     )
 
 

@@ -1,7 +1,8 @@
-import { portal, fineos } from "../../actions";
+import { portal, fineos, fineosPages } from "../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 import { Submission } from "../../../src/types";
 import { config } from "../../actions/common";
+import { assertValidClaim } from "../../../src/util/typeUtils";
 
 describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
   const submissionTest = it("As a claimant, I should be able to submit a intermittent bonding application through the portal", () => {
@@ -37,9 +38,8 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
     portal.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
-        portal.login(
-          getLeaveAdminCredentials(claim.claim.employer_fein as string)
-        );
+        assertValidClaim(claim.claim);
+        portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
         portal.selectClaimFromEmployerDashboard(
           submission.fineos_absence_id,
           "--"
@@ -94,18 +94,15 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
       cy.dependsOnPreviousPass();
       fineos.before();
       cy.visit("/");
-
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
-          fineos.checkPaymentPreference(claim);
-          fineos.visitClaim(submission.fineos_absence_id);
-          fineos.assertClaimStatus("Approved");
-          fineos.getIntermittentPaymentAmount().then((amount) => {
-            expect(
-              amount,
-              `Maximum weekly payment should be: $${claim.metadata?.expected_weekly_payment}`
-            ).to.eq(claim.metadata?.expected_weekly_payment as string);
-          });
+          const payment = (claim.metadata
+            ?.expected_weekly_payment as unknown) as number;
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+            (leaveCase) => {
+              leaveCase.assertPaymentsMade([{ net_payment_amount: payment }]);
+            }
+          );
         });
       });
     }

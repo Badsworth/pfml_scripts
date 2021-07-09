@@ -2,11 +2,11 @@
 
 exports[`PreviousLeaves renders the component 1`] = `
 <Fragment>
-  <ReviewHeading
-    level="2"
+  <Heading
+    level="3"
   >
-    Past leave
-  </ReviewHeading>
+    Previous leave
+  </Heading>
   <p>
     <Trans
       components={
@@ -96,20 +96,23 @@ exports[`PreviousLeaves renders the component 1`] = `
             "itemsById": Object {},
           }
         }
+        isAddedByLeaveAdmin={false}
         key="0"
-        leavePeriod={
+        onChange={[Function]}
+        onRemove={[Function]}
+        previousLeave={
           PreviousLeave {
-            "is_for_current_employer": null,
-            "is_for_same_reason_as_leave_reason": null,
+            "is_for_current_employer": true,
             "leave_end_date": "2020-03-06",
-            "leave_minutes": null,
+            "leave_minutes": 2400,
             "leave_reason": "Caring for a family member who serves in the armed forces",
             "leave_start_date": "2020-03-01",
             "previous_leave_id": 0,
-            "worked_per_week_minutes": null,
+            "type": "other_reason",
+            "worked_per_week_minutes": 1440,
           }
         }
-        onChange={[Function]}
+        shouldShowV2={true}
       />
       <AmendablePreviousLeave
         appErrors={
@@ -118,25 +121,37 @@ exports[`PreviousLeaves renders the component 1`] = `
             "itemsById": Object {},
           }
         }
+        isAddedByLeaveAdmin={false}
         key="1"
-        leavePeriod={
+        onChange={[Function]}
+        onRemove={[Function]}
+        previousLeave={
           PreviousLeave {
-            "is_for_current_employer": null,
-            "is_for_same_reason_as_leave_reason": null,
+            "is_for_current_employer": true,
             "leave_end_date": "2020-05-10",
-            "leave_minutes": null,
+            "leave_minutes": 4800,
             "leave_reason": "Bonding with my child after birth or placement",
             "leave_start_date": "2020-05-01",
             "previous_leave_id": 1,
-            "worked_per_week_minutes": null,
+            "type": "same_reason",
+            "worked_per_week_minutes": 960,
           }
         }
-        onChange={[Function]}
+        shouldShowV2={true}
       />
+      <tr>
+        <td
+          className="padding-y-2 padding-left-0"
+          colSpan="4"
+        >
+          <AddButton
+            disabled={false}
+            label="Add a previous leave"
+            onClick={[Function]}
+          />
+        </td>
+      </tr>
     </tbody>
   </Table>
-  <p>
-    If something is incomplete, add a comment at the end of the page.
-  </p>
 </Fragment>
 `;

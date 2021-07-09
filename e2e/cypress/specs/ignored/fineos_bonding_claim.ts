@@ -3,6 +3,7 @@ import { extractLeavePeriod } from "../../../src/util/claims";
 import { getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
 import { ApplicationRequestBody } from "../../../src/api";
+import { assertValidClaim } from "../../../src/util/typeUtils";
 
 describe("Create a new continuous leave, bonding claim in FINEOS", () => {
   const submit = it(
@@ -13,14 +14,8 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
 
       cy.visit("/");
       cy.task("generateClaim", "BHAP1").then((claim) => {
+        assertValidClaim(claim.claim);
         cy.stash("claim", claim.claim);
-        if (
-          !claim.claim.first_name ||
-          !claim.claim.last_name ||
-          !claim.claim.tax_identifier
-        ) {
-          throw new Error("Claim is missing a first name, last name, or SSN.");
-        }
         fineos.searchClaimantSSN(claim.claim.tax_identifier);
         fineos.clickBottomWidgetButton("OK");
         fineos.assertOnClaimantPage(

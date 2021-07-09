@@ -40,23 +40,6 @@ class PurchaseDataAttributeBuilder(EFormAttributeBuilder):
         },
     }
 
-    JOINING_ATTRIBUTE = {
-        "name": "PurchaseAdditionalItem",
-        "type": "enumValue",
-        "domainName": "PleaseSelectYesNoUnknown",
-        "instanceValue": "Yes",
-    }
-
-    STATIC_ATTRIBUTES = [
-        {
-            "name": "PurchaseType",
-            "type": "enumValue",
-            "domainName": "PleaseSelectCreditChequeCash",
-            "instanceValue": "Credit",
-        },
-        {"name": "ApiVersion", "type": "decimalValue", "instanceValue": 1.0,},
-    ]
-
 
 class PurchaseData(PydanticBaseModel):
     purchase_amount: Optional[Decimal]
@@ -90,7 +73,7 @@ class TestEFormBuilder:
     def test_purchase_data_eform_builder(self, purchase_data):
         eform = PurchaseDataEFormBuilder.build([purchase_data, purchase_data])
         attributes = eform.eformAttributes
-        assert len(attributes) == 15
+        assert len(attributes) == 10
 
         expected_attributes = [
             {"decimalValue": purchase_data.purchase_amount, "name": "purchaseAmount"},
@@ -104,18 +87,6 @@ class TestEFormBuilder:
                 "name": "shoppingCategory",
                 "enumValue": {"domainName": "shopping", "instanceValue": "Home improvement"},
             },
-            {
-                "enumValue": {
-                    "domainName": "PleaseSelectCreditChequeCash",
-                    "instanceValue": "Credit",
-                },
-                "name": "PurchaseType",
-            },
-            {"decimalValue": 1.0, "name": "ApiVersion"},
-            {
-                "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
-                "name": "PurchaseAdditionalItem",
-            },
             {"decimalValue": purchase_data.purchase_amount, "name": "purchaseAmount2"},
             {"name": "itemDescription2", "stringValue": purchase_data.item_description},
             {"dateValue": purchase_data.purchase_date.isoformat(), "name": "purchaseDate2"},
@@ -127,14 +98,6 @@ class TestEFormBuilder:
                 "name": "shoppingCategory2",
                 "enumValue": {"domainName": "shopping", "instanceValue": "Home improvement"},
             },
-            {
-                "enumValue": {
-                    "domainName": "PleaseSelectCreditChequeCash",
-                    "instanceValue": "Credit",
-                },
-                "name": "PurchaseType2",
-            },
-            {"decimalValue": 1.0, "name": "ApiVersion2"},
         ]
         assert attributes == expected_attributes
 
@@ -144,7 +107,7 @@ class TestEFormBuilder:
         eform = PurchaseDataEFormBuilder.build([purchase_data])
 
         attributes = eform.eformAttributes
-        assert len(attributes) == 6
+        assert len(attributes) == 4
 
         item_description_attr = eform.get_attribute("itemDescription")
         assert item_description_attr is None
@@ -155,7 +118,7 @@ class TestEFormBuilder:
         eform = PurchaseDataEFormBuilder.build([purchase_data])
 
         attributes = eform.eformAttributes
-        assert len(attributes) == 6
+        assert len(attributes) == 4
 
         item_category_attr = eform.get_attribute("itemCategory")
         assert item_category_attr is None

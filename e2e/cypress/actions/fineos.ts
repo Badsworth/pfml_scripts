@@ -4,7 +4,7 @@ import {
   getCertificationDocumentType,
   getDocumentReviewTaskName,
 } from "../../src/util/documents";
-import { LeaveReason } from "../../src/types";
+import { LeaveReason, ValidClaim } from "../../src/types";
 import { config } from "./common";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
@@ -169,10 +169,13 @@ export function assertAdjudicatingClaim(claimId: string): void {
 /**
  * Helper to switch to a particular tab.
  */
-export function onTab(label: string): void {
-  cy.contains(".TabStrip td", label).click().should("have.class", "TabOn");
+export function onTab(label: string, wait = 150): void {
+  cy.contains(".TabStrip td", label).click({ force: true }).wait(wait);
+  // experieincing failures due to this assertion when chained with click
+  // we should wait for the specified wait period before making this assertion to avoid this error
+  cy.contains(".TabStrip td", label).should("have.class", "TabOn");
   // Wait on any in-flight Ajax to complete, then add a very slight delay for rendering to occur.
-  cy.wait("@ajaxRender").wait(50);
+  cy.wait("@ajaxRender").wait(wait);
 }
 
 /**
@@ -182,7 +185,7 @@ export function onTab(label: string): void {
  * it will be called often. Try to find a better way to determine if we can move
  * on with processing (element detection).
  */
-function wait() {
+export function wait(): void {
   cy.wait("@ajaxRender");
   cy.get("#disablingLayer").should("not.be.visible");
 }
@@ -197,7 +200,7 @@ export function uploadDocument(
 ): void {
   const docName = documentType.replace(" ", "_");
   cy.get('input[value="Add"]').click();
-  cy.get("table[class='TabStrip']").contains("div", "Search").click();
+  onTab("Search");
   cy.labelled("Business Type").type(businessType);
   cy.get("input[value='Search']").click();
   clickBottomWidgetButton();
@@ -228,7 +231,7 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
   }
 }
 
-/*
+/**
  * This work-flow is submitting a full bonding/military claim
  * directly into Fineos.
  *
@@ -238,8 +241,8 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
 export function createNotification(
   startDate: Date,
   endDate: Date,
-  claimType?: "military" | "bonding" | "caring",
-  application?: ApplicationRequestBody
+  claimType?: "military" | "bonding" | "caring" | "medical",
+  application?: ValidClaim
 ): void {
   const clickNext = (timeout?: number) =>
     cy
@@ -253,6 +256,29 @@ export function createNotification(
   );
   clickNext();
   switch (claimType) {
+    case "medical":
+      cy.contains(
+        "div",
+        "Sickness, treatment required for a medical condition or any other medical procedure"
+      )
+        .prev()
+        .find("input")
+        .click();
+
+      clickNext();
+      cy.findByLabelText("Absence relates to").select("Employee");
+      wait();
+      cy.wait(100);
+      cy.findByLabelText("Absence reason").select(
+        "Serious Health Condition - Employee"
+      );
+      wait();
+      cy.wait(100);
+      cy.findByLabelText("Qualifier 1").select("Not Work Related");
+      wait();
+      cy.wait(100);
+      cy.findByLabelText("Qualifier 2").select("Sickness");
+      break;
     case "military":
       cy.contains("div", "Out of work for another reason")
         .prev()
@@ -311,7 +337,7 @@ export function createNotification(
       .find("span.slider")
       .click();
     clickNext();
-    cy.labelled("Absence status").select("Estimated");
+    cy.labelled("Absence status").select("Known");
     wait();
     cy.labelled("Absence start date").type(
       `${format(startDate, "MM/dd/yyyy")}{enter}`
@@ -427,8 +453,10 @@ export function markEvidence(
   reason = "Evidence has been reviewed and approved"
 ): void {
   onTab("Evidence");
-  cy.contains(".ListTable td", evidenceType).click();
-  cy.get("input[type='submit'][value='Manage Evidence']").click();
+  cy.contains(".ListTable td", evidenceType).click({ force: true });
+  cy.get("input[type='submit'][value='Manage Evidence']").click({
+    force: true,
+  });
   // Focus inside popup. Note: There should be no need for an explicit wait here because
   // Cypress will not move on until the popup has been rendered.
   cy.get(".WidgetPanel_PopupWidget").within(() => {
@@ -437,7 +465,7 @@ export function markEvidence(
     cy.labelled("Evidence Decision Reason").type(
       `{selectall}{backspace}${reason}`
     );
-    cy.get("input[type='button'][value='OK']").click();
+    cy.get("input[type='button'][value='OK']").click({ force: true });
     // Wait till modal has fully closed before moving on.
     cy.get("#disablingLayer").should("not.exist");
   });
@@ -457,10 +485,7 @@ export function claimAdjudicationFlow(
   reason: LeaveReason,
   ERresponse = false
 ): void {
-  const docType = getCertificationDocumentType(
-    reason,
-    config("HAS_FINEOS_SP") === "true"
-  );
+  const docType = getCertificationDocumentType(reason);
 
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
@@ -504,9 +529,7 @@ export function intermittentClaimAdjudicationFlow(
   assertClaimStatus("Adjudication");
   cy.get("input[type='submit'][value='Adjudicate']").click();
   checkStatus(claimNumber, "Eligibility", "Met");
-  markEvidence(
-    getCertificationDocumentType(reason, config("HAS_FINEOS_SP") === "true")
-  );
+  markEvidence(getCertificationDocumentType(reason));
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
   fillAbsencePeriod(claimNumber);
@@ -555,6 +578,9 @@ export function submitIntermittentActualHours(
 
     cy.labelled("Absence end date")
       .focus()
+      // @bc: During a debug session there was a odd failure
+      // this wait helps prevent typing in wrong field
+      .wait(1000)
       .type(`{selectall}{backspace}${endDateFormatted}`)
       .blur()
       // Wait for this element to be detached, then rerendered after being blurred.
@@ -594,10 +620,7 @@ export function mailedDocumentMarkEvidenceRecieved(
   assertClaimStatus("Adjudication");
   onTab("Documents");
   assertHasDocument("Identification Proof");
-  const documentType = getCertificationDocumentType(
-    reason,
-    config("HAS_FINEOS_SP") === "true"
-  );
+  const documentType = getCertificationDocumentType(reason);
   uploadDocument("HCP", documentType);
   onTab("Documents");
   assertHasDocument(documentType);
@@ -626,10 +649,7 @@ export function reviewMailedDocumentsWithTasks(
   uploadDocument("MA_ID", "Identification proof");
   onTab("Documents");
   assertHasDocument("Identification Proof");
-  const documentType = getCertificationDocumentType(
-    reason,
-    config("HAS_FINEOS_SP") === "true"
-  );
+  const documentType = getCertificationDocumentType(reason);
   uploadDocument("HCP", documentType);
   onTab("Documents");
   cy.wait(150);
@@ -689,9 +709,7 @@ export function claimExtensionAdjudicationFlow(
 ): void {
   visitClaim(claimNumber);
   cy.get("input[type='submit'][value='Adjudicate']").click();
-  markEvidence(
-    getCertificationDocumentType(reason, config("HAS_FINEOS_SP") === "true")
-  );
+  markEvidence(getCertificationDocumentType(reason));
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
 }
@@ -947,4 +965,18 @@ export function triggerNoticeRelease(docType: string): void {
     .should("be.checked");
   onTab("Documents");
   assertHasDocument(docType);
+}
+
+/**
+ * Assumes that current page is the amounts pending tab in a paid leave case.
+ * Function will assert that the processing date and period end date are equal
+ */
+export function assertMatchingPaymentDates(): void {
+  cy.get('#amountspendingtabWidget td[id*="processing_date0"]')
+    .invoke("text")
+    .then((processingDate) => {
+      cy.get('#amountspendingtabWidget td[id*="period_end_date0"]')
+        .invoke("text")
+        .should("eq", processingDate);
+    });
 }

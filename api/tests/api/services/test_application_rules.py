@@ -25,6 +25,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReasonQualifier,
     OtherIncome,
     PreviousLeaveOtherReason,
+    PreviousLeaveSameReason,
     WorkPatternDay,
 )
 from massgov.pfml.db.models.employees import PaymentMethod
@@ -214,6 +215,23 @@ def test_employer_notified_date_minimum():
             type=IssueType.minimum,
             rule=IssueRule.conditional,
             message="employer_notification_date year must be within the past 2 years",
+            field="leave_details.employer_notification_date",
+        )
+        in issues
+    )
+
+
+@freeze_time("2021-01-01")
+def test_employer_notified_date_maximum():
+    test_app = ApplicationFactory.build(
+        employer_notified=True, employer_notification_date=date(2021, 1, 2)
+    )
+    issues = get_conditional_issues(test_app, Headers())
+    assert (
+        Issue(
+            type=IssueType.maximum,
+            rule=IssueRule.conditional,
+            message="employer_notification_date must be today or prior",
             field="leave_details.employer_notification_date",
         )
         in issues
@@ -559,6 +577,25 @@ def test_disallow_2020_leave_period_start_dates():
         )
         in issues
     )
+
+
+def test_disallow_caring_leave_before_july():
+    test_app = ApplicationFactory.build(
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+        continuous_leave_periods=[
+            ContinuousLeavePeriodFactory.build(
+                start_date=date(2021, 6, 30), end_date=date(2021, 8, 1)
+            )
+        ],
+    )
+
+    disallow_submission_issue = Issue(
+        message="Caring leave start_date cannot be before 2021-07-01",
+        rule=IssueRule.disallow_caring_leave_before_july,
+    )
+
+    issues = get_leave_periods_issues(test_app)
+    assert disallow_submission_issue in issues
 
 
 def test_disallow_submit_over_60_days_before_start_date():
@@ -1816,6 +1853,14 @@ def test_other_leave_feature_flagged_rules():
 
     assert (
         Issue(
+            field="has_concurrent_leave",
+            message="has_concurrent_leave is required",
+            type=IssueType.required,
+        )
+        not in issues
+    )
+    assert (
+        Issue(
             field="has_employer_benefits",
             message="has_employer_benefits is required",
             type=IssueType.required,
@@ -1853,6 +1898,14 @@ def test_other_leave_feature_flagged_rules():
 
     assert (
         Issue(
+            field="has_concurrent_leave",
+            message="has_concurrent_leave is required",
+            type=IssueType.required,
+        )
+        in issues
+    )
+    assert (
+        Issue(
             field="has_employer_benefits",
             message="has_employer_benefits is required",
             type=IssueType.required,
@@ -1873,7 +1926,7 @@ def test_other_leave_feature_flagged_rules():
             message="has_previous_leaves_other_reason is required",
             type=IssueType.required,
         )
-        not in issues
+        in issues
     )
     assert (
         Issue(
@@ -1881,7 +1934,7 @@ def test_other_leave_feature_flagged_rules():
             message="has_previous_leaves_same_reason is required",
             type=IssueType.required,
         )
-        not in issues
+        in issues
     )
 
 
@@ -2088,41 +2141,6 @@ def test_other_income_end_date_must_be_after_start_date():
     ] == issues
 
 
-def test_has_other_incomes_required():
-    test_app = ApplicationFactory.build(
-        other_incomes_awaiting_approval=True, has_other_incomes=False
-    )
-    issues = get_conditional_issues(test_app, Headers())
-    assert [] == issues
-
-    test_app = ApplicationFactory.build(
-        other_incomes_awaiting_approval=True, has_other_incomes=None
-    )
-    issues = get_conditional_issues(test_app, Headers())
-    assert [
-        Issue(
-            type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="has_other_incomes must be set if other_incomes_awaiting_approval is set",
-            field="has_other_incomes",
-        )
-    ] == issues
-
-    test_app = ApplicationFactory.build(
-        other_incomes_awaiting_approval=True, has_other_incomes=True
-    )
-    issues = get_conditional_issues(test_app, Headers())
-    assert (
-        Issue(
-            type=IssueType.conflicting,
-            rule=IssueRule.disallow_has_other_incomes_when_awaiting_approval,
-            message="has_other_incomes must be false if other_incomes_awaiting_approval is set",
-            field="has_other_incomes",
-        )
-        in issues
-    )
-
-
 def test_has_previous_leaves_true_no_leave():
     application = ApplicationFactory.build()
     application.has_previous_leaves_other_reason = True
@@ -2252,6 +2270,36 @@ def test_previous_leave_no_issues():
 
 
 def test_previous_leave_missing_fields():
+    test_app = ApplicationFactory.build(previous_leaves_same_reason=[PreviousLeaveSameReason()])
+    issues = get_conditional_issues(test_app, Headers())
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_same_reason[0].leave_start_date is required",
+            field="previous_leaves_same_reason[0].leave_start_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_same_reason[0].leave_end_date is required",
+            field="previous_leaves_same_reason[0].leave_end_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_same_reason[0].is_for_current_employer is required",
+            field="previous_leaves_same_reason[0].is_for_current_employer",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_same_reason[0].leave_minutes is required",
+            field="previous_leaves_same_reason[0].leave_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_same_reason[0].worked_per_week_minutes is required",
+            field="previous_leaves_same_reason[0].worked_per_week_minutes",
+        ),
+    ] == issues
+
     test_app = ApplicationFactory.build(previous_leaves_other_reason=[PreviousLeaveOtherReason()])
     issues = get_conditional_issues(test_app, Headers())
     assert [
@@ -2272,11 +2320,6 @@ def test_previous_leave_missing_fields():
         ),
         Issue(
             type=IssueType.required,
-            message="previous_leaves_other_reason[0].leave_reason is required",
-            field="previous_leaves_other_reason[0].leave_reason",
-        ),
-        Issue(
-            type=IssueType.required,
             message="previous_leaves_other_reason[0].leave_minutes is required",
             field="previous_leaves_other_reason[0].leave_minutes",
         ),
@@ -2284,6 +2327,11 @@ def test_previous_leave_missing_fields():
             type=IssueType.required,
             message="previous_leaves_other_reason[0].worked_per_week_minutes is required",
             field="previous_leaves_other_reason[0].worked_per_week_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves_other_reason[0].leave_reason is required",
+            field="previous_leaves_other_reason[0].leave_reason",
         ),
     ] == issues
 

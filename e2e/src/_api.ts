@@ -343,6 +343,9 @@ export interface UserResponse {
   roles?: RoleResponse[];
   user_leave_administrators?: UserLeaveAdminResponse[];
 }
+export interface EmployerAddFeinRequestBody {
+  employer_fein?: string;
+}
 export interface UserUpdateRequest {
   consented_to_data_sharing: boolean;
 }
@@ -377,9 +380,6 @@ export interface EmployeeSearchRequest {
 }
 export interface POSTEmployeesSearchResponse extends SuccessfulResponse {
   data?: EmployeeResponse;
-}
-export interface EmployerAddFeinRequestBody {
-  employer_fein?: string;
 }
 export interface EmployerAddFeinResponse {
   employer_id?: string;
@@ -443,8 +443,14 @@ export interface GETEmployersClaimsByFineosAbsenceIdDocumentsResponse
   extends SuccessfulResponse {
   data?: ClaimDocumentResponse;
 }
-export type MaskedDate = string;
 export type Date = string;
+export interface ConcurrentLeave {
+  concurrent_leave_id?: string | null;
+  is_for_current_employer?: boolean | null;
+  leave_end_date?: Date | null;
+  leave_start_date?: Date | null;
+}
+export type MaskedDate = string;
 export interface EmployerBenefit {
   employer_benefit_id?: string | null;
   benefit_start_date?: Date | null;
@@ -494,18 +500,18 @@ export interface PreviousLeave {
   leave_start_date?: Date | null;
   leave_reason?:
     | (
-        | "Pregnancy / Maternity"
-        | "Serious health condition"
-        | "Care for a family member"
-        | "Child bonding"
-        | "Military caregiver"
-        | "Military exigency family"
+        | "Pregnancy"
+        | "Caring for a family member with a serious health condition"
+        | "Bonding with my child after birth or placement"
+        | "Caring for a family member who serves in the armed forces"
+        | "Managing family affairs while a family member is on active duty in the armed forces"
         | "Unknown"
+        | "An illness or injury"
       )
     | null;
   worked_per_week_minutes?: number | null;
   leave_minutes?: number | null;
-  type?: ("other_reason" | "same_reason" | "deprecated") | null;
+  type?: ("other_reason" | "same_reason") | null;
 }
 export interface Address {
   city?: string | null;
@@ -516,6 +522,7 @@ export interface Address {
 }
 export type MaskedSsnItin = string;
 export interface ClaimReviewResponse {
+  concurrent_leave?: ConcurrentLeave | null;
   date_of_birth?: MaskedDate;
   employer_benefits?: EmployerBenefit[];
   employer_dba?: string;
@@ -539,16 +546,18 @@ export interface GETEmployersClaimsByFineosAbsenceIdReviewResponse
   data?: ClaimReviewResponse;
 }
 export interface EmployerClaimRequestBody {
+  uses_second_eform_version?: boolean;
   employer_benefits: EmployerBenefit[];
+  concurrent_leave?: ConcurrentLeave | null;
   previous_leaves: PreviousLeave[];
   has_amendments?: boolean;
   hours_worked_per_week: number | null;
   employer_decision?: "Approve" | "Deny" | "Requires More Information";
   fraud?: "Yes" | "No";
   comment?: string;
-  leave_reason?: string;
-  believe_relationship_accurate?: "Yes" | "No" | "Unknown" | null;
-  relationship_inaccurate_reason?: string;
+  leave_reason?: string | null;
+  believe_relationship_accurate?: ("Yes" | "No" | "Unknown") | null;
+  relationship_inaccurate_reason?: string | null;
 }
 export interface UpdateClaimReviewResponse {
   claim_id: string;
@@ -705,7 +714,6 @@ export interface ApplicationResponse {
   has_reduced_schedule_leave_periods?: boolean | null;
   has_other_incomes?: boolean | null;
   has_submitted_payment_preference?: boolean | null;
-  other_incomes_awaiting_approval?: boolean | null;
   has_state_id?: boolean | null;
   has_mailing_address?: boolean | null;
   mailing_address?: Address | null;
@@ -715,7 +723,15 @@ export interface ApplicationResponse {
   occupation?:
     | ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care")
     | null;
-  gender?: ("Woman" | "Man" | "Non-binary" | "Gender not listed" | "Prefer not to answer") | null;
+  gender?:
+    | (
+        | "Woman"
+        | "Man"
+        | "Non-binary"
+        | "Gender not listed"
+        | "Prefer not to answer"
+      )
+    | null;
   hours_worked_per_week?: number | null;
   leave_details?: ApplicationLeaveDetails | null;
   payment_preference?: PaymentPreference[] | null;
@@ -725,12 +741,12 @@ export interface ApplicationResponse {
   updated_time?: string;
   status?: "Started" | "Submitted" | "Completed";
   phone?: MaskedPhone;
-  has_previous_leaves?: boolean | null;
   has_previous_leaves_other_reason?: boolean | null;
   has_previous_leaves_same_reason?: boolean | null;
-  previous_leaves?: PreviousLeave[];
+  has_concurrent_leave?: boolean | null;
   previous_leaves_other_reason?: PreviousLeave[];
   previous_leaves_same_reason?: PreviousLeave[];
+  concurrent_leave?: ConcurrentLeave | null;
 }
 export interface POSTApplicationsResponse extends SuccessfulResponse {
   data?: ApplicationResponse;
@@ -748,7 +764,6 @@ export interface Phone {
 }
 export interface ApplicationRequestBody {
   application_nickname?: string | null;
-  employee_ssn?: SsnItin | null;
   tax_identifier?: SsnItin | null;
   employer_fein?: Fein | null;
   hours_worked_per_week?: number | null;
@@ -763,7 +778,6 @@ export interface ApplicationRequestBody {
   has_employer_benefits?: boolean | null;
   has_intermittent_leave_periods?: boolean | null;
   has_other_incomes?: boolean | null;
-  other_incomes_awaiting_approval?: boolean | null;
   has_reduced_schedule_leave_periods?: boolean | null;
   has_state_id?: boolean | null;
   mass_id?: MassId | null;
@@ -771,18 +785,26 @@ export interface ApplicationRequestBody {
   occupation?:
     | ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care")
     | null;
-  gender?: ("Woman" | "Man" | "Non-binary" | "Gender not listed" | "Prefer not to answer") | null;
+  gender?:
+    | (
+        | "Woman"
+        | "Man"
+        | "Non-binary"
+        | "Gender not listed"
+        | "Prefer not to answer"
+      )
+    | null;
   leave_details?: ApplicationLeaveDetails;
   work_pattern?: WorkPattern | null;
   employer_benefits?: EmployerBenefit[] | null;
   other_incomes?: OtherIncome[] | null;
   phone?: Phone;
-  has_previous_leaves?: boolean | null;
   has_previous_leaves_other_reason?: boolean | null;
   has_previous_leaves_same_reason?: boolean | null;
-  previous_leaves?: PreviousLeave[] | null;
+  has_concurrent_leave?: boolean | null;
   previous_leaves_other_reason?: PreviousLeave[] | null;
   previous_leaves_same_reason?: PreviousLeave[] | null;
+  concurrent_leave?: ConcurrentLeave | null;
 }
 export interface PATCHApplicationsByApplicationIdResponse
   extends SuccessfulResponse {
@@ -842,11 +864,12 @@ export interface DocumentUploadRequest {
     | "Pregnancy/Maternity form"
     | "Child bonding evidence form"
     | "Care for a family member form"
-    | "Military exigency form";
+    | "Military exigency form"
+    | "Certification Form";
   name?: string;
   description?: string;
   mark_evidence_received?: boolean;
-  file: unknown; // TODO: Was typed as Blob when generated but encountered type errors, confirm if this was previously set to unknown manually or if further work is needed here
+  file: unknown; // TODO: Was typed as Blob when generated but encountered type errors, confirm if this was previously set to unknown manually or if further work is needed here;
 }
 export interface POSTApplicationsByApplicationIdDocumentsResponse
   extends SuccessfulResponse {
@@ -949,6 +972,27 @@ export async function postUsers(
       ...options,
       method: "POST",
       body: userCreateRequest,
+    })
+  );
+}
+/**
+ * Convert a User account to an employer role
+ */
+export async function postUsersByUser_idConvert_employer(
+  {
+    user_id,
+  }: {
+    user_id: string;
+  },
+  employerAddFeinRequestBody: EmployerAddFeinRequestBody,
+  options?: RequestOptions
+): Promise<ApiResponse<UserResponse>> {
+  return await http.fetchJson(
+    `/users/${user_id}/convert_employer`,
+    http.json({
+      ...options,
+      method: "POST",
+      body: employerAddFeinRequestBody,
     })
   );
 }
@@ -1106,11 +1150,15 @@ export async function getClaims(
     page_offset,
     order_by,
     order_direction,
+    employer_id,
+    claim_status,
   }: {
     page_size?: number;
     page_offset?: number;
     order_by?: string;
     order_direction?: "ascending" | "descending";
+    employer_id?: string;
+    claim_status?: string;
   } = {},
   options?: RequestOptions
 ): Promise<ApiResponse<GETClaimsResponse>> {
@@ -1121,6 +1169,8 @@ export async function getClaims(
         page_offset,
         order_by,
         order_direction,
+        employer_id,
+        claim_status,
       })
     )}`,
     {
@@ -1172,13 +1222,19 @@ export async function getEmployersClaimsByFineos_absence_idDocuments(
 export async function getEmployersClaimsByFineos_absence_idReview(
   {
     fineos_absence_id,
+    xFfDefaultToV2,
   }: {
     fineos_absence_id: string;
+    xFfDefaultToV2?: string;
   },
   options?: RequestOptions
 ): Promise<ApiResponse<GETEmployersClaimsByFineosAbsenceIdReviewResponse>> {
   return await http.fetchJson(`/employers/claims/${fineos_absence_id}/review`, {
     ...options,
+    headers: {
+      ...options?.headers,
+      "X-FF-Default-To-V2": xFfDefaultToV2,
+    },
   });
 }
 /**

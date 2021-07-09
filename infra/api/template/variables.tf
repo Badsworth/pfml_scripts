@@ -192,12 +192,6 @@ variable "rmv_check_mock_success" {
   default     = "1"
 }
 
-variable "enforce_leave_admin_verification" {
-  description = "Specifies if API should enforce Verification for Leave Admins. '0' means no Verifications are checked. '1' prevents requests to Leave Admin APIs without Verification"
-  type        = string
-  default     = "0"
-}
-
 variable "fineos_client_customer_api_url" {
   description = "URL of the FINEOS Customer API"
   type        = string
@@ -303,4 +297,10 @@ variable "release_version" {
   description = "API release version"
   type        = string
   default     = ""
+}
+
+variable "new_plan_proofs_active_at" {
+  description = "ISO 8601 formatted date string, should explicitly set UTC offset (+00:00)"
+  type        = string
+  default     = "2021-06-21 00:00:00+00:00"
 }

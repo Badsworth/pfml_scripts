@@ -63,18 +63,42 @@ export const App = ({ Component, pageProps }) => {
      * Event handler for when a page route transition has ended
      * (either successfully or unsuccessfully).
      * Scrolls the window to the top of the document upon route changes.
+     * @param {string} url - the new URL shown in the browser, including the basePath
+     * @param {object} options
+     * @param {boolean} options.shallow - Primarily used in our route events to determine if scroll/active
+     *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
-    const handleRouteChangeEnd = () => {
+    const handleRouteChangeEnd = (url, { shallow }) => {
       setUI((ui) => {
         return { ...ui, isLoading: false };
       });
-      window.scrollTo(0, 0);
+
+      if (!shallow) {
+        window.scrollTo(0, 0);
+      }
+    };
+
+    /**
+     * Fires when there's an error when changing routes, or a route load is cancelled
+     * @param {object} _err
+     * @param {boolean} _err.cancelled - Indicates if the navigation was cancelled
+     * @param {string} url
+     * @param {object} options
+     * @param {boolean} options.shallow - Primarily used in our route events to determine if scroll/active
+     *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
+     */
+    const handleRouteChangeError = (_err, url, options = {}) => {
+      handleRouteChangeEnd(url, options);
     };
 
     /**
      * Event handler for when a page route is transitioning
+     * @param {string} url - the new URL shown in the browser, including the basePath
+     * @param {object} options
+     * @param {boolean} options.shallow - Primarily used in our route events to determine if scroll/active
+     *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
-    const handleRouteChangeStart = (url = "") => {
+    const handleRouteChangeStart = (url = "", { shallow } = {}) => {
       const [routeName, queryString] = url.split("?");
       const pageAttributes = {
         ...getPageAttributesFromQueryString(queryString),
@@ -85,31 +109,38 @@ export const App = ({ Component, pageProps }) => {
       };
       tracker.startPageView(routeName, pageAttributes);
 
-      appLogic.clearErrors();
-      setUI((ui) => {
-        return { ...ui, isLoading: true };
-      });
+      if (!shallow) {
+        appLogic.clearErrors();
+        setUI((ui) => {
+          return { ...ui, isLoading: true };
+        });
+      }
     };
 
     /**
      * Fires when a route changed completely
-     * @param {string} url - New route URL
+     * @param {string} url - the new URL shown in the browser, including the basePath
+     * @param {object} options
+     * @param {boolean} options.shallow - Primarily used in our route events to determine if scroll/active
+     *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
-    const handleRouteChangeComplete = (url = "") => {
-      handleRouteChangeEnd();
+    const handleRouteChangeComplete = (url = "", { shallow } = {}) => {
+      handleRouteChangeEnd(url, { shallow });
 
       // For screen readers, we want to move their active focus towards the top
       // of the page so they become aware of the page change and can navigate
       // through the new page content. This relies on our pages utilizing the <Title>
       // component, which includes the markup to support this.
-      const pageHeading = document.querySelector(".js-title");
-      if (pageHeading) pageHeading.focus();
+      if (!shallow) {
+        const pageHeading = document.querySelector(".js-title");
+        if (pageHeading) pageHeading.focus();
+      }
     };
 
     // Track route events so we can provide a visual indicator when a page is loading
     router.events.on("routeChangeStart", handleRouteChangeStart);
     router.events.on("routeChangeComplete", handleRouteChangeComplete);
-    router.events.on("routeChangeError", handleRouteChangeEnd);
+    router.events.on("routeChangeError", handleRouteChangeError);
 
     // Passing this empty array causes this effect to be run only once upon mount. See:
     // https://reactjs.org/docs/hooks-effect.html#tip-optimizing-performance-by-skipping-effects
@@ -117,7 +148,7 @@ export const App = ({ Component, pageProps }) => {
     return function cleanup() {
       router.events.off("routeChangeStart", handleRouteChangeStart);
       router.events.off("routeChangeComplete", handleRouteChangeComplete);
-      router.events.off("routeChangeError", handleRouteChangeEnd);
+      router.events.off("routeChangeError", handleRouteChangeError);
     };
   }, [router.events, appLogic]);
 

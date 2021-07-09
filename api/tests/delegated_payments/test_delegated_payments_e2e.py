@@ -14,6 +14,7 @@ from freezegun import freeze_time
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
+import massgov.pfml.experian.address_validate_soap.client as soap_api
 import massgov.pfml.util.files as file_util
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
@@ -88,7 +89,6 @@ from massgov.pfml.delegated_payments.task.process_pub_responses import (
 from massgov.pfml.delegated_payments.task.process_pub_responses import (
     _process_pub_responses as run_process_pub_responses_ecs_task,
 )
-from massgov.pfml.experian.physical_address.client.mock import MockClient
 
 # == Data Structures ==
 
@@ -279,7 +279,6 @@ def test_e2e_pub_payments(
             ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
             ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
             ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-            ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
             ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
             ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
             ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -478,7 +477,6 @@ def test_e2e_pub_payments(
         audit_report_parsed_csv_rows = parse_csv(audit_report_file_path)
         assert len(audit_report_parsed_csv_rows) == len(
             [
-                ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                 ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
                 ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                 ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -722,7 +720,6 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
                         ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
@@ -756,9 +753,6 @@ def test_e2e_pub_payments(
                 "experian_search_exception_count": 0,
                 "invalid_experian_format": 0,
                 "invalid_experian_response": 0,
-                "multiple_experian_matches": len(
-                    [ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN]
-                ),
                 "no_experian_match_count": len(
                     [
                         ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
@@ -799,7 +793,6 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
                         ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
@@ -853,7 +846,6 @@ def test_e2e_pub_payments(
             {
                 "payment_count": len(
                     [
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -880,7 +872,6 @@ def test_e2e_pub_payments(
                 ),
                 "payment_sampled_for_audit_count": len(
                     [
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -907,7 +898,6 @@ def test_e2e_pub_payments(
                 ),
                 "sampled_payment_count": len(
                     [
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -1060,7 +1050,6 @@ def test_e2e_pub_payments(
         # End State
         stage_2_check_scenarios = [
             ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-            ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
             ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
             ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
             ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
@@ -1406,7 +1395,6 @@ def test_e2e_pub_payments(
             test_dataset=test_dataset,
             scenario_names=[
                 ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                 ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
             ],
             end_state=State.DELEGATED_PAYMENT_COMPLETE,
@@ -1425,7 +1413,6 @@ def test_e2e_pub_payments(
         )
 
         # == Validate prenote states
-        # TODO should probably be approved - hold for discussions with Mass/DUA/PUB
         assert_prenote_state(
             test_dataset=test_dataset,
             scenario_names=[
@@ -1439,10 +1426,13 @@ def test_e2e_pub_payments(
 
         assert_prenote_state(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-            ],
+            scenario_names=[ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,],
+            expected_prenote_state=PrenoteState.APPROVED,
+        )
+
+        assert_prenote_state(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.PUB_ACH_PRENOTE_RETURN,],
             expected_prenote_state=PrenoteState.REJECTED,
         )
 
@@ -1565,6 +1555,8 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+                ScenarioName.PUB_ACH_PRENOTE_RETURN,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
@@ -1584,7 +1576,6 @@ def test_e2e_pub_payments(
         ]
         stage_3_successful_writeback_scenarios = [
             ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-            ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
             ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
             ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
             ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
@@ -1640,7 +1631,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                     ]
                 ),
-                "eft_prenote_already_approved_count": 0,
+                "eft_prenote_already_rejected_count": 0,
                 "eft_prenote_count": len(
                     [
                         ScenarioName.PUB_ACH_PRENOTE_RETURN,
@@ -1651,12 +1642,10 @@ def test_e2e_pub_payments(
                 "eft_prenote_id_not_found_count": len(
                     [ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,]
                 ),
-                "eft_prenote_rejected_count": len(
-                    [
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                    ]
+                "eft_prenote_change_notification_count": len(
+                    [ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION]
                 ),
+                "eft_prenote_rejected_count": len([ScenarioName.PUB_ACH_PRENOTE_RETURN]),
                 "eft_prenote_unexpected_state_count": 0,
                 "payment_already_complete_count": 0,
                 "payment_complete_with_change_count": len(
@@ -1680,10 +1669,7 @@ def test_e2e_pub_payments(
                 "payment_already_rejected_count": 0,  # TODO add scenario or check this on later days
                 "payment_notification_unexpected_state_count": 0,
                 "payment_rejected_count": len(
-                    [
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                    ]
+                    [ScenarioName.PUB_ACH_MEDICAL_RETURN, ScenarioName.PUB_ACH_FAMILY_RETURN,]
                 ),
                 "payment_unexpected_state_count": 0,
                 "unknown_id_format_count": len(
@@ -1743,7 +1729,6 @@ def test_e2e_pub_payments(
                 "check_payment_count": len(
                     [
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                     ]
@@ -1751,7 +1736,6 @@ def test_e2e_pub_payments(
                 "payment_complete_by_paid_check": len(
                     [
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_PAYMENT_ADDRESS_MULTIPLE_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
                     ]
                 ),
@@ -1792,16 +1776,16 @@ def test_e2e_pub_payments(
         )
 
     # ===============================================================================
-    # [Day 9 - 7:00 PM] Generate FINEOS extract files
+    # [Day 7 - 7:00 PM] Generate FINEOS extract files
     # ===============================================================================
-    with freeze_time("2021-05-09 18:00:00", tz_offset=5):
+    with freeze_time("2021-05-07 18:00:00", tz_offset=5):
         generate_fineos_extract_files(test_dataset.scenario_dataset)
 
     # ===============================================================================
-    # [Day 9 - 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
+    # [Day 7 - 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
     # ===============================================================================
 
-    with freeze_time("2021-05-09 21:30:00", tz_offset=5):
+    with freeze_time("2021-05-07 21:30:00", tz_offset=5):
         process_fineos_extracts(
             test_dataset, mock_experian_client, test_db_session, test_db_other_session
         )
@@ -1813,6 +1797,7 @@ def test_e2e_pub_payments(
                 ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=test_db_session,
@@ -1820,10 +1805,7 @@ def test_e2e_pub_payments(
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-            ],
+            scenario_names=[ScenarioName.PUB_ACH_PRENOTE_RETURN,],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
             db_session=test_db_session,
         )
@@ -1836,13 +1818,29 @@ def test_e2e_pub_payments(
             db_session=test_db_session,
         )
 
+        # assert prenote states
+        assert_prenote_state(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
+                ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
+                ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
+                ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
+                ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
+            ],
+            expected_prenote_state=PrenoteState.APPROVED,
+        )
+
+        assert_prenote_state(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.PUB_ACH_PRENOTE_RETURN,],
+            expected_prenote_state=PrenoteState.REJECTED,
+        )
+
         # Writeback
         stage_4_legacy_writeback_scenario_names = []
 
-        stage_4_generic_flow_writeback_scenarios = [
-            ScenarioName.PUB_ACH_PRENOTE_RETURN,
-            ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-        ]
+        stage_4_generic_flow_writeback_scenarios = [ScenarioName.PUB_ACH_PRENOTE_RETURN]
 
         assert_writeback_for_stage(
             test_dataset,
@@ -1857,10 +1855,7 @@ def test_e2e_pub_payments(
             "FineosPeiWritebackStep",
             {
                 "eft_account_information_error_writeback_transaction_status_count": len(
-                    [
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                    ]
+                    [ScenarioName.PUB_ACH_PRENOTE_RETURN]
                 ),
             },
         )
@@ -2211,12 +2206,15 @@ def generate_pub_returns(test_dataset: TestDataSet):
 
 def process_fineos_extracts(
     test_dataset: TestDataSet,
-    mock_experian_client: MockClient,
+    mock_experian_client: soap_api.Client,
     db_session: db.Session,
     log_entry_db_session: db.Session,
 ):
     with mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_client",
+        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
+        return_value=None,
+    ), mock.patch(
+        "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
         return_value=mock_experian_client,
     ):
         run_fineos_ecs_task(
@@ -2236,6 +2234,7 @@ def setup_common_env_variables(monkeypatch):
     monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", "123456789")
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", "234567890")
     monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", "100")
+    monkeypatch.setenv("USE_EXPERIAN_SOAP_CLIENT", "1")
 
 
 # == Assertion Helpers ==
@@ -2513,6 +2512,11 @@ def assert_writeback_for_stage(
                 "transactionStatus"
             ] = transaction_status.transaction_status_description
             expected_csv_row["status"] = transaction_status.writeback_record_status
+
+            transaction_status_date = payments_util.get_transaction_status_date(p)
+            expected_csv_row["transStatusDate"] = transaction_status_date.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
 
         else:
             expected_csv_row["status"] = "Active"

@@ -1,24 +1,27 @@
 import copy
-import datetime
+from datetime import date, datetime, timedelta
 
+import factory  # this is from the factory_boy package
 import pytest
 from freezegun import freeze_time
+from jose import jwt
+from jose.constants import ALGORITHMS
 
 import massgov.pfml.api.claims
 import massgov.pfml.fineos.mock_client
 import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
-from massgov.pfml.db.models.employees import UserLeaveAdministrator
+from massgov.pfml.db.models.employees import Claim, Role, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import (
     ApplicationFactory,
     ClaimFactory,
     EmployeeFactory,
     EmployerFactory,
+    UserFactory,
     VerificationFactory,
 )
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
-from massgov.pfml.util import feature_gate
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 from massgov.pfml.util.strings import format_fein
 
@@ -26,25 +29,9 @@ from massgov.pfml.util.strings import format_fein
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture(params=["env_var", "feature_gate", "disabled"])
-def test_verification(request, monkeypatch, initialize_factories_session):
-    # This checks that all tests work _both_ with
-    # 1. Verification disabled and no verification record AND
-    # 2. Verification enabled and verification record
-    # TODO: Remove the params behavior after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
-    if request.param == "env_var":
-        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
-        return VerificationFactory.create()
-    elif request.param == "feature_gate":
-        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-        monkeypatch.setattr(
-            feature_gate, "check_enabled", lambda feature_name, user_email: True,
-        )
-
-        return VerificationFactory.create()
-    else:
-        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-        return None
+@pytest.fixture
+def test_verification(initialize_factories_session):
+    return VerificationFactory.create()
 
 
 @pytest.fixture
@@ -84,16 +71,6 @@ class TestVerificationEnforcement:
     def employer(self):
         employer = EmployerFactory.create()
         return employer
-
-    @pytest.fixture(autouse=True, params=["env_var", "feature_gate"])
-    def _enforce_verifications(self, request, monkeypatch, employer_user):
-        if request.param == "env_var":
-            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
-        else:
-            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-            monkeypatch.setattr(
-                feature_gate, "check_enabled", lambda feature_name, user_email: True,
-            )
 
     @pytest.fixture
     def setup_claim(self, test_db_session, employer_user):
@@ -368,7 +345,10 @@ class TestGetClaimReview:
 
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            headers={
+                "Authorization": f"Bearer {employer_auth_token}",
+                "X-FF-Default-To-V2": "value_does_not_matter",
+            },
         )
         response_data = response.get_json()["data"]
 
@@ -389,6 +369,60 @@ class TestGetClaimReview:
         assert response_data["residential_address"]["line_2"] == "Suite 3450"
         assert response_data["residential_address"]["state"] == "GA"
         assert response_data["residential_address"]["zip"] == "30303"
+        assert response_data["uses_second_eform_version"] is True
+
+    @freeze_time("2020-12-07")
+    def test_second_eform_version_defaults_to_true_when_ff_is_set(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={
+                "Authorization": f"Bearer {employer_auth_token}",
+                "X-FF-Default-To-V2": "value_does_not_matter",
+            },
+        )
+        response_data = response.get_json()["data"]
+
+        assert response.status_code == 200
+        assert response_data["uses_second_eform_version"] is True
+
+    @freeze_time("2020-12-07")
+    def test_second_eform_version_defaults_to_false_when_ff_is_not_set(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        response_data = response.get_json()["data"]
+
+        assert response.status_code == 200
+        assert response_data["uses_second_eform_version"] is False
 
     @freeze_time("2020-12-07")
     def test_claims_is_reviewable_managed_requirement_status(
@@ -419,14 +453,14 @@ class TestGetClaimReview:
                         "managedReqId": 123,
                         "category": "Fake Category",
                         "type": "Employer Confirmation of Leave Data",
-                        "followUpDate": datetime.date(2021, 2, 1),
+                        "followUpDate": date(2021, 2, 1),
                         "documentReceived": True,
                         "creator": "Fake Creator",
                         "status": "Open",
                         "subjectPartyName": "Fake Name",
                         "sourceOfInfoPartyName": "Fake Sourcee",
-                        "creationDate": datetime.date(2020, 1, 1),
-                        "dateSuppressed": datetime.date(2020, 3, 1),
+                        "creationDate": date(2020, 1, 1),
+                        "dateSuppressed": date(2020, 3, 1),
                     }
                 ),
             ]
@@ -1100,6 +1134,88 @@ class TestUpdateClaim:
         assert errors[0].get("rule") == 10
         assert errors[0].get("type") == "maxItems"
         assert errors[0].get("field") == "employer_benefits"
+
+    def test_employer_update_claim_review_validates_v1_employer_benefits_length(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        base_request = {
+            "comment": "comment",
+            # employer_benefits intentionally excluded
+            "employer_decision": "Approve",
+            "fraud": "Yes",
+            "has_amendments": False,
+            "hours_worked_per_week": 40,
+            "previous_leaves": [
+                {
+                    "leave_end_date": "2021-02-06",
+                    "leave_start_date": "2021-01-25",
+                    "leave_reason": "Pregnancy",
+                }
+            ],
+            "uses_second_eform_version": False,
+        }
+
+        request_with_5_employer_benefits = {
+            **base_request,
+            "employer_benefits": [
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+            ],
+        }
+        response = client.patch(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=request_with_5_employer_benefits,
+        )
+
+        errors = response.get_json().get("errors")
+        assert response.status_code == 400
+        assert errors[0].get("message") == "Employer benefits cannot exceed limit of 4"
+        assert errors[0].get("type") == "maximum"
 
     def test_employer_update_claim_review_validates_multiple_fields_at_once(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification
@@ -1908,6 +2024,160 @@ class TestGetClaimsEndpoint:
                         f"tag: {tag}\n{key} value was '{actual_value}', not expected {expected_value}"
                     )
 
+    # Inner class for testing Claims With Status Filtering
+    class TestClaimsOrder:
+        @pytest.fixture(autouse=True)
+        def load_test_db(self, employer_user, test_verification, test_db_session):
+            employer = EmployerFactory.create()
+            employee = EmployeeFactory.create()
+
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(link)
+
+            other_employer = EmployerFactory.create()
+            other_employee = EmployeeFactory.create()
+
+            other_link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=other_employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(other_link)
+
+            for _ in range(5):
+                ClaimFactory.create(
+                    employer=employer,
+                    employee=employee,
+                    fineos_absence_status_id=1,
+                    claim_type_id=1,
+                )
+                ClaimFactory.create(
+                    employer=other_employer,
+                    employee=other_employee,
+                    fineos_absence_status_id=2,
+                    claim_type_id=1,
+                    created_at=factory.Faker(
+                        "date_between_dates",
+                        date_start=date(2021, 1, 1),
+                        date_end=date(2021, 1, 15),
+                    ),
+                )
+                ClaimFactory.create(
+                    employer=other_employer,
+                    employee=other_employee,
+                    fineos_absence_status_id=7,
+                    claim_type_id=1,
+                    created_at=factory.Faker(
+                        "date_between_dates",
+                        date_start=date(2021, 1, 1),
+                        date_end=date(2021, 1, 15),
+                    ),
+                )
+                claim = Claim(employer=employer, fineos_absence_status_id=6, claim_type_id=1,)
+                test_db_session.add(claim)
+            self.claims_count = 20
+            test_db_session.commit()
+
+        def _perform_api_call(self, request, client, employer_auth_token):
+            query_string = "&".join([f"{key}={value}" for key, value in request.items()])
+            return client.get(
+                f"/v1/claims?{query_string}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+
+        def _assert_data_order(self, data, desc=True):
+            if desc:
+                for i in range(0, len(data) - 1):
+                    assert data[i] >= data[i + 1]
+            else:
+                for i in range(0, len(data) - 1):
+                    assert data[i] <= data[i + 1]
+
+        def test_get_claims_with_order_default(self, client, employer_auth_token):
+            request = {}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = [d["created_at"] for d in response_body.get("data", [])]
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=True)
+
+        def test_get_claims_with_order_default_asc(self, client, employer_auth_token):
+            request = {"order_direction": "ascending"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = [d["created_at"] for d in response_body.get("data", [])]
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=False)
+
+        def test_get_claims_with_order_unsupported_key(self, client, employer_auth_token):
+            request = {"order_by": "unsupported"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 400
+
+        def _extract_employee_name(self, response_body):
+            data = []
+            for d in response_body.get("data", []):
+                employee = d["employee"] or {}
+                name = (
+                    employee.get("last_name", " ")
+                    + employee.get("first_name", " ")
+                    + employee.get("middle_name", " ")
+                )
+                data.append(name)
+            return data
+
+        def test_get_claims_with_order_employee_asc(self, client, employer_auth_token):
+            request = {"order_direction": "ascending", "order_by": "employee"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = self._extract_employee_name(response_body)
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=False)
+
+        def test_get_claims_with_order_employee_desc(self, client, employer_auth_token):
+            request = {"order_direction": "descending", "order_by": "employee"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = self._extract_employee_name(response_body)
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=True)
+
+        def test_get_claims_with_order_fineos_absence_status_asc(self, client, employer_auth_token):
+            request = {"order_direction": "ascending", "order_by": "fineos_absence_status"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = [
+                d["fineos_absence_status"].get("sort_order", 0)
+                for d in response_body.get("data", [])
+            ]
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=False)
+
+        def test_get_claims_with_order_fineos_absence_status_desc(
+            self, client, employer_auth_token
+        ):
+            request = {"order_direction": "descending", "order_by": "fineos_absence_status"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            data = [
+                d["fineos_absence_status"].get("sort_order", 0)
+                for d in response_body.get("data", [])
+            ]
+            assert len(data) == self.claims_count
+            self._assert_data_order(data, desc=True)
+
     def test_get_claims_for_employer_id(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification
     ):
@@ -2044,3 +2314,387 @@ class TestGetClaimsEndpoint:
         assert len(response_body["data"]) == 5
         for claim in response_body["data"]:
             assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
+
+    # Inner class for testing Claims With Status Filtering
+    class TestClaimsWithStatus:
+        NUM_CLAIM_PER_STATUS = 2
+
+        @pytest.fixture(autouse=True)
+        def load_test_db(self, employer_user, test_verification, test_db_session):
+            employer = EmployerFactory.create()
+            employee = EmployeeFactory.create()
+            for i in range(1, 9):
+                for _ in range(0, self.NUM_CLAIM_PER_STATUS):
+                    if i == 8:  # absence_status_id => NULL
+                        ClaimFactory.create(
+                            employer=employer, employee=employee, claim_type_id=1,
+                        )
+                        continue
+                    ClaimFactory.create(
+                        employer=employer,
+                        employee=employee,
+                        fineos_absence_status_id=i,
+                        claim_type_id=1,
+                    )
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(link)
+            test_db_session.commit()
+
+        def _perform_api_call(self, url, client, employer_auth_token):
+            return client.get(url, headers={"Authorization": f"Bearer {employer_auth_token}"},)
+
+        def _perform_assertions(self, response, status_code, expected_count, valid_statuses):
+            assert response.status_code == status_code
+            response_body = response.get_json()
+            claim_data = response_body.get("data", [])
+            assert len(claim_data) == expected_count
+            for claim in response_body.get("data", []):
+                absence_status = claim.get("fineos_absence_status") or {}
+                absence_status_description = absence_status.get("absence_status_description", None)
+                assert absence_status_description in valid_statuses
+
+        def test_get_claims_with_status_filter_one_claim(self, client, employer_auth_token):
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Approved", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS,
+                valid_statuses=["Approved"],
+            )
+
+        def test_get_claims_with_status_filter_pending(self, client, employer_auth_token):
+            valid_statuses = [
+                "Adjudication",
+                "In Review",
+                "Intake In Progress",
+                None,
+            ]
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Pending", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS * 4,
+                valid_statuses=valid_statuses,
+            )
+
+        def test_get_claims_with_status_filter_multiple_statuses(self, client, employer_auth_token):
+            valid_statuses = ["Approved", "Closed"]
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Approved,Closed", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS * 2,
+                valid_statuses=valid_statuses,
+            )
+
+        def test_get_claims_with_status_filter_multiple_statuses_pending(
+            self, client, employer_auth_token
+        ):
+            valid_statuses = [
+                "Adjudication",
+                "In Review",
+                "Intake In Progress",
+                None,
+                "Closed",
+                "Completed",
+            ]
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Pending,Closed,Completed", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_count=self.NUM_CLAIM_PER_STATUS * 6,
+                valid_statuses=valid_statuses,
+            )
+
+        def test_get_claims_with_status_filter_unsupported_statuses(
+            self, client, employer_auth_token
+        ):
+            resp = self._perform_api_call(
+                "/v1/claims?claim_status=Unknown", client, employer_auth_token
+            )
+            self._perform_assertions(resp, status_code=400, expected_count=0, valid_statuses=[])
+
+    # Inner class for testing Claims Search
+    class TestClaimsSearch:
+        @pytest.fixture()
+        def X_NAME(self):
+            return "xxxxx"
+
+        @pytest.fixture()
+        def XAbsenceCase(self):
+            return "NTN-99-ABS-01"
+
+        @pytest.fixture()
+        def employer(self):
+            return EmployerFactory.create()
+
+        @pytest.fixture()
+        def other_employer_user(self):
+            return UserFactory.create(roles=[Role.EMPLOYER])
+
+        @pytest.fixture
+        def other_employer_claims(self, other_employer_user):
+            return {
+                "exp": datetime.now() + timedelta(days=1),
+                "sub": str(other_employer_user.sub_id),
+            }
+
+        @pytest.fixture()
+        def other_employer_auth_token(self, other_employer_claims, auth_private_key):
+            return jwt.encode(other_employer_claims, auth_private_key, algorithm=ALGORITHMS.RS256)
+
+        @pytest.fixture()
+        def other_employer(self):
+            return EmployerFactory.create()
+
+        @pytest.fixture()
+        def first_employee(self, X_NAME):
+            return EmployeeFactory.create(
+                first_name="FirstName", middle_name=X_NAME, last_name=X_NAME
+            )
+
+        @pytest.fixture()
+        def middle_employee(self, X_NAME):
+            return EmployeeFactory.create(
+                first_name=X_NAME, middle_name="InMiddleName", last_name=X_NAME
+            )
+
+        @pytest.fixture()
+        def last_employee(self, X_NAME):
+            return EmployeeFactory.create(
+                first_name=X_NAME, middle_name=X_NAME, last_name="AtTheLast"
+            )
+
+        @pytest.fixture()
+        def id_employee(self, X_NAME):
+            return EmployeeFactory.create(first_name=X_NAME, middle_name=X_NAME, last_name=X_NAME)
+
+        @pytest.fixture()
+        def john(self, X_NAME):
+            return EmployeeFactory.create(first_name="John", middle_name=X_NAME, last_name=X_NAME)
+
+        @pytest.fixture()
+        def johnny(self, X_NAME):
+            return EmployeeFactory.create(first_name=X_NAME, middle_name="Johnny", last_name=X_NAME)
+
+        @pytest.fixture()
+        def middlejohn(self, X_NAME):
+            return EmployeeFactory.create(
+                first_name=X_NAME, middle_name=X_NAME, last_name="Middlejohn"
+            )
+
+        @pytest.fixture()
+        def johnson(self, X_NAME):
+            return EmployeeFactory.create(
+                first_name=X_NAME, middle_name=X_NAME, last_name="Johnson"
+            )
+
+        @pytest.fixture(autouse=True)
+        def load_test_db(
+            self,
+            employer_user,
+            other_employer_user,
+            test_verification,
+            test_db_session,
+            employer,
+            other_employer,
+            first_employee,
+            middle_employee,
+            last_employee,
+            id_employee,
+            john,
+            johnny,
+            middlejohn,
+            johnson,
+            XAbsenceCase,
+        ):
+            ClaimFactory.create(employer=employer, employee=first_employee, claim_type_id=1)
+            ClaimFactory.create(employer=employer, employee=middle_employee, claim_type_id=1)
+            ClaimFactory.create(employer=employer, employee=last_employee, claim_type_id=1)
+            ClaimFactory.create(
+                employer=employer,
+                employee=id_employee,
+                claim_type_id=1,
+                fineos_absence_id=XAbsenceCase,
+            )
+            ClaimFactory.create(employer=employer, employee=john, claim_type_id=1)
+            ClaimFactory.create(employer=employer, employee=johnny, claim_type_id=1)
+            ClaimFactory.create(employer=employer, employee=middlejohn, claim_type_id=1)
+
+            ClaimFactory.create(employer=other_employer, employee=johnson, claim_type_id=1)
+
+            leave_admin = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            other_leave_admin = UserLeaveAdministrator(
+                user_id=other_employer_user.user_id,
+                employer_id=other_employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(leave_admin)
+            test_db_session.add(other_leave_admin)
+            test_db_session.commit()
+
+        def perform_search(self, search_string, client, token):
+            return client.get(
+                f"/v1/claims?search={search_string}", headers={"Authorization": f"Bearer {token}"},
+            )
+
+        def test_get_claims_search_first_name(self, first_employee, client, employer_auth_token):
+            response = self.perform_search("firstn", client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            claim = next(
+                (
+                    c
+                    for c in response_body["data"]
+                    if c["employee"]["first_name"] == first_employee.first_name
+                ),
+                None,
+            )
+            assert claim is not None
+
+        def test_get_claims_search_middle_name(self, middle_employee, client, employer_auth_token):
+            response = self.perform_search("inmidd", client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            claim = next(
+                (
+                    c
+                    for c in response_body["data"]
+                    if c["employee"]["middle_name"] == middle_employee.middle_name
+                ),
+                None,
+            )
+            assert claim is not None
+
+        def test_get_claims_search_last_name(self, last_employee, client, employer_auth_token):
+            response = self.perform_search("helast", client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            claim = next(
+                (
+                    c
+                    for c in response_body["data"]
+                    if c["employee"]["last_name"] == last_employee.last_name
+                ),
+                None,
+            )
+            assert claim is not None
+
+        def test_get_claims_search_absence_id(self, XAbsenceCase, client, employer_auth_token):
+            response = self.perform_search("NTN-99-ABS-01", client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            claim = next(
+                (c for c in response_body["data"] if c["fineos_absence_id"] == XAbsenceCase), None,
+            )
+            assert claim is not None
+
+        def test_get_claims_search_common_name_different_employers(
+            self,
+            client,
+            john,
+            johnny,
+            middlejohn,
+            johnson,
+            employer_auth_token,
+            other_employer_auth_token,
+        ):
+            response = self.perform_search("john", client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            john_claim = next(
+                (
+                    c
+                    for c in response_body["data"]
+                    if c["employee"]["first_name"] == john.first_name
+                ),
+                None,
+            )
+            assert john_claim is not None
+
+            johnny_claim = next(
+                (
+                    c
+                    for c in response_body["data"]
+                    if c["employee"]["middle_name"] == johnny.middle_name
+                ),
+                None,
+            )
+            assert johnny_claim is not None
+
+            middlejohn_claim = next(
+                (
+                    c
+                    for c in response_body["data"]
+                    if c["employee"]["last_name"] == middlejohn.last_name
+                ),
+                None,
+            )
+            assert middlejohn_claim is not None
+
+            empty_response = self.perform_search("johnson", client, employer_auth_token)
+
+            assert empty_response.status_code == 200
+            empty_response_body = empty_response.get_json()
+            assert len(empty_response_body["data"]) == 0
+
+            other_response = self.perform_search("john", client, other_employer_auth_token)
+
+            assert other_response.status_code == 200
+            other_response_body = other_response.get_json()
+
+            johnson_claim = next(
+                (
+                    c
+                    for c in other_response_body["data"]
+                    if c["employee"]["last_name"] == johnson.last_name
+                ),
+                None,
+            )
+            assert johnson_claim is not None
+
+        def test_get_claims_search_blank_string(self, client, employer_auth_token):
+            response = self.perform_search("", client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            assert len(response_body["data"]) >= 7
+
+        def test_get_claims_search_not_used(self, client, employer_auth_token):
+            response = client.get(
+                "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            assert len(response_body["data"]) >= 7

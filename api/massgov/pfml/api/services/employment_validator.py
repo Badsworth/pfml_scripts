@@ -2,8 +2,12 @@ from typing import Optional
 
 import massgov.pfml.db as db
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
-from massgov.pfml.db.models.applications import Employee, Employer
-from massgov.pfml.db.models.employees import TaxIdentifier, WagesAndContributions
+from massgov.pfml.db.models.employees import (
+    Employee,
+    Employer,
+    TaxIdentifier,
+    WagesAndContributions,
+)
 
 
 def get_contributing_employer_or_employee_issue(

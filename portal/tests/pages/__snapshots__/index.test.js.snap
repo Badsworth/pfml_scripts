@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Index does show employer information when employerShowSelfRegistrationForm is true 1`] = `
+exports[`Index renders landing page content 1`] = `
 <Fragment>
   <div
     className="maxw-desktop"
@@ -113,7 +113,7 @@ exports[`Index does show employer information when employerShowSelfRegistrationF
 </Fragment>
 `;
 
-exports[`Index does show employer information when employerShowSelfRegistrationForm is true 2`] = `
+exports[`Index renders landing page content 2`] = `
 Array [
   "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this ",
   <a
@@ -128,7 +128,7 @@ Array [
 ]
 `;
 
-exports[`Index renders landing page content 1`] = `
+exports[`Index shows employer information  1`] = `
 <Fragment>
   <div
     className="maxw-desktop"
@@ -212,19 +212,28 @@ exports[`Index renders landing page content 1`] = `
             Employers
           </Heading>
           <p>
-            Are you a Massachusetts employer?
-            <br />
-            <Trans
-              components={
-                Object {
-                  "contact-center-phone-link": <a
-                    href="tel:(833) 344‑7365"
-                  />,
-                }
-              }
-              i18nKey="pages.index.employerCardBody_contactCenter"
-            />
+            Manage leave for your team.
           </p>
+          <ButtonLink
+            className="margin-top-3"
+            href="/employers/create-account"
+          >
+            Create an employer account
+          </ButtonLink>
+          <div
+            className="margin-top-2 text-dark text-bold"
+          >
+            Have an account?
+            <Link
+              href="/login"
+            >
+              <a
+                className="display-inline-block margin-left-1"
+              >
+                Log in
+              </a>
+            </Link>
+          </div>
         </div>
       </article>
     </div>
@@ -232,7 +241,7 @@ exports[`Index renders landing page content 1`] = `
 </Fragment>
 `;
 
-exports[`Index renders landing page content 2`] = `
+exports[`Index shows employer information  2`] = `
 Array [
   "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this ",
   <a
@@ -244,18 +253,5 @@ Array [
     new paid leave program
   </a>,
   ".",
-]
-`;
-
-exports[`Index renders landing page content 3`] = `
-Array [
-  "Call ",
-  <a
-    href="tel:(833) 344‑7365"
-    key="1"
-  >
-    (833) 344‑7365
-  </a>,
-  " to create an employer account.",
 ]
 `;

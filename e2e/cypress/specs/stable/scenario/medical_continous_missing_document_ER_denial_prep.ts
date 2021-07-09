@@ -2,6 +2,7 @@ import { fineos, portal } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
   const submissionTest = it("As a claimant, I should be able to submit a continous bonding application through the portal", () => {
@@ -43,7 +44,8 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
 
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
-          const reason = claim.claim.leave_details?.reason;
+          assertValidClaim(claim.claim);
+          const reason = claim.claim.leave_details.reason;
           if (!reason) throw new Error(`No claim type given`);
           fineos.checkHoursWorkedPerWeek(
             submission.fineos_absence_id,
@@ -79,9 +81,8 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
     portal.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
-        portal.login(
-          getLeaveAdminCredentials(claim.claim.employer_fein as string)
-        );
+        assertValidClaim(claim.claim);
+        portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         portal.checkHoursPerWeekLeaveAdmin(
           claim.claim.hours_worked_per_week as number

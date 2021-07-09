@@ -23,13 +23,13 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.payments.payments_util import get_now
+from massgov.pfml.payments.payments_util import get_now, move_file_and_update_ref_file
 from massgov.pfml.payments.sftp_s3_transfer import (
     SftpS3TransferConfig,
     copy_from_sftp_to_s3_and_archive_files,
     copy_to_sftp_and_archive_s3_files,
 )
-from massgov.pfml.reductions.common import get_claimants_for_outbound
+from massgov.pfml.reductions.common import AgencyLoadResult, get_claimants_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.files import create_csv_from_list, upload_to_s3
 
@@ -40,9 +40,9 @@ DuaReductionPaymentAndClaim = Tuple[DuaReductionPayment, Optional[Claim]]
 
 class Metrics:
     PENDING_DUA_PAYMENT_REFERENCE_FILES_COUNT = "pending_dua_payment_reference_files_count"
-    SUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = "successful_dia_payment_reference_files_count"
+    SUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = "successful_dua_payment_reference_files_count"
     UNSUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = (
-        "unsuccessful_dia_payment_reference_files_count"
+        "unsuccessful_dua_payment_reference_files_count"
     )
     NEW_DUA_PAYMENT_ROW_COUNT = "new_dua_payment_row_count"
     TOTAL_DUA_PAYMENT_ROW_COUNT = "total_dua_payment_row_count"
@@ -229,13 +229,18 @@ def create_list_of_claimants(db_session: db.Session, log_entry: batch_log.LogEnt
     db_session.commit()
 
 
-def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry) -> None:
+def load_new_dua_payments(
+    db_session: db.Session, log_entry: batch_log.LogEntry
+) -> AgencyLoadResult:
     s3_config = get_s3_config()
     pending_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dua_pending_directory_path)
     archive_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dua_archive_directory_path)
+    error_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dfml_error_directory_path)
 
+    result = AgencyLoadResult()
     for ref_file in _get_pending_dua_payment_reference_files(pending_dir, db_session):
         log_entry.increment(Metrics.PENDING_DUA_PAYMENT_REFERENCE_FILES_COUNT)
+        result.found_pending_files = True
 
         try:
             new_row_count, total_row_count = _load_dua_payment_from_reference_file(
@@ -246,7 +251,22 @@ def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry)
             log_entry.increment(Metrics.TOTAL_DUA_PAYMENT_ROW_COUNT, total_row_count)
 
         except Exception:
-            # TODO: transition to an error state
+            # Move to error directory and update ReferenceFile.
+            filename = os.path.basename(ref_file.file_location)
+            dest_path = os.path.join(error_dir, filename)
+            move_file_and_update_ref_file(db_session, dest_path, ref_file)
+
+            # transition to an error state
+            state_log_util.create_finished_state_log(
+                associated_model=ref_file,
+                end_state=State.DUA_PAYMENT_LIST_ERROR_SAVE_TO_DB,
+                outcome=state_log_util.build_outcome(
+                    "Error loading DUA payment file into database"
+                ),
+                db_session=db_session,
+            )
+            db_session.commit()
+
             log_entry.increment(Metrics.UNSUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT)
 
             # Log exceptions but continue attempting to load other payment files into the database.
@@ -257,6 +277,7 @@ def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry)
                     "reference_file_id": ref_file.reference_file_id,
                 },
             )
+    return result
 
 
 def _load_dua_payment_from_reference_file(

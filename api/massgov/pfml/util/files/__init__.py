@@ -145,6 +145,7 @@ def list_files(
         bucket_name, prefix = split_s3_url(path)
 
         # TODO Use boto3 for now to address multithreading issue in lambda, revisit after pilot 2
+        # TODO: this issue has been fixed; should we go back to using smart_open for this?
         # https://github.com/RaRe-Technologies/smart_open/issues/340
         # for key, _content in smart_open.s3_iter_bucket(bucket_name, prefix=prefix, workers=1):
         #     files.append(get_file_name(key))
@@ -395,8 +396,8 @@ def open_stream(path, mode="r"):
     if is_s3_path(path):
         so_config = Config(
             max_pool_connections=10,
-            connect_timeout=14400,
-            read_timeout=14400,
+            connect_timeout=60,
+            read_timeout=60,
             retries={"max_attempts": 10},
         )
         so_transport_params = {"resource_kwargs": {"config": so_config}}

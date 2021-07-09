@@ -44,6 +44,7 @@ from massgov.pfml.db.models.factories import (
     ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
     DocumentFactory,
+    EmployeeFactory,
     EmployerBenefitFactory,
     EmployerFactory,
     IntermittentLeavePeriodFactory,
@@ -1673,7 +1674,7 @@ def test_application_patch_add_employer_benefits(client, user, auth_token, test_
         json={
             "employer_benefits": [
                 {
-                    "benefit_type": "Accrued paid leave",
+                    "benefit_type": "Short-term disability insurance",
                     "benefit_start_date": "2021-01-10",
                     "benefit_end_date": "2021-01-20",
                     "benefit_amount_dollars": 400,
@@ -1692,7 +1693,7 @@ def test_application_patch_add_employer_benefits(client, user, auth_token, test_
     assert len(employer_benefits) == 1
     employer_benefit = employer_benefits[0]
     assert employer_benefit.get("employer_benefit_id") is not None
-    assert employer_benefit.get("benefit_type") == "Accrued paid leave"
+    assert employer_benefit.get("benefit_type") == "Short-term disability insurance"
     assert employer_benefit.get("benefit_start_date") == "2021-01-10"
     assert employer_benefit.get("benefit_end_date") == "2021-01-20"
     assert employer_benefit.get("benefit_amount_dollars") == 400
@@ -1783,7 +1784,7 @@ def test_application_patch_replace_existing_employer_benefits(
             "employer_benefits": [
                 {
                     "employer_benefit_id": employer_benefit_id,
-                    "benefit_type": "Accrued paid leave",
+                    "benefit_type": "Short-term disability insurance",
                     "benefit_end_date": "2021-01-20",
                     "benefit_start_date": "2021-01-10",
                     "benefit_amount_dollars": 400,
@@ -1804,7 +1805,7 @@ def test_application_patch_replace_existing_employer_benefits(
     employer_benefit = employer_benefits[0]
     assert employer_benefit.get("employer_benefit_id") != str(employer_benefit_id)
     assert application.employer_benefits[0].employer_benefit_id != str(employer_benefit_id)
-    assert employer_benefit.get("benefit_type") == "Accrued paid leave"
+    assert employer_benefit.get("benefit_type") == "Short-term disability insurance"
     assert employer_benefit.get("benefit_start_date") == "2021-01-10"
     assert employer_benefit.get("benefit_end_date") == "2021-01-20"
     assert employer_benefit.get("benefit_amount_dollars") == 400
@@ -1813,10 +1814,10 @@ def test_application_patch_replace_existing_employer_benefits(
 
 def test_application_patch_employer_benefit_exceed_limit(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    limit = 3
+    limit = 6
 
     benefits = EmployerBenefitFactory.create_batch(
-        size=2, application_id=application.application_id
+        size=5, application_id=application.application_id
     )
     application.employer_benefits = benefits
     test_db_session.add(application)
@@ -1826,7 +1827,7 @@ def test_application_patch_employer_benefit_exceed_limit(client, user, auth_toke
 
     new_benefits = [
         {
-            "benefit_type": "Accrued paid leave",
+            "benefit_type": "Short-term disability insurance",
             "benefit_end_date": "2021-01-20",
             "benefit_start_date": "2021-01-10",
             "benefit_amount_dollars": 400,
@@ -2005,9 +2006,9 @@ def test_application_patch_replace_existing_other_incomes(
 
 def test_application_patch_other_income_exceed_limit(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    limit = 3
+    limit = 6
 
-    incomes = OtherIncomeFactory.create_batch(size=2, application_id=application.application_id,)
+    incomes = OtherIncomeFactory.create_batch(size=5, application_id=application.application_id,)
     application.other_incomes = incomes
     test_db_session.add(application)
     test_db_session.commit()
@@ -2257,7 +2258,6 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
                     "is_for_current_employer": True,
                     "leave_start_date": "2021-01-01",
                     "leave_end_date": "2021-05-01",
-                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2284,9 +2284,11 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
         assert previous_leave.get("is_for_current_employer") is True
         assert previous_leave.get("leave_start_date") == "2021-01-01"
         assert previous_leave.get("leave_end_date") == "2021-05-01"
-        assert previous_leave.get("leave_reason") == "Pregnancy"
         assert previous_leave.get("worked_per_week_minutes") == 20
         assert previous_leave.get("leave_minutes") == 10
+
+    assert previous_leaves_other_reason[0].get("leave_reason") == "Pregnancy"
+    assert previous_leaves_same_reason[0].get("leave_reason") is None
 
 
 def test_application_patch_add_empty_array_for_previous_leaves(
@@ -2371,7 +2373,57 @@ def test_application_patch_add_empty_previous_leaves(client, user, auth_token, t
         assert leaves[0].leave_minutes is None
 
 
-def test_application_patch_replace_existing_previous_leave(
+def test_application_patch_replace_existing_previous_leave_same_reason(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    application.previous_leaves_same_reason = PreviousLeaveSameReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "previous_leaves_same_reason": [
+                {
+                    "is_for_current_employer": False,
+                    "leave_start_date": "2021-02-01",
+                    "leave_end_date": "2021-06-01",
+                    "worked_per_week_minutes": 20,
+                    "leave_minutes": 10,
+                }
+            ],
+        },
+    )
+
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    previous_leaves_other_reason = response_body.get("previous_leaves_other_reason")
+    previous_leaves_same_reason = response_body.get("previous_leaves_same_reason")
+
+    assert len(previous_leaves_other_reason) == 2
+    assert len(previous_leaves_same_reason) == 1
+
+    previous_leave = previous_leaves_same_reason[0]
+    assert previous_leave.get("is_for_current_employer") is False
+    assert previous_leave.get("leave_start_date") == "2021-02-01"
+    assert previous_leave.get("leave_end_date") == "2021-06-01"
+    assert previous_leave.get("leave_reason") is None
+    assert previous_leave.get("worked_per_week_minutes") == 20
+    assert previous_leave.get("leave_minutes") == 10
+
+
+def test_application_patch_replace_existing_previous_leave_other_reason(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
@@ -2399,16 +2451,6 @@ def test_application_patch_replace_existing_previous_leave(
                     "leave_minutes": 10,
                 }
             ],
-            "previous_leaves_same_reason": [
-                {
-                    "is_for_current_employer": False,
-                    "leave_start_date": "2021-02-01",
-                    "leave_end_date": "2021-06-01",
-                    "leave_reason": "Pregnancy",
-                    "worked_per_week_minutes": 20,
-                    "leave_minutes": 10,
-                }
-            ],
         },
     )
 
@@ -2421,18 +2463,79 @@ def test_application_patch_replace_existing_previous_leave(
     previous_leaves_same_reason = response_body.get("previous_leaves_same_reason")
 
     assert len(previous_leaves_other_reason) == 1
-    assert len(previous_leaves_same_reason) == 1
+    assert len(previous_leaves_same_reason) == 2
 
-    for previous_leave in [
-        previous_leaves_other_reason[0],
-        previous_leaves_same_reason[0],
-    ]:
-        assert previous_leave.get("is_for_current_employer") is False
-        assert previous_leave.get("leave_start_date") == "2021-02-01"
-        assert previous_leave.get("leave_end_date") == "2021-06-01"
-        assert previous_leave.get("leave_reason") == "Pregnancy"
-        assert previous_leave.get("worked_per_week_minutes") == 20
-        assert previous_leave.get("leave_minutes") == 10
+    previous_leave = previous_leaves_other_reason[0]
+    assert previous_leave.get("is_for_current_employer") is False
+    assert previous_leave.get("leave_start_date") == "2021-02-01"
+    assert previous_leave.get("leave_end_date") == "2021-06-01"
+    assert previous_leave.get("leave_reason") == "Pregnancy"
+    assert previous_leave.get("worked_per_week_minutes") == 20
+    assert previous_leave.get("leave_minutes") == 10
+
+
+def test_application_patch_delete_existing_previous_leave_same_reason(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    application.previous_leaves_same_reason = PreviousLeaveSameReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"previous_leaves_same_reason": None,},
+    )
+
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    previous_leaves_other_reason = response_body.get("previous_leaves_other_reason")
+    previous_leaves_same_reason = response_body.get("previous_leaves_same_reason")
+
+    assert len(previous_leaves_other_reason) == 2
+    assert len(previous_leaves_same_reason) == 0
+
+
+def test_application_patch_delete_existing_previous_leave_other_reason(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    application.previous_leaves_same_reason = PreviousLeaveSameReasonFactory.create_batch(
+        size=2, application_id=application.application_id,
+    )
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"previous_leaves_other_reason": None,},
+    )
+
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    previous_leaves_other_reason = response_body.get("previous_leaves_other_reason")
+    previous_leaves_same_reason = response_body.get("previous_leaves_same_reason")
+
+    assert len(previous_leaves_other_reason) == 0
+    assert len(previous_leaves_same_reason) == 2
 
 
 def test_application_patch_previous_leave_exceed_limit(client, user, auth_token, test_db_session):
@@ -2938,10 +3041,12 @@ def test_application_patch_failure_after_absence_case_creation(
 
 def test_application_post_submit_app(client, user, auth_token, test_db_session):
     factory.random.reseed_random(1)
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
 
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
@@ -2998,10 +3103,15 @@ def create_mock_client(err: FINEOSClientError):
             500,
             None,
             FINEOSFatalResponseError(
-                "<ErrorDetails><faultcode>com.fineos.common.exceptions.WSException</faultcode><faultstring>More than One Employee Details Found for the input Search Criteria.</faultstring><detail></detail></ErrorDetails>"
+                method_name="test_name",
+                message="<ErrorDetails><faultcode>com.fineos.common.exceptions.WSException</faultcode><faultstring>More than One Employee Details Found for the input Search Criteria.</faultstring><detail></detail></ErrorDetails>",
             ),
         ),
-        (503, IssueType.fineos_case_error, FINEOSFatalUnavailable(response_status=504)),
+        (
+            503,
+            IssueType.fineos_case_error,
+            FINEOSFatalUnavailable(response_status=504, method_name="test_name"),
+        ),
     ],
 )
 def test_application_post_submit_fineos_register_api_errors(
@@ -3009,11 +3119,12 @@ def test_application_post_submit_fineos_register_api_errors(
 ):
     monkeypatch.setattr(massgov.pfml.fineos, "create_client", create_mock_client(err))
 
-    application = ApplicationFactory.create(user=user)
-
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
 
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
@@ -3061,10 +3172,12 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     # but failed when trying to complete the intake. This would mean we have the fineos_absence_id,
     # but it isn't currently in submitted status. This verifies that it only calls methods in complete_intake.
     factory.random.reseed_random(1)
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
 
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
@@ -3126,6 +3239,35 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     ]
 
 
+def test_application_post_submit_caring_leave_app_before_july(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(
+            start_date=date(2021, 6, 30), end_date=date(2022, 1, 30)
+        )
+    ]
+    application.has_continuous_leave_periods = True
+    application.leave_reason_id = LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+
+    test_db_session.commit()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    response_body = response.get_json()
+
+    assert response.status_code == 400
+
+    errors = response_body.get("errors")
+
+    assert {
+        "message": "Caring leave start_date cannot be before 2021-07-01",
+        "rule": "disallow_caring_leave_before_july",
+    } in errors
+
+
 @freeze_time("2020-01-01")
 def test_application_post_submit_app_more_than_60_days_ahead(
     client, user, auth_token, test_db_session
@@ -3177,16 +3319,17 @@ def test_application_post_submit_ssn_fraud_error(
     # in the call center as they may be cases of fraud.
 
     # consented_user will have a different IDs, create another app with it
-    assert user.active_directory_id != consented_user.active_directory_id
-    assert user.active_directory_id != employer_user.active_directory_id
+    assert user.sub_id != consented_user.sub_id
+    assert user.sub_id != employer_user.sub_id
 
-    application = ApplicationFactory.create(user=user)
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
+    )
     ApplicationFactory.create(user=employer_user, tax_identifier=application.tax_identifier)
     ApplicationFactory.create(user=consented_user, tax_identifier=application.tax_identifier)
-
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
-    )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
 
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
@@ -3219,12 +3362,13 @@ def test_application_post_submit_ssn_second_app(
     # This tests the case where an application is submitted, but another application
     # with the same SSN and same user exists.
     # This is in contrast to test_application_post_submit_ssn_fraud_error above
-    application = ApplicationFactory.create(user=user)
-    ApplicationFactory.create(user=user, tax_identifier=application.tax_identifier)
-
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    ApplicationFactory.create(user=user, tax_identifier=application.tax_identifier)
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
@@ -3269,10 +3413,10 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token):
 
 def test_application_post_submit_app_ssn_not_found(client, user, auth_token, test_db_session):
     # An FEIN of 999999999 is simulated as not found in MockFINEOSClient.
+    employer = EmployerFactory.create()
+    tax_identifier = TaxIdentifierFactory.create(tax_identifier="999999999")
     application = ApplicationFactory.create(
-        user=user,
-        tax_identifier=TaxIdentifierFactory.create(),
-        employer=EmployerFactory.create(employer_fein="999999999"),
+        user=user, tax_identifier=tax_identifier, employer_fein=employer.employer_fein,
     )
 
     test_db_session.commit()
@@ -3294,10 +3438,12 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
 
 
 def test_application_post_submit_existing_work_pattern(client, user, auth_token, test_db_session):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
 
     application.hours_worked_per_week = 70
     application.first_name = "First"
@@ -3427,10 +3573,12 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
 
 
 def test_application_post_submit_to_fineos(client, user, auth_token, test_db_session):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.first_name = "First"
     application.middle_name = "Middle"
     application.last_name = "Last"
@@ -3627,10 +3775,12 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
 def test_application_post_submit_to_fineos_intermittent_leave(
     client, user, auth_token, test_db_session
 ):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 70
     application.employer_notified = True
     application.employer_notification_date = date(2021, 1, 7)
@@ -3688,10 +3838,13 @@ def test_application_post_submit_to_fineos_intermittent_leave(
 def test_application_post_submit_to_fineos_reduced_schedule_leave(
     client, user, auth_token, test_db_session
 ):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+
     application.hours_worked_per_week = 70
     application.employer_notified = True
     application.employer_notification_date = date(2021, 1, 7)
@@ -3759,10 +3912,12 @@ def test_application_post_submit_to_fineos_reduced_schedule_leave(
 def test_application_post_submit_to_fineos_bonding_adoption(
     client, user, auth_token, test_db_session
 ):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -3812,10 +3967,12 @@ def test_application_post_submit_to_fineos_bonding_adoption(
 def test_application_post_submit_to_fineos_bonding_foster(
     client, user, auth_token, test_db_session
 ):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -3867,10 +4024,12 @@ def test_application_post_submit_to_fineos_bonding_foster(
 def test_application_post_submit_to_fineos_bonding_newborn(
     client, user, auth_token, test_db_session
 ):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -3919,10 +4078,12 @@ def test_application_post_submit_to_fineos_bonding_newborn(
 
 
 def test_application_post_submit_to_fineos_medical(client, user, auth_token, test_db_session):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -3976,10 +4137,12 @@ def test_application_post_submit_to_fineos_medical(client, user, auth_token, tes
 def test_application_post_submit_to_fineos_medical_pregnant(
     client, user, auth_token, test_db_session
 ):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -4024,10 +4187,12 @@ def test_application_post_submit_to_fineos_medical_pregnant(
 
 
 def test_application_post_submit_to_fineos_pregnant(client, user, auth_token, test_db_session):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -4074,13 +4239,15 @@ def test_application_post_submit_to_fineos_pregnant(client, user, auth_token, te
 def test_application_post_submit_app_failure_after_absence_case_creation(
     client, user, auth_token, test_db_session
 ):
-    application = ApplicationFactory.create(user=user)
     claim = ClaimFactory.create(
         fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
     )
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
 
     # Fill in required fields so this is an valid application apart from the fact it's already been submitted.
     application.continuous_leave_periods = [
@@ -4109,16 +4276,21 @@ def test_application_post_submit_app_failure_after_absence_case_creation(
 def test_application_post_submit_creates_previous_leaves_eform(
     client, user, auth_token, test_db_session
 ):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 40
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.previous_leaves_same_reason = [
+        PreviousLeaveSameReasonFactory.create(application_id=application.application_id)
     ]
     application.previous_leaves_other_reason = [
         PreviousLeaveOtherReasonFactory.create(application_id=application.application_id)
@@ -4136,16 +4308,23 @@ def test_application_post_submit_creates_previous_leaves_eform(
     filtered = list(filter(lambda cap: cap[0] == "customer_create_eform", captures))
     assert len(filtered) == 1
     create_eform_capture = filtered[0]
-    assert create_eform_capture[2]["eform"].eformType == "Other Leaves"
+    assert create_eform_capture[2]["eform"].eformType == "Other Leaves - current version"
+    eform_attributes = create_eform_capture[2]["eform"].eformAttributes
+    previous_leave_reason = next(
+        (attr for attr in eform_attributes if attr["name"] == "V2QualifyingReason2"), None
+    )
+    assert previous_leave_reason["enumValue"]["instanceValue"] == "An illness or injury"
 
 
 def test_application_post_submit_no_previous_leaves_does_not_create_other_leaves_eform(
     client, user, auth_token, test_db_session
 ):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 40
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -4170,10 +4349,12 @@ def test_application_post_submit_no_previous_leaves_does_not_create_other_leaves
 def test_application_post_submit_creates_other_incomes_eform(
     client, user, auth_token, test_db_session
 ):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 40
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -4197,16 +4378,18 @@ def test_application_post_submit_creates_other_incomes_eform(
     filtered = list(filter(lambda cap: cap[0] == "customer_create_eform", captures))
     assert len(filtered) == 1
     create_eform_capture = filtered[0]
-    assert create_eform_capture[2]["eform"].eformType == "Other Income"
+    assert create_eform_capture[2]["eform"].eformType == "Other Income - current version"
 
 
 def test_application_post_submit_no_benefits_or_incomes_does_not_create_other_incomes_eform(
     client, user, auth_token, test_db_session
 ):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 40
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -4232,17 +4415,22 @@ def test_application_post_submit_to_fineos_caring_leave(client, user, auth_token
     caring_leave_metadata = CaringLeaveMetadataFactory.create(
         relationship_to_caregiver_id=RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_id
     )
-    application = ApplicationFactory.create(user=user, caring_leave_metadata=caring_leave_metadata)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user,
+        employer_fein=employer.employer_fein,
+        tax_identifier=employee.tax_identifier,
+        caring_leave_metadata=caring_leave_metadata,
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
     application.hours_worked_per_week = 40
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2021, 1, 1),
-        end_date=date(2021, 2, 9),
+        start_date=date(2021, 7, 1),
+        end_date=date(2021, 8, 9),
         application_id=application.application_id,
     )
     test_db_session.add(leave_period)
@@ -4828,11 +5016,97 @@ def test_application_patch_benefits_empty_arrays(
     assert len(application.previous_leaves_same_reason) == 0
 
 
+# TODO: refactor existing update_application tests to use this class and fixtures
+# https://lwd.atlassian.net/browse/CP-2331
+class TestApplicationsUpdate:
+    @pytest.fixture
+    def application(self, user):
+        application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+        EmployerBenefitFactory.create(application_id=application.application_id)
+
+        return application
+
+    @pytest.fixture
+    def address(self):
+        return massgov.pfml.api.models.applications.common.Address(
+            line_1="123 Main St.", city="Boston", state="Massachusetts", zip="02111"
+        )
+
+    # Collects the params necessary for making a request with a valid application update
+    # to the mock API client
+    @pytest.fixture
+    def request_params(self, application, auth_token):
+        class UpdateApplicationRequestParams(object):
+            __slots__ = ["application_id", "auth_token", "body"]
+
+            def __init__(self, application_id, auth_token, body):
+                self.application_id = application_id
+                self.auth_token = auth_token
+                self.body = body
+
+        return UpdateApplicationRequestParams(application.application_id, auth_token, {})
+
+    # Submits an application update request with the given params
+    def perform_update(self, client, request_params):
+        return client.patch(
+            "/v1/applications/{}".format(request_params.application_id),
+            headers={"Authorization": f"Bearer {request_params.auth_token}"},
+            json=request_params.body,
+        )
+
+    def test_success(self, client, request_params):
+        request_body = {}
+        request_body["first_name"] = "Foo"
+        request_params.body = request_body
+
+        response = self.perform_update(client, request_params)
+        assert response.status_code == 200
+
+    @pytest.mark.parametrize("name_field", ["first_name", "middle_name", "last_name"])
+    def test_name_field_too_long(self, client, request_params, name_field):
+        name = "a" * 51
+
+        request_body = {}
+        request_body[name_field] = name
+        request_params.body = request_body
+
+        response = self.perform_update(client, request_params)
+        assert response.status_code == 400
+
+        errors = response.get_json().get("errors")
+        assert len(errors) == 1
+
+        error = errors[0]
+        assert error.get("type") == "maxLength"
+        assert error.get("field") == name_field
+
+    @pytest.mark.parametrize("address_field", ["line_1", "line_2", "city", "state"])
+    def test_address_field_too_long(self, client, request_params, address, address_field):
+        address_dict = address.__dict__
+        address_dict[address_field] = "a" * 41
+
+        request_body = {}
+        request_body["residential_address"] = address_dict
+        request_params.body = request_body
+
+        response = self.perform_update(client, request_params)
+        assert response.status_code == 400
+
+        errors = response.get_json().get("errors")
+        assert len(errors) == 1
+
+        error = errors[0]
+        assert error.get("type") == "maxLength"
+        assert error.get("field") == f"residential_address.{address_field}"
+
+
 def test_application_post_submit_app_creates_claim(client, user, auth_token, test_db_session):
-    application = ApplicationFactory.create(user=user)
-    WagesAndContributionsFactory.create(
-        employer=application.employer, employee=application.employee
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
 
     startDate = date(2021, 1, 1)
     endDate = date(2021, 4, 1)
@@ -4884,7 +5158,7 @@ def test_application_patch_caring_leave_metadata(client, user, auth_token, test_
     assert application.caring_leave_metadata is None
 
     caring_leave_metadata = CaringLeaveMetadataFactory.create()
-    application.caring_leave_meatadata = caring_leave_metadata
+    application.caring_leave_metadata = caring_leave_metadata
     test_db_session.add(caring_leave_metadata)
     test_db_session.add(application)
     test_db_session.commit()

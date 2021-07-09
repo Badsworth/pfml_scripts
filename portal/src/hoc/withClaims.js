@@ -17,28 +17,25 @@ import withUser from "./withUser";
 const withClaims = (Component) => {
   const ComponentWithClaims = (props) => {
     const { appLogic, query } = props;
-    const { users } = appLogic;
     const { t } = useTranslation();
 
     assert(appLogic.claims);
     // Since we are within a withUser higher order component, user should always be set
-    assert(users.user);
+    assert(appLogic.users.user);
 
-    const claims = appLogic.claims.claims;
-    const paginationMeta = appLogic.claims.paginationMeta;
-    const requestedPageOffset = query.page_offset
-      ? parseInt(query.page_offset)
-      : 1;
-    const shouldLoad = paginationMeta.page_offset !== requestedPageOffset;
+    const { isLoadingClaims } = appLogic.claims;
+    const requestedPageOffset = query.page_offset;
+    const requestedFilters = {};
+    if (query.claim_status) requestedFilters.claim_status = query.claim_status;
+    if (query.employer_id) requestedFilters.employer_id = query.employer_id;
+    if (query.search) requestedFilters.search = query.search;
 
     useEffect(() => {
-      if (shouldLoad) {
-        appLogic.claims.loadPage(requestedPageOffset);
-      }
+      appLogic.claims.loadPage(requestedPageOffset, requestedFilters);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [shouldLoad, requestedPageOffset]);
+    }, [isLoadingClaims, requestedPageOffset, Object.values(requestedFilters)]);
 
-    if (shouldLoad) {
+    if (isLoadingClaims) {
       return (
         <div className="margin-top-8 text-center">
           <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
@@ -47,7 +44,12 @@ const withClaims = (Component) => {
     }
 
     return (
-      <Component {...props} claims={claims} paginationMeta={paginationMeta} />
+      <Component
+        {...props}
+        activeFilters={appLogic.claims.activeFilters}
+        claims={appLogic.claims.claims}
+        paginationMeta={appLogic.claims.paginationMeta}
+      />
     );
   };
 
@@ -57,13 +59,20 @@ const withClaims = (Component) => {
         user: PropTypes.instanceOf(User).isRequired,
       }).isRequired,
       claims: PropTypes.shape({
+        activeFilters: PropTypes.shape({
+          employer_id: PropTypes.string,
+        }).isRequired,
         claims: PropTypes.instanceOf(ClaimCollection),
+        isLoadingClaims: PropTypes.bool,
         loadPage: PropTypes.func.isRequired,
         paginationMeta: PropTypes.instanceOf(PaginationMeta),
       }).isRequired,
     }).isRequired,
     query: PropTypes.shape({
+      claim_status: PropTypes.string,
+      employer_id: PropTypes.string,
       page_offset: PropTypes.string,
+      search: PropTypes.string,
     }),
   };
 

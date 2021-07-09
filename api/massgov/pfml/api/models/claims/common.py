@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
-from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -46,8 +46,10 @@ class YesNoUnknown(str, Enum):
 class EmployerClaimReview(PydanticBaseModel):
     """ Defines the Employer info request / response format """
 
+    uses_second_eform_version: bool = False
     comment: Optional[str]
     employer_benefits: List[EmployerBenefit]
+    concurrent_leave: Optional[ConcurrentLeave]
     hours_worked_per_week: Optional[Decimal]
     previous_leaves: List[PreviousLeave]
     employer_decision: Optional[str]

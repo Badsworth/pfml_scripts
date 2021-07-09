@@ -15,12 +15,17 @@ export default class ClaimsApi extends BaseApi {
 
   /**
    * Fetches a page of claims for a user
-   * @param {number} pageOffset - page number to load
+   * @param {number|string} pageOffset - Page number to load
+   * @param {object} [filters]
+   * @param {string} [filters.claim_status] - Comma-separated list of statuses
+   * @param {string} [filters.employer_id]
+   * @param {string} [filters.search]
    * @returns {Promise<{ claims: ClaimCollection, paginationMeta: PaginationMeta }>}
    */
-  getClaims = async (pageOffset = 1) => {
+  getClaims = async (pageOffset = 1, filters = {}) => {
     const { data, meta } = await this.request("GET", null, {
       page_offset: pageOffset,
+      ...filters,
     });
 
     const claims = data.map((claimData) => new Claim(claimData));

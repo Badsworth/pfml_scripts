@@ -92,35 +92,73 @@ exports[`ApplicationCard when the claim status is Completed includes a button to
 
 exports[`ApplicationCard when the claim status is Completed renders instructions about reductions 1`] = `
 Array [
-  "If you’ll receive ",
-  <a
-    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+  <p
+    key="p-0"
+  >
+    If you’ll receive 
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+      key="1"
+    >
+      other benefits or income
+    </a>
+    , call the Contact Center at 
+    <a
+      href="tel:(833) 344-7365"
+      key="3"
+    >
+      (833) 344‑7365
+    </a>
+    . This includes:
+  </p>,
+  <ul
+    className="usa-list"
     key="1"
   >
-    other benefits or income
-  </a>,
-  ", call the Contact Center at ",
-  <a
-    href="tel:(833) 344‑7365"
-    key="3"
-  >
-    (833) 344‑7365
-  </a>,
-  ". This includes:",
+    <li
+      key="0"
+    >
+      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+    </li>
+    <li
+      key="1"
+    >
+      Income from any other sources during your leave
+    </li>
+  </ul>,
 ]
 `;
 
-exports[`ApplicationCard when the claim status is Completed renders instructions about reductions 2`] = `
-<ul
-  className="usa-list"
->
-  <li>
-    Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
-  </li>
-  <li>
-    Income from any other sources during your leave
-  </li>
-</ul>
+exports[`ApplicationCard when the claim status is Completed when the Other Leave feature flag is true renders new instructions about reductions 1`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    If your plans for other benefits or income during your paid leave have changed, call the Contact Center at 
+    <a
+      href="tel:(833) 344-7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+    . Report changes to:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer-sponsored parental leave on a different schedule than you expected, report this change.
+    </li>
+    <li
+      key="1"
+    >
+      Income from other sources during your leave. For example, if you got approved for a disability benefit after you submitted your application, report this change.
+    </li>
+  </ul>,
+]
 `;
 
 exports[`ApplicationCard when the claim status is Submitted includes a link to complete the claim 1`] = `
@@ -171,6 +209,54 @@ exports[`ApplicationCard when the claim status is Submitted uses the Case ID as 
 </header>
 `;
 
+exports[`ApplicationCard when the claim status is Submitted with null Other Leave data and the feature flag is true renders a promt to call the Contact Center 1`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    If you have other leave, benefits, and income to report, call the Contact Center at 
+    <a
+      href="tel:(833) 344-7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+    . Report any of these situations:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      You have already taken leave to care for a family member since July 1, 2021
+    </li>
+    <li
+      key="1"
+    >
+      You have already taken leave since January 1, 2021 for 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+        key="1"
+      >
+        any other reason that qualifies for PFML
+      </a>
+    </li>
+    <li
+      key="2"
+    >
+      You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)
+    </li>
+    <li
+      key="3"
+    >
+      You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)
+    </li>
+  </ul>,
+]
+`;
+
 exports[`ApplicationCard when there are legal notices displays legal notices and explains that notices download to the device 1`] = `
 <p>
   When you click the notice link, the file will download to your device.
@@ -178,63 +264,57 @@ exports[`ApplicationCard when there are legal notices displays legal notices and
 `;
 
 exports[`ApplicationCard when there are legal notices displays legal notices and explains that notices download to the device 2`] = `
-<li
-  className="font-body-2xs"
-  key="mock-document-3"
->
-  <a
-    className="text-medium"
-    href=""
+<Fragment>
+  <Button
+    className="text-bold"
     onClick={[Function]}
+    type="button"
+    variation="unstyled"
   >
     Approval notice (PDF)
-  </a>
+  </Button>
   <div
     className="text-base-dark"
   >
     Posted 1/1/2021
   </div>
-</li>
+</Fragment>
 `;
 
 exports[`ApplicationCard when there are legal notices displays legal notices and explains that notices download to the device 3`] = `
-<li
-  className="font-body-2xs"
-  key="mock-document-4"
->
-  <a
-    className="text-medium"
-    href=""
+<Fragment>
+  <Button
+    className="text-bold"
     onClick={[Function]}
+    type="button"
+    variation="unstyled"
   >
-    Denial notice
-  </a>
+    Denial notice (PDF)
+  </Button>
   <div
     className="text-base-dark"
   >
     Posted 1/1/2021
   </div>
-</li>
+</Fragment>
 `;
 
 exports[`ApplicationCard when there are legal notices displays legal notices and explains that notices download to the device 4`] = `
-<li
-  className="font-body-2xs"
-  key="mock-document-5"
->
-  <a
-    className="text-medium"
-    href=""
+<Fragment>
+  <Button
+    className="text-bold"
     onClick={[Function]}
+    type="button"
+    variation="unstyled"
   >
     Request for more information (PDF)
-  </a>
+  </Button>
   <div
     className="text-base-dark"
   >
     Posted 1/1/2021
   </div>
-</li>
+</Fragment>
 `;
 
 exports[`ApplicationCard when there is a denial notice includes a button to upload additional documents 1`] = `

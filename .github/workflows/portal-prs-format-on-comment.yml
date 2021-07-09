@@ -1,0 +1,73 @@
+# Run code formatter for the Paid Leave Portal when PR commenter requests it.
+#
+name: Portal formatter
+
+on:
+  issue_comment:
+    types: [created]
+    paths:
+      - portal/**
+
+env:
+  nodeVersion: 15.x
+
+jobs:
+  comment-check:
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request
+
+    outputs:
+      asked: ${{ steps.check.outputs.triggered }}
+
+    steps:
+      - uses: khan/pull-request-comment-trigger@master
+        id: check
+        with:
+          trigger: '/gh portal format'
+          reaction: rocket
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  format:
+    runs-on: ubuntu-latest
+    needs: [comment-check]
+    if: needs.comment-check.outputs.asked == 'true'
+
+    steps:
+      - name: get pull request ref
+        id: get_pull_request_ref
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/:repository/pulls/:issue_id
+          repository: ${{ github.repository }}
+          issue_id: ${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ fromJson(steps.get_pull_request_ref.outputs.data).head.ref }}
+          # This token is required so that the add-and-commit action
+          # correctly triggers CI checks to rerun. The token provided
+          # to the action itself is only used to pull author info.
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run: npm install
+
+      - name: format
+        run: npm run portal:format
+
+      - uses: EndBug/add-and-commit@v6
+        with:
+          add: portal/**
+          message: 'Auto-format Portal files'
+          branch: ${{ fromJson(steps.get_pull_request_ref.outputs.data).head.ref }}
+          author_name: 'PFMLDevOps'
+          author_email: '68565627+PFMLDevOps@users.noreply.github.com'
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}

@@ -60,7 +60,7 @@ from massgov.pfml.payments.payments_util import get_now
 logger = logging.get_logger(__name__)
 
 # waiting period for pending prenote
-PRENOTE_PRENDING_WAITING_PERIOD = 7
+PRENOTE_PRENDING_WAITING_PERIOD = 5
 
 # folder constants
 RECEIVED_FOLDER = "received"
@@ -81,9 +81,16 @@ expected_file_names = [
 ]
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
+# There are multiple types of overpayments
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
-    ["Overpayment", "Overpayment Actual Recovery", "Overpayment Recovery", "Overpayment Adjustment"]
-)  # There are multiple types of overpayments
+    [
+        "Overpayment",
+        "Overpayment Actual Recovery",
+        "Overpayment Recovery",
+        "Overpayment Adjustment",
+        "Overpayment Recovery Reverse",
+    ]
+)
 PAYMENT_OUT_TRANSACTION_TYPE = "PaymentOut"
 AUTO_ALT_EVENT_REASON = "Automatic Alternate Payment"
 
@@ -182,6 +189,7 @@ class PaymentData:
     payment_start_period: Optional[str] = None
     payment_end_period: Optional[str] = None
     payment_date: Optional[str] = None
+    absence_case_creation_date: Optional[str] = None
     payment_amount: Optional[Decimal] = None
     amalgamation_c: Optional[str] = None
 
@@ -347,9 +355,10 @@ class PaymentData:
             eft_required,
             min_length=9,
             max_length=9,
+            custom_validator_func=payments_util.routing_number_validator,
         )
         self.account_nbr = payments_util.validate_csv_input(
-            "PAYEEACCOUNTN", pei_record, self.validation_container, eft_required, max_length=40
+            "PAYEEACCOUNTN", pei_record, self.validation_container, eft_required, max_length=17
         )
         self.raw_account_type = payments_util.validate_csv_input(
             "PAYEEACCOUNTT",
@@ -464,6 +473,14 @@ class PaymentData:
 
             self.claim_type_raw = payments_util.validate_csv_input(
                 "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
+            )
+
+            self.absence_case_creation_date = payments_util.validate_csv_input(
+                "ABSENCE_CASECREATIONDATE",
+                requested_absence,
+                self.validation_container,
+                True,
+                custom_validator_func=self.payment_period_date_validator,
             )
 
         elif self.is_standard_payment:
@@ -912,6 +929,9 @@ class PaymentExtractStep(Step):
             payment_data.payment_end_period
         )
         payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
+        payment.absence_case_creation_date = payments_util.datetime_str_to_date(
+            payment_data.absence_case_creation_date
+        )
 
         payment.payment_transaction_type_id = (
             payment_data.payment_transaction_type.payment_transaction_type_id
@@ -1035,6 +1055,10 @@ class PaymentExtractStep(Step):
                 and (get_now() - existing_eft.prenote_sent_at).days
                 >= PRENOTE_PRENDING_WAITING_PERIOD
             ):
+                # Set prenote to approved
+                existing_eft.prenote_state_id = PrenoteState.APPROVED.prenote_state_id
+                existing_eft.prenote_approved_at = payments_util.get_now()
+
                 self.increment(self.Metrics.PRENOTE_PAST_WAITING_PERIOD_APPROVED_COUNT)
             else:
                 self.increment(self.Metrics.NOT_APPROVED_PRENOTE_COUNT)
@@ -1064,7 +1088,7 @@ class PaymentExtractStep(Step):
 
             extra["pub_eft_id"] = new_eft.pub_eft_id
             logger.info(
-                "Initiating DELEGATED_EFT flow for employee associated with payment %i",
+                "Initiating DELEGATED_EFT flow for employee associated with payment %s",
                 payment_data.get_payment_message_str(),
                 extra=extra,
             )

@@ -2,7 +2,6 @@ import PropTypes from "prop-types";
 import React from "react";
 import Tag from "../Tag";
 import { UserLeaveAdministrator } from "../../models/User";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -16,13 +15,8 @@ export const LeaveAdministratorRow = ({ leaveAdmin }) => {
     verified,
   } = leaveAdmin;
   const { t } = useTranslation();
-  const isVerificationEnabled = isFeatureEnabled("employerShowVerifications");
-
-  const isVerificationRequired =
-    isVerificationEnabled && !verified && has_verification_data;
-
-  const isVerificationBlocked =
-    isVerificationEnabled && !verified && !has_verification_data;
+  const isVerificationRequired = !verified && has_verification_data;
+  const isVerificationBlocked = !verified && !has_verification_data;
 
   let verificationLink;
   let verificationTag;

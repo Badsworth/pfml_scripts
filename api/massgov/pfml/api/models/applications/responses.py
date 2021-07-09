@@ -39,7 +39,6 @@ class ApplicationResponse(PydanticBaseModel):
     application_id: UUID4
     application_nickname: Optional[str]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
-    employer_id: Optional[UUID4]
     employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
@@ -67,7 +66,6 @@ class ApplicationResponse(PydanticBaseModel):
     has_employer_benefits: Optional[bool]
     employer_benefits: Optional[List[EmployerBenefit]]
     has_other_incomes: Optional[bool]
-    other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
     phone: Optional[MaskedPhone]
     previous_leaves_other_reason: Optional[List[PreviousLeave]]

@@ -128,13 +128,31 @@ Array [
 
 exports[`Checklist renders description for Step 3`] = `
 Array [
-  <strong
-    key="strong-0"
+  <p
+    key="p-0"
   >
-    Are you taking medical leave for your own serious health condition?
-  </strong>,
+    If you’re not sure what kind of leave to apply for, 
+    <a
+      href="https://www.mass.gov/which-paid-leave"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      learn more about Paid Family and Medical Leave
+    </a>
+    .
+  </p>,
   <p
     key="p-1"
+  >
+    <strong
+      key="strong-0"
+    >
+      Are you taking medical leave for your own serious health condition?
+    </strong>
+  </p>,
+  <p
+    key="p-2"
   >
     You need to have a completed 
     <a
@@ -148,11 +166,11 @@ Array [
     . Use your health care provider’s answers on the certification form to fill out some parts of the application.
   </p>,
   <p
-    key="p-2"
+    key="p-3"
   >
     If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be easily added to your claim by calling our Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -160,7 +178,7 @@ Array [
     .
   </p>,
   <p
-    key="p-3"
+    key="p-4"
   >
     <strong
       key="strong-0"
@@ -169,12 +187,12 @@ Array [
     </strong>
   </p>,
   <p
-    key="p-4"
+    key="p-5"
   >
     You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.
   </p>,
   <p
-    key="p-5"
+    key="p-6"
   >
     You also need to know when you want your leave to begin and end.
   </p>,
@@ -193,7 +211,7 @@ Array [
   >
     If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -267,7 +285,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
         components={
           Object {
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "mail-fax-instructions-link": <a
               href="https://www.mass.gov/pfmlsubmitinfo"
@@ -311,6 +329,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={1}
       status="completed"
       stepHref="/applications/name?claim_id=mock_application_id"
+      submittedContent={null}
       title="Verify your identification"
     >
       <Trans
@@ -327,7 +346,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -337,6 +356,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "li": <li />,
             "ul": <ul
               className="usa-list"
+            />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
             />,
           }
         }
@@ -355,6 +379,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={2}
       status="completed"
       stepHref="/applications/employment-status?claim_id=mock_application_id"
+      submittedContent={null}
       title="Enter employment information"
     >
       <Trans
@@ -371,7 +396,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -381,6 +406,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "li": <li />,
             "ul": <ul
               className="usa-list"
+            />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
             />,
           }
         }
@@ -399,6 +429,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={3}
       status="completed"
       stepHref="/applications/leave-reason?claim_id=mock_application_id"
+      submittedContent={null}
       title="Enter leave details"
     >
       <Trans
@@ -415,7 +446,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -425,6 +456,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "li": <li />,
             "ul": <ul
               className="usa-list"
+            />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
             />,
           }
         }
@@ -443,6 +479,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={4}
       status="not_started"
       stepHref="/applications/review?claim_id=mock_application_id"
+      submittedContent={null}
       title="Review and confirm"
     >
       <Trans
@@ -459,7 +496,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -469,6 +506,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "li": <li />,
             "ul": <ul
               className="usa-list"
+            />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
             />,
           }
         }
@@ -505,6 +547,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={5}
       status="disabled"
       stepHref="/applications/payment-method?claim_id=mock_application_id"
+      submittedContent={null}
       title="Add payment information"
     >
       <Trans
@@ -521,7 +564,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -531,6 +574,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "li": <li />,
             "ul": <ul
               className="usa-list"
+            />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
             />,
           }
         }
@@ -567,6 +615,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={6}
       status="disabled"
       stepHref="/applications/upload-id?claim_id=mock_application_id"
+      submittedContent={null}
       title="Upload identification document"
     >
       <Trans
@@ -583,7 +632,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -593,6 +642,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "li": <li />,
             "ul": <ul
               className="usa-list"
+            />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
             />,
           }
         }
@@ -611,6 +665,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={7}
       status="disabled"
       stepHref="/applications/upload-certification?claim_id=mock_application_id"
+      submittedContent={null}
       title="Upload leave certification documents"
     >
       <Trans
@@ -627,7 +682,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
               target="_blank"
             />,
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
             "healthcare-provider-form-link": <a
               href="https://www.mass.gov/medical-leave-form"
@@ -637,6 +692,11 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
             "li": <li />,
             "ul": <ul
               className="usa-list"
+            />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
             />,
           }
         }
@@ -674,7 +734,7 @@ exports[`Checklist renders success message after submitting part one 1`] = `
 Array [
   "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365
@@ -687,7 +747,7 @@ exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 1`] 
 Array [
   "Entering payment information here leads to faster processing, but you can also call ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365
@@ -700,7 +760,7 @@ exports[`Checklist when Part 1 is submitted renders different description for Pa
 Array [
   "If you need to edit your information in Part 1, you’ll need to call the Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365
@@ -712,6 +772,97 @@ Array [
     NTN-111-ABS-01
   </strong>,
   ".",
+]
+`;
+
+exports[`Checklist when Part 1 is submitted w/o Other Leave data passes submittedContent to Other Leave step 1`] = `
+Array [
+  <Trans
+    components={
+      Object {
+        "contact-center-phone-link": <a
+          href="tel:(833) 344-7365"
+        />,
+      }
+    }
+    i18nKey="pages.claimsChecklist.otherLeaveSubmittedIntro"
+  >
+    <p
+      key="p-0"
+    >
+      If you have any other leaves, benefits, or income to report, call the Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+        key="1"
+      >
+        (833) 344‑7365
+      </a>
+      .
+    </p>
+  </Trans>,
+  <Details
+    label="What do I need to report?"
+  >
+    <details
+      className="c-details"
+    >
+      <summary
+        className="margin-bottom-2 text-primary text-underline font-ui-xs"
+      >
+        What do I need to report?
+      </summary>
+      <div
+        className="margin-bottom-2"
+      >
+        <Trans
+          components={
+            Object {
+              "li": <li />,
+              "ul": <ul
+                className="usa-list"
+              />,
+              "when-can-i-use-pfml": <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+              />,
+            }
+          }
+          i18nKey="pages.claimsChecklist.otherLeaveSubmittedDetailsBody"
+        >
+          <ul
+            className="usa-list"
+            key="0"
+          >
+            <li
+              key="0"
+            >
+              You have already taken leave to care for a family member since July 1, 2021
+            </li>
+            <li
+              key="1"
+            >
+              You have already taken leave since January 1, 2021 
+              <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+                key="1"
+              >
+                for any other reason that qualifies for PFML
+              </a>
+            </li>
+            <li
+              key="2"
+            >
+              You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)
+            </li>
+            <li
+              key="3"
+            >
+              You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)
+            </li>
+          </ul>
+        </Trans>
+      </div>
+    </details>
+  </Details>,
 ]
 `;
 
@@ -734,7 +885,7 @@ exports[`Checklist when Part 2 is submitted renders submitted descriptions for P
 Array [
   "If you need to edit your information in Part 2, you’ll need to call the Contact Center at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365

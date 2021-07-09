@@ -3,7 +3,6 @@ import { cloneDeep, get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
-import Details from "../../components/Details";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
@@ -192,32 +191,6 @@ export const LeavePeriodIntermittent = (props) => {
             }}
           />
         </Lead>
-
-        {claim.isBondingLeave && (
-          <div className="measure-6">
-            <Details
-              label={t(
-                "pages.claimsLeavePeriodIntermittent.bondingRegsDetailsLabel"
-              )}
-            >
-              <Trans
-                i18nKey="pages.claimsLeavePeriodIntermittent.bondingRegsDetailsSummary"
-                components={{
-                  "emergency-bonding-regs-worker-link": (
-                    <a
-                      target="_blank"
-                      rel="noopener"
-                      href={
-                        routes.external.massgov
-                          .emergencyBondingRegulationsWorker
-                      }
-                    />
-                  ),
-                }}
-              />
-            </Details>
-          </div>
-        )}
 
         <InputDate
           {...getFunctionalInputProps(`${leavePeriodPath}.start_date`)}

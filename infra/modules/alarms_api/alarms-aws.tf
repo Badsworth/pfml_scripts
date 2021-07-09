@@ -4,6 +4,7 @@ locals {
     "export-leave-admins-created",
     "fineos-error-extract-tool",
     "fineos-data-export-tool",
+    "fineos-report-extracts-tool",
     "reductions-retrieve-payment-lists",
     "reductions-send-wage-replacement",
     "reductions-dua-send-claimant-lists",
@@ -13,6 +14,8 @@ locals {
     "payments-payment-voucher-plus",
     "process-cps-error-reports",
     "weekend-cps-extract-processing",
+    "pub-payments-process-fineos",
+    "weekend-pub-claimant-extract"
   ]
 }
 

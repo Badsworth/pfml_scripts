@@ -20,9 +20,10 @@ const findDocumentsByLeaveReason = (
   // TODO (CP-2029): Remove the medicalCertification type from this array when it becomes obsolete
   const documentFilters = [DocumentType.certification.medicalCertification];
 
-  // TODO (CP-1983): Remove caring leave feature flag check
-  const showCaringLeaveType = isFeatureEnabled("showCaringLeaveType");
-  if (showCaringLeaveType) {
+  // TODO (CP-2311): Remove caring leave feature flag check
+  // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
+  const useNewPlanProofs = isFeatureEnabled("useNewPlanProofs");
+  if (useNewPlanProofs) {
     // TODO (CP-2238): Remove check for pregnant_or_recent_birth
     if (pregnant_or_recent_birth) {
       documentFilters.push(DocumentType.certification[LeaveReason.pregnancy]);

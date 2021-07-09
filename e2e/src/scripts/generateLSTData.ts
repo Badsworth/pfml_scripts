@@ -64,11 +64,28 @@ async function generateLSTData(
   let pool: AnyIterable<GeneratedClaim | DummyScenarioObject>;
   switch (scenario) {
     case "PortalClaimSubmit":
-      pool = ClaimPool.generate(
-        employeePool,
-        scenarios.LSTBHAP1.employee,
-        scenarios.LSTBHAP1.claim,
-        numRecords
+      pool = ClaimPool.merge(
+        // 50% of claims will involve other leaves and benefits.
+        ClaimPool.generate(
+          employeePool,
+          scenarios.LSTOLB1.employee,
+          scenarios.LSTOLB1.claim,
+          Math.floor(numRecords * 0.5)
+        ),
+        // 30% will be standard bonding claims.
+        ClaimPool.generate(
+          employeePool,
+          scenarios.LSTBHAP1.employee,
+          scenarios.LSTBHAP1.claim,
+          Math.floor(numRecords * 0.3)
+        ),
+        // 20% will be standard caring leave claims.
+        ClaimPool.generate(
+          employeePool,
+          scenarios.LSTCHAP1.employee,
+          scenarios.LSTCHAP1.claim,
+          Math.floor(numRecords * 0.2)
+        )
       );
       break;
     case "FineosClaimSubmit":

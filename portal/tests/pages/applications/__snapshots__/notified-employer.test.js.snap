@@ -20,24 +20,6 @@ exports[`NotifiedEmployer renders the page 1`] = `
         },
       ]
     }
-    hint={
-      <Details
-        label="Do you work in an acute care hospital or the teaching hospital of the University of Massachusetts Medical School?"
-      >
-        <Trans
-          components={
-            Object {
-              "emergency-bonding-regs-worker-link": <a
-                href="https://www.mass.gov/pfml-acute-claimant"
-                rel="noopener"
-                target="_blank"
-              />,
-            }
-          }
-          i18nKey="pages.claimsNotifiedEmployer.bondingRegsEmployerNotifiedDetailsSummary"
-        />
-      </Details>
-    }
     label="Have you told your employer that you are taking leave?"
     name="leave_details.employer_notified"
     onChange={[Function]}

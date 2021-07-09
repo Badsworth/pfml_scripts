@@ -19,9 +19,10 @@ function render(customProps = {}) {
   return shallow(
     <PageWrapper
       appLogic={appLogic}
+      // eslint-disable-next-line react/no-children-prop
       children={<div>Page</div>}
       {...customProps}
-    />
+    ></PageWrapper>
   );
 }
 

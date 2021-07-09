@@ -31,8 +31,10 @@ export const Welcome = ({ appLogic, user }) => {
     fill: "currentColor",
   };
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
-  const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
+  const shouldShowOtherLeave = isFeatureEnabled("claimantShowOtherLeaveStep");
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
+  const shouldShowCaringLeaveAlert =
+    shouldShowCaringLeave && !shouldShowOtherLeave;
 
   return (
     <React.Fragment>
@@ -42,14 +44,15 @@ export const Welcome = ({ appLogic, user }) => {
       <div className="grid-row">
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersWelcome.welcomeTitle")}</Title>
-          {shouldShowVerifications && hasVerifiableEmployer && (
+
+          {hasVerifiableEmployer && (
             <Alert
               state="warning"
-              heading={t("pages.employersWelcome.verificationTitle")}
+              heading={t("pages.employersWelcome.verificationAlertTitle")}
             >
               <p>
                 <Trans
-                  i18nKey="pages.employersWelcome.verificationBody"
+                  i18nKey="pages.employersWelcome.verificationAlertBody"
                   components={{
                     "your-organizations-link": (
                       <a href={routes.employers.organizations} />
@@ -59,6 +62,36 @@ export const Welcome = ({ appLogic, user }) => {
               </p>
             </Alert>
           )}
+
+          {shouldShowCaringLeaveAlert && (
+            <Alert state="info">
+              <p>
+                <Trans
+                  i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"
+                  components={{
+                    "about-caring-leave-link": (
+                      <a
+                        href={
+                          routes.external.massgov.benefitsGuide_aboutCaringLeave
+                        }
+                        target="_blank"
+                        rel="noopener"
+                      />
+                    ),
+                  }}
+                />
+              </p>
+            </Alert>
+          )}
+
+          {shouldShowOtherLeave && (
+            <Alert state="info">
+              <p>
+                <Trans i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody" />
+              </p>
+            </Alert>
+          )}
+
           <p>{t("pages.employersWelcome.welcomeBody")}</p>
 
           <Heading level="2">
@@ -118,21 +151,16 @@ export const Welcome = ({ appLogic, user }) => {
         </div>
         <div className="grid-col-fill" />
         <aside className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1">
-          {shouldShowVerifications && (
-            <React.Fragment>
-              <Heading level="2">
-                {t("pages.employersWelcome.settingsTitle")}
-              </Heading>
-              <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05">
-                <li>
-                  <Link href={routes.employers.organizations}>
-                    <a>{t("pages.employersWelcome.settingsLink")}</a>
-                  </Link>
-                  <NewTag />
-                </li>
-              </ul>
-            </React.Fragment>
-          )}
+          <Heading level="2">
+            {t("pages.employersWelcome.settingsTitle")}
+          </Heading>
+          <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05">
+            <li>
+              <Link href={routes.employers.organizations}>
+                <a>{t("pages.employersWelcome.settingsLink")}</a>
+              </Link>
+            </li>
+          </ul>
           <Heading level="2">
             {t("pages.employersWelcome.learnMoreTitle")}
           </Heading>

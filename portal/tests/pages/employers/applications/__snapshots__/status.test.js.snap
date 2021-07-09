@@ -170,15 +170,6 @@ exports[`Status shows the leave duration types 1`] = `
 
 exports[`Status shows the leave duration types 2`] = `
 <StatusRow
-  data-test="duration-intermittent"
-  label="Intermittent leave"
->
-  2/1/2021 – 7/1/2021
-</StatusRow>
-`;
-
-exports[`Status shows the leave duration types 3`] = `
-<StatusRow
   data-test="duration-reduced"
   label="Reduced leave schedule"
 >

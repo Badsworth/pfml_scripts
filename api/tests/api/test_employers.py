@@ -2,11 +2,11 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
+from freezegun import freeze_time
 
 import tests.api
 from massgov.pfml.db.models.employees import EmployerQuarterlyContribution, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
-from massgov.pfml.util import feature_gate
 from massgov.pfml.util.strings import format_fein
 
 # every test in here requires real resources
@@ -16,7 +16,6 @@ pytestmark = pytest.mark.integration
 def test_employers_receive_201_from_add_fein(
     monkeypatch, client, employer_user, employer_auth_token, test_db_session
 ):
-    monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
     current_employer = EmployerFactory.create()
     employer_to_add = EmployerFactory.create(employer_fein="999999999")
     yesterday = datetime.now() - timedelta(days=1)
@@ -77,16 +76,6 @@ class TestVerificationEnforcement:
     # This class groups the tests that ensure that existing users with UserLeaveAdministrator records
     # get 403s when attempting to access employer data without a Verification
 
-    @pytest.fixture(autouse=True, params=["env_var", "feature_gate"])
-    def _enforce_verifications(self, request, monkeypatch, employer_user):
-        if request.param == "env_var":
-            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
-        else:
-            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-            monkeypatch.setattr(
-                feature_gate, "check_enabled", lambda feature_name, user_email: True,
-            )
-
     def test_employers_receive_201_from_add_fein(
         self, monkeypatch, client, employer_user, employer_auth_token, test_db_session
     ):
@@ -120,27 +109,7 @@ class TestVerificationEnforcement:
         assert response_data["employer_fein"] == format_fein(employer_to_add.employer_fein)
         assert type(response_data["employer_id"]) is str
 
-    def test_employers_receive_201_if_no_withholding_data_and_no_enforcement(
-        self, monkeypatch, client, employer_user, employer_auth_token, test_db_session
-    ):
-        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-        monkeypatch.setattr(feature_gate, "check_enabled", lambda feature_name, user_email: False)
-
-        EmployerFactory.create(employer_fein="999999999")
-
-        post_body = {"employer_fein": "999999999"}
-
-        response = client.post(
-            "/v1/employers/add",
-            json=post_body,
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-        )
-
-        assert response.status_code == 201
-
-    def test_employers_receive_402_if_no_withholding_data(
-        self, monkeypatch, client, employer_user, employer_auth_token, test_db_session
-    ):
+    def test_employers_receive_402_if_no_withholding_data(self, client, employer_auth_token):
         EmployerFactory.create(employer_fein="999999999")
 
         post_body = {"employer_fein": "999999999"}
@@ -216,6 +185,7 @@ def test_employers_receive_409_if_duplicate_fein(
     assert response.status_code == 409
 
 
+@freeze_time("2021-05-01")
 def test_employers_receive_200_and_most_recent_date_from_get_withholding_dates(
     client, employer_user, employer_auth_token, test_db_session
 ):

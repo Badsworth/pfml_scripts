@@ -178,7 +178,7 @@ def test_create_cognito_account_username_exists_error(
     assert exc.value.issue.field == "email_address"
     assert exc.value.issue.message == "An account with the given email already exists."
     assert exc.value.issue.type == "exists"
-    assert exc.value.active_directory_id == existing_cognito_user["UserSub"]
+    assert exc.value.sub_id == existing_cognito_user["UserSub"]
 
 
 def test_create_cognito_account_client_error(mock_cognito, mock_cognito_user_pool, monkeypatch):

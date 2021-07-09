@@ -1,5 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`LeaveReasonPage instructs the user to review their previous leaves if they change their leave reason after reporting previous leaves for the same reason 1`] = `
+Array [
+  "Earlier you reported taking previous leave for the same reason you are applying now, but you are about to change that reason.",
+  <br
+    key="br-1"
+  />,
+  <br
+    key="br-2"
+  />,
+  "Save and continue to change your leave reason, then review the previous leave you reported to make sure the reason you took that leave is still accurate.",
+]
+`;
+
 exports[`LeaveReasonPage renders the page for caring leave and does not show reason qualifier followup 1`] = `
 <QuestionPage
   onSave={[Function]}
@@ -13,7 +26,7 @@ exports[`LeaveReasonPage renders the page for caring leave and does not show rea
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "mass-benefits-guide-serious-health-condition": <a
@@ -52,6 +65,18 @@ exports[`LeaveReasonPage renders the page for caring leave and does not show rea
     type="radio"
     value="Care for a Family Member"
   />
+  <ConditionalContent
+    visible={false}
+  >
+    <Alert
+      heading="Review your previous leave"
+      state="warning"
+    >
+      <Trans
+        i18nKey="pages.claimsLeaveReason.leaveReasonChangedAlertBody"
+      />
+    </Alert>
+  </ConditionalContent>
   <ConditionalContent
     clearField={[Function]}
     fieldNamesClearedWhenHidden={
@@ -138,7 +163,7 @@ Array [
   >
     Call the Department of Family and Medical Leave Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365
@@ -161,7 +186,7 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
       components={
         Object {
           "contact-center-phone-link": <a
-            href="tel:(833) 344‑7365"
+            href="tel:(833) 344-7365"
           />,
           "li": <li />,
           "mass-benefits-guide-serious-health-condition": <a
@@ -200,6 +225,18 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
     type="radio"
     value="Serious Health Condition - Employee"
   />
+  <ConditionalContent
+    visible={false}
+  >
+    <Alert
+      heading="Review your previous leave"
+      state="warning"
+    >
+      <Trans
+        i18nKey="pages.claimsLeaveReason.leaveReasonChangedAlertBody"
+      />
+    </Alert>
+  </ConditionalContent>
   <ConditionalContent
     clearField={[Function]}
     fieldNamesClearedWhenHidden={
@@ -286,7 +323,7 @@ Array [
   >
     Call the Department of Family and Medical Leave Contact Center at 
     <a
-      href="tel:(833) 344‑7365"
+      href="tel:(833) 344-7365"
       key="1"
     >
       (833) 344‑7365

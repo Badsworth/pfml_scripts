@@ -103,7 +103,9 @@ def _get_valid_dua_payment_data() -> Dict[str, Any]:
     }
 
 
-def _get_loaded_reference_file_in_s3(mock_s3_bucket, filename, source_directory_path, row_count):
+def _get_loaded_reference_file_in_s3(
+    mock_s3_bucket, filename, source_directory_path, row_count, force_file_error=False
+):
     # Create the ReferenceFile.
     pending_directory = os.path.join(f"s3://{mock_s3_bucket}", source_directory_path)
     source_filepath = os.path.join(pending_directory, filename)
@@ -114,7 +116,8 @@ def _get_loaded_reference_file_in_s3(mock_s3_bucket, filename, source_directory_
     for _i in range(row_count):
         db_data = _get_valid_dua_payment_data()
         csv_row = csv_util.encode_row(db_data, DUA_PAYMENT_LIST_ENCODERS)
-        body = body + ",".join(list(csv_row.values())) + "\n"
+        extra = ",123," if force_file_error else ""
+        body = body + ",".join(list(csv_row.values())) + extra + "\n"
 
     # Add rows to the file in our mock S3 bucket.
     s3_key = os.path.join(source_directory_path, filename)
@@ -399,7 +402,8 @@ def test_load_new_dua_payments_success(
     assert len(file_util.list_files(archive_directory)) == 0
 
     log_entry = LogEntry(test_db_session, "Test")
-    dua.load_new_dua_payments(test_db_session, log_entry)
+    load_result = dua.load_new_dua_payments(test_db_session, log_entry)
+    assert load_result.found_pending_files is True
 
     # Expect to have loaded some rows to the database.
     assert (
@@ -417,6 +421,66 @@ def test_load_new_dua_payments_success(
     assert (
         test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
         .filter(StateLog.end_state_id == State.DUA_PAYMENT_LIST_SAVED_TO_DB.state_id)
+        .scalar()
+        == ref_file_count
+    )
+
+
+@pytest.mark.integration
+def test_load_new_dua_payments_error(
+    dua_reduction_payment_unique_index, test_db_session, mock_s3_bucket, monkeypatch
+):
+    source_directory_path = "reductions/dua/pending"
+    error_directory_path = "reductions/dfml/error"
+
+    monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
+    monkeypatch.setenv("S3_DUA_PENDING_DIRECTORY_PATH", source_directory_path)
+    monkeypatch.setenv("S3_DUA_ERROR_DIRECTORY_PATH", error_directory_path)
+
+    # Define the full paths to the directories.
+    pending_directory = f"s3://{mock_s3_bucket}/{source_directory_path}"
+    error_directory = f"s3://{mock_s3_bucket}/{error_directory_path}"
+
+    # Create some number of ReferenceFiles
+    total_row_count = 0
+    ref_file_count = random.randint(1, 5)
+    for _i in range(ref_file_count):
+        row_count = random.randint(1, 5)
+        total_row_count = total_row_count + row_count
+
+        _get_loaded_reference_file_in_s3(
+            mock_s3_bucket,
+            _random_csv_filename(),
+            source_directory_path,
+            row_count,
+            force_file_error=True,
+        )
+
+    # Expect no rows in the database before.
+    assert (
+        test_db_session.query(
+            sqlalchemy.func.count(DuaReductionPayment.dua_reduction_payment_id)
+        ).scalar()
+        == 0
+    )
+
+    # Expect files to be in pending directory before.
+    assert len(file_util.list_files(pending_directory)) == ref_file_count
+    assert len(file_util.list_files(error_directory)) == 0
+
+    log_entry = LogEntry(test_db_session, "Test")
+    load_result = dua.load_new_dua_payments(test_db_session, log_entry)
+    # We still found pending files, even if they errored.
+    assert load_result.found_pending_files is True
+
+    # Expect files to be in error directory after.
+    assert len(file_util.list_files(pending_directory)) == 0
+    assert len(file_util.list_files(error_directory)) == ref_file_count
+
+    # Expect to have created a StateLog for each ReferenceFile.
+    assert (
+        test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        .filter(StateLog.end_state_id == State.DUA_PAYMENT_LIST_ERROR_SAVE_TO_DB.state_id)
         .scalar()
         == ref_file_count
     )

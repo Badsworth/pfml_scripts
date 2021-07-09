@@ -228,86 +228,24 @@ describe("OtherIncomesDetails", () => {
     });
 
     describe("when the user clicks 'Remove'", () => {
-      it("removes the income when the income isn't saved to the API", async () => {
+      it("removes the income", async () => {
         const claimWithIncomes = createClaimWithIncomes();
         const { appLogic, submitForm, wrapper } = setup(claimWithIncomes);
         appLogic.benefitsApplications.update.mockImplementationOnce(
           (applicationId, patchData) => {
             expect(applicationId).toBe(claimWithIncomes.application_id);
-            expect(patchData.other_incomes).toHaveLength(1);
+            expect(patchData.other_incomes).toEqual([
+              claimWithIncomes.other_incomes[1],
+            ]);
           }
         );
 
         await clickFirstRemoveButton(wrapper);
         await submitForm();
 
-        expect(appLogic.otherLeaves.removeOtherIncome).not.toHaveBeenCalled();
-
         expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
-      });
-
-      it("removes the income when the income is saved to the API and the DELETE request succeeds", async () => {
-        const claimWithIncomes = createClaimWithIncomes();
-        claimWithIncomes.other_incomes[0].other_income_id =
-          "mock-other-income-id-1";
-
-        const { appLogic, submitForm, wrapper } = setup(claimWithIncomes);
-
-        appLogic.benefitsApplications.update.mockImplementationOnce(
-          (applicationId, patchData) => {
-            expect(applicationId).toBe(claimWithIncomes.application_id);
-            expect(patchData.other_incomes).toHaveLength(1);
-          }
-        );
-
-        await clickFirstRemoveButton(wrapper);
-        await submitForm();
-
-        const entries = wrapper.find(RepeatableFieldset).prop("entries");
-
-        expect(appLogic.otherLeaves.removeOtherIncome).toHaveBeenCalled();
-        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
-        expect(entries).toHaveLength(1);
-        expect(
-          wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-        ).toHaveLength(1);
-      });
-
-      it("does not remove the income when the income is saved to the API and the DELETE request fails", async () => {
-        const claimWithIncomes = createClaimWithIncomes();
-        claimWithIncomes.other_incomes[0].other_income_id =
-          "mock-other-income-id-1";
-
-        const { appLogic, submitForm, wrapper } = setup(claimWithIncomes);
-
-        appLogic.otherLeaves.removeOtherIncome.mockImplementationOnce(
-          () => false
-        );
-
-        appLogic.benefitsApplications.update.mockImplementationOnce(
-          (applicationId, patchData) => {
-            expect(applicationId).toBe(claimWithIncomes.application_id);
-            expect(patchData.other_incomes).toHaveLength(2);
-          }
-        );
-
-        await clickFirstRemoveButton(wrapper);
-        expect(appLogic.otherLeaves.removeOtherIncome).toHaveBeenCalled();
-
-        await submitForm();
-        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
-
-        const entries = wrapper.find(RepeatableFieldset).prop("entries");
-        expect(entries).toHaveLength(2);
-        expect(
-          wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-        ).toHaveLength(2);
       });
     });
-  });
-
-  describe("when there are validation errors", () => {
-    it.todo("updates the formState with other_income_ids - see CP-1686");
   });
 });
 

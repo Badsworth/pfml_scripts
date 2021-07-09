@@ -32,7 +32,7 @@ def deprecated_other_income_eform():
                     "name": "WRT1",
                     "enumValue": {
                         "domainName": "WageReplacementType",
-                        "instanceValue": "Accrued paid leave",
+                        "instanceValue": "Short-term disability insurance",
                     },
                 },
                 {
@@ -186,7 +186,7 @@ def other_income_eform():
 def other_leave_eform():
     return EForm.parse_obj(
         {
-            "eformType": "Other Leaves",
+            "eformType": "Other Leaves - current version",
             "eformId": 11475,
             "eformAttributes": [
                 {"name": "V2SecondaryQualifyingReason", "stringValue": "Military caregiver"},
@@ -224,6 +224,14 @@ def other_leave_eform():
                 {
                     "name": "V2LeaveFromEmployer1",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
+                },
+                {
+                    "name": "V2Leave2",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+                },
+                {
+                    "name": "V2Leave1",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
                 },
                 {"name": "V2SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
             ],
@@ -270,6 +278,14 @@ def other_leave_eform_bad_values():
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "No"},
                 },
                 {
+                    "name": "V2Leave2",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+                },
+                {
+                    "name": "V2Leave1",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+                },
+                {
                     "name": "V2LeaveFromEmployer2",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
@@ -288,7 +304,7 @@ def previous_leave():
     return PreviousLeave(
         leave_start_date="2020-05-15",
         leave_end_date="2020-06-01",
-        leave_reason=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION,
+        leave_reason=PreviousLeaveQualifyingReason.AN_ILLNESS_OR_INJURY,
     )
 
 
@@ -305,7 +321,7 @@ class TestTransformEformBody:
         assert benefit_1["benefit_amount_frequency"] == "Per Month"
         assert benefit_1["benefit_start_date"] == date(2020, 10, 1)
         assert benefit_1["benefit_end_date"] == date(2020, 10, 30)
-        assert benefit_1["benefit_type"] == "Accrued paid leave"
+        assert benefit_1["benefit_type"] == "Short-term disability insurance"
         assert benefit_1["program_type"] == "Non-Employer"
 
         assert type(employer_benefits_list[1]) is EmployerBenefit
@@ -350,12 +366,14 @@ class TestTransformEformBody:
         assert other_leave_1["leave_start_date"] == date(2020, 9, 1)
         assert other_leave_1["leave_end_date"] == date(2020, 9, 22)
         assert other_leave_1["leave_reason"] == "Pregnancy"
+        assert other_leave_1["type"] == "other_reason"
 
         assert type(other_leaves_list[1]) is PreviousLeave
         other_leave_2 = other_leaves_list[1].dict()
         assert other_leave_2["leave_start_date"] == date(2020, 9, 23)
         assert other_leave_2["leave_end_date"] == date(2020, 12, 15)
         assert other_leave_2["leave_reason"] == "Bonding with my child after birth or placement"
+        assert other_leave_2["type"] == "same_reason"
 
     def test_transform_eform_with_bad_values(self, other_leave_eform_bad_values):
         other_leaves_list = TransformPreviousLeaveFromOtherLeaveEform.from_fineos(

@@ -4,6 +4,7 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../../test-utils";
+import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
 import EmployerBenefit from "../../../../src/models/EmployerBenefit";
 import LeaveReason from "../../../../src/models/LeaveReason";
@@ -39,17 +40,18 @@ const DOCUMENTS = new DocumentCollection([
 ]);
 
 describe("Review", () => {
-  const claim = new MockEmployerClaimBuilder()
+  const baseClaimBuilder = new MockEmployerClaimBuilder()
     .completed()
-    .reviewable()
-    .create();
+    .reviewable();
+  const claimWithV1Eform = baseClaimBuilder.eformsV1().create();
+  const claimWithV2Eform = baseClaimBuilder.eformsV2().create();
   const query = { absence_id: "NTN-111-ABS-01" };
 
   let appLogic, wrapper;
 
   const renderComponent = (
     render = "shallow",
-    employerClaimAttrs = claim,
+    employerClaimAttrs = claimWithV2Eform,
     props = {}
   ) => {
     return renderWithAppLogic(Review, {
@@ -63,14 +65,11 @@ describe("Review", () => {
   };
 
   beforeEach(() => {
-    process.env.featureFlags = {
-      employerShowPreviousLeaves: true,
-    };
-
     ({ wrapper, appLogic } = renderComponent("mount"));
   });
 
-  it("renders the page", () => {
+  it("renders the page for v1 eforms", () => {
+    ({ wrapper } = renderComponent("shallow", claimWithV1Eform));
     const components = [
       "EmployeeInformation",
       "EmployerBenefits",
@@ -83,7 +82,29 @@ describe("Review", () => {
     ];
 
     components.forEach((component) => {
-      expect(wrapper.find(component).exists()).toEqual(true);
+      expect(wrapper.find(component).exists()).toBe(true);
+    });
+    expect(wrapper.find("ConcurrentLeave").exists()).toBe(false);
+    expect(wrapper.find("PreviousLeaves").exists()).toBe(false);
+  });
+
+  it("renders the page for v2 eforms", () => {
+    ({ wrapper } = renderComponent("shallow", claimWithV2Eform));
+    const components = [
+      "ConcurrentLeave",
+      "EmployeeInformation",
+      "EmployerBenefits",
+      "EmployerDecision",
+      "Feedback",
+      "FraudReport",
+      "LeaveDetails",
+      "LeaveSchedule",
+      "PreviousLeaves",
+      "SupportingWorkDetails",
+    ];
+
+    components.forEach((component) => {
+      expect(wrapper.find(component).exists()).toBe(true);
     });
   });
 
@@ -103,7 +124,7 @@ describe("Review", () => {
   });
 
   it("hides organization name if employer_dba is falsy", () => {
-    const noEmployerDba = clone(claim);
+    const noEmployerDba = clone(claimWithV1Eform);
     noEmployerDba.employer_dba = undefined;
 
     act(() => {
@@ -128,32 +149,12 @@ describe("Review", () => {
         fraud: undefined, // undefined by default
         hours_worked_per_week: expect.any(Number),
         previous_leaves: expect.any(Array),
-        has_amendments: false,
-      }
-    );
-  });
-
-  it("submits a claim with leave_reason when showCaringLeaveType is on", async () => {
-    process.env.featureFlags = {
-      showCaringLeaveType: true,
-    };
-    ({ wrapper, appLogic } = renderComponent("mount"));
-    await simulateEvents(wrapper).submitForm();
-
-    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
-      "NTN-111-ABS-01",
-      {
-        comment: expect.any(String),
-        employer_benefits: expect.any(Array),
-        employer_decision: "Approve", // "Approve" by default
-        fraud: undefined, // undefined by default
-        hours_worked_per_week: expect.any(Number),
-        previous_leaves: expect.any(Array),
+        concurrent_leave: null,
         has_amendments: false,
         leave_reason: "Serious Health Condition - Employee",
+        uses_second_eform_version: true,
       }
     );
-    process.env.featureFlags = {};
   });
 
   it("sets 'comment' based on the Feedback", async () => {
@@ -236,6 +237,68 @@ describe("Review", () => {
 
   it.todo("sets 'employer_benefits' based on EmployerBenefits");
 
+  it("sends concurrent leave if uses_second_eform_version is true", async () => {
+    const claimWithConcurrentLeave = baseClaimBuilder
+      .eformsV2()
+      .concurrentLeave()
+      .create();
+
+    ({ appLogic, wrapper } = renderComponent(
+      "mount",
+      claimWithConcurrentLeave
+    ));
+
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({
+        concurrent_leave: new ConcurrentLeave({
+          is_for_current_employer: true,
+          leave_start_date: "2021-01-01",
+          leave_end_date: "2021-03-01",
+        }),
+      })
+    );
+  });
+
+  it("sends amended concurrent leave if uses_second_eform_version is true", async () => {
+    const claim = new MockEmployerClaimBuilder()
+      .completed()
+      .reviewable()
+      .eformsV2()
+      .concurrentLeave()
+      .create();
+
+    ({ appLogic, wrapper } = renderComponent("mount", claim));
+
+    act(() => {
+      wrapper
+        .find("ConcurrentLeave")
+        .props()
+        .onChange(
+          new ConcurrentLeave({
+            is_for_current_employer: false,
+            leave_start_date: "2021-10-10",
+            leave_end_date: "2021-10-17",
+          })
+        );
+    });
+
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({
+        concurrent_leave: new ConcurrentLeave({
+          is_for_current_employer: false,
+          leave_start_date: "2021-10-10",
+          leave_end_date: "2021-10-17",
+        }),
+      })
+    );
+  });
+
   it("does not redirect if is_reviewable is true", () => {
     expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
   });
@@ -292,12 +355,43 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'has_amendments' to true if leaves are amended", async () => {
+  it("sets 'has_amendments' to true if benefits are added", async () => {
+    ({ appLogic, wrapper } = renderComponent("shallow", claimWithV2Eform));
+
+    act(() => {
+      wrapper.find("EmployerBenefits").props().onAdd();
+    });
+
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ has_amendments: true })
+    );
+  });
+
+  it("sets 'has_amendments' to true if previous leaves are amended", async () => {
+    ({ appLogic, wrapper } = renderComponent("shallow", claimWithV2Eform));
+
     act(() => {
       wrapper
         .find("PreviousLeaves")
         .props()
         .onChange(new PreviousLeave({ previous_leave_id: 0 }));
+    });
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ has_amendments: true })
+    );
+  });
+
+  it("sets 'has_amendments' to true if previous leaves are added", async () => {
+    ({ appLogic, wrapper } = renderComponent("shallow", claimWithV2Eform));
+
+    act(() => {
+      wrapper.find("PreviousLeaves").props().onAdd();
     });
     await simulateEvents(wrapper).submitForm();
 
@@ -370,7 +464,7 @@ describe("Review", () => {
 
     describe("when the claim is a caring leave", () => {
       function render() {
-        const caringLeaveClaim = clone(claim);
+        const caringLeaveClaim = clone(claimWithV2Eform);
         caringLeaveClaim.leave_details.reason = "Care for a Family Member";
         appLogic.employers.documents = DOCUMENTS;
         ({ appLogic, wrapper } = renderComponent("mount", caringLeaveClaim, {
@@ -383,19 +477,7 @@ describe("Review", () => {
         expect(appLogic.employers.loadDocuments).not.toHaveBeenCalled();
       });
 
-      it("shows only medical cert when feature flag is false", () => {
-        render();
-        const documents = wrapper.find("LeaveDetails").props().documents;
-        expect(documents.length).toBe(1);
-        expect(documents.map((document) => document.name)).toEqual([
-          "Medical cert doc",
-        ]);
-      });
-
-      it("shows medical cert and caring cert when feature flag is true", () => {
-        process.env.featureFlags = {
-          showCaringLeaveType: true,
-        };
+      it("shows medical cert and caring cert", () => {
         render();
         const documents = wrapper.find("LeaveDetails").props().documents;
         expect(documents.length).toBe(2);
@@ -409,10 +491,8 @@ describe("Review", () => {
 
   describe("Caring Leave", () => {
     beforeEach(() => {
-      process.env.featureFlags = {
-        showCaringLeaveType: true,
-      };
       const caringLeaveClaim = new MockEmployerClaimBuilder()
+        .eformsV2()
         .completed()
         .caringLeaveReason()
         .reviewable()
@@ -434,7 +514,9 @@ describe("Review", () => {
           fraud: undefined, // undefined by default
           hours_worked_per_week: expect.any(Number),
           previous_leaves: expect.any(Array),
+          concurrent_leave: null,
           has_amendments: false,
+          uses_second_eform_version: true,
           relationship_inaccurate_reason: expect.any(String),
           leave_reason: "Care for a Family Member",
         }
@@ -467,6 +549,7 @@ describe("Review", () => {
         "NTN-111-ABS-01",
         expect.objectContaining({
           has_amendments: false,
+          uses_second_eform_version: true,
           believe_relationship_accurate: "No",
         })
       );

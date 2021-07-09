@@ -149,6 +149,26 @@ def _get_valid_dia_payment_data() -> Dict[str, str]:
     }
 
 
+def _get_invalid_dia_payment_data() -> Dict[str, str]:
+    return {
+        "DFML_ID": str(fake.random_int(min=1000, max=9999)),
+        "BOARD_NO": str(fake.random_int(min=100000, max=999999)),
+        "EVENT_ID": str(fake.random_int(min=100000, max=999999)),
+        "INS_FORM_OR_MEET": fake.random_element(elements=("PC", "LUMP")),
+        "EVE_CREATED_DATE": fake.date(pattern="%Y%m%d"),
+        "FORM_RECEIVED_OR_DISPOSITION": fake.date(pattern="%Y%m%d"),
+        "AWARD_ID": str(fake.random_int(min=5, max=2000)),
+        "AWARD_CODE": ",,,",  # invalid CSV
+        "AWARD_AMOUNT": str(fake.random_int(min=-500, max=-100)),
+        "AWARD_DATE": fake.date(pattern="%Y%m%d"),
+        "START_DATE": fake.date(pattern="%Y%m%d"),
+        "END_DATE": fake.date(pattern="%Y%m%d"),
+        "WEEKLY_AMOUNT": str(fake.random_int(min=-5000, max=-1)),
+        "AWARD_CREATED_DATE": fake.date(pattern="%Y%m%d"),
+        "TERMINATION_DATE": fake.date(pattern="%Y%m%d"),
+    }
+
+
 def _get_loaded_reference_file_in_s3(mock_s3_bucket, filename, source_directory_path, row_count):
     # Create the ReferenceFile.
     pending_directory = os.path.join(f"s3://{mock_s3_bucket}", source_directory_path)
@@ -196,6 +216,16 @@ def _get_loaded_payment_reference_file_in_s3(
     mock_s3_bucket, filename, source_directory_path, row_count
 ):
     rows = [_get_valid_dia_payment_data() for _ in range(row_count)]
+
+    return _make_loaded_payment_reference_file_in_s3(
+        mock_s3_bucket, filename, source_directory_path, rows
+    )
+
+
+def _get_invalid_loaded_payment_reference_file_in_s3(
+    mock_s3_bucket, filename, source_directory_path, row_count
+):
+    rows = [_get_invalid_dia_payment_data() for _ in range(row_count)]
 
     return _make_loaded_payment_reference_file_in_s3(
         mock_s3_bucket, filename, source_directory_path, rows
@@ -533,7 +563,8 @@ def test_assert_dia_payments_are_stored_correctly(
     assert len(file_util.list_files(archive_directory)) == 0
 
     log_entry = LogEntry(test_db_session, "Test")
-    dia.load_new_dia_payments(test_db_session, log_entry)
+    load_result = dia.load_new_dia_payments(test_db_session, log_entry)
+    assert load_result.found_pending_files is True
 
     # Files should have been moved.
     assert len(file_util.list_files(pending_directory)) == 0
@@ -634,6 +665,51 @@ def test_load_new_dia_payments_sucessfully(
     assert (
         test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
         .filter(StateLog.end_state_id == State.DIA_PAYMENT_LIST_SAVED_TO_DB.state_id)
+        .scalar()
+        == ref_file_count
+    )
+
+
+@pytest.mark.integration
+def test_load_new_dia_payments_error(
+    test_db_session, mock_s3_bucket, monkeypatch, initialize_factories_session
+):
+    source_directory_path = "reductions/dia/pending"
+    error_directory_path = "reductions/dfml/error"
+
+    monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
+    monkeypatch.setenv("S3_DIA_PENDING_DIRECTORY_PATH", source_directory_path)
+    monkeypatch.setenv("S3_DIA_ERROR_DIRECTORY_PATH", error_directory_path)
+
+    # Define the full paths to the directories.
+    pending_directory = f"s3://{mock_s3_bucket}/{source_directory_path}"
+    error_directory = f"s3://{mock_s3_bucket}/{error_directory_path}"
+
+    # Create some number of ReferenceFiles
+    total_row_count = 0
+    ref_file_count = random.randint(1, 5)
+    for _i in range(ref_file_count):
+        row_count = random.randint(1, 5)
+        total_row_count = total_row_count + row_count
+        _get_invalid_loaded_payment_reference_file_in_s3(
+            mock_s3_bucket, _random_csv_filename(), source_directory_path, row_count
+        )
+
+    # Expect files to be in pending directory before.
+    assert len(file_util.list_files(pending_directory)) == ref_file_count
+    assert len(file_util.list_files(error_directory)) == 0
+
+    log_entry = LogEntry(test_db_session, "Test")
+    dia.load_new_dia_payments(test_db_session, log_entry)
+
+    # Expect files to be in error directory after.
+    assert len(file_util.list_files(pending_directory)) == 0
+    assert len(file_util.list_files(error_directory)) == ref_file_count
+
+    # Expect to have created a StateLog for each ReferenceFile.
+    assert (
+        test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        .filter(StateLog.end_state_id == State.DIA_PAYMENT_LIST_ERROR_SAVE_TO_DB.state_id)
         .scalar()
         == ref_file_count
     )

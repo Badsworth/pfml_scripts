@@ -159,6 +159,23 @@ describe("EmployersApi", () => {
         );
       });
 
+      it("sends GET request with headers to /employers/claim/{absenceId}/review", async () => {
+        process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+        await employersApi.getClaim(absenceId);
+
+        expect(fetch).toHaveBeenCalledWith(
+          `${process.env.apiUrl}/employers/claims/${absenceId}/review`,
+          expect.objectContaining({
+            headers: {
+              ...headers,
+              "X-FF-Default-To-V2": true,
+            },
+            method: "GET",
+          })
+        );
+      });
+
       it("resolves with claim", async () => {
         const response = await employersApi.getClaim(absenceId);
 

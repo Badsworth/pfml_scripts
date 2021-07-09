@@ -131,7 +131,7 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
     level="2"
     size="1"
   >
-    Tell us about your other sources of income during your leave dates for paid leave.
+    Tell us about your other sources of income during your leave dates for paid leave from PFML.
   </Heading>
   <LeaveDatesAlert
     endDate="2021-06-01"
@@ -153,8 +153,8 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
       ]
     }
     headingPrefix="Income"
-    limit={3}
-    limitMessage="You can only add up to 3 incomes"
+    limit={6}
+    limitMessage="You can only add up to 6 incomes"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
     removeButtonLabel="Remove income"
@@ -172,7 +172,7 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
     level="2"
     size="1"
   >
-    Tell us about your other sources of income during your leave dates for paid leave.
+    Tell us about your other sources of income during your leave dates for paid leave from PFML.
   </Heading>
   <LeaveDatesAlert
     endDate="2021-06-01"
@@ -202,8 +202,8 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
       ]
     }
     headingPrefix="Income"
-    limit={3}
-    limitMessage="You can only add up to 3 incomes"
+    limit={6}
+    limitMessage="You can only add up to 6 incomes"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
     removeButtonLabel="Remove income"

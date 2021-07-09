@@ -61,10 +61,9 @@ module "api" {
     "https://paidleave-api-breakfix.eol.mass.gov",
     "https://l296x0cj1m.execute-api.us-east-1.amazonaws.com"
   ]
-  enforce_leave_admin_verification = "1"
-  enable_application_fraud_check   = "0"
-  release_version                  = var.release_version
-  portal_base_url                  = "https://paidleave-breakfix.eol.mass.gov"
+  enable_application_fraud_check = "0"
+  release_version                = var.release_version
+  portal_base_url                = "https://paidleave-breakfix.eol.mass.gov"
 
   cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_Bi6tPV5hz"
   cognito_user_pool_id        = "us-east-1_Bi6tPV5hz"

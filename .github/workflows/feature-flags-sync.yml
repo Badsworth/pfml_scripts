@@ -1,0 +1,59 @@
+# When changes to the yaml files are merged to the main branch,  
+# this Github Action runs and syncs the files up to S3 automatically.
+#
+name: Feature Flag Sync
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+    paths:
+      - feature_flags/*.yaml
+
+defaults:
+  run:
+    working-directory: ./feature_flags
+
+jobs: 
+  get-envs:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      matrix: ${{ steps.get-envs.outputs.envs }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: get environments
+        id: get-envs
+        run: |
+          sudo apt-get install jq
+          ENVS=$(ls | sed 's/\.yaml//g' | jq -R . | jq -s -c .)
+          echo "::set-output name=envs::$ENVS"
+
+  sync-files:
+    needs: [get-envs]
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJSON(needs.get-envs.outputs.matrix) }}
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-to-assume: ci-run-deploys
+
+      - name: Sync S3 Bucket
+        env:
+          BUCKET_NAME: massgov-pfml-${{ matrix.environment }}-feature-gate
+        run: |
+          aws s3 cp ./${{ matrix.environment }}.yaml s3://$BUCKET_NAME/features.yaml

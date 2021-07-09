@@ -75,7 +75,6 @@ module "api" {
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-stage/rmv_client_certificate-QlZaMl"
   rmv_check_behavior                                  = "partially_mocked"
   rmv_check_mock_success                              = "1"
-  enforce_leave_admin_verification                    = "1"
   fineos_client_customer_api_url                      = "https://idt-api.masspfml.fineos.com/customerapi/"
   fineos_client_integration_services_api_url          = "https://idt-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url                  = "https://idt-api.masspfml.fineos.com/groupclientapi/"
@@ -89,4 +88,5 @@ module "api" {
   fineos_aws_iam_role_external_id                     = "12345"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version
+  new_plan_proofs_active_at                           = "2021-06-29 04:00:00+00:00"
 }

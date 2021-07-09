@@ -1,19 +1,18 @@
 import BenefitsApplication from "../../models/BenefitsApplication";
+import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { Trans } from "react-i18next";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const fields = [
-  "claim.has_other_incomes",
-  "claim.other_incomes_awaiting_approval",
-];
+export const fields = ["claim.has_other_incomes"];
 
 export const OtherIncomes = (props) => {
   const { appLogic, claim } = props;
@@ -21,37 +20,12 @@ export const OtherIncomes = (props) => {
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
-  /**
-   * The radio choices correspond to both has_other_incomes and
-   * other_incomes_awaiting_approval, so this callback determines how those
-   * booleans should be set by the value of the choice input.
-   * @param {SyntheticEvent} event - Change event
-   */
-  const handleHasOtherIncomesChange = (event) => {
-    if (event.target.value === "yes") {
-      updateFields({
-        has_other_incomes: true,
-        other_incomes_awaiting_approval: false,
-      });
-    } else if (event.target.value === "no") {
-      const fieldValues = {
-        has_other_incomes: false,
-        other_incomes_awaiting_approval: false,
-      };
-      if (claim.other_incomes.length) {
-        fieldValues.other_incomes = null;
-      }
-      updateFields(fieldValues);
-    } else if (event.target.value === "pending") {
-      updateFields({
-        has_other_incomes: false,
-        other_incomes_awaiting_approval: true,
-      });
+  const handleSave = () => {
+    if (formState.has_other_incomes === false && claim.other_incomes.length) {
+      formState.other_incomes = null;
     }
-  };
-
-  const handleSave = () =>
     appLogic.benefitsApplications.update(claim.application_id, formState);
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -69,28 +43,17 @@ export const OtherIncomes = (props) => {
     >
       <InputChoiceGroup
         {...getFunctionalInputProps("has_other_incomes")}
-        onChange={handleHasOtherIncomesChange}
         choices={[
           {
-            checked:
-              formState.has_other_incomes === true &&
-              formState.other_incomes_awaiting_approval === false,
+            checked: formState.has_other_incomes === true,
             label: t("pages.claimsOtherIncomes.choiceYes"),
-            value: "yes",
+            value: "true",
           },
           {
-            checked:
-              formState.has_other_incomes === false &&
-              formState.other_incomes_awaiting_approval === false,
+            checked: formState.has_other_incomes === false,
             label: t("pages.claimsOtherIncomes.choiceNo"),
-            value: "no",
-          },
-          {
-            checked:
-              formState.has_other_incomes === false &&
-              formState.other_incomes_awaiting_approval === true,
-            label: t("pages.claimsOtherIncomes.choicePendingOtherIncomes"),
-            value: "pending",
+            value: "false",
+            hint: t("pages.claimsOtherIncomes.choiceNoHint"),
           },
         ]}
         label={t("pages.claimsOtherIncomes.sectionLabel")}
@@ -107,6 +70,20 @@ export const OtherIncomes = (props) => {
                 <li key={index}>{listItem}</li>
               ))}
             </ul>
+            <Details
+              label={t(
+                "pages.claimsOtherIncomes.hintAppliedButNotApprovedDetailsLabel"
+              )}
+            >
+              <Trans
+                i18nKey="pages.claimsOtherIncomes.hintAppliedButNotApprovedDetailsBody"
+                components={{
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
+            </Details>
           </React.Fragment>
         }
       />

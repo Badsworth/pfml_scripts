@@ -37,6 +37,10 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVbiRequestedAbsenceSom,
 )
 from massgov.pfml.delegated_payments.delegated_config import get_s3_config
+from massgov.pfml.delegated_payments.delegated_payments_util import (
+    ValidationIssue,
+    ValidationReason,
+)
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     FineosClaimantData,
     create_fineos_claimant_extract_files,
@@ -91,7 +95,7 @@ def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
     employee_feed_file_name = "2020-12-21-19-20-42-Employee_feed.csv"
     content_line_one = '"C","I","LASTUPDATEDATE","FIRSTNAMES","INITIALS","LASTNAME","PLACEOFBIRTH","DATEOFBIRTH","DATEOFDEATH","ISDECEASED","REALDOB","TITLE","NATIONALITY","COUNTRYOFBIRT","SEX","MARITALSTATUS","DISABLED","NATINSNO","CUSTOMERNO","REFERENCENO","IDENTIFICATIO","UNVERIFIED","STAFF","GROUPCLIENT","SECUREDCLIENT","SELFSERVICEEN","SOURCESYSTEM","C_OCPRTAD_CORRESPONDENC","I_OCPRTAD_CORRESPONDENC","EXTCONSENT","EXTCONFIRMFLAG","EXTMASSID","EXTOUTOFSTATEID","PREFERREDCONT","C_BNKBRNCH_BANKBRANCH","I_BNKBRNCH_BANKBRANCH","PREFERRED_CONTACT_METHOD","DEFPAYMENTPREF","PAYMENT_PREFERENCE","PAYMENTMETHOD","PAYMENTADDRES","ADDRESS1","ADDRESS2","ADDRESS3","ADDRESS4","ADDRESS5","ADDRESS6","ADDRESS7","POSTCODE","COUNTRY","VERIFICATIONS","ACCOUNTNAME","ACCOUNTNO","BANKCODE","SORTCODE","ACCOUNTTYPE","ACTIVE_ABSENCE_FLAG"'
     content_line_two = '"11536","1268","2020-12-03 13:52:33","Glennie","","Balistreri","","1980-01-01 00:00:00","","0","0","480000","3040000","672000","32000","64000","0","881778956","339","2ebb0217-8379-47ba-922d-64aa3a3064c5","8736000","0","0","0","0","0","8032000","11737","1269","0","1","123456789","","1056000","","","Unknown","N","","Elec Funds Transfer","Associated Party Address","456 Park St","","","Oakland","","CA","","94612","672007","7808000","Glennie Balistreri","623546789","","623546789","Checking","Y"'
-    content_line_three = '"11536","1268","2020-12-03 13:52:33","Glennie","","Balistreri","","1980-01-01 00:00:00","","0","0","480000","3040000","672000","32000","64000","0","881778956","339","2ebb0217-8379-47ba-922d-64aa3a3064c5","8736000","0","0","0","0","0","8032000","11737","1269","0","1","123456789","","1056000","","","Unknown","Y","","Elec Funds Transfer","Associated Party Address","123 Main St","","","Oakland","","CA","","94612","672007","7808000","Glennie Balistreri","123546789","","123546789","Checking","Y"'
+    content_line_three = '"11536","1268","2020-12-03 13:52:33","Glennie","","Balistreri","","1980-01-01 00:00:00","","0","0","480000","3040000","672000","32000","64000","0","881778956","339","2ebb0217-8379-47ba-922d-64aa3a3064c5","8736000","0","0","0","0","0","8032000","11737","1269","0","1","123456789","","1056000","","","Unknown","Y","","Elec Funds Transfer","Associated Party Address","123 Main St","","","Oakland","","CA","","94612","672007","7808000","Glennie Balistreri","123546784","","123546784","Checking","Y"'
     content_line_four = '"11536","12915","2020-12-11 11:22:22","Alice","","Halvorson","","1976-08-21 00:00:00","","0","0","480000","3040000","672000","32000","64000","0","534242831","3277","77b4d544-2142-44dc-9dca-325b53d175a2","8736000","0","0","0","0","0","8032000","11737","10959","0","1","S56010286","","1056000","","","Unknown","Y","","Elec Funds Transfer","Associated Party Address","95166 Pouros Well","","","Ahmadstad","","LA","","24920","672007","7808000","Alice Halvorson","5555555555","","011401533","Savings","Y"'
     content = f"{content_line_one}\n{content_line_two}\n{content_line_three}\n{content_line_four}"
 
@@ -171,8 +175,8 @@ def test_run_step_happy_path(
 
     pub_efts = updated_employee.pub_efts.all()
     assert len(pub_efts) == 1
-    assert pub_efts[0].pub_eft.routing_nbr == "123546789"
-    assert pub_efts[0].pub_eft.account_nbr == "123546789"
+    assert pub_efts[0].pub_eft.routing_nbr == "123546784"
+    assert pub_efts[0].pub_eft.account_nbr == "123546784"
     assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
     assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.PENDING_PRE_PUB.prenote_state_id
 
@@ -223,8 +227,8 @@ def test_run_step_existing_approved_eft_info(
         employee=employee,
         pub_eft=PubEftFactory.create(
             prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
-            routing_nbr="123546789",
-            account_nbr="123546789",
+            routing_nbr="123546784",
+            account_nbr="123546784",
             bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
         ),
     )
@@ -244,8 +248,8 @@ def test_run_step_existing_approved_eft_info(
 
     pub_efts = updated_employee.pub_efts.all()
     assert len(pub_efts) == 1
-    assert pub_efts[0].pub_eft.routing_nbr == "123546789"
-    assert pub_efts[0].pub_eft.account_nbr == "123546789"
+    assert pub_efts[0].pub_eft.routing_nbr == "123546784"
+    assert pub_efts[0].pub_eft.account_nbr == "123546784"
     assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
     assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.APPROVED.prenote_state_id
 
@@ -287,8 +291,8 @@ def test_run_step_existing_rejected_eft_info(
         employee=employee,
         pub_eft=PubEftFactory.create(
             prenote_state_id=PrenoteState.REJECTED.prenote_state_id,
-            routing_nbr="123546789",
-            account_nbr="123546789",
+            routing_nbr="123546784",
+            account_nbr="123546784",
             bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
             prenote_response_at=datetime.datetime(2020, 12, 6, 12, 0, 0),
         ),
@@ -309,8 +313,8 @@ def test_run_step_existing_rejected_eft_info(
 
     pub_efts = updated_employee.pub_efts.all()
     assert len(pub_efts) == 1
-    assert pub_efts[0].pub_eft.routing_nbr == "123546789"
-    assert pub_efts[0].pub_eft.account_nbr == "123546789"
+    assert pub_efts[0].pub_eft.routing_nbr == "123546784"
+    assert pub_efts[0].pub_eft.account_nbr == "123546784"
     assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
     assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id
 
@@ -387,7 +391,7 @@ def format_claimant_data() -> FineosClaimantData:
         ssn="123456789",
         date_of_birth="1967-04-27",
         payment_method="Elec Funds Transfer",
-        routing_nbr="123456789",
+        routing_nbr="111111118",
         account_nbr="123456789",
         account_type="Checking",
     )
@@ -491,7 +495,7 @@ def add_employee_feed(extract_data: claimant_extract.ExtractData):
             "DATEOFBIRTH": "1967-04-27",
             "PAYMENTMETHOD": "Elec Funds Transfer",
             "CUSTOMERNO": "12345",
-            "SORTCODE": "123456789",
+            "SORTCODE": "111111118",
             "ACCOUNTNO": "123456789",
             "ACCOUNTTYPE": "Checking",
         }
@@ -623,7 +627,7 @@ def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):
     assert len(employee.pub_efts.all()) == 0
 
     fineos_data = FineosClaimantData(
-        routing_nbr="123456789", account_nbr="123456789", account_type="Checking"
+        routing_nbr="111111118", account_nbr="123456789", account_type="Checking"
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
@@ -635,7 +639,7 @@ def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):
 
     pub_efts = updated_employee.pub_efts.all()
     assert len(pub_efts) == 1
-    assert pub_efts[0].pub_eft.routing_nbr == "123456789"
+    assert pub_efts[0].pub_eft.routing_nbr == "111111118"
     assert pub_efts[0].pub_eft.account_nbr == "123456789"
     assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
     assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.PENDING_PRE_PUB.prenote_state_id
@@ -645,9 +649,25 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     employee = EmployeeFactory()
     assert len(employee.pub_efts.all()) == 0
 
+    # Routing number doesn't pass checksum, but is correct length
+    fineos_data = FineosClaimantData(
+        routing_nbr="111111111", account_nbr="123456789", account_type="Checking"
+    )
+    claimant_data = make_claimant_data_from_fineos_data(fineos_data)
+
+    claimant_extract_step.update_eft_info(claimant_data, employee)
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert set(
+        [ValidationIssue(ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, "SORTCODE: 111111111")]
+    ) == set(claimant_data.validation_container.validation_issues)
+
     # Routing number incorrect length.
     fineos_data = FineosClaimantData(
-        routing_nbr="12345678", account_nbr="123456789", account_type="Checking"
+        routing_nbr="123", account_nbr="123456789", account_type="Checking"
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
@@ -657,14 +677,17 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
-    assert len(claimant_data.validation_container.validation_issues) == 1
-    assert len(updated_employee.pub_efts.all()) == 0
+    assert set(
+        [
+            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "SORTCODE: 123"),
+            ValidationIssue(ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, "SORTCODE: 123"),
+        ]
+    ) == set(claimant_data.validation_container.validation_issues)
 
     # Account number incorrect length.
+    long_num = "123456789012345678"
     fineos_data = FineosClaimantData(
-        routing_nbr="123456789",
-        account_nbr="12345678901234567890123456789012345678901234567890",
-        account_type="Checking",
+        routing_nbr="111111118", account_nbr=long_num, account_type="Checking",
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
@@ -674,13 +697,15 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
-    assert len(claimant_data.validation_container.validation_issues) == 1
+    assert set(
+        [ValidationIssue(ValidationReason.FIELD_TOO_LONG, f"ACCOUNTNO: {long_num}"),]
+    ) == set(claimant_data.validation_container.validation_issues)
     assert len(updated_employee.pub_efts.all()) == 0
 
     # Account type incorrect.
     fineos_data = FineosClaimantData(
-        routing_nbr="123456789",
-        account_nbr="123456789012345678901234567890",
+        routing_nbr="111111118",
+        account_nbr="12345678901234567",
         account_type="Certificate of Deposit",
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
@@ -691,13 +716,19 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
-    assert len(claimant_data.validation_container.validation_issues) == 1
+    assert set(
+        [
+            ValidationIssue(
+                ValidationReason.INVALID_LOOKUP_VALUE, "ACCOUNTTYPE: Certificate of Deposit"
+            )
+        ]
+    ) == set(claimant_data.validation_container.validation_issues)
     assert len(updated_employee.pub_efts.all()) == 0
 
     # Account type and Routing number incorrect.
     fineos_data = FineosClaimantData(
         routing_nbr="12345678",
-        account_nbr="123456789012345678901234567890",
+        account_nbr="12345678901234567",
         account_type="Certificate of Deposit",
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
@@ -708,7 +739,15 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
-    assert len(claimant_data.validation_container.validation_issues) == 2
+    assert set(
+        [
+            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "SORTCODE: 12345678"),
+            ValidationIssue(ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, "SORTCODE: 12345678"),
+            ValidationIssue(
+                ValidationReason.INVALID_LOOKUP_VALUE, "ACCOUNTTYPE: Certificate of Deposit"
+            ),
+        ]
+    ) == set(claimant_data.validation_container.validation_issues)
     assert len(updated_employee.pub_efts.all()) == 0
 
 
@@ -892,7 +931,7 @@ def test_run_step_no_default_payment_pref(
         default_payment_pref="N",
         payment_method="Elec Funds Transfer",
         account_nbr="123456789",
-        routing_nbr="123456789",
+        routing_nbr="111111118",
         account_type="Checking",
     )
 
@@ -949,7 +988,7 @@ def test_run_step_mix_of_payment_prefs(
     default_fineos_data.default_payment_pref = "Y"
     default_fineos_data.payment_method = "Elec Funds Transfer"
     default_fineos_data.account_nbr = "123456789"
-    default_fineos_data.routing_nbr = "123456789"
+    default_fineos_data.routing_nbr = "111111118"
     default_fineos_data.account_type = "Checking"
 
     # Create the employee record
@@ -999,7 +1038,7 @@ def test_run_step_skip_prenote_flag(
         default_payment_pref="Y",
         payment_method="Elec Funds Transfer",
         account_nbr="123456789",
-        routing_nbr="123456789",
+        routing_nbr="111111118",
         account_type="Checking",
     )
 

@@ -1,19 +1,13 @@
 import React, { useState } from "react";
 import Alert from "../components/Alert";
-import AppErrorInfo from "../models/AppErrorInfo";
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import BackButton from "../components/BackButton";
 import Button from "../components/Button";
-import ConditionalContent from "../components/ConditionalContent";
-import InputChoiceGroup from "../components/InputChoiceGroup";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
 import PropTypes from "prop-types";
 import Title from "../components/Title";
 import { get } from "lodash";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
-import tracker from "../services/tracker";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
@@ -25,17 +19,11 @@ export const VerifyAccount = (props) => {
   const { t } = useTranslation();
 
   const createAccountUsername = get(auth, "authData.createAccountUsername", "");
-  const createAccountFlow = get(auth, "authData.createAccountFlow");
   const employerIdNumber = get(auth, "authData.employerIdNumber", "");
 
   // If a user reloads the page, we'd lose the email and FEIN stored in authData,
   // which we need for verifying their account
   const showEmailField = !createAccountUsername;
-  // TODO (CP-1768): Remove code related to showing EIN field once sign up requests are always sent through API
-  const showEinFields =
-    !isFeatureEnabled("employerAuthThroughApi") &&
-    !employerIdNumber &&
-    createAccountFlow !== "claimant";
 
   /**
    * Get the initial value for the "Are you creating an employer account?" option
@@ -49,7 +37,7 @@ export const VerifyAccount = (props) => {
     return null;
   };
 
-  const { formState, getField, updateFields, clearField } = useFormState({
+  const { formState, updateFields } = useFormState({
     code: "",
     username: createAccountUsername,
     ein: employerIdNumber,
@@ -59,33 +47,7 @@ export const VerifyAccount = (props) => {
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-
-    if (showEinFields && formState.isEmployer === null) {
-      const appErrorInfo = new AppErrorInfo({
-        field: "isEmployer",
-        message: t("errors.auth.isEmployer.required"),
-        type: "required",
-      });
-
-      appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
-
-      tracker.trackEvent("ValidationError", {
-        issueField: appErrorInfo.field,
-        issueType: appErrorInfo.type,
-      });
-
-      return;
-    }
-
-    if (!isFeatureEnabled("employerAuthThroughApi") && formState.isEmployer) {
-      await auth.verifyEmployerAccount(
-        formState.username,
-        formState.code,
-        formState.ein
-      );
-    } else {
-      await auth.verifyAccount(formState.username, formState.code);
-    }
+    await auth.verifyAccount(formState.username, formState.code);
   });
 
   const handleResendCodeClick = useThrottledHandler(async (event) => {
@@ -155,44 +117,6 @@ export const VerifyAccount = (props) => {
           {t("pages.authVerifyAccount.resendCodeLink")}
         </Button>
       </div>
-
-      {showEinFields && (
-        <React.Fragment>
-          <InputChoiceGroup
-            {...getFunctionalInputProps("isEmployer")}
-            choices={[
-              {
-                checked: formState.isEmployer === true,
-                label: t("pages.authVerifyAccount.employerChoiceYes"),
-                value: "true",
-              },
-              {
-                checked: formState.isEmployer === false,
-                label: t("pages.authVerifyAccount.employerChoiceNo"),
-                value: "false",
-              },
-            ]}
-            label={t("pages.authVerifyAccount.employerAccountLabel")}
-            type="radio"
-            smallLabel
-          />
-
-          <ConditionalContent
-            fieldNamesClearedWhenHidden={["ein"]}
-            getField={getField}
-            clearField={clearField}
-            updateFields={updateFields}
-            visible={formState.isEmployer}
-          >
-            <InputText
-              {...getFunctionalInputProps("ein")}
-              label={t("pages.authVerifyAccount.einLabel")}
-              mask="fein"
-              smallLabel
-            />
-          </ConditionalContent>
-        </React.Fragment>
-      )}
 
       <Button type="submit" loading={handleSubmit.isThrottled}>
         {t("pages.authVerifyAccount.confirmButton")}

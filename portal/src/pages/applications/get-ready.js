@@ -77,11 +77,6 @@ export const GetReady = (props) => {
             "contact-center-phone-link": (
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
             ),
-            "benefits-timeline-link": (
-              <a
-                href={routes.external.massgov.benefitsTimeline_2020December2}
-              />
-            ),
             ul: <ul className="usa-list" />,
             li: <li />,
           }}
@@ -100,6 +95,19 @@ export const GetReady = (props) => {
           {t("pages.getReady.stepTwoHeading")}
         </Heading>
 
+        <Trans
+          i18nKey="pages.getReady.stepTwoWhichPaidLeaveBody"
+          components={{
+            "which-paid-leave-link": (
+              <a
+                target="_blank"
+                rel="noopener"
+                href={routes.external.massgov.whichPaidLeave}
+              />
+            ),
+          }}
+        />
+
         <Heading level="3">
           {t("pages.getReady.stepTwoMedicalLeaveSubhead")}
         </Heading>
@@ -107,7 +115,11 @@ export const GetReady = (props) => {
           i18nKey="pages.getReady.stepTwoMedicalLeaveBody"
           components={{
             "healthcare-provider-form-link": (
-              <a href={routes.external.massgov.healthcareProviderForm} />
+              <a
+                href={routes.external.massgov.healthcareProviderForm}
+                target="_blank"
+                rel="noopener"
+              />
             ),
           }}
         />
@@ -132,6 +144,8 @@ export const GetReady = (props) => {
                 "caregiver-certification-form-link": (
                   <a
                     href={routes.external.massgov.caregiverCertificationForm}
+                    target="_blank"
+                    rel="noopener"
                   />
                 ),
               }}
@@ -150,12 +164,20 @@ export const GetReady = (props) => {
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
             ),
             "medical-bonding-link": (
-              <a href={routes.external.massgov.medicalBonding} />
+              <a
+                href={routes.external.massgov.medicalBonding}
+                target="_blank"
+                rel="noopener"
+              />
             ),
             ul: <ul className="usa-list" />,
             li: <li />,
             "tax-liability-link": (
-              <a href={routes.external.massgov.taxLiability} />
+              <a
+                href={routes.external.massgov.taxLiability}
+                target="_blank"
+                rel="noopener"
+              />
             ),
           }}
         />

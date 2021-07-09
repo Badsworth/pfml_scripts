@@ -1,6 +1,8 @@
 import { portal, fineos } from "../../actions";
 import { getLeaveAdminCredentials, getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
+import { assertValidClaim } from "../../../src/util/typeUtils";
+import { AssertFullApplicationResponse } from "../../../src/util/claims";
 
 describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineos", () => {
   it("Create a financially eligible claim (MHAP4) in which an employer will respond", () => {
@@ -14,12 +16,8 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
           timestamp_from: Date.now(),
         });
         // Complete Employer Response
-        if (typeof claim.claim.employer_fein !== "string") {
-          throw new Error("Claim must include employer FEIN");
-        }
-        if (typeof response.fineos_absence_id !== "string") {
-          throw new Error("Response must include FINEOS absence ID");
-        }
+        assertValidClaim(claim.claim);
+        AssertFullApplicationResponse(response);
 
         portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
         portal.visitActionRequiredERFormPage(response.fineos_absence_id);

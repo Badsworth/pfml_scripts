@@ -13,134 +13,19 @@ We use [Terraform](https://terraform.io) to manage our infra in a modular, conci
 
 These steps are required before running terraform or test commands locally on your machine.
 
-<details>
-<summary><b>1. Configure AWS</b></summary>
-<p>
+<b>1. Configure AWS</b>
 
-Since we manage AWS resources using Terraform, AWS credentials are needed to run terraform commands.
+Since we manage AWS resources using Terraform, AWS credentials are needed to run terraform commands. Access to the AWS CLI is federated by AWS SSO, backed by Azure AD.
 
-#### EOTSS/PFML AWS Account
+Visit [https://coma.awsapps.com/start](https://coma.awsapps.com/start) and log in with your Azure AD credentials. The UI will provide CLI credentials via `export` commands that you can paste into your terminal.
 
-For the EOTSS-provided PFML account, access to the AWS CLI is federated by Centrify.
-To work with this, Centrify has a python CLI tool for logging in and generating AWS access keys.
-
-PFML has a wrapper command around this CLI tool. By default, we install it as `login-aws`, but you can provide your own when prompted.
-
-First, make sure you have some sort of python3 environment.
-If not, the easiest way to do this is with [pyenv](https://github.com/pyenv/pyenv) or [asdf](https://asdf-vm.com/#/).
-
-```
-# For OSX
-brew install pyenv
-echo 'eval "$(pyenv init -)"' >> ~/.bash_profile (or .zshrc, etc.)
-source ~/.bash_profile
-pyenv install 3.8.2
-```
-
-Install the required libraries:
-
-```
-pip install requests boto3 colorama
-```
-
-Then install PFML's CLI wrapper with the following script:
-
-```sh
-../bin/centrify/install-centrify-aws-cli.sh INSTALL_LOCATION
-```
-
-Since this pulls down a git repository, it is recommended that the installation location you provide is your general git home, if you have one. In other words, the dir that `pfml/` lives in. For example, if `pfml` lives in `/git`:
-
-```sh
-../bin/centrify/install-centrify-aws-cli.sh ~/code/git
-```
-
-Once it is installed, you can run the login-aws command to generate a 1-hour AWS access key. You can look up your AWS role (AWS-498823821309-NonPROD-Admins, AWS-498823821309-ViewOnly) through the web interface:
-
-```sh
-login-aws
-```
-
-<details>
-<summary>Example login for Infrastructure-Admin_profile. </summary>
-<p>
-    
-```
-Logfile - centrify-python-aws.log
-Please enter your username : kevin.yeh
-Password :
-OATH OTP Client :
-Select the aws app to login. Type 'quit' or 'q' to exit
-1 : EOLWD - PFML | aad65420-6a79-412a-9aa1-587c1091d194
-Calling app with key : aad65420-6a79-412a-9aa1-587c1091d194
---------------------------------------------------------------------------------
-
-Select a role to login. Choose one role at a time. This
-selection might be displayed multiple times to facilitate
-multiple profile creations.
-Type 'q' to exit.
-
-Please choose the role you would like to assume -
-1: arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer
-Selecting above role.
-You Chose :  arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer
-Your SAML Provider :  arn:aws:iam::498823821309:saml-provider/Centrify
-home = /Users/kyeah
-Display Name : EOLWD - PFML
-
---------------------------------------------------------------------------------
-Your profile is created. It will expire at 2020-04-03 15:30:35+00:00
-Use --profile AWS-498823821309-Infrastructure-Admin_profile for the commands
-Example -
-aws s3 ls --profile AWS-498823821309-Infrastructure-Admin_profile
---------------------------------------------------------------------------------
-
-AWS_PROFILE is currently: default. Run the following command to set it:
-export AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
-```
-</p>
-</details>
-
-
-If you have multiple roles in AWS, you may encounter a prompt to choose between the roles. This prompt will continue prompting you for a role choice even after you have entered it. It does not exit on its own so you will have to command interrupt (ctrl-c) out of the process. 
-
-For convenience, it is recommended that you export AWS_PROFILE or set an alias
-in your startup script to easily set/select the profile in any shell.
-
-```sh
-#.zshrc
-export AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
-```
-
-or
-
-```sh
-alias aws-eotss="export AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile"
-```
-
-Note that this role will be different for full-access roles, e.g.
-
-```sh
-export AWS_PROFILE=AWS-498823821309-CloudOps-Engineer_profile
-```
-
-</p>
-</details>
-
-<details>
-<summary><b>2. Install Terraform</b></summary>
-<p>
+<b>2. Install Terraform</b>
 
 Refer to the root-level [README](../README.md) for instructions on installing terraform.
 
-</p>
-</details>
+<b>3. Optionally install NPM dependencies</b>
 
-<details>
-<summary><b>3. Optionally install NPM dependencies</b></summary>
-<p>
-
-To locally run tests, you'll also need to run the following with `infra/` as the working directory:
+To locally run tests for JS lambdas, you'll also need to run the following with `infra/` as the working directory:
 
 ```
 npm install
@@ -168,29 +53,7 @@ $ terraform apply
 
 🔗 See [docs/creating-environments.md](../docs/creating-environments.md) to learn how to create a new environment.
 
-### Adding a new SES email address
-
-In order to send emails from an SES email address, the email must first be verified.
-Ensure you have someone who can access the inbox of the email you'll be setting, so they can verify it.
-
-#### Creating the email in Terraform
-
-1. Run `terraform apply`, which will likely return an error indicating you need to verify the email address.
-1. Verify the email address by clicking the link in the verification email that should have been sent after the previous step.
-1. Run `terraform apply` again, which should be successful this time
-
-#### Creating the email in AWS Console
-
-Alternatively, you can create the email in the AWS Console and verify it:
-
-1. Add the email to SES through the AWS Console
-1. Verify the email address by clicking the link in the verification email that should have been sent after the previous step.
-1. Import the SES email resource:
-    ```
-    terraform import aws_ses_email_identity.example email@example.com
-    ```
-
-### Tests
+### Running JS Lambda Tests
 
 To run the [test suite](../docs/tests.md):
 
@@ -212,48 +75,28 @@ npm run test:watch
 
 > By default, this will attempt to identify which tests to run based on which files have changed in the current repository. After running, you can interact with the prompt to configure or filter which test files are ran.
 
-### Testing Github Actions permissions
-
-Since Github Actions has different permissions than developers and admins, it's useful to test terraform configs using our CI/CD role so we know
-that they can be run on Github Actions with the right read/write permissions. This is recommended if you're adding a new service into our ecosystem.
-
-1. Ensure you have the AWS CLI:
-
-   ```
-   pip install awscli
-   ```
-
-2. Generate a session:
-
-   ```
-   aws sts assume-role --role-arn arn:aws:iam::498823821309:role/ci-run-deploys --role-session-name <any-session-name>
-   ```
-
-3. Copy the access key, secret, and session token into your ~/.aws/credentials under a new profile so it looks like this:
-
-   ```
-   [ci-run-deploys]
-   aws_access_key_id = 123
-   aws_secret_access_key = 456
-   aws_session_token = 789
-   ```
-
-4. Use the profile:
-
-   ```
-   export AWS_PROFILE=ci-run-deploys
-   ```
-
-5. Run terraform as usual.
-
 ## Directory Structure
+
+Standalone folders:
+
+```
+└── constants           🏡 infrastructure data shared across all applications and all environments, e.g. a common block of aws tags
+
+└── pfml-aws            🏡 infrastructure for AWS and VPCs, shared across envs e.g. developer IAM roles,
+                           docker registries, and network load balancers for each VPC.
+
+└── monitoring          🏡 configuration for pagerduty schedules, on-call policies, and New Relic/Cloudwatch alerts.
+```
+
+Component folders:
 
 ```
 └── api                 🏡 infrastructure for a PFML api environment
     └── template        🏗  shared template for api env
     └── environments
-
-└── constants           🏡 infrastructure data shared across all applications and all environments, e.g. a common block of aws tags
+        └── test        ⛱  test env, deployed on every merged commit.
+        └── stage       ⛱  staging env
+        └── prod        ⛱  production env
 
 └── ecs-tasks           🏡 infrastructure for adhoc PFML API ECS tasks
     └── template        🏗  shared template for API ecs tasks
@@ -261,20 +104,22 @@ that they can be run on Github Actions with the right read/write permissions. Th
 
 └── env-shared          🏡 infrastructure for an environment, shared across applications e.g. an API Gateway and ECS cluster.
     └── template        🏗  shared template for an env
-    └── environments
-        └── test        ⛱  test env, deployed on every merged commit.
-        └── stage       ⛱  staging env, deployed on every push to deploy/api/stage
-        └── prod        ⛱  production env, deployed on every push to deploy/api/prod
-
-└── pfml-aws            🏡 infrastructure for AWS and VPCs, shared across envs e.g. developer IAM roles,
-                           docker registries, and network load balancers for each VPC.
-
-└── monitoring           🏡 configuration for pagerduty schedules, on-call policies, and New Relic/Cloudwatch alerts.
 
 └── portal              🏡 infrastructure for a PFML portal environment
     └── template        🏗  shared template for portal env
     └── environments
 
+```
+
+Re-usable module folders (used by other folders):
+
+```
+└── modules                  🏡 reusable modules.
+    └──  ecs_task_scheduler  ⛱ Creates a scheduled ECS task job.
+    └──  s3_ecs_trigger      ⛱ Creates an ECS task triggered by S3 events
+    └──  alarms_api          ⛱ Creates alarms for the API application in a given environment.
+    └──  alarms_portal       ⛱ Creates alarms for the Portal application in a given environment.
+    └──  ...
 ```
 
 ## tfstate files
@@ -294,29 +139,4 @@ S3
         └── portal.tfstate
         └── api.tfstate
         └── ecs-tasks.tfstate
-```
-
-## Troubleshooting
-
-Sometimes, Terraform does things you might not expect it to do.
-
-### I am unable to login via login-aws
-
-If you are seeing `Error in calling https://eotss.my.centrify.com/Security/StartAuthentication - Please refer logs.` You can find the logs in `centrify-aws-cli-utilities/Python-AWS/centrify-python-aws.log`
-
-If you are seeing an error like the following: `Access Denied. Please check.. An error occurred (InvalidIdentityToken) when calling the AssumeRoleWithSAML operation`, move your existing `~/.aws/credentials` file somewhere else (perhaps rename to something like `archived_credentials_yyyymmdd` in the same directory) and run `login-aws` again. This should succeed and create a new `~/.aws/credentials` file.
-
-### I have an unexpected error not related to my change?
-
-If you see something like this message:
-
-```
-Error: Network Load Balancers do not support Stickiness
-  on ../../template/load_balancer.tf line 19, in resource "aws_lb_target_group" "app":
-  19: resource "aws_lb_target_group" "app" {
-```
-
-Try "hard resetting" your Terraform state from the environment you're currently deploying from with the following command:
-```bash
-rm -rf .terraform/ && terraform init
 ```

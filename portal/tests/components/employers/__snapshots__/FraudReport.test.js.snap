@@ -59,7 +59,7 @@ exports[`FraudReport renders just the input choices by default 1`] = `
         components={
           Object {
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
           }
         }
@@ -74,7 +74,7 @@ exports[`FraudReport renders just the input choices by default 2`] = `
 Array [
   "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365
@@ -142,7 +142,7 @@ exports[`FraudReport renders the alert if "Yes" is selected 1`] = `
         components={
           Object {
             "contact-center-phone-link": <a
-              href="tel:(833) 344‑7365"
+              href="tel:(833) 344-7365"
             />,
           }
         }
@@ -157,7 +157,7 @@ exports[`FraudReport renders the alert if "Yes" is selected 2`] = `
 Array [
   "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at ",
   <a
-    href="tel:(833) 344‑7365"
+    href="tel:(833) 344-7365"
     key="1"
   >
     (833) 344‑7365

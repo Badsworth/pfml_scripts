@@ -32,10 +32,13 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name   = "performance"
-  service_docker_tag = local.service_docker_tag
-  vpc_id             = data.aws_vpc.vpc.id
-  app_subnet_ids     = data.aws_subnet_ids.vpc_app.ids
+  environment_name        = "performance"
+  st_use_mock_dor_data    = false
+  st_decrypt_dor_data     = false
+  st_file_limit_specified = true
+  service_docker_tag      = local.service_docker_tag
+  vpc_id                  = data.aws_vpc.vpc.id
+  app_subnet_ids          = data.aws_subnet_ids.vpc_app.ids
 
   cognito_user_pool_id                       = "us-east-1_0jv6SlemT"
   fineos_client_customer_api_url             = "https://perf-api.masspfml.fineos.com/customerapi/"
@@ -76,6 +79,7 @@ module "tasks" {
   fineos_data_export_path         = "s3://fin-somdev-data-export/PERF/dataexports"
   fineos_data_import_path         = "s3://fin-somdev-data-import/PERF/peiupdate"
   fineos_error_export_path        = "s3://fin-somdev-data-export/PERF/errorExtracts"
+  fineos_report_export_path       = "s3://fin-somdev-data-export/PERF/reportExtracts"
   pfml_fineos_inbound_path        = "s3://massgov-pfml-performance-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path       = "s3://massgov-pfml-performance-agency-transfer/cps/outbound"
   fineos_vendor_max_history_date  = "2021-01-09"
@@ -89,6 +93,5 @@ module "tasks" {
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
-  dor_fineos_etl_definition          = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression = "cron(30 0 * * ? *)" # Daily at 00:30 UTC [19:30 EST] [20:30 EDT]
 }

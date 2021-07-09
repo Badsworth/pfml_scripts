@@ -4,17 +4,18 @@ import BenefitsApplication, {
 import Document, { DocumentType } from "../models/Document";
 import Alert from "../components/Alert";
 import ButtonLink from "../components/ButtonLink";
+import DownloadableDocument from "../components/DownloadableDocument";
 import Heading from "../components/Heading";
 import LeaveReason from "../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
 import { Trans } from "react-i18next";
-import download from "downloadjs";
 import findDocumentsByTypes from "../utils/findDocumentsByTypes";
 import findKeyByValue from "../utils/findKeyByValue";
 import formatDateRange from "../utils/formatDateRange";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routeWithParams from "../utils/routeWithParams";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
@@ -224,11 +225,13 @@ function LegalNotices(props) {
           <p>{t("components.applicationCard.noticesDownload")}</p>
           <ul className="usa-list">
             {legalNotices.map((notice) => (
-              <LegalNoticeListItem
-                key={notice.fineos_document_id}
-                document={notice}
-                {...props}
-              />
+              <li key={notice.fineos_document_id}>
+                <DownloadableDocument
+                  document={notice}
+                  showCreatedAt
+                  onDownloadClick={appLogic.documents.download}
+                />
+              </li>
             ))}
           </ul>
         </React.Fragment>
@@ -240,60 +243,12 @@ function LegalNotices(props) {
 LegalNotices.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-};
-
-/**
- * Link and metadata for a Legal notice
- */
-function LegalNoticeListItem(props) {
-  const { appLogic, document } = props;
-  const { t } = useTranslation();
-
-  const documentContentType = document.content_type || "application/pdf";
-  const noticeNameTranslationKey =
-    documentContentType === "application/pdf"
-      ? "components.applicationCard.noticeName_pdf"
-      : "components.applicationCard.noticeName";
-
-  const handleClick = async (event) => {
-    event.preventDefault();
-    const documentData = await appLogic.documents.download(document);
-    if (documentData) {
-      download(
-        documentData,
-        document.name.trim() || document.document_type.trim(),
-        documentContentType
-      );
-    }
-  };
-
-  return (
-    <li key={document.fineos_document_id} className="font-body-2xs">
-      <a onClick={handleClick} className="text-medium" href="">
-        {t(noticeNameTranslationKey, {
-          context: findKeyByValue(DocumentType, document.document_type),
-        })}
-      </a>
-      <div className="text-base-dark">
-        {t("components.applicationCard.noticeDate", {
-          date: formatDateRange(document.created_at),
-        })}
-      </div>
-    </li>
-  );
-}
-
-LegalNoticeListItem.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
     documents: PropTypes.shape({
       download: PropTypes.func.isRequired,
     }),
   }).isRequired,
-  document: PropTypes.instanceOf(Document),
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
 };
 
 /**
@@ -329,33 +284,56 @@ function ApplicationActions(props) {
   const showResumeButton = !claim.isCompleted && !hasDenialNotice;
   const showUploadButton = claim.isCompleted || hasDenialNotice;
 
+  /**
+   * Which Other Leave instructions to display on ApplicationCard
+   * TODO (CP-2354) Remove CC guidance for claims with Part 1 submitted without reductions data
+   */
+  const hasReductionsData =
+    get(claim, "has_employer_benefits") !== null ||
+    get(claim, "has_other_incomes") !== null ||
+    get(claim, "has_previous_leaves_same_reason") !== null ||
+    get(claim, "has_previous_leaves_other_reason") !== null ||
+    get(claim, "has_concurrent_leave") !== null;
+  const reductionsEnabled = isFeatureEnabled("claimantShowOtherLeaveStep");
+  // Show no instructions by default
+  let reductionsI18nKey = null;
+  // After launch, show new instructions on completed claims
+  if (reductionsEnabled && claim.isCompleted) {
+    reductionsI18nKey = "components.applicationCard.reductionsInstructions";
+  }
+  // After launch, show prompt to report if Part 1 was submitted with null reductions data
+  else if (reductionsEnabled && !hasReductionsData && claim.isSubmitted) {
+    reductionsI18nKey =
+      "components.applicationCard.reductionsInstructions_missingData";
+  }
+  // Before launch, show old instructions on completed claims
+  else if (claim.isCompleted) {
+    reductionsI18nKey = "components.applicationCard.reductionsInstructions_old";
+  }
+
   return (
     <div>
       <Heading level="3" weight="normal">
         {t("components.applicationCard.actionsHeading")}
       </Heading>
 
-      {claim.isCompleted && (
-        <React.Fragment>
-          <p>
-            <Trans
-              i18nKey="components.applicationCard.reductionsInstructionsIntro"
-              components={{
-                "contact-center-phone-link": (
-                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                ),
-                "reductions-overview-link": (
-                  <a href={routes.external.massgov.reductionsOverview} />
-                ),
-              }}
-            />
-          </p>
-
-          <ul className="usa-list">
-            <li>{t("components.applicationCard.reductionsInstruction_1")}</li>
-            <li>{t("components.applicationCard.reductionsInstruction_2")}</li>
-          </ul>
-        </React.Fragment>
+      {reductionsI18nKey && (
+        <Trans
+          i18nKey={reductionsI18nKey}
+          components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
+            "when-can-i-use-pfml": (
+              <a href={routes.external.massgov.whenCanIUsePFML} />
+            ),
+            "reductions-overview-link": (
+              <a href={routes.external.massgov.reductionsOverview} />
+            ),
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
       )}
 
       {showBondingLeaveDocRequirement && (

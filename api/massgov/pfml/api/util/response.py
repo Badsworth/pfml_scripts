@@ -45,6 +45,8 @@ class IssueRule(str, Enum):
     min_reduced_leave_minutes = "min_reduced_leave_minutes"
     # A rule only applied because a certain condition was met
     conditional = "conditional"
+    # Caring leave applications can't start before July
+    disallow_caring_leave_before_july = "disallow_caring_leave_before_july"
     # Intermittent leave must be on its own application
     disallow_hybrid_intermittent_leave = "disallow_hybrid_intermittent_leave"
     # Can't submit when earliest leave period is more than 60 days in the future
@@ -233,6 +235,7 @@ def paginated_success_response(
 def error_response(
     status_code: Union[
         HTTPException,
+        Type[HTTPException],
         Type[BadRequest],
         Type[PaymentRequired],
         Type[Conflict],

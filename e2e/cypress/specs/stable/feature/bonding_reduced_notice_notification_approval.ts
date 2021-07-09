@@ -98,7 +98,7 @@ describe("Approval (notifications/notices)", () => {
         cy.contains("article", submission.fineos_absence_id).within(() => {
           cy.contains("a", "Approval notice").should("be.visible").click();
         });
-        portal.downloadLegalNotice("Approval", submission.fineos_absence_id, 4);
+        portal.downloadLegalNotice("Approval", submission.fineos_absence_id);
       });
     }
   );
@@ -126,11 +126,7 @@ describe("Approval (notifications/notices)", () => {
             employeeFullName,
             "approval"
           );
-          portal.downloadLegalNotice(
-            "Approval",
-            submission.fineos_absence_id,
-            4
-          );
+          portal.downloadLegalNotice("Approval", submission.fineos_absence_id);
         });
       });
     }

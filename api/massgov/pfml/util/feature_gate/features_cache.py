@@ -1,7 +1,8 @@
 # Utilities for gating user access to features
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Dict, Optional
 
 import yaml
 
@@ -11,11 +12,13 @@ import massgov.pfml.util.logging as logging
 logger = logging.get_logger(__name__)
 
 
+@dataclass
 class Feature:
-    def __init__(self, name: str, user_emails: List[str], enabled: bool):
-        self.name = name
-        self.user_emails = set(user_emails)
-        self.enabled = enabled
+    name: str
+    enabled: bool = False
+    options: Optional[Dict] = None
+    start: Optional[str] = None
+    end: Optional[str] = None
 
 
 class FeaturesCache:
@@ -24,39 +27,45 @@ class FeaturesCache:
 
     feature_1_name:     # unique identifier for a given feature
         enabled: 0      # controls whether a feature is globally enabled or disabled for all users
-        users:          # email addresses of users with an override for disabled features
-            - user_1_email@domain.org
-            - user_2_email@domain.org
-            - user_3_email@domain.org
     feature_2_name:
         enabled: 1
-        users:
-            - user_1_email@domain.org
-    feature_3_name:
-        enabled: 1
-        users:
+        options:
+          page_routes:
+           - /applications/*
+           - /employers/*
+        start: "2021-06-19 17:00:00-04"
+        end: "2021-06-19 18:00:00-04"
     """
 
     def __init__(self, file_path: str, ttl: int):
         self.file_path = file_path.strip()
         self.ttl = timedelta(seconds=ttl)
-        self.features_mapping = self.load_values()
         self.expiry = datetime.now() + self.ttl
+        self._features_mapping = self._load_features_mapping()
 
-    def check_enabled(self, feature_name: str, user_email: str) -> bool:
+    def features_mapping(self) -> Dict[str, Feature]:
         if datetime.now() >= self.expiry:
-            self.features_mapping = self.load_values()
+            self._features_mapping = self._load_features_mapping()
             self.expiry = datetime.now() + self.ttl
+        return self._features_mapping
 
-        feature = self.features_mapping.get(feature_name, None)
+    def check_enabled(self, name: str) -> bool:
+        """
+        Check if the feature is currently enabled.
+        """
+        if datetime.now() >= self.expiry:
+            self._features_mapping = self._load_features_mapping()
+            self.expiry = datetime.now() + self.ttl
+        feature = self._features_mapping.get(name, None)
         if feature is None:
             return False
-        elif feature.enabled:
-            return True
-        else:
-            return user_email in feature.user_emails
+        return bool(feature.enabled)
 
-    def load_values(self):
+    def _load_features_mapping(self) -> Dict[str, Feature]:
+        """
+        This loads the features from the YAML file and is intended to be
+        "private". If this is called directly, the cache/ttl will not be used.
+        """
         features_mapping: Dict[str, Feature] = dict()
 
         try:
@@ -83,18 +92,15 @@ class FeaturesCache:
             return features_mapping
 
         for feature, state in contents.items():
-            if not (isinstance(state, dict) and sorted(state.keys()) == ["enabled", "users"]):
+            if not (isinstance(state, dict) and "enabled" in state.keys()):
                 logger.error(
                     "Error parsing features. Missing attributes for features file",
                     extra={"file_path": self.file_path},
                 )
                 return features_mapping
 
-            user_emails = state["users"] or []
-            enabled = state["enabled"] != 0 or False
+            state["name"] = feature
 
-            features_mapping[feature] = Feature(
-                name=feature, user_emails=user_emails, enabled=enabled,
-            )
+            features_mapping[feature] = Feature(**state)
 
         return features_mapping

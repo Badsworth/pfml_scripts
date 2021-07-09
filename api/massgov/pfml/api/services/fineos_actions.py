@@ -16,6 +16,7 @@ import datetime
 import mimetypes
 import uuid
 from enum import Enum
+from itertools import chain
 from typing import Dict, List, Optional, Set, Tuple
 
 import phonenumbers
@@ -23,9 +24,10 @@ import phonenumbers
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
+from massgov.pfml.api.models.applications.common import LeaveReason as LeaveReasonApi
 from massgov.pfml.api.models.applications.common import OtherIncome
 from massgov.pfml.api.models.applications.responses import DocumentResponse
-from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.db.models.applications import (
     Application,
     Document,
@@ -519,32 +521,27 @@ def build_leave_periods(
     return reduced_schedule_leave_periods, intermittent_leave_periods
 
 
-def build_absence_case(
+def application_reason_to_claim_reason(
     application: Application,
-) -> massgov.pfml.fineos.models.customer_api.AbsenceCase:
-    """Convert an Application to a FINEOS API AbsenceCase model."""
-    continuous_leave_periods = []
-
-    for leave_period in application.continuous_leave_periods:
-        # determine the status of the absence period
-        absence_period_status = determine_absence_period_status(application)
-
-        continuous_leave_periods.append(
-            massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
-                startDate=leave_period.start_date,
-                endDate=leave_period.end_date,
-                startDateFullDay=True,
-                endDateFullDay=True,
-                status=absence_period_status,
-            )
-        )
-
-    reduced_schedule_leave_periods, intermittent_leave_periods = build_leave_periods(application)
-
+) -> Tuple[
+    str,
+    Optional[str],
+    Optional[str],
+    Optional[str],
+    Optional[str],
+    Optional[str],
+    LeaveNotificationReason,
+]:
+    """ Calculate a claim reason, reason qualifiers, relationship qualifiers, and notification reason
+    from an application's reason and related fields. For example, an application may have have a medical
+    leave reason and also have pregnant_or_recent_birth set to true which would get saved to FINEOS as a
+    claim with reason set to pregnancy.
+    """
     # Leave Reason and Leave Reason Qualifier mapping.
     # Relationship and Relationship Qualifier mapping.
     reason = reason_qualifier_1 = reason_qualifier_2 = None
     primary_relationship = primary_rel_qualifier_1 = primary_rel_qualifier_2 = None
+    notification_reason = None
 
     if application.leave_reason_id == LeaveReason.PREGNANCY_MATERNITY.leave_reason_id or (
         application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
@@ -632,6 +629,53 @@ def build_absence_case(
 
     else:
         raise ValueError("Invalid application.leave_reason")
+
+    assert reason
+
+    return (
+        reason,
+        reason_qualifier_1,
+        reason_qualifier_2,
+        primary_relationship,
+        primary_rel_qualifier_1,
+        primary_rel_qualifier_2,
+        notification_reason,
+    )
+
+
+def build_absence_case(
+    application: Application,
+) -> massgov.pfml.fineos.models.customer_api.AbsenceCase:
+    """Convert an Application to a FINEOS API AbsenceCase model."""
+    continuous_leave_periods = []
+
+    for leave_period in application.continuous_leave_periods:
+        # determine the status of the absence period
+        absence_period_status = determine_absence_period_status(application)
+
+        continuous_leave_periods.append(
+            massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
+                startDate=leave_period.start_date,
+                endDate=leave_period.end_date,
+                startDateFullDay=True,
+                endDateFullDay=True,
+                status=absence_period_status,
+            )
+        )
+
+    reduced_schedule_leave_periods, intermittent_leave_periods = build_leave_periods(application)
+
+    # Leave Reason and Leave Reason Qualifier mapping.
+    # Relationship and Relationship Qualifier mapping.
+    (
+        reason,
+        reason_qualifier_1,
+        reason_qualifier_2,
+        primary_relationship,
+        primary_rel_qualifier_1,
+        primary_rel_qualifier_2,
+        notification_reason,
+    ) = application_reason_to_claim_reason(application)
 
     absence_case = massgov.pfml.fineos.models.customer_api.AbsenceCase(
         additionalComments="PFML API " + str(application.application_id),
@@ -904,25 +948,21 @@ def upload_document(
     description: str,
     db_session: massgov.pfml.db.Session,
 ) -> massgov.pfml.fineos.models.customer_api.Document:
-    try:
-        fineos = massgov.pfml.fineos.create_client()
+    fineos = massgov.pfml.fineos.create_client()
 
-        fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
-        absence_id = get_fineos_absence_id_from_application(application)
+    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    absence_id = get_fineos_absence_id_from_application(application)
 
-        fineos_document = fineos.upload_document(
-            fineos_user_id,
-            absence_id,
-            document_type,
-            file_content,
-            file_name,
-            content_type,
-            description,
-        )
-        return fineos_document
-    except massgov.pfml.fineos.FINEOSClientError:
-        logger.exception("FINEOS Client Exception")
-        raise ValueError("FINEOS Client Exception")
+    fineos_document = fineos.upload_document(
+        fineos_user_id,
+        absence_id,
+        document_type,
+        file_content,
+        file_name,
+        content_type,
+        description,
+    )
+    return fineos_document
 
 
 def fineos_document_response_to_document_response(
@@ -1130,6 +1170,35 @@ def resolve_leave_plans(family_exemption: bool, medical_exemption: bool) -> Set[
     return leave_plans
 
 
+def format_other_leaves_data(application: Application) -> Optional[EFormBody]:
+    # Convert from DB models to API models because the API enum models are easier to serialize to strings
+    previous_leave_other_reason_items = map(
+        lambda other_leave: PreviousLeave.from_orm(other_leave),
+        application.previous_leaves_other_reason,
+    )
+    previous_leave_same_reason_items = list(
+        map(
+            lambda same_leave: PreviousLeave.from_orm(same_leave),
+            application.previous_leaves_same_reason,
+        )
+    )
+    # Set the leave reason for previous leaves of the same reason to the claim's leave reason
+    # TODO (CP-1164): Begin using the application's claim reason instead once it's actually accurate
+    leave_reason_str, *ignored = application_reason_to_claim_reason(application)
+    leave_reason = LeaveReasonApi.validate_type(leave_reason_str)
+    for leave in previous_leave_same_reason_items:
+        leave.leave_reason = LeaveReasonApi.to_previous_leave_qualifying_reason(leave_reason)
+
+    previous_leave_items = chain(
+        previous_leave_other_reason_items, previous_leave_same_reason_items
+    )
+    concurrent_leave_item = None
+    if application.concurrent_leave:
+        concurrent_leave_item = ConcurrentLeave.from_orm(application.concurrent_leave)
+
+    return PreviousLeavesEFormBuilder.build(previous_leave_items, concurrent_leave_item)
+
+
 def create_eform(
     application: Application, db_session: massgov.pfml.db.Session, eform: EFormBody
 ) -> None:
@@ -1144,36 +1213,26 @@ def create_other_leaves_and_other_incomes_eforms(
 ) -> None:
     log_attributes = get_application_log_attributes(application)
 
-    # Send previous leaves to fineos
-    if application.previous_leaves_other_reason:
-        # Convert from DB models to API models because the API enum models are easier to serialize to strings
-        previous_leaves_other_reason = map(
-            lambda leave: PreviousLeave.from_orm(leave), application.previous_leaves_other_reason
-        )
-        eform = PreviousLeavesEFormBuilder.build(previous_leaves_other_reason)
-        create_eform(application, db_session, eform)
-        logger.info("Created Other Leaves eform", extra=log_attributes)
-    if application.previous_leaves_same_reason:
-        # Convert from DB models to API models because the API enum models are easier to serialize to strings
-        previous_leaves_same_reason = map(
-            lambda leave: PreviousLeave.from_orm(leave), application.previous_leaves_same_reason
-        )
-        eform = PreviousLeavesEFormBuilder.build(previous_leaves_same_reason)
-        create_eform(application, db_session, eform)
-        logger.info("Created Same Leaves eform", extra=log_attributes)
-    # Send employer benefits and other incomes to fineos
+    # Send Other Leaves to FINEOS - this eForm contains previous leaves for the same reason, some other reason, and concurrent leaves.
     if (
-        application.employer_benefits
-        or application.other_incomes
-        or application.other_incomes_awaiting_approval
+        application.previous_leaves_other_reason
+        or application.previous_leaves_same_reason
+        or application.concurrent_leave
     ):
+        eform = format_other_leaves_data(application)
+        if eform:
+            create_eform(application, db_session, eform)
+            logger.info("Created Other Leaves eform", extra=log_attributes)
+        else:
+            raise ValueError("expected an Other Leaves eform but got None")
+    # Send employer benefits and other incomes to fineos
+    if application.employer_benefits or application.other_incomes:
         # Convert from DB models to API models because the API enum models are easier to serialize to strings
         other_incomes = map(lambda income: OtherIncome.from_orm(income), application.other_incomes)
         employer_benefits = map(
             lambda benefit: EmployerBenefit.from_orm(benefit), application.employer_benefits,
         )
-        eform = OtherIncomesEFormBuilder.build(
-            employer_benefits, other_incomes, application.other_incomes_awaiting_approval,
-        )
+
+        eform = OtherIncomesEFormBuilder.build(employer_benefits, other_incomes,)
         create_eform(application, db_session, eform)
         logger.info("Created Other Incomes eform", extra=log_attributes)

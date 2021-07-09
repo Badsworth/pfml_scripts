@@ -98,7 +98,6 @@ class ApplicationRequestBody(PydanticBaseModel):
     has_employer_benefits: Optional[bool]
     employer_benefits: Optional[List[EmployerBenefit]]
     has_other_incomes: Optional[bool]
-    other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
     phone: Optional[Phone]
     previous_leaves_other_reason: Optional[List[PreviousLeave]]

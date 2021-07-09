@@ -1,10 +1,11 @@
+import AddButton from "./AddButton";
 import AmendablePreviousLeave from "./AmendablePreviousLeave";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Details from "../Details";
+import Heading from "../Heading";
 import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import React from "react";
-import ReviewHeading from "../ReviewHeading";
 import Table from "../Table";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
@@ -17,13 +18,22 @@ import { useTranslation } from "../../locales/i18n";
 
 const PreviousLeaves = (props) => {
   const { t } = useTranslation();
-  const { appErrors, previousLeaves, onChange } = props;
+  const {
+    addedPreviousLeaves,
+    appErrors,
+    onAdd,
+    onChange,
+    onRemove,
+    previousLeaves,
+    shouldShowV2,
+  } = props;
+  const limit = 4;
 
   return (
     <React.Fragment>
-      <ReviewHeading level="2">
+      <Heading level="3">
         {t("components.employersPreviousLeaves.header")}
-      </ReviewHeading>
+      </Heading>
       <p>
         <Trans
           i18nKey="components.employersPreviousLeaves.explanation"
@@ -111,16 +121,17 @@ const PreviousLeaves = (props) => {
         <tbody>
           {previousLeaves.length ? (
             <React.Fragment>
-              {previousLeaves.map((leavePeriod) => {
-                return (
-                  <AmendablePreviousLeave
-                    appErrors={appErrors}
-                    key={leavePeriod.previous_leave_id}
-                    leavePeriod={leavePeriod}
-                    onChange={onChange}
-                  />
-                );
-              })}
+              {previousLeaves.map((previousLeave) => (
+                <AmendablePreviousLeave
+                  appErrors={appErrors}
+                  isAddedByLeaveAdmin={false}
+                  key={previousLeave.previous_leave_id}
+                  onChange={onChange}
+                  onRemove={onRemove}
+                  previousLeave={previousLeave}
+                  shouldShowV2={shouldShowV2}
+                />
+              ))}
             </React.Fragment>
           ) : (
             <tr>
@@ -128,17 +139,52 @@ const PreviousLeaves = (props) => {
               <td colSpan="3" />
             </tr>
           )}
+          {shouldShowV2 &&
+            addedPreviousLeaves.map((addedLeave) => (
+              <AmendablePreviousLeave
+                appErrors={appErrors}
+                isAddedByLeaveAdmin
+                key={addedLeave.previous_leave_id}
+                onChange={onChange}
+                onRemove={onRemove}
+                previousLeave={addedLeave}
+                shouldShowV2={shouldShowV2}
+              />
+            ))}
+          {shouldShowV2 && (
+            <tr>
+              <td colSpan="4" className="padding-y-2 padding-left-0">
+                <AddButton
+                  label={t(
+                    "components.employersAmendablePreviousLeave.addButton",
+                    {
+                      context:
+                        addedPreviousLeaves.length === 0
+                          ? "first"
+                          : "subsequent",
+                    }
+                  )}
+                  onClick={onAdd}
+                  disabled={addedPreviousLeaves.length >= limit}
+                />
+              </td>
+            </tr>
+          )}
         </tbody>
       </Table>
-      <p>{t("components.employersPreviousLeaves.commentInstructions")}</p>
     </React.Fragment>
   );
 };
 
 PreviousLeaves.propTypes = {
+  addedPreviousLeaves: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave))
+    .isRequired,
   appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
+  onAdd: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
+  onRemove: PropTypes.func.isRequired,
   previousLeaves: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)),
+  shouldShowV2: PropTypes.bool.isRequired,
 };
 
 export default PreviousLeaves;

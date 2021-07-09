@@ -8,6 +8,7 @@ import { camelCase, filter, findIndex, get } from "lodash";
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
+import Details from "../../components/Details";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
@@ -110,6 +111,54 @@ export const Checklist = (props) => {
   }
 
   /**
+   * Get the content to show for a submitted step
+   * @param {StepModel} step
+   * @returns {React.Component}
+   */
+  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
+  function getStepSubmittedContent(step) {
+    const reductionsEnabled = isFeatureEnabled("claimantShowOtherLeaveStep");
+    const hasReductionsData =
+      get(claim, "has_employer_benefits") !== null ||
+      get(claim, "has_other_incomes") !== null ||
+      get(claim, "has_previous_leaves_same_reason") !== null ||
+      get(claim, "has_previous_leaves_other_reason") !== null ||
+      get(claim, "has_concurrent_leave") !== null;
+    const showReportReductions = reductionsEnabled && !hasReductionsData;
+
+    if (step.name === ClaimSteps.otherLeave && showReportReductions) {
+      return (
+        <React.Fragment>
+          <Trans
+            i18nKey="pages.claimsChecklist.otherLeaveSubmittedIntro"
+            components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
+          <Details
+            label={t("pages.claimsChecklist.otherLeaveSubmittedDetailsLabel")}
+          >
+            <Trans
+              i18nKey="pages.claimsChecklist.otherLeaveSubmittedDetailsBody"
+              components={{
+                "when-can-i-use-pfml": (
+                  <a href={routes.external.massgov.whenCanIUsePFML} />
+                ),
+                ul: <ul className="usa-list" />,
+                li: <li />,
+              }}
+            />
+          </Details>
+        </React.Fragment>
+      );
+    }
+
+    return null;
+  }
+
+  /**
    * Helper method for rendering steps for one of the StepLists
    * @param {StepModel[]} steps
    * @returns {Step[]}
@@ -138,12 +187,20 @@ export const Checklist = (props) => {
           status={step.status}
           stepHref={stepHref}
           editable={step.editable}
+          submittedContent={getStepSubmittedContent(step)}
         >
           <Trans
             i18nKey="pages.claimsChecklist.stepHTMLDescription"
             components={{
               "contact-center-phone-link": (
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+              "which-paid-leave-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.whichPaidLeave}
+                />
               ),
               "healthcare-provider-form-link": (
                 <a

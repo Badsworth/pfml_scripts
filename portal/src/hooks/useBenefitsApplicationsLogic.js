@@ -23,9 +23,10 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   // if loadAll hasn't been called yet
   const [hasLoadedAll, setHasLoadedAll] = useState(false);
 
-  const applicationsApi = useMemo(() => new BenefitsApplicationsApi({ user }), [
-    user,
-  ]);
+  const applicationsApi = useMemo(
+    () => new BenefitsApplicationsApi({ user }),
+    [user]
+  );
 
   // Cache the validation warnings associated with each claim. Primarily
   // used for controlling the status of Checklist steps.
@@ -239,14 +240,11 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const {
-        claim,
-        errors,
-        warnings,
-      } = await applicationsApi.submitPaymentPreference(
-        application_id,
-        paymentPreferenceData
-      );
+      const { claim, errors, warnings } =
+        await applicationsApi.submitPaymentPreference(
+          application_id,
+          paymentPreferenceData
+        );
 
       // This endpoint should only return errors relevant to this page so no need to filter
       const issues = getRelevantIssues(errors, warnings, []);
