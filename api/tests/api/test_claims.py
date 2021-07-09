@@ -14,7 +14,6 @@ import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.db.models.employees import (
     Claim,
-    ManagedRequirementCategory,
     ManagedRequirementStatus,
     ManagedRequirementType,
     Role,
@@ -2369,8 +2368,8 @@ class TestGetClaimsEndpoint:
             for _ in range(0, self.NUM_VALID_MANAGED_REQUIREMENTS):  # valid managed requirements
                 ManagedRequirementFactory.create(
                     claim=claim,
-                    managed_requirement_type=ManagedRequirementType.EMPLOYER_CONFIRMATION,
-                    managed_requirement_status=ManagedRequirementStatus.OPEN,
+                    managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                    managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
                 )
 
             for _ in range(0, self.NUM_VALID_MANAGED_REQUIREMENTS):  # follow up date in the past
@@ -2380,7 +2379,8 @@ class TestGetClaimsEndpoint:
 
             for _ in range(0, self.NUM_VALID_MANAGED_REQUIREMENTS):  # status is not open
                 ManagedRequirementFactory.create(
-                    claim=claim, managed_requirement_status=ManagedRequirementStatus.COMPLETE,
+                    claim=claim,
+                    managed_requirement_status_id=ManagedRequirementStatus.COMPLETE.managed_requirement_status_id,
                 )
 
             link = UserLeaveAdministrator(

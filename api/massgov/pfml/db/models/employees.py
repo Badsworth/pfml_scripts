@@ -2406,4 +2406,7 @@ def sync_lookup_tables(db_session):
     PaymentCheckStatus.sync_to_database(db_session)
     PrenoteState.sync_to_database(db_session)
     PubErrorType.sync_to_database(db_session)
+    ManagedRequirementStatus.sync_to_database(db_session)
+    ManagedRequirementCategory.sync_to_database(db_session)
+    ManagedRequirementType.sync_to_database(db_session)
     db_session.commit()

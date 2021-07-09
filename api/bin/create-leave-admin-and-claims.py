@@ -44,7 +44,9 @@ def main():
             employer_id=employer.employer_id,
             fineos_absence_id=f"NTN-{fake.unique.random_int()}-ABS-01",
         )
-        ManagedRequirementFactory.create(claim=claim)
+        ManagedRequirementFactory.create(
+            claim=claim, fineos_managed_requirement_id=fake.unique.random_int()
+        )
 
     db_session.add(verification)
     db_session.add(user_leave_admin)

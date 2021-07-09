@@ -67,6 +67,7 @@ class ManagedRequirementResponse(PydanticBaseModel):
 
         return managed_requirement_response
 
+
 class ClaimResponse(PydanticBaseModel):
     fineos_absence_id: Optional[str]
     employer: Optional[EmployerResponse]
