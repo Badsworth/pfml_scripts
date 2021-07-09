@@ -12,21 +12,26 @@ import { Email, GetEmailsOpts } from "../../src/submission/TestMailClient";
 export function getEmails(
   opts: GetEmailsOpts,
   timeout = 30000
-): Cypress.Chainable<Email[]> {
-  return cy.task<Email[]>(
-    "getEmails",
-    {
-      ...opts,
-      timeout,
-    },
-    { timeout: timeout + 1000 }
-  );
-  // .then((emails) => {
-  //   if (!emails.length) cy.log("No email found");
-  //   // if no email is found write empty string to the document
-  //   // this will cause failures for assertions in the emails
-  //   return cy.document().invoke("write", emails[0].html);
-  // });
+): Cypress.Chainable<JQuery<Document>> {
+  return cy
+    .task<Email[]>(
+      "getEmails",
+      {
+        ...opts,
+        timeout,
+      },
+      { timeout: timeout + 1000 }
+    )
+    .then(([email]) => {
+      if (!email) cy.log("No email found");
+
+      cy.reload();
+      cy.wait(150);
+      cy.document().invoke("write", email.html);
+      // if no email is found write empty string to the document
+      // this will cause failures for assertions in the emails
+      return cy.document().invoke("write", email.html);
+    });
 }
 
 export const getNotificationSubject = function (
