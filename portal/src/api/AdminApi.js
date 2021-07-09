@@ -15,9 +15,15 @@ export default class AdminApi extends BaseApi {
    * @returns {Promise<AdminApiResult>}
    */
   getFlags = async () => {
-    const { data } = await this.request("GET", "flags", null, {}, { excludeAuthHeader: true });
+    const { data } = await this.request(
+      "GET",
+      "flags",
+      null,
+      {},
+      { excludeAuthHeader: true }
+    );
 
-    return data.map(flag => {
+    return data.map((flag) => {
       return new Flag(flag);
     });
   };

@@ -1,7 +1,7 @@
 import AdminApi from "../../src/api/AdminApi";
 import { Auth } from "@aws-amplify/auth";
 import { DateTime } from "luxon";
-import Flag from "../../src/models/Flag"
+import Flag from "../../src/models/Flag";
 
 jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
@@ -22,15 +22,17 @@ describe("admin API", () => {
   let adminApi;
   const start = DateTime.local().plus({ hours: 5 }).toISO(); // starts in 5 hours
   const end = DateTime.local().plus({ hours: 10 }).toISO(); // ends in 10 hours
-  const responseData = [{
-    name: "maintenance",
-    enabled: true,
-    end,
-    start, 
-    options: {
-      page_routes: ["/applications/*"]
-    }
-  }];
+  const responseData = [
+    {
+      name: "maintenance",
+      enabled: true,
+      end,
+      start,
+      options: {
+        page_routes: ["/applications/*"],
+      },
+    },
+  ];
 
   const accessTokenJwt =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";

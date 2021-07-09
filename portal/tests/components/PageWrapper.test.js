@@ -39,9 +39,9 @@ describe("PageWrapper", () => {
     end: null,
     enabled: false,
     options: {
-      page_routes: []
-    }
-  }
+      page_routes: [],
+    },
+  };
 
   beforeEach(() => {
     // Enable rendering of the site
@@ -111,9 +111,9 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/login"]
-        }
-      }
+          page_routes: ["/login"],
+        },
+      },
     });
 
     expect(hasMaintenancePage(wrapper)).toBe(true);
@@ -129,9 +129,9 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/employers/*"]
-        }
-      }
+          page_routes: ["/employers/*"],
+        },
+      },
     });
     expect(hasMaintenancePage(wrapper)).toBe(false);
 
@@ -142,9 +142,9 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/employers/*"]
-        }
-      }
+          page_routes: ["/employers/*"],
+        },
+      },
     });
     expect(hasMaintenancePage(wrapper)).toBe(true);
 
@@ -155,9 +155,9 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/employers/*"]
-        }
-      }
+          page_routes: ["/employers/*"],
+        },
+      },
     });
     expect(hasMaintenancePage(wrapper)).toBe(true);
   });
@@ -172,19 +172,19 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/*"]
-        }
-      }
+          page_routes: ["/*"],
+        },
+      },
     });
     const wrapperWithEndTime = render({
       maintenance: {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/*"]
+          page_routes: ["/*"],
         },
-        end: maintenanceEndDateTime
-      }
+        end: maintenanceEndDateTime,
+      },
     });
 
     expect(
@@ -210,13 +210,13 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/*"]
+          page_routes: ["/*"],
         },
         // Started an hour ago
         start: DateTime.local().minus({ hours: 1 }).toISO(),
         // Ends in an hour
-        end: DateTime.local().plus({ hours: 1 }).toISO()
-      }
+        end: DateTime.local().plus({ hours: 1 }).toISO(),
+      },
     });
 
     const wrapperNotInMaintenanceWindow = render({
@@ -224,13 +224,13 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/*"]
+          page_routes: ["/*"],
         },
         // Started 2 hours ago
         start: DateTime.local().minus({ hours: 1 }).toISO(),
         // Ended an hour ago
         end: DateTime.local().minus({ hours: 1 }).toISO(),
-      }
+      },
     });
 
     expect(hasMaintenancePage(wrapperInMaintenanceWindow)).toBe(true);
@@ -245,11 +245,11 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/*"]
+          page_routes: ["/*"],
         },
         // Started an hour ago
         start: DateTime.local().minus({ hours: 1 }).toISO(),
-      }
+      },
     });
 
     const wrapperNotInMaintenanceWindow = render({
@@ -257,11 +257,11 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/*"]
+          page_routes: ["/*"],
         },
         // Starts in one hour
         start: DateTime.local().plus({ hours: 1 }).toISO(),
-      }
+      },
     });
 
     expect(hasMaintenancePage(wrapperInMaintenanceWindow)).toBe(true);
@@ -276,11 +276,11 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/*"]
+          page_routes: ["/*"],
         },
         // Ends in an hour
         end: DateTime.local().plus({ hours: 1 }).toISO(),
-      }
+      },
     });
 
     const wrapperNotInMaintenanceWindow = render({
@@ -288,11 +288,11 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/*"]
+          page_routes: ["/*"],
         },
         // Ended an hour ago
         end: DateTime.local().minus({ hours: 1 }).toISO(),
-      }
+      },
     });
 
     expect(hasMaintenancePage(wrapperInMaintenanceWindow)).toBe(true);
@@ -311,9 +311,9 @@ describe("PageWrapper", () => {
         ...maintenance,
         enabled: true,
         options: {
-          page_routes: ["/login"]
-        }
-      }
+          page_routes: ["/login"],
+        },
+      },
     });
 
     expect(hasMaintenancePage(wrapper)).toBe(false);

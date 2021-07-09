@@ -11,7 +11,7 @@ jest.mock("../../src/api/AdminApi");
 
 describe("useFeatureFlagsLogic", () => {
   let adminApi, appErrorsLogic, flagsLogic, portalFlow;
-  
+
   function renderHook() {
     testHook(() => {
       portalFlow = usePortalFlow();
@@ -31,7 +31,7 @@ describe("useFeatureFlagsLogic", () => {
       renderHook();
     });
 
-     it("fetches flags from the api", async () => {
+    it("fetches flags from the api", async () => {
       await act(async () => {
         await flagsLogic.loadFlags();
       });
@@ -48,9 +48,9 @@ describe("useFeatureFlagsLogic", () => {
 
       expect(appErrorsLogic.appErrors.items[0].name).toBe("NetworkError");
     });
-   });
+  });
 
-   describe("getFlag", () => {
+  describe("getFlag", () => {
     beforeEach(() => {
       renderHook();
     });
@@ -62,15 +62,15 @@ describe("useFeatureFlagsLogic", () => {
         start: null,
         end: null,
         options: {
-            page_routes: ["/*"]
-        }
-      })
+          page_routes: ["/*"],
+        },
+      });
 
-      flagsLogic.getFlag = jest.fn().mockImplementation((flag_name) => {        
+      flagsLogic.getFlag = jest.fn().mockImplementation((flag_name) => {
         return {
           ...flagMock,
-          name: flag_name                                                
-        };                                                                            
+          name: flag_name,
+        };
       });
 
       const maintenanceFlag = flagsLogic.getFlag("maintenance");
@@ -78,5 +78,5 @@ describe("useFeatureFlagsLogic", () => {
       expect(flagsLogic.getFlag).toHaveBeenCalledWith("maintenance");
       expect(maintenanceFlag).toEqual(flagMock);
     });
-   });
+  });
 });

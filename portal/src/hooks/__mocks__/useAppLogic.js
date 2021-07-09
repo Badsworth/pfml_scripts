@@ -135,13 +135,13 @@ export default jest.fn(() => ({
         enabled: false,
         name: "maintenance",
         options: {
-          page_routes: ["/*"]
+          page_routes: ["/*"],
         },
         start: null,
         end: null,
-      })
+      }),
     ],
     getFlag: jest.fn(),
-    loadFlags: jest.fn()
-  }
+    loadFlags: jest.fn(),
+  },
 }));

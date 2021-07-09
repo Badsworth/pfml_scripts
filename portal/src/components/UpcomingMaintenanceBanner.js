@@ -8,17 +8,23 @@ import classnames from "classnames";
  * scheduled maintenance.
  */
 const UpcomingMaintenanceBanner = (props) => {
-  const classes = classnames("upcoming-maintenance-banner bg-yellow padding-1 text-center");
+  const classes = classnames(
+    "upcoming-maintenance-banner bg-yellow padding-1 text-center"
+  );
 
   let maintenanceMessage = "";
-  if(!props.start && !props.end) {
-    maintenanceMessage = "components.upcomingMaintenanceBanner.messageWithNoStartAndNoEnd";
+  if (!props.start && !props.end) {
+    maintenanceMessage =
+      "components.upcomingMaintenanceBanner.messageWithNoStartAndNoEnd";
   } else if (!props.start && props.end) {
-    maintenanceMessage = "components.upcomingMaintenanceBanner.messageWithEndAndNoStart";
+    maintenanceMessage =
+      "components.upcomingMaintenanceBanner.messageWithEndAndNoStart";
   } else if (props.start && !props.end) {
-    maintenanceMessage = "components.upcomingMaintenanceBanner.messageWithStartAndNoEnd";
+    maintenanceMessage =
+      "components.upcomingMaintenanceBanner.messageWithStartAndNoEnd";
   } else {
-    maintenanceMessage = "components.upcomingMaintenanceBanner.messageWithStartAndEnd";
+    maintenanceMessage =
+      "components.upcomingMaintenanceBanner.messageWithStartAndEnd";
   }
 
   return (
@@ -28,7 +34,7 @@ const UpcomingMaintenanceBanner = (props) => {
           i18nKey={maintenanceMessage}
           components={{
             start: props.start,
-            end: props.end
+            end: props.end,
           }}
         />
       </div>
@@ -44,7 +50,7 @@ UpcomingMaintenanceBanner.propTypes = {
   /**
    * End date string for the message
    **/
-  end: PropTypes.string
+  end: PropTypes.string,
 };
 
 export default UpcomingMaintenanceBanner;

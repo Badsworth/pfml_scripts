@@ -152,23 +152,24 @@ export const App = ({ Component, pageProps }) => {
     };
   }, [router.events, appLogic]);
 
-  
   useEffect(() => {
     appLogic.featureFlags.loadFlags();
     /**
-     * We only want feature flags to load one time and not when app re-renders. Removing 
+     * We only want feature flags to load one time and not when app re-renders. Removing
      * the empty array or passing a appLogic.featureFlags dependency creates an infinite
      * loop that calls the api and ultimately crashes the browser.
      */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const maintenance = appLogic.featureFlags.getFlag("maintenance") || new Flag({
-    name: "maintenance",
-    options: {
-      page_routes: []
-    }
-  });
+  const maintenance =
+    appLogic.featureFlags.getFlag("maintenance") ||
+    new Flag({
+      name: "maintenance",
+      options: {
+        page_routes: [],
+      },
+    });
 
   return (
     <PageWrapper

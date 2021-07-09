@@ -37,7 +37,7 @@ const isInMaintenanceWindow = (start, end) => {
  * @param {string} [end] - ISO 8601 date time
  * @returns {boolean}
  */
- const isBeforeOrInMaintenanceWindow = (end) => {
+const isBeforeOrInMaintenanceWindow = (end) => {
   const now = DateTime.local();
   const isBeforeEnd = end ? now < DateTime.fromISO(end) : true;
 
@@ -70,11 +70,7 @@ const isMaintenancePageRoute = (maintenancePageRoutes, pathname) => {
  * with this component as its parent.
  */
 const PageWrapper = (props) => {
-  const {
-    appLogic,
-    isLoading,
-    maintenance
-  } = props;
+  const { appLogic, isLoading, maintenance } = props;
   const { t } = useTranslation();
 
   const maintenancePageRoutes = maintenance.options.page_routes;
@@ -112,7 +108,8 @@ const PageWrapper = (props) => {
    * Should this page display an upcoming maintenance banner?
    * @type {boolean}
    */
-  const showUpcomingMaintenanceBanner = isBeforeOrInMaintenanceWindow(maintenanceEnd) && maintenanceEnabled;
+  const showUpcomingMaintenanceBanner =
+    isBeforeOrInMaintenanceWindow(maintenanceEnd) && maintenanceEnabled;
 
   // Prevent site from being rendered if this feature flag isn't enabled.
   // We render a vague but recognizable message that serves as an indicator
@@ -127,7 +124,11 @@ const PageWrapper = (props) => {
         <Spinner aria-valuetext={t("components.spinner.label")} />
       </section>
     );
-  } else if (showMaintenancePageBody && maintenance.enabled && !isFeatureEnabled("noMaintenance")) {
+  } else if (
+    showMaintenancePageBody &&
+    maintenance.enabled &&
+    !isFeatureEnabled("noMaintenance")
+  ) {
     pageBody = (
       <section id="page" data-test="maintenance page">
         <MaintenanceTakeover
@@ -138,7 +139,12 @@ const PageWrapper = (props) => {
   } else {
     pageBody = (
       <section id="page">
-        {showUpcomingMaintenanceBanner && (<UpcomingMaintenanceBanner start={maintenanceStartTime} end={maintenanceEndTime} />)}
+        {showUpcomingMaintenanceBanner && (
+          <UpcomingMaintenanceBanner
+            start={maintenanceStartTime}
+            end={maintenanceEndTime}
+          />
+        )}
         {props.children}
       </section>
     );

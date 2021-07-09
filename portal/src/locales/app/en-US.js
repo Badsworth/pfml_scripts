@@ -2763,7 +2763,7 @@ const components = {
       "We want to make you aware that there will be scheduled site maintenance from <strong>{{start}}</strong> to <strong>{{end}}</strong>. All or parts of the site will be unavailable during this time. We appreciate your patience and understanding.",
     messageWithStartAndNoEnd:
       "We want to make you aware that there will be scheduled site maintenance beginning at <strong>{{start}}</strong>. All or parts of the site will be temporarily unavailable. We appreciate your patience and understanding.",
-    },
+  },
   userFeedback: {
     instructions:
       "We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.",
