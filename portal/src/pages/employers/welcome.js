@@ -31,17 +31,19 @@ export const Welcome = ({ appLogic, user }) => {
     width: 32,
     fill: "currentColor",
   };
- 
+
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const shouldShowOtherLeave = isFeatureEnabled("claimantShowOtherLeaveStep");
   const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
-  const shouldShowVerificationAlert = shouldShowVerifications && hasVerifiableEmployer;
+  const shouldShowVerificationAlert =
+    shouldShowVerifications && hasVerifiableEmployer;
   const shouldShowCaringLeaveAlert = shouldShowCaringLeave;
-  const employerHasDepartments = user.user_leave_administrators[0].departments.length;
+  const employerHasDepartments =
+    user.user_leave_administrators[0].departments.length;
 
-  if(!employerHasDepartments) {
+  if (!employerHasDepartments) {
     appLogic.portalFlow.goTo(routes.employers.departments);
-    
+
     return null;
   }
   const shouldShowCaringLeaveAlert =

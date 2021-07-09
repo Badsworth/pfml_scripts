@@ -45,7 +45,7 @@ export const EmployerDepartment = (props) => {
 
   useEffect(() => {
     const { tax_identifier } = claim;
-    appLogic.users.searchUsersDepartments({tax_identifier}).then(() => {
+    appLogic.users.searchUsersDepartments({ tax_identifier }).then(() => {
       setIsLoading(false);
     });
   }, []);
@@ -55,24 +55,23 @@ export const EmployerDepartment = (props) => {
       title={t("pages.claimsNotifiedEmployer.title")}
       // onSave={handleSave}
     >
-
-      {isLoading ? 
-        (<Spinner aria-valuetext={t("components.spinner.label")} />)
-      :
-        (<Dropdown
-          choices={appLogic.users.departments.map(department => {
+      {isLoading ? (
+        <Spinner aria-valuetext={t("components.spinner.label")} />
+      ) : (
+        <Dropdown
+          choices={appLogic.users.departments.map((department) => {
             return {
               label: department,
-              value: department
-            }
+              value: department,
+            };
           })}
           emptyChoiceLabel="- Select a Department -"
           label="What is your Department"
           name="department_id"
           onChange={() => {}}
           value="a"
-        />)
-    }
+        />
+      )}
       {/* <InputChoiceGroup
         {...getFunctionalInputProps("leave_details.employer_notified")}
         choices={[

@@ -41,7 +41,7 @@ export default class DepartmentsApi extends BaseApi {
 
     return {
       //departments: new Department(data),
-      departments: ["Brenton", "Melqui"]
+      departments: ["Brenton", "Melqui"],
     };
   };
 }
