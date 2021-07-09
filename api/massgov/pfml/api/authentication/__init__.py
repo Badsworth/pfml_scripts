@@ -17,10 +17,16 @@ import massgov.pfml.api.app as app
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import User
 
+import msal
+from massgov.pfml.api.authentication.msalConfig import MSALClient
+
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 public_keys = None
 
+def get_sso_token():
+    msal = MSALClient()
+    return msal.get_azure_ad_sso_token()
 
 def get_public_keys(userpool_keys_url):
     global public_keys
