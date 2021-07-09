@@ -1,7 +1,6 @@
 import re
 from typing import Any, Dict, Literal, Optional
 
-from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.util.aws_lambda as aws_lambda
@@ -56,11 +55,7 @@ def handler(
     }
 
     logger.info("Handle post confirmation event", extra=log_attributes)
-    user = (
-        db_session.query(User)
-        .filter(or_(User.sub_id == auth_id, User.active_directory_id == auth_id,))
-        .one_or_none()
-    )
+    user = db_session.query(User).filter(User.sub_id == auth_id).one_or_none()
 
     if user is not None:
         logger.info(

@@ -27,9 +27,14 @@ const useAppErrorsLogic = ({ portalFlow }) => {
   const { t } = useTranslation();
 
   /**
+   * @callback addErrorFunction
+   * @param {AppErrorInfo} error
+   */
+
+  /**
    * State representing both application errors and
    * validation errors
-   * @type {{addItem: (error: AppErrorInfo) => undefined, collection: AppErrorInfoCollection, setCollection: Function}}
+   * @type {{addItem: addErrorFunction, collection: AppErrorInfoCollection, setCollection: Function}}
    */
   const {
     addItem: addError,
@@ -159,6 +164,24 @@ const useAppErrorsLogic = ({ portalFlow }) => {
                 href={routes.external.massgov.caseCreationErrorGuide}
               />
             ),
+          }}
+        />
+      );
+    }
+
+    if (type === "contains_v1_and_v2_eforms") {
+      return (
+        <Trans
+          i18nKey={issueMessageKey}
+          components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
+            /* The h3 header has content defined in en-US.js. */
+            /* eslint-disable jsx-a11y/heading-has-content */
+            h3: <h3 />,
+            ul: <ul />,
+            li: <li />,
           }}
         />
       );

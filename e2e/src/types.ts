@@ -8,6 +8,21 @@ import {
 } from "./_api";
 import { DehydratedClaim } from "./generation/Claim";
 
+export type FeatureFlags = {
+  pfmlTerriyay: boolean;
+  claimantShowAuth: boolean;
+  claimantShowMedicalLeaveType: boolean;
+  noMaintenance: boolean;
+  employerShowSelfRegistrationForm: boolean;
+  claimantShowOtherLeaveStep: boolean;
+  claimantAuthThroughApi: boolean;
+  employerShowAddOrganization: boolean;
+  employerShowVerifications: boolean;
+  employerShowDashboard: boolean;
+  useNewPlanProofs: boolean;
+  showCaringLeaveType: boolean;
+};
+
 export type Credentials = {
   username: string;
   password: string;
@@ -41,7 +56,8 @@ export type SubjectOptions =
   | "denial (claimant)"
   | "approval (claimant)"
   | "review leave hours"
-  | "request for additional info";
+  | "request for additional info"
+  | "extension of benefits";
 
 export type Scenarios = keyof typeof scenarios;
 

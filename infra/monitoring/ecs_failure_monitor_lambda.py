@@ -10,14 +10,14 @@ TASKS_TO_IGNORE = [
 
     # DOR Fineos ETL tasks.
     # The pfml-api-<environment>-dor-fineos-etl step function handles retries and failure notifications
-    "dor-import",
-    "load-employers-to-fineos",
-    "fineos-eligibility-feed-export",
-    "fineos-import-employee-updates",
+    ".*dor-import",
+    ".*load-employers-to-fineos",
+    ".*fineos-eligibility-feed-export",
+    ".*fineos-import-employee-updates",
 
     # The Leave Admin registration job runs every 15 minutes, so we avoid spamming
     # and will use PagerDuty for notifications as defined in INFRA-ABC.
-    "register-leave-admins-with-fineos",
+    ".*register-leave-admins-with-fineos",
 
     # The PFML API is a service that will rotate containers when health checks
     # are failing. We should know about issues due to deployment failures.

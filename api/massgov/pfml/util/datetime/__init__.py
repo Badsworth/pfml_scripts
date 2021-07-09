@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, time, timezone
 from typing import NamedTuple, Optional, Union
 
 
@@ -35,3 +35,8 @@ def utcnow() -> datetime:
     See https://docs.python.org/3/library/datetime.html#datetime.datetime.utcnow
     """
     return datetime.now(timezone.utc)
+
+
+def to_datetime(date_or_datetime: date) -> datetime:
+    """Convert a date or datetime to a datetime, setting time to 00:00:00 UTC."""
+    return datetime.combine(date_or_datetime, time.min, tzinfo=timezone.utc)

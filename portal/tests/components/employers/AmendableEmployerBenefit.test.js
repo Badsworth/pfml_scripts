@@ -137,14 +137,15 @@ describe("AmendableEmployerBenefit", () => {
       ).toEqual("$1,000.00 per month");
     });
 
-    it("renders information about unknown frequency when frequency is 'Unknown'", () => {
+    it("renders amountPerFrequency_unknown when amount not zero AND frequency is 'Unknown'", () => {
       const paidLeave = new EmployerBenefit({
-        benefit_amount_dollars: 0,
-        benefit_amount_frequency: "Unknown",
+        benefit_amount_dollars: 200,
+        benefit_amount_frequency: EmployerBenefitFrequency.unknown,
         benefit_end_date: "2021-03-01",
         benefit_start_date: "2021-02-01",
         benefit_type: EmployerBenefitType.paidLeave,
         employer_benefit_id: 0,
+        is_full_salary_continuous: false,
       });
       const wrapper = shallow(
         <AmendableEmployerBenefit
@@ -159,13 +160,13 @@ describe("AmendableEmployerBenefit", () => {
 
       expect(
         wrapper.find("BenefitDetailsRow").dive().find("td").at(1).text()
-      ).toEqual("$0.00 (frequency unknown)");
+      ).toEqual("$200.00 (frequency unknown)");
     });
 
     it("renders fullSalaryContinuous when is_full_salary_continuous is true", () => {
       const fullSalaryContinuousPaidLeave = new EmployerBenefit({
-        benefit_amount_dollars: null,
-        benefit_amount_frequency: null,
+        benefit_amount_dollars: 0,
+        benefit_amount_frequency: EmployerBenefitFrequency.unknown,
         benefit_end_date: "2021-03-01",
         benefit_start_date: "2021-02-01",
         benefit_type: EmployerBenefitType.paidLeave,
@@ -188,20 +189,21 @@ describe("AmendableEmployerBenefit", () => {
       ).toEqual("Full salary continuous");
     });
 
-    it("renders noAmountReported when benefit_amount_dollars is null and is_full_salary_continuous is falsy", () => {
-      const nullPaidLeave = new EmployerBenefit({
-        benefit_amount_dollars: null,
-        benefit_amount_frequency: EmployerBenefitFrequency.monthly,
+    it("renders noAmountReported when benefit_amount_dollars is 0.00 AND benefit_amount_frequency is unknown AND is_full_salary_continuous is falsy", () => {
+      const noAmountNoFreqPaidLeave = new EmployerBenefit({
+        benefit_amount_dollars: 0,
+        benefit_amount_frequency: EmployerBenefitFrequency.unknown,
         benefit_end_date: "2021-03-01",
         benefit_start_date: "2021-02-01",
         benefit_type: EmployerBenefitType.paidLeave,
         employer_benefit_id: 0,
+        is_full_salary_continuous: false,
       });
       const wrapper = shallow(
         <AmendableEmployerBenefit
           appErrors={appLogic.appErrors}
           isAddedByLeaveAdmin={false}
-          employerBenefit={nullPaidLeave}
+          employerBenefit={noAmountNoFreqPaidLeave}
           onChange={onChange}
           onRemove={onRemove}
           shouldShowV2

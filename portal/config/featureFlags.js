@@ -24,12 +24,12 @@ const flagsConfig = {
     claimantShowOtherLeaveStep: false,
 
     // When this flag is enabled, the Leave Admin dashboard shows filter functionality
-    // TODO (EMPLOYER-1412): Remove flag
-    employerShowDashboardEmployerFilter: false,
+    // TODO (EMPLOYER-1499): Remove flag
+    employerShowDashboardFilters: false,
 
-    // When this flag is enabled, file upload is visible on the Review page
-    // TODO (EMPLOYER-665): Show file upload once the endpoint is available
-    employerShowFileUpload: false,
+    // When this flag is enabled, the Leave Admin dashboard supports search functionality
+    // TODO (EMPLOYER-1500): Remove flag
+    employerShowDashboardSearch: false,
 
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
     // TODO (EMPLOYER-718): Remove flag
@@ -49,8 +49,8 @@ const flagsConfig = {
     // When this flag is enabled, the user can apply to take leave to
     // "Care for a family member with a serious health condition" and
     // Leave Admins can review Caring Leave claims
-    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
-    showCaringLeaveType: false,
+    // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
+    showCaringLeaveType: true,
 
     // When this flag is enabled, the medical leave question numbers for leave periods
     // are updated to reflect the new "Certification of Your Serious Health Condition"
@@ -60,29 +60,27 @@ const flagsConfig = {
     // When this flag is enabled, the document upload and listing/download features will use
     // the new plan proofs in FINEOS, expected to roll out on 6/25
     // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
-    useNewPlanProofs: false,
+    useNewPlanProofs: true,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
   "cps-preview": {
-    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
+    employerShowDashboardFilters: true,
   },
   development: {
     example: true,
+    employerShowDashboardFilters: true,
     pfmlTerriyay: true,
-    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
   },
   test: {
-    useNewPlanProofs: true, // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
+    employerShowDashboardFilters: true,
   },
-  stage: {},
-  training: {},
-  performance: {},
-  uat: {},
-  prod: {
-    pfmlTerriyay: true,
-  },
+  stage: { employerShowDashboardFilters: true },
+  training: { employerShowDashboardFilters: true },
+  performance: { employerShowDashboardFilters: true },
+  uat: { employerShowDashboardFilters: true },
+  prod: { employerShowDashboardFilters: true, pfmlTerriyay: true },
 };
 
 /**

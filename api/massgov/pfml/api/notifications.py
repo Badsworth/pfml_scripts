@@ -86,6 +86,7 @@ def notifications_post():
         )
         if employee_id:
             log_attributes = {**log_attributes, "employee_id": employee_id}
+            newrelic.agent.add_custom_parameter("employee_id", employee_id)
 
         if claim is None:
             new_claim = Claim(

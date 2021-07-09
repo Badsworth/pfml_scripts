@@ -56,8 +56,7 @@ const employerResponseLeavesAndBenefits: Partial<EmployerResponseSpec> = {
   ],
 };
 
-// Portal claim submission with eligible employee
-export const LSTBHAP1: ScenarioSpecification = {
+export const LSTOLB1: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
     ...CypressScenarios.BHAP1.claim,
@@ -68,6 +67,19 @@ export const LSTBHAP1: ScenarioSpecification = {
       ...employerResponseLeavesAndBenefits,
     },
     ...otherLeavesAndBenefitsProps,
+  },
+};
+
+// Portal claim submission with eligible employee
+export const LSTBHAP1: ScenarioSpecification = {
+  ...CypressScenarios.BHAP1,
+  claim: {
+    ...CypressScenarios.BHAP1.claim,
+    label: "PortalClaimSubmit",
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
   },
 };
 
@@ -85,9 +97,7 @@ export const LSTCHAP1: ScenarioSpecification = {
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
-      ...employerResponseLeavesAndBenefits,
     },
-    ...otherLeavesAndBenefitsProps,
   },
 };
 

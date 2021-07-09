@@ -161,34 +161,30 @@ def test_check_and_update_wages_and_contributions(test_db_session, initialize_fa
     assert len(test_db_session.dirty) == 1
 
 
-def test_check_and_update_employer_quarlerly_contribution(
+def test_check_and_update_employer_quarterly_contribution(
     test_db_session, initialize_factories_session
 ):
-    now = datetime.now()
-
-    employer = EmployerFactory.create()
-
     payload = {
         "total_pfml_contribution": Decimal("15234.58"),
-        "received_date": date(now.year, now.month, now.day),
+        "received_date": date(2021, 6, 21),
         "pfm_account_id": "12345678912345",
-        "updated_date": now,
+        "updated_date": datetime(2021, 6, 22, 19, 1, 12),
     }
 
+    employer = EmployerFactory.create()
     employer_contribution_row = EmployerQuarterlyContribution(
         employer_id=employer.employer_id,
         filing_period=date(2020, 6, 30),
         pfm_account_id=payload["pfm_account_id"],
         employer_total_pfml_contribution=payload["total_pfml_contribution"],
-        dor_received_date=payload["received_date"],
-        dor_updated_date=payload["updated_date"],
+        dor_received_date=datetime(2021, 6, 21, 0, 0, 0),
+        dor_updated_date=datetime(2021, 6, 22, 19, 1, 12),
     )
     test_db_session.add(employer_contribution_row)
     test_db_session.commit()
-    test_db_session.refresh(employer_contribution_row)
 
-    updated = util.check_and_update_employer_quarlerly_contribution(
-        test_db_session, employer_contribution_row, payload, uuid.uuid4()
+    updated = util.check_and_update_employer_quarterly_contribution(
+        employer_contribution_row, payload, 10
     )
 
     assert not updated
@@ -197,12 +193,51 @@ def test_check_and_update_employer_quarlerly_contribution(
     modified_payload = copy.deepcopy(payload)
     modified_payload["total_pfml_contribution"] = Decimal("15234.64")
 
-    updated = util.check_and_update_employer_quarlerly_contribution(
-        test_db_session, employer_contribution_row, modified_payload, uuid.uuid4()
+    updated = util.check_and_update_employer_quarterly_contribution(
+        employer_contribution_row, modified_payload, 20
     )
 
     assert updated
     assert len(test_db_session.dirty) == 1
+    assert employer_contribution_row.employer_total_pfml_contribution == Decimal("15234.64")
+    assert employer_contribution_row.latest_import_log_id == 20
+
+
+def test_check_and_update_employer_quarterly_contribution_update_twice(
+    test_db_session, initialize_factories_session
+):
+    payload = {
+        "total_pfml_contribution": Decimal("20.00"),
+        "received_date": date(2021, 6, 21),
+        "pfm_account_id": "12345678912345",
+        "updated_date": datetime(2021, 6, 22, 19, 1, 12),
+    }
+
+    employer = EmployerFactory.create()
+    employer_contribution_row = EmployerQuarterlyContribution(
+        employer_id=employer.employer_id,
+        filing_period=date(2020, 6, 30),
+        pfm_account_id=payload["pfm_account_id"],
+        employer_total_pfml_contribution=Decimal("10.00"),
+        dor_received_date=datetime(2021, 6, 10, 0, 0, 0),
+        dor_updated_date=datetime(2021, 6, 11, 18, 0, 12),
+    )
+    test_db_session.add(employer_contribution_row)
+    test_db_session.commit()
+
+    updated = util.check_and_update_employer_quarterly_contribution(
+        employer_contribution_row, payload, 10
+    )
+
+    assert updated
+    assert employer_contribution_row.employer_total_pfml_contribution == Decimal("20.00")
+    assert employer_contribution_row.latest_import_log_id == 10
+
+    updated = util.check_and_update_employer_quarterly_contribution(
+        employer_contribution_row, payload, 10
+    )
+
+    assert not updated
 
 
 def test_dict_to_employee_removes_underscores_in_names():

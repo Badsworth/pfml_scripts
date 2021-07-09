@@ -685,11 +685,9 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     ) == set(claimant_data.validation_container.validation_issues)
 
     # Account number incorrect length.
-    long_num = "12345678901234567890123456789012345678901234567890"
+    long_num = "123456789012345678"
     fineos_data = FineosClaimantData(
-        routing_nbr="111111118",
-        account_nbr="12345678901234567890123456789012345678901234567890",
-        account_type="Checking",
+        routing_nbr="111111118", account_nbr=long_num, account_type="Checking",
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
@@ -707,7 +705,7 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     # Account type incorrect.
     fineos_data = FineosClaimantData(
         routing_nbr="111111118",
-        account_nbr="123456789012345678901234567890",
+        account_nbr="12345678901234567",
         account_type="Certificate of Deposit",
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
@@ -730,7 +728,7 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     # Account type and Routing number incorrect.
     fineos_data = FineosClaimantData(
         routing_nbr="12345678",
-        account_nbr="123456789012345678901234567890",
+        account_nbr="12345678901234567",
         account_type="Certificate of Deposit",
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)

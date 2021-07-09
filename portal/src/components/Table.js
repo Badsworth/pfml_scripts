@@ -36,7 +36,7 @@ Table.propTypes = {
    * Apply responsive styling, stacking the table for small screens.
    * If you use this variant, you must ensure there is a `data-label`
    * attribute on each cell of the table that matches the column header.
-   **/
+   */
   responsive: PropTypes.bool,
   /**
    * Apply a horizontal scrollbar if the columns exceed the available width.

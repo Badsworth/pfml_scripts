@@ -11,7 +11,6 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-06-04.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-06-04.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "HAS_FINEOS_SP": "true",
     "FINEOS_HAS_UPDATED_EFORMS": "true"
   },
   "stage": {
@@ -40,7 +39,7 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-06-04.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-06-04.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "HAS_FINEOS_SP": "true"
+    "FINEOS_HAS_UPDATED_EFORMS": "true"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -56,7 +55,7 @@
     "LST_EMPLOYEES_FILE": "./employees/lst-2021-05-10.employees.json",
     "LST_EMPLOYERS_FILE": "./employers/lst-2021-05-10.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "HAS_FINEOS_SP": "true"
+    "FINEOS_HAS_UPDATED_EFORMS": "true"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -70,7 +69,8 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-06-04.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-06-04.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "HAS_FINEOS_SP": "true"
+    "HAS_FINEOS_SP": "true",
+    "FINEOS_HAS_UPDATED_EFORMS": "true"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
@@ -84,7 +84,6 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-06-04.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-06-04.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "HAS_FINEOS_SP": "true",
     "FINEOS_HAS_UPDATED_EFORMS": "false"
   },
   "local": {

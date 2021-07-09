@@ -80,6 +80,7 @@ module "tasks" {
   fineos_data_export_path   = "s3://fin-sompre-data-export/PFX/dataexports"
   fineos_data_import_path   = "s3://fin-sompre-data-import/PFX/peiupdate"
   fineos_error_export_path  = "s3://fin-sompre-data-export/PFX/errorExtracts"
+  fineos_report_export_path = "s3://fin-sompre-data-export/PFX/reportExtracts"
   pfml_fineos_inbound_path  = "s3://massgov-pfml-breakfix-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path = "s3://massgov-pfml-breakfix-agency-transfer/cps/outbound"
 

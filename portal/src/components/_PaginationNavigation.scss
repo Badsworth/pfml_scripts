@@ -2,8 +2,7 @@
 
 // Override Mayflower Pagination component styles
 .ma__pagination {
-
-  // Prevent double border when rendered below a table 
+  // Prevent double border when rendered below a table
   .ma__pagination__container {
     border-top: 0;
     padding: 0;

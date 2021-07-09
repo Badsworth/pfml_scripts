@@ -41,6 +41,7 @@ module "tasks" {
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/TRN"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN/dataexports"
   fineos_error_export_path                            = "s3://fin-somdev-data-export/TRN/errorExtracts"
+  fineos_report_export_path                           = "s3://fin-somdev-data-export/TRN/reportExtracts"
 
   enable_register_admins_job = true
 

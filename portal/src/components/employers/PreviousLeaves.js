@@ -156,7 +156,13 @@ const PreviousLeaves = (props) => {
               <td colSpan="4" className="padding-y-2 padding-left-0">
                 <AddButton
                   label={t(
-                    "components.employersAmendablePreviousLeave.addButton"
+                    "components.employersAmendablePreviousLeave.addButton",
+                    {
+                      context:
+                        addedPreviousLeaves.length === 0
+                          ? "first"
+                          : "subsequent",
+                    }
                   )}
                   onClick={onAdd}
                   disabled={addedPreviousLeaves.length >= limit}

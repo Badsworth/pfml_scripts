@@ -8,13 +8,13 @@ class PreviousLeave extends BaseModel {
   get defaults() {
     return {
       is_for_current_employer: null,
-      is_for_same_reason_as_leave_reason: null,
       leave_end_date: null,
       leave_minutes: null,
       leave_reason: null, // PreviousLeaveReason
       leave_start_date: null,
       // this ID field is currently only used by the /applications API in the Claimant portal.
       previous_leave_id: null,
+      type: null, // PreviousLeaveType
       worked_per_week_minutes: null,
     };
   }
@@ -36,6 +36,15 @@ export const PreviousLeaveReason = {
   // Unknown may be displayed to Leave Admins, but isn't
   // an option we display to Claimants
   unknown: "Unknown",
+};
+
+/**
+ * Possible values for Application's "previous_leaves[].type" field.
+ * @enum {string}
+ */
+export const PreviousLeaveType = {
+  otherReason: "other_reason",
+  sameReason: "same_reason",
 };
 
 export default PreviousLeave;

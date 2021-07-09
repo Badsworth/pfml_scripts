@@ -101,9 +101,9 @@ import config from "../config";
       generate(TRNOL2, 25),
       generate(TRNOL3, 25),
       generate(TRNOL4, 25),
-      generate(TRNER1, 50),
-      generate(TRNER2, 50),
-      generate(TRNER3, 50)
+      generate(TRNER1, 75),
+      generate(TRNER2, 75),
+      generate(TRNER3, 75)
     );
     // <!-- @default
     await claimPool.save(storage.claims, storage.documents);

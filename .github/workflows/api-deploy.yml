@@ -331,134 +331,10 @@ jobs:
         run: make release
         working-directory: ${{ env.working-dir }}
 
-  lambda-builds:
-    name: Build lambdas
-    needs: update-the-deploy-branch
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        component: ["cognito_pre_signup", "cognito_post_confirmation"]
-
-    env:
-      infra-working-dir: ./api/lambdas
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-
-      - uses: actions/setup-python@v1
-        with:
-          python-version: ${{ env.python-version }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: ci-run-deploys
-          role-duration-seconds: 3600
-
-      - name: Check if lambda packages exist in S3 before the build
-        id: s3-check
-        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-        continue-on-error: true
-        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
-
-      - name: Echo message about the package
-        if: steps.s3-check.outcome == 'success'
-        run: echo "The Lambda package already exists in S3 bucket; skipping rebuild."
-
-      - name: Install API Package Dependencies
-        if: steps.s3-check.outcome == 'failure'
-        run: pip install wheel setuptools poetry
-        working-directory: ${{ env.working-dir }}
-
-      - name: Build API package
-        if: steps.s3-check.outcome == 'failure'
-        run: poetry build
-        working-directory: ${{ env.working-dir }}
-
-      - name: Install Lambda CLI Dependencies
-        if: steps.s3-check.outcome == 'failure'
-        run: pip install aws-sam-cli
-        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
-
-      - name: Lambda Build, Package and Upload to S3
-        if: steps.s3-check.outcome == 'failure'
-        run: make release
-        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
-
-      - name: Rename Lambda S3 Package
-        id: rename
-        if: steps.s3-check.outcome == 'failure'
-        run: |
-          aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
-
-  check-step-function-management:
-    # TODO: Remove this job: https://lwd.atlassian.net/browse/INFRA-504
-    name: (temp) Manage Step Functions
-    runs-on: ubuntu-latest
-    needs: [update-the-deploy-branch, api-build, lambda-builds, deploy-info]
-    env:
-      TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: ci-run-deploys
-          role-duration-seconds: 3600
-
-      - uses: hashicorp/setup-terraform@v1.2.1
-        with:
-          terraform_version: 0.14.7
-          terraform_wrapper: false
-
-      - name: Terraform Init
-        id: terraform_init
-        run: terraform init
-        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
-
-      - name: Check step function management
-        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
-        env:
-          # Clear out the invalid timeout args for terraform output
-          TF_CLI_ARGS: ''
-        run: |
-          function_list=$(terraform state list | { grep step_functions || true; })
-          if ! [[ -z "$function_list" ]] && ! [[ -f "step_functions.tf" ]]; then
-            echo "step functions managed by api -- delete"
-            terraform plan -destroy -lock-timeout=120s \
-            -target=module.api.aws_sfn_state_machine.dor_fineos_etl \
-            -target=module.api.aws_iam_role_policy.step_functions_execution \
-            -target=module.api.aws_iam_role_policy.eventbridge_step_functions_role_policy \
-            -target=module.api.aws_iam_role.step_functions_execution \
-            -target=module.api.aws_iam_role.eventbridge_step_functions \
-            -target=module.api.aws_cloudwatch_event_target.dor_fineos_etl_event_target_ecs \
-            -target=module.api.aws_cloudwatch_event_rule.dor_fineos_etl \
-            -out=plan.tfplan
-            terraform apply plan.tfplan
-          else
-            echo "step function does not need to be deleted"
-          fi
-
   api-db-migrate-up:
     name: Run migrations
     runs-on: ubuntu-latest
-    # This step doesn't really depend on lambda-builds, but for good measure we should
-    # make sure everything builds before we deploy any updates to ECS tasks or services.
-    needs: [update-the-deploy-branch, api-build, lambda-builds, deploy-info, check-step-function-management]
+    needs: [update-the-deploy-branch, api-build, deploy-info]
 
     env:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
@@ -550,8 +426,6 @@ jobs:
 
     env:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_release_version: ${{ github.event.inputs.version || 'main' }}
 
     steps:
@@ -899,10 +773,8 @@ jobs:
   post-e2e-failures-to-slack:
     name: Post E2E failures to Slack
     needs: [finish-comms-slack, end-to-end]
-    # Run if the E2E tests failed. Skip for CPS Preview since those tests are not
-    # expected to pass for a while. This conditional will be removed in INFRA-460.
+    # Run if the E2E tests failed or timed out. Applies to any environment that runs E2E tests.
     if: always() &&
-        github.event.inputs.deployment_env != 'cps-preview' &&
         (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
     runs-on: ubuntu-latest
     steps:

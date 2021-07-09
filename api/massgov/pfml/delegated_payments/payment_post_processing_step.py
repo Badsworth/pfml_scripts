@@ -1,5 +1,4 @@
 import enum
-import math
 import uuid
 from dataclasses import dataclass, field
 from datetime import date
@@ -102,14 +101,7 @@ class PaymentPostProcessingStep(Step):
         # on the length of the period. This is calculated by finding the length
         # in days of the pay period, dividing by 7, and rounding up.
 
-        # We add 1 to the period in days because we want to consider a week to be
-        # 7 days inclusive. For example:
-        #    Jan 1st - Jan 1st is 1 day even though no time passes.
-        #    Jan 1st - Jan 2nd is 2 days
-        #    Jan 1st - Jan 7th is 7 days (eg. Monday -> Sunday)
-        #    Jan 1st - Jan 8th is 8 days (eg. Monday -> the next Monday)
-        period_in_days = (end_date - start_date).days + 1
-        weeks = math.ceil(period_in_days / 7.0)
+        weeks = payments_util.get_period_in_weeks(start_date, end_date)
 
         return weeks * result.maximum_weekly_benefit_amount
 

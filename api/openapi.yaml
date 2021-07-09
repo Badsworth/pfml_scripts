@@ -378,6 +378,16 @@ paths:
             single claim status or a comma seperated list of claim status (i.e claim_status="Pending,Closed"),
             the valid status are "Approved", "Closed", "Completed", "Declined" and "Pending".
           required: false
+        - name: "search"
+          in: query
+          schema:
+            type: string
+          description: > 
+            A search string used to filter the request that,
+            when provided, is used in a fuzzy search against the claims'
+            Absence Case IDs, in addition to the employees' first, middle, and last names.
+            When the string is empty, it is ignored.
+          required: false
       responses:
         "200":
           description: The claim information.
@@ -1378,18 +1388,22 @@ components:
         city:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "Springfield"
         line_1:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "742 Evergreen Terrace"
         line_2:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: ""
         state:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "MA"
         zip:
           type: string

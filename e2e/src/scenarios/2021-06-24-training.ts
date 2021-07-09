@@ -308,7 +308,15 @@ export const TRNER2: ScenarioSpecification = {
       hours_worked_per_week: 40,
       leave_reason: "Care for a Family Member",
       believe_relationship_accurate: "Yes",
-      comment: "STD weekly $50",
+      employer_benefits: [
+        {
+          benefit_type: "Short-term disability insurance",
+          benefit_amount_dollars: 50,
+          benefit_amount_frequency: "Per Week",
+          benefit_start_date: "2021-05-01",
+          benefit_end_date: "2021-06-30",
+        },
+      ],
     },
     metadata: {
       postSubmit: "APPROVEDOCS",

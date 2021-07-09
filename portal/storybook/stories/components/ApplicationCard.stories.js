@@ -22,6 +22,7 @@ export default {
           "Hybrid leave",
           "Intermittent leave",
           "Submitted",
+          "Submitted, null Other Leave",
           "Submitted + Denial notice",
           "Completed",
           "Future Newborn + No cert",
@@ -59,6 +60,12 @@ export const Story = ({ claim, documents, ...args }) => {
       .create();
   } else if (claim === "Submitted") {
     claimAttrs = new MockBenefitsApplicationBuilder().submitted().create();
+  } else if (claim === "Submitted, null Other Leave") {
+    // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
+    claimAttrs = new MockBenefitsApplicationBuilder()
+      .submitted()
+      .nullOtherLeave()
+      .create();
   } else if (claim === "Submitted + Denial notice") {
     claimAttrs = new MockBenefitsApplicationBuilder().submitted().create();
     attachedDocuments = [
@@ -152,6 +159,9 @@ export const Story = ({ claim, documents, ...args }) => {
 
   const appLogic = {
     appErrors: new AppErrorInfoCollection(errors),
+    documents: {
+      download: () => {},
+    },
   };
 
   return (

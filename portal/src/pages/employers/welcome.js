@@ -159,7 +159,6 @@ export const Welcome = ({ appLogic, user }) => {
               <Link href={routes.employers.organizations}>
                 <a>{t("pages.employersWelcome.settingsLink")}</a>
               </Link>
-              <NewTag />
             </li>
           </ul>
           <Heading level="2">

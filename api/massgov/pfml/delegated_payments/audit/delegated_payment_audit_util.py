@@ -109,6 +109,19 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
 
     check_description = _format_check_memo(payment)
 
+    payment_period_start_date = (
+        payment.period_start_date.isoformat() if payment.period_start_date else None
+    )
+    payment_period_end_date = (
+        payment.period_end_date.isoformat() if payment.period_end_date else None
+    )
+
+    payment_period_weeks = None
+    if payment.period_start_date and payment.period_end_date:
+        payment_period_weeks = payments_util.get_period_in_weeks(
+            payment.period_start_date, payment.period_end_date
+        )
+
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
         leave_type=get_leave_type(payment),
@@ -125,12 +138,9 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         is_address_verified=is_address_verified,
         payment_preference=get_payment_preference(payment),
         scheduled_payment_date=payment.payment_date.isoformat() if payment.payment_date else None,
-        payment_period_start_date=payment.period_start_date.isoformat()
-        if payment.period_start_date
-        else None,
-        payment_period_end_date=payment.period_end_date.isoformat()
-        if payment.period_end_date
-        else None,
+        payment_period_start_date=payment_period_start_date,
+        payment_period_end_date=payment_period_end_date,
+        payment_period_weeks=str(payment_period_weeks),
         payment_amount=str(payment.amount),
         absence_case_number=claim.fineos_absence_id,
         c_value=payment.fineos_pei_c_value,

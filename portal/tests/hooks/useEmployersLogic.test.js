@@ -350,6 +350,15 @@ describe("useEmployersLogic", () => {
       expect(submitClaimReviewMock).toHaveBeenCalledWith(absenceId, patchData);
     });
 
+    it("clears the cached claim", async () => {
+      await act(async () => {
+        await employersLogic.loadClaim(absenceId);
+        await employersLogic.submitClaimReview(absenceId, patchData);
+      });
+
+      expect(employersLogic.claim).toBeNull();
+    });
+
     describe("errors", () => {
       beforeEach(() => {
         jest.spyOn(console, "error").mockImplementationOnce(jest.fn());

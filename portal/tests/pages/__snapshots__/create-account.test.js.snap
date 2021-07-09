@@ -18,9 +18,6 @@ exports[`CreateAccount renders the empty page 1`] = `
           "contact-center-phone-link": <a
             href="tel:(833) 344-7365"
           />,
-          "mass-benefits-timeline-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
-          />,
           "p": <p />,
         }
       }
@@ -105,16 +102,6 @@ Array [
       (833) 344‑7365
     </a>
     .
-  </p>,
-  <p
-    key="2"
-  >
-    <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
-      key="0"
-    >
-      Learn more about the paid leave benefit timeline.
-    </a>
   </p>,
 ]
 `;

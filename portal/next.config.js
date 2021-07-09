@@ -55,8 +55,8 @@ const config = {
 };
 
 module.exports = withBundleAnalyzer(
-  // We transpile Mayflower since there's an issue that results in untranspiled
+  // We transpile Mayflower and USWDS since there's an issue that results in untranspiled
   // modules being included in our code, which breaks IE11 compatibility
   // https://jira.mass.gov/browse/DP-20446
-  withTranspileModules(["@massds/mayflower-react"])(withImages(config))
+  withTranspileModules(["@massds/mayflower-react", "uswds"])(withImages(config))
 );

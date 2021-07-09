@@ -59,11 +59,10 @@ export const MIL_RED: ScenarioSpecification = {
   claim: {
     label: "MIL_RED",
     shortClaim: true,
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    reason: "Care for a Family Member",
     docs: {
-      HCP: {},
       MASSID: {},
+      CARING: {},
     },
     reduced_leave_spec: "0,240,240,240,240,240,0",
   },
@@ -424,5 +423,17 @@ export const BHAP1_OLB: ScenarioSpecification = {
     ],
     concurrent_leave: { is_for_current_employer: true },
     metadata: { expected_weekly_payment: "850.00" },
+  },
+};
+
+export const CHAP_ER: ScenarioSpecification = {
+  ...CHAP_RFI,
+  claim: {
+    ...CHAP_RFI.claim,
+    label: "CHAP_ER",
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
   },
 };

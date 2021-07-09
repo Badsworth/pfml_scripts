@@ -21,6 +21,16 @@ class IntermediaryEmployerBenefit:
         self.receive_wage_replacement = "Yes"
 
 
+class IntermediaryV1EmployerBenefit:
+    def __init__(self, benefit: EmployerBenefit):
+        self.benefit_start_date = benefit.benefit_start_date
+        self.benefit_end_date = benefit.benefit_end_date
+        self.benefit_amount_dollars = benefit.benefit_amount_dollars
+        self.benefit_amount_frequency = benefit.benefit_amount_frequency
+        self.benefit_type = benefit.benefit_type
+        self.receive_wage_replacement = "Yes"
+
+
 class IntermediaryOtherIncome:
     def __init__(self, income: OtherIncome):
         self.income_type = income.income_type

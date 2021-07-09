@@ -122,6 +122,9 @@ class PaymentRejectsStep(Step):
                     payment_period_end_date=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date
                     ),
+                    payment_period_weeks=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.payment_period_weeks
+                    ),
                     payment_amount=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.payment_amount),
                     absence_case_number=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_number),
                     c_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.c_value),

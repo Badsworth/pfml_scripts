@@ -53,9 +53,6 @@ exports[`GetReady renders get ready content 1`] = `
     <Trans
       components={
         Object {
-          "benefits-timeline-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
-          />,
           "contact-center-phone-link": <a
             href="tel:(833) 344-7365"
           />,
@@ -114,6 +111,8 @@ exports[`GetReady renders get ready content 1`] = `
         Object {
           "healthcare-provider-form-link": <a
             href="https://www.mass.gov/medical-leave-form"
+            rel="noopener"
+            target="_blank"
           />,
         }
       }
@@ -150,9 +149,13 @@ exports[`GetReady renders get ready content 1`] = `
           "li": <li />,
           "medical-bonding-link": <a
             href="https://www.mass.gov/pfml-medical-bonding"
+            rel="noopener"
+            target="_blank"
           />,
           "tax-liability-link": <a
             href="https://www.mass.gov/pfml-tax-liability"
+            rel="noopener"
+            target="_blank"
           />,
           "ul": <ul
             className="usa-list"
@@ -279,6 +282,8 @@ exports[`GetReady renders get ready content 6`] = `
   <a
     href="https://www.mass.gov/medical-leave-form"
     key="1"
+    rel="noopener"
+    target="_blank"
   >
     Certification of Your Serious Health Condition
   </a>
@@ -315,6 +320,8 @@ Array [
     <a
       href="https://www.mass.gov/pfml-medical-bonding"
       key="1"
+      rel="noopener"
+      target="_blank"
     >
       easily added to your claim
     </a>
@@ -360,6 +367,8 @@ Array [
     <a
       href="https://www.mass.gov/pfml-tax-liability"
       key="1"
+      rel="noopener"
+      target="_blank"
     >
       possible tax implications
     </a>

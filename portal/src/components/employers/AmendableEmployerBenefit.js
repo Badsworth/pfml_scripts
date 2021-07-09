@@ -100,7 +100,10 @@ const AmendableEmployerBenefit = ({
 
     if (is_full_salary_continuous) {
       return t("components.employersEmployerBenefits.fullSalaryContinuous");
-    } else if (benefit_amount_dollars === null) {
+    } else if (
+      benefit_amount_dollars === 0 &&
+      benefit_amount_frequency === EmployerBenefitFrequency.unknown
+    ) {
       return t("components.employersEmployerBenefits.noAmountReported");
     }
 

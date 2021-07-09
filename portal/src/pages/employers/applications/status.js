@@ -1,9 +1,10 @@
-import Document, { DocumentType } from "../../../models/Document";
 import React, { useEffect } from "react";
 import { AbsenceCaseStatus } from "../../../models/Claim";
 import AbsenceCaseStatusTag from "../../../components/AbsenceCaseStatusTag";
 import BackButton from "../../../components/BackButton";
 import DocumentCollection from "../../../models/DocumentCollection";
+import { DocumentType } from "../../../models/Document";
+import DownloadableDocument from "../../../components/DownloadableDocument";
 import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
@@ -12,7 +13,6 @@ import PropTypes from "prop-types";
 import StatusRow from "../../../components/StatusRow";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import download from "downloadjs";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDateRange from "../../../utils/formatDateRange";
@@ -27,7 +27,7 @@ export const Status = (props) => {
     query: { absence_id: absenceId },
   } = props;
   const {
-    employers: { claim, documents },
+    employers: { claim, documents, downloadDocument },
   } = appLogic;
   const { isContinuous, isIntermittent, isReducedSchedule } = claim;
   const { t } = useTranslation();
@@ -99,28 +99,21 @@ export const Status = (props) => {
           ),
         })}
       </StatusRow>
-      <StatusRow
-        data-test="duration"
-        label={t("pages.employersClaimsStatus.leaveDurationLabel")}
-      >
-        {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
-      </StatusRow>
+      {/* TODO (EMPLOYER-448): Show leave duration and the intermittent leave period dates when API returns them to Portal */}
+      {!isIntermittent && (
+        <StatusRow
+          data-test="duration"
+          label={t("pages.employersClaimsStatus.leaveDurationLabel")}
+        >
+          {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
+        </StatusRow>
+      )}
       {isContinuous && (
         <StatusRow
           data-test="duration-continuous"
           label={t("pages.employersClaimsStatus.leaveDurationLabel_continuous")}
         >
           {claim.continuousLeaveDateRange()}
-        </StatusRow>
-      )}
-      {isIntermittent && (
-        <StatusRow
-          data-test="duration-intermittent"
-          label={t(
-            "pages.employersClaimsStatus.leaveDurationLabel_intermittent"
-          )}
-        >
-          {claim.intermittentLeaveDateRange()}
         </StatusRow>
       )}
       {isReducedSchedule && (
@@ -138,12 +131,14 @@ export const Status = (props) => {
           </Heading>
           <ul className="usa-list usa-list--unstyled margin-top-2">
             {legalNotices.map((document) => (
-              <DocumentListItem
-                absenceId={absenceId}
-                appLogic={appLogic}
-                document={document}
-                key={document.fineos_document_id}
-              />
+              <li key={document.fineos_document_id} className="margin-bottom-2">
+                <DownloadableDocument
+                  absenceId={absenceId}
+                  onDownloadClick={downloadDocument}
+                  document={document}
+                  showCreatedAt
+                />
+              </li>
             ))}
           </ul>
         </div>
@@ -164,60 +159,6 @@ Status.propTypes = {
   query: PropTypes.shape({
     absence_id: PropTypes.string,
   }).isRequired,
-};
-
-const DocumentListItem = (props) => {
-  const { absenceId, appLogic, document } = props;
-  const { t } = useTranslation();
-
-  const documentContentType = document.content_type || "application/pdf";
-  const noticeNameTranslationKey =
-    documentContentType === "application/pdf"
-      ? "components.applicationCard.noticeName_pdf"
-      : "components.applicationCard.noticeName";
-
-  const handleClick = async (event) => {
-    event.preventDefault();
-    const documentData = await appLogic.employers.downloadDocument(
-      absenceId,
-      document
-    );
-
-    if (documentData) {
-      download(
-        documentData,
-        document.name.trim() || document.document_type.trim(),
-        documentContentType
-      );
-    }
-  };
-
-  return (
-    <li className="margin-bottom-2">
-      <p>
-        <a onClick={handleClick} href="">
-          {t(noticeNameTranslationKey, {
-            context: findKeyByValue(DocumentType, document.document_type),
-          })}
-        </a>
-      </p>
-      <p className="margin-top-05">
-        {t("pages.employersClaimsStatus.noticeDate", {
-          date: formatDateRange(document.created_at),
-        })}
-      </p>
-    </li>
-  );
-};
-
-DocumentListItem.propTypes = {
-  absenceId: PropTypes.string.isRequired,
-  appLogic: PropTypes.shape({
-    employers: PropTypes.shape({
-      downloadDocument: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  document: PropTypes.instanceOf(Document).isRequired,
 };
 
 export default withEmployerClaim(Status);

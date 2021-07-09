@@ -1,9 +1,16 @@
+import { find, get, pick } from "lodash";
+import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
+import Button from "../../components/Button";
 import ClaimCollection from "../../models/ClaimCollection";
 import Details from "../../components/Details";
 import Dropdown from "../../components/Dropdown";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
+import Icon from "../../components/Icon";
+import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputText from "../../components/InputText";
+import Link from "next/link";
 import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
 import PaginationSummary from "../../components/PaginationSummary";
@@ -14,10 +21,12 @@ import Title from "../../components/Title";
 import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
+import classnames from "classnames";
 import formatDateRange from "../../utils/formatDateRange";
-import { get } from "lodash";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
+import useFormState from "../../hooks/useFormState";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
 
@@ -53,7 +62,7 @@ export const Dashboard = (props) => {
    * are merged with the existing query string.
    * @param {Array<{ name: string, value: number|string }>} paramsToUpdate
    */
-  const updateClaimsRequestParams = (paramsToUpdate) => {
+  const updatePageQuery = (paramsToUpdate) => {
     const params = new URLSearchParams(window.location.search);
 
     paramsToUpdate.forEach(({ name, value }) => {
@@ -71,7 +80,7 @@ export const Dashboard = (props) => {
 
     // Our withClaims component watches the query string and
     // will trigger an API request when it changes.
-    appLogic.portalFlow.goTo(appLogic.portalFlow.pathname, paramsObj);
+    appLogic.portalFlow.updateQuery(paramsObj);
   };
 
   /**
@@ -79,7 +88,7 @@ export const Dashboard = (props) => {
    * @param {number|string} pageOffset - Page number to load
    */
   const handlePaginationNavigationClick = (pageOffset) => {
-    updateClaimsRequestParams([
+    updatePageQuery([
       {
         name: "page_offset",
         value: pageOffset,
@@ -136,13 +145,16 @@ export const Dashboard = (props) => {
         </Details>
       </section>
 
-      {isFeatureEnabled("employerShowDashboardEmployerFilter") && (
-        <Filters
-          activeFilters={props.activeFilters}
-          updateClaimsRequestParams={updateClaimsRequestParams}
-          user={user}
-        />
-      )}
+      <Search
+        initialValue={get(props.activeFilters, "search", "")}
+        updatePageQuery={updatePageQuery}
+      />
+      <Filters
+        activeFilters={props.activeFilters}
+        showFilters={props.query["show-filters"] === "true"}
+        updatePageQuery={updatePageQuery}
+        user={user}
+      />
 
       {paginationMeta.total_records > 0 && (
         <PaginationSummary
@@ -212,11 +224,14 @@ Dashboard.propTypes = {
   appLogic: PropTypes.shape({
     portalFlow: PropTypes.shape({
       getNextPageRoute: PropTypes.func.isRequired,
-      goTo: PropTypes.func.isRequired,
       pathname: PropTypes.string.isRequired,
+      updateQuery: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
   claims: PropTypes.instanceOf(ClaimCollection),
+  query: PropTypes.shape({
+    "show-filters": PropTypes.oneOf(["false", "true"]),
+  }),
   paginationMeta: PropTypes.instanceOf(PaginationMeta),
   user: PropTypes.instanceOf(User).isRequired,
 };
@@ -263,13 +278,17 @@ const ClaimTableRows = (props) => {
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
         return isEmployerRegisteredInFineos ? (
-          <a href={claimRoute}>{get(claim, columnKey)}</a>
+          <Link href={claimRoute}>
+            <a>{get(claim, columnKey)}</a>
+          </Link>
         ) : (
           get(claim, columnKey)
         );
       case "employee_name":
         return isEmployerRegisteredInFineos ? (
-          <a href={claimRoute}>{fullName}</a>
+          <Link href={claimRoute}>
+            <a>{fullName}</a>
+          </Link>
         ) : (
           fullName
         );
@@ -378,14 +397,42 @@ DashboardInfoAlert.propTypes = {
 };
 
 const Filters = (props) => {
-  const { activeFilters, updateClaimsRequestParams, user } = props;
+  const filterFields = ["claim_status", "employer_id"];
+  const { showFilters, updatePageQuery, user } = props;
   const { t } = useTranslation();
 
-  const handleChange = (evt) => {
-    updateClaimsRequestParams([
+  const initialFormState = { ...pick(props.activeFilters, filterFields) };
+  if (initialFormState.claim_status) {
+    // Convert checkbox field query param into array, to conform to how we manage checkbox form state
+    initialFormState.claim_status = initialFormState.claim_status.split(",");
+  }
+
+  const { formState, updateFields } = useFormState(initialFormState);
+  const getFunctionalInputProps = useFunctionalInputProps({
+    formState,
+    updateFields,
+  });
+
+  const filtersContainerId = "filters";
+  let activeFiltersCount = Object.values(initialFormState).length;
+  if (initialFormState.claim_status) {
+    // Count each selected status as an active filter
+    activeFiltersCount += initialFormState.claim_status.length - 1;
+  }
+
+  const handleSubmit = (evt) => {
+    evt.preventDefault();
+    const params = [];
+
+    Object.entries(formState).forEach(([name, value]) => {
+      params.push({ name, value });
+    });
+
+    updatePageQuery([
+      ...params,
       {
-        name: evt.target.name,
-        value: evt.target.value,
+        name: "show-filters",
+        value: false,
       },
       {
         // Reset the page to 1 since filters affect what shows on the first page
@@ -395,27 +442,178 @@ const Filters = (props) => {
     ]);
   };
 
+  const handleFilterReset = () => {
+    const params = [];
+
+    Object.keys(initialFormState).forEach((name) => {
+      // Reset by setting to an empty string
+      params.push({ name, value: "" });
+    });
+
+    updatePageQuery([
+      ...params,
+      {
+        // Reset the page to 1 since filters affect what shows on the first page
+        name: "page_offset",
+        value: "1",
+      },
+    ]);
+  };
+
+  /**
+   * Click event handler for an individual filter's removal button.
+   * @param {string} name - Filter query param name
+   * @param {string|Array} value - Leave empty to remove filter, or pass in the updated
+   *  value if the filter is a checkbox field
+   */
+  const handleRemoveFilterClick = (name, value = "") => {
+    updatePageQuery([
+      {
+        name,
+        value,
+      },
+      {
+        // Reset the page to 1 since filters affect what shows on the first page
+        name: "page_offset",
+        value: "1",
+      },
+    ]);
+  };
+
+  const handleFilterToggleClick = () => {
+    // We use a query param instead of useState since the page re-mounts
+    // every time a filter changes, so we lose any local component state
+    // each time that happens.
+    updatePageQuery([
+      {
+        name: "show-filters",
+        value: !showFilters,
+      },
+    ]);
+  };
+
+  if (!isFeatureEnabled("employerShowDashboardFilters")) {
+    return null;
+  }
+
   return (
     <React.Fragment>
-      {user.verifiedEmployers.length > 1 && (
-        <Dropdown
-          hideEmptyChoice
-          choices={[
-            {
-              label: t("pages.employersDashboard.filterOrgsShowAllChoice"),
-              value: "",
-            },
-            ...user.verifiedEmployers.map((employer) => ({
-              label: `${employer.employer_dba} (${employer.employer_fein})`,
-              value: employer.employer_id,
-            })),
-          ]}
-          label={t("pages.employersDashboard.filterOrgsLabel")}
+      <div
+        className={classnames({
+          // When search is enabled, we visually display this as if it's
+          // part of the same gray container box
+          "margin-bottom-2": !isFeatureEnabled("employerShowDashboardSearch"),
+          "padding-bottom-3 bg-base-lightest padding-x-3": isFeatureEnabled(
+            "employerShowDashboardSearch"
+          ),
+        })}
+      >
+        <Button
+          aria-controls={filtersContainerId}
+          aria-expanded={showFilters.toString()}
+          onClick={handleFilterToggleClick}
+          variation="outline"
+        >
+          {activeFiltersCount > 0 && !showFilters
+            ? t("pages.employersDashboard.filtersShowWithCount", {
+                count: activeFiltersCount,
+              })
+            : t("pages.employersDashboard.filtersToggle", {
+                context: showFilters ? "expanded" : undefined,
+              })}
+        </Button>
+      </div>
+
+      <form
+        className="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
+        hidden={!showFilters}
+        id={filtersContainerId}
+        onSubmit={handleSubmit}
+      >
+        <InputChoiceGroup
+          {...getFunctionalInputProps("claim_status")}
           smallLabel
-          name="employer_id"
-          onChange={handleChange}
-          value={get(activeFilters, "employer_id", "")}
+          choices={[
+            AbsenceCaseStatus.approved,
+            AbsenceCaseStatus.closed,
+            AbsenceCaseStatus.declined,
+            "Pending", // API filtering uses this as a catchall for several pending-like statuses
+          ].map((value) => ({
+            checked: get(formState, "claim_status", []).includes(value),
+            label: t("pages.employersDashboard.filterStatusChoice", {
+              context: value,
+            }),
+            value,
+          }))}
+          label={t("pages.employersDashboard.filterStatusLabel")}
+          type="checkbox"
         />
+
+        {user.verifiedEmployers.length > 1 && (
+          <Dropdown
+            autocomplete
+            {...getFunctionalInputProps("employer_id")}
+            choices={[
+              ...user.verifiedEmployers.map((employer) => ({
+                label: `${employer.employer_dba} (${employer.employer_fein})`,
+                value: employer.employer_id,
+              })),
+            ]}
+            label={t("pages.employersDashboard.filterOrgsLabel")}
+            smallLabel
+          />
+        )}
+
+        <Button type="submit" disabled={Object.values(formState).length === 0}>
+          {t("pages.employersDashboard.filtersApply")}
+        </Button>
+
+        {activeFiltersCount > 0 && (
+          <Button
+            data-test="reset-filters"
+            variation="outline"
+            onClick={handleFilterReset}
+          >
+            {t("pages.employersDashboard.filtersReset")}
+          </Button>
+        )}
+      </form>
+
+      {activeFiltersCount > 0 && (
+        <div className="margin-top-1 margin-bottom-4" data-test="filters-menu">
+          <strong className="margin-right-2 display-inline-block">
+            {t("pages.employersDashboard.filterNavLabel")}
+          </strong>
+          {initialFormState.employer_id && (
+            <FilterMenuButton
+              data-test="employer_id"
+              onClick={() => handleRemoveFilterClick("employer_id")}
+            >
+              {
+                find(user.verifiedEmployers, {
+                  employer_id: initialFormState.employer_id,
+                }).employer_dba
+              }
+            </FilterMenuButton>
+          )}
+          {initialFormState.claim_status &&
+            initialFormState.claim_status.map((status) => (
+              <FilterMenuButton
+                data-test={`claim_status_${status}`}
+                key={status}
+                onClick={() =>
+                  handleRemoveFilterClick(
+                    "claim_status",
+                    initialFormState.claim_status.filter((s) => s !== status)
+                  )
+                }
+              >
+                {t("pages.employersDashboard.filterStatusChoice", {
+                  context: status,
+                })}
+              </FilterMenuButton>
+            ))}
+        </div>
       )}
     </React.Fragment>
   );
@@ -426,8 +624,92 @@ Filters.propTypes = {
     claim_status: PropTypes.string,
     employer_id: PropTypes.string,
   }).isRequired,
-  updateClaimsRequestParams: PropTypes.func.isRequired,
+  showFilters: PropTypes.bool,
+  updatePageQuery: PropTypes.func.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
+};
+
+const FilterMenuButton = (props) => {
+  const { t } = useTranslation();
+
+  return (
+    <Button
+      className="text-bold text-no-underline hover:text-underline margin-right-2"
+      onClick={props.onClick}
+      type="button"
+      variation="unstyled"
+    >
+      <Icon
+        name="cancel"
+        size={3}
+        className="text-ttop margin-top-neg-1px margin-right-05"
+        fill="currentColor"
+      />
+      <span className="usa-sr-only">
+        {t("pages.employersDashboard.filterRemove")}
+      </span>
+      {props.children}
+    </Button>
+  );
+};
+
+FilterMenuButton.propTypes = {
+  children: PropTypes.node.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
+
+const Search = (props) => {
+  const { initialValue, updatePageQuery } = props;
+  const { t } = useTranslation();
+
+  const { formState, updateFields } = useFormState({ search: initialValue });
+  const getFunctionalInputProps = useFunctionalInputProps({
+    formState,
+    updateFields,
+  });
+
+  const handleSubmit = (evt) => {
+    evt.preventDefault();
+
+    updatePageQuery([
+      {
+        name: "search",
+        value: get(formState, "search", ""),
+      },
+      {
+        // Reset the page to 1 since search affects what shows on the first page
+        name: "page_offset",
+        value: "1",
+      },
+    ]);
+  };
+
+  if (!isFeatureEnabled("employerShowDashboardSearch")) return null;
+
+  return (
+    <div className="bg-base-lightest padding-x-3 padding-top-1px padding-bottom-2">
+      <form className="usa-form grid-row" onSubmit={handleSubmit}>
+        <div className="grid-col-fill tablet:grid-col-auto">
+          <InputText
+            {...getFunctionalInputProps("search")}
+            label={t("pages.employersDashboard.searchLabel")}
+            smallLabel
+          />
+        </div>
+        <div className="grid-col-auto flex-align-self-end">
+          <Button className="width-auto" type="submit">
+            {t("pages.employersDashboard.searchSubmit")}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+Search.propTypes = {
+  /** The current search value */
+  initialValue: PropTypes.string,
+  updatePageQuery: PropTypes.func.isRequired,
 };
 
 export default withClaims(Dashboard);

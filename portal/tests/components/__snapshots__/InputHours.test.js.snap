@@ -10,6 +10,7 @@ exports[`InputHours renders component 1`] = `
     Label
   </FormLabel>
   <InputNumber
+    allowNegative={false}
     formGroupClassName="display-inline-block margin-right-3"
     inputClassName=""
     inputMode="numeric"

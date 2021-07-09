@@ -185,10 +185,13 @@ def convert_pydantic_error_to_validation_exception(
         if err_type in pydantic_error_type_map:
             err_type = pydantic_error_type_map[err_type]
 
+        err_field = e["loc"][0]
+        err_message = e["msg"]
+
         errors.append(
             ValidationErrorDetail(
                 type=err_type,
-                message=e["msg"],
+                message=f'Error in field: "{err_field}". {err_message.capitalize()}.',
                 rule=None,
                 field=".".join(str(loc) for loc in e["loc"]),
             )

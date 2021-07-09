@@ -48,7 +48,7 @@ describe("InputPassword", () => {
     const input1 = wrapper1.find(InputText);
     const input2 = wrapper2.find(InputText);
 
-    const idRegex = new RegExp("InputPassword[0-9]+");
+    const idRegex = /InputPassword[0-9]+/;
 
     expect(input1.prop("inputId")).toMatch(idRegex);
     expect(input1.prop("inputId")).not.toBe(input2.prop("inputId"));
