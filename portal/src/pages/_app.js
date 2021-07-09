@@ -170,10 +170,10 @@ export const App = ({ Component, pageProps }) => {
         page_routes: [],
       },
     });
-  
+
   // Initial database value for options is null
   // Make sure to provide page_routes if this is the case
-  if(maintenance.options == null) maintenance.options = { page_routes: [] }
+  if (maintenance.options == null) maintenance.options = { page_routes: [] };
 
   return (
     <PageWrapper
