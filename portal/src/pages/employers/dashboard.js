@@ -420,6 +420,11 @@ const Filters = (props) => {
     activeFiltersCount += initialFormState.claim_status.length - 1;
   }
 
+  /**
+   * Event handler for when the user applies their status and
+   * organization filter selections
+   * @param {object} evt
+   */
   const handleSubmit = (evt) => {
     evt.preventDefault();
     const params = [];

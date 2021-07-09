@@ -64,11 +64,11 @@ const simulateEvents = (wrapper) => {
    * Simulate selecting/deselecting a checkbox
    * @param {string} name Name of input field
    * @param {boolean} checked Select (true) or deselect (false)
+   * @param {string} [value] of the checkbox
    */
-  function changeCheckbox(name, checked) {
+  function changeCheckbox(name, checked, value) {
     act(() => {
       const input = wrapper.find({ name }).last();
-      const value = input.prop("value");
 
       input.simulate("change", {
         target: {

@@ -562,7 +562,7 @@ describe("Employer dashboard", () => {
     ).toBe(true);
   });
 
-  it("updates filter + pagination query params when user selects changes filter", async () => {
+  it("updates query params when user changes filter to Approved and Closed", async () => {
     expect.assertions();
 
     process.env.featureFlags = {
@@ -588,10 +588,11 @@ describe("Employer dashboard", () => {
     });
 
     const filtersWrapper = wrapper.find("Filters").dive();
-    const { changeField, changeRadioGroup, submitForm } =
+    const { changeField, changeCheckbox, submitForm } =
       simulateEvents(filtersWrapper);
 
-    changeRadioGroup("claim_status", "Approved");
+    changeCheckbox("claim_status", true, "Approved");
+    changeCheckbox("claim_status", true, "Closed");
     changeField("employer_id", user_leave_administrators[0].employer_id);
 
     expect(filtersWrapper.find("Button[type='submit']").prop("disabled")).toBe(
@@ -600,7 +601,7 @@ describe("Employer dashboard", () => {
 
     await submitForm();
     expect(updateQuerySpy).toHaveBeenCalledWith({
-      claim_status: "Approved",
+      claim_status: "Approved,Closed",
       employer_id: user_leave_administrators[0].employer_id,
       page_offset: "1",
     });
