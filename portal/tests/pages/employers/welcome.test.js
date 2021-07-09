@@ -25,8 +25,7 @@ describe("Employer welcome", () => {
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
-  it("displays links to Organizations page when employerShowVerifications is true", () => {
-    process.env.featureFlags = { employerShowVerifications: true };
+  it("displays links to Organizations page", () => {
     wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
 
     expect(wrapper.find("Alert").exists()).toEqual(true);
@@ -41,7 +40,7 @@ describe("Employer welcome", () => {
   });
 
   it("renders caring leave form link when showCaringLeaveType is true", () => {
-    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
+    // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
     process.env.featureFlags = { showCaringLeaveType: true };
     testHook(() => {
       appLogic = useAppLogic();
@@ -70,5 +69,36 @@ describe("Employer welcome", () => {
         )
         .dive()
     ).toMatchSnapshot();
+  });
+
+  it("renders other leave alert when claimantShowOtherLeaveStep is true", () => {
+    process.env.featureFlags = {
+      claimantShowOtherLeaveStep: true,
+    };
+    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
+
+    expect(wrapper.find("Alert").exists()).toEqual(true);
+
+    expect(
+      wrapper
+        .find(`Trans[i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody"]`)
+        .dive()
+    ).toMatchSnapshot();
+  });
+
+  it("does not render caring leave alert when showCaringLeaveType is true AND claimantShowOtherLeaveStep is true", () => {
+    process.env.featureFlags = {
+      showCaringLeaveType: true,
+      claimantShowOtherLeaveStep: true,
+    };
+    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
+
+    expect(
+      wrapper
+        .find(
+          `Trans[i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"]`
+        )
+        .exists()
+    ).toEqual(false);
   });
 });

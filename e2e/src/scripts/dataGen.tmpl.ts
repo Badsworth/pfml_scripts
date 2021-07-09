@@ -48,7 +48,7 @@ import * as scenarios from "../scenarios";
  *     ```
  *   3. Submit the generated claims by running:
  *     ```
- *       npx ts-node e2e/src/scripts/submit.ts [PATH/TO/DATA/DIR] [CONCURRENCY]
+ *       npm run cli -- simulation submit <PATH/TO/CLAIMS_DIRECTORY> [--cooldown] [--concurrency number] [--errorLimit number]
  *     ```
  *   3a. If the claims have `postSubmit` steps, then Leave Admins must be registered before claim submission.
  */

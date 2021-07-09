@@ -66,7 +66,7 @@ def test_users_post_claimant(
 
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
-    assert user.active_directory_id is not None
+    assert user.sub_id is not None
 
     # User added to user pool
     cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
@@ -98,7 +98,7 @@ def test_users_post_employer(
 
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
-    assert user.active_directory_id is not None
+    assert user.sub_id is not None
 
     # Employer records added to DB
     assert len(user.roles) == 1
@@ -215,12 +215,10 @@ def test_users_post_cognito_user_exists_error(
     test_db_session,
     valid_claimant_creation_request_body,
 ):
-    existing_user = UserFactory.create(active_directory_id=str(uuid.uuid4()))
+    existing_user = UserFactory.create(sub_id=str(uuid.uuid4()))
 
     def sign_up(**kwargs):
-        raise CognitoUserExistsValidationError(
-            "Username already exists", existing_user.active_directory_id
-        )
+        raise CognitoUserExistsValidationError("Username already exists", existing_user.sub_id)
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 

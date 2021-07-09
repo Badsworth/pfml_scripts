@@ -1,5 +1,5 @@
-import BenefitsApplication from "../../models/BenefitsApplication";
 import DocumentCollection from "../../models/DocumentCollection";
+import EmployerClaim from "../../models/EmployerClaim";
 import { UserLeaveAdministrator } from "../../models/User";
 import Withholding from "../../models/Withholding";
 import { uniqueId } from "lodash";
@@ -16,7 +16,7 @@ export const addEmployerMock = jest.fn().mockResolvedValue(() => {
 
 export const getClaimMock = jest.fn().mockResolvedValue((absenceId) => {
   return {
-    claim: new BenefitsApplication({
+    claim: new EmployerClaim({
       fineos_absence_id: absenceId,
     }),
     status: 200,

@@ -183,9 +183,7 @@ class FineosPeiWritebackStep(Step):
                 )
                 self.increment(f"{metric_name}_writeback_transaction_status_count")
 
-                transaction_status_date = payments_util.get_transaction_status_date(
-                    payment, transaction_status
-                )
+                transaction_status_date = payments_util.get_transaction_status_date(payment)
 
                 writeback_record = PeiWritebackRecord(
                     pei_C_Value=payment.fineos_pei_c_value,

@@ -2,6 +2,7 @@ import requests
 import json
 import os
 import sys
+import re
 
 # Ignoring a task requires adding its name minus "pfml-api-<environment>-" to 
 # the TASKS_TO_IGNORE list below
@@ -9,14 +10,18 @@ TASKS_TO_IGNORE = [
 
     # DOR Fineos ETL tasks.
     # The pfml-api-<environment>-dor-fineos-etl step function handles retries and failure notifications
-    "dor-import",
-    "load-employers-to-fineos",
-    "fineos-eligibility-feed-export",
-    "fineos-import-employee-updates",
+    ".*dor-import",
+    ".*load-employers-to-fineos",
+    ".*fineos-eligibility-feed-export",
+    ".*fineos-import-employee-updates",
 
     # The Leave Admin registration job runs every 15 minutes, so we avoid spamming
     # and will use PagerDuty for notifications as defined in INFRA-ABC.
-    "register-leave-admins-with-fineos"
+    ".*register-leave-admins-with-fineos",
+
+    # The PFML API is a service that will rotate containers when health checks
+    # are failing. We should know about issues due to deployment failures.
+    "pfml-api(-[a-z]+){1,2}$"
 ]
 
 # --------------------------------------------------------------------------- #
@@ -105,7 +110,7 @@ def lambda_handler(event, context=None):
     # Removes all but task name from the event_detail['group']
     task_name = event_detail['group'][event_detail['group'].rindex(':')+1:]
     
-    if any(task_to_ignore in task_name for task_to_ignore in TASKS_TO_IGNORE): 
+    if any(re.match(task_to_ignore, task_name) for task_to_ignore in TASKS_TO_IGNORE):
         return {
             "ECSTaskFailureIgnored" : f"{task_name}"
         }

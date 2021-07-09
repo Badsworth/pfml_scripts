@@ -34,7 +34,7 @@ def create_user(
     employer_for_leave_admin: Optional[Employer],
 ) -> User:
     """Create API records for a new user (claimant or leave admin)"""
-    user = User(active_directory_id=auth_id, email_address=email_address,)
+    user = User(sub_id=auth_id, email_address=email_address,)
 
     try:
         db_session.add(user)
@@ -108,11 +108,9 @@ def register_user(
         )
     except CognitoUserExistsValidationError as error:
         # Cognito user already exists, but confirm we have DB records for the user. If we do then reraise the error (bc claimant is trying to create a duplicate account) and if we don't then continue to create the DB records (bc somehow this step failed the last time).
-        if error.active_directory_id:
-            auth_id = error.active_directory_id
-            existing_user = (
-                db_session.query(User).filter(User.active_directory_id == auth_id).one_or_none()
-            )
+        if error.sub_id:
+            auth_id = str(error.sub_id)
+            existing_user = db_session.query(User).filter(User.sub_id == auth_id).one_or_none()
 
             if existing_user is not None:
                 raise error
@@ -163,11 +161,7 @@ def register_or_update_leave_admin(
         # We may or may not need to create user records
         logger.debug("Existing cognito user found", extra={"auth_id": existing_cognito_id})
         try:
-            user = (
-                db_session.query(User)
-                .filter(User.active_directory_id == existing_cognito_id)
-                .one_or_none()
-            )
+            user = db_session.query(User).filter(User.sub_id == existing_cognito_id).one_or_none()
         except MultipleResultsFound:
             return False, "Multiple User records found in database"
         if user:

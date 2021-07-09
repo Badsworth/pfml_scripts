@@ -9,6 +9,7 @@ const useAppErrorsLogic = () => ({
   setAppErrors: jest.fn(),
   catchError: jest.fn(),
   clearErrors: jest.fn(),
+  clearRequiredFieldErrors: jest.fn(),
 });
 
 export default useAppErrorsLogic;

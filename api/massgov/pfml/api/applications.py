@@ -5,6 +5,7 @@ import flask
 import puremagic
 from flask import Response
 from puremagic import PureError
+from pydantic import ValidationError
 from sqlalchemy import desc
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
 
@@ -50,7 +51,12 @@ from massgov.pfml.db.models.applications import (
     OtherIncome,
     PreviousLeave,
 )
-from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSFatalUnavailable, FINEOSNotFound
+from massgov.pfml.fineos.exception import (
+    FINEOSClientBadResponse,
+    FINEOSClientError,
+    FINEOSFatalUnavailable,
+    FINEOSNotFound,
+)
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.sqlalchemy import get_or_404
 
@@ -302,6 +308,14 @@ def applications_submit(application_id):
         if not existing_application.claim:
             try:
                 send_to_fineos(existing_application, db_session, current_user)
+            # TODO (CP-2350): improve handling of FINEOS validation rules
+            except ValidationError as e:
+                logger.warning(
+                    "applications_submit failure - application failed FINEOS validation",
+                    extra=log_attributes,
+                )
+                raise e
+
             except Exception as e:
                 logger.warning(
                     "applications_submit failure - failure sending application to claims processing system",
@@ -309,10 +323,10 @@ def applications_submit(application_id):
                     exc_info=True,
                 )
 
-                if not isinstance(e, FINEOSClientError):
-                    raise e
+                if isinstance(e, FINEOSClientError):
+                    return get_fineos_submit_issues_response(e, existing_application)
 
-                return get_fineos_submit_issues_response(e, existing_application)
+                raise e
 
             logger.info(
                 "applications_submit - application sent to claims processing system",
@@ -479,6 +493,7 @@ def has_previous_state_managed_paid_leave(existing_application, db_session):
 
 
 def document_upload(application_id, body, file):
+
     with app.db_session() as db_session:
         # Get the referenced application or return 404
         existing_application = get_or_404(db_session, Application, application_id)
@@ -535,8 +550,15 @@ def document_upload(application_id, body, file):
                 ].document_type_description
 
         if document_type not in ID_DOCS:
-            # check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
-            if has_previous_state_managed_paid_leave(existing_application, db_session):
+            # Check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
+            # Because existng claims where only part 1 has been submitted should continue using old doc type, submitted_time
+            # rather than existing docs should be examined
+
+            if has_previous_state_managed_paid_leave(existing_application, db_session) or (
+                existing_application.submitted_time
+                and existing_application.submitted_time
+                < app.get_app_config().new_plan_proofs_active_at
+            ):
                 document_type = (
                     DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_description
                 )
@@ -563,18 +585,24 @@ def document_upload(application_id, body, file):
                 "document_upload - document uploaded to claims processing system",
                 extra=log_attributes,
             )
-        except ValueError as ve:
+        except Exception as err:
             logger.warning(
                 "document_upload failure - failure uploading document to claims processing system",
                 extra=log_attributes,
                 exc_info=True,
             )
-            return response_util.error_response(
-                status_code=BadRequest,
-                message=str(ve),
-                errors=[response_util.custom_issue("fineos_client", str(ve))],
-                data=document_details.dict(),
-            ).to_api_response()
+
+            if isinstance(err, FINEOSClientBadResponse) and err.response_status == 422:
+                message = "Issue encountered while attempting to upload the document."
+                return response_util.error_response(
+                    status_code=BadRequest,
+                    message=message,
+                    errors=[response_util.custom_issue("fineos_client", message)],
+                    data=document_details.dict(),
+                ).to_api_response()
+
+            # Bubble any other issues up to the API error handlers
+            raise
 
         # Insert a document metadata row
         document.application_id = existing_application.application_id

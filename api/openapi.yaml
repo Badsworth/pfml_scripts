@@ -30,6 +30,24 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
 
+  /flags:
+    get:
+      security:
+        - {} # no authentication option
+      tags:
+        - Feature Flags
+      summary: Get feature flags
+      operationId: massgov.pfml.api.flags.flags_get
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and list of flags.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlagsResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableError"
+
   /users:
     post:
       security:
@@ -360,6 +378,16 @@ paths:
             single claim status or a comma seperated list of claim status (i.e claim_status="Pending,Closed"),
             the valid status are "Approved", "Closed", "Completed", "Declined" and "Pending".
           required: false
+        - name: "search"
+          in: query
+          schema:
+            type: string
+          description: > 
+            A search string used to filter the request that,
+            when provided, is used in a fuzzy search against the claims'
+            Absence Case IDs, in addition to the employees' first, middle, and last names.
+            When the string is empty, it is ignored.
+          required: false
       responses:
         "200":
           description: The claim information.
@@ -460,6 +488,11 @@ paths:
             example: "NTN-00-ABS-00"
           description: "FINEOS absence ID of the claim data to be retrieved"
           required: true
+        - name: X-FF-Default-To-V2
+          description: "Checks if we should default to V2 for claims with no eforms"
+          in: header
+          schema:
+            type: string
       responses:
         "200":
           description: A successful request returns a 200 status code.
@@ -1080,6 +1113,7 @@ tags:
   - name: Financial Eligibility
   - name: ID Proofing
   - name: Notifications
+  - name: Feature Flags
 
 components:
   securitySchemes:
@@ -1354,24 +1388,59 @@ components:
         city:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "Springfield"
         line_1:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "742 Evergreen Terrace"
         line_2:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: ""
         state:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "MA"
         zip:
           type: string
           nullable: true
           pattern: '^[0-9]{5}((?:-[0-9]{4})?|(?:-\*{4})?)$'
           example: "12345"
+
+    FlagResponse:
+      type: object
+      properties:
+        start:
+          type: string
+          nullable: true
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"
+        end:
+          type: string
+          nullable: true
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"
+        name:
+          type: string
+          example: "maintenance"
+        options:
+          type: object
+          example:
+            page_routes:
+             - "/applications/*"
+             - "/employers/*"
+        enabled:
+          type: boolean
+          example: false
+
+    FlagsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/FlagResponse"
 
     UserResponse:
       type: object
@@ -1747,14 +1816,17 @@ components:
             first_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "John"
             middle_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "Jake"
             last_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "Doe"
             date_of_birth:
               $ref: "#/components/schemas/DateOrMaskedDate"

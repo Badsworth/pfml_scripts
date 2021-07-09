@@ -3,7 +3,6 @@ import os
 from datetime import date, datetime, timedelta
 
 import boto3
-import faker
 import pytest
 from freezegun import freeze_time
 
@@ -23,6 +22,7 @@ from massgov.pfml.db.models.employees import (
     LkState,
     Payment,
     PaymentMethod,
+    PaymentTransactionType,
     PrenoteState,
     PubEft,
     ReferenceFile,
@@ -62,16 +62,13 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     FineosPaymentData,
     create_fineos_payment_extract_files,
 )
+from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
 
 # every test in here requires real resources
 
 pytestmark = pytest.mark.integration
 
 EXPECTED_OUTCOME = {"message": "Success"}
-
-fake = faker.Faker()
-fake.seed_instance(1212)
-
 
 ### UTILITY METHODS
 
@@ -133,7 +130,7 @@ def add_db_records(
         employee = EmployeeFactory.create(tax_identifier=TaxIdentifier(tax_identifier=tin))
         if add_eft:
             pub_eft = PubEftFactory.create(
-                routing_nbr=tin,
+                routing_nbr=generate_routing_nbr_from_ssn(tin),
                 account_nbr=tin,
                 prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
             )
@@ -465,7 +462,7 @@ def test_process_extract_data(
 
             assert payment.disb_method_id == PaymentMethod.ACH.payment_method_id
             assert payment.pub_eft
-            assert str(payment.pub_eft.routing_nbr) == index * 9
+            assert str(payment.pub_eft.routing_nbr) == generate_routing_nbr_from_ssn(index * 9)
             assert str(payment.pub_eft.account_nbr) == index * 9
             assert (
                 payment.pub_eft.bank_account_type_id
@@ -817,7 +814,7 @@ def test_process_extract_data_no_existing_address_eft(
 
             assert payment.disb_method_id == PaymentMethod.ACH.payment_method_id
             assert payment.pub_eft
-            assert str(payment.pub_eft.routing_nbr) == index * 9
+            assert str(payment.pub_eft.routing_nbr) == generate_routing_nbr_from_ssn(index * 9)
             assert str(payment.pub_eft.account_nbr) == index * 9
             assert (
                 payment.pub_eft.bank_account_type_id
@@ -1565,6 +1562,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
             ValidationIssue(
                 ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
                 "Unknown payment scenario encountered. Payment Amount: None, Event Type: None, Event Reason: ",
@@ -1593,6 +1591,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1617,6 +1616,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD6"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1640,6 +1640,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
         ]
     )
 
@@ -1652,27 +1653,33 @@ def test_validation_param_length(initialize_factories_session, set_exporter_env_
 
     # Routing number too short
     fineos_data = FineosPaymentData(payment_method="Elec Funds Transfer", routing_nbr="123")
-    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
-    assert set([ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYEEBANKSORT: 123")]) == set(
-        payment_data.validation_container.validation_issues
-    )
+    _, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    assert set(
+        [
+            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYEEBANKSORT: 123"),
+            ValidationIssue(ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, "PAYEEBANKSORT: 123"),
+        ]
+    ) == set(payment_data.validation_container.validation_issues)
 
     # Routing/account number too long
     long_num = "1" * 50
     fineos_data = FineosPaymentData(
         payment_method="Elec Funds Transfer", routing_nbr=long_num, account_nbr=long_num
     )
-    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [
             ValidationIssue(ValidationReason.FIELD_TOO_LONG, f"PAYEEBANKSORT: {long_num}"),
             ValidationIssue(ValidationReason.FIELD_TOO_LONG, f"PAYEEACCOUNTN: {long_num}"),
+            ValidationIssue(
+                ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, f"PAYEEBANKSORT: {long_num}"
+            ),
         ]
     ) == set(payment_data.validation_container.validation_issues)
 
     # ZIP too short + formatted incorrectly
     fineos_data = FineosPaymentData(payment_method="Check", zip_code="123")
-    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [
             ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYMENTPOSTCO: 123"),
@@ -1682,7 +1689,7 @@ def test_validation_param_length(initialize_factories_session, set_exporter_env_
 
     # ZIP too long + formatted incorrectly
     fineos_data = FineosPaymentData(payment_method="Check", zip_code="1234567890123456")
-    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [
             ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYMENTPOSTCO: 1234567890123456"),
@@ -1697,21 +1704,21 @@ def test_validation_lookup_validators(initialize_factories_session, set_exporter
 
     # Verify payment method lookup validator
     fineos_data = FineosPaymentData(payment_method="Gold")
-    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTMETHOD: Gold")]
     ) == set(payment_data.validation_container.validation_issues)
 
     # Verify account type lookup validator
     fineos_data = FineosPaymentData(payment_method="Elec Funds Transfer", account_type="Vault")
-    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYEEACCOUNTT: Vault")]
     ) == set(payment_data.validation_container.validation_issues)
 
     # Verify state lookup validator
     fineos_data = FineosPaymentData(payment_method="Check", state="NotAState")
-    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTADD6: NotAState")]
     ) == set(payment_data.validation_container.validation_issues)
@@ -1724,7 +1731,7 @@ def test_validation_payment_amount(initialize_factories_session, set_exporter_en
 
     for invalid_payment_amount in invalid_payment_amounts:
         fineos_data = FineosPaymentData(payment_amount=invalid_payment_amount)
-        ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+        _, payment_data = make_payment_data_from_fineos_data(fineos_data)
         assert set(
             [
                 ValidationIssue(
@@ -1739,16 +1746,115 @@ def test_validation_payment_amount(initialize_factories_session, set_exporter_en
 
 
 def test_validation_zip_code(initialize_factories_session, set_exporter_env_vars):
-    # When doing validation, we verify that payment amount
-    # must be a numeric value
+    # When doing validation, we verify that a zip code must be
+    # either ##### or #####-####
     invalid_zips = ["abcde", "1234567", "-12345", "12345-000"]
 
     for invalid_zip in invalid_zips:
         fineos_data = FineosPaymentData(payment_method="Check", zip_code=invalid_zip)
-        ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+        _, payment_data = make_payment_data_from_fineos_data(fineos_data)
         assert set(
             [ValidationIssue(ValidationReason.INVALID_VALUE, f"PAYMENTPOSTCO: {invalid_zip}")]
         ) == set(payment_data.validation_container.validation_issues)
+
+
+def test_validation_routing_number(initialize_factories_session, set_exporter_env_vars):
+    # All of these routing numbers will fail the checksum validation
+    # See: api/massgov/pfml/util/routing_number_validation.py for math
+    invalid_routing_numbers = ["111111111", "222222222", "333333333"]
+    for invalid_routing_number in invalid_routing_numbers:
+        fineos_data = FineosPaymentData(
+            payment_method="Elec Funds Transfer", routing_nbr=invalid_routing_number
+        )
+        _, payment_data = make_payment_data_from_fineos_data(fineos_data)
+        assert set(
+            [
+                ValidationIssue(
+                    ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM,
+                    f"PAYEEBANKSORT: {invalid_routing_number}",
+                )
+            ]
+        ) == set(payment_data.validation_container.validation_issues)
+
+
+def test_get_payment_transaction_type(initialize_factories_session, set_exporter_env_vars):
+    # get_payment_transaction_type is called as part of the constructor
+    # and sets payment_transaction_type accordingly.
+
+    # note the defaults for FineosPaymentData make a standard payment
+    standard_data = FineosPaymentData()
+    _, payment_data = make_payment_data_from_fineos_data(standard_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_transaction_type.payment_transaction_type_id
+        == PaymentTransactionType.STANDARD.payment_transaction_type_id
+    )
+
+    # Zero Dollar Payment
+    zero_dollar_data = FineosPaymentData(payment_amount="0.00")
+    _, payment_data = make_payment_data_from_fineos_data(zero_dollar_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_transaction_type.payment_transaction_type_id
+        == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+    )
+
+    # Employer Reimbursement
+    employer_reimbursement_data = FineosPaymentData(
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+    )
+    _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_transaction_type.payment_transaction_type_id
+        == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+    )
+
+    # There are multiple values that can create an overpayment
+    for overpayment_event_type in extractor.OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+        # Event reason is always unknown for overpayments in the real data
+        overpayment_data = FineosPaymentData(
+            event_type=overpayment_event_type, event_reason="Unknown"
+        )
+        _, payment_data = make_payment_data_from_fineos_data(overpayment_data)
+        assert not payment_data.validation_container.has_validation_issues()
+        assert (
+            payment_data.payment_transaction_type.payment_transaction_type_id
+            == PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
+        )
+
+    # Cancellation payment
+    cancellation_data = FineosPaymentData(
+        event_type="PaymentOut Cancellation", payment_amount="-100.00"
+    )
+    _, payment_data = make_payment_data_from_fineos_data(cancellation_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_transaction_type.payment_transaction_type_id
+        == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+    )
+
+    ### Various unknown scenarios
+    # Can't be a negative payment when event_type=PaymentOut (the default)
+    negative_payment_data = FineosPaymentData(payment_amount="-100.00")
+    # Event type is always used if payment amount is not 0
+    unknown_event_type_data = FineosPaymentData(event_type="Yet another overpayment event type")
+    # A payment missing everything
+    bare_minimum_payment_data = FineosPaymentData(False, c_value="1000", i_value="1")
+
+    for unknown_data in [negative_payment_data, unknown_event_type_data, bare_minimum_payment_data]:
+        _, payment_data = make_payment_data_from_fineos_data(unknown_data)
+        assert payment_data.validation_container.has_validation_issues()
+        assert (
+            payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE
+            in payment_data.validation_container.get_reasons()
+        )
+        assert (
+            payment_data.payment_transaction_type.payment_transaction_type_id
+            == PaymentTransactionType.UNKNOWN.payment_transaction_type_id
+        )
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
@@ -1776,7 +1882,7 @@ def test_update_eft_existing_eft_matches_and_approved(
     # Create the EFT record
     pub_eft_record = PubEftFactory.create(
         prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
-        routing_nbr="1" * 9,
+        routing_nbr=generate_routing_nbr_from_ssn("1" * 9),
         account_nbr="1" * 9,
         bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
     )
@@ -1840,7 +1946,7 @@ def test_update_eft_existing_eft_matches_and_not_approved(
     # Create the EFT record
     pub_eft_record = PubEftFactory.create(
         prenote_state_id=prenote_state.prenote_state_id,
-        routing_nbr="1" * 9,
+        routing_nbr=generate_routing_nbr_from_ssn("1" * 9),
         account_nbr="1" * 9,
         prenote_sent_at=get_now(),
         bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
@@ -1931,7 +2037,7 @@ def test_update_eft_existing_eft_matches_and_pending_with_pub(
     # Create the EFT record
     pub_eft_record = PubEftFactory.create(
         prenote_state_id=PrenoteState.PENDING_WITH_PUB.prenote_state_id,
-        routing_nbr="1" * 9,
+        routing_nbr=generate_routing_nbr_from_ssn("1" * 9),
         account_nbr="1" * 9,
         prenote_sent_at=get_now() - timedelta(PRENOTE_PRENDING_WAITING_PERIOD),
         bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,

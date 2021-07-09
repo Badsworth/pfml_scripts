@@ -1,0 +1,108 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AmendableConcurrentLeave for admin-added concurrent leaves renders the component 1`] = `
+<Fragment>
+  <ConditionalContent
+    visible={true}
+  >
+    <tr>
+      <td
+        className="padding-top-2 padding-bottom-2 padding-left-0"
+        colSpan="3"
+      >
+        <AmendmentForm
+          className="bg-white"
+          destroyButtonLabel="Cancel addition"
+          onDestroy={[Function]}
+        >
+          <Heading
+            level="4"
+            size="3"
+          >
+            Add an accrued paid leave
+          </Heading>
+          <p>
+            This addition will get saved when you submit your review at the end of this page.
+          </p>
+          <InputDate
+            dayLabel="Day"
+            errorMsg={null}
+            label="When did the leave begin?"
+            monthLabel="Month"
+            name="concurrent_leave.leave_start_date"
+            onChange={[Function]}
+            smallLabel={true}
+            value="2020-03-01"
+            yearLabel="Year"
+          />
+          <InputDate
+            dayLabel="Day"
+            errorMsg={null}
+            label="When did the leave end?"
+            monthLabel="Month"
+            name="concurrent_leave.leave_end_date"
+            onChange={[Function]}
+            smallLabel={true}
+            value="2020-03-06"
+            yearLabel="Year"
+          />
+        </AmendmentForm>
+      </td>
+    </tr>
+  </ConditionalContent>
+</Fragment>
+`;
+
+exports[`AmendableConcurrentLeave for claimant-submitted concurrent leaves renders the component 1`] = `
+<Fragment>
+  <ConcurrentLeaveDetailsRow />
+  <ConditionalContent
+    visible={false}
+  >
+    <tr>
+      <td
+        className="padding-top-2 padding-bottom-2 padding-left-0"
+        colSpan="3"
+      >
+        <AmendmentForm
+          className="bg-base-lightest border-base-lighter"
+          destroyButtonLabel="Cancel amendment"
+          onDestroy={[Function]}
+        >
+          <Heading
+            level="4"
+            size="3"
+          >
+            Amend accrued paid leave
+          </Heading>
+          <p>
+            This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.
+          </p>
+          <InputDate
+            dayLabel="Day"
+            errorMsg={null}
+            label="When did the leave begin?"
+            monthLabel="Month"
+            name="concurrent_leave.leave_start_date"
+            onChange={[Function]}
+            smallLabel={true}
+            value="2020-03-01"
+            yearLabel="Year"
+          />
+          <InputDate
+            dayLabel="Day"
+            errorMsg={null}
+            label="When did the leave end?"
+            monthLabel="Month"
+            name="concurrent_leave.leave_end_date"
+            onChange={[Function]}
+            smallLabel={true}
+            value="2020-03-06"
+            yearLabel="Year"
+          />
+        </AmendmentForm>
+      </td>
+    </tr>
+  </ConditionalContent>
+</Fragment>
+`;

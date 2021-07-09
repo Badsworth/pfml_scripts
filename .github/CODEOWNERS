@@ -23,17 +23,17 @@
 /api/**/api/services/*administrator_fineos_actions.py  @jkpace @sharonwarner
 /api/**/api/eligibility/                               @EyuelAbebe @jamesbursa
 /api/**/api/validation/                                @antxaddis @kyeah
-/api/**/cognito*/                                      @microwavenby @sharonwarner
+/api/**/cognito*/                                      @sharonwarner
 /api/**/db/                                            @doshitan @jamesbursa
-/api/**/delegated_payments/                            @chouinar
+/api/**/delegated_payments/                            @chouinar @antxaddis
 /api/**/dor/                                           @antxaddis @mhuneke
 /api/**/fineos/                                        @doshitan @oscarAtNava
-/api/**/formstack/                                     @microwavenby @sharonwarner
-/api/**/payments/                                      @chouinar @rocketnova
-/api/**/reductions/                                    @jalcine @doshitan
+/api/**/formstack/                                     @sharonwarner
+/api/**/payments/                                      @chouinar @antxaddis
+/api/**/reductions/                                    @mhuneke @doshitan
 /api/**/rmv/                                           @doshitan @kyeah
-/api/**/servicenow/                                    @microwavenby @sharonwarner
-/api/**/user_import/                                   @microwavenby @sharonwarner
+/api/**/servicenow/                                    @sharonwarner
+/api/**/user_import/                                   @sharonwarner
 /api/lambdas/                                          @paz-focus @sharonwarner
 /api/?ocker*                                           @jamesbursa @kyeah
 /api/Makefile                                          @doshitan @kyeah

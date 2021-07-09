@@ -27,6 +27,7 @@ function Button({ type = "button", ...props }) {
     props.variation ? `usa-button--${props.variation}` : "",
     {
       "usa-button--inverse": props.inversed,
+      "bg-white": props.variation === "outline",
       // This is weird, but we need this so that the inversed styling
       // kicks in when the variation is unstyled
       "usa-button--outline": props.inversed && props.variation === "unstyled",
@@ -38,6 +39,8 @@ function Button({ type = "button", ...props }) {
     // Weird eslint thing where it throws an error since we're setting `type` via a variable:
     // eslint-disable-next-line react/button-has-type
     <button
+      aria-controls={props["aria-controls"]}
+      aria-expanded={props["aria-expanded"]}
       className={classes}
       name={props.name}
       onClick={props.onClick}
@@ -74,6 +77,8 @@ function Button({ type = "button", ...props }) {
 }
 
 Button.propTypes = {
+  "aria-controls": PropTypes.string,
+  "aria-expanded": PropTypes.oneOf(["true", "false"]),
   /**
    * Button text
    */

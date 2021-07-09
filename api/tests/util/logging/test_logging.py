@@ -192,7 +192,7 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
         "g",
         {
             "current_user_user_id": str(user.user_id),
-            "current_user_auth_id": str(user.active_directory_id),
+            "current_user_auth_id": str(user.sub_id),
             "current_user_role_ids": ",".join(str(role.role_id) for role in user.roles),
         },
     )
@@ -228,7 +228,7 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
     assert last_line["request_id"] == "123"
     assert last_line["message"] == "test request context"
     assert last_line["current_user.user_id"] == str(user.user_id)
-    assert last_line["current_user.auth_id"] == user.active_directory_id
+    assert last_line["current_user.auth_id"] == user.sub_id
 
 
 def test_log_message_with_exception_and_pii(capsys):

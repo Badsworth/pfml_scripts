@@ -1,10 +1,10 @@
 import Claim, { ClaimEmployee, ClaimEmployer } from "src/models/Claim";
+import React, { useState } from "react";
 import User, { UserLeaveAdministrator } from "src/models/User";
 import ClaimCollection from "src/models/ClaimCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
 import { DateTime } from "luxon";
 import PaginationMeta from "src/models/PaginationMeta";
-import React from "react";
 import faker from "faker";
 import routes from "src/routes";
 import { times } from "lodash";
@@ -130,6 +130,7 @@ export default {
 export const Default = (args) => {
   const { user } = verificationScenarios[args.verification];
   const hasNoClaims = args.claims === "No claims";
+  const [query, setQuery] = useState({});
 
   const claims =
     args.claims === "No claims"
@@ -163,9 +164,11 @@ export const Default = (args) => {
   const appLogic = {
     portalFlow: {
       getNextPageRoute: () => {
-        return "";
+        return "#mock-route";
       },
-      goTo: () => {},
+      updateQuery: (params) => {
+        setQuery(params);
+      },
       pathname: routes.employers.dashboard,
     },
   };
@@ -173,6 +176,7 @@ export const Default = (args) => {
   return (
     <Dashboard
       appLogic={appLogic}
+      activeFilters={{}}
       claims={new ClaimCollection(claims)}
       paginationMeta={
         new PaginationMeta({
@@ -184,6 +188,7 @@ export const Default = (args) => {
           order_direction: "asc",
         })
       }
+      query={query}
       user={user}
     />
   );

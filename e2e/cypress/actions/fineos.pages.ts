@@ -1,7 +1,11 @@
-import { OtherIncome } from "../../src/_api";
+import { Address, OtherIncome } from "../../src/_api";
 import {
+  AllNotNull,
+  NonEmptyArray,
+  PersonalIdentificationDetails,
   ValidConcurrentLeave,
   ValidEmployerBenefit,
+  ValidOtherIncome,
   ValidPreviousLeave,
 } from "../../src/types";
 import {
@@ -10,6 +14,7 @@ import {
   isValidPreviousLeave,
   assertIsTypedArray,
   isValidEmployerBenefit,
+  isValidOtherIncome,
 } from "../../src/util/typeUtils";
 import {
   dateToMMddyyyy,
@@ -21,13 +26,13 @@ import {
   assertHasDocument,
   clickBottomWidgetButton,
   denyClaim,
-  markEvidence,
   onTab,
   triggerNoticeRelease,
   visitClaim,
 } from "./fineos";
 
 import { DocumentUploadRequest } from "../../src/api";
+import { fineos } from ".";
 
 type StatusCategory =
   | "Applicability"
@@ -58,6 +63,12 @@ export class ClaimPage {
     return new ClaimPage();
   }
 
+  paidLeave(cb: (page: PaidLeavePage) => unknown): this {
+    cy.findByText("Absence Paid Leave Case", { selector: "a" }).click();
+    cb(new PaidLeavePage());
+    cy.findByText("Absence Case", { selector: "a" }).click();
+    return this;
+  }
   adjudicate(cb: (page: AdjudicationPage) => unknown): this {
     cy.get('input[type="submit"][value="Adjudicate"]').click();
     cb(new AdjudicationPage());
@@ -74,6 +85,11 @@ export class ClaimPage {
     onTab("Documents");
     cb(new DocumentsPage());
     onTab("Absence Hub");
+    return this;
+  }
+  benefitsExtension(cb: (page: BenefitsExtensionPage) => unknown): this {
+    cy.findByText("Add Time").click({ force: true });
+    cb(new BenefitsExtensionPage());
     return this;
   }
   shouldHaveStatus(category: StatusCategory, expected: string): this {
@@ -130,14 +146,37 @@ class AdjudicationPage {
   }
   acceptLeavePlan() {
     this.onTab("Manage Request");
-    cy.wait(50);
+    cy.wait(150);
     cy.get("input[type='submit'][value='Accept']").click();
   }
 }
 
 class EvidencePage {
-  receive(...args: Parameters<typeof markEvidence>): this {
-    markEvidence(...args);
+  receive(
+    evidenceType: string,
+    receipt = "Received",
+    decision = "Satisfied",
+    reason = "Evidence has been reviewed and approved"
+  ): this {
+    cy.findByText(evidenceType).click();
+    cy.contains("tr", evidenceType).should("have.class", "ListRowSelected");
+    cy.findByText("Manage Evidence").click({
+      force: true,
+    });
+    // Focus inside popup. Note: There should be no need for an explicit wait here because
+    // Cypress will not move on until the popup has been rendered.
+    cy.get(".WidgetPanel_PopupWidget").within(() => {
+      cy.findByLabelText("Evidence Receipt").select(receipt);
+      cy.findByLabelText("Evidence Decision").select(decision);
+      cy.findByLabelText("Evidence Decision Reason").type(
+        `{selectall}{backspace}${reason}`
+      );
+      cy.findByText("OK").click({ force: true });
+      // Wait till modal has fully closed before moving on.
+    });
+    cy.wait(100);
+    cy.get("#disablingLayer").should("not.be.visible");
+    cy.get("#disablingLayerForAjaxPopupWidget").should("not.be.visible");
     return this;
   }
   requestAdditionalInformation(
@@ -173,6 +212,51 @@ class TasksPage {
     return this;
   }
 
+  /**
+   * Adds a task to a claim and asserts it has been assigned to DFML Program Integrity
+   * @param name name of the task to be added
+   */
+  add(
+    name:
+      | "Escalate Employer Reported Other Income"
+      | "Escalate employer reported past leave"
+      | "Escalate employer reported accrued paid leave (PTO)"
+      | "Escalate Employer Reported Fraud"
+  ): this {
+    cy.findByTitle(`Add a task to this case`).click({ force: true });
+    // Search for the task type
+    cy.findByLabelText(`Find Work Types Named`).type(`${name}{enter}`);
+    // Create task
+    cy.findByTitle(name, { exact: false }).click({ force: true });
+    clickBottomWidgetButton("Next");
+    return this;
+  }
+
+  assertIsAssignedToUser(taskName: string, userName: string): this {
+    // Find  task
+    cy.contains("tbody", "This case and its subcases").within(() => {
+      cy.findByText(taskName).click();
+    });
+    // Assert it's assigned to given user
+    cy.get(`span[id^="BasicDetailsUsersDeptWidget"][id$="AssignedTo"]`).should(
+      "contain.text",
+      `${userName}`
+    );
+    return this;
+  }
+  assertIsAssignedToDepartment(taskName: string, departmentName: string): this {
+    // Find  task
+    cy.contains("tbody", "This case and its subcases").within(() => {
+      cy.findByText(taskName).click();
+    });
+    // Assert it's in given department
+    cy.get(`span[id^="BasicDetailsUsersDeptWidget"][id$="Department"]`).should(
+      "contain.text",
+      `${departmentName}`
+    );
+    return this;
+  }
+
   close(name: string): this {
     cy.contains("td", name).click();
     cy.wait("@ajaxRender");
@@ -191,6 +275,7 @@ export class DocumentsPage {
     assertHasDocument(documentName);
     return this;
   }
+
   /**
    * Goes through the document upload process and returns back to the documents page
    * @param documentName
@@ -225,6 +310,83 @@ export class DocumentsPage {
     onTab("Search");
     cy.labelled("Business Type").type(`${documentType}{enter}`);
     clickBottomWidgetButton();
+  }
+
+  submitLegacyEmployerBenefits(
+    benefits: (ValidEmployerBenefit | ValidOtherIncome)[]
+  ): this {
+    this.startDocumentCreation(`Other Income`);
+    benefits.forEach(this.fillLegacyEmployerBenefit);
+    clickBottomWidgetButton();
+    this.assertDocumentExists("Other Income");
+    return this;
+  }
+
+  private fillLegacyEmployerBenefit(
+    benefitOrIncome: ValidEmployerBenefit | ValidOtherIncome,
+    index: number
+  ) {
+    // Will you receive wage replacement during your leave?
+    cy.get(`select[id$=_ReceiveWageReplacement${index > 0 ? index + 1 : ""}]`)
+      .should("be.visible")
+      .select(`Yes`);
+    // Through what type of program will you receive your wage replacement benefit?
+    cy.get(`select[id$=_ProgramType${index > 0 ? index + 1 : ""}]`)
+      .should("be.visible")
+      .select(
+        isValidOtherIncome(benefitOrIncome) ? `Non-Employer` : `Employer`
+      );
+    // Choose type of wage replacement
+    // This one is either bugged or is working in a mysterious way. Skips even indexes
+    cy.get(
+      `select[id$=_WRT${
+        index > 0
+          ? index * 2 + (isValidOtherIncome(benefitOrIncome) ? 2 : 1)
+          : index + 1
+      }]`
+    )
+      .should("be.visible")
+      .select(
+        `${
+          isValidOtherIncome(benefitOrIncome)
+            ? benefitOrIncome.income_type
+            : benefitOrIncome.benefit_type
+        }`
+      );
+    // When will you start receiving this income?
+    cy.get(
+      `input[type=text][id$=_StartDate${index > 0 ? index + 1 : ""}]`
+    ).type(
+      `${dateToMMddyyyy(
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_start_date
+          : benefitOrIncome.benefit_start_date
+      )}{enter}`
+    );
+    // When will you stop receiving this income?
+    cy.get(`input[type=text][id$=_EndDate${index > 0 ? index + 1 : ""}]`).type(
+      `${dateToMMddyyyy(
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_end_date
+          : benefitOrIncome.benefit_end_date
+      )}{enter}`
+    );
+
+    cy.get(`input[type=text][id$=_Amount${index > 0 ? index + 1 : ""}]`).type(
+      `{selectall}{backspace}${
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_amount_dollars
+          : benefitOrIncome.benefit_amount_dollars
+      }`
+    );
+
+    cy.get(`select[id$=_Frequency${index > 0 ? index + 1 : ""}]`).select(
+      `${
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_amount_frequency
+          : benefitOrIncome.benefit_amount_frequency
+      }`
+    );
   }
 
   /**
@@ -273,13 +435,15 @@ export class DocumentsPage {
       NonNullable<typeof other_income.income_type>,
       string
     > = {
-      "Disability benefits under Gov't retirement plan": "Disability benefits under a governmental retirement plan such as STRS or PERS" as const,
-      "Earnings from another employment/self-employment": "Earnings from another employer or through self-employment" as const,
-      "Jones Act benefits": "Jones Act benefits" as const,
-      "Railroad Retirement benefits": "Railroad Retirement benefits" as const,
-      "Unemployment Insurance": "Unemployment Insurance" as const,
-      "Workers Compensation": "Workers Compensation" as const,
-      SSDI: "Social Security Disability Insurance as const",
+      "Disability benefits under Gov't retirement plan":
+        "Disability benefits under a governmental retirement plan such as STRS or PERS",
+      "Earnings from another employment/self-employment":
+        "Earnings from another employer or through self-employment",
+      "Jones Act benefits": "Jones Act benefits",
+      "Railroad Retirement benefits": "Railroad Retirement benefits",
+      "Unemployment Insurance": "Unemployment Insurance",
+      "Workers Compensation": "Workers Compensation",
+      SSDI: "Social Security Disability Insurance",
     };
     // What kind of income is it?
     if (isNotNull(other_income.income_type))
@@ -365,7 +529,7 @@ export class DocumentsPage {
     // How much will you receive? (Optional)
     if (isNotNull(benefit.benefit_amount_dollars))
       cy.get(`input[type=text][id$=V2Amount${i}]`).type(
-        `{selectall}{backspace}${benefit}`
+        `{selectall}{backspace}${benefit.benefit_amount_dollars}`
       );
     const benefitFrequencyMap = {
       "In Total": "One Time / Lump Sum" as const,
@@ -459,9 +623,9 @@ export class DocumentsPage {
       Unknown: "Please select",
     };
 
-    /*         
+    /*
     Because the labels are the same for every leave you report, we have to get creative with selectors
-    Each input has a unique id, with the number of leave being reported attached at the end. 
+    Each input has a unique id, with the number of leave being reported attached at the end.
     */
     //  Did you take any other leave between January 1, 2021 and the first day of the leave you're requesting for the same reason or a different qualifying reason as the leave you're requesting?
     cy.get(`select[id$=V2Applies${i}]`).select("Yes");
@@ -502,7 +666,9 @@ export class DocumentsPage {
     const [hoursWorked, minutesWorked] = minutesToHoursAndMinutes(
       leave.worked_per_week_minutes
     );
-    cy.get(`input[type=text][id$=HoursWorked${i}]`).type(`${hoursWorked}`);
+    cy.get(`input[type=text][id$=HoursWorked${i}]`).type(
+      `{selectall}{backspace}${hoursWorked}`
+    );
     cy.get(`select[id$=MinutesWorked${i}]`).select(
       `${minutesWorked === 0 ? "00" : minutesWorked}`
     );
@@ -512,9 +678,372 @@ export class DocumentsPage {
     const [hoursTotal, minutesTotal] = minutesToHoursAndMinutes(
       leave.leave_minutes
     );
-    cy.get(`input[type=text][id$=TotalHours${i}]`).type(`${hoursTotal}`);
+    cy.get(`input[type=text][id$=TotalHours${i}]`).type(
+      `{selectall}{backspace}${hoursTotal}`
+    );
     cy.get(`select[id$=TotalMinutes${i}]`).select(
       `${minutesTotal === 0 ? "00" : minutesTotal}`
     );
+  }
+}
+
+const reductionCategories = {
+  ["Accrued paid leave" as const]: "",
+  ["Earnings from another employment/self-employment" as const]: "",
+  ["Family or medical leave insurance" as const]: "",
+  ["Jones Act benefits" as const]: "",
+  ["Permanent disability insurance" as const]: "",
+  ["Temporary disability insurance" as const]: "",
+  ["Unemployment Insurance" as const]: "",
+};
+
+/**
+ * Future or made payment.
+ */
+type Payment = { net_payment_amount: number };
+
+/**
+ * Data needed to apply a reduction to a payment in a paid leave case.
+ */
+type Reduction = {
+  type: keyof typeof reductionCategories;
+  start_date: string;
+  end_date: string;
+  frequency_same_as_due: boolean;
+  amount: number;
+};
+/**
+ * Class representing the Absence Paid Leave Case,
+ * Claim should be adjudicated and approved before trying to access this.
+ */
+class PaidLeavePage {
+  private activeTab: string;
+  constructor() {
+    this.activeTab = "General Claim";
+  }
+  private onTab(...path: string[]) {
+    if (this.activeTab !== path.join(",")) {
+      for (const part of path) {
+        onTab(part, 200);
+      }
+      this.activeTab = path.join(",");
+    }
+  }
+
+  /**
+   * Applies reductions to the paid leave case based on reported other incomes & benefits.
+   */
+  applyReductions({
+    other_incomes,
+    employer_benefits,
+  }: {
+    other_incomes?: NonEmptyArray<ValidOtherIncome>;
+    employer_benefits?: NonEmptyArray<ValidEmployerBenefit>;
+  }): this {
+    // Go to the right tab
+    this.onTab(
+      "Financials",
+      "Recurring Payments",
+      "Benefit Amount and Adjustments"
+    );
+    cy.contains(
+      `input[name^="BenefitAmountOffsetsAndDeductions"]`,
+      "Add"
+    ).click();
+    const incomesAndBenefits: (ValidOtherIncome | ValidEmployerBenefit)[] = [];
+    if (other_incomes) incomesAndBenefits.push(...other_incomes);
+    if (employer_benefits) incomesAndBenefits.push(...employer_benefits);
+    // Get reductions from the other incomes & benefits data.
+    const reductions = incomesAndBenefits
+      .map(this.getReduction)
+      .filter((el) => isNotNull(el));
+
+    (reductions as Reduction[]).forEach((reduction) => {
+      this.applyReduction(reduction);
+    });
+
+    clickBottomWidgetButton();
+    return this;
+  }
+
+  /**
+   * Maps incomes and benefits to available reduction types.
+   * @param incomeOrBenefit a valid OtherIncome or EmployerBenefit data object.
+   * @returns reduction data for a given income or benefit.
+   */
+  private getReduction(
+    incomeOrBenefit: ValidOtherIncome | ValidEmployerBenefit
+  ): Reduction | null {
+    /**
+     * Some income & benefit types either won't or are unlikely to generate a reduction.
+     * For more in-depth discussion, look at {@link https://teams.microsoft.com/l/message/19:1d317494c5204955a5516be9cd408ab3@thread.skype/1623770851214?tenantId=3e861d16-48b7-4a0e-9806-8c04d81b7b2a&groupId=f2159e94-1fdd-4834-b5c1-79578a664392&parentMessageId=1623748456804&teamName=EOL-PFMLProject&channelName=Claims%20Processing%20System&createdTime=1623770851214 this Teams thread}
+     */
+    const reductionTypeMap: Record<
+      ValidEmployerBenefit["benefit_type"] | ValidOtherIncome["income_type"],
+      Reduction["type"] | "None"
+    > = {
+      "Accrued paid leave": "Accrued paid leave",
+      "Earnings from another employment/self-employment":
+        "Earnings from another employment/self-employment",
+      "Family or medical leave insurance": "Family or medical leave insurance",
+      "Jones Act benefits": "Jones Act benefits",
+      "Permanent disability insurance": "Permanent disability insurance",
+      "Short-term disability insurance": "Temporary disability insurance",
+      "Unemployment Insurance": "Unemployment Insurance",
+
+      "Disability benefits under Gov't retirement plan": "None",
+      "Railroad Retirement benefits": "None",
+      "Workers Compensation": "None",
+      SSDI: "None",
+      Unknown: "None",
+    } as const;
+    if (isValidOtherIncome(incomeOrBenefit)) {
+      const reductionType = reductionTypeMap[incomeOrBenefit.income_type];
+      if (reductionType === "None") return null;
+      return {
+        type: reductionType,
+        amount: incomeOrBenefit.income_amount_dollars,
+        start_date: incomeOrBenefit.income_start_date,
+        end_date: incomeOrBenefit.income_end_date,
+        frequency_same_as_due: true,
+      };
+    } else {
+      const reductionType = reductionTypeMap[incomeOrBenefit.benefit_type];
+      if (reductionType === "None") return null;
+      return {
+        type: reductionType,
+        amount: incomeOrBenefit.benefit_amount_dollars,
+        start_date: incomeOrBenefit.benefit_start_date,
+        end_date: incomeOrBenefit.benefit_end_date,
+        frequency_same_as_due: true,
+      };
+    }
+  }
+
+  /**
+   * Adds a given reduction to the paid leave case.
+   * Assumes being navigated to "Add Benefit Amount" page.
+   * @param reduction
+   * @param index
+   */
+  private applyReduction({ type, start_date, end_date, amount }: Reduction) {
+    // Select the type of reduction.
+    cy.findByText(type).click();
+
+    // Fill in the dates.
+    cy.findByLabelText("Start Date").type(dateToMMddyyyy(start_date));
+    cy.findByLabelText("End Date").type(dateToMMddyyyy(end_date));
+
+    // Fill in the income/benefit amount. The label for this field isn't connected so we have to use a more direct selector.
+    cy.get("input[type=text][id$=adjustmentAmountMoney]").type(
+      `{selectAll}{backspace}${amount}`
+    );
+    // Add the reduction
+    cy.findByDisplayValue("Add").click();
+
+    // Check the reduction has been added.
+    cy.contains("table", "Benefit Adjustments").within(() => {
+      cy.findByText(type).should("contain.text", type);
+      cy.findByText(`-${this.numToPaymentFormat(amount)}`).should(
+        "contain.text",
+        `-${this.numToPaymentFormat(amount)}`
+      );
+    });
+  }
+
+  /**
+   * Asserts there are pending payments for a given amount.
+   * @param amountsPending array of expected pending payments.
+   * @returns
+   */
+  assertAmountsPending(amountsPending: Payment[]): this {
+    this.onTab("Financials", "Payment History", "Amounts Pending");
+    if (!amountsPending.length) return this;
+    // Get the table
+    cy.contains("table.WidgetPanel", "Amounts Pending").within(() => {
+      const [first, ...rest] = amountsPending;
+      // Get and assert contents of the first row. It has a unique selector.
+      cy.get("tr.ListRowSelected").should(
+        "contain.text",
+        this.numToPaymentFormat(first.net_payment_amount)
+      );
+      // Get and assert contents of the other rows if present.
+      rest.forEach((payment, i) => {
+        cy.get(`tr.ListRow${i + 2}`).should(
+          "contain.text",
+          this.numToPaymentFormat(payment.net_payment_amount)
+        );
+      });
+    });
+    return this;
+  }
+  /**
+   * Asserts there are payments made for a given amount.
+   * @param paymentsMade array of expected made payments.
+   * @returns
+   */
+  assertPaymentsMade(paymentsMade: Payment[]): this {
+    if (!paymentsMade.length) return this;
+    this.onTab("Financials", "Payment History", "Payments Made");
+    cy.contains("table.WidgetPanel", "Payments Made").within(() => {
+      const [first, ...rest] = paymentsMade;
+      // Get and assert contents of the the first row. It has a unique selector.
+      cy.get("tr.ListRowSelected").should(
+        "contain.text",
+        this.numToPaymentFormat(first.net_payment_amount)
+      );
+      // Get and assert contents of the the other rows if present.
+      rest.forEach((payment, i) => {
+        cy.get(`tr.ListRow${i + 2}`).should(
+          "contain.text",
+          this.numToPaymentFormat(payment.net_payment_amount)
+        );
+      });
+    });
+    return this;
+  }
+  /**
+   * Asserts there are alotted payments for a given amount.
+   * @param allotedPayments array of expected alotted payments.
+   */
+  assertPaymentAllocations(allotedPayments: Payment[]): this {
+    if (!allotedPayments.length) return this;
+    this.onTab("Financials", "Payment History", "Payments Made");
+    cy.contains("table.WidgetPanel", "Payment Allocations").within(() => {
+      const [first, ...rest] = allotedPayments;
+      // Get and assert contents of the the first row. It has a unique selector.
+      cy.get("tr.ListRowSelected").should(
+        "contain.text",
+        first.net_payment_amount.toFixed(2)
+      );
+      // Get and assert contents of the the other rows if present.
+      rest.forEach((payment, i) => {
+        cy.get(`tr.ListRow${i + 2}`).should(
+          "contain.text",
+          this.numToPaymentFormat(payment.net_payment_amount)
+        );
+      });
+    });
+    return this;
+  }
+
+  /**
+   *  Asserts processing and end dates match.
+   */
+  assertMatchingPaymentDates(): this {
+    this.onTab("Financials", "Payment History", "Amounts Pending");
+    cy.contains("table.WidgetPanel", "Amounts Pending").within(() => {
+      cy.get('td[id*="processing_date0"]')
+        .invoke("text")
+        .then((processingDate) => {
+          cy.get('td[id*="period_end_date0"]')
+            .invoke("text")
+            .should("eq", processingDate);
+        });
+    });
+    return this;
+  }
+
+  private numToPaymentFormat(num: number): string {
+    const decimal = num % 1 ? "" : ".00";
+    return `${new Intl.NumberFormat("en-US", {
+      style: "decimal",
+    }).format(num)}${decimal}`;
+  }
+}
+
+class BenefitsExtensionPage {
+  private continue(text = "Next") {
+    clickBottomWidgetButton(text);
+    cy.wait("@ajaxRender");
+    cy.wait(150);
+  }
+
+  private enterExtensionLeaveDates(newStartDate: string, newEndDate: string) {
+    cy.labelled("Absence status").select("Known");
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un19_startDate']").type(
+      `{selectall}{backspace}${newStartDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un19_endDate']").type(
+      `{selectall}{backspace}${newEndDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get(
+      "input[name='timeOffAbsencePeriodDetailsWidget_un19_startDateAllDay_CHECKBOX']"
+    ).click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get(
+      "input[name='timeOffAbsencePeriodDetailsWidget_un19_endDateAllDay_CHECKBOX']"
+    ).click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[title='OK']").click();
+  }
+
+  extendLeave(newStartDate: string, newEndDate: string): this {
+    onTab("Capture Additional Time");
+    // This assumes the claim is continuos
+    cy.findByTitle("Add Time Off Period").click();
+    this.enterExtensionLeaveDates(newStartDate, newEndDate);
+    this.continue();
+    this.continue();
+    this.continue();
+    this.continue();
+    this.continue("OK");
+    return this;
+  }
+}
+
+export class ClaimantPage {
+  static visit(ssn: string): ClaimantPage {
+    fineos.searchClaimantSSN(ssn);
+    fineos.clickBottomWidgetButton("OK");
+    return new ClaimantPage();
+  }
+  /**
+   * Changes the personal identification details of the claimant.
+   * @param changes Object with one or more of propreties to edit.
+   */
+  editPersonalIdentification(
+    changes: Partial<PersonalIdentificationDetails>
+  ): this {
+    cy.get(`#personalIdentificationCardWidget`)
+      .findByTitle("Edit")
+      .click({ force: true });
+    cy.get(`#cardEditPopupWidget_PopupWidgetWrapper`).within(() => {
+      if (changes.id_number_type)
+        cy.findByLabelText(`Identification number type`).select(
+          changes.id_number_type
+        );
+
+      if (changes.date_of_birth)
+        cy.findByLabelText(`Date of birth`).type(
+          `{selectAll}{backspace}${changes.date_of_birth}`
+        );
+
+      if (changes.gender) cy.findByLabelText(`Gender`).select(changes.gender);
+
+      if (changes.marital_status)
+        cy.findByLabelText(`Marital status`).select(changes.marital_status);
+      cy.findByText("OK").click({ force: true });
+    });
+    return this;
+  }
+
+  addAddress(address: AllNotNull<Address>): this {
+    cy.findByText(`+ Add address`).click({ force: true });
+    cy.get(`#addressPopupWidget_PopupWidgetWrapper`).within(() => {
+      cy.findByLabelText(`Address line 1`).type(`${address.line_1}`);
+      cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
+      cy.findByLabelText(`City`).type(`${address.city}`);
+      cy.findByLabelText(`State`).select(`${address.state}`);
+      cy.findByLabelText(`Zip code`).type(`${address.zip}`);
+      cy.findByTitle("OK").click({ force: true });
+    });
+    return this;
   }
 }

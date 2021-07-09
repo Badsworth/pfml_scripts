@@ -48,6 +48,7 @@ export default jest.fn(() => ({
     loadPage: jest.fn(),
   },
   clearErrors: jest.fn(),
+  clearRequiredFieldErrors: jest.fn(),
   documents: {
     attach: jest.fn((application_id, files, documentType) => {
       const uploadPromises = [];

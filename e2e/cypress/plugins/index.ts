@@ -53,6 +53,9 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     config("API_BASEURL"),
     authenticator
   );
+  // Keep a static cache of the SSO login cookies. This allows us to skip double-logins
+  // in envrionments that use SSO. Double logins are a side effect of changing the baseUrl.
+  let ssoCookies: string;
 
   // Declare tasks here.
   on("task", {
@@ -113,14 +116,16 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     },
 
     async completeSSOLoginFineos(): Promise<string> {
-      return postSubmit.withFineosBrowser(
-        async (page) => {
-          const cookies = await page.context().cookies();
-          return JSON.stringify(cookies);
-        },
-        false,
-        path.join(__dirname, "..", "screenshots")
-      );
+      if (ssoCookies === undefined) {
+        ssoCookies = await postSubmit.withFineosBrowser(
+          async (page) => {
+            return JSON.stringify(await page.context().cookies());
+          },
+          false,
+          path.join(__dirname, "..", "screenshots")
+        );
+      }
+      return ssoCookies;
     },
 
     waitForClaimDocuments: documentWaiter.waitForClaimDocuments.bind(

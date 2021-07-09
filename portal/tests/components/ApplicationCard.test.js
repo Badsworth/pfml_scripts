@@ -99,8 +99,34 @@ describe("ApplicationCard", () => {
     });
   });
 
+  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
+  describe("when the claim status is Submitted with null Other Leave data and the feature flag is true", () => {
+    it("renders a promt to call the Contact Center", () => {
+      process.env.featureFlags = {
+        claimantShowOtherLeaveStep: true,
+      };
+      const wrapper = render(
+        new MockBenefitsApplicationBuilder()
+          .submitted()
+          .medicalLeaveReason()
+          .nullOtherLeave()
+          .create()
+      );
+      const actions = wrapper.find("ApplicationActions").dive();
+      const instructions = actions.find(
+        `Trans[i18nKey="components.applicationCard.reductionsInstructions_missingData"]`
+      );
+
+      expect(instructions.exists()).toBe(true);
+      expect(instructions.dive()).toMatchSnapshot();
+    });
+  });
+
   describe("when the claim status is Completed", () => {
     it("includes a button to upload additional documents", () => {
+      process.env.featureFlags = {
+        claimantShowOtherLeaveStep: false,
+      };
       const wrapper = render(
         new MockBenefitsApplicationBuilder().completed().create()
       );
@@ -118,9 +144,34 @@ describe("ApplicationCard", () => {
           .create()
       );
       const actions = wrapper.find("ApplicationActions").dive();
+      const instructions = actions.find(
+        `Trans[i18nKey="components.applicationCard.reductionsInstructions_old"]`
+      );
 
-      expect(actions.find("Trans").dive()).toMatchSnapshot();
-      expect(actions.find("ul")).toMatchSnapshot();
+      expect(instructions.exists()).toBe(true);
+      expect(instructions.dive()).toMatchSnapshot();
+    });
+
+    describe("when the Other Leave feature flag is true", () => {
+      it("renders new instructions about reductions", () => {
+        process.env.featureFlags = {
+          claimantShowOtherLeaveStep: true,
+        };
+        const wrapper = render(
+          new MockBenefitsApplicationBuilder()
+            .completed()
+            .bondingBirthLeaveReason()
+            .hasFutureChild()
+            .create()
+        );
+        const actions = wrapper.find("ApplicationActions").dive();
+        const instructions = actions.find(
+          `Trans[i18nKey="components.applicationCard.reductionsInstructions"]`
+        );
+
+        expect(instructions.exists()).toBe(true);
+        expect(instructions.dive()).toMatchSnapshot();
+      });
     });
 
     describe("when it's a bonding claim with no cert doc", () => {
@@ -230,7 +281,7 @@ describe("ApplicationCard", () => {
       const wrapper = render(claim, { documents });
       const legalNotices = wrapper.find("LegalNotices").dive();
 
-      const listItems = legalNotices.find("LegalNoticeListItem");
+      const listItems = legalNotices.find("DownloadableDocument");
 
       expect.assertions(4);
       expect(legalNotices.find("p")).toMatchSnapshot();
@@ -255,9 +306,9 @@ describe("ApplicationCard", () => {
         const legalNotices = wrapper.find("LegalNotices").dive();
 
         legalNotices
-          .find("LegalNoticeListItem")
+          .find("DownloadableDocument")
           .dive()
-          .find("a")
+          .find("Button")
           .simulate("click", {
             preventDefault: () => jest.fn(),
           });

@@ -563,7 +563,8 @@ def test_assert_dia_payments_are_stored_correctly(
     assert len(file_util.list_files(archive_directory)) == 0
 
     log_entry = LogEntry(test_db_session, "Test")
-    dia.load_new_dia_payments(test_db_session, log_entry)
+    load_result = dia.load_new_dia_payments(test_db_session, log_entry)
+    assert load_result.found_pending_files is True
 
     # Files should have been moved.
     assert len(file_util.list_files(pending_directory)) == 0

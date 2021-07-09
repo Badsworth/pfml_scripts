@@ -103,6 +103,8 @@ services:
       #- PFML_FINEOS_OUTBOUND_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/cps/outbound
       #- PFML_ERROR_REPORTS_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/error-reports/outbound
       #- AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
+      #- NEW_PLAN_PROOFS_ACTIVE_AT=2021-06-26 00:00:00+00:00
+      #- FEATURES_FILE_PATH=file:///app/features.yaml
 
     networks:
       main:

@@ -3,10 +3,8 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
-import PreviousLeave, {
-  PreviousLeaveReason,
-} from "../../../src/models/PreviousLeave";
 import { initial, isEqual, last } from "lodash";
+import PreviousLeave from "../../../src/models/PreviousLeave";
 import PreviousLeavesSameReasonDetails from "../../../src/pages/applications/previous-leaves-same-reason-details";
 import React from "react";
 import { shallow } from "enzyme";
@@ -42,10 +40,8 @@ const setup = (claimAttrs = DEFAULT_CLAIM_ATTRS) => {
 
 const previousLeaveData = {
   is_for_current_employer: true,
-  is_for_same_reason_as_leave_reason: null,
   leave_end_date: "2021-06-11",
   leave_minutes: 840,
-  leave_reason: PreviousLeaveReason.bonding,
   leave_start_date: "2021-05-06",
   previous_leave_id: null,
   worked_per_week_minutes: 1920,
@@ -116,7 +112,6 @@ const createClaimWithPreviousLeaves = () =>
       {
         leave_end_date: "2021-01-26",
         leave_minutes: 25,
-        leave_reason: PreviousLeaveReason.bonding,
         leave_start_date: "2021-01-01",
         previous_leave_id: 89,
         worked_per_week_minutes: 40,
@@ -124,7 +119,29 @@ const createClaimWithPreviousLeaves = () =>
       {
         leave_end_date: "2020-12-13",
         leave_minutes: 20,
-        leave_reason: PreviousLeaveReason.bonding,
+        leave_start_date: "2020-11-21",
+        previous_leave_id: 9,
+        worked_per_week_minutes: 40,
+      },
+    ])
+    .create();
+
+const createClaimWithPreviousLeaves_care = () =>
+  new MockBenefitsApplicationBuilder()
+    .caringLeaveReason()
+    .continuous()
+    .employed()
+    .previousLeavesSameReason([
+      {
+        leave_end_date: "2021-01-26",
+        leave_minutes: 25,
+        leave_start_date: "2021-01-01",
+        previous_leave_id: 89,
+        worked_per_week_minutes: 40,
+      },
+      {
+        leave_end_date: "2020-12-13",
+        leave_minutes: 20,
         leave_start_date: "2020-11-21",
         previous_leave_id: 9,
         worked_per_week_minutes: 40,
@@ -144,9 +161,7 @@ describe("PreviousLeavesSameReasonDetails", () => {
       const entries = wrapper.find("RepeatableFieldset").prop("entries");
 
       expect(entries).toHaveLength(1);
-      expect(entries[0]).toEqual(
-        new PreviousLeave({ leave_reason: PreviousLeaveReason.bonding })
-      );
+      expect(entries[0]).toEqual(new PreviousLeave());
     });
 
     it("adds an empty previous leave when the user clicks Add Previous Leave", async () => {
@@ -157,8 +172,8 @@ describe("PreviousLeavesSameReasonDetails", () => {
       const entries = wrapper.find("RepeatableFieldset").prop("entries");
       expect(entries).toHaveLength(2);
       expect(entries).toEqual([
-        previousLeaveData,
-        new PreviousLeave({ leave_reason: PreviousLeaveReason.bonding }),
+        new PreviousLeave({ ...previousLeaveData }),
+        new PreviousLeave(),
       ]);
 
       expect(
@@ -175,9 +190,7 @@ describe("PreviousLeavesSameReasonDetails", () => {
 
       const entries = wrapper.find("RepeatableFieldset").prop("entries");
       expect(entries).toHaveLength(1);
-      expect(entries).toEqual([
-        new PreviousLeave({ leave_reason: PreviousLeaveReason.bonding }),
-      ]);
+      expect(entries).toEqual([new PreviousLeave()]);
 
       expect(
         wrapper.find("RepeatableFieldset").dive().find("RepeatableFieldsetCard")
@@ -206,6 +219,27 @@ describe("PreviousLeavesSameReasonDetails", () => {
       expect(wrapper).toMatchSnapshot();
       expect(firstCard).toMatchSnapshot();
       expect(inputHoursHint.find("Trans").dive()).toMatchSnapshot();
+
+      expect(wrapper.find("Hint")).toMatchInlineSnapshot(`
+        <Hint
+          className="margin-bottom-3"
+        >
+          Enter details about each period of leave taken between January 1, 2021 and January 1, 2021. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.
+        </Hint>
+      `);
+    });
+
+    it("changes hint date when leave reason is caring leave", () => {
+      const claimWithPreviousLeaves_care = createClaimWithPreviousLeaves_care();
+      const { wrapper } = setup(claimWithPreviousLeaves_care);
+
+      expect(wrapper.find("Hint")).toMatchInlineSnapshot(`
+        <Hint
+          className="margin-bottom-3"
+        >
+          Enter details about each period of leave taken between July 1, 2021 and January 1, 2021. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.
+        </Hint>
+      `);
     });
 
     it("adds an empty previous leave when the user clicks Add Previous Leave", async () => {
@@ -219,9 +253,7 @@ describe("PreviousLeavesSameReasonDetails", () => {
       expect(oldEntries).toEqual([
         ...claimWithPreviousLeaves.previous_leaves_same_reason,
       ]);
-      expect(newEntry).toEqual(
-        new PreviousLeave({ leave_reason: PreviousLeaveReason.bonding })
-      );
+      expect(newEntry).toEqual(new PreviousLeave());
 
       expect(
         wrapper.find("RepeatableFieldset").dive().find("RepeatableFieldsetCard")
@@ -240,7 +272,7 @@ describe("PreviousLeavesSameReasonDetails", () => {
       expect(entries).toHaveLength(2);
       expect(entries).toEqual([
         claimWithPreviousLeaves.previous_leaves_same_reason[1],
-        new PreviousLeave({ leave_reason: PreviousLeaveReason.bonding }),
+        new PreviousLeave(),
       ]);
       expect(
         wrapper.find("RepeatableFieldset").dive().find("RepeatableFieldsetCard")

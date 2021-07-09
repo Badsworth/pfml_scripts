@@ -1,13 +1,4 @@
 test_feature_disabled:
     enabled: 0
-    users:
-test_feature_disabled_users_overrides:
-    enabled: 0
-    users:
-        - user_1_email@domain.org
-        - user_2_email@domain.org
-        - user_3_email@domain.org
 test_feature_enabled:
     enabled: 1
-    users:
-        - user_1_email@domain.org

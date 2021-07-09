@@ -34,9 +34,8 @@ output "cognito_user_pool_client_id" {
 }
 
 module "massgov_pfml" {
-  cognito_extra_redirect_urls            = []
-  cognito_extra_logout_urls              = []
-  cognito_enable_provisioned_concurrency = false
+  cognito_extra_redirect_urls = []
+  cognito_extra_logout_urls   = []
 
   # Firewall rules
   # 'true' will set rule to 'BLOCK' (or 'NONE' which is equivalent)

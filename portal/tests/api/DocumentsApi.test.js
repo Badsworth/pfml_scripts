@@ -84,14 +84,13 @@ describe("DocumentsApi", () => {
       it("resolves with document instance", async () => {
         const file = makeFile();
 
-        const {
-          document: documentResponse,
-        } = await documentsApi.attachDocument(
-          applicationId,
-          file,
-          "Mock Category",
-          false
-        );
+        const { document: documentResponse } =
+          await documentsApi.attachDocument(
+            applicationId,
+            file,
+            "Mock Category",
+            false
+          );
         expect(documentResponse).toBeInstanceOf(Document);
       });
 

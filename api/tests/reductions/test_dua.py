@@ -402,7 +402,8 @@ def test_load_new_dua_payments_success(
     assert len(file_util.list_files(archive_directory)) == 0
 
     log_entry = LogEntry(test_db_session, "Test")
-    dua.load_new_dua_payments(test_db_session, log_entry)
+    load_result = dua.load_new_dua_payments(test_db_session, log_entry)
+    assert load_result.found_pending_files is True
 
     # Expect to have loaded some rows to the database.
     assert (
@@ -468,7 +469,9 @@ def test_load_new_dua_payments_error(
     assert len(file_util.list_files(error_directory)) == 0
 
     log_entry = LogEntry(test_db_session, "Test")
-    dua.load_new_dua_payments(test_db_session, log_entry)
+    load_result = dua.load_new_dua_payments(test_db_session, log_entry)
+    # We still found pending files, even if they errored.
+    assert load_result.found_pending_files is True
 
     # Expect files to be in error directory after.
     assert len(file_util.list_files(pending_directory)) == 0

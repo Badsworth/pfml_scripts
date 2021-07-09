@@ -47,8 +47,6 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
     }
     const deployments: (() => Promise<unknown>)[] = [];
     const client = new FloodClient(config("FLOOD_API_TOKEN"));
-    // Unique id generated for this run. This is only used for reporting.
-    const id = uuid();
 
     // Loop through all components and bundle.
     for (const component of preset) {
@@ -85,25 +83,24 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
           await delay(component.delay ?? 0);
           logger.info(`Starting deployment of "${component.flood.name}"`);
           const response = await client.startFlood(
-            {
-              ...component.flood,
-              tag_list: `lst:${id},preset:${args.presetID},scenario:${component.data.scenario}`,
-            },
+            component.flood,
             files.map((file) => fs.createReadStream(file))
           );
           logger.info(
             `Flood launched as "${response.name}": ${response.permalink}.`
           );
+          return response.uuid;
         };
         deployments.push(deploy);
       }
     }
 
     if (args.deploy && deployments.length > 0) {
-      logger.info(`Triggering deployment of floods with ID: ${id}`);
-      await Promise.all(deployments.map((deployment) => deployment()));
+      const ids = await Promise.all(deployments.map((deploy) => deploy()));
       logger.info(
-        `All floods have been triggered. You can generate a report of this run using npm run cli flood-report ${id}`
+        `All floods have been triggered. You can generate a report of this run using: npm run cli -- flood-report ${ids.join(
+          ","
+        )}`
       );
     }
   },

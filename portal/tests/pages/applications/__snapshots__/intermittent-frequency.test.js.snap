@@ -62,7 +62,7 @@ exports[`IntermittentFrequency displays Alert about having form when claim is Me
 
 exports[`IntermittentFrequency displays Lead text with form context when claim is for Medical or Caring leave 1`] = `
 <Lead>
-  Your answers must match Questions 28 and 29 in the Certification of Your Family Member’s Serious Health Condition.
+  Your answers must match the intermittent leave section in the Certification of Your Family Member’s Serious Health Condition.
 </Lead>
 `;
 
@@ -156,6 +156,7 @@ exports[`IntermittentFrequency renders the page 1`] = `
     visible={true}
   >
     <InputNumber
+      allowNegative={false}
       label="Estimate how many absences over the next 6 months."
       name="leave_details.intermittent_leave_periods[0].frequency"
       onChange={[Function]}
@@ -188,6 +189,7 @@ exports[`IntermittentFrequency renders the page 1`] = `
     />
   </ConditionalContent>
   <InputNumber
+    allowNegative={false}
     label="How many hours of work will you miss per absence?"
     name="leave_details.intermittent_leave_periods[0].duration"
     onChange={[Function]}

@@ -12,12 +12,8 @@ data "aws_iam_policy_document" "prod_tfstate_s3_kms_key" {
     resources = ["*"]
 
     principals {
-      type = "AWS"
-      identifiers = [
-        "arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer",
-        "arn:aws:iam::498823821309:role/AWS-498823821309-Infrastructure-Admin",
-        "arn:aws:iam::498823821309:role/ci-run-deploys",
-      ]
+      type        = "AWS"
+      identifiers = module.constants.prod_admin_roles
     }
   }
 

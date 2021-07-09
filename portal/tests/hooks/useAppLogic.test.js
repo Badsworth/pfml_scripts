@@ -14,6 +14,7 @@ describe("useAppLogic", () => {
       catchError,
       claims,
       clearErrors,
+      clearRequiredFieldErrors,
       documents,
       employers,
       otherLeaves,
@@ -33,6 +34,7 @@ describe("useAppLogic", () => {
         documents,
         employers,
         clearErrors,
+        clearRequiredFieldErrors,
         portalFlow,
         otherLeaves,
         setAppErrors,
@@ -50,6 +52,7 @@ describe("useAppLogic", () => {
       BenefitsApplicationCollection
     );
     expect(clearErrors).toBeInstanceOf(Function);
+    expect(clearRequiredFieldErrors).toBeInstanceOf(Function);
     expect(portalFlow).toEqual(expect.anything());
     expect(benefitsApplications.hasLoadedAll).toEqual(expect.any(Boolean));
     expect(benefitsApplications.load).toBeInstanceOf(Function);

@@ -86,13 +86,8 @@ describe("EmploymentStatusPage", () => {
       });
 
       it("submits status and FEIN", () => {
-        const {
-          appLogic,
-          claim,
-          changeField,
-          changeRadioGroup,
-          submitForm,
-        } = setup();
+        const { appLogic, claim, changeField, changeRadioGroup, submitForm } =
+          setup();
         changeRadioGroup("employment_status", EmploymentStatus.employed);
         const testFein = 123456789;
         changeField("employer_fein", testFein);

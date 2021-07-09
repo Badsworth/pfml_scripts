@@ -131,7 +131,7 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
     level="2"
     size="1"
   >
-    Tell us about your other sources of income during your leave dates for paid leave.
+    Tell us about your other sources of income during your leave dates for paid leave from PFML.
   </Heading>
   <LeaveDatesAlert
     endDate="2021-06-01"
@@ -172,7 +172,7 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
     level="2"
     size="1"
   >
-    Tell us about your other sources of income during your leave dates for paid leave.
+    Tell us about your other sources of income during your leave dates for paid leave from PFML.
   </Heading>
   <LeaveDatesAlert
     endDate="2021-06-01"

@@ -3,5 +3,31 @@
     // Trackers loaded globally
     "newrelic": "readonly",
     "globalThis": "readonly"
+  },
+  "extends": ["plugin:jsx-a11y/recommended", "plugin:react/recommended"],
+  "plugins": ["jsx-a11y", "react-hooks"],
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "rules": {
+    "jsx-a11y/anchor-has-content": "off",
+    "jsx-a11y/no-onchange": "off",
+    "react/button-has-type": "error",
+    "react/jsx-handler-names": "off",
+    "react/jsx-fragments": ["error", "element"],
+    "react/jsx-no-target-blank": ["error", { "allowReferrer": true }],
+    "react/no-unescaped-entities": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
   }
 }

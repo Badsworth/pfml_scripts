@@ -55,10 +55,13 @@ class LkAbsenceStatus(Base):
     __tablename__ = "lk_absence_status"
     absence_status_id = Column(Integer, primary_key=True, autoincrement=True)
     absence_status_description = Column(Text)
+    sort_order = Column(Integer, default=0, nullable=False)
+    # use to set order when sorting (non alphabetic) by absence status
 
-    def __init__(self, absence_status_id, absence_status_description):
+    def __init__(self, absence_status_id, absence_status_description, sort_order):
         self.absence_status_id = absence_status_id
         self.absence_status_description = absence_status_description
+        self.sort_order = sort_order
 
 
 class LkAddressType(Base):
@@ -257,6 +260,50 @@ class LkTitle(Base):
         self.title_description = title_description
 
 
+class LkLeaveRequestDecision(Base):
+    __tablename__ = "lk_leave_request_decision"
+    leave_request_decision_id = Column(Integer, primary_key=True, autoincrement=True)
+    leave_request_decision_description = Column(Text)
+
+    def __init__(self, leave_request_decision_id, leave_request_decision_description):
+        self.leave_request_decision_id = leave_request_decision_id
+        self.leave_request_decision_description = leave_request_decision_description
+
+
+class AbsencePeriod(Base):
+    __tablename__ = "absence_period"
+    absence_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
+    fineos_absence_period_id = Column(Integer, nullable=False, index=True, unique=True)
+    fineos_leave_request_id = Column(Integer)
+    absence_period_start_date = Column(Date, nullable=False)
+    absence_period_end_date = Column(Date, nullable=False)
+    leave_request_decision_id = Column(
+        Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id"), nullable=False
+    )
+    is_id_proofed = Column(Boolean)
+    claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"), nullable=False)
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    claim = relationship("Claim")
+    claim_type = relationship(LkClaimType)
+    leave_request_decision = relationship(LkLeaveRequestDecision)
+
+
 class AuthorizedRepresentative(Base):
     __tablename__ = "authorized_representative"
     authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -318,7 +365,7 @@ class Employer(Base):
 class EmployerQuarterlyContribution(Base):
     __tablename__ = "employer_quarterly_contribution"
     employer_id = Column(
-        UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True, primary_key=True
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True, primary_key=True
     )
     filing_period = Column(Date, primary_key=True)
     employer_total_pfml_contribution = Column(Numeric(asdecimal=True), nullable=False)
@@ -571,6 +618,11 @@ class Claim(Base):
     employee = relationship("Employee", back_populates="claims")
     employer = relationship("Employer", back_populates="claims")
     state_logs = relationship("StateLog", back_populates="claim")
+    payments: "Query[Payment]" = dynamic_loader("Payment", back_populates="claim")
+    managed_requirements = cast(
+        Optional[List["ManagedRequirement"]],
+        relationship("ManagedRequirement", back_populates="claim"),
+    )
 
 
 class Payment(Base):
@@ -583,6 +635,7 @@ class Payment(Base):
     period_start_date = Column(Date)
     period_end_date = Column(Date)
     payment_date = Column(Date)
+    absence_case_creation_date = Column(Date)
     amount = Column(Numeric(asdecimal=True), nullable=False)
     fineos_pei_c_value = Column(Text, index=True)
     fineos_pei_i_value = Column(Text, index=True)
@@ -610,6 +663,7 @@ class Payment(Base):
         server_default=payment_individual_id_seq.next_value(),
     )
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
+    leave_request_id = Column(UUID(as_uuid=True), ForeignKey("absence_period.absence_period_id"))
 
     created_at = Column(
         TIMESTAMP(timezone=True),
@@ -625,7 +679,7 @@ class Payment(Base):
         server_default=sqlnow(),
     )
 
-    claim = relationship(Claim)
+    claim = relationship("Claim", back_populates="payments")
     claim_type = relationship(LkClaimType)
     payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
@@ -771,7 +825,10 @@ class HealthCareProviderAddress(Base):
 class User(Base):
     __tablename__ = "user"
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    active_directory_id = Column(Text, index=True, unique=True)
+    active_directory_id = deferred(
+        Column(Text().evaluates_none(), index=True, unique=True)
+    )  # renaming to sub_id
+    sub_id = Column(Text, index=True, unique=True)
     email_address = Column(Text)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
 
@@ -876,6 +933,85 @@ class UserLeaveAdministrator(Base):
     @typed_hybrid_property
     def verified(self) -> bool:
         return bool(self.verification_id)
+
+
+class LkManagedRequirementStatus(Base):
+    __tablename__ = "lk_managed_requirement_status"
+    managed_requirement_status_id = Column(Integer, primary_key=True, autoincrement=True)
+    managed_requirement_status_description = Column(Text)
+
+    def __init__(self, managed_requirement_status_id, managed_requirement_status_description):
+        self.managed_requirement_status_id = managed_requirement_status_id
+        self.managed_requirement_status_description = managed_requirement_status_description
+
+
+class LkManagedRequirementCategory(Base):
+    __tablename__ = "lk_managed_requirement_category"
+    managed_requirement_category_id = Column(Integer, primary_key=True, autoincrement=True)
+    managed_requirement_category_description = Column(Text)
+
+    def __init__(self, managed_requirement_category_id, managed_requirement_category_description):
+        self.managed_requirement_category_id = managed_requirement_category_id
+        self.managed_requirement_category_description = managed_requirement_category_description
+
+
+class LkManagedRequirementType(Base):
+    __tablename__ = "lk_managed_requirement_type"
+    managed_requirement_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    managed_requirement_type_description = Column(Text)
+
+    def __init__(self, managed_requirement_type_id, managed_requirement_type_description):
+        self.managed_requirement_type_id = managed_requirement_type_id
+        self.managed_requirement_type_description = managed_requirement_type_description
+
+
+class ManagedRequirement(Base):
+    """PFML-relevant data from a Managed Requirement in Fineos. Example managed requirement is an Employer info request."""
+
+    __tablename__ = "managed_requirement"
+    managed_requirement_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
+    respondent_user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"))
+    fineos_managed_requirement_id = Column(Text, unique=True, nullable=False)
+    follow_up_date = Column(Date)
+    responded_at = Column(TIMESTAMP(timezone=True))
+    managed_requirement_status_id = Column(
+        Integer,
+        ForeignKey("lk_managed_requirement_status.managed_requirement_status_id"),
+        nullable=False,
+    )
+    managed_requirement_category_id = Column(
+        Integer,
+        ForeignKey("lk_managed_requirement_category.managed_requirement_category_id"),
+        nullable=False,
+    )
+    managed_requirement_type_id = Column(
+        Integer,
+        ForeignKey("lk_managed_requirement_type.managed_requirement_type_id"),
+        nullable=False,
+    )
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    managed_requirement_status = relationship(LkManagedRequirementStatus)
+    managed_requirement_category = relationship(LkManagedRequirementCategory)
+    managed_requirement_type = relationship(LkManagedRequirementType)
+
+    claim = relationship("Claim", back_populates="managed_requirements")
+    respondent_user = relationship(User)
 
 
 class WagesAndContributions(Base):
@@ -1231,15 +1367,15 @@ class PubErrorType(LookupTable):
 
 class AbsenceStatus(LookupTable):
     model = LkAbsenceStatus
-    column_names = ("absence_status_id", "absence_status_description")
+    column_names = ("absence_status_id", "absence_status_description", "sort_order")
 
-    ADJUDICATION = LkAbsenceStatus(1, "Adjudication")
-    APPROVED = LkAbsenceStatus(2, "Approved")
-    CLOSED = LkAbsenceStatus(3, "Closed")
-    COMPLETED = LkAbsenceStatus(4, "Completed")
-    DECLINED = LkAbsenceStatus(5, "Declined")
-    IN_REVIEW = LkAbsenceStatus(6, "In Review")
-    INTAKE_IN_PROGRESS = LkAbsenceStatus(7, "Intake In Progress")
+    ADJUDICATION = LkAbsenceStatus(1, "Adjudication", 2)
+    APPROVED = LkAbsenceStatus(2, "Approved", 5)
+    CLOSED = LkAbsenceStatus(3, "Closed", 7)
+    COMPLETED = LkAbsenceStatus(4, "Completed", 6)
+    DECLINED = LkAbsenceStatus(5, "Declined", 4)
+    IN_REVIEW = LkAbsenceStatus(6, "In Review", 3)
+    INTAKE_IN_PROGRESS = LkAbsenceStatus(7, "Intake In Progress", 1)
 
 
 class AddressType(LookupTable):
@@ -1576,6 +1712,29 @@ class ClaimType(LookupTable):
     FAMILY_LEAVE = LkClaimType(1, "Family Leave")
     MEDICAL_LEAVE = LkClaimType(2, "Medical Leave")
     MILITARY_LEAVE = LkClaimType(3, "Military Leave")
+
+
+class ManagedRequirementStatus(LookupTable):
+    model = LkManagedRequirementStatus
+    column_names = ("managed_requirement_status_id", "managed_requirement_status_description")
+
+    OPEN = LkManagedRequirementStatus(1, "Open")
+    COMPLETE = LkManagedRequirementStatus(2, "Complete")
+    SUPPRESSED = LkManagedRequirementStatus(3, "Suppressed")
+
+
+class ManagedRequirementCategory(LookupTable):
+    model = LkManagedRequirementCategory
+    column_names = ("managed_requirement_category_id", "managed_requirement_category_description")
+
+    EMPLOYER_CONFIRMATION = LkManagedRequirementCategory(1, "Employer Confirmation")
+
+
+class ManagedRequirementType(LookupTable):
+    model = LkManagedRequirementType
+    column_names = ("managed_requirement_type_id", "managed_requirement_type_description")
+
+    EMPLOYER_CONFIRMATION = LkManagedRequirementType(1, "Employer Confirmation of Leave Data")
 
 
 class Race(LookupTable):
@@ -2210,6 +2369,16 @@ class Title(LookupTable):
     DR = LkTitle(6, "Dr")
     MADAM = LkTitle(7, "Madam")
     SIR = LkTitle(8, "Sir")
+
+
+class LeaveRequestDecision(LookupTable):
+    model = LkLeaveRequestDecision
+    column_names = ("leave_request_decision_id", "leave_request_decision_description")
+
+    PENDING = LkLeaveRequestDecision(1, "Pending")
+    IN_REVIEW = LkLeaveRequestDecision(2, "In Review")
+    APPROVED = LkLeaveRequestDecision(3, "Approved")
+    DENIED = LkLeaveRequestDecision(4, "Denied")
 
 
 def sync_lookup_tables(db_session):

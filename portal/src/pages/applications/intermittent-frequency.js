@@ -54,7 +54,7 @@ export const IntermittentFrequency = (props) => {
     get(formState, leavePeriodPath)
   );
 
-  const handleInputChange = useHandleInputChange(updateFields);
+  const handleInputChange = useHandleInputChange(updateFields, formState);
 
   /**
    * The "Irregular over the next 6 months" radio choice for intermittentLeavePeriod.frequency_interval_basis
@@ -189,6 +189,7 @@ export const IntermittentFrequency = (props) => {
           <InputNumber
             {...getFunctionalInputProps(`${leavePeriodPath}.frequency`)}
             valueType="integer"
+            allowNegative={false}
             label={t("pages.claimsIntermittentFrequency.frequencyLabel", {
               context:
                 leavePeriod.frequency_interval === 6
@@ -233,6 +234,7 @@ export const IntermittentFrequency = (props) => {
         <InputNumber
           {...getFunctionalInputProps(`${leavePeriodPath}.duration`)}
           valueType="integer"
+          allowNegative={false}
           label={t("pages.claimsIntermittentFrequency.durationLabel", {
             context: findKeyByValue(DurationBasis, leavePeriod.duration_basis),
           })}

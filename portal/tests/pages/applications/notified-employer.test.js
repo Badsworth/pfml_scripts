@@ -59,13 +59,8 @@ describe("NotifiedEmployer", () => {
   });
 
   it("calls claims.update when user submits form with newly entered data", () => {
-    const {
-      appLogic,
-      changeField,
-      changeRadioGroup,
-      claim,
-      submitForm,
-    } = setup();
+    const { appLogic, changeField, changeRadioGroup, claim, submitForm } =
+      setup();
 
     changeRadioGroup("leave_details.employer_notified", "true");
     changeField("leave_details.employer_notification_date", "2020-06-25");

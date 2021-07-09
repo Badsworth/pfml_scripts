@@ -1,3 +1,4 @@
+import math
 import os
 import pathlib
 import re
@@ -5,7 +6,7 @@ import uuid
 import xml.dom.minidom as minidom
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 from xml.etree.ElementTree import Element
@@ -37,7 +38,6 @@ from massgov.pfml.db.models.employees import (
     LkClaimType,
     LkReferenceFileType,
     Payment,
-    PaymentMethod,
     PaymentReferenceFile,
     PubEft,
     ReferenceFile,
@@ -51,10 +51,9 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
-    FineosWritebackTransactionStatus,
-    LkFineosWritebackTransactionStatus,
 )
 from massgov.pfml.util.csv import CSVSourceWrapper
+from massgov.pfml.util.routing_number_validation import validate_routing_number
 
 logger = logging.get_logger(__package__)
 
@@ -151,6 +150,7 @@ class ValidationReason(str, Enum):
     CLAIMANT_MISMATCH = "ClaimantMismatch"
     CLAIM_NOT_ID_PROOFED = "ClaimNotIdProofed"
     PAYMENT_EXCEEDS_PAY_PERIOD_CAP = "PaymentExceedsPayPeriodCap"
+    ROUTING_NUMBER_FAILS_CHECKSUM = "RoutingNumberFailsChecksum"
 
 
 @dataclass(frozen=True, eq=True)
@@ -194,6 +194,22 @@ def get_date_folder(current_time: Optional[datetime] = None) -> str:
         current_time = get_now()
 
     return current_time.strftime("%Y-%m-%d")
+
+
+def get_period_in_weeks(period_start: date, period_end: date) -> int:
+    period_start_date = period_start.date() if isinstance(period_start, datetime) else period_start
+    period_end_date = period_end.date() if isinstance(period_end, datetime) else period_end
+
+    # We add 1 to the period in days because we want to consider a week to be
+    # 7 days inclusive. For example:
+    #    Jan 1st - Jan 1st is 1 day even though no time passes.
+    #    Jan 1st - Jan 2nd is 2 days
+    #    Jan 1st - Jan 7th is 7 days (eg. Monday -> Sunday)
+    #    Jan 1st - Jan 8th is 8 days (eg. Monday -> the next Monday)
+
+    period_in_days = (period_end_date - period_start_date).days + 1
+    weeks = math.ceil(period_in_days / 7.0)
+    return weeks
 
 
 def build_archive_path(
@@ -244,6 +260,13 @@ def lookup_validator(
 def zip_code_validator(zip_code: str) -> Optional[ValidationReason]:
     if not re.match(Regexes.ZIP_CODE, zip_code):
         return ValidationReason.INVALID_VALUE
+    return None
+
+
+def routing_number_validator(routing_number: str) -> Optional[ValidationReason]:
+    if not validate_routing_number(routing_number):
+        return ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM
+
     return None
 
 
@@ -1248,32 +1271,12 @@ def get_traceable_payment_details(payment: Payment) -> Dict[str, Optional[Any]]:
     }
 
 
-def get_transaction_status_date(
-    payment: Payment, transaction_status: LkFineosWritebackTransactionStatus
-) -> Optional[date]:
-    transaction_status_date = None
+def get_transaction_status_date(payment: Payment) -> date:
     # Check payments that have a check posted date should use
-    # that for the transaction status date
+    # that for the transaction status date as that indicates
+    # from PUB when the check was actually posted
     if payment.check and payment.check.check_posted_date:
-        transaction_status_date = payment.check.check_posted_date
+        return payment.check.check_posted_date
 
-    # Otherwise the transaction status date is calculated from the extraction date
-    elif payment.fineos_extraction_date is not None:
-        # Any payments that we send to PUB should calculate the extraction
-        # date by incrementing based on the type.
-        # Paid -> Sent to PUB (haven't heard back yet)
-        # Posted -> We've heard back, successfully paid (likely a change notification)
-        # Bank Processing Error -> Any PUB error
-        if transaction_status.transaction_status_id in [
-            FineosWritebackTransactionStatus.PAID.transaction_status_id,
-            FineosWritebackTransactionStatus.POSTED.transaction_status_id,
-            FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_id,
-        ]:
-            if payment.disb_method_id == PaymentMethod.CHECK.payment_method_id:
-                transaction_status_date = payment.fineos_extraction_date + timedelta(days=1)
-            else:
-                transaction_status_date = payment.fineos_extraction_date + timedelta(days=2)
-        else:
-            transaction_status_date = payment.fineos_extraction_date
-
-    return transaction_status_date
+    # Otherwise the transaction status date is calculated using the current time.
+    return get_now().date()

@@ -20,12 +20,24 @@ import xmlschema
 
 import massgov.pfml.util.logging
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
+from massgov.pfml.fineos.util.response import (
+    fineos_document_empty_dates_to_none,
+    get_fineos_correlation_id,
+    log_validation_error,
+)
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from . import client, exception, models
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 MILLISECOND = datetime.timedelta(milliseconds=1)
+
+# Failure messages that are expected and don't need to be logged or tracked as errors.
+EXPECTED_DOCUMENT_UPLOAD_FAILURES = {
+    "encoded file data is mandatory",
+    "file size is mandatory",
+    "is not a valid file",
+}
 
 employee_register_request_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "EmployeeRegisterService.Request.xsd")
@@ -62,37 +74,6 @@ occupation_detail_update_service_request_schema = xmlschema.XMLSchema(
 read_employer_response_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "ReadEmployer.Response.xsd")
 )
-
-
-def fineos_document_empty_dates_to_none(response_json: dict) -> dict:
-    # Document effectiveFrom and effectiveTo are empty and set to empty strings
-    # These fields are not set by the portal. Set to none to avoid validation errors.
-
-    if response_json["effectiveFrom"] == "":
-        response_json["effectiveFrom"] = None
-
-    if response_json["effectiveTo"] == "":
-        response_json["effectiveTo"] = None
-
-    # Documents uploaded through FINEOS use "dateCreated" instead of "receivedDate"
-    if response_json["receivedDate"] == "":
-        if response_json["dateCreated"]:
-            response_json["receivedDate"] = response_json["dateCreated"]
-        else:
-            response_json["receivedDate"] = None
-
-    return response_json
-
-
-def get_fineos_correlation_id(response: requests.Response) -> Optional[Any]:
-    try:
-        response_payload_json = response.json()
-        if isinstance(response_payload_json, dict):
-            return response_payload_json.get("correlationId", "")
-    except ValueError:
-        pass
-
-    return None
 
 
 class FINEOSClient(client.AbstractFINEOSClient):
@@ -875,19 +856,25 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         document_type = document_type.replace("/", "%2F")
 
-        response = self._customer_api(
-            "POST",
-            f"customer/cases/{absence_id}/documents/base64Upload/{document_type}",
-            user_id,
-            "upload_documents",
-            json=data,
-        )
+        try:
+            response = self._customer_api(
+                "POST",
+                f"customer/cases/{absence_id}/documents/base64Upload/{document_type}",
+                user_id,
+                "upload_documents",
+                json=data,
+            )
 
-        response_json = response.json()
+            response_json = response.json()
 
-        return models.customer_api.Document.parse_obj(
-            fineos_document_empty_dates_to_none(response_json)
-        )
+            return models.customer_api.Document.parse_obj(
+                fineos_document_empty_dates_to_none(response_json)
+            )
+        except exception.FINEOSClientBadResponse as err:
+            # Log any unexpected upload failures, even if we always
+            # return a BadRequest to the user.
+            log_validation_error(err, EXPECTED_DOCUMENT_UPLOAD_FAILURES)
+            raise
 
     def group_client_get_documents(
         self, user_id: str, absence_id: str
@@ -962,13 +949,22 @@ class FINEOSClient(client.AbstractFINEOSClient):
     def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         header_content_type = None
 
-        response = self._customer_api(
-            "GET",
-            f"customer/cases/{absence_id}/documents",
-            user_id,
-            "get_documents",
-            header_content_type=header_content_type,
-        )
+        try:
+            response = self._customer_api(
+                "GET",
+                f"customer/cases/{absence_id}/documents",
+                user_id,
+                "get_documents",
+                header_content_type=header_content_type,
+            )
+        except exception.FINEOSClientBadResponse as finres:
+            # See API-1198
+            if finres.response_status == requests.codes.FORBIDDEN:
+                logger.warning(
+                    "FINEOS API responded with 403. Returning empty documents list",
+                    extra={"absence_id": absence_id, "user_id": user_id,},
+                )
+                return []
 
         documents = response.json()
 

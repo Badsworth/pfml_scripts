@@ -78,7 +78,7 @@ class TestV1EmployerEformFunctionality:
         eform_body = EmployerClaimReviewV1EFormBuilder.build(v1_employer_claim_review)
         employer_benefits = v1_employer_claim_review.employer_benefits
         assert eform_body.eformType == "Employer Response to Leave Request"
-        assert len(eform_body.eformAttributes) == 10
+        assert len(eform_body.eformAttributes) == 11
         expected_attributes = [
             {"decimalValue": employer_benefits[0].benefit_amount_dollars, "name": "Amount"},
             {"name": "Frequency", "stringValue": "Per Week"},
@@ -91,6 +91,10 @@ class TestV1EmployerEformFunctionality:
                 "name": "EmployerBenefitEndDate",
             },
             {"name": "BenefitType", "stringValue": "Short-term disability insurance"},
+            {
+                "name": "ReceiveWageReplacement",
+                "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            },
             {"name": "Comment", "stringValue": v1_employer_claim_review.comment},
             {
                 "decimalValue": float(v1_employer_claim_review.hours_worked_per_week),
@@ -127,7 +131,7 @@ class TestV1EmployerEformFunctionality:
         eform_body = EmployerClaimReviewV1EFormBuilder.build(v1_employer_claim_review)
         employer_benefits = v1_employer_claim_review.employer_benefits
         assert eform_body.eformType == "Employer Response to Leave Request"
-        assert len(eform_body.eformAttributes) == 16
+        assert len(eform_body.eformAttributes) == 17
         expected_attributes = [
             {"decimalValue": employer_benefits[0].benefit_amount_dollars, "name": "Amount"},
             {"name": "Frequency", "stringValue": "Per Week"},
@@ -141,7 +145,7 @@ class TestV1EmployerEformFunctionality:
             },
             {"name": "BenefitType", "stringValue": employer_benefits[0].benefit_type},
             {
-                "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
+                "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
                 "name": "ReceiveWageReplacement",
             },
             {"decimalValue": employer_benefits[1].benefit_amount_dollars, "name": "Amount2"},
@@ -155,6 +159,10 @@ class TestV1EmployerEformFunctionality:
                 "name": "EmployerBenefitEndDate2",
             },
             {"name": "BenefitType2", "stringValue": employer_benefits[1].benefit_type},
+            {
+                "name": "ReceiveWageReplacement2",
+                "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            },
             {"name": "Comment", "stringValue": v1_employer_claim_review.comment},
             {
                 "decimalValue": float(v1_employer_claim_review.hours_worked_per_week),

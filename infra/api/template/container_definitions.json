@@ -54,7 +54,8 @@
       { "name": "SERVICE_NOW_BASE_URL", "value": "${service_now_base_url}" },
       { "name": "PORTAL_BASE_URL", "value": "${portal_base_url}" },
       { "name": "RELEASE_VERSION", "value": "${release_version}" },
-      { "name": "FEATURES_FILE_PATH", "value": "s3://massgov-pfml-${environment_name}-feature-gate/features.yaml"}
+      { "name": "FEATURES_FILE_PATH", "value": "s3://massgov-pfml-${environment_name}-feature-gate/features.yaml"},
+      { "name": "NEW_PLAN_PROOFS_ACTIVE_AT", "value": "${new_plan_proofs_active_at}" }
     ],
     "secrets": [
       { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},

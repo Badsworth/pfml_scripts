@@ -38,7 +38,7 @@ DOWNLOADABLE_DOC_TYPES = [
     "denial notice",
     "employer response additional documentation",
     "care for a family member form",
-    "own serious health condition",
+    "own serious health condition form",
     "pregnancy/maternity form",
     "child bonding evidence form",
     "military exigency form",
@@ -160,6 +160,7 @@ def get_claim_as_leave_admin(
     absence_id: str,
     employer: Employer,
     fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
+    default_to_v2: Optional[bool] = False,
 ) -> Optional[ClaimReviewResponse]:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
@@ -248,8 +249,14 @@ def get_claim_as_leave_admin(
             )
             contains_version_two_eforms = True
             eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
-            previous_leaves.extend(TransformPreviousLeaveFromOtherLeaveEform.from_fineos(eform))
+            previous_leaves.extend(
+                previous_leave
+                for previous_leave in TransformPreviousLeaveFromOtherLeaveEform.from_fineos(eform)
+                if previous_leave.is_for_current_employer
+            )
             concurrent_leave = TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(eform)
+            if concurrent_leave and not concurrent_leave.is_for_current_employer:
+                concurrent_leave = None
     if customer_info["address"] is not None:
         claimant_address = Address(
             line_1=customer_info["address"]["addressLine1"],
@@ -272,9 +279,11 @@ def get_claim_as_leave_admin(
         )
         raise ContainsV1AndV2Eforms()
 
-    # Any case that does not contain a V1 eform should use the V2 eforms. Cases that do have V1 eforms should either
-    # use the V1 logic (uses_second_eform_version = False), or error as described above
-    uses_second_eform_version = not contains_version_one_eforms
+    # Cases that contain version two eforms should always use V2. Cases that have no eforms should use V2 only if
+    # the feature toggle has been set.
+    uses_second_eform_version = contains_version_two_eforms or (
+        not contains_version_one_eforms and default_to_v2
+    )
 
     if follow_up_date is not None and outstanding_requirement_status == "Open":
         is_reviewable = date.today() < follow_up_date

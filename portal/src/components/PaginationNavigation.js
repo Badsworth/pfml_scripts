@@ -189,10 +189,9 @@ const PaginationNavigation = (props) => {
   /**
    * @type {Pagination.propTypes.pages}
    */
-  const pageButtons = getTruncatedPageRange(
-    pageOffset,
-    totalPages
-  ).map((pageNumberOrSpacer) => getPageButtonProps(pageNumberOrSpacer));
+  const pageButtons = getTruncatedPageRange(pageOffset, totalPages).map(
+    (pageNumberOrSpacer) => getPageButtonProps(pageNumberOrSpacer)
+  );
 
   return (
     <Pagination

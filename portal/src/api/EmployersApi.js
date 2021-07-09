@@ -9,6 +9,7 @@ import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
 import { UserLeaveAdministrator } from "../models/User";
 import Withholding from "../models/Withholding";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 
 /**
@@ -48,7 +49,16 @@ export default class EmployersApi extends BaseApi {
    * @returns {Promise<EmployersAPISingleResult>}
    */
   getClaim = async (absenceId) => {
-    const { data } = await this.request("GET", `claims/${absenceId}/review`);
+    const headers = {};
+    if (isFeatureEnabled("claimantShowOtherLeaveStep")) {
+      headers["X-FF-Default-To-V2"] = true;
+    }
+    const { data } = await this.request(
+      "GET",
+      `claims/${absenceId}/review`,
+      null,
+      headers
+    );
 
     return {
       claim: new EmployerClaim(data),

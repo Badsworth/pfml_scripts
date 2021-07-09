@@ -81,9 +81,16 @@ expected_file_names = [
 ]
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
+# There are multiple types of overpayments
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
-    ["Overpayment", "Overpayment Actual Recovery", "Overpayment Recovery", "Overpayment Adjustment"]
-)  # There are multiple types of overpayments
+    [
+        "Overpayment",
+        "Overpayment Actual Recovery",
+        "Overpayment Recovery",
+        "Overpayment Adjustment",
+        "Overpayment Recovery Reverse",
+    ]
+)
 PAYMENT_OUT_TRANSACTION_TYPE = "PaymentOut"
 AUTO_ALT_EVENT_REASON = "Automatic Alternate Payment"
 
@@ -182,6 +189,7 @@ class PaymentData:
     payment_start_period: Optional[str] = None
     payment_end_period: Optional[str] = None
     payment_date: Optional[str] = None
+    absence_case_creation_date: Optional[str] = None
     payment_amount: Optional[Decimal] = None
     amalgamation_c: Optional[str] = None
 
@@ -347,9 +355,10 @@ class PaymentData:
             eft_required,
             min_length=9,
             max_length=9,
+            custom_validator_func=payments_util.routing_number_validator,
         )
         self.account_nbr = payments_util.validate_csv_input(
-            "PAYEEACCOUNTN", pei_record, self.validation_container, eft_required, max_length=40
+            "PAYEEACCOUNTN", pei_record, self.validation_container, eft_required, max_length=17
         )
         self.raw_account_type = payments_util.validate_csv_input(
             "PAYEEACCOUNTT",
@@ -464,6 +473,14 @@ class PaymentData:
 
             self.claim_type_raw = payments_util.validate_csv_input(
                 "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
+            )
+
+            self.absence_case_creation_date = payments_util.validate_csv_input(
+                "ABSENCE_CASECREATIONDATE",
+                requested_absence,
+                self.validation_container,
+                True,
+                custom_validator_func=self.payment_period_date_validator,
             )
 
         elif self.is_standard_payment:
@@ -912,6 +929,9 @@ class PaymentExtractStep(Step):
             payment_data.payment_end_period
         )
         payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
+        payment.absence_case_creation_date = payments_util.datetime_str_to_date(
+            payment_data.absence_case_creation_date
+        )
 
         payment.payment_transaction_type_id = (
             payment_data.payment_transaction_type.payment_transaction_type_id

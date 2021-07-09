@@ -22,12 +22,12 @@ def test_register_user_success(test_db_session, mock_cognito, mock_cognito_user_
         cognito_client=mock_cognito,
     )
 
-    assert user.active_directory_id is not None
+    assert user.sub_id is not None
     assert user.email_address == email_address
 
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
-    assert user.active_directory_id is not None
+    assert user.sub_id is not None
 
     # User added to user pool
     cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
@@ -38,16 +38,16 @@ def test_register_user_success(test_db_session, mock_cognito, mock_cognito_user_
 def test_register_user_raises_sql_exception(
     initialize_factories_session, test_db_session, mock_cognito, mock_cognito_user_pool, monkeypatch
 ):
-    active_directory_id = "mock-auth-id"
+    sub_id = "mock-auth-id"
 
     def mock_create_cognito_account(*args, **kwargs):
-        return active_directory_id
+        return sub_id
 
     monkeypatch.setattr(users_util, "create_cognito_account", mock_create_cognito_account)
 
     # Test DB failure
     # insert a User already containing the auth_id, forcing a unique key error
-    UserFactory.create(active_directory_id=active_directory_id)
+    UserFactory.create(sub_id=sub_id)
 
     with pytest.raises(SQLAlchemyError):
         users_util.register_user(
@@ -64,7 +64,7 @@ def test_register_user_raises_sql_exception(
 def test_register_user_creates_missing_db_records(
     initialize_factories_session, test_db_session, mock_cognito, mock_cognito_user_pool, monkeypatch
 ):
-    active_directory_id = "mock-auth-id"
+    sub_id = "mock-auth-id"
     email_address = fake.email(domain="example.com")
 
     # This test is based on the assumption that in a previous request, a user was
@@ -89,7 +89,7 @@ def test_register_user_creates_missing_db_records(
     def admin_get_user(Username: str = None, UserPoolId: str = None):
         return {
             "Username": Username,
-            "UserAttributes": [{"Name": "sub", "Value": active_directory_id}],
+            "UserAttributes": [{"Name": "sub", "Value": sub_id}],
         }
 
     monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
@@ -104,5 +104,5 @@ def test_register_user_creates_missing_db_records(
         cognito_client=mock_cognito,
     )
 
-    assert user.active_directory_id == active_directory_id
+    assert user.sub_id == sub_id
     assert user.email_address == email_address

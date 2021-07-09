@@ -24,6 +24,7 @@ const InputCurrency = (props) => {
       {...props}
       value={maskedValue || maskCurrency(props.value)}
       valueType="float"
+      allowNegative
       mask="currency"
       onChange={handleChange}
     />

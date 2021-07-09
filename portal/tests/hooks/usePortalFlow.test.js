@@ -8,6 +8,29 @@ import usePortalFlow from "../../src/hooks/usePortalFlow";
 jest.mock("next/router");
 
 describe("usePortalFlow", () => {
+  describe("updateQuery", () => {
+    let portalFlow;
+
+    beforeEach(() => {
+      testHook(() => {
+        mockRouter.pathname = "/dashboard";
+        portalFlow = usePortalFlow();
+      });
+    });
+
+    it("shallow routes to a path with a query string", () => {
+      portalFlow.updateQuery({ "show-filters": true });
+
+      expect(mockRouter.push).toHaveBeenCalledWith(
+        "/dashboard?show-filters=true",
+        undefined,
+        {
+          shallow: true,
+        }
+      );
+    });
+  });
+
   describe("goToPageFor", () => {
     let expectedRoute, portalFlow;
     beforeEach(() => {

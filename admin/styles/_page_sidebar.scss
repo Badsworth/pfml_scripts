@@ -1,0 +1,89 @@
+/* Navigation */
+.menu {
+  padding: 0 0 0.82em;
+}
+
+.menu__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu__link, .settings__link {
+  color: $Color-RevolutionGray;
+  display: block;
+  padding: 1.18em 1.29em 1.18em 3.14em;
+  text-decoration: none;
+  position: relative;
+  transition: all .2s ease 0s;
+  border-left: solid .29em transparent;
+}
+
+.menu__link:before, .settings__link:before {
+  @include IconFontProps;
+  display: block;
+  font-size: 1.14em;
+  left: .85em;
+  position: absolute;
+  top: 1em;
+}
+
+.menu__link:hover,
+.menu__link:focus,
+.menu__link--active,
+.settings__link:hover,
+.settings__link:focus,
+.settings__link--active {
+  background: $Color-BerkshiresGreen-100;
+  border-color: $Color-BerkshiresGreen-600;
+}
+
+
+.menu__link--dashboard:before {
+  content: $IconHome;
+}
+
+.menu__link--user-lookup:before {
+  content: $IconUsers;
+}
+
+.menu__link--maintenance:before {
+  content: $IconAlert1;
+}
+
+.menu__link--features:before {
+  content: $IconFlag;
+}
+
+/* Settings */
+.settings {
+  border-top: 1px solid #9CC2AB;
+  flex: 1 1 auto;
+  padding: 0.82em 0 0;
+}
+
+.settings__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.settings__link--settings::before {
+  content: $IconSettings;
+}
+
+.settings__link--help::before {
+  content: $IconHelp;
+}
+
+/* Environment Flag */
+.environment {
+  font-size: 0.86em;
+  line-height: 1.5;
+  padding: 0.71em 1.28em 1.48em;
+}
+
+.environment__label {
+  font-weight: 700;
+  text-transform: uppercase;
+}

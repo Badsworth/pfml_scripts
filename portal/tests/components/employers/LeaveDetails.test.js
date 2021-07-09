@@ -48,10 +48,46 @@ describe("LeaveDetails", () => {
     expect(wrapper.exists("InputChoiceGroup")).toBe(false);
   });
 
-  it("renders formatted leave reason as sentence case", () => {
-    expect(wrapper.find(ReviewRow).first().children().first().text()).toEqual(
-      "Medical leave"
+  it("renders leave reason as link when reason is not pregnancy", () => {
+    expect(wrapper.find("ReviewRow[data-test='leave-type']").children())
+      .toMatchInlineSnapshot(`
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
+        rel="noopener"
+        target="_blank"
+      >
+        Medical leave
+      </a>
+    `);
+  });
+
+  it("does not render leave reason as link when reason is pregnancy", () => {
+    const claimWithPregnancyLeave = new MockEmployerClaimBuilder()
+      .completed()
+      .pregnancyLeaveReason()
+      .create();
+    const wrapper = shallow(
+      <LeaveDetails
+        claim={claimWithPregnancyLeave}
+        documents={[]}
+        downloadDocument={jest.fn()}
+        appErrors={new AppErrorInfoCollection()}
+      />
     );
+
+    expect(
+      wrapper.find("ReviewRow[data-test='leave-type']").children()
+    ).toMatchInlineSnapshot(`"Medical leave for pregnancy or birth"`);
+  });
+
+  it("renders formatted leave reason as sentence case", () => {
+    expect(
+      wrapper
+        .find("ReviewRow[data-test='leave-type']")
+        .children()
+        .first()
+        .text()
+    ).toEqual("Medical leave");
   });
 
   it("renders formatted date range for leave duration", () => {
@@ -111,24 +147,27 @@ describe("LeaveDetails", () => {
       expect(documentsHint).toMatchSnapshot();
     });
 
-    it("renders document's name if there is no document name", () => {
+    it("displays the generic document name", () => {
       const { wrapper } = setup();
-      const medicalDocuments = wrapper.find("HcpDocumentItem");
+      const medicalDocuments = wrapper.find("DownloadableDocument");
       expect(medicalDocuments.length).toBe(2);
-      expect(medicalDocuments.map((node) => node.dive().text())).toEqual([
-        "Medical cert doc",
-        "Certification of Your Serious Health Condition",
-      ]);
+      expect(
+        medicalDocuments.map((node) =>
+          node
+            .dive()
+            .containsMatchingElement("Your employee's certification document")
+        )
+      ).toEqual([true, true]);
     });
 
     it("makes a call to download documents on click", async () => {
       const { downloadDocumentSpy, wrapper } = setup();
       await act(async () => {
         await wrapper
-          .find("HcpDocumentItem")
+          .find("DownloadableDocument")
           .at(0)
           .dive()
-          .find("a")
+          .find("Button")
           .simulate("click", {
             preventDefault: jest.fn(),
           });
@@ -175,12 +214,6 @@ describe("LeaveDetails", () => {
       };
     };
 
-    it("does not render relationship question when showCaringLeaveType flag is false", () => {
-      // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
-      const { wrapper } = setup();
-      expect(wrapper.exists("InputChoiceGroup")).toBe(false);
-    });
-
     it("renders documentation hint correctly with family relationship", () => {
       const { wrapper } = setup(DOCUMENTS);
       const documentsHint = wrapper
@@ -191,9 +224,7 @@ describe("LeaveDetails", () => {
       expect(documentsHint).toMatchSnapshot();
     });
 
-    it("renders relationship question when showCaringLeaveType flag is true", () => {
-      // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
-      process.env.featureFlags = { showCaringLeaveType: true };
+    it("renders the relationship question", () => {
       const { wrapper } = setup();
       expect(wrapper).toMatchSnapshot();
       expect(wrapper.exists("InputChoiceGroup")).toBe(true);

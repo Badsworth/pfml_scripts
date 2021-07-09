@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from typing import List
 
@@ -31,6 +32,7 @@ class AppConfig:
     rmv_check_mock_success: bool
     enable_application_fraud_check: bool
     dashboard_password: str
+    new_plan_proofs_active_at: datetime
 
 
 def get_config() -> AppConfig:
@@ -51,4 +53,7 @@ def get_config() -> AppConfig:
         rmv_check_mock_success=os.environ.get("RMV_CHECK_MOCK_SUCCESS", "1") == "1",
         enable_application_fraud_check=os.environ.get("ENABLE_APPLICATION_FRAUD_CHECK", "0") == "1",
         dashboard_password=os.environ.get("DASHBOARD_PASSWORD", ""),
+        new_plan_proofs_active_at=datetime.fromisoformat(
+            os.environ.get("NEW_PLAN_PROOFS_ACTIVE_AT", "2021-06-26 00:00:00+00:00")
+        ),
     )

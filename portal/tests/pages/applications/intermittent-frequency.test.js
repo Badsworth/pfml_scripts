@@ -17,6 +17,7 @@ jest.mock("../../../src/hooks/useAppLogic");
 const frequencyBasisInputName =
   "leave_details.intermittent_leave_periods[0].frequency_interval_basis";
 
+// TODO (CP-2343): Add test for disallowing negative values
 describe("IntermittentFrequency", () => {
   const intermittentClaimAttrs = (attrs) => ({
     leave_details: {
@@ -292,9 +293,8 @@ describe("IntermittentFrequency", () => {
       claimAttrs: claim,
     });
 
-    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
-      wrapper
-    );
+    const { changeField, changeRadioGroup, submitForm } =
+      simulateEvents(wrapper);
 
     changeRadioGroup(
       frequencyBasisInputName,

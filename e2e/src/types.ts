@@ -1,4 +1,4 @@
-import { ApplicationLeaveDetails } from "./api";
+import { ApplicationLeaveDetails, ApplicationRequestBody } from "./api";
 import * as scenarios from "./scenarios";
 import {
   EmployerBenefit,
@@ -7,6 +7,21 @@ import {
   OtherIncome,
 } from "./_api";
 import { DehydratedClaim } from "./generation/Claim";
+
+export type FeatureFlags = {
+  pfmlTerriyay: boolean;
+  claimantShowAuth: boolean;
+  claimantShowMedicalLeaveType: boolean;
+  noMaintenance: boolean;
+  employerShowSelfRegistrationForm: boolean;
+  claimantShowOtherLeaveStep: boolean;
+  claimantAuthThroughApi: boolean;
+  employerShowAddOrganization: boolean;
+  employerShowVerifications: boolean;
+  employerShowDashboard: boolean;
+  useNewPlanProofs: boolean;
+  showCaringLeaveType: boolean;
+};
 
 export type Credentials = {
   username: string;
@@ -41,9 +56,55 @@ export type SubjectOptions =
   | "denial (claimant)"
   | "approval (claimant)"
   | "review leave hours"
-  | "request for additional info";
+  | "request for additional info"
+  | "extension of benefits";
 
 export type Scenarios = keyof typeof scenarios;
+
+export type PersonalIdentificationDetails = {
+  id_number_type: "Social Security Number" | "ID" | "ITIN";
+  date_of_birth: string;
+  gender: NonNullable<ApplicationRequestBody["gender"]>;
+  marital_status:
+    | "Unknown"
+    | "Single"
+    | "Married"
+    | "Divorced"
+    | "Widowed"
+    | "Separated";
+};
+
+/**
+ * @FINEOS_TYPES
+ */
+
+/**
+ * Tasks associated with employer response to a claim.
+ */
+export type ERTasks =
+  | "Employer Approval Received"
+  | "Employer Conflict Reported"
+  | "Escalate employer reported accrued paid leave (PTO)"
+  | "Escalate Employer Reported Fraud"
+  | "Escalate Employer Reported Other Income"
+  | "Escalate employer reported past leave";
+/**
+ * Tasks associated with reviewing evidence.
+ */
+export type DocumentReviewTasks =
+  | "Bonding Certification Review"
+  | "Medical Certification Review"
+  | "ID Review"
+  | "Certification Review"
+  | "Caring Certification Review"
+  | "Medical Pregnancy Certification Review";
+export type FineosTasks = DocumentReviewTasks | ERTasks;
+
+export type ClaimStatus = "Adjudication" | "Approved" | "Completed";
+
+/**
+ * @note UTILITY TYPES
+ */
 
 /**
  * Require properties in P to be neither null nor undefined within T
@@ -60,9 +121,15 @@ export type AllNotNull<T> = Required<
   }
 >;
 
+/**Get a union of non-optional keys of type */
 export type RequiredKeys<T> = {
   [k in keyof T]-?: undefined extends T[k] ? never : k;
 }[keyof T];
+
+/**
+ * Require a typed array to have at least one element.
+ */
+export type NonEmptyArray<T> = [T, ...T[]];
 
 /**
  * @note Following types are used within typeguards and to limit the amount of property checks & type casts.

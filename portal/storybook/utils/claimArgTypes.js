@@ -1,4 +1,3 @@
-import { EmployerBenefitType } from "src/models/EmployerBenefit";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import { PreviousLeaveReason } from "src/models/PreviousLeave";
 
@@ -83,7 +82,7 @@ export const claimArgTypes = {
     defaultValue: "None",
     control: {
       type: "radio",
-      options: ["None", "Weekly medical benefit", "Full wage replacement"],
+      options: ["None", "Yes (array)"],
     },
   },
   "Other income": {
@@ -225,21 +224,12 @@ export function createClaimFromArgs(args) {
   switch (args["Concurrent leave"]) {
     case "From current employer":
       claim = claim.concurrentLeave();
+      break;
   }
 
   switch (args["Employer-sponsored benefit"]) {
-    case "Weekly medical benefit":
+    case "Yes (array)":
       claim = claim.employerBenefit();
-      break;
-    case "Full wage replacement":
-      claim = claim.employerBenefit([
-        {
-          is_full_salary_continuous: true,
-          benefit_start_date: "2021-05-01",
-          benefit_end_date: "2021-07-01",
-          benefit_type: EmployerBenefitType.permanentDisability,
-        },
-      ]);
       break;
   }
 

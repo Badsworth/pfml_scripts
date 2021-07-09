@@ -40,9 +40,8 @@ describe("withBenefitsApplication", () => {
 
   it("Shows spinner when claim's warnings aren't loaded", () => {
     const claim = new BenefitsApplication({ application_id: claim_id });
-    appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
-      [claim]
-    );
+    appLogic.benefitsApplications.benefitsApplications =
+      new BenefitsApplicationCollection([claim]);
     appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings.mockReturnValue(
       false
     );
@@ -75,9 +74,8 @@ describe("withBenefitsApplication", () => {
 
     beforeEach(() => {
       claim = new BenefitsApplication({ application_id: claim_id });
-      appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
-        [claim]
-      );
+      appLogic.benefitsApplications.benefitsApplications =
+        new BenefitsApplicationCollection([claim]);
       appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings.mockReturnValue(
         true
       );

@@ -665,3 +665,12 @@ def test_get_fineos_correlation_id_with_int():
 
     cid = massgov.pfml.fineos.fineos_client.get_fineos_correlation_id(response)
     assert cid == 1234
+
+
+def test_customer_api_documents_403(httpserver, fineos_client):
+    httpserver.expect_request(
+        "/customerapi/customer/cases/123456789/documents", method="GET",
+    ).respond_with_data("", status=403, content_type="application/json")
+
+    documents = fineos_client.get_documents("FINEOS_WEB_ID", "123456789")
+    assert len(documents) == 0

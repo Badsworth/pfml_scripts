@@ -14,7 +14,9 @@ variable "vpc_id" {
 }
 
 variable "app_subnet_ids" {
+  type        = list(string)
   description = "App subnet IDS."
+  default     = []
 }
 
 variable "fineos_client_customer_api_url" {
@@ -71,6 +73,11 @@ variable "fineos_aws_iam_role_external_id" {
   default     = ""
 }
 
+variable "fineos_report_export_path" {
+  description = "Location for additional FINEOS exports"
+  type        = string
+  default     = ""
+}
 variable "fineos_eligibility_feed_output_directory_path" {
   description = "Location the FINEOS Eligibility Feed export should write output to"
   type        = string
@@ -135,16 +142,6 @@ variable "fineos_payment_max_history_date" {
   description = "PFML API will not process FINEOS payment data older than this date"
   type        = string
   default     = ""
-}
-variable "dor_fineos_etl_definition" {
-  description = "Step function definition for DOR FINEOS ETL"
-  type        = string
-  default     = <<-END
-    {
-      "StartAt": "nothing",
-      "States": {"nothing": {"Type": "Pass", "End": true}}
-    }
-    END
 }
 
 variable "dor_fineos_etl_schedule_expression" {
@@ -285,14 +282,8 @@ variable "enable_reductions_send_claimant_lists_to_agencies_schedule" {
   default     = false
 }
 
-variable "enable_reductions_retrieve_payment_lists_from_agencies_schedule" {
-  description = "Enable scheduling for 'reductions-retrieve-payment-lists-from-agencies' ECS task"
-  type        = bool
-  default     = false
-}
-
-variable "enable_reductions_send_wage_replacement_payments_to_dfml_schedule" {
-  description = "Enable scheduling for 'reductions-send-wage-replacement-payments-to-dfml' ECS task"
+variable "enable_reductions_process_agency_data_schedule" {
+  description = "Enable scheduling for 'reductions-process-agency-data' ECS task"
   type        = bool
   default     = false
 }
@@ -322,4 +313,21 @@ variable "enable_pub_automation_create_pub_files" {
 variable "enable_pub_automation_process_returns" {
   description = "Enable scheduling for pub automation return processing task"
   default     = false
+}
+
+########## Variables for Step Functions ################
+
+variable "st_use_mock_dor_data" {
+  description = "Step Function Mock DOR Data"
+  default     = false
+}
+
+variable "st_decrypt_dor_data" {
+  description = "Step Function Decrypted DOR Data"
+  default     = false
+}
+
+variable "st_file_limit_specified" {
+  description = "Step Function Eligibility Feed Export File Number Limit"
+  default     = true
 }

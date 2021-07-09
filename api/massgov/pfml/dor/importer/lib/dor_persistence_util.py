@@ -1,7 +1,9 @@
 import uuid
+from typing import Any, Dict, Iterable, List
 
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
+import massgov.pfml.db
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
@@ -15,6 +17,7 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     WagesAndContributions,
 )
+from massgov.pfml.util.datetime import to_datetime
 from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 
 logger = logging.get_logger(__name__)
@@ -220,30 +223,36 @@ def update_employee(db_session, existing_employee, employee_info, import_log_ent
     return existing_employee
 
 
-def check_and_update_employer_quarlerly_contribution(
-    db_session, existing_employer_quarlerly_contribution, employer_info, import_log_entry_id
-):
+def check_and_update_employer_quarterly_contribution(
+    existing_employer_quarterly_contribution: EmployerQuarterlyContribution,
+    employer_info: Dict[str, Any],
+    import_log_entry_id: int,
+) -> bool:
     do_update = (
-        existing_employer_quarlerly_contribution.employer_total_pfml_contribution
+        existing_employer_quarterly_contribution.employer_total_pfml_contribution
         != employer_info["total_pfml_contribution"]
-        or existing_employer_quarlerly_contribution.dor_received_date.date()
+        or existing_employer_quarterly_contribution.dor_received_date is None
+        or existing_employer_quarterly_contribution.dor_received_date.date()
         != employer_info["received_date"]
-        or existing_employer_quarlerly_contribution.dor_updated_date.date()
+        or existing_employer_quarterly_contribution.dor_updated_date is None
+        or existing_employer_quarterly_contribution.dor_updated_date.date()
         != employer_info["updated_date"].date()
-        or existing_employer_quarlerly_contribution.pfm_account_id
+        or existing_employer_quarterly_contribution.pfm_account_id
         != employer_info["pfm_account_id"]
     )
 
     if not do_update:
         return False
 
-    existing_employer_quarlerly_contribution.employer_total_pfml_contribution = employer_info[
+    existing_employer_quarterly_contribution.employer_total_pfml_contribution = employer_info[
         "total_pfml_contribution"
     ]
-    existing_employer_quarlerly_contribution.pfm_account_id = employer_info["pfm_account_id"]
-    existing_employer_quarlerly_contribution.dor_received_date = employer_info["received_date"]
-    existing_employer_quarlerly_contribution.dor_updated_date = employer_info["updated_date"]
-    existing_employer_quarlerly_contribution.latest_import_log_id = import_log_entry_id
+    existing_employer_quarterly_contribution.pfm_account_id = employer_info["pfm_account_id"]
+    existing_employer_quarterly_contribution.dor_received_date = to_datetime(
+        employer_info["received_date"]
+    )
+    existing_employer_quarterly_contribution.dor_updated_date = employer_info["updated_date"]
+    existing_employer_quarterly_contribution.latest_import_log_id = import_log_entry_id
 
     return True
 
@@ -309,7 +318,9 @@ def check_and_update_wages_and_contributions(
 # == Query Helpers ==
 
 
-def get_employer_quarterly_info_by_employer_id(db_session, employer_ids):
+def get_employer_quarterly_info_by_employer_id(
+    db_session: massgov.pfml.db.Session, employer_ids: Iterable[uuid.UUID]
+) -> List[EmployerQuarterlyContribution]:
     employer_rows = (
         db_session.query(EmployerQuarterlyContribution)
         .filter(EmployerQuarterlyContribution.employer_id.in_(employer_ids))

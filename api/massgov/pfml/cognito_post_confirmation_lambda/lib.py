@@ -55,7 +55,7 @@ def handler(
     }
 
     logger.info("Handle post confirmation event", extra=log_attributes)
-    user = db_session.query(User).filter(User.active_directory_id == auth_id).one_or_none()
+    user = db_session.query(User).filter(User.sub_id == auth_id).one_or_none()
 
     if user is not None:
         logger.info(
@@ -84,9 +84,7 @@ def handler(
 
         return event
 
-    user = User(
-        active_directory_id=cognito_user_attrs["sub"], email_address=cognito_user_attrs["email"],
-    )
+    user = User(sub_id=cognito_user_attrs["sub"], email_address=cognito_user_attrs["email"],)
     logger.info("Creating a claimant account", extra=log_attributes)
 
     db_session.add(user)
@@ -110,7 +108,7 @@ def leave_admin_create(
     if employer is None:
         raise ValueError("Invalid employer_fein")
 
-    user = User(active_directory_id=auth_id, email_address=email,)
+    user = User(sub_id=auth_id, email_address=email,)
     user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
     user_leave_admin = UserLeaveAdministrator(user=user, employer=employer, fineos_web_id=None,)
     try:
