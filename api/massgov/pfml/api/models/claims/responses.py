@@ -44,28 +44,28 @@ class ClaimTypeResponse(PydanticBaseModel):
 class ManagedRequirementResponse(PydanticBaseModel):
     follow_up_date: Optional[date]
     responded_at: Optional[date]
-    managed_requirement_status_description: Optional[str]
-    managed_requirement_category_description: Optional[str]
-    managed_requirement_type_description: Optional[str]
+    status: Optional[str]
+    category: Optional[str]
+    type: Optional[str]
     created_at: Optional[date]
 
     @classmethod
     def from_orm(cls, managed_requirement: ManagedRequirement) -> "ManagedRequirementResponse":
         managed_requirement_response = super().from_orm(managed_requirement)
         if managed_requirement.managed_requirement_status:
-            managed_requirement_response.managed_requirement_status_description = (
+            managed_requirement_response.status = (
                 managed_requirement.managed_requirement_status.managed_requirement_status_description
             )
         if managed_requirement.managed_requirement_category:
-            managed_requirement_response.managed_requirement_category_description = (
+            managed_requirement_response.category = (
                 managed_requirement.managed_requirement_category.managed_requirement_category_description
             )
         if managed_requirement.managed_requirement_type:
-            managed_requirement_response.managed_requirement_type_description = (
+            managed_requirement_response.type = (
                 managed_requirement.managed_requirement_type.managed_requirement_type_description
             )
-        return managed_requirement_response
 
+        return managed_requirement_response
 
 class ClaimResponse(PydanticBaseModel):
     fineos_absence_id: Optional[str]

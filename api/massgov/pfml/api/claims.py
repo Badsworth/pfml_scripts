@@ -1,4 +1,5 @@
 import base64
+from datetime import date
 from typing import Any, Dict, Optional, Set, Union
 
 import connexion
@@ -11,7 +12,6 @@ from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 import massgov.pfml.api.app as app
 import massgov.pfml.api.services.claim_rules as claim_rules
 import massgov.pfml.api.util.response as response_util
-import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
@@ -629,7 +629,7 @@ def add_filter_managed_requirements(query: Query) -> Query:
         == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
         ManagedRequirement.managed_requirement_status_id
         == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
-        ManagedRequirement.follow_up_date >= datetime_util.utcnow(),
+        ManagedRequirement.follow_up_date >= date.today(),
     ]
     query = query.outerjoin(ManagedRequirement, and_(*filters))
     query = query.options(contains_eager("managed_requirements"))

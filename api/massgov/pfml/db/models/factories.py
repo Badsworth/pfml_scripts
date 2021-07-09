@@ -374,7 +374,7 @@ class ManagedRequirementFactory(BaseFactory):
     respondent_user = factory.SubFactory(UserFactory)
     respondent_user_id = factory.LazyAttribute(lambda w: w.respondent_user.user_id)
     fineos_managed_requirement_id = factory.Sequence(lambda n: n)
-    follow_up_date = factory.LazyAttribute(lambda w: w.claim.created_at + timedelta(days=3))
+    follow_up_date = factory.LazyAttribute(lambda w: w.claim.created_at + timedelta(days=10))
     managed_requirement_status = employee_models.ManagedRequirementStatus.OPEN
     managed_requirement_status_id = factory.LazyAttribute(
         lambda w: w.managed_requirement_status.managed_requirement_status_id

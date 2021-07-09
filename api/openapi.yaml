@@ -2181,12 +2181,15 @@ components:
         responded_at:
           format: date
           example: "1970-06-01"
-        managed_requirement_status_description:
-          format: string
-        managed_requirement_category_description:
-          format: string
-        managed_requirement_type_description:
-          format: string
+        status:
+          type: string
+          nullable: True
+        category:
+          type: string
+          nullable: True
+        type:
+          type: string
+          nullable: True
         created_at:
           format: date
 

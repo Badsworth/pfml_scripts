@@ -14,6 +14,7 @@ import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.db.models.employees import (
     Claim,
+    ManagedRequirementCategory,
     ManagedRequirementStatus,
     ManagedRequirementType,
     Role,
@@ -2404,11 +2405,11 @@ class TestGetClaimsEndpoint:
             for req in claim["managed_requirements"]:
                 assert req["follow_up_date"] >= datetime_util.utcnow().strftime("%Y-%m-%d")
                 assert (
-                    req["managed_requirement_type_description"]
+                    req["type"]
                     == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_description
                 )
                 assert (
-                    req["managed_requirement_status_description"]
+                    req["status"]
                     == ManagedRequirementStatus.OPEN.managed_requirement_status_description
                 )
 
