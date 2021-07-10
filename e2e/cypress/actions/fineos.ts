@@ -231,6 +231,7 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
   }
 }
 
+
 /**
  * This work-flow is submitting a full bonding/military claim
  * directly into Fineos.
@@ -269,9 +270,10 @@ export function createNotification(
       cy.findByLabelText("Absence relates to").select("Employee");
       wait();
       cy.wait(100);
+      clickNext(5000);
       cy.findByLabelText("Absence reason").select(
-        "Serious Health Condition - Employee"
-      );
+          "Serious Health Condition - Employee"
+        );
       wait();
       cy.wait(100);
       cy.findByLabelText("Qualifier 1").select("Not Work Related");
@@ -976,7 +978,7 @@ export function addHistoricalAbsenceCase(claimNumber: string): void {
   cy.findByLabelText("Absence relates to").select("Employee");
   wait();
   cy.wait(100);
-  cy.findByLabelText("Absence reason").select(
+  cy.findByLabelText("Absence Reason").select(
     "Serious Health Condition - Employee"
   );
   wait();
