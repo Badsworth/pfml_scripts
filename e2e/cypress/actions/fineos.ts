@@ -972,7 +972,8 @@ export function triggerNoticeRelease(docType: string): void {
 /**
  * Adding a  Historical Absence case
  */
-export function addHistoricalAbsenceCase(claimNumber: string): void {
+export function addHistoricalAbsenceCase(claimNumber: string,
+  startDate: Date): void {
   cy.contains("Options").click();
   cy.contains("Add Historical Absence").click();
   cy.findByLabelText("Absence relates to").select("Employee");
@@ -987,6 +988,34 @@ export function addHistoricalAbsenceCase(claimNumber: string): void {
   wait();
   cy.wait(100);
   cy.findByLabelText("Qualifier 2").select("Sickness");
+  cy.wait(100);
+  cy.contains(
+    "div",
+    "timeOffHistoricalAbsencePeriodsListviewWidget"
+  ).find("input").click();
+  const startDates = addMonths(startDate, -2);
+    const startDateFormatted = format(startDate, "MM/dd/yyyy");
+    const endDateFormatted = format(addDays(startDate, 15), "MM/dd/yyyy");
+  cy.contains(
+    "span",
+    "historicalTimeOffAbsencePeriodDetailsWidget_un10_startDate_WRAPPER"
+  )
+    cy.labelled("Start date").type(
+      `{selectall}{backspace}${startDateFormatted}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get(
+      "span[id=historicalTimeOffAbsencePeriodDetailsWidget_un10_startDateAllDay_WRAPPER]"
+    ).click();
+    cy.labelled("End date").type(
+      `{selectall}{backspace}${endDateFormatted}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("span[id=historicalTimeOffAbsencePeriodDetailsWidget_un10_endDateAllDay_WRAPPER]").click();
+
+  
 }
 
 /**

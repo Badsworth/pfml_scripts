@@ -32,7 +32,7 @@ describe("Create a new continuous leave, medical leave claim in FINEOS and addin
             cy.log(fineos_absence_id);
             fineos.visitClaim(fineos_absence_id);
             fineos.assertClaimStatus("Adjudication");
-            fineos.addHistoricalAbsenceCase(fineos_absence_id);
+            fineos.addHistoricalAbsenceCase(fineos_absence_id, startDate);
           });
       });
     }
