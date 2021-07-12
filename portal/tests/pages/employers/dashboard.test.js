@@ -640,7 +640,7 @@ describe("Employer dashboard", () => {
     expect(findFiltersMenu(wrapperWithActiveFilters)).toMatchSnapshot();
   });
 
-  it("removes filter when a filter menu button is clicked", () => {
+  it("removes the employer filter when its FilterMenuButton is clicked", () => {
     const user_leave_administrators = [
       createUserLeaveAdministrator({
         verified: true,
@@ -660,13 +660,39 @@ describe("Employer dashboard", () => {
     const { click } = simulateEvents(wrapper.find("Filters").dive());
 
     click("FilterMenuButton[data-test='employer_id']");
+
     expect(updateQuerySpy).toHaveBeenLastCalledWith({
       page_offset: "1",
     });
+  });
+
+  it("updates the claim_status param when one of several status FilterMenuButtons is clicked", () => {
+    const { updateQuerySpy, wrapper } = setup({
+      activeFilters: {
+        claim_status: "Approved,Closed,Pending",
+      },
+    });
+    const { click } = simulateEvents(wrapper.find("Filters").dive());
 
     click("FilterMenuButton[data-test='claim_status_Closed']");
+
     expect(updateQuerySpy).toHaveBeenLastCalledWith({
-      claim_status: "Approved",
+      claim_status: "Approved,Pending",
+      page_offset: "1",
+    });
+  });
+
+  it("removes the claim_status param when the last remaining status FilterMenuButton is clicked", () => {
+    const { updateQuerySpy, wrapper } = setup({
+      activeFilters: {
+        claim_status: "Closed",
+      },
+    });
+    const { click } = simulateEvents(wrapper.find("Filters").dive());
+
+    click("FilterMenuButton[data-test='claim_status_Closed']");
+
+    expect(updateQuerySpy).toHaveBeenLastCalledWith({
       page_offset: "1",
     });
   });
