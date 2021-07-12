@@ -1,9 +1,11 @@
 import base64
+from datetime import date
 from typing import Any, Dict, Optional, Set, Union
 
 import connexion
 import flask
-from sqlalchemy import Column, asc, desc, or_
+from sqlalchemy import Column, and_, asc, desc, or_
+from sqlalchemy.orm import contains_eager
 from sqlalchemy.orm.query import Query
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
@@ -32,6 +34,9 @@ from massgov.pfml.db.models.employees import (
     Employee,
     Employer,
     LkAbsenceStatus,
+    ManagedRequirement,
+    ManagedRequirementStatus,
+    ManagedRequirementType,
     UserLeaveAdministrator,
 )
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
@@ -518,9 +523,8 @@ def get_claims() -> flask.Response:
             if search_string:
                 search_string = search_string.strip()
                 query = add_search_filter_to_query(query, search_string)
-
+            query = add_filter_managed_requirements(query)
         page = page_for_api_context(pagination_context, query)
-
     logger.info(
         "get_claims success",
         extra={
@@ -627,4 +631,18 @@ def add_search_filter_to_query(query: Query, search_string: str) -> Query:
         Employee.last_name.ilike(f"%{search_string}%"),
     ]
     query = query.filter(or_(*filters))
+    return query
+
+
+def add_filter_managed_requirements(query: Query) -> Query:
+    filters = [
+        ManagedRequirement.claim_id == Claim.claim_id,
+        ManagedRequirement.managed_requirement_type_id
+        == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+        ManagedRequirement.managed_requirement_status_id
+        == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+        ManagedRequirement.follow_up_date >= date.today(),
+    ]
+    query = query.outerjoin(ManagedRequirement, and_(*filters))
+    query = query.options(contains_eager("managed_requirements"))
     return query
