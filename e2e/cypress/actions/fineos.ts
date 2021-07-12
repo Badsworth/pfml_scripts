@@ -1008,13 +1008,27 @@ export function addHistoricalAbsenceCase(claimNumber: string,
     cy.get(
       "span[id=historicalTimeOffAbsencePeriodDetailsWidget_un10_startDateAllDay_WRAPPER]"
     ).click();
+    cy.wait(200);
     cy.labelled("End date").type(
       `{selectall}{backspace}${endDateFormatted}{enter}`
     );
     cy.wait("@ajaxRender");
     cy.wait(200);
     cy.get("span[id=historicalTimeOffAbsencePeriodDetailsWidget_un10_endDateAllDay_WRAPPER]").click();
-
+    // mel's code 
+    cy.get("input[type='button'][id*='addHistoricalTimeOffAbsencePeriodPopupWidget_un8_okButtonBean']").click();
+  cy.contains(
+    "div",
+    "historicalAbsenceSelectedLeavePlansListViewWidget"
+    ).find("input").click();
+    wait();
+  cy.get(
+  "input[name='historicalCasePlanSelectionListviewWidget_un0_Checkbox_RowId_0_CHECKBOX']"
+  ).click();
+  cy.get("[id=p16_un7_editPageSave_cloned]").contains("OK").click({ force: true });
+  cy.wait(200);
+  cy.get("[id=p15_un24_editPageSave]").contains("OK").click({ force: true });
+  cy.wait(200);
   
 }
 
