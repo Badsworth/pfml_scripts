@@ -23,9 +23,9 @@ jobs:
           role-duration-seconds: 3600
           role-to-assume: ci-run-deploys
 
-      - name: Get Yesterday's Date
+      - name: Get Today's Date
         id: date
-        run: echo "::set-output name=date::$(date --date='yesterday' +'%Y-%m-%d')"
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
       - name: Check file names
         id: file-check
