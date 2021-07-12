@@ -16,6 +16,8 @@ class MSALClientConfig:
     knownAuthorities: [str]
     redirectUri: str
     scopes: [str]
+    states: dict
+    policies: dict
 
     @classmethod
     def from_env(cls) -> "MSALClientConfig":
@@ -34,9 +36,6 @@ class MSALClientConfig:
             },
         }
 
-        authCodeRequest = {}
-        tokenRequest = {}
-
         return MSALClientConfig(
             clientId=os.environ.get("AZURE_AD_APPLICATION_CLIENT_ID", None),
             clientSecret=os.environ.get("AZURE_AD_SECRET_VALUE", None),
@@ -44,6 +43,8 @@ class MSALClientConfig:
             knownAuthorities=[b2cPolicies["authorityDomain"]],
             redirectUri="http://localhost:3000",
             scopes=[f'{os.environ.get("AZURE_AD_APPLICATION_CLIENT_ID", None)}/.default'],
+            policies=b2cPolicies,
+            states=b2cStates
             # "https://graph.microsoft.com/user.read"
             # "postLogoutRedirectUri": "http://localhost:3000",
             # "protocolMode": "AAD",
@@ -76,8 +77,6 @@ class MSALClient:
         # Firstly, looks up a token from cache
         # Since we are looking for token for the current app, NOT for an end user,
         # notice we give account parameter as None.
-        logger.info(self.client)
-        logger.info(self.config)
 
         result = self.client.acquire_token_silent(self.config.scopes, account=None)
 

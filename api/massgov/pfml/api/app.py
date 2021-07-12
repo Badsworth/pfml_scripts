@@ -13,7 +13,8 @@ import flask
 import flask_cors
 import newrelic.api.time_trace
 from flask import Flask, current_app, g
-from sqlalchemy.orm import Session
+from flask.ext.session import Session
+from sqlalchemy.orm import Session as AlchemySession
 
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
@@ -34,7 +35,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 def create_app(
     config: Optional[AppConfig] = None,
     check_migrations_current: bool = True,
-    db_session_factory: Optional[Session] = None,
+    db_session_factory: Optional[AlchemySession] = None,
     do_close_db: bool = True,
 ) -> connexion.FlaskApp:
     logger.info("Creating API Application...")
@@ -71,7 +72,9 @@ def create_app(
 
     flask_cors.CORS(flask_app, origins=config.cors_origins, supports_credentials=True)
 
-    # Set up bouncer
+    session = Session()
+    session.init_app(flask_app)
+    # Set up bouncer # MSAL?
     authorization_path = massgov.pfml.api.authorization.rules.create_authorization(
         config.enable_employee_endpoints
     )
@@ -165,3 +168,33 @@ def get_project_root_dir() -> str:
 
 def openapi_filenames() -> List[str]:
     return ["openapi.yaml"]
+
+
+def _load_cache():
+    cache = msal.SerializableTokenCache()
+    if session.get("token_cache"):
+        cache.deserialize(session["token_cache"])
+    return cache
+
+def _save_cache(cache):
+    if cache.has_state_changed:
+        session["token_cache"] = cache.serialize()
+
+def _build_msal_app(cache=None, authority=None):
+    return msal.ConfidentialClientApplication(
+        app_config.CLIENT_ID, authority=authority or app_config.AUTHORITY,
+        client_credential=app_config.CLIENT_SECRET, token_cache=cache)
+
+def _build_auth_code_flow(authority=None, scopes=None):
+    return _build_msal_app(authority=authority).initiate_auth_code_flow(
+        scopes or [],
+        redirect_uri=url_for("authorized", _external=True))
+
+def _get_token_from_cache(scope=None):
+    cache = _load_cache()  # This web app maintains one cache per session
+    cca = _build_msal_app(cache=cache)
+    accounts = cca.get_accounts()
+    if accounts:  # So all account(s) belong to the current signed-in user
+        result = cca.acquire_token_silent(scope, account=accounts[0])
+        _save_cache(cache)
+        return result

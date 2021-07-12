@@ -567,7 +567,7 @@ paths:
       tags:
         - Azure
       summary: Retrieve an Application identified by the application id
-      operationId: massgov.pfml.api.authentication.get_sso_token
+      operationId: massgov.pfml.api.authentication.get_sso_auth_code
       responses:
         "200":
           $ref: "#/components/responses/ApplicationResponse"

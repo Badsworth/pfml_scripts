@@ -17,16 +17,46 @@ import massgov.pfml.api.app as app
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import User
 
-import msal
-from massgov.pfml.api.authentication.msalConfig import MSALClient
+from typing import Optional
+from massgov.pfml.api.authentication.msalConfig import MSALClient, MSALClientConfig
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 public_keys = None
 
-def get_sso_token():
-    msal = MSALClient()
-    return msal.get_azure_ad_sso_token()
+msal = None
+authCodeRequest = None
+tokenRequest = None
+
+def get_sso_auth_code():
+    global authCodeRequest, tokenRequest
+    
+    if msal is not None:
+        # prepare the request
+        authCodeRequest.authority = config.authority
+        authCodeRequest.scopes = config.scopes
+        authCodeRequest.state = "SIGN_IN"
+
+        tokenRequest.authority = config.authority;
+
+        # request an authorization code to exchange for a token
+        # msal.getAuthCodeUrl(authCodeRequest)
+
+        # res.redirect(response);
+    
+    # res.status(500).send(error);
+    
+    return redirect("www.google.com", code=302)
+
+
+def get_msal_client(config: Optional[MSALClientConfig]):
+    global authCodeRequest, tokenRequest, msal
+
+    logger.info("Initiating Microsoft Authentication Library")
+    authCodeRequest = {}
+    tokenRequest = {}
+    msal = MSALClient(config)
+    logger.info("MSAL successfully initiated")
 
 def get_public_keys(userpool_keys_url):
     global public_keys

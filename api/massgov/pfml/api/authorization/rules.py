@@ -20,8 +20,11 @@ def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
 
 def create_authorization(enable_employees: bool) -> Callable[[User, Any], None]:
     def define_authorization(user: User, they: RuleList) -> None:
+        # SITE ADMIN endpoint auth
+        if has_role_in(user, [Role.ADMIN]):
+            site_admins(user, they)
         # FINEOS endpoint auth
-        if has_role_in(user, [Role.FINEOS]):
+        elif has_role_in(user, [Role.FINEOS]):
             financial_eligibility(user, they)
             rmv_check(user, they)
             notifications(user, they)
@@ -35,6 +38,10 @@ def create_authorization(enable_employees: bool) -> Callable[[User, Any], None]:
 
     return define_authorization
 
+
+def site_admins(user: User, they: RuleList) -> None:
+    if has_role_in(user, [Role.ADMIN]):
+        they.can((CREATE, EDIT, READ), "ADMIN_API")
 
 def leave_admins(user: User, they: RuleList) -> None:
     if has_role_in(user, [Role.EMPLOYER]):
