@@ -184,10 +184,7 @@ export function deleteDownloadsFolder(): void {
  *
  * Also does basic assertion on contents of legal notice doc
  */
-export function downloadLegalNotice(
-  noticeType: string,
-  claim_id: string
-): void {
+export function downloadLegalNotice(claim_id: string): void {
   const downloadsFolder = Cypress.config("downloadsFolder");
   cy.task("getNoticeFileName", downloadsFolder, { timeout: 20000 }).then(
     (filename) => {
@@ -197,8 +194,8 @@ export function downloadLegalNotice(
       ).to.equal(1);
       expect(
         filename[0],
-        `Expect filename to contain text ${noticeType}`
-      ).to.include(noticeType);
+        `Expect filename to contain text download`
+      ).to.include("download");
       expect(
         path.extname(filename[0]),
         "Expect file extension to be a PDF"
@@ -882,12 +879,12 @@ export function checkNoticeForLeaveAdmin(
   switch (noticeType) {
     case "approval":
       cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("a", "Approval notice").should("be.visible").click();
+      cy.contains("button", "Approval notice").should("be.visible").click();
       break;
 
     case "denial":
       cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("a", "Denial notice").should("be.visible").click();
+      cy.contains("button", "Denial notice").should("be.visible").click();
       break;
 
     default:
