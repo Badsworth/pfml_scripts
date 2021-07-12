@@ -66,7 +66,7 @@ describe("Denial Notification and Notice", () => {
         cy.log("Finished waiting for documents");
         cy.visit("/applications");
         cy.contains("article", submission.fineos_absence_id).within(() => {
-          cy.contains("a", "Denial notice").should("be.visible").click();
+          cy.contains("button", "Denial notice").should("be.visible").click();
         });
         portal.downloadLegalNotice("Denial", submission.fineos_absence_id);
       });
