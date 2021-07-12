@@ -2,7 +2,7 @@ import { fineos } from "../../actions";
 import { extractLeavePeriod } from "../../../src/util/claims";
 import { getFineosBaseUrl } from "../../config";
 import { assertValidClaim } from "../../../src/util/typeUtils";
-import {addHistoricalAbsenceCase} from "../../actions/fineos";
+import { addHistoricalAbsenceCase } from "../../actions/fineos";
 
 describe("Create a new continuous leave, medical leave claim in FINEOS and adding Historical Absence case", () => {
   it(

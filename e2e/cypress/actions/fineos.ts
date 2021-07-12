@@ -1,5 +1,5 @@
 import { ApplicationRequestBody, ReducedScheduleLeavePeriods } from "_api";
-import { format, addMonths, addDays, startOfWeek, subDays } from "date-fns";
+import { format, addMonths, addDays, startOfWeek, subDays, subWeeks } from "date-fns";
 import {
   getCertificationDocumentType,
   getDocumentReviewTaskName,
@@ -976,7 +976,7 @@ export function addHistoricalAbsenceCase(claimNumber: string): void {
   cy.findByLabelText("Absence relates to").select("Employee");
   wait();
   cy.wait(100);
-  cy.findByLabelText("Absence reason").select(
+  cy.findByLabelText("Absence Reason").select(
     "Serious Health Condition - Employee"
   );
   wait();
@@ -985,6 +985,32 @@ export function addHistoricalAbsenceCase(claimNumber: string): void {
   wait();
   cy.wait(100);
   cy.findByLabelText("Qualifier 2").select("Sickness");
+  cy.get("input[type='button'][id*='timeOffHistoricalAbsencePeriodsListviewWidget_un3_Add']").click();
+  const mostRecentSunday = startOfWeek(new Date());
+  const startDate = format(subWeeks(mostRecentSunday, 6), "MM/dd/yyyy");
+  const endDate = format(subWeeks(mostRecentSunday, 4),"MM/dd/yyyy");
+  //fix the start and end date. should use id instead.
+  // cy.labelled("historicalTimeOffAbsencePeriodDetailsWidget_un10_startDate").type(
+  //   `{selectall}{backspace}${startDate}`
+  // );
+  // wait();
+  // cy.labelled("historicalTimeOffAbsencePeriodDetailsWidget_un10_endDate").type(
+  //   `{selectall}{backspace}${endDate}`
+  // );
+  cy.get(
+    "input[name='historicalTimeOffAbsencePeriodDetailsWidget_un10_startDateAllDay_CHECKBOX']"
+  ).click();
+  cy.get(
+    "input[name='historicalTimeOffAbsencePeriodDetailsWidget_un10_endDateAllDay_CHECKBOX']"
+  ).click();
+  cy.get("input[type='button'][id*='addHistoricalTimeOffAbsencePeriodPopupWidget_un8_okButtonBean']").click();
+  cy.get("input[type='button'][id*='historicalAbsenceSelectedLeavePlansListViewWidget_un2_Select_Leave_Plans']").click();
+  wait();
+  cy.get(
+    "input[name='historicalCasePlanSelectionListviewWidget_un0_Checkbox_RowId_0_CHECKBOX']"
+  ).click();
+  cy.get("input[type='button'][id*='p16_un7_editPageSave']").click();
+
 }
 
 /**
