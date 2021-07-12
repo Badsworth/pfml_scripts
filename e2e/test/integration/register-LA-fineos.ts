@@ -202,6 +202,7 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
   }, 60000);
 
   test("Submit Claim and confirm the right LA can access the review page", async () => {
+    jest.retryTimes(3);
     const employeePool = await getEmployeePool();
     const submitter = getPortalSubmitter();
     const RLAF_test: ScenarioSpecification = {
