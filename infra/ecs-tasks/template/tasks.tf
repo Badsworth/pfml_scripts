@@ -206,8 +206,8 @@ locals {
         local.db_access,
         local.fineos_s3_access,
         local.pub_s3_folders,
-        { "name" : "PFML_PUB_ACH_ARCHIVE_PATH", "value" : "s3://massgov-pfml-${environment_name}-agency-transfer/pub/internal/ach" },
-        { "name" : "PFML_PUB_CHECK_ARCHIVE_PATH", "value" : "s3://massgov-pfml-${environment_name}-agency-transfer/pub/internal/check" }
+        { "name" : "PFML_PUB_ACH_ARCHIVE_PATH", "value" : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/internal/ach" },
+        { "name" : "PFML_PUB_CHECK_ARCHIVE_PATH", "value" : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/internal/check" }
       ]
     },
 
