@@ -32,6 +32,7 @@ import {
   onTab,
   triggerNoticeRelease,
   visitClaim,
+  reviewClaim,
   wait,
   enterReducedWorkHours,
 } from "./fineos";
@@ -92,6 +93,20 @@ export class ClaimPage {
     onTab("Absence Hub");
     return this;
   }
+  availability(cb: (page: AvailabilityPage) => unknown): this {
+    onTab("Availability");
+    cb(new AvailabilityPage());
+    onTab("Absence Hub");
+    return this;
+  }
+  outstandingRequirements(
+    cb: (page: OutstandingRequirementsPage) => unknown
+  ): this {
+    onTab("Outstanding Requirements");
+    cb(new OutstandingRequirementsPage());
+    onTab("Absence Hub");
+    return this;
+  }
   benefitsExtension(cb: (page: BenefitsExtensionPage) => unknown): this {
     cy.findByText("Add Time").click({ force: true });
     cb(new BenefitsExtensionPage());
@@ -122,6 +137,11 @@ export class ClaimPage {
     denyClaim(reason);
     return this;
   }
+  reviewClaim(): this {
+    onTab("Leave Details");
+    reviewClaim();
+    return this;
+  }
 }
 
 class AdjudicationPage {
@@ -149,10 +169,22 @@ class AdjudicationPage {
     cb(new CertificationPeriodsPage());
     return this;
   }
+  requestInformation(cb: (page: RequestInformationPage) => unknown): this {
+    this.onTab("Request Information", "Request Details");
+    cb(new RequestInformationPage());
+    return this;
+  }
   acceptLeavePlan() {
     this.onTab("Manage Request");
     cy.wait(150);
     cy.get("input[type='submit'][value='Accept']").click();
+  }
+  editPlanDecision(planStatus: string) {
+    this.onTab("Manage Request");
+    cy.wait(300);
+    cy.get("input[type='submit'][value='Evaluate Plan']").click();
+    cy.findByLabelText("Leave Plan Status").select(planStatus);
+    cy.get("#footerButtonsBar input[value='OK']").click();
   }
 }
 
@@ -210,6 +242,59 @@ class CertificationPeriodsPage {
     cy.get("#PopupContainer input[value='Yes']").click();
     return this;
   }
+  remove() {
+    cy.get(
+      "input[type='submit'][title='Remove all certification periods']"
+    ).click();
+    cy.get("#PopupContainer input[value='Yes']").click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("#PopupContainer input[value='Yes']").click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("#PopupContainer input[value='Yes']").click();
+    return this;
+  }
+}
+class RequestInformationPage {
+  private enterNewLeaveDates(newStartDate: string, newEndDate: string) {
+    cy.get(
+      "input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']"
+    ).click();
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']").type(
+      `{selectall}{backspace}${newStartDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(300);
+    cy.get(
+      "input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']"
+    ).click();
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']").type(
+      `{selectall}{backspace}${newEndDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[title='OK']").click();
+  }
+
+  editRequestDates(newStartDate: string, newEndDate: string) {
+    cy.get("input[value='Edit']").click();
+    cy.get("#PopupContainer input[value='Yes']").click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    this.enterNewLeaveDates(newStartDate, newEndDate);
+  }
+}
+class OutstandingRequirementsPage {
+  add() {
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[value='Add']").click();
+    cy.get(
+      "#AddManagedRequirementPopupWidget_PopupWidgetWrapper input[type='submit'][value='Ok']"
+    ).click();
+    cy.get("#footerButtonsBar input[value='OK']").click();
+  }
 }
 class TasksPage {
   assertTaskExists(name: string): this {
@@ -227,6 +312,8 @@ class TasksPage {
       | "Escalate employer reported past leave"
       | "Escalate employer reported accrued paid leave (PTO)"
       | "Escalate Employer Reported Fraud"
+      | "Approved Leave Start Date Change"
+      | "Update Paid Leave Case"
   ): this {
     cy.findByTitle(`Add a task to this case`).click({ force: true });
     // Search for the task type
@@ -259,6 +346,19 @@ class TasksPage {
       "contain.text",
       `${departmentName}`
     );
+    return this;
+  }
+
+  editActivityDescription(name: string, comment: string): this {
+    cy.contains("td", "Approved Leave Start Date Change").click();
+    cy.wait("@ajaxRender");
+    cy.get('input[title="Edit this Activity"').click();
+    cy.wait("@ajaxRender");
+    cy.get("textarea[name*='BasicDetailsWidget1_un11_Description']").type(
+      comment
+    );
+    cy.wait(150);
+    cy.get("#footerButtonsBar input[value='OK']").click();
     return this;
   }
 
@@ -689,6 +789,17 @@ export class DocumentsPage {
     cy.get(`select[id$=TotalMinutes${i}]`).select(
       `${minutesTotal === 0 ? "00" : minutesTotal}`
     );
+  }
+}
+
+class AvailabilityPage {
+  reevaluateAvailability() {
+    cy.get('input[title="Manage time for the selected Leave Plan"').click();
+    cy.get('input[title="Select All"').click();
+    cy.findByLabelText("Decision").select("Pending");
+    cy.findByLabelText("Reason").select("Additional Information");
+    cy.get('input[title]="Apply"').click();
+    cy.findByText("Close").click({ force: true });
   }
 }
 
