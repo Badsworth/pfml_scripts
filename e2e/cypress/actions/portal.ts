@@ -1722,3 +1722,13 @@ export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
       expect($table.html()).to.match(selector);
     });
 }
+
+/**
+ * Assert leave type of the claim during the review.
+ * @param leaveType expand the type as needed
+ */
+export function assertLeaveType(leaveType: "Active duty"): void {
+  cy.findByText("Leave type", { selector: "h3" })
+    .next()
+    .should("contain.text", leaveType);
+}
