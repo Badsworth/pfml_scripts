@@ -1,3 +1,6 @@
+import PreviousLeave, {
+  PreviousLeaveType,
+} from "../../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import { get, isEqual, omit } from "lodash";
 import Alert from "../../../components/Alert";
@@ -19,7 +22,6 @@ import Heading from "../../../components/Heading";
 import LeaveDetails from "../../../components/employers/LeaveDetails";
 import LeaveReason from "../../../models/LeaveReason";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
-import PreviousLeave from "../../../models/PreviousLeave";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
 import PropTypes from "prop-types";
 import ReviewHeading from "../../../components/ReviewHeading";
@@ -231,12 +233,12 @@ export const Review = (props) => {
       `previousLeaves.[${updatedLeave.previous_leave_id}]`
     );
 
-    if (updatedLeave.is_for_same_reason_as_leave_reason === true) {
+    if (updatedLeave.type === PreviousLeaveType.sameReason) {
       updatedLeave.leave_reason = leaveReasonToPreviousLeaveReason(
         claim.leave_details.reason
       );
     } else if (
-      updatedLeave.is_for_same_reason_as_leave_reason === false &&
+      updatedLeave.type === PreviousLeaveType.otherReason &&
       // leave admin did not cancel amendment.
       !isEqual(updatedLeave, originalPreviousLeave)
     ) {

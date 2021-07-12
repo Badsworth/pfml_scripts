@@ -49,11 +49,6 @@ export const CreateAccount = (props) => {
             "contact-center-phone-link": (
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
             ),
-            "mass-benefits-timeline-link": (
-              <a
-                href={routes.external.massgov.benefitsTimeline_2020December2}
-              />
-            ),
             p: <p />,
           }}
         />

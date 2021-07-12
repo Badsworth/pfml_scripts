@@ -49,7 +49,7 @@ UnsupportedBrowserBanner.propTypes = {
    * Force the banner to render regardless of whether the
    * browser is supported or not. Useful for testing or
    * previewing the component in a supported browser.
-   **/
+   */
   forceRender: PropTypes.bool,
 };
 

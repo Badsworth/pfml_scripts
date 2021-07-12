@@ -3,6 +3,7 @@ import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
+import Heading from "../Heading";
 import InputText from "../InputText";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
@@ -19,9 +20,8 @@ const SupportingWorkDetails = (props) => {
   const { appErrors, hoursWorkedPerWeek, onChange } = props;
   const errorMsg = appErrors.fieldErrorMessage("hours_worked_per_week");
   const [amendment, setAmendment] = useState(hoursWorkedPerWeek);
-  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
-    false
-  );
+  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
+    useState(false);
   const amendDuration = (value) => {
     // Same logic as AmendableEmployerBenefit
     // Invalid input will default to 0, validation error message is upcoming
@@ -55,14 +55,22 @@ const SupportingWorkDetails = (props) => {
               onChange(hoursWorkedPerWeek);
             }}
             destroyButtonLabel={t("components.amendmentForm.cancel")}
-            className="input-text-first-child"
+            className="bg-base-lightest border-base-lighter"
           >
+            <Heading level="4" size="3">
+              {t("components.employersSupportingWorkDetails.heading_amend")}
+            </Heading>
+            <p>
+              {t("components.employersSupportingWorkDetails.subtitle_amend")}
+            </p>
             <InputText
               onChange={(e) => amendDuration(e.target.value)}
               value={amendment}
-              label={t("components.amendmentForm.question_leavePeriodDuration")}
+              label={t(
+                "components.employersSupportingWorkDetails.leavePeriodDurationLabel"
+              )}
               hint={t(
-                "components.amendmentForm.question_leavePeriodDuration_hint"
+                "components.employersSupportingWorkDetails.leavePeriodDurationHint"
               )}
               errorMsg={errorMsg}
               mask="hours"

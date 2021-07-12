@@ -23,7 +23,9 @@ def get_employer_claim_review_issues(
         chain(
             get_hours_worked_per_week_issues(claim_review.hours_worked_per_week),
             get_previous_leaves_issues(claim_review.previous_leaves),
-            get_employer_benefits_issues(claim_review.employer_benefits),
+            get_employer_benefits_issues(
+                claim_review.employer_benefits, claim_review.uses_second_eform_version
+            ),
         )
     )
 
@@ -95,12 +97,22 @@ def get_previous_leaves_issues(previous_leaves: List[PreviousLeave]) -> List[Val
 
 
 def get_employer_benefits_issues(
-    employer_benefits: List[EmployerBenefit],
+    employer_benefits: List[EmployerBenefit], uses_second_eform_version: bool
 ) -> List[ValidationErrorDetail]:
     error_list: List[ValidationErrorDetail] = []
 
     if not employer_benefits:
         return error_list
+
+    # TODO (EMPLOYER-1453): Remove v1 eform functionality
+    if not uses_second_eform_version and len(employer_benefits) > 4:
+        error_list.append(
+            ValidationErrorDetail(
+                message="Employer benefits cannot exceed limit of 4",
+                type=IssueType.maximum,
+                field="employer_benefits",
+            )
+        )
 
     for index, employer_benefit in enumerate(employer_benefits):
         # FINEOS does not require that benefit_start_date or benefit_end_date is populated.

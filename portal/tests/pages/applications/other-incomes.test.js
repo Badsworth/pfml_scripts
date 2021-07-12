@@ -37,9 +37,8 @@ describe("OtherIncomes", () => {
   });
 
   it("calls claims.update with expected API fields when user selects Yes", async () => {
-    const { appLogic, claim, changeRadioGroup, submitForm } = setup(
-      otherIncomeClaim
-    );
+    const { appLogic, claim, changeRadioGroup, submitForm } =
+      setup(otherIncomeClaim);
 
     changeRadioGroup("has_other_incomes", "true");
 
@@ -82,9 +81,8 @@ describe("OtherIncomes", () => {
   });
 
   it("sets other_leaves to null when the user selects No", () => {
-    const { appLogic, claim, changeRadioGroup, submitForm } = setup(
-      otherIncomeClaim
-    );
+    const { appLogic, claim, changeRadioGroup, submitForm } =
+      setup(otherIncomeClaim);
 
     expect(claim.other_incomes).toHaveLength(1);
 

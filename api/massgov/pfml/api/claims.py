@@ -27,6 +27,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
     Claim,
     Employee,
     Employer,
@@ -49,8 +50,6 @@ from massgov.pfml.util.strings import sanitize_fein
 logger = massgov.pfml.util.logging.get_logger(__name__)
 # HRD Employer FEIN. See https://lwd.atlassian.net/browse/EMPLOYER-1317
 CLAIMS_DASHBOARD_BLOCKED_FEINS = set(["046002284"])
-
-VALID_CLAIM_STATUSES = {"Approved", "Closed", "Declined", "Pending"}
 
 
 class VerificationRequired(Forbidden):
@@ -153,6 +152,28 @@ def get_claim_log_attributes(claim: Optional[Claim]) -> Dict[str, Any]:
     return {"leave_reason": leave_reason}
 
 
+def get_claim_review_log_attributes(claim_review: Optional[EmployerClaimReview]) -> Dict[str, Any]:
+    if claim_review is None:
+        return {}
+
+    relationship_accurate_val = (
+        claim_review.believe_relationship_accurate.value
+        if claim_review.believe_relationship_accurate
+        else None
+    )
+
+    return {
+        "claim_request.believe_relationship_accurate": relationship_accurate_val,
+        "claim_request.employer_decision": claim_review.employer_decision,
+        "claim_request.fraud": claim_review.fraud,
+        "claim_request.has_amendments": claim_review.has_amendments,
+        "claim_request.has_comment": str(bool(claim_review.comment)),
+        "claim_request.num_previous_leaves": len(claim_review.previous_leaves),
+        "claim_request.num_employer_benefits": len(claim_review.employer_benefits),
+        "claim_request.num_concurrent_leave": 1 if claim_review.concurrent_leave else 0,
+    }
+
+
 @requires(READ, "EMPLOYER_API")
 def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     body = connexion.request.json
@@ -176,20 +197,10 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     log_attributes: Dict[str, Union[bool, str, int, None]]
 
-    relationship_accurate_val = (
-        claim_review.believe_relationship_accurate.value
-        if claim_review.believe_relationship_accurate
-        else None
-    )
-
     log_attributes = {
         "absence_case_id": fineos_absence_id,
         "user_leave_admin.employer_id": user_leave_admin.employer_id,
-        "claim_request.believe_relationship_accurate": relationship_accurate_val,
-        "claim_request.employer_decision": claim_review.employer_decision,
-        "claim_request.fraud": claim_review.fraud,
-        "claim_request.has_amendments": claim_review.has_amendments,
-        "claim_request.has_comment": str(bool(claim_review.comment)),
+        **get_claim_review_log_attributes(claim_review),
         **get_employer_log_attributes(app),
         **get_claim_log_attributes(claim),
     }
@@ -463,7 +474,7 @@ def get_claims() -> flask.Response:
     current_user = app.current_user()
     employer_id = flask.request.args.get("employer_id")
     search_string = flask.request.args.get("search", type=str)
-    absence_statuses = parse_absence_statuses(flask.request.args.get("claim_status"))
+    absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
     is_employer = can(READ, "EMPLOYER_API")
     log_attributes = get_employer_log_attributes(app)
 
@@ -564,18 +575,26 @@ def add_order_by(context: PaginationAPIContext, query: Query) -> Query:
     return query
 
 
-def parse_absence_statuses(absence_status_string: Union[str, None]) -> set:
+def parse_filterable_absence_statuses(absence_status_string: Union[str, None]) -> set:
     if not absence_status_string:
         return set()
     absence_statuses = set(absence_status_string.strip().split(","))
-    validate_absence_status(absence_statuses)
+    validate_filterable_absence_statuses(absence_statuses)
     return absence_statuses
 
 
-def validate_absence_status(absence_statuses: Set[str]) -> None:
-    bad_statuses = absence_statuses - VALID_CLAIM_STATUSES
-    if len(bad_statuses):
-        raise BadRequest(f"Unsupported claim status '{','.join(bad_statuses)}'")
+def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
+    """Confirm the absence statuses match a filterable status"""
+
+    for absence_status in absence_statuses:
+        if absence_status == "Pending":
+            continue
+
+        try:
+            AbsenceStatus.get_id(absence_status)
+        except KeyError:
+            raise BadRequest(f"Invalid claim status {absence_status}.")
+
     return
 
 

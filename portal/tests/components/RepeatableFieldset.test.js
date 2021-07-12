@@ -14,6 +14,7 @@ describe("RepeatableFieldset", () => {
         { first_name: "Bud" },
         { first_name: "Cat" },
       ],
+      // eslint-disable-next-line react/display-name
       render: (entry, index) => (
         <p>
           {entry.first_name} – {index}
@@ -97,8 +98,9 @@ describe("RepeatableFieldset", () => {
       jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
 
       // Note: normally a tabIndex isn't needed on labels, but it is for JS DOM:
-      /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
+      // eslint-disable-next-line react/display-name
       props.render = () => (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
         <label className="test-label" htmlFor="field" tabIndex="0">
           Hello
         </label>

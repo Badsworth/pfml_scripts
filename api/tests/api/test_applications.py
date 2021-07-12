@@ -2258,7 +2258,6 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
                     "is_for_current_employer": True,
                     "leave_start_date": "2021-01-01",
                     "leave_end_date": "2021-05-01",
-                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2285,9 +2284,11 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
         assert previous_leave.get("is_for_current_employer") is True
         assert previous_leave.get("leave_start_date") == "2021-01-01"
         assert previous_leave.get("leave_end_date") == "2021-05-01"
-        assert previous_leave.get("leave_reason") == "Pregnancy"
         assert previous_leave.get("worked_per_week_minutes") == 20
         assert previous_leave.get("leave_minutes") == 10
+
+    assert previous_leaves_other_reason[0].get("leave_reason") == "Pregnancy"
+    assert previous_leaves_same_reason[0].get("leave_reason") is None
 
 
 def test_application_patch_add_empty_array_for_previous_leaves(
@@ -2395,7 +2396,6 @@ def test_application_patch_replace_existing_previous_leave_same_reason(
                     "is_for_current_employer": False,
                     "leave_start_date": "2021-02-01",
                     "leave_end_date": "2021-06-01",
-                    "leave_reason": "Pregnancy",
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
@@ -2418,7 +2418,7 @@ def test_application_patch_replace_existing_previous_leave_same_reason(
     assert previous_leave.get("is_for_current_employer") is False
     assert previous_leave.get("leave_start_date") == "2021-02-01"
     assert previous_leave.get("leave_end_date") == "2021-06-01"
-    assert previous_leave.get("leave_reason") == "Pregnancy"
+    assert previous_leave.get("leave_reason") is None
     assert previous_leave.get("worked_per_week_minutes") == 20
     assert previous_leave.get("leave_minutes") == 10
 
@@ -4289,6 +4289,9 @@ def test_application_post_submit_creates_previous_leaves_eform(
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
+    application.previous_leaves_same_reason = [
+        PreviousLeaveSameReasonFactory.create(application_id=application.application_id)
+    ]
     application.previous_leaves_other_reason = [
         PreviousLeaveOtherReasonFactory.create(application_id=application.application_id)
     ]
@@ -4306,6 +4309,11 @@ def test_application_post_submit_creates_previous_leaves_eform(
     assert len(filtered) == 1
     create_eform_capture = filtered[0]
     assert create_eform_capture[2]["eform"].eformType == "Other Leaves - current version"
+    eform_attributes = create_eform_capture[2]["eform"].eformAttributes
+    previous_leave_reason = next(
+        (attr for attr in eform_attributes if attr["name"] == "V2QualifyingReason2"), None
+    )
+    assert previous_leave_reason["enumValue"]["instanceValue"] == "An illness or injury"
 
 
 def test_application_post_submit_no_previous_leaves_does_not_create_other_leaves_eform(
@@ -5019,13 +5027,15 @@ class TestApplicationsUpdate:
         return application
 
     @pytest.fixture
-    def update_application_body(self):
-        return {}
+    def address(self):
+        return massgov.pfml.api.models.applications.common.Address(
+            line_1="123 Main St.", city="Boston", state="Massachusetts", zip="02111"
+        )
 
     # Collects the params necessary for making a request with a valid application update
     # to the mock API client
     @pytest.fixture
-    def request_params(self, application, auth_token, update_application_body):
+    def request_params(self, application, auth_token):
         class UpdateApplicationRequestParams(object):
             __slots__ = ["application_id", "auth_token", "body"]
 
@@ -5034,9 +5044,7 @@ class TestApplicationsUpdate:
                 self.auth_token = auth_token
                 self.body = body
 
-        return UpdateApplicationRequestParams(
-            application.application_id, auth_token, update_application_body
-        )
+        return UpdateApplicationRequestParams(application.application_id, auth_token, {})
 
     # Submits an application update request with the given params
     def perform_update(self, client, request_params):
@@ -5046,44 +5054,50 @@ class TestApplicationsUpdate:
             json=request_params.body,
         )
 
-    def test_first_name_too_long(self, client, request_params):
-        first_name = "a" * 51
+    def test_success(self, client, request_params):
+        request_body = {}
+        request_body["first_name"] = "Foo"
+        request_params.body = request_body
 
-        update_application_body = request_params.body
-        update_application_body["first_name"] = first_name
+        response = self.perform_update(client, request_params)
+        assert response.status_code == 200
+
+    @pytest.mark.parametrize("name_field", ["first_name", "middle_name", "last_name"])
+    def test_name_field_too_long(self, client, request_params, name_field):
+        name = "a" * 51
+
+        request_body = {}
+        request_body[name_field] = name
+        request_params.body = request_body
 
         response = self.perform_update(client, request_params)
         assert response.status_code == 400
 
         errors = response.get_json().get("errors")
-        error = next((e for e in errors if e.get("field") == "first_name"), None)
+        assert len(errors) == 1
+
+        error = errors[0]
         assert error.get("type") == "maxLength"
+        assert error.get("field") == name_field
 
-    def test_middle_name_too_long(self, client, request_params):
-        middle_name = "a" * 51
+    @pytest.mark.parametrize("address_field", ["line_1", "line_2", "city", "state"])
+    def test_address_field_too_long(self, client, request_params, address, address_field):
+        address_dict = address.__dict__
+        address_dict[address_field] = "a" * 41
 
-        update_application_body = request_params.body
-        update_application_body["middle_name"] = middle_name
+        request_body = {}
+        request_body["residential_address"] = address_dict
+        request_params.body = request_body
 
         response = self.perform_update(client, request_params)
         assert response.status_code == 400
 
         errors = response.get_json().get("errors")
-        error = next((e for e in errors if e.get("field") == "middle_name"), None)
+        assert len(errors) == 1
+
+        error = errors[0]
         assert error.get("type") == "maxLength"
-
-    def test_last_name_too_long(self, client, request_params):
-        last_name = "a" * 51
-
-        update_application_body = request_params.body
-        update_application_body["last_name"] = last_name
-
-        response = self.perform_update(client, request_params)
-        assert response.status_code == 400
-
-        errors = response.get_json().get("errors")
-        error = next((e for e in errors if e.get("field") == "last_name"), None)
-        assert error.get("type") == "maxLength"
+        assert error.get("field") == f"residential_address.{address_field}"
 
 
 def test_application_post_submit_app_creates_claim(client, user, auth_token, test_db_session):

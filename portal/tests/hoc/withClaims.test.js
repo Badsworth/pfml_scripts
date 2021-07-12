@@ -89,6 +89,19 @@ describe("withClaims", () => {
     });
   });
 
+  it("makes request with search query param", () => {
+    const appLogic = useAppLogic();
+    appLogic.claims.paginationMeta = new PaginationMeta({ page_offset: 1 });
+    appLogic.claims.isLoadingClaims = true;
+    const query = { search: "Baxter" };
+
+    setup(appLogic, query);
+
+    expect(appLogic.claims.loadPage).toHaveBeenCalledWith(undefined, {
+      search: "Baxter",
+    });
+  });
+
   it("makes request with pagination and filters params", () => {
     const appLogic = useAppLogic();
     appLogic.claims.paginationMeta = new PaginationMeta({ page_offset: 1 });

@@ -335,17 +335,46 @@ describe("Employer dashboard", () => {
     ).toMatchSnapshot();
   });
 
-  it("does not render filters when no filter feature flags are enabled", () => {
+  it("does not render search section when no search feature flag is enabled", () => {
     const { wrapper } = setup();
 
-    expect(wrapper.find("Filters").dive().isEmptyRender()).toBe(true);
+    expect(wrapper.find("Search").dive().isEmptyRender()).toBe(true);
   });
 
-  it("renders filters when feature flags are enabled", () => {
+  it("renders search section when feature flags are enabled", () => {
     process.env.featureFlags = {
-      employerShowDashboardFilters: true,
+      employerShowDashboardSearch: true,
     };
 
+    const { wrapper } = setup({
+      activeFilters: {
+        search: "Initial search field value",
+      },
+    });
+
+    expect(wrapper.find("Search").dive()).toMatchSnapshot();
+  });
+
+  it("updates search param when a search is performed", async () => {
+    process.env.featureFlags = {
+      employerShowDashboardSearch: true,
+    };
+
+    const { updateQuerySpy, wrapper } = setup();
+
+    const search = wrapper.find("Search").dive();
+    const { changeField, submitForm } = simulateEvents(search);
+
+    changeField("search", "Bud Baxter");
+    await submitForm();
+
+    expect(updateQuerySpy).toHaveBeenCalledWith({
+      page_offset: "1",
+      search: "Bud Baxter",
+    });
+  });
+
+  it("renders filters", () => {
     const { wrapper } = setup({
       userAttrs: {
         // Include multiple LA's so Employer filter shows
@@ -370,15 +399,21 @@ describe("Employer dashboard", () => {
   });
 
   it("renders filters toggle button with expected label and aria attributes", () => {
-    process.env.featureFlags = {
-      employerShowDashboardFilters: true,
-    };
+    const user_leave_administrators = [
+      createUserLeaveAdministrator({
+        verified: true,
+      }),
+    ];
 
     const { wrapper: CollapsedWithoutFilters } = setup();
     const { wrapper: CollapsedWithFilters } = setup({
       activeFilters: {
         claim_status: "Pending",
-        employer_id: "123",
+        employer_id: user_leave_administrators[0].employer_id,
+      },
+      userAttrs: {
+        // Include multiple LA's so Employer filter shows
+        user_leave_administrators,
       },
     });
     const { wrapper: ExpandedWithoutFilters } = setup({
@@ -396,9 +431,6 @@ describe("Employer dashboard", () => {
   });
 
   it("sets initial filter form state from activeFilters prop", () => {
-    process.env.featureFlags = {
-      employerShowDashboardFilters: true,
-    };
     // Include multiple LA's so Employer filter shows
     const user_leave_administrators = [
       createUserLeaveAdministrator({
@@ -440,10 +472,6 @@ describe("Employer dashboard", () => {
   });
 
   it("shows filters section when show-filters query param is set", () => {
-    process.env.featureFlags = {
-      employerShowDashboardFilters: true,
-    };
-
     const { wrapper: collapsedWrapper } = setup();
     const { wrapper: expandedWrapper } = setup({
       query: {
@@ -459,10 +487,6 @@ describe("Employer dashboard", () => {
   });
 
   it("toggles show-filters param when toggle button is clicked", () => {
-    process.env.featureFlags = {
-      employerShowDashboardFilters: true,
-    };
-
     const { updateQuerySpy, wrapper } = setup();
     const filters = wrapper.find("Filters").dive();
     const { click } = simulateEvents(filters);
@@ -473,8 +497,6 @@ describe("Employer dashboard", () => {
   });
 
   it("renders organizations filter when there are multiple verified organizations", () => {
-    process.env.featureFlags = { employerShowDashboardFilters: true };
-
     const { wrapper: wrapperWithOneVerifiedOrg } = setup({
       userAttrs: {
         user_leave_administrators: [
@@ -514,12 +536,8 @@ describe("Employer dashboard", () => {
     ).toBe(true);
   });
 
-  it("updates filter + pagination query params when user selects changes filter", async () => {
+  it("updates query params when user changes filter to Approved and Closed", async () => {
     expect.assertions();
-
-    process.env.featureFlags = {
-      employerShowDashboardFilters: true,
-    };
 
     const user_leave_administrators = [
       createUserLeaveAdministrator({
@@ -540,11 +558,11 @@ describe("Employer dashboard", () => {
     });
 
     const filtersWrapper = wrapper.find("Filters").dive();
-    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
-      filtersWrapper
-    );
+    const { changeField, changeCheckbox, submitForm } =
+      simulateEvents(filtersWrapper);
 
-    changeRadioGroup("claim_status", "Approved");
+    changeCheckbox("claim_status", true, "Approved");
+    changeCheckbox("claim_status", true, "Closed");
     changeField("employer_id", user_leave_administrators[0].employer_id);
 
     expect(filtersWrapper.find("Button[type='submit']").prop("disabled")).toBe(
@@ -553,17 +571,13 @@ describe("Employer dashboard", () => {
 
     await submitForm();
     expect(updateQuerySpy).toHaveBeenCalledWith({
-      claim_status: "Approved",
+      claim_status: "Approved,Closed",
       employer_id: user_leave_administrators[0].employer_id,
       page_offset: "1",
     });
   });
 
   it("resets query params when user clicks Reset action", () => {
-    process.env.featureFlags = {
-      employerShowDashboardFilters: true,
-    };
-
     const user_leave_administrators = [
       createUserLeaveAdministrator({
         verified: true,
@@ -592,6 +606,67 @@ describe("Employer dashboard", () => {
     click("Button[data-test='reset-filters']");
 
     expect(updateQuerySpy).toHaveBeenCalledWith({
+      page_offset: "1",
+    });
+  });
+
+  it("shows buttons for removing active filters", () => {
+    const user_leave_administrators = [
+      createUserLeaveAdministrator({
+        verified: true,
+        employer_dba: "Acme Co",
+      }),
+    ];
+
+    const { wrapper: wrapperWithActiveFilters } = setup({
+      activeFilters: {
+        claim_status: "Approved,Closed",
+        employer_id: user_leave_administrators[0].employer_id,
+      },
+      userAttrs: {
+        user_leave_administrators,
+      },
+    });
+    const { wrapper: wrapperWithoutActiveFilters } = setup({
+      userAttrs: {
+        user_leave_administrators,
+      },
+    });
+
+    const findFiltersMenu = (wrapper) =>
+      wrapper.find("Filters").dive().find("[data-test='filters-menu']");
+
+    expect(findFiltersMenu(wrapperWithoutActiveFilters).exists()).toBe(false);
+    expect(findFiltersMenu(wrapperWithActiveFilters)).toMatchSnapshot();
+  });
+
+  it("removes filter when a filter menu button is clicked", () => {
+    const user_leave_administrators = [
+      createUserLeaveAdministrator({
+        verified: true,
+        employer_dba: "Acme Co",
+      }),
+    ];
+
+    const { updateQuerySpy, wrapper } = setup({
+      activeFilters: {
+        claim_status: "Approved,Closed",
+        employer_id: user_leave_administrators[0].employer_id,
+      },
+      userAttrs: {
+        user_leave_administrators,
+      },
+    });
+    const { click } = simulateEvents(wrapper.find("Filters").dive());
+
+    click("FilterMenuButton[data-test='employer_id']");
+    expect(updateQuerySpy).toHaveBeenLastCalledWith({
+      page_offset: "1",
+    });
+
+    click("FilterMenuButton[data-test='claim_status_Closed']");
+    expect(updateQuerySpy).toHaveBeenLastCalledWith({
+      claim_status: "Approved",
       page_offset: "1",
     });
   });

@@ -22,7 +22,6 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = [
   "claim.previous_leaves_other_reason",
   "claim.previous_leaves_other_reason[*].is_for_current_employer",
-  "claim.previous_leaves_other_reason[*].is_for_same_reason_as_leave_reason",
   "claim.previous_leaves_other_reason[*].leave_end_date",
   "claim.previous_leaves_other_reason[*].leave_minutes",
   "claim.previous_leaves_other_reason[*].leave_reason",

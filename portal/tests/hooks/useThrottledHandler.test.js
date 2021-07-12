@@ -9,6 +9,7 @@ describe("useThrottledHandler", () => {
 
   beforeEach(() => {
     handler = jest.fn().mockResolvedValueOnce(null);
+    // eslint-disable-next-line react/display-name
     Component = (props) => {
       // eslint-disable-next-line react/prop-types
       throttleHandler = useThrottledHandler(props.handler);

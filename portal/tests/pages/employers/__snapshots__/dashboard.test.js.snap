@@ -146,51 +146,22 @@ Array [
 ]
 `;
 
-exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 1`] = `
-<Button
-  aria-controls="filters"
-  aria-expanded="false"
-  onClick={[Function]}
-  variation="outline"
->
-  Show filters (2)
-</Button>
-`;
-
-exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 2`] = `
-<Button
-  aria-controls="filters"
-  aria-expanded="false"
-  onClick={[Function]}
-  variation="outline"
->
-  Show filters
-</Button>
-`;
-
-exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 3`] = `
-<Button
-  aria-controls="filters"
-  aria-expanded="true"
-  onClick={[Function]}
-  variation="outline"
->
-  Hide filters
-</Button>
-`;
-
-exports[`Employer dashboard renders filters when feature flags are enabled 1`] = `
+exports[`Employer dashboard renders filters 1`] = `
 <Fragment>
-  <Button
-    aria-controls="filters"
-    aria-expanded="false"
-    onClick={[Function]}
-    variation="outline"
+  <div
+    className="margin-bottom-2"
   >
-    Show filters
-  </Button>
+    <Button
+      aria-controls="filters"
+      aria-expanded="false"
+      onClick={[Function]}
+      variation="outline"
+    >
+      Show filters
+    </Button>
+  </div>
   <form
-    className="bg-primary-lighter margin-top-2 padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
+    className="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
     hidden={true}
     id="filters"
     onSubmit={[Function]}
@@ -228,12 +199,9 @@ exports[`Employer dashboard renders filters when feature flags are enabled 1`] =
       value=""
     />
     <Dropdown
+      autocomplete={true}
       choices={
         Array [
-          Object {
-            "label": "All organizations",
-            "value": "",
-          },
           Object {
             "label": "Work Inc (11-3456789)",
             "value": "mock-id-1",
@@ -244,7 +212,6 @@ exports[`Employer dashboard renders filters when feature flags are enabled 1`] =
           },
         ]
       }
-      hideEmptyChoice={true}
       label="Organizations"
       name="employer_id"
       onChange={[Function]}
@@ -261,6 +228,39 @@ exports[`Employer dashboard renders filters when feature flags are enabled 1`] =
 </Fragment>
 `;
 
+exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 1`] = `
+<Button
+  aria-controls="filters"
+  aria-expanded="false"
+  onClick={[Function]}
+  variation="outline"
+>
+  Show filters (2)
+</Button>
+`;
+
+exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 2`] = `
+<Button
+  aria-controls="filters"
+  aria-expanded="false"
+  onClick={[Function]}
+  variation="outline"
+>
+  Show filters
+</Button>
+`;
+
+exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 3`] = `
+<Button
+  aria-controls="filters"
+  aria-expanded="true"
+  onClick={[Function]}
+  variation="outline"
+>
+  Hide filters
+</Button>
+`;
+
 exports[`Employer dashboard renders instructions if there are no verified employers 1`] = `
 Array [
   "You have not verified any organizations. ",
@@ -272,6 +272,39 @@ Array [
   </a>,
   " to review applications.",
 ]
+`;
+
+exports[`Employer dashboard renders search section when feature flags are enabled 1`] = `
+<div
+  className="bg-base-lightest padding-x-3 padding-top-1px padding-bottom-2"
+>
+  <form
+    className="usa-form grid-row"
+    onSubmit={[Function]}
+  >
+    <div
+      className="grid-col-fill tablet:grid-col-auto"
+    >
+      <InputText
+        label="Search for employee name or application ID"
+        name="search"
+        onChange={[Function]}
+        smallLabel={true}
+        value="Initial search field value"
+      />
+    </div>
+    <div
+      className="grid-col-auto flex-align-self-end"
+    >
+      <Button
+        className="width-auto"
+        type="submit"
+      >
+        Search
+      </Button>
+    </div>
+  </form>
+</div>
 `;
 
 exports[`Employer dashboard renders the page with expected content and pagination components 1`] = `
@@ -390,4 +423,37 @@ exports[`Employer dashboard renders the page with expected content and paginatio
   pageOffset={1}
   totalPages={3}
 />
+`;
+
+exports[`Employer dashboard shows buttons for removing active filters 1`] = `
+<div
+  className="margin-top-1 margin-bottom-4"
+  data-test="filters-menu"
+>
+  <strong
+    className="margin-right-2 display-inline-block"
+  >
+    Filters:
+  </strong>
+  <FilterMenuButton
+    data-test="employer_id"
+    onClick={[Function]}
+  >
+    Acme Co
+  </FilterMenuButton>
+  <FilterMenuButton
+    data-test="claim_status_Approved"
+    key="Approved"
+    onClick={[Function]}
+  >
+    Approved
+  </FilterMenuButton>
+  <FilterMenuButton
+    data-test="claim_status_Closed"
+    key="Closed"
+    onClick={[Function]}
+  >
+    Closed
+  </FilterMenuButton>
+</div>
 `;

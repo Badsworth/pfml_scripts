@@ -72,9 +72,8 @@ describe("UploadId", () => {
           .medicalLeaveReason()
           .create();
         claim.has_state_id = false;
-        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
-          [claim]
-        );
+        appLogic.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([claim]);
         render();
         expect(wrapper).toMatchSnapshot();
       });
@@ -94,9 +93,8 @@ describe("UploadId", () => {
           .medicalLeaveReason()
           .create();
         claim.has_state_id = true;
-        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
-          [claim]
-        );
+        appLogic.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([claim]);
       });
 
       it("renders a FileCardList", () => {
@@ -402,9 +400,8 @@ describe("UploadId", () => {
 
       it("redirects to the Applications page when the claim has been completed", async () => {
         claim = new MockBenefitsApplicationBuilder().completed().create();
-        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
-          [claim]
-        );
+        appLogic.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([claim]);
         render();
         // Add files to the page state
         const tempFiles = [makeFile(), makeFile()];
@@ -433,9 +430,8 @@ describe("UploadId", () => {
             created_at: "2020-10-12",
             fineos_document_id: "testId",
           });
-          appLogic.documents.documents = await appLogic.documents.documents.addItem(
-            newDoc
-          );
+          appLogic.documents.documents =
+            await appLogic.documents.documents.addItem(newDoc);
           render();
           expect(wrapper.find("FileCardList").props().documents).toHaveLength(
             1

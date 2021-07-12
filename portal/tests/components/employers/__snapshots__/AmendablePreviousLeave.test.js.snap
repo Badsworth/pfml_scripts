@@ -19,7 +19,7 @@ exports[`AmendablePreviousLeave for added leaves renders the component without a
             level="4"
             size="3"
           >
-            Add a new previous leave
+            Add a previous leave
           </Heading>
           <p>
             This addition will get saved when you submit your review at the end of this page.
@@ -33,18 +33,18 @@ exports[`AmendablePreviousLeave for added leaves renders the component without a
                   Object {
                     "checked": false,
                     "label": "Yes",
-                    "value": "true",
+                    "value": "same_reason",
                   },
                   Object {
                     "checked": true,
                     "label": "No",
-                    "value": "false",
+                    "value": "other_reason",
                   },
                 ]
               }
               errorMsg={null}
               label="Was this leave for the same reason as their paid leave request?"
-              name="previous_leaves[0].is_for_same_reason_as_leave_reason"
+              name="previous_leaves[0].type"
               onChange={[Function]}
               smallLabel={true}
               type="radio"
@@ -164,18 +164,18 @@ exports[`AmendablePreviousLeave for amended leaves renders the component with a 
                   Object {
                     "checked": false,
                     "label": "Yes",
-                    "value": "true",
+                    "value": "same_reason",
                   },
                   Object {
                     "checked": true,
                     "label": "No",
-                    "value": "false",
+                    "value": "other_reason",
                   },
                 ]
               }
               errorMsg={null}
               label="Was this leave for the same reason as their paid leave request?"
-              name="previous_leaves[0].is_for_same_reason_as_leave_reason"
+              name="previous_leaves[0].type"
               onChange={[Function]}
               smallLabel={true}
               type="radio"

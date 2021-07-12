@@ -80,7 +80,7 @@ describe("LeaveReasonPage", () => {
     const { wrapper } = setup(medicalLeaveClaim);
 
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    expect(wrapper.find("Trans").first().dive()).toMatchSnapshot();
     expect(
       wrapper
         .find({ name: "leave_details.reason_qualifier" })
@@ -93,7 +93,7 @@ describe("LeaveReasonPage", () => {
     const { wrapper } = setup(caringLeaveClaim);
 
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    expect(wrapper.find("Trans").first().dive()).toMatchSnapshot();
     expect(
       wrapper
         .find({ name: "leave_details.reason_qualifier" })
@@ -188,13 +188,13 @@ describe("LeaveReasonPage", () => {
 
     const fosterQualifierRadio = wrapper
       .find("ConditionalContent")
+      .at(1)
       .dive()
       .find("InputChoiceGroup")
       .first()
       .dive()
       .find({ value: ReasonQualifier.fosterCare });
     expect(fosterQualifierRadio.props().checked).toBe(true);
-
     const { submitForm } = simulateEvents(wrapper);
 
     await submitForm();
@@ -208,5 +208,43 @@ describe("LeaveReasonPage", () => {
         },
       }
     );
+  });
+
+  it("instructs the user to review their previous leaves if they change their leave reason after reporting previous leaves for the same reason", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .caringLeaveReason()
+      .previousLeavesSameReason()
+      .create();
+    const { changeRadioGroup, wrapper } = setup(claim);
+
+    changeRadioGroup("leave_details.reason", LeaveReason.bonding);
+
+    const trans = wrapper.find("Trans").at(1);
+    expect(trans.dive()).toMatchSnapshot();
+    expect(trans.parents("ConditionalContent").prop("visible")).toBe(true);
+  });
+
+  it("does not instruct the user to review their previous leaves if they change their leave reason but don't have previous leaves for the same reason", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .caringLeaveReason()
+      .previousLeavesSameReason([])
+      .create();
+    const { changeRadioGroup, wrapper } = setup(claim);
+
+    changeRadioGroup("leave_details.reason", LeaveReason.bonding);
+
+    const trans = wrapper.find("Trans").at(1);
+    expect(trans.parents("ConditionalContent").prop("visible")).toBe(false);
+  });
+
+  it("does not instruct the user to review their previous leaves if they do not change their leave reason after reporting previous leaves for the same reason", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .caringLeaveReason()
+      .previousLeavesSameReason()
+      .create();
+    const { wrapper } = setup(claim);
+
+    const trans = wrapper.find("Trans").at(1);
+    expect(trans.parents("ConditionalContent").prop("visible")).toBe(false);
   });
 });

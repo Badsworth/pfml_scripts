@@ -36,9 +36,8 @@ const AmendableEmployerBenefit = ({
 }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(employerBenefit);
-  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
-    false
-  );
+  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
+    useState(false);
 
   const getFieldPath = (field) =>
     `employer_benefits[${amendment.employer_benefit_id}].${field}`;

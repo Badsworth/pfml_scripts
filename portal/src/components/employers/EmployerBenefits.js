@@ -36,6 +36,9 @@ const EmployerBenefits = (props) => {
       <p>
         <Trans
           i18nKey="components.employersEmployerBenefits.caption"
+          tOptions={{
+            context: shouldShowV2 ? "v2" : "v1",
+          }}
           components={{
             "reductions-overview-link": (
               <a
@@ -96,7 +99,10 @@ const EmployerBenefits = (props) => {
             <tr>
               <td colSpan="4" className="padding-y-2 padding-left-0">
                 <AddButton
-                  label={t("components.employersEmployerBenefits.addButton")}
+                  label={t("components.employersEmployerBenefits.addButton", {
+                    context:
+                      addedBenefits.length === 0 ? "first" : "subsequent",
+                  })}
                   onClick={onAdd}
                   disabled={addedBenefits.length >= limit}
                 />

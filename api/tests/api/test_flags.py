@@ -66,7 +66,7 @@ maintenance:
         assert len(errors) == 1
         assert errors[0] == {
             "field": "start",
-            "message": "invalid datetime format",
+            "message": 'Error in field: "start". Invalid datetime format.',
             "type": "value_error.datetime",
         }
 
@@ -89,7 +89,7 @@ maintenance:
         assert len(errors) == 1
         assert errors[0] == {
             "field": "enabled",
-            "message": "value could not be parsed to a boolean",
+            "message": 'Error in field: "enabled". Value could not be parsed to a boolean.',
             "type": "type_error.bool",
         }
 
@@ -111,6 +111,6 @@ maintenance:
         assert len(errors) == 1
         assert errors[0] == {
             "field": "options",
-            "message": "value is not a valid dict",
+            "message": 'Error in field: "options". Value is not a valid dict.',
             "type": "type_error.dict",
         }

@@ -27,9 +27,14 @@ const useAppErrorsLogic = ({ portalFlow }) => {
   const { t } = useTranslation();
 
   /**
+   * @callback addErrorFunction
+   * @param {AppErrorInfo} error
+   */
+
+  /**
    * State representing both application errors and
    * validation errors
-   * @type {{addItem: (error: AppErrorInfo) => undefined, collection: AppErrorInfoCollection, setCollection: Function}}
+   * @type {{addItem: addErrorFunction, collection: AppErrorInfoCollection, setCollection: Function}}
    */
   const {
     addItem: addError,

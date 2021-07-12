@@ -293,9 +293,8 @@ describe("IntermittentFrequency", () => {
       claimAttrs: claim,
     });
 
-    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
-      wrapper
-    );
+    const { changeField, changeRadioGroup, submitForm } =
+      simulateEvents(wrapper);
 
     changeRadioGroup(
       frequencyBasisInputName,

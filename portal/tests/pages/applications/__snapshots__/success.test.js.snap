@@ -1773,3 +1773,51 @@ Array [
   ".",
 ]
 `;
+
+exports[`Success renders reportReductionsMessage when feature flag on and !hasReductionsData 1`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Call the Contact Center at 
+    <a
+      href="tel:(833) 344-7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     if any of these are true:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      You have already taken leave to care for a family member since July 1, 2021
+    </li>
+    <li
+      key="1"
+    >
+      You have already taken leave since January 1, 2021 for 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+        key="1"
+      >
+        any other reason that qualifies for PFML
+      </a>
+    </li>
+    <li
+      key="2"
+    >
+      You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)
+    </li>
+    <li
+      key="3"
+    >
+      You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)
+    </li>
+  </ul>,
+]
+`;
