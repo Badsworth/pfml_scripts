@@ -193,7 +193,9 @@ locals {
         local.pub_s3_folders,
         { name : "PUB_PAYMENT_STARTING_CHECK_NUMBER", value : "106" },
         { name : "DFML_PUB_ROUTING_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_routing_number" },
-        { name : "DFML_PUB_ACCOUNT_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_account_number" }
+        { name : "DFML_PUB_ACCOUNT_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_account_number" },
+        { name : "PFML_PUB_ACH_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/ach" },
+        { name : "PFML_PUB_CHECK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/check" }
       ]
     },
 
@@ -203,7 +205,9 @@ locals {
       env = [
         local.db_access,
         local.fineos_s3_access,
-        local.pub_s3_folders
+        local.pub_s3_folders,
+        { "name": "PFML_PUB_ACH_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/pub/internal/ach" },
+        { "name": "PFML_PUB_CHECK_ARCHIVE_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/pub/internal/check" }
       ]
     },
 

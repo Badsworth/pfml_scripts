@@ -72,8 +72,6 @@ locals {
     { name : "DFML_RESPONSE_INBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-reports/dfml-responses" },
     { name : "PUB_MOVEIT_INBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/inbound" },
     { name : "PUB_MOVEIT_OUTBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/outbound" },
-    { name : "PFML_PUB_ACH_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/ach" },
-    { name : "PFML_PUB_CHECK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/check" },
     { name : "PFML_ERROR_REPORTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/reports" },
     { name : "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/audit" }
   ]
