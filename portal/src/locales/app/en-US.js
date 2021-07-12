@@ -1493,7 +1493,7 @@ const pages = {
       "You needed to care for a family member with a serious health condition and your leave began on or after July 1, 2021.",
     ],
     sectionLabel:
-      "Did you take leave between January 1, 2021–{{leaveStartDate}} for a different qualifying reason?",
+      "Did you take leave between January 1, 2021 and {{leaveStartDate}} for a different qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReasonDetails: {
@@ -1545,7 +1545,7 @@ const pages = {
     sectionHint:
       "Select No if your current paid leave from PFML began on July 1, 2021.",
     sectionLabel:
-      "Did you take any other leave between {{previousLeaveStartDate}}–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
+      "Did you take any other leave between {{previousLeaveStartDate}} and {{leaveStartDate}} for the same reason as you are applying for paid leave now?",
     sectionLabel_caring:
       "Did you take any other leave between {{previousLeaveStartDate}} and the first day of the leave you are applying for, for the same reason as you are applying?",
     title: "$t(shared.claimsOtherLeaveTitle)",

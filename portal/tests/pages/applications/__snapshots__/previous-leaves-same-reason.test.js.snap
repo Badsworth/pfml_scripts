@@ -21,7 +21,7 @@ exports[`PreviousLeavesSameReason renders the page 1`] = `
       ]
     }
     hint={false}
-    label="Did you take any other leave between January 1, 2021–January 1, 2021 for the same reason as you are applying for paid leave now?"
+    label="Did you take any other leave between January 1, 2021 and January 1, 2021 for the same reason as you are applying for paid leave now?"
     name="has_previous_leaves_same_reason"
     onChange={[Function]}
     type="radio"
