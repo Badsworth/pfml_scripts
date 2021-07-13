@@ -89,6 +89,7 @@ OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
         "Overpayment Recovery",
         "Overpayment Adjustment",
         "Overpayment Recovery Reverse",
+        "Overpayment Recovery Cancellation",
     ]
 )
 PAYMENT_OUT_TRANSACTION_TYPE = "PaymentOut"
