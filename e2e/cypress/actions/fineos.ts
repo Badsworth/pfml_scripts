@@ -964,11 +964,16 @@ export function triggerNoticeRelease(docType: string): void {
   });
   cy.get('input[type="submit"][value="Properties"]').click();
   cy.get('input[type="submit"][value="Continue"]').click();
-  cy.contains(".TreeNodeContainer", "SOM Generate Legal Notice", {
+  cy.contains("td","SOM Generate Legal Notice", {
     timeout: 20000,
   })
-    .find("input[type='checkbox']")
-    .should("be.checked");
+  cy.get('input[type="submit"][value="Continue"]').click();
+  cy.wait(5000);
+  cy.contains("td","SOM Generate Legal Notice", {
+    timeout: 20000,
+  })
+  .find("input[type='checkbox']")
+  .should("be.checked");
   onTab("Documents");
   assertHasDocument(docType);
 }
