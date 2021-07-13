@@ -190,7 +190,7 @@ module "newrelic_alerts_cognito" {
 
   name  = each.value.name
   query = <<-NRQL
-    SELECT percentage(count(*), WHERE httpResponseCode >= 400 AND httpResponseCode != 503 AND httpResponseCode != 504) 
+    SELECT percentage(count(*), WHERE httpResponseCode >= 400 AND httpResponseCode != 503 AND httpResponseCode != 504)
       * clamp_max(floor(uniqueCount(session) / 3), 1)
     FROM AjaxRequest
     WHERE browserInteractionName = 'fetch: cognito ${each.value.interaction_name}'
@@ -438,16 +438,4 @@ module "portal_synthetic_ping_failure" {
   fill_option = "none"
 
   nrql = "SELECT filter(count(*), WHERE result = 'FAILED') FROM SyntheticCheck WHERE monitorName = 'portal_ping--${var.environment_name}'"
-}
-
-module "portal_synthetic_login_failure" {
-  source = "../newrelic_single_error_alarm"
-
-  # ignore performance and training environments
-  enabled     = contains(["prod", "stage", "test"], var.environment_name)
-  name        = "Portal scripted synthetic login failed"
-  policy_id   = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
-  fill_option = "none"
-
-  nrql = "SELECT filter(count(*), WHERE result = 'FAILED') FROM SyntheticCheck WHERE monitorName = 'portal_scripted_login--${var.environment_name}'"
 }
