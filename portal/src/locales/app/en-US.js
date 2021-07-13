@@ -2598,7 +2598,6 @@ const components = {
     header: "Leave schedule",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
-    tableName: "Leave schedule details table",
   },
   employersNavigationTabs: {
     dashboard: "Dashboard",

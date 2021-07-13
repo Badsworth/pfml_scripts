@@ -7,26 +7,19 @@ exports[`LeaveSchedule renders continuous schedule 1`] = `
   >
     Leave schedule
   </ReviewHeading>
+  <p>
+    <Trans
+      i18nKey="components.employersLeaveSchedule.caption"
+      tOptions={
+        Object {
+          "context": "",
+        }
+      }
+    />
+  </p>
   <Table
     className="width-full"
   >
-    <caption>
-      <p
-        className="text-normal"
-      >
-        <Trans
-          i18nKey="components.employersLeaveSchedule.caption"
-          tOptions={
-            Object {
-              "context": "",
-            }
-          }
-        />
-      </p>
-      <p>
-        Leave schedule details table
-      </p>
-    </caption>
     <thead>
       <tr>
         <th
@@ -71,26 +64,19 @@ exports[`LeaveSchedule renders intermittent schedule 1`] = `
   >
     Leave schedule
   </ReviewHeading>
+  <p>
+    <Trans
+      i18nKey="components.employersLeaveSchedule.caption"
+      tOptions={
+        Object {
+          "context": "",
+        }
+      }
+    />
+  </p>
   <Table
     className="width-full"
   >
-    <caption>
-      <p
-        className="text-normal"
-      >
-        <Trans
-          i18nKey="components.employersLeaveSchedule.caption"
-          tOptions={
-            Object {
-              "context": "",
-            }
-          }
-        />
-      </p>
-      <p>
-        Leave schedule details table
-      </p>
-    </caption>
     <thead>
       <tr>
         <th
@@ -141,26 +127,19 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
   >
     Leave schedule
   </ReviewHeading>
+  <p>
+    <Trans
+      i18nKey="components.employersLeaveSchedule.caption"
+      tOptions={
+        Object {
+          "context": "",
+        }
+      }
+    />
+  </p>
   <Table
     className="width-full"
   >
-    <caption>
-      <p
-        className="text-normal"
-      >
-        <Trans
-          i18nKey="components.employersLeaveSchedule.caption"
-          tOptions={
-            Object {
-              "context": "",
-            }
-          }
-        />
-      </p>
-      <p>
-        Leave schedule details table
-      </p>
-    </caption>
     <thead>
       <tr>
         <th
