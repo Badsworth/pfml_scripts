@@ -44,6 +44,7 @@ env:
   CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title || github.event.head_commit.message }}
+  DEBUG: '@cypress/github-action'
 
 jobs:
   cypress:
@@ -78,32 +79,34 @@ jobs:
           echo "only_stable=${{github.event.inputs.only_stable }}" >> $GITHUB_ENV
 
       # Run Cypress tests.
-      - name: Cypress Tests (Stable)
+      - name: Cypress Tests (un-Stable)
         uses: cypress-io/github-action@v2
-        with:
-          spec: "cypress/specs/stable/**"
-          record: true
-          parallel: true
-          working-directory: e2e
-          group: Stable
-          tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
-
-      # Run Cypress tests.
-      - name: Cypress Tests (Unstable)
-        uses: cypress-io/github-action@v2
+        env:
+          DEBUG: 'cypress:*'
         with:
           spec: "cypress/specs/unstable/**"
           record: true
           parallel: true
           working-directory: e2e
           group: Unstable
-          install: false # Skip install on second run.
           tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
-        # Always run this step if requested, even if stable tests fail.
-        if: env.only_stable == 'false' && always()
-        # Do not allow this step to fail the job. It is informational, not mandatory.
-        # This should be removed when we are ready to make 1.1 tests mandatory.
-        continue-on-error: true
+
+      # # Run Cypress tests.
+      # - name: Cypress Tests (Unstable)
+      #   uses: cypress-io/github-action@v2
+      #   with:
+      #     spec: "cypress/specs/unstable/**"
+      #     record: true
+      #     parallel: true
+      #     working-directory: e2e
+      #     group: Unstable
+      #     install: false # Skip install on second run.
+      #     tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
+      #   # Always run this step if requested, even if stable tests fail.
+      #   if: env.only_stable == 'false' && always()
+      #   # Do not allow this step to fail the job. It is informational, not mandatory.
+      #   # This should be removed when we are ready to make 1.1 tests mandatory.
+      #   continue-on-error: true
 
       - name: "Archive screenshots"
         uses: actions/upload-artifact@v2
@@ -112,61 +115,61 @@ jobs:
           name: cypress-screenshots
           path: e2e/cypress/screenshots
 
-# Run Integration Tests.
-  run_integration_test:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      # Set Cypress Tags according to what type of event we're dealing with.
-      - name: Set variables for PR
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "cypress_tags=PR" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "only_stable=false" >> $GITHUB_ENV
-      - name: Set variables for Nightly
-        if: github.event_name == 'schedule'
-        run: |
-          echo "cypress_tags=Nightly" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "only_stable=false" >> $GITHUB_ENV
-      - name: Set variables for manual run
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "cypress_tags=${{ github.event.inputs.cypress_tags }}" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
-          echo "only_stable=${{github.event.inputs.only_stable }}" >> $GITHUB_ENV
+# # Run Integration Tests.
+#   run_integration_test:
+#     name: Integration Tests
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v2
+#       # Set Cypress Tags according to what type of event we're dealing with.
+#       - name: Set variables for PR
+#         if: github.event_name == 'pull_request'
+#         run: |
+#           echo "cypress_tags=PR" >> $GITHUB_ENV
+#           echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
+#           echo "only_stable=false" >> $GITHUB_ENV
+#       - name: Set variables for Nightly
+#         if: github.event_name == 'schedule'
+#         run: |
+#           echo "cypress_tags=Nightly" >> $GITHUB_ENV
+#           echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
+#           echo "only_stable=false" >> $GITHUB_ENV
+#       - name: Set variables for manual run
+#         if: github.event_name == 'workflow_dispatch'
+#         run: |
+#           echo "cypress_tags=${{ github.event.inputs.cypress_tags }}" >> $GITHUB_ENV
+#           echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
+#           echo "only_stable=${{github.event.inputs.only_stable }}" >> $GITHUB_ENV
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: ci-run-deploys
-          role-duration-seconds: 3600
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+#           aws-region: us-east-1
+#           role-to-assume: ci-run-deploys
+#           role-duration-seconds: 3600
 
-      # Pull the Server to Server API Oauth creds from parameter store
-      - name: Pull Client_ID from SSM
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/service/pfml-api/${{ env.E2E_ENVIRONMENT }}/cognito_internal_fineos_role_app_client_id"
-          env_variable_name: "E2E_API_FINEOS_CLIENT_ID"
-      - name: Pull Client_SECRET from SSM
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/service/pfml-api/${{ env.E2E_ENVIRONMENT }}/cognito_internal_fineos_role_app_client_secret"
-          env_variable_name: "E2E_API_FINEOS_CLIENT_SECRET"
+#       # Pull the Server to Server API Oauth creds from parameter store
+#       - name: Pull Client_ID from SSM
+#         uses: "marvinpinto/action-inject-ssm-secrets@latest"
+#         with:
+#           ssm_parameter: "/service/pfml-api/${{ env.E2E_ENVIRONMENT }}/cognito_internal_fineos_role_app_client_id"
+#           env_variable_name: "E2E_API_FINEOS_CLIENT_ID"
+#       - name: Pull Client_SECRET from SSM
+#         uses: "marvinpinto/action-inject-ssm-secrets@latest"
+#         with:
+#           ssm_parameter: "/service/pfml-api/${{ env.E2E_ENVIRONMENT }}/cognito_internal_fineos_role_app_client_secret"
+#           env_variable_name: "E2E_API_FINEOS_CLIENT_SECRET"
 
-      - name: Setup Node
-        uses: actions/setup-node@v1
-        with: { node-version: 14.x }
-      - name: "Install Dependencies"
-        working-directory: e2e
-        run: npm ci
-      - name: Integration Tests
-        working-directory: e2e
-        run: npm run test:integration
+#       - name: Setup Node
+#         uses: actions/setup-node@v1
+#         with: { node-version: 14.x }
+#       - name: "Install Dependencies"
+#         working-directory: e2e
+#         run: npm ci
+#       - name: Integration Tests
+#         working-directory: e2e
+#         run: npm run test:integration
 
 
