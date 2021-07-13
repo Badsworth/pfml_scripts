@@ -7,20 +7,24 @@ All workflows are triggered by particular GitHub events, specified in the `on` c
 
 For more information on GitHub Actions, see [the docs](https://help.github.com/en/actions).
 
-## Continuous Integration
+## Naming
 
-To preserve the health of the main branch, tests and other checks (linting, etc.) are triggered by `pull_request` events.
+If you are creating a new workflow, please follow this convention:
 
-Workflows with the name patterns `<component>-ci.yml` or `<component>-validate.yml` fall into this category.
+```
+<component>-<workflow-type>-<description>
+```
 
-## Continuous Deployment
+Components should match one of the top-level directories. The workflow type should match one of the following:
 
-These workflows automate the steps involved in cutting releases and rolling them out, triggered by `push` events.
+- **deploy**: Workflows that deploy changes to environments
+- **tests**: Workflows that run tests (e.g. linting, unit tests) during PRs or deployments
+- **scheduled-alerts**: Workflows that run on a schedule and may trigger alerts
+- **scheduled**: Workflows that run on a schedule
+- **on-demand**: Workflows that are only run manually, either through workflow_dispatch or through PR comments.
 
-These have the name pattern `<component>-deploy.yml`.
+### Meta-automation
 
-## Meta-automation
+Some workflows take action on other GitHub workflows, e.g. listening to certain repository updates and triggering certain PR checks to run again.
 
-These workflows take action on other GitHub workflows.
-
-These have the name pattern `<component>-monitor.yml`.
+These have the following naming convention: `<component>-<workflow-type>-monitor-*.yml`.
