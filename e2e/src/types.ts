@@ -75,6 +75,34 @@ export type PersonalIdentificationDetails = {
 };
 
 /**
+ * @FINEOS_TYPES
+ */
+
+/**
+ * Tasks associated with employer response to a claim.
+ */
+export type ERTasks =
+  | "Employer Approval Received"
+  | "Employer Conflict Reported"
+  | "Escalate employer reported accrued paid leave (PTO)"
+  | "Escalate Employer Reported Fraud"
+  | "Escalate Employer Reported Other Income"
+  | "Escalate employer reported past leave";
+/**
+ * Tasks associated with reviewing evidence.
+ */
+export type DocumentReviewTasks =
+  | "Bonding Certification Review"
+  | "Medical Certification Review"
+  | "ID Review"
+  | "Certification Review"
+  | "Caring Certification Review"
+  | "Medical Pregnancy Certification Review";
+export type FineosTasks = DocumentReviewTasks | ERTasks;
+
+export type ClaimStatus = "Adjudication" | "Approved" | "Completed";
+
+/**
  * @note UTILITY TYPES
  */
 

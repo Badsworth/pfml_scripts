@@ -89,11 +89,11 @@ describe("Request for More Information (notifications/notices)", () => {
         cy.log("Finished waiting for documents");
         cy.visit("/applications");
         cy.contains("article", submission.fineos_absence_id).within(() => {
-          cy.contains("a", "Request for more information")
+          cy.contains("button", "Request for more information")
             .should("be.visible")
             .click();
         });
-        portal.downloadLegalNotice("Request", submission.fineos_absence_id);
+        portal.downloadLegalNotice(submission.fineos_absence_id);
         portal.uploadAdditionalDocument(
           submission.fineos_absence_id,
           "Certification",

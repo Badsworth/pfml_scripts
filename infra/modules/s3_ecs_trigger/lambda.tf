@@ -14,6 +14,7 @@ resource "aws_lambda_function" "task_trigger" {
   layers           = [local.newrelic_log_ingestion_layer]
   runtime          = "python3.8"
   publish          = "false"
+  timeout          = 60 # 1 minute
 
   vpc_config {
     subnet_ids         = var.app_subnet_ids

@@ -1388,18 +1388,22 @@ components:
         city:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "Springfield"
         line_1:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "742 Evergreen Terrace"
         line_2:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: ""
         state:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "MA"
         zip:
           type: string
@@ -2172,6 +2176,27 @@ components:
         employer_fein:
           type: string
 
+    ManagedRequirementResponse:
+      type: object
+      properties:
+        follow_up_date:
+          format: date
+          example: "1970-06-01"
+        responded_at:
+          format: date
+          example: "1970-06-01"
+        status:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        type:
+          type: string
+          nullable: true
+        created_at:
+          format: date
+
     ClaimResponse:
       type: object
       properties:
@@ -2197,6 +2222,10 @@ components:
           format: string
         created_at:
           format: date
+        managed_requirements:
+            type: array
+            items:
+              $ref: "#/components/schemas/ManagedRequirementResponse"
 
     ClaimsResponse:
       type: array

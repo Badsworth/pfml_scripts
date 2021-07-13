@@ -43,7 +43,13 @@ export const ScheduleVariable = (props) => {
   });
 
   const handleHoursChange = (event) => {
-    setMinutesWorkedPerWeek(event.target.value);
+    const minutesStr = event.target.value;
+
+    // The input is coerced into a string by InputHours.js
+    // Set it to null instead of "" to clear the input field
+    const minutes = minutesStr === "" ? null : parseInt(minutesStr);
+
+    setMinutesWorkedPerWeek(minutes);
   };
 
   const handleSave = async () => {

@@ -49,7 +49,7 @@ exports[`PreviousLeavesOtherReason renders the page 1`] = `
         </ul>
       </React.Fragment>
     }
-    label="Did you take leave between January 1, 2021– for a different qualifying reason?"
+    label="Did you take leave between January 1, 2021 and January 1, 2021 for a different qualifying reason?"
     name="has_previous_leaves_other_reason"
     onChange={[Function]}
     type="radio"

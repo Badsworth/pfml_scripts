@@ -61,11 +61,11 @@ export const ConcurrentLeaves = (props) => {
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
             />
-            <Heading level="3">
+            <Heading level="2" className="margin-top-4">
               {t("pages.claimsConcurrentLeaves.hintWhatKindHeading")}
             </Heading>
             <Trans i18nKey="pages.claimsConcurrentLeaves.hintWhatKindBody" />
-            <Heading level="3">
+            <Heading level="2">
               {t("pages.claimsConcurrentLeaves.hintWhenToReportHeading")}
             </Heading>
             <Trans

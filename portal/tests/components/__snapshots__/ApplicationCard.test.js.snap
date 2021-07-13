@@ -264,63 +264,57 @@ exports[`ApplicationCard when there are legal notices displays legal notices and
 `;
 
 exports[`ApplicationCard when there are legal notices displays legal notices and explains that notices download to the device 2`] = `
-<li
-  className="font-body-2xs"
-  key="mock-document-3"
->
-  <a
-    className="text-medium"
-    href=""
+<Fragment>
+  <Button
+    className="text-bold"
     onClick={[Function]}
+    type="button"
+    variation="unstyled"
   >
     Approval notice (PDF)
-  </a>
+  </Button>
   <div
     className="text-base-dark"
   >
     Posted 1/1/2021
   </div>
-</li>
+</Fragment>
 `;
 
 exports[`ApplicationCard when there are legal notices displays legal notices and explains that notices download to the device 3`] = `
-<li
-  className="font-body-2xs"
-  key="mock-document-4"
->
-  <a
-    className="text-medium"
-    href=""
+<Fragment>
+  <Button
+    className="text-bold"
     onClick={[Function]}
+    type="button"
+    variation="unstyled"
   >
-    Denial notice
-  </a>
+    Denial notice (PDF)
+  </Button>
   <div
     className="text-base-dark"
   >
     Posted 1/1/2021
   </div>
-</li>
+</Fragment>
 `;
 
 exports[`ApplicationCard when there are legal notices displays legal notices and explains that notices download to the device 4`] = `
-<li
-  className="font-body-2xs"
-  key="mock-document-5"
->
-  <a
-    className="text-medium"
-    href=""
+<Fragment>
+  <Button
+    className="text-bold"
     onClick={[Function]}
+    type="button"
+    variation="unstyled"
   >
     Request for more information (PDF)
-  </a>
+  </Button>
   <div
     className="text-base-dark"
   >
     Posted 1/1/2021
   </div>
-</li>
+</Fragment>
 `;
 
 exports[`ApplicationCard when there is a denial notice includes a button to upload additional documents 1`] = `

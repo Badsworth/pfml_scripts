@@ -66,7 +66,8 @@ export const Dashboard = (props) => {
     const params = new URLSearchParams(window.location.search);
 
     paramsToUpdate.forEach(({ name, value }) => {
-      if (!value) {
+      if (!value || value.length === 0) {
+        // Remove param if its value is null, undefined, empty string, or empty array
         params.delete(name);
       } else {
         params.set(name, value);
@@ -420,6 +421,11 @@ const Filters = (props) => {
     activeFiltersCount += initialFormState.claim_status.length - 1;
   }
 
+  /**
+   * Event handler for when the user applies their status and
+   * organization filter selections
+   * @param {object} evt
+   */
   const handleSubmit = (evt) => {
     evt.preventDefault();
     const params = [];
@@ -491,10 +497,6 @@ const Filters = (props) => {
       },
     ]);
   };
-
-  if (!isFeatureEnabled("employerShowDashboardFilters")) {
-    return null;
-  }
 
   return (
     <React.Fragment>

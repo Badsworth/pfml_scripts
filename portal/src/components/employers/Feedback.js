@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from "react";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
-import FileCardList from "../FileCardList";
 import FormLabel from "../FormLabel";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import { Trans } from "react-i18next";
 import classnames from "classnames";
-import { isFeatureEnabled } from "../../services/featureFlags";
-import useFilesLogic from "../../hooks/useFilesLogic";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -27,10 +24,6 @@ const Feedback = ({
 }) => {
   // TODO (EMPLOYER-583) add frontend validation
   const { t } = useTranslation();
-  const { files, processFiles, removeFile } = useFilesLogic({
-    clearErrors: appLogic.clearErrors,
-    catchError: appLogic.catchError,
-  });
   const [shouldShowCommentBox, setShouldShowCommentBox] = useState(false);
   const errorMsg = appLogic.appErrors.fieldErrorMessage("comment");
 
@@ -55,7 +48,6 @@ const Feedback = ({
       return "employeeNotice";
   };
 
-  const shouldShowFileUpload = isFeatureEnabled("employerShowFileUpload");
   const commentClasses = classnames("usa-form-group", {
     "usa-form-group--error": !!errorMsg,
   });
@@ -118,28 +110,6 @@ const Feedback = ({
             name="comment"
             onChange={(event) => setComment(event.target.value)}
           />
-          {/* TODO (EMPLOYER-665): Show file upload */}
-          {shouldShowFileUpload && (
-            <React.Fragment>
-              <FormLabel small>
-                {t("components.employersFeedback.supportingDocumentationLabel")}
-              </FormLabel>
-              <FileCardList
-                tempFiles={files}
-                onChange={processFiles}
-                onRemoveTempFile={removeFile}
-                fileHeadingPrefix={t(
-                  "components.employersFeedback.fileHeadingPrefix"
-                )}
-                addFirstFileButtonText={t(
-                  "components.employersFeedback.addFirstFileButton"
-                )}
-                addAnotherFileButtonText={t(
-                  "components.employersFeedback.addAnotherFileButton"
-                )}
-              />
-            </React.Fragment>
-          )}
         </div>
       </ConditionalContent>
     </React.Fragment>

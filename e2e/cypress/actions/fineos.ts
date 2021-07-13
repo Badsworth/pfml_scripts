@@ -93,6 +93,12 @@ export function denyClaim(reason: string): void {
   assertClaimStatus("Declined");
 }
 
+export function reviewClaim(): void {
+  cy.contains("td", "Approved").click();
+  cy.get('input[title="Review a Leave Request"').click();
+  cy.wait("@ajaxRender");
+}
+
 /**
  * Called from the claim page, asserts that the claim status is an expected value.
  */

@@ -4,12 +4,12 @@ import BenefitsApplication, {
 import Document, { DocumentType } from "../models/Document";
 import Alert from "../components/Alert";
 import ButtonLink from "../components/ButtonLink";
+import DownloadableDocument from "../components/DownloadableDocument";
 import Heading from "../components/Heading";
 import LeaveReason from "../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
 import { Trans } from "react-i18next";
-import download from "downloadjs";
 import findDocumentsByTypes from "../utils/findDocumentsByTypes";
 import findKeyByValue from "../utils/findKeyByValue";
 import formatDateRange from "../utils/formatDateRange";
@@ -225,11 +225,13 @@ function LegalNotices(props) {
           <p>{t("components.applicationCard.noticesDownload")}</p>
           <ul className="usa-list">
             {legalNotices.map((notice) => (
-              <LegalNoticeListItem
-                key={notice.fineos_document_id}
-                document={notice}
-                {...props}
-              />
+              <li key={notice.fineos_document_id}>
+                <DownloadableDocument
+                  document={notice}
+                  showCreatedAt
+                  onDownloadClick={appLogic.documents.download}
+                />
+              </li>
             ))}
           </ul>
         </React.Fragment>
@@ -241,60 +243,12 @@ function LegalNotices(props) {
 LegalNotices.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-};
-
-/**
- * Link and metadata for a Legal notice
- */
-function LegalNoticeListItem(props) {
-  const { appLogic, document } = props;
-  const { t } = useTranslation();
-
-  const documentContentType = document.content_type || "application/pdf";
-  const noticeNameTranslationKey =
-    documentContentType === "application/pdf"
-      ? "components.applicationCard.noticeName_pdf"
-      : "components.applicationCard.noticeName";
-
-  const handleClick = async (event) => {
-    event.preventDefault();
-    const documentData = await appLogic.documents.download(document);
-    if (documentData) {
-      download(
-        documentData,
-        document.name.trim() || document.document_type.trim(),
-        documentContentType
-      );
-    }
-  };
-
-  return (
-    <li key={document.fineos_document_id} className="font-body-2xs">
-      <a onClick={handleClick} className="text-medium" href="">
-        {t(noticeNameTranslationKey, {
-          context: findKeyByValue(DocumentType, document.document_type),
-        })}
-      </a>
-      <div className="text-base-dark">
-        {t("components.applicationCard.noticeDate", {
-          date: formatDateRange(document.created_at),
-        })}
-      </div>
-    </li>
-  );
-}
-
-LegalNoticeListItem.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
     documents: PropTypes.shape({
       download: PropTypes.func.isRequired,
     }),
   }).isRequired,
-  document: PropTypes.instanceOf(Document),
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
 };
 
 /**

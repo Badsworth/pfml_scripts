@@ -364,6 +364,28 @@ class ClaimFactory(BaseFactory):
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
 
 
+class ManagedRequirementFactory(BaseFactory):
+    class Meta:
+        model = employee_models.ManagedRequirement
+
+    managed_requirement_id = Generators.UuidObj
+    claim = factory.SubFactory(ClaimFactory)
+    claim_id = factory.LazyAttribute(lambda w: w.claim.claim_id)
+    respondent_user = factory.SubFactory(UserFactory)
+    respondent_user_id = factory.LazyAttribute(lambda w: w.respondent_user.user_id)
+    fineos_managed_requirement_id = factory.Sequence(lambda n: n)
+    follow_up_date = factory.LazyAttribute(lambda w: w.claim.created_at + timedelta(days=10))
+    managed_requirement_status_id = (
+        employee_models.ManagedRequirementStatus.OPEN.managed_requirement_status_id
+    )
+    managed_requirement_category_id = (
+        employee_models.ManagedRequirementCategory.EMPLOYER_CONFIRMATION.managed_requirement_category_id
+    )
+    managed_requirement_type_id = (
+        employee_models.ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
+    )
+
+
 class PaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.Payment

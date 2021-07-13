@@ -4,6 +4,7 @@ import {
   simulateEvents,
 } from "../../test-utils";
 import ConcurrentLeaves from "../../../src/pages/applications/concurrent-leaves";
+import { mount } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -34,7 +35,11 @@ const setup = (options = { hasConcurrentLeave: true }) => {
 describe("ConcurrentLeaves", () => {
   it("renders the page", () => {
     const { wrapper } = setup();
+    const inputChoiceGroupHint = wrapper.find("InputChoiceGroup").prop("hint");
+    const hintComponent = mount(inputChoiceGroupHint);
+
     expect(wrapper).toMatchSnapshot();
+    expect(hintComponent).toMatchSnapshot();
   });
 
   it("calls claims.update when user clicks continue", async () => {

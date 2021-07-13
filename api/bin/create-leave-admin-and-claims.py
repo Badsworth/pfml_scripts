@@ -10,7 +10,12 @@ from factory.faker import faker
 
 import massgov.pfml.db
 from massgov.pfml.db.models.employees import Role, UserLeaveAdministrator
-from massgov.pfml.db.models.factories import ClaimFactory, EmployerOnlyDORDataFactory, UserFactory
+from massgov.pfml.db.models.factories import (
+    ClaimFactory,
+    EmployerOnlyDORDataFactory,
+    ManagedRequirementFactory,
+    UserFactory,
+)
 from massgov.pfml.db.models.verifications import Verification, VerificationType
 
 fake = faker.Faker()
@@ -35,9 +40,12 @@ def main():
 
     # Create some claims so we have data to read and write to
     for _ in range(10):
-        ClaimFactory.create(
+        claim = ClaimFactory.create(
             employer_id=employer.employer_id,
             fineos_absence_id=f"NTN-{fake.unique.random_int()}-ABS-01",
+        )
+        ManagedRequirementFactory.create(
+            claim=claim, fineos_managed_requirement_id=fake.unique.random_int()
         )
 
     db_session.add(verification)

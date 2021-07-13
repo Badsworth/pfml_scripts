@@ -21,7 +21,9 @@ export async function labelled(
 ): Promise<playwright.ElementHandle> {
   const $label = await page.waitForSelector(`label:text("${label}")`);
   const id = await $label.evaluate((el) => el.getAttribute("for"));
-  const input = await page.$(`input[name="${id}"],select[name="${id}"]`);
+  const input = await page.$(
+    `input[name="${id}"],select[name="${id}"],textarea[name="${id}"]`
+  );
   if (input !== null) {
     return input;
   }
@@ -76,7 +78,10 @@ export async function waitForStablePage(page: playwright.Page): Promise<void> {
   await Promise.all([
     page.waitForFunction(() => {
       // @ts-ignore - Ignore use of Fineos window properties.
-      const requests = Object.values(window.axGetAjaxQueueManager().requests);
+      const requests = window.axGetAjaxQueueManager
+        ? // @ts-ignore - Ignore use of Fineos window properties.
+          Object.values(window.axGetAjaxQueueManager().requests)
+        : [];
       // @ts-ignore - Ignore use of Fineos window properties.
       return requests.filter((r) => r.state === "resolved").length === 0;
     }),
