@@ -17,6 +17,8 @@
     <h1>Batch jobs</h1>
     <p><em>All times in UTC. Current UTC time is {{ now.strftime("%Y-%m-%d %H:%M:%S") }}.</em></p>
 
+    <p><strong>{{ data.filtered|length }}</strong> entries hidden due to no DUA/DIA file present for download.</p>
+
     <table>
         <thead>
             <tr>
@@ -30,7 +32,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for entry in data %}
+            {% for entry in data.processed %}
                 <tr>
                     <td><a href="{{ base_url }}batch/{{ entry.import_log_id }}">{{ entry.import_log_id }}</a></td>
                     <td>{{ entry.start.strftime("%Y-%m-%d %H:%M:%S") if entry.start }}</td>
