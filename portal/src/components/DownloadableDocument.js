@@ -34,7 +34,7 @@ const DownloadableDocument = (props) => {
     if (documentData) {
       download(
         documentData,
-        document.name || document.type,
+        documentName,
         document.content_type || "application/pdf"
       );
     }

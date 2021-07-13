@@ -184,10 +184,7 @@ export function deleteDownloadsFolder(): void {
  *
  * Also does basic assertion on contents of legal notice doc
  */
-export function downloadLegalNotice(
-  noticeType: string,
-  claim_id: string
-): void {
+export function downloadLegalNotice(claim_id: string): void {
   const downloadsFolder = Cypress.config("downloadsFolder");
   cy.task("getNoticeFileName", downloadsFolder, { timeout: 20000 }).then(
     (filename) => {
@@ -196,14 +193,9 @@ export function downloadLegalNotice(
         "downloads folder should contain only one file"
       ).to.equal(1);
       expect(
-        filename[0],
-        `Expect filename to contain text ${noticeType}`
-      ).to.include(noticeType);
-      expect(
         path.extname(filename[0]),
         "Expect file extension to be a PDF"
       ).to.equal(".pdf");
-
       cy.task("getParsedPDF", path.join(downloadsFolder, filename[0])).then(
         (pdf) => {
           const application_id_from_notice = email.getTextBetween(
@@ -882,12 +874,12 @@ export function checkNoticeForLeaveAdmin(
   switch (noticeType) {
     case "approval":
       cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("a", "Approval notice").should("be.visible").click();
+      cy.contains("button", "Approval notice").should("be.visible").click();
       break;
 
     case "denial":
       cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("a", "Denial notice").should("be.visible").click();
+      cy.contains("button", "Denial notice").should("be.visible").click();
       break;
 
     default:
@@ -1702,7 +1694,7 @@ function fillEmployerBenefitData(benefit: ValidEmployerBenefit): void {
 }
 
 export function addConcurrentLeave(leave: ValidConcurrentLeave): void {
-  cy.findByText("Add a concurrent leave").click();
+  cy.findByText(/Add (a concurrent|an accrued paid) leave/).click();
   cy.contains("tr", "Add an accrued paid leave").within(() => {
     fillDateFieldset("When did the leave begin?", leave.leave_start_date);
     fillDateFieldset("When did the leave end?", leave.leave_end_date);
@@ -1721,4 +1713,14 @@ export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
     .should(($table) => {
       expect($table.html()).to.match(selector);
     });
+}
+
+/**
+ * Assert leave type of the claim during the review.
+ * @param leaveType expand the type as needed
+ */
+export function assertLeaveType(leaveType: "Active duty"): void {
+  cy.findByText("Leave type", { selector: "h3" })
+    .next()
+    .should("contain.text", leaveType);
 }

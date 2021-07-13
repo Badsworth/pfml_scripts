@@ -33,18 +33,15 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
       <ReviewHeading level="2">
         {t("components.employersLeaveSchedule.header")}
       </ReviewHeading>
+      <p>
+        <Trans
+          i18nKey="components.employersLeaveSchedule.caption"
+          tOptions={{
+            context: buildContext() || "",
+          }}
+        />
+      </p>
       <Table className="width-full">
-        <caption>
-          <p className="text-normal">
-            <Trans
-              i18nKey="components.employersLeaveSchedule.caption"
-              tOptions={{
-                context: buildContext() || "",
-              }}
-            />
-          </p>
-          <p>{t("components.employersLeaveSchedule.tableName")}</p>
-        </caption>
         <thead>
           <tr>
             <th scope="col">

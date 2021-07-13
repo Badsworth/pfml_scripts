@@ -66,7 +66,8 @@ export const Dashboard = (props) => {
     const params = new URLSearchParams(window.location.search);
 
     paramsToUpdate.forEach(({ name, value }) => {
-      if (!value) {
+      if (!value || value.length === 0) {
+        // Remove param if its value is null, undefined, empty string, or empty array
         params.delete(name);
       } else {
         params.set(name, value);
@@ -496,10 +497,6 @@ const Filters = (props) => {
       },
     ]);
   };
-
-  if (!isFeatureEnabled("employerShowDashboardFilters")) {
-    return null;
-  }
 
   return (
     <React.Fragment>

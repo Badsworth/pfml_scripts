@@ -146,40 +146,7 @@ Array [
 ]
 `;
 
-exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 1`] = `
-<Button
-  aria-controls="filters"
-  aria-expanded="false"
-  onClick={[Function]}
-  variation="outline"
->
-  Show filters (2)
-</Button>
-`;
-
-exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 2`] = `
-<Button
-  aria-controls="filters"
-  aria-expanded="false"
-  onClick={[Function]}
-  variation="outline"
->
-  Show filters
-</Button>
-`;
-
-exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 3`] = `
-<Button
-  aria-controls="filters"
-  aria-expanded="true"
-  onClick={[Function]}
-  variation="outline"
->
-  Hide filters
-</Button>
-`;
-
-exports[`Employer dashboard renders filters when feature flags are enabled 1`] = `
+exports[`Employer dashboard renders filters 1`] = `
 <Fragment>
   <div
     className="margin-bottom-2"
@@ -259,6 +226,39 @@ exports[`Employer dashboard renders filters when feature flags are enabled 1`] =
     </Button>
   </form>
 </Fragment>
+`;
+
+exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 1`] = `
+<Button
+  aria-controls="filters"
+  aria-expanded="false"
+  onClick={[Function]}
+  variation="outline"
+>
+  Show filters (2)
+</Button>
+`;
+
+exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 2`] = `
+<Button
+  aria-controls="filters"
+  aria-expanded="false"
+  onClick={[Function]}
+  variation="outline"
+>
+  Show filters
+</Button>
+`;
+
+exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 3`] = `
+<Button
+  aria-controls="filters"
+  aria-expanded="true"
+  onClick={[Function]}
+  variation="outline"
+>
+  Hide filters
+</Button>
 `;
 
 exports[`Employer dashboard renders instructions if there are no verified employers 1`] = `
