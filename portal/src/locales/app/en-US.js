@@ -606,8 +606,16 @@ const errors = {
         "The employer ID you entered is already associated with your account.",
       employer_verification_data_required:
         "$t(shared.ein.employer_verification_data_required)",
+      // TODO (EMPLOYER-1565): Remove this once the API no longer returns it
       invalid:
         "Enter your 9-digit Employer Identification Number in the correct format.",
+      pattern:
+        "Enter your 9-digit Employer Identification Number in the correct format.",
+      require_contributing_employer:
+        "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly and the associated business is contributing to Paid Family and Medical Leave.",
+      require_employer:
+        "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
+      required: "Enter your 9-digit Employer Identification Number.",
     },
     hours_worked_per_week: {
       // TODO (EMPLOYER-723) remove this
