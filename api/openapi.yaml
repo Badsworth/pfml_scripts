@@ -562,12 +562,36 @@ paths:
         "200":
           $ref: "#/components/responses/ApplicationSearchResponse"
 
-  /auth/azure:
+  /admin/authorize:
     get:
       tags:
         - Azure
       summary: Retrieve an Application identified by the application id
-      operationId: massgov.pfml.api.authentication.get_sso_auth_code
+      operationId: massgov.pfml.api.authentication.get_authorization_url
+      responses:
+        "200":
+          $ref: "#/components/responses/ApplicationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/login:
+    post:
+      tags:
+        - Azure
+      summary: Retrieve an Application identified by the application id
+      operationId: massgov.pfml.api.authentication.login_admin
+      responses:
+        "200":
+          $ref: "#/components/responses/ApplicationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  
+  /admin/logout:
+    get:
+      tags:
+        - Azure
+      summary: Retrieve an Application identified by the application id
+      operationId: massgov.pfml.api.authentication.logout_admin
       responses:
         "200":
           $ref: "#/components/responses/ApplicationResponse"

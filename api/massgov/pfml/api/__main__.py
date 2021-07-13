@@ -40,7 +40,6 @@ def start_server():
         connexion_app = app.create_app()
         app_config = app.get_app_config(connexion_app)
         authentication.get_public_keys(app_config.cognito_user_pool_keys_url)
-        authentication.get_msal_client(app_config.azure_sso)
 
         logger.info("Running API Application...")
         running_in_local = app_config.environment in ("local", "dev")
