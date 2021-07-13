@@ -972,8 +972,7 @@ export function triggerNoticeRelease(docType: string): void {
 /**
  * Adding a  Historical Absence case
  */
-export function addHistoricalAbsenceCase(claimNumber: string,
-  startDate: Date): void {
+export function addHistoricalAbsenceCase(claimNumber: string): void {
   cy.contains("Options").click();
   cy.contains("Add Historical Absence").click();
   cy.findByLabelText("Absence relates to").select("Employee");
@@ -993,9 +992,11 @@ export function addHistoricalAbsenceCase(claimNumber: string,
     "div",
     "timeOffHistoricalAbsencePeriodsListviewWidget"
   ).find("input").click();
-  const startDates = addMonths(startDate, -2);
-    const startDateFormatted = format(startDate, "MM/dd/yyyy");
-    const endDateFormatted = format(addDays(startDate, 15), "MM/dd/yyyy");
+  const mostRecentSunday = startOfWeek(new Date());
+  const startDate = subDays(mostRecentSunday, 13);
+  const startDateFormatted = format(startDate, "MM/dd/yyyy");
+  const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
+  
   cy.contains(
     "span",
     "historicalTimeOffAbsencePeriodDetailsWidget_un10_startDate_WRAPPER"
@@ -1015,7 +1016,6 @@ export function addHistoricalAbsenceCase(claimNumber: string,
     cy.wait("@ajaxRender");
     cy.wait(200);
     cy.get("span[id=historicalTimeOffAbsencePeriodDetailsWidget_un10_endDateAllDay_WRAPPER]").click();
-    // mel's code 
     cy.get("input[type='button'][id*='addHistoricalTimeOffAbsencePeriodPopupWidget_un8_okButtonBean']").click();
   cy.contains(
     "div",
@@ -1025,10 +1025,16 @@ export function addHistoricalAbsenceCase(claimNumber: string,
   cy.get(
   "input[name='historicalCasePlanSelectionListviewWidget_un0_Checkbox_RowId_0_CHECKBOX']"
   ).click();
-  cy.get("[id=p16_un7_editPageSave_cloned]").contains("OK").click({ force: true });
+  cy.get("[id*=editPageSave_cloned]").contains("OK").click({ force: true });
   cy.wait(200);
-  cy.get("[id=p15_un24_editPageSave]").contains("OK").click({ force: true });
+  cy.get("[id*=editPageSave]").contains("OK").click({ force: true });
   cy.wait(200);
+  cy.get('a[name*="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]').click();
+  onTab("Cases");
+  // cy.get('.ListView > input').click()
+  cy.get('.ListRowSelected > td').should(($td) => {
+    expect($td.eq(4)).to.contain("Absence Historical Case")    
+  })
   
 }
 
