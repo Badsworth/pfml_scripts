@@ -23,6 +23,7 @@ class PaymentAuditCSV(AbstractRecord):
     scheduled_payment_date: Optional[str]
     payment_period_start_date: Optional[str]
     payment_period_end_date: Optional[str]
+    payment_period_weeks: Optional[str]
     payment_amount: Optional[str]
     absence_case_number: Optional[str]
     c_value: Optional[str]
@@ -57,6 +58,7 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     scheduled_payment_date="Scheduled Payment Date",
     payment_period_start_date="Payment Period Start",
     payment_period_end_date="Payment Period End",
+    payment_period_weeks="Payment Period Weeks",
     payment_amount="Payment Amount",
     absence_case_number="Absence Case Number",
     c_value="C Value",

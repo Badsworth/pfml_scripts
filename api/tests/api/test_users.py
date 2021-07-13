@@ -218,9 +218,7 @@ def test_users_post_cognito_user_exists_error(
     existing_user = UserFactory.create(sub_id=str(uuid.uuid4()))
 
     def sign_up(**kwargs):
-        raise CognitoUserExistsValidationError(
-            "Username already exists", existing_user.active_directory_id, existing_user.sub_id
-        )
+        raise CognitoUserExistsValidationError("Username already exists", existing_user.sub_id)
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 

@@ -33,6 +33,13 @@ jobs:
       - name: install
         run: npm ci
 
+      - name: format-check
+        run: npm run portal:format-check
+
+      - name: if format-check fails
+        if: ${{ failure() }}
+        run: echo "::warning file=package.json,line=1,col=1::Make sure you have the latest version of Prettier setup locally. You can also trigger Prettier by commenting on the PR with '/gh portal format' as the body."
+
       - name: lint
         run: npm run lint:ci
 

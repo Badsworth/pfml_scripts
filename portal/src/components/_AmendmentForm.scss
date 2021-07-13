@@ -9,14 +9,6 @@
   }
 }
 
-// TODO (CP-697): May change how spacing is applied to form components
-// Apply only if input text is first input
-.c-amendment-form.input-text-first-child {
-  label:first-of-type {
-    @extend .margin-top-0;
-  }
-}
-
 table .c-amendment-form {
   max-width: fit-content;
 }

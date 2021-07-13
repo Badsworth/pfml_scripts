@@ -87,6 +87,11 @@ export class ClaimPage {
     onTab("Absence Hub");
     return this;
   }
+  benefitsExtension(cb: (page: BenefitsExtensionPage) => unknown): this {
+    cy.findByText("Add Time").click({ force: true });
+    cb(new BenefitsExtensionPage());
+    return this;
+  }
   shouldHaveStatus(category: StatusCategory, expected: string): this {
     const selector =
       category === "PlanDecision"
@@ -141,7 +146,7 @@ class AdjudicationPage {
   }
   acceptLeavePlan() {
     this.onTab("Manage Request");
-    cy.wait(50);
+    cy.wait(150);
     cy.get("input[type='submit'][value='Accept']").click();
   }
 }
@@ -270,6 +275,7 @@ export class DocumentsPage {
     assertHasDocument(documentName);
     return this;
   }
+
   /**
    * Goes through the document upload process and returns back to the documents page
    * @param documentName
@@ -304,6 +310,83 @@ export class DocumentsPage {
     onTab("Search");
     cy.labelled("Business Type").type(`${documentType}{enter}`);
     clickBottomWidgetButton();
+  }
+
+  submitLegacyEmployerBenefits(
+    benefits: (ValidEmployerBenefit | ValidOtherIncome)[]
+  ): this {
+    this.startDocumentCreation(`Other Income`);
+    benefits.forEach(this.fillLegacyEmployerBenefit);
+    clickBottomWidgetButton();
+    this.assertDocumentExists("Other Income");
+    return this;
+  }
+
+  private fillLegacyEmployerBenefit(
+    benefitOrIncome: ValidEmployerBenefit | ValidOtherIncome,
+    index: number
+  ) {
+    // Will you receive wage replacement during your leave?
+    cy.get(`select[id$=_ReceiveWageReplacement${index > 0 ? index + 1 : ""}]`)
+      .should("be.visible")
+      .select(`Yes`);
+    // Through what type of program will you receive your wage replacement benefit?
+    cy.get(`select[id$=_ProgramType${index > 0 ? index + 1 : ""}]`)
+      .should("be.visible")
+      .select(
+        isValidOtherIncome(benefitOrIncome) ? `Non-Employer` : `Employer`
+      );
+    // Choose type of wage replacement
+    // This one is either bugged or is working in a mysterious way. Skips even indexes
+    cy.get(
+      `select[id$=_WRT${
+        index > 0
+          ? index * 2 + (isValidOtherIncome(benefitOrIncome) ? 2 : 1)
+          : index + 1
+      }]`
+    )
+      .should("be.visible")
+      .select(
+        `${
+          isValidOtherIncome(benefitOrIncome)
+            ? benefitOrIncome.income_type
+            : benefitOrIncome.benefit_type
+        }`
+      );
+    // When will you start receiving this income?
+    cy.get(
+      `input[type=text][id$=_StartDate${index > 0 ? index + 1 : ""}]`
+    ).type(
+      `${dateToMMddyyyy(
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_start_date
+          : benefitOrIncome.benefit_start_date
+      )}{enter}`
+    );
+    // When will you stop receiving this income?
+    cy.get(`input[type=text][id$=_EndDate${index > 0 ? index + 1 : ""}]`).type(
+      `${dateToMMddyyyy(
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_end_date
+          : benefitOrIncome.benefit_end_date
+      )}{enter}`
+    );
+
+    cy.get(`input[type=text][id$=_Amount${index > 0 ? index + 1 : ""}]`).type(
+      `{selectall}{backspace}${
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_amount_dollars
+          : benefitOrIncome.benefit_amount_dollars
+      }`
+    );
+
+    cy.get(`select[id$=_Frequency${index > 0 ? index + 1 : ""}]`).select(
+      `${
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_amount_frequency
+          : benefitOrIncome.benefit_amount_frequency
+      }`
+    );
   }
 
   /**
@@ -540,9 +623,9 @@ export class DocumentsPage {
       Unknown: "Please select",
     };
 
-    /*         
+    /*
     Because the labels are the same for every leave you report, we have to get creative with selectors
-    Each input has a unique id, with the number of leave being reported attached at the end. 
+    Each input has a unique id, with the number of leave being reported attached at the end.
     */
     //  Did you take any other leave between January 1, 2021 and the first day of the leave you're requesting for the same reason or a different qualifying reason as the leave you're requesting?
     cy.get(`select[id$=V2Applies${i}]`).select("Yes");
@@ -844,10 +927,74 @@ class PaidLeavePage {
     return this;
   }
 
+  /**
+   *  Asserts processing and end dates match.
+   */
+  assertMatchingPaymentDates(): this {
+    this.onTab("Financials", "Payment History", "Amounts Pending");
+    cy.contains("table.WidgetPanel", "Amounts Pending").within(() => {
+      cy.get('td[id*="processing_date0"]')
+        .invoke("text")
+        .then((processingDate) => {
+          cy.get('td[id*="period_end_date0"]')
+            .invoke("text")
+            .should("eq", processingDate);
+        });
+    });
+    return this;
+  }
+
   private numToPaymentFormat(num: number): string {
+    const decimal = num % 1 ? "" : ".00";
     return `${new Intl.NumberFormat("en-US", {
       style: "decimal",
-    }).format(num)}.00`;
+    }).format(num)}${decimal}`;
+  }
+}
+
+class BenefitsExtensionPage {
+  private continue(text = "Next") {
+    clickBottomWidgetButton(text);
+    cy.wait("@ajaxRender");
+    cy.wait(150);
+  }
+
+  private enterExtensionLeaveDates(newStartDate: string, newEndDate: string) {
+    cy.labelled("Absence status").select("Known");
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un19_startDate']").type(
+      `{selectall}{backspace}${newStartDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un19_endDate']").type(
+      `{selectall}{backspace}${newEndDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get(
+      "input[name='timeOffAbsencePeriodDetailsWidget_un19_startDateAllDay_CHECKBOX']"
+    ).click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get(
+      "input[name='timeOffAbsencePeriodDetailsWidget_un19_endDateAllDay_CHECKBOX']"
+    ).click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[title='OK']").click();
+  }
+
+  extendLeave(newStartDate: string, newEndDate: string): this {
+    onTab("Capture Additional Time");
+    // This assumes the claim is continuos
+    cy.findByTitle("Add Time Off Period").click();
+    this.enterExtensionLeaveDates(newStartDate, newEndDate);
+    this.continue();
+    this.continue();
+    this.continue();
+    this.continue();
+    this.continue("OK");
+    return this;
   }
 }
 

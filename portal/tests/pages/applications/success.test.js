@@ -69,6 +69,65 @@ describe("Success", () => {
 
       const transElements = wrapper.find("Trans");
       transElements.forEach((el) => expect(el.dive()).toMatchSnapshot());
+
+      expect(
+        wrapper
+          .find(`Trans[i18nKey="pages.claimsSuccess.reportReductionsProcess"]`)
+          .exists()
+      ).toEqual(true);
     });
+  });
+
+  it(`renders reportReductionsMessage when feature flag on and !hasReductionsData`, () => {
+    process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+    const claim = new MockBenefitsApplicationBuilder()
+      .continuous({ start_date: "2020-01-01" })
+      .medicalLeaveReason()
+      .absenceId()
+      .create();
+
+    const { wrapper } = renderWithAppLogic(Success, {
+      claimAttrs: claim,
+    });
+
+    expect(
+      wrapper
+        .find(`Trans[i18nKey="pages.claimsSuccess.reportReductionsMessage"]`)
+        .dive()
+    ).toMatchSnapshot();
+
+    expect(
+      wrapper
+        .find(`Trans[i18nKey="pages.claimsSuccess.reportReductionsProcess"]`)
+        .exists()
+    ).toEqual(false);
+  });
+
+  it(`does not render reportReductionsMessage when feature flag on and hasReductionsData`, () => {
+    process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+    const claim = new MockBenefitsApplicationBuilder()
+      .continuous({ start_date: "2020-01-01" })
+      .medicalLeaveReason()
+      .noOtherLeave() // sets null values to false which make hasReductionsData true
+      .absenceId()
+      .create();
+
+    const { wrapper } = renderWithAppLogic(Success, {
+      claimAttrs: claim,
+    });
+
+    expect(
+      wrapper
+        .find(`Trans[i18nKey="pages.claimsSuccess.reportReductionsMessage"]`)
+        .exists()
+    ).toEqual(false);
+
+    expect(
+      wrapper
+        .find(`Trans[i18nKey="pages.claimsSuccess.reportReductionsProcess"]`)
+        .exists()
+    ).toEqual(false);
   });
 });

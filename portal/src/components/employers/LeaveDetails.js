@@ -2,6 +2,7 @@ import Alert from "../Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../../components/ConditionalContent";
 import Document from "../../models/Document";
+import DownloadableDocument from "../DownloadableDocument";
 import EmployerClaim from "../../models/EmployerClaim";
 import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -12,10 +13,8 @@ import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { Trans } from "react-i18next";
 import classnames from "classnames";
-import download from "downloadjs";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
@@ -43,7 +42,6 @@ const LeaveDetails = (props) => {
 
   const isCaringLeave = reason === LeaveReason.care;
   const isPregnancy = reason === LeaveReason.pregnancy;
-  const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
   const errorMsg = appErrors.fieldErrorMessage(
     "relationship_inaccurate_reason"
   );
@@ -121,17 +119,22 @@ const LeaveDetails = (props) => {
             }}
             tOptions={{ context: isCaringLeave ? "caringLeave" : null }}
           />
-          {documents.map((document) => (
-            <HcpDocumentItem
-              downloadDocument={downloadDocument}
-              absenceId={absenceId}
-              document={document}
-              key={document.fineos_document_id}
-            />
-          ))}
+          <div>
+            {documents.map((document) => (
+              <DownloadableDocument
+                onDownloadClick={downloadDocument}
+                absenceId={absenceId}
+                document={document}
+                displayDocumentName={t(
+                  "components.employersLeaveDetails.documentName"
+                )}
+                key={document.fineos_document_id}
+              />
+            ))}
+          </div>
         </ReviewRow>
       )}
-      {shouldShowCaringLeave && isCaringLeave && (
+      {isCaringLeave && (
         <React.Fragment>
           <InputChoiceGroup
             smallLabel
@@ -245,40 +248,6 @@ LeaveDetails.propTypes = {
   onChangeBelieveRelationshipAccurate: PropTypes.func,
   relationshipInaccurateReason: PropTypes.string,
   onChangeRelationshipInaccurateReason: PropTypes.func,
-};
-
-const HcpDocumentItem = (props) => {
-  const { absenceId, document, downloadDocument } = props;
-  const { t } = useTranslation();
-  const documentName =
-    document.name?.trim() ||
-    t("components.employersLeaveDetails.healthCareProviderFormLink") ||
-    document.document_type.trim();
-
-  const handleClick = async (event) => {
-    event.preventDefault();
-    const documentData = await downloadDocument(absenceId, document);
-
-    download(
-      documentData,
-      documentName,
-      document.content_type || "application/pdf"
-    );
-  };
-
-  return (
-    <div>
-      <a onClick={handleClick} href="">
-        {documentName}
-      </a>
-    </div>
-  );
-};
-
-HcpDocumentItem.propTypes = {
-  absenceId: PropTypes.string.isRequired,
-  document: PropTypes.instanceOf(Document).isRequired,
-  downloadDocument: PropTypes.func.isRequired,
 };
 
 export default LeaveDetails;

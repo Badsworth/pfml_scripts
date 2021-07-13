@@ -643,16 +643,21 @@ export const Review = (props) => {
               level={reviewRowLevel}
               label={t("pages.claimsReview.concurrentLeaveLabel")}
             >
-              {t("pages.claimsReview.previousLeaveIsForCurrentEmployer", {
-                context: String(
-                  get(claim, "concurrent_leave.is_for_current_employer")
-                ),
-              })}
-              <br />
-              {formatDateRange(
-                get(claim, "concurrent_leave.leave_start_date"),
-                get(claim, "concurrent_leave.leave_end_date")
-              )}
+              <p className="text-base-darker margin-top-1">
+                {formatDateRange(
+                  get(claim, "concurrent_leave.leave_start_date"),
+                  get(claim, "concurrent_leave.leave_end_date")
+                )}
+              </p>
+              <ul className="usa-list margin-top-1">
+                <li>
+                  {t("pages.claimsReview.isForCurrentEmployer", {
+                    context: String(
+                      get(claim, "concurrent_leave.is_for_current_employer")
+                    ),
+                  })}
+                </li>
+              </ul>
             </ReviewRow>
           )}
 
@@ -876,7 +881,7 @@ export const PreviousLeaveList = (props) => {
           {t("pages.claimsReview.previousLeaveType", { context: props.type })}
         </li>
         <li>
-          {t("pages.claimsReview.previousLeaveIsForCurrentEmployer", {
+          {t("pages.claimsReview.isForCurrentEmployer", {
             context: String(get(entry, "is_for_current_employer")),
           })}
         </li>
@@ -1040,15 +1045,11 @@ export const OtherLeaveEntry = (props) => {
 
   return (
     <ReviewRow level={reviewRowLevel} label={label}>
-      {type && (
-        <React.Fragment>
-          {type}
-          <br />
-        </React.Fragment>
-      )}
-      {dates}
-      <br />
-      {amount}
+      <p className="text-base-darker margin-top-1">{dates}</p>
+      <ul className="usa-list margin-top-1">
+        {type && <li>{type}</li>}
+        {amount && <li>{amount}</li>}
+      </ul>
     </ReviewRow>
   );
 };

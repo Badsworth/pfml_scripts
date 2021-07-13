@@ -60,6 +60,24 @@ describe("ClaimsApi", () => {
       );
     });
 
+    it("includes Completed status filter when Closed status filter is included", async () => {
+      mockFetch();
+
+      const claimsApi = new ClaimsApi();
+      await claimsApi.getClaims(2, {
+        employer_id: "mock-employer-id",
+        claim_status: "Closed",
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/claims?page_offset=2&employer_id=mock-employer-id&claim_status=Closed%2CCompleted`,
+        expect.objectContaining({
+          headers: expect.any(Object),
+          method: "GET",
+        })
+      );
+    });
+
     it("returns response as instances of ClaimCollection and PaginationMeta", async () => {
       const mockResponseData = [
         {

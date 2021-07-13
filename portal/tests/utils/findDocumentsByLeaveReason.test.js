@@ -85,7 +85,7 @@ describe("findDocumentsByLeaveReason", () => {
 
   it("decouples plan proof filtering from showCaringLeaveType flag", () => {
     // When useNewPlanProofs is false but showCaringLeaveType is true, the new plan proofs should not be used in filtering
-    // TODO (CP-1989): Remove showCaringLeaveType flag once caring leave is made available in Production
+    // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
     // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
     const documentsList = [
       new Document({

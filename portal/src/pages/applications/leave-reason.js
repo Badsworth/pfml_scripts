@@ -90,7 +90,7 @@ export const LeaveReason = (props) => {
   );
 
   // Caring leave type is behind a feature flag until 7/1 launch
-  // TODO (CP-1989): Remove showCaringLeaveType feature flag and move the choiceCaringLeave option into choices by default
+  // TODO (CP-2311): Remove showCaringLeaveType feature flag and move the choiceCaringLeave option into choices by default
   const showCaringLeaveType = isFeatureEnabled("showCaringLeaveType");
 
   const getChoices = () => {
@@ -139,6 +139,20 @@ export const LeaveReason = (props) => {
         hint={t("pages.claimsLeaveReason.sectionHint")}
         type="radio"
       />
+
+      <ConditionalContent
+        visible={
+          claim.previous_leaves_same_reason.length > 0 &&
+          claim.leave_details.reason !== reason
+        }
+      >
+        <Alert
+          state="warning"
+          heading={t("pages.claimsLeaveReason.leaveReasonChangedAlertTitle")}
+        >
+          <Trans i18nKey="pages.claimsLeaveReason.leaveReasonChangedAlertBody" />
+        </Alert>
+      </ConditionalContent>
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={["leave_details.reason_qualifier"]}

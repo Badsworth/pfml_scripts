@@ -28,6 +28,7 @@ const withClaims = (Component) => {
     const requestedFilters = {};
     if (query.claim_status) requestedFilters.claim_status = query.claim_status;
     if (query.employer_id) requestedFilters.employer_id = query.employer_id;
+    if (query.search) requestedFilters.search = query.search;
 
     useEffect(() => {
       appLogic.claims.loadPage(requestedPageOffset, requestedFilters);
@@ -71,6 +72,7 @@ const withClaims = (Component) => {
       claim_status: PropTypes.string,
       employer_id: PropTypes.string,
       page_offset: PropTypes.string,
+      search: PropTypes.string,
     }),
   };
 

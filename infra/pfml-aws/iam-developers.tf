@@ -1,6 +1,7 @@
 # Sets up extra admin-y access policies for developers on the team,
 # like full write access to SSM.
 #
+# TODO (INFRA-561) Remove this entire file; these SSO permissions are obsolete after July 1st, 2021
 data "aws_iam_role" "developers" {
   name = "AWS-498823821309-Infrastructure-Admin"
 }

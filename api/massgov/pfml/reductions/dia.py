@@ -24,7 +24,7 @@ from massgov.pfml.payments.sftp_s3_transfer import (
     copy_from_sftp_to_s3_and_archive_files,
     copy_to_sftp_and_archive_s3_files,
 )
-from massgov.pfml.reductions.common import get_claimants_for_outbound
+from massgov.pfml.reductions.common import AgencyLoadResult, get_claimants_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.batch.log import LogEntry
 from massgov.pfml.util.files import upload_to_s3
@@ -408,14 +408,16 @@ def _load_dia_payment_from_reference_file(
     return new_row_count, total_row_count
 
 
-def load_new_dia_payments(db_session: db.Session, log_entry: LogEntry) -> None:
+def load_new_dia_payments(db_session: db.Session, log_entry: LogEntry) -> AgencyLoadResult:
     s3_config = get_s3_config()
     pending_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dia_pending_directory_path)
     archive_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dia_archive_directory_path)
     error_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dfml_error_directory_path)
 
+    result = AgencyLoadResult()
     for ref_file in _get_pending_dia_payment_reference_files(pending_dir, db_session):
         log_entry.increment(Metrics.PENDING_DIA_PAYMENT_REFERENCE_FILES_COUNT)
+        result.found_pending_files = True
 
         try:
             new_row_count, total_row_count = _load_dia_payment_from_reference_file(
@@ -452,3 +454,5 @@ def load_new_dia_payments(db_session: db.Session, log_entry: LogEntry) -> None:
                     "reference_file_id": ref_file.reference_file_id,
                 },
             )
+
+    return result

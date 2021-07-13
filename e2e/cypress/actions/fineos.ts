@@ -169,10 +169,11 @@ export function assertAdjudicatingClaim(claimId: string): void {
 /**
  * Helper to switch to a particular tab.
  */
-export function onTab(label: string, wait = 50): void {
-  cy.contains(".TabStrip td", label)
-    .click({ force: true })
-    .should("have.class", "TabOn");
+export function onTab(label: string, wait = 150): void {
+  cy.contains(".TabStrip td", label).click({ force: true }).wait(wait);
+  // experieincing failures due to this assertion when chained with click
+  // we should wait for the specified wait period before making this assertion to avoid this error
+  cy.contains(".TabStrip td", label).should("have.class", "TabOn");
   // Wait on any in-flight Ajax to complete, then add a very slight delay for rendering to occur.
   cy.wait("@ajaxRender").wait(wait);
 }
@@ -184,7 +185,7 @@ export function onTab(label: string, wait = 50): void {
  * it will be called often. Try to find a better way to determine if we can move
  * on with processing (element detection).
  */
-function wait() {
+export function wait(): void {
   cy.wait("@ajaxRender");
   cy.get("#disablingLayer").should("not.be.visible");
 }
@@ -484,10 +485,7 @@ export function claimAdjudicationFlow(
   reason: LeaveReason,
   ERresponse = false
 ): void {
-  const docType = getCertificationDocumentType(
-    reason,
-    config("HAS_FINEOS_SP") === "true"
-  );
+  const docType = getCertificationDocumentType(reason);
 
   visitClaim(claimNumber);
   assertClaimStatus("Adjudication");
@@ -531,9 +529,7 @@ export function intermittentClaimAdjudicationFlow(
   assertClaimStatus("Adjudication");
   cy.get("input[type='submit'][value='Adjudicate']").click();
   checkStatus(claimNumber, "Eligibility", "Met");
-  markEvidence(
-    getCertificationDocumentType(reason, config("HAS_FINEOS_SP") === "true")
-  );
+  markEvidence(getCertificationDocumentType(reason));
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
   fillAbsencePeriod(claimNumber);
@@ -624,10 +620,7 @@ export function mailedDocumentMarkEvidenceRecieved(
   assertClaimStatus("Adjudication");
   onTab("Documents");
   assertHasDocument("Identification Proof");
-  const documentType = getCertificationDocumentType(
-    reason,
-    config("HAS_FINEOS_SP") === "true"
-  );
+  const documentType = getCertificationDocumentType(reason);
   uploadDocument("HCP", documentType);
   onTab("Documents");
   assertHasDocument(documentType);
@@ -656,10 +649,7 @@ export function reviewMailedDocumentsWithTasks(
   uploadDocument("MA_ID", "Identification proof");
   onTab("Documents");
   assertHasDocument("Identification Proof");
-  const documentType = getCertificationDocumentType(
-    reason,
-    config("HAS_FINEOS_SP") === "true"
-  );
+  const documentType = getCertificationDocumentType(reason);
   uploadDocument("HCP", documentType);
   onTab("Documents");
   cy.wait(150);
@@ -719,9 +709,7 @@ export function claimExtensionAdjudicationFlow(
 ): void {
   visitClaim(claimNumber);
   cy.get("input[type='submit'][value='Adjudicate']").click();
-  markEvidence(
-    getCertificationDocumentType(reason, config("HAS_FINEOS_SP") === "true")
-  );
+  markEvidence(getCertificationDocumentType(reason));
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
 }

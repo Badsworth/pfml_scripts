@@ -188,7 +188,7 @@ exports[`LeavePeriodReducedSchedule renders the page with medical leave content 
     <InputDate
       dayLabel="Day"
       example="mm / dd / yyyy"
-      label="Last day of leave or re‑evaluation date"
+      label="Last day of leave"
       monthLabel="Month"
       name="leave_details.reduced_schedule_leave_periods[0].end_date"
       onChange={[Function]}

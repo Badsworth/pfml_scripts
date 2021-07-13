@@ -648,11 +648,21 @@ exports[`Review Page OtherLeaveEntry when all data are present renders all data 
   label="Benefit 1"
   level="4"
 >
-  Medical or family leave
-  <br />
-  07-22-2020 - 09-22-2020
-  <br />
-  $250 per month
+  <p
+    className="text-base-darker margin-top-1"
+  >
+    07-22-2020 - 09-22-2020
+  </p>
+  <ul
+    className="usa-list margin-top-1"
+  >
+    <li>
+      Medical or family leave
+    </li>
+    <li>
+      $250 per month
+    </li>
+  </ul>
 </ReviewRow>
 `;
 
@@ -661,10 +671,18 @@ exports[`Review Page OtherLeaveEntry when amount is missing doesn't render missi
   label="Benefit 1"
   level="4"
 >
-  Medical or family leave
-  <br />
-  07-22-2020 - 09-22-2020
-  <br />
+  <p
+    className="text-base-darker margin-top-1"
+  >
+    07-22-2020 - 09-22-2020
+  </p>
+  <ul
+    className="usa-list margin-top-1"
+  >
+    <li>
+      Medical or family leave
+    </li>
+  </ul>
 </ReviewRow>
 `;
 
@@ -907,12 +925,12 @@ exports[`Review Page Part 1 Review Page when all data is present renders Review 
         Array [
           PreviousLeave {
             "is_for_current_employer": true,
-            "is_for_same_reason_as_leave_reason": null,
             "leave_end_date": "2021-05-01",
             "leave_minutes": 1200,
             "leave_reason": null,
             "leave_start_date": "2021-07-01",
             "previous_leave_id": null,
+            "type": "same_reason",
             "worked_per_week_minutes": 2400,
           },
         ]
@@ -926,12 +944,12 @@ exports[`Review Page Part 1 Review Page when all data is present renders Review 
         Array [
           PreviousLeave {
             "is_for_current_employer": null,
-            "is_for_same_reason_as_leave_reason": null,
             "leave_end_date": null,
             "leave_minutes": null,
             "leave_reason": null,
             "leave_start_date": null,
             "previous_leave_id": null,
+            "type": "other_reason",
             "worked_per_week_minutes": null,
           },
         ]
@@ -950,9 +968,18 @@ exports[`Review Page Part 1 Review Page when all data is present renders Review 
       label="Accrued paid leave"
       level="4"
     >
-      From this employer
-      <br />
-      1/1/2021 – 3/1/2021
+      <p
+        className="text-base-darker margin-top-1"
+      >
+        1/1/2021 – 3/1/2021
+      </p>
+      <ul
+        className="usa-list margin-top-1"
+      >
+        <li>
+          From this employer
+        </li>
+      </ul>
     </ReviewRow>
     <ReviewRow
       label="Employer-sponsored benefits?"
@@ -973,21 +1000,30 @@ exports[`Review Page Part 1 Review Page when all data is present renders Review 
             "is_full_salary_continuous": false,
           },
           EmployerBenefit {
-            "benefit_amount_dollars": null,
-            "benefit_amount_frequency": null,
+            "benefit_amount_dollars": 200,
+            "benefit_amount_frequency": "Unknown",
+            "benefit_end_date": "2021-02-01",
+            "benefit_start_date": "2021-01-01",
+            "benefit_type": "Family or medical leave insurance",
+            "employer_benefit_id": 2,
+            "is_full_salary_continuous": false,
+          },
+          EmployerBenefit {
+            "benefit_amount_dollars": 0,
+            "benefit_amount_frequency": "Unknown",
             "benefit_end_date": "2021-02-01",
             "benefit_start_date": "2021-01-01",
             "benefit_type": "Short-term disability insurance",
-            "employer_benefit_id": 2,
+            "employer_benefit_id": 3,
             "is_full_salary_continuous": true,
           },
           EmployerBenefit {
-            "benefit_amount_dollars": null,
-            "benefit_amount_frequency": "Per Week",
+            "benefit_amount_dollars": 0,
+            "benefit_amount_frequency": "Unknown",
             "benefit_end_date": "2021-02-01",
             "benefit_start_date": "2021-01-01",
             "benefit_type": "Permanent disability insurance",
-            "employer_benefit_id": 3,
+            "employer_benefit_id": 4,
             "is_full_salary_continuous": false,
           },
         ]
@@ -1071,7 +1107,7 @@ Array [
         40h
       </li>
       <li>
-        Total hours taken: 
+        Total hours of leave taken: 
         20h
       </li>
     </ul>
@@ -1103,7 +1139,7 @@ Array [
         40h
       </li>
       <li>
-        Total hours taken: 
+        Total hours of leave taken: 
         20h
       </li>
     </ul>
@@ -1137,7 +1173,7 @@ Array [
         40h
       </li>
       <li>
-        Total hours taken: 
+        Total hours of leave taken: 
         20h
       </li>
     </ul>
@@ -1166,7 +1202,7 @@ Array [
         40h
       </li>
       <li>
-        Total hours taken: 
+        Total hours of leave taken: 
         20h
       </li>
     </ul>

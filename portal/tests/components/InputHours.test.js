@@ -1,7 +1,8 @@
+import { createInputElement, testHook } from "../test-utils";
 import { mount, shallow } from "enzyme";
 import InputHours from "../../src/components/InputHours";
 import React from "react";
-import { createInputElement } from "../test-utils";
+import useHandleInputChange from "../../src/hooks/useHandleInputChange";
 
 function render(customProps = {}, mountComponent = false) {
   const props = Object.assign(
@@ -156,5 +157,60 @@ describe("InputHours", () => {
     });
 
     expect(props.onChange.mock.calls[0][0].target.value).toBe("480");
+  });
+
+  it("propagates valid input with useHandleInputChange", () => {
+    const updateFields = jest.fn();
+    let onChange;
+    testHook(() => {
+      onChange = useHandleInputChange(updateFields);
+    });
+
+    const { wrapper } = render(
+      {
+        name: "minutes",
+        onChange,
+      },
+      true
+    );
+
+    const input = wrapper.find("input");
+
+    input.simulate("change", {
+      // create input element with all the necessary attributes for parsing the value
+      target: createInputElement({ ...input.props(), value: "1" }),
+    });
+
+    expect(updateFields).toHaveBeenCalledTimes(1);
+    expect(updateFields).toHaveBeenCalledWith(
+      expect.objectContaining({
+        minutes: 60,
+      })
+    );
+  });
+
+  it("does not propagate invalid input with useHandleInputChange", () => {
+    const updateFields = jest.fn();
+    let onChange;
+    testHook(() => {
+      onChange = useHandleInputChange(updateFields);
+    });
+
+    const { wrapper } = render(
+      {
+        name: "minutes",
+        onChange,
+      },
+      true
+    );
+
+    const input = wrapper.find("input");
+
+    input.simulate("change", {
+      // create input element with all the necessary attributes for parsing the value
+      target: createInputElement({ ...input.props(), value: "-1" }),
+    });
+
+    expect(updateFields).not.toHaveBeenCalled();
   });
 });

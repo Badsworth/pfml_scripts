@@ -19,7 +19,9 @@ function useFunctionalInputProps({ appErrors, formState, updateFields }) {
     fieldName,
     config = { fallbackValue: "" }
   ) {
-    const errorMsg = appErrors.fieldErrorMessage(fieldName);
+    const errorMsg = appErrors
+      ? appErrors.fieldErrorMessage(fieldName)
+      : undefined;
     const value = get(formState, fieldName);
 
     return {

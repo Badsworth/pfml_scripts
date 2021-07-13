@@ -128,6 +128,7 @@ const Step = (props) => {
             {props.title}
           </Heading>
           {showChildren && <div className="usa-prose">{props.children}</div>}
+          {completed && !props.editable && props.submittedContent}
         </div>
         <div className={actionColumnClasses}>
           {disabled && disabledStartButton}
@@ -163,6 +164,11 @@ Step.propTypes = {
    * Description of the step
    */
   children: PropTypes.node,
+  /**
+   * Content to display if step is submitted (completed && !editable)
+   * TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
+   */
+  submittedContent: PropTypes.node,
   /**
    * Whether or not the step is editable by the user
    */

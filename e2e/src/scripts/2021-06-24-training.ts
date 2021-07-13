@@ -1,11 +1,3 @@
-/**
- * @file
- * Template for generating PFML test data.
- *
- * @abstract
- * Should be cloned in the same directory and customized before use.
- */
-
 import dataDirectory from "../generation/DataDirectory";
 import EmployeePool from "../generation/Employee";
 import ClaimPool from "../generation/Claim";
@@ -23,55 +15,14 @@ import {
   TRNOL4,
 } from "../scenarios/2021-06-24-training";
 import { ScenarioSpecification } from "../generation/Scenario";
-import config from "../config";
 
-/**
- * @summary
- *
- * This is a data generation script, roughly consisting of three parts:
- *   1. Employer generation
- *   2. Employee generation
- *   3. Claim generation
- *
- * Clone this file to make a new script. Before use, take note of all @todo items listed below.
- *
- * NB. This script is "idempotent"—if you run it multiple times, nothing bad happens.
- * Since we check if file exists each time, we may rerun this many times without overwriting existing data.
- *
- * @todo After customizing this script, you can generate the data by running:
- *   ```
- *     npx ts-node [PATH/TO/DATA_GEN_SCRIPT.ts]`
- *   ```
- *
- * By default, the resulting data will be placed within the `/data` directory at the project root.
- *
- * @todo After generating the data, follow-up steps may include:
- *   1. Upload the resulting DOR files to the appropriate S3 bucket based on the desired environment;
- *   2. After the employers are loaded into FINEOS, register Leave Admins for the employers by running:
- *     ```
- *       E2E_ENVIRONMENT=ENV_NAME npm run cli -- simulation registerAllLeaveAdmins [-f PATH/TO/employers.json]
- *     ```
- *   2a. To register a single Leave Admin at a time, use the following command instead:
- *     ```
- *       npm run cli -- simulation register-leave-admin [FEIN] [WITHHOLDING_AMOUNT]
- *     ```
- *   3. Submit the generated claims by running:
- *     ```
- *       npx ts-node e2e/src/scripts/submit.ts [PATH/TO/DATA/DIR] [CONCURRENCY]
- *     ```
- *   3a. If the claims have `postSubmit` steps, then Leave Admins must be registered before claim submission.
- */
 (async () => {
-  // @todo Rename the data directory as needed.
-  const storage = dataDirectory("2021-06-25-OLB_training_claims");
-  // <!-- @default
+  const storage = dataDirectory("2021-07-06-training");
   await storage.prepare();
   let claimPool: ClaimPool;
-  // @default -->
 
-  const employeePool = await EmployeePool.load(config("EMPLOYEES_FILE"));
+  const employeePool = await EmployeePool.load(storage.employees);
 
-  // Part 3: Claim generation.
   try {
     await ClaimPool.load(storage.claims, storage.documents);
   } catch (e) {
@@ -101,16 +52,11 @@ import config from "../config";
       generate(TRNOL2, 25),
       generate(TRNOL3, 25),
       generate(TRNOL4, 25),
-      generate(TRNER1, 25),
-      generate(TRNER2, 25),
-      generate(TRNER3, 25)
+      generate(TRNER1, 75),
+      generate(TRNER2, 75),
+      generate(TRNER3, 75)
     );
-    // <!-- @default
     await claimPool.save(storage.claims, storage.documents);
-    // Save used employees.
-    // @todo OPTIONAL: Omit second arg to reuse employees.
-    await employeePool.save(storage.employees, storage.usedEmployees);
-    // @default -->
   }
   const used = process.memoryUsage().heapUsed / 1024 / 1024;
   console.log(

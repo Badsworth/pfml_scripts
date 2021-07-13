@@ -1,5 +1,6 @@
 import PreviousLeave, {
   PreviousLeaveReason,
+  PreviousLeaveType,
 } from "../../../src/models/PreviousLeave";
 import AmendablePreviousLeave from "../../../src/components/employers/AmendablePreviousLeave";
 import React from "react";
@@ -10,12 +11,12 @@ import useAppLogic from "../../../src/hooks/useAppLogic";
 describe("AmendablePreviousLeave", () => {
   const previousLeave = new PreviousLeave({
     is_for_current_employer: true,
-    is_for_same_reason_as_leave_reason: false,
     leave_minutes: 2400,
     leave_reason: PreviousLeaveReason.serviceMemberFamily,
     leave_start_date: "2020-03-01",
     leave_end_date: "2020-03-06",
     previous_leave_id: 0,
+    type: PreviousLeaveType.otherReason,
     worked_per_week_minutes: 1440,
   });
   const onChange = jest.fn();

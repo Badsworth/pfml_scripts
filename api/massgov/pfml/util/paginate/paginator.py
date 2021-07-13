@@ -7,6 +7,8 @@ from sqlalchemy import func
 from sqlalchemy.orm import Query
 from werkzeug.exceptions import BadRequest
 
+from massgov.pfml.db.models.base import Base
+
 DEFAULT_PAGE_OFFSET = 1
 DEFAULT_PAGE_SIZE = 25
 
@@ -26,15 +28,13 @@ class PaginationAPIContext:
         order_direction = request.args.get(
             "order_direction", default=OrderDirection.desc.value, type=str
         )
+        valid_order_keys = entity.__dict__.keys() - set(Base.__dict__.keys()).union(
+            {"__tablename__"}
+        )
+        if order_by not in valid_order_keys:
+            raise BadRequest(f"Unsupported order_key '{order_by}'")
 
-        order_key = getattr(entity, order_by, None)
-        if order_key is None:
-            raise BadRequest(f"Unsupported order_key '{order_key}'")
-
-        if order_direction == OrderDirection.asc.value:
-            order_key = order_key.asc()
-        else:
-            order_key = order_key.desc()
+        order_key = getattr(entity, order_by)
 
         self.page_size = page_size
         self.page_offset = page_offset

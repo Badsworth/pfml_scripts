@@ -1,32 +1,27 @@
-import { LeaveReason } from "../types";
+import { DocumentReviewTasks, LeaveReason } from "../types";
 import { DocumentUploadRequest } from "../api";
 
 export function getCertificationDocumentType(
-  reason: LeaveReason,
-  hasServicePack: boolean
+  reason: LeaveReason
 ): DocumentUploadRequest["document_type"] {
   // After the SP, document types are renamed.
-  if (hasServicePack) {
-    switch (reason) {
-      case "Child Bonding":
-        return "Child bonding evidence form";
-      case "Serious Health Condition - Employee":
-        return "Own serious health condition form";
-      case "Care for a Family Member":
-        return "Care for a family member form";
-      default:
-        throw new Error(
-          `Unable to determine name of certification doc for leave reason "${reason}"`
-        );
-    }
-  } else {
-    return "State managed Paid Leave Confirmation";
+  switch (reason) {
+    case "Child Bonding":
+      return "Child bonding evidence form";
+    case "Serious Health Condition - Employee":
+      return "Own serious health condition form";
+    case "Care for a Family Member":
+      return "Care for a family member form";
+    default:
+      throw new Error(
+        `Unable to determine name of certification doc for leave reason "${reason}"`
+      );
   }
 }
 
 export function getDocumentReviewTaskName(
   documentType: DocumentUploadRequest["document_type"]
-): string {
+): DocumentReviewTasks {
   switch (documentType) {
     case "Child bonding evidence form":
       return "Bonding Certification Review";

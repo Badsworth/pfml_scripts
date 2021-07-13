@@ -2,15 +2,11 @@ import { get } from "lodash";
 import getInputValueFromEvent from "../utils/getInputValueFromEvent";
 
 /**
- * @typedef {import('./useFormState').FormState} FormState
- */
-
-/**
  * React hook that takes a function that updates formState and returns an event handler
  * that can listen to form input change events and update the appropriate formState fields
  * based on the input name and value.
- * @param {FormState#updateFields} updateFields Function that updates form state with new field values
- * @param {FormState#formState} formState Current form state, before this change
+ * @param {Function} updateFields - FormState#updateFields - updates form state with new field values
+ * @param {object} formState - FormState#formState - Current form state, before this change
  * @returns {handleInputChangeFunction} Event handler that can listen to form input change events and update the appropriate formState fields based on the input name and value.
  */
 const useHandleInputChange = (updateFields, formState = {}) => {

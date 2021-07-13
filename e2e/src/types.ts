@@ -8,6 +8,21 @@ import {
 } from "./_api";
 import { DehydratedClaim } from "./generation/Claim";
 
+export type FeatureFlags = {
+  pfmlTerriyay: boolean;
+  claimantShowAuth: boolean;
+  claimantShowMedicalLeaveType: boolean;
+  noMaintenance: boolean;
+  employerShowSelfRegistrationForm: boolean;
+  claimantShowOtherLeaveStep: boolean;
+  claimantAuthThroughApi: boolean;
+  employerShowAddOrganization: boolean;
+  employerShowVerifications: boolean;
+  employerShowDashboard: boolean;
+  useNewPlanProofs: boolean;
+  showCaringLeaveType: boolean;
+};
+
 export type Credentials = {
   username: string;
   password: string;
@@ -41,7 +56,8 @@ export type SubjectOptions =
   | "denial (claimant)"
   | "approval (claimant)"
   | "review leave hours"
-  | "request for additional info";
+  | "request for additional info"
+  | "extension of benefits";
 
 export type Scenarios = keyof typeof scenarios;
 
@@ -57,6 +73,34 @@ export type PersonalIdentificationDetails = {
     | "Widowed"
     | "Separated";
 };
+
+/**
+ * @FINEOS_TYPES
+ */
+
+/**
+ * Tasks associated with employer response to a claim.
+ */
+export type ERTasks =
+  | "Employer Approval Received"
+  | "Employer Conflict Reported"
+  | "Escalate employer reported accrued paid leave (PTO)"
+  | "Escalate Employer Reported Fraud"
+  | "Escalate Employer Reported Other Income"
+  | "Escalate employer reported past leave";
+/**
+ * Tasks associated with reviewing evidence.
+ */
+export type DocumentReviewTasks =
+  | "Bonding Certification Review"
+  | "Medical Certification Review"
+  | "ID Review"
+  | "Certification Review"
+  | "Caring Certification Review"
+  | "Medical Pregnancy Certification Review";
+export type FineosTasks = DocumentReviewTasks | ERTasks;
+
+export type ClaimStatus = "Adjudication" | "Approved" | "Completed";
 
 /**
  * @note UTILITY TYPES

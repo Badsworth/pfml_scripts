@@ -156,6 +156,7 @@ exports[`IntermittentFrequency renders the page 1`] = `
     visible={true}
   >
     <InputNumber
+      allowNegative={false}
       label="Estimate how many absences over the next 6 months."
       name="leave_details.intermittent_leave_periods[0].frequency"
       onChange={[Function]}
@@ -188,6 +189,7 @@ exports[`IntermittentFrequency renders the page 1`] = `
     />
   </ConditionalContent>
   <InputNumber
+    allowNegative={false}
     label="How many hours of work will you miss per absence?"
     name="leave_details.intermittent_leave_periods[0].duration"
     onChange={[Function]}

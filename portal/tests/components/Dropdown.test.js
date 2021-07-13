@@ -35,6 +35,7 @@ describe("Dropdown", () => {
   it("renders select field with list of options", () => {
     const { wrapper } = render();
 
+    expect(wrapper.exists(".usa-combo-box")).toBe(false);
     expect(wrapper.find("select")).toMatchSnapshot();
   });
 
@@ -62,7 +63,7 @@ describe("Dropdown", () => {
     const label1 = wrapper1.find("FormLabel");
     const input2 = wrapper2.find(".usa-select");
 
-    const idRegex = new RegExp("Dropdown[0-9]+");
+    const idRegex = /Dropdown[0-9]+/;
 
     expect(input1.prop("id")).toMatch(idRegex);
     expect(input1.prop("id")).not.toBe(input2.prop("id"));
@@ -127,9 +128,7 @@ describe("Dropdown", () => {
 
   describe("when change event is triggered", () => {
     it("calls onChange", () => {
-      const { props, wrapper } = render({
-        onChange: jest.fn(),
-      });
+      const { props, wrapper } = render();
 
       wrapper.find(".usa-select").simulate("change");
 
@@ -186,6 +185,15 @@ describe("Dropdown", () => {
 
       expect(wrapper.find("option")).toHaveLength(2);
       expect(wrapper.find("option").first().prop("value")).toEqual("a");
+    });
+  });
+
+  describe("when `autocomplete` is true", () => {
+    it("renders the list of options as combo-box", () => {
+      const { wrapper } = render({ autocomplete: true });
+
+      expect(wrapper.exists(".usa-combo-box")).toBe(true);
+      expect(wrapper.find(".usa-combo-box")).toMatchSnapshot();
     });
   });
 });

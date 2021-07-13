@@ -412,6 +412,9 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
         row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date]
         == payment.period_end_date.isoformat()
     )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_weeks] == str(
+        payments_util.get_period_in_weeks(payment.period_start_date, payment.period_end_date)
+    )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_amount] == str(payment.amount)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number] == payment.claim.fineos_absence_id
     assert row[PAYMENT_AUDIT_CSV_HEADERS.c_value] == payment.fineos_pei_c_value

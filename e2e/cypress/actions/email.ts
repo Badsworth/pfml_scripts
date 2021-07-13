@@ -36,6 +36,7 @@ export const getNotificationSubject = function (
     "approval (claimant)": "Your paid leave application was Approved",
     "request for additional info": `Action required: Provide additional information for your paid leave application ${caseNumber}`,
     "review leave hours": `${employeeName} reported their intermittent leave hours`,
+    "extension of benefits": `${employeeName} requested to extend their paid leave application with the Commonwealth of MA`,
   };
   if (notificationType in notificationSubjects) {
     return notificationSubjects[notificationType];

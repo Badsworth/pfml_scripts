@@ -106,6 +106,7 @@ const InputHours = (props) => {
         inputMode="numeric"
         value={isNil(props.value) ? "" : hoursMinutes.hours}
         valueType="integer"
+        allowNegative={false}
         onChange={handleHoursChange}
       />
       <Dropdown

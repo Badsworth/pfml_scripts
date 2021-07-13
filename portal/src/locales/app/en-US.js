@@ -22,7 +22,7 @@ const errors = {
   applications: {
     concurrent_leave: {
       is_for_current_employer: {
-        required: "Select yes if your leave is from this employer.",
+        required: "Select Yes if your leave is from this employer.",
       },
       leave_end_date: {
         format:
@@ -83,7 +83,7 @@ const errors = {
     },
     employer_notified: {
       required:
-        "Select yes if you told your employer that you are taking leave.",
+        "Select Yes if you told your employer that you are taking leave.",
     },
     employment_status: {
       required: "Enter your employment status.",
@@ -98,39 +98,39 @@ const errors = {
     },
     has_concurrent_leave: {
       required:
-        "Select yes if you will use any other paid leave during your PFML leave.",
+        "Select Yes if you will use any other paid leave during your PFML leave.",
     },
     has_continuous_leave_periods: {
       required: "Select Yes if you are taking continuous leave.",
     },
     has_employer_benefits: {
       required:
-        "Select yes if you will you use any employer-sponsored benefits during your leave.",
+        "Select Yes if you will you use any employer-sponsored benefits during your leave.",
     },
     has_intermittent_leave_periods: {
       required: "Select Yes if you are taking intermittent leave.",
     },
     has_mailing_address: {
-      required: "Select yes if you get your mail at this address.",
+      required: "Select Yes if you get your mail at this address.",
     },
     has_other_incomes: {
       required:
-        "Select yes if you will receive income from any other sources during your leave.",
+        "Select Yes if you will receive income from any other sources during your leave.",
     },
     has_previous_leaves_other_reason: {
       required:
-        "Select yes if you have taken any other leave since January 1, 2021 for a different qualifying reason.",
+        "Select Yes if you have taken any other leave since January 1, 2021 for a different qualifying reason.",
     },
     has_previous_leaves_same_reason: {
       required:
-        "Select yes if you have taken any other leave for the same qualifying reason.",
+        "Select Yes if you have taken any other leave for the same qualifying reason.",
     },
     has_reduced_schedule_leave_periods: {
       required: "Select Yes if you are working a reduced schedule.",
     },
     has_state_id: {
       required:
-        "Select yes if you have a Massachusetts driver’s license or ID card.",
+        "Select Yes if you have a Massachusetts driver's license or ID card.",
     },
     hours_worked_per_week: {
       maximum: "The average hours you work each week must be less than 168.",
@@ -196,7 +196,7 @@ const errors = {
       },
       employer_notified: {
         required:
-          "Select yes if you told your employer that you are taking leave",
+          "Select Yes if you told your employer that you are taking leave",
       },
       intermittent_leave_periods: {
         duration: {
@@ -233,7 +233,7 @@ const errors = {
       },
       pregnant_or_recent_birth: {
         required:
-          "Select yes if are you taking medical leave because you are pregnant or recently gave birth.",
+          "Select Yes if are you taking medical leave because you are pregnant or recently gave birth.",
       },
       reason: {
         required: "Select the reason for taking paid leave.",
@@ -453,13 +453,19 @@ const errors = {
     },
     residential_address: {
       city: {
+        maxLength: "City must be 40 characters or fewer.",
         required: "Enter a city for your residential address.",
       },
       line_1: {
+        maxLength: "Address must be 40 characters or fewer.",
         required: "Enter the street address for your residential address.",
+      },
+      line_2: {
+        maxLength: "Address line 2 must be 40 characters or fewer.",
       },
       required: "Enter a residential address.",
       state: {
+        maxLength: "State must be 40 characters or fewer.",
         required: "Enter a state for your residential address.",
       },
       zip: {
@@ -579,6 +585,8 @@ const errors = {
     comment: {
       maxLength: "$t(shared.maxEmployerCommentLengthError)",
     },
+    contains_v1_and_v2_eforms:
+      "<h3>Call the contact center to review this application</h3><p>We can’t display this application for review online. To review this application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p><strong>What you will need to know when you call the agent:</strong></p><ul><li>The employee’s name and application ID. You can find these on the Dashboard, or in the email we sent to tell you that you can review this application.</li><li>The error code for this error: <strong>V-12</strong>.</li></ul><strong>Why you are seeing this error:</strong> Your employee told us about some other leave and benefits they are receiving in addition to paid leave from PFML. This information was added to their application recently. In some cases, when an employee who submitted an application before July 15th then adds other leave and benefits information later, it can cause this error.<p>This is a rare error that will not happen with new applications.</p>",
     ein: {
       employer_verification_data_required:
         "$t(shared.ein.employer_verification_data_required)",
@@ -705,7 +713,7 @@ const shared = {
     addButton: "Add another previous leave",
     errors: {
       isForCurrentEmployer_required:
-        "Select yes if your leave is from this employer.",
+        "Select Yes if your leave is from this employer.",
       leaveEndDate_format:
         "The date your leave ended must include a valid month, day, and year.",
       leaveEndDate_invalidDateRange:
@@ -817,16 +825,6 @@ const shared = {
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
   noneReported: "None reported",
-  noticeDate: "Posted {{date}}",
-  noticeName: "Other notice", // it should fallback to this if we receive an unexpected or undefined enum
-  noticeName_approvalNotice: "Approval notice",
-  noticeName_denialNotice: "Denial notice",
-  noticeName_pdf: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
-  noticeName_pdf_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
-  noticeName_pdf_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
-  noticeName_pdf_requestForInfoNotice:
-    "Request for more information $t(shared.pdfNoticeSuffix)",
-  noticeName_requestForInfoNotice: "Request for more information",
   otherIncomeEntryPrefix: "Income",
   otherIncomeType_jonesAct: "Jones Act benefits",
   otherIncomeType_otherEmployer:
@@ -872,7 +870,7 @@ const pages = {
   },
   authCreateAccount: {
     alertBody:
-      "<p>You can apply online if you’re currently employed in Massachusetts.</p><p>If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p><mass-benefits-timeline-link>Learn more about the paid leave benefit timeline.</mass-benefits-timeline-link></p>",
+      "<p>You can apply online if you’re currently employed in Massachusetts.</p><p>If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     alertHeading: "You can now apply for paid family and medical leave.",
     areAnEmployer:
       "<strong>Are you a Massachusetts employer?</strong> <employer-create-account-link>Create an employer account</employer-create-account-link> to manage leave for your team.",
@@ -1002,6 +1000,12 @@ const pages = {
     completed_uneditable: "Confirmed",
     documentsLoadError: "$t(shared.documentsLoadError)",
     edit: "Edit",
+    // TODO (CP-2354) Remove CC guidance for claims with Part 1 submitted without reductions data
+    otherLeaveSubmittedDetailsBody:
+      "<ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 <when-can-i-use-pfml>for any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
+    otherLeaveSubmittedDetailsLabel: "What do I need to report?",
+    otherLeaveSubmittedIntro:
+      "<p>If you have any other leaves, benefits, or income to report, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     partOneSubmittedDescription:
       "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Now, you can work on Parts 2 and 3, and submit your application.",
     partOneSubmittedHeading: "Part 1 of your application was confirmed.",
@@ -1027,7 +1031,7 @@ const pages = {
       "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
       "<p>If you’re not sure what kind of leave to apply for, <which-paid-leave-link>learn more about Paid Family and Medical Leave</which-paid-leave-link>.</p><p><strong>Are you taking medical leave for your own serious health condition?</strong></p><p>You need to have a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p>",
-    // TODO (CP-1983) Merge leaveDetails and leaveDetailsWithCaring when showCaringLeave feature flag is not needed
+    // TODO (CP-2311) Merge leaveDetails and leaveDetailsWithCaring when showCaringLeave feature flag is not needed
     stepHTMLDescription_leaveDetailsWithCaring:
       "<p>If you’re not sure what kind of leave to apply for, <which-paid-leave-link>learn more about Paid Family and Medical Leave</which-paid-leave-link>.</p><p><strong>Are you taking medical leave for your own serious health condition?</strong></p><p>You need to have a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship</caregiver-relationship-link>.</p>",
     stepHTMLDescription_medical:
@@ -1289,8 +1293,7 @@ const pages = {
     datesSectionLabel:
       "Enter the start and end dates for your intermittent leave.",
     endDateLabel: "Last day of leave",
-    endDateLabel_medical:
-      "Last day of leave or re$t(chars.nbhyphen)evaluation date",
+    endDateLabel_medical: "Last day of leave",
     hasLeaveHint_bonding:
       "For example, you need to take time off for: <ul><li>Court dates for your foster child</li><li>Social worker visits</li><li>Gaps in your childcare</li></ul>",
     hasLeaveHint_care:
@@ -1322,8 +1325,7 @@ const pages = {
     datesSectionLabel:
       "Enter the start and end dates for your reduced leave schedule.",
     endDateLabel: "Last day of leave",
-    endDateLabel_medical:
-      "Last day of leave or re$t(chars.nbhyphen)evaluation date",
+    endDateLabel_medical: "Last day of leave",
     hasLeaveHint_care:
       "Your answer must match the $t(shared.certificationFormCare).",
     hasLeaveHint_medical:
@@ -1354,6 +1356,9 @@ const pages = {
       "Leave is determined based on benefit year (365 days from the start of the first week you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child. <multiple-births-link>Learn more about taking leave for multiple childbirths or placements</multiple-births-link>.",
     bondingTypeNewbornLabel: "Birth",
     caringLeaveLabel: "I need to care for my family member.",
+    leaveReasonChangedAlertBody:
+      "Earlier you reported taking previous leave for the same reason you are applying now, but you are about to change that reason.<br/><br/>Save and continue to change your leave reason, then review the previous leave you reported to make sure the reason you took that leave is still accurate.",
+    leaveReasonChangedAlertTitle: "Review your previous leave",
     medicalLeaveLabel: "I can’t work due to my illness, injury, or pregnancy.",
     sectionHint: "You can only request one leave at a time.",
     sectionLabel: "Why do you need to take leave?",
@@ -1549,6 +1554,8 @@ const pages = {
       "Select No if your current paid leave from PFML began on July 1, 2021.",
     sectionLabel:
       "Did you take any other leave between {{previousLeaveStartDate}}–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
+    sectionLabel_caring:
+      "Did you take any other leave between {{previousLeaveStartDate}} and the first day of the leave you are applying for, for the same reason as you are applying?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesSameReasonDetails: {
@@ -1625,6 +1632,7 @@ const pages = {
     amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
     amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
     amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",
+    amountPerFrequency_unknown: "",
     amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     childBirthDateLabel: "Child’s date of birth",
     childPlacementDateLabel: "Child’s placement date",
@@ -1686,6 +1694,8 @@ const pages = {
       "Estimated {{frequency}} absences per week, each lasting {{duration}} days.",
     intermittentFrequencyDuration_weeks_hours:
       "Estimated {{frequency}} absences per week, each lasting {{duration}} hours.",
+    isForCurrentEmployer_false: "From a different employer",
+    isForCurrentEmployer_true: "From this employer",
     leaveDetailsSectionHeading: "$t(shared.leaveDetailsStepTitle)",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
@@ -1741,11 +1751,9 @@ const pages = {
     pregnancyOrRecentBirth_yes: "$t(shared.choiceYes)",
     previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",
     previousLeaveHasPreviousLeavesLabel: "Previous leave?",
-    previousLeaveIsForCurrentEmployer_false: "From a different employer",
-    previousLeaveIsForCurrentEmployer_true: "From this employer",
     previousLeaveLabel: "Previous paid or unpaid leave?",
     previousLeaveLeaveMinutes: "$t(shared.displayTime)",
-    previousLeaveLeaveMinutesLabel: "Total hours taken: ",
+    previousLeaveLeaveMinutesLabel: "Total hours of leave taken: ",
     previousLeaveLeaveMinutes_noMinutes: "$t(shared.displayTime_noMinutes)",
     previousLeaveReason_activeDutyFamily:
       "Leave was for managing family affairs while a family member was on active duty in the armed forces",
@@ -1870,6 +1878,8 @@ const pages = {
     proofRequired_medicalPregnantFuture:
       "You must call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> once your medical leave begins to confirm that your leave has begun. We can’t approve your application until we hear from$t(chars.nbsp)you.",
     reportReductionsHeading: "We may need more information from you",
+    reportReductionsMessage:
+      "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if any of these are true:</p><ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 for <when-can-i-use-pfml>any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
     reportReductionsProcess:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you’ll receive:</p><ul><li>Any <reductions-employer-benefits-link>benefits from your employer</reductions-employer-benefits-link> that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from <reductions-overview-link>any other sources</reductions-overview-link> during your leave</li></ul>",
     title: "You submitted your application",
@@ -2061,17 +2071,6 @@ const pages = {
     leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    noticeDate: "$t(shared.noticeDate)",
-    noticeName: "$t(shared.noticeName)",
-    noticeName_approvalNotice: "$t(shared.noticeName_approvalNotice)",
-    noticeName_denialNotice: "$t(shared.noticeName_denialNotice)",
-    noticeName_pdf: "$t(shared.noticeName_pdf)",
-    noticeName_pdf_approvalNotice: "$t(shared.noticeName_pdf_approvalNotice)",
-    noticeName_pdf_denialNotice: "$t(shared.noticeName_pdf_denialNotice)",
-    noticeName_pdf_requestForInfoNotice:
-      "$t(shared.noticeName_pdf_requestForInfoNotice)",
-    noticeName_requestForInfoNotice:
-      "$t(shared.noticeName_requestForInfoNotice)",
     noticesLabel: "Notices",
     statusLabel: "Status",
     title: "Application status for {{name}}",
@@ -2089,11 +2088,24 @@ const pages = {
     betaHeader: "We're making it easier to manage paid leave applications",
     betaMessage:
       "Our dashboard is in beta. You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can <user-feedback-link>use our feedback form</user-feedback-link> to tell us what you think of our new features.",
+    filterNavLabel: "Filters:",
     filterOrgsLabel: "Organizations",
-    filterOrgsShowAllChoice: "All organizations",
+    filterRemove: "Remove filter:",
+    filterStatusChoice_Approved: "$t(shared.absenceCaseStatus_approved)",
+    filterStatusChoice_Closed: "$t(shared.absenceCaseStatus_closed)",
+    filterStatusChoice_Declined: "$t(shared.absenceCaseStatus_denied)",
+    filterStatusChoice_Pending: "--",
+    filterStatusLabel: "Status",
+    filtersApply: "Apply filters",
+    filtersReset: "Reset all filters",
+    filtersShowWithCount: "Show filters ({{count}})",
+    filtersToggle: "Show filters",
+    filtersToggle_expanded: "Hide filters",
     instructions:
       "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
+    searchLabel: "Search for employee name or application ID",
+    searchSubmit: "Search",
     startDateTooltip: "When an employee started a new leave application",
     statusDescription_approved:
       "<strong>Approved:</strong> DFML has approved this leave request.",
@@ -2158,7 +2170,7 @@ const pages = {
     companyNameLabel: "<strong>Organization:</strong> {{company}}",
     detailsLabel: "Where to find your paid leave contributions",
     detailsList:
-      "Log into <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Accounts</strong> tab, select <strong>Paid Family and Medical Leave</strong>.</li><li>On the <strong>Periods</strong> tab, select <strong>{{date}}</strong>. If you don't have access to MassTaxConnect, we recommend asking your payroll department to copy the data from the <recent-filing-periods-link>4 most recent filing periods</recent-filing-periods-link>.</li><li>Copy the <strong>Tax</strong> amount from the <strong>Summary</strong> section.</li></ol>If you have any questions about your paid leave contributions, please contact the Department of Revenue at <dor-phone-link><strong>$t(shared.departmentOfRevenuePhoneNumber)</strong></dor-phone-link> from 9am-4pm ET.",
+      "Log into <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Summary</strong> page, scroll down to the <strong>Paid Family and Medical Leave</strong> section on the left. In the <strong>Account</strong> portion, select <strong>Returns</strong>.</li><li>Choose <strong>the last period</strong> for which a return has been <strong>received</strong>. For example, if you remitted your contributions for 3-31-2021, and the return has been processed and designated as ‘received’, you can use the amount from that period to verify your account. If you have not yet remitted your contributions or it is still being processed, use the amount from the most recent period for which you filed that has been processed.</li><li>Go into the return. Click <strong>View or Amend Return</strong>. Then select <strong>Next</strong> at the bottom. Look to <strong>line 6</strong> and you will find the <strong>Total Contributions Due</strong>.</li><li>Copy the <strong>Total Contributions Due</strong> amount for verification.</li></ol>If you have any questions about your paid leave contributions, please contact the Department of Revenue at <dor-phone-link><strong>$t(shared.departmentOfRevenuePhoneNumber)</strong></dor-phone-link> from 9am-4pm ET.",
     employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     lead:
@@ -2277,10 +2289,8 @@ const pages = {
       "To find out more about how the Commonwealth might use the information you share with the Department of Family and Medical Leave, please read the <informed-consent-link>DFML Informed Consent Agreement</informed-consent-link> and the <privacy-policy-link>Privacy Policy for Mass.gov</privacy-policy-link>.",
     fullUserAgreementHeading: "Read the full user agreements",
     intro:
-      "The information you provide on this website will be used to administer the Paid Family and Medical Leave program.",
+      "The information you provide on this website will be used to administer the Paid Family and Medical Leave program. To continue using this website, you must agree to the terms of the user agreements updated as of June$t(chars.nbsp)25,$t(chars.nbsp)2021.",
     title: "How this website uses your information",
-    updatedMessage:
-      "To continue using this website, you must agree to the terms of the user agreements updated as of July$t(chars.nbsp)1,$t(chars.nbsp)2021.",
   },
 };
 
@@ -2296,10 +2306,6 @@ const components = {
   },
   amendmentForm: {
     cancel: "Cancel amendment",
-    question_leavePeriodDuration:
-      "On average, how many hours does the employee work each week?",
-    question_leavePeriodDuration_hint:
-      "If their schedule varies, tell us the average number of hours worked over the past 52 weeks.",
   },
   applicationCard: {
     actionsHeading: "Actions",
@@ -2319,27 +2325,17 @@ const components = {
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    noticeDate: "$t(shared.noticeDate)",
-    noticeName: "$t(shared.noticeName)",
-    noticeName_approvalNotice: "$t(shared.noticeName_approvalNotice)",
-    noticeName_denialNotice: "$t(shared.noticeName_denialNotice)",
-    noticeName_pdf: "$t(shared.noticeName_pdf)",
-    noticeName_pdf_approvalNotice: "$t(shared.noticeName_pdf_approvalNotice)",
-    noticeName_pdf_denialNotice: "$t(shared.noticeName_pdf_denialNotice)",
-    noticeName_pdf_requestForInfoNotice:
-      "$t(shared.noticeName_pdf_requestForInfoNotice)",
-    noticeName_requestForInfoNotice:
-      "$t(shared.noticeName_requestForInfoNotice)",
     noticesDownload:
       "When you click the notice link, the file will download to your device.",
     noticesFallback:
       "Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.",
     noticesHeading: "Download your notices",
-    reductionsInstruction_1:
-      "Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)",
-    reductionsInstruction_2: "Income from any other sources during your leave",
-    reductionsInstructionsIntro:
-      "If you’ll receive <reductions-overview-link>other benefits or income</reductions-overview-link>, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. This includes:",
+    reductionsInstructions:
+      "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer-sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit after you submitted your application, report this change.</li></ul>",
+    reductionsInstructions_missingData:
+      "<p>If you have other leave, benefits, and income to report, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report any of these situations:</p><ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 for <when-can-i-use-pfml>any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
+    reductionsInstructions_old:
+      "<p>If you’ll receive <reductions-overview-link>other benefits or income</reductions-overview-link>, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. This includes:</p><ul><li>Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from any other sources during your leave</li></ul>",
     resumeClaimButton: "Continue application",
     uploadDocsButton: "Upload additional documents",
   },
@@ -2369,6 +2365,14 @@ const components = {
     body_id:
       "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
     header: "Document Requirements:",
+  },
+  downloadableDocument: {
+    createdAtDate: "Posted {{date}}",
+    noticeName: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
+    noticeName_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
+    noticeName_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
+    noticeName_requestForInfoNotice:
+      "Request for more information $t(shared.pdfNoticeSuffix)",
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
@@ -2424,12 +2428,13 @@ const components = {
     title: "Add an employer-sponsored benefit",
   },
   employersAmendablePreviousLeave: {
-    addButton: "Add another previous leave",
+    addButton_first: "Add a previous leave",
+    addButton_subsequent: "Add another previous leave",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     destroyButtonLabel_add: "Cancel addition",
     destroyButtonLabel_amend: "Cancel amendment",
-    heading_add: "Add a new previous leave",
+    heading_add: "Add a previous leave",
     heading_amend: "Amend previous leave",
     isForSameReasonAsLeaveReasonLabel:
       "Was this leave for the same reason as their paid leave request?",
@@ -2454,7 +2459,7 @@ const components = {
       "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
   },
   employersConcurrentLeave: {
-    addButton: "Add a concurrent leave",
+    addButton: "Add an accrued paid leave",
     dateRangeLabel: "Date range",
     explanation:
       "Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program. There’s a 7-day unpaid waiting period, and employees are allowed to use accrued paid leave to overlap that period.",
@@ -2475,7 +2480,8 @@ const components = {
       "Did the employee give you at least 30 days notice about their leave?",
   },
   employersEmployerBenefits: {
-    addButton: "Add a benefit",
+    addButton_first: "Add an employer-sponsored benefit",
+    addButton_subsequent: "Add another employer-sponsored benefit",
     amountFrequency: "Select a frequency",
     amountFrequency_daily: "$t(shared.amountFrequency_daily)",
     amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
@@ -2489,8 +2495,10 @@ const components = {
     amountPerFrequency_unknown: "$t(shared.amountPerFrequency_unknown)",
     amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     benefitTypeLabel: "Benefit type",
-    caption:
-      "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
+    caption_v1:
+      "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, paid time off (PTO) or accrued paid leave, and family or medical leave benefits such as a parental leave program. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
+    caption_v2:
+      "Your employee is planning to use these benefits during their paid leave under PFML. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. For paid time off (PTO) and other accrued paid leave your employee will use, review “Concurrent accrued paid leave” above. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
     fullSalaryContinuous: "Full salary continuous",
@@ -2506,8 +2514,6 @@ const components = {
     heading: "Have you approved or denied this leave request?",
   },
   employersFeedback: {
-    addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
-    addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     commentSolicitation: "Please tell us more.",
@@ -2517,10 +2523,7 @@ const components = {
       "Please tell us why you denied this leave request.",
     commentSolicitation_fraud:
       "Please tell us why you believe this is fraudulent.",
-    fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
     instructionsLabel: "Do you have any additional comments or concerns?",
-    supportingDocumentationLabel:
-      "If you have any supporting documentation, please attach it for review.",
   },
   employersFraudReport: {
     alertBody:
@@ -2565,13 +2568,13 @@ const components = {
     choiceUnknown: "I don't know",
     choiceYes: "Yes",
     commentHeading: "Tell us why you think this relationship is inaccurate.",
+    documentName: "Your employee's certification document",
     documentationLabel: "Documentation",
     familyMemberRelationshipHint:
       "This employee has attested the family member relationship is <eligible-relationship-link>a covered relationship</eligible-relationship-link>. If something on the form seems incorrect, add a comment at the end of the page.",
     familyMemberRelationshipLabel:
       "Do you believe the listed relationship is described accurately? (Optional)",
     header: "Leave details",
-    healthCareProviderFormLink: "$t(shared.certificationFormMedical)",
     inaccurateRelationshipAlertHeading:
       "The employee will be denied paid leave.",
     inaccurateRelationshipAlertLead:
@@ -2638,6 +2641,13 @@ const components = {
   },
   employersSupportingWorkDetails: {
     header: "Supporting work details",
+    heading_amend: "Amend weekly hours worked",
+    leavePeriodDurationHint:
+      "If their schedule varies, tell us the average number of hours worked over the past 52 weeks.",
+    leavePeriodDurationLabel:
+      "On average, how many hours does the employee work each week?",
+    subtitle_amend:
+      "This amendment will get saved when you submit your review.",
     weeklyHoursWorkedLabel: "Weekly hours worked",
   },
   errorBoundary: {

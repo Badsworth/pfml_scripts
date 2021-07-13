@@ -144,8 +144,8 @@ module "fineos_extract_scheduler" {
           "fineos-bucket-tool",
           "--recursive",
           "--dated-folders",
-          "--copy_dir", "${var.fineos_data_export_path}",
-          "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/reportExtracts",
+          "--copy_dir", "${var.fineos_report_export_path}",
+          "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/dataexports",
           "--file_prefixes", "all"
         ]
       }
@@ -203,6 +203,7 @@ module "fineos_error_extract_scheduler" {
           "--dated-folders",
           "--copy_dir", "${var.fineos_error_export_path}",
           "--to_dir", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/cps-errors/received/",
+          "--archive_dir", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/cps-errors/processed/",
           "--file_prefixes", "all"
         ]
       }
@@ -240,7 +241,7 @@ module "export_leave_admins_created_scheduler" {
               "--s3_output=api_db/accounts_created",
               "--s3_bucket=massgov-pfml-${var.environment_name}-business-intelligence-tool",
               "--use_date",
-              "SELECT pu.email_address as email, pu.user_id as user_id, pu.active_directory_id as cognito_id,ula.fineos_web_id as fineos_id,e.employer_name as employer_name,e.employer_dba as employer_dba,e.employer_fein as fein,e.fineos_employer_id as fineos_customer_number,ula.created_at as date_created FROM public.user pu LEFT JOIN link_user_leave_administrator ula ON (pu.user_id=ula.user_id) LEFT JOIN employer e ON (ula.employer_id=e.employer_id) WHERE ula.created_at >= now() - interval '24 hour'"
+              "SELECT pu.email_address as email, pu.user_id as user_id, pu.sub_id as cognito_id,ula.fineos_web_id as fineos_id,e.employer_name as employer_name,e.employer_dba as employer_dba,e.employer_fein as fein,e.fineos_employer_id as fineos_customer_number,ula.created_at as date_created FROM public.user pu LEFT JOIN link_user_leave_administrator ula ON (pu.user_id=ula.user_id) LEFT JOIN employer e ON (ula.employer_id=e.employer_id) WHERE ula.created_at >= now() - interval '24 hour'"
             ]
           }
         ]
@@ -333,11 +334,11 @@ module "reductions_dua_send_claimant_lists_scheduler" {
   JSON
 }
 
-module "reductions_retrieve_payment_listsscheduler" {
+module "reductions_process_agency_data_lists_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
-  is_enabled = var.enable_reductions_retrieve_payment_lists_from_agencies_schedule
+  is_enabled = var.enable_reductions_process_agency_data_schedule
 
-  task_name           = "reductions-retrieve-payment-lists"
+  task_name           = "reductions-process-agency-data"
   schedule_expression = "cron(0/15 8-23,0 * * ? *)"
   environment_name    = var.environment_name
 
@@ -345,26 +346,8 @@ module "reductions_retrieve_payment_listsscheduler" {
   app_subnet_ids     = var.app_subnet_ids
   security_group_ids = [aws_security_group.tasks.id]
 
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-retrieve-payment-lists"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-retrieve-payment-lists"].family
-  ecs_task_executor_role     = aws_iam_role.reductions_workflow_execution_role.arn
-  ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
-}
-
-module "reductions-send-wage-replacement-payments-to-dfml" {
-  source     = "../../modules/ecs_task_scheduler"
-  is_enabled = var.enable_reductions_send_wage_replacement_payments_to_dfml_schedule
-
-  task_name           = "reductions-send-wage-replacement"
-  schedule_expression = "cron(0 14 ? * MON-FRI *)"
-  environment_name    = var.environment_name
-
-  cluster_arn        = data.aws_ecs_cluster.cluster.arn
-  app_subnet_ids     = var.app_subnet_ids
-  security_group_ids = [aws_security_group.tasks.id]
-
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-send-wage-replacement"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-send-wage-replacement"].family
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-process-agency-data"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-process-agency-data"].family
   ecs_task_executor_role     = aws_iam_role.reductions_workflow_execution_role.arn
   ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
 }
