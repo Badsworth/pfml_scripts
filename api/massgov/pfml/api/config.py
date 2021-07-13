@@ -35,7 +35,7 @@ class AppConfig:
     dashboard_password: str
     new_plan_proofs_active_at: datetime
     azure_sso: MSALClientConfig
-
+    secret_key: str
 
 def get_config() -> AppConfig:
     return AppConfig(
@@ -58,5 +58,6 @@ def get_config() -> AppConfig:
         new_plan_proofs_active_at=datetime.fromisoformat(
             os.environ.get("NEW_PLAN_PROOFS_ACTIVE_AT", "2021-06-26 00:00:00+00:00")
         ),
-        azure_sso=MSALClientConfig.from_env()
+        azure_sso=MSALClientConfig.from_env(),
+        secret_key=os.urandom(16)
     )

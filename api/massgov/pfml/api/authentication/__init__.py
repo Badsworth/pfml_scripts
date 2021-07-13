@@ -48,7 +48,6 @@ def get_sso_auth_code():
     
     return redirect("www.google.com", code=302)
 
-
 def get_msal_client(config: Optional[MSALClientConfig]):
     global authCodeRequest, tokenRequest, msal
 

@@ -12,9 +12,8 @@ import connexion.mock
 import flask
 import flask_cors
 import newrelic.api.time_trace
-from flask import Flask, current_app, g
-from flask.ext.session import Session
-from sqlalchemy.orm import Session as AlchemySession
+from flask import Flask, current_app, g, session
+from sqlalchemy.orm import Session
 
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
@@ -29,13 +28,15 @@ from massgov.pfml.db.models.employees import User
 
 from .reverse_proxy import ReverseProxied
 
+import msal
+
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def create_app(
     config: Optional[AppConfig] = None,
     check_migrations_current: bool = True,
-    db_session_factory: Optional[AlchemySession] = None,
+    db_session_factory: Optional[Session] = None,
     do_close_db: bool = True,
 ) -> connexion.FlaskApp:
     logger.info("Creating API Application...")
@@ -72,9 +73,8 @@ def create_app(
 
     flask_cors.CORS(flask_app, origins=config.cors_origins, supports_credentials=True)
 
-    session = Session()
-    session.init_app(flask_app)
-    # Set up bouncer # MSAL?
+    #« session?
+    # Set up bouncer
     authorization_path = massgov.pfml.api.authorization.rules.create_authorization(
         config.enable_employee_endpoints
     )
@@ -120,6 +120,69 @@ def create_app(
 
     massgov.pfml.api.dashboards.init(app, config.dashboard_password)
 
+    # @app.route("/admin/login")
+    def login():
+        # Technically we could use empty list [] as scopes to do just sign in,
+        # here we choose to also collect end user consent upfront
+        session["flow"] = _build_auth_code_flow(scopes=config.azure_sso.scopes)
+        auth_url = session["flow"]["auth_uri"]
+        return auth_url
+
+    # Its absolute URL must match your app's redirect_uri set in AAD
+    # @app.route(config.azure_sso.redirectUri)  
+    def authorized():
+        try:
+            cache = _load_cache()
+            result = _build_msal_app(cache=cache).acquire_token_by_auth_code_flow(
+                session.get("flow", {}), request.args)
+            if "error" in result:
+                return render_template("auth_error.html", result=result)
+            session["user"] = result.get("id_token_claims")
+            _save_cache(cache)
+        except ValueError:  # Usually caused by CSRF
+            pass  # Simply ignore them
+        return redirect(url_for("index"))
+
+    # @app.route("/admin/logout")
+    def logout():
+        # Wipe out user and its token cache from session
+        session.clear()
+        # Also logout from your tenant's web session
+        return redirect(
+            config.azure_sso.authority + "/oauth2/v2.0/logout" +
+            "?post_logout_redirect_uri=" + url_for("index", _external=True)
+        )
+
+
+    def _build_auth_code_flow(authority=None, scopes=None):
+        return _build_msal_app(authority=authority).initiate_auth_code_flow(
+            scopes or [],
+            redirect_uri=url_for("authorized", _external=True))
+
+    def _build_msal_app(cache=None, authority=None):
+        return msal.ConfidentialClientApplication(
+            config.azure_sso.clientId, authority=authority or config.azure_sso.authority,
+            client_credential=config.azure_sso.clientSecret, token_cache=cache)
+
+    def _save_cache(cache):
+        if cache.has_state_changed:
+            session["token_cache"] = cache.serialize()
+
+    def _load_cache():
+        cache = msal.SerializableTokenCache()
+        if session.get("token_cache"):
+            cache.deserialize(session["token_cache"])
+        return cache
+
+    def _get_token_from_cache(scope=None):
+        cache = _load_cache()  # This web app maintains one cache per session
+        sso = _build_msal_app(cache=cache)
+        accounts = sso.get_accounts()
+        if accounts:  # So all account(s) belong to the current signed-in user
+            result = sso.acquire_token_silent(scope, account=accounts[0])
+            _save_cache(cache)
+            return result
+    
     return app
 
 
@@ -168,33 +231,3 @@ def get_project_root_dir() -> str:
 
 def openapi_filenames() -> List[str]:
     return ["openapi.yaml"]
-
-
-def _load_cache():
-    cache = msal.SerializableTokenCache()
-    if session.get("token_cache"):
-        cache.deserialize(session["token_cache"])
-    return cache
-
-def _save_cache(cache):
-    if cache.has_state_changed:
-        session["token_cache"] = cache.serialize()
-
-def _build_msal_app(cache=None, authority=None):
-    return msal.ConfidentialClientApplication(
-        app_config.CLIENT_ID, authority=authority or app_config.AUTHORITY,
-        client_credential=app_config.CLIENT_SECRET, token_cache=cache)
-
-def _build_auth_code_flow(authority=None, scopes=None):
-    return _build_msal_app(authority=authority).initiate_auth_code_flow(
-        scopes or [],
-        redirect_uri=url_for("authorized", _external=True))
-
-def _get_token_from_cache(scope=None):
-    cache = _load_cache()  # This web app maintains one cache per session
-    cca = _build_msal_app(cache=cache)
-    accounts = cca.get_accounts()
-    if accounts:  # So all account(s) belong to the current signed-in user
-        result = cca.acquire_token_silent(scope, account=accounts[0])
-        _save_cache(cache)
-        return result
