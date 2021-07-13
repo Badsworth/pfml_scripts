@@ -2,7 +2,7 @@ import PreviousLeave, {
   PreviousLeaveType,
 } from "../../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
-import { get, isEqual, omit } from "lodash";
+import { get, isEqual, isNil, omit } from "lodash";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
@@ -33,6 +33,8 @@ import formatDateRange from "../../../utils/formatDateRange";
 import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
 import routes from "../../../routes";
 import updateAmendments from "../../../utils/updateAmendments";
+import useFormState from "../../../hooks/useFormState";
+import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
@@ -59,17 +61,29 @@ export const Review = (props) => {
     });
   }
 
-  const [formState, setFormState] = useState({
+  // Generate id based on index for employer benefit and previous leave (id is not provided by API)
+  // Note: these indices are used to properly display inline errors and amend employer benefits and
+  // previous leaves. If employer_benefit_id and previous_leave_id no longer match the indices, then
+  // the functionality described above will need to be reimplemented.
+  const indexedEmployerBenefits = claim.employer_benefits.map(
+    (benefit, index) =>
+      new EmployerBenefit({ ...benefit, employer_benefit_id: index })
+  );
+  const indexedPreviousLeaves = claim.previous_leaves.map(
+    (leave, index) => new PreviousLeave({ ...leave, previous_leave_id: index })
+  );
+
+  const { clearField, getField, formState, updateFields } = useFormState({
     // base fields
     concurrentLeave: claim.concurrent_leave,
     amendedConcurrentLeave: claim.concurrent_leave,
-    employerBenefits: [],
-    amendedBenefits: [],
-    previousLeaves: [],
-    amendedPreviousLeaves: [],
-    amendedHours: 0,
+    employerBenefits: indexedEmployerBenefits,
+    amendedBenefits: indexedEmployerBenefits,
+    previousLeaves: indexedPreviousLeaves,
+    amendedPreviousLeaves: indexedPreviousLeaves,
+    hours_worked_per_week: claim.hours_worked_per_week,
     comment: "",
-    employerDecision: "Approve",
+    employer_decision: "Approve",
     fraud: undefined,
     employeeNotice: undefined,
     believeRelationshipAccurate: undefined,
@@ -78,6 +92,12 @@ export const Review = (props) => {
     addedBenefits: [],
     addedPreviousLeaves: [],
     addedConcurrentLeave: null,
+  });
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
   });
 
   const [allPreviousLeaves, setAllPreviousLeaves] = useState([]);
@@ -98,7 +118,7 @@ export const Review = (props) => {
 
   const isCommentRequired =
     formState.fraud === "Yes" ||
-    formState.employerDecision === "Deny" ||
+    formState.employer_decision === "Deny" ||
     formState.employeeNotice === "No";
 
   const isSubmitDisabled =
@@ -106,32 +126,6 @@ export const Review = (props) => {
     (formState.believeRelationshipAccurate === "No" &&
       formState.relationshipInaccurateReason === "");
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
-
-  useEffect(() => {
-    // Generate id based on index for employer benefit, previous leave (id is not provided by BE)
-    // Note: these indices are used to properly display inline errors and amend employer benefits and
-    // previous leaves. If employer_benefit_id and previous_leave_id no longer match the indices, then
-    // the functionality described above will need to be reimplemented.
-    const indexedEmployerBenefits = claim.employer_benefits.map(
-      (benefit, index) =>
-        new EmployerBenefit({ ...benefit, employer_benefit_id: index })
-    );
-    const indexedPreviousLeaves = claim.previous_leaves.map(
-      (leave, index) =>
-        new PreviousLeave({ ...leave, previous_leave_id: index })
-    );
-
-    if (claim) {
-      updateFields({
-        amendedBenefits: indexedEmployerBenefits,
-        employerBenefits: indexedEmployerBenefits,
-        amendedPreviousLeaves: indexedPreviousLeaves,
-        previousLeaves: indexedPreviousLeaves,
-        amendedHours: claim.hours_worked_per_week,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [claim]);
 
   useEffect(() => {
     if (!documents) {
@@ -151,14 +145,6 @@ export const Review = (props) => {
     DocumentType.certification[leaveReason],
     DocumentType.certification.medicalCertification,
   ]);
-
-  const updateFields = (fields) => {
-    setFormState({ ...formState, ...fields });
-  };
-
-  const handleHoursWorkedChange = (updatedHoursWorked) => {
-    updateFields({ amendedHours: updatedHoursWorked });
-  };
 
   const handleBenefitInputAdd = () => {
     updateFields({
@@ -284,10 +270,6 @@ export const Review = (props) => {
     updateFields({ employeeNotice: updatedEmployeeNotice });
   };
 
-  const handleEmployerDecisionChange = (updatedEmployerDecision) => {
-    updateFields({ employerDecision: updatedEmployerDecision });
-  };
-
   const handleBelieveRelationshipAccurateChange = (
     updatedBelieveRelationshipAccurate
   ) => {
@@ -312,24 +294,29 @@ export const Review = (props) => {
     const employer_benefits = allEmployerBenefits.map((benefit) =>
       omit(benefit, ["employer_benefit_id"])
     );
-    const amendedHours = formState.amendedHours;
     const previous_leaves = allPreviousLeaves.map((leave) =>
       omit(leave, ["previous_leave_id"])
     );
+
+    // canceling amendments causes their values in formState to be null.
+    // in these cases, we want to restore the claimant-provided, original values.
+    const hours_worked_per_week = isNil(formState.hours_worked_per_week)
+      ? claim.hours_worked_per_week
+      : formState.hours_worked_per_week;
 
     const payload = {
       comment: formState.comment,
       concurrent_leave,
       employer_benefits,
-      employer_decision: formState.employerDecision,
+      employer_decision: formState.employer_decision,
       fraud: formState.fraud,
-      hours_worked_per_week: amendedHours,
+      hours_worked_per_week,
       previous_leaves,
       has_amendments:
         !isEqual(allEmployerBenefits, formState.employerBenefits) ||
         !isEqual(allPreviousLeaves, formState.previousLeaves) ||
         !isEqual(concurrent_leave, formState.concurrentLeave) ||
-        !isEqual(amendedHours, claim.hours_worked_per_week),
+        !isEqual(claim.hours_worked_per_week, hours_worked_per_week),
       leave_reason: leaveReason,
       uses_second_eform_version: !!claim.uses_second_eform_version,
     };
@@ -416,9 +403,11 @@ export const Review = (props) => {
         onKeyDown={handleKeyDown}
       >
         <SupportingWorkDetails
-          appErrors={appErrors}
-          hoursWorkedPerWeek={claim.hours_worked_per_week}
-          onChange={handleHoursWorkedChange}
+          clearField={clearField}
+          getField={getField}
+          getFunctionalInputProps={getFunctionalInputProps}
+          initialHoursWorkedPerWeek={claim.hours_worked_per_week}
+          updateFields={updateFields}
         />
 
         <ReviewHeading level="2">
@@ -487,13 +476,15 @@ export const Review = (props) => {
           onChange={handleEmployeeNoticeChange}
         />
         <EmployerDecision
+          employerDecisionInput={formState.employer_decision}
           fraud={formState.fraud}
-          onChange={handleEmployerDecisionChange}
+          getFunctionalInputProps={getFunctionalInputProps}
+          updateFields={updateFields}
         />
         <Feedback
           appLogic={props.appLogic}
           isReportingFraud={formState.fraud === "Yes"}
-          isDenyingRequest={formState.employerDecision === "Deny"}
+          isDenyingRequest={formState.employer_decision === "Deny"}
           isEmployeeNoticeInsufficient={formState.employeeNotice === "No"}
           comment={formState.comment}
           setComment={(comment) => updateFields({ comment })}
