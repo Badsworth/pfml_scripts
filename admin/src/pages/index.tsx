@@ -1,7 +1,7 @@
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import SlideOut from "../components/SlideOut";
 import { Helmet } from "react-helmet-async";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "../components/Button";
 import UserLookup from "./users";
 
@@ -21,6 +21,38 @@ export default function Home() {
   const slideOutCloseCallback = () => {
     setShowSlideOut(false);
   };
+
+  const parseURLSearch = (search: string) => JSON.parse(
+    '{"' +
+      decodeURI(search)
+        .replace(/"/g, '\\"')
+        .replace(/&/g, '","')
+        .replace(/=/g, '":"') +
+      '"}',
+  );
+
+  useEffect(() => {
+    if (!window.location.search) {
+      fetch("http://localhost:1550/v1/admin/authorize", {
+        headers: {
+          Authorization:
+            "Bearer "
+        },
+      })
+        .then((r) => {
+          return r.json();
+        })
+        .then((url) => {
+          const queryArgs = parseURLSearch(url.split("?")[1]);
+          localStorage.setItem("AzureADSSOAuthCode", JSON.stringify(queryArgs))
+          window.location.href = url;
+        });
+    } else {
+      const queryArgs = parseURLSearch(location.search.substring(1));
+      const authCodeParams = JSON.parse(localStorage.getItem("AzureADSSOAuthCode") || "{}")
+      console.log({ ...authCodeParams, ...queryArgs })
+    }
+  }, []);
 
   return (
     <>
