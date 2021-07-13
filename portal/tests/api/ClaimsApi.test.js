@@ -42,17 +42,24 @@ describe("ClaimsApi", () => {
       );
     });
 
-    it("includes filters in request", async () => {
+    it("includes order and filter params in request", async () => {
       mockFetch();
 
       const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims(2, {
-        employer_id: "mock-employer-id",
-        claim_status: "Approved,Pending",
-      });
+      await claimsApi.getClaims(
+        2,
+        {
+          order_by: "employee",
+          order_direction: "descending",
+        },
+        {
+          employer_id: "mock-employer-id",
+          claim_status: "Approved,Pending",
+        }
+      );
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/claims?page_offset=2&employer_id=mock-employer-id&claim_status=Approved%2CPending`,
+        `${process.env.apiUrl}/claims?page_offset=2&order_by=employee&order_direction=descending&employer_id=mock-employer-id&claim_status=Approved%2CPending`,
         expect.objectContaining({
           headers: expect.any(Object),
           method: "GET",
@@ -69,7 +76,7 @@ describe("ClaimsApi", () => {
       };
       const originalFilters = { ...filters };
       const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims(2, filters);
+      await claimsApi.getClaims(2, {}, filters);
 
       expect(global.fetch).toHaveBeenCalledWith(
         `${process.env.apiUrl}/claims?page_offset=2&employer_id=mock-employer-id&claim_status=Closed%2CCompleted`,
