@@ -1,16 +1,16 @@
-import { AllNotNull, Submission } from "../../../src/types";
-import { dateToMMddyyyy, extractLeavePeriod } from "../../../src/util/claims";
+import { AllNotNull, Submission } from "../../../../src/types";
+import { dateToMMddyyyy, extractLeavePeriod } from "../../../../src/util/claims";
 import {
   assertIsTypedArray,
   assertValidClaim,
   isValidConcurrentLeave,
   isValidEmployerBenefit,
   isValidPreviousLeave,
-} from "../../../src/util/typeUtils";
-import { Address } from "../../../src/_api";
-import { fineos, fineosPages, portal } from "../../actions";
-import { config } from "../../actions/common";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
+} from "../../../../src/util/typeUtils";
+import { Address } from "../../../../src/_api";
+import { fineos, fineosPages, portal } from "../../../actions";
+import { config } from "../../../actions/common";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 
 describe("Claimant can call call-center to submit a claim for leave with other leaves and benefits", () => {
   if (config("FINEOS_HAS_UPDATED_EFORMS") === "true") {
