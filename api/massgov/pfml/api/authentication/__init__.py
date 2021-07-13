@@ -5,6 +5,7 @@
 import json
 
 import flask
+from flask import session
 import jose
 import newrelic.agent
 import requests
@@ -17,45 +18,74 @@ import massgov.pfml.api.app as app
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import User
 
+import msal
 from typing import Optional
-from massgov.pfml.api.authentication.msalConfig import MSALClient, MSALClientConfig
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 public_keys = None
 
-msal = None
-authCodeRequest = None
-tokenRequest = None
+def get_authorization_url():
+    config = app.get_app_config()
+    session["flow"] = _build_auth_code_flow(scopes=config.azure_sso.scopes)
+    auth_url = session["flow"]["auth_uri"]
+    return auth_url
 
-def get_sso_auth_code():
-    global authCodeRequest, tokenRequest
-    
-    if msal is not None:
-        # prepare the request
-        authCodeRequest.authority = config.authority
-        authCodeRequest.scopes = config.scopes
-        authCodeRequest.state = "SIGN_IN"
+def login_admin():
+    try:
+        cache = _load_cache()
+        result = _build_msal_app(cache=cache).acquire_token_by_auth_code_flow(
+            session.get("flow", {}), request.args)
+        if "error" in result:
+            return render_template("auth_error.html", result=result)
+        session["user"] = result.get("id_token_claims")
+        _save_cache(cache)
+    except ValueError:  # Usually caused by CSRF
+        pass  # Simply ignore them
+    return True
 
-        tokenRequest.authority = config.authority;
+def logout_admin():
+    config = app.get_app_config()
+    # Wipe out user and its token cache from session
+    session.clear()
+    # Also logout from your tenant's web session
+    return redirect(
+        config.azure_sso.authority + "/oauth2/v2.0/logout" +
+        "?post_logout_redirect_uri=" + config.azure_sso.postLogoutRedirectUri
+    )
 
-        # request an authorization code to exchange for a token
-        # msal.getAuthCodeUrl(authCodeRequest)
+def _build_auth_code_flow(authority=None, scopes=None):
+    config = app.get_app_config()
+    return _build_msal_app(authority=authority).initiate_auth_code_flow(
+        scopes or [],
+        redirect_uri=config.azure_sso.redirectUri
+    )
 
-        # res.redirect(response);
-    
-    # res.status(500).send(error);
-    
-    return redirect("www.google.com", code=302)
+def _build_msal_app(cache=None, authority=None):
+    config = app.get_app_config()
+    return msal.ConfidentialClientApplication(
+        config.azure_sso.clientId, authority=authority or config.azure_sso.authority,
+        client_credential=config.azure_sso.clientSecret, token_cache=cache)
 
-def get_msal_client(config: Optional[MSALClientConfig]):
-    global authCodeRequest, tokenRequest, msal
+def _save_cache(cache):
+    if cache.has_state_changed:
+        session["token_cache"] = cache.serialize()
 
-    logger.info("Initiating Microsoft Authentication Library")
-    authCodeRequest = {}
-    tokenRequest = {}
-    msal = MSALClient(config)
-    logger.info("MSAL successfully initiated")
+def _load_cache():
+    cache = msal.SerializableTokenCache()
+    if session.get("token_cache"):
+        cache.deserialize(session["token_cache"])
+    return cache
+
+def _get_token_from_cache(scope=None):
+    cache = _load_cache()  # This web app maintains one cache per session
+    sso = _build_msal_app(cache=cache)
+    accounts = sso.get_accounts()
+    if accounts:  # So all account(s) belong to the current signed-in user
+        result = sso.acquire_token_silent(scope, account=accounts[0])
+        _save_cache(cache)
+        return result
+
 
 def get_public_keys(userpool_keys_url):
     global public_keys
@@ -95,7 +125,9 @@ def decode_cognito_token(token):
     See also https://connexion.readthedocs.io/en/latest/security.html
     """
     try:
+        logger.info("wtf is happening")
         decoded_token = _decode_cognito_token(token)
+        logger.info("wtf is happening")
         auth_id = decoded_token.get("sub")
         with app.db_session() as db_session:
             user = db_session.query(User).filter(User.sub_id == auth_id).one()
