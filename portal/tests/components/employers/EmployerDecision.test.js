@@ -57,24 +57,19 @@ describe("EmployerDecision", () => {
     });
   });
 
-  describe("when fraud is 'Yes'", () => {
-    it('disables the "Approve" option and selects "Deny"', () => {
-      const wrapper = render(true, { fraud: "Yes" });
+  describe("when fraud is reported", () => {
+    it('calls "updateFields" with employer decision of deny', () => {
+      render(true, { fraud: "Yes" });
       expect(updateFields).toHaveBeenCalledWith({ employer_decision: "Deny" });
-      // simulate updateFields, which was tested above.
-      act(() => {
-        wrapper.setProps({ employerDecision: "Deny" });
-      });
-      wrapper.update();
+    });
 
-      const choices = wrapper.find("InputChoiceGroup").prop("choices");
-      const approveOption = choices.find(
-        (choice) => choice.value === "Approve"
-      );
-      const denyOption = choices.find((choice) => choice.value === "Deny");
-
+    it('disables the "Approve" option', () => {
+      const wrapper = render(true, { fraud: "Yes" });
+      const approveOption = wrapper
+        .find("InputChoiceGroup")
+        .prop("choices")
+        .find((choice) => choice.value === "Approve");
       expect(approveOption.disabled).toBe(true);
-      expect(denyOption.checked).toBe(true);
     });
 
     describe("and is changed to 'No'", () => {

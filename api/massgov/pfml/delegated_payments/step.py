@@ -83,10 +83,10 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             return
         self.log_entry.set_metrics(metrics)
 
-    def increment(self, name: str) -> None:
+    def increment(self, name: str, increment: int = 1) -> None:
         if not self.log_entry:
             return
-        self.log_entry.increment(name)
+        self.log_entry.increment(name, increment)
 
 
 def calculate_state_log_count_diff(

@@ -2,7 +2,7 @@ import PreviousLeave, {
   PreviousLeaveType,
 } from "../../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
-import { get, isEqual, omit } from "lodash";
+import { get, isEqual, isNil, omit } from "lodash";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
@@ -61,7 +61,7 @@ export const Review = (props) => {
     });
   }
 
-  // Generate id based on index for employer benefit, previous leave (id is not provided by BE)
+  // Generate id based on index for employer benefit and previous leave (id is not provided by API)
   // Note: these indices are used to properly display inline errors and amend employer benefits and
   // previous leaves. If employer_benefit_id and previous_leave_id no longer match the indices, then
   // the functionality described above will need to be reimplemented.
@@ -73,7 +73,7 @@ export const Review = (props) => {
     (leave, index) => new PreviousLeave({ ...leave, previous_leave_id: index })
   );
 
-  const { formState, updateFields } = useFormState({
+  const { clearField, getField, formState, updateFields } = useFormState({
     // base fields
     concurrentLeave: claim.concurrent_leave,
     amendedConcurrentLeave: claim.concurrent_leave,
@@ -298,19 +298,25 @@ export const Review = (props) => {
       omit(leave, ["previous_leave_id"])
     );
 
+    // canceling amendments causes their values in formState to be null.
+    // in these cases, we want to restore the claimant-provided, original values.
+    const hours_worked_per_week = isNil(formState.hours_worked_per_week)
+      ? claim.hours_worked_per_week
+      : formState.hours_worked_per_week;
+
     const payload = {
       comment: formState.comment,
       concurrent_leave,
       employer_benefits,
       employer_decision: formState.employer_decision,
       fraud: formState.fraud,
-      hours_worked_per_week: formState.hours_worked_per_week,
+      hours_worked_per_week,
       previous_leaves,
       has_amendments:
         !isEqual(allEmployerBenefits, formState.employerBenefits) ||
         !isEqual(allPreviousLeaves, formState.previousLeaves) ||
         !isEqual(concurrent_leave, formState.concurrentLeave) ||
-        !isEqual(claim.hours_worked_per_week, formState.hours_worked_per_week),
+        !isEqual(claim.hours_worked_per_week, hours_worked_per_week),
       leave_reason: leaveReason,
       uses_second_eform_version: !!claim.uses_second_eform_version,
     };
@@ -397,6 +403,8 @@ export const Review = (props) => {
         onKeyDown={handleKeyDown}
       >
         <SupportingWorkDetails
+          clearField={clearField}
+          getField={getField}
           getFunctionalInputProps={getFunctionalInputProps}
           initialHoursWorkedPerWeek={claim.hours_worked_per_week}
           updateFields={updateFields}
@@ -468,7 +476,7 @@ export const Review = (props) => {
           onChange={handleEmployeeNoticeChange}
         />
         <EmployerDecision
-          employerDecision={formState.employer_decision}
+          employerDecisionInput={formState.employer_decision}
           fraud={formState.fraud}
           getFunctionalInputProps={getFunctionalInputProps}
           updateFields={updateFields}

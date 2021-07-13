@@ -159,6 +159,9 @@ export const Story = ({ claim, documents, ...args }) => {
 
   const appLogic = {
     appErrors: new AppErrorInfoCollection(errors),
+    documents: {
+      download: () => {},
+    },
   };
 
   return (

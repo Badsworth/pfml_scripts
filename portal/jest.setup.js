@@ -57,7 +57,7 @@ const initialProcessEnv = Object.assign({}, process.env);
 
 beforeEach(() => {
   // Reset our environment variables before each test run
-  process.env = initialProcessEnv;
+  process.env = { ...initialProcessEnv };
   jest.spyOn(console, "error").mockImplementation((msg, ...args) => {
     throw new Error(format(`console.error: ${msg}`, ...args));
   });

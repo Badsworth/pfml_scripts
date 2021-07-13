@@ -825,16 +825,6 @@ const shared = {
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
   noneReported: "None reported",
-  noticeDate: "Posted {{date}}",
-  noticeName: "Other notice", // it should fallback to this if we receive an unexpected or undefined enum
-  noticeName_approvalNotice: "Approval notice",
-  noticeName_denialNotice: "Denial notice",
-  noticeName_pdf: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
-  noticeName_pdf_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
-  noticeName_pdf_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
-  noticeName_pdf_requestForInfoNotice:
-    "Request for more information $t(shared.pdfNoticeSuffix)",
-  noticeName_requestForInfoNotice: "Request for more information",
   otherIncomeEntryPrefix: "Income",
   otherIncomeType_jonesAct: "Jones Act benefits",
   otherIncomeType_otherEmployer:
@@ -1082,7 +1072,7 @@ const pages = {
       "<p>This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.</p>",
     hintWhatKindHeading: "What kinds of accrued paid leave to report",
     hintWhenToReportBody:
-      "<p>If your PFML leave includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave. Select Yes to report this leave.</p><p>If your PFML leave includes working fewer hours than normal (a reduced leave schedule) or taking time off work in uneven or unpredictable blocks of time (intermittent leave), you need to report leave if ONE of the following two statements is true:</p><ul><li>You are planning to use this accrued paid leave on days when you are also taking PFML leave.</li><li>You are planning to use this accrued paid leave for a PFML qualifying reason, even if it’s not the same reason you are applying for leave now.</li></ul>",
+      "<p>If your PFML leave includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave. Select Yes to report this leave.</p><p>If your PFML leave includes working fewer hours than normal (a reduced leave schedule) or taking time off work in uneven or unpredictable blocks of time (intermittent leave), you need to report leave if ONE of the following two statements is true:</p><ul><li>You are planning to use this accrued paid leave on days when you are also taking PFML leave.</li><li>You are planning to use this accrued paid leave for a PFML qualifying reason, even if it’s not the same reason you are applying for now.</li></ul>",
     hintWhenToReportDetailsBody:
       "<ul><li>You had a serious health condition, including illness, injury, or pregnancy.</li><li>If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.</li><li>You bonded with your child after birth or placement.</li><li>You needed to manage family affairs while a family member is on active duty in the armed forces.</li><li>You needed to care for a family member who serves in the armed forces.</li><li>You needed to care for a family member with a serious health condition.</li></ul>",
     hintWhenToReportDetailsLabel: "What are the qualifying reasons?",
@@ -1503,7 +1493,7 @@ const pages = {
       "You needed to care for a family member with a serious health condition and your leave began on or after July 1, 2021.",
     ],
     sectionLabel:
-      "Did you take leave between January 1, 2021–{{leaveStartDate}} for a different qualifying reason?",
+      "Did you take leave between January 1, 2021 and {{leaveStartDate}} for a different qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReasonDetails: {
@@ -1555,7 +1545,7 @@ const pages = {
     sectionHint:
       "Select No if your current paid leave from PFML began on July 1, 2021.",
     sectionLabel:
-      "Did you take any other leave between {{previousLeaveStartDate}}–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
+      "Did you take any other leave between {{previousLeaveStartDate}} and {{leaveStartDate}} for the same reason as you are applying for paid leave now?",
     sectionLabel_caring:
       "Did you take any other leave between {{previousLeaveStartDate}} and the first day of the leave you are applying for, for the same reason as you are applying?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -2069,17 +2059,6 @@ const pages = {
     leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    noticeDate: "$t(shared.noticeDate)",
-    noticeName: "$t(shared.noticeName)",
-    noticeName_approvalNotice: "$t(shared.noticeName_approvalNotice)",
-    noticeName_denialNotice: "$t(shared.noticeName_denialNotice)",
-    noticeName_pdf: "$t(shared.noticeName_pdf)",
-    noticeName_pdf_approvalNotice: "$t(shared.noticeName_pdf_approvalNotice)",
-    noticeName_pdf_denialNotice: "$t(shared.noticeName_pdf_denialNotice)",
-    noticeName_pdf_requestForInfoNotice:
-      "$t(shared.noticeName_pdf_requestForInfoNotice)",
-    noticeName_requestForInfoNotice:
-      "$t(shared.noticeName_requestForInfoNotice)",
     noticesLabel: "Notices",
     statusLabel: "Status",
     title: "Application status for {{name}}",
@@ -2333,17 +2312,6 @@ const components = {
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    noticeDate: "$t(shared.noticeDate)",
-    noticeName: "$t(shared.noticeName)",
-    noticeName_approvalNotice: "$t(shared.noticeName_approvalNotice)",
-    noticeName_denialNotice: "$t(shared.noticeName_denialNotice)",
-    noticeName_pdf: "$t(shared.noticeName_pdf)",
-    noticeName_pdf_approvalNotice: "$t(shared.noticeName_pdf_approvalNotice)",
-    noticeName_pdf_denialNotice: "$t(shared.noticeName_pdf_denialNotice)",
-    noticeName_pdf_requestForInfoNotice:
-      "$t(shared.noticeName_pdf_requestForInfoNotice)",
-    noticeName_requestForInfoNotice:
-      "$t(shared.noticeName_requestForInfoNotice)",
     noticesDownload:
       "When you click the notice link, the file will download to your device.",
     noticesFallback:
@@ -2384,6 +2352,14 @@ const components = {
     body_id:
       "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
     header: "Document Requirements:",
+  },
+  downloadableDocument: {
+    createdAtDate: "Posted {{date}}",
+    noticeName: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
+    noticeName_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
+    noticeName_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
+    noticeName_requestForInfoNotice:
+      "Request for more information $t(shared.pdfNoticeSuffix)",
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
@@ -2524,8 +2500,6 @@ const components = {
     heading: "Have you approved or denied this leave request?",
   },
   employersFeedback: {
-    addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
-    addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     commentSolicitation: "Please tell us more.",
@@ -2535,10 +2509,7 @@ const components = {
       "Please tell us why you denied this leave request.",
     commentSolicitation_fraud:
       "Please tell us why you believe this is fraudulent.",
-    fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
     instructionsLabel: "Do you have any additional comments or concerns?",
-    supportingDocumentationLabel:
-      "If you have any supporting documentation, please attach it for review.",
   },
   employersFraudReport: {
     alertBody:
@@ -2583,13 +2554,13 @@ const components = {
     choiceUnknown: "I don't know",
     choiceYes: "Yes",
     commentHeading: "Tell us why you think this relationship is inaccurate.",
+    documentName: "Your employee's certification document",
     documentationLabel: "Documentation",
     familyMemberRelationshipHint:
       "This employee has attested the family member relationship is <eligible-relationship-link>a covered relationship</eligible-relationship-link>. If something on the form seems incorrect, add a comment at the end of the page.",
     familyMemberRelationshipLabel:
       "Do you believe the listed relationship is described accurately? (Optional)",
     header: "Leave details",
-    healthCareProviderFormLink: "$t(shared.certificationFormMedical)",
     inaccurateRelationshipAlertHeading:
       "The employee will be denied paid leave.",
     inaccurateRelationshipAlertLead:
@@ -2627,7 +2598,6 @@ const components = {
     header: "Leave schedule",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
-    tableName: "Leave schedule details table",
   },
   employersNavigationTabs: {
     dashboard: "Dashboard",

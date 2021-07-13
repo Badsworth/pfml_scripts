@@ -19,15 +19,6 @@ const SupportingWorkDetails = (props) => {
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(false);
 
-  /**
-   * Cancels an amendment to hours_worked_per_week by restoring the initial value.
-   */
-  const handleCancel = () => {
-    props.updateFields({
-      hours_worked_per_week: props.initialHoursWorkedPerWeek,
-    });
-  };
-
   return (
     <React.Fragment>
       <ReviewHeading level="2">
@@ -43,12 +34,15 @@ const SupportingWorkDetails = (props) => {
         }
       >
         <p className="margin-top-0">{props.initialHoursWorkedPerWeek}</p>
-        <ConditionalContent visible={isAmendmentFormDisplayed}>
+        <ConditionalContent
+          getField={props.getField}
+          clearField={props.clearField}
+          updateFields={props.updateFields}
+          fieldNamesClearedWhenHidden={["hours_worked_per_week"]}
+          visible={isAmendmentFormDisplayed}
+        >
           <AmendmentForm
-            onDestroy={() => {
-              handleCancel();
-              setIsAmendmentFormDisplayed(false);
-            }}
+            onDestroy={() => setIsAmendmentFormDisplayed(false)}
             destroyButtonLabel={t("components.amendmentForm.cancel")}
             className="bg-base-lightest border-base-lighter"
           >
@@ -69,7 +63,7 @@ const SupportingWorkDetails = (props) => {
               mask="hours"
               width="small"
               smallLabel
-              valueType="float"
+              valueType="integer"
             />
           </AmendmentForm>
         </ConditionalContent>
@@ -79,6 +73,8 @@ const SupportingWorkDetails = (props) => {
 };
 
 SupportingWorkDetails.propTypes = {
+  clearField: PropTypes.func.isRequired,
+  getField: PropTypes.func.isRequired,
   getFunctionalInputProps: PropTypes.func.isRequired,
   initialHoursWorkedPerWeek: PropTypes.number.isRequired,
   updateFields: PropTypes.func.isRequired,

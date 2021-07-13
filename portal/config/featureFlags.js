@@ -23,17 +23,9 @@ const flagsConfig = {
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
 
-    // When this flag is enabled, the Leave Admin dashboard shows filter functionality
-    // TODO (EMPLOYER-1499): Remove flag
-    employerShowDashboardFilters: false,
-
     // When this flag is enabled, the Leave Admin dashboard supports search functionality
     // TODO (EMPLOYER-1500): Remove flag
     employerShowDashboardSearch: false,
-
-    // When this flag is enabled, file upload is visible on the Review page
-    // TODO (EMPLOYER-665): Show file upload once the endpoint is available
-    employerShowFileUpload: false,
 
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
     // TODO (EMPLOYER-718): Remove flag
@@ -69,22 +61,17 @@ const flagsConfig = {
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
-  "cps-preview": {
-    employerShowDashboardFilters: true,
-  },
+  "cps-preview": {},
   development: {
     example: true,
-    employerShowDashboardFilters: true,
     pfmlTerriyay: true,
   },
-  test: {
-    employerShowDashboardFilters: true,
-  },
-  stage: { employerShowDashboardFilters: true },
-  training: { employerShowDashboardFilters: true },
-  performance: { employerShowDashboardFilters: true },
-  uat: { employerShowDashboardFilters: true },
-  prod: { employerShowDashboardFilters: true, pfmlTerriyay: true },
+  test: {},
+  stage: {},
+  training: {},
+  performance: {},
+  uat: {},
+  prod: { pfmlTerriyay: true },
 };
 
 /**

@@ -1,51 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`EmployerDecision renders the component 1`] = `
-<Fragment>
-  <InputChoiceGroup
-    choices={
-      Array [
+<InputChoiceGroup
+  choices={
+    Array [
+      Object {
+        "checked": false,
+        "disabled": false,
+        "label": "Approve",
+        "value": "Approve",
+      },
+      Object {
+        "checked": false,
+        "label": "Deny (explain below)",
+        "value": "Deny",
+      },
+    ]
+  }
+  hint={
+    <Trans
+      components={
         Object {
-          "checked": false,
-          "disabled": false,
-          "label": "Approve",
-          "value": "Approve",
-        },
-        Object {
-          "checked": false,
-          "label": "Deny (explain below)",
-          "value": "Deny",
-        },
-      ]
-    }
-    hint={
-      <Trans
-        className="font-heading-xs text-normal"
-        components={
-          Object {
-            "mass-employer-role-link": <a
-              href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
-              rel="noreferrer noopener"
-              target="_blank"
-            />,
-          }
+          "mass-employer-role-link": <a
+            href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
         }
-        i18nKey="components.employersEmployerDecision.explanation"
-      />
-    }
-    label={
-      <ReviewHeading
-        level="2"
-      >
-        Have you approved or denied this leave request?
-      </ReviewHeading>
-    }
-    name="employer_decision"
-    onChange={[Function]}
-    smallLabel={true}
-    smallabel={true}
-    type="radio"
-    value=""
-  />
-</Fragment>
+      }
+      i18nKey="components.employersEmployerDecision.explanation"
+    />
+  }
+  label={
+    <ReviewHeading
+      level="2"
+    >
+      Have you approved or denied this leave request?
+    </ReviewHeading>
+  }
+  name="employer_decision"
+  onChange={[Function]}
+  smallLabel={true}
+  type="radio"
+  value=""
+/>
 `;

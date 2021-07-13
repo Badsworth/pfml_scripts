@@ -281,7 +281,7 @@ describe("ApplicationCard", () => {
       const wrapper = render(claim, { documents });
       const legalNotices = wrapper.find("LegalNotices").dive();
 
-      const listItems = legalNotices.find("LegalNoticeListItem");
+      const listItems = legalNotices.find("DownloadableDocument");
 
       expect.assertions(4);
       expect(legalNotices.find("p")).toMatchSnapshot();
@@ -306,9 +306,9 @@ describe("ApplicationCard", () => {
         const legalNotices = wrapper.find("LegalNotices").dive();
 
         legalNotices
-          .find("LegalNoticeListItem")
+          .find("DownloadableDocument")
           .dive()
-          .find("a")
+          .find("Button")
           .simulate("click", {
             preventDefault: () => jest.fn(),
           });

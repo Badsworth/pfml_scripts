@@ -233,6 +233,22 @@ describe("Review", () => {
     );
   });
 
+  it("restores the default hours_worked_per_week if the value in the form is null", async () => {
+    act(() => {
+      const updateFields = wrapper
+        .find("SupportingWorkDetails")
+        .prop("updateFields");
+      updateFields({ hours_worked_per_week: null });
+    });
+
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ hours_worked_per_week: 30 })
+    );
+  });
+
   it.todo("sets 'previous_leaves' based on PreviousLeaves");
 
   it.todo("sets 'employer_benefits' based on EmployerBenefits");

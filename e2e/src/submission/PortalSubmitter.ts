@@ -24,6 +24,7 @@ import AuthenticationManager from "./AuthenticationManager";
 import { Credentials } from "../types";
 import { GeneratedClaim } from "../generation/Claim";
 import { DocumentWithPromisedFile } from "../generation/documents";
+import config from "../config";
 
 if (!global.FormData) {
   // @ts-ignore
@@ -176,6 +177,8 @@ export default class PortalSubmitter {
           ...response.employer_benefits,
         ],
         previous_leaves: [...data.previous_leaves, ...response.previous_leaves],
+        uses_second_eform_version:
+          config("FINEOS_HAS_UPDATED_EFORMS") === "true",
       },
       options
     );

@@ -31,10 +31,12 @@ class MockVerificationZeepCaller(LazyApiCaller, ApiCaller):
 
     search_responses: Dict[str, SearchResponse]
     fallback_verify_level: VerifyLevel
+    call_count: int
 
     def __init__(self, fallback_verify_level: VerifyLevel = VerifyLevel.VERIFIED) -> None:
         self.search_responses = {}
         self.fallback_verify_level = fallback_verify_level
+        self.call_count = 0
 
     def get(self) -> ApiCaller:
         return self
@@ -44,6 +46,7 @@ class MockVerificationZeepCaller(LazyApiCaller, ApiCaller):
         return self.get()
 
     def DoSearch(self, **kwargs: Any) -> Dict[str, Any]:
+        self.call_count += 1
         # Note that these kwargs are created by turning the
         # SearchRequest object into a json/dictionary object
         address_text = kwargs.get("Search")

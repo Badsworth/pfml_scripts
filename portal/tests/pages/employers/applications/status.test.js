@@ -39,7 +39,7 @@ const DOCUMENTS = new DocumentCollection([
     name: "Medical cert doc",
   }),
   new Document({
-    content_type: "image/png",
+    content_type: null,
     created_at: "2020-03-04",
     document_type: DocumentType.requestForInfoNotice,
     fineos_document_id: "fineos-id-3",
@@ -223,17 +223,17 @@ describe("Status", () => {
     });
 
     it("shows only legal documents", () => {
-      const documentDivs = wrapper.find("DocumentListItem");
+      const documentDivs = wrapper.find("DownloadableDocument");
       const entries = documentDivs.map((div) => {
-        const title = div.dive().find("p").at(0).text();
-        const date = div.dive().find("p").at(1).text();
+        const title = div.dive().find("Button").children().text();
+        const date = div.dive().find("div").text();
         return [title, date];
       });
 
       expect(entries).toEqual([
         ["Approval notice (PDF)", "Posted 1/2/2020"],
         ["Denial notice (PDF)", "Posted 2/3/2020"],
-        ["Request for more information", "Posted 3/4/2020"],
+        ["Request for more information (PDF)", "Posted 3/4/2020"],
       ]);
     });
 
@@ -243,10 +243,10 @@ describe("Status", () => {
         .mockImplementation(() => Promise.resolve(new Blob()));
 
       await wrapper
-        .find("DocumentListItem")
+        .find("DownloadableDocument")
         .at(0)
         .dive()
-        .find("a")
+        .find("Button")
         .simulate("click", {
           preventDefault: () => jest.fn(),
         });
