@@ -284,7 +284,6 @@ export class Tasks extends FineosPage {
     await delay(150);
   }
   async open(task: FineosTasks): Promise<void> {
-    await util.clickTab(this.page, "Tasks");
     await Promise.race([
       this.page.waitForNavigation(),
       this.page.click(`input[title="Add a task to this case"][type=submit]`),
