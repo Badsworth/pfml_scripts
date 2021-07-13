@@ -283,4 +283,23 @@ export class Tasks extends FineosPage {
     ]);
     await delay(150);
   }
+  async open(task: FineosTasks): Promise<void> {
+    await util.clickTab(this.page, "Tasks");
+    await Promise.race([
+      this.page.waitForNavigation(),
+      this.page.click(`input[title="Add a task to this case"][type=submit]`),
+    ]);
+    await util.labelled(this.page, "Find Work Types Named").then(async (el) => {
+      await el.type(task);
+      await el.press("Enter");
+    });
+    await Promise.race([
+      this.page.waitForNavigation(),
+      this.page.click('td[title="${taskName}"]'),
+    ]);
+    await Promise.race([
+      this.page.waitForNavigation(),
+      this.page.click("#footerButtonsBar input[value='Next']"),
+    ]);
+  }
 }
