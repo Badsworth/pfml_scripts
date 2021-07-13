@@ -125,9 +125,7 @@ def decode_cognito_token(token):
     See also https://connexion.readthedocs.io/en/latest/security.html
     """
     try:
-        logger.info("wtf is happening")
         decoded_token = _decode_cognito_token(token)
-        logger.info("wtf is happening")
         auth_id = decoded_token.get("sub")
         with app.db_session() as db_session:
             user = db_session.query(User).filter(User.sub_id == auth_id).one()
