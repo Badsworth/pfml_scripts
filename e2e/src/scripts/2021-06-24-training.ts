@@ -42,7 +42,7 @@ import { ScenarioSpecification } from "../generation/Scenario";
      */
 
     const generate = (spec: ScenarioSpecification, count: number) =>
-      ClaimPool.generate(employeePool, spec.employee, spec.claim, count);
+      ClaimPool.generate(employeePool, spec.employee, spec.claim, count * 1.15);
     claimPool = ClaimPool.merge(
       generate(TRNOI1, 25),
       generate(TRNOI2, 25),

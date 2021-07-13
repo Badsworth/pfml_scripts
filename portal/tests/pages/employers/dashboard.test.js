@@ -374,7 +374,17 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("renders filters", () => {
+  it("does not render filters when no filter feature flags are enabled", () => {
+    const { wrapper } = setup();
+
+    expect(wrapper.find("Filters").dive().isEmptyRender()).toBe(true);
+  });
+
+  it("renders filters when feature flags are enabled", () => {
+    process.env.featureFlags = {
+      employerShowDashboardFilters: true,
+    };
+
     const { wrapper } = setup({
       userAttrs: {
         // Include multiple LA's so Employer filter shows
@@ -399,12 +409,15 @@ describe("Employer dashboard", () => {
   });
 
   it("renders filters toggle button with expected label and aria attributes", () => {
+    process.env.featureFlags = {
+      employerShowDashboardFilters: true,
+    };
+
     const user_leave_administrators = [
       createUserLeaveAdministrator({
         verified: true,
       }),
     ];
-
     const { wrapper: CollapsedWithoutFilters } = setup();
     const { wrapper: CollapsedWithFilters } = setup({
       activeFilters: {
@@ -431,6 +444,9 @@ describe("Employer dashboard", () => {
   });
 
   it("sets initial filter form state from activeFilters prop", () => {
+    process.env.featureFlags = {
+      employerShowDashboardFilters: true,
+    };
     // Include multiple LA's so Employer filter shows
     const user_leave_administrators = [
       createUserLeaveAdministrator({
@@ -472,6 +488,10 @@ describe("Employer dashboard", () => {
   });
 
   it("shows filters section when show-filters query param is set", () => {
+    process.env.featureFlags = {
+      employerShowDashboardFilters: true,
+    };
+
     const { wrapper: collapsedWrapper } = setup();
     const { wrapper: expandedWrapper } = setup({
       query: {
@@ -487,6 +507,10 @@ describe("Employer dashboard", () => {
   });
 
   it("toggles show-filters param when toggle button is clicked", () => {
+    process.env.featureFlags = {
+      employerShowDashboardFilters: true,
+    };
+
     const { updateQuerySpy, wrapper } = setup();
     const filters = wrapper.find("Filters").dive();
     const { click } = simulateEvents(filters);
@@ -497,6 +521,8 @@ describe("Employer dashboard", () => {
   });
 
   it("renders organizations filter when there are multiple verified organizations", () => {
+    process.env.featureFlags = { employerShowDashboardFilters: true };
+
     const { wrapper: wrapperWithOneVerifiedOrg } = setup({
       userAttrs: {
         user_leave_administrators: [
@@ -539,6 +565,10 @@ describe("Employer dashboard", () => {
   it("updates query params when user changes filter to Approved and Closed", async () => {
     expect.assertions();
 
+    process.env.featureFlags = {
+      employerShowDashboardFilters: true,
+    };
+
     const user_leave_administrators = [
       createUserLeaveAdministrator({
         verified: true,
@@ -579,6 +609,10 @@ describe("Employer dashboard", () => {
   });
 
   it("resets query params when user clicks Reset action", () => {
+    process.env.featureFlags = {
+      employerShowDashboardFilters: true,
+    };
+
     const user_leave_administrators = [
       createUserLeaveAdministrator({
         verified: true,
@@ -641,7 +675,7 @@ describe("Employer dashboard", () => {
     expect(findFiltersMenu(wrapperWithActiveFilters)).toMatchSnapshot();
   });
 
-  it("removes the employer filter when its FilterMenuButton is clicked", () => {
+  it("removes filter when a filter menu button is clicked", () => {
     const user_leave_administrators = [
       createUserLeaveAdministrator({
         verified: true,
@@ -661,39 +695,13 @@ describe("Employer dashboard", () => {
     const { click } = simulateEvents(wrapper.find("Filters").dive());
 
     click("FilterMenuButton[data-test='employer_id']");
-
     expect(updateQuerySpy).toHaveBeenLastCalledWith({
       page_offset: "1",
     });
-  });
-
-  it("updates the claim_status param when one of several status FilterMenuButtons is clicked", () => {
-    const { updateQuerySpy, wrapper } = setup({
-      activeFilters: {
-        claim_status: "Approved,Closed,Pending",
-      },
-    });
-    const { click } = simulateEvents(wrapper.find("Filters").dive());
 
     click("FilterMenuButton[data-test='claim_status_Closed']");
-
     expect(updateQuerySpy).toHaveBeenLastCalledWith({
-      claim_status: "Approved,Pending",
-      page_offset: "1",
-    });
-  });
-
-  it("removes the claim_status param when the last remaining status FilterMenuButton is clicked", () => {
-    const { updateQuerySpy, wrapper } = setup({
-      activeFilters: {
-        claim_status: "Closed",
-      },
-    });
-    const { click } = simulateEvents(wrapper.find("Filters").dive());
-
-    click("FilterMenuButton[data-test='claim_status_Closed']");
-
-    expect(updateQuerySpy).toHaveBeenLastCalledWith({
+      claim_status: "Approved",
       page_offset: "1",
     });
   });
