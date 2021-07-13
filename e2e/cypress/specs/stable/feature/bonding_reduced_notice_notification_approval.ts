@@ -96,7 +96,7 @@ describe("Approval (notifications/notices)", () => {
 
         cy.visit("/applications");
         cy.contains("article", submission.fineos_absence_id).within(() => {
-          cy.contains("button", "Approval notice").should("be.visible").click();
+          cy.findByText("Approval notice (PDF)").should("be.visible").click();
         });
         portal.downloadLegalNotice(submission.fineos_absence_id);
       });

@@ -89,7 +89,7 @@ describe("Request for More Information (notifications/notices)", () => {
         cy.log("Finished waiting for documents");
         cy.visit("/applications");
         cy.contains("article", submission.fineos_absence_id).within(() => {
-          cy.contains("button", "Request for more information")
+          cy.findByText("Request for more information (PDF)")
             .should("be.visible")
             .click();
         });
