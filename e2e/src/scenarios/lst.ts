@@ -1,14 +1,21 @@
 import { ScenarioSpecification } from "../generation/Scenario";
 import * as CypressScenarios from "./cypress";
 import { getCaringLeaveStartEndDates } from "../util/claims";
-import { EmployerResponseSpec } from "../generation/Claim";
+import { ClaimSpecification, EmployerResponseSpec } from "../generation/Claim";
 
 /**
  * Load & Stress Testing Scenarios.
  *
  */
 
-const otherLeavesAndBenefitsProps: Partial<ScenarioSpecification["claim"]> = {
+const otherLeavesAndBenefitsProps: Pick<
+  ClaimSpecification,
+  | "other_incomes"
+  | "employer_benefits"
+  | "previous_leaves_other_reason"
+  | "previous_leaves_same_reason"
+  | "concurrent_leave"
+> = {
   other_incomes: [
     {
       income_type: "Earnings from another employment/self-employment",
