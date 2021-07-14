@@ -216,8 +216,6 @@ describe("Denial Notification and Notice", () => {
             .then(() => {
               cy.wait(100);
               cy.contains(submission.fineos_absence_id);
-              // unsure if this claimants name needs to be there
-              // cy.contains(`${claim.first_name} ${claim.last_name}`);
             });
         });
       });

@@ -152,7 +152,7 @@ describe("Approval (notifications/notices)", () => {
             )
             .then(() => {
               cy.get(
-                `a[href="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+                `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
               );
             });
         });
@@ -194,7 +194,7 @@ describe("Approval (notifications/notices)", () => {
               cy.contains(employeeFullName);
               cy.contains(submission.fineos_absence_id);
               cy.get(
-                `a[href="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+                `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
               );
             });
         });
@@ -227,7 +227,10 @@ describe("Approval (notifications/notices)", () => {
               // Reduced timeout, since we have multiple tests that run prior to this.
               30000
             )
-            .should("not.be.empty");
+            cy.contains(submission.fineos_absence_id);
+            cy.get(
+              `a[href*="paidleave-test.mass.gov/applications"]`
+            );
         });
       });
     }
