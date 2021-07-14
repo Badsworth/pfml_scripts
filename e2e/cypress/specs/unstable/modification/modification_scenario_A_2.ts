@@ -44,7 +44,7 @@ describe("Post-approval (notifications/notices)", () => {
             addDays(new Date(endDate), 8),
             "MM/dd/yyyy"
           );
-          cy.stash("extensionLeaveDates", [startDate, newEndDate]);
+          cy.stash("extensionLeaveDates", [newStartDate, newEndDate]);
           const claimPage = fineosPages.ClaimPage.visit(
             response.fineos_absence_id
           );
@@ -73,11 +73,6 @@ describe("Post-approval (notifications/notices)", () => {
             );
             adjudication.acceptLeavePlan();
           });
-          claimPage.approve()
-          claimPage.tasks((task) => {
-            task.close("Caring Certification Review");
-            task.close("ID Review");
-          });
         });
       });
     }
@@ -93,13 +88,13 @@ describe("Post-approval (notifications/notices)", () => {
       cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
         cy.unstash<Submission>("submission").then((submission) => {
           cy.unstash<string[]>("extensionLeaveDates").then(
-            ([startDate, endDate]) => {
+            ([newStartDate, newEndDate]) => {
               assertValidClaim(claim);
               portal.login(getLeaveAdminCredentials(claim.employer_fein));
               portal.visitActionRequiredERFormPage(submission.fineos_absence_id)
-              const portalFormatStart = format(new Date(startDate), "M/d/yyyy");
+              const portalFormatStart = format(new Date(newStartDate), "M/d/yyyy");
               const portalFormatEnd = format(
-                parse(endDate, "MM/dd/yyyy", new Date(endDate)),
+                parse(newEndDate, "MM/dd/yyyy", new Date(newEndDate)),
                 "M/d/yyyy"
               );
               portal.assertLeaveDatesAsLA(portalFormatStart, portalFormatEnd);
@@ -109,30 +104,4 @@ describe("Post-approval (notifications/notices)", () => {
       });
     }
   );
-  
-  it("As a leave admin, I should receive a notification regarding the time added to the claim", () => {
-    cy.wait(10000);
-    cy.dependsOnPreviousPass([extension]);
-    cy.unstash<Submission>("submission").then(
-      ({ timestamp_from, fineos_absence_id }) => {
-        cy.unstash<DehydratedClaim>("claim").then((claim) => {
-          const subject = getNotificationSubject(
-            `${claim.claim.first_name} ${claim.claim.last_name}`,
-            "extension of benefits"
-          );
-          cy.task<Email[]>(
-            "getEmails",
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject,
-              timestamp_from: timestamp_from,
-            },
-            { timeout: 360000 }
-          ).then((emails) => {
-            expect(emails[0].html).to.contain(fineos_absence_id);
-          });
-        });
-      }
-    );
-  });
 });
