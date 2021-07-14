@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
 import { DateTime } from "luxon";
 import ErrorBoundary from "./ErrorBoundary";
 import ErrorsSummary from "./ErrorsSummary";
 import Header from "./Header";
 import { Helmet } from "react-helmet";
 import PropTypes from "prop-types";
+import React from "react";
 import Spinner from "../components/Spinner";
 import UpcomingMaintenanceBanner from "../components/UpcomingMaintenanceBanner";
 import dynamic from "next/dynamic";
@@ -77,16 +77,6 @@ const PageWrapper = (props) => {
   const maintenanceStart = maintenance.start;
   const maintenanceEnd = maintenance.end;
   const maintenanceEnabled = maintenance.enabled;
-
-  useEffect(() => {
-    appLogic.featureFlags.loadFlags();
-    /**
-     * We only want feature flags to load one time and not when app re-renders. Removing
-     * the empty array or passing a appLogic.featureFlags dependency creates an infinite
-     * loop that calls the api and ultimately crashes the browser.
-     */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   /**
    * What to show to the user within our page wrapper. Depends on
