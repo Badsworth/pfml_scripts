@@ -833,7 +833,7 @@ in order to rebuild your container and pick up the new values.</p>
 <h3 id="overriding-aws-credentials">Overriding AWS credentials</h3>
 <p>To use your AWS credentials locally:</p>
 <ol>
-<li>Run the <code>login-aws</code> script</li>
+<li>Run <code>aws sso login</code></li>
 <li>Override the container's AWS credentials path in <code>docker-compose.override.yml</code> (there's a commented line showing an example)</li>
 <li>Set the <code>AWS_PROFILE</code> in <code>docker-compose.yml</code> to the AWS profile you want to use</li>
 <li>Rerun <code>make build</code></li>
