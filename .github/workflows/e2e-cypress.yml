@@ -49,7 +49,9 @@ jobs:
   cypress:
     name: Run Cypress Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # At the job level, we extend timeout from 6 minutes to 30. We'll set tighter timeouts for steps below to prevent
+    # hung tests from spinning endlessly.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -80,6 +82,7 @@ jobs:
       # Run Cypress tests.
       - name: Cypress Tests (Stable)
         uses: cypress-io/github-action@v2
+        timeout-minutes: 15
         with:
           spec: "cypress/specs/stable/**"
           record: true
@@ -103,8 +106,10 @@ jobs:
         # Always run this step if requested, even if stable tests fail.
         if: env.only_stable == 'false' && always()
         # Do not allow this step to fail the job. It is informational, not mandatory.
-        # This should be removed when we are ready to make 1.1 tests mandatory.
         continue-on-error: true
+        # Setting a step timeout here prevents a hung unstable test from timing out at the job level - it times out at
+        # the step level instead, allowing continue-on-error to do its job.
+        timeout-minutes: 10
 
       - name: "Archive screenshots"
         uses: actions/upload-artifact@v2
@@ -116,7 +121,7 @@ jobs:
           path: e2e/cypress/screenshots
           if-no-files-found: "ignore"
 
-# Run Integration Tests.
+  # Run Integration Tests.
   run_integration_test:
     name: Integration Tests
     runs-on: ubuntu-latest
@@ -172,5 +177,3 @@ jobs:
       - name: Integration Tests
         working-directory: e2e
         run: npm run test:integration
-
-
