@@ -67,13 +67,12 @@ describe("Report of intermittent leave hours notification", () => {
               },
               180000
             )
-            .then(async (emails) => {
-              const data = email.getNotificationData(emails[0].html);
+            .then(() => {
               const dob =
                 claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-              expect(data.name).to.equal(employeeFullName);
-              expect(data.dob).to.equal(dob);
-              expect(data.applicationId).to.equal(submission.fineos_absence_id);
+                cy.contains(dob);
+                cy.contains(employeeFullName);
+                cy.contains(submission.fineos_absence_id);
             });
         });
       });
