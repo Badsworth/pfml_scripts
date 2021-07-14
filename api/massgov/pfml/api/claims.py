@@ -362,6 +362,13 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
         return error.to_api_response()
 
     documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
+
+    if len(documents) == 0:
+        logger.error(
+            "employer_document_download failed - no documents returned", extra={**log_attributes},
+        )
+        raise Forbidden(description="User does not have access to this document")
+
     document = next(
         (doc for doc in documents if doc.fineos_document_id == fineos_document_id), None
     )
