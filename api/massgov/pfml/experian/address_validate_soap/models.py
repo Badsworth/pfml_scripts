@@ -196,9 +196,9 @@ class PicklistEntry(SnakeToCamelBaseModel):
 
 
 class Picklist(SnakeToCamelBaseModel):
-    full_picklist_moniker: str
+    full_picklist_moniker: Optional[str]
     picklist_entries: Optional[List[PicklistEntry]] = Field(None, alias="PicklistEntry")
-    prompt: str
+    prompt: Optional[str]
     total: int
     auto_format_safe: bool = False
     auto_format_past_close: bool = False
