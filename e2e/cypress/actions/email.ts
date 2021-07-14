@@ -26,7 +26,6 @@ export function getEmails(
       if (!email) cy.log("No email found");
 
       cy.reload();
-      cy.wait(150);
       cy.document().invoke("write", email.html);
       // if no email is found write empty string to the document
       // this will cause failures for assertions in the emails

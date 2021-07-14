@@ -107,6 +107,11 @@ describe("Denial Notification and Notice", () => {
     "I should receive an 'application started' notification (employer)",
     { retries: 0 },
     () => {
+      // cy.on('uncaught:exception', (err, runnable) => {
+      //   // returning false here prevents Cypress from
+      //   // failing the test
+      //   return false
+      // })  
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
@@ -144,7 +149,7 @@ describe("Denial Notification and Notice", () => {
   it(
     "Should generate a (Denial) notification for the Leave Administrator",
     { retries: 0 },
-    () => {
+    () => {    
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
@@ -175,7 +180,7 @@ describe("Denial Notification and Notice", () => {
               cy.contains(employeeFullName);
               cy.contains(submission.fineos_absence_id);
               cy.get(
-                `a[href="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+                `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
               );
             });
         });
@@ -210,7 +215,9 @@ describe("Denial Notification and Notice", () => {
             )
             .then(() => {
               cy.wait(100);
-              cy.contains(`${claim.first_name} ${claim.last_name}`);
+              cy.contains(submission.fineos_absence_id);
+              // unsure if this claimants name needs to be there
+              // cy.contains(`${claim.first_name} ${claim.last_name}`);
             });
         });
       });
