@@ -24,7 +24,7 @@ in order to rebuild your container and pick up the new values.
 
 To use your AWS credentials locally:
 
-1. Run the `login-aws` script
+1. Run `aws sso login`
 1. Override the container's AWS credentials path in `docker-compose.override.yml` (there's a commented line showing an example)
 1. Set the `AWS_PROFILE` in `docker-compose.yml` to the AWS profile you want to use
 1. Rerun `make build`

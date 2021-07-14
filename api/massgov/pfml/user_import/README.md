@@ -54,7 +54,7 @@ Note that in order to connect to S3 and to Cognito, the `ecs-task` or your local
 
 (See https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html for more info)
 
-For a local execution, running `login-aws` should suffice to provide you with access to Test
+For a local execution, running `aws sso login` should suffice to provide you with access to Test
 
 ### IAM Permissions for ECS Task
 
