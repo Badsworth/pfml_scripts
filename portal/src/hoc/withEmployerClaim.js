@@ -69,7 +69,7 @@ const withEmployerClaim = (Component) => {
       }
     };
 
-    if (!claim) {
+    if (!claim && appLogic.appErrors.isEmpty) {
       return (
         <div className="margin-top-8 text-center">
           <Spinner
@@ -77,6 +77,8 @@ const withEmployerClaim = (Component) => {
           />
         </div>
       );
+    } else if (!claim) {
+      return null;
     }
 
     return <Component {...props} claim={claim} />;
