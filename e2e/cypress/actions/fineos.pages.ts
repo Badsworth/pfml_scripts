@@ -9,27 +9,27 @@ import {
   ValidPreviousLeave,
 } from "../../src/types";
 import {
-  isNotNull,
-  isValidConcurrentLeave,
-  isValidPreviousLeave,
-  assertIsTypedArray,
-  isValidEmployerBenefit,
-  isValidOtherIncome,
-} from "../../src/util/typeUtils";
-import {
-  dateToMMddyyyy,
-  minutesToHoursAndMinutes,
-} from "../../src/util/claims";
-import {
   approveClaim,
-  assertHasTask,
   assertHasDocument,
+  assertHasTask,
   clickBottomWidgetButton,
   denyClaim,
   onTab,
   triggerNoticeRelease,
   visitClaim,
 } from "./fineos";
+import {
+  assertIsTypedArray,
+  isNotNull,
+  isValidConcurrentLeave,
+  isValidEmployerBenefit,
+  isValidOtherIncome,
+  isValidPreviousLeave,
+} from "../../src/util/typeUtils";
+import {
+  dateToMMddyyyy,
+  minutesToHoursAndMinutes,
+} from "../../src/util/claims";
 
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
@@ -148,6 +148,24 @@ class AdjudicationPage {
     this.onTab("Manage Request");
     cy.wait(150);
     cy.get("input[type='submit'][value='Accept']").click();
+  }
+  extendLeavePreAdjudication(newStartDate: string, newEndDate: string) {
+    this.onTab("Request Information");
+    cy.wait(5000)
+    cy.get("input[type='submit'][value='Edit']").click();
+    cy.get("#PopupContainer input[value='Yes']").click();
+    cy.labelled("Absence status").select("Known");
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']").type(
+      `{selectall}{backspace}${newStartDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']").type(
+      `{selectall}{backspace}${newEndDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[title='OK']").click();
   }
 }
 
