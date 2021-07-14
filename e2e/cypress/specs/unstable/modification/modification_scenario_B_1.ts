@@ -21,7 +21,7 @@ describe("Post-approval (notifications/notices)", () => {
       fineos.before();
       cy.visit("/");
       // Submit a claim via the API, including Employer Response.
-      cy.task("generateClaim", "CHAP_RFI").then((claim) => {
+      cy.task("generateClaim", "CHAP_ER").then((claim) => {
         cy.stash("claim", claim);
         cy.task("submitClaimToAPI", {
           ...claim,
@@ -44,7 +44,7 @@ describe("Post-approval (notifications/notices)", () => {
             addDays(new Date(endDate), 8),
             "MM/dd/yyyy"
           );
-          cy.stash("extensionLeaveDates", [newStartDate, newEndDate]);
+          cy.stash("extensionLeaveDates", [startDate, newEndDate]);
           const claimPage = fineosPages.ClaimPage.visit(
             response.fineos_absence_id
           );
@@ -73,6 +73,11 @@ describe("Post-approval (notifications/notices)", () => {
             );
             adjudication.acceptLeavePlan();
           });
+          claimPage.approve()
+          claimPage.tasks((task) => {
+            task.close("Caring Certification Review");
+            task.close("ID Review");
+          });
         });
       });
     }
@@ -88,13 +93,12 @@ describe("Post-approval (notifications/notices)", () => {
       cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
         cy.unstash<Submission>("submission").then((submission) => {
           cy.unstash<string[]>("extensionLeaveDates").then(
-            ([newStartDate, newEndDate]) => {
+            ([startDate, endDate]) => {
               assertValidClaim(claim);
               portal.login(getLeaveAdminCredentials(claim.employer_fein));
-              portal.visitActionRequiredERFormPage(submission.fineos_absence_id)
-              const portalFormatStart = format(new Date(newStartDate), "M/d/yyyy");
+              const portalFormatStart = format(new Date(startDate), "M/d/yyyy");
               const portalFormatEnd = format(
-                parse(newEndDate, "MM/dd/yyyy", new Date(newEndDate)),
+                parse(endDate, "MM/dd/yyyy", new Date(endDate)),
                 "M/d/yyyy"
               );
               portal.assertLeaveDatesAsLA(portalFormatStart, portalFormatEnd);
@@ -104,14 +108,16 @@ describe("Post-approval (notifications/notices)", () => {
       });
     }
   );
+
   it("As a leave admin, I should receive a notification regarding the time added to the claim", () => {
+    cy.wait(10000);
     cy.dependsOnPreviousPass([extension]);
     cy.unstash<Submission>("submission").then(
       ({ timestamp_from, fineos_absence_id }) => {
         cy.unstash<DehydratedClaim>("claim").then((claim) => {
           const subject = getNotificationSubject(
             `${claim.claim.first_name} ${claim.claim.last_name}`,
-            "employer response"
+            "extension of benefits"
           );
           cy.task<Email[]>(
             "getEmails",

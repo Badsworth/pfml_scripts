@@ -104,4 +104,28 @@ describe("Post-approval (notifications/notices)", () => {
       });
     }
   );
+  it("As a leave admin, I should receive a notification regarding the time added to the claim", () => {
+    cy.dependsOnPreviousPass([extension]);
+    cy.unstash<Submission>("submission").then(
+      ({ timestamp_from, fineos_absence_id }) => {
+        cy.unstash<DehydratedClaim>("claim").then((claim) => {
+          const subject = getNotificationSubject(
+            `${claim.claim.first_name} ${claim.claim.last_name}`,
+            "employer response"
+          );
+          cy.task<Email[]>(
+            "getEmails",
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject,
+              timestamp_from: timestamp_from,
+            },
+            { timeout: 360000 }
+          ).then((emails) => {
+            expect(emails[0].html).to.contain(fineos_absence_id);
+          });
+        });
+      }
+    );
+  });
 });
