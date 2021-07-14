@@ -59,7 +59,7 @@ jobs:
 
       # Set Cypress Tags according to what type of event we're dealing with.
       - name: Set variables for PR
-        if: github.event_name == 'pull_request' 
+        if: github.event_name == 'pull_request'
         run: |
           echo "cypress_tags=PR" >> $GITHUB_ENV
           echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
@@ -99,6 +99,7 @@ jobs:
           group: Unstable
           install: false # Skip install on second run.
           tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
+          config: trashAssetsBeforeRuns=false
         # Always run this step if requested, even if stable tests fail.
         if: env.only_stable == 'false' && always()
         # Do not allow this step to fail the job. It is informational, not mandatory.
@@ -109,8 +110,11 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: cypress-screenshots
+          # See https://github.com/actions/upload-artifact#uploading-to-the-same-artifact for an explanation of
+          # why we use a different name for each instance.
+          name: cypress-screenshots ${{ matrix.containers }}
           path: e2e/cypress/screenshots
+          if-no-files-found: "ignore"
 
 # Run Integration Tests.
   run_integration_test:
