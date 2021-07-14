@@ -6,7 +6,7 @@ import { extractLeavePeriod } from "../../../src/util/claims";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 import { format, addDays, parse } from "date-fns";
 
-describe("Post-approval (notifications/notices)", () => {
+describe("Post-approval (notifications/notices)", { retries: 0 }, () => {
   const credentials: Credentials = {
     username: Cypress.env("E2E_PORTAL_USERNAME"),
     password: Cypress.env("E2E_PORTAL_PASSWORD"),
