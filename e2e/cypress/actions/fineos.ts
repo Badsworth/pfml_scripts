@@ -39,7 +39,11 @@ export function before(): void {
     ) {
       return false;
     }
-    if (e.message.match(/Cannot set property 'status' of undefined/)) {
+    if (
+      e.message.match(
+        /Cannot (set|read) property ('status'|'range') of undefined/
+      )
+    ) {
       return false;
     }
     return true;

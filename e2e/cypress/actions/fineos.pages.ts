@@ -154,7 +154,7 @@ class AdjudicationPage {
   private onTab(...path: string[]) {
     if (this.activeTab !== path.join(",")) {
       for (const part of path) {
-        onTab(part);
+        onTab(part, part === "Certification Periods" ? 1000 : undefined);
       }
       this.activeTab = path.join(",");
     }
@@ -176,8 +176,8 @@ class AdjudicationPage {
   }
   acceptLeavePlan() {
     this.onTab("Manage Request");
-    cy.wait(150);
-    cy.get("input[type='submit'][value='Accept']").click();
+    cy.wait(300);
+    cy.get("input[type='submit'][value='Accept']").click({ force: true });
   }
   editPlanDecision(planStatus: string) {
     this.onTab("Manage Request");
