@@ -85,7 +85,7 @@ export const Review = (props) => {
     comment: "",
     employer_decision: "Approve",
     fraud: undefined,
-    employeeNotice: undefined,
+    employee_notice: undefined,
     believeRelationshipAccurate: undefined,
     relationshipInaccurateReason: "",
     // added fields
@@ -119,7 +119,7 @@ export const Review = (props) => {
   const isCommentRequired =
     formState.fraud === "Yes" ||
     formState.employer_decision === "Deny" ||
-    formState.employeeNotice === "No";
+    formState.employee_notice === "No";
 
   const isSubmitDisabled =
     (isCommentRequired && formState.comment === "") ||
@@ -260,14 +260,6 @@ export const Review = (props) => {
         ...updatedLeave,
       },
     });
-  };
-
-  const handleFraudInputChange = (updatedFraudInput) => {
-    updateFields({ fraud: updatedFraudInput });
-  };
-
-  const handleEmployeeNoticeChange = (updatedEmployeeNotice) => {
-    updateFields({ employeeNotice: updatedEmployeeNotice });
   };
 
   const handleBelieveRelationshipAccurateChange = (
@@ -470,10 +462,15 @@ export const Review = (props) => {
           onRemove={handleBenefitRemove}
           shouldShowV2={shouldShowV2}
         />
-        <FraudReport onChange={handleFraudInputChange} />
+        <FraudReport
+          fraudInput={formState.fraud}
+          getFunctionalInputProps={getFunctionalInputProps}
+        />
         <EmployeeNotice
-          fraud={formState.fraud}
-          onChange={handleEmployeeNoticeChange}
+          employeeNoticeInput={formState.employee_notice}
+          fraudInput={formState.fraud}
+          getFunctionalInputProps={getFunctionalInputProps}
+          updateFields={updateFields}
         />
         <EmployerDecision
           employerDecisionInput={formState.employer_decision}
@@ -482,12 +479,13 @@ export const Review = (props) => {
           updateFields={updateFields}
         />
         <Feedback
-          appLogic={props.appLogic}
+          getField={getField}
+          getFunctionalInputProps={getFunctionalInputProps}
           isReportingFraud={formState.fraud === "Yes"}
           isDenyingRequest={formState.employer_decision === "Deny"}
-          isEmployeeNoticeInsufficient={formState.employeeNotice === "No"}
+          isEmployeeNoticeInsufficient={formState.employee_notice === "No"}
           comment={formState.comment}
-          setComment={(comment) => updateFields({ comment })}
+          updateFields={updateFields}
         />
         <Button
           className="margin-top-4"

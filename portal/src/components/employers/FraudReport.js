@@ -1,30 +1,19 @@
-import React, { useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import Alert from "../Alert";
 import ConditionalContent from "../ConditionalContent";
 import Details from "../Details";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
+import React from "react";
 import ReviewHeading from "../ReviewHeading";
 
-const FraudReport = ({ onChange = () => {} }) => {
+const FraudReport = (props) => {
   const { t } = useTranslation();
-  const [isFraud, setIsFraud] = useState();
-
-  const handleOnChange = (event) => {
-    setIsFraud(event.target.value);
-  };
-
-  useEffect(() => {
-    if (isFraud === "Yes" || isFraud === "No") {
-      onChange(isFraud);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFraud]);
 
   return (
     <React.Fragment>
       <InputChoiceGroup
+        {...props.getFunctionalInputProps("fraud")}
         smallLabel
         label={
           <ReviewHeading level="2">
@@ -46,21 +35,19 @@ const FraudReport = ({ onChange = () => {} }) => {
         }
         choices={[
           {
-            checked: isFraud === "Yes",
+            checked: props.fraudInput === "Yes",
             label: t("components.employersFraudReport.choiceYes"),
             value: "Yes",
           },
           {
-            checked: isFraud === "No",
+            checked: props.fraudInput === "No",
             label: t("components.employersFraudReport.choiceNo"),
             value: "No",
           },
         ]}
-        name="isFraud"
-        onChange={handleOnChange}
         type="radio"
       />
-      <ConditionalContent visible={isFraud === "Yes"}>
+      <ConditionalContent visible={props.fraudInput === "Yes"}>
         <React.Fragment>
           <Alert
             state="warning"
@@ -82,7 +69,8 @@ const FraudReport = ({ onChange = () => {} }) => {
 };
 
 FraudReport.propTypes = {
-  onChange: PropTypes.func.isRequired,
+  fraudInput: PropTypes.oneOf(["Yes", "No"]),
+  getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
 export default FraudReport;

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
 import FormLabel from "../FormLabel";
 import InputChoiceGroup from "../InputChoiceGroup";
@@ -15,24 +14,17 @@ import { useTranslation } from "../../locales/i18n";
  */
 
 const Feedback = ({
-  appLogic,
+  getField,
+  getFunctionalInputProps,
   isReportingFraud,
   isDenyingRequest,
   isEmployeeNoticeInsufficient,
   comment,
-  setComment,
+  updateFields,
 }) => {
   // TODO (EMPLOYER-583) add frontend validation
   const { t } = useTranslation();
   const [shouldShowCommentBox, setShouldShowCommentBox] = useState(false);
-  const errorMsg = appLogic.appErrors.fieldErrorMessage("comment");
-
-  useEffect(() => {
-    if (!shouldShowCommentBox) {
-      setComment("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldShowCommentBox]);
 
   useEffect(() => {
     setShouldShowCommentBox(
@@ -47,6 +39,10 @@ const Feedback = ({
     if (!isDenyingRequest && isEmployeeNoticeInsufficient)
       return "employeeNotice";
   };
+
+  const clearCommentBox = () => updateFields({ comment: "" });
+
+  const { errorMsg, name, onChange } = getFunctionalInputProps("comment");
 
   const commentClasses = classnames("usa-form-group", {
     "usa-form-group--error": !!errorMsg,
@@ -79,22 +75,21 @@ const Feedback = ({
         }
         name="shouldShowCommentBox"
         onChange={(event) => {
-          const hasSelectedYes = event.target.value === "true";
-          setShouldShowCommentBox(hasSelectedYes);
-          if (!hasSelectedYes) setComment("");
+          setShouldShowCommentBox(event.target.value === "true");
         }}
         type="radio"
       />
       <ConditionalContent
-        getField={() => comment}
-        clearField={() => setComment("")}
-        updateFields={(event) => setComment(event.target.value)}
+        getField={getField}
+        clearField={clearCommentBox}
+        updateFields={updateFields}
+        fieldNamesClearedWhenHidden={["comment"]}
         visible={shouldShowCommentBox}
       >
         <div className={commentClasses}>
           <FormLabel
             className="usa-label"
-            htmlFor="comment"
+            htmlFor={name}
             small
             errorMsg={errorMsg}
           >
@@ -107,8 +102,8 @@ const Feedback = ({
           </FormLabel>
           <textarea
             className={textAreaClasses}
-            name="comment"
-            onChange={(event) => setComment(event.target.value)}
+            name={name}
+            onChange={onChange}
           />
         </div>
       </ConditionalContent>
@@ -117,16 +112,13 @@ const Feedback = ({
 };
 
 Feedback.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-    clearErrors: PropTypes.func.isRequired,
-    catchError: PropTypes.func.isRequired,
-  }).isRequired,
+  getField: PropTypes.func.isRequired,
+  getFunctionalInputProps: PropTypes.func.isRequired,
   isReportingFraud: PropTypes.bool,
   isDenyingRequest: PropTypes.bool,
   isEmployeeNoticeInsufficient: PropTypes.bool,
   comment: PropTypes.string.isRequired,
-  setComment: PropTypes.func.isRequired,
+  updateFields: PropTypes.func.isRequired,
 };
 
 export default Feedback;
