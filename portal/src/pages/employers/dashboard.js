@@ -31,30 +31,7 @@ import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
 
 export const Dashboard = (props) => {
-  const { appLogic, paginationMeta, user } = props;
   const { t } = useTranslation();
-
-  const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
-  const hasVerifiableEmployer = user.hasVerifiableEmployer;
-
-  const tableColumnVisibility = {
-    employee_name: true,
-    fineos_absence_id: true,
-    employer_dba: user.user_leave_administrators.length > 1,
-    employer_fein: true,
-    created_at: true,
-    status: true,
-  };
-  /**
-   * Columns rendered in the table.
-   * Used for rendering header labels and the field(s) in each column. These
-   * mostly mirror the name of the fields rendered, but not exactly
-   * since some columns might require multiple fields.
-   * @type {string[]}
-   */
-  const tableColumnKeys = Object.entries(tableColumnVisibility)
-    .filter(([columnKey, isVisible]) => isVisible)
-    .map(([columnKey, isVisible]) => columnKey);
 
   /**
    * Update the page's query string, to load a different page number,
@@ -81,29 +58,16 @@ export const Dashboard = (props) => {
 
     // Our withClaims component watches the query string and
     // will trigger an API request when it changes.
-    appLogic.portalFlow.updateQuery(paramsObj);
-  };
-
-  /**
-   * Event handler for when a next/prev pagination button is clicked
-   * @param {number|string} pageOffset - Page number to load
-   */
-  const handlePaginationNavigationClick = (pageOffset) => {
-    updatePageQuery([
-      {
-        name: "page_offset",
-        value: pageOffset,
-      },
-    ]);
+    props.appLogic.portalFlow.updateQuery(paramsObj);
   };
 
   return (
     <React.Fragment>
-      <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
+      <EmployerNavigationTabs activePath={props.appLogic.portalFlow.pathname} />
       <Title>{t("pages.employersDashboard.title")}</Title>
 
       <div className="measure-6">
-        {hasVerifiableEmployer && (
+        {props.user.hasVerifiableEmployer && (
           <Alert
             state="warning"
             heading={t("pages.employersDashboard.verificationTitle")}
@@ -121,7 +85,7 @@ export const Dashboard = (props) => {
           </Alert>
         )}
 
-        <DashboardInfoAlert user={user} />
+        <DashboardInfoAlert user={props.user} />
       </div>
 
       <section className="margin-bottom-4">
@@ -154,9 +118,88 @@ export const Dashboard = (props) => {
         activeFilters={props.activeFilters}
         showFilters={props.query["show-filters"] === "true"}
         updatePageQuery={updatePageQuery}
-        user={user}
+        user={props.user}
       />
+      <PaginatedClaimsTable
+        appLogic={props.appLogic}
+        claims={props.claims}
+        user={props.user}
+        paginationMeta={props.paginationMeta}
+        updatePageQuery={updatePageQuery}
+        sort={
+          <SortDropdown
+            order_by={props.query.order_by}
+            order_direction={props.query.order_direction}
+            updatePageQuery={updatePageQuery}
+          />
+        }
+      />
+    </React.Fragment>
+  );
+};
 
+Dashboard.propTypes = {
+  activeFilters: PropTypes.shape({
+    claim_status: PropTypes.string,
+    employer_id: PropTypes.string,
+  }).isRequired,
+  appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
+      pathname: PropTypes.string.isRequired,
+      updateQuery: PropTypes.func.isRequired,
+    }).isRequired,
+  }).isRequired,
+  claims: PropTypes.instanceOf(ClaimCollection),
+  query: PropTypes.shape({
+    "show-filters": PropTypes.oneOf(["false", "true"]),
+    order_by: PropTypes.string,
+    order_direction: PropTypes.oneOf(["ascending", "descending"]),
+  }),
+  paginationMeta: PropTypes.instanceOf(PaginationMeta),
+  user: PropTypes.instanceOf(User).isRequired,
+};
+
+const PaginatedClaimsTable = (props) => {
+  const { paginationMeta, updatePageQuery, user } = props;
+  const { t } = useTranslation();
+
+  const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
+  const tableColumnVisibility = {
+    employee_name: true,
+    fineos_absence_id: true,
+    employer_dba: user.user_leave_administrators.length > 1,
+    employer_fein: true,
+    created_at: true,
+    status: true,
+  };
+
+  /**
+   * Columns rendered in the table.
+   * Used for rendering header labels and the field(s) in each column. These
+   * mostly mirror the name of the fields rendered, but not exactly
+   * since some columns might require multiple fields.
+   * @type {string[]}
+   */
+  const tableColumnKeys = Object.entries(tableColumnVisibility)
+    .filter(([columnKey, isVisible]) => isVisible)
+    .map(([columnKey]) => columnKey);
+
+  /**
+   * Event handler for when a next/prev pagination button is clicked
+   * @param {number|string} pageOffset - Page number to load
+   */
+  const handlePaginationNavigationClick = (pageOffset) => {
+    updatePageQuery([
+      {
+        name: "page_offset",
+        value: pageOffset,
+      },
+    ]);
+  };
+
+  return (
+    <React.Fragment>
       <div className="margin-y-2 grid-row grid-gap flex-align-center">
         {paginationMeta.total_records > 0 && (
           <div className="grid-col grid-col-12 margin-bottom-2 mobile-lg:grid-col-fill mobile-lg:margin-bottom-0">
@@ -167,13 +210,7 @@ export const Dashboard = (props) => {
             />
           </div>
         )}
-        <div className="grid-col grid-col-auto">
-          <SortDropdown
-            order_by={props.query.order_by}
-            order_direction={props.query.order_direction}
-            updatePageQuery={updatePageQuery}
-          />
-        </div>
+        <div className="grid-col grid-col-auto">{props.sort}</div>
       </div>
       <Table className="width-full" responsive scrollable>
         <thead>
@@ -228,26 +265,18 @@ export const Dashboard = (props) => {
   );
 };
 
-Dashboard.propTypes = {
-  activeFilters: PropTypes.shape({
-    claim_status: PropTypes.string,
-    employer_id: PropTypes.string,
-  }).isRequired,
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-      pathname: PropTypes.string.isRequired,
-      updateQuery: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
+PaginatedClaimsTable.propTypes = {
+  appLogic: Dashboard.propTypes.appLogic,
   claims: PropTypes.instanceOf(ClaimCollection),
+  paginationMeta: PropTypes.instanceOf(PaginationMeta),
+  updatePageQuery: PropTypes.func.isRequired,
+  /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
+  sort: PropTypes.node.isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
   query: PropTypes.shape({
-    "show-filters": PropTypes.oneOf(["false", "true"]),
     order_by: PropTypes.string,
     order_direction: PropTypes.oneOf(["ascending", "descending"]),
   }),
-  paginationMeta: PropTypes.instanceOf(PaginationMeta),
-  user: PropTypes.instanceOf(User).isRequired,
 };
 
 /**

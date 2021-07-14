@@ -109,10 +109,19 @@ describe("Employer dashboard", () => {
     wrapper
       .find("Trans")
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
+    wrapper
+      .find("PaginatedClaimsTable")
+      .dive()
+      .find("Trans")
+      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
 
     expect(wrapper.find("Details")).toMatchSnapshot();
-    expect(wrapper.find("PaginationSummary")).toMatchSnapshot();
-    expect(wrapper.find("PaginationNavigation")).toMatchSnapshot();
+    expect(
+      wrapper.find("PaginatedClaimsTable").dive().find("PaginationSummary")
+    ).toMatchSnapshot();
+    expect(
+      wrapper.find("PaginatedClaimsTable").dive().find("PaginationNavigation")
+    ).toMatchSnapshot();
   });
 
   it("renders a beta info alert if all employers are registered in FINEOS", () => {
@@ -187,9 +196,10 @@ describe("Employer dashboard", () => {
     };
 
     const { wrapper } = setup({ claims, userAttrs });
+    const parent = wrapper.find("PaginatedClaimsTable").dive();
 
-    expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
-    expect(wrapper.find("thead")).toMatchSnapshot();
+    expect(parent.find("ClaimTableRows").dive()).toMatchSnapshot();
+    expect(parent.find("thead")).toMatchSnapshot();
   });
 
   it("renders claim rows without links if employer is not registered in FINEOS", () => {
@@ -204,8 +214,9 @@ describe("Employer dashboard", () => {
     };
 
     const { wrapper } = setup({ claims, userAttrs });
+    const parent = wrapper.find("PaginatedClaimsTable").dive();
 
-    expect(wrapper.find("ClaimTableRows").dive().find("a")).toHaveLength(0);
+    expect(parent.find("ClaimTableRows").dive().find("a")).toHaveLength(0);
   });
 
   it("allows Claim.employee to be null", () => {
@@ -221,9 +232,10 @@ describe("Employer dashboard", () => {
         user_leave_administrators: [verifiedUserLeaveAdministrator],
       },
     });
+    const parent = wrapper.find("PaginatedClaimsTable").dive();
 
     expect(
-      wrapper
+      parent
         .find("ClaimTableRows")
         .dive()
         .find('[data-test="employee_name"] a')
@@ -246,8 +258,13 @@ describe("Employer dashboard", () => {
       },
     });
 
-    expect(soloEmployerWrapper.find("ClaimTableRows").prop("tableColumnKeys"))
-      .toMatchInlineSnapshot(`
+    expect(
+      soloEmployerWrapper
+        .find("PaginatedClaimsTable")
+        .dive()
+        .find("ClaimTableRows")
+        .prop("tableColumnKeys")
+    ).toMatchInlineSnapshot(`
       Array [
         "employee_name",
         "fineos_absence_id",
@@ -257,7 +274,11 @@ describe("Employer dashboard", () => {
       ]
     `);
     expect(
-      multipleEmployerWrapper.find("ClaimTableRows").prop("tableColumnKeys")
+      multipleEmployerWrapper
+        .find("PaginatedClaimsTable")
+        .dive()
+        .find("ClaimTableRows")
+        .prop("tableColumnKeys")
     ).toMatchInlineSnapshot(`
       Array [
         "employee_name",
@@ -280,10 +301,11 @@ describe("Employer dashboard", () => {
         total_pages: 1,
       },
     });
+    const parent = wrapper.find("PaginatedClaimsTable").dive();
 
-    expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
-    expect(wrapper.find("PaginationSummary").exists()).toBe(false);
-    expect(wrapper.find("PaginationNavigation").exists()).toBe(false);
+    expect(parent.find("ClaimTableRows").dive()).toMatchSnapshot();
+    expect(parent.find("PaginationSummary").exists()).toBe(false);
+    expect(parent.find("PaginationNavigation").exists()).toBe(false);
   });
 
   it("renders only the pagination summary when only one page of claims exists", () => {
@@ -293,16 +315,18 @@ describe("Employer dashboard", () => {
         total_pages: 1,
       },
     });
+    const parent = wrapper.find("PaginatedClaimsTable").dive();
 
-    expect(wrapper.find("PaginationSummary").exists()).toBe(true);
-    expect(wrapper.find("PaginationNavigation").exists()).toBe(false);
+    expect(parent.find("PaginationSummary").exists()).toBe(true);
+    expect(parent.find("PaginationNavigation").exists()).toBe(false);
   });
 
   it("changes the page_offset query param when a page navigation button is clicked", () => {
     const { updateQuerySpy, wrapper } = setup();
     const clickedPageOffset = "3";
+    const parent = wrapper.find("PaginatedClaimsTable").dive();
 
-    wrapper.find("PaginationNavigation").simulate("click", clickedPageOffset);
+    parent.find("PaginationNavigation").simulate("click", clickedPageOffset);
 
     expect(updateQuerySpy).toHaveBeenCalledWith({
       page_offset: clickedPageOffset,
@@ -329,9 +353,10 @@ describe("Employer dashboard", () => {
         user_leave_administrators: [verifiableUserLeaveAdministrator],
       },
     });
+    const parent = wrapper.find("PaginatedClaimsTable").dive();
 
     expect(
-      wrapper.find("[data-test='verification-instructions-row'] Trans").dive()
+      parent.find("[data-test='verification-instructions-row'] Trans").dive()
     ).toMatchSnapshot();
   });
 
@@ -704,7 +729,9 @@ describe("Employer dashboard", () => {
 
     const { wrapper } = setup();
 
-    expect(wrapper.find("SortDropdown").dive()).toMatchSnapshot();
+    expect(
+      wrapper.find("PaginatedClaimsTable").dive().find("SortDropdown").dive()
+    ).toMatchSnapshot();
   });
 
   it("updates order_by and order_direction params when a sort choice is selected", () => {
@@ -714,8 +741,12 @@ describe("Employer dashboard", () => {
 
     const { updateQuerySpy, wrapper } = setup();
 
-    const search = wrapper.find("SortDropdown").dive();
-    const { changeField } = simulateEvents(search);
+    const field = wrapper
+      .find("PaginatedClaimsTable")
+      .dive()
+      .find("SortDropdown")
+      .dive();
+    const { changeField } = simulateEvents(field);
 
     changeField("orderAndDirection", "employee,ascending");
 
