@@ -1,5 +1,6 @@
+import { addDays, addWeeks, startOfWeek, subWeeks } from "date-fns";
+
 import { ScenarioSpecification } from "../generation/Scenario";
-import { addWeeks, subWeeks, startOfWeek, addDays } from "date-fns";
 import { getCaringLeaveStartEndDates } from "../../src/util/claims";
 
 /**
@@ -49,6 +50,21 @@ export const REDUCED_ER: ScenarioSpecification = {
       hours_worked_per_week: 20,
       employer_decision: "Approve",
       fraud: "No",
+    },
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+  },
+};
+
+export const REDUCED_RFI: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "REDUCED_RFI",
+    shortClaim: true,
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
+    docs: {
+      FOSTERPLACEMENT: {},
+      MASSID: {},
     },
     reduced_leave_spec: "0,240,240,240,240,240,0",
   },

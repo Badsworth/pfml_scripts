@@ -1,4 +1,4 @@
-import { Address, OtherIncome } from "../../src/_api";
+import { Address, OtherIncome, ReducedScheduleLeavePeriods } from "../../src/_api";
 import {
   AllNotNull,
   NonEmptyArray,
@@ -166,6 +166,33 @@ class AdjudicationPage {
     cy.wait("@ajaxRender");
     cy.wait(200);
     cy.get("input[title='OK']").click();
+  }
+  
+  enterReducedLeaveSchedule(reducedLeaveSchedule: ReducedScheduleLeavePeriods) {
+    this.onTab("Request Information");
+    cy.wait(5000)
+    cy.get("input[type='submit'][value='Edit']").click();
+    cy.get("#PopupContainer input[value='Yes']").click();
+
+    const hrs = (minutes: number | null | undefined) => {
+      return minutes ? Math.round(minutes / 60) : 0;
+    };
+    const weekdayInfo = [
+      { hours: hrs(reducedLeaveSchedule.sunday_off_minutes) },
+      { hours: hrs(reducedLeaveSchedule.monday_off_minutes) },
+      { hours: hrs(reducedLeaveSchedule.tuesday_off_minutes) },
+      { hours: hrs(reducedLeaveSchedule.wednesday_off_minutes) },
+      { hours: hrs(reducedLeaveSchedule.thursday_off_minutes) },
+      { hours: hrs(reducedLeaveSchedule.friday_off_minutes) },
+      { hours: hrs(reducedLeaveSchedule.saturday_off_minutes) },
+    ];
+  
+    cy.get("input[name*='_hours']").each((input, index) => {
+      cy.wrap(input).type(`{selectall}{backspace}${weekdayInfo[index].hours.toString()}`);
+    });
+    cy.get("#editAbsencePeriodPopupWidget_un46_okButtonBean").click();
+    
+    return reducedLeaveSchedule
   }
 }
 

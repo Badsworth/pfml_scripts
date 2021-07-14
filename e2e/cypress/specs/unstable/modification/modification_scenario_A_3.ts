@@ -1,7 +1,8 @@
-import { addDays, format, parse, subDays } from "date-fns";
+import { addDays, format, parse } from "date-fns";
 import { fineos, fineosPages, portal } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 
+import { ReducedScheduleLeavePeriods } from "../../../../src/_api";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { extractLeavePeriod } from "../../../../src/util/claims";
@@ -21,7 +22,7 @@ describe("Post-approval (notifications/notices)", () => {
       fineos.before();
       cy.visit("/");
       // Submit a claim via the API, including Employer Response.
-      cy.task("generateClaim", "CHAP_ER").then((claim) => {
+      cy.task("generateClaim", "REDUCED_RFI").then((claim) => {
         cy.stash("claim", claim);
         cy.task("submitClaimToAPI", {
           ...claim,
@@ -29,29 +30,46 @@ describe("Post-approval (notifications/notices)", () => {
         }).then((response) => {
           if (!response.fineos_absence_id) {
             throw new Error("Response contained no fineos_absence_id property");
+          };
+          if (claim.claim.leave_details == undefined){
+            throw new Error("Leave Details undefined")
           }
-          const [startDate, endDate] = extractLeavePeriod(claim.claim);
+          const leaveDetails = claim.claim.leave_details
+          if (leaveDetails.reduced_schedule_leave_periods == undefined){
+            throw new Error("Reduced Leave Periods are undefined")
+          }
+          const reducedLeaveDetails = leaveDetails.reduced_schedule_leave_periods[0]
+          const decreaseMinutes = function(minutes: number | null | undefined){
+            if (!!minutes && minutes >= 60){
+              return minutes - 60
+            } else {
+              return minutes
+            }
+          };
+
+          if (reducedLeaveDetails != undefined){
+            reducedLeaveDetails.monday_off_minutes = decreaseMinutes(reducedLeaveDetails.thursday_off_minutes)
+            reducedLeaveDetails.tuesday_off_minutes = decreaseMinutes(reducedLeaveDetails.thursday_off_minutes)
+            reducedLeaveDetails.wednesday_off_minutes = decreaseMinutes(reducedLeaveDetails.thursday_off_minutes)
+            reducedLeaveDetails.thursday_off_minutes = decreaseMinutes(reducedLeaveDetails.thursday_off_minutes)
+            reducedLeaveDetails.friday_off_minutes = decreaseMinutes(reducedLeaveDetails.thursday_off_minutes)
+            reducedLeaveDetails.saturday_off_minutes = decreaseMinutes(reducedLeaveDetails.thursday_off_minutes)
+            reducedLeaveDetails.sunday_off_minutes = decreaseMinutes(reducedLeaveDetails.thursday_off_minutes)
+          }
+
           cy.stash("submission", {
             application_id: response.application_id,
             fineos_absence_id: response.fineos_absence_id,
             timestamp_from: Date.now(),
           });
-          const newStartDate = format(
-            subDays(new Date(endDate), 8),
-            "MM/dd/yyyy"
-          );
-          const newEndDate = format(
-            addDays(new Date(endDate), 0),
-            "MM/dd/yyyy"
-          );
-          cy.stash("extensionLeaveDates", [newStartDate, newEndDate]);
+          cy.stash("decreasedReducedLeaveDetails", reducedLeaveDetails);
           const claimPage = fineosPages.ClaimPage.visit(
             response.fineos_absence_id
           );
 
 
           claimPage.adjudicate((adjudicate) =>
-            adjudicate.extendLeavePreAdjudication(newStartDate, newEndDate)
+            adjudicate.enterReducedLeaveSchedule(reducedLeaveDetails)
           );
 
           // Including this visit helps to avoid the "Whoops there is no test to run" message by Cypress.
@@ -73,40 +91,10 @@ describe("Post-approval (notifications/notices)", () => {
             );
             adjudication.acceptLeavePlan();
           });
-          claimPage.approve()
-          claimPage.tasks((task) => {
-            task.close("Caring Certification Review");
-            task.close("ID Review");
-          });
         });
       });
     }
   );
-
-  it("As a leave admin, I should NOT receive a request for information email", () => {
-    cy.dependsOnPreviousPass([extension]);
-    cy.unstash<Submission>("submission").then(
-      ({ timestamp_from, fineos_absence_id }) => {
-        cy.unstash<DehydratedClaim>("claim").then((claim) => {
-          const subject = getNotificationSubject(
-            `${claim.claim.first_name} ${claim.claim.last_name}`,
-            "employer response"
-          );
-          cy.task<Email[]>(
-            "getEmails",
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject,
-              timestamp_from: timestamp_from,
-            },
-            { timeout: 360000 }
-          ).then((emails) => {
-            expect(emails[0].html).to.contain(fineos_absence_id);
-          });
-        });
-      }
-    );
-  });
 
   it(
     "Leave admin will see leave periods for the claim that reflect the extension",
@@ -118,15 +106,13 @@ describe("Post-approval (notifications/notices)", () => {
       cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
         cy.unstash<Submission>("submission").then((submission) => {
           cy.unstash<string[]>("extensionLeaveDates").then(
-            ([startDate, endDate]) => {
+            ([newStartDate, newEndDate]) => {
               assertValidClaim(claim);
               portal.login(getLeaveAdminCredentials(claim.employer_fein));
-              cy.visit(
-                `/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}`
-              );
-              const portalFormatStart = format(new Date(startDate), "M/d/yyyy");
+              portal.visitActionRequiredERFormPage(submission.fineos_absence_id)
+              const portalFormatStart = format(new Date(newStartDate), "M/d/yyyy");
               const portalFormatEnd = format(
-                parse(endDate, "MM/dd/yyyy", new Date(endDate)),
+                parse(newEndDate, "MM/dd/yyyy", new Date(newEndDate)),
                 "M/d/yyyy"
               );
               portal.assertLeaveDatesAsLA(portalFormatStart, portalFormatEnd);
@@ -136,7 +122,6 @@ describe("Post-approval (notifications/notices)", () => {
       });
     }
   );
-
   it("As a leave admin, I should receive a request for information email", () => {
     cy.dependsOnPreviousPass([extension]);
     cy.unstash<Submission>("submission").then(

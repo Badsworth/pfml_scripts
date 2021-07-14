@@ -104,7 +104,7 @@ describe("Post-approval (notifications/notices)", () => {
       });
     }
   );
-  it("As a leave admin, I should receive a notification regarding the time added to the claim", () => {
+  it("As a leave admin, I should receive a request for information email", () => {
     cy.dependsOnPreviousPass([extension]);
     cy.unstash<Submission>("submission").then(
       ({ timestamp_from, fineos_absence_id }) => {
