@@ -25,6 +25,7 @@ import LeaveSchedule from "../../../components/employers/LeaveSchedule";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
 import PropTypes from "prop-types";
 import ReviewHeading from "../../../components/ReviewHeading";
+import ReviewRow from "../../../components/ReviewRow";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -364,17 +365,23 @@ export const Review = (props) => {
       </Alert>
       <p>{t("pages.employersClaimsReview.instructionsAmendment")}</p>
       {!!claim.employer_dba && (
-        <React.Fragment>
-          <p className="text-bold">
-            {t("pages.employersClaimsReview.organizationNameLabel")}
-          </p>
-          <p className="margin-top-0">{claim.employer_dba}</p>
-        </React.Fragment>
+        <ReviewRow
+          level="2"
+          label={t("pages.employersClaimsReview.organizationNameLabel")}
+          noBorder
+          data-test="org-name-row"
+        >
+          {claim.employer_dba}
+        </ReviewRow>
       )}
-      <p className="text-bold">
-        {t("pages.employersClaimsReview.employerIdentifierLabel")}
-      </p>
-      <p className="margin-top-0">{claim.employer_fein}</p>
+      <ReviewRow
+        level="2"
+        label={t("pages.employersClaimsReview.employerIdentifierLabel")}
+        noBorder
+        data-test="ein-row"
+      >
+        {claim.employer_fein}
+      </ReviewRow>
       <EmployeeInformation claim={claim} />
       <LeaveDetails
         appErrors={appErrors}
@@ -427,7 +434,11 @@ export const Review = (props) => {
             />
             <div className="usa-summary-box" role="complementary">
               <div className="usa-summary-box__body">
-                <Heading className="usa-summary-box__heading" level="4">
+                <Heading
+                  className="usa-summary-box__heading"
+                  level="3"
+                  size="4"
+                >
                   {t("pages.employersClaimsReview.otherLeavesSummaryBoxTitle")}
                 </Heading>
                 <div className="usa-summary-box__text">

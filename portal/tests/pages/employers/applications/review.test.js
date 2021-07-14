@@ -109,18 +109,11 @@ describe("Review", () => {
   });
 
   it("displays organization/employer information", () => {
-    const organizationNameLabel = wrapper.find("p.text-bold").at(0);
-    const employerIdentifierNumberLabel = wrapper.find("p.text-bold").at(1);
-    const dataValues = wrapper.find("p.margin-top-0");
-    const organizationName = dataValues.at(0);
-    const ein = dataValues.at(1);
+    const orgNameRow = wrapper.find("[data-test='org-name-row']");
+    const einRow = wrapper.find("[data-test='ein-row']");
 
-    expect(organizationNameLabel.text()).toBe("Organization");
-    expect(organizationName.text()).toBe("Work Inc.");
-    expect(employerIdentifierNumberLabel.text()).toBe(
-      "Employer ID number (EIN)"
-    );
-    expect(ein.text()).toBe("12-3456789");
+    expect(orgNameRow).toMatchSnapshot();
+    expect(einRow).toMatchSnapshot();
   });
 
   it("hides organization name if employer_dba is falsy", () => {
@@ -131,10 +124,11 @@ describe("Review", () => {
       ({ wrapper } = renderComponent("shallow", noEmployerDba));
     });
 
-    const employerIdentifierNumberLabel = wrapper.find("p.text-bold").first();
-    expect(employerIdentifierNumberLabel.text()).toBe(
-      "Employer ID number (EIN)"
-    );
+    const orgNameRow = wrapper.find("[data-test='org-name-row']");
+    const einRow = wrapper.find("[data-test='ein-row']");
+
+    expect(orgNameRow.exists()).toBe(false);
+    expect(einRow.exists()).toBe(true);
   });
 
   it("submits a claim with the correct options", async () => {
