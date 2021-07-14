@@ -2102,6 +2102,11 @@ const pages = {
     noClaimResults: "No applications on file",
     searchLabel: "Search for employee name or application ID",
     searchSubmit: "Search",
+    sortChoice_employee_az: "Last name – A to Z",
+    sortChoice_employee_za: "Last name – Z to A",
+    sortChoice_newest: "Newest applications",
+    sortChoice_oldest: "Oldest applications",
+    sortLabel: "Sort",
     startDateTooltip: "When an employee started a new leave application",
     statusDescription_approved:
       "<strong>Approved:</strong> DFML has approved this leave request.",

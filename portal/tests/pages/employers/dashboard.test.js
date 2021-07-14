@@ -696,4 +696,33 @@ describe("Employer dashboard", () => {
       page_offset: "1",
     });
   });
+
+  it("renders Sort section when feature flags are enabled", () => {
+    process.env.featureFlags = {
+      employerShowDashboardSort: true,
+    };
+
+    const { wrapper } = setup();
+
+    expect(wrapper.find("SortDropdown").dive()).toMatchSnapshot();
+  });
+
+  it("updates order_by and order_direction params when a sort choice is selected", () => {
+    process.env.featureFlags = {
+      employerShowDashboardSort: true,
+    };
+
+    const { updateQuerySpy, wrapper } = setup();
+
+    const search = wrapper.find("SortDropdown").dive();
+    const { changeField } = simulateEvents(search);
+
+    changeField("orderAndDirection", "employee,ascending");
+
+    expect(updateQuerySpy).toHaveBeenCalledWith({
+      order_by: "employee",
+      order_direction: "ascending",
+      page_offset: "1",
+    });
+  });
 });
