@@ -9,6 +9,16 @@ import useAppLogic from "../../src/hooks/useAppLogic";
 // see https://github.com/vercel/next.js/issues/5416
 jest.mock("next/dynamic", () => () => (_props) => null);
 
+const maintenance = {
+  name: null,
+  start: null,
+  end: null,
+  enabled: false,
+  options: {
+    page_routes: [],
+  },
+};
+
 function render(customProps = {}) {
   let appLogic;
 
@@ -21,6 +31,7 @@ function render(customProps = {}) {
       appLogic={appLogic}
       // eslint-disable-next-line react/no-children-prop
       children={<div>Page</div>}
+      maintenance={maintenance}
       {...customProps}
     ></PageWrapper>
   );
@@ -32,17 +43,13 @@ function hasMaintenancePage(wrapper) {
   return wrapper.find({ "data-test": "maintenance page" }).exists();
 }
 
-describe("PageWrapper", () => {
-  const maintenance = {
-    name: null,
-    start: null,
-    end: null,
-    enabled: false,
-    options: {
-      page_routes: [],
-    },
-  };
+function hasUpcomingMaintenanceBanner(wrapper) {
+  // Need to use data-test attribute since the UpcomingMaintenanceBanner component
+  // is lazy-loaded, so won't be present on initial render
+  return wrapper.find({ "data-test": "maintenance banner" }).exists();
+}
 
+describe("PageWrapper", () => {
   beforeEach(() => {
     // Enable rendering of the site
     process.env.featureFlags = {
@@ -55,7 +62,7 @@ describe("PageWrapper", () => {
       pfmlTerriyay: false,
     };
 
-    const wrapper = render({ maintenance });
+    const wrapper = render();
 
     expect(wrapper).toMatchInlineSnapshot(`
         <code>
@@ -65,7 +72,7 @@ describe("PageWrapper", () => {
   });
 
   it("sets description meta tag", () => {
-    const wrapper = render({ maintenance });
+    const wrapper = render();
 
     expect(wrapper.find("meta")).toMatchSnapshot();
   });
@@ -76,7 +83,7 @@ describe("PageWrapper", () => {
       appLogic = useAppLogic();
     });
 
-    const wrapper = render({ appLogic, maintenance });
+    const wrapper = render({ appLogic });
 
     expect(wrapper.find("Header").exists()).toBe(true);
     expect(wrapper.find("Header").prop("user")).toBe(appLogic.users.user);
@@ -84,16 +91,17 @@ describe("PageWrapper", () => {
   });
 
   it("renders Spinner when isLoading is true", () => {
-    const wrapper = render({ isLoading: true, maintenance });
+    const wrapper = render({ isLoading: true });
 
     expect(wrapper.find("#page")).toMatchSnapshot();
   });
 
   it("renders the children as the page's body", () => {
-    const wrapper = render({ children: <p>Page content</p>, maintenance });
+    const wrapper = render({ children: <p>Page content</p> });
 
     expect(wrapper.find("#page")).toMatchInlineSnapshot(`
       <section
+        data-test="maintenance banner"
         id="page"
       >
         <p>
@@ -101,6 +109,74 @@ describe("PageWrapper", () => {
         </p>
       </section>
     `);
+  });
+
+  it("renders UpcomingMaintenanceBanner when future maintenance is scheduled with start/end times", () => {
+    mockRouter.pathname = "/login";
+
+    const wrapper = render({
+      maintenance: {
+        ...maintenance,
+        start: DateTime.local().plus({ days: 1 }), // Starts tomorrow
+        end: DateTime.local().plus({ days: 3 }), // Ends in 3 days
+        enabled: true,
+        options: {
+          page_routes: ["/login"],
+        },
+      },
+    });
+
+    expect(hasUpcomingMaintenanceBanner(wrapper)).toBe(true);
+  });
+
+  it("renders UpcomingMaintenanceBanner when future maintenance is scheduled with start time but no end time", () => {
+    mockRouter.pathname = "/login";
+
+    const wrapper = render({
+      maintenance: {
+        ...maintenance,
+        start: DateTime.local().plus({ days: 1 }), // Starts tomorrow
+        enabled: true,
+        options: {
+          page_routes: ["/login"],
+        },
+      },
+    });
+
+    expect(hasUpcomingMaintenanceBanner(wrapper)).toBe(true);
+  });
+
+  it("renders UpcomingMaintenanceBanner when future maintenance is scheduled with end time but no start time", () => {
+    mockRouter.pathname = "/login";
+
+    const wrapper = render({
+      maintenance: {
+        ...maintenance,
+        end: DateTime.local().plus({ days: 3 }), // Ends in 3 days
+        enabled: true,
+        options: {
+          page_routes: ["/applications"], // Set different page route so we get the banner and not the maintenance takeover page
+        },
+      },
+    });
+
+    expect(hasUpcomingMaintenanceBanner(wrapper)).toBe(true);
+  });
+
+  it("renders UpcomingMaintenanceBanner when future maintenance is scheduled with no start/end times", () => {
+    mockRouter.pathname = "/login";
+
+    const wrapper = render({
+      maintenance: {
+        ...maintenance,
+        enabled: true,
+        options: {
+          page_routes: ["/applications"], // Set different page route so we get the banner and not the maintenance takeover page
+        },
+      },
+    });
+
+    expect(hasUpcomingMaintenanceBanner(wrapper)).toBe(true);
   });
 
   it("renders MaintenanceTakeover when maintenancePageRoutes includes the current page's route and no start/end time is set", () => {
@@ -325,7 +401,7 @@ describe("PageWrapper", () => {
       appLogic = useAppLogic();
     });
 
-    const wrapper = render({ appLogic, maintenance });
+    const wrapper = render({ appLogic });
 
     expect(wrapper.find("ErrorsSummary").prop("errors")).toBe(
       appLogic.appErrors

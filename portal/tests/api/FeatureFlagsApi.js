@@ -1,6 +1,5 @@
-import AdminApi from "../../src/api/AdminApi";
-import { Auth } from "@aws-amplify/auth";
 import { DateTime } from "luxon";
+import FeatureFlagsApi from "../../src/api/FeatureFlagsApi";
 import Flag from "../../src/models/Flag";
 
 jest.mock("@aws-amplify/auth");
@@ -34,8 +33,6 @@ describe("admin API", () => {
     },
   ];
 
-  const accessTokenJwt =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
   const getResponse = () => {
     return {
       data: responseData,
@@ -44,12 +41,7 @@ describe("admin API", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
-    adminApi = new AdminApi();
+    adminApi = new FeatureFlagsApi();
   });
 
   describe("get maintenance flag", () => {

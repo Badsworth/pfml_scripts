@@ -2,36 +2,54 @@
 
 The Portal includes the ability to have maintenance pages that we can turn on in case we need to shut down all or part of the website.
 
-Maintenance pages are controlled through the `maintenancePageRoutes` [environment variable](environment-variables.md).
+Maintenance pages are controlled through the `maintenance` entry in the [S3 feature-gate files](/EOLWD/pfml/blob/main/feature_flags/). The data is retrieved from the file via API request in the portal and then set in `appLogic.featureFlags.flags`. The API request is cached for five minutes and only executed once for every full page request (not on react render/re-render).
 
-Add the `maintenancePageRoutes` variable to the environment you want to target. It accepts an array of routes (without trailing slashes) that should render a maintenance page.
+All available options for maintenance are:
+
+```yaml
+maintenance:
+  start: <time>
+  end: <time>
+  enabled: 0
+  options:
+    page_routes:
+      - /*
+```
+
+Add the `options:page_routes` key to the environment you want to target. It accepts an array of routes (without trailing slashes) that should render a maintenance page.
 
 ## Enable site wide
 
 Use `*` to match any string:
 
-```json
-"maintenancePageRoutes": ["/*"]
+```yaml
+enabled: 1
+options:
+  page_routes:
+    - /*
 ```
 
 ## Enable on a group of pages
 
-```json
-"maintenancePageRoutes": ["/applications/*"]
+```yaml
+enabled: 1
+options:
+  page_routes:
+    - /applications/*
 ```
 
 ## Enable on specific pages
 
-```json
-"maintenancePageRoutes": [
-  "/create-account",
-  "/employers/create-account"
-]
+```yaml
+enabled: 1
+options:
+  page_routes:
+    - /create-account
 ```
 
 ## Enable scheduled maintenance page
 
-If the maintenance page is being added because of scheduled down time, you can optionally schedule the beginning and end of this maintenance time by setting the `maintenanceStart` and/or `maintenanceEnd` environment variable to an [ISO 8601](https://xkcd.com/1179/) datetime string.
+If the maintenance page is being added because of scheduled down time, you can optionally schedule the beginning and end of this maintenance time by setting the `start` and/or `end` keys to an [ISO 8601](https://xkcd.com/1179/) datetime string.
 
 - Daylight savings time needs taken into account! For Eastern Daylight Time (EDT), use `-04:00`, for Eastern Standard Time (EST), use `-05:00`.
 - The start and end time are optional.
@@ -41,10 +59,13 @@ If the maintenance page is being added because of scheduled down time, you can o
 
 For example, to enable the maintenance page on all routes, starting at March 25 at 3:30am EDT and ending at March 26 at 8pm EDT.
 
-```json
-"maintenancePageRoutes": ["/*"], // required
-"maintenanceStart": "2021-03-25T03:30:00-04:00",
-"maintenanceEnd": "2021-03-26T20:00:00-04:00",
+```yaml
+start: "2021-03-25T03:30:00-04:00"
+end: "2021-03-26T20:00:00-04:00"
+enabled: 1
+options:
+  page_routes:
+    - /*
 ```
 
 We're using Eastern time zone above since that's what Massachusetts is, but it could technically be whatever timezone.

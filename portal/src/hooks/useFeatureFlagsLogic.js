@@ -1,5 +1,6 @@
-import AdminApi from "../api/AdminApi";
+import FeatureFlagsApi from "../api/FeatureFlagsApi";
 import Flag from "../models/Flag";
+import tracker from "../services/tracker";
 import { useState } from "react";
 
 /**
@@ -9,11 +10,8 @@ import { useState } from "react";
  * @returns {object} { flags: Object, getFlag: Function, loadFlags: Function }
  */
 const useFlagsLogic = ({ appErrorsLogic }) => {
-  const flagModel = new Flag();
-  const initialState = [flagModel];
-
-  const [flags, setFlags] = useState(initialState);
-  const adminApi = new AdminApi();
+  const [flags, setFlags] = useState([]);
+  const featureFlagsApi = new FeatureFlagsApi();
 
   /**
    * Get current maintenance status from /flags/maintenance
@@ -23,9 +21,11 @@ const useFlagsLogic = ({ appErrorsLogic }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      setFlags(await adminApi.getFlags());
+      setFlags(await featureFlagsApi.getFlags());
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      tracker.trackEvent("Feature flags API request failed", {
+        errorMessage: error.message,
+      });
     }
   };
 
@@ -33,10 +33,12 @@ const useFlagsLogic = ({ appErrorsLogic }) => {
    * Get and return a specific feature flag from the
    * set of flags
    * @param {string} flag_name - Flag name to retrieve
-   * @returns {object|null} { flag } or null
+   * @returns {object} { flag }
    */
   const getFlag = (flag_name) => {
-    return flags.filter((flag) => flag.name === flag_name)[0] || null;
+    return (
+      new Flag(flags.filter((flag) => flag.name === flag_name)[0]) || new Flag()
+    );
   };
 
   return {

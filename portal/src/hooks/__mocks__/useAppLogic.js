@@ -141,7 +141,17 @@ export default jest.fn(() => ({
         end: null,
       }),
     ],
-    getFlag: jest.fn(),
+    getFlag: jest.fn(() => {
+      return new Flag({
+        enabled: false,
+        name: "maintenance",
+        options: {
+          page_routes: ["/*"],
+        },
+        start: null,
+        end: null,
+      });
+    }),
     loadFlags: jest.fn(),
   },
 }));

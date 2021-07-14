@@ -3,7 +3,6 @@ import "../../styles/app.scss";
 import React, { useEffect, useState } from "react";
 
 import { Auth } from "@aws-amplify/auth";
-import Flag from "../models/Flag";
 import PageWrapper from "../components/PageWrapper";
 import PropTypes from "prop-types";
 import { initializeI18n } from "../locales/i18n";
@@ -152,27 +151,11 @@ export const App = ({ Component, pageProps }) => {
     };
   }, [router.events, appLogic]);
 
-  useEffect(() => {
-    appLogic.featureFlags.loadFlags();
-    /**
-     * We only want feature flags to load one time and not when app re-renders. Removing
-     * the empty array or passing a appLogic.featureFlags dependency creates an infinite
-     * loop that calls the api and ultimately crashes the browser.
-     */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Get maintenance feature flag
+  const maintenance = appLogic.featureFlags.getFlag("maintenance");
 
-  const maintenance =
-    appLogic.featureFlags.getFlag("maintenance") ||
-    new Flag({
-      name: "maintenance",
-      options: {
-        page_routes: [],
-      },
-    });
-
-  // Initial database value for options is null
-  // Make sure to provide page_routes if this is the case
+  // Initial value for options is null. Make sure to provide page_routes for the maintenance flag
+  // if this is the case because getFlag will return an empty flag if flag name is not found/set
   if (maintenance.options == null) maintenance.options = { page_routes: [] };
 
   return (

@@ -9,7 +9,7 @@ import classnames from "classnames";
  */
 const UpcomingMaintenanceBanner = (props) => {
   const classes = classnames(
-    "upcoming-maintenance-banner bg-yellow padding-1 text-center"
+    "upcoming-maintenance-banner margin-bottom-3 bg-yellow padding-1 text-center"
   );
 
   let maintenanceMessage = "";
@@ -28,28 +28,26 @@ const UpcomingMaintenanceBanner = (props) => {
   }
 
   return (
-    <React.Fragment>
-      <div role="alert" className={classes}>
-        <Trans
-          i18nKey={maintenanceMessage}
-          components={{
-            start: props.start,
-            end: props.end,
-          }}
-        />
-      </div>
-    </React.Fragment>
+    <div role="alert" className={classes}>
+      <Trans
+        i18nKey={maintenanceMessage}
+        values={{
+          start: props.start,
+          end: props.end,
+        }}
+      />
+    </div>
   );
 };
 
 UpcomingMaintenanceBanner.propTypes = {
   /**
    * Start date string for the message
-   **/
+   */
   start: PropTypes.string,
   /**
    * End date string for the message
-   **/
+   */
   end: PropTypes.string,
 };
 

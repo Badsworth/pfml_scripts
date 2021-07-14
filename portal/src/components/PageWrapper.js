@@ -1,10 +1,10 @@
+import React, { useEffect } from "react";
 import { DateTime } from "luxon";
 import ErrorBoundary from "./ErrorBoundary";
 import ErrorsSummary from "./ErrorsSummary";
 import Header from "./Header";
 import { Helmet } from "react-helmet";
 import PropTypes from "prop-types";
-import React from "react";
 import Spinner from "../components/Spinner";
 import UpcomingMaintenanceBanner from "../components/UpcomingMaintenanceBanner";
 import dynamic from "next/dynamic";
@@ -78,6 +78,16 @@ const PageWrapper = (props) => {
   const maintenanceEnd = maintenance.end;
   const maintenanceEnabled = maintenance.enabled;
 
+  useEffect(() => {
+    appLogic.featureFlags.loadFlags();
+    /**
+     * We only want feature flags to load one time and not when app re-renders. Removing
+     * the empty array or passing a appLogic.featureFlags dependency creates an infinite
+     * loop that calls the api and ultimately crashes the browser.
+     */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /**
    * What to show to the user within our page wrapper. Depends on
    * the state of our app, such as loading state and feature flags.
@@ -93,7 +103,9 @@ const PageWrapper = (props) => {
     isMaintenancePageRoute(
       maintenancePageRoutes,
       appLogic.portalFlow.pathname
-    ) && isInMaintenanceWindow(maintenanceStart, maintenanceEnd);
+    ) &&
+    isInMaintenanceWindow(maintenanceStart, maintenanceEnd) &&
+    maintenance.enabled;
 
   // User-friendly representation of the maintenance times
   const maintenanceStartTime = maintenanceStart
@@ -124,11 +136,7 @@ const PageWrapper = (props) => {
         <Spinner aria-valuetext={t("components.spinner.label")} />
       </section>
     );
-  } else if (
-    showMaintenancePageBody &&
-    maintenance.enabled &&
-    !isFeatureEnabled("noMaintenance")
-  ) {
+  } else if (showMaintenancePageBody && !isFeatureEnabled("noMaintenance")) {
     pageBody = (
       <section id="page" data-test="maintenance page">
         <MaintenanceTakeover
@@ -138,7 +146,7 @@ const PageWrapper = (props) => {
     );
   } else {
     pageBody = (
-      <section id="page">
+      <section id="page" data-test="maintenance banner">
         {showUpcomingMaintenanceBanner && (
           <UpcomingMaintenanceBanner
             start={maintenanceStartTime}

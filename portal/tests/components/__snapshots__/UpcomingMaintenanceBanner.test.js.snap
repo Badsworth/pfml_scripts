@@ -1,77 +1,45 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`MaintenanceTakeover Renders correct content when both start date and end date are provided 1`] = `
-<Fragment>
-  <div
-    className="upcoming-maintenance-banner bg-yellow padding-1 text-center"
-    role="alert"
+Array [
+  "We want to make you aware that there will be scheduled site maintenance from ",
+  <strong
+    key="strong-1"
   >
-    <Trans
-      components={
-        Object {
-          "end": "June 17, 2021, 10:00 AM EDT",
-          "start": "June 15, 2021, 3:00 PM EDT",
-        }
-      }
-      i18nKey="components.upcomingMaintenanceBanner.messageWithStartAndEnd"
-    />
-  </div>
-</Fragment>
+    June 15, 2021, 3:00 PM EDT
+  </strong>,
+  " to ",
+  <strong
+    key="strong-3"
+  >
+    June 17, 2021, 10:00 AM EDT
+  </strong>,
+  ". All or parts of the site will be unavailable during this time. We appreciate your patience and understanding.",
+]
 `;
 
 exports[`MaintenanceTakeover Renders correct content when only end date is provided 1`] = `
-<Fragment>
-  <div
-    className="upcoming-maintenance-banner bg-yellow padding-1 text-center"
-    role="alert"
+Array [
+  "We want to make you aware that the site is currently undergoing maintenance. We project that maintenance will be completed by ",
+  <strong
+    key="strong-1"
   >
-    <Trans
-      components={
-        Object {
-          "end": "June 17, 2021, 10:00 AM EDT",
-          "start": "",
-        }
-      }
-      i18nKey="components.upcomingMaintenanceBanner.messageWithEndAndNoStart"
-    />
-  </div>
-</Fragment>
+    June 17, 2021, 10:00 AM EDT
+  </strong>,
+  ". All or parts of the site will be temporarily unavailable. We appreciate your patience and understanding.",
+]
 `;
 
 exports[`MaintenanceTakeover Renders correct content when only start date is provided 1`] = `
-<Fragment>
-  <div
-    className="upcoming-maintenance-banner bg-yellow padding-1 text-center"
-    role="alert"
+Array [
+  "We want to make you aware that there will be scheduled site maintenance beginning at ",
+  <strong
+    key="strong-1"
   >
-    <Trans
-      components={
-        Object {
-          "end": "",
-          "start": "June 15, 2021, 3:00 PM EDT",
-        }
-      }
-      i18nKey="components.upcomingMaintenanceBanner.messageWithStartAndNoEnd"
-    />
-  </div>
-</Fragment>
+    June 15, 2021, 3:00 PM EDT
+  </strong>,
+  ". All or parts of the site will be temporarily unavailable. We appreciate your patience and understanding.",
+]
 `;
 
-exports[`MaintenanceTakeover Renders correct content when start date and end date are not provided 1`] = `
-<Fragment>
-  <div
-    className="upcoming-maintenance-banner bg-yellow padding-1 text-center"
-    role="alert"
-  >
-    <Trans
-      components={
-        Object {
-          "end": "",
-          "start": "",
-        }
-      }
-      i18nKey="components.upcomingMaintenanceBanner.messageWithNoStartAndNoEnd"
-    />
-  </div>
-</Fragment>
-`;
+exports[`MaintenanceTakeover Renders correct content when start date and end date are not provided 1`] = `"We want to make you aware that the site is currently undergoing maintenance. All or parts of the site will be temporarily unavailable. We appreciate your patience and understanding."`;

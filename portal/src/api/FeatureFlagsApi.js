@@ -1,7 +1,7 @@
 import BaseApi from "./BaseApi";
 import Flag from "../models/Flag";
 
-export default class AdminApi extends BaseApi {
+export default class FeatureFlagApi extends BaseApi {
   get basePath() {
     return "";
   }
@@ -12,7 +12,7 @@ export default class AdminApi extends BaseApi {
 
   /**
    * Fetches all feature flags
-   * @returns {Promise<AdminApiResult>}
+   * @returns {Promise<FeatureFlagApiResult>}
    */
   getFlags = async () => {
     const { data } = await this.request(
