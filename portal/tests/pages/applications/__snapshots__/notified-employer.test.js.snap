@@ -39,7 +39,7 @@ exports[`NotifiedEmployer renders the page 1`] = `
   >
     <InputDate
       dayLabel="Day"
-      example="mm / dd / yyyy"
+      example="MM / DD / YYYY"
       hint="This can be an approximate date."
       label="When did you tell them?"
       monthLabel="Month"

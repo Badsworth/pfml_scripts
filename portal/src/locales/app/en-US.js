@@ -2709,7 +2709,7 @@ const components = {
   form: {
     continueButton: "Save and continue",
     dateInputDayLabel: "Day",
-    dateInputExample: "mm / dd / yyyy",
+    dateInputExample: "MM / DD / YYYY",
     dateInputMonthLabel: "Month",
     dateInputYearLabel: "Year",
     optional: "(optional)",
