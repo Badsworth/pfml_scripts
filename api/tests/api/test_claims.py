@@ -13,6 +13,7 @@ import massgov.pfml.util.datetime as datetime_util
 import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
     Claim,
     ManagedRequirementStatus,
     ManagedRequirementType,
@@ -1762,16 +1763,8 @@ def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> b
     assert claim_response["employee"]["last_name"] == claim_query.employee.last_name
     assert claim_response["employee"]["other_name"] == claim_query.employee.other_name
     assert (
-        claim_response["fineos_absence_status"]["absence_status_description"]
-        == claim_query.fineos_absence_status.absence_status_description
-    )
-    assert (
         claim_response["claim_status"]
         == claim_query.fineos_absence_status.absence_status_description
-    )
-    assert (
-        claim_response["claim_type"]["claim_type_description"]
-        == claim_query.claim_type.claim_type_description
     )
     assert claim_response["claim_type_description"] == claim_query.claim_type.claim_type_description
 
@@ -2160,31 +2153,47 @@ class TestGetClaimsEndpoint:
             assert len(data) == self.claims_count
             self._assert_data_order(data, desc=True)
 
-        def test_get_claims_with_order_fineos_absence_status_asc(self, client, employer_auth_token):
+        def test_get_claims_with_order_fineos_absence_status_asc(
+            self, client, employer_auth_token, test_db_session
+        ):
             request = {"order_direction": "ascending", "order_by": "fineos_absence_status"}
             response = self._perform_api_call(request, client, employer_auth_token)
             assert response.status_code == 200
             response_body = response.get_json()
-            data = [
-                d["fineos_absence_status"].get("sort_order", 0)
-                for d in response_body.get("data", [])
+            claims = response_body.get("data", [])
+
+            absence_status_orders = [
+                AbsenceStatus.get_instance(
+                    test_db_session, description=claim["claim_status"]
+                ).sort_order
+                if claim["claim_status"]
+                else 0
+                for claim in claims
             ]
-            assert len(data) == self.claims_count
-            self._assert_data_order(data, desc=False)
+
+            assert len(claims) == self.claims_count
+            self._assert_data_order(absence_status_orders, desc=False)
 
         def test_get_claims_with_order_fineos_absence_status_desc(
-            self, client, employer_auth_token
+            self, client, employer_auth_token, test_db_session
         ):
             request = {"order_direction": "descending", "order_by": "fineos_absence_status"}
             response = self._perform_api_call(request, client, employer_auth_token)
             assert response.status_code == 200
             response_body = response.get_json()
-            data = [
-                d["fineos_absence_status"].get("sort_order", 0)
-                for d in response_body.get("data", [])
+            claims = response_body.get("data", [])
+
+            absence_status_orders = [
+                AbsenceStatus.get_instance(
+                    test_db_session, description=claim["claim_status"]
+                ).sort_order
+                if claim["claim_status"]
+                else 0
+                for claim in claims
             ]
-            assert len(data) == self.claims_count
-            self._assert_data_order(data, desc=True)
+
+            assert len(claims) == self.claims_count
+            self._assert_data_order(absence_status_orders, desc=True)
 
     def test_get_claims_for_employer_id(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification
@@ -2362,9 +2371,8 @@ class TestGetClaimsEndpoint:
             claim_data = response_body.get("data", [])
             assert len(claim_data) == expected_count
             for claim in response_body.get("data", []):
-                absence_status = claim.get("fineos_absence_status") or {}
-                absence_status_description = absence_status.get("absence_status_description", None)
-                assert absence_status_description in valid_statuses
+                absence_status = claim.get("claim_status", None)
+                assert absence_status in valid_statuses
 
         def test_get_claims_with_status_filter_one_claim(self, client, employer_auth_token):
             resp = self._perform_api_call(

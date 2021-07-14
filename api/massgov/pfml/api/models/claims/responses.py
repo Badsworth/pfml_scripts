@@ -33,14 +33,6 @@ class EmployeeResponse(PydanticBaseModel):
     other_name: Optional[str]
 
 
-class FineosAbsenceStatusResponse(PydanticBaseModel):
-    absence_status_description: str
-
-
-class ClaimTypeResponse(PydanticBaseModel):
-    claim_type_description: str
-
-
 class ManagedRequirementResponse(PydanticBaseModel):
     follow_up_date: Optional[date]
     responded_at: Optional[date]
@@ -75,9 +67,7 @@ class ClaimResponse(PydanticBaseModel):
     fineos_notification_id: Optional[str]
     absence_period_start_date: Optional[date]
     absence_period_end_date: Optional[date]
-    fineos_absence_status: Optional[FineosAbsenceStatusResponse]
     claim_status: Optional[str]
-    claim_type: Optional[ClaimTypeResponse]
     claim_type_description: Optional[str]
     created_at: Optional[date]
     managed_requirements: Optional[List[ManagedRequirementResponse]]

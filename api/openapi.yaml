@@ -2216,10 +2216,13 @@ components:
         absence_period_end_date:
           format: date
           example: "1970-06-01"
-        fineos_absence_status:
+        claim_status:
+          description: "Absence case status"
           format: string
-        claim_type:
+          example: "Approved"
+        claim_type_description:
           format: string
+          example: "Medical Leave"
         created_at:
           format: date
         managed_requirements:

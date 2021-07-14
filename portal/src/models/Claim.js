@@ -37,7 +37,6 @@ class Claim extends BaseModel {
        */
       employer: null,
       fineos_absence_id: null,
-
       fineos_notification_id: null,
     };
   }
