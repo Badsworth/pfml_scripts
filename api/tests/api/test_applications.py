@@ -2915,6 +2915,29 @@ def test_application_patch_invalid_values(client, user, auth_token):
     )
 
 
+def test_application_patch_state_invalid(client, user, auth_token):
+    application = ApplicationFactory.create(user=user)
+    states = list(GeoState.description_to_id.keys())
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"mailing_address": {"state": "ZZ"}},
+    )
+
+    tests.api.validate_error_response(
+        response,
+        400,
+        errors=[
+            {
+                "field": "mailing_address.state",
+                "message": f"'ZZ' is not one of {states}",
+                "rule": states,
+                "type": "enum",
+            },
+        ],
+    )
+
 def test_application_patch_fein_not_found(client, user, auth_token):
     # Assert that API returns a validation warning when the request
     # includes an EIN that doesn't match an Employer record
