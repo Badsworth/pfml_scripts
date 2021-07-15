@@ -43,10 +43,11 @@ exports[`FraudReport renders just the input choices by default 1`] = `
         Do you have any reason to suspect this is fraud?
       </ReviewHeading>
     }
-    name="isFraud"
+    name="fraud"
     onChange={[Function]}
     smallLabel={true}
     type="radio"
+    value=""
   />
   <ConditionalContent
     visible={false}
@@ -126,10 +127,11 @@ exports[`FraudReport renders the alert if "Yes" is selected 1`] = `
         Do you have any reason to suspect this is fraud?
       </ReviewHeading>
     }
-    name="isFraud"
+    name="fraud"
     onChange={[Function]}
     smallLabel={true}
     type="radio"
+    value=""
   />
   <ConditionalContent
     visible={true}
