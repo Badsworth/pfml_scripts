@@ -18,7 +18,7 @@ exports[`IntermittentLeaveSchedule renders a regular intermittent leave period 1
             />,
           }
         }
-        i18nKey="components.employersIntermittentLeaveSchedule.attachments"
+        i18nKey="components.employersIntermittentLeaveSchedule.lead"
         tOptions={
           Object {
             "context": "noDocs",
@@ -48,7 +48,7 @@ exports[`IntermittentLeaveSchedule renders an irregular intermittent leave perio
             />,
           }
         }
-        i18nKey="components.employersIntermittentLeaveSchedule.attachments"
+        i18nKey="components.employersIntermittentLeaveSchedule.lead"
         tOptions={
           Object {
             "context": "noDocs",
@@ -91,7 +91,7 @@ exports[`IntermittentLeaveSchedule renders with documents 1`] = `
             />,
           }
         }
-        i18nKey="components.employersIntermittentLeaveSchedule.attachments"
+        i18nKey="components.employersIntermittentLeaveSchedule.lead"
         tOptions={
           Object {
             "context": "hasDocs",

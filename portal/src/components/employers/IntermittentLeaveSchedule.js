@@ -50,7 +50,7 @@ const IntermittentLeaveSchedule = ({ hasDocuments }) => {
           {/* TODO (EMPLOYER-448): Support intermittent leave
           TODO (EMPLOYER-655): Update intermittent leave details */}
           <Trans
-            i18nKey="components.employersIntermittentLeaveSchedule.attachments"
+            i18nKey="components.employersIntermittentLeaveSchedule.lead"
             components={{
               "contact-center-phone-link": (
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />

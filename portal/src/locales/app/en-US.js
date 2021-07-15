@@ -2538,8 +2538,6 @@ const components = {
     heading: "Do you have any reason to suspect this is fraud?",
   },
   employersIntermittentLeaveSchedule: {
-    attachments_hasDocs: "$t(shared.employerLeaveScheduleHasDocAttached)",
-    attachments_noDocs: "$t(shared.employerLeaveScheduleHasNoDocAttached)",
     claimDurationType_continuous: "$t(shared.claimDurationTypeContinuous)",
     claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     claimDurationType_reducedSchedule:
@@ -2559,6 +2557,8 @@ const components = {
       "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
     intermittentFrequencyDuration_weeks_hours:
       "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
+    lead_hasDocs: "$t(shared.employerLeaveScheduleHasDocAttached)",
+    lead_noDocs: "$t(shared.employerLeaveScheduleHasNoDocAttached)",
   },
   employersLeaveDetails: {
     applicationIdLabel: "Application ID",
@@ -2594,8 +2594,6 @@ const components = {
       "If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.",
   },
   employersLeaveSchedule: {
-    attachments_hasDocs: "$t(shared.employerLeaveScheduleHasDocAttached)",
-    attachments_noDocs: "$t(shared.employerLeaveScheduleHasNoDocAttached)",
     caption: "This is your employee’s expected leave schedule.",
     caption_documents:
       "This is your employee’s expected leave schedule. Download the attached documentation for more details.",
@@ -2608,6 +2606,8 @@ const components = {
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
     header: "Leave schedule",
+    lead_hasDocs: "$t(shared.employerLeaveScheduleHasDocAttached)",
+    lead_noDocs: "$t(shared.employerLeaveScheduleHasNoDocAttached)",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
   },
