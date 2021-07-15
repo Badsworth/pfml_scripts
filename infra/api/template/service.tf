@@ -62,8 +62,8 @@ data "template_file" "container_definitions" {
 
   vars = {
     app_name                                   = local.app_name
-    cpu                                        = "1024"
-    memory                                     = "2048"
+    cpu                                        = "768"
+    memory                                     = "1536"
     db_host                                    = aws_db_instance.default.address
     db_name                                    = aws_db_instance.default.name
     db_username                                = "pfml_api"
