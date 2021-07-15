@@ -564,10 +564,12 @@ paths:
 
   /admin/authorize:
     get:
+      security:
+        - {} # no authentication option
       tags:
         - Azure
       summary: Retrieve an Application identified by the application id
-      operationId: massgov.pfml.api.authentication.get_authorization_url
+      operationId: massgov.pfml.api.users.get_authorization_url
       responses:
         "200":
           $ref: "#/components/responses/ApplicationResponse"
@@ -576,10 +578,14 @@ paths:
 
   /admin/login:
     post:
+      security:
+        - {} # no authentication option
       tags:
         - Azure
       summary: Retrieve an Application identified by the application id
-      operationId: massgov.pfml.api.authentication.login_admin
+      operationId: massgov.pfml.api.users.login_admin
+      requestBody:
+        $ref: '#/components/requestBodies/AdminLoginRequest'
       responses:
         "200":
           $ref: "#/components/responses/ApplicationResponse"
@@ -588,10 +594,12 @@ paths:
   
   /admin/logout:
     get:
+      security:
+        - {} # no authentication option
       tags:
         - Azure
       summary: Retrieve an Application identified by the application id
-      operationId: massgov.pfml.api.authentication.logout_admin
+      operationId: massgov.pfml.api.users.logout_admin
       responses:
         "200":
           $ref: "#/components/responses/ApplicationResponse"
@@ -1203,6 +1211,12 @@ components:
         enum: ["ascending", "descending"]
 
   requestBodies:
+    AdminLoginRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AdminLoginRequest"
+      required: true
     UserUpdateRequest:
       content:
         application/json:
@@ -1328,6 +1342,46 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
 
   schemas:
+      
+    AuthCodeResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        session_state:
+          type: string
+        state:
+          type: string
+      
+    AuthCodeFlow:
+      type: object
+      properties:
+        auth_uri:
+          type: string
+        claims_challenge:
+          type: string
+          nullable: true
+        code_verifier:
+          type: string
+        nonce:
+          type: string
+        redirect_uri:
+          type: string
+        scope:
+          type: array
+          items:
+            type: string
+        state:
+          type: string
+
+    AdminLoginRequest:
+      type: object
+      properties:
+        authCodeRes:
+          $ref: "#/components/schemas/AuthCodeResponse"
+        authCodeFlow:
+          $ref: "#/components/schemas/AuthCodeFlow"
+
     SuccessfulResponse:
       type: object
       properties:
