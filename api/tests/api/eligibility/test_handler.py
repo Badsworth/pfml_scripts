@@ -2,7 +2,6 @@
 # Tests for /v1/financial-eligibility API.
 #
 
-import re
 from datetime import date
 
 import pytest
@@ -135,11 +134,6 @@ def test_endpoint_unauthorized_user(
     )
 
     assert response.status_code == 403
-    # This works around the stringified version of User that gets returned - <massgov.pfml.db.models.employees.User object at 0x7fb466b96be0>
-    assert re.search(
-        r"does not have create access to Financial Eligibility Calculation",
-        response.get_json().get("message"),
-    )
 
 
 def test_self_employed_two_quarters(
