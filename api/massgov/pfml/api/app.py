@@ -12,8 +12,8 @@ import connexion.mock
 import flask
 import flask_cors
 import newrelic.api.time_trace
-from flask import Flask, current_app, g, session
-from sqlalchemy.orm import Session
+from flask import Flask, current_app, g
+from sqlalchemy.orm import Session as Session
 
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
@@ -70,12 +70,9 @@ def create_app(
 
     flask_app = app.app
     flask_app.config["app_config"] = config
-    flask_app.config["SECRET_KEY"] = os.urandom(16)
-    flask_app.config["SESSION_TYPE"] = "filesystem"
 
     flask_cors.CORS(flask_app, origins=config.cors_origins, supports_credentials=True)
 
-    # session initialized here?
     # Set up bouncer
     authorization_path = massgov.pfml.api.authorization.rules.create_authorization(
         config.enable_employee_endpoints
