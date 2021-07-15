@@ -1,8 +1,72 @@
 import "../../styles/index.scss";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import type { AppProps } from "next/app";
+import { useState, useEffect } from "react";
+import * as api from "../api";
 
 function MyApp({ Component, pageProps }: AppProps) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const localTokens = JSON.parse(
+      localStorage.getItem("SSOAuthenticationTokens") || "{}",
+    );
+    if ("access_token" in localTokens) {
+      const isValidToken = false;
+
+      console.log("Trying to login:", localTokens);
+      // @todo: send token and verify if is valid token
+      setIsLoggedIn(isValidToken);
+      return () => {};
+    }
+
+    let authCodeFlow: api.AuthCodeFlow;
+    authCodeFlow = JSON.parse(
+      localStorage.getItem("SSOAuthorizationRequest") || "{}",
+    );
+    if (!window.location.search) {
+      // get auth url
+      api
+        .getAdminAuthorize()
+        .then(({ data }) => {
+          localStorage.setItem("SSOAuthorizationRequest", JSON.stringify(data));
+          window.location.href = data.auth_uri as string;
+        })
+        .catch((e) => {
+          // @todo: error logging in!
+          console.error("Error on authorization url:", e);
+        });
+    } else if ("state" in authCodeFlow) {
+      // after it comes back from MS
+      const authCodeRes = parseURLSearch(location.search.substring(1));
+      // get access tokens
+      api
+        .postAdminLogin({
+          authCodeRes,
+          authCodeFlow,
+        })
+        .then(({ data }) => {
+          console.log("Logged in!", data);
+          localStorage.removeItem("SSOAuthorizationRequest");
+          localStorage.setItem("SSOAuthenticationTokens", JSON.stringify(data));
+          window.location.href = window.location.origin;
+        })
+        .catch((e) => {
+          // @todo: error logging in!
+          console.error("Error on login:", e);
+        });
+    }
+  }, []);
+
+  if (!isLoggedIn) {
+    return (
+      <div className="login">
+        <i className="pfml-icon--pfml-logo login__logo" />
+        <h1 className="login__title">Logging in...</h1>
+      </div>
+    );
+  }
+
   return (
     <HelmetProvider>
       <div className="page">
@@ -89,4 +153,15 @@ function MyApp({ Component, pageProps }: AppProps) {
     </HelmetProvider>
   );
 }
+
 export default MyApp;
+
+const parseURLSearch = (search: string) =>
+  JSON.parse(
+    '{"' +
+      decodeURI(search)
+        .replace(/"/g, '\\"')
+        .replace(/&/g, '","')
+        .replace(/=/g, '":"') +
+      '"}',
+  );
