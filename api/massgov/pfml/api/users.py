@@ -1,3 +1,4 @@
+import sys
 from typing import Any, Dict
 
 import connexion
@@ -7,10 +8,17 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
+from massgov.pfml.api.authentication import (
+    _build_msal_app,
+    _build_auth_code_flow,
+    _load_cache,
+    _save_cache,
+)
 from massgov.pfml.api.models.users.requests import (
     UserConvertEmployerRequest,
     UserCreateRequest,
     UserUpdateRequest,
+    AdminLoginRequest,
 )
 from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
 from massgov.pfml.api.services.user_rules import (
@@ -19,12 +27,72 @@ from massgov.pfml.api.services.user_rules import (
     get_users_post_required_fields_issues,
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.db.models.employees import Employer, Role, User
+from massgov.pfml.db.models.employees import Employer, Role, User, UserRole
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.users import add_leave_admin_and_role, register_user
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+def get_authorization_url():
+    return _build_auth_code_flow()
+
+def login_admin():
+    result = {}
+    request = AdminLoginRequest.parse_obj(connexion.request.json)
+    try:
+        cache = _load_cache()
+
+        result = _build_msal_app(cache=cache).acquire_token_by_auth_code_flow(
+            request.authCodeFlow.__dict__, request.authCodeRes.__dict__, scopes=None
+        )
+        
+        if "error" in result:
+            logger.error(result["error"])
+            return result
+
+        # got token successfully
+        token = result.get("access_token")
+        id_token_claims = result.get("id_token_claims")
+
+        # check if this is an admin user
+        with app.db_session() as db_session:
+            cur_user = (
+                db_session.query(User)
+                .filter(User.email_address == id_token_claims.get("preferred_username"))
+                .one_or_none()
+            )
+
+            if cur_user is None:
+                raise Exception("Unknown user")
+
+            is_admin = (
+                db_session.query(UserRole)
+                .filter(UserRole.user_id == cur_user.user_id and UserRole.role_id == Role.ADMIN.role_id)
+                .one_or_none()
+            )
+
+            if is_admin is None:
+                raise Exception("User is not an admin")
+
+        _save_cache(cache)
+        
+    except ValueError:
+        # Usually caused by CSRF
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        logger.error(f'ValueError {exc_value}')
+        # Simply ignore them
+
+    return result
+
+def logout_admin():
+    config = app.get_app_config()
+    # Wipe out user and its token cache from session
+    # Also logout from your tenant's web session
+    return redirect(
+        config.azure_sso.authority + "/oauth2/v2.0/logout" +
+        "?post_logout_redirect_uri=" + config.azure_sso.postLogoutRedirectUri
+    )
 
 
 def users_post():
