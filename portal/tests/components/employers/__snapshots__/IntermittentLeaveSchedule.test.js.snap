@@ -72,3 +72,33 @@ Array [
   " for details about the leave schedule.",
 ]
 `;
+
+exports[`IntermittentLeaveSchedule renders with documents 1`] = `
+<tr>
+  <th
+    scope="row"
+  />
+  <td>
+    Intermittent leave
+  </td>
+  <td>
+    <div>
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344-7365"
+            />,
+          }
+        }
+        i18nKey="components.employersIntermittentLeaveSchedule.attachments"
+        tOptions={
+          Object {
+            "context": "hasDocs",
+          }
+        }
+      />
+    </div>
+  </td>
+</tr>
+`;

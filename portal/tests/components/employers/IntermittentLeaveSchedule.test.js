@@ -8,6 +8,19 @@ import React from "react";
 import { shallow } from "enzyme";
 
 describe("IntermittentLeaveSchedule", () => {
+  const regularIntermittentLeavePeriods = [
+    new IntermittentLeavePeriod({
+      leave_period_id: "mock-leave-period-id",
+      start_date: "2021-02-01",
+      end_date: "2021-07-01",
+      duration: 3,
+      duration_basis: DurationBasis.hours,
+      frequency: 2,
+      frequency_interval: null,
+      frequency_interval_basis: FrequencyIntervalBasis.weeks,
+    }),
+  ];
+
   let wrapper;
 
   it("renders an irregular intermittent leave period", () => {
@@ -35,21 +48,19 @@ describe("IntermittentLeaveSchedule", () => {
   });
 
   it("renders a regular intermittent leave period", () => {
-    const regularIntermittentLeavePeriods = [
-      new IntermittentLeavePeriod({
-        leave_period_id: "mock-leave-period-id",
-        start_date: "2021-02-01",
-        end_date: "2021-07-01",
-        duration: 3,
-        duration_basis: DurationBasis.hours,
-        frequency: 2,
-        frequency_interval: null,
-        frequency_interval_basis: FrequencyIntervalBasis.weeks,
-      }),
-    ];
-
     wrapper = shallow(
       <IntermittentLeaveSchedule
+        intermittentLeavePeriods={regularIntermittentLeavePeriods}
+      />
+    );
+
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders with documents", () => {
+    wrapper = shallow(
+      <IntermittentLeaveSchedule
+        hasDocuments
         intermittentLeavePeriods={regularIntermittentLeavePeriods}
       />
     );

@@ -803,6 +803,10 @@ const shared = {
     "If something is incomplete, add a comment at the end of the page.",
   employerInstructions_followUpDate:
     "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
+  employerLeaveScheduleHasDocAttached:
+    "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
+  employerLeaveScheduleHasNoDocAttached:
+    "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose files",
   fileUpload_fileHeadingPrefix: "File",
@@ -2534,10 +2538,8 @@ const components = {
     heading: "Do you have any reason to suspect this is fraud?",
   },
   employersIntermittentLeaveSchedule: {
-    attachments_hasDocs:
-      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
-    attachments_noDocs:
-      "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
+    attachments_hasDocs: "$t(shared.employerLeaveScheduleHasDocAttached)",
+    attachments_noDocs: "$t(shared.employerLeaveScheduleHasNoDocAttached)",
     claimDurationType_continuous: "$t(shared.claimDurationTypeContinuous)",
     claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     claimDurationType_reducedSchedule:
@@ -2592,10 +2594,8 @@ const components = {
       "If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.",
   },
   employersLeaveSchedule: {
-    attachments_hasDocs:
-      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
-    attachments_noDocs:
-      "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
+    attachments_hasDocs: "$t(shared.employerLeaveScheduleHasDocAttached)",
+    attachments_noDocs: "$t(shared.employerLeaveScheduleHasNoDocAttached)",
     caption: "This is your employee’s expected leave schedule.",
     caption_documents:
       "This is your employee’s expected leave schedule. Download the attached documentation for more details.",
