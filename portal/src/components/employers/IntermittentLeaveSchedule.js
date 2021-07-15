@@ -1,12 +1,13 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { Trans } from "react-i18next";
 import { useTranslation } from "../../locales/i18n";
 
 /**
  * Display intermittent leave schedule
  * in the Leave Admin claim review page.
+ * @param {boolean} hasDocuments - Determines if document(s) exist.
  */
-
 const IntermittentLeaveSchedule = ({ hasDocuments }) => {
   // TODO (EMPLOYER-655): Update intermittent leave details
   // const leavePeriod = props.intermittentLeavePeriods[0];
@@ -82,6 +83,7 @@ IntermittentLeaveSchedule.propTypes = {
   // intermittentLeavePeriods: PropTypes.arrayOf(
   //   PropTypes.instanceOf(IntermittentLeavePeriod)
   // ).isRequired,
+  hasDocuments: PropTypes.bool,
 };
 
 export default IntermittentLeaveSchedule;

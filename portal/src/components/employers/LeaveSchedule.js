@@ -12,8 +12,8 @@ import { useTranslation } from "../../locales/i18n";
 /**
  * Display leave periods by leave type
  * in the Leave Admin claim review page.
+ * @param {boolean} hasDocuments - Determines if document(s) exist.
  */
-
 const LeaveSchedule = ({ hasDocuments, claim }) => {
   const { t } = useTranslation();
   const {

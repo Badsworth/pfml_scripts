@@ -2601,10 +2601,10 @@ const components = {
     claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     claimDurationType_reducedSchedule:
       "$t(shared.claimDurationTypeReducedSchedule)",
-    dateRangeLabel: "Date range",
-    detailsLabel: "Details",
     contactForLeaveScheduleDetails:
       "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
+    dateRangeLabel: "Date range",
+    detailsLabel: "Details",
     downloadAttachments:
       "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     header: "Leave schedule",
