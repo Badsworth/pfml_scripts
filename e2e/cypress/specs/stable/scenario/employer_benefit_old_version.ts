@@ -77,43 +77,40 @@ import { config } from "../../../actions/common";
         });
       }
     );
-    const benefitAmendment =
-      it("LA can view and amend the reported benefits", () => {
-        portal.before({ claimantShowOtherLeaveStep: false });
-        cy.dependsOnPreviousPass([claimSubmission, reportBenefits]);
-        cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
-          cy.unstash<Submission>("submission").then((submission) => {
-            cy.unstash<
-              [ValidEmployerBenefit, ValidEmployerBenefit, ValidOtherIncome]
-            >("benefits").then((benefits) => {
-              assertValidClaim(claim);
-              portal.login(getLeaveAdminCredentials(claim.employer_fein));
-              portal.visitActionRequiredERFormPage(
-                submission.fineos_absence_id
-              );
-              const [benefit1, benefit2, nonERBenefit] = benefits;
-              // Check we have the employer benefits from fineos
-              portal.assertEmployerBenefit(benefit1);
-              portal.assertEmployerBenefit(benefit2);
-              // Assert the non employer benefit is not here
-              cy.contains("table", "Benefit type").within(($table) => {
-                expect($table.html()).not.to.contain(nonERBenefit.income_type);
-              });
-              // Amend the benefit amount.
-              portal.amendLegacyBenefit(benefit1, {
-                ...benefit1,
-                benefit_amount_dollars: 500,
-              });
-              portal.amendLegacyBenefit(benefit2, {
-                ...benefit2,
-                benefit_amount_dollars: 600,
-              });
-              // Approve the claim
-              portal.respondToLeaveAdminRequest(false, true, true, false);
+    const benefitAmendment = it("LA can view and amend the reported benefits", () => {
+      portal.before({ claimantShowOtherLeaveStep: false });
+      cy.dependsOnPreviousPass([claimSubmission, reportBenefits]);
+      cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          cy.unstash<
+            [ValidEmployerBenefit, ValidEmployerBenefit, ValidOtherIncome]
+          >("benefits").then((benefits) => {
+            assertValidClaim(claim);
+            portal.login(getLeaveAdminCredentials(claim.employer_fein));
+            portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
+            const [benefit1, benefit2, nonERBenefit] = benefits;
+            // Check we have the employer benefits from fineos
+            portal.assertEmployerBenefit(benefit1);
+            portal.assertEmployerBenefit(benefit2);
+            // Assert the non employer benefit is not here
+            cy.contains("table", "Benefit type").within(($table) => {
+              expect($table.html()).not.to.contain(nonERBenefit.income_type);
             });
+            // Amend the benefit amount.
+            portal.amendLegacyBenefit(benefit1, {
+              ...benefit1,
+              benefit_amount_dollars: 500,
+            });
+            portal.amendLegacyBenefit(benefit2, {
+              ...benefit2,
+              benefit_amount_dollars: 600,
+            });
+            // Approve the claim
+            portal.respondToLeaveAdminRequest(false, true, true, false);
           });
         });
       });
+    });
     it(
       "Agent can see employer response amendments",
       { baseUrl: getFineosBaseUrl() },

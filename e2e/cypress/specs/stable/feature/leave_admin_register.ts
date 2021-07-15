@@ -1,34 +1,31 @@
 import { portal } from "../../../actions";
 
 describe("Leave Admin Self-Registration", () => {
-  const register =
-    it("Leave administrators should be able to self-register on the portal.", () => {
-      portal.before();
-      cy.task("pickEmployer", {
-        withholdings: "non-exempt",
-        metadata: { register_leave_admins: true },
-      }).then((employer) => {
-        cy.task("generateCredentials").then((credentials) => {
-          portal.registerAsLeaveAdmin(credentials, employer.fein);
-          portal.login(credentials);
-          portal.assertLoggedIn();
-          cy.wait(1000);
-          cy.get('button[type="submit"]')
-            .contains("Agree and continue")
-            .click();
-          portal.goToEmployerDashboard();
-          portal.assertUnverifiedEmployerDashboard();
-          const withholding =
-            employer.withholdings[employer.withholdings.length - 1];
-          if (!withholding)
-            throw new Error("This employer has no withholdings reported");
-          portal.verifyLeaveAdmin(withholding);
+  const register = it("Leave administrators should be able to self-register on the portal.", () => {
+    portal.before();
+    cy.task("pickEmployer", {
+      withholdings: "non-exempt",
+      metadata: { register_leave_admins: true },
+    }).then((employer) => {
+      cy.task("generateCredentials").then((credentials) => {
+        portal.registerAsLeaveAdmin(credentials, employer.fein);
+        portal.login(credentials);
+        portal.assertLoggedIn();
+        cy.wait(1000);
+        cy.get('button[type="submit"]').contains("Agree and continue").click();
+        portal.goToEmployerDashboard();
+        portal.assertUnverifiedEmployerDashboard();
+        const withholding =
+          employer.withholdings[employer.withholdings.length - 1];
+        if (!withholding)
+          throw new Error("This employer has no withholdings reported");
+        portal.verifyLeaveAdmin(withholding);
 
-          cy.stash("employer", employer.fein);
-          cy.stash("credentials", credentials);
-        });
+        cy.stash("employer", employer.fein);
+        cy.stash("credentials", credentials);
       });
     });
+  });
 
   it("Leave administrators should be able to register for a second organization", () => {
     cy.dependsOnPreviousPass([register]);

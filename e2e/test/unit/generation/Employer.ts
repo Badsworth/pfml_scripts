@@ -135,9 +135,9 @@ describe("Employer Generation", () => {
   });
 
   it("pick() should accept a specification that allows it to pick employers by metadata properties", () => {
-    const employers = [
+    const employers = ([
       { fein: "123", metadata: { foo: "bar" } },
-    ] as unknown as Employer[];
+    ] as unknown) as Employer[];
     const pool = new EmployerPool(employers);
     expect(() => pool.pick({ metadata: { foo: "baz" } })).toThrow(
       "No employers match the specification"
