@@ -32,8 +32,13 @@ exports[`Feedback renders the component 1`] = `
   />
   <ConditionalContent
     clearField={[Function]}
-    getField={[Function]}
-    updateFields={[Function]}
+    fieldNamesClearedWhenHidden={
+      Array [
+        "comment",
+      ]
+    }
+    getField={[MockFunction]}
+    updateFields={[MockFunction]}
     visible={false}
   >
     <div
@@ -41,7 +46,6 @@ exports[`Feedback renders the component 1`] = `
     >
       <FormLabel
         className="usa-label"
-        errorMsg={null}
         htmlFor="comment"
         small={true}
       >
