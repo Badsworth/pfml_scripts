@@ -2538,6 +2538,8 @@ const components = {
     claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     claimDurationType_reducedSchedule:
       "$t(shared.claimDurationTypeReducedSchedule)",
+    contactForLeaveScheduleDetails:
+      "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     downloadAttachments:
       "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     frequencyBasis_irregular: "Irregular over the next 6 months",
@@ -2601,6 +2603,8 @@ const components = {
       "$t(shared.claimDurationTypeReducedSchedule)",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
+    contactForLeaveScheduleDetails:
+      "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     downloadAttachments:
       "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     header: "Leave schedule",

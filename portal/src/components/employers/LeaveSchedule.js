@@ -101,7 +101,11 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
                 {/* TODO (CP-1074): Update hours/day */}
                 {/* TODO (EMPLOYER-655): Update reduced leave details */}
                 <Trans
-                  i18nKey="components.employersLeaveSchedule.downloadAttachments"
+                  i18nKey={`components.employersLeaveSchedule.${
+                    hasDocuments
+                      ? "downloadAttachments"
+                      : "contactForLeaveScheduleDetails"
+                  }`}
                   components={{
                     "contact-center-phone-link": (
                       <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
@@ -120,6 +124,7 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
           {isIntermittent && (
             <IntermittentLeaveSchedule
               intermittentLeavePeriods={intermittent_leave_periods}
+              hasDocuments={hasDocuments}
             />
           )}
         </tbody>
