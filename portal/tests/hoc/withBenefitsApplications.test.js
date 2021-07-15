@@ -25,7 +25,8 @@ describe("withBenefitsApplications", () => {
   });
 
   it("Shows spinner when claims are not loaded", () => {
-    appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection();
+    appLogic.benefitsApplications.benefitsApplications =
+      new BenefitsApplicationCollection();
     act(() => {
       wrapper = shallow(<WrappedComponent appLogic={appLogic} />);
     });
@@ -41,7 +42,8 @@ describe("withBenefitsApplications", () => {
   });
 
   it("loads claims", () => {
-    appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection();
+    appLogic.benefitsApplications.benefitsApplications =
+      new BenefitsApplicationCollection();
     render();
     expect(appLogic.benefitsApplications.loadAll).toHaveBeenCalledTimes(1);
   });
@@ -54,9 +56,8 @@ describe("withBenefitsApplications", () => {
   });
 
   it("does not load claims if claims have already been loaded", () => {
-    appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
-      []
-    );
+    appLogic.benefitsApplications.benefitsApplications =
+      new BenefitsApplicationCollection([]);
     appLogic.benefitsApplications.hasLoadedAll = true;
 
     render();

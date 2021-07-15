@@ -131,6 +131,7 @@ make release-notes refs="portal/v6.1..portal/v7.0"
 ```
 
 The work will generally fall into one of a number of categories, with changes to:
+
 - EMPLOYER
 - INFRA
 - CP

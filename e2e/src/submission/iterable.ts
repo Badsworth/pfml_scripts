@@ -8,10 +8,10 @@ import {
   getClaimantCredentials,
   getLeaveAdminCredentials,
 } from "../util/credentials";
-import { ApplicationResponse } from "../api";
 import PortalSubmitter from "./PortalSubmitter";
 import * as util from "util";
 import chalk from "chalk";
+import { PostSubmitCallback } from "../scripts/util";
 
 /**
  * Iterator callback to log progress as submission happens.
@@ -88,7 +88,7 @@ export function submitAll(
  * Execute a postProcess callback following submission.
  */
 export function postProcess(
-  fn: (claim: GeneratedClaim, result: ApplicationResponse) => Promise<void>,
+  fn: PostSubmitCallback,
   concurrency = 1
 ): (
   iterable: AnyIterable<SubmissionResult>

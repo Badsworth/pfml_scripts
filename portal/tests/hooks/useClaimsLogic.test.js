@@ -61,22 +61,30 @@ describe("useClaimsLogic", () => {
       );
     });
 
-    it("loads page with filters", async () => {
+    it("loads page with order and filter params", async () => {
       expect.assertions();
 
       const { appLogic } = setup();
 
       await act(async () => {
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage(1, {
-          claim_status: "Approved,Pending",
-          employer_id: "mock-employer-id",
-        });
+        await appLogic.current.claims.loadPage(
+          1,
+          {
+            order_by: "created_at",
+            order_direction: "ascending",
+          },
+          {
+            claim_status: "Approved,Pending",
+            employer_id: "mock-employer-id",
+            search: "foo",
+          }
+        );
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining(
-          "?page_offset=1&claim_status=Approved%2CPending&employer_id=mock-employer-id"
+          "?page_offset=1&order_by=created_at&order_direction=ascending&claim_status=Approved%2CPending&employer_id=mock-employer-id&search=foo"
         ),
         expect.any(Object)
       );
@@ -100,7 +108,7 @@ describe("useClaimsLogic", () => {
       expect(appLogic.current.claims.isLoadingClaims).toBe(false);
     });
 
-    it("only makes api request if a page and filters hasn't been loaded", async () => {
+    it("only makes api request if the page number, ordering, or filters have changed", async () => {
       expect.assertions();
       const { appLogic } = setup();
 
@@ -117,15 +125,37 @@ describe("useClaimsLogic", () => {
 
         // this should make an API request since the filters changed
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage(1, {
-          employer_id: "mock-employer-id",
-        });
+        await appLogic.current.claims.loadPage(
+          1,
+          {},
+          {
+            employer_id: "mock-employer-id",
+          }
+        );
         expect(global.fetch).toHaveBeenCalled();
 
         // but this shouldn't, since we've already loaded all claims with these filters
         mockPaginatedFetch();
+        await appLogic.current.claims.loadPage(
+          1,
+          {},
+          {
+            employer_id: "mock-employer-id",
+          }
+        );
+        expect(global.fetch).not.toHaveBeenCalled();
+
+        // this should make an API request since the order changed
+        mockPaginatedFetch();
         await appLogic.current.claims.loadPage(1, {
-          employer_id: "mock-employer-id",
+          order_by: "employee",
+        });
+        expect(global.fetch).toHaveBeenCalled();
+
+        // but this shouldn't, since we've already loaded all claims with this order
+        mockPaginatedFetch();
+        await appLogic.current.claims.loadPage(1, {
+          order_by: "employee",
         });
         expect(global.fetch).not.toHaveBeenCalled();
       });

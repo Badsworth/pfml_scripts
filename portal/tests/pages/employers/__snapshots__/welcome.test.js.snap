@@ -239,7 +239,6 @@ exports[`Employer welcome renders page 1`] = `
               Your organizations
             </a>
           </Link>
-          <NewTag />
         </li>
       </ul>
       <Heading

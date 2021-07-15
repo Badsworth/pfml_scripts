@@ -1,8 +1,10 @@
 import { Address, OtherIncome } from "../../src/_api";
 import {
   AllNotNull,
+  LeaveReason,
   NonEmptyArray,
   PersonalIdentificationDetails,
+  ValidClaim,
   ValidConcurrentLeave,
   ValidEmployerBenefit,
   ValidOtherIncome,
@@ -18,6 +20,7 @@ import {
 } from "../../src/util/typeUtils";
 import {
   dateToMMddyyyy,
+  getLeavePeriod,
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
 import {
@@ -29,6 +32,9 @@ import {
   onTab,
   triggerNoticeRelease,
   visitClaim,
+  reviewClaim,
+  wait,
+  enterReducedWorkHours,
 } from "./fineos";
 
 import { DocumentUploadRequest } from "../../src/api";
@@ -87,6 +93,20 @@ export class ClaimPage {
     onTab("Absence Hub");
     return this;
   }
+  availability(cb: (page: AvailabilityPage) => unknown): this {
+    onTab("Availability");
+    cb(new AvailabilityPage());
+    onTab("Absence Hub");
+    return this;
+  }
+  outstandingRequirements(
+    cb: (page: OutstandingRequirementsPage) => unknown
+  ): this {
+    onTab("Outstanding Requirements");
+    cb(new OutstandingRequirementsPage());
+    onTab("Absence Hub");
+    return this;
+  }
   benefitsExtension(cb: (page: BenefitsExtensionPage) => unknown): this {
     cy.findByText("Add Time").click({ force: true });
     cb(new BenefitsExtensionPage());
@@ -117,6 +137,11 @@ export class ClaimPage {
     denyClaim(reason);
     return this;
   }
+  reviewClaim(): this {
+    onTab("Leave Details");
+    reviewClaim();
+    return this;
+  }
 }
 
 class AdjudicationPage {
@@ -144,10 +169,22 @@ class AdjudicationPage {
     cb(new CertificationPeriodsPage());
     return this;
   }
+  requestInformation(cb: (page: RequestInformationPage) => unknown): this {
+    this.onTab("Request Information", "Request Details");
+    cb(new RequestInformationPage());
+    return this;
+  }
   acceptLeavePlan() {
     this.onTab("Manage Request");
     cy.wait(150);
     cy.get("input[type='submit'][value='Accept']").click();
+  }
+  editPlanDecision(planStatus: string) {
+    this.onTab("Manage Request");
+    cy.wait(300);
+    cy.get("input[type='submit'][value='Evaluate Plan']").click();
+    cy.findByLabelText("Leave Plan Status").select(planStatus);
+    cy.get("#footerButtonsBar input[value='OK']").click();
   }
 }
 
@@ -205,6 +242,59 @@ class CertificationPeriodsPage {
     cy.get("#PopupContainer input[value='Yes']").click();
     return this;
   }
+  remove() {
+    cy.get(
+      "input[type='submit'][title='Remove all certification periods']"
+    ).click();
+    cy.get("#PopupContainer input[value='Yes']").click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("#PopupContainer input[value='Yes']").click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("#PopupContainer input[value='Yes']").click();
+    return this;
+  }
+}
+class RequestInformationPage {
+  private enterNewLeaveDates(newStartDate: string, newEndDate: string) {
+    cy.get(
+      "input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']"
+    ).click();
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']").type(
+      `{selectall}{backspace}${newStartDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(300);
+    cy.get(
+      "input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']"
+    ).click();
+    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']").type(
+      `{selectall}{backspace}${newEndDate}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[title='OK']").click();
+  }
+
+  editRequestDates(newStartDate: string, newEndDate: string) {
+    cy.get("input[value='Edit']").click();
+    cy.get("#PopupContainer input[value='Yes']").click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    this.enterNewLeaveDates(newStartDate, newEndDate);
+  }
+}
+class OutstandingRequirementsPage {
+  add() {
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[value='Add']").click();
+    cy.get(
+      "#AddManagedRequirementPopupWidget_PopupWidgetWrapper input[type='submit'][value='Ok']"
+    ).click();
+    cy.get("#footerButtonsBar input[value='OK']").click();
+  }
 }
 class TasksPage {
   assertTaskExists(name: string): this {
@@ -222,6 +312,8 @@ class TasksPage {
       | "Escalate employer reported past leave"
       | "Escalate employer reported accrued paid leave (PTO)"
       | "Escalate Employer Reported Fraud"
+      | "Approved Leave Start Date Change"
+      | "Update Paid Leave Case"
   ): this {
     cy.findByTitle(`Add a task to this case`).click({ force: true });
     // Search for the task type
@@ -257,6 +349,19 @@ class TasksPage {
     return this;
   }
 
+  editActivityDescription(name: string, comment: string): this {
+    cy.contains("td", "Approved Leave Start Date Change").click();
+    cy.wait("@ajaxRender");
+    cy.get('input[title="Edit this Activity"').click();
+    cy.wait("@ajaxRender");
+    cy.get("textarea[name*='BasicDetailsWidget1_un11_Description']").type(
+      comment
+    );
+    cy.wait(150);
+    cy.get("#footerButtonsBar input[value='OK']").click();
+    return this;
+  }
+
   close(name: string): this {
     cy.contains("td", name).click();
     cy.wait("@ajaxRender");
@@ -275,6 +380,7 @@ export class DocumentsPage {
     assertHasDocument(documentName);
     return this;
   }
+
   /**
    * Goes through the document upload process and returns back to the documents page
    * @param documentName
@@ -309,6 +415,83 @@ export class DocumentsPage {
     onTab("Search");
     cy.labelled("Business Type").type(`${documentType}{enter}`);
     clickBottomWidgetButton();
+  }
+
+  submitLegacyEmployerBenefits(
+    benefits: (ValidEmployerBenefit | ValidOtherIncome)[]
+  ): this {
+    this.startDocumentCreation(`Other Income`);
+    benefits.forEach(this.fillLegacyEmployerBenefit);
+    clickBottomWidgetButton();
+    this.assertDocumentExists("Other Income");
+    return this;
+  }
+
+  private fillLegacyEmployerBenefit(
+    benefitOrIncome: ValidEmployerBenefit | ValidOtherIncome,
+    index: number
+  ) {
+    // Will you receive wage replacement during your leave?
+    cy.get(`select[id$=_ReceiveWageReplacement${index > 0 ? index + 1 : ""}]`)
+      .should("be.visible")
+      .select(`Yes`);
+    // Through what type of program will you receive your wage replacement benefit?
+    cy.get(`select[id$=_ProgramType${index > 0 ? index + 1 : ""}]`)
+      .should("be.visible")
+      .select(
+        isValidOtherIncome(benefitOrIncome) ? `Non-Employer` : `Employer`
+      );
+    // Choose type of wage replacement
+    // This one is either bugged or is working in a mysterious way. Skips even indexes
+    cy.get(
+      `select[id$=_WRT${
+        index > 0
+          ? index * 2 + (isValidOtherIncome(benefitOrIncome) ? 2 : 1)
+          : index + 1
+      }]`
+    )
+      .should("be.visible")
+      .select(
+        `${
+          isValidOtherIncome(benefitOrIncome)
+            ? benefitOrIncome.income_type
+            : benefitOrIncome.benefit_type
+        }`
+      );
+    // When will you start receiving this income?
+    cy.get(
+      `input[type=text][id$=_StartDate${index > 0 ? index + 1 : ""}]`
+    ).type(
+      `${dateToMMddyyyy(
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_start_date
+          : benefitOrIncome.benefit_start_date
+      )}{enter}`
+    );
+    // When will you stop receiving this income?
+    cy.get(`input[type=text][id$=_EndDate${index > 0 ? index + 1 : ""}]`).type(
+      `${dateToMMddyyyy(
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_end_date
+          : benefitOrIncome.benefit_end_date
+      )}{enter}`
+    );
+
+    cy.get(`input[type=text][id$=_Amount${index > 0 ? index + 1 : ""}]`).type(
+      `{selectall}{backspace}${
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_amount_dollars
+          : benefitOrIncome.benefit_amount_dollars
+      }`
+    );
+
+    cy.get(`select[id$=_Frequency${index > 0 ? index + 1 : ""}]`).select(
+      `${
+        isValidOtherIncome(benefitOrIncome)
+          ? benefitOrIncome.income_amount_frequency
+          : benefitOrIncome.benefit_amount_frequency
+      }`
+    );
   }
 
   /**
@@ -606,6 +789,17 @@ export class DocumentsPage {
     cy.get(`select[id$=TotalMinutes${i}]`).select(
       `${minutesTotal === 0 ? "00" : minutesTotal}`
     );
+  }
+}
+
+class AvailabilityPage {
+  reevaluateAvailability() {
+    cy.get('input[title="Manage time for the selected Leave Plan"').click();
+    cy.get('input[title="Select All"').click();
+    cy.findByLabelText("Decision").select("Pending");
+    cy.findByLabelText("Reason").select("Additional Information");
+    cy.get('input[title]="Apply"').click();
+    cy.findByText("Close").click({ force: true });
   }
 }
 
@@ -967,5 +1161,198 @@ export class ClaimantPage {
       cy.findByTitle("OK").click({ force: true });
     });
     return this;
+  }
+
+  /**
+   * Submits the current part of the claim intake.
+   * @param timeout
+   */
+  private clickNext = (timeout?: number) =>
+    cy
+      .get('#navButtons input[value="Next "]', { timeout })
+      .first()
+      .click({ force: true });
+
+  /**
+   * Goes throught the claim intake process for a given claim.
+   * @param claim Generated claim
+   * @param reason leave reason, can also inlcude reasons not supported by the claim generator, like "Military Caregiver", etc.
+   */
+  createNotification(
+    claim: ValidClaim,
+    reason: LeaveReason | "Military Exigency Family" | "Military Caregiver"
+  ): void {
+    // Start the process
+    cy.contains("span", "Create Notification").click();
+    // "Notification details" step, we are not changing anything here, so we just skip it.
+    this.clickNext();
+    // "Occupation Details" step.
+    cy.findByLabelText("Hours worked per week").type(
+      `{selectall}{backspace}${claim.hours_worked_per_week}`
+    );
+    this.clickNext();
+    // "Notification Options" step.
+    // Need special selector for these radio buttons since they are not connected to their labels.
+    const selectTypeOfRequest = (label: string) =>
+      cy.contains("div", label).prev().find("input").click();
+
+    // On following pages select options tend to be re-rendered often, so we need to check if they have children before acting
+    const assertSelectIsLoaded = (el: JQuery<HTMLElement>) => {
+      expect(el.children().length > 1 || el.children().first().text() !== "").to
+        .be.true;
+    };
+    const chooseSelectOption = (label: string, option: string) => {
+      cy.findByLabelText(label).should(assertSelectIsLoaded).select(option);
+      wait();
+    };
+
+    switch (reason) {
+      case "Care for a Family Member":
+        selectTypeOfRequest("Caring for a family member");
+        this.clickNext();
+        chooseSelectOption("Qualifier 1", "Serious Health Condition");
+
+        cy.get("#leaveRequestAbsenceRelationshipsWidget").within(() => {
+          chooseSelectOption(
+            "Primary Relationship to Employee",
+            "Sibling - Brother/Sister"
+          );
+          chooseSelectOption("Qualifier 1", "Biological");
+        });
+        break;
+      case "Child Bonding":
+        selectTypeOfRequest(
+          "Bonding with a new child (adoption/ foster care/ newborn)"
+        );
+        this.clickNext();
+        if (isNotNull(claim.leave_details.reason_qualifier))
+          chooseSelectOption(
+            "Qualifier 1",
+            claim.leave_details.reason_qualifier
+          );
+        break;
+      case "Serious Health Condition - Employee":
+        selectTypeOfRequest(
+          "Sickness, treatment required for a medical condition or any other medical procedure"
+        );
+        this.clickNext();
+        chooseSelectOption("Absence relates to", "Employee");
+        chooseSelectOption(
+          "Absence reason",
+          "Serious Health Condition - Employee"
+        );
+        chooseSelectOption("Qualifier 1", "Not Work Related");
+        chooseSelectOption("Qualifier 2", "Sickness");
+
+        break;
+      case "Pregnancy/Maternity":
+        selectTypeOfRequest("Pregnancy, birth or related medical treatment");
+        this.clickNext();
+        chooseSelectOption("Absence relates to", "Employee");
+        chooseSelectOption("Absence reason", "Pregnancy/Maternity");
+        chooseSelectOption("Qualifier 1", "Prenatal Care");
+      case "Military Caregiver":
+        selectTypeOfRequest("Out of work for another reason");
+        this.clickNext();
+        chooseSelectOption("Absence relates to", "Family");
+        chooseSelectOption("Absence reason", "Military Caregiver");
+        break;
+      case "Military Exigency Family":
+        selectTypeOfRequest("Out of work for another reason");
+        this.clickNext();
+        chooseSelectOption("Absence relates to", "Family");
+        chooseSelectOption("Absence reason", "Military Exigency Family");
+        chooseSelectOption("Qualifier 1", "Other Additional Activities");
+    }
+    this.clickNext(5000);
+
+    const {
+      has_continuous_leave_periods,
+      has_intermittent_leave_periods,
+      has_reduced_schedule_leave_periods,
+    } = claim;
+    const toggleLeaveScheduleSlider = (
+      type: "continuos" | "intermittent" | "reduced"
+    ) => {
+      const scheduleSliderMap: Record<typeof type, string> = {
+        continuos: "One or more fixed time off periods",
+        intermittent: "Episodic / leave as needed",
+        reduced: "Reduced work schedule",
+      };
+      cy.contains("div.toggle-guidance-row", scheduleSliderMap[type])
+        .find("span.slider")
+        .click();
+    };
+
+    const [startDate, endDate] = getLeavePeriod(claim.leave_details);
+
+    if (has_continuous_leave_periods) {
+      toggleLeaveScheduleSlider("continuos");
+      this.clickNext();
+      chooseSelectOption("Absence status", "Known");
+      cy.findByLabelText("Absence start date").type(
+        `${dateToMMddyyyy(startDate)}{enter}`
+      );
+      wait();
+      cy.findByLabelText("Absence end date").type(
+        `${dateToMMddyyyy(endDate)}{enter}`
+      );
+      wait();
+      cy.findByTitle("Quick Add").click();
+    }
+
+    if (has_intermittent_leave_periods) {
+      toggleLeaveScheduleSlider("intermittent");
+      // @ToDo
+      // Implement any actions/flows for episodic
+    }
+
+    if (has_reduced_schedule_leave_periods) {
+      toggleLeaveScheduleSlider("reduced");
+      this.clickNext();
+      chooseSelectOption("Absence status", "Known");
+      wait();
+      cy.labelled("Absence start date").type(
+        `${dateToMMddyyyy(startDate)}{enter}`
+      );
+      wait();
+      cy.labelled("Absence end date").type(`${dateToMMddyyyy(endDate)}{enter}`);
+      wait();
+      if (isNotNull(claim.leave_details.reduced_schedule_leave_periods))
+        enterReducedWorkHours(
+          claim.leave_details.reduced_schedule_leave_periods
+        );
+      wait();
+      cy.get(
+        '#reducedScheduleAbsencePeriodDetailsQuickAddWidget input[value="Add"]'
+      ).click();
+    }
+
+    this.clickNext(5000);
+
+    // @Reminder: If needed add more dynamic options such as
+    // 3 weeks Rotating (currently not needed)
+    if (claim?.work_pattern?.work_pattern_type)
+      chooseSelectOption(
+        "Work Pattern Type",
+        claim.work_pattern.work_pattern_type === "Rotating"
+          ? "2 weeks Rotating"
+          : claim.work_pattern.work_pattern_type
+      );
+    wait();
+    // cy.wait(200);
+    cy.findByLabelText("Standard Work Week").click();
+    wait();
+    // cy.wait(200);
+    cy.get('input[value="Apply to Calendar"]').click({ force: true });
+    this.clickNext();
+    if (reason === "Military Caregiver") {
+      cy.findByLabelText("Military Caregiver Description").type(
+        "I am a parent military caregiver."
+      );
+    }
+    this.clickNext(20000);
+    cy.contains("div", "Thank you. Your notification has been submitted.");
+    this.clickNext(20000);
   }
 }

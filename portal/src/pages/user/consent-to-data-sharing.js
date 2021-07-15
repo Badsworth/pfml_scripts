@@ -36,7 +36,6 @@ export const ConsentToDataSharing = (props) => {
       <Title>{t("pages.userConsentToDataSharing.title")}</Title>
       <p className="margin-bottom-2">
         {t("pages.userConsentToDataSharing.intro")}
-        {t("pages.userConsentToDataSharing.updatedMessage")}
       </p>
 
       <Accordion>

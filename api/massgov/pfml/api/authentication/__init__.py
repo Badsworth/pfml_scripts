@@ -10,7 +10,6 @@ import newrelic.agent
 import requests
 from jose import jwt
 from jose.constants import ALGORITHMS
-from sqlalchemy import or_
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from werkzeug.exceptions import Unauthorized
 
@@ -64,24 +63,18 @@ def decode_cognito_token(token):
         decoded_token = _decode_cognito_token(token)
         auth_id = decoded_token.get("sub")
         with app.db_session() as db_session:
-            user = (
-                db_session.query(User)
-                .filter(or_(User.active_directory_id == auth_id, User.sub_id == auth_id,))
-                .one()
-            )
+            user = db_session.query(User).filter(User.sub_id == auth_id).one()
 
             flask.g.current_user = user
 
             newrelic.agent.add_custom_parameter("current_user.user_id", user.user_id)
             newrelic.agent.add_custom_parameter(
-                "current_user.auth_id", user.sub_id if user.sub_id else user.active_directory_id,
+                "current_user.auth_id", user.sub_id,
             )
 
             # Read attributes for logging, so that db calls are not made during logging.
             flask.g.current_user_user_id = str(user.user_id)
-            flask.g.current_user_auth_id = str(
-                user.sub_id if user.sub_id else user.active_directory_id
-            )
+            flask.g.current_user_auth_id = str(user.sub_id)
             flask.g.current_user_role_ids = ",".join(str(role.role_id) for role in user.roles)
 
         logger.info("auth token decode succeeded", extra={"current_user.auth_id": auth_id})

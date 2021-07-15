@@ -6,8 +6,6 @@ from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import func
-
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.util.batch.log as batch_log
@@ -29,7 +27,7 @@ from massgov.pfml.payments.sftp_s3_transfer import (
     copy_from_sftp_to_s3_and_archive_files,
     copy_to_sftp_and_archive_s3_files,
 )
-from massgov.pfml.reductions.common import get_claimants_for_outbound
+from massgov.pfml.reductions.common import AgencyLoadResult, get_claimants_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.files import create_csv_from_list, upload_to_s3
 
@@ -229,14 +227,18 @@ def create_list_of_claimants(db_session: db.Session, log_entry: batch_log.LogEnt
     db_session.commit()
 
 
-def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry) -> None:
+def load_new_dua_payments(
+    db_session: db.Session, log_entry: batch_log.LogEntry
+) -> AgencyLoadResult:
     s3_config = get_s3_config()
     pending_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dua_pending_directory_path)
     archive_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dua_archive_directory_path)
     error_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dfml_error_directory_path)
 
+    result = AgencyLoadResult()
     for ref_file in _get_pending_dua_payment_reference_files(pending_dir, db_session):
         log_entry.increment(Metrics.PENDING_DUA_PAYMENT_REFERENCE_FILES_COUNT)
+        result.found_pending_files = True
 
         try:
             new_row_count, total_row_count = _load_dua_payment_from_reference_file(
@@ -273,6 +275,7 @@ def load_new_dua_payments(db_session: db.Session, log_entry: batch_log.LogEntry)
                     "reference_file_id": ref_file.reference_file_id,
                 },
             )
+    return result
 
 
 def _load_dua_payment_from_reference_file(
@@ -361,20 +364,6 @@ def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> Tuple
     # in the calling code.
 
 
-def _payment_list_has_been_downloaded_today(db_session: db.Session) -> bool:
-    midnight_today = get_now().replace(hour=0, minute=0)
-    num_files = (
-        db_session.query(func.count(ReferenceFile.reference_file_id))
-        .filter(
-            ReferenceFile.created_at >= midnight_today,
-            ReferenceFile.reference_file_type_id
-            == ReferenceFileType.DUA_PAYMENT_LIST.reference_file_type_id,
-        )
-        .scalar()
-    )
-    return num_files > 0
-
-
 def download_payment_list_from_moveit(db_session: db.Session, log_entry: batch_log.LogEntry) -> int:
     s3_config = get_s3_config()
     moveit_config = get_moveit_config()
@@ -412,16 +401,6 @@ def download_payment_list_from_moveit(db_session: db.Session, log_entry: batch_l
 
     log_entry.set_metrics({Metrics.DUA_PAYMENT_LISTS_DOWNLOADED_COUNT: len(copied_reference_files)})
     return len(copied_reference_files)
-
-
-# Meant to be called from ECS directly as a task.
-def download_payment_list_if_none_today(
-    db_session: db.Session, log_entry: batch_log.LogEntry
-) -> None:
-    # Downloading payment lists from requires connecting to MoveIt. Wrap that call in this condition
-    # so we only incur the overhead of that connection if we haven't retrieved a payment list today.
-    if _payment_list_has_been_downloaded_today(db_session) is False:
-        download_payment_list_from_moveit(db_session, log_entry)
 
 
 def _convert_cent_to_dollars(cent: str) -> Decimal:

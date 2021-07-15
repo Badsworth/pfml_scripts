@@ -1,3 +1,4 @@
+import { compact, find, get, pick } from "lodash";
 import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
@@ -6,7 +7,9 @@ import ClaimCollection from "../../models/ClaimCollection";
 import Details from "../../components/Details";
 import Dropdown from "../../components/Dropdown";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
+import Icon from "../../components/Icon";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputText from "../../components/InputText";
 import Link from "next/link";
 import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
@@ -18,8 +21,8 @@ import Title from "../../components/Title";
 import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
+import classnames from "classnames";
 import formatDateRange from "../../utils/formatDateRange";
-import { get } from "lodash";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
@@ -28,30 +31,7 @@ import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
 
 export const Dashboard = (props) => {
-  const { appLogic, paginationMeta, user } = props;
   const { t } = useTranslation();
-
-  const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
-  const hasVerifiableEmployer = user.hasVerifiableEmployer;
-
-  const tableColumnVisibility = {
-    employee_name: true,
-    fineos_absence_id: true,
-    employer_dba: user.user_leave_administrators.length > 1,
-    employer_fein: true,
-    created_at: true,
-    status: true,
-  };
-  /**
-   * Columns rendered in the table.
-   * Used for rendering header labels and the field(s) in each column. These
-   * mostly mirror the name of the fields rendered, but not exactly
-   * since some columns might require multiple fields.
-   * @type {string[]}
-   */
-  const tableColumnKeys = Object.entries(tableColumnVisibility)
-    .filter(([columnKey, isVisible]) => isVisible)
-    .map(([columnKey, isVisible]) => columnKey);
 
   /**
    * Update the page's query string, to load a different page number,
@@ -63,7 +43,8 @@ export const Dashboard = (props) => {
     const params = new URLSearchParams(window.location.search);
 
     paramsToUpdate.forEach(({ name, value }) => {
-      if (!value) {
+      if (!value || value.length === 0) {
+        // Remove param if its value is null, undefined, empty string, or empty array
         params.delete(name);
       } else {
         params.set(name, value);
@@ -77,29 +58,16 @@ export const Dashboard = (props) => {
 
     // Our withClaims component watches the query string and
     // will trigger an API request when it changes.
-    appLogic.portalFlow.updateQuery(paramsObj);
-  };
-
-  /**
-   * Event handler for when a next/prev pagination button is clicked
-   * @param {number|string} pageOffset - Page number to load
-   */
-  const handlePaginationNavigationClick = (pageOffset) => {
-    updatePageQuery([
-      {
-        name: "page_offset",
-        value: pageOffset,
-      },
-    ]);
+    props.appLogic.portalFlow.updateQuery(paramsObj);
   };
 
   return (
     <React.Fragment>
-      <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
+      <EmployerNavigationTabs activePath={props.appLogic.portalFlow.pathname} />
       <Title>{t("pages.employersDashboard.title")}</Title>
 
       <div className="measure-6">
-        {hasVerifiableEmployer && (
+        {props.user.hasVerifiableEmployer && (
           <Alert
             state="warning"
             heading={t("pages.employersDashboard.verificationTitle")}
@@ -117,7 +85,7 @@ export const Dashboard = (props) => {
           </Alert>
         )}
 
-        <DashboardInfoAlert user={user} />
+        <DashboardInfoAlert user={props.user} />
       </div>
 
       <section className="margin-bottom-4">
@@ -142,21 +110,109 @@ export const Dashboard = (props) => {
         </Details>
       </section>
 
+      <Search
+        initialValue={get(props.activeFilters, "search", "")}
+        updatePageQuery={updatePageQuery}
+      />
       <Filters
         activeFilters={props.activeFilters}
         showFilters={props.query["show-filters"] === "true"}
         updatePageQuery={updatePageQuery}
-        user={user}
+        user={props.user}
       />
+      <PaginatedClaimsTable
+        appLogic={props.appLogic}
+        claims={props.claims}
+        user={props.user}
+        paginationMeta={props.paginationMeta}
+        updatePageQuery={updatePageQuery}
+        sort={
+          <SortDropdown
+            order_by={props.query.order_by}
+            order_direction={props.query.order_direction}
+            updatePageQuery={updatePageQuery}
+          />
+        }
+      />
+    </React.Fragment>
+  );
+};
 
-      {paginationMeta.total_records > 0 && (
-        <PaginationSummary
-          pageOffset={paginationMeta.page_offset}
-          pageSize={paginationMeta.page_size}
-          totalRecords={paginationMeta.total_records}
-        />
-      )}
-      <Table className="width-full tablet:width-auto" responsive scrollable>
+Dashboard.propTypes = {
+  activeFilters: PropTypes.shape({
+    claim_status: PropTypes.string,
+    employer_id: PropTypes.string,
+  }).isRequired,
+  appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
+      pathname: PropTypes.string.isRequired,
+      updateQuery: PropTypes.func.isRequired,
+    }).isRequired,
+  }).isRequired,
+  claims: PropTypes.instanceOf(ClaimCollection),
+  query: PropTypes.shape({
+    "show-filters": PropTypes.oneOf(["false", "true"]),
+    order_by: PropTypes.string,
+    order_direction: PropTypes.oneOf(["ascending", "descending"]),
+  }),
+  paginationMeta: PropTypes.instanceOf(PaginationMeta),
+  user: PropTypes.instanceOf(User).isRequired,
+};
+
+const PaginatedClaimsTable = (props) => {
+  const { paginationMeta, updatePageQuery, user } = props;
+  const { t } = useTranslation();
+
+  const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
+  const tableColumnVisibility = {
+    employee_name: true,
+    fineos_absence_id: true,
+    employer_dba: user.user_leave_administrators.length > 1,
+    employer_fein: true,
+    created_at: true,
+    status: true,
+  };
+
+  /**
+   * Columns rendered in the table.
+   * Used for rendering header labels and the field(s) in each column. These
+   * mostly mirror the name of the fields rendered, but not exactly
+   * since some columns might require multiple fields.
+   * @type {string[]}
+   */
+  const tableColumnKeys = Object.entries(tableColumnVisibility)
+    .filter(([columnKey, isVisible]) => isVisible)
+    .map(([columnKey]) => columnKey);
+
+  /**
+   * Event handler for when a next/prev pagination button is clicked
+   * @param {number|string} pageOffset - Page number to load
+   */
+  const handlePaginationNavigationClick = (pageOffset) => {
+    updatePageQuery([
+      {
+        name: "page_offset",
+        value: pageOffset,
+      },
+    ]);
+  };
+
+  return (
+    <React.Fragment>
+      <div className="margin-y-2 grid-row grid-gap flex-align-center">
+        {paginationMeta.total_records > 0 && (
+          <div className="grid-col grid-col-12 margin-bottom-2 mobile-lg:grid-col-fill mobile-lg:margin-bottom-0">
+            <PaginationSummary
+              pageOffset={paginationMeta.page_offset}
+              pageSize={paginationMeta.page_size}
+              totalRecords={paginationMeta.total_records}
+            />
+          </div>
+        )}
+        <div className="grid-col grid-col-auto">{props.sort}</div>
+      </div>
+      <Table className="width-full" responsive scrollable>
         <thead>
           <tr>
             {tableColumnKeys.map((columnKey) => (
@@ -209,24 +265,18 @@ export const Dashboard = (props) => {
   );
 };
 
-Dashboard.propTypes = {
-  activeFilters: PropTypes.shape({
-    claim_status: PropTypes.string,
-    employer_id: PropTypes.string,
-  }).isRequired,
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-      pathname: PropTypes.string.isRequired,
-      updateQuery: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
+PaginatedClaimsTable.propTypes = {
+  appLogic: Dashboard.propTypes.appLogic,
   claims: PropTypes.instanceOf(ClaimCollection),
-  query: PropTypes.shape({
-    "show-filters": PropTypes.oneOf(["false", "true"]),
-  }),
   paginationMeta: PropTypes.instanceOf(PaginationMeta),
+  updatePageQuery: PropTypes.func.isRequired,
+  /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
+  sort: PropTypes.node.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
+  query: PropTypes.shape({
+    order_by: PropTypes.string,
+    order_direction: PropTypes.oneOf(["ascending", "descending"]),
+  }),
 };
 
 /**
@@ -390,13 +440,14 @@ DashboardInfoAlert.propTypes = {
 };
 
 const Filters = (props) => {
-  const { activeFilters, showFilters, updatePageQuery, user } = props;
+  const filterFields = ["claim_status", "employer_id"];
+  const { showFilters, updatePageQuery, user } = props;
   const { t } = useTranslation();
 
-  const initialFormState = { ...activeFilters };
-  if (activeFilters.claim_status) {
+  const initialFormState = { ...pick(props.activeFilters, filterFields) };
+  if (initialFormState.claim_status) {
     // Convert checkbox field query param into array, to conform to how we manage checkbox form state
-    initialFormState.claim_status = activeFilters.claim_status.split(",");
+    initialFormState.claim_status = initialFormState.claim_status.split(",");
   }
 
   const { formState, updateFields } = useFormState(initialFormState);
@@ -405,15 +456,46 @@ const Filters = (props) => {
     updateFields,
   });
 
-  const activeFiltersCount = Object.values(activeFilters).length;
   const filtersContainerId = "filters";
+  let activeFiltersCount = Object.values(initialFormState).length;
+  if (initialFormState.claim_status) {
+    // Count each selected status as an active filter
+    activeFiltersCount += initialFormState.claim_status.length - 1;
+  }
 
+  /**
+   * Event handler for when the user applies their status and
+   * organization filter selections
+   * @param {object} evt
+   */
   const handleSubmit = (evt) => {
     evt.preventDefault();
     const params = [];
 
     Object.entries(formState).forEach(([name, value]) => {
       params.push({ name, value });
+    });
+
+    updatePageQuery([
+      ...params,
+      {
+        name: "show-filters",
+        value: false,
+      },
+      {
+        // Reset the page to 1 since filters affect what shows on the first page
+        name: "page_offset",
+        value: "1",
+      },
+    ]);
+  };
+
+  const handleFilterReset = () => {
+    const params = [];
+
+    Object.keys(initialFormState).forEach((name) => {
+      // Reset by setting to an empty string
+      params.push({ name, value: "" });
     });
 
     updatePageQuery([
@@ -426,16 +508,18 @@ const Filters = (props) => {
     ]);
   };
 
-  const handleFilterReset = () => {
-    const params = [];
-
-    Object.keys(activeFilters).forEach((name) => {
-      // Reset by setting to an empty string
-      params.push({ name, value: "" });
-    });
-
+  /**
+   * Click event handler for an individual filter's removal button.
+   * @param {string} name - Filter query param name
+   * @param {string|Array} value - Leave empty to remove filter, or pass in the updated
+   *  value if the filter is a checkbox field
+   */
+  const handleRemoveFilterClick = (name, value = "") => {
     updatePageQuery([
-      ...params,
+      {
+        name,
+        value,
+      },
       {
         // Reset the page to 1 since filters affect what shows on the first page
         name: "page_offset",
@@ -456,29 +540,36 @@ const Filters = (props) => {
     ]);
   };
 
-  if (!isFeatureEnabled("employerShowDashboardFilters")) {
-    return null;
-  }
-
   return (
     <React.Fragment>
-      <Button
-        aria-controls={filtersContainerId}
-        aria-expanded={showFilters.toString()}
-        onClick={handleFilterToggleClick}
-        variation="outline"
+      <div
+        className={classnames({
+          // When search is enabled, we visually display this as if it's
+          // part of the same gray container box
+          "margin-bottom-2": !isFeatureEnabled("employerShowDashboardSearch"),
+          "padding-bottom-3 bg-base-lightest padding-x-3": isFeatureEnabled(
+            "employerShowDashboardSearch"
+          ),
+        })}
       >
-        {activeFiltersCount > 0 && !showFilters
-          ? t("pages.employersDashboard.filtersShowWithCount", {
-              count: activeFiltersCount,
-            })
-          : t("pages.employersDashboard.filtersToggle", {
-              context: showFilters ? "expanded" : undefined,
-            })}
-      </Button>
+        <Button
+          aria-controls={filtersContainerId}
+          aria-expanded={showFilters.toString()}
+          onClick={handleFilterToggleClick}
+          variation="outline"
+        >
+          {activeFiltersCount > 0 && !showFilters
+            ? t("pages.employersDashboard.filtersShowWithCount", {
+                count: activeFiltersCount,
+              })
+            : t("pages.employersDashboard.filtersToggle", {
+                context: showFilters ? "expanded" : undefined,
+              })}
+        </Button>
+      </div>
 
       <form
-        className="bg-primary-lighter margin-top-2 padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
+        className="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
         hidden={!showFilters}
         id={filtersContainerId}
         onSubmit={handleSubmit}
@@ -504,13 +595,9 @@ const Filters = (props) => {
 
         {user.verifiedEmployers.length > 1 && (
           <Dropdown
+            autocomplete
             {...getFunctionalInputProps("employer_id")}
-            hideEmptyChoice
             choices={[
-              {
-                label: t("pages.employersDashboard.filterOrgsShowAllChoice"),
-                value: "",
-              },
               ...user.verifiedEmployers.map((employer) => ({
                 label: `${employer.employer_dba} (${employer.employer_fein})`,
                 value: employer.employer_id,
@@ -535,6 +622,43 @@ const Filters = (props) => {
           </Button>
         )}
       </form>
+
+      {activeFiltersCount > 0 && (
+        <div className="margin-top-1 margin-bottom-4" data-test="filters-menu">
+          <strong className="margin-right-2 display-inline-block">
+            {t("pages.employersDashboard.filterNavLabel")}
+          </strong>
+          {initialFormState.employer_id && (
+            <FilterMenuButton
+              data-test="employer_id"
+              onClick={() => handleRemoveFilterClick("employer_id")}
+            >
+              {
+                find(user.verifiedEmployers, {
+                  employer_id: initialFormState.employer_id,
+                }).employer_dba
+              }
+            </FilterMenuButton>
+          )}
+          {initialFormState.claim_status &&
+            initialFormState.claim_status.map((status) => (
+              <FilterMenuButton
+                data-test={`claim_status_${status}`}
+                key={status}
+                onClick={() =>
+                  handleRemoveFilterClick(
+                    "claim_status",
+                    initialFormState.claim_status.filter((s) => s !== status)
+                  )
+                }
+              >
+                {t("pages.employersDashboard.filterStatusChoice", {
+                  context: status,
+                })}
+              </FilterMenuButton>
+            ))}
+        </div>
+      )}
     </React.Fragment>
   );
 };
@@ -547,6 +671,163 @@ Filters.propTypes = {
   showFilters: PropTypes.bool,
   updatePageQuery: PropTypes.func.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
+};
+
+const FilterMenuButton = (props) => {
+  const { t } = useTranslation();
+
+  return (
+    <Button
+      className="text-bold text-no-underline hover:text-underline margin-right-2"
+      onClick={props.onClick}
+      type="button"
+      variation="unstyled"
+    >
+      <Icon
+        name="cancel"
+        size={3}
+        className="text-ttop margin-top-neg-1px margin-right-05"
+        fill="currentColor"
+      />
+      <span className="usa-sr-only">
+        {t("pages.employersDashboard.filterRemove")}
+      </span>
+      {props.children}
+    </Button>
+  );
+};
+
+FilterMenuButton.propTypes = {
+  children: PropTypes.node.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
+
+const Search = (props) => {
+  const { initialValue, updatePageQuery } = props;
+  const { t } = useTranslation();
+
+  const { formState, updateFields } = useFormState({ search: initialValue });
+  const getFunctionalInputProps = useFunctionalInputProps({
+    formState,
+    updateFields,
+  });
+
+  const handleSubmit = (evt) => {
+    evt.preventDefault();
+
+    updatePageQuery([
+      {
+        name: "search",
+        value: get(formState, "search", ""),
+      },
+      {
+        // Reset the page to 1 since search affects what shows on the first page
+        name: "page_offset",
+        value: "1",
+      },
+    ]);
+  };
+
+  if (!isFeatureEnabled("employerShowDashboardSearch")) return null;
+
+  return (
+    <div className="bg-base-lightest padding-x-3 padding-top-1px padding-bottom-2">
+      <form className="usa-form grid-row" onSubmit={handleSubmit}>
+        <div className="grid-col-fill tablet:grid-col-auto">
+          <InputText
+            {...getFunctionalInputProps("search")}
+            label={t("pages.employersDashboard.searchLabel")}
+            smallLabel
+          />
+        </div>
+        <div className="grid-col-auto flex-align-self-end">
+          <Button className="width-auto" type="submit">
+            {t("pages.employersDashboard.searchSubmit")}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+Search.propTypes = {
+  /** The current search value */
+  initialValue: PropTypes.string,
+  updatePageQuery: PropTypes.func.isRequired,
+};
+
+const SortDropdown = (props) => {
+  const { order_by, order_direction, updatePageQuery } = props;
+  const choices = {
+    newest: "created_at,descending",
+    oldest: "created_at,ascending",
+    employee_az: "employee,ascending",
+    employee_za: "employee,descending",
+  };
+  const { t } = useTranslation();
+  const { formState, updateFields } = useFormState({
+    orderAndDirection: compact([order_by, order_direction]).join(","),
+  });
+  const getFunctionalInputProps = useFunctionalInputProps({
+    formState,
+    updateFields,
+  });
+
+  /**
+   * Convert a selected dropdown option to order_by and order_direction params
+   * @param {string} orderAndDirection - comma-delineated order_by,order_direction
+   * @returns {Array<{ name: string, value: string }>}
+   */
+  const getParamsFromOrderAndDirection = (orderAndDirection) => {
+    const [order_by, order_direction] = orderAndDirection.split(",");
+
+    return [
+      {
+        name: "order_by",
+        value: order_by,
+      },
+      {
+        name: "order_direction",
+        value: order_direction,
+      },
+    ];
+  };
+
+  const handleChange = (evt) => {
+    updatePageQuery([
+      ...getParamsFromOrderAndDirection(evt.target.value),
+      {
+        // Reset the page to 1 since ordering affects what shows on the first page
+        name: "page_offset",
+        value: "1",
+      },
+    ]);
+  };
+
+  if (!isFeatureEnabled("employerShowDashboardSort")) return null;
+
+  return (
+    <Dropdown
+      {...getFunctionalInputProps("orderAndDirection")}
+      onChange={handleChange}
+      choices={Object.entries(choices).map(([key, value]) => ({
+        label: t("pages.employersDashboard.sortChoice", { context: key }),
+        value,
+      }))}
+      label={t("pages.employersDashboard.sortLabel")}
+      smallLabel
+      formGroupClassName="display-flex margin-0 flex-align-center"
+      labelClassName="text-bold margin-right-1"
+      selectClassName="margin-0"
+      hideEmptyChoice
+    />
+  );
+};
+
+SortDropdown.propTypes = {
+  order_by: PropTypes.oneOf(["created_at", "employee"]),
+  order_direction: PropTypes.oneOf(["ascending", "descending"]),
+  updatePageQuery: PropTypes.func.isRequired,
 };
 
 export default withClaims(Dashboard);

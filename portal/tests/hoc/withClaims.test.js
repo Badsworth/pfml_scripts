@@ -51,45 +51,7 @@ describe("withClaims", () => {
     expect(pageProps.claims).toBe(claimsCollection);
   });
 
-  it("makes request with page_offset query param", () => {
-    const appLogic = useAppLogic();
-    appLogic.claims.paginationMeta = new PaginationMeta({ page_offset: 2 });
-    appLogic.claims.isLoadingClaims = true;
-
-    const query = { page_offset: "3" };
-
-    setup(appLogic, query);
-
-    expect(appLogic.claims.loadPage).toHaveBeenCalledWith("3", {});
-  });
-
-  it("makes request with employer_id query param", () => {
-    const appLogic = useAppLogic();
-    appLogic.claims.paginationMeta = new PaginationMeta({ page_offset: 1 });
-    appLogic.claims.isLoadingClaims = true;
-    const query = { employer_id: "mock-employer-id" };
-
-    setup(appLogic, query);
-
-    expect(appLogic.claims.loadPage).toHaveBeenCalledWith(undefined, {
-      employer_id: "mock-employer-id",
-    });
-  });
-
-  it("makes request with claim_status query param", () => {
-    const appLogic = useAppLogic();
-    appLogic.claims.paginationMeta = new PaginationMeta({ page_offset: 1 });
-    appLogic.claims.isLoadingClaims = true;
-    const query = { claim_status: "Approved,Pending" };
-
-    setup(appLogic, query);
-
-    expect(appLogic.claims.loadPage).toHaveBeenCalledWith(undefined, {
-      claim_status: "Approved,Pending",
-    });
-  });
-
-  it("makes request with pagination and filters params", () => {
+  it("makes request with pagination, order, and filters params", () => {
     const appLogic = useAppLogic();
     appLogic.claims.paginationMeta = new PaginationMeta({ page_offset: 1 });
     appLogic.claims.isLoadingClaims = true;
@@ -97,13 +59,24 @@ describe("withClaims", () => {
       page_offset: "2",
       claim_status: "Approved,Pending",
       employer_id: "mock-employer-id",
+      order_by: "employee",
+      order_direction: "descending",
+      search: "foo",
     };
 
     setup(appLogic, query);
 
-    expect(appLogic.claims.loadPage).toHaveBeenCalledWith("2", {
-      claim_status: "Approved,Pending",
-      employer_id: "mock-employer-id",
-    });
+    expect(appLogic.claims.loadPage).toHaveBeenCalledWith(
+      "2",
+      {
+        order_by: "employee",
+        order_direction: "descending",
+      },
+      {
+        claim_status: "Approved,Pending",
+        employer_id: "mock-employer-id",
+        search: "foo",
+      }
+    );
   });
 });

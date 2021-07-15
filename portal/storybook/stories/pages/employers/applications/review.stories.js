@@ -32,7 +32,7 @@ export default {
     },
     // Todo(EMPLOYER-1453): remove V1 eform functionality
     "Claimant EForm Version": {
-      defaultValue: "Version 1 (before 2021-07-14)",
+      defaultValue: "Version 2 (after 2021-07-14)",
       control: {
         type: "radio",
         options: [

@@ -35,7 +35,6 @@ from massgov.pfml.db.models.factories import (
     EmployeeWithFineosNumberFactory,
     ReferenceFileFactory,
 )
-from massgov.pfml.payments.payments_util import get_now
 from massgov.pfml.util.batch.log import LogEntry
 
 fake = faker.Faker()
@@ -402,7 +401,8 @@ def test_load_new_dua_payments_success(
     assert len(file_util.list_files(archive_directory)) == 0
 
     log_entry = LogEntry(test_db_session, "Test")
-    dua.load_new_dua_payments(test_db_session, log_entry)
+    load_result = dua.load_new_dua_payments(test_db_session, log_entry)
+    assert load_result.found_pending_files is True
 
     # Expect to have loaded some rows to the database.
     assert (
@@ -468,7 +468,9 @@ def test_load_new_dua_payments_error(
     assert len(file_util.list_files(error_directory)) == 0
 
     log_entry = LogEntry(test_db_session, "Test")
-    dua.load_new_dua_payments(test_db_session, log_entry)
+    load_result = dua.load_new_dua_payments(test_db_session, log_entry)
+    # We still found pending files, even if they errored.
+    assert load_result.found_pending_files is True
 
     # Expect files to be in error directory after.
     assert len(file_util.list_files(pending_directory)) == 0
@@ -785,57 +787,6 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
 
 
 @pytest.mark.parametrize(
-    "other_ref_file_count, old_payment_list_ref_file_count, today_payment_list_ref_file_count, result",
-    (
-        # No ReferenceFiles in the database.
-        (0, 0, 0, False),
-        # Some ReferenceFiles in the database, but none with DUA_PAYMENT_LIST type.
-        (random.randint(1, 4), 0, 0, False),
-        # Some ReferenceFiles with DUA_PAYMENT_LIST type in the database but none created today.
-        (random.randint(1, 4), random.randint(3, 6), 0, False),
-        # Some ReferenceFiles with DUA_PAYMENT_LIST types created today.
-        (random.randint(1, 4), random.randint(3, 6), random.randint(1, 8), True),
-        # Most common scenario. Single ReferenceFile with DUA_PAYMENT_LIST type created today.
-        (random.randint(1, 4), random.randint(3, 6), 1, True),
-    ),
-    ids=[
-        "none_other-none_old-none_today",
-        "some_other-none_old-none_today",
-        "some_other-some_old-none_today",
-        "some_other-some_old-some_today",
-        "some_other-some_old-one_today",
-    ],
-)
-@pytest.mark.integration
-def test_payment_list_has_been_downloaded_today(
-    test_db_session,
-    initialize_factories_session,
-    other_ref_file_count,
-    old_payment_list_ref_file_count,
-    today_payment_list_ref_file_count,
-    result,
-):
-    for _i in range(other_ref_file_count):
-        ReferenceFileFactory.create()
-
-    for _i in range(old_payment_list_ref_file_count):
-        ref_file = ReferenceFileFactory.create(
-            reference_file_type_id=ReferenceFileType.DUA_PAYMENT_LIST.reference_file_type_id,
-        )
-        ref_file.created_at = get_now() - timedelta(days=random.randint(1, 365))
-
-    # Commit the created_at time changes to the database.
-    test_db_session.commit()
-
-    for _i in range(today_payment_list_ref_file_count):
-        ReferenceFileFactory.create(
-            reference_file_type_id=ReferenceFileType.DUA_PAYMENT_LIST.reference_file_type_id,
-        )
-
-    assert dua._payment_list_has_been_downloaded_today(test_db_session) == result
-
-
-@pytest.mark.parametrize(
     "moveit_file_count",
     (
         # No files waiting for use in MoveIt.
@@ -849,7 +800,7 @@ def test_payment_list_has_been_downloaded_today(
     ids=["no_files", "one_waiting", "multiple_files"],
 )
 @pytest.mark.integration
-def test_download_payment_list_if_none_today(
+def test_download_payment_list_from_moveit(
     initialize_factories_session,
     test_db_session,
     mock_s3_bucket,
@@ -886,7 +837,7 @@ def test_download_payment_list_if_none_today(
     assert len(file_util.list_files(full_s3_dest_path)) == 0
 
     log_entry = LogEntry(test_db_session, "Test")
-    dua.download_payment_list_if_none_today(test_db_session, log_entry)
+    dua.download_payment_list_from_moveit(test_db_session, log_entry)
 
     # Expect to have moved all files from the source to the archive directory of MoveIt.
     files_in_moveit_archive_dir = mock_sftp_client.listdir(moveit_archive_path)

@@ -75,10 +75,24 @@ async function buildReport(ids: string[]): Promise<string[]> {
     const newrelic = `https://one.newrelic.com/launcher/nr1-core.explorer?${params.toString()}`;
     const runtime = `${format(start, "p")}-${format(end, "p")}`;
     const name = flood.name.replace(/.* Preset \- /, "");
-    return `* [${name}](${flood.permalink}): ${runtime}, ${percent}% error rate. [View in New Relic](${newrelic})`;
+    return {
+      total,
+      failed,
+      description: `* [${name}](${flood.permalink}): ${runtime}, ${percent}% error rate. [View in New Relic](${newrelic})`,
+    };
   });
-
-  return Promise.all(promises);
+  const lines = await Promise.all(promises);
+  const summary = lines.reduce((totals, line) => {
+    const total = totals.total + line.total;
+    const failed = totals.failed + line.failed;
+    const percent = (total ? (failed / total) * 100 : 0).toFixed(1);
+    return {
+      total,
+      failed,
+      description: `* Summary: ${percent}% error rate. ${failed}/${total} failed.`,
+    };
+  });
+  return [...lines, summary].map((line) => line.description);
 }
 
 /**

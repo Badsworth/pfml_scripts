@@ -22,12 +22,12 @@ exports[`PreviousLeavesOtherReasonDetails when the user has no previous leaves r
       Array [
         PreviousLeave {
           "is_for_current_employer": null,
-          "is_for_same_reason_as_leave_reason": null,
           "leave_end_date": null,
           "leave_minutes": null,
           "leave_reason": null,
           "leave_start_date": null,
           "previous_leave_id": null,
+          "type": null,
           "worked_per_week_minutes": null,
         },
       ]
@@ -65,22 +65,22 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
       Array [
         PreviousLeave {
           "is_for_current_employer": null,
-          "is_for_same_reason_as_leave_reason": null,
           "leave_end_date": "2021-01-26",
           "leave_minutes": 1500,
           "leave_reason": "Caring for a family member with a serious health condition",
           "leave_start_date": "2021-01-01",
           "previous_leave_id": 89,
+          "type": "other_reason",
           "worked_per_week_minutes": 2400,
         },
         PreviousLeave {
           "is_for_current_employer": null,
-          "is_for_same_reason_as_leave_reason": null,
           "leave_end_date": "2020-12-13",
           "leave_minutes": 1200,
           "leave_reason": "Bonding with my child after birth or placement",
           "leave_start_date": "2020-11-21",
           "previous_leave_id": 9,
+          "type": "other_reason",
           "worked_per_week_minutes": 2400,
         },
       ]
@@ -166,7 +166,7 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
   />
   <InputDate
     dayLabel="Day"
-    example="mm / dd / yyyy"
+    example="MM / DD / YYYY"
     label="What was the first day of this leave?"
     monthLabel="Month"
     name="previous_leaves_other_reason[0].leave_start_date"
@@ -177,7 +177,7 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
   />
   <InputDate
     dayLabel="Day"
-    example="mm / dd / yyyy"
+    example="MM / DD / YYYY"
     label="What was the last day of this leave?"
     monthLabel="Month"
     name="previous_leaves_other_reason[0].leave_end_date"

@@ -42,22 +42,52 @@ describe("ClaimsApi", () => {
       );
     });
 
-    it("includes filters in request", async () => {
+    it("includes order and filter params in request", async () => {
       mockFetch();
 
       const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims(2, {
-        employer_id: "mock-employer-id",
-        claim_status: "Approved,Pending",
-      });
+      await claimsApi.getClaims(
+        2,
+        {
+          order_by: "employee",
+          order_direction: "descending",
+        },
+        {
+          employer_id: "mock-employer-id",
+          claim_status: "Approved,Pending",
+        }
+      );
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/claims?page_offset=2&employer_id=mock-employer-id&claim_status=Approved%2CPending`,
+        `${process.env.apiUrl}/claims?page_offset=2&order_by=employee&order_direction=descending&employer_id=mock-employer-id&claim_status=Approved%2CPending`,
         expect.objectContaining({
           headers: expect.any(Object),
           method: "GET",
         })
       );
+    });
+
+    it("includes Completed status filter when Closed status filter is included", async () => {
+      mockFetch();
+
+      const filters = {
+        employer_id: "mock-employer-id",
+        claim_status: "Closed",
+      };
+      const originalFilters = { ...filters };
+      const claimsApi = new ClaimsApi();
+      await claimsApi.getClaims(2, {}, filters);
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/claims?page_offset=2&employer_id=mock-employer-id&claim_status=Closed%2CCompleted`,
+        expect.objectContaining({
+          headers: expect.any(Object),
+          method: "GET",
+        })
+      );
+      // Doesn't mutate original object, so that our claimsLogic caches what it is aware of, rather
+      // than what is sent to the API
+      expect(filters).toEqual(originalFilters);
     });
 
     it("returns response as instances of ClaimCollection and PaginationMeta", async () => {

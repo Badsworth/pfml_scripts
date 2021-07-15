@@ -1,15 +1,18 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import {
+  MockBenefitsApplicationBuilder,
+  renderWithAppLogic,
+  simulateEvents,
+} from "../../test-utils";
 import PreviousLeave from "../../../src/models/PreviousLeave";
 import PreviousLeavesOtherReason from "../../../src/pages/applications/previous-leaves-other-reason";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
 const setup = (claimAttrs = {}) => {
-  const {
-    appLogic,
-    claim,
-    wrapper,
-  } = renderWithAppLogic(PreviousLeavesOtherReason, { claimAttrs });
+  const { appLogic, claim, wrapper } = renderWithAppLogic(
+    PreviousLeavesOtherReason,
+    { claimAttrs }
+  );
 
   const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
 
@@ -24,7 +27,9 @@ const setup = (claimAttrs = {}) => {
 
 describe("PreviousLeavesOtherReason", () => {
   it("renders the page", () => {
-    const { wrapper } = setup();
+    const { wrapper } = setup(
+      new MockBenefitsApplicationBuilder().continuous().create()
+    );
 
     expect(wrapper).toMatchSnapshot();
   });

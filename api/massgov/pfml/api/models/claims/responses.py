@@ -11,7 +11,7 @@ from massgov.pfml.api.models.claims.common import (
     PreviousLeave,
 )
 from massgov.pfml.api.models.common import ConcurrentLeave
-from massgov.pfml.db.models.employees import Claim
+from massgov.pfml.db.models.employees import Claim, ManagedRequirement
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FEINFormattedStr,
@@ -33,12 +33,31 @@ class EmployeeResponse(PydanticBaseModel):
     other_name: Optional[str]
 
 
-class FineosAbsenceStatusResponse(PydanticBaseModel):
-    absence_status_description: str
+class ManagedRequirementResponse(PydanticBaseModel):
+    follow_up_date: Optional[date]
+    responded_at: Optional[date]
+    status: Optional[str]
+    category: Optional[str]
+    type: Optional[str]
+    created_at: Optional[date]
 
+    @classmethod
+    def from_orm(cls, managed_requirement: ManagedRequirement) -> "ManagedRequirementResponse":
+        managed_requirement_response = super().from_orm(managed_requirement)
+        if managed_requirement.managed_requirement_status:
+            managed_requirement_response.status = (
+                managed_requirement.managed_requirement_status.managed_requirement_status_description
+            )
+        if managed_requirement.managed_requirement_category:
+            managed_requirement_response.category = (
+                managed_requirement.managed_requirement_category.managed_requirement_category_description
+            )
+        if managed_requirement.managed_requirement_type:
+            managed_requirement_response.type = (
+                managed_requirement.managed_requirement_type.managed_requirement_type_description
+            )
 
-class ClaimTypeResponse(PydanticBaseModel):
-    claim_type_description: str
+        return managed_requirement_response
 
 
 class ClaimResponse(PydanticBaseModel):
@@ -48,11 +67,10 @@ class ClaimResponse(PydanticBaseModel):
     fineos_notification_id: Optional[str]
     absence_period_start_date: Optional[date]
     absence_period_end_date: Optional[date]
-    fineos_absence_status: Optional[FineosAbsenceStatusResponse]
     claim_status: Optional[str]
-    claim_type: Optional[ClaimTypeResponse]
     claim_type_description: Optional[str]
     created_at: Optional[date]
+    managed_requirements: Optional[List[ManagedRequirementResponse]]
 
     @classmethod
     def from_orm(cls, claim: Claim) -> "ClaimResponse":

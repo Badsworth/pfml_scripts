@@ -5,6 +5,7 @@ exports[`AmendButton renders the component 1`] = `
   className="c-amend-button"
 >
   <Button
+    data-test="amend-button"
     variation="unstyled"
   >
     <Icon

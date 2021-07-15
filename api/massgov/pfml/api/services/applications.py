@@ -821,10 +821,13 @@ def set_previous_leaves(
             worked_per_week_minutes=api_previous_leave.worked_per_week_minutes,
             leave_minutes=api_previous_leave.leave_minutes,
         )
-        if api_previous_leave.leave_reason:
+
+        # We only care about the leave reason for PreviousLeaveOtherReason objects
+        if previous_leave_type == PreviousLeaveOtherReason and api_previous_leave.leave_reason:
             new_previous_leave.leave_reason_id = PreviousLeaveQualifyingReason.get_id(
                 api_previous_leave.leave_reason
             )
+
         db_session.add(new_previous_leave)
 
 

@@ -45,6 +45,7 @@ resource "aws_lambda_function" "ecs_failure_monitor" {
   layers           = [local.requests_layer]
   runtime          = "python3.8"
   publish          = "false"
+  timeout          = 60 # 1 minute
 
   environment {
     variables = {

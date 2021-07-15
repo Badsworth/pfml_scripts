@@ -13,7 +13,7 @@ Create a user with the FINEOS role:
 
 Get a JWT for that user:
 
-  make jwt auth_id=<UUID from active_directory_id attribute>
+  make jwt auth_id=<UUID from sub_id attribute>
 
 Run the API calls:
 

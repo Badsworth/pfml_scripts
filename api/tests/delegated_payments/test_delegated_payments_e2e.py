@@ -1444,8 +1444,8 @@ def test_e2e_pub_payments(
 
         pub_ach_response_processed_folder = os.path.join(
             s3_config.pfml_pub_ach_archive_path,
-            date_folder,
             payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+            date_folder,
         )
         nacha_filenames = [payments_util.Constants.FILE_NAME_PUB_NACHA]
         assert_files(pub_ach_response_processed_folder, nacha_filenames, timestamp_prefix)
@@ -1499,8 +1499,8 @@ def test_e2e_pub_payments(
         # processed check return files
         pub_check_response_processed_folder = os.path.join(
             s3_config.pfml_pub_check_archive_path,
-            date_folder,
             payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+            date_folder,
         )
         positive_pay_check_response_file = (
             f"Paid-{payments_util.Constants.FILE_NAME_PUB_POSITIVE_PAY}.csv"

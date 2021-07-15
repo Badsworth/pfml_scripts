@@ -34,7 +34,7 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
   />
   <InputDate
     dayLabel="Day"
-    example="mm / dd / yyyy"
+    example="MM / DD / YYYY"
     label="What is the first day of leave from work that this benefit will pay you for?"
     monthLabel="Month"
     name="employer_benefits[0].benefit_start_date"
@@ -45,7 +45,7 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
   />
   <InputDate
     dayLabel="Day"
-    example="mm / dd / yyyy"
+    example="MM / DD / YYYY"
     label="What is the last day of leave from work that this benefit will pay you for?"
     monthLabel="Month"
     name="employer_benefits[0].benefit_end_date"

@@ -401,6 +401,61 @@ def test_run_step_state_transitions_soap(
     )
 
 
+def test_run_step_state_transitions_malformed_address(
+    local_initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
+    monkeypatch,
+):
+    # Testing that if the address is missing pieces, it'll still move to the appropriate
+    # state and that Experian will not be called at all.
+    monkeypatch.setenv("USE_EXPERIAN_SOAP_CLIENT", "1")
+    mock_caller = MockVerificationZeepCaller()
+
+    check_payment = _random_valid_payment_with_state_log(
+        local_test_db_session, PaymentMethod.CHECK.payment_method_id
+    )
+    check_payment.experian_address_pair.experian_address = None
+    check_payment.experian_address_pair.fineos_address.address_line_one = ""
+
+    eft_payment = _random_valid_payment_with_state_log(
+        local_test_db_session, PaymentMethod.ACH.payment_method_id
+    )
+    eft_payment.experian_address_pair.experian_address = None
+    eft_payment.experian_address_pair.fineos_address.address_line_one = None
+
+    # Commit the various experian_address_pair.experian_address = None changes to the database.
+    local_test_db_session.commit()
+
+    client = soap_api.Client(mock_caller)
+
+    with mock.patch(
+        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
+        return_value=None,
+    ), mock.patch(
+        "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
+        return_value=client,
+    ):
+        AddressValidationStep(
+            db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+        ).run()
+
+    # mock_caller.DoSearch was never called
+    assert mock_caller.call_count == 0
+
+    # Check payment would have gone to the error state
+    _assert_payment_state(
+        local_test_db_other_session, State.PAYMENT_FAILED_ADDRESS_VALIDATION, [check_payment],
+    )
+
+    # EFT payment would have gone to the success state despite the issue
+    _assert_payment_state(
+        local_test_db_other_session,
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+        [eft_payment],
+    )
+
+
 def test_run_step_no_database_changes_on_exception(
     initialize_factories_session, test_db_session, test_db_other_session
 ):

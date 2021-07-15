@@ -404,7 +404,7 @@ Currently this is a JWT set in the `Authorization` HTTP header. A JWT signed by
 a locally generated JWK can be created for a user via:
 
 ```sh
-make jwt auth_id=<active_directory_id of a user record>
+make jwt auth_id=<sub_id of a user record>
 ```
 
 Currently the JWT expires after a day, but we may tweak the lifetime for
@@ -420,12 +420,12 @@ Which will print something like:
 
 ```
 {'user_id': '548c9e28-3d72-4c5c-96e7-4a77f3c37041',
- 'active_directory_id': '33f965ad-0150-4c5b-a3a6-86bbd5df1a26',
+ 'sub_id': '33f965ad-0150-4c5b-a3a6-86bbd5df1a26',
  'email_address': 'gfarmer@lewis.com',
  'consented_to_data_sharing': False}
 ```
 
-The `active_directory_id` field is what is needed to generate a JWT. For the
+The `sub_id` field is what is needed to generate a JWT. For the
 example above, it would be:
 
 ```sh
@@ -459,7 +459,7 @@ Some endpoints require a `client_id` and `client_secret`. For these, you will ne
 1. Update the `COGNITO_USER_POOL_KEYS_URL` setting in `docker-compose.yml` to point to one of our environments. There should be one already in the file that you can uncomment.
 1. Update `tokenUrl` in the `openapi.yaml` to the Cognito address (for stage: `https://massgov-pfml-stage.auth.us-east-1.amazoncognito.com/oauth2/token`)
 1. Create a user: `make create-user args=fineos` 
-1. In a tool like Postico, edit the DB record for the user, and change its `active_directory_id` to the `client_id`
+1. In a tool like Postico, edit the DB record for the user, and change its `sub_id` to the `client_id`
 1. Re-build and restart the Docker container
 
 

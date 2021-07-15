@@ -27,10 +27,6 @@ class EFormAttributeBuilder:
     }
     """
 
-    # Static attribute value that should be added for all entries except the last. It won't be added
-    # for the final entry in an eform.
-    JOINING_ATTRIBUTE: Dict[str, Any] = {}
-
     def __init__(self, target):
         self.target = target
 
@@ -57,23 +53,13 @@ class EFormAttributeBuilder:
         setattr(attribute, attribute_type, value)
         return attribute
 
-    def to_attributes(self, count: int, suffix: str, is_last: bool) -> List[EFormAttribute]:
+    def to_attributes(self, count: int, suffix: str) -> List[EFormAttribute]:
         attributes = []
         """For examples of ATTRIBUTE_MAP check fineos/transforms/to_fineos/eforms/employer.py
         keys come from front end, values are what fineos expects
         """
         for key, definition in self.ATTRIBUTE_MAP.items():
             value = getattr(self.target, key)
-            attribute = self.to_attribute(value, definition, count, suffix)
-            attributes.append(attribute)
-
-        """The employer v1 eform handles joining attributes differently than other eforms. This logic
-        can be removed when the employer v1 eform is deprecated.
-        https://lwd.atlassian.net/browse/EMPLOYER-1439
-        """
-        if not is_last and len(self.JOINING_ATTRIBUTE.items()) > 0:
-            definition = self.JOINING_ATTRIBUTE
-            value = definition["instanceValue"]
             attribute = self.to_attribute(value, definition, count, suffix)
             attributes.append(attribute)
 
@@ -97,13 +83,11 @@ class EFormBuilder:
         """
         attributes = []
         targets = list(iter(targets))
-        last_index = len(targets) - 1
         for i, target in enumerate(targets):
             suffix = ""
             if i != 0 or always_add_suffix:
                 suffix = str(i + 1)
-            is_last = i == last_index
-            attributes.extend(target.to_attributes(i, suffix, is_last))
+            attributes.extend(target.to_attributes(i, suffix))
         return attributes
 
     @classmethod

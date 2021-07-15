@@ -296,7 +296,7 @@ def test_process_check_return_step_full(
             reference_file.reference_file_type_id
             == ReferenceFileType.PUB_CHECK_RETURN.reference_file_type_id
         )
-    processed_dir = "s3://%s/2021-04-12/processed" % mock_s3_bucket_resource.name
+    processed_dir = "s3://%s/processed/2021-04-12" % mock_s3_bucket_resource.name
     assert reference_files[0].file_location == processed_dir + "/check_outstanding_small.csv"
     assert reference_files[1].file_location == processed_dir + "/check_paid_small.csv"
 

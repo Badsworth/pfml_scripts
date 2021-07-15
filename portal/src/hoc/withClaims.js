@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { isNil, omitBy } from "lodash";
 import ClaimCollection from "../models/ClaimCollection";
 import PaginationMeta from "../models/PaginationMeta";
 import PropTypes from "prop-types";
@@ -24,15 +25,32 @@ const withClaims = (Component) => {
     assert(appLogic.users.user);
 
     const { isLoadingClaims } = appLogic.claims;
-    const requestedPageOffset = query.page_offset;
-    const requestedFilters = {};
-    if (query.claim_status) requestedFilters.claim_status = query.claim_status;
-    if (query.employer_id) requestedFilters.employer_id = query.employer_id;
+    const { page_offset } = query;
+
+    // Exclude null or undefined values since we don't want to
+    // send those into the API request's query string, and our
+    // UI components won't need to filter them out when determining
+    // how many filters are active.
+    const order = omitBy(
+      {
+        order_by: query.order_by,
+        order_direction: query.order_direction,
+      },
+      isNil
+    );
+    const filters = omitBy(
+      {
+        claim_status: query.claim_status,
+        employer_id: query.employer_id,
+        search: query.search,
+      },
+      isNil
+    );
 
     useEffect(() => {
-      appLogic.claims.loadPage(requestedPageOffset, requestedFilters);
+      appLogic.claims.loadPage(page_offset, order, filters);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoadingClaims, requestedPageOffset, Object.values(requestedFilters)]);
+    }, [isLoadingClaims, page_offset, order, filters]);
 
     if (isLoadingClaims) {
       return (
@@ -70,7 +88,10 @@ const withClaims = (Component) => {
     query: PropTypes.shape({
       claim_status: PropTypes.string,
       employer_id: PropTypes.string,
+      order_by: PropTypes.string,
+      order_direction: PropTypes.string,
       page_offset: PropTypes.string,
+      search: PropTypes.string,
     }),
   };
 

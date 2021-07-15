@@ -14,7 +14,7 @@ const PaginationSummary = (props) => {
       : maxRecordNumberForPage;
 
   return (
-    <p>
+    <p className="line-height-sans-2">
       {t("components.pagination.summary", {
         firstRecordNumber: Number(firstRecordNumber).toLocaleString(),
         lastRecordNumber: Number(lastRecordNumber).toLocaleString(),

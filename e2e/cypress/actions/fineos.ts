@@ -92,6 +92,12 @@ export function denyClaim(reason: string): void {
   assertClaimStatus("Declined");
 }
 
+export function reviewClaim(): void {
+  cy.contains("td", "Approved").click();
+  cy.get('input[title="Review a Leave Request"').click();
+  cy.wait("@ajaxRender");
+}
+
 /**
  * Called from the claim page, asserts that the claim status is an expected value.
  */
@@ -184,7 +190,7 @@ export function onTab(label: string, wait = 150): void {
  * it will be called often. Try to find a better way to determine if we can move
  * on with processing (element detection).
  */
-function wait() {
+export function wait(): void {
   cy.wait("@ajaxRender");
   cy.get("#disablingLayer").should("not.be.visible");
 }

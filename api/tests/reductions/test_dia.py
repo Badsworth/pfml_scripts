@@ -33,7 +33,7 @@ from massgov.pfml.reductions.dia import (
     _format_claimants_for_dia_claimant_list,
     _write_claimants_to_tempfile,
     create_list_of_claimants,
-    download_payment_list_if_none_today,
+    download_payment_list_from_moveit,
     upload_claimant_list_to_moveit,
 )
 from massgov.pfml.util.batch.log import LogEntry
@@ -446,7 +446,7 @@ def test_create_list_of_claimants_skips_claims_with_missing_data(
     ),
 )
 @pytest.mark.integration
-def test_download_payment_list_if_none_today(
+def test_download_payment_list_from_moveit(
     local_initialize_factories_session,
     local_test_db_session,
     local_test_db_other_session,
@@ -484,7 +484,7 @@ def test_download_payment_list_if_none_today(
     assert len(file_util.list_files(full_s3_dest_path)) == 0
 
     log_entry = LogEntry(local_test_db_other_session, "Test")
-    download_payment_list_if_none_today(local_test_db_session, log_entry)
+    download_payment_list_from_moveit(local_test_db_session, log_entry)
 
     # Expect to have moved all files from the source to the archive directory of MoveIt.
     files_in_moveit_archive_dir = mock_sftp_client.listdir(moveit_archive_path)
@@ -563,7 +563,8 @@ def test_assert_dia_payments_are_stored_correctly(
     assert len(file_util.list_files(archive_directory)) == 0
 
     log_entry = LogEntry(test_db_session, "Test")
-    dia.load_new_dia_payments(test_db_session, log_entry)
+    load_result = dia.load_new_dia_payments(test_db_session, log_entry)
+    assert load_result.found_pending_files is True
 
     # Files should have been moved.
     assert len(file_util.list_files(pending_directory)) == 0

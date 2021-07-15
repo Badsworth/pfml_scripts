@@ -1,0 +1,75 @@
+name: PUB Process File Daily Check
+
+on:
+  schedule:
+  # scheduled to run weekdays at 6:30 AM EST (7:30 AM EDT)
+  - cron: '30 11 * * MON-FRI'
+
+defaults:
+  run:
+    working-directory: .
+
+jobs:
+  pub-process-file-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-to-assume: ci-run-deploys
+
+      - name: Get Today's Date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Check file names
+        id: file-check
+        run: |
+          pub_file=$(
+            aws s3 sync s3://massgov-pfml-prod-agency-transfer . \
+            --exclude "*" --include "reports/sent/${{ steps.date.outputs.date }}/*-cancellation-report.csv" \
+            --dryrun 
+          )
+
+          if [ -z $pub_file ]; then
+            echo "PUB Process file does not exist"
+            exit 1
+          else
+            echo "File found: $pub_file"
+          fi
+
+  alert-if-failed:
+    runs-on: ubuntu-latest
+    needs: [pub-process-file-check]
+    if: always() && needs.pub-process-file-check.result == 'failure'
+    steps:
+    - name: send high priority page if file is missing or empty
+      uses: fjogeleit/http-request-action@master
+      with:
+        url: 'https://events.pagerduty.com/v2/enqueue'
+        method: 'POST'
+        contentType: 'application/json'
+        data: "{
+          \"routing_key\": \"60e2a861cbe64208c0ae9ddcfa02938e\", 
+          \"event_action\": \"trigger\",
+          \"dedup_key\":\"pub-process-file-check\",
+          \"payload\": {
+            \"summary\": \"PUB Process file missing\",
+            \"severity\": \"critical\",
+            \"source\": \"PUB Process File Check\",
+            \"custom_details\": {
+              \"description\": \"Yesterday's PUB process file missing\"
+              }
+            },
+            \"links\": [
+              {
+              \"href\":\"https://github.com/EOLWD/pfml/actions/runs/${{ github.run_id }}\",
+              \"text\": \"GitHub Actions run\"
+              }
+            ]
+          }"

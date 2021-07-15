@@ -141,6 +141,20 @@ export const LeaveReason = (props) => {
       />
 
       <ConditionalContent
+        visible={
+          claim.previous_leaves_same_reason.length > 0 &&
+          claim.leave_details.reason !== reason
+        }
+      >
+        <Alert
+          state="warning"
+          heading={t("pages.claimsLeaveReason.leaveReasonChangedAlertTitle")}
+        >
+          <Trans i18nKey="pages.claimsLeaveReason.leaveReasonChangedAlertBody" />
+        </Alert>
+      </ConditionalContent>
+
+      <ConditionalContent
         fieldNamesClearedWhenHidden={["leave_details.reason_qualifier"]}
         getField={getField}
         clearField={clearField}

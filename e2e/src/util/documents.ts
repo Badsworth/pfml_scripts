@@ -1,4 +1,4 @@
-import { LeaveReason } from "../types";
+import { DocumentReviewTasks, LeaveReason } from "../types";
 import { DocumentUploadRequest } from "../api";
 
 export function getCertificationDocumentType(
@@ -21,7 +21,7 @@ export function getCertificationDocumentType(
 
 export function getDocumentReviewTaskName(
   documentType: DocumentUploadRequest["document_type"]
-): string {
+): DocumentReviewTasks {
   switch (documentType) {
     case "Child bonding evidence form":
       return "Bonding Certification Review";

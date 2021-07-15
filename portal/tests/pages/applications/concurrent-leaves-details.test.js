@@ -44,13 +44,8 @@ describe("ConcurrentLeavesDetails", () => {
   });
 
   it("calls claims.update with new concurrent leave data when user clicks continue", async () => {
-    const {
-      appLogic,
-      changeField,
-      changeRadioGroup,
-      claim,
-      submitForm,
-    } = setup();
+    const { appLogic, changeField, changeRadioGroup, claim, submitForm } =
+      setup();
 
     changeRadioGroup(
       "concurrent_leave.is_for_current_employer",

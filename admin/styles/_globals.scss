@@ -1,0 +1,86 @@
+html {
+  color: $Color-GraniteGray-700;
+  font: 400 14px/1.14 NotoSans, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+  color: $Color-RevolutionGray;
+  font-size: 24px;
+  font-weight: 200;
+  line-height: 1.33;
+}
+
+.page {
+  background: #e5e5e5;
+  display: grid;
+  grid-template-columns: 15.79em auto;
+  grid-template-rows: minmax(min-content, max-content) auto;
+  height: 100vh;
+}
+
+.page__header {
+  background: $Color-BerkshiresGreen-600;
+  grid-column: 1 / span 2;
+  grid-row: 1 / 1;
+  padding: 0.79em 1.14em;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.06);
+  position: relative;
+  z-index: 1;
+}
+
+.page__logo-link {
+  color: #fff;
+  display: block;
+  font-size: 3.15em;
+  text-decoration: none;
+}
+
+.page__logo-link::before {
+  @include IconFontProps;
+  content: $IconPfmlLogo;
+  display: block;
+}
+
+.user-options {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.user-options__name {
+  color: #FFF;
+  display: block;
+  margin-left: 0.57em;
+}
+
+.user-options__avatar-image {
+  border-radius: 50%;
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+.page__sidebar {
+  background: $Color-BerkshiresGreen-200;
+  display: flex;
+  flex-direction: column;
+  grid-column: 1 / 1;
+  grid-row: 2 / 2;
+  overflow-y: auto;
+  position: relative;
+}
+
+.page__main {
+  grid-column: 2 / 2;
+  grid-row: 2 / 2;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 1.64em 2.29em;
+  position: relative;
+}

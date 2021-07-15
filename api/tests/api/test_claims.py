@@ -9,14 +9,23 @@ from jose.constants import ALGORITHMS
 
 import massgov.pfml.api.claims
 import massgov.pfml.fineos.mock_client
+import massgov.pfml.util.datetime as datetime_util
 import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
-from massgov.pfml.db.models.employees import Claim, Role, UserLeaveAdministrator
+from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
+    Claim,
+    ManagedRequirementStatus,
+    ManagedRequirementType,
+    Role,
+    UserLeaveAdministrator,
+)
 from massgov.pfml.db.models.factories import (
     ApplicationFactory,
     ClaimFactory,
     EmployeeFactory,
     EmployerFactory,
+    ManagedRequirementFactory,
     UserFactory,
     VerificationFactory,
 )
@@ -1135,6 +1144,88 @@ class TestUpdateClaim:
         assert errors[0].get("type") == "maxItems"
         assert errors[0].get("field") == "employer_benefits"
 
+    def test_employer_update_claim_review_validates_v1_employer_benefits_length(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        base_request = {
+            "comment": "comment",
+            # employer_benefits intentionally excluded
+            "employer_decision": "Approve",
+            "fraud": "Yes",
+            "has_amendments": False,
+            "hours_worked_per_week": 40,
+            "previous_leaves": [
+                {
+                    "leave_end_date": "2021-02-06",
+                    "leave_start_date": "2021-01-25",
+                    "leave_reason": "Pregnancy",
+                }
+            ],
+            "uses_second_eform_version": False,
+        }
+
+        request_with_5_employer_benefits = {
+            **base_request,
+            "employer_benefits": [
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+                {
+                    "benefit_amount_dollars": 0,
+                    "benefit_amount_frequency": "Per Day",
+                    "benefit_end_date": "2021-01-05",
+                    "benefit_start_date": "2021-02-06",
+                    "benefit_type": "Accrued paid leave",
+                },
+            ],
+        }
+        response = client.patch(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=request_with_5_employer_benefits,
+        )
+
+        errors = response.get_json().get("errors")
+        assert response.status_code == 400
+        assert errors[0].get("message") == "Employer benefits cannot exceed limit of 4"
+        assert errors[0].get("type") == "maximum"
+
     def test_employer_update_claim_review_validates_multiple_fields_at_once(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification
     ):
@@ -1672,16 +1763,8 @@ def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> b
     assert claim_response["employee"]["last_name"] == claim_query.employee.last_name
     assert claim_response["employee"]["other_name"] == claim_query.employee.other_name
     assert (
-        claim_response["fineos_absence_status"]["absence_status_description"]
-        == claim_query.fineos_absence_status.absence_status_description
-    )
-    assert (
         claim_response["claim_status"]
         == claim_query.fineos_absence_status.absence_status_description
-    )
-    assert (
-        claim_response["claim_type"]["claim_type_description"]
-        == claim_query.claim_type.claim_type_description
     )
     assert claim_response["claim_type_description"] == claim_query.claim_type.claim_type_description
 
@@ -2070,31 +2153,47 @@ class TestGetClaimsEndpoint:
             assert len(data) == self.claims_count
             self._assert_data_order(data, desc=True)
 
-        def test_get_claims_with_order_fineos_absence_status_asc(self, client, employer_auth_token):
+        def test_get_claims_with_order_fineos_absence_status_asc(
+            self, client, employer_auth_token, test_db_session
+        ):
             request = {"order_direction": "ascending", "order_by": "fineos_absence_status"}
             response = self._perform_api_call(request, client, employer_auth_token)
             assert response.status_code == 200
             response_body = response.get_json()
-            data = [
-                d["fineos_absence_status"].get("sort_order", 0)
-                for d in response_body.get("data", [])
+            claims = response_body.get("data", [])
+
+            absence_status_orders = [
+                AbsenceStatus.get_instance(
+                    test_db_session, description=claim["claim_status"]
+                ).sort_order
+                if claim["claim_status"]
+                else 0
+                for claim in claims
             ]
-            assert len(data) == self.claims_count
-            self._assert_data_order(data, desc=False)
+
+            assert len(claims) == self.claims_count
+            self._assert_data_order(absence_status_orders, desc=False)
 
         def test_get_claims_with_order_fineos_absence_status_desc(
-            self, client, employer_auth_token
+            self, client, employer_auth_token, test_db_session
         ):
             request = {"order_direction": "descending", "order_by": "fineos_absence_status"}
             response = self._perform_api_call(request, client, employer_auth_token)
             assert response.status_code == 200
             response_body = response.get_json()
-            data = [
-                d["fineos_absence_status"].get("sort_order", 0)
-                for d in response_body.get("data", [])
+            claims = response_body.get("data", [])
+
+            absence_status_orders = [
+                AbsenceStatus.get_instance(
+                    test_db_session, description=claim["claim_status"]
+                ).sort_order
+                if claim["claim_status"]
+                else 0
+                for claim in claims
             ]
-            assert len(data) == self.claims_count
-            self._assert_data_order(data, desc=True)
+
+            assert len(claims) == self.claims_count
+            self._assert_data_order(absence_status_orders, desc=True)
 
     def test_get_claims_for_employer_id(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification
@@ -2272,9 +2371,8 @@ class TestGetClaimsEndpoint:
             claim_data = response_body.get("data", [])
             assert len(claim_data) == expected_count
             for claim in response_body.get("data", []):
-                absence_status = claim.get("fineos_absence_status") or {}
-                absence_status_description = absence_status.get("absence_status_description", None)
-                assert absence_status_description in valid_statuses
+                absence_status = claim.get("claim_status", None)
+                assert absence_status in valid_statuses
 
         def test_get_claims_with_status_filter_one_claim(self, client, employer_auth_token):
             resp = self._perform_api_call(
@@ -2325,26 +2423,101 @@ class TestGetClaimsEndpoint:
                 "Intake In Progress",
                 None,
                 "Closed",
+                "Completed",
             ]
             resp = self._perform_api_call(
-                "/v1/claims?claim_status=Pending,Closed", client, employer_auth_token
+                "/v1/claims?claim_status=Pending,Closed,Completed", client, employer_auth_token
             )
             self._perform_assertions(
                 resp,
                 status_code=200,
-                expected_count=self.NUM_CLAIM_PER_STATUS * 5,
+                expected_count=self.NUM_CLAIM_PER_STATUS * 6,
                 valid_statuses=valid_statuses,
             )
 
-        def test_get_claims_with_status_filter_unsuported_statuses(
+        def test_get_claims_with_status_filter_unsupported_statuses(
             self, client, employer_auth_token
         ):
             resp = self._perform_api_call(
                 "/v1/claims?claim_status=Unknown", client, employer_auth_token
             )
-            self._perform_assertions(
-                resp, status_code=400, expected_count=0, valid_statuses=["Unknown"]
+            self._perform_assertions(resp, status_code=400, expected_count=0, valid_statuses=[])
+
+    # Inner class for testing Claims with Managed Requirements
+    class TestClaimsWithManagedRequirements:
+        @pytest.fixture()
+        def claim(self, employer_user, test_verification, test_db_session):
+            employer = EmployerFactory.create()
+            employee = EmployeeFactory.create()
+
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
             )
+            test_db_session.add(link)
+            test_db_session.commit()
+
+            return ClaimFactory.create(
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+        @pytest.fixture()
+        def managed_requirements(self, claim):
+            return [
+                ManagedRequirementFactory.create(
+                    claim=claim,
+                    managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                    managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                )
+                for _ in range(0, 2)
+            ]
+
+        @pytest.fixture()
+        def old_managed_requirements(self, claim):
+            return [
+                ManagedRequirementFactory.create(
+                    claim=claim, follow_up_date=datetime_util.utcnow() - timedelta(days=3)
+                )
+                for _ in range(0, 2)
+            ]
+
+        @pytest.fixture()
+        def complete_managed_requirements(self, claim):
+            return [
+                ManagedRequirementFactory.create(
+                    claim=claim,
+                    managed_requirement_status_id=ManagedRequirementStatus.COMPLETE.managed_requirement_status_id,
+                )
+                for _ in range(0, 2)
+            ]
+
+        def test_claim_managed_requirements(
+            self,
+            client,
+            employer_auth_token,
+            managed_requirements,
+            old_managed_requirements,
+            complete_managed_requirements,
+        ):
+            resp = client.get(
+                "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == 1
+            claim = response_body["data"][0]
+            assert len(claim.get("managed_requirements", [])) == len(managed_requirements)
+            expected_type = (
+                ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_description
+            )
+            expected_status = ManagedRequirementStatus.OPEN.managed_requirement_status_description
+            for req in claim["managed_requirements"]:
+                assert req["follow_up_date"] >= date.today().strftime("%Y-%m-%d")
+                assert req["type"] == expected_type
+                assert req["status"] == expected_status
 
     # Inner class for testing Claims Search
     class TestClaimsSearch:

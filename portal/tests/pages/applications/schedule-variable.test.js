@@ -92,6 +92,32 @@ describe("ScheduleVariable", () => {
     );
   });
 
+  it("clears the form when the user clears their input", async () => {
+    const initialWorkPattern = WorkPattern.createWithWeek(60 * 7); // 1 hour each day
+    const { appLogic, claim, changeField, submitForm } = setup(
+      new MockBenefitsApplicationBuilder()
+        .continuous()
+        .workPattern({
+          work_pattern_days: initialWorkPattern.work_pattern_days,
+          work_pattern_type: WorkPatternType.variable,
+        })
+        .create()
+    );
+
+    changeField("work_pattern.work_pattern_days[0].minutes", "");
+    await submitForm();
+
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        hours_worked_per_week: null,
+        work_pattern: {
+          work_pattern_days: [],
+        },
+      }
+    );
+  });
+
   it("submits data when user doesn't change their answers", async () => {
     const initialWorkPattern = WorkPattern.createWithWeek(60 * 7); // 1 hour each day
     const { appLogic, claim, submitForm } = setup(

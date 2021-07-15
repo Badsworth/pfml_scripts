@@ -147,24 +147,27 @@ describe("LeaveDetails", () => {
       expect(documentsHint).toMatchSnapshot();
     });
 
-    it("renders document's name if there is no document name", () => {
+    it("displays the generic document name", () => {
       const { wrapper } = setup();
-      const medicalDocuments = wrapper.find("HcpDocumentItem");
+      const medicalDocuments = wrapper.find("DownloadableDocument");
       expect(medicalDocuments.length).toBe(2);
-      expect(medicalDocuments.map((node) => node.dive().text())).toEqual([
-        "Medical cert doc",
-        "Certification of Your Serious Health Condition",
-      ]);
+      expect(
+        medicalDocuments.map((node) =>
+          node
+            .dive()
+            .containsMatchingElement("Your employee's certification document")
+        )
+      ).toEqual([true, true]);
     });
 
     it("makes a call to download documents on click", async () => {
       const { downloadDocumentSpy, wrapper } = setup();
       await act(async () => {
         await wrapper
-          .find("HcpDocumentItem")
+          .find("DownloadableDocument")
           .at(0)
           .dive()
-          .find("a")
+          .find("Button")
           .simulate("click", {
             preventDefault: jest.fn(),
           });

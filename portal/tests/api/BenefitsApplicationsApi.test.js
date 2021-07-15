@@ -420,13 +420,11 @@ describe("BenefitsApplicationsApi", () => {
     });
 
     it("resolves with claim properties", async () => {
-      const {
-        claim: claimResponse,
-        ...rest
-      } = await claimsApi.submitPaymentPreference(
-        claim.application_id,
-        payment_preference
-      );
+      const { claim: claimResponse, ...rest } =
+        await claimsApi.submitPaymentPreference(
+          claim.application_id,
+          payment_preference
+        );
 
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);

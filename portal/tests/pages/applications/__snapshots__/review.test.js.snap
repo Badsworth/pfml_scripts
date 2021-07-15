@@ -925,12 +925,12 @@ exports[`Review Page Part 1 Review Page when all data is present renders Review 
         Array [
           PreviousLeave {
             "is_for_current_employer": true,
-            "is_for_same_reason_as_leave_reason": null,
             "leave_end_date": "2021-05-01",
             "leave_minutes": 1200,
             "leave_reason": null,
             "leave_start_date": "2021-07-01",
             "previous_leave_id": null,
+            "type": "same_reason",
             "worked_per_week_minutes": 2400,
           },
         ]
@@ -944,12 +944,12 @@ exports[`Review Page Part 1 Review Page when all data is present renders Review 
         Array [
           PreviousLeave {
             "is_for_current_employer": null,
-            "is_for_same_reason_as_leave_reason": null,
             "leave_end_date": null,
             "leave_minutes": null,
             "leave_reason": null,
             "leave_start_date": null,
             "previous_leave_id": null,
+            "type": "other_reason",
             "worked_per_week_minutes": null,
           },
         ]

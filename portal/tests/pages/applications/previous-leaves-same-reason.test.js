@@ -9,11 +9,10 @@ import PreviousLeavesSameReason from "../../../src/pages/applications/previous-l
 jest.mock("../../../src/hooks/useAppLogic");
 
 const setup = (claimAttrs = {}) => {
-  const {
-    appLogic,
-    claim,
-    wrapper,
-  } = renderWithAppLogic(PreviousLeavesSameReason, { claimAttrs });
+  const { appLogic, claim, wrapper } = renderWithAppLogic(
+    PreviousLeavesSameReason,
+    { claimAttrs }
+  );
 
   const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
 

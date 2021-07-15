@@ -18,39 +18,10 @@ import {
   subMonths,
 } from "date-fns";
 import faker from "faker";
-
-export type LeaveDetailsSpec = {
-  reason: ApplicationLeaveDetails["reason"];
-  reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
-  /** Makes a claim for an extremely short time period (1 day). */
-  shortClaim?: boolean;
-  /** Generate an employer notification date that is considered "short notice" by law. */
-  shortNotice?: boolean;
-  /** Flag to create a continuous leave period */
-  has_continuous_leave_periods?: boolean;
-  /** Data to create a reduced leave period. See work_pattern_spec for the expected format. */
-  reduced_leave_spec?: string;
-  /**
-   * Data to create an intermittent leave period.
-   *
-   * Acceptable values for this property are:
-   *   * `false` or `undefined`: No intermittent leave period will be added.
-   *   * `true`: An intermittent leave period will be generated automatically.
-   *   * Partial Intermittent Leave period object: Will be merged with the generated defaults into a leave period.
-   *   * Array of Partial Intermittent Leave Period objects: Each item will be merged with the generated defaults into
-   *     multiple leave periods.
-   */
-  intermittent_leave_spec?: IntermittentLeaveSpec | false;
-  /** Flag to make this a medical pre-birth claim. */
-  pregnant_or_recent_birth?: boolean;
-  /** Specify explicit leave dates for the claim. These will be used for the reduced/intermittent/continuous leave periods. */
-  leave_dates?: [Date, Date];
-  /** Control the date of the bonding event (child birth/adoption/etc) */
-  bondingDate?: "far-past" | "past" | "future";
-};
+import { ClaimSpecification } from "./Claim";
 
 export default function generateLeaveDetails(
-  config: LeaveDetailsSpec,
+  config: ClaimSpecification,
   work_pattern: WorkPattern
 ): ApplicationLeaveDetails {
   const { reason, reason_qualifier } = config;
@@ -297,7 +268,7 @@ function getEarliestStartDate(details: ApplicationLeaveDetails): Date {
 }
 
 function makeChildPlacementDate(
-  spec: LeaveDetailsSpec["bondingDate"],
+  spec: ClaimSpecification["bondingDate"],
   leaveStart: Date
 ): string {
   switch (spec) {

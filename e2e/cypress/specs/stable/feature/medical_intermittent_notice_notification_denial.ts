@@ -66,9 +66,9 @@ describe("Denial Notification and Notice", () => {
         cy.log("Finished waiting for documents");
         cy.visit("/applications");
         cy.contains("article", submission.fineos_absence_id).within(() => {
-          cy.contains("a", "Denial notice").should("be.visible").click();
+          cy.findByText("Denial notice (PDF)").should("be.visible").click();
         });
-        portal.downloadLegalNotice("Denial", submission.fineos_absence_id, 4);
+        portal.downloadLegalNotice(submission.fineos_absence_id);
       });
     }
   );
@@ -96,7 +96,7 @@ describe("Denial Notification and Notice", () => {
             employeeFullName,
             "denial"
           );
-          portal.downloadLegalNotice("Denial", submission.fineos_absence_id, 4);
+          portal.downloadLegalNotice(submission.fineos_absence_id);
         });
       });
     }

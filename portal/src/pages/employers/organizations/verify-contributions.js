@@ -80,7 +80,7 @@ export const VerifyContributions = (props) => {
               <a
                 href={routes.external.massTaxConnect}
                 target="_blank"
-                rel="noopener"
+                rel="noreferrer noopener"
               />
             ),
           }}
@@ -101,7 +101,7 @@ export const VerifyContributions = (props) => {
               <a
                 href={routes.external.massTaxConnect}
                 target="_blank"
-                rel="noopener"
+                rel="noreferrer noopener"
               />
             ),
             "dor-phone-link": (
@@ -111,7 +111,7 @@ export const VerifyContributions = (props) => {
               <a
                 href={routes.external.massgov.preparingToVerifyEmployer}
                 target="_blank"
-                rel="noopener"
+                rel="noreferrer noopener"
               />
             ),
             ol: <ol className="usa-list" />,

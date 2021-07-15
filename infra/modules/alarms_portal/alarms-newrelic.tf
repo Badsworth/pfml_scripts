@@ -190,7 +190,7 @@ module "newrelic_alerts_cognito" {
 
   name  = each.value.name
   query = <<-NRQL
-    SELECT percentage(count(*), WHERE httpResponseCode >= 400)
+    SELECT percentage(count(*), WHERE httpResponseCode >= 400 AND httpResponseCode != 503 AND httpResponseCode != 504)
       * clamp_max(floor(uniqueCount(session) / 3), 1)
     FROM AjaxRequest
     WHERE browserInteractionName = 'fetch: cognito ${each.value.interaction_name}'
@@ -233,13 +233,76 @@ module "newrelic_alerts_application_post" {
 
   name  = each.value.name
   query = <<-NRQL
-    SELECT percentage(count(*), WHERE httpResponseCode >= 400)
+    SELECT percentage(count(*), WHERE httpResponseCode >= 400 AND httpResponseCode != 503 AND httpResponseCode != 504)
       * clamp_max(floor(uniqueCount(user.auth_id) / 3), 1)
     FROM AjaxRequest
     WHERE httpMethod = 'POST'
       AND groupedRequestUrl LIKE '%/applications/*/${each.value.request_url}'
       AND environment = '${var.environment_name}'
   NRQL
+}
+
+locals {
+  network_errors = {
+    "cognito_api" = {
+      name        = "High Cognito network error rate"
+      request_url = "%cognito%"
+    }
+    "paid_leave_api" = {
+      name        = "High API network error rate"
+      request_url = "%paidleave%mass.gov%"
+    }
+  }
+}
+
+# Alarm for server-side network errors. The thresholds should be pretty high here
+# since network issues are more unpredictable.
+#
+# Note that client-side network errors are not captured here. These are issues like:
+# - cancelled (ajax request cancelled by the user)
+# - failed to fetch (CORS issues or user navigated away from the page during a fetch)
+#
+resource "newrelic_nrql_alert_condition" "server_networkerror_surge" {
+  for_each = local.network_errors
+
+  # WARN: NetworkError percentage above 2% within the last 10 minutes, and at least 10 requests made per window
+  # CRIT: NetworkError percentage above 5% within the last 10 minutes, and at least 10 requests made per window
+  policy_id      = newrelic_alert_policy.portal_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  enabled        = true
+
+  name = each.value.name
+  nrql {
+    query = <<-NRQL
+      SELECT percentage(count(*), WHERE httpResponseCode = 503 OR httpResponseCode = 504)
+        * clamp_max(floor(count(*) / 10), 1)
+      FROM AjaxRequest
+      WHERE environment = '${var.environment_name}'
+        AND groupedRequestUrl LIKE '${each.value.request_url}'
+    NRQL
+
+    evaluation_offset = 1
+  }
+
+  violation_time_limit_seconds = 86400 # 24 hours
+  aggregation_window           = 300   # calculate every 5 minutes e.g. TIMESERIES 5 MINUTES
+
+  warning {
+    # Warn if two 5-minute periods have error rate > 39% (at least 4/10 requests)
+    threshold_duration    = 600
+    threshold             = 0.39
+    operator              = "above"
+    threshold_occurrences = "ALL"
+  }
+
+  critical {
+    # Set the alarm off if two 5-minute periods have error rate > 59% (at least 6/10 requests)
+    threshold_duration    = 600
+    threshold             = 0.59
+    operator              = "above"
+    threshold_occurrences = "ALL"
+  }
 }
 
 locals {
@@ -278,6 +341,8 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
       ) * clamp_max(floor(${local.js_error_uniq_count} / ${local.js_error_min_uniq_per_window}), 1)
       FROM JavaScriptError, BrowserInteraction
       WHERE appName = 'PFML-Portal-${upper(var.environment_name)}'
+        AND pageUrl NOT LIKE '%localhost%'
+        AND targetUrl NOT LIKE '%localhost%'
     NRQL
 
     evaluation_offset = 1
@@ -375,16 +440,4 @@ module "portal_synthetic_ping_failure" {
   fill_option = "none"
 
   nrql = "SELECT filter(count(*), WHERE result = 'FAILED') FROM SyntheticCheck WHERE monitorName = 'portal_ping--${var.environment_name}'"
-}
-
-module "portal_synthetic_login_failure" {
-  source = "../newrelic_single_error_alarm"
-
-  # ignore performance and training environments
-  enabled     = contains(["prod", "stage", "test"], var.environment_name)
-  name        = "Portal scripted synthetic login failed"
-  policy_id   = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
-  fill_option = "none"
-
-  nrql = "SELECT filter(count(*), WHERE result = 'FAILED') FROM SyntheticCheck WHERE monitorName = 'portal_scripted_login--${var.environment_name}'"
 }

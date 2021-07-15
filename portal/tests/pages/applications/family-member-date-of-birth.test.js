@@ -5,11 +5,10 @@ import FamilyMemberDateOfBirth from "../../../src/pages/applications/family-memb
 jest.mock("../../../src/hooks/useAppLogic");
 
 const setup = (claimAttrs = {}) => {
-  const {
-    appLogic,
-    claim,
-    wrapper,
-  } = renderWithAppLogic(FamilyMemberDateOfBirth, { claimAttrs });
+  const { appLogic, claim, wrapper } = renderWithAppLogic(
+    FamilyMemberDateOfBirth,
+    { claimAttrs }
+  );
 
   const { changeField, submitForm } = simulateEvents(wrapper);
 

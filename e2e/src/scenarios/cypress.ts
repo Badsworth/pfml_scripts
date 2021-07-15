@@ -59,13 +59,24 @@ export const MIL_RED: ScenarioSpecification = {
   claim: {
     label: "MIL_RED",
     shortClaim: true,
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    reason: "Care for a Family Member",
     docs: {
-      HCP: {},
       MASSID: {},
+      CARING: {},
     },
     reduced_leave_spec: "0,240,240,240,240,240,0",
+  },
+};
+
+export const MIL_EXI: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "Military Exigency claim",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
+    docs: {
+      MASSID: {},
+    },
   },
 };
 
@@ -91,8 +102,8 @@ export const BHAP9: ScenarioSpecification = {
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
     docs: {
-      HCP: {},
       MASSID: {},
+      FOSTERPLACEMENT: {},
     },
     intermittent_leave_spec: true,
   },
@@ -158,8 +169,8 @@ export const MHAP4: ScenarioSpecification = {
     shortClaim: true,
     reason: "Pregnancy/Maternity",
     docs: {
-      HCP: {},
       MASSID: {},
+      PREGNANCY_MATERNITY_FORM: {},
     },
   },
 };

@@ -40,13 +40,6 @@ class PurchaseDataAttributeBuilder(EFormAttributeBuilder):
         },
     }
 
-    JOINING_ATTRIBUTE = {
-        "name": "PurchaseAdditionalItem",
-        "type": "enumValue",
-        "domainName": "PleaseSelectYesNo",
-        "instanceValue": "Yes",
-    }
-
 
 class PurchaseData(PydanticBaseModel):
     purchase_amount: Optional[Decimal]
@@ -80,7 +73,7 @@ class TestEFormBuilder:
     def test_purchase_data_eform_builder(self, purchase_data):
         eform = PurchaseDataEFormBuilder.build([purchase_data, purchase_data])
         attributes = eform.eformAttributes
-        assert len(attributes) == 11
+        assert len(attributes) == 10
 
         expected_attributes = [
             {"decimalValue": purchase_data.purchase_amount, "name": "purchaseAmount"},
@@ -93,10 +86,6 @@ class TestEFormBuilder:
             {
                 "name": "shoppingCategory",
                 "enumValue": {"domainName": "shopping", "instanceValue": "Home improvement"},
-            },
-            {
-                "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
-                "name": "PurchaseAdditionalItem",
             },
             {"decimalValue": purchase_data.purchase_amount, "name": "purchaseAmount2"},
             {"name": "itemDescription2", "stringValue": purchase_data.item_description},

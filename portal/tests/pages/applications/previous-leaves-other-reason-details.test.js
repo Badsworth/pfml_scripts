@@ -38,7 +38,6 @@ const setup = (claimAttrs) => {
 
 const previousLeaveData = {
   is_for_current_employer: true,
-  is_for_same_reason_as_leave_reason: null,
   leave_end_date: "2021-06-11",
   leave_minutes: 840,
   leave_reason: PreviousLeaveReason.medical,
@@ -181,7 +180,10 @@ describe("PreviousLeavesOtherReasonDetails", () => {
 
       const entries = wrapper.find("RepeatableFieldset").prop("entries");
       expect(entries).toHaveLength(2);
-      expect(entries).toEqual([previousLeaveData, new PreviousLeave()]);
+      expect(entries).toEqual([
+        new PreviousLeave({ ...previousLeaveData }),
+        new PreviousLeave(),
+      ]);
 
       expect(
         wrapper.find("RepeatableFieldset").dive().find("RepeatableFieldsetCard")
