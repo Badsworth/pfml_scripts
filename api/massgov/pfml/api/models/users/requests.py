@@ -26,3 +26,23 @@ class UserUpdateRequest(PydanticBaseModel):
 
 class UserConvertEmployerRequest(PydanticBaseModel):
     employer_fein: FEINUnformattedStr
+
+
+class AuthCodeResponse(PydanticBaseModel):
+    code: str
+    session_state: str
+    state: str
+    
+class AuthCodeFlow(PydanticBaseModel):
+    auth_uri: str
+    claims_challenge: Optional[str]
+    code_verifier: str
+    nonce: str
+    redirect_uri: str
+    scope: list
+    state: str
+
+class AdminLoginRequest(PydanticBaseModel):
+    authCodeFlow: AuthCodeFlow
+    authCodeRes: AuthCodeResponse
+    
