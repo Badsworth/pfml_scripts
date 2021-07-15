@@ -76,6 +76,7 @@ Cypress.Commands.add("dependsOnPreviousPass", (dependencies?: [Test]) => {
   // If any of the previous results we're considering are not passes, we've failed
   // the check and should skip the current test.
   if (dependentValues.some((r) => r !== "passed")) {
+    Cypress.runner.stop();
     getMochaContext().skip();
   }
 });
