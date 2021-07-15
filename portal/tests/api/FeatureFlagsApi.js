@@ -17,7 +17,7 @@ const mockFetch = ({
   });
 };
 
-describe("admin API", () => {
+describe("FeatureFlagsAPI", () => {
   let adminApi;
   const start = DateTime.local().plus({ hours: 5 }).toISO(); // starts in 5 hours
   const end = DateTime.local().plus({ hours: 10 }).toISO(); // ends in 10 hours
