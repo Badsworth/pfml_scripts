@@ -1002,7 +1002,7 @@ export function addHistoricalAbsenceCase(claimNumber: string): void {
     `{selectall}{backspace}${startDateFormatted}{enter}`
   );
   cy.wait(200);
-  // Click on All Day check boxes 
+  // Click on All Day check boxes
   cy.get(
     'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="startDateAllDay_WRAPPER"]'
   ).click();
@@ -1021,7 +1021,7 @@ export function addHistoricalAbsenceCase(claimNumber: string): void {
   cy.get(
     'input[id^="addHistoricalTimeOffAbsencePeriodPopupWidget_un8_okButtonBean"][id$="okButtonBean"]'
   ).click({ force: true });
-  // Select Leave Plan 
+  // Select Leave Plan
   cy.contains("div", "historicalAbsenceSelectedLeavePlansListViewWidget")
     .find("input")
     .click();
