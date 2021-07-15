@@ -6,7 +6,6 @@ import { useTranslation } from "../../locales/i18n";
 /**
  * Display intermittent leave schedule
  * in the Leave Admin claim review page.
- * @param {boolean} hasDocuments - Determines if document(s) exist.
  */
 const IntermittentLeaveSchedule = ({ hasDocuments }) => {
   // TODO (EMPLOYER-655): Update intermittent leave details
