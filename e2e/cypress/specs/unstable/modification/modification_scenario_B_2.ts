@@ -49,7 +49,6 @@ describe("Post-approval (notifications/notices)", () => {
             response.fineos_absence_id
           );
 
-
           claimPage.adjudicate((adjudicate) =>
             adjudicate.extendLeavePreAdjudication(newStartDate, newEndDate)
           );
