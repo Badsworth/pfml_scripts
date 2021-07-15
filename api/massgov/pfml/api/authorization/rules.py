@@ -43,6 +43,7 @@ def site_admins(user: User, they: RuleList) -> None:
     if has_role_in(user, [Role.ADMIN]):
         they.can((CREATE, EDIT, READ), "ADMIN_API")
 
+
 def leave_admins(user: User, they: RuleList) -> None:
     if has_role_in(user, [Role.EMPLOYER]):
         they.can((EDIT, READ), "EMPLOYER_API")

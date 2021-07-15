@@ -32,7 +32,8 @@ class AuthCodeResponse(PydanticBaseModel):
     code: str
     session_state: str
     state: str
-    
+
+
 class AuthCodeFlow(PydanticBaseModel):
     auth_uri: str
     claims_challenge: Optional[str]
@@ -42,7 +43,7 @@ class AuthCodeFlow(PydanticBaseModel):
     scope: list
     state: str
 
+
 class AdminLoginRequest(PydanticBaseModel):
     authCodeFlow: AuthCodeFlow
     authCodeRes: AuthCodeResponse
-    

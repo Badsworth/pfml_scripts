@@ -28,8 +28,6 @@ from massgov.pfml.db.models.employees import User
 
 from .reverse_proxy import ReverseProxied
 
-import msal
-
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 

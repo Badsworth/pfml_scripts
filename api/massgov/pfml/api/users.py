@@ -7,18 +7,18 @@ from werkzeug.exceptions import BadRequest, NotFound
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
-from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.authentication import (
-    _build_msal_app,
     _build_auth_code_flow,
+    _build_msal_app,
     _load_cache,
     _save_cache,
 )
+from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import (
+    AdminLoginRequest,
     UserConvertEmployerRequest,
     UserCreateRequest,
     UserUpdateRequest,
-    AdminLoginRequest,
 )
 from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
 from massgov.pfml.api.services.user_rules import (
@@ -34,8 +34,10 @@ from massgov.pfml.util.users import add_leave_admin_and_role, register_user
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
+
 def get_authorization_url():
     return _build_auth_code_flow()
+
 
 def login_admin():
     result = {}
@@ -46,13 +48,13 @@ def login_admin():
         result = _build_msal_app(cache=cache).acquire_token_by_auth_code_flow(
             request.authCodeFlow.__dict__, request.authCodeRes.__dict__, scopes=None
         )
-        
+
         if "error" in result:
             logger.error(result["error"])
             return result
 
         # got token successfully
-        token = result.get("access_token")
+        # token = result.get("access_token")
         id_token_claims = result.get("id_token_claims")
 
         # check if this is an admin user
@@ -68,7 +70,9 @@ def login_admin():
 
             is_admin = (
                 db_session.query(UserRole)
-                .filter(UserRole.user_id == cur_user.user_id and UserRole.role_id == Role.ADMIN.role_id)
+                .filter(
+                    UserRole.user_id == cur_user.user_id and UserRole.role_id == Role.ADMIN.role_id
+                )
                 .one_or_none()
             )
 
@@ -76,23 +80,21 @@ def login_admin():
                 raise Exception("User is not an admin")
 
         _save_cache(cache)
-        
+
     except ValueError:
         # Usually caused by CSRF
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        logger.error(f'ValueError {exc_value}')
+        logger.error(f"ValueError {exc_value}")
         # Simply ignore them
 
     return result
+
 
 def logout_admin():
     config = app.get_app_config()
     # Wipe out user and its token cache from session
     # Also logout from your tenant's web session
-    return redirect(
-        config.azure_sso.authority + "/oauth2/v2.0/logout" +
-        "?post_logout_redirect_uri=" + config.azure_sso.postLogoutRedirectUri
-    )
+    return f"{config.azure_sso.authority}/oauth2/v2.0/logout?post_logout_redirect_uri={config.azure_sso.postLogoutRedirectUri}"
 
 
 def users_post():

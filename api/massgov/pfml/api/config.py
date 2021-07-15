@@ -5,8 +5,8 @@ from enum import Enum
 from typing import List
 
 import massgov.pfml.db.config as db_config
-from massgov.pfml.util.strings import split_str
 from massgov.pfml.api.authentication.msalConfig import MSALClientConfig
+from massgov.pfml.util.strings import split_str
 
 
 class RMVCheckBehavior(Enum):
@@ -35,6 +35,7 @@ class AppConfig:
     dashboard_password: str
     new_plan_proofs_active_at: datetime
     azure_sso: MSALClientConfig
+
 
 def get_config() -> AppConfig:
     return AppConfig(

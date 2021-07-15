@@ -6,6 +6,7 @@ import json
 
 import flask
 import jose
+import msal
 import newrelic.agent
 import requests
 from jose import jwt
@@ -17,38 +18,42 @@ import massgov.pfml.api.app as app
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import User
 
-import msal
-
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 public_keys = None
 session = {}
 
+
 def _build_auth_code_flow(authority=None, scopes=None):
     config = app.get_app_config()
     return _build_msal_app(authority=authority).initiate_auth_code_flow(
-        scopes or config.azure_sso.scopes,
-        redirect_uri=config.azure_sso.redirectUri
+        scopes or config.azure_sso.scopes, redirect_uri=config.azure_sso.redirectUri
     )
+
 
 def _build_msal_app(cache=None, authority=None):
     config = app.get_app_config()
     return msal.ConfidentialClientApplication(
-        config.azure_sso.clientId, authority=authority or config.azure_sso.authority,
-        client_credential=config.azure_sso.clientSecret, token_cache=cache
+        config.azure_sso.clientId,
+        authority=authority or config.azure_sso.authority,
+        client_credential=config.azure_sso.clientSecret,
+        token_cache=cache,
     )
+
 
 def _save_cache(cache):
     if cache.has_state_changed:
         session["token_cache"] = cache.serialize()
         logger.info(f'save cache {session["token_cache"]}')
 
+
 def _load_cache():
     cache = msal.SerializableTokenCache()
     if session.get("token_cache"):
         cache.deserialize(session["token_cache"])
-        logger.info(f'load cache {cache}')
+        logger.info(f"load cache {cache}")
     return cache
+
 
 def _get_token_from_cache(scope=None):
     cache = _load_cache()  # This web app maintains one cache per session

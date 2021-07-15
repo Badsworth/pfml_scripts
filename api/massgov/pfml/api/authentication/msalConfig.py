@@ -1,12 +1,10 @@
 import os
-import msal
-import json
-import requests
-import massgov.pfml.util.logging
 from dataclasses import dataclass
-from typing import Optional
+
+import massgov.pfml.util.logging
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
 
 @dataclass
 class MSALClientConfig:
@@ -24,8 +22,6 @@ class MSALClientConfig:
     def from_env(cls) -> "MSALClientConfig":
         b2cStates = {
             "SIGN_IN": "sign_in",
-            # CALL_API: "call_api",
-            # PASSWORD_RESET: "password_reset",
         }
 
         b2cPolicies = {
