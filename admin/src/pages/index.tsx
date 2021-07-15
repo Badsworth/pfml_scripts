@@ -45,10 +45,7 @@ export default function Home() {
           const queryArgs = parseURLSearch(
             String(res["auth_uri"]).split("?")[1],
           );
-          localStorage.setItem(
-            "SSOAuthorizationResponse",
-            JSON.stringify(res),
-          );
+          localStorage.setItem("SSOAuthorizationResponse", JSON.stringify(res));
           window.location.href = res["auth_uri"];
         });
     } else if (ssoResponse !== null) {
@@ -63,7 +60,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           authCodeRes,
-          authCodeFlow
+          authCodeFlow,
         }),
       })
         .then((r) => r.json())

@@ -313,6 +313,14 @@ export interface ErrorResponse {
   warnings?: Issue[];
   errors: Issue[];
 }
+export interface FlagResponse {
+  start?: string | null;
+  end?: string | null;
+  name?: string;
+  options?: object;
+  enabled?: boolean;
+}
+export type FlagsResponse = FlagResponse[];
 export type Fein = string;
 export interface UserCreateRequest {
   email_address?: string | null;
@@ -755,6 +763,24 @@ export type ApplicationSearchResults = ApplicationResponse[];
 export interface GETApplicationsResponse extends SuccessfulResponse {
   data?: ApplicationSearchResults;
 }
+export interface AuthCodeResponse {
+  code?: string;
+  session_state?: string;
+  state?: string;
+}
+export interface AuthCodeFlow {
+  auth_uri?: string;
+  claims_challenge?: string | null;
+  code_verifier?: string;
+  nonce?: string;
+  redirect_uri?: string;
+  scope?: string[];
+  state?: string;
+}
+export interface AdminLoginRequest {
+  authCodeRes?: AuthCodeResponse;
+  authCodeFlow?: AuthCodeFlow;
+}
 export type SsnItin = string;
 export type MassId = string;
 export interface Phone {
@@ -960,6 +986,16 @@ export async function getStatus(
   });
 }
 /**
+ * Get feature flags
+ */
+export async function getFlags(
+  options?: RequestOptions,
+): Promise<ApiResponse<FlagsResponse>> {
+  return await http.fetchJson("/flags", {
+    ...options,
+  });
+}
+/**
  * Create a User account
  */
 export async function postUsers(
@@ -1152,6 +1188,7 @@ export async function getClaims(
     order_direction,
     employer_id,
     claim_status,
+    search,
   }: {
     page_size?: number;
     page_offset?: number;
@@ -1159,6 +1196,7 @@ export async function getClaims(
     order_direction?: "ascending" | "descending";
     employer_id?: string;
     claim_status?: string;
+    search?: string;
   } = {},
   options?: RequestOptions,
 ): Promise<ApiResponse<GETClaimsResponse>> {
@@ -1171,6 +1209,7 @@ export async function getClaims(
         order_direction,
         employer_id,
         claim_status,
+        search,
       }),
     )}`,
     {
@@ -1190,7 +1229,7 @@ export async function getEmployersClaimsByFineos_absence_idDocumentsAndFineos_do
     fineos_document_id: string;
   },
   options?: RequestOptions,
-): Promise<ApiResponse<string | undefined>> {
+): Promise<ApiResponse<string>> {
   return await http.fetch(
     `/employers/claims/${fineos_absence_id}/documents/${fineos_document_id}`,
     {
@@ -1222,13 +1261,19 @@ export async function getEmployersClaimsByFineos_absence_idDocuments(
 export async function getEmployersClaimsByFineos_absence_idReview(
   {
     fineos_absence_id,
+    xFfDefaultToV2,
   }: {
     fineos_absence_id: string;
+    xFfDefaultToV2?: string;
   },
   options?: RequestOptions,
 ): Promise<ApiResponse<GETEmployersClaimsByFineosAbsenceIdReviewResponse>> {
   return await http.fetchJson(`/employers/claims/${fineos_absence_id}/review`, {
     ...options,
+    headers: {
+      ...options?.headers,
+      "X-FF-Default-To-V2": xFfDefaultToV2,
+    },
   });
 }
 /**
@@ -1270,6 +1315,42 @@ export async function getApplications(
   options?: RequestOptions,
 ): Promise<ApiResponse<GETApplicationsResponse>> {
   return await http.fetchJson("/applications", {
+    ...options,
+  });
+}
+/**
+ * Retrieve an Application identified by the application id
+ */
+export async function getAdminAuthorize(
+  options?: RequestOptions,
+): Promise<ApiResponse<ApplicationResponse>> {
+  return await http.fetchJson("/admin/authorize", {
+    ...options,
+  });
+}
+/**
+ * Retrieve an Application identified by the application id
+ */
+export async function postAdminLogin(
+  adminLoginRequest: AdminLoginRequest,
+  options?: RequestOptions,
+): Promise<ApiResponse<ApplicationResponse>> {
+  return await http.fetchJson(
+    "/admin/login",
+    http.json({
+      ...options,
+      method: "POST",
+      body: adminLoginRequest,
+    }),
+  );
+}
+/**
+ * Retrieve an Application identified by the application id
+ */
+export async function getAdminLogout(
+  options?: RequestOptions,
+): Promise<ApiResponse<ApplicationResponse>> {
+  return await http.fetchJson("/admin/logout", {
     ...options,
   });
 }
