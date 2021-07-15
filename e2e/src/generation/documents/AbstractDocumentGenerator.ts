@@ -26,7 +26,8 @@ interface DocumentGeneratorInterface<C extends Record<string, unknown>> {
 
 export abstract class AbstractDocumentGenerator<
   C extends Record<string, unknown>
-> implements DocumentGeneratorInterface<C> {
+> implements DocumentGeneratorInterface<C>
+{
   constructor(public documentType: DocumentType) {}
   abstract documentSource(): string;
   async generate(claim: ApplicationRequestBody, config: C): PromisedDocument {

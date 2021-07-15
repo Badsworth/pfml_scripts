@@ -15,9 +15,8 @@ function SSO(): void {
   cy.clearCookies();
   // Perform SSO login in a task. We can't visit other domains in Cypress.
   cy.task("completeSSOLoginFineos").then((cookiesJson) => {
-    const deserializedCookies: Record<string, string>[] = JSON.parse(
-      cookiesJson
-    );
+    const deserializedCookies: Record<string, string>[] =
+      JSON.parse(cookiesJson);
     // Filter out any cookies that will fail to be set. Those are ones where secure: false
     // and sameSite: "None"
     const noSecure = deserializedCookies.filter(
@@ -231,7 +230,6 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
   }
 }
 
-
 /**
  * This work-flow is submitting a full bonding/military claim
  * directly into Fineos.
@@ -272,8 +270,8 @@ export function createNotification(
       cy.wait(100);
       clickNext(5000);
       cy.findByLabelText("Absence reason").select(
-          "Serious Health Condition - Employee"
-        );
+        "Serious Health Condition - Employee"
+      );
       wait();
       cy.wait(100);
       cy.findByLabelText("Qualifier 1").select("Not Work Related");
@@ -984,53 +982,57 @@ export function addHistoricalAbsenceCase(claimNumber: string): void {
   wait();
   cy.findByLabelText("Qualifier 1").select("Not Work Related");
   wait();
-// 
+  //
   cy.findByLabelText("Qualifier 2").select("Sickness");
   //
-  cy.contains(
-    "div",
-    "timeOffHistoricalAbsencePeriodsListviewWidget"
-  ).find("input").click();
+  cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
+    .find("input")
+    .click();
   const mostRecentSunday = startOfWeek(new Date());
   const startDate = subDays(mostRecentSunday, 13);
   const startDateFormatted = format(startDate, "MM/dd/yyyy");
   const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
-  
+  cy.labelled("Start date").type(
+    `{selectall}{backspace}${startDateFormatted}{enter}`
+  );
+  cy.wait(200);
+  // Click on All Day check boxes 
   cy.get(
-    'span[id*="historicalTimeOffAbsencePeriodDetailsWidget"]')
-    cy.labelled("Start date").type(
-      `{selectall}{backspace}${startDateFormatted}{enter}`
-    );
-    cy.wait("@ajaxRender");
-    //
-    cy.get(
-      'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="startDateAllDay_WRAPPER"]'
-    ).click();
-    cy.get('span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="endDateAllDay_WRAPPER"]'
-    ).click();
-    //
-    cy.labelled("End date").type(
-      `{selectall}{backspace}${endDateFormatted}{enter}`
-    );
-    cy.wait("@ajaxRender");
-    cy.get('input[id^="addHistoricalTimeOffAbsencePeriodPopupWidget_un8_okButtonBean"][id$="okButtonBean"]'
-    ).click({force: true});
-  cy.contains(
-    "div",
-    "historicalAbsenceSelectedLeavePlansListViewWidget"
-    ).find("input").click();
-    wait();
+    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="startDateAllDay_WRAPPER"]'
+  ).click();
+  cy.get(
+    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="endDateAllDay_WRAPPER"]'
+  ).click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  // Fill in end date
+  cy.labelled("End date").type(
+    `{selectall}{backspace}${endDateFormatted}{enter}`
+  );
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  // Click on Okay to exit popup window
+  cy.get(
+    'input[id^="addHistoricalTimeOffAbsencePeriodPopupWidget_un8_okButtonBean"][id$="okButtonBean"]'
+  ).click({ force: true });
+  // Select Leave Plan 
+  cy.contains("div", "historicalAbsenceSelectedLeavePlansListViewWidget")
+    .find("input")
+    .click();
+  wait();
   cy.get(
     "input[name='historicalCasePlanSelectionListviewWidget_un0_Checkbox_RowId_0_CHECKBOX']"
-    ).click();
-  cy.get("[id*=editPageSave_cloned]").contains("OK").click({ force: true });
-  cy.get("[id*=editPageSave]").contains("OK").click({ force: true });
-  cy.get('a[id="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]').click();
+  ).click();
+  clickBottomWidgetButton();
+  clickBottomWidgetButton();
+  // Click on Claimaints name to view their cases
+  cy.get(
+    'a[id="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]'
+  ).click();
   onTab("Cases");
-  cy.get('.ListRowSelected > td').should(($td) => {
-    expect($td.eq(4)).to.contain("Absence Historical Case")    
-  })
-  
+  cy.get(".ListRowSelected > td").should(($td) => {
+    expect($td.eq(4)).to.contain("Absence Historical Case");
+  });
 }
 
 /**
