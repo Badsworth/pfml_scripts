@@ -3174,7 +3174,8 @@ components:
             - Spouse
     State:
       type: string
-      maxLength: 40 # FINEOS requirement
+      nullable: true
+      maxLength: 2
       example: "MA"
       enum:
         - "MA"

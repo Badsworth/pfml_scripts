@@ -2915,29 +2915,6 @@ def test_application_patch_invalid_values(client, user, auth_token):
     )
 
 
-def test_application_patch_state_invalid(client, user, auth_token):
-    application = ApplicationFactory.create(user=user)
-    states = list(GeoState.description_to_id.keys())
-
-    response = client.patch(
-        "/v1/applications/{}".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"mailing_address": {"state": "ZZ"}},
-    )
-
-    tests.api.validate_error_response(
-        response,
-        400,
-        errors=[
-            {
-                "field": "mailing_address.state",
-                "message": f"'ZZ' is not one of {states}",
-                "rule": states,
-                "type": "enum",
-            },
-        ],
-    )
-
 def test_application_patch_fein_not_found(client, user, auth_token):
     # Assert that API returns a validation warning when the request
     # includes an EIN that doesn't match an Employer record
@@ -5052,7 +5029,7 @@ class TestApplicationsUpdate:
     @pytest.fixture
     def address(self):
         return massgov.pfml.api.models.applications.common.Address(
-            line_1="123 Main St.", city="Boston", state="Massachusetts", zip="02111"
+            line_1="123 Main St.", city="Boston", state="MA", zip="02111"
         )
 
     # Collects the params necessary for making a request with a valid application update
@@ -5103,7 +5080,7 @@ class TestApplicationsUpdate:
         assert error.get("type") == "maxLength"
         assert error.get("field") == name_field
 
-    @pytest.mark.parametrize("address_field", ["line_1", "line_2", "city", "state"])
+    @pytest.mark.parametrize("address_field", ["line_1", "line_2", "city"])
     def test_address_field_too_long(self, client, request_params, address, address_field):
         address_dict = address.__dict__
         address_dict[address_field] = "a" * 41
@@ -5121,6 +5098,38 @@ class TestApplicationsUpdate:
         error = errors[0]
         assert error.get("type") == "maxLength"
         assert error.get("field") == f"residential_address.{address_field}"
+
+
+
+def test_application_patch_state_invalid(client, user, auth_token):
+    application = ApplicationFactory.create(user=user)
+    states = list(GeoState.description_to_id.keys())        
+    long_state = "a" * 41
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"mailing_address": {"state": long_state}},
+    )
+
+    tests.api.validate_error_response(
+        response,
+        400,
+        errors=[
+            {
+                "field": "mailing_address.state",
+                "message": f"'{long_state}' is too long",
+                "rule": 2,
+                "type": "maxLength"
+            },
+            {
+                "field": "mailing_address.state",
+                "message": f"'{long_state}' is not one of {states}",
+                "rule": states,
+                "type": "enum",
+            },
+        ],
+    )
 
 
 def test_application_post_submit_app_creates_claim(client, user, auth_token, test_db_session):
