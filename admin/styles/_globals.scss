@@ -12,6 +12,23 @@ h1 {
   line-height: 1.33;
 }
 
+.login {
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  transform: translateY(-100%);
+  text-align: center;
+  color: $Color-BerkshiresGreen-600;
+  &__title {
+    padding-top: 1.5em;
+    font-size: 3em;
+    color: inherit;
+  }
+  &__logo {
+    font-size: 6em;
+  }
+}
+
 .page {
   background: #e5e5e5;
   display: grid;

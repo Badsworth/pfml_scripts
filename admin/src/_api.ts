@@ -1323,7 +1323,7 @@ export async function getApplications(
  */
 export async function getAdminAuthorize(
   options?: RequestOptions,
-): Promise<ApiResponse<ApplicationResponse>> {
+): Promise<ApiResponse<AuthCodeFlow>> {
   return await http.fetchJson("/admin/authorize", {
     ...options,
   });
