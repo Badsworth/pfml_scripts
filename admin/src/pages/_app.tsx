@@ -17,6 +17,15 @@ function MyApp({ Component, pageProps }: AppProps) {
       console.log("Trying to login:", localTokens);
       // @todo: send token and verify if is valid token
       setIsLoggedIn(isValidToken);
+
+      let retryToken: NodeJS.Timeout;
+      if (!isValidToken) {
+        localStorage.removeItem("SSOAuthenticationTokens");
+        retryToken = setTimeout(() => {
+          window.location.href = window.location.origin;
+        }, 60000);
+        return () => clearInterval(retryToken);
+      }
       return () => {};
     }
 
@@ -33,12 +42,14 @@ function MyApp({ Component, pageProps }: AppProps) {
           window.location.href = data.auth_uri as string;
         })
         .catch((e) => {
-          // @todo: error logging in!
-          console.error("Error on authorization url:", e);
+          // @todo: error getting authorization url!
+          console.error("Error getting authorization url:", e);
         });
     } else if ("state" in authCodeFlow) {
       // after it comes back from MS
-      const authCodeRes = parseURLSearch(location.search.substring(1));
+      const authCodeRes: api.AuthCodeResponse = parseURLSearch(
+        location.search.substring(1),
+      );
       // get access tokens
       api
         .postAdminLogin({
@@ -53,9 +64,10 @@ function MyApp({ Component, pageProps }: AppProps) {
         })
         .catch((e) => {
           // @todo: error logging in!
-          console.error("Error on login:", e);
+          console.error("Error logging in:", e);
         });
     }
+    return () => {};
   }, []);
 
   if (!isLoggedIn) {
