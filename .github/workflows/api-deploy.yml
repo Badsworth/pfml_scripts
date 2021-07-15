@@ -328,7 +328,7 @@ jobs:
 
       - name: Build and upload docker image artifact
         if: steps.ecr-check.outcome == 'failure'
-        run: make release
+        run: make build-and-publish
         working-directory: ${{ env.working-dir }}
 
   api-db-migrate-up:
