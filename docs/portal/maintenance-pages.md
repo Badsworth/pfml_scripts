@@ -2,7 +2,7 @@
 
 The Portal includes the ability to have maintenance pages that we can turn on in case we need to shut down all or part of the website.
 
-Maintenance pages are controlled through the `maintenance` entry in the [S3 feature-gate files](/EOLWD/pfml/blob/main/feature_flags/). The data is retrieved from the file via API request in the portal and then set in `appLogic.featureFlags.flags`. The API request is cached for five minutes and only executed once for every full page request (not on react render/re-render).
+Maintenance pages are controlled through the `maintenance` entry in the [S3 feature-gate files](../../feature_flags/). The data is retrieved from the file via API request in the portal and then set in `appLogic.featureFlags.flags`. The API request is cached for five minutes and only executed once for every full page request (not on react render/re-render).
 
 All available options for maintenance are:
 
