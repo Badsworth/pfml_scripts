@@ -977,17 +977,16 @@ export function addHistoricalAbsenceCase(claimNumber: string): void {
   cy.contains("Add Historical Absence").click();
   cy.findByLabelText("Absence relates to").select("Employee");
   wait();
-  cy.wait(100);
   cy.findByLabelText("Absence Reason").select(
     "Serious Health Condition - Employee"
   );
+  //
   wait();
-  cy.wait(100);
   cy.findByLabelText("Qualifier 1").select("Not Work Related");
   wait();
-  cy.wait(100);
+// 
   cy.findByLabelText("Qualifier 2").select("Sickness");
-  cy.wait(100);
+  //
   cy.contains(
     "div",
     "timeOffHistoricalAbsencePeriodsListviewWidget"
@@ -997,41 +996,37 @@ export function addHistoricalAbsenceCase(claimNumber: string): void {
   const startDateFormatted = format(startDate, "MM/dd/yyyy");
   const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
   
-  cy.contains(
-    "span",
-    "historicalTimeOffAbsencePeriodDetailsWidget_un10_startDate_WRAPPER"
-  )
+  cy.get(
+    'span[id*="historicalTimeOffAbsencePeriodDetailsWidget"]')
     cy.labelled("Start date").type(
       `{selectall}{backspace}${startDateFormatted}{enter}`
     );
     cy.wait("@ajaxRender");
-    cy.wait(200);
+    //
     cy.get(
-      "span[id=historicalTimeOffAbsencePeriodDetailsWidget_un10_startDateAllDay_WRAPPER]"
+      'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="startDateAllDay_WRAPPER"]'
     ).click();
-    cy.wait(200);
+    cy.get('span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="endDateAllDay_WRAPPER"]'
+    ).click();
+    //
     cy.labelled("End date").type(
       `{selectall}{backspace}${endDateFormatted}{enter}`
     );
     cy.wait("@ajaxRender");
-    cy.wait(200);
-    cy.get("span[id=historicalTimeOffAbsencePeriodDetailsWidget_un10_endDateAllDay_WRAPPER]").click();
-    cy.get("input[type='button'][id*='addHistoricalTimeOffAbsencePeriodPopupWidget_un8_okButtonBean']").click();
+    cy.get('input[id^="addHistoricalTimeOffAbsencePeriodPopupWidget_un8_okButtonBean"][id$="okButtonBean"]'
+    ).click({force: true});
   cy.contains(
     "div",
     "historicalAbsenceSelectedLeavePlansListViewWidget"
     ).find("input").click();
     wait();
   cy.get(
-  "input[name='historicalCasePlanSelectionListviewWidget_un0_Checkbox_RowId_0_CHECKBOX']"
-  ).click();
+    "input[name='historicalCasePlanSelectionListviewWidget_un0_Checkbox_RowId_0_CHECKBOX']"
+    ).click();
   cy.get("[id*=editPageSave_cloned]").contains("OK").click({ force: true });
-  cy.wait(200);
   cy.get("[id*=editPageSave]").contains("OK").click({ force: true });
-  cy.wait(200);
-  cy.get('a[name*="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]').click();
+  cy.get('a[id="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]').click();
   onTab("Cases");
-  // cy.get('.ListView > input').click()
   cy.get('.ListRowSelected > td').should(($td) => {
     expect($td.eq(4)).to.contain("Absence Historical Case")    
   })
