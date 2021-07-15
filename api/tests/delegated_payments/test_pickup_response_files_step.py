@@ -52,6 +52,12 @@ def verify_files(directory, file_names, add_timestamps=False):
     assert set(directory_contents) == set(expected_files)
 
 
+def verify_metrics(step, expected_metrics):
+    log_entry_metrics = step.log_entry.metrics
+    for metric_key, expected_value in expected_metrics.items():
+        assert log_entry_metrics.get(metric_key, None) == expected_value
+
+
 @pytest.fixture
 def pickup_response_file_step(initialize_factories_session, test_db_session, test_db_other_session):
     return PickupResponseFilesStep(
@@ -128,6 +134,19 @@ def random_files_in_moveit_response_path(setup_paths):
     )
 
 
+@pytest.fixture
+def ok_files_in_moveit_response_path(setup_paths):
+    moveit_inbound_path = payments_config.get_s3_config().pub_moveit_inbound_path
+    # Add a few files that end with .OK which don't get moved, but also don't increment
+    # any sort of warning as they're expected and used for triggering the PUB responses ECS task
+
+    ok_file_1 = "DONE.OK"
+    ok_file_2 = ".ok-words"
+    return generate_files(ok_file_1, moveit_inbound_path) + generate_files(
+        ok_file_2, moveit_inbound_path
+    )
+
+
 @freeze_time("2021-01-01 12:00:00")
 def test_run_step(pickup_response_file_step, payment_reject_files, pub_check_files, pub_ach_files):
     s3_config = payments_config.get_s3_config()
@@ -161,6 +180,19 @@ def test_run_step(pickup_response_file_step, payment_reject_files, pub_check_fil
     verify_files(s3_config.pub_moveit_inbound_path, [])
     verify_files(s3_config.dfml_response_inbound_path, [])
 
+    verify_metrics(
+        pickup_response_file_step,
+        {
+            "files_moved_count": len(payment_reject_files)
+            + len(pub_check_files)
+            + len(pub_ach_files),
+            "unknown_files_count": 0,
+            "Payment-Audit-Report_file_moved_count": len(payment_reject_files),
+            "EOLWD-DFML-POSITIVE-PAY_file_moved_count": len(pub_check_files),
+            "EOLWD-DFML-NACHA_file_moved_count": len(pub_ach_files),
+        },
+    )
+
 
 @freeze_time("2021-01-01 12:00:00")
 def test_run_step_miscellaneous_files_present(
@@ -170,6 +202,7 @@ def test_run_step_miscellaneous_files_present(
     pub_ach_files,
     random_files_in_dfml_response_path,
     random_files_in_moveit_response_path,
+    ok_files_in_moveit_response_path,
 ):
     s3_config = payments_config.get_s3_config()
     # Construct the expected output directories
@@ -186,7 +219,10 @@ def test_run_step_miscellaneous_files_present(
     # Verify all input directories contain the expected files
     verify_files(
         s3_config.pub_moveit_inbound_path,
-        pub_check_files + pub_ach_files + random_files_in_moveit_response_path,
+        pub_check_files
+        + pub_ach_files
+        + random_files_in_moveit_response_path
+        + ok_files_in_moveit_response_path,
     )
     verify_files(
         s3_config.dfml_response_inbound_path,
@@ -205,8 +241,25 @@ def test_run_step_miscellaneous_files_present(
     verify_files(pub_ach_received_path, pub_ach_files, True)
 
     # Verify the input directories contain just the random files
-    verify_files(s3_config.pub_moveit_inbound_path, random_files_in_moveit_response_path)
+    verify_files(
+        s3_config.pub_moveit_inbound_path,
+        random_files_in_moveit_response_path + ok_files_in_moveit_response_path,
+    )
     verify_files(s3_config.dfml_response_inbound_path, random_files_in_dfml_response_path)
+
+    verify_metrics(
+        pickup_response_file_step,
+        {
+            "files_moved_count": len(payment_reject_files)
+            + len(pub_check_files)
+            + len(pub_ach_files),
+            "unknown_files_count": len(random_files_in_moveit_response_path)
+            + len(random_files_in_dfml_response_path),
+            "Payment-Audit-Report_file_moved_count": len(payment_reject_files),
+            "EOLWD-DFML-POSITIVE-PAY_file_moved_count": len(pub_check_files),
+            "EOLWD-DFML-NACHA_file_moved_count": len(pub_ach_files),
+        },
+    )
 
 
 @freeze_time("2021-01-01 12:00:00")
@@ -241,12 +294,24 @@ def test_run_step_no_files(pickup_response_file_step, setup_paths):
     verify_files(pub_check_received_path, [])
     verify_files(pub_ach_received_path, [])
 
+    verify_metrics(
+        pickup_response_file_step,
+        {
+            "files_moved_count": 0,
+            "unknown_files_count": 0,
+            "Payment-Audit-Report_file_moved_count": 0,
+            "EOLWD-DFML-POSITIVE-PAY_file_moved_count": 0,
+            "EOLWD-DFML-NACHA_file_moved_count": 0,
+        },
+    )
+
 
 @freeze_time("2021-01-01 12:00:00")
 def test_run_step_only_irrelevant_files(
     pickup_response_file_step,
     random_files_in_dfml_response_path,
     random_files_in_moveit_response_path,
+    ok_files_in_moveit_response_path,
 ):
     s3_config = payments_config.get_s3_config()
     # Construct the expected output directories
@@ -261,7 +326,10 @@ def test_run_step_only_irrelevant_files(
     )
 
     # Verify all input directories contain the expected files
-    verify_files(s3_config.pub_moveit_inbound_path, random_files_in_moveit_response_path)
+    verify_files(
+        s3_config.pub_moveit_inbound_path,
+        random_files_in_moveit_response_path + ok_files_in_moveit_response_path,
+    )
     verify_files(s3_config.dfml_response_inbound_path, random_files_in_dfml_response_path)
     # Verify the output directories are empty
     verify_files(payment_audit_received_path, [])
@@ -271,9 +339,25 @@ def test_run_step_only_irrelevant_files(
     pickup_response_file_step.run()
 
     # Verify the input directories are unchanged
-    verify_files(s3_config.pub_moveit_inbound_path, random_files_in_moveit_response_path)
+    verify_files(
+        s3_config.pub_moveit_inbound_path,
+        random_files_in_moveit_response_path + ok_files_in_moveit_response_path,
+    )
     verify_files(s3_config.dfml_response_inbound_path, random_files_in_dfml_response_path)
     # Verify the output directories are empty
     verify_files(payment_audit_received_path, [])
     verify_files(pub_check_received_path, [])
     verify_files(pub_ach_received_path, [])
+
+    verify_metrics(
+        pickup_response_file_step,
+        {
+            "files_moved_count": 0,
+            # The .OK files aren't in the unknown count as per the logic
+            "unknown_files_count": len(random_files_in_moveit_response_path)
+            + len(random_files_in_dfml_response_path),
+            "Payment-Audit-Report_file_moved_count": 0,
+            "EOLWD-DFML-POSITIVE-PAY_file_moved_count": 0,
+            "EOLWD-DFML-NACHA_file_moved_count": 0,
+        },
+    )

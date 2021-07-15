@@ -8,15 +8,18 @@ from pydantic import BaseSettings, Field
 from requests import Session
 from zeep.transports import Transport
 
+# Note: After running into issues with non secure imports in the WSDL, using a modified version of the WSDL hosted in S3
+SOAP_WSDL_DEFAULT_URL = (
+    "https://massgov-pfml-test-experian-soap.s3.amazonaws.com/experian-source/ProOnDemandV3.wsdl"
+)
+
 
 class ExperianSOAPConfig(BaseSettings):
     auth_token: str = Field(..., min_length=1)
     # Code expects a v3 endpoint. Defaults to US regional endpoint.
     #
     # https://docs.experianaperture.io/address-validation/address-validate-soap/api-reference/api-specification/#v3-endpoint
-    soap_endpoint: str = Field(
-        "https://ws2.ondemand.qas.com/ProOnDemand/V3/ProOnDemandService.asmx", min_length=1
-    )
+    soap_endpoint: str = Field(SOAP_WSDL_DEFAULT_URL, min_length=1)
 
     class Config:
         # Shares a prefix with ExperianConfig as the same authentication token

@@ -606,8 +606,16 @@ const errors = {
         "The employer ID you entered is already associated with your account.",
       employer_verification_data_required:
         "$t(shared.ein.employer_verification_data_required)",
+      // TODO (EMPLOYER-1565): Remove this once the API no longer returns it
       invalid:
         "Enter your 9-digit Employer Identification Number in the correct format.",
+      pattern:
+        "Enter your 9-digit Employer Identification Number in the correct format.",
+      require_contributing_employer:
+        "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly and the associated business is contributing to Paid Family and Medical Leave.",
+      require_employer:
+        "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
+      required: "Enter your 9-digit Employer Identification Number.",
     },
     hours_worked_per_week: {
       // TODO (EMPLOYER-723) remove this
@@ -1072,7 +1080,7 @@ const pages = {
       "<p>This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.</p>",
     hintWhatKindHeading: "What kinds of accrued paid leave to report",
     hintWhenToReportBody:
-      "<p>If your PFML leave includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave. Select Yes to report this leave.</p><p>If your PFML leave includes working fewer hours than normal (a reduced leave schedule) or taking time off work in uneven or unpredictable blocks of time (intermittent leave), you need to report leave if ONE of the following two statements is true:</p><ul><li>You are planning to use this accrued paid leave on days when you are also taking PFML leave.</li><li>You are planning to use this accrued paid leave for a PFML qualifying reason, even if it’s not the same reason you are applying for leave now.</li></ul>",
+      "<p>If your PFML leave includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave. Select Yes to report this leave.</p><p>If your PFML leave includes working fewer hours than normal (a reduced leave schedule) or taking time off work in uneven or unpredictable blocks of time (intermittent leave), you need to report leave if ONE of the following two statements is true:</p><ul><li>You are planning to use this accrued paid leave on days when you are also taking PFML leave.</li><li>You are planning to use this accrued paid leave for a PFML qualifying reason, even if it’s not the same reason you are applying for now.</li></ul>",
     hintWhenToReportDetailsBody:
       "<ul><li>You had a serious health condition, including illness, injury, or pregnancy.</li><li>If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.</li><li>You bonded with your child after birth or placement.</li><li>You needed to manage family affairs while a family member is on active duty in the armed forces.</li><li>You needed to care for a family member who serves in the armed forces.</li><li>You needed to care for a family member with a serious health condition.</li></ul>",
     hintWhenToReportDetailsLabel: "What are the qualifying reasons?",
@@ -1493,7 +1501,7 @@ const pages = {
       "You needed to care for a family member with a serious health condition and your leave began on or after July 1, 2021.",
     ],
     sectionLabel:
-      "Did you take leave between January 1, 2021–{{leaveStartDate}} for a different qualifying reason?",
+      "Did you take leave between January 1, 2021 and {{leaveStartDate}} for a different qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReasonDetails: {
@@ -1545,7 +1553,7 @@ const pages = {
     sectionHint:
       "Select No if your current paid leave from PFML began on July 1, 2021.",
     sectionLabel:
-      "Did you take any other leave between {{previousLeaveStartDate}}–{{leaveStartDate}} for the same reason as you are applying for paid leave now?",
+      "Did you take any other leave between {{previousLeaveStartDate}} and {{leaveStartDate}} for the same reason as you are applying for paid leave now?",
     sectionLabel_caring:
       "Did you take any other leave between {{previousLeaveStartDate}} and the first day of the leave you are applying for, for the same reason as you are applying?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -2094,6 +2102,11 @@ const pages = {
     noClaimResults: "No applications on file",
     searchLabel: "Search for employee name or application ID",
     searchSubmit: "Search",
+    sortChoice_employee_az: "Last name – A to Z",
+    sortChoice_employee_za: "Last name – Z to A",
+    sortChoice_newest: "Newest applications",
+    sortChoice_oldest: "Oldest applications",
+    sortLabel: "Sort",
     startDateTooltip: "When an employee started a new leave application",
     statusDescription_approved:
       "<strong>Approved:</strong> DFML has approved this leave request.",
@@ -2598,7 +2611,6 @@ const components = {
     header: "Leave schedule",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
-    tableName: "Leave schedule details table",
   },
   employersNavigationTabs: {
     dashboard: "Dashboard",
@@ -2702,7 +2714,7 @@ const components = {
   form: {
     continueButton: "Save and continue",
     dateInputDayLabel: "Day",
-    dateInputExample: "mm / dd / yyyy",
+    dateInputExample: "MM / DD / YYYY",
     dateInputMonthLabel: "Month",
     dateInputYearLabel: "Year",
     optional: "(optional)",

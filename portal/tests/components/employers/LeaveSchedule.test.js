@@ -90,8 +90,8 @@ describe("LeaveSchedule", () => {
       }));
     });
 
-    it("displays caption for a non-intermittent schedule with documents", () => {
-      expect(wrapper.find("caption").find("Trans").dive().text()).toEqual(
+    it("displays help text for a non-intermittent schedule with documents", () => {
+      expect(wrapper.find("p").find("Trans").dive().text()).toEqual(
         "This is your employee’s expected leave schedule. Download the attached documentation for more details."
       );
     });
@@ -110,8 +110,8 @@ describe("LeaveSchedule", () => {
       }));
     });
 
-    it("displays caption for an intermittent schedule with documents", () => {
-      expect(wrapper.find("caption").find("Trans").dive().text()).toEqual(
+    it("displays help text for an intermittent schedule with documents", () => {
+      expect(wrapper.find("p").find("Trans").dive().text()).toEqual(
         "Download the attached documentation for details about the employee’s intermittent leave schedule."
       );
     });
@@ -129,8 +129,8 @@ describe("LeaveSchedule", () => {
       }));
     });
 
-    it("displays caption for a schedule without documents", () => {
-      expect(wrapper.find("caption").find("Trans").dive().text()).toEqual(
+    it("displays help text for a schedule without documents", () => {
+      expect(wrapper.find("p").find("Trans").dive().text()).toEqual(
         "This is your employee’s expected leave schedule."
       );
     });

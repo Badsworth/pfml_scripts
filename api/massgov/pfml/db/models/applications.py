@@ -33,7 +33,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.rmv.models import RmvAcknowledgement
 
 from ..lookup import LookupTable
-from .base import Base, utc_timestamp_gen, uuid_gen
+from .base import Base, TimestampMixin, uuid_gen
 from .common import StrEnum
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -755,15 +755,13 @@ class ContentType(LookupTable):
     HEIC = LkContentType(5, "image/heic")
 
 
-class Document(Base):
+class Document(Base, TimestampMixin):
     __tablename__ = "document"
     document_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False, index=True)
     application_id = Column(
         UUID(as_uuid=True), ForeignKey("application.application_id"), nullable=False, index=True
     )
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
-    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
     document_type_id = Column(
         Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
     )
@@ -785,17 +783,9 @@ class RMVCheckApiErrorCode(Enum):
     UNKNOWN_RMV_ISSUE = "UNKNOWN_RMV_ISSUE"
 
 
-class RMVCheck(Base):
+class RMVCheck(Base, TimestampMixin):
     __tablename__ = "rmv_check"
     rmv_check_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-    )
 
     request_to_rmv_started_at = Column(TIMESTAMP(timezone=True), nullable=True)
     request_to_rmv_completed_at = Column(TIMESTAMP(timezone=True), nullable=True)
@@ -879,17 +869,10 @@ def sync_state_metrics(db_session):
     db_session.commit()
 
 
-class Notification(Base):
+class Notification(Base, TimestampMixin):
     __tablename__ = "notification"
     notification_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     request_json = Column(JSON, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-    )
     fineos_absence_id = Column(Text, index=True)
 
 

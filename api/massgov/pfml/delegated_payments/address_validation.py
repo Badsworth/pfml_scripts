@@ -57,6 +57,9 @@ class Constants:
     MESSAGE_VALID_MATCHING_ADDRESS = "Matching address validated by Experian"
     MESSAGE_INVALID_ADDRESS = "Address not valid in Experian"
     MESSAGE_EXPERIAN_EXCEPTION_FORMAT = "An exception was thrown by Experian: {}"
+    MESSAGE_ADDRESS_MISSING_PART = (
+        "The address is missing a required component and cannot be validated"
+    )
 
 
 class AddressValidationStep(Step):
@@ -72,6 +75,7 @@ class AddressValidationStep(Step):
         VALID_EXPERIAN_FORMAT = "valid_experian_format"
         VALIDATED_ADDRESS_COUNT = "validated_address_count"
         VERIFIED_EXPERIAN_MATCH = "verified_experian_match"
+        ADDRESS_MISSING_COMPONENT_COUNT = "address_missing_component_count"
 
     def run_step(self) -> None:
         self.use_experian_soap_client = os.environ.get("USE_EXPERIAN_SOAP_CLIENT", "0") == "1"
@@ -117,6 +121,19 @@ class AddressValidationStep(Step):
 
             return None
 
+        if address_pair.fineos_address and not self._does_address_have_all_parts(
+            address_pair.fineos_address
+        ):
+            self._create_end_state_by_payment_type(
+                payment=payment,
+                address=address_pair.fineos_address,
+                address_validation_result=None,
+                end_state=Constants.ERROR_STATE,
+                message=Constants.MESSAGE_ADDRESS_MISSING_PART,
+            )
+            self.increment(self.Metrics.ADDRESS_MISSING_COMPONENT_COUNT)
+            return None
+
         # When we fully switch over to using the SOAP API,
         # we can remove this check and just make it the normal behavior
         if self.use_experian_soap_client:
@@ -130,6 +147,7 @@ class AddressValidationStep(Step):
         self, experian_rest_client: Client, payment: Payment, address_pair: ExperianAddressPair
     ) -> None:
         address = address_pair.fineos_address
+
         try:
             response = _experian_rest_response_for_address(experian_rest_client, address)
         except Exception as e:
@@ -243,7 +261,7 @@ class AddressValidationStep(Step):
             self.increment(self.Metrics.VERIFIED_EXPERIAN_MATCH)
             formatted_address = experian_verification_response_to_address(response)
 
-            if not self._does_experian_soap_address_have_all_parts(address):
+            if not self._does_address_have_all_parts(address):
                 end_state = Constants.ERROR_STATE
                 message = Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE
                 self.increment(self.Metrics.INVALID_EXPERIAN_FORMAT)
@@ -275,7 +293,7 @@ class AddressValidationStep(Step):
             message=Constants.MESSAGE_INVALID_ADDRESS,
         )
 
-    def _does_experian_soap_address_have_all_parts(self, address: Address) -> bool:
+    def _does_address_have_all_parts(self, address: Address) -> bool:
         if (
             not address.address_line_one
             or not address.city

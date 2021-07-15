@@ -103,7 +103,7 @@ def test_process_nacha_return_file_step_full(
     )
 
     assert reference_file.file_location == str(
-        tmp_path / payments_util.get_date_folder() / "processed" / "ach_return_small.ach"
+        tmp_path / "processed" / payments_util.get_date_folder() / "ach_return_small.ach"
     )
 
     # There should be no change to employee states in this process (returns are tracked in the

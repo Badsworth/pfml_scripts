@@ -4,8 +4,6 @@ import os
 import tempfile
 from typing import Any, Dict, List, Tuple
 
-from sqlalchemy import func
-
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.util.batch.log as batch_log
@@ -259,20 +257,6 @@ def create_list_of_claimants(db_session: db.Session, log_entry: batch_log.LogEnt
     db_session.commit()
 
 
-def _payment_list_has_been_downloaded_today(db_session: db.Session) -> bool:
-    midnight_today = get_now().replace(hour=0, minute=0)
-    num_files = (
-        db_session.query(func.count(ReferenceFile.reference_file_id))
-        .filter(
-            ReferenceFile.created_at >= midnight_today,
-            ReferenceFile.reference_file_type_id
-            == ReferenceFileType.DIA_PAYMENT_LIST.reference_file_type_id,
-        )
-        .scalar()
-    )
-    return num_files > 0
-
-
 def download_payment_list_from_moveit(db_session: db.Session, log_entry: batch_log.LogEntry) -> int:
     s3_config = get_s3_config()
     moveit_config = get_moveit_config()
@@ -310,16 +294,6 @@ def download_payment_list_from_moveit(db_session: db.Session, log_entry: batch_l
 
     log_entry.set_metrics({Metrics.DIA_PAYMENT_LISTS_DOWNLOADED_COUNT: len(copied_reference_files)})
     return len(copied_reference_files)
-
-
-# Meant to be called from ECS directly as a task.
-def download_payment_list_if_none_today(
-    db_session: db.Session, log_entry: batch_log.LogEntry
-) -> None:
-    # Downloading payment lists from requires connecting to MoveIt. Wrap that call in this condition
-    # so we only incur the overhead of that connection if we haven't retrieved a payment list today.
-    if _payment_list_has_been_downloaded_today(db_session) is False:
-        download_payment_list_from_moveit(db_session, log_entry)
 
 
 def _get_pending_dia_payment_reference_files(

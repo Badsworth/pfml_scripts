@@ -29,10 +29,10 @@ services:
       #
       # Example usage:
       # 1. Log into AWS:
-      #    $ login-aws
+      #    $ aws sso login
       #
       # 2. Update AWS_PROFILE in docker-compose.yml. e.g.
-      #    - AWS_PROFILE=AWS-498823821309-NonPROD-Admins_profile
+      #    - AWS_PROFILE=eolwd-pfml-infrastructure-admin-498823821309
       #
       # 3. Restart container
       #    $ make stop && make start

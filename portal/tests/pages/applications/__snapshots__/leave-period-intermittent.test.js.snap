@@ -91,7 +91,7 @@ exports[`LeavePeriodIntermittent renders the page with bonding leave content 1`]
     </Lead>
     <InputDate
       dayLabel="Day"
-      example="mm / dd / yyyy"
+      example="MM / DD / YYYY"
       label="First day of leave"
       monthLabel="Month"
       name="leave_details.intermittent_leave_periods[0].start_date"
@@ -102,7 +102,7 @@ exports[`LeavePeriodIntermittent renders the page with bonding leave content 1`]
     />
     <InputDate
       dayLabel="Day"
-      example="mm / dd / yyyy"
+      example="MM / DD / YYYY"
       label="Last day of leave"
       monthLabel="Month"
       name="leave_details.intermittent_leave_periods[0].end_date"
@@ -246,7 +246,7 @@ exports[`LeavePeriodIntermittent renders the page with medical leave content 1`]
     </Lead>
     <InputDate
       dayLabel="Day"
-      example="mm / dd / yyyy"
+      example="MM / DD / YYYY"
       label="First day of leave"
       monthLabel="Month"
       name="leave_details.intermittent_leave_periods[0].start_date"
@@ -257,7 +257,7 @@ exports[`LeavePeriodIntermittent renders the page with medical leave content 1`]
     />
     <InputDate
       dayLabel="Day"
-      example="mm / dd / yyyy"
+      example="MM / DD / YYYY"
       label="Last day of leave"
       monthLabel="Month"
       name="leave_details.intermittent_leave_periods[0].end_date"

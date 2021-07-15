@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
 import Heading from "../Heading";
-import InputText from "../InputText";
+import InputNumber from "../InputNumber";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
@@ -17,20 +16,8 @@ import { useTranslation } from "../../locales/i18n";
 
 const SupportingWorkDetails = (props) => {
   const { t } = useTranslation();
-  const { appErrors, hoursWorkedPerWeek, onChange } = props;
-  const errorMsg = appErrors.fieldErrorMessage("hours_worked_per_week");
-  const [amendment, setAmendment] = useState(hoursWorkedPerWeek);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(false);
-  const amendDuration = (value) => {
-    // Same logic as AmendableEmployerBenefit
-    // Invalid input will default to 0, validation error message is upcoming
-    const isInvalid = value === "0" || !parseFloat(value);
-    const displayValue = isInvalid ? 0 : value;
-    const formattedValue = isInvalid ? 0 : parseFloat(value.replace(/,/g, ""));
-    setAmendment(displayValue);
-    onChange(formattedValue);
-  };
 
   return (
     <React.Fragment>
@@ -46,14 +33,16 @@ const SupportingWorkDetails = (props) => {
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
         }
       >
-        <p className="margin-top-0">{hoursWorkedPerWeek}</p>
-        <ConditionalContent visible={isAmendmentFormDisplayed}>
+        <p className="margin-top-0">{props.initialHoursWorkedPerWeek}</p>
+        <ConditionalContent
+          getField={props.getField}
+          clearField={props.clearField}
+          updateFields={props.updateFields}
+          fieldNamesClearedWhenHidden={["hours_worked_per_week"]}
+          visible={isAmendmentFormDisplayed}
+        >
           <AmendmentForm
-            onDestroy={() => {
-              setIsAmendmentFormDisplayed(false);
-              setAmendment(hoursWorkedPerWeek);
-              onChange(hoursWorkedPerWeek);
-            }}
+            onDestroy={() => setIsAmendmentFormDisplayed(false)}
             destroyButtonLabel={t("components.amendmentForm.cancel")}
             className="bg-base-lightest border-base-lighter"
           >
@@ -63,20 +52,18 @@ const SupportingWorkDetails = (props) => {
             <p>
               {t("components.employersSupportingWorkDetails.subtitle_amend")}
             </p>
-            <InputText
-              onChange={(e) => amendDuration(e.target.value)}
-              value={amendment}
+            <InputNumber
+              {...props.getFunctionalInputProps("hours_worked_per_week")}
               label={t(
                 "components.employersSupportingWorkDetails.leavePeriodDurationLabel"
               )}
               hint={t(
                 "components.employersSupportingWorkDetails.leavePeriodDurationHint"
               )}
-              errorMsg={errorMsg}
               mask="hours"
-              name="hours_worked_per_week"
               width="small"
               smallLabel
+              valueType="integer"
             />
           </AmendmentForm>
         </ConditionalContent>
@@ -86,9 +73,11 @@ const SupportingWorkDetails = (props) => {
 };
 
 SupportingWorkDetails.propTypes = {
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  hoursWorkedPerWeek: PropTypes.number.isRequired,
-  onChange: PropTypes.func,
+  clearField: PropTypes.func.isRequired,
+  getField: PropTypes.func.isRequired,
+  getFunctionalInputProps: PropTypes.func.isRequired,
+  initialHoursWorkedPerWeek: PropTypes.number.isRequired,
+  updateFields: PropTypes.func.isRequired,
 };
 
 export default SupportingWorkDetails;

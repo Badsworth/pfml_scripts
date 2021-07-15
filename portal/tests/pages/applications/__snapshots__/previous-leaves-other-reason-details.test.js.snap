@@ -166,7 +166,7 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
   />
   <InputDate
     dayLabel="Day"
-    example="mm / dd / yyyy"
+    example="MM / DD / YYYY"
     label="What was the first day of this leave?"
     monthLabel="Month"
     name="previous_leaves_other_reason[0].leave_start_date"
@@ -177,7 +177,7 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
   />
   <InputDate
     dayLabel="Day"
-    example="mm / dd / yyyy"
+    example="MM / DD / YYYY"
     label="What was the last day of this leave?"
     monthLabel="Month"
     name="previous_leaves_other_reason[0].leave_end_date"
