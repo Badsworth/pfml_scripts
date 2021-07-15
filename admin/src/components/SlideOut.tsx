@@ -1,25 +1,20 @@
 import { MouseEvent } from "react";
-import Button from "./Button";
 
 type Props = {
   title: string;
-  handleCloseCallback: Function;
-  children: React.ReactNode;
+  isOpen?: boolean;
+  onClose?: (event: MouseEvent) => void;
+  children?: React.ReactNode;
 };
 
-const SlideOut = ({ title, handleCloseCallback, children }: Props) => {
-  const handleClose = (event: MouseEvent) => {
-    event.preventDefault();
-    handleCloseCallback(event);
-  };
-
+const SlideOut = ({ title, isOpen, onClose, children }: Props) => {
   return (
-    <dialog open className="slide-out">
-      <div className="slide-out__background"></div>
+    <dialog className="slide-out" open={isOpen}>
+      <div className="slide-out__background" onClick={onClose}></div>
       <div className="slide-out__content">
         <div className="slide-out__header">
           <h2 className="slide-out__title">{title}</h2>
-          <button className="slide-out__btn-close" onClick={handleClose}>
+          <button className="slide-out__btn-close" onClick={onClose}>
             x
           </button>
         </div>

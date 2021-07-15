@@ -26,9 +26,11 @@ http.fetch = (
   ...args: Parameters<typeof http.fetch>
 ): ReturnType<typeof http.fetch> => {
   args[1] = {
-    baseUrl: (configs as {
-      [key: string]: RequestOptions;
-    })[env].baseUrl,
+    baseUrl: (
+      configs as {
+        [key: string]: RequestOptions;
+      }
+    )[env].baseUrl,
   };
   return _fetch(...args).catch((e) => {
     throw e;

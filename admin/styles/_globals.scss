@@ -54,7 +54,7 @@ h1 {
 }
 
 .user-options__name {
-  color: #FFF;
+  color: #fff;
   display: block;
   margin-left: 0.57em;
 }
@@ -83,4 +83,48 @@ h1 {
   overflow-y: auto;
   padding: 1.64em 2.29em;
   position: relative;
+}
+
+// general input styling:
+// changes here will apply to all inputs, therefore
+// custom overrides should happen at the component level
+input {
+  width: 100%;
+  font: inherit;
+  outline: none;
+  appearance: none;
+  padding: 1em;
+  border: 1px solid white;
+  box-shadow: $Box-Shadow;
+  border-radius: $Border-Radius;
+  color: $Color-GraniteGray-400;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    border-color: $Color-GraniteGray-400;
+  }
+
+  &:active,
+  &:focus {
+    border-color: $Color-BayBlue-500;
+  }
+
+  &:active {
+    pointer-events: none; // fixes issue with click-drag-select in text input field scrolls parent
+  }
+
+  &:not(:placeholder-shown) {
+    color: $Color-RevolutionGray;
+  }
+
+  // .hasIcon--left automatically places icon in the left of any input
+  &.hasIcon--left {
+    padding-left: 2.86em;
+    & + i[class*="pfml-icon"] {
+      position: absolute;
+      transform: translateY(-50%);
+      top: calc(50% - 1px);
+      left: 1em;
+    }
+  }
 }

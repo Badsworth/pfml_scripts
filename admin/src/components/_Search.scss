@@ -1,1 +1,11 @@
 /* Styles for Search.tsx component */
+.search {
+  // .search__input-wrapper
+  &__input-wrapper {
+    position: relative;
+  }
+  // .search__icon
+  &__icon {
+    color: $Color-GraniteGray-400;
+  }
+}

@@ -1,1 +1,38 @@
 /* Styles for Table.tsx component */
+.table {
+  width: 100%;
+  margin-top: 2em;
+  border: 0;
+  border-radius: $Border-Radius;
+  box-shadow: $Box-Shadow;
+  background: white;
+
+  &__head {
+    background: #eee;
+    border-radius: $Border-Radius;
+  }
+
+  &__header {
+    text-align: left;
+    text-transform: uppercase;
+    font-style: bold;
+    padding: 0.5em 1em;
+    line-height: 1.5em;
+    &:first-child {
+      border-top-left-radius: $Border-Radius;
+    }
+    &:last-child {
+      border-top-right-radius: $Border-Radius;
+    }
+  }
+
+  &__col {
+    padding: 0.5em 1em;
+    line-height: 2em;
+    border-bottom: 1px solid $Color-GraniteGray-200;
+  }
+
+  tr:last-child &__col {
+    border: 0;
+  }
+}
