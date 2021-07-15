@@ -14,7 +14,7 @@ const AmendButton = ({ onClick }) => {
 
   return (
     <span className="c-amend-button">
-      <Button variation="unstyled" onClick={onClick}>
+      <Button variation="unstyled" onClick={onClick} data-test="amend-button">
         <Icon
           name="edit"
           className="text-middle margin-right-05 margin-top-neg-05"

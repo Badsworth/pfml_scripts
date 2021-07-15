@@ -872,12 +872,12 @@ export function checkNoticeForLeaveAdmin(
   switch (noticeType) {
     case "approval":
       cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("button", "Approval notice").should("be.visible").click();
+      cy.findByText("Approval notice (PDF)").should("be.visible").click();
       break;
 
     case "denial":
       cy.contains("h1", claimantName).should("be.visible");
-      cy.contains("button", "Denial notice").should("be.visible").click();
+      cy.findByText("Denial notice (PDF)").should("be.visible").click();
       break;
 
     default:

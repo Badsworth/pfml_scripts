@@ -1,4 +1,4 @@
-import { find, get, pick } from "lodash";
+import { compact, find, get, pick } from "lodash";
 import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
@@ -31,30 +31,7 @@ import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
 
 export const Dashboard = (props) => {
-  const { appLogic, paginationMeta, user } = props;
   const { t } = useTranslation();
-
-  const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
-  const hasVerifiableEmployer = user.hasVerifiableEmployer;
-
-  const tableColumnVisibility = {
-    employee_name: true,
-    fineos_absence_id: true,
-    employer_dba: user.user_leave_administrators.length > 1,
-    employer_fein: true,
-    created_at: true,
-    status: true,
-  };
-  /**
-   * Columns rendered in the table.
-   * Used for rendering header labels and the field(s) in each column. These
-   * mostly mirror the name of the fields rendered, but not exactly
-   * since some columns might require multiple fields.
-   * @type {string[]}
-   */
-  const tableColumnKeys = Object.entries(tableColumnVisibility)
-    .filter(([columnKey, isVisible]) => isVisible)
-    .map(([columnKey, isVisible]) => columnKey);
 
   /**
    * Update the page's query string, to load a different page number,
@@ -81,29 +58,16 @@ export const Dashboard = (props) => {
 
     // Our withClaims component watches the query string and
     // will trigger an API request when it changes.
-    appLogic.portalFlow.updateQuery(paramsObj);
-  };
-
-  /**
-   * Event handler for when a next/prev pagination button is clicked
-   * @param {number|string} pageOffset - Page number to load
-   */
-  const handlePaginationNavigationClick = (pageOffset) => {
-    updatePageQuery([
-      {
-        name: "page_offset",
-        value: pageOffset,
-      },
-    ]);
+    props.appLogic.portalFlow.updateQuery(paramsObj);
   };
 
   return (
     <React.Fragment>
-      <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
+      <EmployerNavigationTabs activePath={props.appLogic.portalFlow.pathname} />
       <Title>{t("pages.employersDashboard.title")}</Title>
 
       <div className="measure-6">
-        {hasVerifiableEmployer && (
+        {props.user.hasVerifiableEmployer && (
           <Alert
             state="warning"
             heading={t("pages.employersDashboard.verificationTitle")}
@@ -121,7 +85,7 @@ export const Dashboard = (props) => {
           </Alert>
         )}
 
-        <DashboardInfoAlert user={user} />
+        <DashboardInfoAlert user={props.user} />
       </div>
 
       <section className="margin-bottom-4">
@@ -154,17 +118,101 @@ export const Dashboard = (props) => {
         activeFilters={props.activeFilters}
         showFilters={props.query["show-filters"] === "true"}
         updatePageQuery={updatePageQuery}
-        user={user}
+        user={props.user}
       />
+      <PaginatedClaimsTable
+        appLogic={props.appLogic}
+        claims={props.claims}
+        user={props.user}
+        paginationMeta={props.paginationMeta}
+        updatePageQuery={updatePageQuery}
+        sort={
+          <SortDropdown
+            order_by={props.query.order_by}
+            order_direction={props.query.order_direction}
+            updatePageQuery={updatePageQuery}
+          />
+        }
+      />
+    </React.Fragment>
+  );
+};
 
-      {paginationMeta.total_records > 0 && (
-        <PaginationSummary
-          pageOffset={paginationMeta.page_offset}
-          pageSize={paginationMeta.page_size}
-          totalRecords={paginationMeta.total_records}
-        />
-      )}
-      <Table className="width-full tablet:width-auto" responsive scrollable>
+Dashboard.propTypes = {
+  activeFilters: PropTypes.shape({
+    claim_status: PropTypes.string,
+    employer_id: PropTypes.string,
+  }).isRequired,
+  appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
+      pathname: PropTypes.string.isRequired,
+      updateQuery: PropTypes.func.isRequired,
+    }).isRequired,
+  }).isRequired,
+  claims: PropTypes.instanceOf(ClaimCollection),
+  query: PropTypes.shape({
+    "show-filters": PropTypes.oneOf(["false", "true"]),
+    order_by: PropTypes.string,
+    order_direction: PropTypes.oneOf(["ascending", "descending"]),
+  }),
+  paginationMeta: PropTypes.instanceOf(PaginationMeta),
+  user: PropTypes.instanceOf(User).isRequired,
+};
+
+const PaginatedClaimsTable = (props) => {
+  const { paginationMeta, updatePageQuery, user } = props;
+  const { t } = useTranslation();
+
+  const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
+  const tableColumnVisibility = {
+    employee_name: true,
+    fineos_absence_id: true,
+    employer_dba: user.user_leave_administrators.length > 1,
+    employer_fein: true,
+    created_at: true,
+    status: true,
+  };
+
+  /**
+   * Columns rendered in the table.
+   * Used for rendering header labels and the field(s) in each column. These
+   * mostly mirror the name of the fields rendered, but not exactly
+   * since some columns might require multiple fields.
+   * @type {string[]}
+   */
+  const tableColumnKeys = Object.entries(tableColumnVisibility)
+    .filter(([columnKey, isVisible]) => isVisible)
+    .map(([columnKey]) => columnKey);
+
+  /**
+   * Event handler for when a next/prev pagination button is clicked
+   * @param {number|string} pageOffset - Page number to load
+   */
+  const handlePaginationNavigationClick = (pageOffset) => {
+    updatePageQuery([
+      {
+        name: "page_offset",
+        value: pageOffset,
+      },
+    ]);
+  };
+
+  return (
+    <React.Fragment>
+      <div className="margin-y-2 grid-row grid-gap flex-align-center">
+        {paginationMeta.total_records > 0 && (
+          <div className="grid-col grid-col-12 margin-bottom-2 mobile-lg:grid-col-fill mobile-lg:margin-bottom-0">
+            <PaginationSummary
+              pageOffset={paginationMeta.page_offset}
+              pageSize={paginationMeta.page_size}
+              totalRecords={paginationMeta.total_records}
+            />
+          </div>
+        )}
+        <div className="grid-col grid-col-auto">{props.sort}</div>
+      </div>
+      <Table className="width-full" responsive scrollable>
         <thead>
           <tr>
             {tableColumnKeys.map((columnKey) => (
@@ -217,24 +265,18 @@ export const Dashboard = (props) => {
   );
 };
 
-Dashboard.propTypes = {
-  activeFilters: PropTypes.shape({
-    claim_status: PropTypes.string,
-    employer_id: PropTypes.string,
-  }).isRequired,
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-      pathname: PropTypes.string.isRequired,
-      updateQuery: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
+PaginatedClaimsTable.propTypes = {
+  appLogic: Dashboard.propTypes.appLogic,
   claims: PropTypes.instanceOf(ClaimCollection),
-  query: PropTypes.shape({
-    "show-filters": PropTypes.oneOf(["false", "true"]),
-  }),
   paginationMeta: PropTypes.instanceOf(PaginationMeta),
+  updatePageQuery: PropTypes.func.isRequired,
+  /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
+  sort: PropTypes.node.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
+  query: PropTypes.shape({
+    order_by: PropTypes.string,
+    order_direction: PropTypes.oneOf(["ascending", "descending"]),
+  }),
 };
 
 /**
@@ -711,6 +753,80 @@ const Search = (props) => {
 Search.propTypes = {
   /** The current search value */
   initialValue: PropTypes.string,
+  updatePageQuery: PropTypes.func.isRequired,
+};
+
+const SortDropdown = (props) => {
+  const { order_by, order_direction, updatePageQuery } = props;
+  const choices = {
+    newest: "created_at,descending",
+    oldest: "created_at,ascending",
+    employee_az: "employee,ascending",
+    employee_za: "employee,descending",
+  };
+  const { t } = useTranslation();
+  const { formState, updateFields } = useFormState({
+    orderAndDirection: compact([order_by, order_direction]).join(","),
+  });
+  const getFunctionalInputProps = useFunctionalInputProps({
+    formState,
+    updateFields,
+  });
+
+  /**
+   * Convert a selected dropdown option to order_by and order_direction params
+   * @param {string} orderAndDirection - comma-delineated order_by,order_direction
+   * @returns {Array<{ name: string, value: string }>}
+   */
+  const getParamsFromOrderAndDirection = (orderAndDirection) => {
+    const [order_by, order_direction] = orderAndDirection.split(",");
+
+    return [
+      {
+        name: "order_by",
+        value: order_by,
+      },
+      {
+        name: "order_direction",
+        value: order_direction,
+      },
+    ];
+  };
+
+  const handleChange = (evt) => {
+    updatePageQuery([
+      ...getParamsFromOrderAndDirection(evt.target.value),
+      {
+        // Reset the page to 1 since ordering affects what shows on the first page
+        name: "page_offset",
+        value: "1",
+      },
+    ]);
+  };
+
+  if (!isFeatureEnabled("employerShowDashboardSort")) return null;
+
+  return (
+    <Dropdown
+      {...getFunctionalInputProps("orderAndDirection")}
+      onChange={handleChange}
+      choices={Object.entries(choices).map(([key, value]) => ({
+        label: t("pages.employersDashboard.sortChoice", { context: key }),
+        value,
+      }))}
+      label={t("pages.employersDashboard.sortLabel")}
+      smallLabel
+      formGroupClassName="display-flex margin-0 flex-align-center"
+      labelClassName="text-bold margin-right-1"
+      selectClassName="margin-0"
+      hideEmptyChoice
+    />
+  );
+};
+
+SortDropdown.propTypes = {
+  order_by: PropTypes.oneOf(["created_at", "employee"]),
+  order_direction: PropTypes.oneOf(["ascending", "descending"]),
   updatePageQuery: PropTypes.func.isRequired,
 };
 

@@ -241,7 +241,7 @@ def copy_dir(
     # get list of all files in the provided S3 archival path, or empty list if no prefix was given
     archive_files = (
         massgov.pfml.util.files.list_files(
-            path=archive_dir, recursive=recursive, boto_session=boto_source
+            path=archive_dir, recursive=recursive, boto_session=boto_dest
         )
         if archive_dir
         else []

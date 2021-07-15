@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`SupportingWorkDetails renders the component 1`] = `
+exports[`SupportingWorkDetails renders the component with the AmendmentForm closed 1`] = `
 <Fragment>
   <ReviewHeading
     level="2"
@@ -22,6 +22,14 @@ exports[`SupportingWorkDetails renders the component 1`] = `
       30
     </p>
     <ConditionalContent
+      clearField={[MockFunction]}
+      fieldNamesClearedWhenHidden={
+        Array [
+          "hours_worked_per_week",
+        ]
+      }
+      getField={[MockFunction]}
+      updateFields={[MockFunction]}
       visible={false}
     >
       <AmendmentForm
@@ -38,8 +46,7 @@ exports[`SupportingWorkDetails renders the component 1`] = `
         <p>
           This amendment will get saved when you submit your review.
         </p>
-        <InputText
-          errorMsg={null}
+        <InputNumber
           hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
           label="On average, how many hours does the employee work each week?"
           mask="hours"
@@ -47,6 +54,7 @@ exports[`SupportingWorkDetails renders the component 1`] = `
           onChange={[Function]}
           smallLabel={true}
           value={30}
+          valueType="integer"
           width="small"
         />
       </AmendmentForm>

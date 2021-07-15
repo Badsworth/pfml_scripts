@@ -75,8 +75,8 @@ resource "newrelic_alert_policy_channel" "pfml_prod_low_priority_alerts" {
 # Alerts relating to the API's generic performance metrics
 
 resource "newrelic_nrql_alert_condition" "api_error_rate" {
-  # WARN: error rate above 5% in any five-minute period
-  # CRIT: error rate above 10% in two five-minute periods
+  # WARN: error rate above 5% in any five-minute period, with at least 10 unique users.
+  # CRIT: error rate above 10% in two five-minute periods, with at least 10 unique users in each period.
   #
   # These should be tuned down once we can better distinguish
   # certain types of errors.
@@ -88,15 +88,20 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
   aggregation_window = 300 # 5-minute window
 
   nrql {
-    # Calculate error percentage.
+    # Calculate error percentage. Clamping is applied to ensure that any data points with less than 10 unique users
+    # is removed from the calculation and interpreted as 0%. This is a workaround to prevent periods of low activity
+    # (e.g. late night) from triggering the alarm and waking people up.
     #
     # Ignore the following triaged errors until they are resolved:
-    # - documents_get 403 (PSD-112)
-    # - document_upload 422 (PSD-842)
-    # - OCOrganization.[*].CustomerNo type issue (PSD-161)
+    # - mark_document_as_received 422 (PSD-842)
+    # - mark_document_as_received 500 (PSD-1456)
+    # - get_customer_info 403 (PSD-1122)
+    # - document_upload 502 (PSD-1595)
+    # - document_upload 403 (PSD-1800)
+    # - download_document_as_leave_admin 502 (PSD-1738)
     # - FINEOSFatalUnavailable (Should be ignored entirely in https://github.com/EOLWD/pfml/pull/3516)
     #
-    # This keeps the error rate signal clean so we can catch new issues.
+    # This keeps the error rate signal clean so we can catch new frequent issues.
     #
     # Also ignore the following transactions:
     # - push_db (This is a before_request method that New Relic breaks out as a separate transaction)
@@ -107,20 +112,15 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
     #
     query             = <<-NRQL
       SELECT filter(
-        count(error.message), 
-        WHERE NOT (
-          error.message LIKE '%expected 200, but got 403'
-          AND request.uri LIKE '%applications%/documents' 
-          AND request.method LIKE 'GET'
-        )
-        AND NOT (
-          error.message LIKE '%expected 200, but got 422'
-          AND request.uri LIKE '%applications%/documents' 
-          AND request.method LIKE 'POST'
-        )
-        AND NOT error.message LIKE '%1 validation error for OCOrganisation%CustomerNo none is not an allowed value%'
+        count(error.message),
+        WHERE NOT error.message = '(mark_document_as_recieved) expected 200, but got 422'
+        AND NOT error.message = '(mark_document_as_recieved) FINEOSFatalResponseError: 500'
+        AND NOT error.message = '(get_customer_info) expected 200, but got 403'
+        AND NOT error.message = '(upload_documents) FINEOSFatalResponseError: 502'
+        AND NOT error.message = '(upload_documents) expected 200, but got 403'
+        AND NOT error.message = '(download_document_as_leave_admin) FINEOSFatalResponseError: 502'
         AND NOT error.class = 'massgov.pfml.fineos.exception:FINEOSFatalUnavailable'
-      ) * 100 / uniqueCount(traceId)
+      ) * 100 * clamp_max(floor(uniqueCount(current_user.user_id) / 10), 1) / uniqueCount(traceId)
       FROM Transaction, TransactionError
       WHERE appName='PFML-API-${upper(var.environment_name)}'
         AND (name IS NULL or name NOT LIKE '%push_db')
@@ -163,7 +163,7 @@ resource "newrelic_nrql_alert_condition" "api_network_error_rate" {
       SELECT filter(
           count(*),
           WHERE numeric(response.status) = 503
-        ) * 100 / uniqueCount(traceId)
+        ) * 100 * clamp_max(floor(uniqueCount(current_user.user_id) / 10), 1) / uniqueCount(traceId)
       FROM Transaction
       WHERE appName='PFML-API-${upper(var.environment_name)}'
         AND name NOT LIKE '%push_db'

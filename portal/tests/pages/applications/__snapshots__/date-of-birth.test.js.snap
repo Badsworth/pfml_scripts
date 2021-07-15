@@ -7,7 +7,7 @@ exports[`DateOfBirth renders the page 1`] = `
 >
   <InputDate
     dayLabel="Day"
-    example="mm / dd / yyyy"
+    example="MM / DD / YYYY"
     label="What’s your date of birth?"
     monthLabel="Month"
     name="date_of_birth"

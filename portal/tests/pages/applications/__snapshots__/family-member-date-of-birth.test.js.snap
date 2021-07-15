@@ -7,7 +7,7 @@ exports[`FamilyMemberDateOfBirth renders the page 1`] = `
 >
   <InputDate
     dayLabel="Day"
-    example="mm / dd / yyyy"
+    example="MM / DD / YYYY"
     label="What is your family member's date of birth?"
     monthLabel="Month"
     name="leave_details.caring_leave_metadata.family_member_date_of_birth"

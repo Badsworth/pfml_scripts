@@ -606,8 +606,16 @@ const errors = {
         "The employer ID you entered is already associated with your account.",
       employer_verification_data_required:
         "$t(shared.ein.employer_verification_data_required)",
+      // TODO (EMPLOYER-1565): Remove this once the API no longer returns it
       invalid:
         "Enter your 9-digit Employer Identification Number in the correct format.",
+      pattern:
+        "Enter your 9-digit Employer Identification Number in the correct format.",
+      require_contributing_employer:
+        "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly and the associated business is contributing to Paid Family and Medical Leave.",
+      require_employer:
+        "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
+      required: "Enter your 9-digit Employer Identification Number.",
     },
     hours_worked_per_week: {
       // TODO (EMPLOYER-723) remove this
@@ -2094,6 +2102,11 @@ const pages = {
     noClaimResults: "No applications on file",
     searchLabel: "Search for employee name or application ID",
     searchSubmit: "Search",
+    sortChoice_employee_az: "Last name – A to Z",
+    sortChoice_employee_za: "Last name – Z to A",
+    sortChoice_newest: "Newest applications",
+    sortChoice_oldest: "Oldest applications",
+    sortLabel: "Sort",
     startDateTooltip: "When an employee started a new leave application",
     statusDescription_approved:
       "<strong>Approved:</strong> DFML has approved this leave request.",
@@ -2701,7 +2714,7 @@ const components = {
   form: {
     continueButton: "Save and continue",
     dateInputDayLabel: "Day",
-    dateInputExample: "mm / dd / yyyy",
+    dateInputExample: "MM / DD / YYYY",
     dateInputMonthLabel: "Month",
     dateInputYearLabel: "Year",
     optional: "(optional)",

@@ -13,7 +13,7 @@ import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import ImportLog, Payment, ReferenceFile
 
 from ..lookup import LookupTable
-from .base import Base, utc_timestamp_gen, uuid_gen
+from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -25,7 +25,7 @@ else:
     PostgreSQLUUID = UUID(as_uuid=True)
 
 
-class FineosExtractVpei(Base):
+class FineosExtractVpei(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vpei"
 
     vpei_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -115,18 +115,6 @@ class FineosExtractVpei(Base):
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
@@ -134,7 +122,7 @@ class FineosExtractVpei(Base):
     reference_file = relationship(ReferenceFile)
 
 
-class FineosExtractVpeiPaymentDetails(Base):
+class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vpei_payment_details"
 
     vpei_payment_details_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -163,18 +151,6 @@ class FineosExtractVpeiPaymentDetails(Base):
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
@@ -182,7 +158,7 @@ class FineosExtractVpeiPaymentDetails(Base):
     reference_file = relationship(ReferenceFile)
 
 
-class FineosExtractVpeiClaimDetails(Base):
+class FineosExtractVpeiClaimDetails(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vpei_claim_details"
 
     vpei_claim_details_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -246,18 +222,6 @@ class FineosExtractVpeiClaimDetails(Base):
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
@@ -265,7 +229,7 @@ class FineosExtractVpeiClaimDetails(Base):
     reference_file = relationship(ReferenceFile)
 
 
-class FineosExtractVbiRequestedAbsenceSom(Base):
+class FineosExtractVbiRequestedAbsenceSom(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vbi_requested_absence_som"
 
     vbi_requested_absence_som_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -321,25 +285,13 @@ class FineosExtractVbiRequestedAbsenceSom(Base):
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
     reference_file = relationship(ReferenceFile)
 
 
-class FineosExtractVbiRequestedAbsence(Base):
+class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vbi_requested_absence"
 
     vbi_requested_absence_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -394,25 +346,13 @@ class FineosExtractVbiRequestedAbsence(Base):
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
     reference_file = relationship(ReferenceFile)
 
 
-class FineosExtractEmployeeFeed(Base):
+class FineosExtractEmployeeFeed(Base, TimestampMixin):
     __tablename__ = "fineos_extract_employee_feed"
 
     employee_feed_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -478,18 +418,6 @@ class FineosExtractEmployeeFeed(Base):
 
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
-    )
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True

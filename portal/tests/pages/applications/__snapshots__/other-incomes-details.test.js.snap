@@ -51,7 +51,7 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
   />
   <InputDate
     dayLabel="Day"
-    example="mm / dd / yyyy"
+    example="MM / DD / YYYY"
     label="What is the first day of your leave that this income will pay you for?"
     monthLabel="Month"
     name="other_incomes[0].income_start_date"
@@ -62,7 +62,7 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
   />
   <InputDate
     dayLabel="Day"
-    example="mm / dd / yyyy"
+    example="MM / DD / YYYY"
     label="What is the last day of your leave that this income will pay you for?"
     monthLabel="Month"
     name="other_incomes[0].income_end_date"

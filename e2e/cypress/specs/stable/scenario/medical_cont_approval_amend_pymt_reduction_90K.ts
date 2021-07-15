@@ -1,21 +1,21 @@
-import { fineos, fineosPages, portal } from "../../actions";
+import { fineos, fineosPages, portal } from "../../../actions";
 import {
   getClaimantCredentials,
   getFineosBaseUrl,
   getLeaveAdminCredentials,
-} from "../../config";
+} from "../../../config";
 import {
   Submission,
   ValidConcurrentLeave,
   ValidEmployerBenefit,
-} from "../../../src/types";
+} from "../../../../src/types";
 import {
   assertIsTypedArray,
   assertValidClaim,
   isValidEmployerBenefit,
   isValidOtherIncome,
   isValidPreviousLeave,
-} from "../../../src/util/typeUtils";
+} from "../../../../src/util/typeUtils";
 
 // Used for stashing generated benefit and leave
 type LeaveAdminchanges = {
