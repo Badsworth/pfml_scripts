@@ -772,6 +772,7 @@ const shared = {
   contactCenterPhoneNumber: "(833) 344-7365",
   contactCenterPhoneNumberNoBreak:
     "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
+  dateRangeDelimiter: "to",
   day_Friday: "Friday",
   day_Monday: "Monday",
   day_Saturday: "Saturday",
@@ -2740,7 +2741,7 @@ const components = {
     nextLabel: "Next",
     previousLabel: "Previous",
     summary:
-      "Viewing {{firstRecordNumber}} – {{lastRecordNumber}} of {{totalRecords}} results",
+      "Viewing {{firstRecordNumber}} to {{lastRecordNumber}} of {{totalRecords}} results",
   },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",

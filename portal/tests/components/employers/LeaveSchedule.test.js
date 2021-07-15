@@ -41,7 +41,7 @@ describe("LeaveSchedule", () => {
       .children()
       .map((cell) => cell.text());
 
-    expect(cellValues).toEqual(["1/1/2021 – 6/1/2021", "Continuous leave"]);
+    expect(cellValues).toEqual(["1/1/2021 to 6/1/2021", "Continuous leave"]);
     expect(wrapper).toMatchSnapshot();
   });
 

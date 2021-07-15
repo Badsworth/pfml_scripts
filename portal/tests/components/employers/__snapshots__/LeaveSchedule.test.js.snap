@@ -44,7 +44,7 @@ exports[`LeaveSchedule renders continuous schedule 1`] = `
         <th
           scope="row"
         >
-          1/1/2021 – 6/1/2021
+          1/1/2021 to 6/1/2021
         </th>
         <td
           colSpan="2"

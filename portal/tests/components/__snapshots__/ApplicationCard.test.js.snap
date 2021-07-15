@@ -33,7 +33,7 @@ exports[`ApplicationCard renders Intermittent leave period date range 1`] = `
   <p
     className="margin-top-0 margin-bottom-2 font-body-2xs text-medium"
   >
-    2/1/2021 – 7/1/2021
+    2/1/2021 to 7/1/2021
   </p>
 </div>
 `;
@@ -50,7 +50,7 @@ exports[`ApplicationCard renders continuous and reduced schedule leave period da
   <p
     className="margin-top-0 margin-bottom-2 font-body-2xs text-medium"
   >
-    1/1/2021 – 6/1/2021
+    1/1/2021 to 6/1/2021
   </p>
   <Heading
     className="margin-top-0 margin-bottom-05 text-base-dark"
@@ -62,7 +62,7 @@ exports[`ApplicationCard renders continuous and reduced schedule leave period da
   <p
     className="margin-top-0 margin-bottom-2 font-body-2xs text-medium"
   >
-    2/1/2021 – 7/1/2021
+    2/1/2021 to 7/1/2021
   </p>
 </div>
 `;

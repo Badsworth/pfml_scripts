@@ -112,7 +112,7 @@ describe("BaseBenefitsApplication", () => {
   describe("#continuousLeaveDateRange", () => {
     it("returns the expected date range", () => {
       expect(claimWithContinuousLeave.continuousLeaveDateRange()).toEqual(
-        "3/1/2021 – 9/1/2021"
+        "3/1/2021 to 9/1/2021"
       );
     });
   });
@@ -129,7 +129,7 @@ describe("BaseBenefitsApplication", () => {
   describe("#reducedLeaveDateRange", () => {
     it("returns the expected date range", () => {
       expect(claimWithReducedLeave.reducedLeaveDateRange()).toBe(
-        "1/1/2021 – 8/1/2021"
+        "1/1/2021 to 8/1/2021"
       );
     });
   });
@@ -146,7 +146,7 @@ describe("BaseBenefitsApplication", () => {
   describe("#intermittentLeaveDateRange", () => {
     it("returns the expected date range", () => {
       expect(claimWithIntermittentLeave.intermittentLeaveDateRange()).toEqual(
-        "2/1/2021 – 8/1/2021"
+        "2/1/2021 to 8/1/2021"
       );
     });
   });
