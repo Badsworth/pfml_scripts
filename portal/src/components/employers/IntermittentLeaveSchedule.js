@@ -61,6 +61,9 @@ const IntermittentLeaveSchedule = ({ hasDocuments }) => {
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
               ),
             }}
+            tOptions={{
+              context: hasDocuments ? "hasDocs" : "noDocs",
+            }}
           />
           {/* <Trans
             i18nKey="components.employersIntermittentLeaveSchedule.intermittentFrequencyDuration"

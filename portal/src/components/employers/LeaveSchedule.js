@@ -111,6 +111,9 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
                       <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
                     ),
                   }}
+                  tOptions={{
+                    context: hasDocuments ? "hasDocs" : "noDocs",
+                  }}
                 />
                 {/* {t(
                   "components.employersLeaveSchedule.reducedHoursPerWeek",
