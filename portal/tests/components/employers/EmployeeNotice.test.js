@@ -1,21 +1,43 @@
-import { mount, shallow } from "enzyme";
+import { simulateEvents, testHook } from "../../test-utils";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import EmployeeNotice from "../../../src/components/employers/EmployeeNotice";
 import React from "react";
-import { simulateEvents } from "../../test-utils";
+import { shallow } from "enzyme";
+import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
 describe("EmployeeNotice", () => {
-  let wrapper;
-  const onChange = jest.fn();
+  const updateFields = jest.fn();
+  let getFunctionalInputProps;
+
+  function render(givenProps = {}) {
+    const defaultProps = {
+      employeeNoticeInput: undefined,
+      fraudInput: "No",
+      getFunctionalInputProps,
+      updateFields,
+    };
+    const props = { ...defaultProps, ...givenProps };
+
+    return shallow(<EmployeeNotice {...props} />);
+  }
 
   beforeEach(() => {
-    wrapper = shallow(<EmployeeNotice fraud="No" onChange={onChange} />);
+    testHook(() => {
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors: new AppErrorInfoCollection(),
+        formState: { fraud: "No", employee_notice: undefined },
+        updateFields,
+      });
+    });
   });
 
   it("renders the component", () => {
+    const wrapper = render();
     expect(wrapper).toMatchSnapshot();
   });
 
   it("does not select any option by default", () => {
+    const wrapper = render();
     const choices = wrapper.find("InputChoiceGroup").prop("choices");
 
     for (const choice of choices) {
@@ -24,7 +46,7 @@ describe("EmployeeNotice", () => {
   });
 
   it("unselects and disables options if fraud is reported", () => {
-    wrapper = shallow(<EmployeeNotice fraud="Yes" onChange={onChange} />);
+    const wrapper = render({ fraudInput: "Yes" });
 
     const choices = wrapper.find("InputChoiceGroup").prop("choices");
 
@@ -34,16 +56,15 @@ describe("EmployeeNotice", () => {
     }
   });
 
-  it('calls "onChange" when fraud choice has changed', () => {
-    wrapper = mount(<EmployeeNotice fraud="No" onChange={onChange} />);
+  it('calls "updateFields" when fraud choice has changed', () => {
+    const wrapper = render();
     const { changeRadioGroup } = simulateEvents(wrapper);
 
-    changeRadioGroup("employeeNotice", "Yes");
-    changeRadioGroup("employeeNotice", "No");
+    changeRadioGroup("employee_notice", "Yes");
+    changeRadioGroup("employee_notice", "No");
 
-    expect(onChange).toHaveBeenCalledTimes(3);
-    expect(onChange).toHaveBeenNthCalledWith(1, undefined);
-    expect(onChange).toHaveBeenNthCalledWith(2, "Yes");
-    expect(onChange).toHaveBeenNthCalledWith(3, "No");
+    expect(updateFields).toHaveBeenCalledTimes(2);
+    expect(updateFields).toHaveBeenNthCalledWith(1, { employee_notice: "Yes" });
+    expect(updateFields).toHaveBeenNthCalledWith(2, { employee_notice: "No" });
   });
 });
