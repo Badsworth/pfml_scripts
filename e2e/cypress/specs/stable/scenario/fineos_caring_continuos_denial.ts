@@ -45,19 +45,20 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     }
   );
 
-  const employerDenial = it("Leave admin will submit ER denial for employee", () => {
-    cy.dependsOnPreviousPass([fineosSubmission]);
-    portal.before();
-    cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<string>("fineos_absence_id").then((fineos_absence_id) => {
-        assertValidClaim(claim.claim);
-        portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
-        portal.selectClaimFromEmployerDashboard(fineos_absence_id, "--");
-        portal.visitActionRequiredERFormPage(fineos_absence_id);
-        portal.respondToLeaveAdminRequest(false, true, false, true);
+  const employerDenial =
+    it("Leave admin will submit ER denial for employee", () => {
+      cy.dependsOnPreviousPass([fineosSubmission]);
+      portal.before();
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<string>("fineos_absence_id").then((fineos_absence_id) => {
+          assertValidClaim(claim.claim);
+          portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
+          portal.selectClaimFromEmployerDashboard(fineos_absence_id, "--");
+          portal.visitActionRequiredERFormPage(fineos_absence_id);
+          portal.respondToLeaveAdminRequest(false, true, false, true);
+        });
       });
     });
-  });
 
   it("CSR rep will deny claim", { baseUrl: getFineosBaseUrl() }, () => {
     cy.dependsOnPreviousPass([fineosSubmission, employerDenial]);

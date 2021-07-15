@@ -5,33 +5,34 @@ import { config } from "../../actions/common";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 
 describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
-  const submissionTest = it("As a claimant, I should be able to submit a intermittent bonding application through the portal", () => {
-    portal.before();
-    cy.task("generateClaim", "BIAP60").then((claim) => {
-      cy.stash("claim", claim);
-      const application: ApplicationRequestBody = claim.claim;
-      const paymentPreference = claim.paymentPreference;
+  const submissionTest =
+    it("As a claimant, I should be able to submit a intermittent bonding application through the portal", () => {
+      portal.before();
+      cy.task("generateClaim", "BIAP60").then((claim) => {
+        cy.stash("claim", claim);
+        const application: ApplicationRequestBody = claim.claim;
+        const paymentPreference = claim.paymentPreference;
 
-      const credentials: Credentials = {
-        username: config("PORTAL_USERNAME"),
-        password: config("PORTAL_PASSWORD"),
-      };
-      portal.login(credentials);
-      portal.goToDashboardFromApplicationsPage();
+        const credentials: Credentials = {
+          username: config("PORTAL_USERNAME"),
+          password: config("PORTAL_PASSWORD"),
+        };
+        portal.login(credentials);
+        portal.goToDashboardFromApplicationsPage();
 
-      // Submit Claim
-      portal.startClaim();
-      portal.submitClaimPartOne(application);
-      portal.waitForClaimSubmission().then((data) => {
-        cy.stash("submission", {
-          application_id: data.application_id,
-          fineos_absence_id: data.fineos_absence_id,
-          timestamp_from: Date.now(),
+        // Submit Claim
+        portal.startClaim();
+        portal.submitClaimPartOne(application);
+        portal.waitForClaimSubmission().then((data) => {
+          cy.stash("submission", {
+            application_id: data.application_id,
+            fineos_absence_id: data.fineos_absence_id,
+            timestamp_from: Date.now(),
+          });
         });
+        portal.submitClaimPartsTwoThree(application, paymentPreference);
       });
-      portal.submitClaimPartsTwoThree(application, paymentPreference);
     });
-  });
 
   it("Leave admin will submit ER approval for employee", () => {
     cy.dependsOnPreviousPass([submissionTest]);
@@ -96,8 +97,8 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
       cy.visit("/");
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
-          const payment = (claim.metadata
-            ?.expected_weekly_payment as unknown) as number;
+          const payment = claim.metadata
+            ?.expected_weekly_payment as unknown as number;
           fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
             (leaveCase) => {
               leaveCase.assertPaymentsMade([{ net_payment_amount: payment }]);

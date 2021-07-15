@@ -111,7 +111,7 @@ describe("Denial Notification and Notice", () => {
       //   // returning false here prevents Cypress from
       //   // failing the test
       //   return false
-      // })  
+      // })
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
@@ -149,7 +149,7 @@ describe("Denial Notification and Notice", () => {
   it(
     "Should generate a (Denial) notification for the Leave Administrator",
     { retries: 0 },
-    () => {    
+    () => {
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {

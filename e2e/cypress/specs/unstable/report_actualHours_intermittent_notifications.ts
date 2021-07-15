@@ -70,9 +70,9 @@ describe("Report of intermittent leave hours notification", () => {
             .then(() => {
               const dob =
                 claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-                cy.contains(dob);
-                cy.contains(employeeFullName);
-                cy.contains(submission.fineos_absence_id);
+              cy.contains(dob);
+              cy.contains(employeeFullName);
+              cy.contains(submission.fineos_absence_id);
             });
         });
       });

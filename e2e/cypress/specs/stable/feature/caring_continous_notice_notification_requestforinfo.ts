@@ -130,19 +130,18 @@ describe("Request for More Information (notifications/notices)", () => {
     () => {
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
-        email
-          .getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject:
-                "Thank you for successfully submitting your Paid Family and Medical Leave Application",
-              timestamp_from: submission.timestamp_from,
-              messageWildcard: submission.fineos_absence_id,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            180000
-          )
-          cy.contains(submission.fineos_absence_id);
+        email.getEmails(
+          {
+            address: "gqzap.notifications@inbox.testmail.app",
+            subject:
+              "Thank you for successfully submitting your Paid Family and Medical Leave Application",
+            timestamp_from: submission.timestamp_from,
+            messageWildcard: submission.fineos_absence_id,
+            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+          },
+          180000
+        );
+        cy.contains(submission.fineos_absence_id);
       });
     }
   );
@@ -161,20 +160,19 @@ describe("Request for More Information (notifications/notices)", () => {
             submission.fineos_absence_id
           );
           cy.log(subjectClaimant);
-          email
-            .getEmails(
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectClaimant,
-                messageWildcard: submission.fineos_absence_id,
-                timestamp_from: submission.timestamp_from,
-                debugInfo: {
-                  "Fineos Claim ID": submission.fineos_absence_id,
-                },
+          email.getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subjectClaimant,
+              messageWildcard: submission.fineos_absence_id,
+              timestamp_from: submission.timestamp_from,
+              debugInfo: {
+                "Fineos Claim ID": submission.fineos_absence_id,
               },
-              60000
-            )
-            cy.contains(submission.fineos_absence_id);
+            },
+            60000
+          );
+          cy.contains(submission.fineos_absence_id);
         });
       });
     }

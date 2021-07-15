@@ -15,9 +15,8 @@ function SSO(): void {
   cy.clearCookies();
   // Perform SSO login in a task. We can't visit other domains in Cypress.
   cy.task("completeSSOLoginFineos").then((cookiesJson) => {
-    const deserializedCookies: Record<string, string>[] = JSON.parse(
-      cookiesJson
-    );
+    const deserializedCookies: Record<string, string>[] =
+      JSON.parse(cookiesJson);
     // Filter out any cookies that will fail to be set. Those are ones where secure: false
     // and sameSite: "None"
     const noSecure = deserializedCookies.filter(
@@ -964,16 +963,16 @@ export function triggerNoticeRelease(docType: string): void {
   });
   cy.get('input[type="submit"][value="Properties"]').click();
   cy.get('input[type="submit"][value="Continue"]').click();
-  cy.contains("td","SOM Generate Legal Notice", {
+  cy.contains("td", "SOM Generate Legal Notice", {
     timeout: 20000,
-  })
+  });
   cy.get('input[type="submit"][value="Continue"]').click();
   cy.wait(5000);
-  cy.contains("td","SOM Generate Legal Notice", {
+  cy.contains("td", "SOM Generate Legal Notice", {
     timeout: 20000,
   })
-  .find("input[type='checkbox']")
-  .should("be.checked");
+    .find("input[type='checkbox']")
+    .should("be.checked");
   onTab("Documents");
   assertHasDocument(docType);
 }
