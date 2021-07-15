@@ -2534,14 +2534,14 @@ const components = {
     heading: "Do you have any reason to suspect this is fraud?",
   },
   employersIntermittentLeaveSchedule: {
+    attachments_hasDocs:
+      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
+    attachments_noDocs:
+      "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     claimDurationType_continuous: "$t(shared.claimDurationTypeContinuous)",
     claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     claimDurationType_reducedSchedule:
       "$t(shared.claimDurationTypeReducedSchedule)",
-    contactForLeaveScheduleDetails:
-      "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
-    downloadAttachments:
-      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     frequencyBasis_irregular: "Irregular over the next 6 months",
     frequencyBasis_months: "At least once a month",
     frequencyBasis_weeks: "At least once a week",
@@ -2592,6 +2592,10 @@ const components = {
       "If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.",
   },
   employersLeaveSchedule: {
+    attachments_hasDocs:
+      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
+    attachments_noDocs:
+      "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     caption: "This is your employee’s expected leave schedule.",
     caption_documents:
       "This is your employee’s expected leave schedule. Download the attached documentation for more details.",
@@ -2601,12 +2605,8 @@ const components = {
     claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     claimDurationType_reducedSchedule:
       "$t(shared.claimDurationTypeReducedSchedule)",
-    contactForLeaveScheduleDetails:
-      "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
-    downloadAttachments:
-      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     header: "Leave schedule",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",

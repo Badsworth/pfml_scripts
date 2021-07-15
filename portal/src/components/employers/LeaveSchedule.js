@@ -100,11 +100,7 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
                 {/* TODO (CP-1074): Update hours/day */}
                 {/* TODO (EMPLOYER-655): Update reduced leave details */}
                 <Trans
-                  i18nKey={`components.employersLeaveSchedule.${
-                    hasDocuments
-                      ? "downloadAttachments"
-                      : "contactForLeaveScheduleDetails"
-                  }`}
+                  i18nKey="components.employersLeaveSchedule.attachments"
                   components={{
                     "contact-center-phone-link": (
                       <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
