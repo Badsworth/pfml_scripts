@@ -113,8 +113,9 @@ export default class AuthenticationManager {
         onSuccess: () => console.log("Success was called"),
         onFailure: () => console.log("Failure was called"),
         inputVerificationCode: async () => {
-          const code =
-            await verificationFetcher.getResetVerificationCodeForUser(username);
+          const code = await verificationFetcher.getResetVerificationCodeForUser(
+            username
+          );
           cognitoUser.confirmPassword(
             code,
             password,
@@ -234,7 +235,7 @@ export default class AuthenticationManager {
         "User-Agent": "PFML Business Simulation Bot",
       },
     };
-    const user = (await getUsersCurrent(apiOptions)) as unknown as {
+    const user = ((await getUsersCurrent(apiOptions)) as unknown) as {
       data: { data: UserResponse };
     };
     if (!user.data.data.user_leave_administrators) {
@@ -276,7 +277,7 @@ export default class AuthenticationManager {
         "User-Agent": "PFML Business Simulation Bot",
       },
     };
-    const user = (await getUsersCurrent(apiOptions)) as unknown as {
+    const user = ((await getUsersCurrent(apiOptions)) as unknown) as {
       data: { data: { user_id: string } };
     };
     if (!user.data.data.user_id) {
