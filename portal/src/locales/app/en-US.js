@@ -804,6 +804,10 @@ const shared = {
     "If something is incomplete, add a comment at the end of the page.",
   employerInstructions_followUpDate:
     "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
+  employerLeaveScheduleLeadHasDocs:
+    "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
+  employerLeaveScheduleLeadNoDocs:
+    "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose files",
   fileUpload_fileHeadingPrefix: "File",
@@ -2544,8 +2548,6 @@ const components = {
     claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     claimDurationType_reducedSchedule:
       "$t(shared.claimDurationTypeReducedSchedule)",
-    downloadAttachments:
-      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     frequencyBasis_irregular: "Irregular over the next 6 months",
     frequencyBasis_months: "At least once a month",
     frequencyBasis_weeks: "At least once a week",
@@ -2561,6 +2563,8 @@ const components = {
       "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
     intermittentFrequencyDuration_weeks_hours:
       "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
+    lead_hasDocs: "$t(shared.employerLeaveScheduleLeadHasDocs)",
+    lead_noDocs: "$t(shared.employerLeaveScheduleLeadNoDocs)",
   },
   employersLeaveDetails: {
     applicationIdLabel: "Application ID",
@@ -2607,9 +2611,9 @@ const components = {
       "$t(shared.claimDurationTypeReducedSchedule)",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
-    downloadAttachments:
-      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     header: "Leave schedule",
+    lead_hasDocs: "$t(shared.employerLeaveScheduleLeadHasDocs)",
+    lead_noDocs: "$t(shared.employerLeaveScheduleLeadNoDocs)",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
   },

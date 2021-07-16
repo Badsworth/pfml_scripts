@@ -13,7 +13,6 @@ import { useTranslation } from "../../locales/i18n";
  * Display leave periods by leave type
  * in the Leave Admin claim review page.
  */
-
 const LeaveSchedule = ({ hasDocuments, claim }) => {
   const { t } = useTranslation();
   const {
@@ -101,11 +100,14 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
                 {/* TODO (CP-1074): Update hours/day */}
                 {/* TODO (EMPLOYER-655): Update reduced leave details */}
                 <Trans
-                  i18nKey="components.employersLeaveSchedule.downloadAttachments"
+                  i18nKey="components.employersLeaveSchedule.lead"
                   components={{
                     "contact-center-phone-link": (
                       <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
                     ),
+                  }}
+                  tOptions={{
+                    context: hasDocuments ? "hasDocs" : "noDocs",
                   }}
                 />
                 {/* {t(
@@ -120,6 +122,7 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
           {isIntermittent && (
             <IntermittentLeaveSchedule
               intermittentLeavePeriods={intermittent_leave_periods}
+              hasDocuments={hasDocuments}
             />
           )}
         </tbody>
