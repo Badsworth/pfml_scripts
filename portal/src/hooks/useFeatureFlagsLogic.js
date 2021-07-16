@@ -4,7 +4,7 @@ import tracker from "../services/tracker";
 import { useState } from "react";
 
 /**
- * Hook that defines feature flags state. This will eventually replace services/featureFlags.js. 
+ * Hook that defines feature flags state. This will eventually replace services/featureFlags.js.
  * @returns {object} { flags: Object, getFlag: Function, loadFlags: Function }
  */
 const useFlagsLogic = () => {
