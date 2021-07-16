@@ -77,6 +77,37 @@ def test_endpoint_with_employee_wages_data(
     }
 
 
+def test_endpoint_with_unknown_employment_status(
+    client, test_db_session, initialize_factories_session, fineos_user_token
+):
+    body = {
+        "application_submitted_date": "2020-12-30",
+        "employer_fein": "71-6779225",
+        "employment_status": "Unknown",
+        "leave_start_date": "2020-12-30",
+        "tax_identifier": "088-57-4541",
+    }
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
+
+    assert response.json == {
+        "data": {
+            "description": "Not Known: invalid employment status",
+            "employer_average_weekly_wage": None,
+            "financially_eligible": False,
+            "state_average_weekly_wage": None,
+            "total_wages": None,
+            "unemployment_minimum": None,
+        },
+        "message": "success",
+        "meta": {"method": "POST", "resource": "/v1/financial-eligibility"},
+        "status_code": 200,
+    }
+
+
 def test_endpoint_no_employee_wage_data(
     client, test_db_session, initialize_factories_session, fineos_user_token
 ):

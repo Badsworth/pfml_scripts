@@ -11,6 +11,7 @@ import massgov.pfml.api.eligibility.eligibility as eligibility
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, ensure
+from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
 from massgov.pfml.db.models.employees import Employee, Employer, TaxIdentifier
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
@@ -30,7 +31,7 @@ class EligibilityRequest(PydanticBaseModel):
     employer_fein: str
     leave_start_date: date
     application_submitted_date: date
-    employment_status: str
+    employment_status: EligibilityEmploymentStatus
     tax_identifier: str
 
 
@@ -44,6 +45,23 @@ def eligibility_post():
     leave_start_date = request.leave_start_date
     application_submitted_date = request.application_submitted_date
     employment_status = request.employment_status
+
+    if employment_status not in [
+        EligibilityEmploymentStatus.employed,
+        EligibilityEmploymentStatus.self_employed,
+        EligibilityEmploymentStatus.unemployed,
+    ]:
+        return response_util.success_response(
+            message="success",
+            data=EligibilityResponse(
+                financially_eligible=False,
+                description="Not Known: invalid employment status",
+                total_wages=None,
+                state_average_weekly_wage=None,
+                unemployment_minimum=None,
+                employer_average_weekly_wage=None,
+            ).dict(),
+        ).to_api_response()
 
     with app.db_session() as db_session:
         tax_record = (
