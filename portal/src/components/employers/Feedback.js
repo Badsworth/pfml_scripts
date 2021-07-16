@@ -42,7 +42,9 @@ const Feedback = ({
 
   const clearCommentBox = () => updateFields({ comment: "" });
 
-  const { errorMsg, name, onChange } = getFunctionalInputProps("comment");
+  const { errorMsg, name, onChange } = getFunctionalInputProps("comment", {
+    fallbackValue: "",
+  });
 
   const commentClasses = classnames("usa-form-group", {
     "usa-form-group--error": !!errorMsg,
