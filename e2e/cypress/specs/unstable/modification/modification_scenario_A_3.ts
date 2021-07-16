@@ -22,7 +22,7 @@ describe("Post-approval (notifications/notices)", () => {
       fineos.before();
       cy.visit("/");
       // Submit a claim via the API, including Employer Response.
-      cy.task("generateClaim", "REDUCED_RFI").then((claim) => {
+      cy.task("generateClaim", "CHAP_REDUCED_RFI").then((claim) => {
         cy.stash("claim", claim);
         cy.task("submitClaimToAPI", {
           ...claim,
