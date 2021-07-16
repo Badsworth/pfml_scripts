@@ -177,7 +177,7 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
                 />,
               }
             }
-            i18nKey="components.employersLeaveSchedule.attachments"
+            i18nKey="components.employersLeaveSchedule.lead"
             tOptions={
               Object {
                 "context": "noDocs",
