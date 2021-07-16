@@ -57,7 +57,7 @@ describe("IntermittentLeaveSchedule", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("renders with documents", () => {
+  it("renders correct text with documents", () => {
     wrapper = shallow(
       <IntermittentLeaveSchedule
         hasDocuments
@@ -65,6 +65,16 @@ describe("IntermittentLeaveSchedule", () => {
       />
     );
 
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+  });
+
+  it("renders correct text without documents", () => {
+    wrapper = shallow(
+      <IntermittentLeaveSchedule
+        intermittentLeavePeriods={regularIntermittentLeavePeriods}
+      />
+    );
+
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 });
