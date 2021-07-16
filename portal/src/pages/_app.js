@@ -164,10 +164,6 @@ export const App = ({ Component, pageProps }) => {
   // Get maintenance feature flag
   const maintenance = appLogic.featureFlags.getFlag("maintenance");
 
-  // Initial value for options is null. Make sure to provide page_routes for the maintenance flag
-  // if this is the case because getFlag will return an empty flag if flag name is not found/set
-  if (maintenance.options == null) maintenance.options = { page_routes: [] };
-
   return (
     <PageWrapper
       appLogic={appLogic}

@@ -12,7 +12,7 @@ export default class FeatureFlagApi extends BaseApi {
 
   /**
    * Fetches all feature flags
-   * @returns {Promise<FeatureFlagApiResult>}
+   * @returns {Promise<Array.<Object>>}
    */
   getFlags = async () => {
     const { data } = await this.request(

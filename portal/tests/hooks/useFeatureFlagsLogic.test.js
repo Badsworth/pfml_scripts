@@ -44,27 +44,48 @@ describe("useFeatureFlagsLogic", () => {
       renderHook();
     });
 
-    it("returns a specified feature flag from the state", () => {
+    it("returns a specified feature flag from the state", async () => {
       const flagMock = new Flag({
         name: "maintenance",
-        enabled: true,
         start: null,
         end: null,
+        enabled: 1,
         options: {
           page_routes: ["/*"],
         },
       });
 
-      flagsLogic.getFlag = jest.fn().mockImplementation((flag_name) => {
-        return {
-          ...flagMock,
-          name: flag_name,
-        };
+      await act(async () => {
+        featureFlagsApi.getFlags.mockResolvedValueOnce([
+          new Flag({
+            name: "maintenance",
+            start: null,
+            end: null,
+            enabled: 1,
+            options: {
+              page_routes: ["/*"],
+            },
+          }),
+          new Flag({
+            name: "test 1",
+            start: null,
+            end: null,
+            enabled: 0,
+            options: null,
+          }),
+          new Flag({
+            name: "test 2",
+            start: null,
+            end: null,
+            enabled: 0,
+            options: null,
+          }),
+        ]);
+        await flagsLogic.loadFlags();
       });
 
       const maintenanceFlag = flagsLogic.getFlag("maintenance");
 
-      expect(flagsLogic.getFlag).toHaveBeenCalledWith("maintenance");
       expect(maintenanceFlag).toEqual(flagMock);
     });
   });

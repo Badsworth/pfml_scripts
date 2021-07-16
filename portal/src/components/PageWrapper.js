@@ -6,8 +6,8 @@ import { Helmet } from "react-helmet";
 import PropTypes from "prop-types";
 import React from "react";
 import Spinner from "../components/Spinner";
-import UpcomingMaintenanceBanner from "../components/UpcomingMaintenanceBanner";
 import dynamic from "next/dynamic";
+import { get } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";
 import { useTranslation } from "../locales/i18n";
 
@@ -15,6 +15,9 @@ import { useTranslation } from "../locales/i18n";
 // https://nextjs.org/docs/advanced-features/dynamic-import
 const Footer = dynamic(() => import("./Footer"));
 const MaintenanceTakeover = dynamic(() => import("./MaintenanceTakeover"));
+const UpcomingMaintenanceBanner = dynamic(() =>
+  import("../components/UpcomingMaintenanceBanner")
+);
 
 /**
  * @param {string} [start] - ISO 8601 date time
@@ -73,7 +76,7 @@ const PageWrapper = (props) => {
   const { appLogic, isLoading, maintenance } = props;
   const { t } = useTranslation();
 
-  const maintenancePageRoutes = maintenance.options.page_routes;
+  const maintenancePageRoutes = get(maintenance, "options.page_routes", []);
   const maintenanceStart = maintenance.start;
   const maintenanceEnd = maintenance.end;
   const maintenanceEnabled = maintenance.enabled;
@@ -135,8 +138,12 @@ const PageWrapper = (props) => {
       </section>
     );
   } else {
+    const pageAttrs = {};
+    if (showUpcomingMaintenanceBanner)
+      pageAttrs["data-test"] = "maintenance banner";
+
     pageBody = (
-      <section id="page" data-test="maintenance banner">
+      <section id="page" {...pageAttrs}>
         {showUpcomingMaintenanceBanner && (
           <UpcomingMaintenanceBanner
             start={maintenanceStartTime}

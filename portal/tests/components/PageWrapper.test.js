@@ -101,7 +101,6 @@ describe("PageWrapper", () => {
 
     expect(wrapper.find("#page")).toMatchInlineSnapshot(`
       <section
-        data-test="maintenance banner"
         id="page"
       >
         <p>

@@ -5,7 +5,10 @@ import { shallow } from "enzyme";
 describe("MaintenanceTakeover", () => {
   it("Renders correct content when only start date is provided", () => {
     const wrapper = shallow(
-      <UpcomingMaintenanceBanner start="June 15, 2021, 3:00 PM EDT" end="" />
+      <UpcomingMaintenanceBanner
+        start="June 15, 2021, 3:00 PM EDT"
+        end={null}
+      />
     );
 
     expect(wrapper.find("Trans").first().dive()).toMatchSnapshot();
@@ -13,7 +16,10 @@ describe("MaintenanceTakeover", () => {
 
   it("Renders correct content when only end date is provided", () => {
     const wrapper = shallow(
-      <UpcomingMaintenanceBanner start="" end="June 17, 2021, 10:00 AM EDT" />
+      <UpcomingMaintenanceBanner
+        start={null}
+        end="June 17, 2021, 10:00 AM EDT"
+      />
     );
 
     expect(wrapper.find("Trans").first().dive()).toMatchSnapshot();
@@ -31,7 +37,9 @@ describe("MaintenanceTakeover", () => {
   });
 
   it("Renders correct content when start date and end date are not provided", () => {
-    const wrapper = shallow(<UpcomingMaintenanceBanner start="" end="" />);
+    const wrapper = shallow(
+      <UpcomingMaintenanceBanner start={null} end={null} />
+    );
 
     expect(wrapper.find("Trans").first().dive()).toMatchSnapshot();
   });
