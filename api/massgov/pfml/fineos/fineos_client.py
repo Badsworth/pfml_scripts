@@ -583,6 +583,48 @@ class FINEOSClient(client.AbstractFINEOSClient):
         set_empty_dates_to_none(absence_periods, ["startDate", "endDate"])
         return models.group_client_api.PeriodDecisions.parse_obj(absence_periods)
 
+    def get_customer_absence_period_decisions(
+        self, user_id: str, absence_id: str
+    ) -> str:
+        try:
+            response = self._customer_api(
+                "GET",
+                f"customer/absence/absences/{absence_id}/absence-period-decisions",
+                user_id,
+                "get_absence_period_decisions",
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: get_absence_period_decisions",
+                extra={"method_name": "get_absence_period_decisions"},
+                exc_info=error,
+            )
+            error.method_name = "get_absence_period_decisions"
+            raise error
+        absence_periods = response.text
+        return absence_periods
+
+    def get_outstanding_supporting_evidence(
+        self, user_id: str, absence_id: str
+    ) -> str:
+        try:
+            response = self._customer_api(
+                "GET",
+                f"customer/cases/{absence_id}/outstanding-supporting-evidence",
+                user_id,
+                "get_outstanding_supporting_evidence",
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: get_absence_period_decisions",
+                extra={"method_name": "get_absence_period_decisions"},
+                exc_info=error,
+            )
+            error.method_name = "get_absence_period_decisions"
+            raise error
+        outstanding_evidence = response.text
+        return outstanding_evidence
+
     def get_customer_info(
         self, user_id: str, customer_id: str
     ) -> models.group_client_api.CustomerInfo:

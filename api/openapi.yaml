@@ -406,6 +406,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /claims_new:
+    get:
+      tags:
+        - Claims
+      summary: Test endpoint to prove performance of FINEOS API calls for Claimant Dashboard
+      operationId: massgov.pfml.api.claims.get_claims_new
+      parameters:
+        - name: employee_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: ID of Employee to query claims for
+          required: false
+      responses:
+        "200":
+          description: Claims found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
       summary: Retrieve a FINEOS documents for a specified absence ID and document ID

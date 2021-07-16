@@ -12,6 +12,7 @@ import massgov.pfml.fineos.mock_client
 import massgov.pfml.util.datetime as datetime_util
 import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
+from massgov.pfml.db.models.applications import FINEOSWebIdExt
 from massgov.pfml.db.models.employees import (
     Claim,
     ManagedRequirementStatus,
@@ -26,7 +27,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     ManagedRequirementFactory,
     UserFactory,
-    VerificationFactory,
+    VerificationFactory, TaxIdentifierFactory,
 )
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
@@ -69,6 +70,28 @@ def update_claim_body():
         "leave_reason": "Pregnancy/Maternity",
     }
 
+
+def test_clams_new(test_db_session, client, employer_auth_token):
+    tax_identifier = TaxIdentifierFactory(
+        tax_identifier="035721607"
+    )
+    employee = EmployeeFactory(
+        employee_id="281681b6-6d0e-4ac3-8920-017deb8b18d2",
+        tax_identifier=tax_identifier
+    )
+    fineos_web_id_ext = FINEOSWebIdExt()
+    fineos_web_id_ext.employee_tax_identifier = "035721607"
+    fineos_web_id_ext.employer_fein = "674257140"
+    fineos_web_id_ext.fineos_web_id = "pfml_api_b99333b5-9d94-422e-8537-2b4258df02a5"
+    test_db_session.add(fineos_web_id_ext)
+
+    response = client.get(
+        f"/v1/claims_new?employee_id={employee.employee_id}",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "Claims found"
 
 @pytest.mark.integration
 class TestVerificationEnforcement:

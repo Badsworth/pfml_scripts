@@ -1,8 +1,11 @@
 import base64
+import json
 from typing import Any, Dict, Optional, Set, Union
 
 import connexion
 import flask
+import oauthlib
+import requests_oauthlib
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
@@ -23,7 +26,8 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_documents_as_leave_admin,
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
-from massgov.pfml.db.models.employees import AbsenceStatus, Claim, Employer, UserLeaveAdministrator
+from massgov.pfml.db.models.applications import FINEOSWebIdExt
+from massgov.pfml.db.models.employees import AbsenceStatus, Claim, Employer, UserLeaveAdministrator, Employee
 from massgov.pfml.db.queries.get_claims_query import GetClaimsQuery
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
@@ -531,6 +535,61 @@ def get_claims() -> flask.Response:
         context=pagination_context,
         status_code=200,
     ).to_api_response()
+
+
+def get_claims_new() -> flask.Response:
+    employee_id = flask.request.args.get("employee_id")
+
+    with app.db_session() as db_session:
+        employee = db_session.query(Employee).filter(Employee.employee_id == employee_id).one_or_none()
+        web_ids = db_session.query(FINEOSWebIdExt).filter(
+            FINEOSWebIdExt.employee_tax_identifier == employee.tax_identifier.tax_identifier
+        ).all()
+
+    # backend = oauthlib.oauth2.BackendApplicationClient(client_id="1ral5e957i0l9shul52bhk0037")
+    # oauth_session = requests_oauthlib.OAuth2Session(client=backend, scope="service-gateway/all")
+    # fineos = massgov.pfml.fineos.FINEOSClient(
+    #     integration_services_api_url="https://dt2-api.masspfml.fineos.com/integration-services/",
+    #     customer_api_url="https://dt2-api.masspfml.fineos.com/customerapi/",
+    #     group_client_api_url="https://dt2-api.masspfml.fineos.com/groupclientapi/",
+    #     wscomposer_url="https://dt2-api.masspfml.fineos.com/integration-services/wscomposer/",
+    #     wscomposer_user_id="CONTENT",
+    #     oauth2_url="https://dt2-api.masspfml.fineos.com/oauth2/token",
+    #     client_id="1ral5e957i0l9shul52bhk0037",
+    #     client_secret="45qqfa12nl9gm8ts2gd6nl552o7vur83l7i34k3vv6f2l5077gg",
+    #     oauth_session=oauth_session,
+    # )
+    fineos = massgov.pfml.fineos.create_client()
+
+    total_decisions = []
+    if len(web_ids) > 0:
+        for web_id in web_ids:
+            absences = fineos.get_absences(web_id.fineos_web_id)
+
+            for absence in absences:
+                absence_id = absence.absenceId
+                if absence_id:
+                    decisions = fineos.get_customer_absence_period_decisions(web_id.fineos_web_id, absence_id)
+                    if decisions:
+                        total_decisions.append(json.loads(decisions))
+                    evidence = fineos.get_outstanding_supporting_evidence(web_id.fineos_web_id, absence_id)
+                    if evidence:
+                        total_decisions.append(json.loads(evidence))
+
+    if total_decisions:
+        response = response_util.success_response(
+            message="Claims found",
+            data=total_decisions,
+            status_code=200
+        ).to_api_response()
+    else:
+        response = response_util.success_response(
+            message="Nothing found",
+            data=[],
+            status_code=404
+        ).to_api_response()
+
+    return response
 
 
 def parse_filterable_absence_statuses(absence_status_string: Union[str, None]) -> set:
