@@ -803,9 +803,9 @@ const shared = {
     "If something is incomplete, add a comment at the end of the page.",
   employerInstructions_followUpDate:
     "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
-  employerLeaveScheduleHasDocAttached:
+  employerLeaveScheduleLeadHasDocs:
     "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
-  employerLeaveScheduleHasNoDocAttached:
+  employerLeaveScheduleLeadNoDocs:
     "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose files",
@@ -2557,8 +2557,8 @@ const components = {
       "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
     intermittentFrequencyDuration_weeks_hours:
       "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
-    lead_hasDocs: "$t(shared.employerLeaveScheduleHasDocAttached)",
-    lead_noDocs: "$t(shared.employerLeaveScheduleHasNoDocAttached)",
+    lead_hasDocs: "$t(shared.employerLeaveScheduleLeadHasDocs)",
+    lead_noDocs: "$t(shared.employerLeaveScheduleLeadNoDocs)",
   },
   employersLeaveDetails: {
     applicationIdLabel: "Application ID",
@@ -2606,8 +2606,8 @@ const components = {
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
     header: "Leave schedule",
-    lead_hasDocs: "$t(shared.employerLeaveScheduleHasDocAttached)",
-    lead_noDocs: "$t(shared.employerLeaveScheduleHasNoDocAttached)",
+    lead_hasDocs: "$t(shared.employerLeaveScheduleLeadHasDocs)",
+    lead_noDocs: "$t(shared.employerLeaveScheduleLeadNoDocs)",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
   },
