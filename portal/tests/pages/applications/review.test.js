@@ -38,7 +38,6 @@ import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
 import { shallow } from "enzyme";
-import { times } from "lodash";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 import usePortalFlow from "../../../src/hooks/usePortalFlow";
 
@@ -108,15 +107,15 @@ describe("Review Page", () => {
       expect(completeSpy).not.toHaveBeenCalled();
     });
 
-    it("renders a custom Alert when there are missing required fields", () => {
+    it("renders a custom Alert when there are required field errors for specific fields", () => {
       const appErrors = new AppErrorInfoCollection([
-        new AppErrorInfo({ type: "required" }),
+        new AppErrorInfo({ type: "required", field: "someField" }),
       ]);
       const root = setup({ render: "mount", diveLevels: 0 }).wrapper;
-      let wrapper = root;
-      times(4, () => (wrapper = wrapper.childAt(0)));
+      expect(root.exists("[data-test='missing-required-fields-alert']")).toBe(
+        false
+      );
 
-      expect(wrapper.exists("Alert")).toBe(false);
       act(() => {
         // Simulate missing required field errors
         const appLogic = root.props().appLogic;
@@ -128,12 +127,40 @@ describe("Review Page", () => {
         });
       });
       root.update();
-      wrapper = root;
-      times(4, () => (wrapper = wrapper.childAt(0)));
+      const alert = root.find("[data-test='missing-required-fields-alert']");
 
-      expect(wrapper.exists("Alert")).toBe(true);
-      const alert = wrapper.find("Alert");
       expect(alert).toMatchSnapshot();
+    });
+
+    it("does not render a custom Alert when there are required errors not associated to a specific field", () => {
+      const appErrors = new AppErrorInfoCollection([
+        new AppErrorInfo({
+          type: "required",
+          field: null,
+          rule: "require_employer_notified",
+          message:
+            "employer_notified must be True if employment_status is Employed",
+        }),
+      ]);
+      const root = setup({ render: "mount", diveLevels: 0 }).wrapper;
+      expect(root.exists("[data-test='missing-required-fields-alert']")).toBe(
+        false
+      );
+      act(() => {
+        // Simulate missing required field errors
+        const appLogic = root.props().appLogic;
+        root.setProps({
+          appLogic: {
+            ...appLogic,
+            appErrors,
+          },
+        });
+      });
+      root.update();
+
+      expect(root.exists("[data-test='missing-required-fields-alert']")).toBe(
+        false
+      );
     });
   });
 

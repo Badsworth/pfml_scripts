@@ -686,9 +686,10 @@ exports[`Review Page OtherLeaveEntry when amount is missing doesn't render missi
 </ReviewRow>
 `;
 
-exports[`Review Page Part 1 Review Page renders a custom Alert when there are missing required fields 1`] = `
+exports[`Review Page Part 1 Review Page renders a custom Alert when there are required field errors for specific fields 1`] = `
 <Alert
   className="margin-bottom-3"
+  data-test="missing-required-fields-alert"
 >
   <div
     className="usa-alert usa-alert--error margin-bottom-3"
