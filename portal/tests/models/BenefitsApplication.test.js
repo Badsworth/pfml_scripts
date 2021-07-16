@@ -102,13 +102,22 @@ describe("Claim", () => {
     });
   });
 
-  it("#isMedicalLeave returns true when the Claim reason is medical", () => {
+  it("#isMedicalOrPregnancyLeave returns true when the Claim reason is medical", () => {
     const claimWithReason = new MockBenefitsApplicationBuilder()
       .medicalLeaveReason()
       .create();
 
-    expect(emptyClaim.isMedicalLeave).toBe(false);
-    expect(claimWithReason.isMedicalLeave).toBe(true);
+    expect(emptyClaim.isMedicalOrPregnancyLeave).toBe(false);
+    expect(claimWithReason.isMedicalOrPregnancyLeave).toBe(true);
+  });
+
+  it("#isMedicalOrPregnancyLeave returns true when the Claim reason is pregnancy", () => {
+    const claimWithReason = new MockBenefitsApplicationBuilder()
+      .pregnancyLeaveReason()
+      .create();
+
+    expect(emptyClaim.isMedicalOrPregnancyLeave).toBe(false);
+    expect(claimWithReason.isMedicalOrPregnancyLeave).toBe(true);
   });
 
   describe("WorkPattern", () => {

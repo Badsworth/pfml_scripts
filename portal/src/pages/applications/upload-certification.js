@@ -51,12 +51,12 @@ export const UploadCertification = (props) => {
     },
     [LeaveReason.care]: "care",
     [LeaveReason.medical]: "medical",
+    [LeaveReason.pregnancy]: "medical",
   };
   let leadTextContext;
   switch (claimReason) {
     case LeaveReason.medical:
-      leadTextContext = conditionalContext[claimReason];
-      break;
+    case LeaveReason.pregnancy:
     case LeaveReason.care:
       leadTextContext = conditionalContext[claimReason];
       break;

@@ -38,6 +38,10 @@ export const LeaveReason = (props) => {
       set(formState, "leave_details.child_placement_date", null);
       set(formState, "leave_details.has_future_child_date", null);
     }
+    // when the claimant changes the answer, clear out pregnant_or_recent_birth field
+    if (reason !== get(claim, "leave_details.reason")) {
+      set(formState, "leave_details.pregnant_or_recent_birth", null);
+    }
 
     await appLogic.benefitsApplications.update(claim.application_id, formState);
   };
@@ -49,7 +53,9 @@ export const LeaveReason = (props) => {
   });
 
   const choiceMedical = {
-    checked: reason === LeaveReasonEnum.medical,
+    checked: [LeaveReasonEnum.medical, LeaveReasonEnum.pregnancy].includes(
+      reason
+    ),
     label: t("pages.claimsLeaveReason.medicalLeaveLabel"),
     value: LeaveReasonEnum.medical,
   };

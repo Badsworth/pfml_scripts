@@ -260,7 +260,7 @@ export const Checklist = (props) => {
     if (stepName !== ClaimSteps.uploadCertification) {
       return camelCase(stepName);
     }
-    if (claimReason === LeaveReason.medical) {
+    if ([LeaveReason.medical, LeaveReason.pregnancy].includes(claimReason)) {
       return "medical";
     }
     if (claimReason === LeaveReason.care) {

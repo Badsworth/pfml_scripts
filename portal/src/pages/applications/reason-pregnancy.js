@@ -1,6 +1,7 @@
 import { get, pick } from "lodash";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -17,9 +18,6 @@ export const ReasonPregnancy = (props) => {
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
-  const handleSave = () =>
-    appLogic.benefitsApplications.update(claim.application_id, formState);
-
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,
@@ -31,6 +29,14 @@ export const ReasonPregnancy = (props) => {
     "leave_details.pregnant_or_recent_birth"
   );
 
+  const handleSave = () => {
+    if (pregnancyOrRecentBirth) {
+      formState.leave_details.reason = LeaveReason.pregnancy;
+    } else if (pregnancyOrRecentBirth === false) {
+      formState.leave_details.reason = LeaveReason.medical;
+    }
+    appLogic.benefitsApplications.update(claim.application_id, formState);
+  };
   return (
     <QuestionPage
       title={t("pages.claimsReasonPregnancy.title")}

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ReasonPregnancy renders the page 1`] = `
+exports[`ReasonPregnancy renders the page with no answer 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Leave details"
@@ -14,7 +14,7 @@ exports[`ReasonPregnancy renders the page 1`] = `
           "value": "true",
         },
         Object {
-          "checked": true,
+          "checked": false,
           "label": "No",
           "value": "false",
         },
@@ -24,7 +24,7 @@ exports[`ReasonPregnancy renders the page 1`] = `
     name="leave_details.pregnant_or_recent_birth"
     onChange={[Function]}
     type="radio"
-    value={false}
+    value=""
   />
 </QuestionPage>
 `;
