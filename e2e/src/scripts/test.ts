@@ -64,7 +64,7 @@ async function submitClaimToAPI(
     // await approveClaim(page, claim, res.fineos_absence_id);
     await closeDocuments(
       page,
-      (claim as unknown) as GeneratedClaim,
+      claim as unknown as GeneratedClaim,
       res.fineos_absence_id
     );
     // const claimPage = await Claim.visit(page, res.fineos_absence_id);

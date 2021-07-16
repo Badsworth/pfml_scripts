@@ -62,6 +62,7 @@ describe("Request for More Information (notifications/notices)", () => {
           });
           // This should trigger a change in plan status.
           page.shouldHaveStatus("PlanDecision", "Pending Evidence");
+          cy.pause()
           page.triggerNotice("Request for more Information");
         });
       });
