@@ -454,3 +454,38 @@ export const CHAP_ER: ScenarioSpecification = {
     },
   },
 };
+
+export const CHAP_REDUCED_ER: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CHAP_REDUCED_ER",
+    shortClaim: true,
+    reason: "Care for a Family Member",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 20,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+  },
+};
+
+export const CHAP_REDUCED_RFI: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CHAP_REDUCED_ER",
+    shortClaim: true,
+    reason: "Care for a Family Member",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+  },
+};
+
+
