@@ -40,7 +40,7 @@ resource "newrelic_nrql_alert_condition" "endpoint_error_rates" {
     query             = <<-NRQL
       SELECT percentage(
         COUNT(*), WHERE ${each.value.status_code_filter}
-      ) FROM Span
+      ) * clamp_max(floor(count(*) / 5), 1) FROM Span
       WHERE ${var.where_span_filter}
       AND appName = 'PFML-API-${upper(var.environment_name)}'
     NRQL
