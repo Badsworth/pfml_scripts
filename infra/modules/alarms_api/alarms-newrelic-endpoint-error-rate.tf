@@ -9,7 +9,7 @@ locals {
   endpoint_groups = {
     "notifications" = {
       alarm_name        = "High Notifications endpoint error rate"
-      where_span_filter = "name LIKE 'POST paidleave-api%.mass.gov:80/api/v1/notifications'"
+      where_span_filter = "name LIKE '%notifications_post' AND response.status IS NOT NULL"
     }
     "service_now_api" = {
       alarm_name        = "High ServiceNow API error rate"

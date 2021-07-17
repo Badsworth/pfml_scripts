@@ -9,15 +9,15 @@ locals {
   error_groups = {
     "5xx" = {
       error_group_name   = "5xx"
-      status_code_filter = "(response.statusCode >= 500 AND response.statusCode != 503 AND response.statusCode != 504) OR error.class IS NOT NULL"
+      status_code_filter = "(response.status >= 500 AND response.status != 503 AND response.status != 504) OR (http.statusCode >= 500 AND http.statusCode != 503 AND http.statusCode != 504) OR error.class IS NOT NULL"
     }
     "network" = {
       error_group_name   = "503/504"
-      status_code_filter = "response.statusCode = 503 OR response.statusCode = 504"
+      status_code_filter = "(response.status = 503 OR response.status = 504) OR (http.statusCode = 503 OR http.statusCode = 504)"
     }
     "4xx" = {
       error_group_name   = "4xx"
-      status_code_filter = "response.statusCode >= 400 AND response.statusCode < 500"
+      status_code_filter = "(response.status >= 400 AND response.status < 500) OR (http.statusCode >= 400 AND http.statusCode < 500)"
     }
   }
 }
