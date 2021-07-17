@@ -7,10 +7,11 @@ locals {
   # - Alarm for high 4XX error rate
   #
   endpoint_groups = {
-    "notifications" = {
-      alarm_name        = "High Notifications endpoint error rate"
-      where_span_filter = "name LIKE '%notifications_post' AND response.status IS NOT NULL"
-    }
+    # TODO split this out
+    # "notifications" = {
+    #   alarm_name        = "High Notifications endpoint error rate"
+    #   where_span_filter = "name LIKE '%notifications_post' AND (response.status IS NOT NULL OR error.class IS NOT NULL)"
+    # }
     "service_now_api" = {
       alarm_name        = "High ServiceNow API error rate"
       where_span_filter = "name LIKE 'External/savilinx.servicenowservices.com/requests/'"
