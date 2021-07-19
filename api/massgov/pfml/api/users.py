@@ -12,6 +12,7 @@ from massgov.pfml.api.authentication import (
     _build_msal_app,
     _load_cache,
     _save_cache,
+    decode_azure_ad_token,
 )
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import (
@@ -50,42 +51,24 @@ def login_admin():
         )
 
         if "error" in result:
-            logger.error(result["error"])
-            return result
+            logger.info(f"login_admin failure - {result['error']}")
+            return response_util.error_response(
+                status_code=BadRequest,
+                message=result["message"],
+                errors=result["error"],
+                data={},
+            ).to_api_response()
 
         # got token successfully
-        # token = result.get("access_token")
-        id_token_claims = result.get("id_token_claims")
-
-        # check if this is an admin user
-        with app.db_session() as db_session:
-            cur_user = (
-                db_session.query(User)
-                .filter(User.email_address == id_token_claims.get("preferred_username"))
-                .one_or_none()
-            )
-
-            if cur_user is None:
-                raise Exception("Unknown user")
-
-            is_admin = (
-                db_session.query(UserRole)
-                .filter(
-                    UserRole.user_id == cur_user.user_id and UserRole.role_id == Role.ADMIN.role_id
-                )
-                .one_or_none()
-            )
-
-            if is_admin is None:
-                raise Exception("User is not an admin")
+        decode_azure_ad_token(result.get("access_token"))
 
         _save_cache(cache)
 
     except ValueError:
-        # Usually caused by CSRF
+        # Usually caused by CSRF # Simply ignore them
         exc_type, exc_value, exc_traceback = sys.exc_info()
         logger.error(f"ValueError {exc_value}")
-        # Simply ignore them
+        
 
     return result
 

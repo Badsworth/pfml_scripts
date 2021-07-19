@@ -572,7 +572,11 @@ paths:
       operationId: massgov.pfml.api.users.get_authorization_url
       responses:
         "200":
-          $ref: "#/components/responses/ApplicationResponse"
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthCodeFlow"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -588,7 +592,7 @@ paths:
         $ref: '#/components/requestBodies/AdminLoginRequest'
       responses:
         "200":
-          $ref: "#/components/responses/ApplicationResponse"
+          $ref: "#/components/responses/AdminLoginResponse"
         "404":
           $ref: "#/components/responses/NotFound"
   
@@ -1174,7 +1178,11 @@ components:
         clientCredentials:
           tokenUrl: /api/v1/oauth2/token
           scopes: {}
-
+    azurejwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: massgov.pfml.api.authentication.decode_azure_ad_token
   parameters:
     pageSize:
       name: "page_size"
@@ -1304,6 +1312,12 @@ components:
               - properties:
                   data:
                     $ref: "#/components/schemas/ApplicationSearchResults"
+    AdminLoginResponse:
+      description: Successful admin login
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AdminLoginResponse"
     NotFound:
       description: The specified resource was not found
       content:
@@ -1342,7 +1356,6 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
 
   schemas:
-      
     AuthCodeResponse:
       type: object
       properties:
@@ -1352,7 +1365,7 @@ components:
           type: string
         state:
           type: string
-      
+
     AuthCodeFlow:
       type: object
       properties:
@@ -1381,6 +1394,16 @@ components:
           $ref: "#/components/schemas/AuthCodeResponse"
         authCodeFlow:
           $ref: "#/components/schemas/AuthCodeFlow"
+
+    AdminLoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        id_token:
+          type: string
+        id_token_claims:
+          type: object
 
     SuccessfulResponse:
       type: object

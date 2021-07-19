@@ -17,32 +17,39 @@ class MSALClientConfig:
     scopes: [str]
     states: dict
     policies: dict
+    publicKeysUrl: str
 
     @classmethod
     def from_env(cls) -> "MSALClientConfig":
+        clientId = os.environ.get("AZURE_AD_APPLICATION_CLIENT_ID", None)
+        clientSecret = os.environ.get("AZURE_AD_SECRET_VALUE", None)
+        tenantId = os.environ.get("AZURE_AD_DIRECTORY_TENANT_ID", None)
+        authorityDomain = os.environ.get("AZURE_AD_AUTHORITY_DOMAIN", None)
+
         b2cStates = {
             "SIGN_IN": "sign_in",
         }
-
         b2cPolicies = {
-            "authorityDomain": os.environ.get("AZURE_AD_AUTHORITY_DOMAIN", None),
+            "authorityDomain": authorityDomain,
             "authorities": {
                 "login": {
-                    "authority": f'https://{os.environ.get("AZURE_AD_AUTHORITY_DOMAIN", None)}/{os.environ.get("AZURE_AD_DIRECTORY_TENANT_ID", None)}',
+                    "authority": f'https://{authorityDomain}/{tenantId}',
                 },
             },
         }
+        keysUrl = f'https://{authorityDomain}/{tenantId}/discovery/v2.0/keys?appid={clientId}'
 
         return MSALClientConfig(
-            clientId=os.environ.get("AZURE_AD_APPLICATION_CLIENT_ID", None),
-            clientSecret=os.environ.get("AZURE_AD_SECRET_VALUE", None),
+            clientId=clientId,
+            clientSecret=clientSecret,
             authority=b2cPolicies["authorities"]["login"]["authority"],
             knownAuthorities=[b2cPolicies["authorityDomain"]],
             redirectUri="http://localhost:3000",
             postLogoutRedirectUri="http://localhost:3000",
-            scopes=[f'{os.environ.get("AZURE_AD_APPLICATION_CLIENT_ID", None)}/.default'],
+            scopes=[f'{clientId}/.default'],
             policies=b2cPolicies,
-            states=b2cStates
+            states=b2cStates,
+            publicKeysUrl=keysUrl
             # "https://graph.microsoft.com/user.read"
             # "protocolMode": "AAD",
             # "endpoint": "https://graph.microsoft.com/v1.0/users"

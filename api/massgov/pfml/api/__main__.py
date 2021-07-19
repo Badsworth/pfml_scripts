@@ -41,6 +41,10 @@ def start_server():
         app_config = app.get_app_config(connexion_app)
         authentication.get_public_keys(app_config.cognito_user_pool_keys_url)
 
+        # should be refreshed every day?
+        # https://docs.microsoft.com/en-us/azure/active-directory/develop/access-tokens#validating-tokens
+        authentication.get_azure_ad_public_keys(app_config.azure_sso)
+
         logger.info("Running API Application...")
         running_in_local = app_config.environment in ("local", "dev")
 
