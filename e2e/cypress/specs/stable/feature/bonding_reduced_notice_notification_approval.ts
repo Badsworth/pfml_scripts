@@ -227,7 +227,7 @@ describe("Approval (notifications/notices)", () => {
             30000
           );
           cy.contains(submission.fineos_absence_id);
-          cy.get(`a[href*="paidleave-test.mass.gov/applications"]`);
+          cy.get(`a[href*="${config("PORTAL_BASEURL")}/applications"]`);
         });
       });
     }
