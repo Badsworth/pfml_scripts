@@ -8,7 +8,7 @@
     "start": "next start",
     "generate:api": "npx @spec2ts/openapi-client ../api/openapi.yaml -o src/_api.ts",
     "type-check": "tsc --pretty --noEmit",
-    "format": "prettier --write . '**/*.{js,json,md,mdx,yaml,yml,ts,tsx,jsx}' && stylelint --fix styles/*.scss src/components/*.scss",
+    "format": "prettier --write . && stylelint --fix styles/*.scss src/components/*.scss",
     "test": "jest",
     "lint": "tsc --pretty --noEmit && next lint && stylelint styles/*.scss src/components/*.scss"
   },

@@ -38,7 +38,7 @@ const Search = ({ search, setResults, debounceDelay }: Props) => {
       <div className="search__input-wrapper">
         <input
           type="text"
-          className="hasIcon--left"
+          className="search__input"
           onChange={searchOnChange}
           placeholder="Enter email address"
         />
