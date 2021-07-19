@@ -4,8 +4,9 @@ from typing import Any, Dict, Optional, Set, Union
 
 import connexion
 import flask
-import oauthlib
-import requests_oauthlib
+
+# import oauthlib
+# import requests_oauthlib
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
@@ -27,7 +28,13 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.applications import FINEOSWebIdExt
-from massgov.pfml.db.models.employees import AbsenceStatus, Claim, Employer, UserLeaveAdministrator, Employee
+from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
+    Claim,
+    Employee,
+    Employer,
+    UserLeaveAdministrator,
+)
 from massgov.pfml.db.queries.get_claims_query import GetClaimsQuery
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
@@ -541,10 +548,17 @@ def get_claims_new() -> flask.Response:
     employee_id = flask.request.args.get("employee_id")
 
     with app.db_session() as db_session:
-        employee = db_session.query(Employee).filter(Employee.employee_id == employee_id).one_or_none()
-        web_ids = db_session.query(FINEOSWebIdExt).filter(
-            FINEOSWebIdExt.employee_tax_identifier == employee.tax_identifier.tax_identifier
-        ).all()
+        employee = (
+            db_session.query(Employee).filter(Employee.employee_id == employee_id).one_or_none()
+        )
+        if employee and employee.tax_identifier:
+            web_ids = (
+                db_session.query(FINEOSWebIdExt)
+                .filter(
+                    FINEOSWebIdExt.employee_tax_identifier == employee.tax_identifier.tax_identifier
+                )
+                .all()
+            )
 
     # backend = oauthlib.oauth2.BackendApplicationClient(client_id="1ral5e957i0l9shul52bhk0037")
     # oauth_session = requests_oauthlib.OAuth2Session(client=backend, scope="service-gateway/all")
@@ -562,31 +576,30 @@ def get_claims_new() -> flask.Response:
     fineos = massgov.pfml.fineos.create_client()
 
     total_decisions = []
-    if len(web_ids) > 0:
+    if web_ids and len(web_ids) > 0:
         for web_id in web_ids:
-            absences = fineos.get_absences(web_id.fineos_web_id)
+            fineos_web_id = web_id.fineos_web_id if web_id.fineos_web_id else ""
+            absences = fineos.get_absences(fineos_web_id)
 
             for absence in absences:
                 absence_id = absence.absenceId
                 if absence_id:
-                    decisions = fineos.get_customer_absence_period_decisions(web_id.fineos_web_id, absence_id)
+                    decisions = fineos.get_customer_absence_period_decisions(
+                        fineos_web_id, absence_id
+                    )
                     if decisions:
                         total_decisions.append(json.loads(decisions))
-                    evidence = fineos.get_outstanding_supporting_evidence(web_id.fineos_web_id, absence_id)
+                    evidence = fineos.get_outstanding_supporting_evidence(fineos_web_id, absence_id)
                     if evidence:
                         total_decisions.append(json.loads(evidence))
 
     if total_decisions:
         response = response_util.success_response(
-            message="Claims found",
-            data=total_decisions,
-            status_code=200
+            message="Claims found", data=total_decisions, status_code=200
         ).to_api_response()
     else:
         response = response_util.success_response(
-            message="Nothing found",
-            data=[],
-            status_code=404
+            message="Nothing found", data=[], status_code=404
         ).to_api_response()
 
     return response

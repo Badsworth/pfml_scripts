@@ -26,8 +26,9 @@ from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
     ManagedRequirementFactory,
+    TaxIdentifierFactory,
     UserFactory,
-    VerificationFactory, TaxIdentifierFactory,
+    VerificationFactory,
 )
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
@@ -72,12 +73,9 @@ def update_claim_body():
 
 
 def test_clams_new(test_db_session, client, employer_auth_token):
-    tax_identifier = TaxIdentifierFactory(
-        tax_identifier="035721607"
-    )
+    tax_identifier = TaxIdentifierFactory(tax_identifier="035721607")
     employee = EmployeeFactory(
-        employee_id="281681b6-6d0e-4ac3-8920-017deb8b18d2",
-        tax_identifier=tax_identifier
+        employee_id="281681b6-6d0e-4ac3-8920-017deb8b18d2", tax_identifier=tax_identifier
     )
     fineos_web_id_ext = FINEOSWebIdExt()
     fineos_web_id_ext.employee_tax_identifier = "035721607"
@@ -90,8 +88,9 @@ def test_clams_new(test_db_session, client, employer_auth_token):
         headers={"Authorization": f"Bearer {employer_auth_token}"},
     )
 
-    assert response.status_code == 200
-    assert response.get_json()["message"] == "Claims found"
+    assert response.status_code == 404
+    assert response.get_json()["message"] == "Nothing found"
+
 
 @pytest.mark.integration
 class TestVerificationEnforcement:

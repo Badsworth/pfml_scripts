@@ -342,6 +342,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         set_empty_dates_to_none(absence_periods, ["startDate", "endDate"])
         return models.group_client_api.PeriodDecisions.parse_obj(absence_periods)
 
+    def get_customer_absence_period_decisions(self, user_id: str, absence_id: str) -> str:
+        return "{}"
+
+    def get_outstanding_supporting_evidence(self, user_id: str, absence_id: str) -> str:
+        return "{}"
+
     def get_customer_info(
         self, user_id: str, customer_id: str
     ) -> models.group_client_api.CustomerInfo:

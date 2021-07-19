@@ -82,15 +82,11 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def get_customer_absence_period_decisions(
-            self, user_id: str, absence_id: str
-    ) -> str:
+    def get_customer_absence_period_decisions(self, user_id: str, absence_id: str) -> str:
         pass
 
     @abc.abstractmethod
-    def get_outstanding_supporting_evidence(
-            self, user_id: str, absence_id: str
-    ) -> str:
+    def get_outstanding_supporting_evidence(self, user_id: str, absence_id: str) -> str:
         pass
 
     @abc.abstractmethod

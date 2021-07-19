@@ -583,9 +583,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         set_empty_dates_to_none(absence_periods, ["startDate", "endDate"])
         return models.group_client_api.PeriodDecisions.parse_obj(absence_periods)
 
-    def get_customer_absence_period_decisions(
-        self, user_id: str, absence_id: str
-    ) -> str:
+    def get_customer_absence_period_decisions(self, user_id: str, absence_id: str) -> str:
         try:
             response = self._customer_api(
                 "GET",
@@ -604,9 +602,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         absence_periods = response.text
         return absence_periods
 
-    def get_outstanding_supporting_evidence(
-        self, user_id: str, absence_id: str
-    ) -> str:
+    def get_outstanding_supporting_evidence(self, user_id: str, absence_id: str) -> str:
         try:
             response = self._customer_api(
                 "GET",
