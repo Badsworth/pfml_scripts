@@ -4,8 +4,9 @@ import {
   getCertificationDocumentType,
   getDocumentReviewTaskName,
 } from "../../src/util/documents";
-import { LeaveReason, ValidClaim } from "../../src/types";
+import { ValidClaim } from "../../src/types";
 import { config } from "./common";
+import { LeaveReason } from "../../src/generation/Claim";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *

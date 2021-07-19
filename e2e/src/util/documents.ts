@@ -1,5 +1,6 @@
-import { DocumentReviewTasks, LeaveReason } from "../types";
+import { DocumentReviewTasks } from "../types";
 import { DocumentUploadRequest } from "../api";
+import { LeaveReason } from "../generation/Claim";
 
 export function getCertificationDocumentType(
   reason: LeaveReason

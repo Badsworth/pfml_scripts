@@ -33,7 +33,10 @@ export type OAuthCreds = {
   secretID: string;
 };
 
-export type LeaveReason = NonNullable<ApplicationLeaveDetails["reason"]>;
+export type FineosStubDocTypes =
+  | "Military exigency form"
+  | "Family Member Active Duty Service Proof"
+  | "Covered Service Member Identification Proof";
 
 export type LeavePeriods = Pick<
   ApplicationLeaveDetails,
@@ -59,7 +62,8 @@ export type SubjectOptions =
   | "request for additional info"
   | "extension of benefits";
 
-export type Scenarios = keyof typeof scenarios;
+export type ScenarioSpecs = typeof scenarios;
+export type Scenarios = keyof ScenarioSpecs;
 
 export type PersonalIdentificationDetails = {
   id_number_type: "Social Security Number" | "ID" | "ITIN";

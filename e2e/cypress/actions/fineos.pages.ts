@@ -5,7 +5,6 @@ import {
 } from "../../src/_api";
 import {
   AllNotNull,
-  LeaveReason,
   NonEmptyArray,
   PersonalIdentificationDetails,
   ValidClaim,
@@ -43,6 +42,7 @@ import {
 
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
+import { LeaveReason } from "../../src/generation/Claim";
 
 type StatusCategory =
   | "Applicability"
@@ -1194,10 +1194,7 @@ export class ClaimantPage {
    * @param claim Generated claim
    * @param reason leave reason, can also inlcude reasons not supported by the claim generator, like "Military Caregiver", etc.
    */
-  createNotification(
-    claim: ValidClaim,
-    reason: LeaveReason | "Military Exigency Family" | "Military Caregiver"
-  ): void {
+  createNotification(claim: ValidClaim, reason: LeaveReason): void {
     // Start the process
     cy.contains("span", "Create Notification").click();
     // "Notification details" step, we are not changing anything here, so we just skip it.
