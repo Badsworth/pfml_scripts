@@ -62,7 +62,18 @@ const cmd: CommandModule<SystemWideArgs, SubmissionArgs> = {
       args.cooldownMode &&
         args.logger.info(`Claim submission will run in cooldown mode`);
 
-      await submit(claimPool, tracker, postSubmit, args.concurrency);
+      if (args.cooldownMode && typeof args.errorLimit !== "number")
+        throw Error(
+          "To run in cooldown mode, specify the maximum consecutive error limit.\n Add '--errorLimit [number]' to your command to specify the error limit"
+        );
+
+      await submit(
+        claimPool,
+        tracker,
+        args.concurrency,
+        args.errorLimit || 3,
+        postSubmit
+      );
       await SubmittedClaimIndex.write(
         path.join(storage.dir, "submitted.csv"),
         await ClaimPool.load(storage.claims, storage.documents),
