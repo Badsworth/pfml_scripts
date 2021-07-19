@@ -74,10 +74,10 @@ class ProcessFilesInPathStep(Step, metaclass=abc.ABCMeta):
             self.base_path, delegated_payments_util.Constants.S3_INBOUND_RECEIVED_DIR,
         )
         self.processed_path = os.path.join(
-            self.base_path, date_folder, delegated_payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+            self.base_path, delegated_payments_util.Constants.S3_INBOUND_PROCESSED_DIR, date_folder
         )
         self.error_path = os.path.join(
-            self.base_path, date_folder, delegated_payments_util.Constants.S3_INBOUND_ERROR_DIR,
+            self.base_path, delegated_payments_util.Constants.S3_INBOUND_ERROR_DIR, date_folder
         )
 
     @abc.abstractmethod

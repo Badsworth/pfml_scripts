@@ -67,16 +67,24 @@ def load_all(db_session: db.Session, fineos: AbstractFINEOSClient) -> LoadEmploy
 
 
 def load_updates(
-    db_session: db.Session, fineos: AbstractFINEOSClient, process_id: int = 1, batch_size: int = 100
+    db_session: db.Session,
+    fineos: AbstractFINEOSClient,
+    process_id: int = 1,
+    batch_size: int = 100,
+    employer_update_limit: Optional[int] = None,
 ) -> LoadEmployersReport:
     start_time = utcnow()
     report = LoadEmployersReport(start=start_time.isoformat())
 
-    logger.info("Starting Employer updates load to FINEOS", extra={"process_id": process_id})
+    logger.info(
+        "Starting Employer updates load to FINEOS",
+        extra={"process_id": process_id, "employer_update_limit": employer_update_limit},
+    )
 
     employers = get_new_or_updated_employers(
         db_session, batch_size, process_id, pickup_existing_at_start=True
     )
+
     employers_with_logging = massgov.pfml.util.logging.log_every(
         logger,
         employers,
@@ -88,7 +96,6 @@ def load_updates(
 
     for employer in employers_with_logging:
         report.total_employers_count += 1
-
         # we must commit or rollback the transaction for each item to ensure the
         # row lock put in place by `skip_locked_query` is released
         try:
@@ -121,6 +128,15 @@ def load_updates(
             db_session.rollback()
 
             report.errored_employers_count += 1
+
+        if (
+            employer_update_limit is not None
+            and report.total_employers_count >= employer_update_limit
+        ):
+            logger.info(
+                f"Update employer limit of {employer_update_limit} was surpassed. Finishing task."
+            )
+            break
 
     end_time = utcnow()
     report.end = end_time.isoformat()

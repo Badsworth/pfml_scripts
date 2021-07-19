@@ -331,3 +331,8 @@ variable "st_file_limit_specified" {
   description = "Step Function Eligibility Feed Export File Number Limit"
   default     = true
 }
+
+variable "st_employer_update_limit" {
+  description = "Employer Upload Update Limit"
+  type        = number
+}

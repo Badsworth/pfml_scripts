@@ -1,4 +1,6 @@
 import User, { UserLeaveAdministrator } from "../../src/models/User";
+import AppErrorInfo from "../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import { MockEmployerClaimBuilder } from "../test-utils";
 import React from "react";
@@ -58,6 +60,17 @@ describe("withEmployerClaim", () => {
 
     expect(wrapper.find("Spinner").exists()).toBe(true);
     expect(wrapper.find("PageComponent").exists()).toBe(false);
+  });
+
+  it("doesn't show the spinner if there are errors", () => {
+    appLogic.appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
+
+    appLogic.users.user = user;
+
+    render(appLogic);
+
+    expect(wrapper.find("Spinner").exists()).toBe(false);
+    expect(wrapper.isEmptyRender()).toBe(true);
   });
 
   it("loads the claim", () => {

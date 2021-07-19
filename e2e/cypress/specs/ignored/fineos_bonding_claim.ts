@@ -63,10 +63,9 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
               },
               180000
             )
-            .then(async (emails) => {
-              const data = email.getNotificationData(emails[0].html);
-              expect(data.name).to.equal(employeeFullName);
-              expect(data.applicationId).to.equal(submission.fineos_absence_id);
+            .then(() => {
+              cy.contains(employeeFullName);
+              cy.contains(submission.fineos_absence_id);
             });
         });
       });

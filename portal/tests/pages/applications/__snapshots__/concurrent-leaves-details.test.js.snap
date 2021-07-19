@@ -39,7 +39,7 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
   />
   <InputDate
     dayLabel="Day"
-    hint="mm / dd / yyyy"
+    hint="MM / DD / YYYY"
     label="What is the first day of this leave?"
     monthLabel="Month"
     name="concurrent_leave.leave_start_date"
@@ -49,7 +49,7 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
   />
   <InputDate
     dayLabel="Day"
-    hint="mm / dd / yyyy"
+    hint="MM / DD / YYYY"
     label="What is the last day of this leave?"
     monthLabel="Month"
     name="concurrent_leave.leave_end_date"

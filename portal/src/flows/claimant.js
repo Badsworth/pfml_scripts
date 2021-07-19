@@ -59,7 +59,7 @@ import { fields as workPatternTypeFields } from "../pages/applications/work-patt
  */
 export const guards = {
   isCaringLeave: ({ claim }) => claim.isCaringLeave,
-  isMedicalLeave: ({ claim }) => claim.isMedicalLeave,
+  isMedicalOrPregnancyLeave: ({ claim }) => claim.isMedicalOrPregnancyLeave,
   isBondingLeave: ({ claim }) => claim.isBondingLeave,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
@@ -256,7 +256,7 @@ export default {
         CONTINUE: [
           {
             target: routes.applications.reasonPregnancy,
-            cond: "isMedicalLeave",
+            cond: "isMedicalOrPregnancyLeave",
           },
           {
             target: routes.applications.dateOfChild,

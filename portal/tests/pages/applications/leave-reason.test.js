@@ -127,6 +127,7 @@ describe("LeaveReasonPage", () => {
       claim.application_id,
       {
         leave_details: {
+          pregnant_or_recent_birth: null,
           reason: LeaveReason.bonding,
           reason_qualifier: ReasonQualifier.newBorn,
         },

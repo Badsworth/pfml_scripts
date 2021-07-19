@@ -13,7 +13,7 @@ exports[`Review Page EmployerBenefitList when all data are present renders all d
 Array [
   <OtherLeaveEntry
     amount="$250.00 per month"
-    dates="8/12/2021 – 12/30/2021"
+    dates="8/12/2021 to 12/30/2021"
     key="0"
     label="Benefit 1"
     reviewRowLevel="4"
@@ -21,7 +21,7 @@ Array [
   />,
   <OtherLeaveEntry
     amount="$250.00 per month"
-    dates="8/12/2021 – 12/30/2021"
+    dates="8/12/2021 to 12/30/2021"
     key="1"
     label="Benefit 2"
     reviewRowLevel="4"
@@ -29,7 +29,7 @@ Array [
   />,
   <OtherLeaveEntry
     amount="Full wage replacement"
-    dates="8/12/2021 – 12/30/2021"
+    dates="8/12/2021 to 12/30/2021"
     key="2"
     label="Benefit 3"
     reviewRowLevel="4"
@@ -37,7 +37,7 @@ Array [
   />,
   <OtherLeaveEntry
     amount="Full wage replacement"
-    dates="8/12/2021 – 12/30/2021"
+    dates="8/12/2021 to 12/30/2021"
     key="3"
     label="Benefit 4"
     reviewRowLevel="4"
@@ -49,7 +49,7 @@ Array [
 exports[`Review Page EmployerBenefitList when amount fields are missing doesn't render missing data 1`] = `
 <OtherLeaveEntry
   amount={null}
-  dates="8/12/2021 – 12/30/2021"
+  dates="8/12/2021 to 12/30/2021"
   key="0"
   label="Benefit 1"
   reviewRowLevel="4"
@@ -195,7 +195,7 @@ exports[`Review Page Final Review Page when the claim is complete renders Review
     label="Continuous leave"
     level="3"
   >
-    1/1/2021 – 6/1/2021
+    1/1/2021 to 6/1/2021
   </ReviewRow>
   <ReviewRow
     label="Reduced leave"
@@ -485,7 +485,7 @@ exports[`Review Page Leave reason When the reason is caring leave renders caring
     label="Continuous leave"
     level="4"
   >
-    1/1/2021 – 6/1/2021
+    1/1/2021 to 6/1/2021
   </ReviewRow>
   <ReviewRow
     label="Reduced leave"
@@ -575,7 +575,7 @@ exports[`Review Page OtherIncomeList when all data are present renders all data 
 Array [
   <OtherLeaveEntry
     amount="$250.00 per month"
-    dates="8/12/2021 – 12/30/2021"
+    dates="8/12/2021 to 12/30/2021"
     key="0"
     label="Income 1"
     reviewRowLevel="4"
@@ -583,7 +583,7 @@ Array [
   />,
   <OtherLeaveEntry
     amount="$250.00 per month"
-    dates="8/12/2021 – 12/30/2021"
+    dates="8/12/2021 to 12/30/2021"
     key="1"
     label="Income 2"
     reviewRowLevel="4"
@@ -591,7 +591,7 @@ Array [
   />,
   <OtherLeaveEntry
     amount="$250.00 per month"
-    dates="8/12/2021 – 12/30/2021"
+    dates="8/12/2021 to 12/30/2021"
     key="2"
     label="Income 3"
     reviewRowLevel="4"
@@ -599,7 +599,7 @@ Array [
   />,
   <OtherLeaveEntry
     amount="$250.00 per month"
-    dates="8/12/2021 – 12/30/2021"
+    dates="8/12/2021 to 12/30/2021"
     key="3"
     label="Income 4"
     reviewRowLevel="4"
@@ -607,7 +607,7 @@ Array [
   />,
   <OtherLeaveEntry
     amount="$250.00 per month"
-    dates="8/12/2021 – 12/30/2021"
+    dates="8/12/2021 to 12/30/2021"
     key="4"
     label="Income 5"
     reviewRowLevel="4"
@@ -615,7 +615,7 @@ Array [
   />,
   <OtherLeaveEntry
     amount="$250.00 per month"
-    dates="8/12/2021 – 12/30/2021"
+    dates="8/12/2021 to 12/30/2021"
     key="5"
     label="Income 6"
     reviewRowLevel="4"
@@ -623,7 +623,7 @@ Array [
   />,
   <OtherLeaveEntry
     amount="$250.00 per month"
-    dates="8/12/2021 – 12/30/2021"
+    dates="8/12/2021 to 12/30/2021"
     key="6"
     label="Income 7"
     reviewRowLevel="4"
@@ -635,7 +635,7 @@ Array [
 exports[`Review Page OtherIncomeList when amount fields are missing doesn't render missing data 1`] = `
 <OtherLeaveEntry
   amount={null}
-  dates="8/12/2021 – 12/30/2021"
+  dates="8/12/2021 to 12/30/2021"
   key="0"
   label="Income 1"
   reviewRowLevel="4"
@@ -686,9 +686,10 @@ exports[`Review Page OtherLeaveEntry when amount is missing doesn't render missi
 </ReviewRow>
 `;
 
-exports[`Review Page Part 1 Review Page renders a custom Alert when there are missing required fields 1`] = `
+exports[`Review Page Part 1 Review Page renders a custom Alert when there are required field errors for specific fields 1`] = `
 <Alert
   className="margin-bottom-3"
+  data-test="missing-required-fields-alert"
 >
   <div
     className="usa-alert usa-alert--error margin-bottom-3"
@@ -891,7 +892,7 @@ exports[`Review Page Part 1 Review Page when all data is present renders Review 
     label="Continuous leave"
     level="4"
   >
-    1/1/2021 – 6/1/2021
+    1/1/2021 to 6/1/2021
   </ReviewRow>
   <ReviewRow
     label="Reduced leave"
@@ -971,7 +972,7 @@ exports[`Review Page Part 1 Review Page when all data is present renders Review 
       <p
         className="text-base-darker margin-top-1"
       >
-        1/1/2021 – 3/1/2021
+        1/1/2021 to 3/1/2021
       </p>
       <ul
         className="usa-list margin-top-1"
@@ -1088,7 +1089,7 @@ Array [
     <p
       className="text-base-darker margin-top-1"
     >
-      7/1/2021 – 5/1/2021
+      7/1/2021 to 5/1/2021
     </p>
     <ul
       className="usa-list margin-top-1"
@@ -1120,7 +1121,7 @@ Array [
     <p
       className="text-base-darker margin-top-1"
     >
-      7/1/2021 – 5/1/2021
+      7/1/2021 to 5/1/2021
     </p>
     <ul
       className="usa-list margin-top-1"
@@ -1157,7 +1158,7 @@ Array [
     <p
       className="text-base-darker margin-top-1"
     >
-      7/1/2021 – 5/1/2021
+      7/1/2021 to 5/1/2021
     </p>
     <ul
       className="usa-list margin-top-1"
@@ -1186,7 +1187,7 @@ Array [
     <p
       className="text-base-darker margin-top-1"
     >
-      7/1/2021 – 5/1/2021
+      7/1/2021 to 5/1/2021
     </p>
     <ul
       className="usa-list margin-top-1"

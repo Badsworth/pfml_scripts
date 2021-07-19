@@ -30,11 +30,10 @@ from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import Query, deferred, dynamic_loader, relationship
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
-from sqlalchemy.sql.functions import now as sqlnow
 from sqlalchemy.types import JSON, TypeEngine
 
 from ..lookup import LookupTable
-from .base import Base, utc_timestamp_gen, uuid_gen
+from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
 from .verifications import Verification
 
 # (typed_hybrid_property) https://github.com/dropbox/sqlalchemy-stubs/issues/98
@@ -270,7 +269,7 @@ class LkLeaveRequestDecision(Base):
         self.leave_request_decision_description = leave_request_decision_description
 
 
-class AbsencePeriod(Base):
+class AbsencePeriod(Base, TimestampMixin):
     __tablename__ = "absence_period"
     absence_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
@@ -283,21 +282,6 @@ class AbsencePeriod(Base):
     )
     is_id_proofed = Column(Boolean)
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"), nullable=False)
-
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
 
     claim = relationship("Claim")
     claim_type = relationship(LkClaimType)
@@ -321,7 +305,7 @@ class HealthCareProvider(Base):
     addresses = relationship("HealthCareProviderAddress", back_populates="health_care_provider")
 
 
-class Employer(Base):
+class Employer(Base, TimestampMixin):
     __tablename__ = "employer"
     employer_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     account_key = Column(Text, index=True)
@@ -400,7 +384,7 @@ class EFT(Base):
     employee = relationship("Employee", back_populates="eft")
 
 
-class PubEft(Base):
+class PubEft(Base, TimestampMixin):
     __tablename__ = "pub_eft"
     pub_eft_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     routing_nbr = Column(Text, nullable=False)
@@ -410,19 +394,6 @@ class PubEft(Base):
     )
     prenote_state_id = Column(
         Integer, ForeignKey("lk_prenote_state.prenote_state_id"), nullable=False
-    )
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-        server_default=sqlnow(),
     )
     prenote_approved_at = Column(TIMESTAMP(timezone=True))
     prenote_response_at = Column(TIMESTAMP(timezone=True))
@@ -486,7 +457,7 @@ class ExperianAddressPair(Base):
     )
 
 
-class Employee(Base):
+class Employee(Base, TimestampMixin):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     tax_identifier_id = Column(
@@ -580,7 +551,7 @@ class EmployeePubEftPair(Base):
     pub_eft = relationship("PubEft", back_populates="employees")
 
 
-class Claim(Base):
+class Claim(Base, TimestampMixin):
     __tablename__ = "claim"
     claim_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
@@ -592,21 +563,6 @@ class Claim(Base):
     absence_period_end_date = Column(Date)
     fineos_notification_id = Column(Text)
     is_id_proofed = Column(Boolean)
-
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
 
     # Not sure if these are currently used.
     authorized_representative_id = Column(UUID(as_uuid=True))
@@ -625,7 +581,7 @@ class Claim(Base):
     )
 
 
-class Payment(Base):
+class Payment(Base, TimestampMixin):
     __tablename__ = "payment"
     payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True)
@@ -665,20 +621,6 @@ class Payment(Base):
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
     leave_request_id = Column(UUID(as_uuid=True), ForeignKey("absence_period.absence_period_id"))
 
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-
     claim = relationship("Claim", back_populates="payments")
     claim_type = relationship(LkClaimType)
     payment_transaction_type = relationship(LkPaymentTransactionType)
@@ -693,27 +635,13 @@ class Payment(Base):
     check = relationship("PaymentCheck", backref="payment", uselist=False)
 
 
-class PaymentCheck(Base):
+class PaymentCheck(Base, TimestampMixin):
     __tablename__ = "payment_check"
     payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), primary_key=True)
     check_number = Column(Integer, nullable=False, index=True, unique=True)
     check_posted_date = Column(Date)
     payment_check_status_id = Column(
         Integer, ForeignKey("lk_payment_check_status.payment_check_status_id")
-    )
-
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-        server_default=sqlnow(),
     )
 
     payment_check_status = relationship(LkPaymentCheckStatus)
@@ -822,7 +750,7 @@ class HealthCareProviderAddress(Base):
     address = relationship("Address", back_populates="health_care_providers")
 
 
-class User(Base):
+class User(Base, TimestampMixin):
     __tablename__ = "user"
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     active_directory_id = deferred(
@@ -831,21 +759,6 @@ class User(Base):
     sub_id = Column(Text, index=True, unique=True)
     email_address = Column(Text)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
-
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
@@ -870,31 +783,16 @@ class User(Base):
         return user_leave_administrator.verified if user_leave_administrator else False
 
 
-class UserRole(Base):
+class UserRole(Base, TimestampMixin):
     __tablename__ = "link_user_role"
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), primary_key=True)
     role_id = Column(Integer, ForeignKey("lk_role.role_id"), primary_key=True)
-
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
 
     user = relationship(User)
     role = relationship(LkRole)
 
 
-class UserLeaveAdministrator(Base):
+class UserLeaveAdministrator(Base, TimestampMixin):
     __tablename__ = "link_user_leave_administrator"
     __table_args__ = (UniqueConstraint("user_id", "employer_id"),)
     user_leave_administrator_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -903,21 +801,6 @@ class UserLeaveAdministrator(Base):
     fineos_web_id = Column(Text)
     verification_id = Column(
         UUID(as_uuid=True), ForeignKey("verification.verification_id"), nullable=True
-    )
-
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-        server_default=sqlnow(),
     )
 
     user = relationship(User)
@@ -965,7 +848,7 @@ class LkManagedRequirementType(Base):
         self.managed_requirement_type_description = managed_requirement_type_description
 
 
-class ManagedRequirement(Base):
+class ManagedRequirement(Base, TimestampMixin):
     """PFML-relevant data from a Managed Requirement in Fineos. Example managed requirement is an Employer info request."""
 
     __tablename__ = "managed_requirement"
@@ -989,21 +872,6 @@ class ManagedRequirement(Base):
         Integer,
         ForeignKey("lk_managed_requirement_type.managed_requirement_type_id"),
         nullable=False,
-    )
-
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-        server_default=sqlnow(),
     )
 
     managed_requirement_status = relationship(LkManagedRequirementStatus)
@@ -1074,7 +942,7 @@ class ImportLog(Base):
     end = Column(TIMESTAMP(timezone=True))
 
 
-class ReferenceFile(Base):
+class ReferenceFile(Base, TimestampMixin):
     __tablename__ = "reference_file"
     reference_file_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     file_location = Column(Text, index=True, unique=True, nullable=False)
@@ -1098,19 +966,6 @@ class ReferenceFile(Base):
     )
     dua_reduction_payment = relationship(
         "DuaReductionPaymentReferenceFile", back_populates="reference_file"
-    )
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-        server_default=sqlnow(),
     )
 
 
@@ -1234,7 +1089,7 @@ class LatestStateLog(Base):
     reference_file = relationship("ReferenceFile")
 
 
-class DuaReductionPayment(Base):
+class DuaReductionPayment(Base, TimestampMixin):
     __tablename__ = "dua_reduction_payment"
     dua_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
@@ -1248,13 +1103,6 @@ class DuaReductionPayment(Base):
     benefit_year_begin_date = Column(Date)
     benefit_year_end_date = Column(Date)
 
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-
     # Each row should be unique. This enables us to load only new rows from a CSV and ensures that
     # we don't include payments twice as two different rows. Almost all fields are nullable so we
     # have to coalesce those null values to empty strings. We've manually adjusted the migration
@@ -1262,7 +1110,7 @@ class DuaReductionPayment(Base):
     # See: 2021_01_29_15_51_16_14155f78d8e6_create_dua_reduction_payment_table.py
 
 
-class DiaReductionPayment(Base):
+class DiaReductionPayment(Base, TimestampMixin):
     __tablename__ = "dia_reduction_payment"
     dia_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
@@ -1282,17 +1130,10 @@ class DiaReductionPayment(Base):
     award_created_date = Column(Date)
     termination_date = Column(Date)
 
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-
     # Each row should be unique.
 
 
-class PubError(Base):
+class PubError(Base, TimestampMixin):
     __tablename__ = "pub_error"
     pub_error_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
@@ -1317,21 +1158,6 @@ class PubError(Base):
         ForeignKey("reference_file.reference_file_id"),
         primary_key=True,
         nullable=False,
-    )
-
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
-
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-        server_default=sqlnow(),
     )
 
     pub_error_type = relationship("LkPubErrorType")
@@ -2306,6 +2132,13 @@ class PaymentTransactionType(LookupTable):
     CANCELLATION = LkPaymentTransactionType(4, "Cancellation")
     UNKNOWN = LkPaymentTransactionType(5, "Unknown")
     EMPLOYER_REIMBURSEMENT = LkPaymentTransactionType(6, "Employer Reimbursement")
+    OVERPAYMENT_ACTUAL_RECOVERY = LkPaymentTransactionType(7, "Overpayment Actual Recovery")
+    OVERPAYMENT_RECOVERY = LkPaymentTransactionType(8, "Overpayment Recovery")
+    OVERPAYMENT_ADJUSTMENT = LkPaymentTransactionType(9, "Overpayment Adjustment")
+    OVERPAYMENT_RECOVERY_REVERSE = LkPaymentTransactionType(10, "Overpayment Recovery Reverse")
+    OVERPAYMENT_RECOVERY_CANCELLATION = LkPaymentTransactionType(
+        11, "Overpayment Recovery Cancellation"
+    )
 
 
 class PaymentCheckStatus(LookupTable):

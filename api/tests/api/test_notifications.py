@@ -1,5 +1,4 @@
 import copy
-import json
 
 import pytest
 
@@ -88,8 +87,7 @@ def test_notifications_post_leave_admin(client, test_db_session, fineos_user_tok
     assert notification.created_at
     assert notification.updated_at
     assert notification.fineos_absence_id == leave_admin_body["absence_case_id"]
-    request_json = json.loads(notification.request_json)
-    assert request_json == leave_admin_body
+    assert notification.request_json == leave_admin_body
 
     associated_claim = (
         test_db_session.query(Claim)
@@ -140,8 +138,7 @@ def test_notifications_post_leave_admin_no_document_type(
     assert notification.created_at
     assert notification.updated_at
     assert notification.fineos_absence_id == leave_admin_body["absence_case_id"]
-    request_json = json.loads(notification.request_json)
-    assert request_json == leave_admin_body_no_document_type
+    assert notification.request_json == leave_admin_body_no_document_type
 
 
 def test_notifications_invalid_fein_error(client, test_db_session, fineos_user_token, employer):
@@ -215,8 +212,7 @@ def test_notifications_post_leave_admin_empty_str_document_type(
     assert notification.created_at
     assert notification.updated_at
     assert notification.fineos_absence_id == leave_admin_body["absence_case_id"]
-    request_json = json.loads(notification.request_json)
-    assert request_json == leave_admin_body_empty_str_document_type
+    assert notification.request_json == leave_admin_body_empty_str_document_type
 
 
 def test_notifications_post_claimant(client, test_db_session, fineos_user_token, employer):
@@ -232,8 +228,7 @@ def test_notifications_post_claimant(client, test_db_session, fineos_user_token,
     assert notification.created_at
     assert notification.updated_at
     assert notification.fineos_absence_id == leave_admin_body["absence_case_id"]
-    request_json = json.loads(notification.request_json)
-    assert request_json == claimant_body
+    assert notification.request_json == claimant_body
 
 
 def test_notification_post_multiple_notifications(

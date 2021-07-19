@@ -12,6 +12,7 @@
   right: 0;
   top: 0;
   width: auto;
+  z-index: 10;
 }
 
 .slide-out:not([open]) {
@@ -37,7 +38,7 @@
 
 .slide-out__content {
   animation: animateSlideOutPanelIn 0.5s forwards;
-  background: white;
+  background: #fff;
   box-sizing: border-box;
   height: 100%;
   max-width: 350px;

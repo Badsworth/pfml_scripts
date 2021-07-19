@@ -1,15 +1,9 @@
-import {
-  useState,
-  useEffect,
-  Dispatch,
-  ChangeEvent,
-  SetStateAction,
-} from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import useDebounce from "../hooks/useDebounce";
 
 type Props = {
   search: (searchTerm: string) => Promise<unknown>;
-  setResults: any;
+  setResults: any; // @todo: better type?
   debounceDelay?: number;
 };
 
@@ -26,25 +20,31 @@ const Search = ({ search, setResults, debounceDelay }: Props) => {
         setResults(results);
       });
     } else {
-      // setResults([]);
       setIsSearching(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchTerm]);
 
-  const searchOnChange = (e: ChangeEvent<HTMLInputElement>) =>
+  const searchOnChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+  };
+
+  const searchOnSubmit = (e: FormEvent) => {
+    e.preventDefault();
+  };
 
   return (
-    <div className="search">
-      <form className="search__form">
+    <form onSubmit={searchOnSubmit} className="search">
+      <div className="search__input-wrapper">
         <input
           type="text"
           className="search__input"
           onChange={searchOnChange}
+          placeholder="Enter email address"
         />
-      </form>
-    </div>
+        <i className="pfml-icon--search search__icon"></i>
+      </div>
+    </form>
   );
 };
 

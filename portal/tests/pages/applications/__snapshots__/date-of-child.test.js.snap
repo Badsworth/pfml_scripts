@@ -7,7 +7,7 @@ exports[`DateOfChild renders the page 1`] = `
 >
   <InputDate
     dayLabel="Day"
-    example="mm / dd / yyyy"
+    example="MM / DD / YYYY"
     hint={null}
     label="pages.claimsBondingDateOfChild.sectionLabel"
     monthLabel="Month"

@@ -20,18 +20,25 @@ function MyApp({ Component, pageProps }: AppProps) {
             ></a>
           </div>
           <div className="page__user-options">
-            <a href="#" role="button" aria-label="FirstName LastName - User Options" className="user-options">
+            <a
+              href="#"
+              role="button"
+              aria-label="FirstName LastName - User Options"
+              className="user-options"
+            >
               <span className="user-options__avatar">
-                <img className="user-options__avatar-image" src="https://via.placeholder.com/32" alt="FirstName LastName" />
+                <img
+                  className="user-options__avatar-image"
+                  src="https://via.placeholder.com/32"
+                  alt="FirstName LastName"
+                />
               </span>
               <span className="user-options__name">FirstName LastName</span>
-              <span className="user-options__dropdown">
-
-              </span>
+              <span className="user-options__dropdown"></span>
             </a>
           </div>
         </header>
-        <aside className="page__sidebar" tabIndex="0">
+        <aside className="page__sidebar" tabIndex={0}>
           <nav className="menu">
             <ul className="menu__list">
               <li className="menu__list-item">
@@ -75,7 +82,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             <div className="environment__flag">Production</div>
           </div>
         </aside>
-        <main className="page__main" tabIndex="0">
+        <main className="page__main" tabIndex={0}>
           <Component {...pageProps} />
         </main>
       </div>

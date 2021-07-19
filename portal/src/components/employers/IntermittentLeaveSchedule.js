@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import React from "react";
 import { Trans } from "react-i18next";
 import { useTranslation } from "../../locales/i18n";
@@ -6,8 +7,7 @@ import { useTranslation } from "../../locales/i18n";
  * Display intermittent leave schedule
  * in the Leave Admin claim review page.
  */
-
-const IntermittentLeaveSchedule = (props) => {
+const IntermittentLeaveSchedule = ({ hasDocuments }) => {
   // TODO (EMPLOYER-655): Update intermittent leave details
   // const leavePeriod = props.intermittentLeavePeriods[0];
   const { t } = useTranslation();
@@ -50,11 +50,14 @@ const IntermittentLeaveSchedule = (props) => {
           {/* TODO (EMPLOYER-448): Support intermittent leave
           TODO (EMPLOYER-655): Update intermittent leave details */}
           <Trans
-            i18nKey="components.employersIntermittentLeaveSchedule.downloadAttachments"
+            i18nKey="components.employersIntermittentLeaveSchedule.lead"
             components={{
               "contact-center-phone-link": (
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
               ),
+            }}
+            tOptions={{
+              context: hasDocuments ? "hasDocs" : "noDocs",
             }}
           />
           {/* <Trans
@@ -78,6 +81,7 @@ IntermittentLeaveSchedule.propTypes = {
   // intermittentLeavePeriods: PropTypes.arrayOf(
   //   PropTypes.instanceOf(IntermittentLeavePeriod)
   // ).isRequired,
+  hasDocuments: PropTypes.bool,
 };
 
 export default IntermittentLeaveSchedule;

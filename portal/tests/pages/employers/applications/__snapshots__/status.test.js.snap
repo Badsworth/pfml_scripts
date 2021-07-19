@@ -66,19 +66,19 @@ exports[`Status renders the page and correct content in Trans component 1`] = `
     data-test="duration"
     label="Leave duration"
   >
-    1/1/2021 – 7/1/2021
+    1/1/2021 to 7/1/2021
   </StatusRow>
   <StatusRow
     data-test="duration-continuous"
     label="Continuous leave"
   >
-    1/1/2021 – 6/1/2021
+    1/1/2021 to 6/1/2021
   </StatusRow>
   <StatusRow
     data-test="duration-reduced"
     label="Reduced leave schedule"
   >
-    2/1/2021 – 7/1/2021
+    2/1/2021 to 7/1/2021
   </StatusRow>
 </Fragment>
 `;
@@ -155,7 +155,7 @@ exports[`Status shows the leave duration 1`] = `
   data-test="duration"
   label="Leave duration"
 >
-  1/1/2021 – 7/1/2021
+  1/1/2021 to 7/1/2021
 </StatusRow>
 `;
 
@@ -164,7 +164,7 @@ exports[`Status shows the leave duration types 1`] = `
   data-test="duration-continuous"
   label="Continuous leave"
 >
-  1/1/2021 – 6/1/2021
+  1/1/2021 to 6/1/2021
 </StatusRow>
 `;
 
@@ -173,7 +173,7 @@ exports[`Status shows the leave duration types 2`] = `
   data-test="duration-reduced"
   label="Reduced leave schedule"
 >
-  2/1/2021 – 7/1/2021
+  2/1/2021 to 7/1/2021
 </StatusRow>
 `;
 

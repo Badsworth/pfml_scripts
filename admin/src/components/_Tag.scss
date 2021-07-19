@@ -1,0 +1,18 @@
+/* Styles for Table.tsx component */
+.tag {
+  border: 1px solid;
+  border-radius: 0.75em;
+  padding: 0.25em 0.6em;
+  // @todo: get real colors
+  &--green {
+    background: #90ee90;
+    border-color: #0f0;
+    color: #0f0;
+  }
+
+  &--blue {
+    background: #add8e6;
+    border-color: #00f;
+    color: #00f;
+  }
+}

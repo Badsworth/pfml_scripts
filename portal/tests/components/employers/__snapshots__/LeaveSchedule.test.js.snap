@@ -44,7 +44,7 @@ exports[`LeaveSchedule renders continuous schedule 1`] = `
         <th
           scope="row"
         >
-          1/1/2021 – 6/1/2021
+          1/1/2021 to 6/1/2021
         </th>
         <td
           colSpan="2"
@@ -98,6 +98,7 @@ exports[`LeaveSchedule renders intermittent schedule 1`] = `
     </thead>
     <tbody>
       <IntermittentLeaveSchedule
+        hasDocuments={false}
         intermittentLeavePeriods={
           Array [
             IntermittentLeavePeriod {
@@ -176,7 +177,12 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
                 />,
               }
             }
-            i18nKey="components.employersLeaveSchedule.downloadAttachments"
+            i18nKey="components.employersLeaveSchedule.lead"
+            tOptions={
+              Object {
+                "context": "noDocs",
+              }
+            }
           />
         </td>
       </tr>
@@ -187,7 +193,7 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
 
 exports[`LeaveSchedule renders reduced schedule 2`] = `
 Array [
-  "Download the attached documentation or contact us at ",
+  "Contact us at ",
   <a
     href="tel:(833) 344-7365"
     key="1"

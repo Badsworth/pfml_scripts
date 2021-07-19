@@ -9,7 +9,7 @@ DOCKER_REGISTRY ?= 498823821309.dkr.ecr.us-east-1.amazonaws.com
 
 # Generate a unique tag based solely on the git hash.
 # This will be the identifier used for deployment via terraform.
-RELEASE_TAG := $(shell git rev-parse HEAD)
+IMAGE_TAG := $(shell git rev-parse HEAD)
 
 # Generate an informational tag so we can see where every image comes from.
 DATE := $(shell date -u '+%Y%m%d.%H%M%S')
@@ -109,7 +109,7 @@ build: ## Build development container
 build-app: ## Build app container
 	docker build \
 		--tag $(APP_NAME):latest \
-		--tag $(APP_NAME):$(RELEASE_TAG) \
+		--tag $(APP_NAME):$(IMAGE_TAG) \
 		--target app \
 		--build-arg RUN_USER=$(RUN_USER) \
 		--build-arg RUN_UID=$(RUN_UID) \
@@ -303,44 +303,44 @@ start-db: ## Start DB container
 stop: ## Stop all running containers
 	docker-compose down
 
-release: ## Build and publish release image
-release: release-build release-publish
+build-and-publish: ## Build and publish release image
+build-and-publish: api-image-build api-image-publish
 
-release-build: ## Build release image
+api-image-build: ## Build release image
 	docker build \
 		--tag $(APP_NAME):latest \
-		--tag $(APP_NAME):$(RELEASE_TAG) \
+		--tag $(APP_NAME):$(IMAGE_TAG) \
 		--target app \
 		--build-arg RUN_USER=container \
 		--build-arg RUN_UID=4000 \
 		.
 
-release-start-api: jwks.json
+release-start-api: jwks.json ## starts api container without an attached database
 	docker-compose --file docker-compose.yml --file docker-compose.release.yml up --detach
 
 release-stop-api:
 	docker-compose --file docker-compose.yml --file docker-compose.release.yml down
 
-release-test: db-upgrade db-create-users release-start-api run-test
+pre-flight-test: db-upgrade db-create-users release-start-api health-check
 
 # Since we have a time-based tag INFO_TAG, tagging and pushing are usually best
 # to be done together, but you could tag then later push by setting INFO_TAG
 # directly
-release-publish: ## Tag and push release
-release-publish: ecr-login release-tag release-push
+api-image-publish: ## Tag and push release
+api-image-publish: ecr-login api-image-tag api-image-push
 
-release-push: ## Push release image to the registry
-	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(RELEASE_TAG)
+api-image-push: ## Push release image to the registry
+	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(IMAGE_TAG)
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
-release-tag: ## Tag release image for registry
-	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(RELEASE_TAG)
-	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
+api-image-tag: ## Tag release image for registry
+	docker tag $(APP_NAME):$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(IMAGE_TAG)
+	docker tag $(APP_NAME):$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
 runcmd: ## Run poetry command
 	$(PY_RUN_CMD) $(cmd)
 
-run-test: # The second parameter is the number of retries (each followed by
+health-check: # The second parameter is the number of retries (each followed by
 		  # a second of wait) until a state is determined by the docker daemon
 	./bin/check_container_health.sh 60
 
@@ -497,6 +497,6 @@ help: ## Displays this help screen
 	@echo "APP_NAME=$(APP_NAME)"
 	@echo "INFO_TAG=$(INFO_TAG)"
 	@echo "RUN_CMD_OPT=$(RUN_CMD_OPT)"
-	@echo "RELEASE_TAG=$(RELEASE_TAG)"
+	@echo "IMAGE_TAG=$(IMAGE_TAG)"
 	@echo "RUN_UID=$(RUN_UID)"
 	@echo "RUN_USER=$(RUN_USER)"

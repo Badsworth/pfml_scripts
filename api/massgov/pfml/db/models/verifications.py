@@ -5,12 +5,12 @@
 # properly read and write data. If you make a change, follow the instructions
 # in the API README to generate an associated table migration.
 
-from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, Text
+from sqlalchemy import Column, ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from ..lookup import LookupTable
-from .base import Base, utc_timestamp_gen, uuid_gen
+from .base import Base, TimestampMixin, uuid_gen
 
 
 class LkVerificationType(Base):
@@ -35,7 +35,7 @@ class VerificationType(LookupTable):
     PFML_WITHHOLDING = LkVerificationType(3, "PFML Withholding")
 
 
-class Verification(Base):
+class Verification(Base, TimestampMixin):
     """ Stores a record of a Verification that occurred for association with a Role;
     """
 
@@ -46,13 +46,6 @@ class Verification(Base):
     )
     verification_type = relationship("LkVerificationType")
     verification_metadata = Column(JSONB)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-    )
 
 
 def sync_lookup_tables(db_session):

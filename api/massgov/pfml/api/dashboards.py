@@ -2,6 +2,7 @@
 # Internal status dashboards.
 #
 
+import json
 import secrets
 from datetime import datetime
 from typing import Optional
@@ -11,6 +12,8 @@ from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app
 from massgov.pfml.db.models.employees import ImportLog
+from massgov.pfml.reductions.dia import Metrics as DIAMetrics
+from massgov.pfml.reductions.dua import Metrics as DUAMetrics
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
@@ -25,7 +28,21 @@ def init(app, dashboard_password):
         if not secrets.compare_digest(key, dashboard_password):
             raise NotFound
         entries = import_jobs_get()
-        return flask.render_template("dashboards.html", data=entries, now=utcnow())
+        data: dict = {
+            "filtered": [],
+            "processed": [],
+        }
+
+        for entry in entries:
+            report = json.loads(entry.get("report")) if entry.get("report") else None
+            if report and (
+                report.get(DUAMetrics.DUA_PAYMENT_LISTS_DOWNLOADED_COUNT) == 0
+                or report.get(DIAMetrics.DIA_PAYMENT_LISTS_DOWNLOADED_COUNT) == 0
+            ):
+                data["filtered"].append(entry)
+            else:
+                data["processed"].append(entry)
+        return flask.render_template("dashboards.html", data=data, now=utcnow())
 
     @app.route("/dashboard/<key>/batch/<int:batch_id>")
     def dashboard_batch_id(key, batch_id):

@@ -96,7 +96,7 @@ describe("Approval (notifications/notices)", () => {
 
         cy.visit("/applications");
         cy.contains("article", submission.fineos_absence_id).within(() => {
-          cy.contains("button", "Approval notice").should("be.visible").click();
+          cy.findByText("Approval notice (PDF)").should("be.visible").click();
         });
         portal.downloadLegalNotice(submission.fineos_absence_id);
       });
@@ -150,9 +150,9 @@ describe("Approval (notifications/notices)", () => {
               },
               180000
             )
-            .then((emails) => {
-              expect(emails[0].html).to.contain(
-                `/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}`
+            .then(() => {
+              cy.get(
+                `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
               );
             });
         });
@@ -186,15 +186,15 @@ describe("Approval (notifications/notices)", () => {
               // Reduced timeout, since we have multiple tests that run prior to this.
               60000
             )
-            .then(async (emails) => {
-              const data = email.getNotificationData(emails[0].html);
+            .then(() => {
               const dob =
                 claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-              expect(data.name).to.equal(employeeFullName);
-              expect(data.dob).to.equal(dob);
-              expect(data.applicationId).to.equal(submission.fineos_absence_id);
-              expect(emails[0].html).to.contain(
-                `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
+              cy.log("DOB", dob);
+              cy.contains(dob);
+              cy.contains(employeeFullName);
+              cy.contains(submission.fineos_absence_id);
+              cy.get(
+                `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
               );
             });
         });
@@ -215,19 +215,19 @@ describe("Approval (notifications/notices)", () => {
             submission.fineos_absence_id
           );
           // Check email for Claimant/Employee
-          email
-            .getEmails(
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectClaimant,
-                messageWildcard: submission.fineos_absence_id,
-                timestamp_from: submission.timestamp_from,
-                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-              },
-              // Reduced timeout, since we have multiple tests that run prior to this.
-              30000
-            )
-            .should("not.be.empty");
+          email.getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subjectClaimant,
+              messageWildcard: submission.fineos_absence_id,
+              timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            },
+            // Reduced timeout, since we have multiple tests that run prior to this.
+            30000
+          );
+          cy.contains(submission.fineos_absence_id);
+          cy.get(`a[href*="${config("PORTAL_BASEURL")}/applications"]`);
         });
       });
     }

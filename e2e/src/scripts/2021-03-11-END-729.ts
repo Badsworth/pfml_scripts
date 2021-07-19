@@ -7,15 +7,6 @@ import EmployeeIndex from "../generation/writers/EmployeeIndex";
 import { ScenarioSpecification } from "../generation/Scenario";
 import DOR from "../generation/writers/DOR";
 import dataDirectory from "../generation/DataDirectory";
-import { submit, PostSubmitCallback } from "./util";
-import ClaimSubmissionTracker from "../submission/ClaimStateTracker";
-import SubmittedClaimIndex from "../submission/writers/SubmittedClaimIndex";
-import {
-  approveClaim,
-  withFineosBrowser,
-  denyClaim,
-  closeDocuments,
-} from "../submission/PostSubmit";
 import EmployerIndex from "../generation/writers/EmployerIndex";
 
 /**
@@ -35,7 +26,6 @@ import EmployerIndex from "../generation/writers/EmployerIndex";
     // of claims that have previously been submitted.
     let employerPool: EmployerPool;
     let employeePool: EmployeePool;
-    let claimPool: ClaimPool;
 
     /// Generate a pool of employers.
     try {
@@ -77,7 +67,7 @@ import EmployerIndex from "../generation/writers/EmployerIndex";
     }
     // Generate a pool of claims. This could happen later, though!
     try {
-      claimPool = await ClaimPool.load(storage.claims, storage.documents);
+      await ClaimPool.load(storage.claims, storage.documents);
     } catch (e) {
       if (e.code !== "ENOENT") throw e;
       // Shortcut for generating a new claim pool filled with 1 scenario.
@@ -122,50 +112,6 @@ import EmployerIndex from "../generation/writers/EmployerIndex";
         generate(scenarios.TRNAD, 100),
         generate(scenarios.TRNAE, 100)
       ).save(storage.claims, storage.documents);
-    }
-
-    const tracker = new ClaimSubmissionTracker(storage.state);
-
-    const postSubmit: PostSubmitCallback = async (claim, response) => {
-      const { metadata } = claim;
-      if (metadata && "postSubmit" in metadata) {
-        // Open a puppeteer browser for the duration of this callback.
-        await withFineosBrowser(async (page) => {
-          const { fineos_absence_id } = response;
-          if (!fineos_absence_id)
-            throw new Error(
-              `No fineos_absence_id was found on this response: ${JSON.stringify(
-                response
-              )}`
-            );
-          switch (metadata.postSubmit) {
-            case "APPROVE":
-              await approveClaim(page, claim, fineos_absence_id);
-              break;
-            case "DENY":
-              await denyClaim(page, fineos_absence_id);
-              break;
-            case "APPROVEDOCS":
-              await closeDocuments(page, claim, fineos_absence_id);
-              break;
-            default:
-              throw new Error(
-                `Unknown claim.metadata.postSubmit property: ${metadata.postSubmit}`
-              );
-          }
-        });
-      }
-    };
-
-    if (false && claimPool) {
-      // Finally, kick off submission submission.
-      await submit(claimPool, tracker, postSubmit, 3);
-      // Last but not least, write the index of submitted claims in CSV format.
-      await SubmittedClaimIndex.write(
-        path.join(storage.dir, "submitted.csv"),
-        await ClaimPool.load(storage.claims, storage.documents),
-        tracker
-      );
     }
   }
 

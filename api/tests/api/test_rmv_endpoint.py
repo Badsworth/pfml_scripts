@@ -1,5 +1,4 @@
 # Testing Mocked API responses
-import re
 from unittest import mock
 
 import pytest
@@ -192,6 +191,3 @@ def test_endpoint_unauthorized_user(client, auth_token):
     )
 
     assert response.status_code == 403
-    assert re.search(
-        r"does not have create access to RMVCheck", response.get_json().get("message"),
-    )

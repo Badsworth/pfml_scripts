@@ -122,7 +122,7 @@ describe("AmendableEmployerBenefit", () => {
     it("renders formatted date range for benefit used by employee", () => {
       expect(
         wrapper.find("BenefitDetailsRow").dive().find("th").text()
-      ).toEqual("2/1/2021 – 3/1/2021");
+      ).toEqual("2/1/2021 to 3/1/2021");
     });
 
     it("renders formatted benefit type as sentence case", () => {

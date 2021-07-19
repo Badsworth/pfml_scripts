@@ -47,6 +47,6 @@ jobs:
           target_environment: "${{ matrix.environment }}"
           cypress_tags: ${{ format('Morning Run ({0})', matrix.environment) }}
           github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          github_branch: ${{ matrix.environment == 'test' && 'main' || format('deploy/portal/{0}', matrix.environment) }}
+          github_branch: 'main'
           wait_for_results: "false"
           only_stable: 'true'

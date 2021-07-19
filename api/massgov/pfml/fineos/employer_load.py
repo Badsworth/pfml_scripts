@@ -1,6 +1,7 @@
 import argparse
 from dataclasses import asdict
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseSettings, Field
 
@@ -20,6 +21,9 @@ class EmployerLoadMode(Enum):
 
 class EmployerLoadConfig(BaseSettings):
     mode: EmployerLoadMode = Field(EmployerLoadMode.ONLY_NEW, env="EMPLOYER_LOAD_MODE")
+    update_employer_number_limit: Optional[int] = Field(
+        None, env="EMPLOYER_UPDATE_LIMIT"
+    )  # Only applies to "updates" mode
 
 
 def parse_args():
@@ -52,7 +56,10 @@ def handler():
 
         if config.mode is EmployerLoadMode.UPDATES:
             report = massgov.pfml.fineos.employers.load_updates(
-                db_session, fineos_client, args.process_id
+                db_session,
+                fineos_client,
+                args.process_id,
+                employer_update_limit=config.update_employer_number_limit,
             )
         else:
             report = massgov.pfml.fineos.employers.load_all(db_session, fineos_client)

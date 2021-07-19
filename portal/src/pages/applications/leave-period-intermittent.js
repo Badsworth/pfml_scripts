@@ -94,7 +94,7 @@ export const LeavePeriodIntermittent = (props) => {
       title={t("pages.claimsLeavePeriodIntermittent.title")}
       onSave={handleSave}
     >
-      {(claim.isMedicalLeave || claim.isCaringLeave) && (
+      {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsLeavePeriodIntermittent.needDocumentAlert"
@@ -140,7 +140,7 @@ export const LeavePeriodIntermittent = (props) => {
             i18nKey="pages.claimsLeavePeriodIntermittent.hasLeaveHint"
             tOptions={{
               context:
-                claim.isMedicalLeave &&
+                claim.isMedicalOrPregnancyLeave &&
                 isFeatureEnabled("updateMedicalCertForm")
                   ? "updateMedicalCertForm"
                   : contentContext,
@@ -184,7 +184,7 @@ export const LeavePeriodIntermittent = (props) => {
             i18nKey="pages.claimsLeavePeriodIntermittent.datesLead"
             tOptions={{
               context:
-                claim.isMedicalLeave &&
+                claim.isMedicalOrPregnancyLeave &&
                 isFeatureEnabled("updateMedicalCertForm")
                   ? "updateMedicalCertForm"
                   : contentContext,

@@ -50,7 +50,7 @@ $ make db-upgrade
 $ make run
 ```
 
-For lambdas that require AWS resources (i.e S3) you will need to be logged in to the PFML AWS. See documentation around `login-aws` in `/api/README.md`
+For lambdas that require AWS resources (i.e S3) you will need to be logged in to the PFML AWS. See documentation around `aws configure sso` in `/infra/README.md`
 
 ## Infrastructure
 

@@ -66,7 +66,7 @@ describe("UploadCertification", () => {
       expect(wrapper.find("Trans").dive()).toMatchSnapshot();
     });
 
-    it("renders page with caregiver leave contentwhen leave reason is caregiver leave", () => {
+    it("renders page with caregiver leave content when leave reason is caregiver leave", () => {
       const claim = new MockBenefitsApplicationBuilder()
         .caringLeaveReason()
         .create();
@@ -207,14 +207,14 @@ describe("UploadCertification", () => {
       expect(appLogic.documents.attach).toHaveBeenCalledWith(
         claim.application_id,
         expect.arrayContaining(expectedTempFiles),
-        expect.any(String),
+        DocumentType.certification.certificationForm,
         false
       );
 
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledTimes(1);
     });
 
-    it("displays unsucessfully uploaded files as removable file cards", async () => {
+    it("displays unsuccessfully uploaded files as removable file cards", async () => {
       const { appLogic, claim, submitForm, wrapper } = setup({
         hasLoadedClaimDocuments: true,
       });
@@ -267,7 +267,7 @@ describe("UploadCertification", () => {
       attachSpy.mockRestore();
     });
 
-    it("uses State managed Paid Leave Confirmation as the doc type when the caring leave feature flag is disabled", async () => {
+    it("uses Certification Form as the doc type", async () => {
       const { appLogic, claim, submitForm, wrapper } = setup({
         hasLoadedClaimDocuments: true,
       });
@@ -290,46 +290,9 @@ describe("UploadCertification", () => {
       expect(appLogic.documents.attach).toHaveBeenCalledWith(
         claim.application_id,
         expect.arrayContaining(expectedTempFiles),
-        expect.stringMatching(DocumentType.certification.medicalCertification),
+        DocumentType.certification.certificationForm,
         false
       );
-    });
-
-    it("uses Certification Form as the doc type when the useNewPlanProofs flag is enabled", async () => {
-      // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
-      process.env.featureFlags = {
-        useNewPlanProofs: true,
-      };
-
-      const { appLogic, claim, submitForm, wrapper } = setup({
-        hasLoadedClaimDocuments: true,
-      });
-
-      await act(async () => {
-        await wrapper.find("FileCardList").simulate("change", tempFiles);
-      });
-
-      jest.spyOn(appLogic.documents, "attach").mockImplementation(
-        jest.fn(() => {
-          return [
-            Promise.resolve({ success: true }),
-            Promise.resolve({ success: true }),
-          ];
-        })
-      );
-
-      await submitForm();
-
-      expect(appLogic.documents.attach).toHaveBeenCalledWith(
-        claim.application_id,
-        expect.arrayContaining(expectedTempFiles),
-        expect.stringMatching(DocumentType.certification.certificationForm),
-        false
-      );
-
-      process.env.featureFlags = {
-        useNewPlanProofs: false,
-      };
     });
   });
 
@@ -358,7 +321,7 @@ describe("UploadCertification", () => {
     expect(appLogic.documents.attach).toHaveBeenCalledWith(
       claim.application_id,
       [],
-      "State managed Paid Leave Confirmation",
+      DocumentType.certification.certificationForm,
       true
     );
   });

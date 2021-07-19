@@ -11,7 +11,7 @@ import {
   WorkPattern,
 } from "../api";
 import faker from "faker";
-import generateLeaveDetails, { LeaveDetailsSpec } from "./LeaveDetails";
+import generateLeaveDetails from "./LeaveDetails";
 import { v4 as uuid } from "uuid";
 import generateDocuments, {
   DehydratedDocument,
@@ -27,25 +27,41 @@ import ndjson from "ndjson";
 import { StreamWrapper } from "./FileWrapper";
 import { collect, map, AnyIterable } from "streaming-iterables";
 import { OtherIncome } from "../api";
-import { ConcurrentLeave, EmployerBenefit, PreviousLeave } from "../_api";
+import {
+  ConcurrentLeave,
+  EmployerBenefit,
+  IntermittentLeavePeriods,
+  PreviousLeave,
+} from "../_api";
 import { generateOtherIncomes } from "./OtherIncomes";
 import { generateEmployerBenefits } from "./EmployerBenefits";
 import { generatePreviousLeaves } from "./PreviousLeaves";
 import { generateConcurrentLeaves } from "./ConcurrentLeave";
 import { NonEmptyArray } from "../types";
 
-const pipelineP = promisify(pipeline);
-interface PromiseWithOptionalGeneration<T> extends Promise<T> {
-  orGenerateAndSave(gen: () => T): Promise<T>;
+export type FineosExclusiveLeaveReasons =
+  | "Military Exigency Family"
+  | "Military Caregiver";
+export type APILeaveReason = ApplicationLeaveDetails["reason"];
+export type LeaveReason = APILeaveReason | FineosExclusiveLeaveReasons;
+
+/**Claim types accepted by the API */
+export interface APIClaimSpec extends BaseClaimSpecification {
+  reason: APILeaveReason;
 }
-/**
- * Specifies how a claim should be generated.
- */
-export type ClaimSpecification = {
+/**Claim types exclusive to Fineos intake process */
+export interface FineosClaimSpec extends BaseClaimSpecification {
+  reason: FineosExclusiveLeaveReasons;
+}
+
+export type ClaimSpecification = APIClaimSpec;
+
+/**Base Claim specification allowing for any combination of values */
+export interface BaseClaimSpecification {
   /** A human-readable name or ID for this type of claim. */
   label: string;
   /** Reason for leave. */
-  reason: ApplicationLeaveDetails["reason"];
+  reason: LeaveReason;
   /** The qualifier for the leave reason */
   reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
   /** An object describing documentation that should accompany the claim. */
@@ -61,9 +77,20 @@ export type ClaimSpecification = {
    * following the specification given here. See work_pattern_spec for information on the format.
    */
   reduced_leave_spec?: string;
-  /** Flag to make this an intermittent leave claim */
-  has_intermittent_leave_periods?: boolean;
+  /**
+   * Data to create an intermittent leave period.
+   *
+   * Acceptable values for this property are:
+   *   * `false` or `undefined`: No intermittent leave period will be added.
+   *   * `true`: An intermittent leave period will be generated automatically.
+   *   * Partial Intermittent Leave period object: Will be merged with the generated defaults into a leave period.
+   *   * Array of Partial Intermittent Leave Period objects: Each item will be merged with the generated defaults into
+   *     multiple leave periods.
+   */
+  intermittent_leave_spec?: IntermittentLeaveSpec | false;
+  /**Make this a medical prebirth claim */
   pregnant_or_recent_birth?: boolean;
+  /** Control the date of the bonding event (child birth/adoption/etc) */
   bondingDate?: "far-past" | "past" | "future";
   /** Specify explicit leave dates for the claim. These will be used for the reduced/intermittent/continuous leave periods. */
   leave_dates?: [Date, Date];
@@ -89,7 +116,14 @@ export type ClaimSpecification = {
   work_pattern_spec?: WorkPatternSpec;
   /** Optional metadata to be saved verbatim on the claim object. Not submitted in any way. */
   metadata?: GeneratedClaimMetadata;
-} & LeaveDetailsSpec;
+  /** Makes a claim for an extremely short time period (1 day). */
+  shortClaim?: boolean;
+}
+
+type IntermittentLeaveSpec =
+  | IntermittentLeavePeriods
+  | IntermittentLeavePeriods[]
+  | true;
 
 export type GeneratedClaimMetadata = Record<string, string | boolean>;
 
@@ -116,6 +150,11 @@ export type GeneratedClaim = {
 export type DehydratedClaim = Omit<GeneratedClaim, "documents"> & {
   documents: DehydratedDocument[];
 };
+
+interface PromiseWithOptionalGeneration<T> extends Promise<T> {
+  orGenerateAndSave(gen: () => T): Promise<T>;
+}
+const pipelineP = promisify(pipeline);
 
 /**
  * Responsible for generating single claims.

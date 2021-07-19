@@ -2,7 +2,6 @@
 # Tests for /v1/financial-eligibility API.
 #
 
-import re
 from datetime import date
 
 import pytest
@@ -78,6 +77,37 @@ def test_endpoint_with_employee_wages_data(
     }
 
 
+def test_endpoint_with_unknown_employment_status(
+    client, test_db_session, initialize_factories_session, fineos_user_token
+):
+    body = {
+        "application_submitted_date": "2020-12-30",
+        "employer_fein": "71-6779225",
+        "employment_status": "Unknown",
+        "leave_start_date": "2020-12-30",
+        "tax_identifier": "088-57-4541",
+    }
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
+
+    assert response.json == {
+        "data": {
+            "description": "Not Known: invalid employment status",
+            "employer_average_weekly_wage": None,
+            "financially_eligible": False,
+            "state_average_weekly_wage": None,
+            "total_wages": None,
+            "unemployment_minimum": None,
+        },
+        "message": "success",
+        "meta": {"method": "POST", "resource": "/v1/financial-eligibility"},
+        "status_code": 200,
+    }
+
+
 def test_endpoint_no_employee_wage_data(
     client, test_db_session, initialize_factories_session, fineos_user_token
 ):
@@ -135,11 +165,6 @@ def test_endpoint_unauthorized_user(
     )
 
     assert response.status_code == 403
-    # This works around the stringified version of User that gets returned - <massgov.pfml.db.models.employees.User object at 0x7fb466b96be0>
-    assert re.search(
-        r"does not have create access to Financial Eligibility Calculation",
-        response.get_json().get("message"),
-    )
 
 
 def test_self_employed_two_quarters(

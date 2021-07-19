@@ -7,6 +7,9 @@ const mockClaims = {
     .create(),
   caring: new MockBenefitsApplicationBuilder().caringLeaveReason().create(),
   medical: new MockBenefitsApplicationBuilder().medicalLeaveReason().create(),
+  "Medical leave for pregnancy or birth": new MockBenefitsApplicationBuilder()
+    .pregnancyLeaveReason()
+    .create(),
 };
 
 const { config, DefaultStory } = generateClaimPageStory(

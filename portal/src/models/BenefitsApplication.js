@@ -84,11 +84,12 @@ class BenefitsApplication extends BaseBenefitsApplication {
   }
 
   /**
-   * Determine if claim is a Medical Leave claim
+   * Determine if claim is a Medical or Pregnancy leave claim
    * @returns {boolean}
    */
-  get isMedicalLeave() {
-    return get(this, "leave_details.reason") === LeaveReason.medical;
+  get isMedicalOrPregnancyLeave() {
+    const reason = get(this, "leave_details.reason");
+    return reason === LeaveReason.medical || reason === LeaveReason.pregnancy;
   }
 
   /**

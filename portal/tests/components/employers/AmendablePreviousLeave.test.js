@@ -96,7 +96,7 @@ describe("AmendablePreviousLeave", () => {
     it("renders formatted date range for existing previous leave", () => {
       const wrapper = renderAmendedLeave();
       expect(wrapper.find("LeaveDetailsRow").dive().find("th").text()).toEqual(
-        "3/1/2020 – 3/6/2020"
+        "3/1/2020 to 3/6/2020"
       );
     });
 

@@ -119,19 +119,20 @@ const LeaveDetails = (props) => {
             }}
             tOptions={{ context: isCaringLeave ? "caringLeave" : null }}
           />
-          <div>
+          <ul className="usa-list">
             {documents.map((document) => (
-              <DownloadableDocument
-                onDownloadClick={downloadDocument}
-                absenceId={absenceId}
-                document={document}
-                displayDocumentName={t(
-                  "components.employersLeaveDetails.documentName"
-                )}
-                key={document.fineos_document_id}
-              />
+              <li key={document.fineos_document_id}>
+                <DownloadableDocument
+                  onDownloadClick={downloadDocument}
+                  absenceId={absenceId}
+                  document={document}
+                  displayDocumentName={t(
+                    "components.employersLeaveDetails.documentName"
+                  )}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         </ReviewRow>
       )}
       {isCaringLeave && (

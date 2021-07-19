@@ -12,6 +12,7 @@ import PortalSubmitter from "./PortalSubmitter";
 import * as util from "util";
 import chalk from "chalk";
 import { PostSubmitCallback } from "../scripts/util";
+import delay from "delay";
 
 /**
  * Iterator callback to log progress as submission happens.
@@ -115,18 +116,34 @@ export function postProcess(
  * Iterator callback to stop the entire process if too many submission errors are encountered.
  */
 export function watchFailures(
-  results: AnyIterable<SubmissionResult>
+  results: AnyIterable<SubmissionResult>,
+  consecErrorLmt = 3,
+  testing = false // flag to improve the testability
 ): AsyncGenerator<SubmissionResult> {
   let consecutiveErrors = 0;
+  return (async function* _() {
+    for await (const result of results) {
+      consecutiveErrors = result.error
+        ? consecutiveErrors + 1
+        : handleSucess(consecutiveErrors);
+      if (consecutiveErrors >= consecErrorLmt)
+        throw new Error(
+          `Stopping submission after encountering ${consecErrorLmt} consecutive errors`
+        );
+      const delayMs = getDelayMS(consecutiveErrors);
+      if (delayMs > 0) {
+        log(
+          result.claim,
+          `Delaying next submission for ${
+            delayMs / 1000
+          } due to consecutive errors received.`
+        );
+      }
+      await delay(testing ? 50 : delayMs);
 
-  return tap((result: SubmissionResult) => {
-    consecutiveErrors = result.error ? consecutiveErrors + 1 : 0;
-    if (consecutiveErrors >= 3) {
-      throw new Error(
-        `Stopping because ${consecutiveErrors} consecutive errors were encountered.`
-      );
+      yield result;
     }
-  }, results);
+  })();
 }
 
 function formatTime(seconds: number): string {
@@ -140,4 +157,24 @@ function formatTime(seconds: number): string {
 
 function formatPercent(decimal: number): string {
   return (decimal * 100).toPrecision(2) + "%";
+}
+
+function getDelayMS(consecutiveErrors: number) {
+  const base = 1000 * 60;
+  if (consecutiveErrors >= 10) return base * 1;
+  if (consecutiveErrors >= 6) return base * 0.5;
+  if (consecutiveErrors >= 3) return base * 0.25;
+  return 0;
+}
+
+/* 
+ This function is used to reset the consecutiveError value
+ If the current amount of consectuive errors is greater than 6, we
+ should reset the amount of consecutive errors to 3.
+ 
+ This extra step will help determine if the submission should run at full speed (submission was successful on subsequent submissions after reset)
+*/
+function handleSucess(consecutiveErrors: number) {
+  if (consecutiveErrors >= 6) return 3;
+  else return 0;
 }

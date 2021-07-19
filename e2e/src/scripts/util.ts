@@ -37,8 +37,9 @@ export type PostSubmitCallback = (
 export async function submit(
   claims: AsyncIterable<GeneratedClaim>,
   tracker: ClaimStateTracker,
-  postSubmit?: PostSubmitCallback,
-  concurrency = 1
+  concurrency = 1,
+  maxConsecErrors: number,
+  postSubmit?: PostSubmitCallback
 ): Promise<void> {
   // Use async iterables to consume all of the claims. Order of the processing steps in this pipeline matters!
   // Filtering must happen before submit, and tracking should happen before the failure watcher.
@@ -49,7 +50,7 @@ export async function submit(
     postProcess(postSubmit ?? (() => Promise.resolve()), concurrency), // Run post-processing steps (this is optional).
     tracker.track, // Track claims that have been submitted.
     logSubmissions, // Log submission results to console.
-    watchFailures, // Exit after 3 failures.
+    (submission) => watchFailures(submission, maxConsecErrors), // Exit after 3 failures.
     consume
   );
 }

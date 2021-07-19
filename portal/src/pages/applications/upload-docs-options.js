@@ -36,6 +36,7 @@ export const UploadDocsOptions = (props) => {
       [ReasonQualifier.fosterCare]: "bonding_adopt_foster",
     },
     [LeaveReason.medical]: "medical",
+    [LeaveReason.pregnancy]: "medical",
     [LeaveReason.care]: "care",
   };
   const certChoiceLabel =

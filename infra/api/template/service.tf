@@ -62,8 +62,8 @@ data "template_file" "container_definitions" {
 
   vars = {
     app_name                                   = local.app_name
-    cpu                                        = "1024"
-    memory                                     = "2048"
+    cpu                                        = "768"
+    memory                                     = "1536"
     db_host                                    = aws_db_instance.default.address
     db_name                                    = aws_db_instance.default.name
     db_username                                = "pfml_api"
@@ -79,7 +79,6 @@ data "template_file" "container_definitions" {
     logging_level                              = var.logging_level
     rmv_client_certificate_binary_arn          = var.rmv_client_certificate_binary_arn
     rmv_client_base_url                        = var.rmv_client_base_url
-    rmv_client_server_ca_bundle_name           = var.rmv_client_server_ca_bundle_name
     rmv_check_behavior                         = var.rmv_check_behavior
     rmv_check_mock_success                     = var.rmv_check_mock_success
     fineos_client_customer_api_url             = var.fineos_client_customer_api_url

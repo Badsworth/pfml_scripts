@@ -606,8 +606,16 @@ const errors = {
         "The employer ID you entered is already associated with your account.",
       employer_verification_data_required:
         "$t(shared.ein.employer_verification_data_required)",
+      // TODO (EMPLOYER-1565): Remove this once the API no longer returns it
       invalid:
         "Enter your 9-digit Employer Identification Number in the correct format.",
+      pattern:
+        "Enter your 9-digit Employer Identification Number in the correct format.",
+      require_contributing_employer:
+        "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly and the associated business is contributing to Paid Family and Medical Leave.",
+      require_employer:
+        "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
+      required: "Enter your 9-digit Employer Identification Number.",
     },
     hours_worked_per_week: {
       // TODO (EMPLOYER-723) remove this
@@ -764,6 +772,7 @@ const shared = {
   contactCenterPhoneNumber: "(833) 344-7365",
   contactCenterPhoneNumberNoBreak:
     "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
+  dateRangeDelimiter: "to",
   day_Friday: "Friday",
   day_Monday: "Monday",
   day_Saturday: "Saturday",
@@ -795,6 +804,10 @@ const shared = {
     "If something is incomplete, add a comment at the end of the page.",
   employerInstructions_followUpDate:
     "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
+  employerLeaveScheduleLeadHasDocs:
+    "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
+  employerLeaveScheduleLeadNoDocs:
+    "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose files",
   fileUpload_fileHeadingPrefix: "File",
@@ -807,8 +820,20 @@ const shared = {
   hoursLabel: "Hours",
   leavePeriodCaringAlert:
     "You will need a completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> for this$t(chars.nbsp)section.",
+  leavePeriodContinuousDatesLeadMedicalOrPregnancy:
+    "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormMedical).",
+  leavePeriodHasLeaveHintCare:
+    "Your answer must match the $t(shared.certificationFormCare).",
+  leavePeriodHasLeaveHintMedicalOrPregnancy:
+    "Your answer must match the $t(shared.certificationFormMedical).",
+  leavePeriodHasLeaveHintUpdateMedicalCertForm:
+    "Your answer must match the corresponding checkbox of Question 14 in the $t(shared.certificationFormMedical).",
+  leavePeriodIntermittentDatesLeadMedicalOrPregnancy:
+    "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormMedical).",
   leavePeriodMedicalAlert:
     "You will need a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link> for this$t(chars.nbsp)section.",
+  leavePeriodReducedDatesLeadMedicalOrPregnancy:
+    "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormMedical).",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Bond with a child",
   leaveReasonCare: "Care for a family member",
@@ -843,6 +868,8 @@ const shared = {
   pdfNoticeSuffix: "(PDF)",
   previousLeaveEntryPrefix: "Previous leave",
   qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
+  reducedLeaveScheduleLeadCertGuidanceMedicalOrPregnancy:
+    "The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormMedical).",
   resendVerificationCodeLink: "Resend the code",
   siteDescription:
     "Apply for this Commonwealth-offered benefit here, or log in to review your applications.",
@@ -1234,6 +1261,8 @@ const pages = {
       "Your answers must match the intermittent leave section in the $t(shared.certificationFormCare).",
     frequencyHint_medical:
       "Your answers must match the intermittent leave section in the $t(shared.certificationFormMedical).",
+    frequencyHint_pregnancy:
+      "Your answers must match the intermittent leave section in the $t(shared.certificationFormMedical).",
     frequencyHint_updateMedicalCertForm:
       "Your answers must match Questions 21 and 22 in the $t(shared.certificationFormMedical).",
     frequencyLabel_irregular:
@@ -1242,6 +1271,7 @@ const pages = {
     frequencyLabel_weeks: "Estimate how many absences per week.",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
     needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
+    needDocumentAlert_pregnancy: "$t(shared.leavePeriodMedicalAlert)",
     sectionLabel:
       "Tell us the estimated frequency and duration of your intermittent$t(chars.nbsp)leave.",
     title: "$t(shared.claimsLeaveDetailsTitle)",
@@ -1254,22 +1284,26 @@ const pages = {
     datesLead_care:
       "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormMedical).",
+      "$t(shared.leavePeriodContinuousDatesLeadMedicalOrPregnancy)",
+    datesLead_pregnancy:
+      "$t(shared.leavePeriodContinuousDatesLeadMedicalOrPregnancy)",
     datesLead_updateMedicalCertForm:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 16 in the $t(shared.certificationFormMedical).",
     datesSectionLabel:
       "Enter the start and end dates for your continuous leave.",
     endDateLabel: "Last day of leave",
-    hasLeaveHint_care:
-      "Your answer must match the $t(shared.certificationFormCare).",
+    hasLeaveHint_care: "$t(shared.leavePeriodHasLeaveHintCare)",
     hasLeaveHint_medical:
-      "Your answer must match the $t(shared.certificationFormMedical).",
+      "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
+    hasLeaveHint_pregnancy:
+      "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
     hasLeaveHint_updateMedicalCertForm:
-      "Your answer must match the corresponding checkbox of Question 14 in the $t(shared.certificationFormMedical).",
+      "$t(shared.leavePeriodHasLeaveHintUpdateMedicalCertForm)",
     hasLeaveLabel:
       "Do you need to take off work completely for a period of time (continuous leave)?",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
     needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
+    needDocumentAlert_pregnancy: "$t(shared.leavePeriodMedicalAlert)",
     startDateLabel: "First day of leave",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
@@ -1281,7 +1315,9 @@ const pages = {
     datesLead_care:
       "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormMedical).",
+      "$t(shared.leavePeriodIntermittentDatesLeadMedicalOrPregnancy)",
+    datesLead_pregnancy:
+      "$t(shared.leavePeriodIntermittentDatesLeadMedicalOrPregnancy)",
     datesLead_updateMedicalCertForm:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 20 in the $t(shared.certificationFormMedical).",
     datesSectionLabel:
@@ -1290,18 +1326,20 @@ const pages = {
     endDateLabel_medical: "Last day of leave",
     hasLeaveHint_bonding:
       "For example, you need to take time off for: <ul><li>Court dates for your foster child</li><li>Social worker visits</li><li>Gaps in your childcare</li></ul>",
-    hasLeaveHint_care:
-      "Your answer must match the $t(shared.certificationFormCare).",
+    hasLeaveHint_care: " $t(shared.leavePeriodHasLeaveHintCare)",
     hasLeaveHint_medical:
-      "Your answer must match the $t(shared.certificationFormMedical).",
+      "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
+    hasLeaveHint_pregnancy:
+      "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
     hasLeaveHint_updateMedicalCertForm:
-      "Your answer must match the corresponding checkbox of Question 14 in the $t(shared.certificationFormMedical).",
+      "$t(shared.leavePeriodHasLeaveHintUpdateMedicalCertForm)",
     hasLeaveLabel:
       "Do you need to take off work in uneven blocks of time (intermittent leave)?",
     hybridLeaveWarning:
       "You have to create a separate application for intermittent leave.",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
     needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
+    needDocumentAlert_pregnancy: "$t(shared.leavePeriodMedicalAlert)",
     startDateLabel: "First day of leave",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
@@ -1313,23 +1351,27 @@ const pages = {
     datesLead_care:
       "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormMedical).",
+      "$t(shared.leavePeriodReducedDatesLeadMedicalOrPregnancy)",
+    datesLead_pregnancy:
+      "$t(shared.leavePeriodReducedDatesLeadMedicalOrPregnancy)",
     datesLead_updateMedicalCertForm:
       "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 18 in the $t(shared.certificationFormMedical).",
     datesSectionLabel:
       "Enter the start and end dates for your reduced leave schedule.",
     endDateLabel: "Last day of leave",
     endDateLabel_medical: "Last day of leave",
-    hasLeaveHint_care:
-      "Your answer must match the $t(shared.certificationFormCare).",
+    hasLeaveHint_care: "$t(shared.leavePeriodHasLeaveHintCare)",
     hasLeaveHint_medical:
-      "Your answer must match the $t(shared.certificationFormMedical).",
+      "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
+    hasLeaveHint_pregnancy:
+      "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
     hasLeaveHint_updateMedicalCertForm:
-      "Your answer must match the corresponding checkbox of Question 14 in the $t(shared.certificationFormMedical).",
+      "$t(shared.leavePeriodHasLeaveHintUpdateMedicalCertForm)",
     hasLeaveLabel:
       "Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
     needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
+    needDocumentAlert_pregnancy: "$t(shared.leavePeriodMedicalAlert)",
     startDateLabel: "First day of leave",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
@@ -1603,12 +1645,15 @@ const pages = {
     leadCertGuidance_care:
       "The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormCare).",
     leadCertGuidance_medical:
-      "The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormMedical).",
+      "$t(shared.reducedLeaveScheduleLeadCertGuidanceMedicalOrPregnancy)",
+    leadCertGuidance_pregnancy:
+      "$t(shared.reducedLeaveScheduleLeadCertGuidanceMedicalOrPregnancy)",
     leadCertGuidance_updateMedicalCertForm:
       "The total number of hours you enter must match Question 19 in the $t(shared.certificationFormMedical).",
     minutesLabel: "$t(shared.minutesLabel)",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
     needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
+    needDocumentAlert_pregnancy: "$t(shared.leavePeriodMedicalAlert)",
     sectionLabel:
       "How many hours will you take off while you are on a reduced leave schedule?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
@@ -1698,6 +1743,7 @@ const pages = {
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
     leaveReasonValue_care: "$t(shared.leaveReasonCare)",
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     mailingAddressLabel: "Mailing address",
@@ -1893,9 +1939,8 @@ const pages = {
       "You need to upload a completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> to prove that you need to take leave to care for a family member with a serious medical condition.",
     lead_medical:
       "You need to upload a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link> to prove that you need to take medical leave.",
+    sectionLabel: "Upload your certification form",
     sectionLabel_bonding: "Upload your documentation",
-    sectionLabel_care: "Upload your certification form",
-    sectionLabel_medical: "Upload your certification form",
     title: "Upload certification",
   },
   claimsUploadDocsOptions: {
@@ -2094,6 +2139,11 @@ const pages = {
     noClaimResults: "No applications on file",
     searchLabel: "Search for employee name or application ID",
     searchSubmit: "Search",
+    sortChoice_employee_az: "Last name – A to Z",
+    sortChoice_employee_za: "Last name – Z to A",
+    sortChoice_newest: "Newest applications",
+    sortChoice_oldest: "Oldest applications",
+    sortLabel: "Sort",
     startDateTooltip: "When an employee started a new leave application",
     statusDescription_approved:
       "<strong>Approved:</strong> DFML has approved this leave request.",
@@ -2310,6 +2360,7 @@ const components = {
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
     leaveReasonValue_care: "$t(shared.leaveReasonCare)",
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     noticesDownload:
@@ -2530,8 +2581,6 @@ const components = {
     claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     claimDurationType_reducedSchedule:
       "$t(shared.claimDurationTypeReducedSchedule)",
-    downloadAttachments:
-      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     frequencyBasis_irregular: "Irregular over the next 6 months",
     frequencyBasis_months: "At least once a month",
     frequencyBasis_weeks: "At least once a week",
@@ -2547,6 +2596,8 @@ const components = {
       "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
     intermittentFrequencyDuration_weeks_hours:
       "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
+    lead_hasDocs: "$t(shared.employerLeaveScheduleLeadHasDocs)",
+    lead_noDocs: "$t(shared.employerLeaveScheduleLeadNoDocs)",
   },
   employersLeaveDetails: {
     applicationIdLabel: "Application ID",
@@ -2593,9 +2644,9 @@ const components = {
       "$t(shared.claimDurationTypeReducedSchedule)",
     dateRangeLabel: "Date range",
     detailsLabel: "Details",
-    downloadAttachments:
-      "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
     header: "Leave schedule",
+    lead_hasDocs: "$t(shared.employerLeaveScheduleLeadHasDocs)",
+    lead_noDocs: "$t(shared.employerLeaveScheduleLeadNoDocs)",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
   },
@@ -2701,7 +2752,7 @@ const components = {
   form: {
     continueButton: "Save and continue",
     dateInputDayLabel: "Day",
-    dateInputExample: "mm / dd / yyyy",
+    dateInputExample: "MM / DD / YYYY",
     dateInputMonthLabel: "Month",
     dateInputYearLabel: "Year",
     optional: "(optional)",
@@ -2727,7 +2778,7 @@ const components = {
     nextLabel: "Next",
     previousLabel: "Previous",
     summary:
-      "Viewing {{firstRecordNumber}} – {{lastRecordNumber}} of {{totalRecords}} results",
+      "Viewing {{firstRecordNumber}} to {{lastRecordNumber}} of {{totalRecords}} results",
   },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",

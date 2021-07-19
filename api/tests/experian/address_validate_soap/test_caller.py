@@ -50,7 +50,7 @@ def mock_wsdl_response(status_code):
 def test_zeep_caller_get_200(mock_wsdl_200):
     # Client should be able to retrieve and parse WSDL from a given source.
     caller = LazyZeepApiCaller(
-        ExperianSOAPConfig(soap_endpoint="https://fake-url.com", auth_token="foo")
+        ExperianSOAPConfig(soap_wsdl_uri="https://fake-url.com", auth_token="foo")
     )
     assert caller.get()
 
@@ -58,7 +58,7 @@ def test_zeep_caller_get_200(mock_wsdl_200):
 def test_zeep_caller_get_500(mock_wsdl_500):
     # Client should raise an HTTP error when failing to retrieve the WSDL on first call.
     caller = LazyZeepApiCaller(
-        ExperianSOAPConfig(soap_endpoint="https://fake-url.com", auth_token="foo")
+        ExperianSOAPConfig(soap_wsdl_uri="https://fake-url.com", auth_token="foo")
     )
 
     with pytest.raises(HTTPError):
@@ -67,7 +67,7 @@ def test_zeep_caller_get_500(mock_wsdl_500):
 
 def test_zeep_caller_do_search(mock_wsdl_200, mocker):
     caller = LazyZeepApiCaller(
-        ExperianSOAPConfig(soap_endpoint="https://fake-url.com", auth_token="foo")
+        ExperianSOAPConfig(soap_wsdl_uri="https://fake-url.com", auth_token="foo")
     )
 
     mock_service_proxy = mocker.Mock(spec=ApiCaller)
@@ -82,7 +82,7 @@ def test_zeep_caller_do_search(mock_wsdl_200, mocker):
 
 def test_zeep_caller_caches_service_proxy(mock_wsdl_200, mocker):
     caller = LazyZeepApiCaller(
-        ExperianSOAPConfig(soap_endpoint="https://fake-url.com", auth_token="foo")
+        ExperianSOAPConfig(soap_wsdl_uri="https://fake-url.com", auth_token="foo")
     )
 
     mock_service_proxy = mocker.Mock(spec=ApiCaller)

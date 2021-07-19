@@ -91,7 +91,7 @@ export const LeavePeriodReducedSchedule = (props) => {
       title={t("pages.claimsLeavePeriodReducedSchedule.title")}
       onSave={handleSave}
     >
-      {(claim.isMedicalLeave || claim.isCaringLeave) && (
+      {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsLeavePeriodReducedSchedule.needDocumentAlert"
@@ -132,10 +132,10 @@ export const LeavePeriodReducedSchedule = (props) => {
           },
         ]}
         hint={
-          claim.isMedicalLeave || claim.isCaringLeave
+          claim.isMedicalOrPregnancyLeave || claim.isCaringLeave
             ? t("pages.claimsLeavePeriodReducedSchedule.hasLeaveHint", {
                 context:
-                  claim.isMedicalLeave &&
+                  claim.isMedicalOrPregnancyLeave &&
                   isFeatureEnabled("updateMedicalCertForm")
                     ? "updateMedicalCertForm"
                     : contentContext,
@@ -162,7 +162,7 @@ export const LeavePeriodReducedSchedule = (props) => {
             i18nKey="pages.claimsLeavePeriodReducedSchedule.datesLead"
             tOptions={{
               context:
-                claim.isMedicalLeave &&
+                claim.isMedicalOrPregnancyLeave &&
                 isFeatureEnabled("updateMedicalCertForm")
                   ? "updateMedicalCertForm"
                   : contentContext,

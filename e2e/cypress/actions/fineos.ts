@@ -4,8 +4,9 @@ import {
   getCertificationDocumentType,
   getDocumentReviewTaskName,
 } from "../../src/util/documents";
-import { LeaveReason, ValidClaim } from "../../src/types";
+import { ValidClaim } from "../../src/types";
 import { config } from "./common";
+import { LeaveReason } from "../../src/generation/Claim";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
@@ -39,7 +40,11 @@ export function before(): void {
     ) {
       return false;
     }
-    if (e.message.match(/Cannot set property 'status' of undefined/)) {
+    if (
+      e.message.match(
+        /Cannot (set|read) property ('status'|'range') of undefined/
+      )
+    ) {
       return false;
     }
     return true;
@@ -53,7 +58,7 @@ export function before(): void {
   // Fineos error pages have been found to cause test crashes when rendered. This is very hard to debug, as Cypress
   // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we instead
   // throw an error.
-  cy.intercept(/\/util\/errorpage.jsp/, (req) => {
+  cy.intercept(/\/(util\/errorpage\.jsp|outofdatedataerror\.jsp)/, (req) => {
     req.reply(
       "A fatal Fineos error was thrown at this point. We've blocked the rendering of this page to prevent test crashes"
     );
@@ -381,7 +386,7 @@ export function createNotification(
     wait();
     enterReducedWorkHours(
       application?.leave_details
-        ?.reduced_schedule_leave_periods as ReducedScheduleLeavePeriods[]
+        ?.reduced_schedule_leave_periods?.[0] as ReducedScheduleLeavePeriods
     );
     wait();
     cy.get(
@@ -419,19 +424,19 @@ export function createNotification(
 }
 
 export function enterReducedWorkHours(
-  leave_details: ReducedScheduleLeavePeriods[]
+  leave_details: ReducedScheduleLeavePeriods
 ): void {
   const hrs = (minutes: number | null | undefined) => {
     return minutes ? Math.round(minutes / 60) : 0;
   };
   const weekdayInfo = [
-    { hours: hrs(leave_details[0].sunday_off_minutes) },
-    { hours: hrs(leave_details[0].monday_off_minutes) },
-    { hours: hrs(leave_details[0].tuesday_off_minutes) },
-    { hours: hrs(leave_details[0].wednesday_off_minutes) },
-    { hours: hrs(leave_details[0].thursday_off_minutes) },
-    { hours: hrs(leave_details[0].friday_off_minutes) },
-    { hours: hrs(leave_details[0].saturday_off_minutes) },
+    { hours: hrs(leave_details.sunday_off_minutes) },
+    { hours: hrs(leave_details.monday_off_minutes) },
+    { hours: hrs(leave_details.tuesday_off_minutes) },
+    { hours: hrs(leave_details.wednesday_off_minutes) },
+    { hours: hrs(leave_details.thursday_off_minutes) },
+    { hours: hrs(leave_details.friday_off_minutes) },
+    { hours: hrs(leave_details.saturday_off_minutes) },
   ];
 
   cy.get("input[name*='_hours']").each((input, index) => {

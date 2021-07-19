@@ -1,5 +1,39 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Employer dashboard renders Sort section when feature flags are enabled 1`] = `
+<Dropdown
+  choices={
+    Array [
+      Object {
+        "label": "Newest applications",
+        "value": "created_at,descending",
+      },
+      Object {
+        "label": "Oldest applications",
+        "value": "created_at,ascending",
+      },
+      Object {
+        "label": "Last name – A to Z",
+        "value": "employee,ascending",
+      },
+      Object {
+        "label": "Last name – Z to A",
+        "value": "employee,descending",
+      },
+    ]
+  }
+  formGroupClassName="display-flex margin-0 flex-align-center"
+  hideEmptyChoice={true}
+  label="Sort"
+  labelClassName="text-bold margin-right-1"
+  name="orderAndDirection"
+  onChange={[Function]}
+  selectClassName="margin-0"
+  smallLabel={true}
+  value=""
+/>
+`;
+
 exports[`Employer dashboard renders a 'no results' message in the table, and no pagination components when no claims are present 1`] = `
 <tr>
   <td

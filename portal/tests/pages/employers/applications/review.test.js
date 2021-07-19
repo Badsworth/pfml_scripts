@@ -109,18 +109,11 @@ describe("Review", () => {
   });
 
   it("displays organization/employer information", () => {
-    const organizationNameLabel = wrapper.find("p.text-bold").at(0);
-    const employerIdentifierNumberLabel = wrapper.find("p.text-bold").at(1);
-    const dataValues = wrapper.find("p.margin-top-0");
-    const organizationName = dataValues.at(0);
-    const ein = dataValues.at(1);
+    const orgNameRow = wrapper.find("[data-test='org-name-row']");
+    const einRow = wrapper.find("[data-test='ein-row']");
 
-    expect(organizationNameLabel.text()).toBe("Organization");
-    expect(organizationName.text()).toBe("Work Inc.");
-    expect(employerIdentifierNumberLabel.text()).toBe(
-      "Employer ID number (EIN)"
-    );
-    expect(ein.text()).toBe("12-3456789");
+    expect(orgNameRow).toMatchSnapshot();
+    expect(einRow).toMatchSnapshot();
   });
 
   it("hides organization name if employer_dba is falsy", () => {
@@ -131,10 +124,11 @@ describe("Review", () => {
       ({ wrapper } = renderComponent("shallow", noEmployerDba));
     });
 
-    const employerIdentifierNumberLabel = wrapper.find("p.text-bold").first();
-    expect(employerIdentifierNumberLabel.text()).toBe(
-      "Employer ID number (EIN)"
-    );
+    const orgNameRow = wrapper.find("[data-test='org-name-row']");
+    const einRow = wrapper.find("[data-test='ein-row']");
+
+    expect(orgNameRow.exists()).toBe(false);
+    expect(einRow.exists()).toBe(true);
   });
 
   it("submits a claim with the correct options", async () => {
@@ -171,12 +165,12 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'employer_decision' if the employer denys", async () => {
+  it("sets 'employer_decision' if the employer denies", async () => {
     act(() => {
-      const setEmployerDecision = wrapper
+      const updateFields = wrapper
         .find("EmployerDecision")
-        .prop("onChange");
-      setEmployerDecision("Deny");
+        .prop("updateFields");
+      updateFields({ employer_decision: "Deny" });
     });
 
     await simulateEvents(wrapper).submitForm();
@@ -189,10 +183,10 @@ describe("Review", () => {
 
   it("sets 'employer_decision' if the employer approves", async () => {
     act(() => {
-      const setEmployerDecision = wrapper
+      const updateFields = wrapper
         .find("EmployerDecision")
-        .prop("onChange");
-      setEmployerDecision("Approve");
+        .prop("updateFields");
+      updateFields({ employer_decision: "Approve" });
     });
 
     await simulateEvents(wrapper).submitForm();
@@ -219,10 +213,10 @@ describe("Review", () => {
 
   it("sets 'hours_worked_per_week' based on SupportingWorkDetails", async () => {
     act(() => {
-      const setAmendedHours = wrapper
+      const updateFields = wrapper
         .find("SupportingWorkDetails")
-        .prop("onChange");
-      setAmendedHours(50.5);
+        .prop("updateFields");
+      updateFields({ hours_worked_per_week: 50.5 });
     });
 
     await simulateEvents(wrapper).submitForm();
@@ -230,6 +224,22 @@ describe("Review", () => {
     expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
       expect.objectContaining({ hours_worked_per_week: 50.5 })
+    );
+  });
+
+  it("restores the default hours_worked_per_week if the value in the form is null", async () => {
+    act(() => {
+      const updateFields = wrapper
+        .find("SupportingWorkDetails")
+        .prop("updateFields");
+      updateFields({ hours_worked_per_week: null });
+    });
+
+    await simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ hours_worked_per_week: 30 })
     );
   });
 
@@ -403,7 +413,10 @@ describe("Review", () => {
 
   it("sets 'has_amendments' to true if hours are amended", async () => {
     act(() => {
-      wrapper.find("SupportingWorkDetails").props().onChange(60);
+      wrapper
+        .find("SupportingWorkDetails")
+        .props()
+        .updateFields({ hours_worked_per_week: 60 });
     });
     await simulateEvents(wrapper).submitForm();
 

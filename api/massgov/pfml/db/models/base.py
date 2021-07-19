@@ -3,10 +3,15 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import inspect
+from sqlalchemy import TIMESTAMP, Column, inspect
 from sqlalchemy.ext.declarative import as_declarative
+from sqlalchemy.sql.functions import now as sqlnow
 
 from massgov.pfml.util.datetime import utcnow
+
+
+def same_as_created_at(context):
+    return context.get_current_parameters()["created_at"]
 
 
 @as_declarative()
@@ -35,3 +40,21 @@ def uuid_gen():
 def utc_timestamp_gen():
     """ Generate a tz-aware timestamp pinned to UTC """
     return utcnow()
+
+
+# This is annotated as a @declarative_mixin when we upgrade to SQLAlchemy 1.4
+class TimestampMixin:
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=same_as_created_at,
+        onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )

@@ -9,7 +9,7 @@ describe("PaginationSummary", () => {
     );
 
     expect(wrapper.find("p").text()).toEqual(
-      "Viewing 26 – 50 of 7,500 results"
+      "Viewing 26 to 50 of 7,500 results"
     );
   });
 
@@ -18,6 +18,6 @@ describe("PaginationSummary", () => {
       <PaginationSummary pageOffset={1} pageSize={25} totalRecords={20} />
     );
 
-    expect(wrapper.find("p").text()).toEqual("Viewing 1 – 20 of 20 results");
+    expect(wrapper.find("p").text()).toEqual("Viewing 1 to 20 of 20 results");
   });
 });

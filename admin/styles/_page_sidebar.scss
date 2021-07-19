@@ -9,21 +9,23 @@
   padding: 0;
 }
 
-.menu__link, .settings__link {
+.menu__link,
+.settings__link {
+  border-left: solid 0.29em transparent;
   color: $Color-RevolutionGray;
   display: block;
   padding: 1.18em 1.29em 1.18em 3.14em;
-  text-decoration: none;
   position: relative;
-  transition: all .2s ease 0s;
-  border-left: solid .29em transparent;
+  text-decoration: none;
+  transition: all 0.2s ease 0s;
 }
 
-.menu__link:before, .settings__link:before {
+.menu__link::before,
+.settings__link::before {
   @include IconFontProps;
   display: block;
   font-size: 1.14em;
-  left: .85em;
+  left: 0.85em;
   position: absolute;
   top: 1em;
 }
@@ -38,26 +40,25 @@
   border-color: $Color-BerkshiresGreen-600;
 }
 
-
-.menu__link--dashboard:before {
+.menu__link--dashboard::before {
   content: $IconHome;
 }
 
-.menu__link--user-lookup:before {
+.menu__link--user-lookup::before {
   content: $IconUsers;
 }
 
-.menu__link--maintenance:before {
+.menu__link--maintenance::before {
   content: $IconAlert1;
 }
 
-.menu__link--features:before {
+.menu__link--features::before {
   content: $IconFlag;
 }
 
 /* Settings */
 .settings {
-  border-top: 1px solid #9CC2AB;
+  border-top: 1px solid #9cc2ab;
   flex: 1 1 auto;
   padding: 0.82em 0 0;
 }

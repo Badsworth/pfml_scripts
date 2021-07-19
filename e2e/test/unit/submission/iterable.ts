@@ -53,4 +53,73 @@ describe("watchFailures", () => {
     const results = [errorResult, errorResult, errorResult];
     await expect(consume(watchFailures(results))).rejects.toThrowError();
   });
+
+  it("Should not error when 3 consecutive failures are encountered if otherwise specified", async () => {
+    const results = [errorResult, errorResult, errorResult, errorResult];
+    await expect(consume(watchFailures(results, 5, true))).resolves.toBe(
+      undefined
+    );
+  });
+
+  it("Should error when 'n' consecutive failures are encountered", async () => {
+    const results = [errorResult, errorResult, errorResult, errorResult];
+    await expect(
+      consume(watchFailures(results, 4, true))
+    ).rejects.toThrowError();
+  });
+
+  it("Should reset consecutive errors to 3 if there is one successful submission after 6 errors", async () => {
+    const results = [
+      errorResult, // 1
+      errorResult, // 2
+      errorResult, // 3
+      errorResult, // 4
+      errorResult, //5
+      errorResult, // 6
+      successResult, // 3
+      errorResult, // 4
+      errorResult, // 5
+      errorResult, // 6
+      errorResult, // 7
+      errorResult, // 8
+      errorResult, // 9
+    ];
+
+    await expect(
+      consume(watchFailures(results, 9, true))
+    ).rejects.toThrowError();
+
+    await expect(consume(watchFailures(results, 10, true))).resolves.toBe(
+      undefined
+    );
+  });
+
+  // proves that if consecutive errors are greater than 6 (highly unstable claim submission), we won't continue with full speed claim submission until we see more stability
+  it("Should reset consecutive errors to 0 if 1 of the 3 subseqeuent submissions are succesful after 6 errors", async () => {
+    const results = [
+      errorResult, // 1
+      errorResult, // 2
+      errorResult, // 3
+      errorResult, // 4
+      errorResult, // 5
+      errorResult, // 6
+      successResult, // 3
+      errorResult, // 4
+      errorResult, // 5
+      successResult, // 0
+      errorResult, // 1
+      errorResult, // 2
+      errorResult, // 3
+      errorResult, // 4
+      errorResult, // 5
+      errorResult, // 6
+      errorResult, // 7
+    ];
+    await expect(
+      consume(watchFailures(results, 7, true))
+    ).rejects.toThrowError();
+    await expect(consume(watchFailures(results, 10, true))).resolves.toBe(
+      undefined
+    );
+  });
 });
