@@ -4,9 +4,6 @@ from typing import Any, Dict, Optional, Set, Union
 
 import connexion
 import flask
-
-# import oauthlib
-# import requests_oauthlib
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
