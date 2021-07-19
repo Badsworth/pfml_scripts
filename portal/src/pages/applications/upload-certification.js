@@ -19,7 +19,6 @@ import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import uploadDocumentsHelper from "../../utils/uploadDocumentsHelper";
 import useFilesLogic from "../../hooks/useFilesLogic";
@@ -78,12 +77,7 @@ export const UploadCertification = (props) => {
       return;
     }
 
-    // To enable backwards-compabitility, the document type when uploading will switch from State managed Paid Leave Confirmation to Certification Form
-    // when the useNewPlanProofs flag is enabled; the API will set the plan proof on the document upload to FINEOS when Certification Form is used
-
-    const documentType = isFeatureEnabled("useNewPlanProofs")
-      ? DocumentType.certification.certificationForm
-      : DocumentType.certification.medicalCertification;
+    const documentType = DocumentType.certification.certificationForm;
 
     const uploadPromises = appLogic.documents.attach(
       claim.application_id,

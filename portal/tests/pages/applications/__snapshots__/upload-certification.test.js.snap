@@ -11,7 +11,7 @@ exports[`UploadCertification before any documents have been loaded renders page 
 
 exports[`UploadCertification before any documents have been loaded renders page with bonding leave content when leave reason is Bonding leave 2`] = `"You need to upload one of the following documents to confirm your child’s date of birth:"`;
 
-exports[`UploadCertification before any documents have been loaded renders page with caregiver leave contentwhen leave reason is caregiver leave 1`] = `
+exports[`UploadCertification before any documents have been loaded renders page with caregiver leave content when leave reason is caregiver leave 1`] = `
 <Heading
   level="2"
   size="1"
@@ -20,7 +20,7 @@ exports[`UploadCertification before any documents have been loaded renders page 
 </Heading>
 `;
 
-exports[`UploadCertification before any documents have been loaded renders page with caregiver leave contentwhen leave reason is caregiver leave 2`] = `
+exports[`UploadCertification before any documents have been loaded renders page with caregiver leave content when leave reason is caregiver leave 2`] = `
 Array [
   "You need to upload a completed ",
   <a
