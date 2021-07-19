@@ -7,8 +7,10 @@ import massgov.pfml.fineos.mock_client
 from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.api.services.administrator_fineos_actions import (
+    DOWNLOADABLE_DOC_TYPES,
     EFORM_TYPES,
     get_claim_as_leave_admin,
+    get_documents_as_leave_admin,
     get_leave_details,
     register_leave_admin_with_fineos,
 )
@@ -1924,3 +1926,21 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
     assert leave_details.is_reviewable is False
     assert leave_details.status == "Known"
     assert leave_details.uses_second_eform_version is False
+
+
+# testing class for get_documents_as_leave_admin
+class TestGetDocumentsAsLeaveAdmin:
+    @pytest.fixture
+    def absence_id(self):
+        # TODO: (EMPLOYER-1584): Don't rely on FINEOS mock_client and magic strings for mocking
+        return "leave_admin_mixed_allowable_doc_types"
+
+    def test_get_documents(self, absence_id):
+        documents = get_documents_as_leave_admin("fake-id", absence_id)
+        assert len(documents) > 0
+
+    def test_filters_non_downloadable_documents(self, absence_id):
+        documents = get_documents_as_leave_admin("fake-id", absence_id)
+
+        for document in documents:
+            assert document.document_type.lower() in DOWNLOADABLE_DOC_TYPES
