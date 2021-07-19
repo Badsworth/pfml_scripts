@@ -1,4 +1,8 @@
-import { Address, OtherIncome } from "../../src/_api";
+import {
+  Address,
+  OtherIncome,
+  ReducedScheduleLeavePeriods,
+} from "../../src/_api";
 import {
   AllNotNull,
   LeaveReason,
@@ -1300,7 +1304,6 @@ export class ClaimantPage {
 
     if (has_continuous_leave_periods) {
       toggleLeaveScheduleSlider("continuos");
-      this.clickNext();
       chooseSelectOption("Absence status", "Known");
       cy.findByLabelText("Absence start date").type(
         `${dateToMMddyyyy(startDate)}{enter}`
@@ -1321,7 +1324,6 @@ export class ClaimantPage {
 
     if (has_reduced_schedule_leave_periods) {
       toggleLeaveScheduleSlider("reduced");
-      this.clickNext();
       chooseSelectOption("Absence status", "Known");
       wait();
       cy.labelled("Absence start date").type(
@@ -1332,7 +1334,7 @@ export class ClaimantPage {
       wait();
       if (isNotNull(claim.leave_details.reduced_schedule_leave_periods))
         enterReducedWorkHours(
-          claim.leave_details.reduced_schedule_leave_periods
+          claim.leave_details.reduced_schedule_leave_periods?.[0]
         );
       wait();
       cy.get(
@@ -1366,5 +1368,320 @@ export class ClaimantPage {
     this.clickNext(20000);
     cy.contains("div", "Thank you. Your notification has been submitted.");
     this.clickNext(20000);
+  }
+  /**
+   * Starts the Fineos intake process and executes the given callback once navigated to first meaningful step of the intake.
+   * @param cb
+   * @returns the return value of `cb`
+   */
+  startCreateNotification<T>(cb: (step: OccupationDetails) => T): T {
+    // Start the process
+    cy.contains("span", "Create Notification").click();
+    // "Notification details" step, we are not changing anything here, so we just skip it.
+    this.clickNext();
+    return cb(new OccupationDetails());
+  }
+}
+/**Contains utilities used within multiple pages throughout the intake process */
+abstract class CreateNotificationStep {
+  /**
+   * Submits the current part of the claim intake.
+   * @param timeout
+   */
+  clickNext(timeout?: number) {
+    cy.get('#navButtons input[value="Next "]', { timeout })
+      .first()
+      .click({ force: true });
+  }
+  /**
+   * Safely selects an option for a <select> tag with a given label
+   * @param label
+   * @param option
+   */
+  protected chooseSelectOption(label: string, option: string) {
+    cy.findByLabelText(label)
+      .should((el: JQuery<HTMLElement>) => {
+        // Make sure the select has children and is loaded
+        expect(el.children().length > 1 || el.children().first().text() !== "")
+          .to.be.true;
+      })
+      .select(option);
+    // Wait for ajax
+    wait();
+  }
+}
+
+class OccupationDetails extends CreateNotificationStep {
+  enterHoursWorkedPerWeek(hoursWorkedPerWeek: number) {
+    cy.findByLabelText("Hours worked per week").type(
+      `{selectall}{backspace}${hoursWorkedPerWeek}`
+    );
+  }
+  /**
+   * Submits Occupation Details step and navigates to Notification Options step
+   * @param cb
+   * @returns the return value of `cb`
+   */
+  nextStep<T>(cb: (step: NotificationOptions) => T): T {
+    this.clickNext();
+    return cb(new NotificationOptions());
+  }
+}
+class NotificationOptions extends CreateNotificationStep {
+  chooseTypeOfRequest(
+    type:
+      | "Accident or treatment required for an injury"
+      | "Sickness, treatment required for a medical condition or any other medical procedure"
+      | "Pregnancy, birth or related medical treatment"
+      | "Bonding with a new child (adoption/ foster care/ newborn)"
+      | "Caring for a family member"
+      | "Out of work for another reason"
+  ): this {
+    cy.contains("div", type).prev().find("input").click();
+    return this;
+  }
+  /**
+   * Submits Notification Options step and navigates Reason Of Absence to step
+   * @param cb
+   * @returns the return value of `cb`
+   */
+  nextStep<T>(cb: (step: ReasonOfAbsence) => T): T {
+    this.clickNext();
+    return cb(new ReasonOfAbsence());
+  }
+}
+/**
+ * Maps to select inputs available to describe Absense Reason
+ */
+export type AbsenceReasonDescription = {
+  relates_to?: string;
+  reason?: string;
+  qualifier_1?: string;
+  qualifier_2?: string;
+};
+/**
+ * Maps to select inputs available to describe Primary Relationship
+ */
+type PrimaryRelationshipDescription = {
+  relationship_to_employee?: string;
+  qualifier_1?: string;
+  qualifier_2?: string;
+};
+class ReasonOfAbsence extends CreateNotificationStep {
+  /**
+   * Fills out the absence reason select fields with given data
+   * @param desc
+   */
+  fillAbsenceReason(desc: AbsenceReasonDescription): this {
+    if (desc.relates_to)
+      this.chooseSelectOption("Absence relates to", desc.relates_to);
+    if (desc.reason) this.chooseSelectOption("Absence reason", desc.reason);
+    if (desc.qualifier_1)
+      this.chooseSelectOption("Qualifier 1", desc.qualifier_1);
+    if (desc.qualifier_2)
+      this.chooseSelectOption("Qualifier 2", desc.qualifier_2);
+    return this;
+  }
+  /**
+   * Fills out the Absence Relationships select fields with given data
+   * @param relationship
+   */
+  fillAbsenceRelationship(relationship: PrimaryRelationshipDescription): this {
+    cy.get("#leaveRequestAbsenceRelationshipsWidget").within(() => {
+      if (relationship.relationship_to_employee)
+        this.chooseSelectOption(
+          "Absence relates to",
+          relationship.relationship_to_employee
+        );
+      if (relationship.qualifier_1)
+        this.chooseSelectOption("Absence relates to", relationship.qualifier_1);
+      if (relationship.qualifier_2)
+        this.chooseSelectOption("Absence relates to", relationship.qualifier_2);
+    });
+    return this;
+  }
+  /**
+   * Submits Reason Of Absence step and navigates Dates Of Absence to step
+   * @param cb
+   * @returns the return value of `cb`
+   */
+  nextStep<T>(cb: (step: DatesOfAbsence) => T): T {
+    this.clickNext(5000);
+    return cb(new DatesOfAbsence());
+  }
+}
+
+type AbsenceStatus = "Known" | "Estimated" | "Please select";
+
+type ContinuousLeavePeriod = {
+  status: AbsenceStatus;
+  /**MM/DD/YYYY */
+  start: string;
+  /**MM/DD/YYYY */
+  end: string;
+  /**MM/DD/YYYY */
+  last_day_worked?: string;
+  /**MM/DD/YYYY */
+  return_to_work_date?: string;
+};
+class DatesOfAbsence extends CreateNotificationStep {
+  /**
+   * Toggles the control needed to render the Leave Period inputs according to `type`.
+   * The control needs to be toggled before attempting to enter the leave period dates, but doesn't need to be toggled more than once.
+   * @param type
+   */
+  toggleLeaveScheduleSlider(
+    type: "continuos" | "intermittent" | "reduced"
+  ): this {
+    const scheduleSliderMap: Record<typeof type, string> = {
+      continuos: "One or more fixed time off periods",
+      intermittent: "Episodic / leave as needed",
+      reduced: "Reduced work schedule",
+    };
+    cy.contains("div.toggle-guidance-row", scheduleSliderMap[type])
+      .find("span.slider")
+      .click();
+    return this;
+  }
+  addFixedTimeOffPeriod(period: ContinuousLeavePeriod): this {
+    // wait() doesn't work within this widget, but we still need to use it. So we have to get out of .within() scope after every action.
+    const withinWidget = (cb: () => unknown) =>
+      cy.get(`#timeOffAbsencePeriodDetailsQuickAddWidget`).within(cb);
+
+    // Enter absence status
+    withinWidget(() => {
+      cy.findByLabelText("Absence status").select(period.status);
+    });
+    wait();
+
+    // Enter leave start and end dates
+    withinWidget(() => {
+      cy.findByLabelText("Absence start date").type(
+        `${dateToMMddyyyy(period.start)}{enter}`
+      );
+    });
+    wait();
+
+    withinWidget(() => {
+      cy.findByLabelText("Absence end date").type(
+        `${dateToMMddyyyy(period.end)}{enter}`
+      );
+    });
+    wait();
+
+    // Enter work related dates if specified
+    withinWidget(() => {
+      if (period.last_day_worked)
+        cy.findByLabelText("Last day worked ").type(
+          `${dateToMMddyyyy(period.last_day_worked)}{enter}`
+        );
+    });
+
+    wait();
+    withinWidget(() => {
+      if (period.return_to_work_date)
+        cy.findByLabelText("Return to work date").type(
+          `${dateToMMddyyyy(period.return_to_work_date)}{enter}`
+        );
+    });
+    wait();
+
+    // Add the period
+    cy.findByTitle(`Quick Add`).click();
+    return this;
+  }
+  addReducedSchedulePeriod(
+    absenceStatus: AbsenceStatus,
+    reducedLeavePeriod: ReducedScheduleLeavePeriods
+  ): this {
+    // Same as addFixedTimeOffPeriod, wait() doesn't worked when scoped to this widget
+    const withinWidget = (cb: () => unknown) =>
+      cy.get(`#reducedScheduleAbsencePeriodDetailsQuickAddWidget`).within(cb);
+    // Enter absence status
+    withinWidget(() => {
+      this.chooseSelectOption("Absence status", absenceStatus);
+    });
+    wait();
+    // Enter reduced schedule period start/end dates
+    withinWidget(() => {
+      if (reducedLeavePeriod.start_date)
+        cy.labelled("Absence start date").type(
+          `${dateToMMddyyyy(reducedLeavePeriod.start_date)}{enter}`
+        );
+    });
+    wait();
+    withinWidget(() => {
+      if (reducedLeavePeriod.end_date)
+        cy.labelled("Absence end date").type(
+          `${dateToMMddyyyy(reducedLeavePeriod.end_date)}{enter}`
+        );
+    });
+    wait();
+    // Enter hours for each weekday
+    withinWidget(() => enterReducedWorkHours(reducedLeavePeriod));
+    wait();
+    // Submit period
+    withinWidget(() => cy.findByTitle(`Quick Add`).click());
+    return this;
+  }
+  nextStep<T>(cb: (step: WorkAbsenceDetails) => T): T {
+    this.clickNext(5000);
+    return cb(new WorkAbsenceDetails());
+  }
+}
+
+class WorkAbsenceDetails extends CreateNotificationStep {
+  selectWorkPatternType(
+    type:
+      | "Unknown"
+      | "Fixed"
+      | "2 weeks Rotating"
+      | "3 weeks Rotating"
+      | "4 weeks Rotating"
+      | "Variable"
+  ): this {
+    this.chooseSelectOption("Work Pattern Type", type);
+    wait();
+    return this;
+  }
+  applyStandardWorkWeek(): this {
+    cy.findByLabelText("Standard Work Week").click();
+    wait();
+    cy.get('input[value="Apply to Calendar"]').click({ force: true });
+    return this;
+  }
+  addMilitaryCaregiverDescription(): this {
+    cy.findByLabelText("Military Caregiver Description").type(
+      "I am a parent military caregiver."
+    );
+    return this;
+  }
+  nextStep<T>(cb: (step: WrapUp) => T): T {
+    this.clickNext(20000);
+    return cb(new WrapUp());
+  }
+}
+
+class WrapUp extends CreateNotificationStep {
+  /**Looks for the Leave Case number in the Wrap Up step and returns it wrapped by Cypress. */
+  private getLeaveCaseNumber() {
+    const caseNumberMatcher = /NTN-[0-9]{5}-[A-Z]{3}-[0-9]{2}/g;
+    return cy
+      .findByText(/Absence Case - NTN-[0-9]{5}-[A-Z]{3}-[0-9]{2}/g)
+      .then((el) => {
+        const match = el.text().match(caseNumberMatcher);
+        if (!match)
+          throw new Error(
+            `Couldn't find the Case Number on intake Wrap Up page.`
+          );
+        return cy.wrap(match[0]);
+      });
+  }
+  /**Captures the Leave Case id number and exits the notification creation process */
+  finishNotificationCreation(): Cypress.Chainable<string> {
+    return this.getLeaveCaseNumber().then((absenceId) => {
+      this.clickNext(20000);
+      return cy.wrap(absenceId);
+    });
   }
 }

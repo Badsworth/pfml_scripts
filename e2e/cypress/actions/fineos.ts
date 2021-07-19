@@ -385,7 +385,7 @@ export function createNotification(
     wait();
     enterReducedWorkHours(
       application?.leave_details
-        ?.reduced_schedule_leave_periods as ReducedScheduleLeavePeriods[]
+        ?.reduced_schedule_leave_periods?.[0] as ReducedScheduleLeavePeriods
     );
     wait();
     cy.get(
@@ -423,19 +423,19 @@ export function createNotification(
 }
 
 export function enterReducedWorkHours(
-  leave_details: ReducedScheduleLeavePeriods[]
+  leave_details: ReducedScheduleLeavePeriods
 ): void {
   const hrs = (minutes: number | null | undefined) => {
     return minutes ? Math.round(minutes / 60) : 0;
   };
   const weekdayInfo = [
-    { hours: hrs(leave_details[0].sunday_off_minutes) },
-    { hours: hrs(leave_details[0].monday_off_minutes) },
-    { hours: hrs(leave_details[0].tuesday_off_minutes) },
-    { hours: hrs(leave_details[0].wednesday_off_minutes) },
-    { hours: hrs(leave_details[0].thursday_off_minutes) },
-    { hours: hrs(leave_details[0].friday_off_minutes) },
-    { hours: hrs(leave_details[0].saturday_off_minutes) },
+    { hours: hrs(leave_details.sunday_off_minutes) },
+    { hours: hrs(leave_details.monday_off_minutes) },
+    { hours: hrs(leave_details.tuesday_off_minutes) },
+    { hours: hrs(leave_details.wednesday_off_minutes) },
+    { hours: hrs(leave_details.thursday_off_minutes) },
+    { hours: hrs(leave_details.friday_off_minutes) },
+    { hours: hrs(leave_details.saturday_off_minutes) },
   ];
 
   cy.get("input[name*='_hours']").each((input, index) => {
