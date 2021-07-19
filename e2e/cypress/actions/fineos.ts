@@ -56,28 +56,12 @@ export function before(): void {
   });
 
   // Fineos error pages have been found to cause test crashes when rendered. This is very hard to debug, as Cypress
-  // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we replace the
-  // page with an error page and capture the real response to a file for future debugging.
+  // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we instead
+  // throw an error.
   cy.intercept(/\/(util\/errorpage\.jsp|outofdatedataerror\.jsp)/, (req) => {
-    req.continue((res) => {
-      const filename = Math.ceil(Math.random() * 1000).toString() + `.json`;
-      // We can't use Cypress's normal async methods here. Instead, use cy.now() to skip the command queue.
-      // This is very undocumented and very not recommended, but I can't find a cleaner way to capture this data to disk
-      // before we return the fake response.
-      // @ts-ignore
-      cy.now(
-        "writeFile",
-        `cypress/screenshots/${filename}`,
-        JSON.stringify({
-          url: req.url,
-          headers: res.headers,
-          body: res.body,
-        })
-      );
-      res.send(
-        `A fatal Fineos error was thrown at this point. We've blocked the rendering of this page to prevent test crashes, but the original response body has been saved to the screenshots directory as ${filename}`
-      );
-    });
+    req.reply(
+      "A fatal Fineos error was thrown at this point. We've blocked the rendering of this page to prevent test crashes"
+    );
   });
 
   // Set up a route we can listen to wait on ajax rendering to complete.
