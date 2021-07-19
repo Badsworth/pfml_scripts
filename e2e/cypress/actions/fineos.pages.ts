@@ -295,6 +295,18 @@ class OutstandingRequirementsPage {
     ).click();
     cy.get("#footerButtonsBar input[value='OK']").click();
   }
+  complete(receipt = "Received", reason = "Complete Employer Confirmation") {
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[value='Complete']").click();
+    cy.get("#CompletionReasonWidget_PopupWidgetWrapper").within(() => {
+      cy.findByLabelText("Completion Reason").select(receipt);
+      cy.findByLabelText("Completion Notes").type(
+        `{selectall}{backspace}${reason}`
+      );
+      cy.findByText("Ok").click({ force: true });
+    });
+  }
 }
 class TasksPage {
   assertTaskExists(name: string): this {
