@@ -148,7 +148,20 @@ export const LeavePeriodIntermittent = (props) => {
             components={{ ul: <ul className="usa-list" />, li: <li /> }}
           />
         }
-        label={t("pages.claimsLeavePeriodIntermittent.hasLeaveLabel")}
+        label={
+          <Trans
+            i18nKey="pages.claimsLeavePeriodIntermittent.hasLeaveLabel"
+            components={{
+              "scheduling-leave-guide-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.schedulingLeaveGuide}
+                />
+              ),
+            }}
+          />
+        }
         type="radio"
       />
 

@@ -1309,7 +1309,7 @@ const pages = {
     hasLeaveHint_updateMedicalCertForm:
       "Your answer must match the corresponding checkbox of Question 14 in the $t(shared.certificationFormMedical).",
     hasLeaveLabel:
-      "Do you need to take off work in uneven blocks of time (intermittent leave)?",
+      "Do you need to take off work in uneven blocks of time (<scheduling-leave-guide-link>intermittent leave</scheduling-leave-guide-link>)?",
     hybridLeaveWarning:
       "You have to create a separate application for intermittent leave.",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
@@ -1339,7 +1339,7 @@ const pages = {
     hasLeaveHint_updateMedicalCertForm:
       "Your answer must match the corresponding checkbox of Question 14 in the $t(shared.certificationFormMedical).",
     hasLeaveLabel:
-      "Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?",
+      "Do you need to work fewer hours than usual for a period of time (<scheduling-leave-guide-link>reduced leave schedule</scheduling-leave-guide-link>)?",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
     needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
     startDateLabel: "First day of leave",

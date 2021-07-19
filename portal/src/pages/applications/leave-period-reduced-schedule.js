@@ -142,7 +142,20 @@ export const LeavePeriodReducedSchedule = (props) => {
               })
             : null
         }
-        label={t("pages.claimsLeavePeriodReducedSchedule.hasLeaveLabel")}
+        label={
+          <Trans
+            i18nKey="pages.claimsLeavePeriodReducedSchedule.hasLeaveLabel"
+            components={{
+              "scheduling-leave-guide-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.schedulingLeaveGuide}
+                />
+              ),
+            }}
+          />
+        }
         type="radio"
       />
 
