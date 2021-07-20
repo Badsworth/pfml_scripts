@@ -490,3 +490,14 @@ export const CHAP_ER: ScenarioSpecification = {
     },
   },
 };
+
+export const HIST_CASE: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "HIST_CASE",
+    shortClaim: true,
+    has_continuous_leave_periods: true,
+    reason: "Serious Health Condition - Employee",
+    docs: {},
+  },
+};
