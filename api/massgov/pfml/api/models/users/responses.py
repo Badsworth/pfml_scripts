@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import UUID4, Field
 
@@ -33,3 +33,25 @@ class UserResponse(PydanticBaseModel):
     consented_to_data_sharing: bool
     roles: List[RoleResponse]
     user_leave_administrators: List[UserLeaveAdminResponse]
+
+
+class AuthURIResponse(PydanticBaseModel):
+    auth_uri: str
+    claims_challenge: Optional[str]
+    code_verifier: str
+    nonce: str
+    redirect_uri: str
+    scope: list
+    state: str
+
+
+class AuthCodeResponse(PydanticBaseModel):
+    code: str
+    session_state: str
+    state: str
+
+
+class AdminTokenResponse(PydanticBaseModel):
+    access_token: str
+    refresh_token: str
+    id_token: str

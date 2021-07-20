@@ -11,17 +11,22 @@ from massgov.pfml.api.authentication import (
     _build_auth_code_flow,
     _build_msal_app,
     _load_cache,
-    _save_cache,
     decode_azure_ad_token,
 )
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import (
-    AdminLoginRequest,
     UserConvertEmployerRequest,
     UserCreateRequest,
     UserUpdateRequest,
+    AdminTokenRequest,
 )
-from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
+from massgov.pfml.api.models.users.responses import (
+    UserLeaveAdminResponse, 
+    UserResponse,
+    AuthURIResponse,
+    AuthCodeResponse,
+    AdminTokenResponse,
+)
 from massgov.pfml.api.services.user_rules import (
     get_users_convert_employer_issues,
     get_users_post_employer_issues,
@@ -36,48 +41,63 @@ from massgov.pfml.util.users import add_leave_admin_and_role, register_user
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def get_authorization_url():
-    return _build_auth_code_flow()
+def admins_authorization_url():
+    authCodeParams = _build_auth_code_flow()
+    return response_util.success_response(
+        data=AuthURIResponse.parse_obj(authCodeParams).__dict__,
+        message="Retrieved authorization url!",
+        status_code=200,
+    ).to_api_response()
 
 
-def login_admin():
-    result = {}
-    request = AdminLoginRequest.parse_obj(connexion.request.json)
+def admins_token():
+    tokens = {}
+    request = AdminTokenRequest.parse_obj(connexion.request.json)
     try:
         cache = _load_cache()
 
-        result = _build_msal_app(cache=cache).acquire_token_by_auth_code_flow(
-            request.authCodeFlow.__dict__, request.authCodeRes.__dict__, scopes=None
+        tokens = _build_msal_app(cache=cache).acquire_token_by_auth_code_flow(
+            request.authURIRes.__dict__, request.authCodeRes.__dict__, scopes=None
         )
 
-        if "error" in result:
-            logger.info(f"login_admin failure - {result['error']}")
+        if "error" in tokens:
+            logger.info(f"admins_token failure - {tokens['error']}")
             return response_util.error_response(
-                status_code=BadRequest,
-                message=result["message"],
-                errors=result["error"],
-                data={},
+                status_code=BadRequest, message=tokens["error"], errors=tokens["error"], data={},
             ).to_api_response()
 
-        # got token successfully
-        decode_azure_ad_token(result.get("access_token"))
+        # _save_cache(cache)
 
-        _save_cache(cache)
-
-    except ValueError:
-        # Usually caused by CSRF # Simply ignore them
+    except ValueError: # Usually caused by CSRF, simply ignore them
         exc_type, exc_value, exc_traceback = sys.exc_info()
         logger.error(f"ValueError {exc_value}")
-        
 
-    return result
+    return response_util.success_response(
+        data=AdminTokenResponse.parse_obj(tokens).__dict__,
+        message="Successfully logged in!",
+        status_code=200,
+    ).to_api_response()
 
 
-def logout_admin():
-    config = app.get_app_config()
+def admins_login():
+    # get token from header
+    logger.info("admins_login")
+    access_token = connexion.request.headers["Authorization"]
+    logger.info(access_token)
+    decoded_token, user = decode_azure_ad_token(access_token)
+    # @todo: verification if admin has full or just partial access
+    return response_util.success_response(
+        data=user_response(user),
+        message="Successfully logged in!",
+        status_code=200,
+    ).to_api_response()
+
+
+def admins_logout():
+    config = app.get_app_config().azure_sso
     # Wipe out user and its token cache from session
     # Also logout from your tenant's web session
-    return f"{config.azure_sso.authority}/oauth2/v2.0/logout?post_logout_redirect_uri={config.azure_sso.postLogoutRedirectUri}"
+    return f"{config.authority}/oauth2/v2.0/logout?post_logout_redirect_uri={config.postLogoutRedirectUri}"
 
 
 def users_post():

@@ -2,7 +2,7 @@ from typing import Optional
 
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import FEINUnformattedStr
-
+from massgov.pfml.api.models.users.responses import AuthURIResponse, AuthCodeResponse
 
 class RoleRequest(PydanticBaseModel):
     role_description: Optional[str]
@@ -28,22 +28,6 @@ class UserConvertEmployerRequest(PydanticBaseModel):
     employer_fein: FEINUnformattedStr
 
 
-class AuthCodeResponse(PydanticBaseModel):
-    code: str
-    session_state: str
-    state: str
-
-
-class AuthCodeFlow(PydanticBaseModel):
-    auth_uri: str
-    claims_challenge: Optional[str]
-    code_verifier: str
-    nonce: str
-    redirect_uri: str
-    scope: list
-    state: str
-
-
-class AdminLoginRequest(PydanticBaseModel):
-    authCodeFlow: AuthCodeFlow
+class AdminTokenRequest(PydanticBaseModel):
+    authURIRes: AuthURIResponse
     authCodeRes: AuthCodeResponse

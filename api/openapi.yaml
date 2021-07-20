@@ -565,48 +565,75 @@ paths:
   /admin/authorize:
     get:
       security:
-        - {} # no authentication option
+        - {} # no authentication required
       tags:
-        - Azure
-      summary: Retrieve an Application identified by the application id
-      operationId: massgov.pfml.api.users.get_authorization_url
+        - Admin
+      summary: Returns azure ad authentication url to initiate user auth code flow 
+      operationId: massgov.pfml.api.users.admins_authorization_url
       responses:
         "200":
-          description: The specified resource was not found
+          description: Initiated authentication code flow
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthCodeFlow"
-        "404":
-          $ref: "#/components/responses/NotFound"
+                $ref: "#/components/schemas/AuthURIResponse"
 
-  /admin/login:
+  /admin/token:
     post:
       security:
-        - {} # no authentication option
+        - {} # no authentication required
       tags:
-        - Azure
-      summary: Retrieve an Application identified by the application id
-      operationId: massgov.pfml.api.users.login_admin
+        - Admin
+      summary: Trade an authentication code for an access token
+      operationId: massgov.pfml.api.users.admins_token
       requestBody:
-        $ref: '#/components/requestBodies/AdminLoginRequest'
+        $ref: '#/components/requestBodies/AdminTokenRequest'
       responses:
         "200":
-          $ref: "#/components/responses/AdminLoginResponse"
+          $ref: "#/components/responses/AdminTokenResponse"
+        "401":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  
+  /admin/login:
+    get:
+      security:
+        - azurejwt: []
+      tags:
+        - Admin
+      summary: Login as admin user
+      operationId: massgov.pfml.api.users.admins_login
+      responses:
+        "200":
+          description: Successfully logged in as admin account!
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/Unauthorized"
+        "401":
+          $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
   
   /admin/logout:
     get:
       security:
-        - {} # no authentication option
+        - {} # no authentication required
       tags:
-        - Azure
-      summary: Retrieve an Application identified by the application id
-      operationId: massgov.pfml.api.users.logout_admin
+        - Admin
+      summary: Logout as admin user
+      operationId: massgov.pfml.api.users.admins_logout
       responses:
         "200":
-          $ref: "#/components/responses/ApplicationResponse"
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                # $ref: "#/components/schemas/ApplicationResponse"
+                type: boolean
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -1178,11 +1205,25 @@ components:
         clientCredentials:
           tokenUrl: /api/v1/oauth2/token
           scopes: {}
+          
     azurejwt:
       type: http
       scheme: bearer
       bearerFormat: JWT
       x-bearerInfoFunc: massgov.pfml.api.authentication.decode_azure_ad_token
+    azureoauth2:
+      type: oauth2
+      description: Azure AD OAuth2
+      x-tokenInfoFunc: massgov.pfml.api.authentication.decode_cognito_token
+      flows:
+        authorizationCode:
+          authorizationUrl: /api/v1/admin/authorize
+          tokenUrl: /api/v1/admin/token
+          refreshUrl: /api/v1/admin/refresh
+          scopes:
+            users:read: Reads user information
+
+
   parameters:
     pageSize:
       name: "page_size"
@@ -1219,11 +1260,11 @@ components:
         enum: ["ascending", "descending"]
 
   requestBodies:
-    AdminLoginRequest:
+    AdminTokenRequest:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/AdminLoginRequest"
+            $ref: "#/components/schemas/AdminTokenRequest"
       required: true
     UserUpdateRequest:
       content:
@@ -1312,12 +1353,12 @@ components:
               - properties:
                   data:
                     $ref: "#/components/schemas/ApplicationSearchResults"
-    AdminLoginResponse:
-      description: Successful admin login
+    AdminTokenResponse:
+      description: User has successfully logged into microsoft account
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/AdminLoginResponse"
+            $ref: "#/components/schemas/AdminTokenResponse"
     NotFound:
       description: The specified resource was not found
       content:
@@ -1356,17 +1397,7 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
 
   schemas:
-    AuthCodeResponse:
-      type: object
-      properties:
-        code:
-          type: string
-        session_state:
-          type: string
-        state:
-          type: string
-
-    AuthCodeFlow:
+    AuthURIResponse:
       type: object
       properties:
         auth_uri:
@@ -1387,23 +1418,33 @@ components:
         state:
           type: string
 
-    AdminLoginRequest:
+    AuthCodeResponse:
       type: object
       properties:
+        code:
+          type: string
+        session_state:
+          type: string
+        state:
+          type: string
+
+    AdminTokenRequest:
+      type: object
+      properties:
+        authURIRes:
+          $ref: "#/components/schemas/AuthURIResponse"
         authCodeRes:
           $ref: "#/components/schemas/AuthCodeResponse"
-        authCodeFlow:
-          $ref: "#/components/schemas/AuthCodeFlow"
 
-    AdminLoginResponse:
+    AdminTokenResponse:
       type: object
       properties:
         access_token:
           type: string
+        refresh_token:
+          type: string
         id_token:
           type: string
-        id_token_claims:
-          type: object
 
     SuccessfulResponse:
       type: object

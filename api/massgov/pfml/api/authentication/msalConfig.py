@@ -31,13 +31,9 @@ class MSALClientConfig:
         }
         b2cPolicies = {
             "authorityDomain": authorityDomain,
-            "authorities": {
-                "login": {
-                    "authority": f'https://{authorityDomain}/{tenantId}',
-                },
-            },
+            "authorities": {"login": {"authority": f"https://{authorityDomain}/{tenantId}",},},
         }
-        keysUrl = f'https://{authorityDomain}/{tenantId}/discovery/v2.0/keys?appid={clientId}'
+        keysUrl = f"https://{authorityDomain}/{tenantId}/discovery/v2.0/keys?appid={clientId}"
 
         return MSALClientConfig(
             clientId=clientId,
@@ -46,7 +42,7 @@ class MSALClientConfig:
             knownAuthorities=[b2cPolicies["authorityDomain"]],
             redirectUri="http://localhost:3000",
             postLogoutRedirectUri="http://localhost:3000",
-            scopes=[f'{clientId}/.default'],
+            scopes=[f"{clientId}/.default"],
             policies=b2cPolicies,
             states=b2cStates,
             publicKeysUrl=keysUrl
