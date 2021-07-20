@@ -1,4 +1,3 @@
-import json
 from typing import Optional
 
 import connexion
@@ -47,7 +46,7 @@ def notifications_post():
         notification.updated_at = now
         notification.fineos_absence_id = notification_request.absence_case_id
 
-        notification.request_json = json.dumps(body)  # type: ignore
+        notification.request_json = body
 
         db_session.add(notification)
         db_session.commit()

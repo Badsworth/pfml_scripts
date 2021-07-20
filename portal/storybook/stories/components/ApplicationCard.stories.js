@@ -143,6 +143,10 @@ export const Story = ({ claim, documents, ...args }) => {
         fineos_document_id: "b",
       }),
     ];
+  } else if (claim === "Pregnancy") {
+    claimAttrs = new MockBenefitsApplicationBuilder()
+      .pregnancyLeaveReason()
+      .create();
   }
 
   if (args.errors === "DocumentsLoadError") {

@@ -8,7 +8,7 @@ from typing import Optional
 import massgov.pfml.api.eligibility.eligibility_util as eligibility_util
 import massgov.pfml.api.eligibility.wage as wage
 from massgov.pfml.api.eligibility.eligibility_date import eligibility_date
-from massgov.pfml.api.models.applications.common import EmploymentStatus
+from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -57,7 +57,9 @@ def compute_financial_eligibility(
     elif not gte_thirty_times_wba:
         description = "Claimant wages failed 30x rule"
 
-    elif employment_status == EmploymentStatus.self_employed and len(quarterly_wages) < 2:
+    elif (
+        employment_status == EligibilityEmploymentStatus.self_employed and len(quarterly_wages) < 2
+    ):
         description = "Opt-in quarterly contributions not met"
 
     else:

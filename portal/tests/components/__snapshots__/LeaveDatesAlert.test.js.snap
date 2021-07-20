@@ -9,6 +9,6 @@ exports[`LeaveDatesAlert renders Alert with given dates 1`] = `
   noIcon={true}
   state="info"
 >
-  1/1/2021 – 1/30/2021
+  1/1/2021 to 1/30/2021
 </Alert>
 `;

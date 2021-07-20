@@ -1,1 +1,19 @@
 /* Styles for Search.tsx component */
+.search {
+  // .search__input-wrapper
+  &__input-wrapper {
+    position: relative;
+  }
+  // .search__input
+  &__input {
+    padding-left: 2.86em;
+  }
+  // .search__icon
+  &__icon {
+    color: $Color-GraniteGray-400;
+    left: 1em;
+    position: absolute;
+    top: calc(50% - 1px);
+    transform: translateY(-50%);
+  }
+}

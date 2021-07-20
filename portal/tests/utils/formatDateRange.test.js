@@ -5,7 +5,7 @@ describe("formatDateRange", () => {
     it("returns formatted date range", () => {
       const formattedDate = formatDateRange("1990-09-01", "1990-10-31");
 
-      expect(formattedDate).toBe("9/1/1990 – 10/31/1990");
+      expect(formattedDate).toBe("9/1/1990 to 10/31/1990");
     });
   });
 
@@ -13,7 +13,7 @@ describe("formatDateRange", () => {
     it("returns formatted date range with masked fields still masked", () => {
       const formattedDate = formatDateRange("****-09-01", "****-**-**");
 
-      expect(formattedDate).toBe("9/1/**** – **/**/****");
+      expect(formattedDate).toBe("9/1/**** to **/**/****");
     });
   });
 
@@ -26,10 +26,22 @@ describe("formatDateRange", () => {
   });
 
   describe("when only start date is present", () => {
-    it("does not include date deliminator", () => {
+    it("does not include date delimiter", () => {
       const formattedDate = formatDateRange("1990-09-01", null);
 
       expect(formattedDate).toBe("9/1/1990");
+    });
+  });
+
+  describe("when customDelimiter is present", () => {
+    it("overrides the default delimiter", () => {
+      const formattedDate = formatDateRange(
+        "1990-09-01",
+        "1990-10-31",
+        "through"
+      );
+
+      expect(formattedDate).toBe("9/1/1990 through 10/31/1990");
     });
   });
 

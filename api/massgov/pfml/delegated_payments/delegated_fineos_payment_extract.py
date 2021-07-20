@@ -82,14 +82,19 @@ expected_file_names = [
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
 # There are multiple types of overpayments
-OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
+OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = [
+    PaymentTransactionType.OVERPAYMENT,
+    PaymentTransactionType.OVERPAYMENT_ACTUAL_RECOVERY,
+    PaymentTransactionType.OVERPAYMENT_RECOVERY,
+    PaymentTransactionType.OVERPAYMENT_ADJUSTMENT,
+    PaymentTransactionType.OVERPAYMENT_RECOVERY_REVERSE,
+    PaymentTransactionType.OVERPAYMENT_RECOVERY_CANCELLATION,
+]
+
+OVERPAYMENT_PAYMENT_TRANSACTION_TYPE_IDS = set(
     [
-        "Overpayment",
-        "Overpayment Actual Recovery",
-        "Overpayment Recovery",
-        "Overpayment Adjustment",
-        "Overpayment Recovery Reverse",
-        "Overpayment Recovery Cancellation",
+        overpayment_transaction_type.payment_transaction_type_id
+        for overpayment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES
     ]
 )
 PAYMENT_OUT_TRANSACTION_TYPE = "PaymentOut"
@@ -408,9 +413,10 @@ class PaymentData:
         ):
             return PaymentTransactionType.EMPLOYER_REIMBURSEMENT
 
-        # Note that Overpayments can be positive or negative
-        if self.event_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
-            return PaymentTransactionType.OVERPAYMENT
+        # Note that Overpayments can be positive or negative amounts
+        for overpayment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+            if self.event_type == overpayment_transaction_type.payment_transaction_type_description:
+                return overpayment_transaction_type
 
         # Cancellations
         if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
@@ -1224,10 +1230,7 @@ class PaymentExtractStep(Step):
             self.increment(self.Metrics.ZERO_DOLLAR_PAYMENT_COUNT)
 
         # Overpayments are added to to the FINEOS writeback + a report
-        elif (
-            payment.payment_transaction_type_id
-            == PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
-        ):
+        elif payment.payment_transaction_type_id in OVERPAYMENT_PAYMENT_TRANSACTION_TYPE_IDS:
             end_state = State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
             message = "Overpayment payment processed"
             self._manage_pei_writeback_state(

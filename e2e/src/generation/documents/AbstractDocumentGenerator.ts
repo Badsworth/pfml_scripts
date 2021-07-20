@@ -11,6 +11,7 @@ import path from "path";
 import { v4 as uuid } from "uuid";
 import { DocumentWithPromisedFile } from "./index";
 import { Uint8ArrayWrapper } from "../FileWrapper";
+import { FineosStubDocTypes } from "../../types";
 
 export type DocumentType = DocumentUploadRequest["document_type"];
 export type PDFFormData = { [k: string]: string | boolean };
@@ -27,7 +28,7 @@ interface DocumentGeneratorInterface<C extends Record<string, unknown>> {
 export abstract class AbstractDocumentGenerator<
   C extends Record<string, unknown>
 > implements DocumentGeneratorInterface<C> {
-  constructor(public documentType: DocumentType) {}
+  constructor(public documentType: DocumentType | FineosStubDocTypes) {}
   abstract documentSource(): string;
   async generate(claim: ApplicationRequestBody, config: C): PromisedDocument {
     const formData = this.getFormData(claim, config);
@@ -39,7 +40,8 @@ export abstract class AbstractDocumentGenerator<
   ): DocumentWithPromisedFile {
     const name = `${uuid()}.pdf`;
     return {
-      document_type: this.documentType,
+      // Assertion here so that we don't have to redefine all of the associated types downstream
+      document_type: this.documentType as DocumentType,
       name,
       // Return a callback to generate the file. This is important when dealing with millions of claims, as it allows us
       // to trigger generation at save time.

@@ -136,7 +136,7 @@ def test_applications_get_fineos_forbidden(client, fineos_user, fineos_user_toke
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {fineos_user_token}"},
     )
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
 
 def test_applications_get_partially_displays_fin_acct_num(

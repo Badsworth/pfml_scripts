@@ -43,11 +43,15 @@ export type FineosExclusiveLeaveReasons =
   | "Military Exigency Family"
   | "Military Caregiver";
 export type APILeaveReason = ApplicationLeaveDetails["reason"];
-export type LeaveReason = APILeaveReason;
+export type LeaveReason = APILeaveReason | FineosExclusiveLeaveReasons;
 
 /**Claim types accepted by the API */
 export interface APIClaimSpec extends BaseClaimSpecification {
   reason: APILeaveReason;
+}
+/**Claim types exclusive to Fineos intake process */
+export interface FineosClaimSpec extends BaseClaimSpecification {
+  reason: FineosExclusiveLeaveReasons;
 }
 
 export type ClaimSpecification = APIClaimSpec;

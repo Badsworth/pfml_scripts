@@ -1,26 +1,44 @@
 type Props = {
   rows: any[];
-  rowData: {
+  cols: {
     title: string;
+    width?: string;
+    align?: "left" | "center" | "right" | "justify" | "char" | undefined;
     content: (data: any) => JSX.Element;
   }[];
+  hideHeaders?: boolean;
+  noResults?: JSX.Element;
 };
 
-const Table = ({ rows, rowData }: Props) => {
+const Table = ({ rows, cols, hideHeaders, noResults }: Props) => {
+  if (rows.length === 0 || cols.length === 0) {
+    return noResults || <p>No results found</p>;
+  }
   return (
-    <table className="table">
-      <thead>
-        <tr>
-          {rowData.map((col, i) => (
-            <th key={i}>{col.title}</th>
-          ))}
-        </tr>
-      </thead>
+    <table className="table" cellPadding="0" cellSpacing="0">
+      {!hideHeaders && (
+        <thead>
+          <tr className="table__head">
+            {cols.map((col, i) => (
+              <th key={i} className="table__header">
+                {col.title}
+              </th>
+            ))}
+          </tr>
+        </thead>
+      )}
       <tbody>
         {rows.map((row, di) => (
           <tr key={di}>
-            {rowData.map((col, hi) => (
-              <td key={hi}>{col.content(row)}</td>
+            {cols.map((col, hi) => (
+              <td
+                key={hi}
+                className="table__col"
+                width={col.width}
+                align={col.align}
+              >
+                {col.content(row)}
+              </td>
             ))}
           </tr>
         ))}

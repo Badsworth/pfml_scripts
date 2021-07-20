@@ -114,7 +114,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             </a>
           </div>
         </header>
-        <aside className="page__sidebar" tabIndex="0">
+        <aside className="page__sidebar" tabIndex={0}>
           <nav className="menu">
             <ul className="menu__list">
               <li className="menu__list-item">
@@ -158,7 +158,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             <div className="environment__flag">Production</div>
           </div>
         </aside>
-        <main className="page__main" tabIndex="0">
+        <main className="page__main" tabIndex={0}>
           <Component {...pageProps} />
         </main>
       </div>

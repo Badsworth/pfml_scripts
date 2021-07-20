@@ -2,19 +2,8 @@ import datetime
 from decimal import Decimal
 from enum import Enum
 
-from sqlalchemy import (
-    JSON,
-    TIMESTAMP,
-    Boolean,
-    Column,
-    Date,
-    ForeignKey,
-    Integer,
-    Numeric,
-    Text,
-    case,
-)
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text, case
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
 
@@ -872,7 +861,7 @@ def sync_state_metrics(db_session):
 class Notification(Base, TimestampMixin):
     __tablename__ = "notification"
     notification_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    request_json = Column(JSON, nullable=False)
+    request_json = Column(JSONB, nullable=False)
     fineos_absence_id = Column(Text, index=True)
 
 

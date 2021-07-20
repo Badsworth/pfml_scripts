@@ -61,6 +61,7 @@ locals {
       st_overrides              = local.st_state_details.overrides
       st_decrypt_value          = local.st_decrypt_value
       st_file_limit_specified   = var.st_file_limit_specified
+      st_employer_update_limit  = var.st_employer_update_limit
 
       cluster_arn           = data.aws_ecs_cluster.cluster.arn
       environment_name      = var.environment_name

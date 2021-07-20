@@ -4,8 +4,9 @@ import {
   getCertificationDocumentType,
   getDocumentReviewTaskName,
 } from "../../src/util/documents";
-import { LeaveReason, ValidClaim } from "../../src/types";
+import { ValidClaim } from "../../src/types";
 import { config } from "./common";
+import { LeaveReason } from "../../src/generation/Claim";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
@@ -39,7 +40,11 @@ export function before(): void {
     ) {
       return false;
     }
-    if (e.message.match(/Cannot set property 'status' of undefined/)) {
+    if (
+      e.message.match(
+        /Cannot (set|read) property ('status'|'range') of undefined/
+      )
+    ) {
       return false;
     }
     return true;
@@ -53,7 +58,7 @@ export function before(): void {
   // Fineos error pages have been found to cause test crashes when rendered. This is very hard to debug, as Cypress
   // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we instead
   // throw an error.
-  cy.intercept(/\/util\/errorpage.jsp/, (req) => {
+  cy.intercept(/\/(util\/errorpage\.jsp|outofdatedataerror\.jsp)/, (req) => {
     req.reply(
       "A fatal Fineos error was thrown at this point. We've blocked the rendering of this page to prevent test crashes"
     );
@@ -275,6 +280,7 @@ export function createNotification(
       cy.findByLabelText("Absence relates to").select("Employee");
       wait();
       cy.wait(100);
+      clickNext(5000);
       cy.findByLabelText("Absence reason").select(
         "Serious Health Condition - Employee"
       );
@@ -381,7 +387,7 @@ export function createNotification(
     wait();
     enterReducedWorkHours(
       application?.leave_details
-        ?.reduced_schedule_leave_periods as ReducedScheduleLeavePeriods[]
+        ?.reduced_schedule_leave_periods?.[0] as ReducedScheduleLeavePeriods
     );
     wait();
     cy.get(
@@ -419,19 +425,19 @@ export function createNotification(
 }
 
 export function enterReducedWorkHours(
-  leave_details: ReducedScheduleLeavePeriods[]
+  leave_details: ReducedScheduleLeavePeriods
 ): void {
   const hrs = (minutes: number | null | undefined) => {
     return minutes ? Math.round(minutes / 60) : 0;
   };
   const weekdayInfo = [
-    { hours: hrs(leave_details[0].sunday_off_minutes) },
-    { hours: hrs(leave_details[0].monday_off_minutes) },
-    { hours: hrs(leave_details[0].tuesday_off_minutes) },
-    { hours: hrs(leave_details[0].wednesday_off_minutes) },
-    { hours: hrs(leave_details[0].thursday_off_minutes) },
-    { hours: hrs(leave_details[0].friday_off_minutes) },
-    { hours: hrs(leave_details[0].saturday_off_minutes) },
+    { hours: hrs(leave_details.sunday_off_minutes) },
+    { hours: hrs(leave_details.monday_off_minutes) },
+    { hours: hrs(leave_details.tuesday_off_minutes) },
+    { hours: hrs(leave_details.wednesday_off_minutes) },
+    { hours: hrs(leave_details.thursday_off_minutes) },
+    { hours: hrs(leave_details.friday_off_minutes) },
+    { hours: hrs(leave_details.saturday_off_minutes) },
   ];
 
   cy.get("input[name*='_hours']").each((input, index) => {
@@ -971,6 +977,78 @@ export function triggerNoticeRelease(docType: string): void {
     .should("be.checked");
   onTab("Documents");
   assertHasDocument(docType);
+}
+
+/**
+ * Adding a  Historical Absence case, assumes being navigated to `Absence Hub` tab on the Claim page.
+ */
+export function addHistoricalAbsenceCase(): void {
+  cy.contains("Options").click();
+  cy.contains("Add Historical Absence").click();
+  cy.findByLabelText("Absence relates to").select("Employee");
+  wait();
+  cy.findByLabelText("Absence Reason").select(
+    "Serious Health Condition - Employee"
+  );
+  wait();
+  cy.findByLabelText("Qualifier 1").select("Not Work Related");
+  wait();
+  cy.findByLabelText("Qualifier 2").select("Sickness");
+  wait();
+  cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
+    .find("input")
+    .click();
+  const mostRecentSunday = startOfWeek(new Date());
+  const startDate = subDays(mostRecentSunday, 13);
+  const startDateFormatted = format(startDate, "MM/dd/yyyy");
+  const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
+  // Fill in end date
+  cy.findByLabelText("End Date").type(
+    `{selectall}{backspace}${endDateFormatted}{enter}`
+  );
+  wait();
+  cy.wait(200);
+  // Fill start date
+  cy.findByLabelText("Start Date").type(
+    `{selectall}{backspace}${startDateFormatted}{enter}`
+  );
+  wait();
+  cy.wait(200);
+  // First all day checkbox
+  cy.get(
+    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="startDateAllDay_WRAPPER"]'
+  ).click();
+  wait();
+  cy.wait(200);
+  // Second all day checkbox
+  cy.get(
+    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="endDateAllDay_WRAPPER"]'
+  ).click();
+  wait();
+  cy.wait(200);
+
+  // Click on Okay to exit popup window
+  cy.get(
+    'input[id^="addHistoricalTimeOffAbsencePeriodPopupWidget"][id$="okButtonBean"]'
+  ).click({ force: true });
+  // Select Leave Plan
+  cy.contains("div", "historicalAbsenceSelectedLeavePlansListViewWidget")
+    .find("input")
+    .click();
+  wait();
+  cy.get(
+    "input[name='historicalCasePlanSelectionListviewWidget_un0_Checkbox_RowId_0_CHECKBOX']"
+  ).click();
+  clickBottomWidgetButton();
+  clickBottomWidgetButton();
+  // Click on Claimaints name to view their cases
+  cy.get(
+    'a[id="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]'
+  ).click();
+  onTab("Cases");
+  cy.get(".ListRowSelected > td").should(($td) => {
+    expect($td.eq(4)).to.contain("Absence Historical Case");
+  });
 }
 
 /**

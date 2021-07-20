@@ -38,7 +38,20 @@ exports[`LeavePeriodIntermittent renders the page with bonding leave content 1`]
         }
       />
     }
-    label="Do you need to take off work in uneven blocks of time (intermittent leave)?"
+    label={
+      <Trans
+        components={
+          Object {
+            "scheduling-leave-guide-link": <a
+              href="https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
+        i18nKey="pages.claimsLeavePeriodIntermittent.hasLeaveLabel"
+      />
+    }
     name="has_intermittent_leave_periods"
     onChange={[Function]}
     type="radio"
@@ -117,6 +130,21 @@ exports[`LeavePeriodIntermittent renders the page with bonding leave content 1`]
 
 exports[`LeavePeriodIntermittent renders the page with bonding leave content 2`] = `
 Array [
+  "Do you need to take off work in uneven blocks of time (",
+  <a
+    href="https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    intermittent leave
+  </a>,
+  ")?",
+]
+`;
+
+exports[`LeavePeriodIntermittent renders the page with bonding leave content 3`] = `
+Array [
   "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.",
   <br
     key="br-1"
@@ -193,7 +221,20 @@ exports[`LeavePeriodIntermittent renders the page with medical leave content 1`]
         }
       />
     }
-    label="Do you need to take off work in uneven blocks of time (intermittent leave)?"
+    label={
+      <Trans
+        components={
+          Object {
+            "scheduling-leave-guide-link": <a
+              href="https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
+        i18nKey="pages.claimsLeavePeriodIntermittent.hasLeaveLabel"
+      />
+    }
     name="has_intermittent_leave_periods"
     onChange={[Function]}
     type="radio"

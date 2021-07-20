@@ -38,6 +38,14 @@ class Occupation(str, LookupEnum):
         return db_employee_models.LkOccupation
 
 
+class EligibilityEmploymentStatus(str):
+    employed = "Employed"
+    unemployed = "Unemployed"
+    self_employed = "Self-Employed"
+    unknown = "Unknown"
+    retired = "Retired"
+
+
 class EmploymentStatus(str, LookupEnum):
     employed = "Employed"
     unemployed = "Unemployed"

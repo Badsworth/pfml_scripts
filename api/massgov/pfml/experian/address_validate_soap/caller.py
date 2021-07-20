@@ -1,5 +1,5 @@
 import abc
-import urllib.parse
+import os
 from functools import cached_property
 from typing import Any, Dict, Optional
 
@@ -8,18 +8,15 @@ from pydantic import BaseSettings, Field
 from requests import Session
 from zeep.transports import Transport
 
-# Note: After running into issues with non secure imports in the WSDL, using a modified version of the WSDL hosted in S3
-SOAP_WSDL_DEFAULT_URL = (
-    "https://massgov-pfml-test-experian-soap.s3.amazonaws.com/experian-source/ProOnDemandV3.wsdl"
-)
+# https://docs.experianaperture.io/address-validation/address-validate-soap/api-reference/api-specification/#v3-endpoint
+# Note: After running into issues with non secure imports in the WSDL, using a modified version of the WSDL we ship with the code
+SOAP_WSDL_DEFAULT_URL = os.path.join(os.path.dirname(__file__), "wsdl/ProOnDemandV3.wsdl")
 
 
 class ExperianSOAPConfig(BaseSettings):
     auth_token: str = Field(..., min_length=1)
     # Code expects a v3 endpoint. Defaults to US regional endpoint.
-    #
-    # https://docs.experianaperture.io/address-validation/address-validate-soap/api-reference/api-specification/#v3-endpoint
-    soap_endpoint: str = Field(SOAP_WSDL_DEFAULT_URL, min_length=1)
+    soap_wsdl_uri: str = Field(SOAP_WSDL_DEFAULT_URL, min_length=1)
 
     class Config:
         # Shares a prefix with ExperianConfig as the same authentication token
@@ -65,7 +62,7 @@ class LazyZeepApiCaller(LazyApiCaller, ApiCaller):
 
         self.config = config
 
-        self.soap_endpoint = config.soap_endpoint.rstrip("/")
+        self.soap_wsdl_uri = config.soap_wsdl_uri.rstrip("/")
         self.init_session()
 
     def init_session(self):
@@ -78,13 +75,12 @@ class LazyZeepApiCaller(LazyApiCaller, ApiCaller):
         self.session.headers.update({"Auth-Token": self.config.auth_token})
 
     def get(self) -> ApiCaller:
-        url = urllib.parse.urljoin(self.soap_endpoint, "?WSDL")
         # The Experian WSDL unfortunately includes some schemas that require
         # forbid_entities to be turned off
         settings = zeep.Settings(forbid_entities=False)
 
         service_proxy = zeep.Client(
-            url, settings=settings, transport=Transport(session=self.session)
+            self.soap_wsdl_uri, settings=settings, transport=Transport(session=self.session)
         ).service
 
         return service_proxy

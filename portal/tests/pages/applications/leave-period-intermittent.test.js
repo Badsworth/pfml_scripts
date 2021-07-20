@@ -5,6 +5,7 @@ import {
 } from "../../test-utils";
 import LeavePeriodIntermittent from "../../../src/pages/applications/leave-period-intermittent";
 import { act } from "react-dom/test-utils";
+import { shallow } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -17,8 +18,12 @@ describe("LeavePeriodIntermittent", () => {
     const { wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
       claimAttrs: claim,
     });
+    const Label = wrapper.find("InputChoiceGroup").prop("label");
+    const labelWrapper = shallow(Label);
 
     expect(wrapper).toMatchSnapshot();
+    expect(labelWrapper).toMatchSnapshot();
+
     wrapper
       .find("Trans")
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());

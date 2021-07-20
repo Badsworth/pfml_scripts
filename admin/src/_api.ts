@@ -156,7 +156,12 @@ export const http = {
     url: string,
     req?: FetchRequestOptions,
   ): Promise<ApiResponse<string | undefined>> {
-    const { baseUrl, headers, fetch: customFetch, ...init } = {
+    const {
+      baseUrl,
+      headers,
+      fetch: customFetch,
+      ...init
+    } = {
       ...defaults,
       ...req,
     };

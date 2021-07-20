@@ -122,7 +122,7 @@ export const ReducedLeaveSchedule = (props) => {
       title={t("pages.claimsReducedLeaveSchedule.title")}
       onSave={handleSave}
     >
-      {(claim.isMedicalLeave || claim.isCaringLeave) && (
+      {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsReducedLeaveSchedule.needDocumentAlert"
@@ -161,13 +161,13 @@ export const ReducedLeaveSchedule = (props) => {
         </Lead>
       )}
 
-      {(claim.isMedicalLeave || claim.isCaringLeave) && (
+      {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
         <Lead>
           <Trans
             i18nKey="pages.claimsReducedLeaveSchedule.leadCertGuidance"
             tOptions={{
               context:
-                claim.isMedicalLeave &&
+                claim.isMedicalOrPregnancyLeave &&
                 isFeatureEnabled("updateMedicalCertForm")
                   ? "updateMedicalCertForm"
                   : contentContext,

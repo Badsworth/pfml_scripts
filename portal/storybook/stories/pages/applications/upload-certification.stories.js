@@ -5,6 +5,9 @@ const mockClaims = {
   "Medical leave": new MockBenefitsApplicationBuilder()
     .medicalLeaveReason()
     .create(),
+  "Medical leave for pregnancy or birth": new MockBenefitsApplicationBuilder()
+    .pregnancyLeaveReason()
+    .create(),
   "Bonding: newborn": new MockBenefitsApplicationBuilder()
     .bondingBirthLeaveReason()
     .create(),

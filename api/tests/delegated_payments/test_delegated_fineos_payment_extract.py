@@ -1813,16 +1813,17 @@ def test_get_payment_transaction_type(initialize_factories_session, set_exporter
     )
 
     # There are multiple values that can create an overpayment
-    for overpayment_event_type in extractor.OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+    for overpayment_payment_transaction_type in extractor.OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
         # Event reason is always unknown for overpayments in the real data
         overpayment_data = FineosPaymentData(
-            event_type=overpayment_event_type, event_reason="Unknown"
+            event_type=overpayment_payment_transaction_type.payment_transaction_type_description,
+            event_reason="Unknown",
         )
         _, payment_data = make_payment_data_from_fineos_data(overpayment_data)
         assert not payment_data.validation_container.has_validation_issues()
         assert (
             payment_data.payment_transaction_type.payment_transaction_type_id
-            == PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
+            == overpayment_payment_transaction_type.payment_transaction_type_id
         )
 
     # Cancellation payment

@@ -14,7 +14,6 @@ from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.claims.responses import ClaimResponse
 from massgov.pfml.api.services.administrator_fineos_actions import (
-    DOWNLOADABLE_DOC_TYPES,
     awaiting_leave_info,
     complete_claim_review,
     create_eform,
@@ -369,13 +368,6 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
     if document is None:
         logger.error(
             "employer_document_download failed - document not found", extra={**log_attributes},
-        )
-        raise Forbidden(description="User does not have access to this document")
-
-    if document.document_type and document.document_type.lower() not in DOWNLOADABLE_DOC_TYPES:
-        log_attributes["document_type"] = document.document_type
-        logger.error(
-            "employer_document_download failed - document_type not found", extra={**log_attributes},
         )
         raise Forbidden(description="User does not have access to this document")
 

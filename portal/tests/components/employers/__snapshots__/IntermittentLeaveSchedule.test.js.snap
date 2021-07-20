@@ -18,7 +18,12 @@ exports[`IntermittentLeaveSchedule renders a regular intermittent leave period 1
             />,
           }
         }
-        i18nKey="components.employersIntermittentLeaveSchedule.downloadAttachments"
+        i18nKey="components.employersIntermittentLeaveSchedule.lead"
+        tOptions={
+          Object {
+            "context": "noDocs",
+          }
+        }
       />
     </div>
   </td>
@@ -43,7 +48,12 @@ exports[`IntermittentLeaveSchedule renders an irregular intermittent leave perio
             />,
           }
         }
-        i18nKey="components.employersIntermittentLeaveSchedule.downloadAttachments"
+        i18nKey="components.employersIntermittentLeaveSchedule.lead"
+        tOptions={
+          Object {
+            "context": "noDocs",
+          }
+        }
       />
     </div>
   </td>
@@ -52,7 +62,33 @@ exports[`IntermittentLeaveSchedule renders an irregular intermittent leave perio
 
 exports[`IntermittentLeaveSchedule renders an irregular intermittent leave period 2`] = `
 Array [
+  "Contact us at ",
+  <a
+    href="tel:(833) 344-7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " for details about the leave schedule.",
+]
+`;
+
+exports[`IntermittentLeaveSchedule renders correct text with documents 1`] = `
+Array [
   "Download the attached documentation or contact us at ",
+  <a
+    href="tel:(833) 344-7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " for details about the leave schedule.",
+]
+`;
+
+exports[`IntermittentLeaveSchedule renders correct text without documents 1`] = `
+Array [
+  "Contact us at ",
   <a
     href="tel:(833) 344-7365"
     key="1"

@@ -54,7 +54,7 @@ exports[`LeaveDetails Caring Leave renders the relationship question 1`] = `
     label="Leave duration"
     level="3"
   >
-    1/1/2021 – 7/1/2021
+    1/1/2021 to 7/1/2021
   </ReviewRow>
   <InputChoiceGroup
     choices={
@@ -179,7 +179,7 @@ exports[`LeaveDetails renders the component 1`] = `
     label="Leave duration"
     level="3"
   >
-    1/1/2021 – 7/1/2021
+    1/1/2021 to 7/1/2021
   </ReviewRow>
 </Fragment>
 `;

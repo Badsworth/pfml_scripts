@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2021-06-1"
+  version: "2021-07-14"
 
 servers:
   - url: /v1
@@ -2531,6 +2531,8 @@ components:
             - Employed
             - Unemployed
             - Self-Employed
+            - Unknown
+            - Retired
           example: "Employed"
           nullable: false
       required:
@@ -2552,15 +2554,19 @@ components:
         total_wages:
           type: number
           example: 75000
+          nullable: true
         state_average_weekly_wage:
           type: integer
           example: 1431
+          nullable: true
         unemployment_minimum:
           type: integer
           example: 5100
+          nullable: true
         employer_average_weekly_wage:
           type: number
           example: 1500
+          nullable: true
       required:
         - financially_eligible
         - description

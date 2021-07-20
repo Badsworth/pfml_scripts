@@ -95,7 +95,7 @@ export const IntermittentFrequency = (props) => {
       title={t("pages.claimsIntermittentFrequency.title")}
       onSave={handleSave}
     >
-      {(claim.isMedicalLeave || claim.isCaringLeave) && (
+      {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsIntermittentFrequency.needDocumentAlert"
@@ -126,11 +126,12 @@ export const IntermittentFrequency = (props) => {
         {t("pages.claimsIntermittentFrequency.sectionLabel")}
       </Heading>
 
-      {(claim.isMedicalLeave || claim.isCaringLeave) && (
+      {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
         <Lead>
           {t("pages.claimsIntermittentFrequency.frequencyHint", {
             context:
-              claim.isMedicalLeave && isFeatureEnabled("updateMedicalCertForm")
+              claim.isMedicalOrPregnancyLeave &&
+              isFeatureEnabled("updateMedicalCertForm")
                 ? "updateMedicalCertForm"
                 : contentContext,
           })}

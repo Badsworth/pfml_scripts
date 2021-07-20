@@ -24,7 +24,7 @@ import OtherIncome, {
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
-import { compact, get, isUndefined, pick } from "lodash";
+import { compact, get, isUndefined } from "lodash";
 
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
@@ -48,6 +48,7 @@ import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import getI18nContextForIntermittentFrequencyDuration from "../../utils/getI18nContextForIntermittentFrequencyDuration";
+import getMissingRequiredFields from "../../utils/getMissingRequiredFields";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import tracker from "../../services/tracker";
@@ -152,11 +153,8 @@ export const Review = (props) => {
   // page with required fields.
   const [showNewFieldError, setShowNewFieldError] = useState(false);
   useEffect(() => {
-    if (appErrors.items.some((error) => error.type === "required")) {
-      const missingFields = appErrors.items
-        .filter((error) => error.type === "required")
-        .map((error) => pick(error, ["name", "field", "meta", "rule", "type"]));
-
+    const missingFields = getMissingRequiredFields(appErrors.items);
+    if (missingFields.length) {
       tracker.trackEvent("Missing required fields", { missingFields });
 
       clearRequiredFieldErrors();
@@ -175,7 +173,10 @@ export const Review = (props) => {
   return (
     <div className="measure-6">
       {showNewFieldError && (
-        <Alert className="margin-bottom-3">
+        <Alert
+          className="margin-bottom-3"
+          data-test="missing-required-fields-alert"
+        >
           <Trans
             i18nKey="pages.claimsReview.missingRequiredFieldError"
             components={{
@@ -416,7 +417,7 @@ export const Review = (props) => {
         })}
       </ReviewRow>
 
-      {claim.isMedicalLeave && (
+      {claim.isMedicalOrPregnancyLeave && (
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.pregnancyOrRecentBirthLabel")}

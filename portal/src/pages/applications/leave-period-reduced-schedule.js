@@ -91,7 +91,7 @@ export const LeavePeriodReducedSchedule = (props) => {
       title={t("pages.claimsLeavePeriodReducedSchedule.title")}
       onSave={handleSave}
     >
-      {(claim.isMedicalLeave || claim.isCaringLeave) && (
+      {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsLeavePeriodReducedSchedule.needDocumentAlert"
@@ -132,17 +132,30 @@ export const LeavePeriodReducedSchedule = (props) => {
           },
         ]}
         hint={
-          claim.isMedicalLeave || claim.isCaringLeave
+          claim.isMedicalOrPregnancyLeave || claim.isCaringLeave
             ? t("pages.claimsLeavePeriodReducedSchedule.hasLeaveHint", {
                 context:
-                  claim.isMedicalLeave &&
+                  claim.isMedicalOrPregnancyLeave &&
                   isFeatureEnabled("updateMedicalCertForm")
                     ? "updateMedicalCertForm"
                     : contentContext,
               })
             : null
         }
-        label={t("pages.claimsLeavePeriodReducedSchedule.hasLeaveLabel")}
+        label={
+          <Trans
+            i18nKey="pages.claimsLeavePeriodReducedSchedule.hasLeaveLabel"
+            components={{
+              "scheduling-leave-guide-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.schedulingLeaveGuide}
+                />
+              ),
+            }}
+          />
+        }
         type="radio"
       />
 
@@ -162,7 +175,7 @@ export const LeavePeriodReducedSchedule = (props) => {
             i18nKey="pages.claimsLeavePeriodReducedSchedule.datesLead"
             tOptions={{
               context:
-                claim.isMedicalLeave &&
+                claim.isMedicalOrPregnancyLeave &&
                 isFeatureEnabled("updateMedicalCertForm")
                   ? "updateMedicalCertForm"
                   : contentContext,

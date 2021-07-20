@@ -52,7 +52,7 @@ export const Success = (props) => {
   let claimContext;
 
   if (
-    claim.isMedicalLeave &&
+    claim.isMedicalOrPregnancyLeave &&
     claim.isLeaveStartDateInFuture &&
     pregnant_or_recent_birth
   ) {
@@ -176,7 +176,7 @@ export const Success = (props) => {
           }}
         />
 
-        {claim.isMedicalLeave && pregnant_or_recent_birth && (
+        {claim.isMedicalOrPregnancyLeave && pregnant_or_recent_birth && (
           <div className={secondaryContentContainerClasses}>
             <Heading level="2">
               <IconCopy {...iconProps} />
