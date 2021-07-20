@@ -93,7 +93,7 @@ jobs:
       E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
       E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
       E2E_FINEOS_USERS: ${{ secrets.E2E_FINEOS_USERS }}
-    if: needs.check-flood.flood-files-changed == 'true'
+    if: needs.check-flood.outputs.flood-files-changed == 'true'
     steps:
       - uses: actions/checkout@v2
       - name: Setup Node
