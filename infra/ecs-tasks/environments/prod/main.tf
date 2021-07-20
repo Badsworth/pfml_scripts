@@ -36,7 +36,7 @@ module "tasks" {
   st_use_mock_dor_data     = false
   st_decrypt_dor_data      = true
   st_file_limit_specified  = true
-  st_employer_update_limit = 250
+  st_employer_update_limit = 1500
   service_docker_tag       = local.service_docker_tag
   vpc_id                   = data.aws_vpc.vpc.id
   app_subnet_ids           = data.aws_subnet_ids.vpc_app.ids
