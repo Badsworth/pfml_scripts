@@ -1049,6 +1049,7 @@ export function addHistoricalAbsenceCase(): void {
   cy.get(".ListRowSelected > td").should(($td) => {
     expect($td.eq(4)).to.contain("Absence Historical Case");
   });
+  cy.get('input[title="Open"]').click();
 }
 
 /**
