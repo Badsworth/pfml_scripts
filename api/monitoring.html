@@ -295,8 +295,44 @@
   
   
     <li class="md-nav__item">
+      <a href="automated-tests.html" class="md-nav__link">
+        Automated Tests
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="database-migrations.html" class="md-nav__link">
+        Database Migrations
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="db-roles-and-users.html" class="md-nav__link">
         Database Users
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="development-environment-setup.html" class="md-nav__link">
+        Development Environment Setup
       </a>
     </li>
   
@@ -390,8 +426,44 @@
   
   
     <li class="md-nav__item">
+      <a href="running-the-application-docker.html" class="md-nav__link">
+        Running the Application (Docker)
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="ses.html" class="md-nav__link">
         Ses
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="technical-overview.html" class="md-nav__link">
+        Technical Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="working-with-releases.html" class="md-nav__link">
+        Working With Releases
       </a>
     </li>
   
@@ -792,8 +864,8 @@
                 <h1 id="api-monitoring">API Monitoring</h1>
 <p>We use New Relic (for performance monitoring, synthetics, and general queries)
 and AWS CloudWatch (for infrastructure-level concerns) to monitor the PFML API.</p>
-<p>We get CloudWatch metrics for free just by deploying the API on AWS Fargate,
-but the New Relic metrics are sourced from a Python agent that is initialized during server startup.</p>
+<p>We get CloudWatch metrics for free just by deploying the API on AWS Fargate, but the New Relic metrics are sourced from
+a Python agent that is initialized during server startup.</p>
 <h2 id="aws-cloudwatch">AWS CloudWatch</h2>
 <ul>
 <li><a href="https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#alarmsV2:">Alarms index</a></li>
@@ -801,12 +873,12 @@ but the New Relic metrics are sourced from a Python agent that is initialized du
 <li><a href="https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#metricsV2:graph=~()">Available CloudWatch metrics</a></li>
 </ul>
 <p>The API's AWS monitoring is defined in Terraform under <code>infra/api/template/alarms.tf</code>.</p>
-<p>When an alarm triggers, it will push an event to one or more SNS topics, also defined in <code>alarms.tf</code>.
-If configured to do so, SNS events can also be generated when an alarm stops alarming and returns to a normal state.</p>
+<p>When an alarm triggers, it will push an event to one or more SNS topics, also defined in <code>alarms.tf</code>. If configured to
+do so, SNS events can also be generated when an alarm stops alarming and returns to a normal state.</p>
 <p>To subscribe to AWS alerts, you can do one of two things.</p>
 <ul>
-<li>You can use the AWS console to create a temporary subscription to one or more SNS topics,
-  but these subscriptions will only last until someone re-applies the canonical Terraform config.</li>
+<li>You can use the AWS console to create a temporary subscription to one or more SNS topics, but these subscriptions will
+  only last until someone re-applies the canonical Terraform config.</li>
 <li>You can define a new <code>aws_sns_topic_subscription</code> object in <code>alarms.tf</code>.</li>
 </ul>
 <h2 id="new-relic">New Relic</h2>
@@ -816,8 +888,9 @@ If configured to do so, SNS events can also be generated when an alarm stops ala
 </ul>
 </li>
 </ul>
-<p>Most configuration is sourced from <code>api/newrelic.ini</code> except for the license key,
-which is sourced from AWS SSM and provided at runtime as an environment variable.</p>
+<p>Config variables and env-specific settings for New Relic, except for the license key, live inside <code>newrelic.ini</code>
+and <code>container_definitions.json</code>. See <a href="https://github.com/EOLWD/pfml/tree/main/docs/api/environment-variables.md">environment-variables.md</a> for more about how
+env vars are pulled in at runtime.</p>
 <p>At this time, New Relic API monitoring is limited only to data collection. Alarms have not yet been configured here.</p>
                 
               
@@ -854,13 +927,13 @@ which is sourced from AWS SSM and provided at runtime as an environment variable
       
       
         
-        <a href="ses.html" class="md-footer__link md-footer__link--next" aria-label="Next: Ses" rel="next">
+        <a href="running-the-application-docker.html" class="md-footer__link md-footer__link--next" aria-label="Next: Running the Application (Docker)" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Ses
+              Running the Application (Docker)
             </div>
           </div>
           <div class="md-footer__button md-icon">
