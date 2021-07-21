@@ -20,8 +20,9 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
             cy.contains("button", "I understand and agree").click();
     
             // Submit Claim
-            portal.submitClaimPartOne(application);
-            cy.wait(10000);
+            portal.clickChecklistButton("Verify your identification");
+            portal.verifyIdentity(application);            
+            cy.wait(5000);
             cy.clearCookies();
             portal.before();
         cy.task("generateCredentials").then((new_credentials) => {
