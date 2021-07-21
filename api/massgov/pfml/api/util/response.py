@@ -85,6 +85,8 @@ class IssueRule(str, Enum):
 class IssueType(str, Enum):
     # Data is present but shouldn't be
     conflicting = "conflicting"
+    # A matching record already exists
+    duplicate = "duplicate"
     # A record already exists, preventing this data from being used again
     exists = "exists"
     # Number or Date is greater than expected range
@@ -123,10 +125,12 @@ class IssueType(str, Enum):
     require_contributing_employer = "require_contributing_employer"
     # Data failed a checksum test e.g. Routing number
     checksum = "checksum"
+    # Employer can't be verified because there's nothing to verify against
+    employer_requires_verification_data = "employer_requires_verification_data"
 
 
 @dataclass
-class Issue:
+class Issue:  # TODO (CP-1925): Replace in favor of ValidationErrorDetail
     type: Union[IssueType, str, None] = None
     message: str = ""
     rule: Optional[Any] = None

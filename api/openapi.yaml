@@ -2351,9 +2351,8 @@ components:
       type: object
       properties:
         employer_fein:
-          type: string
-          example: "12-3456789"
-          nullable: false
+          $ref: "#/components/schemas/Fein"
+          nullable: true
 
     EligibilityRequest:
       type: object

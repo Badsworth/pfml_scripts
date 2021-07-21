@@ -30,8 +30,11 @@ class ValidationException(Exception):
     __slots__ = ["errors", "message", "data"]
 
     def __init__(
-        self, errors: List[ValidationErrorDetail], message: str, data: Union[dict, List[dict]]
+        self,
+        errors: List[ValidationErrorDetail],
+        message: str = "Invalid request",
+        data: Optional[Union[dict, List[dict]]] = None,
     ):
         self.errors = errors
         self.message = message
-        self.data = data
+        self.data = data or {}
