@@ -768,12 +768,7 @@ export type ApplicationSearchResults = ApplicationResponse[];
 export interface GETApplicationsResponse extends SuccessfulResponse {
   data?: ApplicationSearchResults;
 }
-export interface AuthCodeResponse {
-  code?: string;
-  session_state?: string;
-  state?: string;
-}
-export interface AuthCodeFlow {
+export interface AuthURIResponse {
   auth_uri?: string;
   claims_challenge?: string | null;
   code_verifier?: string;
@@ -782,9 +777,19 @@ export interface AuthCodeFlow {
   scope?: string[];
   state?: string;
 }
-export interface AdminLoginRequest {
+export interface AuthCodeResponse {
+  code?: string;
+  session_state?: string;
+  state?: string;
+}
+export interface AdminTokenRequest {
+  authURIRes?: AuthURIResponse;
   authCodeRes?: AuthCodeResponse;
-  authCodeFlow?: AuthCodeFlow;
+}
+export interface AdminTokenResponse {
+  access_token?: string;
+  refresh_token?: string;
+  id_token?: string;
 }
 export type SsnItin = string;
 export type MassId = string;
@@ -1234,7 +1239,7 @@ export async function getEmployersClaimsByFineos_absence_idDocumentsAndFineos_do
     fineos_document_id: string;
   },
   options?: RequestOptions,
-): Promise<ApiResponse<string>> {
+): Promise<ApiResponse<string | undefined>> {
   return await http.fetch(
     `/employers/claims/${fineos_absence_id}/documents/${fineos_document_id}`,
     {
@@ -1324,39 +1329,37 @@ export async function getApplications(
   });
 }
 /**
- * Retrieve an Application identified by the application id
+ * Returns azure ad authentication url to initiate user auth code flow
  */
-export async function getAdminAuthorize(
-  options?: RequestOptions,
-): Promise<ApiResponse<AuthCodeFlow>> {
+ export async function getAdminAuthorize(options?: RequestOptions): Promise<ApiResponse<AuthURIResponse>> {
   return await http.fetchJson("/admin/authorize", {
+    ...options
+  });
+}
+/**
+ * Trade an authentication code for an access token
+ */
+export async function postAdminToken(adminTokenRequest: AdminTokenRequest, options?: RequestOptions): Promise<ApiResponse<AdminTokenResponse>> {
+  return await http.fetchJson("/admin/token", http.json({
+    ...options,
+    method: "POST",
+    body: adminTokenRequest
+  }));
+}
+/**
+ * Login as admin user
+ */
+export async function getAdminLogin(options?: RequestOptions): Promise<ApiResponse<UserResponse>> {
+  return await http.fetchJson("/admin/login", {
     ...options,
   });
 }
 /**
- * Retrieve an Application identified by the application id
+ * Logout as admin user
  */
-export async function postAdminLogin(
-  adminLoginRequest: AdminLoginRequest,
-  options?: RequestOptions,
-): Promise<ApiResponse<ApplicationResponse>> {
-  return await http.fetchJson(
-    "/admin/login",
-    http.json({
-      ...options,
-      method: "POST",
-      body: adminLoginRequest,
-    }),
-  );
-}
-/**
- * Retrieve an Application identified by the application id
- */
-export async function getAdminLogout(
-  options?: RequestOptions,
-): Promise<ApiResponse<ApplicationResponse>> {
+export async function getAdminLogout(options?: RequestOptions): Promise<ApiResponse<string>> {
   return await http.fetchJson("/admin/logout", {
-    ...options,
+    ...options
   });
 }
 /**
