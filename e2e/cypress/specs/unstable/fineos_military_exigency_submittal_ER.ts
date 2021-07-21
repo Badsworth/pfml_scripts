@@ -15,14 +15,9 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
         assertValidClaim(claim.claim);
         cy.stash("claim", claim);
 
-        ClaimantPage.visit(claim.claim.tax_identifier).createNotification(
-          claim.claim,
-          "Military Exigency Family"
-        );
-        cy.get("a[name*='CaseMapWidget']")
-          .invoke("text")
-          .then((text) => {
-            const fineos_absence_id = text.slice(24);
+        ClaimantPage.visit(claim.claim.tax_identifier)
+          .createNotification(claim.claim)
+          .then((fineos_absence_id) => {
             cy.log(fineos_absence_id);
             cy.stash("submission", { fineos_absence_id });
 
@@ -31,8 +26,6 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
                 claim.documents.forEach((doc) =>
                   evidence.receive(doc.document_type)
                 );
-                evidence.receive("Military exigency form");
-                evidence.receive("Family Member Active Duty Service Proof");
               });
             });
           });

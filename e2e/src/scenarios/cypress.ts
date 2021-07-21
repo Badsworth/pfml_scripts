@@ -1,4 +1,8 @@
-import { ScenarioSpecification } from "../generation/Scenario";
+import {
+  MilitaryCaregiverClaim,
+  MilitaryExigencyClaim,
+  ScenarioSpecification,
+} from "../generation/Scenario";
 import { addWeeks, subWeeks, startOfWeek, addDays, subDays } from "date-fns";
 import { getCaringLeaveStartEndDates } from "../../src/util/claims";
 
@@ -54,28 +58,31 @@ export const REDUCED_ER: ScenarioSpecification = {
   },
 };
 
-export const MIL_RED: ScenarioSpecification = {
+export const MIL_RED: ScenarioSpecification<MilitaryCaregiverClaim> = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "MIL_RED",
     shortClaim: true,
-    reason: "Care for a Family Member",
+    reason: "Military Caregiver",
     docs: {
       MASSID: {},
+      COVERED_SERVICE_MEMBER_ID: {},
       CARING: {},
     },
     reduced_leave_spec: "0,240,240,240,240,240,0",
   },
 };
 
-export const MIL_EXI: ScenarioSpecification = {
+export const MIL_EXI: ScenarioSpecification<MilitaryExigencyClaim> = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "Military Exigency claim",
     shortClaim: true,
-    reason: "Serious Health Condition - Employee",
+    reason: "Military Exigency Family",
     docs: {
       MASSID: {},
+      ACTIVE_SERVICE_PROOF: {},
+      MILITARY_EXIGENCY_FORM: {},
     },
   },
 };
@@ -284,16 +291,15 @@ export const CDENY2: ScenarioSpecification = {
   },
 };
 
-export const MIL_RED_OLB: ScenarioSpecification = {
+export const MED_OLB: ScenarioSpecification = {
   employee: { mass_id: true, wages: 90000 },
   claim: {
-    label: "MIL_RED with Other Leaves & Benefits",
+    label: "MED with Other Leaves & Benefits",
     leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 3)],
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    reason: "Serious Health Condition - Employee",
     docs: {
       MASSID: {},
-      FOSTERPLACEMENT: {},
+      HCP: {},
     },
     reduced_leave_spec: "0,240,240,240,240,240,0",
     employerResponse: {

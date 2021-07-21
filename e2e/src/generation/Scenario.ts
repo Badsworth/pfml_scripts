@@ -72,5 +72,8 @@ export interface MilitaryExigencyClaim extends FineosClaimSpec {
 }
 export interface MilitaryCaregiverClaim extends FineosClaimSpec {
   reason: "Military Caregiver";
-  docs?: Pick<DocumentGenerationSpec, "COVERED_SERVICE_MEMBER_ID" | "MASSID">;
+  docs?: Pick<
+    DocumentGenerationSpec,
+    "COVERED_SERVICE_MEMBER_ID" | "MASSID" | "CARING"
+  >;
 }
