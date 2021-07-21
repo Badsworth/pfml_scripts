@@ -1,41 +1,42 @@
 import {
-  Credentials,
-  ValidPreviousLeave,
-  ValidConcurrentLeave,
-  ValidEmployerBenefit,
-  ValidOtherIncome,
-  FeatureFlags,
-} from "../../src/types";
-import {
-  isNotNull,
-  assertIsTypedArray,
-  isValidPreviousLeave,
-  isValidConcurrentLeave,
-  isValidEmployerBenefit,
-  isValidOtherIncome,
-} from "../../src/util/typeUtils";
-import {
+  ApplicationRequestBody,
   ApplicationResponse,
   IntermittentLeavePeriods,
   PaymentPreference,
   PaymentPreferenceRequestBody,
-  ApplicationRequestBody,
   ReducedScheduleLeavePeriods,
   WorkPattern,
   WorkPatternDay,
 } from "../../src/api";
 import {
-  extractDebugInfoFromBody,
-  extractDebugInfoFromHeaders,
-} from "../../src/errors";
-import { config } from "./common";
-import { email } from ".";
-import { inFieldsetLabelled } from "./common";
-import path from "path";
+  Credentials,
+  FeatureFlags,
+  ValidConcurrentLeave,
+  ValidEmployerBenefit,
+  ValidOtherIncome,
+  ValidPreviousLeave,
+} from "../../src/types";
+import {
+  assertIsTypedArray,
+  isNotNull,
+  isValidConcurrentLeave,
+  isValidEmployerBenefit,
+  isValidOtherIncome,
+  isValidPreviousLeave,
+} from "../../src/util/typeUtils";
 import {
   dateToReviewFormat,
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
+import {
+  extractDebugInfoFromBody,
+  extractDebugInfoFromHeaders,
+} from "../../src/errors";
+
+import { config } from "./common";
+import { email } from ".";
+import { inFieldsetLabelled } from "./common";
+import path from "path";
 
 /**
  *
@@ -227,7 +228,7 @@ export function logout(): void {
 }
 
 export function registerAsClaimant(credentials: Credentials): void {
-  cy.visit("/create-account");
+  cy.visit("/create-account/");
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").type(credentials.password);
   cy.contains("button", "Create account").click();
@@ -716,6 +717,12 @@ export function confirmSubmit(): void {
 
 export function goToDashboardFromApplicationsPage(): void {
   cy.contains("Start a new application", {
+    timeout: 15000, // Dashboard can take awhile to load due to the number of claims the E2E user has
+  }).click();
+}
+
+export function startApplicationForFirstTime(): void {
+  cy.contains("Create an application", {
     timeout: 15000, // Dashboard can take awhile to load due to the number of claims the E2E user has
   }).click();
 }
