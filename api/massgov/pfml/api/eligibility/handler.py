@@ -40,6 +40,16 @@ def eligibility_post():
     ensure(CREATE, "Financial Eligibility Calculation")
 
     request = EligibilityRequest.parse_obj(connexion.request.json)
+
+    logger.info(
+        "Received financial eligibility request",
+        extra={
+            "leave_start_date": str(request.leave_start_date),
+            "application_submitted_date": str(request.application_submitted_date),
+            "employment_status": request.employment_status,
+        },
+    )
+
     tax_identifier = request.tax_identifier
     fein = request.employer_fein
     leave_start_date = request.leave_start_date
@@ -95,10 +105,16 @@ def eligibility_post():
         logger.info(
             "Calculated financial eligibility",
             extra={
-                "financially_eligible": wage_data_response.financially_eligible,
-                "description": wage_data_response.description,
                 "employee_id": employee_id,
                 "employer_id": employer_id,
+                "financially_eligible": wage_data_response.financially_eligible,
+                "description": wage_data_response.description,
+                "total_wages": str(wage_data_response.total_wages),
+                "state_average_weekly_wage": wage_data_response.state_average_weekly_wage,
+                "unemployment_minimum": wage_data_response.unemployment_minimum,
+                "employer_average_weekly_wage": str(
+                    wage_data_response.employer_average_weekly_wage
+                ),
             },
         )
 
