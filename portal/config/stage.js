@@ -10,6 +10,6 @@ module.exports = {
   newRelicAppId: "847043861",
   // See docs/portal/maintenance-pages.md
   maintenancePageRoutes: ["/*"],
-  maintenanceStart: "2021-07-25T03:59:00-04:00",
-  maintenanceEnd: "2021-07-25T05:00:00-04:00",
+  maintenanceStart: "2021-08-01T03:59:00-04:00",
+  maintenanceEnd: "2021-08-01T05:00:00-04:00",
 };
