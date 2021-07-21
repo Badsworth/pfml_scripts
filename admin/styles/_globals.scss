@@ -7,7 +7,7 @@ html {
 
 h1 {
   color: $Color-RevolutionGray;
-  font-size: 24px;
+  font-size: 1.71em;
   font-weight: 200;
   line-height: 1.33;
 }
@@ -90,11 +90,12 @@ h1 {
 // custom overrides should happen at the component level
 input {
   appearance: none;
-  border: 1px solid #fff;
+  border: 1px solid #ddd;
   border-radius: $Border-Radius;
   box-shadow: $Box-Shadow;
   color: $Color-GraniteGray-400;
   font: inherit;
+  margin-bottom: 0.57em;
   outline: none;
   padding: 1em;
   transition: all 0.2s ease-in-out;

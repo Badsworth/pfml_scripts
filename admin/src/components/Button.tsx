@@ -1,24 +1,24 @@
 import React from "react";
+import classNames from "classnames";
 
 type Props = {
-  additionalClasses?: string;
+  additionalClasses?: string[];
   callback: Function;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
-const Button = ({ additionalClasses = "", callback, children }: Props) => {
+const Button = ({ additionalClasses = [], callback, children }: Props) => {
   const handleOnClick = (event: React.MouseEvent) => {
     event.preventDefault();
 
     callback(event);
   };
 
-  const classes =
-    additionalClasses.trim() == "" ? "" : " " + additionalClasses.trim();
+  const classes = classNames([...additionalClasses, "btn"]);
 
   return (
-    <button className={`btn${classes}`} onClick={handleOnClick}>
-      <span className="btn__text">{children}</span>
+    <button className={classes} onClick={handleOnClick}>
+      {children}
     </button>
   );
 };
