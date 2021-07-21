@@ -41,7 +41,7 @@ class MSALClientConfig:
             authority=b2cPolicies["authorities"]["login"]["authority"],
             knownAuthorities=[b2cPolicies["authorityDomain"]],
             redirectUri="http://localhost:3000",
-            postLogoutRedirectUri="http://localhost:3000",
+            postLogoutRedirectUri="http://localhost:3000/logout",
             scopes=[f"{clientId}/.default"],
             policies=b2cPolicies,
             states=b2cStates,

@@ -1,7 +1,7 @@
 #
-# Authentication using JWT tokens and AWS Cognito.
+# Authentication using JWT tokens, AWS Cognito and Azure AD.
 #
-
+from datetime import datetime
 import json
 
 import flask
@@ -22,10 +22,13 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 public_keys = None
 azure_config = None
+azure_public_keys_last_updated = None
 azure_public_keys = None
 session = {}
 
-
+#
+# AWS Cognito
+#
 def get_public_keys(userpool_keys_url):
     global public_keys
 
@@ -43,6 +46,7 @@ def get_url_as_json(url):
     else:
         response = requests.get(url, timeout=5)
         return response.json()
+
 
 def _decode_cognito_token(token):
     decoded_token = jwt.decode(
@@ -91,18 +95,28 @@ def decode_cognito_token(token):
         )
         raise Unauthorized
 
+#
+# Azure AD Single Sign on for admins 
+#
+def get_azure_ad_public_keys(config):
+    global azure_config, azure_public_keys, azure_public_keys_last_updated
 
-def get_azure_ad_public_keys(azure_ad_config):
-    global azure_config, azure_public_keys
+    now = datetime.now()
+    seconds_in_24_hours = 86400
 
-    azure_config = azure_ad_config
-    logger.info("Retrieving public keys from %s", azure_config.publicKeysUrl)
-    data = get_url_as_json(azure_config.publicKeysUrl)
-    azure_public_keys = data["keys"]
-    logger.info("Public keys successfully retrieved")
+    if azure_public_keys_last_updated is None or (now - azure_public_keys_last_updated).total_seconds() > seconds_in_24_hours:
+        azure_config = config
+        logger.info("Retrieving public keys from %s", config.publicKeysUrl)
+        data = get_url_as_json(config.publicKeysUrl)
+        azure_public_keys = get_url_as_json(config.publicKeysUrl)["keys"]
+        azure_public_keys_last_updated = now
+        logger.info("Public keys successfully retrieved!")
 
 
 def _decode_azure_ad_token(token):
+    # The public keys should be refreshed every day https://docs.microsoft.com/en-us/azure/active-directory/develop/access-tokens#validating-tokens
+    get_azure_ad_public_keys(azure_config)
+
     headers = jwt.get_unverified_header(token)
     pick_public_key = [key for key in azure_public_keys if key.get("kid") == headers.get("kid")]
     if len(pick_public_key) == 1:
@@ -114,13 +128,6 @@ def _decode_azure_ad_token(token):
             audience=azure_config.clientId,
         )
         return decoded_token
-
-    # either user has a fake token (no effect)
-    # or public keys might have changed
-    # should these be refreshed every day?
-    # https://docs.microsoft.com/en-us/azure/active-directory/develop/access-tokens#validating-tokens
-    get_azure_ad_public_keys(azure_config)
-    # after updating public keys, user can retry logging in
     raise jose.JOSEError("Invalid key!")
 
 
@@ -153,7 +160,7 @@ def decode_azure_ad_token(token):
             raise NoResultFound
 
         logger.info("auth token decode succeeded", extra={"current_user.auth_id": auth_id})
-        return decoded_token, user
+        return decoded_token
     except jose.JOSEError as e:
         logger.exception("auth token decode failed: %s %s", type(e), str(e), extra={"error": e})
         raise Unauthorized
@@ -162,6 +169,10 @@ def decode_azure_ad_token(token):
             "user query failed: %s", type(e), extra={"current_user.auth_id": auth_id, "error": e,},
         )
         raise Unauthorized
+
+
+def _build_logout_flow():
+    return f"{azure_config.authority}/oauth2/v2.0/logout?post_logout_redirect_uri={azure_config.postLogoutRedirectUri}"
 
 
 def _build_auth_code_flow(authority=None, scopes=None):
@@ -180,23 +191,4 @@ def _build_msal_app(cache=None, authority=None):
 
 
 def _load_cache():
-    # cache = msal.SerializableTokenCache()
-    # if session.get("token_cache"):
-    #     cache.deserialize(session["token_cache"])
-    #     logger.info(f"token_cache {session.get('token_cache')}")
     return msal.SerializableTokenCache()
-
-# def _save_cache(cache):
-#     if cache.has_state_changed:
-#         session["token_cache"] = cache.serialize()
-
-
-
-# def _get_token_from_cache(scope=None):
-#     cache = _load_cache()  # This web app maintains one cache per session
-#     msal_app = _build_msal_app(cache=cache)
-#     accounts = msal_app.get_accounts()
-#     if accounts:  # So all account(s) belong to the current signed-in user
-#         result = msal_app.acquire_token_silent(scope, account=accounts[0])
-#         _save_cache(cache)
-#         return result
