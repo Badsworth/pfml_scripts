@@ -9,19 +9,19 @@
       
       
       
-      <link rel="icon" href="/assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.0">
     
     
       
-        <title>PFML</title>
+        <title>Ses - PFML</title>
       
     
     
-      <link rel="stylesheet" href="/assets/stylesheets/main.fe914879.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.fe914879.min.css">
       
         
-        <link rel="stylesheet" href="/assets/stylesheets/palette.ba0d045b.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ba0d045b.min.css">
         
       
     
@@ -53,12 +53,17 @@
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
   
     
-    <script>function __prefix(e){return new URL("/",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#configuring-ecs-tasks-to-send-emails" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -67,7 +72,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/." title="PFML" class="md-header__button md-logo" aria-label="PFML" data-md-component="logo">
+    <a href="../.." title="PFML" class="md-header__button md-logo" aria-label="PFML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -86,7 +91,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              Ses
             
           </span>
         </div>
@@ -164,7 +169,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/." title="PFML" class="md-nav__button md-logo" aria-label="PFML" data-md-component="logo">
+    <a href="../.." title="PFML" class="md-nav__button md-logo" aria-label="PFML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -196,7 +201,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         Massachusetts PFML (Portal and API)
       </a>
     </li>
@@ -211,7 +216,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/contributing/" class="md-nav__link">
+      <a href="../../contributing/" class="md-nav__link">
         Contributing
       </a>
     </li>
@@ -226,7 +231,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/creating-environments/" class="md-nav__link">
+      <a href="../../creating-environments/" class="md-nav__link">
         Setting up a new environment
       </a>
     </li>
@@ -241,7 +246,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/deployment/" class="md-nav__link">
+      <a href="../../deployment/" class="md-nav__link">
         Deployment
       </a>
     </li>
@@ -256,7 +261,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/tools/" class="md-nav__link">
+      <a href="../../tools/" class="md-nav__link">
         Tools
       </a>
     </li>
@@ -269,12 +274,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
       
       <label class="md-nav__link" for="__nav_6">
         Api
@@ -292,7 +299,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/automated-tests/" class="md-nav__link">
+      <a href="../automated-tests/" class="md-nav__link">
         Automated Tests
       </a>
     </li>
@@ -304,7 +311,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/database-migrations/" class="md-nav__link">
+      <a href="../database-migrations/" class="md-nav__link">
         Database Migrations
       </a>
     </li>
@@ -316,7 +323,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/db-roles-and-users/" class="md-nav__link">
+      <a href="../db-roles-and-users/" class="md-nav__link">
         Database Users
       </a>
     </li>
@@ -328,7 +335,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/development-environment-setup/" class="md-nav__link">
+      <a href="../development-environment-setup/" class="md-nav__link">
         Development Environment Setup
       </a>
     </li>
@@ -340,7 +347,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/environment-variables/" class="md-nav__link">
+      <a href="../environment-variables/" class="md-nav__link">
         Environment Variables
       </a>
     </li>
@@ -352,7 +359,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/fields-and-validations/" class="md-nav__link">
+      <a href="../fields-and-validations/" class="md-nav__link">
         Fields and validations
       </a>
     </li>
@@ -364,7 +371,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/monitoring/" class="md-nav__link">
+      <a href="../monitoring/" class="md-nav__link">
         API Monitoring
       </a>
     </li>
@@ -376,7 +383,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/running-the-application-docker/" class="md-nav__link">
+      <a href="../running-the-application-docker/" class="md-nav__link">
         Running the Application (Docker)
       </a>
     </li>
@@ -386,11 +393,67 @@
             
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="/api/ses/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Ses
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Ses
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-ecs-tasks-to-send-emails" class="md-nav__link">
+    Configuring ECS Tasks to send emails
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuring ECS Tasks to send emails">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#allow-your-task-iam-role-to-send-emails" class="md-nav__link">
+    Allow your task IAM Role to send emails
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-your-iam-role-name-to-the-ses-allowlist" class="md-nav__link">
+    Add your IAM role name to the SES allowlist
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -400,7 +463,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/technical-overview/" class="md-nav__link">
+      <a href="../technical-overview/" class="md-nav__link">
         Technical Overview
       </a>
     </li>
@@ -412,7 +475,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/working-with-releases/" class="md-nav__link">
+      <a href="../working-with-releases/" class="md-nav__link">
         Working With Releases
       </a>
     </li>
@@ -424,7 +487,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/writing-tests/" class="md-nav__link">
+      <a href="../writing-tests/" class="md-nav__link">
         Writing Tests
       </a>
     </li>
@@ -466,7 +529,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/infra/adding-ses-email-address/" class="md-nav__link">
+      <a href="../../infra/adding-ses-email-address/" class="md-nav__link">
         Adding a new SES email address
       </a>
     </li>
@@ -478,7 +541,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/infra/making-changes-to-alerts/" class="md-nav__link">
+      <a href="../../infra/making-changes-to-alerts/" class="md-nav__link">
         Making Changes to Alerts
       </a>
     </li>
@@ -490,7 +553,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/infra/testing-github-action-permissions/" class="md-nav__link">
+      <a href="../../infra/testing-github-action-permissions/" class="md-nav__link">
         Testing Github Actions permissions
       </a>
     </li>
@@ -532,7 +595,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/browser-support/" class="md-nav__link">
+      <a href="../../portal/browser-support/" class="md-nav__link">
         Browser support
       </a>
     </li>
@@ -544,7 +607,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/creating-environments/" class="md-nav__link">
+      <a href="../../portal/creating-environments/" class="md-nav__link">
         Setting up a new environment
       </a>
     </li>
@@ -556,7 +619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/development/" class="md-nav__link">
+      <a href="../../portal/development/" class="md-nav__link">
         Portal Development
       </a>
     </li>
@@ -568,7 +631,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/environment-variables/" class="md-nav__link">
+      <a href="../../portal/environment-variables/" class="md-nav__link">
         Environment variables
       </a>
     </li>
@@ -580,7 +643,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/error-handling/" class="md-nav__link">
+      <a href="../../portal/error-handling/" class="md-nav__link">
         Error handling
       </a>
     </li>
@@ -592,7 +655,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/feature-flags/" class="md-nav__link">
+      <a href="../../portal/feature-flags/" class="md-nav__link">
         Feature flags
       </a>
     </li>
@@ -604,7 +667,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/internationalization/" class="md-nav__link">
+      <a href="../../portal/internationalization/" class="md-nav__link">
         Internationalization
       </a>
     </li>
@@ -616,7 +679,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/maintenance-pages/" class="md-nav__link">
+      <a href="../../portal/maintenance-pages/" class="md-nav__link">
         Maintenance pages
       </a>
     </li>
@@ -628,7 +691,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/monitoring/" class="md-nav__link">
+      <a href="../../portal/monitoring/" class="md-nav__link">
         Monitoring
       </a>
     </li>
@@ -640,7 +703,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/naming-conventions/" class="md-nav__link">
+      <a href="../../portal/naming-conventions/" class="md-nav__link">
         Naming conventions
       </a>
     </li>
@@ -652,7 +715,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/software-architecture/" class="md-nav__link">
+      <a href="../../portal/software-architecture/" class="md-nav__link">
         Software Architecture
       </a>
     </li>
@@ -664,7 +727,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/storybook/" class="md-nav__link">
+      <a href="../../portal/storybook/" class="md-nav__link">
         Storybook
       </a>
     </li>
@@ -676,7 +739,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/tests/" class="md-nav__link">
+      <a href="../../portal/tests/" class="md-nav__link">
         Tests
       </a>
     </li>
@@ -688,7 +751,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/web-analytics/" class="md-nav__link">
+      <a href="../../portal/web-analytics/" class="md-nav__link">
         Web Analytics
       </a>
     </li>
@@ -730,7 +793,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/releases/api/" class="md-nav__link">
+      <a href="../../releases/api/" class="md-nav__link">
         Api
       </a>
     </li>
@@ -742,7 +805,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/releases/portal/" class="md-nav__link">
+      <a href="../../releases/portal/" class="md-nav__link">
         Portal
       </a>
     </li>
@@ -762,11 +825,118 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-ecs-tasks-to-send-emails" class="md-nav__link">
+    Configuring ECS Tasks to send emails
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuring ECS Tasks to send emails">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#allow-your-task-iam-role-to-send-emails" class="md-nav__link">
+    Allow your task IAM Role to send emails
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-your-iam-role-name-to-the-ses-allowlist" class="md-nav__link">
+    Add your IAM role name to the SES allowlist
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
-  <h1>404 - Not found</h1>
+                
+                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/api/ses.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                  <h1>Ses</h1>
+                
+                <h2 id="configuring-ecs-tasks-to-send-emails">Configuring ECS Tasks to send emails</h2>
+<p>In certain cases, it may make sense to send emails from a running application. The instructions below list out the required steps for getting your ECS task configured with the appropriate permissions.</p>
+<h3 id="allow-your-task-iam-role-to-send-emails">Allow your task IAM Role to send emails</h3>
+<p>By default, your ECS task does not have any AWS permissions. IAM roles define what they are allowed to do, with which resources (like an SES email!) There are two IAM roles for a task: the task IAM role and the execution IAM role.</p>
+<ul>
+<li>
+<p>The task IAM role defines the permissions used during application runtime.</p>
+</li>
+<li>
+<p>The execution IAM role defines the permissions needed before the task starts.</p>
+</li>
+</ul>
+<p>Since you'll be sending emails during an application's runtime, the task IAM role policy will need to be configured with permissions to send emails. This might look like this:</p>
+<div class="highlight"><pre><span></span><code>  <span class="nb">statement</span> <span class="p">{</span>
+    <span class="na">sid</span>    <span class="o">=</span> <span class="s2">&quot;AllowSESSendEmail&quot;</span>
+    <span class="na">effect</span> <span class="o">=</span> <span class="s2">&quot;Allow&quot;</span>
+
+    <span class="na">actions</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="s2">&quot;ses:SendEmail&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;ses:SendRawEmail&quot;</span>
+    <span class="p">]</span>
+
+    <span class="nb">condition</span> <span class="p">{</span>
+      <span class="na">test</span>     <span class="o">=</span> <span class="s2">&quot;ForAllValues:StringLike&quot;</span>
+      <span class="na">variable</span> <span class="o">=</span> <span class="s2">&quot;ses:Recipients&quot;</span>
+      <span class="na">values</span> <span class="o">=</span> <span class="p">[</span><span class="c1"></span>
+<span class="c1">        # Any email addresses you expect to communicate with.</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+
+    <span class="na">resources</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="s2">&quot;*&quot;</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
+</code></pre></div>
+<h3 id="add-your-iam-role-name-to-the-ses-allowlist">Add your IAM role name to the SES allowlist</h3>
+<p>Additionally, we maintain a strict list of resources that are allowed to send emails with each of our email addresses in <a href="https://github.com/EOLWD/pfml/tree/main/infra/pfml-aws/ses.tf">ses.tf</a>. You'll want to update the condition in <code>data.aws_iam_policy_document.restrict_ses_senders</code> to include your IAM roles in this pattern:</p>
+<div class="highlight"><pre><span></span><code><span class="err">arn</span><span class="p">:</span><span class="err">aws</span><span class="p">:</span><span class="err">sts</span><span class="p">::</span><span class="err">$</span><span class="p">{</span><span class="nv">data.aws_caller_identity.current.account_id</span><span class="p">}:</span><span class="err">assumed-role/MY_IAM_ROLE_PATTERN</span><span class="cm">/*&quot;</span>
+</code></pre></div>
+<p>Note that this is the name of the IAM role itself, not the policy. e.g. use the name in this block:</p>
+<div class="highlight"><pre><span></span><code><span class="kr">resource</span> <span class="nc">&quot;aws_iam_role&quot;</span> <span class="nv">&quot;payments_fineos_process_task_role&quot;</span> <span class="p">{</span>
+  <span class="na">name</span>               <span class="o">=</span> <span class="s2">&quot;${local.app_name}-${var.environment_name}-ecs-tasks-payments-fineos-process&quot;</span>
+  <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div>
+                
+              
+              
+                
+
 
               
             </article>
@@ -777,6 +947,41 @@
       
         
 <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../running-the-application-docker/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Running the Application (Docker)" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Running the Application (Docker)
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../technical-overview/" class="md-footer__link md-footer__link--next" aria-label="Next: Technical Overview" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Technical Overview
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -797,10 +1002,10 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "/", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "/assets/javascripts/workers/search.53c85856.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.53c85856.min.js", "version": null}</script>
     
     
-      <script src="/assets/javascripts/bundle.716f8af4.min.js"></script>
+      <script src="../../assets/javascripts/bundle.716f8af4.min.js"></script>
       
     
   </body>

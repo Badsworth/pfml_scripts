@@ -9,19 +9,19 @@
       
       
       
-      <link rel="icon" href="/assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.0">
     
     
       
-        <title>PFML</title>
+        <title>Database Migrations - PFML</title>
       
     
     
-      <link rel="stylesheet" href="/assets/stylesheets/main.fe914879.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.fe914879.min.css">
       
         
-        <link rel="stylesheet" href="/assets/stylesheets/palette.ba0d045b.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ba0d045b.min.css">
         
       
     
@@ -53,12 +53,17 @@
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
   
     
-    <script>function __prefix(e){return new URL("/",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#database-migrations" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -67,7 +72,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/." title="PFML" class="md-header__button md-logo" aria-label="PFML" data-md-component="logo">
+    <a href="../.." title="PFML" class="md-header__button md-logo" aria-label="PFML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -86,7 +91,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              Database Migrations
             
           </span>
         </div>
@@ -164,7 +169,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/." title="PFML" class="md-nav__button md-logo" aria-label="PFML" data-md-component="logo">
+    <a href="../.." title="PFML" class="md-nav__button md-logo" aria-label="PFML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -196,7 +201,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         Massachusetts PFML (Portal and API)
       </a>
     </li>
@@ -211,7 +216,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/contributing/" class="md-nav__link">
+      <a href="../../contributing/" class="md-nav__link">
         Contributing
       </a>
     </li>
@@ -226,7 +231,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/creating-environments/" class="md-nav__link">
+      <a href="../../creating-environments/" class="md-nav__link">
         Setting up a new environment
       </a>
     </li>
@@ -241,7 +246,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/deployment/" class="md-nav__link">
+      <a href="../../deployment/" class="md-nav__link">
         Deployment
       </a>
     </li>
@@ -256,7 +261,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/tools/" class="md-nav__link">
+      <a href="../../tools/" class="md-nav__link">
         Tools
       </a>
     </li>
@@ -269,12 +274,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
       
       <label class="md-nav__link" for="__nav_6">
         Api
@@ -292,7 +299,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/automated-tests/" class="md-nav__link">
+      <a href="../automated-tests/" class="md-nav__link">
         Automated Tests
       </a>
     </li>
@@ -302,11 +309,65 @@
             
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="/api/database-migrations/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Database Migrations
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Database Migrations
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#running-migrations" class="md-nav__link">
+    Running migrations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-new-migrations" class="md-nav__link">
+    Creating new migrations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-head-situations" class="md-nav__link">
+    Multi-head situations
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -316,7 +377,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/db-roles-and-users/" class="md-nav__link">
+      <a href="../db-roles-and-users/" class="md-nav__link">
         Database Users
       </a>
     </li>
@@ -328,7 +389,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/development-environment-setup/" class="md-nav__link">
+      <a href="../development-environment-setup/" class="md-nav__link">
         Development Environment Setup
       </a>
     </li>
@@ -340,7 +401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/environment-variables/" class="md-nav__link">
+      <a href="../environment-variables/" class="md-nav__link">
         Environment Variables
       </a>
     </li>
@@ -352,7 +413,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/fields-and-validations/" class="md-nav__link">
+      <a href="../fields-and-validations/" class="md-nav__link">
         Fields and validations
       </a>
     </li>
@@ -364,7 +425,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/monitoring/" class="md-nav__link">
+      <a href="../monitoring/" class="md-nav__link">
         API Monitoring
       </a>
     </li>
@@ -376,7 +437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/running-the-application-docker/" class="md-nav__link">
+      <a href="../running-the-application-docker/" class="md-nav__link">
         Running the Application (Docker)
       </a>
     </li>
@@ -388,7 +449,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/ses/" class="md-nav__link">
+      <a href="../ses/" class="md-nav__link">
         Ses
       </a>
     </li>
@@ -400,7 +461,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/technical-overview/" class="md-nav__link">
+      <a href="../technical-overview/" class="md-nav__link">
         Technical Overview
       </a>
     </li>
@@ -412,7 +473,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/working-with-releases/" class="md-nav__link">
+      <a href="../working-with-releases/" class="md-nav__link">
         Working With Releases
       </a>
     </li>
@@ -424,7 +485,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/writing-tests/" class="md-nav__link">
+      <a href="../writing-tests/" class="md-nav__link">
         Writing Tests
       </a>
     </li>
@@ -466,7 +527,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/infra/adding-ses-email-address/" class="md-nav__link">
+      <a href="../../infra/adding-ses-email-address/" class="md-nav__link">
         Adding a new SES email address
       </a>
     </li>
@@ -478,7 +539,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/infra/making-changes-to-alerts/" class="md-nav__link">
+      <a href="../../infra/making-changes-to-alerts/" class="md-nav__link">
         Making Changes to Alerts
       </a>
     </li>
@@ -490,7 +551,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/infra/testing-github-action-permissions/" class="md-nav__link">
+      <a href="../../infra/testing-github-action-permissions/" class="md-nav__link">
         Testing Github Actions permissions
       </a>
     </li>
@@ -532,7 +593,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/browser-support/" class="md-nav__link">
+      <a href="../../portal/browser-support/" class="md-nav__link">
         Browser support
       </a>
     </li>
@@ -544,7 +605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/creating-environments/" class="md-nav__link">
+      <a href="../../portal/creating-environments/" class="md-nav__link">
         Setting up a new environment
       </a>
     </li>
@@ -556,7 +617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/development/" class="md-nav__link">
+      <a href="../../portal/development/" class="md-nav__link">
         Portal Development
       </a>
     </li>
@@ -568,7 +629,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/environment-variables/" class="md-nav__link">
+      <a href="../../portal/environment-variables/" class="md-nav__link">
         Environment variables
       </a>
     </li>
@@ -580,7 +641,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/error-handling/" class="md-nav__link">
+      <a href="../../portal/error-handling/" class="md-nav__link">
         Error handling
       </a>
     </li>
@@ -592,7 +653,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/feature-flags/" class="md-nav__link">
+      <a href="../../portal/feature-flags/" class="md-nav__link">
         Feature flags
       </a>
     </li>
@@ -604,7 +665,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/internationalization/" class="md-nav__link">
+      <a href="../../portal/internationalization/" class="md-nav__link">
         Internationalization
       </a>
     </li>
@@ -616,7 +677,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/maintenance-pages/" class="md-nav__link">
+      <a href="../../portal/maintenance-pages/" class="md-nav__link">
         Maintenance pages
       </a>
     </li>
@@ -628,7 +689,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/monitoring/" class="md-nav__link">
+      <a href="../../portal/monitoring/" class="md-nav__link">
         Monitoring
       </a>
     </li>
@@ -640,7 +701,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/naming-conventions/" class="md-nav__link">
+      <a href="../../portal/naming-conventions/" class="md-nav__link">
         Naming conventions
       </a>
     </li>
@@ -652,7 +713,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/software-architecture/" class="md-nav__link">
+      <a href="../../portal/software-architecture/" class="md-nav__link">
         Software Architecture
       </a>
     </li>
@@ -664,7 +725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/storybook/" class="md-nav__link">
+      <a href="../../portal/storybook/" class="md-nav__link">
         Storybook
       </a>
     </li>
@@ -676,7 +737,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/tests/" class="md-nav__link">
+      <a href="../../portal/tests/" class="md-nav__link">
         Tests
       </a>
     </li>
@@ -688,7 +749,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/web-analytics/" class="md-nav__link">
+      <a href="../../portal/web-analytics/" class="md-nav__link">
         Web Analytics
       </a>
     </li>
@@ -730,7 +791,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/releases/api/" class="md-nav__link">
+      <a href="../../releases/api/" class="md-nav__link">
         Api
       </a>
     </li>
@@ -742,7 +803,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/releases/portal/" class="md-nav__link">
+      <a href="../../releases/portal/" class="md-nav__link">
         Portal
       </a>
     </li>
@@ -762,11 +823,135 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#running-migrations" class="md-nav__link">
+    Running migrations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-new-migrations" class="md-nav__link">
+    Creating new migrations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-head-situations" class="md-nav__link">
+    Multi-head situations
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
-  <h1>404 - Not found</h1>
+                
+                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/api/database-migrations.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="database-migrations">Database Migrations</h1>
+<ul>
+<li><a href="#running-migrations">Running migrations</a></li>
+<li><a href="#creating-new-migrations">Creating new migrations</a></li>
+<li><a href="#multi-head-situations">Multi-head situations</a></li>
+</ul>
+<h2 id="running-migrations">Running migrations</h2>
+<p>When you're first setting up your environment, ensure that migrations are run
+against your db so it has all the required tables. <code>make init</code> does this, but if
+needing to work with the migrations directly, some common commands:</p>
+<div class="highlight"><pre><span></span><code>make db-upgrade       <span class="c1"># Apply pending migrations to db</span>
+make db-downgrade     <span class="c1"># Rollback last migration to db</span>
+make db-downgrade-all <span class="c1"># Rollback all migrations</span>
+</code></pre></div>
+<h2 id="creating-new-migrations">Creating new migrations</h2>
+<p>If you've changed a python object model, auto-generate a migration file for the database and run it:</p>
+<div class="highlight"><pre><span></span><code>$ make db-migrate-create <span class="nv">MIGRATE_MSG</span><span class="o">=</span><span class="s2">&quot;&lt;brief description of change&gt;&quot;</span>
+$ make db-upgrade
+</code></pre></div>
+<details>
+    <summary>Example: Adding a new column to an existing table:</summary>
+
+1. Manually update the database models with the changes (`massgov/pfml/db/models/employees.py` in this example)
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">Address</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">created_at</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">TIMESTAMP</span><span class="p">(</span><span class="n">timezone</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span> <span class="c1"># Newly added line</span>
+</code></pre></div>
+
+2. Automatically generate a migration file with `make db-migrate-create MIGRATE_MSG="Add created_at timestamp to address table"`
+<div class="highlight"><pre><span></span><code><span class="o">...</span>
+<span class="k">def</span> <span class="nf">upgrade</span><span class="p">():</span>
+    <span class="c1"># ### commands auto generated by Alembic - please adjust! ###</span>
+    <span class="n">op</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;address&quot;</span><span class="p">,</span> <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">,</span> <span class="n">sa</span><span class="o">.</span><span class="n">TIMESTAMP</span><span class="p">(</span><span class="n">timezone</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="c1"># ### end Alembic commands ###</span>
+
+
+<span class="k">def</span> <span class="nf">downgrade</span><span class="p">():</span>
+    <span class="c1"># ### commands auto generated by Alembic - please adjust! ###</span>
+    <span class="n">op</span><span class="o">.</span><span class="n">drop_column</span><span class="p">(</span><span class="s2">&quot;address&quot;</span><span class="p">,</span> <span class="s2">&quot;created_at&quot;</span><span class="p">)</span>
+    <span class="c1"># ### end Alembic commands ###</span>
+</code></pre></div>
+
+3. Manually adjust the migration file as needed. Some changes will not fully auto-generate (like foreign keys), so make sure that all desired changes are included.
+</details>
+
+<h2 id="multi-head-situations">Multi-head situations</h2>
+<p>Alembic migrations form an ordered history, with each migration having at least
+one parent migration as specified by the <code>down_revision</code> variable. This can be
+visualized by:</p>
+<div class="highlight"><pre><span></span><code>make db-migrate-history
+</code></pre></div>
+<p>When multiple migrations are created that point to the same <code>down_revision</code> a
+branch is created, with the tip of each branch being a "head". The above history
+command will show this, but a list of just the heads can been retrieved with:</p>
+<div class="highlight"><pre><span></span><code>make db-migrate-heads
+</code></pre></div>
+<p>CI/CD runs migrations to reach the "head". When there are multiple, Alembic
+can't resolve which migrations need to be run. If you run into this error,
+you'll need to fix the migration branches/heads before merging to <code>main</code>.</p>
+<p>If the migrations don't depend on each other, which is likely if they've
+branched, then you can just run:</p>
+<div class="highlight"><pre><span></span><code>make db-migrate-merge-heads
+</code></pre></div>
+<p>Which will create a new migration pointing to all current "head"s, effectively
+pulling them all together.</p>
+<p>When branched migrations do need to happen in a defined order, then manually
+update the <code>down_revision</code> of one that should happen second to reference to the
+migration that should happen first.</p>
+                
+              
+              
+                
+
 
               
             </article>
@@ -777,6 +962,41 @@
       
         
 <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../automated-tests/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Automated Tests" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Automated Tests
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../db-roles-and-users/" class="md-footer__link md-footer__link--next" aria-label="Next: Database Users" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Database Users
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -797,10 +1017,10 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "/", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "/assets/javascripts/workers/search.53c85856.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.53c85856.min.js", "version": null}</script>
     
     
-      <script src="/assets/javascripts/bundle.716f8af4.min.js"></script>
+      <script src="../../assets/javascripts/bundle.716f8af4.min.js"></script>
       
     
   </body>

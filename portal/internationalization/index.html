@@ -1,0 +1,1305 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.0">
+    
+    
+      
+        <title>Internationalization - PFML</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.fe914879.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ba0d045b.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#internationalization" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="PFML" class="md-header__button md-logo" aria-label="PFML" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PFML
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Internationalization
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/EOLWD/PFML/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    EOLWD/pfml
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="PFML" class="md-nav__button md-logo" aria-label="PFML" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    PFML
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/EOLWD/PFML/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    EOLWD/pfml
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Massachusetts PFML (Portal and API)
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        Contributing
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../creating-environments/" class="md-nav__link">
+        Setting up a new environment
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/" class="md-nav__link">
+        Deployment
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/" class="md-nav__link">
+        Tools
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      <label class="md-nav__link" for="__nav_6">
+        Api
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Api" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Api
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/automated-tests/" class="md-nav__link">
+        Automated Tests
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/database-migrations/" class="md-nav__link">
+        Database Migrations
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/db-roles-and-users/" class="md-nav__link">
+        Database Users
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/development-environment-setup/" class="md-nav__link">
+        Development Environment Setup
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/environment-variables/" class="md-nav__link">
+        Environment Variables
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/fields-and-validations/" class="md-nav__link">
+        Fields and validations
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/monitoring/" class="md-nav__link">
+        API Monitoring
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/running-the-application-docker/" class="md-nav__link">
+        Running the Application (Docker)
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ses/" class="md-nav__link">
+        Ses
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/technical-overview/" class="md-nav__link">
+        Technical Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/working-with-releases/" class="md-nav__link">
+        Working With Releases
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/writing-tests/" class="md-nav__link">
+        Writing Tests
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
+      
+      <label class="md-nav__link" for="__nav_7">
+        Infra
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Infra" data-md-level="1">
+        <label class="md-nav__title" for="__nav_7">
+          <span class="md-nav__icon md-icon"></span>
+          Infra
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/adding-ses-email-address/" class="md-nav__link">
+        Adding a new SES email address
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/making-changes-to-alerts/" class="md-nav__link">
+        Making Changes to Alerts
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/testing-github-action-permissions/" class="md-nav__link">
+        Testing Github Actions permissions
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" checked>
+      
+      <label class="md-nav__link" for="__nav_8">
+        Portal
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Portal" data-md-level="1">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          Portal
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../browser-support/" class="md-nav__link">
+        Browser support
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-environments/" class="md-nav__link">
+        Setting up a new environment
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        Portal Development
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../environment-variables/" class="md-nav__link">
+        Environment variables
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error handling
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature-flags/" class="md-nav__link">
+        Feature flags
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Internationalization
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Internationalization
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#application" class="md-nav__link">
+    Application
+  </a>
+  
+    <nav class="md-nav" aria-label="Application">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#i18next-patterns" class="md-nav__link">
+    i18next patterns
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conventions" class="md-nav__link">
+    Conventions
+  </a>
+  
+    <nav class="md-nav" aria-label="Conventions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#organization" class="md-nav__link">
+    Organization
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#naming" class="md-nav__link">
+    Naming
+  </a>
+  
+    <nav class="md-nav" aria-label="Naming">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-page-element-terminology" class="md-nav__link">
+    Common page element terminology
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sharing-content" class="md-nav__link">
+    Sharing content
+  </a>
+  
+    <nav class="md-nav" aria-label="Sharing content">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-markup-in-values" class="md-nav__link">
+    Using markup in values
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rendering-values-in-pages-and-components" class="md-nav__link">
+    Rendering values in pages and components
+  </a>
+  
+    <nav class="md-nav" aria-label="Rendering values in pages and components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-the-usetranslation-hook" class="md-nav__link">
+    Using the useTranslation hook
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-trans-component" class="md-nav__link">
+    The Trans component
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maintenance-pages/" class="md-nav__link">
+        Maintenance pages
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../monitoring/" class="md-nav__link">
+        Monitoring
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming-conventions/" class="md-nav__link">
+        Naming conventions
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../software-architecture/" class="md-nav__link">
+        Software Architecture
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../storybook/" class="md-nav__link">
+        Storybook
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tests/" class="md-nav__link">
+        Tests
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web-analytics/" class="md-nav__link">
+        Web Analytics
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
+      
+      <label class="md-nav__link" for="__nav_9">
+        Releases
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Releases" data-md-level="1">
+        <label class="md-nav__title" for="__nav_9">
+          <span class="md-nav__icon md-icon"></span>
+          Releases
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/api/" class="md-nav__link">
+        Api
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/portal/" class="md-nav__link">
+        Portal
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#application" class="md-nav__link">
+    Application
+  </a>
+  
+    <nav class="md-nav" aria-label="Application">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#i18next-patterns" class="md-nav__link">
+    i18next patterns
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conventions" class="md-nav__link">
+    Conventions
+  </a>
+  
+    <nav class="md-nav" aria-label="Conventions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#organization" class="md-nav__link">
+    Organization
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#naming" class="md-nav__link">
+    Naming
+  </a>
+  
+    <nav class="md-nav" aria-label="Naming">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-page-element-terminology" class="md-nav__link">
+    Common page element terminology
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sharing-content" class="md-nav__link">
+    Sharing content
+  </a>
+  
+    <nav class="md-nav" aria-label="Sharing content">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-markup-in-values" class="md-nav__link">
+    Using markup in values
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rendering-values-in-pages-and-components" class="md-nav__link">
+    Rendering values in pages and components
+  </a>
+  
+    <nav class="md-nav" aria-label="Rendering values in pages and components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-the-usetranslation-hook" class="md-nav__link">
+    Using the useTranslation hook
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-trans-component" class="md-nav__link">
+    The Trans component
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/portal/internationalization.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="internationalization">Internationalization</h1>
+<p>All Portal internationalization (i18n) is configured in the <code>portal/src/locales/i18n.js</code> module.</p>
+<p>The locale selection for both i18n systems is configured in <code>i18n.js</code> to allow locale synchronization across the app.</p>
+<h2 id="application">Application</h2>
+<p>This app uses <a href="https://i18next.com/">i18next</a> and its <a href="https://react.i18next.com/">React library</a> for application localization. You can find i18next translation resources in <code>portal/locales/app/</code>. Each language has a file with a set of keys and values for every content string we need to localize for our site. The keys are how we will refer to these strings throughout our codebase, rather than hard coding the content strings.</p>
+<h3 id="i18next-patterns">i18next patterns</h3>
+<p>Our application takes advantage of some advanced patterns supported by the <code>i18next</code> library. It can be useful to be aware of these while working in the codebase:</p>
+<ul>
+<li><a href="https://www.i18next.com/translation-function/context">Context</a> allows us to have variations of a string based on the value of a <code>context</code> property:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="nx">t</span><span class="p">(</span><span class="s2">&quot;haveIncome&quot;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">context</span><span class="o">:</span> <span class="s2">&quot;married&quot;</span> <span class="p">});</span> <span class="c1">// -&gt; &quot;Do you or your spouse have income sources?&quot;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+  <span class="nt">&quot;haveIncome&quot;</span><span class="p">:</span> <span class="s2">&quot;Do you have income sources?&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;haveIncome_married&quot;</span><span class="p">:</span> <span class="s2">&quot;Do you or your spouse have income sources?&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li>The <a href="https://react.i18next.com/latest/trans-component">Trans</a> component allows us to integrate html tags such as links (<code>&lt;a&gt;</code> tags) and text formatting tags (e.g. <code>&lt;strong&gt;</code> or <code>&lt;em&gt;</code>) into translated text:</li>
+</ul>
+<div class="highlight"><pre><span></span><code>&lt;Trans
+  i18nKey=&quot;userAgreement&quot;
+  components={{
+    &quot;consent-link&quot;: &lt;a href=&quot;https://www.mass.gov/paidleave-informedconsent&quot; /&gt;,
+    &quot;privacy-policy-link&quot;: &lt;a href=&quot;https://www.mass.gov/privacypolicy&quot; /&gt;,
+  }}
+/&gt;
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+  <span class="nt">&quot;userAgreement&quot;</span><span class="p">:</span> <span class="s2">&quot;To find out more about how the Commonwealth might use the information you share with DFML, please read the &lt;consent-link&gt;DFML Informed Consent Agreement&lt;/consent-link&gt; and the &lt;privacy-policy-link&gt;Privacy Policy for Mass.gov&lt;/privacy-policy-link&gt;.&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Note that we are using the <a href="https://react.i18next.com/latest/trans-component#alternative-usage-v-11-6-0">alternative usage of Trans introduced in v11.6.0</a> where components are passed in as props rather than as children of <code>Trans</code>. This method allows the use of named tags in locale strings rather than needing to refer to child components by their index.</p>
+<ul>
+<li><a href="https://www.i18next.com/translation-function/formatting">Formatters</a> are functions that define locale-specific formats for specially-formatted values such as currencies or time durations.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="nx">t</span><span class="p">(</span><span class="s2">&quot;timeDuration&quot;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">minutes</span><span class="o">:</span> <span class="mf">480</span> <span class="p">});</span> <span class="c1">// -&gt; &quot;8h&quot;</span>
+<span class="nx">t</span><span class="p">(</span><span class="s2">&quot;timeDuration&quot;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">minutes</span><span class="o">:</span> <span class="mf">475</span> <span class="p">});</span> <span class="c1">// -&gt; &quot;7h 55m&quot;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span> <span class="nx">formatValue</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">format</span><span class="p">,</span> <span class="nx">locale</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">format</span> <span class="o">===</span> <span class="s2">&quot;hoursMinutesDuration&quot;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Could also internationalize by using the locale value</span>
+    <span class="kd">const</span> <span class="p">{</span> <span class="nx">hours</span><span class="p">,</span> <span class="nx">minutes</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">convertMinutesToHours</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">minutes</span> <span class="o">===</span> <span class="mf">0</span><span class="p">)</span> <span class="k">return</span> <span class="sb">`</span><span class="si">${</span><span class="nx">hours</span><span class="si">}</span><span class="sb">h`</span><span class="p">;</span>
+    <span class="k">return</span> <span class="sb">`</span><span class="si">${</span><span class="nx">hours</span><span class="si">}</span><span class="sb">h </span><span class="si">${</span><span class="nx">minutes</span><span class="si">}</span><span class="sb">m`</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nx">value</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+  <span class="kc">t</span><span class="err">imeDura</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="p">:</span> <span class="s2">&quot;{{minutes, hoursMinutesDuration}}&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="conventions">Conventions</h3>
+<p>Internationalization content can get messy and lead to hard-to-find bugs during translation. As such we strictly follow the below conventions to preserve readability, maintainability, and avoid errors.</p>
+<h4 id="organization">Organization</h4>
+<ul>
+<li>Keys are organized under top-level objects by how they're used:</li>
+<li><code>components</code> defines content used in specific components</li>
+<li><code>pages</code> defines content used in specific pages</li>
+<li><code>errors</code> defines content used in error messages, which aren’t page or component specific</li>
+<li><code>shared</code> defines content shared between multiple components or pages</li>
+<li><code>chars</code> defines special characters (such as non-breaking spaces, which are difficult to distinguish in values)</li>
+<li>Keys are limited to three levels deep, for example <code>pages.claimsDateOfBirth.title</code>. This makes the structure easier to navigate and the process of finding a specific element more consistent.</li>
+</ul>
+<h4 id="naming">Naming</h4>
+<ul>
+<li>Prioritize readability, and then brevity.</li>
+<li>Try to be consistent with existing keys. For example the title content for each page should be under a key, <code>pages.&lt;page-identifier&gt;.title</code>.</li>
+<li>When a page is related to a larger series of pages you can indicate that with a prefix. For example, the name form page within the claims flow is identified as <code>pages.claimsName</code>.</li>
+<li>Avoid repeating context in the key. For example, prefer <code>pages.claimsName.sectionHint</code> over <code>pages.claimsName.nameSectionHint</code>.</li>
+<li>Try to name keys after the purpose of the key, not just an underscored version of your translation. This may result in duplication of translations (i.e. multiple keys for "First name"), but this is much more flexible for cases down the line when one of those translations needs to change (i.e "First name" changes to "Spouse's first name").</li>
+<li>Keys should be alphabetical so they're easier for others to find and update. We also considered sorting them by page-order where they occur but alphabetical is more easily enforced (with linting) and doesn’t require re-ordering even if content on a page is re-ordered.</li>
+<li>Keys must be unique - there can't be two keys with the same name. This only applies to the entire key, for example having <code>pages.claimsName.sectionHint</code> and <code>pages.claimsSsn.sectionHint</code> is fine.</li>
+</ul>
+<h5 id="common-page-element-terminology">Common page element terminology</h5>
+<p>The PFML pages follow a design system that uses common terms for various page elements. It's helpful to use these terms when defining content strings for both the developer experience (when implementing a page design this gives you tips on how to name content strings) and in tracing content from the page back to the i18n key. These terms may change over time so this will need to be updated when they do. Some common element terms include:</p>
+<ul>
+<li><code>title</code> - one per page</li>
+<li><code>sectionLabel</code> - one per section or fieldset. This is typically either an HTML legend or label, depending on the page/section</li>
+<li><code>lead</code> - additional context about an entire page, section, or fieldset</li>
+<li><code>legend</code> - context about an embedded fieldset (note that sectionLabel content is always called sectionLabel even if we render it with an HTML legend element)</li>
+<li><code>label</code> - typically one per input</li>
+<li><code>hint</code> - additional context about a specific input</li>
+</ul>
+<p><strong>Note:</strong> we use <code>snake_case</code> for input field names to match the names used by the API, but we don’t carry that over to i18n keys. For example the <code>state_id</code> field on the claims license page has a label called <code>pages.claimsLicense.stateIdLabel</code>.</p>
+<p>For visual examples of different text elements on a page see the design team’s <a href="https://www.figma.com/file/v8LlmK8r1JmByqtNVMvqjS/PFML?node-id=938%3A0">page template</a> designs.</p>
+<h4 id="sharing-content">Sharing content</h4>
+<p>All shared keys are located inside the <code>shared</code> object; this makes it obvious that when you're changing one of them your changes will impact multiple components/pages. This is meant to prevent accidental content changes if someone is only trying to update content in one place.</p>
+<p>Sharing content should follow this pattern:</p>
+<ul>
+<li>The shared content is defined with a key inside the <code>shared</code> object.</li>
+<li>Each page or component that uses the shared content should define its own key and reference the shared key.</li>
+<li>Shared keys, such as <code>shared.claimsPages.leaveTypeTitle</code>, shouldn't be referenced directly in application code.</li>
+</ul>
+<h5 id="example">Example</h5>
+<div class="highlight"><pre><span></span><code>shared: {
+  claimsPages:
+    // Define the shared key here -- anyone changing this will know it affects multiple pages
+    takingLeaveTitle: &quot;Who is taking leave?&quot;,
+  },
+}
+
+pages: {
+  claimsName: {
+    // Reference the shared content with a key where it&#39;s used. This key, `pages.claimsName.title`,
+    // will be the key used within the page. This makes it easy to stop using the shared content
+    // by changing this to a content string.
+    title: &quot;$t(shared.claimsPages.takingLeaveTitle)&quot;,
+  },
+}
+</code></pre></div>
+<h4 id="using-markup-in-values">Using markup in values</h4>
+<p>Sometimes content necessitates the use of specific HTML tags. However, markup should only include tag names and not tag attributes. A tag's <code>className</code>, <code>href</code>, and other attributes should be set by the page or component that renders the key (see usage example below).</p>
+<p>Using markup in content strings can be useful but it can also make them more difficult to read and edit without introducing errors. Markup should be used sparingly. Some of the reasons for using markup in content strings include answering yes to any of these questions:</p>
+<ul>
+<li>Does this content require specific embedded tags for formatting? (e.g. <code>&lt;a&gt;</code>, <code>&lt;em&gt;</code>, <code>&lt;strong&gt;</code>, <code>&lt;ul&gt;</code>, <code>&lt;ol&gt;</code>, or multiple <code>&lt;p&gt;</code> tags)</li>
+<li>Does this content serve one primary function for the user?</li>
+<li>Is it helpful to edit this content as one key? (e.g. two paragraphs that serve one purpose for the user, or list items with an explicit order)</li>
+<li>Would breaking this content into multiple keys make them more difficult to name semantically or add unnecessary structure?</li>
+</ul>
+<h3 id="rendering-values-in-pages-and-components">Rendering values in pages and components</h3>
+<h4 id="using-the-usetranslation-hook">Using the <code>useTranslation</code> hook</h4>
+<p>With simple values, you only need to get the <code>t</code> function to render values in the functional component:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nx">React</span> <span class="k">from</span> <span class="s2">&quot;react&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">useTranslation</span> <span class="p">}</span> <span class="k">from</span> <span class="s2">&quot;react-i18next&quot;</span><span class="p">;</span>
+
+<span class="k">export</span> <span class="kd">function</span> <span class="nx">MyComponent</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="p">{</span> <span class="nx">t</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">useTranslation</span><span class="p">();</span>
+
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">t</span><span class="p">(</span><span class="s2">&quot;translationResourceKey&quot;</span><span class="p">)}</span><span class="o">&lt;</span><span class="err">/p&gt;;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="the-trans-component">The <code>Trans</code> component</h4>
+<p>Since the <code>t</code> function can't be used for values that include markup, the <code>Trans</code> component is used to interpolate or translate complex react elements.</p>
+<p>Set the key in the language file, excluding all tag attributes:</p>
+<div class="highlight"><pre><span></span><code>htmlKey:
+  &quot;&lt;ul&gt;&lt;li&gt;List item one&lt;/li&gt;&lt;li&gt;List item two has &lt;my-link&gt;a link&lt;/my-link&gt;&lt;/li&gt;&lt;/ul&gt;&quot;,
+</code></pre></div>
+<p>Anchors are given a unique tag name in the language file, and the corresponding <code>href</code> value is defined in <code>routes.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">myLink</span><span class="o">:</span> <span class="s2">&quot;http://www.example.com&quot;</span><span class="p">,</span>
+</code></pre></div>
+<p>The <code>Trans</code> component renders the basic tags, <code>br</code>, <code>strong</code>, <code>i</code>, and <code>p</code>. However, other tags must be explicitly defined. The <code>components</code> object is where attributes such as <code>className</code>, <code>href</code> can be set:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nx">React</span> <span class="k">from</span> <span class="s2">&quot;react&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">Trans</span> <span class="p">}</span> <span class="k">from</span> <span class="s2">&quot;react-i18next&quot;</span><span class="p">;</span>
+
+<span class="o">&lt;</span><span class="nx">Trans</span>
+  <span class="nx">i18nKey</span><span class="o">=</span><span class="s2">&quot;htmlKey&quot;</span>
+  <span class="nx">components</span><span class="o">=</span><span class="p">{{</span>
+    <span class="s2">&quot;my-link&quot;</span><span class="o">:</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">a</span>
+        <span class="nx">target</span><span class="o">=</span><span class="s2">&quot;_blank&quot;</span>
+        <span class="nx">rel</span><span class="o">=</span><span class="s2">&quot;noopener&quot;</span>
+        <span class="nx">href</span><span class="o">=</span><span class="p">{</span><span class="nx">routes</span><span class="p">.</span><span class="nx">external</span><span class="p">.</span><span class="nx">myLink</span><span class="p">}</span>
+      <span class="o">/&gt;</span>
+    <span class="p">),</span>
+    <span class="nx">ul</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">ul</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;usa-list&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
+    <span class="nx">li</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">li</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="p">}}</span>
+<span class="err">/&gt;</span>
+</code></pre></div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../feature-flags/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Feature flags" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Feature flags
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../maintenance-pages/" class="md-footer__link md-footer__link--next" aria-label="Next: Maintenance pages" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Maintenance pages
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.53c85856.min.js", "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.716f8af4.min.js"></script>
+      
+    
+  </body>
+</html>

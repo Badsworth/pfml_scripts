@@ -9,19 +9,19 @@
       
       
       
-      <link rel="icon" href="/assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.0">
     
     
       
-        <title>PFML</title>
+        <title>Deployment - PFML</title>
       
     
     
-      <link rel="stylesheet" href="/assets/stylesheets/main.fe914879.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.fe914879.min.css">
       
         
-        <link rel="stylesheet" href="/assets/stylesheets/palette.ba0d045b.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ba0d045b.min.css">
         
       
     
@@ -53,12 +53,17 @@
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
   
     
-    <script>function __prefix(e){return new URL("/",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    <script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#deployment" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -67,7 +72,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/." title="PFML" class="md-header__button md-logo" aria-label="PFML" data-md-component="logo">
+    <a href=".." title="PFML" class="md-header__button md-logo" aria-label="PFML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -86,7 +91,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              Deployment
             
           </span>
         </div>
@@ -164,7 +169,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/." title="PFML" class="md-nav__button md-logo" aria-label="PFML" data-md-component="logo">
+    <a href=".." title="PFML" class="md-nav__button md-logo" aria-label="PFML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -196,7 +201,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         Massachusetts PFML (Portal and API)
       </a>
     </li>
@@ -211,7 +216,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/contributing/" class="md-nav__link">
+      <a href="../contributing/" class="md-nav__link">
         Contributing
       </a>
     </li>
@@ -226,7 +231,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/creating-environments/" class="md-nav__link">
+      <a href="../creating-environments/" class="md-nav__link">
         Setting up a new environment
       </a>
     </li>
@@ -239,11 +244,85 @@
 
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="/deployment/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Deployment
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Deployment
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#deploying-to-an-environment" class="md-nav__link">
+    Deploying to an environment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-environment-coordination" class="md-nav__link">
+    Test Environment Coordination
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Environment Coordination">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#during-testing" class="md-nav__link">
+    During Testing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#after-testing" class="md-nav__link">
+    After Testing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#branch-to-environment-mapping" class="md-nav__link">
+    Branch-to-environment mapping
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -256,7 +335,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/tools/" class="md-nav__link">
+      <a href="../tools/" class="md-nav__link">
         Tools
       </a>
     </li>
@@ -292,7 +371,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/automated-tests/" class="md-nav__link">
+      <a href="../api/automated-tests/" class="md-nav__link">
         Automated Tests
       </a>
     </li>
@@ -304,7 +383,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/database-migrations/" class="md-nav__link">
+      <a href="../api/database-migrations/" class="md-nav__link">
         Database Migrations
       </a>
     </li>
@@ -316,7 +395,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/db-roles-and-users/" class="md-nav__link">
+      <a href="../api/db-roles-and-users/" class="md-nav__link">
         Database Users
       </a>
     </li>
@@ -328,7 +407,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/development-environment-setup/" class="md-nav__link">
+      <a href="../api/development-environment-setup/" class="md-nav__link">
         Development Environment Setup
       </a>
     </li>
@@ -340,7 +419,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/environment-variables/" class="md-nav__link">
+      <a href="../api/environment-variables/" class="md-nav__link">
         Environment Variables
       </a>
     </li>
@@ -352,7 +431,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/fields-and-validations/" class="md-nav__link">
+      <a href="../api/fields-and-validations/" class="md-nav__link">
         Fields and validations
       </a>
     </li>
@@ -364,7 +443,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/monitoring/" class="md-nav__link">
+      <a href="../api/monitoring/" class="md-nav__link">
         API Monitoring
       </a>
     </li>
@@ -376,7 +455,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/running-the-application-docker/" class="md-nav__link">
+      <a href="../api/running-the-application-docker/" class="md-nav__link">
         Running the Application (Docker)
       </a>
     </li>
@@ -388,7 +467,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/ses/" class="md-nav__link">
+      <a href="../api/ses/" class="md-nav__link">
         Ses
       </a>
     </li>
@@ -400,7 +479,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/technical-overview/" class="md-nav__link">
+      <a href="../api/technical-overview/" class="md-nav__link">
         Technical Overview
       </a>
     </li>
@@ -412,7 +491,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/working-with-releases/" class="md-nav__link">
+      <a href="../api/working-with-releases/" class="md-nav__link">
         Working With Releases
       </a>
     </li>
@@ -424,7 +503,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/api/writing-tests/" class="md-nav__link">
+      <a href="../api/writing-tests/" class="md-nav__link">
         Writing Tests
       </a>
     </li>
@@ -466,7 +545,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/infra/adding-ses-email-address/" class="md-nav__link">
+      <a href="../infra/adding-ses-email-address/" class="md-nav__link">
         Adding a new SES email address
       </a>
     </li>
@@ -478,7 +557,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/infra/making-changes-to-alerts/" class="md-nav__link">
+      <a href="../infra/making-changes-to-alerts/" class="md-nav__link">
         Making Changes to Alerts
       </a>
     </li>
@@ -490,7 +569,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/infra/testing-github-action-permissions/" class="md-nav__link">
+      <a href="../infra/testing-github-action-permissions/" class="md-nav__link">
         Testing Github Actions permissions
       </a>
     </li>
@@ -532,7 +611,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/browser-support/" class="md-nav__link">
+      <a href="../portal/browser-support/" class="md-nav__link">
         Browser support
       </a>
     </li>
@@ -544,7 +623,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/creating-environments/" class="md-nav__link">
+      <a href="../portal/creating-environments/" class="md-nav__link">
         Setting up a new environment
       </a>
     </li>
@@ -556,7 +635,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/development/" class="md-nav__link">
+      <a href="../portal/development/" class="md-nav__link">
         Portal Development
       </a>
     </li>
@@ -568,7 +647,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/environment-variables/" class="md-nav__link">
+      <a href="../portal/environment-variables/" class="md-nav__link">
         Environment variables
       </a>
     </li>
@@ -580,7 +659,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/error-handling/" class="md-nav__link">
+      <a href="../portal/error-handling/" class="md-nav__link">
         Error handling
       </a>
     </li>
@@ -592,7 +671,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/feature-flags/" class="md-nav__link">
+      <a href="../portal/feature-flags/" class="md-nav__link">
         Feature flags
       </a>
     </li>
@@ -604,7 +683,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/internationalization/" class="md-nav__link">
+      <a href="../portal/internationalization/" class="md-nav__link">
         Internationalization
       </a>
     </li>
@@ -616,7 +695,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/maintenance-pages/" class="md-nav__link">
+      <a href="../portal/maintenance-pages/" class="md-nav__link">
         Maintenance pages
       </a>
     </li>
@@ -628,7 +707,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/monitoring/" class="md-nav__link">
+      <a href="../portal/monitoring/" class="md-nav__link">
         Monitoring
       </a>
     </li>
@@ -640,7 +719,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/naming-conventions/" class="md-nav__link">
+      <a href="../portal/naming-conventions/" class="md-nav__link">
         Naming conventions
       </a>
     </li>
@@ -652,7 +731,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/software-architecture/" class="md-nav__link">
+      <a href="../portal/software-architecture/" class="md-nav__link">
         Software Architecture
       </a>
     </li>
@@ -664,7 +743,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/storybook/" class="md-nav__link">
+      <a href="../portal/storybook/" class="md-nav__link">
         Storybook
       </a>
     </li>
@@ -676,7 +755,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/tests/" class="md-nav__link">
+      <a href="../portal/tests/" class="md-nav__link">
         Tests
       </a>
     </li>
@@ -688,7 +767,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/portal/web-analytics/" class="md-nav__link">
+      <a href="../portal/web-analytics/" class="md-nav__link">
         Web Analytics
       </a>
     </li>
@@ -730,7 +809,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/releases/api/" class="md-nav__link">
+      <a href="../releases/api/" class="md-nav__link">
         Api
       </a>
     </li>
@@ -742,7 +821,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/releases/portal/" class="md-nav__link">
+      <a href="../releases/portal/" class="md-nav__link">
         Portal
       </a>
     </li>
@@ -762,11 +841,178 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#deploying-to-an-environment" class="md-nav__link">
+    Deploying to an environment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-environment-coordination" class="md-nav__link">
+    Test Environment Coordination
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Environment Coordination">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#during-testing" class="md-nav__link">
+    During Testing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#after-testing" class="md-nav__link">
+    After Testing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#branch-to-environment-mapping" class="md-nav__link">
+    Branch-to-environment mapping
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
-  <h1>404 - Not found</h1>
+                
+                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/deployment.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="deployment">Deployment</h1>
+<p>Deployments to all environments are managed through GitHub Actions.</p>
+<ul>
+<li>
+<p>The <code>main</code> branch is automatically deployed to <code>test</code> as pull requests are merged into it.</p>
+</li>
+<li>
+<p>Deployments to other environmments are triggered manually.</p>
+</li>
+</ul>
+<hr />
+<h3 id="deploying-to-an-environment">Deploying to an environment</h3>
+<ol>
+<li>
+<p>Visit the API or Portal Github Actions homepage:</p>
+<ul>
+<li><a href="https://github.com/EOLWD/pfml/actions?query=workflow%3A%22API+CI+Deploy%22">API Deploy</a></li>
+<li><a href="https://github.com/EOLWD/pfml/actions?query=workflow%3A%22Portal+Deploy%22">Portal Deploy</a></li>
+</ul>
+</li>
+<li>
+<p>Click the "Run workflow" button, and fill in the inputs:</p>
+<ul>
+<li>Provide the <code>deployment_env</code> from the list of environments.</li>
+<li>Provide a git branch or tag to deploy. This can be:<ul>
+<li>the name of a git tag, e.g. <code>api/v1.7.0-rc1</code>, or </li>
+<li>the name of a git branch, like <code>release/api/v1.7.0</code> or <code>kev/my-feature-branch</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Click the green "Run workflow" button.</p>
+</li>
+</ol>
+<h3 id="test-environment-coordination">Test Environment Coordination</h3>
+<p>If you are testing a feature branch on the test environment, please go through the following additional steps:</p>
+<h4 id="during-testing">During Testing</h4>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Communicate to #mass-pfml-deploys-shared. "⚠️ I'll be using the API/Portal test environment soon, please let me know if you have any concerns."</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> After running the workflow, click the "Disable Workflow" button to prevent auto-deploys from overriding your deployment.</li>
+</ul>
+<h4 id="after-testing">After Testing</h4>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Click the "Enable Workflow" button.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Re-deploy <code>main</code> to test.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Notify the Slack channel.</li>
+</ul>
+<h3 id="branch-to-environment-mapping">Branch-to-environment mapping</h3>
+<p>At a quick glance, you can view the commit history for any environment based on the branch.</p>
+<table>
+<thead>
+<tr>
+<th>Name of API deploy branch</th>
+<th>Name of Portal deploy branch</th>
+<th>Corresponding env</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>main</td>
+<td>main</td>
+<td>test</td>
+</tr>
+<tr>
+<td>deploy/api/stage</td>
+<td>deploy/portal/stage</td>
+<td>stage</td>
+</tr>
+<tr>
+<td>deploy/api/prod</td>
+<td>deploy/portal/prod</td>
+<td>prod</td>
+</tr>
+<tr>
+<td>deploy/api/performance</td>
+<td>deploy/portal/performance</td>
+<td>performance</td>
+</tr>
+<tr>
+<td>deploy/api/training</td>
+<td>deploy/portal/training</td>
+<td>training</td>
+</tr>
+<tr>
+<td>deploy/api/uat</td>
+<td>deploy/portal/uat</td>
+<td>uat</td>
+</tr>
+</tbody>
+</table>
+                
+              
+              
+                
+
 
               
             </article>
@@ -777,6 +1023,41 @@
       
         
 <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../creating-environments/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Setting up a new environment" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Setting up a new environment
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../tools/" class="md-footer__link md-footer__link--next" aria-label="Next: Tools" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Tools
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -797,10 +1078,10 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "/", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "/assets/javascripts/workers/search.53c85856.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.53c85856.min.js", "version": null}</script>
     
     
-      <script src="/assets/javascripts/bundle.716f8af4.min.js"></script>
+      <script src="../assets/javascripts/bundle.716f8af4.min.js"></script>
       
     
   </body>
