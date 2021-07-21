@@ -8,6 +8,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authentication import (
+    _build_logout_flow,
     _build_auth_code_flow,
     _build_msal_app,
     _load_cache,
@@ -54,9 +55,7 @@ def admins_token():
     tokens = {}
     request = AdminTokenRequest.parse_obj(connexion.request.json)
     try:
-        cache = _load_cache()
-
-        tokens = _build_msal_app(cache=cache).acquire_token_by_auth_code_flow(
+        tokens = _build_msal_app(cache=_load_cache()).acquire_token_by_auth_code_flow(
             request.authURIRes.__dict__, request.authCodeRes.__dict__, scopes=None
         )
 
@@ -65,8 +64,6 @@ def admins_token():
             return response_util.error_response(
                 status_code=BadRequest, message=tokens["error"], errors=tokens["error"], data={},
             ).to_api_response()
-
-        # _save_cache(cache)
 
     except ValueError: # Usually caused by CSRF, simply ignore them
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -80,24 +77,21 @@ def admins_token():
 
 
 def admins_login():
-    # get token from header
-    logger.info("admins_login")
-    access_token = connexion.request.headers["Authorization"]
-    logger.info(access_token)
-    decoded_token, user = decode_azure_ad_token(access_token)
-    # @todo: verification if admin has full or just partial access
+    # decode_azure_ad_token is automatically called
+    # and will validate the Authorization token
     return response_util.success_response(
-        data=user_response(user),
+        data=user_response(app.current_user()),
         message="Successfully logged in!",
         status_code=200,
     ).to_api_response()
 
 
 def admins_logout():
-    config = app.get_app_config().azure_sso
-    # Wipe out user and its token cache from session
-    # Also logout from your tenant's web session
-    return f"{config.authority}/oauth2/v2.0/logout?post_logout_redirect_uri={config.postLogoutRedirectUri}"
+    return response_util.success_response(
+        data=_build_logout_flow(),
+        message="Successfully logged in!",
+        status_code=200,
+    ).to_api_response()
 
 
 def users_post():

@@ -621,21 +621,18 @@ paths:
   /admin/logout:
     get:
       security:
-        - {} # no authentication required
+        - {}
       tags:
         - Admin
-      summary: Logout as admin user
+      summary: Logout from your admin account
       operationId: massgov.pfml.api.users.admins_logout
       responses:
         "200":
-          description: Logged out
+          description: Retrieved logout url
           content:
             application/json:
               schema:
-                # $ref: "#/components/schemas/ApplicationResponse"
-                type: boolean
-        "404":
-          $ref: "#/components/responses/NotFound"
+                type: string
 
   /applications/{application_id}:
     get:
@@ -1219,7 +1216,7 @@ components:
         authorizationCode:
           authorizationUrl: /api/v1/admin/authorize
           tokenUrl: /api/v1/admin/token
-          refreshUrl: /api/v1/admin/refresh
+          refreshUrl: /api/v1/admin/logout
           scopes:
             users:read: Reads user information
 
