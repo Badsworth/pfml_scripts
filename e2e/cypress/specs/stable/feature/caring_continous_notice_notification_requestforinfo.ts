@@ -68,7 +68,7 @@ describe("Request for More Information (notifications/notices)", () => {
     }
   );
 
-  it(
+  const upload = it(
     "Should allow claimant to upload additional documents and generate a legal notice (Request for Information) that the claimant can view",
     { retries: 0 },
     () => {
@@ -107,6 +107,7 @@ describe("Request for More Information (notifications/notices)", () => {
     "CSR rep can view the additional information uploaded by claimant",
     { baseUrl: getFineosBaseUrl() },
     () => {
+      cy.dependsOnPreviousPass([submit, upload]);
       fineos.before();
       cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {

@@ -4,7 +4,6 @@ import {
   ScenarioSpecification,
 } from "../generation/Scenario";
 import { addWeeks, subWeeks, startOfWeek, addDays, subDays } from "date-fns";
-import { getCaringLeaveStartEndDates } from "../../src/util/claims";
 
 /**
  * Cypress Testing Scenarios.
@@ -264,7 +263,6 @@ export const BIAP60ER: ScenarioSpecification = {
   },
 };
 
-const [start, end] = getCaringLeaveStartEndDates();
 export const CCAP90: ScenarioSpecification = {
   employee: {
     wages: 90000,
@@ -275,7 +273,7 @@ export const CCAP90: ScenarioSpecification = {
     reason: "Care for a Family Member",
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: { MASSID: {}, CARING: {} },
-    leave_dates: [start, end],
+    leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
     metadata: { expected_weekly_payment: "850.00" },
   },
 };
@@ -352,7 +350,7 @@ export const CHAP_RFI: ScenarioSpecification = {
   claim: {
     label: "CHAP_RFI",
     reason: "Care for a Family Member",
-    leave_dates: [start, addDays(start, 2)],
+    shortClaim: true,
     docs: {
       MASSID: {},
       CARING: {},
