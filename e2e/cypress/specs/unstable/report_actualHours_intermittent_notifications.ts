@@ -18,18 +18,14 @@ describe("Report of intermittent leave hours notification", () => {
         cy.stash("claim", claim.claim);
         cy.task("submitClaimToAPI", {
           ...claim,
-        }).then((response) => {
-          if (!response.fineos_absence_id) {
-            throw new Error("Response contained no fineos_absence_id property");
-          }
-
+        }).then((res) => {
           cy.stash("submission", {
-            application_id: response.application_id,
-            fineos_absence_id: response.fineos_absence_id,
+            application_id: res.application_id,
+            fineos_absence_id: res.fineos_absence_id,
             timestamp_from: Date.now(),
           });
           fineos.intermittentClaimAdjudicationFlow(
-            response.fineos_absence_id,
+            res.fineos_absence_id,
             "Child Bonding",
             true
           );

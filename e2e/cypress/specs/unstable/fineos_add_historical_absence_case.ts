@@ -13,19 +13,16 @@ describe("Create a new continuous leave, medical leave claim in FINEOS and addin
       cy.task("submitClaimToAPI", {
         ...claim,
         credentials,
-      }).then((responseData: ApplicationResponse) => {
+      }).then((res) => {
         fineos.before();
         cy.visit("/");
-        if (!responseData.fineos_absence_id) {
-          throw new Error("FINEOS ID must be specified");
-        }
         cy.stash("claim", claim.claim);
         cy.stash("submission", {
-          application_id: responseData.application_id,
-          fineos_absence_id: responseData.fineos_absence_id,
+          application_id: res.application_id,
+          fineos_absence_id: res.fineos_absence_id,
           timestamp_from: Date.now(),
         });
-        fineosPages.ClaimPage.visit(responseData.fineos_absence_id);
+        fineosPages.ClaimPage.visit(res.fineos_absence_id);
         fineos.addHistoricalAbsenceCase();
       });
     });

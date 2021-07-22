@@ -66,7 +66,7 @@ declare namespace Cypress {
     task(
       event: "submitClaimToAPI",
       arg: DehydratedClaim
-    ): Chainable<ApplicationResponse>;
+    ): Chainable<ApplicationSubmissionResponse>;
     task(event: "submitClaimToAPI", arg: GeneratedClaim): Chainable<never>;
     task(
       event: "submitClaimToAPI",
@@ -74,7 +74,7 @@ declare namespace Cypress {
         credentials?: Credentials;
         employerCredentials?: Credentials;
       }
-    ): Chainable<ApplicationResponse>;
+    ): Chainable<ApplicationSubmissionResponse>;
     task(event: "pickEmployer", spec: EmployerPickSpec): Chainable<Employer>;
     task(event: "getEmails", opts: GetEmailsOpts): Chainable<Email[]>;
     task(event: "registerClaimant", options: Credentials): Chainable<true>;

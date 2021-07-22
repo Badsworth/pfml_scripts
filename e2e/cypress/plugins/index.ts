@@ -19,13 +19,16 @@ import {
   getPortalSubmitter,
   getVerificationFetcher,
 } from "../../src/util/common";
-import { Credentials, Scenarios } from "../../src/types";
+import {
+  ApplicationSubmissionResponse,
+  Credentials,
+  Scenarios,
+} from "../../src/types";
 import {
   generateCredentials,
   getClaimantCredentials,
   getLeaveAdminCredentials,
 } from "../../src/util/credentials";
-import { ApplicationResponse } from "../../src/api";
 
 import fs from "fs";
 import pdf from "pdf-parse";
@@ -97,7 +100,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         credentials?: Credentials;
         employerCredentials?: Credentials;
       }
-    ): Promise<ApplicationResponse> {
+    ): Promise<ApplicationSubmissionResponse> {
       if (!application.claim) throw new Error("Application missing!");
       const { credentials, employerCredentials, ...claim } = application;
       const { employer_fein } = application.claim;

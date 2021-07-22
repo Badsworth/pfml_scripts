@@ -25,20 +25,15 @@ describe("Request for More Information (notifications/notices)", () => {
         cy.task("submitClaimToAPI", {
           ...claim,
           credentials,
-        }).then((responseData: ApplicationResponse) => {
-          if (!responseData.fineos_absence_id) {
-            throw new Error("FINEOS ID must be specified");
-          }
+        }).then((res) => {
           cy.stash("claim", claim.claim);
           cy.stash("submission", {
-            application_id: responseData.application_id,
-            fineos_absence_id: responseData.fineos_absence_id,
+            application_id: res.application_id,
+            fineos_absence_id: res.fineos_absence_id,
             timestamp_from: Date.now(),
           });
 
-          const page = fineosPages.ClaimPage.visit(
-            responseData.fineos_absence_id
-          );
+          const page = fineosPages.ClaimPage.visit(res.fineos_absence_id);
           page.adjudicate((adjudication) => {
             adjudication.evidence((evidence) => {
               const certificationDocument = findCertificationDoc(

@@ -1,9 +1,9 @@
+import { ApplicationLeaveDetails, ApplicationRequestBody } from "../_api";
 import {
-  ApplicationLeaveDetails,
-  ApplicationRequestBody,
-  ApplicationResponse,
-} from "../_api";
-import { LeavePeriods, Submission } from "../types";
+  ApplicationSubmissionResponse,
+  LeavePeriods,
+  Submission,
+} from "../types";
 import { parseISO, format } from "date-fns";
 import { isNotNull } from "./typeUtils";
 
@@ -16,25 +16,14 @@ export function extractLeavePeriod(
   } else throw new Error("Missing leave details");
 }
 
-export function AssertFullApplicationResponse(
-  response: ApplicationResponse
-): asserts response is ApplicationResponse &
-  Required<Pick<ApplicationResponse, "application_id" | "fineos_absence_id">> {
-  if (!response.application_id)
-    throw new Error("API Response missing Application ID");
-  if (!response.fineos_absence_id)
-    throw new Error("API Response missing Fineos Absence ID");
-}
-
 /**
  * Extracts relevant submission data from an API response.
  * @param apiResponse API response coming from the PMFL API
  * @returns submission object with current timestamp
  */
 export function getSubmissionFromApiResponse(
-  apiResponse: ApplicationResponse
+  apiResponse: ApplicationSubmissionResponse
 ): Submission {
-  AssertFullApplicationResponse(apiResponse);
   return {
     application_id: apiResponse.application_id,
     fineos_absence_id: apiResponse.fineos_absence_id,

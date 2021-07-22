@@ -51,6 +51,11 @@ export type Submission = {
   timestamp_from: number;
 };
 
+export type ApplicationSubmissionResponse = RequireNotNull<
+  ApplicationResponse,
+  "fineos_absence_id" | "application_id" | "first_name" | "last_name"
+>;
+
 export type SubjectOptions =
   | "application started"
   | "employer response"

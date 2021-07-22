@@ -28,14 +28,11 @@ describe("Claim date change", () => {
         cy.task("submitClaimToAPI", {
           ...claim,
           credentials,
-        }).then((response) => {
-          if (!response.fineos_absence_id) {
-            throw new Error("Response contained no fineos_absence_id property");
-          }
+        }).then((res) => {
           const [startDate, endDate] = extractLeavePeriod(claim.claim);
           cy.stash("submission", {
-            application_id: response.application_id,
-            fineos_absence_id: response.fineos_absence_id,
+            application_id: res.application_id,
+            fineos_absence_id: res.fineos_absence_id,
             timestamp_from: Date.now(),
           });
           const newStartDate = format(
@@ -47,9 +44,7 @@ describe("Claim date change", () => {
             "MM/dd/yyyy"
           );
           cy.stash("changedLeaveDates", [newStartDate, newEndDate]);
-          const claimPage = fineosPages.ClaimPage.visit(
-            response.fineos_absence_id
-          );
+          const claimPage = fineosPages.ClaimPage.visit(res.fineos_absence_id);
           claimPage.adjudicate((adjudication) => {
             adjudication.evidence((evidence) => {
               for (const document of claim.documents) {
@@ -78,7 +73,7 @@ describe("Claim date change", () => {
           claimPage.reviewClaim();
           cy.visit("/");
           const claimReviewed = fineosPages.ClaimPage.visit(
-            response.fineos_absence_id
+            res.fineos_absence_id
           );
           claimReviewed.adjudicate((adjudication) => {
             adjudication.editPlanDecision("Undecided");
