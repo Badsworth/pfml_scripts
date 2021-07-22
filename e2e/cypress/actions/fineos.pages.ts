@@ -39,6 +39,7 @@ import {
   reviewClaim,
   wait,
   enterReducedWorkHours,
+  waitForAjaxComplete,
 } from "./fineos";
 
 import { DocumentUploadRequest } from "../../src/api";
@@ -181,8 +182,7 @@ class AdjudicationPage {
   }
   acceptLeavePlan() {
     this.onTab("Manage Request");
-    cy.wait(150);
-    cy.get("input[type='submit'][value='Accept']").click();
+    cy.get("input[type='submit'][value='Accept']").click({ force: true });
   }
   editPlanDecision(planStatus: string) {
     this.onTab("Manage Request");
@@ -216,9 +216,11 @@ class EvidencePage {
       cy.findByText("OK").click({ force: true });
       // Wait till modal has fully closed before moving on.
     });
-    cy.wait(100);
-    cy.get("#disablingLayer").should("not.be.visible");
-    cy.get("#disablingLayerForAjaxPopupWidget").should("not.be.visible");
+    // Wait until the table has updated with the new status before we attempt to move on.
+    cy.contains(".ListTable tr", evidenceType).should((row) => {
+      expect(row.find("td:nth-child(3)")).to.contain.text(receipt);
+      expect(row.find("td:nth-child(5)")).to.contain.text(decision);
+    });
     return this;
   }
   requestAdditionalInformation(
@@ -857,7 +859,7 @@ class PaidLeavePage {
   private onTab(...path: string[]) {
     if (this.activeTab !== path.join(",")) {
       for (const part of path) {
-        onTab(part, 200);
+        onTab(part);
       }
       this.activeTab = path.join(",");
     }
@@ -993,21 +995,18 @@ class PaidLeavePage {
     this.onTab("Financials", "Payment History", "Amounts Pending");
     if (!amountsPending.length) return this;
     // Get the table
-    cy.contains("table.WidgetPanel", "Amounts Pending").within(() => {
-      const [first, ...rest] = amountsPending;
-      // Get and assert contents of the first row. It has a unique selector.
-      cy.get("tr.ListRowSelected").should(
-        "contain.text",
-        this.numToPaymentFormat(first.net_payment_amount)
-      );
-      // Get and assert contents of the other rows if present.
-      rest.forEach((payment, i) => {
-        cy.get(`tr.ListRow${i + 2}`).should(
-          "contain.text",
-          this.numToPaymentFormat(payment.net_payment_amount)
-        );
+    cy.contains("table.WidgetPanel", "Amounts Pending")
+      .find("table.ListTable")
+      .within(() => {
+        amountsPending.forEach((payment, i) => {
+          // Note: We don't want to rely on row classes here, as they are added an indeterminate time after the page is
+          // rendered.
+          cy.get(`tr:nth-child(${i + 1})`).should(
+            "contain.text",
+            payment.net_payment_amount
+          );
+        });
       });
-    });
     return this;
   }
   /**
@@ -1018,21 +1017,18 @@ class PaidLeavePage {
   assertPaymentsMade(paymentsMade: Payment[]): this {
     if (!paymentsMade.length) return this;
     this.onTab("Financials", "Payment History", "Payments Made");
-    cy.contains("table.WidgetPanel", "Payments Made").within(() => {
-      const [first, ...rest] = paymentsMade;
-      // Get and assert contents of the the first row. It has a unique selector.
-      cy.get("tr.ListRowSelected").should(
-        "contain.text",
-        this.numToPaymentFormat(first.net_payment_amount)
-      );
-      // Get and assert contents of the the other rows if present.
-      rest.forEach((payment, i) => {
-        cy.get(`tr.ListRow${i + 2}`).should(
-          "contain.text",
-          this.numToPaymentFormat(payment.net_payment_amount)
-        );
+    cy.contains("table.WidgetPanel", "Payments Made")
+      .find("table.ListTable")
+      .within(() => {
+        paymentsMade.forEach((payment, i) => {
+          // Note: We don't want to rely on row classes here, as they are added an indeterminate time after the page is
+          // rendered.
+          cy.get(`tr:nth-child(${i + 1})`).should(
+            "contain.text",
+            this.numToPaymentFormat(payment.net_payment_amount)
+          );
+        });
       });
-    });
     return this;
   }
   /**
@@ -1154,9 +1150,10 @@ export class ClaimantPage {
         );
 
       if (changes.date_of_birth)
-        cy.findByLabelText(`Date of birth`).type(
-          `{selectAll}{backspace}${changes.date_of_birth}`
-        );
+        cy.findByLabelText(`Date of birth`)
+          .focus()
+          .type(`{selectAll}{backspace}${changes.date_of_birth}`)
+          .blur();
 
       if (changes.gender) cy.findByLabelText(`Gender`).select(changes.gender);
 
@@ -1169,6 +1166,7 @@ export class ClaimantPage {
 
   addAddress(address: AllNotNull<Address>): this {
     cy.findByText(`+ Add address`).click({ force: true });
+    waitForAjaxComplete();
     cy.get(`#addressPopupWidget_PopupWidgetWrapper`).within(() => {
       cy.findByLabelText(`Address line 1`).type(`${address.line_1}`);
       cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
@@ -1405,6 +1403,7 @@ type TypeOfRequestOptions =
 class NotificationOptions extends CreateNotificationStep {
   chooseTypeOfRequest(type: TypeOfRequestOptions): this {
     cy.contains("div", type).prev().find("input").click();
+    cy.findByText("Request a Leave").should("be.visible");
     return this;
   }
   /**
@@ -1555,6 +1554,7 @@ class DatesOfAbsence extends CreateNotificationStep {
 
     // Add the period
     cy.findByTitle(`Quick Add`).click();
+    wait();
     return this;
   }
   addReducedSchedulePeriod(
@@ -1589,6 +1589,7 @@ class DatesOfAbsence extends CreateNotificationStep {
     wait();
     // Submit period
     withinWidget(() => cy.findByTitle(`Quick Add`).click());
+    wait();
     return this;
   }
   nextStep<T>(cb: (step: WorkAbsenceDetails) => T): T {

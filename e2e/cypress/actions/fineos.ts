@@ -179,13 +179,14 @@ export function assertAdjudicatingClaim(claimId: string): void {
 /**
  * Helper to switch to a particular tab.
  */
-export function onTab(label: string, wait = 150): void {
-  cy.contains(".TabStrip td", label).click({ force: true }).wait(wait);
-  // experieincing failures due to this assertion when chained with click
-  // we should wait for the specified wait period before making this assertion to avoid this error
-  cy.contains(".TabStrip td", label).should("have.class", "TabOn");
-  // Wait on any in-flight Ajax to complete, then add a very slight delay for rendering to occur.
-  cy.wait("@ajaxRender").wait(wait);
+export function onTab(label: string): void {
+  cy.contains(".TabStrip td", label).then((tab) => {
+    if (tab.hasClass("TabOn")) {
+      return; // We're already on the correct tab.
+    }
+    cy.wrap(tab).click().should("have.class", "TabOn");
+    waitForAjaxComplete();
+  });
 }
 
 /**
@@ -211,6 +212,18 @@ export function wait(): void {
       expect(Cypress.dom.isAttached($el)).to.be.true;
     })
     .should("not.be.visible");
+}
+
+export function waitForAjaxComplete(): void {
+  cy.window()
+    .invoke("axGetAjaxQueueManager")
+    .should((q) => {
+      const inFlight = Object.values(q.requests).filter(
+        // @ts-ignore - ignore uses of Fineos internal window properties.
+        (req) => req.state() !== "resolved"
+      );
+      expect(inFlight, "In-flight Ajax requests should be 0").to.have.length(0);
+    });
 }
 
 export function clickBottomWidgetButton(value = "OK"): void {
@@ -308,8 +321,11 @@ export function markEvidence(
       `{selectall}{backspace}${reason}`
     );
     cy.get("input[type='button'][value='OK']").click({ force: true });
-    // Wait till modal has fully closed before moving on.
-    cy.get("#disablingLayer").should("not.exist");
+  });
+  // Wait until the table has updated with the new status before we attempt to move on.
+  cy.contains(".ListTable tr", evidenceType).should((row) => {
+    expect(row.find("td:nth-child(3)")).to.contain.text(receipt);
+    expect(row.find("td:nth-child(5)")).to.contain.text(decision);
   });
 }
 
@@ -816,15 +832,15 @@ export function addHistoricalAbsenceCase(): void {
   cy.contains("Options").click();
   cy.contains("Add Historical Absence").click();
   cy.findByLabelText("Absence relates to").select("Employee");
-  wait();
+  waitForAjaxComplete();
   cy.findByLabelText("Absence Reason").select(
     "Serious Health Condition - Employee"
   );
-  wait();
+  waitForAjaxComplete();
   cy.findByLabelText("Qualifier 1").select("Not Work Related");
-  wait();
+  waitForAjaxComplete();
   cy.findByLabelText("Qualifier 2").select("Sickness");
-  wait();
+  waitForAjaxComplete();
   cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
     .find("input")
     .click();
