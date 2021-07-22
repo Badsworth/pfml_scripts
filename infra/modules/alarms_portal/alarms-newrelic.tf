@@ -368,31 +368,6 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
   }
 }
 
-module "unexpected_validation_violations" {
-  # Alarm on validation errors that should never happen, like type or enum mismatches.
-
-  source = "../newrelic_single_error_alarm"
-
-  enabled     = true
-  name        = "Unexpected validation violations"
-  policy_id   = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
-  runbook_url = "https://lwd.atlassian.net/l/c/XSzdMmJ6"
-
-  # Ignoring employer_benefits[%].benefit_amount_frequency since we expect an
-  # enum ValidationError for it on the Employer review page
-  nrql = <<-NRQL
-    SELECT count(*) FROM PageAction
-    WHERE actionName = 'ValidationError'
-      AND environment = '${var.environment_name}'
-      AND (
-        issueType IN ('enum', 'type')
-        OR issueType LIKE 'type_error%'
-        OR issueType LIKE 'value_error%'
-      )
-      AND issueField NOT LIKE 'employer_benefits[%].benefit_amount_frequency'
-    FACET issueType, issueField
-  NRQL
-}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Alerts relating to errors in user account actions
