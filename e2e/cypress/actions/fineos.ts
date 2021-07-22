@@ -733,58 +733,6 @@ export function findOtherLeaveEForm(claimNumber: string): void {
   cy.wait(200);
 }
 
-export function checkPaymentPreference(simClaim: DehydratedClaim): void {
-  const { claim, paymentPreference } = simClaim;
-  searchClaimantSSN(claim.tax_identifier as string);
-  clickBottomWidgetButton("OK");
-  onTab("Payment Preferences");
-  cy.contains("td", "Yes").click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  cy.get('input[type="submit"][value="View"]').click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-
-  // Check Name
-  cy.get('span[id*="accountName"]').should(
-    "contain",
-    `${claim.first_name} ${claim.last_name}`
-  );
-
-  // Check Payment Preference
-  cy.contains(
-    "span",
-    paymentPreference.payment_preference?.payment_method as string
-  ).should("be.visible");
-  cy.contains(
-    "span",
-    paymentPreference.payment_preference?.account_number as string
-  ).should("be.visible");
-  cy.contains(
-    "span",
-    paymentPreference.payment_preference?.bank_account_type as string
-  ).should("be.visible");
-  cy.contains(
-    "span",
-    paymentPreference.payment_preference?.routing_number as string
-  ).should("be.visible");
-
-  // Check Address
-  cy.contains("span", claim.mailing_address?.line_1 as string).should(
-    "be.visible"
-  );
-  cy.contains("span", claim.mailing_address?.city as string).should(
-    "be.visible"
-  );
-  cy.contains("tr > td > span", claim.mailing_address?.state as string).should(
-    "be.visible"
-  );
-  cy.contains("span", claim.mailing_address?.zip as string).should(
-    "be.visible"
-  );
-  cy.wait(2000);
-}
-
 export function getPaymentAmount(): Cypress.Chainable<string> {
   cy.contains("Absence Paid Leave Case").click();
   cy.wait("@ajaxRender");

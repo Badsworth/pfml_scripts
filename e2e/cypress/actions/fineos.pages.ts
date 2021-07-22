@@ -1,6 +1,7 @@
 import {
   Address,
   OtherIncome,
+  PaymentPreferenceRequestBody,
   ReducedScheduleLeavePeriods,
 } from "../../src/_api";
 import {
@@ -1053,6 +1054,50 @@ class PaidLeavePage {
         );
       });
     });
+    return this;
+  }
+
+  assertPaymentAddress(address: Address): this {
+    this.onTab("Financials", "Recurring Payments", "Payment Details");
+    cy.get("span[id*='PaymentAddress']").should((span) => {
+      if (address.line_1) expect(span).to.contain.text(address.line_1);
+      if (address.line_2) expect(span).to.contain.text(address.line_2);
+      if (address.city) expect(span).to.contain.text(address.city);
+      if (address.state) expect(span).to.contain.text(address.state);
+      if (address.zip) expect(span).to.contain.text(address.zip);
+    });
+    return this;
+  }
+
+  assertPaymentPreference({
+    payment_preference,
+  }: PaymentPreferenceRequestBody): this {
+    if (!payment_preference) throw new Error("No payment preference given");
+    if (payment_preference.payment_method !== "Elec Funds Transfer")
+      throw new Error(
+        "Assertions on payment preferences other than EFT are not implemented yet."
+      );
+
+    this.onTab("Financials", "Recurring Payments", "Payment Details");
+    // The "Expand" button seems to show inconsistently. Only try to click expand if we see an expand button.
+    cy.get("#PayeeWidget > .WidgetPanel").then((panel) =>
+      panel.find("[title='Expand this Section']").each((i, el) => {
+        cy.wrap(el).click();
+      })
+    );
+    cy.get("[id*='paymentMethodDropDown']").should(
+      "contain.text",
+      payment_preference.payment_method
+    );
+    cy.get("[id*='bankAccountNo']").should(
+      "contain.text",
+      payment_preference.account_number
+    );
+    cy.get("[id*='routingNumber']").should(
+      "contain.text",
+      payment_preference.routing_number
+    );
+
     return this;
   }
 
