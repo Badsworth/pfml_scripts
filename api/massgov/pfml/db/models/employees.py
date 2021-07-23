@@ -750,6 +750,12 @@ class HealthCareProviderAddress(Base):
     address = relationship("Address", back_populates="health_care_providers")
 
 
+class AdminUser(Base, TimestampMixin):
+    __tablename__ = "admin_user"
+    sub_id = Column(Text, primary_key=True)
+    email = Column(Text)
+    name = Column(Text)
+
 class User(Base, TimestampMixin):
     __tablename__ = "user"
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)

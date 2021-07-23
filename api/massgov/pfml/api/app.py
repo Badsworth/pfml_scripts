@@ -13,7 +13,7 @@ import flask
 import flask_cors
 import newrelic.api.time_trace
 from flask import Flask, current_app, g
-from sqlalchemy.orm import Session as Session
+from sqlalchemy.orm import Session
 
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
@@ -24,7 +24,7 @@ import massgov.pfml.util.logging.access
 from massgov.pfml import db
 from massgov.pfml.api.config import AppConfig, get_config
 from massgov.pfml.api.validation import add_error_handlers_to_app, get_custom_validator_map
-from massgov.pfml.db.models.employees import User
+from massgov.pfml.db.models.employees import User, AdminUser
 
 from .reverse_proxy import ReverseProxied
 
@@ -157,6 +157,9 @@ def db_session(close: bool = False) -> Generator[db.Session, None, None]:
 
 def current_user() -> Optional[User]:
     return g.get("current_user")
+    
+def admin_user() -> Optional[AdminUser]:
+    return g.get("admin_user")
 
 
 def get_project_root_dir() -> str:
