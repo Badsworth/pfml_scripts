@@ -56,6 +56,11 @@ exports[`LeaveReasonPage renders the page for caring leave and does not show rea
           "label": "I need to bond with my child after birth, adoption, or foster placement.",
           "value": "Child Bonding",
         },
+        Object {
+          "checked": true,
+          "label": "I need to care for my family member.",
+          "value": "Care for a Family Member",
+        },
       ]
     }
     hint="You can only request one leave at a time."
@@ -215,6 +220,11 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
           "checked": false,
           "label": "I need to bond with my child after birth, adoption, or foster placement.",
           "value": "Child Bonding",
+        },
+        Object {
+          "checked": false,
+          "label": "I need to care for my family member.",
+          "value": "Care for a Family Member",
         },
       ]
     }

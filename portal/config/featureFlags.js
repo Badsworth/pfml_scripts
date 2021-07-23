@@ -46,12 +46,6 @@ const flagsConfig = {
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
 
-    // When this flag is enabled, the user can apply to take leave to
-    // "Care for a family member with a serious health condition" and
-    // Leave Admins can review Caring Leave claims
-    // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
-    showCaringLeaveType: true,
-
     // When this flag is enabled, the medical leave question numbers for leave periods
     // are updated to reflect the new "Certification of Your Serious Health Condition"
     // TODO (CP-2205): Remove this flag once updated medical leave form is effective
