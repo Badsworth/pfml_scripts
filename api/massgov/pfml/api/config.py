@@ -34,7 +34,6 @@ class AppConfig:
     enable_application_fraud_check: bool
     dashboard_password: str
     new_plan_proofs_active_at: datetime
-    azure_sso: MSALClientConfig
 
 
 def get_config() -> AppConfig:
@@ -58,5 +57,4 @@ def get_config() -> AppConfig:
         new_plan_proofs_active_at=datetime.fromisoformat(
             os.environ.get("NEW_PLAN_PROOFS_ACTIVE_AT", "2021-06-26 00:00:00+00:00")
         ),
-        azure_sso=MSALClientConfig.from_env(),
     )

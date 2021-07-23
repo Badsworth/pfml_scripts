@@ -4,14 +4,14 @@ from typing import Any, Dict
 import connexion
 from werkzeug.exceptions import BadRequest, NotFound
 
+from flask import redirect
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authentication import (
-    _build_logout_flow,
-    _build_auth_code_flow,
-    _build_msal_app,
-    _load_cache,
+    build_logout_flow,
+    build_auth_code_flow,
+    build_access_token,
     decode_azure_ad_token,
 )
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
@@ -43,7 +43,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def admins_authorization_url():
-    authCodeParams = _build_auth_code_flow()
+    authCodeParams = build_auth_code_flow()
     return response_util.success_response(
         data=AuthURIResponse.parse_obj(authCodeParams).__dict__,
         message="Retrieved authorization url!",
@@ -55,9 +55,7 @@ def admins_token():
     tokens = {}
     request = AdminTokenRequest.parse_obj(connexion.request.json)
     try:
-        tokens = _build_msal_app(cache=_load_cache()).acquire_token_by_auth_code_flow(
-            request.authURIRes.__dict__, request.authCodeRes.__dict__, scopes=None
-        )
+        tokens = build_access_token(request.authURIRes.__dict__, request.authCodeRes.__dict__)
 
         if "error" in tokens:
             logger.info(f"admins_token failure - {tokens['error']}")
@@ -80,7 +78,7 @@ def admins_login():
     # decode_azure_ad_token is automatically called
     # and will validate the Authorization token
     return response_util.success_response(
-        data=user_response(app.current_user()),
+        data={},
         message="Successfully logged in!",
         status_code=200,
     ).to_api_response()
@@ -88,7 +86,7 @@ def admins_login():
 
 def admins_logout():
     return response_util.success_response(
-        data=_build_logout_flow(),
+        data=build_logout_flow(),
         message="Successfully logged in!",
         status_code=200,
     ).to_api_response()

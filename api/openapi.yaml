@@ -1211,7 +1211,7 @@ components:
     azureoauth2:
       type: oauth2
       description: Azure AD OAuth2
-      x-tokenInfoFunc: massgov.pfml.api.authentication.decode_cognito_token
+      x-tokenInfoFunc: massgov.pfml.api.authentication.decode_azure_ad_token
       flows:
         authorizationCode:
           authorizationUrl: /api/v1/admin/authorize
