@@ -35,6 +35,12 @@ const flagsConfig = {
     // TODO (EMPLOYER-718): Remove flag
     employerShowPreviousLeaves: false,
 
+    // When this flag is enabled, the status column's current value of -- inside of the dashboard page will be replaced with either:
+    // Review by {date}
+    // No action required
+    // TODO (EMPLOYER-1587) Remove flag
+    employerShowReviewByStatus: false,
+
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
     noMaintenance: false,

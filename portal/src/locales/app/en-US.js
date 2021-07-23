@@ -2330,6 +2330,8 @@ const components = {
     status_closed: "$t(shared.absenceCaseStatus_closed)",
     status_completed: "$t(shared.absenceCaseStatus_closed)",
     status_declined: "$t(shared.absenceCaseStatus_denied)",
+    status_noAction: "No action required",
+    status_openRequirements: "Review by {{followupDate}}",
   },
   amendButton: {
     amend: "Amend",
