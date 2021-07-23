@@ -1,6 +1,5 @@
 import AddButton from "./AddButton";
 import AmendableConcurrentLeave from "./AmendableConcurrentLeave";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeaveModel from "../../models/ConcurrentLeave";
 import Heading from "../Heading";
 import PropTypes from "prop-types";
@@ -16,13 +15,19 @@ import { useTranslation } from "../../locales/i18n";
 const ConcurrentLeave = (props) => {
   const { t } = useTranslation();
   const {
-    addedConcurrentLeave,
-    appErrors,
-    concurrentLeave,
-    onAdd,
-    onChange,
-    onRemove,
+    currentConcurrentLeave,
+    getFunctionalInputProps,
+    originalConcurrentLeave,
+    updateFields,
   } = props;
+
+  const addConcurrentLeave = () => {
+    updateFields({
+      concurrent_leave: new ConcurrentLeaveModel({
+        is_for_current_employer: true,
+      }),
+    });
+  };
 
   return (
     <React.Fragment>
@@ -39,13 +44,12 @@ const ConcurrentLeave = (props) => {
           </tr>
         </thead>
         <tbody>
-          {concurrentLeave ? (
+          {originalConcurrentLeave ? (
             <AmendableConcurrentLeave
-              appErrors={appErrors}
-              concurrentLeave={concurrentLeave}
+              getFunctionalInputProps={getFunctionalInputProps}
               isAddedByLeaveAdmin={false}
-              onChange={onChange}
-              onRemove={onRemove}
+              originalConcurrentLeave={originalConcurrentLeave}
+              updateFields={updateFields}
             />
           ) : (
             <tr>
@@ -53,21 +57,20 @@ const ConcurrentLeave = (props) => {
               <td colSpan="3" />
             </tr>
           )}
-          {addedConcurrentLeave && !concurrentLeave && (
+          {currentConcurrentLeave && !originalConcurrentLeave && (
             <AmendableConcurrentLeave
-              appErrors={appErrors}
-              concurrentLeave={addedConcurrentLeave}
+              getFunctionalInputProps={getFunctionalInputProps}
               isAddedByLeaveAdmin
-              onChange={onChange}
-              onRemove={onRemove}
+              originalConcurrentLeave={originalConcurrentLeave}
+              updateFields={updateFields}
             />
           )}
-          {!concurrentLeave && !addedConcurrentLeave && (
+          {!currentConcurrentLeave && (
             <tr>
               <td colSpan="2" className="padding-y-2 padding-left-0">
                 <AddButton
                   label={t("components.employersConcurrentLeave.addButton")}
-                  onClick={onAdd}
+                  onClick={addConcurrentLeave}
                 />
               </td>
             </tr>
@@ -79,12 +82,10 @@ const ConcurrentLeave = (props) => {
 };
 
 ConcurrentLeave.propTypes = {
-  addedConcurrentLeave: PropTypes.instanceOf(ConcurrentLeaveModel),
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  concurrentLeave: PropTypes.instanceOf(ConcurrentLeaveModel),
-  onAdd: PropTypes.func.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
+  currentConcurrentLeave: PropTypes.instanceOf(ConcurrentLeaveModel),
+  getFunctionalInputProps: PropTypes.func.isRequired,
+  originalConcurrentLeave: PropTypes.instanceOf(ConcurrentLeaveModel),
+  updateFields: PropTypes.func.isRequired,
 };
 
 export default ConcurrentLeave;

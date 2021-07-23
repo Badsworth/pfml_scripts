@@ -286,13 +286,13 @@ describe("Review", () => {
       wrapper
         .find("ConcurrentLeave")
         .props()
-        .onChange(
-          new ConcurrentLeave({
+        .updateFields({
+          concurrent_leave: new ConcurrentLeave({
             is_for_current_employer: false,
             leave_start_date: "2021-10-10",
             leave_end_date: "2021-10-17",
-          })
-        );
+          }),
+        });
     });
 
     await simulateEvents(wrapper).submitForm();

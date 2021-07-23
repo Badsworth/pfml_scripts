@@ -1,9 +1,10 @@
+import { simulateEvents, testHook } from "../../test-utils";
 import AmendableConcurrentLeave from "../../../src/components/employers/AmendableConcurrentLeave";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import ConcurrentLeaveModel from "../../../src/models/ConcurrentLeave";
 import React from "react";
 import { shallow } from "enzyme";
-import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
 describe("AmendableConcurrentLeave", () => {
   const concurrentLeave = new ConcurrentLeaveModel({
@@ -11,10 +12,29 @@ describe("AmendableConcurrentLeave", () => {
     leave_start_date: "2020-03-01",
     leave_end_date: "2020-03-06",
   });
-  const onChange = jest.fn();
-  const onRemove = jest.fn();
+  const updateFields = jest.fn();
+  let getFunctionalInputProps;
 
-  let appLogic, wrapper;
+  function render(givenProps = {}) {
+    const defaultProps = {
+      getFunctionalInputProps,
+      isAddedByLeaveAdmin: false,
+      originalConcurrentLeave: concurrentLeave,
+      updateFields,
+    };
+    const props = { ...defaultProps, ...givenProps };
+    return shallow(<AmendableConcurrentLeave {...props} />);
+  }
+
+  beforeEach(() => {
+    testHook(() => {
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors: new AppErrorInfoCollection(),
+        formState: {},
+        updateFields,
+      });
+    });
+  });
 
   describe("for claimant-submitted concurrent leaves", () => {
     function clickAmendButton(wrapper) {
@@ -25,113 +45,86 @@ describe("AmendableConcurrentLeave", () => {
         .simulate("click");
     }
 
-    beforeEach(() => {
-      testHook(() => {
-        appLogic = useAppLogic();
-      });
-
-      wrapper = shallow(
-        <AmendableConcurrentLeave
-          appErrors={appLogic.appErrors}
-          concurrentLeave={concurrentLeave}
-          isAddedByLeaveAdmin={false}
-          onChange={onChange}
-          onRemove={onRemove}
-        />
-      );
-    });
-
     it("renders the component", () => {
+      const wrapper = render();
       expect(wrapper).toMatchSnapshot();
     });
 
     it("renders an AmendmentForm if user clicks on AmendButton", () => {
+      const wrapper = render();
       clickAmendButton(wrapper);
 
       expect(wrapper.find("AmendmentForm").exists()).toEqual(true);
     });
 
     it("updates start and end dates in the AmendmentForm", () => {
+      const wrapper = render();
       clickAmendButton(wrapper);
-      wrapper
-        .find("InputDate")
-        .first()
-        .simulate("change", { target: { value: "2020-10-10" } });
-      wrapper
-        .find("InputDate")
-        .last()
-        .simulate("change", { target: { value: "2020-10-20" } });
+      const { changeField } = simulateEvents(wrapper);
 
-      expect(onChange).toHaveBeenCalledTimes(2);
-      expect(wrapper.find("InputDate").first().prop("value")).toEqual(
-        "2020-10-10"
-      );
-      expect(wrapper.find("InputDate").last().prop("value")).toEqual(
-        "2020-10-20"
-      );
-    });
+      changeField("concurrent_leave.leave_start_date", "2020-10-10");
+      changeField("concurrent_leave.leave_end_date", "2020-10-20");
 
-    it("formats empty dates to null instead of an empty string", () => {
-      clickAmendButton(wrapper);
-      wrapper
-        .find("InputDate")
-        .first()
-        .simulate("change", { target: { value: "" } });
-
-      expect(onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ leave_start_date: null }),
-        "amendedConcurrentLeave"
-      );
+      expect(updateFields).toHaveBeenCalledTimes(2);
+      expect(updateFields).toHaveBeenNthCalledWith(1, {
+        "concurrent_leave.leave_start_date": "2020-10-10",
+      });
+      expect(updateFields).toHaveBeenNthCalledWith(2, {
+        "concurrent_leave.leave_end_date": "2020-10-20",
+      });
     });
 
     it("restores original value on cancel", () => {
+      const wrapper = render();
       clickAmendButton(wrapper);
-      wrapper
-        .find("InputDate")
-        .first()
-        .simulate("change", { target: { value: "2020-10-10" } });
+      const { changeField } = simulateEvents(wrapper);
 
-      expect(wrapper.find("InputDate").first().prop("value")).toEqual(
-        "2020-10-10"
-      );
-
+      changeField("concurrent_leave.leave_start_date", "2020-10-10");
       wrapper.find("AmendmentForm").dive().find("Button").simulate("click");
 
-      clickAmendButton(wrapper);
-      expect(wrapper.find("InputDate").first().prop("value")).toEqual(
-        "2020-03-01"
-      );
+      expect(updateFields).toHaveBeenCalledTimes(2);
+      expect(updateFields).toHaveBeenNthCalledWith(2, {
+        concurrent_leave: concurrentLeave,
+      });
     });
   });
 
   describe("for admin-added concurrent leaves", () => {
-    beforeEach(() => {
-      testHook(() => {
-        appLogic = useAppLogic();
-      });
-
-      wrapper = shallow(
-        <AmendableConcurrentLeave
-          appErrors={appLogic.appErrors}
-          concurrentLeave={concurrentLeave}
-          isAddedByLeaveAdmin
-          onChange={onChange}
-          onRemove={onRemove}
-        />
-      );
-    });
+    function renderWithAdminAddedLeave() {
+      return render({ isAddedByLeaveAdmin: true });
+    }
 
     it("renders the component", () => {
+      const wrapper = renderWithAdminAddedLeave();
       expect(wrapper).toMatchSnapshot();
     });
 
     it("does not show any ConcurrentLeaveDetailsRow components", () => {
+      const wrapper = renderWithAdminAddedLeave();
       expect(wrapper.find("ConcurrentLeaveDetailsRow").exists()).toBe(false);
     });
 
-    it("calls 'onRemove' value on cancel", () => {
+    it("removes the concurrent leave on cancel", () => {
+      const wrapper = renderWithAdminAddedLeave();
       wrapper.find("AmendmentForm").dive().find("Button").simulate("click");
-      expect(onRemove).toHaveBeenCalled();
+      const { changeField } = simulateEvents(wrapper);
+
+      changeField("concurrent_leave.leave_start_date", "2020-10-10");
+      wrapper.find("AmendmentForm").dive().find("Button").simulate("click");
+
+      expect(updateFields).toHaveBeenCalledTimes(3);
+      // after "amend" button is clicked.
+      expect(updateFields).toHaveBeenNthCalledWith(1, {
+        concurrent_leave: null,
+      });
+      // after field value changed.
+      expect(updateFields).toHaveBeenNthCalledWith(2, {
+        "concurrent_leave.leave_start_date": "2020-10-10",
+      });
+      // after "cancel" button clicked..
+      expect(updateFields).toHaveBeenNthCalledWith(3, {
+        concurrent_leave: null,
+      });
     });
   });
 });

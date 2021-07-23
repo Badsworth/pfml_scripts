@@ -25,22 +25,16 @@ exports[`ConcurrentLeave renders the component 1`] = `
     </thead>
     <tbody>
       <AmendableConcurrentLeave
-        appErrors={
-          AppErrorInfoCollection {
-            "items": Array [],
-            "itemsById": Object {},
-          }
-        }
-        concurrentLeave={
+        getFunctionalInputProps={[Function]}
+        isAddedByLeaveAdmin={false}
+        originalConcurrentLeave={
           ConcurrentLeave {
             "is_for_current_employer": true,
             "leave_end_date": "2020-03-06",
             "leave_start_date": "2020-03-01",
           }
         }
-        isAddedByLeaveAdmin={false}
-        onChange={[Function]}
-        onRemove={[Function]}
+        updateFields={[MockFunction]}
       />
     </tbody>
   </Table>

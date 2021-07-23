@@ -1,27 +1,31 @@
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import ConcurrentLeave from "../../../src/components/employers/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../src/models/ConcurrentLeave";
 import React from "react";
 import { shallow } from "enzyme";
 import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
-const CONCURRENT_LEAVE = new ConcurrentLeaveModel({
+const CONCURRENT_LEAVE_DATA = {
   is_for_current_employer: true,
   leave_start_date: "2020-03-01",
   leave_end_date: "2020-03-06",
-});
+};
 
 describe("ConcurrentLeave", () => {
-  let appLogic;
+  const updateFields = jest.fn();
+  let getFunctionalInputProps;
 
   function render(providedProps) {
     const defaultProps = {
-      addedConcurrentLeave: null,
-      appErrors: appLogic.appErrors,
-      concurrentLeave: CONCURRENT_LEAVE,
-      onAdd: () => {},
-      onChange: () => {},
-      onRemove: () => {},
+      currentConcurrentLeave: new ConcurrentLeaveModel({
+        ...CONCURRENT_LEAVE_DATA,
+      }),
+      getFunctionalInputProps,
+      originalConcurrentLeave: new ConcurrentLeaveModel({
+        ...CONCURRENT_LEAVE_DATA,
+      }),
+      updateFields,
     };
     const componentProps = {
       ...defaultProps,
@@ -32,7 +36,11 @@ describe("ConcurrentLeave", () => {
 
   beforeEach(() => {
     testHook(() => {
-      appLogic = useAppLogic();
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors: new AppErrorInfoCollection(),
+        formState: {},
+        updateFields,
+      });
     });
   });
 
@@ -42,7 +50,10 @@ describe("ConcurrentLeave", () => {
   });
 
   it("displays 'None reported' and the add button if no leave periods are reported", () => {
-    const wrapper = render({ concurrentLeave: null });
+    const wrapper = render({
+      currentConcurrentLeave: null,
+      originalConcurrentLeave: null,
+    });
     expect(wrapper.find("AmendableConcurrentLeave").exists()).toEqual(false);
     expect(wrapper.find("th").last().text()).toEqual("None reported");
     expect(wrapper.find("AddButton").exists()).toBe(true);
@@ -60,8 +71,7 @@ describe("ConcurrentLeave", () => {
 
   it("displays a row for admin-added concurrent leave", () => {
     const wrapper = render({
-      addedConcurrentLeave: CONCURRENT_LEAVE,
-      concurrentLeave: null,
+      originalConcurrentLeave: null,
     });
 
     expect(wrapper.find("AmendableConcurrentLeave").length).toBe(1);
@@ -69,8 +79,7 @@ describe("ConcurrentLeave", () => {
 
   it("does not display the add button if there exists an admin-added concurrent leave", () => {
     const wrapper = render({
-      addedConcurrentLeave: CONCURRENT_LEAVE,
-      concurrentLeave: null,
+      originalConcurrentLeave: null,
     });
     expect(wrapper.find("AddButton").exists()).toBe(false);
   });

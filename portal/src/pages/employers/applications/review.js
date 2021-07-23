@@ -2,12 +2,11 @@ import PreviousLeave, {
   PreviousLeaveType,
 } from "../../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
-import { get, isEqual, isNil, omit } from "lodash";
+import { cloneDeep, get, isEqual, isNil, omit } from "lodash";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
-import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
 import DocumentCollection from "../../../models/DocumentCollection";
 import { DocumentType } from "../../../models/Document";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
@@ -76,8 +75,7 @@ export const Review = (props) => {
 
   const { clearField, getField, formState, updateFields } = useFormState({
     // base fields
-    concurrentLeave: claim.concurrent_leave,
-    amendedConcurrentLeave: claim.concurrent_leave,
+    concurrent_leave: cloneDeep(claim.concurrent_leave),
     employerBenefits: indexedEmployerBenefits,
     amendedBenefits: indexedEmployerBenefits,
     previousLeaves: indexedPreviousLeaves,
@@ -92,7 +90,6 @@ export const Review = (props) => {
     // added fields
     addedBenefits: [],
     addedPreviousLeaves: [],
-    addedConcurrentLeave: null,
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -239,30 +236,6 @@ export const Review = (props) => {
     updateFields({ [formStateField]: updatedPreviousLeaves });
   };
 
-  const handleConcurrentLeaveAdd = () => {
-    updateFields({
-      addedConcurrentLeave: new ConcurrentLeaveModel({
-        is_for_current_employer: true,
-      }),
-    });
-  };
-
-  const handleConcurrentLeaveRemove = () => {
-    updateFields({ addedConcurrentLeave: null });
-  };
-
-  const handleConcurrentLeaveInputChange = (
-    updatedLeave,
-    formStateField = "amendedConcurrentLeave"
-  ) => {
-    updateFields({
-      [formStateField]: {
-        ...get(formState, formStateField),
-        ...updatedLeave,
-      },
-    });
-  };
-
   const handleFraudInputChange = (updatedFraudInput) => {
     updateFields({ fraud: updatedFraudInput });
   };
@@ -290,8 +263,6 @@ export const Review = (props) => {
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
 
-    const concurrent_leave =
-      formState.amendedConcurrentLeave || formState.addedConcurrentLeave;
     const employer_benefits = allEmployerBenefits.map((benefit) =>
       omit(benefit, ["employer_benefit_id"])
     );
@@ -307,7 +278,7 @@ export const Review = (props) => {
 
     const payload = {
       comment: formState.comment,
-      concurrent_leave,
+      concurrent_leave: formState.concurrent_leave,
       employer_benefits,
       employer_decision: formState.employer_decision,
       fraud: formState.fraud,
@@ -316,7 +287,7 @@ export const Review = (props) => {
       has_amendments:
         !isEqual(allEmployerBenefits, formState.employerBenefits) ||
         !isEqual(allPreviousLeaves, formState.previousLeaves) ||
-        !isEqual(concurrent_leave, formState.concurrentLeave) ||
+        !isEqual(claim.concurrent_leave, formState.concurrent_leave) ||
         !isEqual(claim.hours_worked_per_week, hours_worked_per_week),
       leave_reason: leaveReason,
       uses_second_eform_version: !!claim.uses_second_eform_version,
@@ -462,13 +433,10 @@ export const Review = (props) => {
               shouldShowV2={shouldShowV2}
             />
             <ConcurrentLeave
-              appErrors={appErrors}
-              addedConcurrentLeave={formState.addedConcurrentLeave}
-              concurrentLeave={formState.concurrentLeave}
-              onAdd={handleConcurrentLeaveAdd}
-              onChange={handleConcurrentLeaveInputChange}
-              onRemove={handleConcurrentLeaveRemove}
-              shouldShowV2={shouldShowV2}
+              currentConcurrentLeave={formState.concurrent_leave}
+              getFunctionalInputProps={getFunctionalInputProps}
+              originalConcurrentLeave={claim.concurrent_leave}
+              updateFields={updateFields}
             />
           </React.Fragment>
         )}

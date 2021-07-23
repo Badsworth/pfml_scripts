@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
 import ConditionalContent from "../ConditionalContent";
 import Heading from "../Heading";
 import InputDate from "../InputDate";
 import PropTypes from "prop-types";
+import { cloneDeep } from "lodash";
 import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
@@ -16,54 +16,22 @@ import { useTranslation } from "../../locales/i18n";
  */
 
 const AmendableConcurrentLeave = ({
-  appErrors,
-  concurrentLeave,
+  getFunctionalInputProps,
   isAddedByLeaveAdmin,
-  onChange,
-  onRemove,
+  originalConcurrentLeave,
+  updateFields,
 }) => {
   const { t } = useTranslation();
-  const [amendment, setAmendment] = useState(concurrentLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(false);
 
-  const getFormattedValue = (field, value) => {
-    if (field === "leave_start_date" || field === "leave_end_date") {
-      // happens if a user starts typing a date, then removes it
-      // these fields aren't required, and sending an empty string returns an "invalid date" error
-      return value === "" ? null : value;
-    }
-
-    return value;
-  };
-
-  const amendLeave = (field, value) => {
-    const formStateField = isAddedByLeaveAdmin
-      ? "addedConcurrentLeave"
-      : "amendedConcurrentLeave";
-    const formattedValue = getFormattedValue(field, value);
-    setAmendment({
-      ...amendment,
-      [field]: value,
-    });
-    onChange({ [field]: formattedValue }, formStateField);
-  };
-
-  const startDateErrMsg = appErrors.fieldErrorMessage(
-    `concurrent_leave.leave_start_date`
-  );
-  const leaveDateErrMsg = appErrors.fieldErrorMessage(
-    `concurrent_leave.leave_end_date`
-  );
-
   const handleCancelAmendment = () => {
     setIsAmendmentFormDisplayed(false);
-    setAmendment(concurrentLeave);
-    onChange(concurrentLeave);
+    updateFields({ concurrent_leave: cloneDeep(originalConcurrentLeave) });
   };
 
   const handleDeleteAddition = () => {
-    onRemove(amendment);
+    updateFields({ concurrent_leave: null });
   };
 
   const addOrAmend = isAddedByLeaveAdmin ? "add" : "amend";
@@ -82,8 +50,8 @@ const AmendableConcurrentLeave = ({
     <tr>
       <th scope="row">
         {formatDateRange(
-          concurrentLeave.leave_start_date,
-          concurrentLeave.leave_end_date
+          originalConcurrentLeave.leave_start_date,
+          originalConcurrentLeave.leave_end_date
         )}
       </th>
       <td>
@@ -122,26 +90,22 @@ const AmendableConcurrentLeave = ({
                 })}
               </p>
               <InputDate
-                onChange={(e) => amendLeave("leave_start_date", e.target.value)}
-                value={amendment.leave_start_date}
+                {...getFunctionalInputProps(
+                  "concurrent_leave.leave_start_date"
+                )}
                 label={t(
                   "components.employersAmendableConcurrentLeave.leaveStartDateLabel"
                 )}
-                errorMsg={startDateErrMsg}
-                name="concurrent_leave.leave_start_date"
                 dayLabel={t("components.form.dateInputDayLabel")}
                 monthLabel={t("components.form.dateInputMonthLabel")}
                 yearLabel={t("components.form.dateInputYearLabel")}
                 smallLabel
               />
               <InputDate
-                onChange={(e) => amendLeave("leave_end_date", e.target.value)}
-                value={amendment.leave_end_date}
+                {...getFunctionalInputProps("concurrent_leave.leave_end_date")}
                 label={t(
                   "components.employersAmendableConcurrentLeave.leaveEndDateLabel"
                 )}
-                errorMsg={leaveDateErrMsg}
-                name="concurrent_leave.leave_end_date"
                 dayLabel={t("components.form.dateInputDayLabel")}
                 monthLabel={t("components.form.dateInputMonthLabel")}
                 yearLabel={t("components.form.dateInputYearLabel")}
@@ -156,11 +120,10 @@ const AmendableConcurrentLeave = ({
 };
 
 AmendableConcurrentLeave.propTypes = {
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  concurrentLeave: PropTypes.instanceOf(ConcurrentLeave).isRequired,
+  getFunctionalInputProps: PropTypes.func.isRequired,
   isAddedByLeaveAdmin: PropTypes.bool.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
+  originalConcurrentLeave: PropTypes.instanceOf(ConcurrentLeave),
+  updateFields: PropTypes.func.isRequired,
 };
 
 export default AmendableConcurrentLeave;
