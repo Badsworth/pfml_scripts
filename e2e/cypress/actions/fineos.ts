@@ -1,4 +1,4 @@
-import { ReducedScheduleLeavePeriods } from "_api";
+import { DocumentUploadRequest, ReducedScheduleLeavePeriods } from "_api";
 import { format, addMonths, addDays, startOfWeek, subDays } from "date-fns";
 import {
   getCertificationDocumentType,
@@ -858,4 +858,31 @@ export function assertMatchingPaymentDates(): void {
         .invoke("text")
         .should("eq", processingDate);
     });
+}
+
+/**
+ * Takes document type and returns fixture file name.
+ * @param document_type document type as specified in the `claim.documents`
+ * @returns name of the fixture file, see `e2e/cypress/fixtures`
+ */
+export function getFixtureDocumentName(
+  document_type: DocumentUploadRequest["document_type"]
+): string {
+  switch (document_type) {
+    case "Driver's License Mass":
+    case "Identification Proof":
+    case "Passport":
+      return "MA_ID" as const;
+    case "Driver's License Other State":
+      return "OOS_ID" as const;
+    case "Own serious health condition form":
+      return "HCP" as const;
+    case "Child bonding evidence form":
+      return "FOSTER" as const;
+    case "Certification Form":
+      return "ADOPTION" as const;
+
+    default:
+      return "HCP" as const;
+  }
 }

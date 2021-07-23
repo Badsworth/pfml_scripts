@@ -285,7 +285,10 @@ export const CDENY2: ScenarioSpecification = {
     shortClaim: true,
     has_continuous_leave_periods: true,
     reason: "Care for a Family Member",
-    docs: {},
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
   },
 };
 

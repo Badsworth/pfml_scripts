@@ -41,6 +41,7 @@ import {
   wait,
   enterReducedWorkHours,
   waitForAjaxComplete,
+  getFixtureDocumentName,
 } from "./fineos";
 
 import { DocumentUploadRequest } from "../../src/api";
@@ -316,6 +317,17 @@ class OutstandingRequirementsPage {
     });
   }
 }
+/**Tasks avalable in fineos, expand the list as needed. */
+type FineosTaskNames =
+  | "Escalate Employer Reported Other Income"
+  | "Escalate employer reported past leave"
+  | "Escalate employer reported accrued paid leave (PTO)"
+  | "Escalate Employer Reported Fraud"
+  | "Approved Leave Start Date Change"
+  | "Update Paid Leave Case"
+  | "Caring Certification Review"
+  | "ID Review"
+  | "Bonding Certification Review";
 class TasksPage {
   assertTaskExists(name: string): this {
     assertHasTask(name);
@@ -326,21 +338,21 @@ class TasksPage {
    * Adds a task to a claim and asserts it has been assigned to DFML Program Integrity
    * @param name name of the task to be added
    */
-  add(
-    name:
-      | "Escalate Employer Reported Other Income"
-      | "Escalate employer reported past leave"
-      | "Escalate employer reported accrued paid leave (PTO)"
-      | "Escalate Employer Reported Fraud"
-      | "Approved Leave Start Date Change"
-      | "Update Paid Leave Case"
-  ): this {
+  add(name: FineosTaskNames): this {
     cy.findByTitle(`Add a task to this case`).click({ force: true });
     // Search for the task type
     cy.findByLabelText(`Find Work Types Named`).type(`${name}{enter}`);
     // Create task
     cy.findByTitle(name, { exact: false }).click({ force: true });
     clickBottomWidgetButton("Next");
+    return this;
+  }
+
+  close(name: FineosTaskNames): this {
+    cy.contains("td", name).click();
+    waitForAjaxComplete();
+    cy.get('input[title="Close selected task"]');
+    waitForAjaxComplete();
     return this;
   }
 
@@ -381,15 +393,6 @@ class TasksPage {
     cy.get("#footerButtonsBar input[value='OK']").click();
     return this;
   }
-
-  close(name: string): this {
-    cy.contains("td", name).click();
-    cy.wait("@ajaxRender");
-    cy.get('input[title="Close selected task"]');
-    cy.wait("@ajaxRender");
-    cy.wait(150);
-    return this;
-  }
 }
 
 /**
@@ -403,15 +406,16 @@ export class DocumentsPage {
 
   /**
    * Goes through the document upload process and returns back to the documents page
-   * @param documentName
-   * @param documentType
+   * @param businessType - name of the document type in fineos
    * @returns
    */
-  uploadDocument(documentName: string, documentType: string): this {
+  uploadDocument(documentType: DocumentUploadRequest["document_type"]): this {
     this.startDocumentCreation(documentType);
-    const docName = documentName.replace(" ", "_");
-    cy.get("input[type='file']").attachFile(`./${docName}.pdf`);
+    cy.get("input[type='file']").attachFile(
+      `./${getFixtureDocumentName(documentType)}.pdf`
+    );
     clickBottomWidgetButton();
+    this.assertDocumentExists(documentType);
     return this;
   }
   /**
