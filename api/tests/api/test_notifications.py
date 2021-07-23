@@ -326,7 +326,13 @@ class TestNotificationManagedRequirement:
         }
 
     @classmethod
-    def leave_admin_body(cls):
+    def leave_admin_body_create(cls):
+        rv = leave_admin_body.copy()
+        rv["trigger"] = "Employer Confirmation of Leave Data"
+        return rv
+
+    @classmethod
+    def leave_admin_body_update(cls):
         rv = leave_admin_body.copy()
         rv["trigger"] = "Designation Notice"
         return rv
@@ -335,12 +341,26 @@ class TestNotificationManagedRequirement:
     def claim(self, employer):
         return ClaimFactory.create(
             employer_id=employer.employer_id,
-            fineos_absence_id=self.leave_admin_body()["absence_case_id"],
+            fineos_absence_id=self.leave_admin_body_update()["absence_case_id"],
         )
 
     @pytest.fixture()
     def fineos_managed_requirement(self, claim):
         return ManagedRequirementDetails.parse_obj(self.managed_requirement())
+
+    def _api_call_create(self, client, token):
+        return client.post(
+            "/v1/notifications",
+            headers={"Authorization": f"Bearer {token}"},
+            json=self.leave_admin_body_create(),
+        )
+
+    def _api_call_update(self, client, token):
+        return client.post(
+            "/v1/notifications",
+            headers={"Authorization": f"Bearer {token}"},
+            json=self.leave_admin_body_update(),
+        )
 
     def _assert_managed_requirement_data(
         self,
@@ -354,9 +374,31 @@ class TestNotificationManagedRequirement:
             fineos_managed_requirement.managedReqId
         )
         assert managed_requirement.follow_up_date == fineos_managed_requirement.followUpDate
-        assert (
+        status = (
             managed_requirement.managed_requirement_status.managed_requirement_status_description
-            == fineos_managed_requirement.status
+        )
+        assert status == fineos_managed_requirement.status
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+    def test_notification_managed_requirement_create_success(
+        self,
+        mock_get_req,
+        client,
+        test_db_session,
+        fineos_user_token,
+        fineos_managed_requirement,
+        claim,
+    ):
+        mock_get_req.return_value = [fineos_managed_requirement]
+
+        response = self._api_call_create(client, fineos_user_token)
+
+        assert response.status_code == 201
+        managed_requirement = get_managed_requirement_by_fineos_managed_requirement_id(
+            fineos_managed_requirement.managedReqId, test_db_session
+        )
+        self._assert_managed_requirement_data(
+            claim, managed_requirement, fineos_managed_requirement
         )
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
@@ -377,11 +419,8 @@ class TestNotificationManagedRequirement:
         fineos_managed_requirement.followUpDate = date.today() + timedelta(days=20)
         fineos_managed_requirement.status = ManagedRequirementStatus.get_description(2)
 
-        response = client.post(
-            "/v1/notifications",
-            headers={"Authorization": f"Bearer {fineos_user_token}"},
-            json=self.leave_admin_body(),
-        )
+        response = self._api_call_update(client, fineos_user_token)
+
         assert response.status_code == 201
         managed_requirement = get_managed_requirement_by_fineos_managed_requirement_id(
             fineos_managed_requirement.managedReqId, test_db_session
@@ -391,16 +430,29 @@ class TestNotificationManagedRequirement:
         )
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+    def test_notification_managed_requirement_create_failure(
+        self, mock_get_req, client, test_db_session, fineos_user_token, fineos_managed_requirement,
+    ):
+        fineos_managed_requirement.status = "Bad Status"
+        mock_get_req.return_value = [fineos_managed_requirement]
+
+        response = self._api_call_create(client, fineos_user_token)
+
+        assert response.status_code == 201
+        managed_requirement = get_managed_requirement_by_fineos_managed_requirement_id(
+            fineos_managed_requirement.managedReqId, test_db_session
+        )
+        assert managed_requirement is None
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
     def test_notification_managed_requirement_update_failure_status(
         self, mock_get_req, client, test_db_session, fineos_user_token, fineos_managed_requirement,
     ):
         fineos_managed_requirement.status = "Bad Status"
         mock_get_req.return_value = [fineos_managed_requirement]
-        response = client.post(
-            "/v1/notifications",
-            headers={"Authorization": f"Bearer {fineos_user_token}"},
-            json=self.leave_admin_body(),
-        )
+
+        response = self._api_call_update(client, fineos_user_token)
+
         assert response.status_code == 201
         managed_requirement = get_managed_requirement_by_fineos_managed_requirement_id(
             fineos_managed_requirement.managedReqId, test_db_session
@@ -419,7 +471,7 @@ class TestNotificationManagedRequirement:
         fineos_managed_requirement,
     ):
         mock_get_req.return_value = [fineos_managed_requirement]
-        body = self.leave_admin_body().copy()
+        body = self.leave_admin_body_update().copy()
         body["recipients"] = []
         create_managed_requirement_from_fineos(
             test_db_session, claim.claim_id, fineos_managed_requirement, {}
@@ -460,11 +512,9 @@ class TestNotificationManagedRequirement:
         fineos_managed_requirement,
     ):
         mock_get_req.return_value = [fineos_managed_requirement]
-        response = client.post(
-            "/v1/notifications",
-            headers={"Authorization": f"Bearer {fineos_user_token}"},
-            json=self.leave_admin_body(),
-        )
+
+        response = self._api_call_create(client, fineos_user_token)
+
         assert response.status_code == 201
         managed_requirement = get_managed_requirement_by_fineos_managed_requirement_id(
             fineos_managed_requirement.managedReqId, test_db_session
@@ -511,11 +561,8 @@ class TestNotificationManagedRequirement:
                 man_req["description_id"]
             )
 
-        response = client.post(
-            "/v1/notifications",
-            headers={"Authorization": f"Bearer {fineos_user_token}"},
-            json=self.leave_admin_body(),
-        )
+        response = self._api_call_update(client, fineos_user_token)
+
         assert response.status_code == 201
 
         for man_req in managed_requirements:
