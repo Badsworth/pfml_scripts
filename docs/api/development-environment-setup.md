@@ -100,11 +100,8 @@ To setup a development environment outside of Docker, you'll need to install a f
    or [asdf](https://asdf-vm.com/).
 2. After installing and activating the right version of Python, install
    [poetry](https://python-poetry.org/docs/#installation).
-3. Install [Node.js](https://nodejs.org/en/) (v10 or greater).
-   [nvm](https://github.com/nvm-sh/nvm) is one popular option. Similar to Python, [asdf](https://asdf-vm.com/) is
-   another option.
-4. Set `RUN_CMD_OPT` to `NATIVE` in your development environment.
-5. Run `make deps` to install Python dependencies and development tooling.
+3. Set `RUN_CMD_OPT` to `NATIVE` in your development environment.
+4. Run `make deps` to install Python dependencies and development tooling.
 
 You should now be able to run developer tooling natively, like linting.
 
