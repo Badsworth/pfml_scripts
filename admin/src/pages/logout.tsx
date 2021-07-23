@@ -1,9 +1,10 @@
 import * as api from "../api";
 import { useEffect, useState } from "react";
 import { SSO_ACCESS_TOKENS } from "./_app";
+import Loading from "../components/Loading";
 
 function Logout() {
-  const [localTokens, setLocalTokens] = useState<string | null>(null)
+  const [localTokens, setLocalTokens] = useState<string | null>(null);
   const logout = () => {
     setLocalTokens(localStorage.getItem(SSO_ACCESS_TOKENS));
     if (localTokens) {
@@ -25,11 +26,7 @@ function Logout() {
     logout();
   });
 
-  return (
-    <div className="login">
-      <h1 className="login__title">{localTokens ? "Logging out..." : "Logged out!"}</h1>
-    </div>
-  );
+  return <Loading title={localTokens ? "Logging out..." : "Logged out!"} loading={!!localTokens} />;
 }
 
 export default Logout;

@@ -1,8 +1,9 @@
 import "../../styles/index.scss";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import type { AppProps } from "next/app";
-import { useState, useEffect, MouseEvent } from "react";
+import { useState, useEffect } from "react";
 import * as api from "../api";
+import Loading from '../components/Loading';
 
 export const SSO_AUTH_URI = "SSO_AUTH_URI";
 export const SSO_ACCESS_TOKENS = "SSO_ACCESS_TOKENS";
@@ -215,10 +216,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         )}
         {Component.name === "Logout" && <Component {...pageProps} />}
         {typeof user === "undefined" && Component.name !== "Logout" && (
-          <div className="login">
-            <h1 className="login__title">Logging in...</h1>
-            <button className="login__button">Login</button>
-          </div>
+          <Loading title="Logging in..." loading={true} />
         )}
       </div>
     </HelmetProvider>
