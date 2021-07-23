@@ -6,9 +6,15 @@ import * as api from "../api";
 
 export const SSO_AUTH_URI = "SSO_AUTH_URI";
 export const SSO_ACCESS_TOKENS = "SSO_ACCESS_TOKENS";
+export const POST_LOGIN_REDIRECT = "POST_LOGIN_REDIRECT";
 const noop = () => {};
+
 function MyApp({ Component, pageProps }: AppProps) {
+  // @todo: change user type
   const [user, setUser] = useState<api.UserResponse>();
+
+  let authURIRes: api.AuthURIResponse;
+  let localTokens: api.AdminTokenResponse;
 
   const retryLogin = (time: number) => {
     return (e: Error) => {
@@ -21,54 +27,51 @@ function MyApp({ Component, pageProps }: AppProps) {
     };
   };
 
-  const logout = (e: MouseEvent) => {
-    e.preventDefault();
-    api
-      .getAdminLogout()
-      .then(({ data }) => {
-        localStorage.removeItem(SSO_ACCESS_TOKENS);
-        console.log(data);
-        location.href = data as string;
-      })
-      .catch(retryLogin(10));
-  };
-
-  useEffect(() => {
-    if (user) return noop;
-    // Handle the cases where user already has a token
-    const localTokens: api.AdminTokenResponse = JSON.parse(
-      localStorage.getItem(SSO_ACCESS_TOKENS) || "{}",
-    );
+  const canLogin = () => {
+    localTokens = JSON.parse(localStorage.getItem(SSO_ACCESS_TOKENS) || "{}");
     if ("access_token" in localTokens) {
       api
-        .getAdminLogin(
-          /* localTokens, */ {
-            headers: {
-              Authorization: `Bearer ${localTokens.access_token}`,
-            },
+        .getAdminLogin({
+          headers: {
+            Authorization: `Bearer ${localTokens.access_token}`,
           },
-        )
+        })
         .then(({ data }) => {
           console.info("Logged in!", data);
           setUser(data);
         })
         .catch(retryLogin(10));
-      return noop;
+
+      return true;
     }
+    return false;
+  };
+
+  const getAuthCode = () => {
     // If the user doesn't have a token, initiate auth code flow
-    let authURIRes: api.AuthURIResponse;
     authURIRes = JSON.parse(localStorage.getItem(SSO_AUTH_URI) || "{}");
-    if (!location.search) {
+    if (!location.search.includes("code")) {
       api
         .getAdminAuthorize()
         .then(({ data }) => {
-          // console.log("Authorization:", data);
+          if (!data.auth_uri) {
+            // @todo: show error
+            return;
+          }
           localStorage.setItem(SSO_AUTH_URI, JSON.stringify(data));
-          location.href = data.auth_uri as string;
+          location.href = data.auth_uri;
         })
-        .catch(retryLogin(10));
-    } else if ("state" in authURIRes) {
+        .catch((e) => {
+          // @todo: show error
+          return;
+        });
+    }
+  };
+
+  const getAccessToken = () => {
+    if (location.search.includes("code") && "state" in authURIRes) {
       // when the user receives the code, we'll trade it for an access_token
+      localStorage.removeItem(SSO_AUTH_URI);
       const authCodeRes: api.AuthCodeResponse = parseURLSearch(
         location.search.substring(1),
       );
@@ -78,16 +81,46 @@ function MyApp({ Component, pageProps }: AppProps) {
           authCodeRes,
         })
         .then(({ data }) => {
-          // console.log("Tokens:", data);
-          localStorage.removeItem(SSO_AUTH_URI);
+          if (!data.access_token) {
+            // @todo: show error
+            return;
+          }
           localStorage.setItem(SSO_ACCESS_TOKENS, JSON.stringify(data));
-          location.href = location.origin;
+          location.href =
+            localStorage.getItem(POST_LOGIN_REDIRECT) || location.origin;
+          localStorage.removeItem(POST_LOGIN_REDIRECT);
         })
-        .catch(retryLogin(10));
+        .catch((e) => {
+          // @todo: show error
+          return;
+        });
+    }
+  };
+
+  useEffect(() => {
+    if (user) return noop;
+    // Handle the cases where user already has a token
+    if (canLogin()) return noop;
+    // User could not login
+    // If the user is not trying to logout
+    if (Component.name !== "Logout") {
+      // If user was not in home directory
+      // redirect back to where they left off after the login
+      if (location.pathname !== "/") {
+        localStorage.setItem(
+          POST_LOGIN_REDIRECT,
+          location.origin + location.pathname,
+        );
+      }
+      // Initiate auth code flow
+      getAuthCode();
+      // Trade auth code for access tokens
+      getAccessToken();
     }
     return noop;
   }, []);
 
+  console.log(Component.name);
   return (
     <HelmetProvider>
       <div className="page">
@@ -99,7 +132,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <header className="page__header">
           <div className="page__logo">
             <a
-              href="#"
+              href="/"
               title="Paid Family & Medical Leave - Massachusetts"
               className="page__logo-link"
             ></a>
@@ -107,11 +140,10 @@ function MyApp({ Component, pageProps }: AppProps) {
           {user && (
             <div className="page__user-options">
               <a
-                href="#"
+                href="/logout"
                 role="button"
                 aria-label={`${user.email_address} - User Options`}
                 className="user-options"
-                onClick={logout}
               >
                 <span className="user-options__avatar">
                   <img
@@ -126,7 +158,8 @@ function MyApp({ Component, pageProps }: AppProps) {
             </div>
           )}
         </header>
-        {user && (
+        {/* @todo reduce login calls */}
+        {typeof user !== "undefined" && Component.name !== "Logout" && (
           <>
             <aside className="page__sidebar" tabIndex={0}>
               <nav className="menu">
@@ -180,9 +213,11 @@ function MyApp({ Component, pageProps }: AppProps) {
             </main>
           </>
         )}
-        {!user && (
+        {Component.name === "Logout" && <Component {...pageProps} />}
+        {typeof user === "undefined" && Component.name !== "Logout" && (
           <div className="login">
-            <div className="login__title">Logging in...</div>
+            <h1 className="login__title">Logging in...</h1>
+            <button className="login__button">Login</button>
           </div>
         )}
       </div>
