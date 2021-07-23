@@ -9,7 +9,6 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplications from "../../hoc/withBenefitsApplications";
@@ -58,11 +57,6 @@ export const GetReady = (props) => {
           components={{
             ul: <ul className="usa-list" />,
             li: <li />,
-          }}
-          tOptions={{
-            context: isFeatureEnabled("showCaringLeaveType")
-              ? "caring"
-              : undefined,
           }}
         />
 
@@ -132,27 +126,21 @@ export const GetReady = (props) => {
         </Heading>
 
         <Trans i18nKey="pages.getReady.stepTwoBondingLeaveBody" />
-
-        {isFeatureEnabled("showCaringLeaveType") ? (
-          <React.Fragment>
-            <Heading level="4">
-              {t("pages.getReady.stepTwoCaringLeaveSubhead")}
-            </Heading>
-            <Trans
-              i18nKey="pages.getReady.stepTwoCaringLeaveBody"
-              components={{
-                "caregiver-certification-form-link": (
-                  <a
-                    href={routes.external.massgov.caregiverCertificationForm}
-                    target="_blank"
-                    rel="noopener"
-                  />
-                ),
-              }}
-            />
-          </React.Fragment>
-        ) : undefined}
-
+        <Heading level="4">
+          {t("pages.getReady.stepTwoCaringLeaveSubhead")}
+        </Heading>
+        <Trans
+          i18nKey="pages.getReady.stepTwoCaringLeaveBody"
+          components={{
+            "caregiver-certification-form-link": (
+              <a
+                href={routes.external.massgov.caregiverCertificationForm}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
+          }}
+        />
         <Heading level="2">
           <Icon className={iconClassName} name="edit" />
           {t("pages.getReady.stepThreeHeading")}

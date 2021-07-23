@@ -418,7 +418,7 @@ def test_users_convert_employer(client, user, employer_for_new_user, auth_token,
 
 
 def test_users_convert_employer_bad_fein(client, user, auth_token):
-    body = {"employer_fein": "999999999"}
+    body = {"employer_fein": "99-9999999"}
     response = client.post(
         "v1/users/{}/convert_employer".format(user.user_id),
         headers={"Authorization": f"Bearer {auth_token}"},

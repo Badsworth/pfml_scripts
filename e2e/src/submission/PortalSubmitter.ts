@@ -21,7 +21,7 @@ import {
 } from "../api";
 import pRetry from "p-retry";
 import AuthenticationManager from "./AuthenticationManager";
-import { Credentials } from "../types";
+import { ApplicationSubmissionResponse, Credentials } from "../types";
 import { GeneratedClaim } from "../generation/Claim";
 import { DocumentWithPromisedFile } from "../generation/documents";
 import config from "../config";
@@ -70,7 +70,7 @@ export default class PortalSubmitter {
     claim: GeneratedClaim,
     credentials: Credentials,
     employerCredentials?: Credentials
-  ): Promise<ApplicationResponse> {
+  ): Promise<ApplicationSubmissionResponse> {
     const options = await this.getOptions(credentials);
 
     const application_id = await this.createApplication(options);
@@ -237,14 +237,21 @@ export default class PortalSubmitter {
       { application_id },
       options
     );
-    if (response.data.data && "fineos_absence_id" in response.data.data) {
+    if (
+      response.data.data &&
+      "fineos_absence_id" in response.data.data &&
+      "first_name" in response.data.data &&
+      "last_name" in response.data.data
+    ) {
       return response.data.data as {
         fineos_absence_id: string;
         first_name: string;
         last_name: string;
       };
     }
-    throw new Error("Submit application data did not contain absence id");
+    throw new Error(
+      "Submit application data did not contain one of the following required properties: fineos_absence_id, first_name, last_name"
+    );
   }
 
   private async completeApplication(

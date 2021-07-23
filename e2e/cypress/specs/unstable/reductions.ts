@@ -11,7 +11,7 @@ import {
 describe("Claim reduction", () => {
   const claimSubmission = it("Given a fully approved claim", () => {
     portal.before();
-    cy.task("generateClaim", "MIL_RED_OLB").then((claim) => {
+    cy.task("generateClaim", "MED_OLB").then((claim) => {
       cy.task("submitClaimToAPI", claim).then((response) => {
         cy.stash("claim", claim);
         cy.stash("submission", {

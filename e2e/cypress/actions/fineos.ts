@@ -1,10 +1,9 @@
-import { ApplicationRequestBody, ReducedScheduleLeavePeriods } from "_api";
+import { ReducedScheduleLeavePeriods } from "_api";
 import { format, addMonths, addDays, startOfWeek, subDays } from "date-fns";
 import {
   getCertificationDocumentType,
   getDocumentReviewTaskName,
 } from "../../src/util/documents";
-import { ValidClaim } from "../../src/types";
 import { config } from "./common";
 import { LeaveReason } from "../../src/generation/Claim";
 /**
@@ -180,13 +179,14 @@ export function assertAdjudicatingClaim(claimId: string): void {
 /**
  * Helper to switch to a particular tab.
  */
-export function onTab(label: string, wait = 150): void {
-  cy.contains(".TabStrip td", label).click({ force: true }).wait(wait);
-  // experieincing failures due to this assertion when chained with click
-  // we should wait for the specified wait period before making this assertion to avoid this error
-  cy.contains(".TabStrip td", label).should("have.class", "TabOn");
-  // Wait on any in-flight Ajax to complete, then add a very slight delay for rendering to occur.
-  cy.wait("@ajaxRender").wait(wait);
+export function onTab(label: string): void {
+  cy.contains(".TabStrip td", label).then((tab) => {
+    if (tab.hasClass("TabOn")) {
+      return; // We're already on the correct tab.
+    }
+    cy.wrap(tab).click().should("have.class", "TabOn");
+    waitForAjaxComplete();
+  });
 }
 
 /**
@@ -198,7 +198,32 @@ export function onTab(label: string, wait = 150): void {
  */
 export function wait(): void {
   cy.wait("@ajaxRender");
-  cy.get("#disablingLayer").should("not.be.visible");
+  // cy.get("#disablingLayer").should("not.be.visible");
+  cy.root()
+    .should(($el) => {
+      expect(Cypress.dom.isAttached($el)).to.be.true;
+    })
+    .closest(`html`)
+    .should(($el) => {
+      expect(Cypress.dom.isAttached($el)).to.be.true;
+    })
+    .find(`#disablingLayer`)
+    .should(($el) => {
+      expect(Cypress.dom.isAttached($el)).to.be.true;
+    })
+    .should("not.be.visible");
+}
+
+export function waitForAjaxComplete(): void {
+  cy.window()
+    .invoke("axGetAjaxQueueManager")
+    .should((q) => {
+      const inFlight = Object.values(q.requests).filter(
+        // @ts-ignore - ignore uses of Fineos internal window properties.
+        (req) => req.state() !== "resolved"
+      );
+      expect(inFlight, "In-flight Ajax requests should be 0").to.have.length(0);
+    });
 }
 
 export function clickBottomWidgetButton(value = "OK"): void {
@@ -240,188 +265,6 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
       `Employer Conflict Reported`
     ).click();
   }
-}
-
-/**
- * This work-flow is submitting a full bonding/military claim
- * directly into Fineos.
- *
- * Note: named createNotification based on the name of the button
- * in Fineos that starts this workflow
- */
-export function createNotification(
-  startDate: Date,
-  endDate: Date,
-  claimType?: "military" | "bonding" | "caring" | "medical",
-  application?: ValidClaim
-): void {
-  const clickNext = (timeout?: number) =>
-    cy
-      .get('#navButtons input[value="Next "]', { timeout })
-      .first()
-      .click({ force: true });
-  cy.contains("span", "Create Notification").click();
-  clickNext();
-  cy.labelled("Hours worked per week").type(
-    `{selectall}{backspace}${application?.hours_worked_per_week}`
-  );
-  clickNext();
-  switch (claimType) {
-    case "medical":
-      cy.contains(
-        "div",
-        "Sickness, treatment required for a medical condition or any other medical procedure"
-      )
-        .prev()
-        .find("input")
-        .click();
-
-      clickNext();
-      cy.findByLabelText("Absence relates to").select("Employee");
-      wait();
-      cy.wait(100);
-      clickNext(5000);
-      cy.findByLabelText("Absence reason").select(
-        "Serious Health Condition - Employee"
-      );
-      wait();
-      cy.wait(100);
-      cy.findByLabelText("Qualifier 1").select("Not Work Related");
-      wait();
-      cy.wait(100);
-      cy.findByLabelText("Qualifier 2").select("Sickness");
-      break;
-    case "military":
-      cy.contains("div", "Out of work for another reason")
-        .prev()
-        .find("input")
-        .click();
-      clickNext();
-      cy.labelled("Absence relates to").select("Family");
-      wait();
-      cy.labelled("Absence reason").select("Military Caregiver", {});
-      break;
-
-    case "bonding":
-      cy.contains(
-        "div",
-        "Bonding with a new child (adoption/ foster care/ newborn)"
-      )
-        .prev()
-        .find("input")
-        .click();
-      clickNext();
-      cy.labelled("Qualifier 1").select("Foster Care");
-      break;
-
-    case "caring":
-      cy.contains("div", "Caring for a family member")
-        .prev()
-        .find("input")
-        .click();
-      clickNext();
-      cy.labelled("Qualifier 1").select("Serious Health Condition");
-      cy.wait("@ajaxRender");
-      cy.get("#leaveRequestAbsenceRelationshipsWidget").within(() => {
-        cy.labelled("Primary Relationship to Employee").select(
-          "Sibling - Brother/Sister"
-        );
-        cy.wait("@ajaxRender");
-        cy.wait(200);
-        cy.labelled("Qualifier 1").select("Biological");
-      });
-      clickNext();
-      break;
-
-    default:
-      throw new Error("ClaimType not found");
-  }
-  clickNext(5000);
-
-  const {
-    has_continuous_leave_periods,
-    has_intermittent_leave_periods,
-    has_reduced_schedule_leave_periods,
-  } = application as ApplicationRequestBody;
-
-  if (has_continuous_leave_periods) {
-    cy.contains("div.toggle-guidance-row", "One or more fixed time off periods")
-      .find("span.slider")
-      .click();
-    clickNext();
-    cy.labelled("Absence status").select("Known");
-    wait();
-    cy.labelled("Absence start date").type(
-      `${format(startDate, "MM/dd/yyyy")}{enter}`
-    );
-    wait();
-    cy.labelled("Absence end date").type(
-      `${format(endDate, "MM/dd/yyyy")}{enter}`
-    );
-    wait();
-    cy.get('input[title="Quick Add"]').click();
-  }
-
-  if (has_intermittent_leave_periods) {
-    cy.contains("div.toggle-guidance-row", "Episodic / leave as needed")
-      .find("span.slider")
-      .click();
-    // @ToDo
-    // Implement any actions/flows for episodic
-  }
-
-  if (has_reduced_schedule_leave_periods) {
-    cy.contains("div.toggle-guidance-row", "Reduced work schedule")
-      .find("span.slider")
-      .click();
-    clickNext();
-    cy.labelled("Absence status").select("Estimated");
-    wait();
-    cy.labelled("Absence start date").type(
-      `${format(startDate, "MM/dd/yyyy")}{enter}`
-    );
-    wait();
-    cy.labelled("Absence end date").type(
-      `${format(endDate, "MM/dd/yyyy")}{enter}`
-    );
-    wait();
-    enterReducedWorkHours(
-      application?.leave_details
-        ?.reduced_schedule_leave_periods?.[0] as ReducedScheduleLeavePeriods
-    );
-    wait();
-    cy.get(
-      '#reducedScheduleAbsencePeriodDetailsQuickAddWidget input[value="Add"]'
-    ).click();
-  }
-
-  clickNext(5000);
-  if (application?.work_pattern?.work_pattern_type !== "Rotating") {
-    cy.labelled("Work Pattern Type").select(
-      application?.work_pattern?.work_pattern_type as string
-    );
-    wait();
-  } else {
-    // @Reminder: If needed add more dynamic options such as
-    // 3 weeks Rotating (currently not needed)
-    cy.labelled("Work Pattern Type").select("2 weeks Rotating");
-    wait();
-  }
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  cy.labelled("Standard Work Week").click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  cy.get('input[value="Apply to Calendar"]').click({ force: true });
-  clickNext();
-  if (claimType === "military") {
-    cy.labelled("Military Caregiver Description").type(
-      "I am a parent military caregiver."
-    );
-  }
-  clickNext(20000);
-  cy.contains("div", "Thank you. Your notification has been submitted.");
-  clickNext(20000);
 }
 
 export function enterReducedWorkHours(
@@ -478,8 +321,11 @@ export function markEvidence(
       `{selectall}{backspace}${reason}`
     );
     cy.get("input[type='button'][value='OK']").click({ force: true });
-    // Wait till modal has fully closed before moving on.
-    cy.get("#disablingLayer").should("not.exist");
+  });
+  // Wait until the table has updated with the new status before we attempt to move on.
+  cy.contains(".ListTable tr", evidenceType).should((row) => {
+    expect(row.find("td:nth-child(3)")).to.contain.text(receipt);
+    expect(row.find("td:nth-child(5)")).to.contain.text(decision);
   });
 }
 
@@ -887,58 +733,6 @@ export function findOtherLeaveEForm(claimNumber: string): void {
   cy.wait(200);
 }
 
-export function checkPaymentPreference(simClaim: DehydratedClaim): void {
-  const { claim, paymentPreference } = simClaim;
-  searchClaimantSSN(claim.tax_identifier as string);
-  clickBottomWidgetButton("OK");
-  onTab("Payment Preferences");
-  cy.contains("td", "Yes").click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  cy.get('input[type="submit"][value="View"]').click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-
-  // Check Name
-  cy.get('span[id*="accountName"]').should(
-    "contain",
-    `${claim.first_name} ${claim.last_name}`
-  );
-
-  // Check Payment Preference
-  cy.contains(
-    "span",
-    paymentPreference.payment_preference?.payment_method as string
-  ).should("be.visible");
-  cy.contains(
-    "span",
-    paymentPreference.payment_preference?.account_number as string
-  ).should("be.visible");
-  cy.contains(
-    "span",
-    paymentPreference.payment_preference?.bank_account_type as string
-  ).should("be.visible");
-  cy.contains(
-    "span",
-    paymentPreference.payment_preference?.routing_number as string
-  ).should("be.visible");
-
-  // Check Address
-  cy.contains("span", claim.mailing_address?.line_1 as string).should(
-    "be.visible"
-  );
-  cy.contains("span", claim.mailing_address?.city as string).should(
-    "be.visible"
-  );
-  cy.contains("tr > td > span", claim.mailing_address?.state as string).should(
-    "be.visible"
-  );
-  cy.contains("span", claim.mailing_address?.zip as string).should(
-    "be.visible"
-  );
-  cy.wait(2000);
-}
-
 export function getPaymentAmount(): Cypress.Chainable<string> {
   cy.contains("Absence Paid Leave Case").click();
   cy.wait("@ajaxRender");
@@ -986,15 +780,15 @@ export function addHistoricalAbsenceCase(): void {
   cy.contains("Options").click();
   cy.contains("Add Historical Absence").click();
   cy.findByLabelText("Absence relates to").select("Employee");
-  wait();
+  waitForAjaxComplete();
   cy.findByLabelText("Absence Reason").select(
     "Serious Health Condition - Employee"
   );
-  wait();
+  waitForAjaxComplete();
   cy.findByLabelText("Qualifier 1").select("Not Work Related");
-  wait();
+  waitForAjaxComplete();
   cy.findByLabelText("Qualifier 2").select("Sickness");
-  wait();
+  waitForAjaxComplete();
   cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
     .find("input")
     .click();
@@ -1049,6 +843,7 @@ export function addHistoricalAbsenceCase(): void {
   cy.get(".ListRowSelected > td").should(($td) => {
     expect($td.eq(4)).to.contain("Absence Historical Case");
   });
+  cy.get('input[title="Open"]').click();
 }
 
 /**

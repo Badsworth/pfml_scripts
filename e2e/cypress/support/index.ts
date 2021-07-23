@@ -19,3 +19,7 @@ require("cypress-grep")();
 import "./commands";
 import "./dependents";
 import "cypress-file-upload";
+
+Cypress.Keyboard.defaults({
+  keystrokeDelay: 0,
+});

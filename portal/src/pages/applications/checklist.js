@@ -250,12 +250,6 @@ export const Checklist = (props) => {
       claim,
       "leave_details.has_future_child_date"
     );
-    if (
-      stepName === ClaimSteps.leaveDetails &&
-      isFeatureEnabled("showCaringLeaveType")
-    ) {
-      return "leaveDetailsWithCaring";
-    }
     // TODO (CP-2101) rename context strings for clarity in en-US.js strings i.e. uploadMedicalCert, uploadCareCert
     if (stepName !== ClaimSteps.uploadCertification) {
       return camelCase(stepName);

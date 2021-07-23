@@ -1,5 +1,4 @@
-import { fineos, portal } from "../../../actions";
-import { extractLeavePeriod } from "../../../../src/util/claims";
+import { fineos, fineosPages, portal } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { ClaimPage } from "../../../actions/fineos.pages";
@@ -16,21 +15,9 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
         assertValidClaim(claim.claim);
         cy.stash("claim", claim);
 
-        fineos.searchClaimantSSN(claim.claim.tax_identifier);
-        fineos.clickBottomWidgetButton("OK");
-        fineos.assertOnClaimantPage(
-          claim.claim.first_name,
-          claim.claim.last_name
-        );
-        const [startDate, endDate] = extractLeavePeriod(
-          claim.claim,
-          "reduced_schedule_leave_periods"
-        );
-        fineos.createNotification(startDate, endDate, "military", claim.claim);
-        cy.get("a[name*='CaseMapWidget']")
-          .invoke("text")
-          .then((text) => {
-            const fineos_absence_id = text.slice(24);
+        fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
+          .createNotification(claim.claim)
+          .then((fineos_absence_id) => {
             cy.log(fineos_absence_id);
             cy.stash("submission", { fineos_absence_id });
 
@@ -39,7 +26,6 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
                 claim.documents.forEach((doc) =>
                   evidence.receive(doc.document_type)
                 );
-                evidence.receive("Covered Service Member Identification Proof");
               });
             });
           });

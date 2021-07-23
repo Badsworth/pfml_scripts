@@ -3,12 +3,15 @@
 @import 'reset';
 @import 'colors';
 @import 'variables';
+// Button is imported earlier to more easily override styling.
+@import '../src/components/Button';
 @import 'globals';
+@import 'maintenance';
 @import 'page_sidebar';
 @import '../src/components/Loading';
 @import '../src/components/ConfirmationDialog';
 @import '../src/components/SlideOut';
-@import '../src/components/Button';
+@import '../src/components/Table';
 @import '../src/components/Search';
 @import '../src/components/Table';
 @import '../src/components/Tag';

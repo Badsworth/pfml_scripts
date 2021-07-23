@@ -1,8 +1,5 @@
 import { AllNotNull, Submission } from "../../../../src/types";
-import {
-  dateToMMddyyyy,
-  extractLeavePeriod,
-} from "../../../../src/util/claims";
+import { dateToMMddyyyy } from "../../../../src/util/claims";
 import {
   assertIsTypedArray,
   assertValidClaim,
@@ -38,16 +35,9 @@ describe("Claimant can call call-center to submit a claim for leave with other l
               ...(claim.claim.mailing_address as AllNotNull<Address>),
             });
 
-          const [startDate, endDate] = extractLeavePeriod(
-            claim.claim,
-            "continuous_leave_periods"
-          );
-          fineos.createNotification(startDate, endDate, "medical", claim.claim);
-          cy.get("a[name*='CaseMapWidget']")
-            .invoke("text")
-            .then((text) => {
-              const fineos_absence_id = text.slice(24);
-
+          claimantPage
+            .createNotification(claim.claim)
+            .then((fineos_absence_id) => {
               cy.stash("submission", {
                 timestamp_from: Date.now(),
                 fineos_absence_id,

@@ -38,6 +38,10 @@ class Claim extends BaseModel {
       employer: null,
       fineos_absence_id: null,
       fineos_notification_id: null,
+      /**
+       * @type {ManagedRequirements}
+       */
+      managed_requirements: null,
     };
   }
 }
@@ -76,6 +80,22 @@ export class ClaimEmployer extends BaseModel {
       employer_dba: null,
       employer_fein: null,
       employer_id: null,
+    };
+  }
+}
+
+/**
+ * Managed requirements associated to the Claim
+ */
+export class ManagedRequirements extends BaseModel {
+  get defaults() {
+    return {
+      category: null,
+      created_at: null,
+      follow_up_date: null,
+      responded_at: null,
+      status: null,
+      type: null,
     };
   }
 }

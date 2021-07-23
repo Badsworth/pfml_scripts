@@ -94,14 +94,21 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
 
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
-          fineos.checkPaymentPreference(claim);
-          fineos.visitClaim(submission.fineos_absence_id);
-          fineos.assertClaimStatus("Approved");
-          fineos.getPaymentAmount().then((amount) => {
-            expect(
-              amount,
-              `Maximum weekly payment should be: $${claim.metadata?.expected_weekly_payment}`
-            ).to.eq(claim.metadata?.expected_weekly_payment as string);
+          const page = fineosPages.ClaimPage.visit(
+            submission.fineos_absence_id
+          );
+          page.paidLeave((paidLeavePage) => {
+            if (claim.claim.mailing_address)
+              paidLeavePage.assertPaymentAddress(claim.claim.mailing_address);
+            if (claim.paymentPreference)
+              paidLeavePage.assertPaymentPreference(claim.paymentPreference);
+            paidLeavePage.assertAmountsPending([
+              {
+                net_payment_amount: parseInt(
+                  claim.metadata?.expected_weekly_payment as string
+                ),
+              },
+            ]);
           });
         });
       });

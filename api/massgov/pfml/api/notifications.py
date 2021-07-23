@@ -1,9 +1,11 @@
 from typing import Optional
+from uuid import UUID
 
 import connexion
 import flask
 import newrelic.agent
 from sqlalchemy.orm.exc import MultipleResultsFound
+from sqlalchemy.orm.session import Session
 from werkzeug.exceptions import BadRequest
 
 import massgov.pfml.api.app as app
@@ -16,8 +18,16 @@ from massgov.pfml.api.models.notifications.requests import NotificationRequest
 from massgov.pfml.api.services.service_now_actions import send_notification_to_service_now
 from massgov.pfml.db.models.applications import Notification
 from massgov.pfml.db.models.employees import Claim, Employee, Employer
+from massgov.pfml.db.queries.managed_requirements import (
+    create_or_update_managed_requirement_from_fineos,
+    get_fineos_managed_requirements_from_notification,
+)
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+DESIGNATION_NOTICE = "Designation Notice"
+LEAVE_REQUEST_DECLINED = "Leave Request Declined"
+LEAVE_ADMINISTRATOR = "Leave Administrator"
 
 
 def notifications_post():
@@ -88,16 +98,16 @@ def notifications_post():
             newrelic.agent.add_custom_parameter("employee_id", employee_id)
 
         if claim is None:
-            new_claim = Claim(
+            claim = Claim(
                 employer_id=employer.employer_id,
                 employee_id=employee_id,
                 fineos_absence_id=notification_request.absence_case_id,
             )
-            db_session.add(new_claim)
+            db_session.add(claim)
             db_session.commit()
 
-            log_attributes = {**log_attributes, "claim_id": str(new_claim.claim_id)}
-            newrelic.agent.add_custom_parameter("claim_id", str(new_claim.claim_id))
+            log_attributes = {**log_attributes, "claim_id": str(claim.claim_id)}
+            newrelic.agent.add_custom_parameter("claim_id", str(claim.claim_id))
 
             logger.info("Created Claim from a Notification", extra=log_attributes)
         else:
@@ -113,6 +123,23 @@ def notifications_post():
             if db_changed:
                 db_session.add(claim)
                 db_session.commit()
+
+        should_update_managed_requirements = (
+            notification_request.trigger in [DESIGNATION_NOTICE, LEAVE_REQUEST_DECLINED]
+            and notification_request.recipient_type == LEAVE_ADMINISTRATOR
+        )
+        if should_update_managed_requirements:
+            try:
+                handle_managed_requirements_update(
+                    notification_request, claim.claim_id, db_session, log_attributes
+                )
+            except Exception as error:  # catch all exception handler
+                logger.error(
+                    "Managed requirements failed to create or update",
+                    extra=log_attributes,
+                    exc_info=error,
+                )
+
     # Send the request to Service Now
     send_notification_to_service_now(notification_request, employer)
 
@@ -205,3 +232,24 @@ def _err400_multiple_employer_feins_found(notification_request, log_attributes):
         errors=[],
         data={},
     ).to_api_response()
+
+
+def handle_managed_requirements_update(
+    notification: NotificationRequest, claim_id: UUID, db_session: Session, log_attributes: dict
+) -> None:
+    fineos_requirements = get_fineos_managed_requirements_from_notification(
+        notification, log_attributes
+    )
+    for fineos_requirement in fineos_requirements:
+        log_attr = {
+            "fineos_managed_requirement.managedReqId": fineos_requirement.managedReqId,
+            "fineos_managed_requirement.status": fineos_requirement.status,
+            "fineos_managed_requirement.category": fineos_requirement.category,
+            "fineos_managed_requirement.type": fineos_requirement.type,
+            "fineos_managed_requirement.followUpDate": fineos_requirement.followUpDate,
+            **log_attributes.copy(),
+        }
+        create_or_update_managed_requirement_from_fineos(
+            db_session, claim_id, fineos_requirement, log_attr
+        )
+    return

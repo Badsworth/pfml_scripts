@@ -49,7 +49,6 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                 // Request types
                 .chooseTypeOfRequest("Out of work for another reason")
                 .nextStep((reasonOfAbsence) => {
-                  cy.pause();
                   reasonOfAbsence.fillAbsenceReason(absenceDescription);
                   /* 
                     // @TODO Fill absence relationship for caring leave or bonding claims

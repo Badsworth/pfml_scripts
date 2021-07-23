@@ -196,6 +196,43 @@ Array [
   >
     You also need to know when you want your leave to begin and end.
   </p>,
+  <p
+    key="p-7"
+  >
+    <strong
+      key="strong-0"
+    >
+      Are you taking leave to care for a family member?
+    </strong>
+  </p>,
+  <p
+    key="p-8"
+  >
+    You need to have the 
+    <a
+      href="https://www.mass.gov/family-caring-form"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      Certification of Your Family Member’s Serious Health Condition
+    </a>
+     completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.
+  </p>,
+  <p
+    key="p-9"
+  >
+    You also need to be sure of the 
+    <a
+      href="https://www.mass.gov/family-caring-leave-relationships"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      eligibility of your relationship
+    </a>
+    .
+  </p>,
 ]
 `;
 

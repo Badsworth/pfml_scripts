@@ -14,7 +14,10 @@ import { format } from "date-fns";
   await storage.prepare();
 
   // Generate 2 employers that will have employees assigned to them.
-  const employersWithEmployees = EmployerPool.generate(2, { size: "small" });
+  const employersWithEmployees = EmployerPool.generate(2, {
+    size: "small",
+    metadata: { has_employees: true },
+  });
   // Generate 1 employer with 0 withholdings for use in LA verification.
   const ineligibleLAEmployers = EmployerPool.generate(1, {
     withholdings: [0, 0, 0, 0],

@@ -1,6 +1,9 @@
-import { ScenarioSpecification } from "../generation/Scenario";
+import {
+  MilitaryCaregiverClaim,
+  MilitaryExigencyClaim,
+  ScenarioSpecification,
+} from "../generation/Scenario";
 import { addWeeks, subWeeks, startOfWeek, addDays, subDays } from "date-fns";
-import { getCaringLeaveStartEndDates } from "../../src/util/claims";
 
 /**
  * Cypress Testing Scenarios.
@@ -54,28 +57,31 @@ export const REDUCED_ER: ScenarioSpecification = {
   },
 };
 
-export const MIL_RED: ScenarioSpecification = {
+export const MIL_RED: ScenarioSpecification<MilitaryCaregiverClaim> = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "MIL_RED",
     shortClaim: true,
-    reason: "Care for a Family Member",
+    reason: "Military Caregiver",
     docs: {
       MASSID: {},
+      COVERED_SERVICE_MEMBER_ID: {},
       CARING: {},
     },
     reduced_leave_spec: "0,240,240,240,240,240,0",
   },
 };
 
-export const MIL_EXI: ScenarioSpecification = {
+export const MIL_EXI: ScenarioSpecification<MilitaryExigencyClaim> = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "Military Exigency claim",
     shortClaim: true,
-    reason: "Serious Health Condition - Employee",
+    reason: "Military Exigency Family",
     docs: {
       MASSID: {},
+      ACTIVE_SERVICE_PROOF: {},
+      MILITARY_EXIGENCY_FORM: {},
     },
   },
 };
@@ -257,7 +263,6 @@ export const BIAP60ER: ScenarioSpecification = {
   },
 };
 
-const [start, end] = getCaringLeaveStartEndDates();
 export const CCAP90: ScenarioSpecification = {
   employee: {
     wages: 90000,
@@ -268,7 +273,7 @@ export const CCAP90: ScenarioSpecification = {
     reason: "Care for a Family Member",
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: { MASSID: {}, CARING: {} },
-    leave_dates: [start, end],
+    leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
     metadata: { expected_weekly_payment: "850.00" },
   },
 };
@@ -284,16 +289,15 @@ export const CDENY2: ScenarioSpecification = {
   },
 };
 
-export const MIL_RED_OLB: ScenarioSpecification = {
+export const MED_OLB: ScenarioSpecification = {
   employee: { mass_id: true, wages: 90000 },
   claim: {
-    label: "MIL_RED with Other Leaves & Benefits",
+    label: "MED with Other Leaves & Benefits",
     leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 3)],
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    reason: "Serious Health Condition - Employee",
     docs: {
       MASSID: {},
-      FOSTERPLACEMENT: {},
+      HCP: {},
     },
     reduced_leave_spec: "0,240,240,240,240,240,0",
     employerResponse: {
@@ -346,7 +350,7 @@ export const CHAP_RFI: ScenarioSpecification = {
   claim: {
     label: "CHAP_RFI",
     reason: "Care for a Family Member",
-    leave_dates: [start, addDays(start, 2)],
+    shortClaim: true,
     docs: {
       MASSID: {},
       CARING: {},

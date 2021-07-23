@@ -45,11 +45,18 @@ export function enrichHttpError(error: HttpError): void {
  * @param headers
  */
 export function extractDebugInfoFromHeaders(
-  headers: Record<string, string>
+  headers: Record<string, string | string[]>
 ): Record<string, string> {
   const debugInfo: Record<string, string> = {};
   if (typeof headers["x-amzn-requestid"] === "string") {
     debugInfo["New Relic Logs"] = buildNRDebugURL(headers["x-amzn-requestid"]);
+  } else if (
+    Array.isArray(headers["x-amzn-requestid"]) &&
+    headers["x-amzn-requestid"].length > 0
+  ) {
+    debugInfo["New Relic Logs"] = buildNRDebugURL(
+      headers["x-amzn-requestid"][0]
+    );
   }
   return debugInfo;
 }

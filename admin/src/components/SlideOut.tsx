@@ -1,3 +1,4 @@
+import Button from "../components/Button";
 import { MouseEvent } from "react";
 
 type Props = {
@@ -14,9 +15,10 @@ const SlideOut = ({ title, isOpen, onClose, children }: Props) => {
       <div className="slide-out__content">
         <div className="slide-out__header">
           <h2 className="slide-out__title">{title}</h2>
-          <button className="slide-out__btn-close" onClick={onClose}>
-            x
-          </button>
+          <button
+            className="slide-out__btn-close btn"
+            onClick={onClose}
+          ></button>
         </div>
         <div className="slide-out__body">{children}</div>
       </div>

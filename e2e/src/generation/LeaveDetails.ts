@@ -18,7 +18,7 @@ import {
   subMonths,
 } from "date-fns";
 import faker from "faker";
-import { ClaimSpecification } from "./Claim";
+import { ClaimSpecification, LeaveReason } from "./Claim";
 
 export default function generateLeaveDetails(
   config: ClaimSpecification,
@@ -57,7 +57,8 @@ export default function generateLeaveDetails(
     reason,
     reason_qualifier: reason_qualifier ?? null,
     caring_leave_metadata:
-      reason === "Care for a Family Member"
+      reason === "Care for a Family Member" ||
+      (reason as NonNullable<LeaveReason>) === "Military Caregiver"
         ? {
             relationship_to_caregiver: "Sibling - Brother/Sister",
             family_member_first_name: faker.name.firstName(),
@@ -80,7 +81,7 @@ export default function generateLeaveDetails(
     { representation: "date" }
   );
 
-  switch (reason) {
+  switch (reason as NonNullable<LeaveReason>) {
     case "Serious Health Condition - Employee":
       // Do nothing else.
       break;
@@ -114,6 +115,11 @@ export default function generateLeaveDetails(
         default:
           throw new Error(`Invalid reason_qualifier for Child Bonding`);
       }
+      break;
+    //Fineos leave reasons
+    case "Military Caregiver":
+      break;
+    case "Military Exigency Family":
       break;
     default:
       throw new Error(`Invalid reason given`);

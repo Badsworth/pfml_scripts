@@ -23,14 +23,11 @@ describe("Post-approval (notifications/notices)", () => {
         cy.task("submitClaimToAPI", {
           ...claim,
           credentials,
-        }).then((response) => {
-          if (!response.fineos_absence_id) {
-            throw new Error("Response contained no fineos_absence_id property");
-          }
+        }).then((res) => {
           const [startDate, endDate] = extractLeavePeriod(claim.claim);
           cy.stash("submission", {
-            application_id: response.application_id,
-            fineos_absence_id: response.fineos_absence_id,
+            application_id: res.application_id,
+            fineos_absence_id: res.fineos_absence_id,
             timestamp_from: Date.now(),
           });
           const newStartDate = format(
@@ -42,9 +39,7 @@ describe("Post-approval (notifications/notices)", () => {
             "MM/dd/yyyy"
           );
           cy.stash("extensionLeaveDates", [startDate, newEndDate]);
-          const claimPage = fineosPages.ClaimPage.visit(
-            response.fineos_absence_id
-          );
+          const claimPage = fineosPages.ClaimPage.visit(res.fineos_absence_id);
           claimPage.adjudicate((adjudication) => {
             adjudication.evidence((evidence) => {
               for (const document of claim.documents) {
@@ -69,7 +64,7 @@ describe("Post-approval (notifications/notices)", () => {
           // Including this visit helps to avoid the "Whoops there is no test to run" message by Cypress.
           cy.visit("/");
           const claimAfterExtension = fineosPages.ClaimPage.visit(
-            response.fineos_absence_id
+            res.fineos_absence_id
           );
           claimAfterExtension.adjudicate((adjudication) => {
             adjudication.evidence((evidence) => {

@@ -95,17 +95,11 @@ export const LeaveReason = (props) => {
     "claimantShowMilitaryLeaveTypes"
   );
 
-  // Caring leave type is behind a feature flag until 7/1 launch
-  // TODO (CP-2311): Remove showCaringLeaveType feature flag and move the choiceCaringLeave option into choices by default
-  const showCaringLeaveType = isFeatureEnabled("showCaringLeaveType");
-
   const getChoices = () => {
-    const choices = [choiceMedical, choiceBonding];
+    const choices = [choiceMedical, choiceBonding, choiceCaringLeave];
 
     showMilitaryLeaveTypes &&
       choices.push(choiceActiveDutyFamily, choiceServiceMemberFamily);
-
-    showCaringLeaveType && choices.push(choiceCaringLeave);
 
     return choices;
   };

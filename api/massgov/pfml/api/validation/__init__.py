@@ -34,7 +34,11 @@ logger = logging.get_logger(__name__)
 
 
 def is_unexpected_validation_error(error: ValidationErrorDetail) -> bool:
-    return error.type in UNEXPECTED_ERROR_TYPES or error.type.startswith("type_error")
+    return (
+        error.type in UNEXPECTED_ERROR_TYPES
+        or error.type.startswith("type_error")
+        or error.type.startswith("value_error")
+    )
 
 
 def log_validation_error(

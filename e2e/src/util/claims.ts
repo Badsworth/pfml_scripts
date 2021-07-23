@@ -1,18 +1,10 @@
+import { ApplicationLeaveDetails, ApplicationRequestBody } from "../_api";
 import {
-  ApplicationLeaveDetails,
-  ApplicationRequestBody,
-  ApplicationResponse,
-} from "../_api";
-import { LeavePeriods, Submission } from "../types";
-import {
-  max,
-  addDays,
-  parseISO,
-  format,
-  startOfWeek,
-  addWeeks,
-} from "date-fns";
-import faker from "faker";
+  ApplicationSubmissionResponse,
+  LeavePeriods,
+  Submission,
+} from "../types";
+import { parseISO, format } from "date-fns";
 import { isNotNull } from "./typeUtils";
 
 export function extractLeavePeriod(
@@ -24,25 +16,14 @@ export function extractLeavePeriod(
   } else throw new Error("Missing leave details");
 }
 
-export function AssertFullApplicationResponse(
-  response: ApplicationResponse
-): asserts response is ApplicationResponse &
-  Required<Pick<ApplicationResponse, "application_id" | "fineos_absence_id">> {
-  if (!response.application_id)
-    throw new Error("API Response missing Application ID");
-  if (!response.fineos_absence_id)
-    throw new Error("API Response missing Fineos Absence ID");
-}
-
 /**
  * Extracts relevant submission data from an API response.
  * @param apiResponse API response coming from the PMFL API
  * @returns submission object with current timestamp
  */
 export function getSubmissionFromApiResponse(
-  apiResponse: ApplicationResponse
+  apiResponse: ApplicationSubmissionResponse
 ): Submission {
-  AssertFullApplicationResponse(apiResponse);
   return {
     application_id: apiResponse.application_id,
     fineos_absence_id: apiResponse.fineos_absence_id,
@@ -119,23 +100,6 @@ export function getLeavePeriod(
   } else {
     throw new Error("Claim missing leave periods");
   }
-}
-/**
- * Specific function for setting the start date past
- * July 1st, 2021 and within 60 days of submittal date.
- *
- * There's a Fineos restriction for caring leave claims
- * submitted before that date. Also returns end date
- * two weeks after start date (for proper payment calculation)
- *
- * @Reminder to remove once we're past 21 July, 20201
- */
-export function getCaringLeaveStartEndDates(): [Date, Date] {
-  const minStartDate = max([parseISO("2021-07-09"), new Date()]);
-  const maxStartDate = addDays(new Date(), 60);
-  const start = startOfWeek(faker.date.between(minStartDate, maxStartDate));
-  const end = addWeeks(start, 2);
-  return [start, end];
 }
 
 /**

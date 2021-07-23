@@ -1,5 +1,4 @@
-import { fineos, email } from "../../actions";
-import { extractLeavePeriod } from "../../../src/util/claims";
+import { fineos, email, fineosPages } from "../../actions";
 import { getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
 import { ApplicationRequestBody } from "../../../src/api";
@@ -16,18 +15,9 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
       cy.task("generateClaim", "BHAP1").then((claim) => {
         assertValidClaim(claim.claim);
         cy.stash("claim", claim.claim);
-        fineos.searchClaimantSSN(claim.claim.tax_identifier);
-        fineos.clickBottomWidgetButton("OK");
-        fineos.assertOnClaimantPage(
-          claim.claim.first_name,
-          claim.claim.last_name
-        );
-        const [startDate, endDate] = extractLeavePeriod(claim.claim);
-        fineos.createNotification(startDate, endDate, "bonding", claim.claim);
-        cy.get("a[name*='CaseMapWidget']")
-          .invoke("text")
-          .then((text) => {
-            const fineos_absence_id = text.slice(24);
+        fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
+          .createNotification(claim.claim)
+          .then((fineos_absence_id) => {
             cy.log(fineos_absence_id);
             cy.stash("submission", {
               fineos_absence_id: fineos_absence_id,
