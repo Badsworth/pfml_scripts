@@ -64,7 +64,11 @@ describe("Approval (notifications/notices)", () => {
           claimPage.shouldHaveStatus("Restriction", "Passed");
           claimPage.shouldHaveStatus("PlanDecision", "Accepted");
           claimPage.approve();
-          claimPage.triggerNotice("Approval Notice");
+          claimPage
+            .triggerNotice("Approval Notice")
+            .documents((docPage) =>
+              docPage.assertDocumentExists("Approval Notice")
+            );
         });
       });
     }

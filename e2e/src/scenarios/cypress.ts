@@ -521,3 +521,13 @@ export const HIST_CASE: ScenarioSpecification = {
     docs: {},
   },
 };
+
+// Leave start date change request
+export const MED_LSDCR: ScenarioSpecification = {
+  ...MHAP1ER,
+  claim: {
+    ...MHAP1ER.claim,
+    label: "MED_LSDCR",
+    leave_dates: [addWeeks(new Date(), 2), addWeeks(new Date(), 6)],
+  },
+};

@@ -58,6 +58,8 @@ type StatusCategory =
   | "Protocols"
   | "PlanDecision";
 
+type PlanDecisions = "Accepted" | "Pending Evidence" | "Rejected" | "Undecided";
+
 /**
  * This is a page object for interacting with Fineos.
  *
@@ -114,6 +116,11 @@ export class ClaimPage {
     onTab("Outstanding Requirements");
     cb(new OutstandingRequirementsPage());
     onTab("Absence Hub");
+    return this;
+  }
+  leaveDetails(cb: (page: LeaveDetailsPage) => unknown): this {
+    onTab("Leave Details");
+    cb(new LeaveDetailsPage());
     return this;
   }
   benefitsExtension(cb: (page: BenefitsExtensionPage) => unknown): this {
@@ -191,12 +198,18 @@ class AdjudicationPage {
     this.onTab("Manage Request");
     cy.get("input[type='submit'][value='Accept']").click({ force: true });
   }
-  editPlanDecision(planStatus: string) {
+  editPlanDecision(planDecision: PlanDecisions) {
     this.onTab("Manage Request");
-    cy.wait(300);
+    waitForAjaxComplete();
     cy.get("input[type='submit'][value='Evaluate Plan']").click();
-    cy.findByLabelText("Leave Plan Status").select(planStatus);
+    cy.findByLabelText("Leave Plan Status").select(planDecision);
     cy.get("#footerButtonsBar input[value='OK']").click();
+  }
+  availability(cb: (page: AvailabilityPage) => unknown): this {
+    this.onTab("Availability");
+    cb(new AvailabilityPage());
+    this.onTab("Manage Request");
+    return this;
   }
 }
 
@@ -252,6 +265,7 @@ class EvidencePage {
 }
 class CertificationPeriodsPage {
   prefill() {
+    waitForAjaxComplete();
     cy.get("input[value='Prefill with Requested Absence Periods']").click();
     cy.get("#PopupContainer input[value='Yes']").click();
     return this;
@@ -261,11 +275,9 @@ class CertificationPeriodsPage {
       "input[type='submit'][title='Remove all certification periods']"
     ).click();
     cy.get("#PopupContainer input[value='Yes']").click();
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    waitForAjaxComplete();
     cy.get("#PopupContainer input[value='Yes']").click();
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    waitForAjaxComplete();
     cy.get("#PopupContainer input[value='Yes']").click();
     return this;
   }
@@ -332,8 +344,10 @@ type FineosTaskNames =
   | "Update Paid Leave Case"
   | "Caring Certification Review"
   | "ID Review"
+  | "Bonding Certification Review"
   | "Medical Certification Review"
-  | "Bonding Certification Review";
+  | "Employer Approval Received";
+
 class TasksPage {
   assertTaskExists(name: string): this {
     assertHasTask(name);
@@ -374,10 +388,13 @@ class TasksPage {
     );
     return this;
   }
-  assertIsAssignedToDepartment(taskName: string, departmentName: string): this {
+  assertIsAssignedToDepartment(
+    task: FineosTaskNames,
+    departmentName: string
+  ): this {
     // Find  task
     cy.contains("tbody", "This case and its subcases").within(() => {
-      cy.findByText(taskName).click();
+      cy.findByText(task).click();
     });
     // Assert it's in given department
     cy.get(`span[id^="BasicDetailsUsersDeptWidget"][id$="Department"]`).should(
@@ -823,13 +840,29 @@ export class DocumentsPage {
 }
 
 class AvailabilityPage {
-  reevaluateAvailability() {
-    cy.get('input[title="Manage time for the selected Leave Plan"').click();
-    cy.get('input[title="Select All"').click();
-    cy.findByLabelText("Decision").select("Pending");
-    cy.findByLabelText("Reason").select("Additional Information");
-    cy.get('input[title]="Apply"').click();
-    cy.findByText("Close").click({ force: true });
+  reevaluateAvailability(decision: string, reason: string) {
+    cy.get('input[title="Manage time for the selected Leave Plan"]').click();
+    waitForAjaxComplete();
+    cy.get('input[title="Select All"]').click();
+    waitForAjaxComplete();
+    // findByLabelText() wont work here - labels do not have the "for" or "aria-labelledby" attributes
+    cy.contains("label", "Decision")
+      .parent()
+      .parent()
+      .within(() => {
+        cy.get("select").select(decision);
+      });
+    waitForAjaxComplete();
+    cy.contains("label", "Reason")
+      .parent()
+      .parent()
+      .within(() => {
+        cy.get("select").select(reason);
+      });
+    cy.get('input[type="submit"][value="Apply"]').click();
+    cy.get("#footerButtonsBar").within(() => {
+      cy.findByText("Close").click({ force: true });
+    });
   }
 }
 
@@ -1706,5 +1739,17 @@ class WrapUp extends CreateNotificationStep {
       this.clickNext(20000);
       return cy.wrap(absenceId);
     });
+  }
+}
+
+class LeaveDetailsPage {
+  /**
+   * Function will redirect us to the claim adjudiction page
+   */
+  editLeavePostApproval(): AdjudicationPage {
+    cy.get('input[type="submit"][value="Review"]').click();
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Edit"]').click();
+    return new AdjudicationPage();
   }
 }

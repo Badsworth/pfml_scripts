@@ -770,18 +770,16 @@ export function getIntermittentPaymentAmount(): Cypress.Chainable<string> {
 export function triggerNoticeRelease(docType: string): void {
   onTab("Task");
   onTab("Processes");
-  cy.contains(".TreeNodeElement", "SOM Generate Legal Notice").click({
+  cy.contains(".TreeNodeElement", docType).click({
     force: true,
   });
   cy.get('input[type="submit"][value="Properties"]').click();
   cy.get('input[type="submit"][value="Continue"]').click();
-  cy.contains(".TreeNodeContainer", "SOM Generate Legal Notice", {
+  cy.contains(".TreeNodeContainer", docType, {
     timeout: 20000,
   })
     .find("input[type='checkbox']")
     .should("be.checked");
-  onTab("Documents");
-  assertHasDocument(docType);
 }
 
 /**
