@@ -37,13 +37,6 @@ http.fetch = (
     throw e;
   });
 };
-const _fetchJson = http.fetchJson;
-http.fetchJson = async (
-  ...args: Parameters<typeof http.fetchJson>
-): Promise<ApiResponse<any>> => {
-  const res = await _fetchJson(...args);
-  return res.data;
-};
 
 const _fetchJson = http.fetchJson;
 http.fetchJson = async (
