@@ -65,7 +65,7 @@ describe("Approval (notifications/notices)", () => {
           claimPage.shouldHaveStatus("PlanDecision", "Accepted");
           claimPage.approve();
           claimPage
-            .triggerNotice("Approval Notice")
+            .triggerNotice("Designation Notice")
             .documents((docPage) =>
               docPage.assertDocumentExists("Approval Notice")
             );
