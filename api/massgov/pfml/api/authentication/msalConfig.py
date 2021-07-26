@@ -31,6 +31,11 @@ class MSALClientConfig:
         cls.tenant_id = os.environ.get("AZURE_AD_DIRECTORY_TENANT_ID", None)
         cls.authority_domain = os.environ.get("AZURE_AD_AUTHORITY_DOMAIN", None)
 
+        # prevents crash in case of missing env. variables
+        if cls.client_id is None or cls.tenant_id is None or cls.client_secret is None or cls.authority_domain is None:
+            logger.warning("Missing Azure AD environment variables!")
+            return cls
+            
         cls.b2c_states = {
             "SIGN_IN": "sign_in",
         }
@@ -48,8 +53,8 @@ class MSALClientConfig:
         cls.authority = cls.b2c_policies["authorities"]["login"]["authority"]
         cls.known_authorities = [cls.b2c_policies["authorityDomain"]]
         # @todo: environment based url redirects
-        cls.redirect_uri = "http://localhost:3000"
-        cls.post_logout_redirect_uri = "http://localhost:3000/logout"
+        cls.redirect_uri = os.environ.get("CORS_ORIGIN")
+        cls.post_logout_redirect_uri = f"{cls.redirect_uri}/logout"
         cls.logout_url = f"{cls.authority}/oauth2/v2.0/logout?post_logout_redirect_uri={cls.post_logout_redirect_uri}"
         cls.scopes = [f"{cls.client_id}/.default"]
         cls.policies = cls.b2c_policies
