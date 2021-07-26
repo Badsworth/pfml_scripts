@@ -677,6 +677,25 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
 
     update_request_body_dob = {"date_of_birth": "1970-01-01"}
 
+    # patching a partial update of the mailing address (zip code only)
+    update_request_body = {"mailing_address": {"zip": "12345",}}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("mailing_address")["city"] == "Chicago"
+    assert response_body.get("data").get("mailing_address")["line_1"] == "*******"
+    assert response_body.get("data").get("mailing_address")["zip"] == "12345"
+    assert application.mailing_address.city == "Chicago"
+    assert application.mailing_address.address_line_one == "123 Bar St."
+    assert application.mailing_address.zip_code == "12345"
+
     # patching another field and confirming mailing address still persists
     response_new_update = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -756,6 +775,25 @@ def test_application_patch_residential_address(client, user, auth_token, test_db
     assert response_body.get("data").get("residential_address")["line_1"] == "*******"
     assert application.residential_address.city == "Chicago"
     assert application.residential_address.address_line_one == "123 Bar St."
+
+    # patching a partial update of the residential address (zip code only)
+    update_request_body = {"residential_address": {"zip": "12345",}}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("residential_address")["city"] == "Chicago"
+    assert response_body.get("data").get("residential_address")["line_1"] == "*******"
+    assert response_body.get("data").get("residential_address")["zip"] == "12345"
+    assert application.residential_address.city == "Chicago"
+    assert application.residential_address.address_line_one == "123 Bar St."
+    assert application.residential_address.zip_code == "12345"
 
     # removing residential address
     update_request_body = {"residential_address": None}
