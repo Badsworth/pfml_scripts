@@ -97,16 +97,22 @@ exports[`LeaveDetails Caring Leave renders the relationship question 1`] = `
         Do you believe the listed relationship is described accurately? (Optional)
       </ReviewHeading>
     }
-    name="believeRelationshipAccurate"
+    name="believe_relationship_accurate"
     onChange={[Function]}
     smallLabel={true}
     type="radio"
+    value=""
   />
   <ConditionalContent
     clearField={[Function]}
     data-test="relationship-accurate-no"
+    fieldNamesClearedWhenHidden={
+      Array [
+        "relationship_inaccurate_reason",
+      ]
+    }
     getField={[Function]}
-    updateFields={[Function]}
+    updateFields={[MockFunction]}
     visible={false}
   >
     <Alert
@@ -122,15 +128,14 @@ exports[`LeaveDetails Caring Leave renders the relationship question 1`] = `
     >
       <FormLabel
         className="usa-label"
-        errorMsg={null}
-        htmlFor="relationshipInaccurateReason"
+        htmlFor="relationship_inaccurate_reason"
         small={true}
       >
         Tell us why you think this relationship is inaccurate.
       </FormLabel>
       <textarea
         className="usa-textarea margin-top-3"
-        name="relationshipInaccurateReason"
+        name="relationship_inaccurate_reason"
         onChange={[Function]}
       />
     </div>

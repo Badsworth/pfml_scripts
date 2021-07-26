@@ -85,8 +85,8 @@ export const Review = (props) => {
     employer_decision: "Approve",
     fraud: undefined,
     employeeNotice: undefined,
-    believeRelationshipAccurate: undefined,
-    relationshipInaccurateReason: "",
+    believe_relationship_accurate: undefined,
+    relationship_inaccurate_reason: "",
     // added fields
     addedBenefits: [],
     addedPreviousLeaves: [],
@@ -121,8 +121,8 @@ export const Review = (props) => {
 
   const isSubmitDisabled =
     (isCommentRequired && formState.comment === "") ||
-    (formState.believeRelationshipAccurate === "No" &&
-      formState.relationshipInaccurateReason === "");
+    (formState.believe_relationship_accurate === "No" &&
+      formState.relationship_inaccurate_reason === "");
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
 
   useEffect(() => {
@@ -244,22 +244,6 @@ export const Review = (props) => {
     updateFields({ employeeNotice: updatedEmployeeNotice });
   };
 
-  const handleBelieveRelationshipAccurateChange = (
-    updatedBelieveRelationshipAccurate
-  ) => {
-    updateFields({
-      believeRelationshipAccurate: updatedBelieveRelationshipAccurate,
-    });
-  };
-
-  const handleRelationshipInaccurateReason = (
-    updatedRelationshipInaccurateReason
-  ) => {
-    updateFields({
-      relationshipInaccurateReason: updatedRelationshipInaccurateReason,
-    });
-  };
-
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
 
@@ -295,14 +279,15 @@ export const Review = (props) => {
 
     if (isCaringLeave) {
       const parsedRelationshipComment =
-        formState.believeRelationshipAccurate === "No"
-          ? formState.relationshipInaccurateReason
+        formState.believe_relationship_accurate === "No"
+          ? formState.relationship_inaccurate_reason
           : "";
       payload.believe_relationship_accurate =
-        formState.believeRelationshipAccurate;
+        formState.believe_relationship_accurate;
       payload.relationship_inaccurate_reason = parsedRelationshipComment;
     }
 
+    // TODO test manually.
     await props.appLogic.employers.submitClaimReview(absenceId, payload);
   });
 
@@ -355,18 +340,13 @@ export const Review = (props) => {
       </ReviewRow>
       <EmployeeInformation claim={claim} />
       <LeaveDetails
-        appErrors={appErrors}
         claim={claim}
         documents={certificationDocuments}
         downloadDocument={downloadDocument}
-        believeRelationshipAccurate={formState.believeRelationshipAccurate}
-        onChangeBelieveRelationshipAccurate={
-          handleBelieveRelationshipAccurateChange
-        }
-        relationshipInaccurateReason={formState.relationshipInaccurateReason}
-        onChangeRelationshipInaccurateReason={
-          handleRelationshipInaccurateReason
-        }
+        believeRelationshipAccurate={formState.believe_relationship_accurate}
+        relationshipInaccurateReason={formState.relationship_inaccurate_reason}
+        getFunctionalInputProps={getFunctionalInputProps}
+        updateFields={updateFields}
       />
       <LeaveSchedule
         appLogic={appLogic}

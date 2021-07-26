@@ -537,12 +537,8 @@ describe("Review", () => {
     });
 
     it("disables submit button when LA indicates the relationship is inaccurate and no relationship comment", () => {
-      act(() => {
-        wrapper
-          .find("LeaveDetails")
-          .props()
-          .onChangeBelieveRelationshipAccurate("No");
-      });
+      const { changeRadioGroup } = simulateEvents(wrapper);
+      changeRadioGroup("believe_relationship_accurate", "No");
 
       expect(
         wrapper.update().find('button[type="submit"]').prop("disabled")
@@ -550,12 +546,10 @@ describe("Review", () => {
     });
 
     it("submits has_amendments as false when LA indicates the relationship is inaccurate", async () => {
+      const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
+      changeRadioGroup("believe_relationship_accurate", "No");
       await act(async () => {
-        await wrapper
-          .find("input[name='believeRelationshipAccurate']")
-          .last()
-          .simulate("change", { target: { value: "No" } });
-        await simulateEvents(wrapper).submitForm();
+        await submitForm();
       });
 
       expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(

@@ -1,12 +1,16 @@
 import Document, { DocumentType } from "../../../src/models/Document";
-import { MockEmployerClaimBuilder, simulateEvents } from "../../test-utils";
+import {
+  MockEmployerClaimBuilder,
+  simulateEvents,
+  testHook,
+} from "../../test-utils";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import LeaveDetails from "../../../src/components/employers/LeaveDetails";
 import React from "react";
-import ReviewRow from "../../../src/components/ReviewRow";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
+import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
 const DOCUMENTS = [
   new Document({
@@ -26,29 +30,47 @@ const DOCUMENTS = [
 ];
 
 describe("LeaveDetails", () => {
-  let claim, wrapper;
+  const downloadDocumentSpy = jest.fn();
+  const updateFields = jest.fn();
+  let claim, getFunctionalInputProps;
+
+  function render(givenProps = {}) {
+    claim =
+      givenProps.claim || new MockEmployerClaimBuilder().completed().create();
+    const defaultProps = {
+      claim,
+      documents: [],
+      downloadDocument: downloadDocumentSpy,
+      getFunctionalInputProps,
+      updateFields,
+    };
+
+    const props = { ...defaultProps, ...givenProps };
+    return shallow(<LeaveDetails {...props} />);
+  }
 
   beforeEach(() => {
-    claim = new MockEmployerClaimBuilder().completed().create();
-    wrapper = shallow(
-      <LeaveDetails
-        claim={claim}
-        documents={[]}
-        downloadDocument={jest.fn()}
-        appErrors={new AppErrorInfoCollection()}
-      />
-    );
+    testHook(() => {
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors: new AppErrorInfoCollection(),
+        formState: {},
+        updateFields,
+      });
+    });
   });
 
   it("renders the component", () => {
+    const wrapper = render();
     expect(wrapper).toMatchSnapshot();
   });
 
   it("does not render relationship question when claim is not for Care", () => {
+    const wrapper = render();
     expect(wrapper.exists("InputChoiceGroup")).toBe(false);
   });
 
   it("renders leave reason as link when reason is not pregnancy", () => {
+    const wrapper = render();
     expect(wrapper.find("ReviewRow[data-test='leave-type']").children())
       .toMatchInlineSnapshot(`
       <a
@@ -66,14 +88,7 @@ describe("LeaveDetails", () => {
       .completed()
       .pregnancyLeaveReason()
       .create();
-    const wrapper = shallow(
-      <LeaveDetails
-        claim={claimWithPregnancyLeave}
-        documents={[]}
-        downloadDocument={jest.fn()}
-        appErrors={new AppErrorInfoCollection()}
-      />
-    );
+    const wrapper = render({ claim: claimWithPregnancyLeave });
 
     expect(
       wrapper.find("ReviewRow[data-test='leave-type']").children()
@@ -81,6 +96,7 @@ describe("LeaveDetails", () => {
   });
 
   it("renders formatted leave reason as sentence case", () => {
+    const wrapper = render();
     expect(
       wrapper
         .find("ReviewRow[data-test='leave-type']")
@@ -91,7 +107,8 @@ describe("LeaveDetails", () => {
   });
 
   it("renders formatted date range for leave duration", () => {
-    expect(wrapper.find(ReviewRow).last().children().first().text()).toEqual(
+    const wrapper = render();
+    expect(wrapper.find("ReviewRow").last().children().first().text()).toEqual(
       "1/1/2021 to 7/1/2021"
     );
   });
@@ -100,36 +117,22 @@ describe("LeaveDetails", () => {
     const claimWithIntermittentLeave = new MockEmployerClaimBuilder()
       .completed(true)
       .create();
-    const wrapper = shallow(
-      <LeaveDetails
-        claim={claimWithIntermittentLeave}
-        documents={[]}
-        downloadDocument={jest.fn()}
-        appErrors={new AppErrorInfoCollection()}
-      />
-    );
-    expect(wrapper.find(ReviewRow).last().children().first().text()).toEqual(
+    const wrapper = render({ claim: claimWithIntermittentLeave });
+    expect(wrapper.find("ReviewRow").last().children().first().text()).toEqual(
       "—"
     );
   });
 
   it("does not render documentation row", () => {
+    const wrapper = render();
     expect(wrapper.exists('ReviewRow[label="Documentation"]')).toBe(false);
   });
 
   describe("when there are documents", () => {
     const setup = () => {
-      const downloadDocumentSpy = jest.fn();
       const claim = new MockEmployerClaimBuilder().completed().create();
-      const wrapper = shallow(
-        <LeaveDetails
-          claim={claim}
-          documents={DOCUMENTS}
-          downloadDocument={downloadDocumentSpy}
-          appErrors={new AppErrorInfoCollection()}
-        />
-      );
-      return { downloadDocumentSpy, wrapper };
+      const wrapper = render({ claim, documents: DOCUMENTS });
+      return { wrapper };
     };
 
     it("shows the documents heading", () => {
@@ -161,7 +164,7 @@ describe("LeaveDetails", () => {
     });
 
     it("makes a call to download documents on click", async () => {
-      const { downloadDocumentSpy, wrapper } = setup();
+      const { wrapper } = setup();
       await act(async () => {
         await wrapper
           .find("DownloadableDocument")
@@ -188,29 +191,15 @@ describe("LeaveDetails", () => {
 
   describe("Caring Leave", () => {
     const setup = (documents = [], props = {}) => {
-      const onChangeBelieveRelationshipAccurateMock = jest.fn();
       const claim = new MockEmployerClaimBuilder()
         .completed()
         .caringLeaveReason()
         .create();
-      const wrapper = shallow(
-        <LeaveDetails
-          claim={claim}
-          documents={documents}
-          downloadDocument={jest.fn()}
-          onChangeBelieveRelationshipAccurate={
-            onChangeBelieveRelationshipAccurateMock
-          }
-          onChangeRelationshipInaccurateReason={jest.fn()}
-          appErrors={new AppErrorInfoCollection()}
-          {...props}
-        />
-      );
+      const wrapper = render({ ...props, claim, documents });
       const { changeRadioGroup } = simulateEvents(wrapper);
       return {
         changeRadioGroup,
         wrapper,
-        onChangeBelieveRelationshipAccurateMock,
       };
     };
 
@@ -240,15 +229,11 @@ describe("LeaveDetails", () => {
     });
 
     it("renders the comment box when user indicates the relationship is inaccurate ", () => {
-      const {
-        wrapper,
-        changeRadioGroup,
-        onChangeBelieveRelationshipAccurateMock,
-      } = setup();
-      changeRadioGroup("believeRelationshipAccurate", "No");
-      expect(onChangeBelieveRelationshipAccurateMock).toHaveBeenCalledWith(
-        "No"
-      );
+      const { wrapper, changeRadioGroup } = setup();
+      changeRadioGroup("believe_relationship_accurate", "No");
+      expect(updateFields).toHaveBeenCalledWith({
+        believe_relationship_accurate: "No",
+      });
       wrapper.setProps({ believeRelationshipAccurate: "No" });
 
       const relationshipInaccurateElement = wrapper.find(
@@ -258,15 +243,11 @@ describe("LeaveDetails", () => {
     });
 
     it("renders the comment box when user indicates the relationship status is unknown ", () => {
-      const {
-        wrapper,
-        changeRadioGroup,
-        onChangeBelieveRelationshipAccurateMock,
-      } = setup();
-      changeRadioGroup("believeRelationshipAccurate", "Unknown");
-      expect(onChangeBelieveRelationshipAccurateMock).toHaveBeenCalledWith(
-        "Unknown"
-      );
+      const { wrapper, changeRadioGroup } = setup();
+      changeRadioGroup("believe_relationship_accurate", "Unknown");
+      expect(updateFields).toHaveBeenCalledWith({
+        believe_relationship_accurate: "Unknown",
+      });
       wrapper.setProps({ believeRelationshipAccurate: "Unknown" });
 
       const relationshipUnknownElement = wrapper.find(
@@ -284,7 +265,14 @@ describe("LeaveDetails", () => {
             "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
         }),
       ]);
-      const { wrapper } = setup([], { appErrors });
+      testHook(() => {
+        getFunctionalInputProps = useFunctionalInputProps({
+          appErrors,
+          formState: {},
+          updateFields,
+        });
+      });
+      const { wrapper } = setup([], { getFunctionalInputProps });
 
       expect(
         wrapper
@@ -299,7 +287,7 @@ describe("LeaveDetails", () => {
       expect(
         wrapper
           .find("ConditionalContent")
-          .find("textarea[name='relationshipInaccurateReason']")
+          .find("textarea[name='relationship_inaccurate_reason']")
           .hasClass("usa-input--error")
       ).toEqual(true);
     });

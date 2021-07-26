@@ -1,5 +1,4 @@
 import Alert from "../Alert";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../../components/ConditionalContent";
 import Document from "../../models/Document";
 import DownloadableDocument from "../DownloadableDocument";
@@ -26,7 +25,6 @@ import { useTranslation } from "../../locales/i18n";
 const LeaveDetails = (props) => {
   const { t } = useTranslation();
   const {
-    appErrors,
     believeRelationshipAccurate,
     claim: {
       fineos_absence_id: absenceId,
@@ -35,23 +33,30 @@ const LeaveDetails = (props) => {
     },
     documents,
     downloadDocument,
-    onChangeBelieveRelationshipAccurate,
-    onChangeRelationshipInaccurateReason,
+    getFunctionalInputProps,
     relationshipInaccurateReason,
+    updateFields,
   } = props;
 
   const isCaringLeave = reason === LeaveReason.care;
   const isPregnancy = reason === LeaveReason.pregnancy;
-  const errorMsg = appErrors.fieldErrorMessage(
+
+  const clearRelationshipInaccurateReason = (
+    field = "relationship_inaccurate_reason"
+  ) => {
+    updateFields({ [field]: "" });
+  };
+
+  const relationshipInaccurateReasonFields = getFunctionalInputProps(
     "relationship_inaccurate_reason"
   );
 
   const inaccurateReasonClasses = classnames("usa-form-group", {
-    "usa-form-group--error": !!errorMsg,
+    "usa-form-group--error": !!relationshipInaccurateReasonFields.errorMsg,
   });
 
   const textAreaClasses = classnames("usa-textarea margin-top-3", {
-    "usa-input--error": !!errorMsg,
+    "usa-input--error": !!relationshipInaccurateReasonFields.errorMsg,
   });
 
   const benefitsGuideLink = {
@@ -138,11 +143,8 @@ const LeaveDetails = (props) => {
       {isCaringLeave && (
         <React.Fragment>
           <InputChoiceGroup
+            {...getFunctionalInputProps("believe_relationship_accurate")}
             smallLabel
-            name="believeRelationshipAccurate"
-            onChange={(e) => {
-              onChangeBelieveRelationshipAccurate(e.target.value);
-            }}
             choices={[
               {
                 checked: believeRelationshipAccurate === "Yes",
@@ -186,11 +188,10 @@ const LeaveDetails = (props) => {
 
           <ConditionalContent
             getField={() => relationshipInaccurateReason}
-            clearField={() => onChangeRelationshipInaccurateReason("")}
-            updateFields={(event) =>
-              onChangeRelationshipInaccurateReason(event.target.value)
-            }
+            clearField={clearRelationshipInaccurateReason}
+            updateFields={updateFields}
             visible={believeRelationshipAccurate === "No"}
+            fieldNamesClearedWhenHidden={["relationship_inaccurate_reason"]}
             data-test="relationship-accurate-no"
           >
             <Alert
@@ -208,18 +209,17 @@ const LeaveDetails = (props) => {
             <div className={inaccurateReasonClasses}>
               <FormLabel
                 className="usa-label"
-                htmlFor="relationshipInaccurateReason"
+                htmlFor={relationshipInaccurateReasonFields.name}
                 small
-                errorMsg={errorMsg}
+                errorMsg={relationshipInaccurateReasonFields.errorMsg}
               >
                 {t("components.employersLeaveDetails.commentHeading")}
               </FormLabel>
               <textarea
                 className={textAreaClasses}
-                name="relationshipInaccurateReason"
-                onChange={(event) =>
-                  onChangeRelationshipInaccurateReason(event.target.value)
-                }
+                name={relationshipInaccurateReasonFields.name}
+                onChange={relationshipInaccurateReasonFields.onChange}
+                // TODO add comment about how existence of "value" breaks functionalityy
               />
             </div>
           </ConditionalContent>
@@ -241,14 +241,13 @@ const LeaveDetails = (props) => {
 };
 
 LeaveDetails.propTypes = {
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
   believeRelationshipAccurate: PropTypes.oneOf(["Yes", "Unknown", "No"]),
   claim: PropTypes.instanceOf(EmployerClaim).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   downloadDocument: PropTypes.func.isRequired,
-  onChangeBelieveRelationshipAccurate: PropTypes.func,
+  getFunctionalInputProps: PropTypes.func.isRequired,
   relationshipInaccurateReason: PropTypes.string,
-  onChangeRelationshipInaccurateReason: PropTypes.func,
+  updateFields: PropTypes.func.isRequired,
 };
 
 export default LeaveDetails;
