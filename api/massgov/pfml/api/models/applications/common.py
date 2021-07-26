@@ -33,10 +33,6 @@ class Occupation(str, LookupEnum):
     engineer = "Engineer"
     health_care = "Health Care"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_employee_models.LkOccupation
-
 
 class EligibilityEmploymentStatus(str):
     employed = "Employed"
@@ -51,20 +47,12 @@ class EmploymentStatus(str, LookupEnum):
     unemployed = "Unemployed"
     self_employed = "Self-Employed"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkEmploymentStatus
-
 
 class LeaveReason(str, LookupEnum):
     pregnancy = "Pregnancy/Maternity"
     child_bonding = "Child Bonding"
     serious_health_condition_employee = "Serious Health Condition - Employee"
     caring_leave = "Care for a Family Member"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkLeaveReason
 
     @classmethod
     def to_previous_leave_qualifying_reason(
@@ -88,10 +76,6 @@ class LeaveReasonQualifier(str, LookupEnum):
     foster_care = "Foster Care"
     serious_health_condition = "Serious Health Condition"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkLeaveReasonQualifier
-
 
 class RelationshipToCaregiver(str, LookupEnum):
     spouse = "Spouse"
@@ -106,10 +90,6 @@ class RelationshipToCaregiver(str, LookupEnum):
     other = "Other"
     employee = "Employee"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkRelationshipToCaregiver
-
 
 class RelationshipQualifier(str, LookupEnum):
     adoptive = "Adoptive"
@@ -119,20 +99,12 @@ class RelationshipQualifier(str, LookupEnum):
     legal_guardian = "Legal Guardian"
     step_parent = "Step Parent"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkRelationshipQualifier
 
-
-class EmployerNotificationMethod(str, LookupEnum):
+class NotificationMethod(str, LookupEnum):
     in_writing = "In Writing"
     in_person = "In Person"
     by_telephone = "By Telephone"
     other = "Other"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkNotificationMethod
 
 
 class ReducedScheduleLeavePeriods(PydanticBaseModel):
@@ -234,7 +206,7 @@ class BaseApplicationLeaveDetails(PydanticBaseModel):
     pregnant_or_recent_birth: Optional[bool]
     employer_notified: Optional[bool]
     employer_notification_date: Optional[date]
-    employer_notification_method: Optional[EmployerNotificationMethod]
+    employer_notification_method: Optional[NotificationMethod]
     has_future_child_date: Optional[bool]
 
 
@@ -289,28 +261,16 @@ class PaymentMethod(str, LookupEnum):
     check = "Check"
     debit = "Debit"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_employee_models.LkPaymentMethod
-
 
 class BankAccountType(str, LookupEnum):
     savings = "Savings"
     checking = "Checking"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_employee_models.LkBankAccountType
 
 
 class WorkPatternType(str, LookupEnum):
     fixed = "Fixed"
     rotating = "Rotating"
     variable = "Variable"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkWorkPatternType
 
 
 class DayOfWeek(str, LookupEnum):
@@ -321,10 +281,6 @@ class DayOfWeek(str, LookupEnum):
     thursday = "Thursday"
     friday = "Friday"
     saturday = "Saturday"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkDayOfWeek
 
 
 class BasePaymentPreference(PydanticBaseModel):
@@ -361,10 +317,6 @@ class OtherIncomeType(str, LookupEnum):
     railroad_retirement = "Railroad Retirement benefits"
     other_employer = "Earnings from another employment/self-employment"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkOtherIncomeType
-
 
 class OtherIncome(PydanticBaseModel):
     other_income_id: Optional[UUID4]
@@ -396,10 +348,6 @@ class DocumentType(str, LookupEnum):
     care_for_a_family_member_form = "Care for a family member form"
     military_exigency_form = "Military exigency form"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkDocumentType
-
 
 class ContentType(str, LookupEnum):
     pdf = "application/pdf"
@@ -407,10 +355,6 @@ class ContentType(str, LookupEnum):
     png = "image/png"
     webp = "image/tiff"
     heic = "image/heic"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkContentType
 
 
 # Gender I/O Types
@@ -421,10 +365,6 @@ class Gender(str, LookupEnum):
     not_listed = "Gender not listed"
     no_answer = "Prefer not to answer"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkGender
-
 
 # Phone I/O Types
 
@@ -433,10 +373,6 @@ class PhoneType(str, LookupEnum):
     Cell = "Cell"
     Fax = "Fax"
     Phone = "Phone"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkPhoneType
 
 
 class Phone(PydanticBaseModel):
