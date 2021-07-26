@@ -41,6 +41,7 @@ import {
   wait,
   enterReducedWorkHours,
   waitForAjaxComplete,
+  clickNext,
   getFixtureDocumentName,
   withdrawClaim,
 } from "./fineos";
@@ -48,6 +49,7 @@ import {
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
+import { format, parseISO } from "date-fns";
 
 type StatusCategory =
   | "Applicability"
@@ -79,7 +81,12 @@ export class ClaimPage {
     visitClaim(id);
     return new ClaimPage();
   }
-
+  recordActualLeave<T>(cb: (page: RecordActualTime) => T): T {
+    // Start the submission process.
+    cy.findByText("Record Actual").click({ force: true });
+    waitForAjaxComplete();
+    return cb(new RecordActualTime());
+  }
   paidLeave(cb: (page: PaidLeavePage) => unknown): this {
     cy.findByText("Absence Paid Leave Case", { selector: "a" }).click();
     cb(new PaidLeavePage());
@@ -1742,6 +1749,105 @@ class WrapUp extends CreateNotificationStep {
   }
 }
 
+type EpisodicLeavePeriodDescription = {
+  startDate: string;
+  endDate: string;
+  timeSpanHoursStart: string;
+  timeSpanHoursEnd: string;
+};
+class RecordActualTime {
+  fillTimePeriod({
+    startDate,
+    endDate,
+    timeSpanHoursStart,
+    timeSpanHoursEnd,
+  }: EpisodicLeavePeriodDescription) {
+    // Select the episodic leave period.
+    cy.findByTitle("Episodic").click();
+    // Open the modal.
+    cy.findByText("Record Actual").click();
+    cy.get(".popup-container").within(() => {
+      waitForAjaxComplete();
+      // Wait for focus to be captured on the "Last Day Worked" field. This happens automatically, and only occurs
+      // when the popup is ready for interaction. Annoyingly, it gets captured 2x on render, forcing us to wait as well.
+      cy.findByLabelText("Last day worked").should("have.focus");
+
+      const startDateFormatted = format(parseISO(startDate), "MM/dd/yyyy");
+      const endDateFormatted = format(parseISO(endDate), "MM/dd/yyyy");
+      // Start date
+      cy.findByLabelText("Absence start date")
+        .focus()
+        .type(`{selectall}{backspace}${startDateFormatted}`)
+        // After entering the date and losing focus, the form re-renders and cuptures focus again
+        .blur();
+      // Wait for the form to capture focus
+      cy.findByLabelText("Absence start date").should("have.focus");
+      // End date, same thing about focus
+      cy.findByLabelText("Absence end date")
+        .focus()
+        .type(`{selectall}{backspace}${endDateFormatted}`)
+        .blur();
+      cy.findByLabelText("Absence end date").should("have.focus");
+
+      cy.get(
+        `input[id^="timeOffAbsencePeriodDetailsWidget"][id$="timeSpanHoursStartDate"]`
+      ).type(`{selectall}{backspace}${timeSpanHoursStart}`);
+      cy.get(
+        `input[id^="timeOffAbsencePeriodDetailsWidget"][id$="timeSpanHoursEndDate"]`
+      ).type(`{selectall}{backspace}${timeSpanHoursEnd}`);
+      // Submit the actual period
+      cy.findByText("OK").click();
+    });
+    return this;
+  }
+  nextStep<T>(cb: (step: AdditionalReporting) => T): T {
+    clickNext();
+    waitForAjaxComplete();
+    return cb(new AdditionalReporting());
+  }
+}
+
+type AdditionalDetails = {
+  reported_by?: "Employee" | "Employee Manager" | "Employer Representative";
+  received_via?:
+    | "Unknown"
+    | "Phone"
+    | "E-Mail"
+    | "Paper"
+    | "Fax"
+    | "Mail/Post"
+    | "Self Service";
+  reported_date?: string;
+  accepted?: "Yes" | "No" | "Unknown";
+  additional_notes?: string;
+  reporting_party?: string;
+};
+export class AdditionalReporting {
+  reportAdditionalDetails(details: AdditionalDetails): this {
+    // Select the period
+    cy.contains("td", "Time off period").click({ force: true });
+    if (details.reported_by) {
+      cy.findByLabelText("Reported By").select(details.reported_by);
+      waitForAjaxComplete();
+    }
+    if (details.reporting_party)
+      cy.findByLabelText("Reporting Party Name").type(details.reporting_party);
+    if (details.received_via)
+      cy.findByLabelText("Received Via").select(details.received_via);
+    if (details.accepted)
+      cy.findByLabelText("Manager Accepted").select(details.accepted);
+    if (details.reporting_party)
+      cy.findByLabelText("Additional Notes").type(details.reporting_party);
+    cy.get("input[id*='applyActualTime']").click();
+    waitForAjaxComplete();
+    return this;
+  }
+  /**Returns back to the Claim page. */
+  finishRecordingActualLeave(): void {
+    clickNext();
+    waitForAjaxComplete();
+  }
+}
 class LeaveDetailsPage {
   /**
    * Function will redirect us to the claim adjudiction page

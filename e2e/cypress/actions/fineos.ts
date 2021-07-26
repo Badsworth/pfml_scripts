@@ -385,102 +385,6 @@ export function claimAdjudicationFlow(
   cy.wait(2000);
 }
 
-export function intermittentClaimAdjudicationFlow(
-  claimNumber: string,
-  reason: LeaveReason,
-  ERresponse = false
-): void {
-  visitClaim(claimNumber);
-  if (ERresponse) {
-    assertClaimHasLeaveAdminResponse(true);
-    clickBottomWidgetButton("Close");
-  }
-  assertClaimStatus("Adjudication");
-  cy.get("input[type='submit'][value='Adjudicate']").click();
-  checkStatus(claimNumber, "Eligibility", "Met");
-  markEvidence(getCertificationDocumentType(reason));
-  markEvidence("Identification Proof");
-  checkStatus(claimNumber, "Evidence", "Satisfied");
-  fillAbsencePeriod(claimNumber);
-  onTab("Manage Request");
-  cy.wait(500);
-  cy.get("input[type='submit'][value='Accept']").click();
-  cy.wait(500);
-  checkStatus(claimNumber, "Availability", "As Certified");
-  // Complete Adjudication
-  assertAdjudicatingClaim(claimNumber);
-  clickBottomWidgetButton("OK");
-  // Approve Claim
-  if (ERresponse) {
-    approveClaim();
-  }
-  wait();
-}
-
-// This is being used for Sally hours to allow us to see payment being made.
-export function submitIntermittentActualHours(
-  timeSpanHoursStart: string,
-  timeSpanHoursEnd: string
-): void {
-  cy.contains("span[class='LinkText']", "Record Actual").click({ force: true });
-  wait();
-  cy.contains("tbody", "Episodic").click();
-  cy.contains("input", "Record Actual").click();
-  cy.get(".popup-container").within(() => {
-    cy.wait("@ajaxRender");
-    // Wait for focus to be captured on the "Last Day Worked" field. This happens automatically, and only occurs
-    // when the popup is ready for interaction. Annoyingly, it gets captured 2x on render, forcing us to wait as well.
-    cy.labelled("Last Day Worked").should("have.focus").wait(250);
-
-    const mostRecentSunday = startOfWeek(new Date());
-    const startDate = subDays(mostRecentSunday, 13);
-    const startDateFormatted = format(startDate, "MM/dd/yyyy");
-    const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
-
-    cy.labelled("Absence start date")
-      .focus()
-      .type(`{selectall}{backspace}${startDateFormatted}`)
-      .blur()
-      // Wait for this element to be detached, then rerendered after being blurred.
-      .should(($el) => Cypress.dom.isDetached($el))
-      .wait(100);
-
-    cy.labelled("Absence end date")
-      .focus()
-      // @bc: During a debug session there was a odd failure
-      // this wait helps prevent typing in wrong field
-      .wait(1000)
-      .type(`{selectall}{backspace}${endDateFormatted}`)
-      .blur()
-      // Wait for this element to be detached, then rerendered after being blurred.
-      .should(($el) => Cypress.dom.isDetached($el))
-      .wait(100);
-
-    cy.get(
-      "input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursStartDate']"
-    ).type(`{selectall}{backspace}${timeSpanHoursStart}`);
-    cy.get(
-      "input[name*='timeOffAbsencePeriodDetailsWidget_un26_timeSpanHoursEndDate']"
-    ).type(`{selectall}{backspace}${timeSpanHoursEnd}`);
-    cy.get("input[type='submit'][value='OK']").click();
-  });
-  cy.get("#nextPreviousButtons").within(() => {
-    cy.get("input[value*='Next ']").click({ force: true });
-  });
-  cy.contains("td", "Time off period").click({ force: true });
-  wait();
-  cy.get("select[name*='reportedBy']").select("Employee");
-  wait();
-  cy.get("select[name*='receivedVia']").select("Phone");
-  wait();
-  cy.get("select[name*='managerAccepted']").select("Yes");
-  cy.get("input[name*='applyActualTime']").click();
-  cy.contains("td", "Time off period").click({ force: true });
-  cy.get("#nextPreviousButtons").within(() => {
-    cy.get("input[value*='Next ']").click({ force: true });
-  });
-}
-
 export function mailedDocumentMarkEvidenceRecieved(
   claimNumber: string,
   reason: LeaveReason
@@ -869,6 +773,13 @@ export function assertMatchingPaymentDates(): void {
     });
 }
 
+/**Clicks on the 'Next' or 'Previous' button to move to the next/previous step during the intake process or recording actual leave */
+export const clickNext = (
+  buttonName: "Next" | "Previous" = "Next"
+): Cypress.Chainable<JQuery<HTMLElement>> =>
+  cy
+    .get(`#nextPreviousButtons input[value*='${buttonName} ']`)
+    .click({ force: true });
 /**
  * Takes document type and returns fixture file name.
  * @param document_type document type as specified in the `claim.documents`
