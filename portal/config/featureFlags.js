@@ -20,8 +20,7 @@ const flagsConfig = {
     // When this flag is enabled, the "Other leave, income, and benefits" step of
     // the Claim flow becomes visible, and its validation rules are applied via
     // a X-FF-Require-Other-Leaves header on API requests.
-    // TODO (CP-1346): Show this step once it's been integrated w/ the API.
-    claimantShowOtherLeaveStep: false,
+    claimantShowOtherLeaveStep: true,
 
     // When this flag is enabled, the Leave Admin dashboard supports search functionality
     // TODO (EMPLOYER-1500): Remove flag
