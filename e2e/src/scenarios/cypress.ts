@@ -498,6 +498,19 @@ export const CHAP_ER: ScenarioSpecification = {
   },
 };
 
+export const WDCLAIM: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "WDCLAIM",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+  },
+};
+
 export const HIST_CASE: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {

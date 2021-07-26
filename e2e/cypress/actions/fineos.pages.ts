@@ -42,6 +42,7 @@ import {
   enterReducedWorkHours,
   waitForAjaxComplete,
   getFixtureDocumentName,
+  withdrawClaim,
 } from "./fineos";
 
 import { DocumentUploadRequest } from "../../src/api";
@@ -143,6 +144,10 @@ export class ClaimPage {
   }
   deny(reason: string): this {
     denyClaim(reason);
+    return this;
+  }
+  withdraw(): this {
+    withdrawClaim();
     return this;
   }
   reviewClaim(): this {
@@ -327,6 +332,7 @@ type FineosTaskNames =
   | "Update Paid Leave Case"
   | "Caring Certification Review"
   | "ID Review"
+  | "Medical Certification Review"
   | "Bonding Certification Review";
 class TasksPage {
   assertTaskExists(name: string): this {
@@ -351,7 +357,7 @@ class TasksPage {
   close(name: FineosTaskNames): this {
     cy.contains("td", name).click();
     waitForAjaxComplete();
-    cy.get('input[title="Close selected task"]');
+    cy.get('input[title="Close selected task"]').click();
     waitForAjaxComplete();
     return this;
   }

@@ -253,6 +253,17 @@ export function approveClaim(): void {
   assertClaimStatus("Approved");
 }
 
+export function withdrawClaim(): void {
+  cy.get('a[title="Withdraw the Pending Leave Request"').click({
+    force: true,
+  });
+  cy.get("#leaveRequestWithdrawPopupWidget_PopupWidgetWrapper").within(() => {
+    cy.findByLabelText("Withdrawal Reason").select("Employee Withdrawal");
+    cy.findByText("OK").click({ force: true });
+  });
+  assertClaimStatus("Closed");
+}
+
 export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
   if (approval) {
     cy.contains(
