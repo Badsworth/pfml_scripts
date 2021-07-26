@@ -52,10 +52,11 @@ class MSALClientConfig:
 
         cls.authority = cls.b2c_policies["authorities"]["login"]["authority"]
         cls.known_authorities = [cls.b2c_policies["authorityDomain"]]
-        # @todo: environment based url redirects
+
         cls.redirect_uri = os.environ.get("CORS_ORIGINS")
         cls.post_logout_redirect_uri = f"{cls.redirect_uri}/logout"
         cls.logout_url = f"{cls.authority}/oauth2/v2.0/logout?post_logout_redirect_uri={cls.post_logout_redirect_uri}"
+        
         cls.scopes = [f"{cls.client_id}/.default"]
         cls.policies = cls.b2c_policies
         cls.states = cls.b2c_states
