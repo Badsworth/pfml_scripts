@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
 import FormLabel from "../FormLabel";
@@ -21,10 +21,11 @@ const Feedback = ({
   isEmployeeNoticeInsufficient,
   comment,
   setComment,
+  shouldShowCommentBox,
+  updateFields,
 }) => {
   // TODO (EMPLOYER-583) add frontend validation
   const { t } = useTranslation();
-  const [shouldShowCommentBox, setShouldShowCommentBox] = useState(false);
   const errorMsg = appLogic.appErrors.fieldErrorMessage("comment");
 
   useEffect(() => {
@@ -35,9 +36,10 @@ const Feedback = ({
   }, [shouldShowCommentBox]);
 
   useEffect(() => {
-    setShouldShowCommentBox(
-      isDenyingRequest || isEmployeeNoticeInsufficient || !!comment
-    );
+    updateFields({
+      shouldShowCommentBox:
+        isDenyingRequest || isEmployeeNoticeInsufficient || !!comment,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDenyingRequest, isEmployeeNoticeInsufficient]);
 
@@ -47,6 +49,9 @@ const Feedback = ({
     if (!isDenyingRequest && isEmployeeNoticeInsufficient)
       return "employeeNotice";
   };
+
+  const shouldDisableNoOption =
+    isDenyingRequest || isEmployeeNoticeInsufficient;
 
   const commentClasses = classnames("usa-form-group", {
     "usa-form-group--error": !!errorMsg,
@@ -67,7 +72,7 @@ const Feedback = ({
           },
           {
             checked: !shouldShowCommentBox,
-            disabled: isDenyingRequest || isEmployeeNoticeInsufficient,
+            disabled: shouldDisableNoOption,
             label: t("components.employersFeedback.choiceNo"),
             value: "false",
           },
@@ -80,7 +85,7 @@ const Feedback = ({
         name="shouldShowCommentBox"
         onChange={(event) => {
           const hasSelectedYes = event.target.value === "true";
-          setShouldShowCommentBox(hasSelectedYes);
+          updateFields({ shouldShowCommentBox: hasSelectedYes });
           if (!hasSelectedYes) setComment("");
         }}
         type="radio"
@@ -127,6 +132,8 @@ Feedback.propTypes = {
   isEmployeeNoticeInsufficient: PropTypes.bool,
   comment: PropTypes.string.isRequired,
   setComment: PropTypes.func.isRequired,
+  shouldShowCommentBox: PropTypes.bool.isRequired,
+  updateFields: PropTypes.func.isRequired,
 };
 
 export default Feedback;

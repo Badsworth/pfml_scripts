@@ -93,6 +93,7 @@ export const Review = (props) => {
     addedBenefits: [],
     addedPreviousLeaves: [],
     addedConcurrentLeave: null,
+    shouldShowCommentBox: false,
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -117,10 +118,15 @@ export const Review = (props) => {
     ]);
   }, [formState.amendedBenefits, formState.addedBenefits]);
 
+  const isReportingFraud = formState.fraud === "Yes";
+  const isDenyingRequest = formState.employer_decision === "Deny";
+  const isEmployeeNoticeInsufficient = formState.employeeNotice === "No";
+
   const isCommentRequired =
-    formState.fraud === "Yes" ||
-    formState.employer_decision === "Deny" ||
-    formState.employeeNotice === "No";
+    isReportingFraud ||
+    isDenyingRequest ||
+    isEmployeeNoticeInsufficient ||
+    formState.shouldShowCommentBox;
 
   const isSubmitDisabled =
     (isCommentRequired && formState.comment === "") ||
@@ -494,11 +500,13 @@ export const Review = (props) => {
         />
         <Feedback
           appLogic={props.appLogic}
-          isReportingFraud={formState.fraud === "Yes"}
-          isDenyingRequest={formState.employer_decision === "Deny"}
-          isEmployeeNoticeInsufficient={formState.employeeNotice === "No"}
+          isReportingFraud={isReportingFraud}
+          isDenyingRequest={isDenyingRequest}
+          isEmployeeNoticeInsufficient={isEmployeeNoticeInsufficient}
           comment={formState.comment}
           setComment={(comment) => updateFields({ comment })}
+          shouldShowCommentBox={formState.shouldShowCommentBox}
+          updateFields={updateFields}
         />
         <Button
           className="margin-top-4"

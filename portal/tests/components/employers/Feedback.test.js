@@ -11,6 +11,7 @@ jest.mock("../../../src/hooks/useAppLogic");
 
 describe("Feedback", () => {
   const appLogic = useAppLogic();
+  const updateFields = jest.fn();
   let wrapper;
 
   beforeEach(() => {
@@ -22,6 +23,8 @@ describe("Feedback", () => {
         isEmployeeNoticeInsufficient={false}
         comment=""
         setComment={() => {}}
+        shouldShowCommentBox={false}
+        updateFields={updateFields}
       />
     );
   });
@@ -40,6 +43,8 @@ describe("Feedback", () => {
           isEmployeeNoticeInsufficient={false}
           comment=""
           setComment={() => {}}
+          shouldShowCommentBox
+          updateFields={updateFields}
         />
       );
     });
@@ -71,7 +76,10 @@ describe("Feedback", () => {
           isDenyingRequest={false}
           isEmployeeNoticeInsufficient
           comment=""
+          commentContext=""
           setComment={() => {}}
+          shouldShowCommentBox
+          updateFields={updateFields}
         />
       );
     });
@@ -104,6 +112,8 @@ describe("Feedback", () => {
           isDenyingRequest
           isEmployeeNoticeInsufficient={false}
           setComment={() => {}}
+          shouldShowCommentBox
+          updateFields={updateFields}
         />
       );
     });
@@ -135,11 +145,15 @@ describe("Feedback", () => {
             isDenyingRequest
             isEmployeeNoticeInsufficient={false}
             setComment={() => {}}
+            shouldShowCommentBox={false}
+            updateFields={updateFields}
           />
         );
 
         act(() => {
-          wrapper.setProps({ isDenyingRequest: false });
+          wrapper.setProps({
+            isDenyingRequest: false,
+          });
         });
         // for useEffect to take place
         wrapper.update();
@@ -163,7 +177,11 @@ describe("Feedback", () => {
             appLogic={appLogic}
             comment="some comment"
             isDenyingRequest
+            isReportingFraud={false}
+            isEmployeeNoticeInsufficient={false}
             setComment={() => {}}
+            shouldShowCommentBox
+            updateFields={updateFields}
           />
         );
 
@@ -217,7 +235,11 @@ describe("Feedback", () => {
         appLogic={appLogic}
         comment="some comment"
         isDenyingRequest
+        isReportingFraud={false}
+        isEmployeeNoticeInsufficient={false}
         setComment={() => {}}
+        shouldShowCommentBox
+        updateFields={updateFields}
       />
     );
 
@@ -232,5 +254,29 @@ describe("Feedback", () => {
         .find("textarea[name='comment']")
         .hasClass("usa-input--error")
     ).toEqual(true);
+  });
+
+  describe("when comment box should be shown", () => {
+    beforeEach(() => {
+      wrapper = mount(
+        <Feedback
+          appLogic={appLogic}
+          isReportingFraud={false}
+          isDenyingRequest={false}
+          isEmployeeNoticeInsufficient={false}
+          comment=""
+          commentContext=""
+          setComment={() => {}}
+          shouldShowCommentBox
+          updateFields={updateFields}
+        />
+      );
+    });
+
+    it("displays a message prompting user to leave a comment", () => {
+      const message = wrapper.find("Trans").text();
+
+      expect(message).toEqual("Please tell us more.");
+    });
   });
 });

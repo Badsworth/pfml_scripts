@@ -568,4 +568,13 @@ describe("Review", () => {
       );
     });
   });
+
+  it("disables submit button if comment is required", () => {
+    ({ wrapper } = renderComponent("mount"));
+    const { changeRadioGroup } = simulateEvents(wrapper);
+    changeRadioGroup("shouldShowCommentBox", "true");
+    expect(
+      wrapper.update().find('button[type="submit"]').prop("disabled")
+    ).toBe(true);
+  });
 });
