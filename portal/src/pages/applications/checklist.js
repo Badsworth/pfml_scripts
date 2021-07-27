@@ -60,7 +60,7 @@ export const Checklist = (props) => {
    */
   const allSteps = StepModel.createClaimStepsFromMachine(
     claimantConfig,
-    // TODO (CP-1346) Remove feature flag check once feature flag is no longer relevant
+    // TODO (CP-1658) Remove feature flag check once feature flag is no longer relevant
     {
       claim,
       idDocuments,
