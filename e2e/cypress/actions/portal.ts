@@ -214,11 +214,32 @@ export function downloadLegalNotice(claim_id: string): void {
 }
 
 export function login(credentials: Credentials): void {
+  const enterCredectialsAndSubmit = (credentials: Credentials) => {
+    cy.findByLabelText("Email address").type(credentials.username);
+    cy.findByLabelText("Password").typeMasked(credentials.password);
+    cy.findByText("Log in", { selector: "button" }).click({
+      waitForAnimations: true,
+    });
+  };
+
   cy.visit(`${config("PORTAL_BASEURL")}/login`);
-  cy.labelled("Email address").type(credentials.username);
-  cy.labelled("Password").typeMasked(credentials.password);
-  cy.contains("button", "Log in").click({ waitForAnimations: true });
-  cy.url().should("not.include", "login");
+  // Wait for page to navigate away from login screen
+  enterCredectialsAndSubmit(credentials);
+  cy.url()
+    .should("not.include", "login")
+    .then((url) => {
+      // Go through account verification if asked
+      if (url.includes(`verify-account`))
+        cy.task("getAuthVerification", credentials.username).then(
+          (code: string) => {
+            cy.findByLabelText("Email address").type(credentials.username);
+            cy.findByLabelText("6-digit code").type(code);
+            cy.findByText("Submit").click();
+            cy.url().should("include", "account-verified=true");
+            enterCredectialsAndSubmit(credentials);
+          }
+        );
+    });
 }
 
 export function logout(): void {
