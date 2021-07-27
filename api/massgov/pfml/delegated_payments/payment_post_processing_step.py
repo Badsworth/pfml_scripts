@@ -9,7 +9,14 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, cast
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import Claim, Payment, PaymentTransactionType, State, StateLog
+from massgov.pfml.db.models.employees import (
+    Claim,
+    LatestStateLog,
+    Payment,
+    PaymentTransactionType,
+    State,
+    StateLog,
+)
 from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
     FineosWritebackTransactionStatus,
@@ -193,10 +200,13 @@ class PaymentPostProcessingStep(Step):
         )
 
         # For the payment IDs fetched above, look for any payments
-        # that we have sent to PUB already
+        # that we have sent to PUB or have returned as paid
+        # Payments that errored after sending to PUB will be excluded
+        # as they're moved to a separate end state
         return (
             self.db_session.query(Payment)
             .join(StateLog)
+            .join(LatestStateLog)
             .filter(
                 Payment.payment_id.in_(subquery),
                 StateLog.end_state_id.in_(payments_util.Constants.PAID_STATE_IDS),
