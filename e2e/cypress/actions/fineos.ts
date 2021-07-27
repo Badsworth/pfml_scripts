@@ -27,24 +27,6 @@ function SSO(): void {
 }
 
 export function before(): void {
-  // Suppress known application errors in Fineos.
-  cy.on("uncaught:exception", (e) => {
-    if (
-      e.message.match(
-        /(#.(CaseOwnershipSummaryPanelElement|CaseParticipantsSummaryPanelElement)|panelsdrilldown|startHeartbeatMonitorForPage)/
-      )
-    ) {
-      return false;
-    }
-    if (
-      e.message.match(
-        /Cannot (set|read) property ('status'|'range') of undefined/
-      )
-    ) {
-      return false;
-    }
-    return true;
-  });
   // Block new-relic.js outright due to issues with Cypress networking code.
   // Without this block, test retries on the portal error out due to fetch() errors.
   cy.intercept("https://js-agent.newrelic.com/*", (req) => {
