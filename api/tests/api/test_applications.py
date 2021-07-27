@@ -2953,6 +2953,42 @@ def test_application_patch_invalid_values(client, user, auth_token):
     )
 
 
+@pytest.mark.parametrize("state_string", ("ZZ", "New York"))
+def test_application_patch_state_invalid(client, user, auth_token, state_string):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"mailing_address": {"state": state_string}},
+    )
+
+    tests.api.validate_error_response(
+        response,
+        400,
+        errors=[
+            {
+                "field": "mailing_address.state",
+                "message": f"'{state_string}' is not a valid state",
+                "type": "enum",
+            },
+        ],
+    )
+
+
+def test_application_patch_state_valid(client, user, auth_token):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"mailing_address": {"state": "NY"}},
+    )
+
+    assert response.json["data"]["mailing_address"]["state"] == "NY"
+    assert response.status_code == 200
+
+
 def test_application_patch_fein_not_found(client, user, auth_token):
     # Assert that API returns a validation warning when the request
     # includes an EIN that doesn't match an Employer record

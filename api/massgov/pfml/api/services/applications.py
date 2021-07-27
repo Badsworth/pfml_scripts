@@ -601,7 +601,18 @@ def add_or_update_address(
 
     if address is not None:
         if address.state:
-            state_id = GeoState.get_id(address.state)
+            try:
+                state_id = GeoState.get_id(address.state)
+            except KeyError as error:
+                message = f"'{error.args[0]}' is not a valid state"
+                # Guard clause is included here to satisfy the linter...
+                address_description = (
+                    address_type.address_description and address_type.address_description.lower()
+                )
+                error_detail = ValidationErrorDetail(
+                    "enum", message, None, f"{address_description}_address.state",
+                )
+                raise ValidationException([error_detail], message, {})
 
         address_to_update = Address(
             address_line_one=address.line_1,
