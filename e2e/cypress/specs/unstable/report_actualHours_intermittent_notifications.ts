@@ -55,9 +55,6 @@ describe("Report of intermittent leave hours notification", () => {
           );
 
           new fineosPages.ClaimPage().recordActualLeave((recordActualTime) => {
-            // cy.log(actualLeaveStart, actualLeaveEnd);
-            // cy.log(JSON.stringify(claim.claim, null, 2));
-            // cy.pause();
             if (claim.metadata?.spanHoursStart && claim.metadata?.spanHoursEnd)
               recordActualTime.fillTimePeriod({
                 startDate: actualLeaveStart,

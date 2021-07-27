@@ -148,7 +148,14 @@ export class ClaimPage {
     });
     return this;
   }
-  triggerNotice(type: string): this {
+  triggerNotice(
+    type:
+      | "Designation Notice"
+      | "SOM Generate Legal Notice"
+      | "Leave Request Declined"
+      | "Pending Application Withdrawn"
+      | "Review Approval Notice"
+  ): this {
     triggerNoticeRelease(type);
     return this;
   }
