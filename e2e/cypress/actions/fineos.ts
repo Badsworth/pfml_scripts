@@ -1,9 +1,6 @@
 import { DocumentUploadRequest, ReducedScheduleLeavePeriods } from "_api";
 import { format, addMonths, addDays, startOfWeek, subDays } from "date-fns";
-import {
-  getCertificationDocumentType,
-  getDocumentReviewTaskName,
-} from "../../src/util/documents";
+import { getCertificationDocumentType } from "../../src/util/documents";
 import { config } from "./common";
 import { LeaveReason } from "../../src/generation/Claim";
 /**
@@ -349,42 +346,6 @@ export function fillAbsencePeriod(claimNumber: string): void {
   cy.get("#PopupContainer input[value='Yes']").click();
 }
 
-export function claimAdjudicationFlow(
-  claimNumber: string,
-  reason: LeaveReason,
-  ERresponse = false
-): void {
-  const docType = getCertificationDocumentType(reason);
-
-  visitClaim(claimNumber);
-  assertClaimStatus("Adjudication");
-  onTab("Tasks");
-  assertHasTask(getDocumentReviewTaskName(docType));
-  assertHasTask("ID Review");
-  if (ERresponse) {
-    assertHasTask("Employer Approval Received");
-  }
-  onTab("Absence Hub");
-  assertPlanStatus("Applicability", "Applicable");
-  assertPlanStatus("Eligibility", "Met");
-  cy.get("input[type='submit'][value='Adjudicate']").click();
-  markEvidence(docType);
-  markEvidence("Identification Proof");
-  fillAbsencePeriod(claimNumber);
-  onTab("Manage Request");
-  assertPlanStatus("Evidence", "Satisfied");
-  assertPlanStatus("Availability", "Time Available");
-  assertPlanStatus("Restriction", "Passed");
-  assertPlanStatus("Protocols", "Passed");
-  clickBottomWidgetButton("OK");
-
-  // Approve Claim
-  if (ERresponse) {
-    approveClaim();
-  }
-  cy.wait(2000);
-}
-
 export function mailedDocumentMarkEvidenceRecieved(
   claimNumber: string,
   reason: LeaveReason
@@ -403,50 +364,6 @@ export function mailedDocumentMarkEvidenceRecieved(
   markEvidence("Identification Proof");
   checkStatus(claimNumber, "Evidence", "Satisfied");
   clickBottomWidgetButton();
-}
-
-/**
- *Assumes that the ID and certification documents have not been uploaded to the case.
- *The function will upload both ID documents and certification document into fineos.
- *The certfication review and identification proof tasks are both opened and then closed after marking the evidence.
- */
-export function reviewMailedDocumentsWithTasks(
-  claimNumber: string,
-  reason: LeaveReason,
-  taskName: string,
-  approveDocs = true
-): void {
-  visitClaim(claimNumber);
-  assertClaimStatus("Adjudication");
-  onTab("Documents");
-  uploadDocument("MA_ID", "Identification proof");
-  onTab("Documents");
-  assertHasDocument("Identification Proof");
-  const documentType = getCertificationDocumentType(reason);
-  uploadDocument("HCP", documentType);
-  onTab("Documents");
-  cy.wait(150);
-  assertHasDocument(documentType);
-  onTab("Absence Hub");
-  openDocTasks(taskName);
-  onTab("Absence Hub");
-  cy.get('input[type="submit"][value="Adjudicate"]').click();
-  const evidenceDecision = approveDocs ? "Satisfied" : "Not Satisfied";
-  const evidenceReason = !approveDocs
-    ? "Evidence has been reviewed and denied"
-    : undefined;
-  markEvidence(documentType, undefined, evidenceDecision, evidenceReason);
-  markEvidence(
-    "Identification Proof",
-    undefined,
-    evidenceDecision,
-    evidenceReason
-  );
-  checkStatus(claimNumber, "Evidence", evidenceDecision);
-  clickBottomWidgetButton();
-  for (const task of ["ID Review", taskName]) {
-    closeTask(task);
-  }
 }
 
 export function openDocTasks(taskName: string): void {
@@ -474,17 +391,6 @@ export function closeTask(task: string): void {
   cy.wait(150);
   cy.get(`td[title="${task}"]`).click();
   cy.get('input[type="submit"][value="Close"]').click();
-}
-
-export function claimExtensionAdjudicationFlow(
-  claimNumber: string,
-  reason: LeaveReason
-): void {
-  visitClaim(claimNumber);
-  cy.get("input[type='submit'][value='Adjudicate']").click();
-  markEvidence(getCertificationDocumentType(reason));
-  markEvidence("Identification Proof");
-  checkStatus(claimNumber, "Evidence", "Satisfied");
 }
 
 export function checkHoursWorkedPerWeek(
