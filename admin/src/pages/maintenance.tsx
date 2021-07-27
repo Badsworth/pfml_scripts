@@ -1,5 +1,6 @@
 import "react-datetime/css/react-datetime.css";
 //import { ApiResponse, FlagsResponse, getFlagsByNameLogs } from "../api";
+import Alert from "../components/Alert";
 import Link from "next/link";
 import { Helmet } from "react-helmet-async";
 import React from "react";
@@ -61,6 +62,9 @@ export default function Maintenance() {
     "/login",
   ];
 
+  const currentMaintenance = maintenanceHistory[0];
+  const showCurrent = currentMaintenance.enabled ?? false;
+
   // Functions to format table.
   const formatDateTime = (datetime: string) => {
     return moment(datetime).format("MM-DD-YY hh:mmA");
@@ -73,6 +77,11 @@ export default function Maintenance() {
         (m.end ? formatDateTime(m.end) : "No end provided")}
     </>
   );
+  const getPageRoutes = (m: MaintenanceHistory) => {
+    const routes = m?.options?.page_routes ?? [];
+
+    return routes.join(", ");
+  };
   const getCreatedBy = (m: MaintenanceHistory) => <>{"Admin"}</>;
   const getOptions = (m: MaintenanceHistory) => {
     const linkValues: { [key: string]: string | string[] } = {};
@@ -111,26 +120,59 @@ export default function Maintenance() {
       </Helmet>
 
       <h1>Maintenance</h1>
-      <div className="maintenance-status">
-        <div className="maintenance-status__text">
-          <h2 className="maintenance-status__title">Maintenance</h2>
-          <p className="maintenance-status__body">
-            When maintenance is scheduled for the future, a maintenance banner
-            is displayed to users in the portal on the top of the page. When
-            maintenance is currently enabled, a maintenance page is displayed to
-            users instead of the normal page content.
-          </p>
+      <Alert type="success" closeable={true}>
+        Maintenance has been turned on.
+      </Alert>
+      <div className="maintenance">
+        <div className="maintenance-info">
+          <div className="maintenance-info__text">
+            <h2 className="maintenance-info__title">Maintenance</h2>
+            <p className="maintenance-info__body">
+              When maintenance is scheduled for the future, a maintenance banner
+              is displayed to users in the portal on the top of the page. When
+              maintenance is currently enabled, a maintenance page is displayed
+              to users instead of the normal page content.
+            </p>
+          </div>
+          <Toggle status={false} />
+          <button type="button" className="btn">
+            <Link
+              href={{
+                pathname: "/maintenance/add",
+              }}
+            >
+              <a className="maintenance-info__a-config"></a>
+            </Link>
+          </button>
         </div>
-        <Toggle status={false} />
-        <button type="button" className="btn">
-          <Link
-            href={{
-              pathname: "/maintenance/add",
-            }}
-          >
-            <a className="maintenance-status__a-config"></a>
-          </Link>
-        </button>
+        {showCurrent && (
+          <div className="maintenance-status">
+            <div className="maintenance-status__row">
+              <div className="maintenance-status__label">Name</div>
+              <div className="maintenance-status__value">
+                {getName(currentMaintenance)}
+              </div>
+            </div>
+            <div className="maintenance-status__row">
+              <div className="maintenance-status__label">Created By</div>
+              <div className="maintenance-status__value">
+                {getCreatedBy(currentMaintenance)}
+              </div>
+            </div>
+            <div className="maintenance-status__row">
+              <div className="maintenance-status__label">Duration</div>
+              <div className="maintenance-status__value">
+                {getDuration(currentMaintenance)}
+              </div>
+            </div>
+            <div className="maintenance-status__row">
+              <div className="maintenance-status__label">Page Routes</div>
+              <div className="maintenance-status__value">
+                {getPageRoutes(currentMaintenance)}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <h2>History</h2>

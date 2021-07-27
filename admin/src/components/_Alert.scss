@@ -1,0 +1,96 @@
+/** @define alert */
+.alert {
+  align-items: flex-start;
+  background: $Color-GraniteGray-50;
+  border: solid 1px #989898;
+  border-radius: 6px;
+  color: $Color-RevolutionGray;
+  display: flex;
+  line-height: 1.43;
+  margin-bottom: 1.1em;
+  padding: 0 0.95em 0 1.1em;
+}
+
+.alert--warn {
+  background: $Color-DucklingYellow-50;
+  border-color: $Color-DucklingYellow-300;
+}
+
+.alert--success {
+  background: $Color-BerkshiresGreen-50;
+  border-color: $Color-BerkshiresGreen-300;
+}
+
+.alert--info {
+  background: $Color-BayBlue-50;
+  border-color: $Color-BayBlue-300;
+}
+
+.alert--error {
+  background: $Color-IndependenceCranberry-50;
+  border-color: $Color-ErrorRed;
+}
+
+.alert__icon {
+  align-items: center;
+  display: none;
+  flex: none;
+  font-size: 1.2em;
+  justify-content: center;
+  line-height: 1;
+  margin: 0.8em 0.85em 0 0;
+}
+
+.alert--warn .alert__icon,
+.alert--success .alert__icon,
+.alert--info .alert__icon,
+.alert--error .alert__icon {
+  display: flex;
+}
+
+.alert__icon::before {
+  @include IconFontProps;
+}
+
+.alert--warn .alert__icon::before {
+  color: $Color-DucklingYellow-500;
+  content: $IconAlert2;
+}
+
+.alert--success .alert__icon::before {
+  color: $Color-BerkshiresGreen-500;
+  content: $IconCircleCheck;
+}
+
+.alert--info .alert__icon::before {
+  color: $Color-BayBlue-500;
+  content: $IconInfo;
+}
+
+.alert--error .alert__icon::before {
+  color: $Color-ErrorRed;
+  content: $IconAlert1;
+}
+
+.alert__text {
+  flex: 1 1 auto;
+  letter-spacing: -0.017em;
+  padding: 0.77em 0;
+}
+
+.alert__dismiss {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  flex: none;
+  font-size: 0.85em;
+  line-height: 1;
+  margin: 0.85em 0 0 1.1em;
+  padding: 0.5em;
+}
+
+.alert__dismiss::before {
+  @include IconFontProps;
+  color: $Color-GraniteGray-300;
+  content: $IconX2;
+}
