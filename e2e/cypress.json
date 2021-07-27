@@ -12,10 +12,7 @@
     "openMode": 0,
     "runMode": 1
   },
-  "testFiles": [
-    "**/*.{feature,ts}"
-  ],
+  "testFiles": ["**/*.{feature,ts}"],
   "viewportWidth": 2000,
   "viewportHeight": 1320
 }
-

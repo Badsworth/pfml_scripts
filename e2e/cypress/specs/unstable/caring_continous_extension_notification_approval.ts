@@ -61,6 +61,7 @@ describe("Post-approval (notifications/notices)", () => {
           claimPage.benefitsExtension((benefitsExtension) =>
             benefitsExtension.extendLeave(newStartDate, newEndDate)
           );
+          cy.wait(500);
           // Including this visit helps to avoid the "Whoops there is no test to run" message by Cypress.
           cy.visit("/");
           const claimAfterExtension = fineosPages.ClaimPage.visit(
