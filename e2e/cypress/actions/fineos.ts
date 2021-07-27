@@ -181,8 +181,10 @@ export function onTab(label: string): void {
     if (tab.hasClass("TabOn")) {
       return; // We're already on the correct tab.
     }
-    cy.wrap(tab).click().should("have.class", "TabOn");
+    // Here we are splitting the action and assertion, because the tab class can be added after a re-render.
+    cy.contains(".TabStrip td", label).click();
     waitForAjaxComplete();
+    cy.contains(".TabStrip td", label).should("have.class", "TabOn");
   });
 }
 
@@ -391,28 +393,6 @@ export function closeTask(task: string): void {
   cy.wait(150);
   cy.get(`td[title="${task}"]`).click();
   cy.get('input[type="submit"][value="Close"]').click();
-}
-
-export function checkHoursWorkedPerWeek(
-  claimNumber: string,
-  hours_worked_per_week: number
-): void {
-  visitClaim(claimNumber);
-  assertClaimStatus("Adjudication");
-  cy.get('input[type="submit"][value="Adjudicate"]').click();
-  onTab("Request Information");
-  wait();
-  cy.contains(".TabStrip td", "Employment Information").click();
-  wait();
-  cy.labelled("Hours worked per week").should((input) => {
-    expect(
-      input,
-      `Hours worked per week should be: ${hours_worked_per_week} hours`
-    )
-      .attr("value")
-      .equal(String(hours_worked_per_week));
-  });
-  clickBottomWidgetButton("OK");
 }
 
 export function claimAddTimeAfterApproval(

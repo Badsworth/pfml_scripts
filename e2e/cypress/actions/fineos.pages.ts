@@ -317,6 +317,19 @@ class RequestInformationPage {
     cy.wait(200);
     this.enterNewLeaveDates(newStartDate, newEndDate);
   }
+
+  assertHoursWorkedPerWeek(hours_worked_per_week: number) {
+    onTab("Employment Information");
+    cy.findByLabelText("Hours worked per week").should((input) => {
+      expect(
+        input,
+        `Hours worked per week should be: ${hours_worked_per_week} hours`
+      )
+        .attr("value")
+        .equal(String(hours_worked_per_week));
+    });
+    onTab("Request Details");
+  }
 }
 class OutstandingRequirementsPage {
   add() {
