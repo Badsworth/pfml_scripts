@@ -241,8 +241,15 @@ def _err400_multiple_employer_feins_found(notification_request, log_attributes):
 def handle_managed_requirements_create(
     notification: NotificationRequest, claim_id: UUID, db_session: Session, log_attributes: dict
 ) -> None:
-    fineos_reqs = get_fineos_managed_requirements_from_notification(notification, log_attributes)
-    for fineos_requirement in fineos_reqs:
+    fineos_requirements = get_fineos_managed_requirements_from_notification(
+        notification, log_attributes
+    )
+
+    if len(fineos_requirements) == 0:
+        logger.info("No managed requirements returned by Fineos", extra=log_attributes)
+        return
+
+    for fineos_requirement in fineos_requirements:
         log_attr = {
             "fineos_managed_requirement.managedReqId": fineos_requirement.managedReqId,
             "fineos_managed_requirement.status": fineos_requirement.status,
@@ -279,6 +286,11 @@ def handle_managed_requirements_update(
     fineos_requirements = get_fineos_managed_requirements_from_notification(
         notification, log_attributes
     )
+
+    if len(fineos_requirements) == 0:
+        logger.info("No managed requirements returned by Fineos", extra=log_attributes)
+        return
+
     for fineos_requirement in fineos_requirements:
         log_attr = {
             "fineos_managed_requirement.managedReqId": fineos_requirement.managedReqId,
