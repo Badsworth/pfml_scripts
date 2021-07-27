@@ -2,10 +2,11 @@ import SpinnerIcon from "../../styles/icons/icon_glyphs/spinner.svg"
 
 type Props = {
   title: string;
+  error?: string;
   loading: boolean;
 };
 
-const Loading = ({ title, loading }: Props) => {
+const Loading = ({ title, error, loading }: Props) => {
   return (
     <div className="loading">
       <div className="loading__container">
@@ -13,7 +14,7 @@ const Loading = ({ title, loading }: Props) => {
         <h1 className="loading__title">{title}</h1>
         {loading && (
           <p className="loading__description">
-            This may take a few seconds, please don’t close this page.
+            {error || "This may take a few seconds, please don’t close this page."}
           </p>
         )}
       </div>

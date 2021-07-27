@@ -3,30 +3,22 @@ import { Helmet, HelmetProvider } from "react-helmet-async";
 import type { AppProps } from "next/app";
 import { useState, useEffect } from "react";
 import * as api from "../api";
-import Loading from '../components/Loading';
+import Loading from "../components/Loading";
 
 export const SSO_AUTH_URI = "SSO_AUTH_URI";
 export const SSO_ACCESS_TOKENS = "SSO_ACCESS_TOKENS";
 export const POST_LOGIN_REDIRECT = "POST_LOGIN_REDIRECT";
 const noop = () => {};
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp(appProps: AppProps) {
+  const { Component, pageProps } = appProps;
   // @todo: change user type
+  console.log(appProps, pageProps);
   const [user, setUser] = useState<api.UserResponse>();
+  const [error, setError] = useState<Partial<api.ErrorResponse>>();
 
   let authURIRes: api.AuthURIResponse;
   let localTokens: api.AdminTokenResponse;
-
-  const retryLogin = (time: number) => {
-    return (e: Error) => {
-      console.error(e);
-      localStorage.removeItem(SSO_AUTH_URI);
-      localStorage.removeItem(SSO_ACCESS_TOKENS);
-      setTimeout(() => {
-        window.location.href = window.location.origin;
-      }, time * 1000);
-    };
-  };
 
   const canLogin = () => {
     localTokens = JSON.parse(localStorage.getItem(SSO_ACCESS_TOKENS) || "{}");
@@ -38,10 +30,9 @@ function MyApp({ Component, pageProps }: AppProps) {
           },
         })
         .then(({ data }) => {
-          console.info("Logged in!", data);
           setUser(data);
         })
-        .catch(retryLogin(10));
+        .catch(setError);
 
       return true;
     }
@@ -56,23 +47,19 @@ function MyApp({ Component, pageProps }: AppProps) {
         .getAdminAuthorize()
         .then(({ data }) => {
           if (!data.auth_uri) {
-            // @todo: show error
+            setError({ data: { message: "Missing authentication uri!" } });
             return;
           }
           localStorage.setItem(SSO_AUTH_URI, JSON.stringify(data));
           location.href = data.auth_uri;
         })
-        .catch((e) => {
-          // @todo: show error
-          return;
-        });
+        .catch(setError);
     }
   };
 
   const getAccessToken = () => {
     if (location.search.includes("code") && "state" in authURIRes) {
       // when the user receives the code, we'll trade it for an access_token
-      localStorage.removeItem(SSO_AUTH_URI);
       const authCodeRes: api.AuthCodeResponse = parseURLSearch(
         location.search.substring(1),
       );
@@ -83,25 +70,23 @@ function MyApp({ Component, pageProps }: AppProps) {
         })
         .then(({ data }) => {
           if (!data.access_token) {
-            // @todo: show error
+            setError({ data: { message: "Missing access token!" } });
             return;
           }
+          localStorage.removeItem(SSO_AUTH_URI);
           localStorage.setItem(SSO_ACCESS_TOKENS, JSON.stringify(data));
           location.href =
             localStorage.getItem(POST_LOGIN_REDIRECT) || location.origin;
           localStorage.removeItem(POST_LOGIN_REDIRECT);
         })
-        .catch((e) => {
-          // @todo: show error
-          return;
-        });
+        .catch(setError);
     }
   };
 
   useEffect(() => {
-    if (user) return noop;
     // Handle the cases where user already has a token
     if (canLogin()) return noop;
+    if (user || error) return noop;
     // User could not login
     // If the user is not trying to logout
     if (Component.name !== "Logout") {
@@ -121,7 +106,6 @@ function MyApp({ Component, pageProps }: AppProps) {
     return noop;
   }, []);
 
-  console.log(Component.name);
   return (
     <HelmetProvider>
       <div className="page">
@@ -210,13 +194,17 @@ function MyApp({ Component, pageProps }: AppProps) {
               </div>
             </aside>
             <main className="page__main" tabIndex={0}>
-              <Component {...pageProps} />
+              <Component {...pageProps} user={user} />
             </main>
           </>
         )}
         {Component.name === "Logout" && <Component {...pageProps} />}
         {typeof user === "undefined" && Component.name !== "Logout" && (
-          <Loading title="Logging in..." loading={true} />
+          <Loading
+            title="Logging in..."
+            error={error?.data.message}
+            loading={!error}
+          />
         )}
       </div>
     </HelmetProvider>
