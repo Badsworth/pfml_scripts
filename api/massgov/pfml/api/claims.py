@@ -23,7 +23,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import AbsenceStatus, Claim, Employer, UserLeaveAdministrator
-from massgov.pfml.db.queries.get_claims_query import GetClaimsQuery
+from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter, GetClaimsQuery
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
@@ -537,7 +537,7 @@ def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
     """Confirm the absence statuses match a filterable status"""
 
     for absence_status in absence_statuses:
-        if absence_status == "Pending":
+        if absence_status in ActionRequiredStatusFilter.all():
             continue
 
         try:
@@ -549,7 +549,9 @@ def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
 
 
 def convert_pending_absence_status(absence_statuses: Set[str]) -> Set[str]:
-    if "Pending" in absence_statuses:
-        absence_statuses.remove("Pending")
+    if (
+        ActionRequiredStatusFilter.PENDING in absence_statuses
+        or ActionRequiredStatusFilter.PENDING_NO_ACTION in absence_statuses
+    ):
         absence_statuses.update(["Intake In Progress", "In Review", "Adjudication", None])  # type: ignore
     return absence_statuses

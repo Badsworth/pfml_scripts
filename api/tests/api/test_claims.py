@@ -30,6 +30,7 @@ from massgov.pfml.db.models.factories import (
     UserFactory,
     VerificationFactory,
 )
+from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
@@ -2471,11 +2472,16 @@ class TestGetClaimsEndpoint:
 
     # Inner class for testing Claims with Managed Requirements
     class TestClaimsWithManagedRequirements:
-        @pytest.fixture()
-        def claim(self, employer_user, test_verification, test_db_session):
-            employer = EmployerFactory.create()
-            employee = EmployeeFactory.create()
+        @pytest.fixture
+        def employer(self):
+            return EmployerFactory.create()
 
+        @pytest.fixture
+        def employee(self):
+            return EmployeeFactory.create()
+
+        @pytest.fixture(autouse=True)
+        def link(self, test_db_session, employer_user, employer, test_verification):
             link = UserLeaveAdministrator(
                 user_id=employer_user.user_id,
                 employer_id=employer.employer_id,
@@ -2485,9 +2491,26 @@ class TestGetClaimsEndpoint:
             test_db_session.add(link)
             test_db_session.commit()
 
+        @pytest.fixture()
+        def claim(self, employer, employee):
             return ClaimFactory.create(
-                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.get_id("Completed"),
+                claim_type_id=1,
             )
+
+        @pytest.fixture
+        def other_claims(self, employer, employee):
+            return [
+                ClaimFactory.create(
+                    employer=employer,
+                    employee=employee,
+                    fineos_absence_status_id=AbsenceStatus.get_id("Completed"),
+                    claim_type_id=1,
+                )
+                for _ in range(0, 2)
+            ]
 
         @pytest.fixture()
         def managed_requirements(self, claim):
@@ -2519,6 +2542,15 @@ class TestGetClaimsEndpoint:
                 for _ in range(0, 2)
             ]
 
+        @pytest.fixture
+        def transfer_managed_requirement_ownership(
+            self, test_db_session, other_claims, complete_managed_requirements
+        ):
+            # transfer ownership of claim
+            for mr in complete_managed_requirements:
+                mr.claim_id = other_claims[0].claim_id
+            test_db_session.commit()
+
         def test_claim_managed_requirements(
             self,
             client,
@@ -2544,6 +2576,78 @@ class TestGetClaimsEndpoint:
                 assert req["follow_up_date"] >= date.today().strftime("%Y-%m-%d")
                 assert req["type"] == expected_type
                 assert req["status"] == expected_status
+
+        def test_claim_filter_has_open_managed_requirement(
+            self,
+            client,
+            employer_auth_token,
+            managed_requirements,
+            transfer_managed_requirement_ownership,
+        ):
+            """
+            db has:
+            - one completed claim with at least one open managed requirements (should be returned since it has an open managed requirement)
+            - one completed claim with some managed requirements but none are open (should  NOT be returned since has no open managed requirement)
+            - one completed claim with no managed requirements (should NOT be returned since has no open managed requirement)
+            """
+            resp = client.get(
+                f"/v1/claims?claim_status={ActionRequiredStatusFilter.OPEN_REQUIREMENT}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == 1
+
+        def test_claim_filter_has_pending_no_action(
+            self,
+            client,
+            other_claims,
+            employer_auth_token,
+            test_db_session,
+            claim,
+            managed_requirements,
+            transfer_managed_requirement_ownership,
+        ):
+            """
+            db has:
+            - one completed claim with at least one open managed requirements (should NOT be returned)
+            - one completed claim with some managed requirements but none are open (should be returned)
+            - one completed claim with no managed requirements (should be returned since has no open managed requirement)
+            """
+            test_db_session.commit()
+            resp = client.get(
+                f"/v1/claims?claim_status={ActionRequiredStatusFilter.PENDING_NO_ACTION}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == len(other_claims)
+            for returned_claim in claim_data:
+                assert len(returned_claim["managed_requirements"]) == 0
+
+        def test_claim_filter_has_open_managed_requirement_has_pending_no_action(
+            self,
+            client,
+            employer_auth_token,
+            managed_requirements,
+            transfer_managed_requirement_ownership,
+        ):
+            """
+            db has:
+            - one completed claim with at least one open managed requirements (should be returned since it has an open managed requirement)
+            - one completed claim with some managed requirements but none are open (should be returned since has no open managed requirement)
+            - one completed claim with no managed requirements (should be returned since has no open managed requirement)
+            """
+            resp = client.get(
+                f"/v1/claims?claim_status={ActionRequiredStatusFilter.PENDING_NO_ACTION},{ActionRequiredStatusFilter.OPEN_REQUIREMENT}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == 3
 
     # Inner class for testing Claims Search
     class TestClaimsSearch:
