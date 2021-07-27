@@ -417,7 +417,7 @@ export const Review = (props) => {
         })}
       </ReviewRow>
 
-      {claim.isMedicalLeave && (
+      {claim.isMedicalOrPregnancyLeave && (
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.pregnancyOrRecentBirthLabel")}

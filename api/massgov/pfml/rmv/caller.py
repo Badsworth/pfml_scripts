@@ -20,7 +20,6 @@ class RmvConfig:
     base_url: str
     pkcs12_data: bytes
     pkcs12_pw: str
-    server_ca_bundle_name: Optional[str] = None
 
     @classmethod
     def from_env_and_secrets_manager(cls):
@@ -33,7 +32,6 @@ class RmvConfig:
             base_url=os.environ["RMV_CLIENT_BASE_URL"],
             pkcs12_pw=os.environ["RMV_CLIENT_CERTIFICATE_PASSWORD"],
             pkcs12_data=pkcs12_data,
-            server_ca_bundle_name=os.getenv("RMV_CLIENT_SERVER_CA_BUNDLE_NAME"),
         )
 
 
@@ -65,7 +63,6 @@ class LazyZeepApiCaller(LazyApiCaller[zeep.proxy.ServiceProxy]):
         self.base_url = config.base_url.rstrip("/")
         self.pkcs12_data = config.pkcs12_data
         self.pkcs12_pw = config.pkcs12_pw
-        self.server_ca_bundle_name = config.server_ca_bundle_name
         self.init_session()
 
     def init_session(self):
@@ -73,13 +70,6 @@ class LazyZeepApiCaller(LazyApiCaller[zeep.proxy.ServiceProxy]):
         Initialize a persistent HTTPS session for connecting to the RMV API.
         """
         self.session = Session()
-
-        if self.server_ca_bundle_name:
-            rmv_cert_path = os.path.join(
-                os.path.dirname(__file__), "server_ca_bundles", self.server_ca_bundle_name + ".pem",
-            )
-            self.session.verify = rmv_cert_path
-
         self.session.mount(
             self.base_url,
             Pkcs12Adapter(pkcs12_data=self.pkcs12_data, pkcs12_password=self.pkcs12_pw),

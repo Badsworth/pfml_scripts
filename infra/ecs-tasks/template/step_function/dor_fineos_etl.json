@@ -132,6 +132,7 @@
                     {
                       "Name": "load-employers-to-fineos",
                       "Environment": [
+                        { "Name": "EMPLOYER_UPDATE_LIMIT", "Value": "${st_employer_update_limit}" },
                         { "Name": "EMPLOYER_LOAD_MODE", "Value": "updates" },
                         { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
                       ],

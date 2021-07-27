@@ -11,6 +11,7 @@ import CatPicture from "./CatPicture";
 import CaringLeaveProviderForm from "./CaringLeaveProviderForm";
 import FileWrapper from "../FileWrapper";
 import { getCertificationDocumentType } from "../../util/documents";
+import StubFineosDoc from "./StubFineosDoc";
 
 export const generators = {
   MASSID: new MassID("Identification Proof"),
@@ -37,6 +38,16 @@ export const generators = {
   ),
   PREGNANCY_MATERNITY_FORM: new HealthCareProviderForm(
     "Pregnancy/Maternity form"
+  ),
+  /**Stub document for use only when submitting fineos specific claims */
+  MILITARY_EXIGENCY_FORM: new StubFineosDoc("Military exigency form"),
+  /**Stub document for use only when submitting fineos specific claims */
+  ACTIVE_SERVICE_PROOF: new StubFineosDoc(
+    "Family Member Active Duty Service Proof"
+  ),
+  /**Stub document for use only when submitting fineos specific claims */
+  COVERED_SERVICE_MEMBER_ID: new StubFineosDoc(
+    "Covered Service Member Identification Proof"
   ),
 };
 

@@ -47,8 +47,9 @@ export default function Home() {
       )}
       {showSlideOut && (
         <SlideOut
+          isOpen={true}
           title="Enable Caring Leave Type"
-          handleCloseCallback={slideOutCloseCallback}
+          onClose={slideOutCloseCallback}
         >
           <h2>Slideout!!</h2>
           <p>Lorem Ipsum stuff here...</p>

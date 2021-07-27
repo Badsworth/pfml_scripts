@@ -34,7 +34,7 @@ const ConfirmationDialog = ({
         </div>
         <div className="confirmation-dialog__action-buttons confirmation-dialog__action-buttons--stacked">
           <Button callback={handleContinue}>Continue</Button>
-          <Button additionalClasses="btn-cancel" callback={handleCancel}>
+          <Button additionalClasses={["btn-cancel"]} callback={handleCancel}>
             Cancel
           </Button>
         </div>

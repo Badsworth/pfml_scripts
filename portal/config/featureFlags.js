@@ -56,11 +56,6 @@ const flagsConfig = {
     // are updated to reflect the new "Certification of Your Serious Health Condition"
     // TODO (CP-2205): Remove this flag once updated medical leave form is effective
     updateMedicalCertForm: false,
-
-    // When this flag is enabled, the document upload and listing/download features will use
-    // the new plan proofs in FINEOS, expected to roll out on 6/25
-    // TODO (CP-2306): Remove or disable this feature flag to coincide with FINEOS 6/25 udpate
-    useNewPlanProofs: true,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in

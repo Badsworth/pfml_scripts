@@ -1,5 +1,6 @@
 import copy
 from datetime import date, datetime, timedelta
+from unittest import mock
 
 import factory  # this is from the factory_boy package
 import pytest
@@ -11,7 +12,7 @@ import massgov.pfml.api.claims
 import massgov.pfml.fineos.mock_client
 import massgov.pfml.util.datetime as datetime_util
 import tests.api
-from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
+from massgov.pfml.api.models.claims.responses import DocumentResponse
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
@@ -38,8 +39,15 @@ from massgov.pfml.util.strings import format_fein
 pytestmark = pytest.mark.integration
 
 
+# Run `initialize_factories_session` for all tests,
+# so that it doesn't need to be manually included
+@pytest.fixture(autouse=True)
+def setup_factories(initialize_factories_session):
+    return
+
+
 @pytest.fixture
-def test_verification(initialize_factories_session):
+def test_verification():
     return VerificationFactory.create()
 
 
@@ -69,6 +77,26 @@ def update_claim_body():
         ],
         "leave_reason": "Pregnancy/Maternity",
     }
+
+
+@pytest.fixture
+def employer():
+    return EmployerFactory.create()
+
+
+@pytest.fixture
+def claim(employer):
+    return ClaimFactory.create(employer_id=employer.employer_id)
+
+
+@pytest.fixture
+def user_leave_admin(employer_user, employer, test_verification):
+    return UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+        verification=test_verification,
+    )
 
 
 @pytest.mark.integration
@@ -214,116 +242,114 @@ class TestNotAuthorizedForAccess:
         assert response.get_json()["errors"][0]["type"] == "unauthorized_leave_admin"
 
 
+# testing class for employer_get_claim_documents
 @pytest.mark.integration
-class TestDownloadDocuments:
+class TestEmployerGetClaimDocuments:
+    @pytest.fixture(autouse=True)
+    def setup_db(self, claim, employer, user_leave_admin, test_db_session):
+        test_db_session.add(user_leave_admin)
+        test_db_session.commit()
+
     @pytest.fixture
-    def setup_employer(self, test_db_session, employer_user, test_verification):
-        employer = EmployerFactory.create()
-        claim = ClaimFactory.create(employer_id=employer.employer_id)
-        link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(link)
-        test_db_session.commit()
-        return claim
+    def request_params(self, claim, employer_auth_token):
+        class GetClaimDocumentsRequestParams(object):
+            __slots__ = ["absence_id", "auth_token"]
 
-    def test_non_employers_cannot_download_documents(self, client, auth_token, setup_employer):
-        response = client.get(
-            f"/v1/employers/claims/{setup_employer.fineos_absence_id}/documents/1111",
-            headers={"Authorization": f"Bearer {auth_token}"},
+            def __init__(self, absence_id, auth_token):
+                self.absence_id = absence_id
+                self.auth_token = auth_token
+
+        return GetClaimDocumentsRequestParams(claim.fineos_absence_id, employer_auth_token)
+
+    def get_documents(self, client, params):
+        return client.get(
+            f"/v1/employers/claims/{params.absence_id}/documents",
+            headers={"Authorization": f"Bearer {params.auth_token}"},
         )
 
+    def test_non_employers_cannot_access(self, client, request_params, auth_token):
+        request_params.auth_token = auth_token
+
+        response = self.get_documents(client, request_params)
         assert response.status_code == 403
 
-    def test_non_employers_cannot_download_documents_not_attached_to_absence(
-        self, client, employer_auth_token, setup_employer
-    ):
-        response = client.get(
-            f"/v1/employers/claims/{setup_employer.fineos_absence_id}/documents/bad_doc_id",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-        )
-
-        assert response.status_code == 403
-
-    def test_non_employers_cannot_download_documents_of_disallowed_types(
-        self, client, employer_auth_token, setup_employer
-    ):
-        response = client.get(
-            f"/v1/employers/claims/{setup_employer.fineos_absence_id}/documents/3011",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-        )
-
-        assert response.status_code == 403
-
-    def test_employers_receive_200_from_document_download(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
-    ):
-        employer = EmployerFactory.create()
-        ClaimFactory.create(
-            employer_id=employer.employer_id, fineos_absence_id="leave_admin_allowable_doc_type"
-        )
-        link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(link)
-        test_db_session.commit()
-
-        response = client.get(
-            "/v1/employers/claims/leave_admin_allowable_doc_type/documents/3011",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-        )
-
+    def test_employers_receive_200(self, client, request_params):
+        response = self.get_documents(client, request_params)
         assert response.status_code == 200
 
-    def test_non_employers_cannot_access_get_documents(self, client, auth_token, setup_employer):
-        response = client.get(
-            f"/v1/employers/claims/{setup_employer.fineos_absence_id}/documents",
-            headers={"Authorization": f"Bearer {auth_token}"},
-        )
 
-        assert response.status_code == 403
-
-    def test_employers_receive_200_from_get_documents(
-        self, client, employer_auth_token, setup_employer
-    ):
-        response = client.get(
-            f"/v1/employers/claims/{setup_employer.fineos_absence_id}/documents",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-        )
-
-        assert response.status_code == 200
-
-    def test_employers_receive_only_downloadable_documents_from_get_documents(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
-    ):
-        test_absence_id = "leave_admin_mixed_allowable_doc_types"
-        employer = EmployerFactory.create()
-        ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id=test_absence_id)
-        link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(link)
+# testing class for employer_document_download
+class TestEmployerDocumentDownload:
+    @pytest.fixture(autouse=True)
+    def setup_db(self, claim, employer, user_leave_admin, test_db_session):
+        test_db_session.add(user_leave_admin)
         test_db_session.commit()
 
-        response = client.get(
-            f"/v1/employers/claims/{test_absence_id}/documents",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-        )
-        response_body = response.get_json()
-        document_data = response_body.get("data")
+    @pytest.fixture
+    def document_id(self):
+        return "123"
 
+    @pytest.fixture
+    def document(self, document_id):
+        return DocumentResponse(
+            created_at=None,
+            document_type="state managed paid leave confirmation",
+            content_type="application/pdf",
+            fineos_document_id=document_id,
+            name="test.pdf",
+            description="Mock File",
+        )
+
+    @pytest.fixture
+    def request_params(self, claim, document_id, employer_auth_token):
+        class EmployerDocumentDownloadRequestParams(object):
+            __slots__ = ["absence_id", "document_id", "auth_token"]
+
+            def __init__(self, absence_id, document_id, auth_token):
+                self.absence_id = absence_id
+                self.document_id = document_id
+                self.auth_token = auth_token
+
+        return EmployerDocumentDownloadRequestParams(
+            claim.fineos_absence_id, document_id, employer_auth_token
+        )
+
+    def download_document(self, client, params):
+        return client.get(
+            f"/v1/employers/claims/{params.absence_id}/documents/{params.document_id}",
+            headers={"Authorization": f"Bearer {params.auth_token}"},
+        )
+
+    def test_non_employers_receive_403(self, client, request_params, auth_token):
+        request_params.auth_token = auth_token
+
+        response = self.download_document(client, request_params)
+        assert response.status_code == 403
+
+        response_json = response.get_json()
+        message = response_json["message"]
+        assert "does not have read access" in message
+
+    @mock.patch("massgov.pfml.api.claims.get_documents_as_leave_admin")
+    def test_employers_receive_200(self, mock_get_docs, document, client, request_params):
+        mock_get_docs.return_value = [document]
+
+        response = self.download_document(client, request_params)
         assert response.status_code == 200
-        for document in document_data:
-            assert document.get("document_type") in DOWNLOADABLE_DOC_TYPES
+
+    @mock.patch("massgov.pfml.api.claims.get_documents_as_leave_admin")
+    def test_cannot_download_documents_not_attached_to_absence(
+        self, mock_get_docs, document, client, request_params, caplog
+    ):
+        document.fineos_document_id = "bad_doc_id"
+        mock_get_docs.return_value = [document]
+
+        response = self.download_document(client, request_params)
+
+        tests.api.validate_error_response(
+            response, 403, message="User does not have access to this document"
+        )
+        assert "document not found" in caplog.text
 
 
 @pytest.mark.integration

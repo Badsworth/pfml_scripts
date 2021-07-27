@@ -1,5 +1,5 @@
 import { getNotificationSubject } from "../../actions/email";
-import { fineos, portal, fineosPages } from "../../actions";
+import { fineos, portal, email, fineosPages } from "../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 import { Submission } from "../../../src/types";
 import { extractLeavePeriod } from "../../../src/util/claims";
@@ -114,26 +114,28 @@ describe("Post-approval (notifications/notices)", () => {
   );
   it("As a leave admin, I should receive a notification regarding the time added to the claim", () => {
     cy.dependsOnPreviousPass([extension]);
-    cy.unstash<Submission>("submission").then(
-      ({ timestamp_from, fineos_absence_id }) => {
-        cy.unstash<DehydratedClaim>("claim").then((claim) => {
-          const subject = getNotificationSubject(
-            `${claim.claim.first_name} ${claim.claim.last_name}`,
-            "extension of benefits"
-          );
-          cy.task<Email[]>(
-            "getEmails",
+    cy.unstash<Submission>("submission").then((submission) => {
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        const subjectClaimant = getNotificationSubject(
+          `${claim.claim.first_name} ${claim.claim.last_name}`,
+          "extension of benefits"
+        );
+        email
+          .getEmails(
             {
               address: "gqzap.notifications@inbox.testmail.app",
-              subject,
-              timestamp_from: timestamp_from,
+              subject: subjectClaimant,
+              messageWildcard: submission.fineos_absence_id,
+              timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
-            { timeout: 360000 }
-          ).then((emails) => {
-            expect(emails[0].html).to.contain(fineos_absence_id);
+            // Reduced timeout, since we have multiple tests that run prior to this.
+            30000
+          )
+          .then(() => {
+            cy.contains(submission.fineos_absence_id);
           });
-        });
-      }
-    );
+      });
+    });
   });
 });

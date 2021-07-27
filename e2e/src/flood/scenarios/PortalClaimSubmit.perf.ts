@@ -168,7 +168,22 @@ async function submitEmployerResponse(
   data: Cfg.LSTSimClaim
 ): Promise<void> {
   if (!data.employerResponse) return;
-
+  // sort claims in portal
+  await (await Util.waitForElement(browser, By.linkText("Dashboard"))).click();
+  const sorts = [
+    "Oldest applications",
+    "Last name – A to Z",
+    "Last name – Z to A",
+    "Newest applications",
+  ] as const;
+  const randomIndex = Math.floor(Math.random() * sorts.length);
+  await Util.waitForElement(browser, Util.byLabelled("Sort"));
+  await (await Util.labelled(browser, "Sort")).click();
+  await browser.selectByText(
+    By.nameAttr("orderAndDirection"),
+    sorts[randomIndex]
+  );
+  // submit response directly to API
   const employerResponse = data.employerResponse;
   const review = await pRetry(
     async () => {
@@ -248,6 +263,7 @@ async function setFeatureFlags(browser: Browser): Promise<void> {
       claimantShowAuth: true,
       claimantAuthThroughApi: true,
       employerShowDashboard: true,
+      employerShowDashboardSort: true,
     }),
     url: config("PORTAL_BASEURL"),
   });

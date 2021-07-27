@@ -1,11 +1,11 @@
-import { ApplicationRequestBody, ReducedScheduleLeavePeriods } from "_api";
+import { ReducedScheduleLeavePeriods } from "_api";
 import { format, addMonths, addDays, startOfWeek, subDays } from "date-fns";
 import {
   getCertificationDocumentType,
   getDocumentReviewTaskName,
 } from "../../src/util/documents";
-import { LeaveReason, ValidClaim } from "../../src/types";
 import { config } from "./common";
+import { LeaveReason } from "../../src/generation/Claim";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
@@ -197,7 +197,20 @@ export function onTab(label: string, wait = 150): void {
  */
 export function wait(): void {
   cy.wait("@ajaxRender");
-  cy.get("#disablingLayer").should("not.be.visible");
+  // cy.get("#disablingLayer").should("not.be.visible");
+  cy.root()
+    .should(($el) => {
+      expect(Cypress.dom.isAttached($el)).to.be.true;
+    })
+    .closest(`html`)
+    .should(($el) => {
+      expect(Cypress.dom.isAttached($el)).to.be.true;
+    })
+    .find(`#disablingLayer`)
+    .should(($el) => {
+      expect(Cypress.dom.isAttached($el)).to.be.true;
+    })
+    .should("not.be.visible");
 }
 
 export function clickBottomWidgetButton(value = "OK"): void {
@@ -241,201 +254,20 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
   }
 }
 
-/**
- * This work-flow is submitting a full bonding/military claim
- * directly into Fineos.
- *
- * Note: named createNotification based on the name of the button
- * in Fineos that starts this workflow
- */
-export function createNotification(
-  startDate: Date,
-  endDate: Date,
-  claimType?: "military" | "bonding" | "caring" | "medical",
-  application?: ValidClaim
-): void {
-  const clickNext = (timeout?: number) =>
-    cy
-      .get('#navButtons input[value="Next "]', { timeout })
-      .first()
-      .click({ force: true });
-  cy.contains("span", "Create Notification").click();
-  clickNext();
-  cy.labelled("Hours worked per week").type(
-    `{selectall}{backspace}${application?.hours_worked_per_week}`
-  );
-  clickNext();
-  switch (claimType) {
-    case "medical":
-      cy.contains(
-        "div",
-        "Sickness, treatment required for a medical condition or any other medical procedure"
-      )
-        .prev()
-        .find("input")
-        .click();
-
-      clickNext();
-      cy.findByLabelText("Absence relates to").select("Employee");
-      wait();
-      cy.wait(100);
-      cy.findByLabelText("Absence reason").select(
-        "Serious Health Condition - Employee"
-      );
-      wait();
-      cy.wait(100);
-      cy.findByLabelText("Qualifier 1").select("Not Work Related");
-      wait();
-      cy.wait(100);
-      cy.findByLabelText("Qualifier 2").select("Sickness");
-      break;
-    case "military":
-      cy.contains("div", "Out of work for another reason")
-        .prev()
-        .find("input")
-        .click();
-      clickNext();
-      cy.labelled("Absence relates to").select("Family");
-      wait();
-      cy.labelled("Absence reason").select("Military Caregiver", {});
-      break;
-
-    case "bonding":
-      cy.contains(
-        "div",
-        "Bonding with a new child (adoption/ foster care/ newborn)"
-      )
-        .prev()
-        .find("input")
-        .click();
-      clickNext();
-      cy.labelled("Qualifier 1").select("Foster Care");
-      break;
-
-    case "caring":
-      cy.contains("div", "Caring for a family member")
-        .prev()
-        .find("input")
-        .click();
-      clickNext();
-      cy.labelled("Qualifier 1").select("Serious Health Condition");
-      cy.wait("@ajaxRender");
-      cy.get("#leaveRequestAbsenceRelationshipsWidget").within(() => {
-        cy.labelled("Primary Relationship to Employee").select(
-          "Sibling - Brother/Sister"
-        );
-        cy.wait("@ajaxRender");
-        cy.wait(200);
-        cy.labelled("Qualifier 1").select("Biological");
-      });
-      clickNext();
-      break;
-
-    default:
-      throw new Error("ClaimType not found");
-  }
-  clickNext(5000);
-
-  const {
-    has_continuous_leave_periods,
-    has_intermittent_leave_periods,
-    has_reduced_schedule_leave_periods,
-  } = application as ApplicationRequestBody;
-
-  if (has_continuous_leave_periods) {
-    cy.contains("div.toggle-guidance-row", "One or more fixed time off periods")
-      .find("span.slider")
-      .click();
-    clickNext();
-    cy.labelled("Absence status").select("Known");
-    wait();
-    cy.labelled("Absence start date").type(
-      `${format(startDate, "MM/dd/yyyy")}{enter}`
-    );
-    wait();
-    cy.labelled("Absence end date").type(
-      `${format(endDate, "MM/dd/yyyy")}{enter}`
-    );
-    wait();
-    cy.get('input[title="Quick Add"]').click();
-  }
-
-  if (has_intermittent_leave_periods) {
-    cy.contains("div.toggle-guidance-row", "Episodic / leave as needed")
-      .find("span.slider")
-      .click();
-    // @ToDo
-    // Implement any actions/flows for episodic
-  }
-
-  if (has_reduced_schedule_leave_periods) {
-    cy.contains("div.toggle-guidance-row", "Reduced work schedule")
-      .find("span.slider")
-      .click();
-    clickNext();
-    cy.labelled("Absence status").select("Estimated");
-    wait();
-    cy.labelled("Absence start date").type(
-      `${format(startDate, "MM/dd/yyyy")}{enter}`
-    );
-    wait();
-    cy.labelled("Absence end date").type(
-      `${format(endDate, "MM/dd/yyyy")}{enter}`
-    );
-    wait();
-    enterReducedWorkHours(
-      application?.leave_details
-        ?.reduced_schedule_leave_periods as ReducedScheduleLeavePeriods[]
-    );
-    wait();
-    cy.get(
-      '#reducedScheduleAbsencePeriodDetailsQuickAddWidget input[value="Add"]'
-    ).click();
-  }
-
-  clickNext(5000);
-  if (application?.work_pattern?.work_pattern_type !== "Rotating") {
-    cy.labelled("Work Pattern Type").select(
-      application?.work_pattern?.work_pattern_type as string
-    );
-    wait();
-  } else {
-    // @Reminder: If needed add more dynamic options such as
-    // 3 weeks Rotating (currently not needed)
-    cy.labelled("Work Pattern Type").select("2 weeks Rotating");
-    wait();
-  }
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  cy.labelled("Standard Work Week").click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  cy.get('input[value="Apply to Calendar"]').click({ force: true });
-  clickNext();
-  if (claimType === "military") {
-    cy.labelled("Military Caregiver Description").type(
-      "I am a parent military caregiver."
-    );
-  }
-  clickNext(20000);
-  cy.contains("div", "Thank you. Your notification has been submitted.");
-  clickNext(20000);
-}
-
 export function enterReducedWorkHours(
-  leave_details: ReducedScheduleLeavePeriods[]
+  leave_details: ReducedScheduleLeavePeriods
 ): void {
   const hrs = (minutes: number | null | undefined) => {
     return minutes ? Math.round(minutes / 60) : 0;
   };
   const weekdayInfo = [
-    { hours: hrs(leave_details[0].sunday_off_minutes) },
-    { hours: hrs(leave_details[0].monday_off_minutes) },
-    { hours: hrs(leave_details[0].tuesday_off_minutes) },
-    { hours: hrs(leave_details[0].wednesday_off_minutes) },
-    { hours: hrs(leave_details[0].thursday_off_minutes) },
-    { hours: hrs(leave_details[0].friday_off_minutes) },
-    { hours: hrs(leave_details[0].saturday_off_minutes) },
+    { hours: hrs(leave_details.sunday_off_minutes) },
+    { hours: hrs(leave_details.monday_off_minutes) },
+    { hours: hrs(leave_details.tuesday_off_minutes) },
+    { hours: hrs(leave_details.wednesday_off_minutes) },
+    { hours: hrs(leave_details.thursday_off_minutes) },
+    { hours: hrs(leave_details.friday_off_minutes) },
+    { hours: hrs(leave_details.saturday_off_minutes) },
   ];
 
   cy.get("input[name*='_hours']").each((input, index) => {
@@ -975,6 +807,79 @@ export function triggerNoticeRelease(docType: string): void {
     .should("be.checked");
   onTab("Documents");
   assertHasDocument(docType);
+}
+
+/**
+ * Adding a  Historical Absence case, assumes being navigated to `Absence Hub` tab on the Claim page.
+ */
+export function addHistoricalAbsenceCase(): void {
+  cy.contains("Options").click();
+  cy.contains("Add Historical Absence").click();
+  cy.findByLabelText("Absence relates to").select("Employee");
+  wait();
+  cy.findByLabelText("Absence Reason").select(
+    "Serious Health Condition - Employee"
+  );
+  wait();
+  cy.findByLabelText("Qualifier 1").select("Not Work Related");
+  wait();
+  cy.findByLabelText("Qualifier 2").select("Sickness");
+  wait();
+  cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
+    .find("input")
+    .click();
+  const mostRecentSunday = startOfWeek(new Date());
+  const startDate = subDays(mostRecentSunday, 13);
+  const startDateFormatted = format(startDate, "MM/dd/yyyy");
+  const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
+  // Fill in end date
+  cy.findByLabelText("End Date").type(
+    `{selectall}{backspace}${endDateFormatted}{enter}`
+  );
+  wait();
+  cy.wait(200);
+  // Fill start date
+  cy.findByLabelText("Start Date").type(
+    `{selectall}{backspace}${startDateFormatted}{enter}`
+  );
+  wait();
+  cy.wait(200);
+  // First all day checkbox
+  cy.get(
+    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="startDateAllDay_WRAPPER"]'
+  ).click();
+  wait();
+  cy.wait(200);
+  // Second all day checkbox
+  cy.get(
+    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="endDateAllDay_WRAPPER"]'
+  ).click();
+  wait();
+  cy.wait(200);
+
+  // Click on Okay to exit popup window
+  cy.get(
+    'input[id^="addHistoricalTimeOffAbsencePeriodPopupWidget"][id$="okButtonBean"]'
+  ).click({ force: true });
+  // Select Leave Plan
+  cy.contains("div", "historicalAbsenceSelectedLeavePlansListViewWidget")
+    .find("input")
+    .click();
+  wait();
+  cy.get(
+    "input[name='historicalCasePlanSelectionListviewWidget_un0_Checkbox_RowId_0_CHECKBOX']"
+  ).click();
+  clickBottomWidgetButton();
+  clickBottomWidgetButton();
+  // Click on Claimaints name to view their cases
+  cy.get(
+    'a[id="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]'
+  ).click();
+  onTab("Cases");
+  cy.get(".ListRowSelected > td").should(($td) => {
+    expect($td.eq(4)).to.contain("Absence Historical Case");
+  });
+  cy.get('input[title="Open"]').click();
 }
 
 /**

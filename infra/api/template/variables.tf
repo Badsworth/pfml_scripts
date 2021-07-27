@@ -174,12 +174,6 @@ variable "rmv_client_certificate_binary_arn" {
   default     = ""
 }
 
-variable "rmv_client_server_ca_bundle_name" {
-  description = "Specifies which special server certificate CA bundle to use for interacting with the RMV API (if one is needed)."
-  type        = string
-  default     = ""
-}
-
 variable "rmv_check_behavior" {
   description = "Specifies if the RMV response is mocked"
   type        = string

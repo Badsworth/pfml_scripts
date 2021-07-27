@@ -126,13 +126,14 @@ describe("Denial Notification and Notice", () => {
               },
               180000
             )
-            .then(async (emails) => {
-              const data = email.getNotificationData(emails[0].html);
+            .then(() => {
               const dob =
                 claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-              expect(data.name).to.equal(employeeFullName);
-              expect(data.dob).to.equal(dob);
-              expect(data.applicationId).to.equal(submission.fineos_absence_id);
+              cy.log(dob);
+              cy.contains(dob);
+              cy.contains(employeeFullName);
+              cy.contains(dob);
+              cy.contains(submission.fineos_absence_id);
             });
         });
       });
@@ -165,15 +166,15 @@ describe("Denial Notification and Notice", () => {
               // Reduced timeout, since we have multiple tests that run prior to this.
               60000
             )
-            .then(async (emails) => {
-              const data = email.getNotificationData(emails[0].html);
+            .then(() => {
               const dob =
                 claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-              expect(data.name).to.equal(employeeFullName);
-              expect(data.dob).to.equal(dob);
-              expect(data.applicationId).to.equal(submission.fineos_absence_id);
-              expect(emails[0].html).to.contain(
-                `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
+              cy.log("DOB", dob);
+              cy.contains(dob);
+              cy.contains(employeeFullName);
+              cy.contains(submission.fineos_absence_id);
+              cy.get(
+                `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
               );
             });
         });
@@ -206,7 +207,10 @@ describe("Denial Notification and Notice", () => {
               // Reduced timeout, since we have multiple tests that run prior to this.
               30000
             )
-            .should("not.be.empty");
+            .then(() => {
+              cy.wait(100);
+              cy.contains(submission.fineos_absence_id);
+            });
         });
       });
     }

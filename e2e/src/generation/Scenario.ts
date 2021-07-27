@@ -1,5 +1,5 @@
 import { EmployeePickSpec } from "./Employee";
-import { APIClaimSpec, BaseClaimSpecification } from "./Claim";
+import { APIClaimSpec, BaseClaimSpecification, FineosClaimSpec } from "./Claim";
 import { DocumentGenerationSpec } from "./documents";
 
 /**
@@ -60,4 +60,20 @@ export interface PregnancyClaim extends APIClaimSpec {
 export interface CaringLeaveClaim extends APIClaimSpec {
   reason: "Care for a Family Member";
   docs?: Pick<DocumentGenerationSpec, "MASSID" | "CARING">;
+}
+
+/**Fineos exlusive claim types */
+export interface MilitaryExigencyClaim extends FineosClaimSpec {
+  reason: "Military Exigency Family";
+  docs?: Pick<
+    DocumentGenerationSpec,
+    "MILITARY_EXIGENCY_FORM" | "ACTIVE_SERVICE_PROOF" | "MASSID"
+  >;
+}
+export interface MilitaryCaregiverClaim extends FineosClaimSpec {
+  reason: "Military Caregiver";
+  docs?: Pick<
+    DocumentGenerationSpec,
+    "COVERED_SERVICE_MEMBER_ID" | "MASSID" | "CARING"
+  >;
 }

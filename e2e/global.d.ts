@@ -20,6 +20,10 @@ type Employer = import("./src/generation/Employer").Employer;
 type EmployerPickSpec = import("./src/generation/Employer").EmployerPickSpec;
 type pdf = import("pdf-parse").Result;
 type Scenarios = import("./src/types").Scenarios;
+type ScenarioSpecs = import("./src/types").ScenarioSpecs;
+type APIClaimSpec = import("./src/generation/Claim").APIClaimSpec;
+type GeneratedClaim = import("./src/generation/Claim").GeneratedClaim;
+type FineosExclusiveLeaveReasons = import("./src/generation/Claim").FineosExclusiveLeaveReasons;
 
 declare namespace Cypress {
   interface Cypress {
@@ -38,10 +42,14 @@ declare namespace Cypress {
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
     dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;
-    task(
+    task<T extends Scenarios>(
       event: "generateClaim",
-      scenario: Scenarios
-    ): Chainable<DehydratedClaim>;
+      scenario: T
+    ): Chainable<
+      ScenarioSpecs[T]["claim"] extends APIClaimSpec
+        ? DehydratedClaim
+        : GeneratedClaim
+    >;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(event: "completeSSOLoginFineos"): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
@@ -59,6 +67,7 @@ declare namespace Cypress {
       event: "submitClaimToAPI",
       arg: DehydratedClaim
     ): Chainable<ApplicationResponse>;
+    task(event: "submitClaimToAPI", arg: GeneratedClaim): Chainable<never>;
     task(
       event: "submitClaimToAPI",
       arg: DehydratedClaim & {

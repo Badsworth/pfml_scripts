@@ -91,7 +91,7 @@ export const LeavePeriodContinuous = (props) => {
       title={t("pages.claimsLeavePeriodContinuous.title")}
       onSave={handleSave}
     >
-      {(claim.isMedicalLeave || claim.isCaringLeave) && (
+      {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsLeavePeriodContinuous.needDocumentAlert"
@@ -133,10 +133,10 @@ export const LeavePeriodContinuous = (props) => {
           },
         ]}
         hint={
-          claim.isMedicalLeave || claim.isCaringLeave
+          claim.isMedicalOrPregnancyLeave || claim.isCaringLeave
             ? t("pages.claimsLeavePeriodContinuous.hasLeaveHint", {
                 context:
-                  claim.isMedicalLeave &&
+                  claim.isMedicalOrPregnancyLeave &&
                   isFeatureEnabled("updateMedicalCertForm")
                     ? "updateMedicalCertForm"
                     : contentContext,
@@ -163,7 +163,7 @@ export const LeavePeriodContinuous = (props) => {
             i18nKey="pages.claimsLeavePeriodContinuous.datesLead"
             tOptions={{
               context:
-                claim.isMedicalLeave &&
+                claim.isMedicalOrPregnancyLeave &&
                 isFeatureEnabled("updateMedicalCertForm")
                   ? "updateMedicalCertForm"
                   : contentContext,

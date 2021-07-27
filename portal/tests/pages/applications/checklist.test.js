@@ -292,15 +292,7 @@ describe("Checklist", () => {
       expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
     });
 
-    it("renders certification doc step as completed when the document type matches the leave reason when useNewPlanProofs feature flag is turned on", () => {
-      // When the feature flag is enabled, the component should mark this step as completed when there are documents with a DocType that match the leave reason
-      // In this test case, the feature flag is enabled, and the claim has documents with DocTypes that match the leave reason,
-      // so the component should render this step as completed
-      // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
-      process.env.featureFlags = {
-        useNewPlanProofs: true,
-      };
-
+    it("renders certification doc step as completed when the document type matches the leave reason", () => {
       const claim = new MockBenefitsApplicationBuilder()
         .medicalLeaveReason()
         .complete()
@@ -318,16 +310,7 @@ describe("Checklist", () => {
       expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
     });
 
-    it("renders certification doc step as incomplete when the document type does not match the leave reason when useNewPlanProofs flag is turned on", () => {
-      // When the feature flag is enabled, the component should mark this step as completed when there are documents with a DocType that match the leave reason
-      // In this test case, the feature flag is enabled, and the claim has documents with DocTypes that don't match the leave reason,
-      // so the component should render this step as incomplete
-      // TODO (CP-2306): Remove or disable useNewPlanProofs feature flag to coincide with FINEOS 6/25 udpate
-
-      process.env.featureFlags = {
-        useNewPlanProofs: true,
-      };
-
+    it("renders certification doc step as incomplete when the document type does not match the leave reason", () => {
       const claim = new MockBenefitsApplicationBuilder()
         .medicalLeaveReason()
         .complete()

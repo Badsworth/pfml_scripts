@@ -1,7 +1,10 @@
-import { Address, OtherIncome } from "../../src/_api";
+import {
+  Address,
+  OtherIncome,
+  ReducedScheduleLeavePeriods,
+} from "../../src/_api";
 import {
   AllNotNull,
-  LeaveReason,
   NonEmptyArray,
   PersonalIdentificationDetails,
   ValidClaim,
@@ -17,6 +20,7 @@ import {
   assertIsTypedArray,
   isValidEmployerBenefit,
   isValidOtherIncome,
+  assertValidClaim,
 } from "../../src/util/typeUtils";
 import {
   dateToMMddyyyy,
@@ -39,6 +43,7 @@ import {
 
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
+import { LeaveReason } from "../../src/generation/Claim";
 
 type StatusCategory =
   | "Applicability"
@@ -294,6 +299,18 @@ class OutstandingRequirementsPage {
       "#AddManagedRequirementPopupWidget_PopupWidgetWrapper input[type='submit'][value='Ok']"
     ).click();
     cy.get("#footerButtonsBar input[value='OK']").click();
+  }
+  complete(receipt = "Received", reason = "Complete Employer Confirmation") {
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.get("input[value='Complete']").click();
+    cy.get("#CompletionReasonWidget_PopupWidgetWrapper").within(() => {
+      cy.findByLabelText("Completion Reason").select(receipt);
+      cy.findByLabelText("Completion Notes").type(
+        `{selectall}{backspace}${reason}`
+      );
+      cy.findByText("Ok").click({ force: true });
+    });
   }
 }
 class TasksPage {
@@ -1175,184 +1192,463 @@ export class ClaimantPage {
 
   /**
    * Goes throught the claim intake process for a given claim.
+   * Currently some of the options during the intake process are hard coded, since there are too many options to reasonably account for at this stage.
+   * If you need more fine-grained control, use `ClaimantPage.startCreateNotification()`
    * @param claim Generated claim
-   * @param reason leave reason, can also inlcude reasons not supported by the claim generator, like "Military Caregiver", etc.
+   * @returns Fineos Absence Case number wrapped into `Cypress.Chainable` type.
+   * @example
+   * ClaimantPage.visit(claimantSSN)
+   *  .createNotification(claim)
+   *  .then(fineos_absence_id=>{
+   *    //Further actions here...
+   *  })
    */
-  createNotification(
-    claim: ValidClaim,
-    reason: LeaveReason | "Military Exigency Family" | "Military Caregiver"
-  ): void {
+  createNotification(claim: ValidClaim): Cypress.Chainable<string> {
+    if (!claim.leave_details.reason) throw new Error(`Missing leave reason.`);
+    const reason = claim.leave_details.reason as NonNullable<LeaveReason>;
+    // Start the process
+    return this.startCreateNotification((occupationDetails) => {
+      // "Occupation Details" step.
+      if (claim.hours_worked_per_week)
+        occupationDetails.enterHoursWorkedPerWeek(claim.hours_worked_per_week);
+      return occupationDetails.nextStep((notificationOptions) => {
+        // Choose Request Type
+        const reasonToRequestTypeMap: Record<
+          NonNullable<LeaveReason>,
+          TypeOfRequestOptions
+        > = {
+          "Care for a Family Member": "Caring for a family member",
+          "Child Bonding":
+            "Bonding with a new child (adoption/ foster care/ newborn)",
+          "Military Caregiver": "Out of work for another reason",
+          "Military Exigency Family": "Out of work for another reason",
+          "Pregnancy/Maternity":
+            "Pregnancy, birth or related medical treatment",
+          "Serious Health Condition - Employee":
+            "Sickness, treatment required for a medical condition or any other medical procedure",
+        };
+        return notificationOptions
+          .chooseTypeOfRequest(reasonToRequestTypeMap[reason])
+          .nextStep((reasonOfAbsence) => {
+            // Fill reason of absence depending on claim contents.
+            switch (reason) {
+              case "Care for a Family Member":
+                reasonOfAbsence.fillAbsenceReason({
+                  qualifier_1: "Serious Health Condition",
+                });
+                reasonOfAbsence.fillAbsenceRelationship({
+                  relationship_to_employee: "Sibling - Brother/Sister",
+                  qualifier_1: "Biological",
+                });
+                break;
+              case "Child Bonding":
+                if (claim.leave_details.reason_qualifier)
+                  reasonOfAbsence.fillAbsenceReason({
+                    qualifier_1: claim.leave_details.reason_qualifier,
+                  });
+                break;
+              case "Serious Health Condition - Employee":
+                reasonOfAbsence.fillAbsenceReason({
+                  relates_to: "Employee",
+                  reason: "Serious Health Condition - Employee",
+                  qualifier_1: "Not Work Related",
+                  qualifier_2: "Sickness",
+                });
+                break;
+              case "Pregnancy/Maternity":
+                reasonOfAbsence.fillAbsenceReason({
+                  relates_to: "Employee",
+                  reason: "Pregnancy/Maternity",
+                  qualifier_1: "Prenatal Care",
+                });
+                break;
+              case "Military Caregiver":
+                reasonOfAbsence.fillAbsenceReason({
+                  relates_to: "Family",
+                  reason: "Military Caregiver",
+                });
+                break;
+              case "Military Exigency Family":
+                reasonOfAbsence.fillAbsenceReason({
+                  relates_to: "Family",
+                  reason: "Military Exigency Family",
+                  qualifier_1: "Other Additional Activities",
+                });
+                break;
+              default:
+                throw new Error(`Invalid leave reason.`);
+            }
+            return reasonOfAbsence.nextStep((datesOfAbsence) => {
+              assertValidClaim(claim);
+              // Add all available leave periods.
+              const [startDate, endDate] = getLeavePeriod(claim.leave_details);
+              if (claim.has_continuous_leave_periods)
+                // @TODO adjust leave period/status as needed
+                datesOfAbsence
+                  .toggleLeaveScheduleSlider("continuos")
+                  .addFixedTimeOffPeriod({
+                    status: "Known",
+                    start: startDate,
+                    end: endDate,
+                  });
+              if (claim.has_intermittent_leave_periods)
+                datesOfAbsence
+                  // @TODO add method to add intermittent leave period
+                  .toggleLeaveScheduleSlider("intermittent");
+              if (
+                claim.has_reduced_schedule_leave_periods &&
+                claim.leave_details.reduced_schedule_leave_periods
+              )
+                datesOfAbsence
+                  .toggleLeaveScheduleSlider("reduced")
+                  .addReducedSchedulePeriod(
+                    "Known",
+                    claim.leave_details.reduced_schedule_leave_periods[0]
+                  );
+              return datesOfAbsence.nextStep((absenceDetails) => {
+                if (!claim?.work_pattern?.work_pattern_type)
+                  throw new Error(`Missing work pattern`);
+                absenceDetails
+                  .selectWorkPatternType(
+                    claim.work_pattern.work_pattern_type === "Rotating"
+                      ? "2 weeks Rotating"
+                      : claim.work_pattern.work_pattern_type
+                  )
+                  .applyStandardWorkWeek();
+                return absenceDetails.nextStep((wrapUp) => {
+                  // Fill military Caregiver description if needed.
+                  if (reason === "Military Caregiver")
+                    absenceDetails.addMilitaryCaregiverDescription();
+                  // Skip additional details step if needed
+                  if (
+                    reason === "Care for a Family Member" ||
+                    reason === "Military Exigency Family" ||
+                    reason === "Serious Health Condition - Employee" ||
+                    reason === "Military Caregiver" ||
+                    reason === "Child Bonding"
+                  )
+                    wrapUp.clickNext(20000);
+                  return wrapUp.finishNotificationCreation();
+                });
+              });
+            });
+          });
+      });
+    });
+  }
+  /**
+   * Starts the Fineos intake process and executes the given callback once navigated to first meaningful step of the intake.
+   * @param cb
+   * @returns the return value of `cb`
+   */
+  startCreateNotification<T>(cb: (step: OccupationDetails) => T): T {
     // Start the process
     cy.contains("span", "Create Notification").click();
     // "Notification details" step, we are not changing anything here, so we just skip it.
     this.clickNext();
-    // "Occupation Details" step.
-    cy.findByLabelText("Hours worked per week").type(
-      `{selectall}{backspace}${claim.hours_worked_per_week}`
-    );
-    this.clickNext();
-    // "Notification Options" step.
-    // Need special selector for these radio buttons since they are not connected to their labels.
-    const selectTypeOfRequest = (label: string) =>
-      cy.contains("div", label).prev().find("input").click();
-
-    // On following pages select options tend to be re-rendered often, so we need to check if they have children before acting
-    const assertSelectIsLoaded = (el: JQuery<HTMLElement>) => {
-      expect(el.children().length > 1 || el.children().first().text() !== "").to
-        .be.true;
-    };
-    const chooseSelectOption = (label: string, option: string) => {
-      cy.findByLabelText(label).should(assertSelectIsLoaded).select(option);
-      wait();
-    };
-
-    switch (reason) {
-      case "Care for a Family Member":
-        selectTypeOfRequest("Caring for a family member");
-        this.clickNext();
-        chooseSelectOption("Qualifier 1", "Serious Health Condition");
-
-        cy.get("#leaveRequestAbsenceRelationshipsWidget").within(() => {
-          chooseSelectOption(
-            "Primary Relationship to Employee",
-            "Sibling - Brother/Sister"
-          );
-          chooseSelectOption("Qualifier 1", "Biological");
-        });
-        break;
-      case "Child Bonding":
-        selectTypeOfRequest(
-          "Bonding with a new child (adoption/ foster care/ newborn)"
-        );
-        this.clickNext();
-        if (isNotNull(claim.leave_details.reason_qualifier))
-          chooseSelectOption(
-            "Qualifier 1",
-            claim.leave_details.reason_qualifier
-          );
-        break;
-      case "Serious Health Condition - Employee":
-        selectTypeOfRequest(
-          "Sickness, treatment required for a medical condition or any other medical procedure"
-        );
-        this.clickNext();
-        chooseSelectOption("Absence relates to", "Employee");
-        chooseSelectOption(
-          "Absence reason",
-          "Serious Health Condition - Employee"
-        );
-        chooseSelectOption("Qualifier 1", "Not Work Related");
-        chooseSelectOption("Qualifier 2", "Sickness");
-
-        break;
-      case "Pregnancy/Maternity":
-        selectTypeOfRequest("Pregnancy, birth or related medical treatment");
-        this.clickNext();
-        chooseSelectOption("Absence relates to", "Employee");
-        chooseSelectOption("Absence reason", "Pregnancy/Maternity");
-        chooseSelectOption("Qualifier 1", "Prenatal Care");
-      case "Military Caregiver":
-        selectTypeOfRequest("Out of work for another reason");
-        this.clickNext();
-        chooseSelectOption("Absence relates to", "Family");
-        chooseSelectOption("Absence reason", "Military Caregiver");
-        break;
-      case "Military Exigency Family":
-        selectTypeOfRequest("Out of work for another reason");
-        this.clickNext();
-        chooseSelectOption("Absence relates to", "Family");
-        chooseSelectOption("Absence reason", "Military Exigency Family");
-        chooseSelectOption("Qualifier 1", "Other Additional Activities");
-    }
-    this.clickNext(5000);
-
-    const {
-      has_continuous_leave_periods,
-      has_intermittent_leave_periods,
-      has_reduced_schedule_leave_periods,
-    } = claim;
-    const toggleLeaveScheduleSlider = (
-      type: "continuos" | "intermittent" | "reduced"
-    ) => {
-      const scheduleSliderMap: Record<typeof type, string> = {
-        continuos: "One or more fixed time off periods",
-        intermittent: "Episodic / leave as needed",
-        reduced: "Reduced work schedule",
-      };
-      cy.contains("div.toggle-guidance-row", scheduleSliderMap[type])
-        .find("span.slider")
-        .click();
-    };
-
-    const [startDate, endDate] = getLeavePeriod(claim.leave_details);
-
-    if (has_continuous_leave_periods) {
-      toggleLeaveScheduleSlider("continuos");
-      this.clickNext();
-      chooseSelectOption("Absence status", "Known");
-      cy.findByLabelText("Absence start date").type(
-        `${dateToMMddyyyy(startDate)}{enter}`
-      );
-      wait();
-      cy.findByLabelText("Absence end date").type(
-        `${dateToMMddyyyy(endDate)}{enter}`
-      );
-      wait();
-      cy.findByTitle("Quick Add").click();
-    }
-
-    if (has_intermittent_leave_periods) {
-      toggleLeaveScheduleSlider("intermittent");
-      // @ToDo
-      // Implement any actions/flows for episodic
-    }
-
-    if (has_reduced_schedule_leave_periods) {
-      toggleLeaveScheduleSlider("reduced");
-      this.clickNext();
-      chooseSelectOption("Absence status", "Known");
-      wait();
-      cy.labelled("Absence start date").type(
-        `${dateToMMddyyyy(startDate)}{enter}`
-      );
-      wait();
-      cy.labelled("Absence end date").type(`${dateToMMddyyyy(endDate)}{enter}`);
-      wait();
-      if (isNotNull(claim.leave_details.reduced_schedule_leave_periods))
-        enterReducedWorkHours(
-          claim.leave_details.reduced_schedule_leave_periods
-        );
-      wait();
-      cy.get(
-        '#reducedScheduleAbsencePeriodDetailsQuickAddWidget input[value="Add"]'
-      ).click();
-    }
-
-    this.clickNext(5000);
-
-    // @Reminder: If needed add more dynamic options such as
-    // 3 weeks Rotating (currently not needed)
-    if (claim?.work_pattern?.work_pattern_type)
-      chooseSelectOption(
-        "Work Pattern Type",
-        claim.work_pattern.work_pattern_type === "Rotating"
-          ? "2 weeks Rotating"
-          : claim.work_pattern.work_pattern_type
-      );
+    return cb(new OccupationDetails());
+  }
+}
+/**Contains utilities used within multiple pages throughout the intake process */
+abstract class CreateNotificationStep {
+  /**
+   * Submits the current part of the claim intake.
+   * @param timeout
+   */
+  clickNext(timeout?: number) {
+    cy.get('#navButtons input[value="Next "]', { timeout })
+      .first()
+      .click({ force: true });
+  }
+  /**
+   * Safely selects an option for a <select> tag with a given label
+   * @param label
+   * @param option
+   */
+  protected chooseSelectOption(label: string, option: string) {
+    cy.findByLabelText(label)
+      .should((el: JQuery<HTMLElement>) => {
+        // Make sure the select has children and is loaded
+        expect(el.children().length > 1 || el.children().first().text() !== "")
+          .to.be.true;
+      })
+      .select(option);
+    // Wait for ajax
     wait();
-    // cy.wait(200);
+  }
+}
+
+class OccupationDetails extends CreateNotificationStep {
+  enterHoursWorkedPerWeek(hoursWorkedPerWeek: number) {
+    cy.findByLabelText("Hours worked per week").type(
+      `{selectall}{backspace}${hoursWorkedPerWeek}`
+    );
+  }
+  /**
+   * Submits Occupation Details step and navigates to Notification Options step
+   * @param cb
+   * @returns the return value of `cb`
+   */
+  nextStep<T>(cb: (step: NotificationOptions) => T): T {
+    this.clickNext();
+    return cb(new NotificationOptions());
+  }
+}
+
+type TypeOfRequestOptions =
+  | "Accident or treatment required for an injury"
+  | "Sickness, treatment required for a medical condition or any other medical procedure"
+  | "Pregnancy, birth or related medical treatment"
+  | "Bonding with a new child (adoption/ foster care/ newborn)"
+  | "Caring for a family member"
+  | "Out of work for another reason";
+class NotificationOptions extends CreateNotificationStep {
+  chooseTypeOfRequest(type: TypeOfRequestOptions): this {
+    cy.contains("div", type).prev().find("input").click();
+    return this;
+  }
+  /**
+   * Submits Notification Options step and navigates Reason Of Absence to step
+   * @param cb
+   * @returns the return value of `cb`
+   */
+  nextStep<T>(cb: (step: ReasonOfAbsence) => T): T {
+    this.clickNext();
+    return cb(new ReasonOfAbsence());
+  }
+}
+/**
+ * Maps to select inputs available to describe Absense Reason
+ */
+export type AbsenceReasonDescription = {
+  relates_to?: string;
+  reason?: string;
+  qualifier_1?: string;
+  qualifier_2?: string;
+};
+/**
+ * Maps to select inputs available to describe Primary Relationship
+ */
+type PrimaryRelationshipDescription = {
+  relationship_to_employee?: string;
+  qualifier_1?: string;
+  qualifier_2?: string;
+};
+class ReasonOfAbsence extends CreateNotificationStep {
+  /**
+   * Fills out the absence reason select fields with given data
+   * @param desc
+   */
+  fillAbsenceReason(desc: AbsenceReasonDescription): this {
+    if (desc.relates_to)
+      this.chooseSelectOption("Absence relates to", desc.relates_to);
+    if (desc.reason) this.chooseSelectOption("Absence reason", desc.reason);
+    if (desc.qualifier_1)
+      this.chooseSelectOption("Qualifier 1", desc.qualifier_1);
+    if (desc.qualifier_2)
+      this.chooseSelectOption("Qualifier 2", desc.qualifier_2);
+    return this;
+  }
+  /**
+   * Fills out the Absence Relationships select fields with given data
+   * @param relationship
+   */
+  fillAbsenceRelationship(relationship: PrimaryRelationshipDescription): this {
+    cy.get("#leaveRequestAbsenceRelationshipsWidget").within(() => {
+      if (relationship.relationship_to_employee)
+        this.chooseSelectOption(
+          "Primary Relationship to Employee",
+          relationship.relationship_to_employee
+        );
+      if (relationship.qualifier_1)
+        this.chooseSelectOption("Qualifier 1", relationship.qualifier_1);
+      if (relationship.qualifier_2)
+        this.chooseSelectOption("Qualifier 2", relationship.qualifier_2);
+    });
+    return this;
+  }
+  /**
+   * Submits Reason Of Absence step and navigates Dates Of Absence to step
+   * @param cb
+   * @returns the return value of `cb`
+   */
+  nextStep<T>(cb: (step: DatesOfAbsence) => T): T {
+    this.clickNext(5000);
+    return cb(new DatesOfAbsence());
+  }
+}
+
+type AbsenceStatus = "Known" | "Estimated" | "Please select";
+
+type ContinuousLeavePeriod = {
+  status: AbsenceStatus;
+  /**MM/DD/YYYY */
+  start: string;
+  /**MM/DD/YYYY */
+  end: string;
+  /**MM/DD/YYYY */
+  last_day_worked?: string;
+  /**MM/DD/YYYY */
+  return_to_work_date?: string;
+};
+class DatesOfAbsence extends CreateNotificationStep {
+  /**
+   * Toggles the control needed to render the Leave Period inputs according to `type`.
+   * The control needs to be toggled before attempting to enter the leave period dates, but doesn't need to be toggled more than once.
+   * @param type
+   */
+  toggleLeaveScheduleSlider(
+    type: "continuos" | "intermittent" | "reduced"
+  ): this {
+    const scheduleSliderMap: Record<typeof type, string> = {
+      continuos: "One or more fixed time off periods",
+      intermittent: "Episodic / leave as needed",
+      reduced: "Reduced work schedule",
+    };
+    cy.contains("div.toggle-guidance-row", scheduleSliderMap[type])
+      .find("span.slider")
+      .click();
+    return this;
+  }
+  addFixedTimeOffPeriod(period: ContinuousLeavePeriod): this {
+    // wait() doesn't work within this widget, but we still need to use it. So we have to get out of .within() scope after every action.
+    const withinWidget = (cb: () => unknown) =>
+      cy.get(`#timeOffAbsencePeriodDetailsQuickAddWidget`).within(cb);
+
+    // Enter absence status
+    withinWidget(() => {
+      cy.findByLabelText("Absence status").select(period.status);
+    });
+    wait();
+
+    // Enter leave start and end dates
+    withinWidget(() => {
+      cy.findByLabelText("Absence start date").type(
+        `${dateToMMddyyyy(period.start)}{enter}`
+      );
+    });
+    wait();
+
+    withinWidget(() => {
+      cy.findByLabelText("Absence end date").type(
+        `${dateToMMddyyyy(period.end)}{enter}`
+      );
+    });
+    wait();
+
+    // Enter work related dates if specified
+    withinWidget(() => {
+      if (period.last_day_worked)
+        cy.findByLabelText("Last day worked ").type(
+          `${dateToMMddyyyy(period.last_day_worked)}{enter}`
+        );
+    });
+
+    wait();
+    withinWidget(() => {
+      if (period.return_to_work_date)
+        cy.findByLabelText("Return to work date").type(
+          `${dateToMMddyyyy(period.return_to_work_date)}{enter}`
+        );
+    });
+    wait();
+
+    // Add the period
+    cy.findByTitle(`Quick Add`).click();
+    return this;
+  }
+  addReducedSchedulePeriod(
+    absenceStatus: AbsenceStatus,
+    reducedLeavePeriod: ReducedScheduleLeavePeriods
+  ): this {
+    // Same as addFixedTimeOffPeriod, wait() doesn't worked when scoped to this widget
+    const withinWidget = (cb: () => unknown) =>
+      cy.get(`#reducedScheduleAbsencePeriodDetailsQuickAddWidget`).within(cb);
+    // Enter absence status
+    withinWidget(() => {
+      this.chooseSelectOption("Absence status", absenceStatus);
+    });
+    wait();
+    // Enter reduced schedule period start/end dates
+    withinWidget(() => {
+      if (reducedLeavePeriod.start_date)
+        cy.labelled("Absence start date").type(
+          `${dateToMMddyyyy(reducedLeavePeriod.start_date)}{enter}`
+        );
+    });
+    wait();
+    withinWidget(() => {
+      if (reducedLeavePeriod.end_date)
+        cy.labelled("Absence end date").type(
+          `${dateToMMddyyyy(reducedLeavePeriod.end_date)}{enter}`
+        );
+    });
+    wait();
+    // Enter hours for each weekday
+    withinWidget(() => enterReducedWorkHours(reducedLeavePeriod));
+    wait();
+    // Submit period
+    withinWidget(() => cy.findByTitle(`Quick Add`).click());
+    return this;
+  }
+  nextStep<T>(cb: (step: WorkAbsenceDetails) => T): T {
+    this.clickNext(5000);
+    return cb(new WorkAbsenceDetails());
+  }
+}
+
+class WorkAbsenceDetails extends CreateNotificationStep {
+  selectWorkPatternType(
+    type:
+      | "Unknown"
+      | "Fixed"
+      | "2 weeks Rotating"
+      | "3 weeks Rotating"
+      | "4 weeks Rotating"
+      | "Variable"
+  ): this {
+    this.chooseSelectOption("Work Pattern Type", type);
+    wait();
+    return this;
+  }
+  applyStandardWorkWeek(): this {
     cy.findByLabelText("Standard Work Week").click();
     wait();
-    // cy.wait(200);
     cy.get('input[value="Apply to Calendar"]').click({ force: true });
-    this.clickNext();
-    if (reason === "Military Caregiver") {
-      cy.findByLabelText("Military Caregiver Description").type(
-        "I am a parent military caregiver."
-      );
-    }
+    return this;
+  }
+  addMilitaryCaregiverDescription(): this {
+    cy.findByLabelText("Military Caregiver Description").type(
+      "I am a parent military caregiver."
+    );
+    return this;
+  }
+  nextStep<T>(cb: (step: WrapUp) => T): T {
     this.clickNext(20000);
-    cy.contains("div", "Thank you. Your notification has been submitted.");
-    this.clickNext(20000);
+    return cb(new WrapUp());
+  }
+}
+
+class WrapUp extends CreateNotificationStep {
+  /**Looks for the Leave Case number in the Wrap Up step and returns it wrapped by Cypress. */
+  private getLeaveCaseNumber() {
+    const caseNumberMatcher = /NTN-[0-9]{1,6}-[A-Z]{3}-[0-9]{2}/g;
+    return cy
+      .findByText(/Absence Case - NTN-[0-9]{1,6}-[A-Z]{3}-[0-9]{2}/g)
+      .then((el) => {
+        const match = el.text().match(caseNumberMatcher);
+        if (!match)
+          throw new Error(
+            `Couldn't find the Case Number on intake Wrap Up page.`
+          );
+        return cy.wrap(match[0]);
+      });
+  }
+  /**Captures the Leave Case id number and exits the notification creation process */
+  finishNotificationCreation(): Cypress.Chainable<string> {
+    return this.getLeaveCaseNumber().then((absenceId) => {
+      this.clickNext(20000);
+      return cy.wrap(absenceId);
+    });
   }
 }

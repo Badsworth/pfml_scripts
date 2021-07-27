@@ -140,7 +140,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       const claim = ClaimGenerator.generate(
         await getEmployeePool(),
         scenario.employee,
-        scenario.claim
+        scenario.claim as APIClaimSpec
       );
       // Dehydrate (save) documents to the temp directory, where they can be picked up later on.
       // The file for a document is normally a callback function, which cannot be serialized and

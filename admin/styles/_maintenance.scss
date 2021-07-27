@@ -1,0 +1,55 @@
+/** @define maintenance-status */
+.maintenance-status {
+  background: #fff;
+  border-radius: $Border-Radius;
+  box-shadow: $Box-Shadow;
+  display: flex;
+  margin-bottom: 2.28em;
+  padding: 1.43em 1.71em;
+}
+
+.maintenance-status__title {
+  color: $Color-RevolutionGray;
+  font-size: 1.14em;
+  font-weight: 400;
+  line-height: 1.71;
+  margin-bottom: 0.57em;
+}
+
+.maintenance-status__text {
+  color: $Color-GraniteGray-700;
+  flex: 1 1 auto;
+}
+
+.maintenance-status__a-config {
+  text-decoration: none;
+}
+
+.maintenance-status__a-config::before {
+  content: '\e905';
+  font-family: 'SiteAdminPortal' !important;
+}
+
+/** @define maintenance-configure */
+.maintenance-configure {
+  background: #fff;
+  border-radius: $Border-Radius;
+  box-shadow: $Box-Shadow;
+  padding: 1.43em 1.71em;
+}
+
+.maintenance-configure__fieldset {
+  .maintenance-configure__input {
+    appearance: auto;
+    width: auto;
+  }
+}
+
+.maintenance-configure__datetimes-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+
+.maintenance-configure__datetime-wrapper {
+  width: 49%;
+}

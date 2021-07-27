@@ -27,7 +27,7 @@ const Table = ({ rows, cols, hideHeaders, noResults }: Props) => {
           </tr>
         </thead>
       )}
-      <tbody>
+      <tbody className="table__body">
         {rows.map((row, di) => (
           <tr key={di}>
             {cols.map((col, hi) => (

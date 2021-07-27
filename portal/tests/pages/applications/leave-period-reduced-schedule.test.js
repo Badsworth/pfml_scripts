@@ -4,6 +4,7 @@ import {
   simulateEvents,
 } from "../../test-utils";
 import LeavePeriodReducedSchedule from "../../../src/pages/applications/leave-period-reduced-schedule";
+import { shallow } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -16,8 +17,12 @@ describe("LeavePeriodReducedSchedule", () => {
     const { wrapper } = renderWithAppLogic(LeavePeriodReducedSchedule, {
       claimAttrs: claim,
     });
+    const Label = wrapper.find("InputChoiceGroup").prop("label");
+    const labelWrapper = shallow(Label);
 
     expect(wrapper).toMatchSnapshot();
+    expect(labelWrapper).toMatchSnapshot();
+
     wrapper
       .find("Trans")
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());

@@ -26,6 +26,16 @@ const mockClaims = {
     .variableWorkPattern()
     .medicalLeaveReason()
     .create(),
+  "Medical leave for pregnancy or birth (Fixed)":
+    new MockBenefitsApplicationBuilder()
+      .fixedWorkPattern()
+      .pregnancyLeaveReason()
+      .create(),
+  "Medical leave for pregnancy or birth (Variable)":
+    new MockBenefitsApplicationBuilder()
+      .variableWorkPattern()
+      .pregnancyLeaveReason()
+      .create(),
 };
 
 const { config, DefaultStory } = generateClaimPageStory(

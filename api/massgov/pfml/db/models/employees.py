@@ -2132,6 +2132,13 @@ class PaymentTransactionType(LookupTable):
     CANCELLATION = LkPaymentTransactionType(4, "Cancellation")
     UNKNOWN = LkPaymentTransactionType(5, "Unknown")
     EMPLOYER_REIMBURSEMENT = LkPaymentTransactionType(6, "Employer Reimbursement")
+    OVERPAYMENT_ACTUAL_RECOVERY = LkPaymentTransactionType(7, "Overpayment Actual Recovery")
+    OVERPAYMENT_RECOVERY = LkPaymentTransactionType(8, "Overpayment Recovery")
+    OVERPAYMENT_ADJUSTMENT = LkPaymentTransactionType(9, "Overpayment Adjustment")
+    OVERPAYMENT_RECOVERY_REVERSE = LkPaymentTransactionType(10, "Overpayment Recovery Reverse")
+    OVERPAYMENT_RECOVERY_CANCELLATION = LkPaymentTransactionType(
+        11, "Overpayment Recovery Cancellation"
+    )
 
 
 class PaymentCheckStatus(LookupTable):

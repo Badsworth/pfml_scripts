@@ -1,4 +1,5 @@
 import concurrent.futures
+from functools import partial
 
 import pytest
 
@@ -129,6 +130,43 @@ def test_load_updates_simple(module_persistent_db_session, create_triggers):
     module_persistent_db_session.refresh(employer)
 
     assert employer.fineos_employer_id is not None
+
+
+def test_load_updates_limit(module_persistent_db_session, create_triggers):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+    test_limit_size = 6
+    employer_num = 10
+
+    employers = EmployerOnlyDORDataFactory.create_batch(size=employer_num)
+
+    employer_log_entries_before = module_persistent_db_session.query(EmployerLog).all()
+
+    assert len(employer_log_entries_before) == employer_num
+
+    result = fineos_employers.load_updates(
+        module_persistent_db_session, fineos_client, employer_update_limit=test_limit_size
+    )
+
+    assert result.total_employers_count == test_limit_size
+    assert result.loaded_employers_count == test_limit_size
+    assert result.errored_employers_count == 0
+
+    [module_persistent_db_session.refresh(employer) for employer in employers]
+
+    employer_ids = [employer.fineos_employer_id for employer in employers]
+
+    assert sum([bool(fineos_id) for fineos_id in employer_ids]) == test_limit_size
+    assert (
+        sum([not bool(fineos_id) for fineos_id in employer_ids]) == employer_num - test_limit_size
+    )
+
+    employer_log_entries_after = module_persistent_db_session.query(EmployerLog).all()
+
+    assert len(employer_log_entries_after) == employer_num - test_limit_size
+
+    # delete lingering employerlogs
+    module_persistent_db_session.query(EmployerLog).delete()
+    module_persistent_db_session.commit()
 
 
 def test_load_updates_simple_no_updates_to_api_employer_model(
@@ -422,9 +460,13 @@ def make_test_db():
     return massgov.pfml.db.init()
 
 
-def call_load_updates_worker(process_id, batch_size=5):
+def call_load_updates_worker(process_id, batch_size=5, employer_update_limit=None):
     return fineos_employers.load_updates(
-        make_test_db(), massgov.pfml.fineos.MockFINEOSClient(), process_id, batch_size=batch_size
+        make_test_db(),
+        massgov.pfml.fineos.MockFINEOSClient(),
+        process_id,
+        batch_size=batch_size,
+        employer_update_limit=employer_update_limit,
     )
 
 
@@ -536,3 +578,52 @@ def test_load_updates_multiple_processes(module_persistent_db_session, create_tr
     for employer in employers:
         module_persistent_db_session.refresh(employer)
         assert employer.fineos_employer_id is not None
+
+
+def test_load_updates_multiple_processes_limits(module_persistent_db_session, create_triggers):
+    batch_size = 10
+    employee_limit = 3
+    process_number = 2
+    num_expected_success = employee_limit * process_number
+    employers = EmployerOnlyDORDataFactory.create_batch(size=batch_size)
+
+    employer_log_entries_before = module_persistent_db_session.query(EmployerLog).all()
+    assert len(employer_log_entries_before) == batch_size
+
+    module_persistent_db_session.commit()
+
+    limited_call_load_updates_worker = partial(
+        call_load_updates_worker, employer_update_limit=employee_limit
+    )
+
+    (
+        reports,
+        total_employers_count,
+        loaded_employers_count,
+        errored_employers_count,
+    ) = spawn_multiple_load_updates(
+        [limited_call_load_updates_worker for _ in range(process_number)]
+    )
+
+    for r in reports:
+        assert r.total_employers_count > 0
+
+    assert loaded_employers_count == num_expected_success
+    assert errored_employers_count == 0
+
+    employer_log_entries_after = module_persistent_db_session.query(EmployerLog).all()
+    assert len(employer_log_entries_after) == batch_size - num_expected_success
+
+    [module_persistent_db_session.refresh(employer) for employer in employers]
+
+    employer_ids = [employer.fineos_employer_id for employer in employers]
+
+    assert sum([bool(fineos_id) for fineos_id in employer_ids]) == num_expected_success
+    assert (
+        sum([not bool(fineos_id) for fineos_id in employer_ids])
+        == batch_size - num_expected_success
+    )
+
+    # delete lingering employerlogs
+    module_persistent_db_session.query(EmployerLog).delete()
+    module_persistent_db_session.commit()
