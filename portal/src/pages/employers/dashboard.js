@@ -61,6 +61,8 @@ export const Dashboard = (props) => {
     props.appLogic.portalFlow.updateQuery(paramsObj);
   };
 
+  const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
+
   return (
     <React.Fragment>
       <EmployerNavigationTabs activePath={props.appLogic.portalFlow.pathname} />
@@ -90,23 +92,43 @@ export const Dashboard = (props) => {
 
       <section className="margin-bottom-4">
         <p className="margin-y-2">
-          {t("pages.employersDashboard.instructions")}
+          {!showReviewByStatus && t("pages.employersDashboard.instructions")}
         </p>
         <Details label={t("pages.employersDashboard.statusDescriptionsLabel")}>
-          <ul className="usa-list">
-            <li>
-              <Trans i18nKey="pages.employersDashboard.statusDescription_none" />
-            </li>
-            <li>
-              <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
-            </li>
-            <li>
-              <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
-            </li>
-            <li>
-              <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
-            </li>
-          </ul>
+          {showReviewByStatus ? (
+            <ul className="usa-list">
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_reviewBy" />
+              </li>
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_noAction" />
+              </li>
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
+              </li>
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
+              </li>
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
+              </li>
+            </ul>
+          ) : (
+            <ul className="usa-list">
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_none" />
+              </li>
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
+              </li>
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
+              </li>
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
+              </li>
+            </ul>
+          )}
         </Details>
       </section>
 

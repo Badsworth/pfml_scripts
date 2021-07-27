@@ -2148,8 +2148,12 @@ const pages = {
       "<strong>Closed:</strong> The leave has passed or no action can be taken.",
     statusDescription_denied:
       "<strong>Denied:</strong> DFML has denied this leave request.",
+    statusDescription_noAction:
+      "<strong>No action required:</strong> This leave request is awaiting a decision from DFML.",
     statusDescription_none:
       "<strong>“--” or no status:</strong> This leave request may require action from you; otherwise, it is awaiting a decision from DFML.",
+    statusDescription_reviewBy:
+      "<strong>Review by:</strong> Review this application by this date to provide DFML with your input.",
     statusDescriptionsLabel: "Status descriptions",
     tableColHeading_created_at: "Application start date",
     tableColHeading_employee_name: "Employee name",

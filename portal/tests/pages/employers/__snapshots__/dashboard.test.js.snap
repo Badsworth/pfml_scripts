@@ -342,6 +342,61 @@ exports[`Employer dashboard renders search section when feature flags are enable
 </div>
 `;
 
+exports[`Employer dashboard renders status descriptions with review by when feature flags are enabled 1`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Review by:
+  </strong>,
+  " Review this application by this date to provide DFML with your input.",
+]
+`;
+
+exports[`Employer dashboard renders status descriptions with review by when feature flags are enabled 2`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    No action required:
+  </strong>,
+  " This leave request is awaiting a decision from DFML.",
+]
+`;
+
+exports[`Employer dashboard renders status descriptions with review by when feature flags are enabled 3`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Denied:
+  </strong>,
+  " DFML has denied this leave request.",
+]
+`;
+
+exports[`Employer dashboard renders status descriptions with review by when feature flags are enabled 4`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Approved:
+  </strong>,
+  " DFML has approved this leave request.",
+]
+`;
+
+exports[`Employer dashboard renders status descriptions with review by when feature flags are enabled 5`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Closed:
+  </strong>,
+  " The leave has passed or no action can be taken.",
+]
+`;
+
 exports[`Employer dashboard renders the page with expected content and pagination components 1`] = `
 <Title>
   Dashboard

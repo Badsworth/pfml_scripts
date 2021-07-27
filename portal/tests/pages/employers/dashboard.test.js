@@ -756,4 +756,15 @@ describe("Employer dashboard", () => {
       page_offset: "1",
     });
   });
+
+  it("renders status descriptions with review by when feature flags are enabled", () => {
+    process.env.featureFlags = {
+      employerShowReviewByStatus: true,
+    };
+
+    const { wrapper } = setup();
+    wrapper
+      .find("Trans")
+      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
+  });
 });
