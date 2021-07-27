@@ -128,8 +128,7 @@ export default function Maintenance() {
               pathname: "/maintenance/add",
             }}
           >
-            <a className="maintenance-status__a-config">
-            </a>
+            <a className="maintenance-status__a-config"></a>
           </Link>
         </button>
       </div>
