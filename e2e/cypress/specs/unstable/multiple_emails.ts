@@ -25,21 +25,20 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
             cy.wait(5000);
             cy.clearCookies();
             portal.before();
-        cy.task("generateCredentials").then((new_credentials) => {
-            portal.registerAsClaimant(new_credentials);
-            portal.login(new_credentials);
-            portal.assertLoggedIn();
-            cy.get('button[type="submit"]').contains("Agree and continue").click();
-            const application: ApplicationRequestBody = claim.claim;
-            const paymentPreference = claim.paymentPreference;
+
+
+            const new_credentials: Credentials = {
+              username: config("PORTAL_USERNAME"),
+              password: config("PORTAL_PASSWORD"),
+            };
+            const new_application: ApplicationRequestBody = claim.claim;
 
             portal.login(new_credentials);
-            portal.startApplicationForFirstTime();
-            cy.contains("button", "I understand and agree").click();
+            portal.goToDashboardFromApplicationsPage();
+            portal.startClaim();
     
             // Submit Claim
-            portal.submitClaimPartOne(application);
-        });
+            portal.submitClaimPartOne(new_application);
         });
     });
   });
