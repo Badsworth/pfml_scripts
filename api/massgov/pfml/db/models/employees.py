@@ -759,7 +759,7 @@ class User(Base, TimestampMixin):
     sub_id = Column(Text, index=True, unique=True)
     email_address = Column(Text)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
-
+    not_fraud = Column(Boolean, default=False, nullable=True)
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
         "UserLeaveAdministrator", back_populates="user", uselist=True

@@ -21,7 +21,8 @@ class UserCreateRequest(PydanticBaseModel):
 
 
 class UserUpdateRequest(PydanticBaseModel):
-    consented_to_data_sharing: bool
+    consented_to_data_sharing: Optional[bool]
+    not_fraud: Optional[bool]
 
 
 class UserConvertEmployerRequest(PydanticBaseModel):

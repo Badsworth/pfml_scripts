@@ -31,5 +31,6 @@ class UserResponse(PydanticBaseModel):
     auth_id: str = Field(alias="sub_id")
     email_address: str
     consented_to_data_sharing: bool
+    not_fraud: bool
     roles: List[RoleResponse]
     user_leave_administrators: List[UserLeaveAdminResponse]

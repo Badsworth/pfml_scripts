@@ -1146,7 +1146,7 @@ def get_work_pattern_issues(application: Application) -> List[Issue]:
 
 
 def validate_application_state(
-    existing_application: Application, db_session: db.Session
+    existing_application: Application, db_session: db.Session, not_fraud: bool
 ) -> List[Issue]:
     """
         Utility method for validating an application's state in the entire system is valid
@@ -1169,7 +1169,7 @@ def validate_application_state(
     # This may be a case of fraud if any application was returned.
     # Add an issue, the portal will display information indicating
     # the user should reach out to the contact center for additional assistance.
-    if application:
+    if application and not not_fraud:
         issues.append(
             Issue(message="Request by current user not allowed", rule=IssueRule.disallow_attempts,)
         )

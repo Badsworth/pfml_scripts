@@ -1459,6 +1459,10 @@ components:
         consented_to_data_sharing:
           type: boolean
           example: false
+        not_fraud:
+          type: boolean
+          example: false
+          nullable: true
         roles:
           type: array
           items:
@@ -1533,7 +1537,10 @@ components:
         consented_to_data_sharing:
           type: boolean
           example: true
-      required: ["consented_to_data_sharing"]
+        not_fraud:
+          type: boolean
+          example: false
+          nullable: true
 
     EmployeeUpdateRequest:
       type: object

@@ -340,6 +340,7 @@ export interface UserResponse {
   auth_id?: string;
   email_address?: string;
   consented_to_data_sharing?: boolean;
+  not_fraud?: boolean;
   roles?: RoleResponse[];
   user_leave_administrators?: UserLeaveAdminResponse[];
 }
@@ -347,7 +348,8 @@ export interface EmployerAddFeinRequestBody {
   employer_fein?: string;
 }
 export interface UserUpdateRequest {
-  consented_to_data_sharing: boolean;
+  consented_to_data_sharing?: boolean;
+  not_fraud?: boolean;
 }
 export interface EmployeeResponse {
   employee_id: string;

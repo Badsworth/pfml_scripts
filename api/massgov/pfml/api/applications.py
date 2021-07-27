@@ -274,7 +274,7 @@ def applications_submit(application_id):
             # Meta issues are problems with the application beyond just the model itself
             # Includes checks for a potentially fraudulent application.
             meta_issues = application_rules.validate_application_state(
-                existing_application, db_session
+                existing_application, db_session, current_user.not_fraud
             )
             if meta_issues:
                 logger.info(

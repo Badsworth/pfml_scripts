@@ -7,6 +7,7 @@ class User extends BaseModel {
       auth_id: null,
       consented_to_data_sharing: null,
       email_address: null,
+      not_fraud: null,
       roles: [], // array of UserRole
       status: null,
       user_id: null,
