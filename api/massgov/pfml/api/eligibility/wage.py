@@ -34,7 +34,6 @@ def query_employee_wages(
             employees.WagesAndContributions.filing_period.between(
                 earliest_quarter.start_date(), effective_quarter.as_date()
             ),
-            employees.WagesAndContributions.employee_qtr_wages != 0,
         )
         .order_by(
             employees.WagesAndContributions.employer_id,
@@ -134,8 +133,7 @@ class WageCalculator:
 
         wages = []
         for reported_quarter, wage in quarter_wages.items():
-            # Ignore Zero-Dollar wages
-            if reported_quarter in base_period_quarters and wage > 0:
+            if reported_quarter in base_period_quarters:
                 wages.append(wage)
 
         if len(wages) <= 2:
