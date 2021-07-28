@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import AnyUrl, BaseModel, Extra, Field
 
+from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
+
 
 class _Links(BaseModel):
     pass
@@ -2871,6 +2873,9 @@ class GroupClientDocument(BaseModel):
         None,
         description="The read status of the document by other group client from same Organisation.",
     )
+
+    def is_downloadable_by_leave_admin(self) -> bool:
+        return self.name.lower() in DOWNLOADABLE_DOC_TYPES
 
 
 class CaseContactSummary(BaseModel):

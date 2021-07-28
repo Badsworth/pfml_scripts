@@ -1,14 +1,18 @@
+import copy
 import logging  # noqa: B1
 from datetime import date
+from unittest import mock
 
 import pytest
 
 import massgov.pfml.fineos.mock_client
+from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
+from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.api.services.administrator_fineos_actions import (
-    DOWNLOADABLE_DOC_TYPES,
     EFORM_TYPES,
+    download_document_as_leave_admin,
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
     get_leave_details,
@@ -18,7 +22,9 @@ from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.fineos import FINEOSClient, create_client
+from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.fineos.models import CreateOrUpdateLeaveAdmin, group_client_api
+from massgov.pfml.fineos.models.group_client_api import GroupClientDocument
 
 
 @pytest.fixture
@@ -1936,11 +1942,89 @@ class TestGetDocumentsAsLeaveAdmin:
         return "leave_admin_mixed_allowable_doc_types"
 
     def test_get_documents(self, absence_id):
-        documents = get_documents_as_leave_admin("fake-id", absence_id)
+        documents = get_documents_as_leave_admin("fake_id", absence_id)
         assert len(documents) > 0
 
     def test_filters_non_downloadable_documents(self, absence_id):
-        documents = get_documents_as_leave_admin("fake-id", absence_id)
+        documents = get_documents_as_leave_admin("fake_id", absence_id)
 
         for document in documents:
             assert document.document_type.lower() in DOWNLOADABLE_DOC_TYPES
+
+
+# testing class for download_document_as_leave_admin
+class TestDownloadDocumentAsLeaveAdmin:
+    @pytest.fixture
+    def documents(self, downloadable_doc, non_downloadable_doc):
+        return [downloadable_doc, non_downloadable_doc]
+
+    @pytest.fixture
+    def document(self):
+        return GroupClientDocument(
+            caseId="absence_id",
+            rootCaseId="NTN-111",
+            documentId=3000,
+            name="state managed paid leave confirmation",
+            type="Document",
+            fileExtension=".pdf",
+            fileName="26e82dd7-dbfc-4e7b-9804-ea955627253d.png",
+            originalFilename="test.pdf",
+            receivedDate=date(2020, 9, 1),
+            effectiveFrom=date(2020, 9, 2),
+            effectiveTo=date(2020, 9, 3),
+            description="Mock File",
+            title="",
+            isRead=False,
+            createdBy="Roberto Carlos",
+            dateCreated=None,
+            extensionAttributes=[],
+            status=None,
+            privacyTag=None,
+            readForMyOrganisation=None,
+        )
+
+    @pytest.fixture
+    def downloadable_doc(self, document):
+        doc = copy.deepcopy(document)
+        doc.documentId = 3001
+
+        return doc
+
+    @pytest.fixture
+    def non_downloadable_doc(self, document):
+        doc = copy.deepcopy(document)
+        doc.documentId = 3002
+        doc.name = "Identification Proof"
+
+        return doc
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.group_client_get_documents")
+    def test_download_document(self, mock_get_docs, documents, downloadable_doc):
+        mock_get_docs.return_value = documents
+
+        doc_id = str(downloadable_doc.documentId)
+        document_data = download_document_as_leave_admin("fake_id", "foo", doc_id)
+
+        assert document_data is not None
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.group_client_get_documents")
+    def test_document_not_found(self, mock_get_docs, documents):
+        mock_get_docs.return_value = documents
+
+        with pytest.raises(ObjectNotFound) as exc_info:
+            download_document_as_leave_admin("fake_id", "foo", "bad_doc_id")
+
+        error = exc_info.value
+        assert error.description == "Unable to find FINEOS document for user"
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.group_client_get_documents")
+    def test_not_authorized_for_document_type(self, mock_get_docs, documents, non_downloadable_doc):
+        mock_get_docs.return_value = documents
+
+        doc_id = str(non_downloadable_doc.documentId)
+        with pytest.raises(NotAuthorizedForAccess) as exc_info:
+            download_document_as_leave_admin("fake_id", "foo", doc_id)
+
+        expected_msg = "User is not authorized to access documents of type: identification proof"
+        error = exc_info.value
+        assert error.description == expected_msg

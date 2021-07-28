@@ -12,7 +12,8 @@ import massgov.pfml.api.claims
 import massgov.pfml.fineos.mock_client
 import massgov.pfml.util.datetime as datetime_util
 import tests.api
-from massgov.pfml.api.models.claims.responses import DocumentResponse
+from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
+from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
@@ -33,6 +34,7 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
+from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 from massgov.pfml.util.strings import format_fein
 
@@ -287,22 +289,19 @@ class TestEmployerDocumentDownload:
         test_db_session.commit()
 
     @pytest.fixture
-    def document_id(self):
-        return "123"
-
-    @pytest.fixture
-    def document(self, document_id):
-        return DocumentResponse(
-            created_at=None,
-            document_type="state managed paid leave confirmation",
-            content_type="application/pdf",
-            fineos_document_id=document_id,
-            name="test.pdf",
-            description="Mock File",
+    def document_data(self):
+        return Base64EncodedFileData(
+            fileName="test.pdf",
+            fileExtension="pdf",
+            base64EncodedFileContents="Zm9v",  # decodes to "foo"
+            contentType="application/pdf",
+            description=None,
+            fileSizeInBytes=0,
+            managedReqId=None,
         )
 
     @pytest.fixture
-    def request_params(self, claim, document_id, employer_auth_token):
+    def request_params(self, claim, employer_auth_token):
         class EmployerDocumentDownloadRequestParams(object):
             __slots__ = ["absence_id", "document_id", "auth_token"]
 
@@ -312,7 +311,7 @@ class TestEmployerDocumentDownload:
                 self.auth_token = auth_token
 
         return EmployerDocumentDownloadRequestParams(
-            claim.fineos_absence_id, document_id, employer_auth_token
+            claim.fineos_absence_id, "doc_id", employer_auth_token
         )
 
     def download_document(self, client, params):
@@ -331,26 +330,49 @@ class TestEmployerDocumentDownload:
         message = response_json["message"]
         assert "does not have read access" in message
 
-    @mock.patch("massgov.pfml.api.claims.get_documents_as_leave_admin")
-    def test_employers_receive_200(self, mock_get_docs, document, client, request_params):
-        mock_get_docs.return_value = [document]
+    @mock.patch("massgov.pfml.api.claims.download_document_as_leave_admin")
+    def test_employers_receive_200(self, mock_download, document_data, client, request_params):
+        mock_download.return_value = document_data
 
         response = self.download_document(client, request_params)
         assert response.status_code == 200
 
-    @mock.patch("massgov.pfml.api.claims.get_documents_as_leave_admin")
+    @mock.patch("massgov.pfml.api.claims.download_document_as_leave_admin")
     def test_cannot_download_documents_not_attached_to_absence(
-        self, mock_get_docs, document, client, request_params, caplog
+        self, mock_download, client, request_params, caplog
     ):
-        document.fineos_document_id = "bad_doc_id"
-        mock_get_docs.return_value = [document]
+        mock_download.side_effect = ObjectNotFound(
+            description="Unable to find FINEOS document for user"
+        )
 
         response = self.download_document(client, request_params)
+        assert response.status_code == 404
 
-        tests.api.validate_error_response(
-            response, 403, message="User does not have access to this document"
+        response_json = response.get_json()
+        message = response_json["message"]
+        assert message == "Unable to find FINEOS document for user"
+
+        assert "Unable to find FINEOS document for user" in caplog.text
+
+    @mock.patch("massgov.pfml.api.claims.download_document_as_leave_admin")
+    def test_cannot_download_non_downloadable_doc_types(
+        self, mock_download, client, request_params, caplog
+    ):
+        error_message = "User is not authorized to access documents of type: identification proof"
+        mock_download.side_effect = NotAuthorizedForAccess(
+            description=error_message,
+            error_type="unauthorized_document_type",
+            data={"doc_type": "identification proof"},
         )
-        assert "document not found" in caplog.text
+
+        response = self.download_document(client, request_params)
+        assert response.status_code == 403
+
+        response_json = response.get_json()
+        message = response_json["message"]
+        assert message == error_message
+
+        assert error_message in caplog.text
 
 
 @pytest.mark.integration
