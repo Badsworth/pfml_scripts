@@ -509,6 +509,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def group_client_get_documents(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.GroupClientDocument]:
+        # TODO: (API-1812) - deprecate magic string ( no longer used )
         # special case for testing all downloadable document types:
         if absence_id == "leave_admin_mixed_allowable_doc_types":
             # This should mirror the DOWNLOADABLE_DOC_TYPES in fineos/common.py

@@ -22,7 +22,6 @@ from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.fineos import FINEOSClient, create_client
-from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.fineos.models import CreateOrUpdateLeaveAdmin, group_client_api
 from massgov.pfml.fineos.models.group_client_api import GroupClientDocument
 
@@ -1935,21 +1934,41 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
 
 
 # testing class for get_documents_as_leave_admin
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.group_client_get_documents")
 class TestGetDocumentsAsLeaveAdmin:
     @pytest.fixture
-    def absence_id(self):
-        # TODO: (EMPLOYER-1584): Don't rely on FINEOS mock_client and magic strings for mocking
-        return "leave_admin_mixed_allowable_doc_types"
+    def group_client_document(self):
+        return GroupClientDocument(
+            name="approval notice",
+            documentId=1,
+            type="document",
+            caseId="123",
+            description="foo bar",
+            originalFilename="test.pdf",
+        )
 
-    def test_get_documents(self, absence_id):
-        documents = get_documents_as_leave_admin("fake_id", absence_id)
-        assert len(documents) > 0
+    @pytest.fixture
+    def group_client_doc_invalid_type(self):
+        return GroupClientDocument(
+            name="invalid type",
+            documentId=2,
+            type="document",
+            caseId="234",
+            description="foo bar",
+            originalFilename="test.pdf",
+        )
 
-    def test_filters_non_downloadable_documents(self, absence_id):
-        documents = get_documents_as_leave_admin("fake_id", absence_id)
-
-        for document in documents:
-            assert document.document_type.lower() in DOWNLOADABLE_DOC_TYPES
+    def test_get_documents(
+        self, mock_group_client_get_docs, group_client_document, group_client_doc_invalid_type,
+    ):
+        mock_group_client_get_docs.return_value = [
+            group_client_document,
+            group_client_doc_invalid_type,
+        ]
+        documents = get_documents_as_leave_admin("fake-user-id", "fake-absence-id")
+        mock_group_client_get_docs.assert_called_once_with("fake-user-id", "fake-absence-id")
+        assert len(documents) == 1
+        assert documents[0].fineos_document_id == "1"
 
 
 # testing class for download_document_as_leave_admin
