@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
+import classnames from "classnames";
 import useUniqueId from "../hooks/useUniqueId";
 
 /**
@@ -13,8 +14,10 @@ function InputChoice({ type = "checkbox", ...props }) {
   const inputId = useUniqueId("InputChoice");
   const id = props.id || inputId;
 
+  const fieldClassName = classnames(`usa-${type} measure-5`, props.className);
+
   return (
-    <div className={`usa-${type} measure-5`}>
+    <div className={fieldClassName}>
       <input
         checked={props.checked}
         className={`usa-${type}__input`}
@@ -51,6 +54,10 @@ InputChoice.propTypes = {
    * for a controlled component.
    */
   checked: PropTypes.bool,
+  /**
+   * Additional classes to include on the field
+   */
+  className: PropTypes.string,
   /**
    * HTML input `disabled` attribute
    */

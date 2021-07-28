@@ -46,6 +46,13 @@ describe("InputChoice", () => {
     expect(field.prop("disabled")).toBe(disabled);
   });
 
+  it("sets the className", () => {
+    const { wrapper } = render({ type: "checkbox", className: "foo" });
+
+    expect(wrapper.hasClass("usa-checkbox")).toBe(true);
+    expect(wrapper.hasClass("foo")).toBe(true);
+  });
+
   it("generates a unique id if none is provided", () => {
     const { wrapper: wrapper1 } = render({ name: "one" });
     const { wrapper: wrapper2 } = render({ name: "two" });
