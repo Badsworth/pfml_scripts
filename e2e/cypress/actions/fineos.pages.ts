@@ -6,6 +6,7 @@ import {
 } from "../../src/_api";
 import {
   AllNotNull,
+  FineosTasks,
   NonEmptyArray,
   PersonalIdentificationDetails,
   ValidClaim,
@@ -29,21 +30,15 @@ import {
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
 import {
-  approveClaim,
-  assertHasTask,
   assertHasDocument,
   clickBottomWidgetButton,
-  denyClaim,
   onTab,
-  triggerNoticeRelease,
   visitClaim,
-  reviewClaim,
   wait,
-  enterReducedWorkHours,
   waitForAjaxComplete,
   clickNext,
   getFixtureDocumentName,
-  withdrawClaim,
+  assertClaimStatus,
 } from "./fineos";
 
 import { DocumentUploadRequest } from "../../src/api";
@@ -157,24 +152,65 @@ export class ClaimPage {
       | "Review Approval Notice"
       | "Leave Cancellation Request"
   ): this {
-    triggerNoticeRelease(type);
+    onTab("Task");
+    onTab("Processes");
+    cy.contains(".TreeNodeElement", type).click({
+      force: true,
+    });
+    cy.get('input[type="submit"][value="Properties"]').click();
+    cy.get('input[type="submit"][value="Continue"]').click();
+    cy.contains(".TreeNodeContainer", type, {
+      timeout: 20000,
+    })
+      .find("input[type='checkbox']")
+      .should("be.checked");
+
     return this;
   }
   approve(): this {
-    approveClaim();
+    // This button turns out to be unclickable without force, because selecting
+    // it seems to scroll it out of view. Force works around that.
+    cy.get('a[title="Approve the Pending Leaving Request"]').click({
+      force: true,
+    });
+    waitForAjaxComplete();
+    assertClaimStatus("Approved");
     return this;
   }
   deny(reason: string): this {
-    denyClaim(reason);
+    cy.get("input[type='submit'][value='Adjudicate']").click();
+    // Make sure the page is fully loaded by waiting for the leave plan to show up.
+    cy.get("table[id*='selectedLeavePlans'] tr")
+      .should("have.length", 1)
+      .click();
+    cy.get("input[type='submit'][value='Reject']").click();
+    clickBottomWidgetButton("OK");
+
+    cy.get('a[title="Deny the Pending Leave Request"]').click();
+    cy.get('span[id="leaveRequestDenialDetailsWidget"]')
+      .find("select")
+      .select(reason);
+    cy.get('input[type="submit"][value="OK"]').click();
+    assertClaimStatus("Declined");
     return this;
   }
   withdraw(): this {
-    withdrawClaim();
+    cy.get('a[title="Withdraw the Pending Leave Request"').click({
+      force: true,
+    });
+    cy.get("#leaveRequestWithdrawPopupWidget_PopupWidgetWrapper").within(() => {
+      cy.findByLabelText("Withdrawal Reason").select("Employee Withdrawal");
+      cy.findByText("OK").click({ force: true });
+    });
+    assertClaimStatus("Closed");
     return this;
   }
   reviewClaim(): this {
     onTab("Leave Details");
-    reviewClaim();
+    cy.contains("td", "Approved").click();
+    cy.get('input[title="Review a Leave Request"').click();
+    waitForAjaxComplete();
+    onTab("Absence Hub");
     return this;
   }
 }
@@ -362,23 +398,18 @@ class OutstandingRequirementsPage {
     });
   }
 }
-/**Tasks avalable in fineos, expand the list as needed. */
-type FineosTaskNames =
-  | "Escalate Employer Reported Other Income"
-  | "Escalate employer reported past leave"
-  | "Escalate employer reported accrued paid leave (PTO)"
-  | "Escalate Employer Reported Fraud"
-  | "Approved Leave Start Date Change"
-  | "Update Paid Leave Case"
-  | "Caring Certification Review"
-  | "ID Review"
-  | "Bonding Certification Review"
-  | "Medical Certification Review"
-  | "Employer Approval Received";
 
 class TasksPage {
-  assertTaskExists(name: string): this {
-    assertHasTask(name);
+  /**
+   * Called from the tasks page, asserts that a particular task is found.
+   * @param name
+   */
+  assertTaskExists(name: FineosTasks): this {
+    cy.get("table[id*='TasksForCaseWidget']").should((table) => {
+      expect(table, `Expected to find a "${name}" task`).to.have.descendants(
+        `tr td:nth-child(6)[title="${name}"]`
+      );
+    });
     return this;
   }
 
@@ -386,7 +417,7 @@ class TasksPage {
    * Adds a task to a claim and asserts it has been assigned to DFML Program Integrity
    * @param name name of the task to be added
    */
-  add(name: FineosTaskNames): this {
+  add(name: FineosTasks): this {
     cy.findByTitle(`Add a task to this case`).click({ force: true });
     // Search for the task type
     cy.findByLabelText(`Find Work Types Named`).type(`${name}{enter}`);
@@ -396,7 +427,7 @@ class TasksPage {
     return this;
   }
 
-  close(name: FineosTaskNames): this {
+  close(name: FineosTasks): this {
     cy.contains("td", name).click();
     waitForAjaxComplete();
     cy.get('input[title="Close selected task"]').click();
@@ -417,7 +448,7 @@ class TasksPage {
     return this;
   }
   assertIsAssignedToDepartment(
-    task: FineosTaskNames,
+    task: FineosTasks,
     departmentName: string
   ): this {
     // Find  task
@@ -1245,8 +1276,16 @@ class BenefitsExtensionPage {
 
 export class ClaimantPage {
   static visit(ssn: string): ClaimantPage {
-    fineos.searchClaimantSSN(ssn);
+    ssn = ssn.replace(/-/g, "");
+    cy.get('a[aria-label="Parties"]').click();
+    waitForAjaxComplete();
+    cy.contains("td", "Identification Number")
+      .next()
+      .within(() => cy.get("input").type(ssn));
+    cy.get('input[type="submit"][value="Search"]').click();
+    waitForAjaxComplete();
     fineos.clickBottomWidgetButton("OK");
+    waitForAjaxComplete();
     return new ClaimantPage();
   }
   /**
@@ -1626,30 +1665,30 @@ class DatesOfAbsence extends CreateNotificationStep {
     return this;
   }
   addFixedTimeOffPeriod(period: ContinuousLeavePeriod): this {
-    // wait() doesn't work within this widget, but we still need to use it. So we have to get out of .within() scope after every action.
+    // Since the widget also gets re-rendered from time to time, we need to re-query it frequently.
     const withinWidget = (cb: () => unknown) =>
       cy.get(`#timeOffAbsencePeriodDetailsQuickAddWidget`).within(cb);
 
     // Enter absence status
     withinWidget(() => {
       cy.findByLabelText("Absence status").select(period.status);
+      waitForAjaxComplete();
     });
-    wait();
 
     // Enter leave start and end dates
     withinWidget(() => {
       cy.findByLabelText("Absence start date").type(
         `${dateToMMddyyyy(period.start)}{enter}`
       );
+      waitForAjaxComplete();
     });
-    wait();
 
     withinWidget(() => {
       cy.findByLabelText("Absence end date").type(
         `${dateToMMddyyyy(period.end)}{enter}`
       );
+      waitForAjaxComplete();
     });
-    wait();
 
     // Enter work related dates if specified
     withinWidget(() => {
@@ -1658,54 +1697,79 @@ class DatesOfAbsence extends CreateNotificationStep {
           `${dateToMMddyyyy(period.last_day_worked)}{enter}`
         );
     });
+    waitForAjaxComplete();
 
-    wait();
     withinWidget(() => {
       if (period.return_to_work_date)
         cy.findByLabelText("Return to work date").type(
           `${dateToMMddyyyy(period.return_to_work_date)}{enter}`
         );
+      waitForAjaxComplete();
     });
-    wait();
 
     // Add the period
-    cy.findByTitle(`Quick Add`).click();
-    wait();
+    withinWidget(() => {
+      cy.findByTitle(`Quick Add`).click();
+      waitForAjaxComplete();
+    });
     return this;
+  }
+  private enterReducedWorkHours(
+    leave_details: ReducedScheduleLeavePeriods
+  ): void {
+    const hrs = (minutes: number | null | undefined) => {
+      return minutes ? Math.round(minutes / 60) : 0;
+    };
+    const weekdayInfo = [
+      { hours: hrs(leave_details.sunday_off_minutes) },
+      { hours: hrs(leave_details.monday_off_minutes) },
+      { hours: hrs(leave_details.tuesday_off_minutes) },
+      { hours: hrs(leave_details.wednesday_off_minutes) },
+      { hours: hrs(leave_details.thursday_off_minutes) },
+      { hours: hrs(leave_details.friday_off_minutes) },
+      { hours: hrs(leave_details.saturday_off_minutes) },
+    ];
+
+    cy.get("input[name*='_hours']").each((input, index) => {
+      cy.wrap(input).type(weekdayInfo[index].hours.toString());
+    });
   }
   addReducedSchedulePeriod(
     absenceStatus: AbsenceStatus,
     reducedLeavePeriod: ReducedScheduleLeavePeriods
   ): this {
-    // Same as addFixedTimeOffPeriod, wait() doesn't worked when scoped to this widget
     const withinWidget = (cb: () => unknown) =>
       cy.get(`#reducedScheduleAbsencePeriodDetailsQuickAddWidget`).within(cb);
-    // Enter absence status
+
     withinWidget(() => {
+      // Enter absence status
       this.chooseSelectOption("Absence status", absenceStatus);
-    });
-    wait();
-    // Enter reduced schedule period start/end dates
-    withinWidget(() => {
+      waitForAjaxComplete();
+
       if (reducedLeavePeriod.start_date)
-        cy.labelled("Absence start date").type(
-          `${dateToMMddyyyy(reducedLeavePeriod.start_date)}{enter}`
-        );
+        // Enter reduced schedule period start/end dates
+        cy.findByLabelText("Absence start date")
+          .type(`${dateToMMddyyyy(reducedLeavePeriod.start_date)}{enter}`)
+          .then(waitForAjaxComplete);
     });
-    wait();
+    // After this the entire widget re-renders and we need to re-query for it.
     withinWidget(() => {
       if (reducedLeavePeriod.end_date)
-        cy.labelled("Absence end date").type(
-          `${dateToMMddyyyy(reducedLeavePeriod.end_date)}{enter}`
-        );
+        cy.findByLabelText("Absence end date")
+          .type(`${dateToMMddyyyy(reducedLeavePeriod.end_date)}{enter}`)
+          .then(waitForAjaxComplete);
     });
-    wait();
-    // Enter hours for each weekday
-    withinWidget(() => enterReducedWorkHours(reducedLeavePeriod));
-    wait();
-    // Submit period
-    withinWidget(() => cy.findByTitle(`Quick Add`).click());
-    wait();
+    withinWidget(() => {
+      // Enter hours for each weekday
+      this.enterReducedWorkHours(reducedLeavePeriod);
+      waitForAjaxComplete();
+    });
+    withinWidget(() => {
+      // Submit period
+      cy.findByTitle(`Quick Add`).click();
+      waitForAjaxComplete();
+    });
+
     return this;
   }
   nextStep<T>(cb: (step: WorkAbsenceDetails) => T): T {
