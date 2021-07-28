@@ -17,6 +17,7 @@ from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
+    LkManagedRequirementStatus,
     ManagedRequirementStatus,
     ManagedRequirementType,
     Role,
@@ -2515,6 +2516,23 @@ class TestGetClaimsEndpoint:
 
         @pytest.fixture()
         def claim(self, employer, employee):
+            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1,)
+
+        @pytest.fixture
+        def claim_pending_no_action(self, employer, employee):
+            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1,)
+
+        @pytest.fixture
+        def third_claim(self, employer, employee):
+            return ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.get_id("Adjudication"),
+                claim_type_id=1,
+            )
+
+        @pytest.fixture
+        def completed_claim(self, employer, employee):
             return ClaimFactory.create(
                 employer=employer,
                 employee=employee,
@@ -2522,28 +2540,34 @@ class TestGetClaimsEndpoint:
                 claim_type_id=1,
             )
 
-        @pytest.fixture
-        def other_claims(self, employer, employee):
-            return [
-                ClaimFactory.create(
-                    employer=employer,
-                    employee=employee,
-                    fineos_absence_status_id=AbsenceStatus.get_id("Completed"),
-                    claim_type_id=1,
-                )
-                for _ in range(0, 2)
-            ]
-
-        @pytest.fixture()
-        def managed_requirements(self, claim):
+        def _add_managed_requirements_to_claim(
+            self, claim, status: LkManagedRequirementStatus, count=2
+        ):
             return [
                 ManagedRequirementFactory.create(
                     claim=claim,
                     managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
-                    managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                    managed_requirement_status_id=status.managed_requirement_status_id,
                 )
-                for _ in range(0, 2)
+                for _ in range(0, count)
             ]
+
+        @pytest.fixture
+        def claims_with_managed_requirements(
+            self, claim, claim_pending_no_action, third_claim, completed_claim
+        ):
+            # claim has both open and completed requirements
+            self._add_managed_requirements_to_claim(claim, ManagedRequirementStatus.OPEN)
+            self._add_managed_requirements_to_claim(claim, ManagedRequirementStatus.COMPLETE)
+
+            # claim_pending_no_action has completed requirements
+            self._add_managed_requirements_to_claim(
+                claim_pending_no_action, ManagedRequirementStatus.COMPLETE
+            )
+
+            # third_claim does not have managed requirements
+
+            # completed claim does not have managed requirements and is Completed, should NOT be returned
 
         @pytest.fixture()
         def old_managed_requirements(self, claim):
@@ -2554,33 +2578,11 @@ class TestGetClaimsEndpoint:
                 for _ in range(0, 2)
             ]
 
-        @pytest.fixture()
-        def complete_managed_requirements(self, claim):
-            return [
-                ManagedRequirementFactory.create(
-                    claim=claim,
-                    managed_requirement_status_id=ManagedRequirementStatus.COMPLETE.managed_requirement_status_id,
-                )
-                for _ in range(0, 2)
-            ]
-
-        @pytest.fixture
-        def transfer_managed_requirement_ownership(
-            self, test_db_session, other_claims, complete_managed_requirements
-        ):
-            # transfer ownership of claim
-            for mr in complete_managed_requirements:
-                mr.claim_id = other_claims[0].claim_id
-            test_db_session.commit()
-
         def test_claim_managed_requirements(
-            self,
-            client,
-            employer_auth_token,
-            managed_requirements,
-            old_managed_requirements,
-            complete_managed_requirements,
+            self, client, employer_auth_token, claim, old_managed_requirements,
         ):
+            self._add_managed_requirements_to_claim(claim, ManagedRequirementStatus.OPEN, 2)
+            self._add_managed_requirements_to_claim(claim, ManagedRequirementStatus.COMPLETE)
             resp = client.get(
                 "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
             )
@@ -2589,7 +2591,7 @@ class TestGetClaimsEndpoint:
             claim_data = response_body.get("data")
             assert len(claim_data) == 1
             claim = response_body["data"][0]
-            assert len(claim.get("managed_requirements", [])) == len(managed_requirements)
+            assert len(claim.get("managed_requirements", [])) == 2
             expected_type = (
                 ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_description
             )
@@ -2600,18 +2602,13 @@ class TestGetClaimsEndpoint:
                 assert req["status"] == expected_status
 
         def test_claim_filter_has_open_managed_requirement(
-            self,
-            client,
-            employer_auth_token,
-            managed_requirements,
-            transfer_managed_requirement_ownership,
+            self, client, employer_auth_token, claims_with_managed_requirements
         ):
-            """
-            db has:
-            - one completed claim with at least one open managed requirements (should be returned since it has an open managed requirement)
-            - one completed claim with some managed requirements but none are open (should  NOT be returned since has no open managed requirement)
-            - one completed claim with no managed requirements (should NOT be returned since has no open managed requirement)
-            """
+            # claim has both open and completed requirements, should be returned
+            # claim_pending_no_action has completed requirements, should NOT be returned
+            # third_claim does not have managed requirements, should NOT be returned
+            # completed claim does not have managed requirements and is Completed, should NOT be returned
+
             resp = client.get(
                 f"/v1/claims?claim_status={ActionRequiredStatusFilter.OPEN_REQUIREMENT}",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -2622,22 +2619,13 @@ class TestGetClaimsEndpoint:
             assert len(claim_data) == 1
 
         def test_claim_filter_has_pending_no_action(
-            self,
-            client,
-            other_claims,
-            employer_auth_token,
-            test_db_session,
-            claim,
-            managed_requirements,
-            transfer_managed_requirement_ownership,
+            self, client, employer_auth_token, claims_with_managed_requirements
         ):
-            """
-            db has:
-            - one completed claim with at least one open managed requirements (should NOT be returned)
-            - one completed claim with some managed requirements but none are open (should be returned)
-            - one completed claim with no managed requirements (should be returned since has no open managed requirement)
-            """
-            test_db_session.commit()
+            # claim has both open and completed requirements, should NOT be returned
+            # claim_pending_no_action has completed requirements, should be returned
+            # third_claim does not have managed requirements, should be returned
+            # completed claim does not have managed requirements but is Completed, should NOT be returned
+
             resp = client.get(
                 f"/v1/claims?claim_status={ActionRequiredStatusFilter.PENDING_NO_ACTION}",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -2645,23 +2633,18 @@ class TestGetClaimsEndpoint:
             assert resp.status_code == 200
             response_body = resp.get_json()
             claim_data = response_body.get("data")
-            assert len(claim_data) == len(other_claims)
+            assert len(claim_data) == 2
             for returned_claim in claim_data:
                 assert len(returned_claim["managed_requirements"]) == 0
 
         def test_claim_filter_has_open_managed_requirement_has_pending_no_action(
-            self,
-            client,
-            employer_auth_token,
-            managed_requirements,
-            transfer_managed_requirement_ownership,
+            self, client, employer_auth_token, claims_with_managed_requirements
         ):
-            """
-            db has:
-            - one completed claim with at least one open managed requirements (should be returned since it has an open managed requirement)
-            - one completed claim with some managed requirements but none are open (should be returned since has no open managed requirement)
-            - one completed claim with no managed requirements (should be returned since has no open managed requirement)
-            """
+            # claim has both open and completed requirements, should be returned
+            # claim_pending_no_action has completed requirements, should be returned
+            # third_claim does not have managed requirements, should be returned
+            # completed claim does not have managed requirements and is Completed, should NOT be returned
+
             resp = client.get(
                 f"/v1/claims?claim_status={ActionRequiredStatusFilter.PENDING_NO_ACTION},{ActionRequiredStatusFilter.OPEN_REQUIREMENT}",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},

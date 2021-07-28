@@ -495,6 +495,7 @@ def get_claims() -> flask.Response:
             else:
                 query.add_user_owns_claim_filter(current_user)
 
+            query.add_managed_requirements_filter()
             if len(absence_statuses):
                 # Log the values from the query params rather than the enum groups they
                 # might equate to, since what is sent into the API will be more familiar
@@ -503,14 +504,12 @@ def get_claims() -> flask.Response:
                     {"filter.absence_statuses": ", ".join(sorted(absence_statuses))}
                 )
 
-                absence_statuses = convert_pending_absence_status(absence_statuses)
                 query.add_absence_status_filter(absence_statuses)
 
             if search_string:
                 search_string = search_string.strip()
                 query.add_search_filter(search_string)
 
-            query.add_managed_requirements_filter()
             query.add_order_by(pagination_context)
 
             page = query.get_paginated_results(pagination_context)
@@ -559,12 +558,3 @@ def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
             raise BadRequest(f"Invalid claim status {absence_status}.")
 
     return
-
-
-def convert_pending_absence_status(absence_statuses: Set[str]) -> Set[str]:
-    if (
-        ActionRequiredStatusFilter.PENDING in absence_statuses
-        or ActionRequiredStatusFilter.PENDING_NO_ACTION in absence_statuses
-    ):
-        absence_statuses.update(["Intake In Progress", "In Review", "Adjudication", None])  # type: ignore
-    return absence_statuses

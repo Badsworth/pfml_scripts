@@ -37,9 +37,13 @@ class ActionRequiredStatusFilter(str, Enum):
         return [cls.PENDING, cls.OPEN_REQUIREMENT, cls.PENDING_NO_ACTION]
 
 
+PendingAbsenceStatuses = ["Intake In Progress", "In Review", "Adjudication", None]
+
 # Wrapper for the DB layer of the `get_claims` endpoint
 # Create a query for filtering and ordering Claim results
 # The "get" methods are idempotent, the rest will change the query and affect the results
+
+
 class GetClaimsQuery:
     def __init__(self, db_session: db.Session):
         self.query = db_session.query(Claim)
@@ -55,30 +59,43 @@ class GetClaimsQuery:
     def get_managed_requirement_status_filters(self, absence_statuses: Set[str]) -> List[Any]:
         has_pending_no_action = ActionRequiredStatusFilter.PENDING_NO_ACTION in absence_statuses
         has_open_requirement = ActionRequiredStatusFilter.OPEN_REQUIREMENT in absence_statuses
+        has_pending = ActionRequiredStatusFilter.PENDING in absence_statuses
+
         filters = []
-        filter = (
+        filter = Claim.managed_requirements.any(  # type: ignore
             ManagedRequirement.managed_requirement_status_id
             == ManagedRequirementStatus.OPEN.managed_requirement_status_id
         )
         if has_open_requirement:
-            filters.append(Claim.managed_requirements.any(filter))  # type: ignore
+            filters.append(filter)
         if has_pending_no_action:
-            filters.append(~Claim.managed_requirements.any(filter))  # type: ignore
+            pending_no_action_filters = [
+                or_(
+                    LkAbsenceStatus.absence_status_description.in_(PendingAbsenceStatuses),
+                    Claim.fineos_absence_status_id.is_(None),
+                ),
+                ~filter,
+            ]
+            filters.append(and_(*pending_no_action_filters))
+        if has_pending:
+            absence_statuses.update(PendingAbsenceStatuses)  # type: ignore
+
         # remove absence status not in database
         absence_statuses.difference_update(ActionRequiredStatusFilter.all())  # update in place
         return filters
 
     def add_absence_status_filter(self, absence_statuses: Set[str]) -> None:
-        filters = self.get_managed_requirement_status_filters(absence_statuses)
-        if not len(absence_statuses):
-            self.query = self.query.filter(or_(*filters))
-            return
-
         self.query = self.query.join(
             LkAbsenceStatus,
             LkAbsenceStatus.absence_status_id == Claim.fineos_absence_status_id,
             isouter=True,
         )
+
+        filters = self.get_managed_requirement_status_filters(absence_statuses)
+        if not len(absence_statuses):
+            self.query = self.query.filter(or_(*filters))
+            return
+
         filters.append(LkAbsenceStatus.absence_status_description.in_(absence_statuses))
         if None in absence_statuses:
             filters.append(Claim.fineos_absence_status_id.is_(None))
