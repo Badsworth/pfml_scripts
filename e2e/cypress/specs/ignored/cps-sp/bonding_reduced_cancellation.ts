@@ -104,11 +104,6 @@ describe("Approval (notifications/notices)", () => {
         waitForAjaxComplete();
         fineos.clickNext();
         waitForAjaxComplete();
-        onTab("Documents");
-        cy.get(".ListRow > td").should(($td) => {
-          expect($td.eq(8)).to.contain("Record Cancel Time");
-        });
-        waitForAjaxComplete();
         onTab("Tasks");
         cy.get(
           'td[id="CaseTasksTabWidget_un67_FINEOS.WorkManager.Activities.ViewTasks.AbsenceCase_TasksView_cell"]'
@@ -116,7 +111,13 @@ describe("Approval (notifications/notices)", () => {
           .find("div")
           .click({ force: true });
         cy.findByText("All tasks").click();
-        cy.findByText("Review and Decision Cancel Time Submitted").click();
+        claimPage.tasks((tasks) => {
+          tasks.assertTaskExists("Review and Decision Cancel Time Submitted");
+        });
+        claimPage.triggerNotice("Leave Cancellation Request");
+        claimPage.documents((docsPage) => {
+          docsPage.assertDocumentExists("Approved Time Cancelled");
+        });
       });
     });
   });

@@ -153,8 +153,9 @@ export class ClaimPage {
       | "Designation Notice"
       | "SOM Generate Legal Notice"
       | "Leave Request Declined"
-      | "Pending Application Withdrawn"
+      | "Leave Request Withdrawn"
       | "Review Approval Notice"
+      | "Leave Cancellation Request"
   ): this {
     triggerNoticeRelease(type);
     return this;

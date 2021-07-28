@@ -43,7 +43,7 @@ describe("Withdraw Notification and Notice", () => {
             tasks.close("ID Review");
           });
           claimPage.withdraw();
-          claimPage.triggerNotice("Pending Application Withdrawn");
+          claimPage.triggerNotice("Leave Request Withdrawn");
           claimPage.documents((docsPage) => {
             docsPage.assertDocumentExists("Pending Application Withdrawn");
           });
