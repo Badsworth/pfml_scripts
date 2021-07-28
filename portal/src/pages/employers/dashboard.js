@@ -1,4 +1,4 @@
-import { compact, find, get, pick } from "lodash";
+import { camelCase, compact, find, get, pick, startCase } from "lodash";
 import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
@@ -568,6 +568,12 @@ const Filters = (props) => {
     ]);
   };
 
+  // TODO (EMPLOYER-1587): Remove variable
+  const pendingStatusChoices = isFeatureEnabled("employerShowReviewByStatus")
+    ? ["Pending - no action", "Open requirement"]
+    : // API filtering uses this as a catchall for several pending-like statuses
+      ["Pending"];
+
   return (
     <React.Fragment>
       <div
@@ -609,11 +615,12 @@ const Filters = (props) => {
             AbsenceCaseStatus.approved,
             AbsenceCaseStatus.closed,
             AbsenceCaseStatus.declined,
-            "Pending", // API filtering uses this as a catchall for several pending-like statuses
+            // TODO (EMPLOYER-1587): replace with the two new AbsenceCaseStatus values
+            ...pendingStatusChoices,
           ].map((value) => ({
             checked: get(formState, "claim_status", []).includes(value),
             label: t("pages.employersDashboard.filterStatusChoice", {
-              context: value,
+              context: startCase(camelCase(value)).replace(/[-\s]/g, ""),
             }),
             value,
           }))}
@@ -681,7 +688,7 @@ const Filters = (props) => {
                 }
               >
                 {t("pages.employersDashboard.filterStatusChoice", {
-                  context: status,
+                  context: startCase(camelCase(status)).replace(/[-\s]/g, ""),
                 })}
               </FilterMenuButton>
             ))}

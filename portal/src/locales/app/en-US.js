@@ -680,6 +680,7 @@ const shared = {
   absenceCaseStatus_approved: "Approved",
   absenceCaseStatus_closed: "Closed",
   absenceCaseStatus_denied: "Denied",
+  absenceCaseStatus_noAction: "No action required",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequencyLabel: "Frequency",
@@ -2124,7 +2125,10 @@ const pages = {
     filterStatusChoice_Approved: "$t(shared.absenceCaseStatus_approved)",
     filterStatusChoice_Closed: "$t(shared.absenceCaseStatus_closed)",
     filterStatusChoice_Declined: "$t(shared.absenceCaseStatus_denied)",
+    filterStatusChoice_OpenRequirement: "Review by",
+    // TODO (EMPLOYER-1587): Remove unused field
     filterStatusChoice_Pending: "--",
+    filterStatusChoice_PendingNoAction: "$t(shared.absenceCaseStatus_noAction)",
     filterStatusLabel: "Status",
     filtersApply: "Apply filters",
     filtersReset: "Reset all filters",
@@ -2334,7 +2338,7 @@ const components = {
     status_closed: "$t(shared.absenceCaseStatus_closed)",
     status_completed: "$t(shared.absenceCaseStatus_closed)",
     status_declined: "$t(shared.absenceCaseStatus_denied)",
-    status_noAction: "No action required",
+    status_noAction: "$t(shared.absenceCaseStatus_noAction)",
     status_openRequirements: "Review by {{followupDate}}",
   },
   amendButton: {
