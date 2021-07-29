@@ -101,8 +101,8 @@ describe("Post-approval (notifications/notices)", () => {
           fineos.waitForAjaxComplete();
           cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
           fineos.waitForAjaxComplete();
-          // cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
-          // fineos.waitForAjaxComplete();
+          cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
+          fineos.waitForAjaxComplete();
           cy.get('span[id="footerButtonsBar_cloned"]').contains("OK").click();
           fineos.waitForAjaxComplete();
           // Complete adjudication process for new leave plan 
