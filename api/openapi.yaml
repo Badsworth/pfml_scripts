@@ -47,7 +47,80 @@ paths:
                 $ref: "#/components/schemas/FlagsResponse"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
+  /flags/{name}:
+    get:
+      security:
+        - {} # no authentication option
+      tags:
+        - Feature Flags
+      summary: Get a feature flag
+      operationId: massgov.pfml.api.flags.flag_get
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          description: Name of the flag to get
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and one flag.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flag"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableError"
+    patch:
+      security:
+        - {} # no authentication option
+      tags:
+        - Feature Flags
+      summary: Update a feature flag
+      operationId: massgov.pfml.api.flags.flags_patch
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          description: Name of flag to update
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a user object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      requestBody:
+        $ref: "#/components/requestBodies/FlagUpdateRequest"
 
+  /flags/{name}/logs:
+    get:
+      security:
+        - {} # no authentication option
+      tags:
+        - Feature Flags
+      summary: Get feature flags
+      operationId: massgov.pfml.api.flags.flag_get_logs
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          description: Name of the flag to get
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and list of flag logs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlagsResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableError"
   /users:
     post:
       security:
@@ -1203,6 +1276,12 @@ components:
           schema:
             $ref: "#/components/schemas/EligibilityRequest"
       required: true
+    FlagUpdateRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Flag"
+      required: true
     NotificationRequest:
       content:
         application/json:
@@ -1411,7 +1490,7 @@ components:
           pattern: '^[0-9]{5}((?:-[0-9]{4})?|(?:-\*{4})?)$'
           example: "12345"
 
-    FlagResponse:
+    Flag:
       type: object
       properties:
         start:
@@ -1427,6 +1506,7 @@ components:
         name:
           type: string
           example: "maintenance"
+          readOnly: true
         options:
           type: object
           example:
@@ -1436,11 +1516,12 @@ components:
         enabled:
           type: boolean
           example: false
+      additionalProperties: false
 
     FlagsResponse:
       type: array
       items:
-        $ref: "#/components/schemas/FlagResponse"
+        $ref: "#/components/schemas/Flag"
 
     UserResponse:
       type: object

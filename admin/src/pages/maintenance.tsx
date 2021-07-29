@@ -1,5 +1,11 @@
 import "react-datetime/css/react-datetime.css";
-//import { ApiResponse, FlagsResponse, getFlagsByNameLogs } from "../api";
+import {
+  ApiResponse,
+  Flag,
+  FlagsResponse,
+  getFlagsByNameLogs,
+  getFlagsByName,
+} from "../api";
 import Alert from "../components/Alert";
 import Link from "next/link";
 import { Helmet } from "react-helmet-async";
@@ -9,49 +15,26 @@ import Toggle from "../components/Toggle";
 import moment from "moment";
 
 export default function Maintenance() {
-  const [maintenanceHistory, setMaintenanceHistory] = React.useState<
-    MaintenanceHistory[]
-  >([
-    {
-      enabled: true,
-      start: "2021-06-17 18:00:00-04",
-      end: "2021-06-17 17:00:00-04",
-      options: {
-        maintenanceName: "Fineos downtime two custom page routes",
-        page_routes: ["/applications/*", "/test/", "/another/"],
-      },
-    },
-    {
-      enabled: true,
-      start: "2021-06-17 18:00:00-04",
-      end: "2021-06-17 17:00:00-04",
-      options: {
-        maintenanceName: "Fineos downtime two checked page routes",
-        page_routes: ["/applications/*", "/employers/*", "/test/", "/another/"],
-      },
-    },
-  ]);
+  const [maintenanceHistory, setMaintenanceHistory] =
+    React.useState<FlagsResponse>([]);
+  const [maintenance, setMaintenance] = React.useState<Flag | null>(null);
 
-  /*
   React.useEffect(() => {
+    getFlagsByName({ name: "maintenance" }).then(
+      (response: ApiResponse<Flag>) => {
+        setMaintenance(response.data);
+      },
+    );
     getFlagsByNameLogs({ name: "maintenance" }).then(
       (response: ApiResponse<FlagsResponse>) => {
         setMaintenanceHistory(response.data);
       },
     );
-  });
-  */
+  }, []);
 
   type optionsObject = {
-    maintenanceName?: string;
+    name?: string;
     page_routes?: string[];
-  };
-
-  type MaintenanceHistory = {
-    enabled?: boolean;
-    start?: string | null;
-    end?: string | null;
-    options?: optionsObject | null;
   };
 
   const checkedValues = [
@@ -62,31 +45,29 @@ export default function Maintenance() {
     "/login",
   ];
 
-  const currentMaintenance = maintenanceHistory[0];
-  const showCurrent = currentMaintenance.enabled ?? false;
-
   // Functions to format table.
   const formatDateTime = (datetime: string) => {
     return moment(datetime).format("MM-DD-YY hh:mmA");
   };
-  const getName = (m: MaintenanceHistory) => <>{m?.options?.maintenanceName}</>;
-  const getDuration = (m: MaintenanceHistory) => (
+  const getName = (m: Flag) => <>{(m?.options as optionsObject)?.name}</>;
+  const getDuration = (m: Flag) => (
     <>
       {(m.start ? formatDateTime(m.start) : "No start provided") +
         " - " +
         (m.end ? formatDateTime(m.end) : "No end provided")}
     </>
   );
-  const getPageRoutes = (m: MaintenanceHistory) => {
-    const routes = m?.options?.page_routes ?? [];
+  const getPageRoutes = (m: Flag) => {
+    const routes = (m?.options as optionsObject)?.page_routes ?? [];
 
     return routes.join(", ");
   };
-  const getCreatedBy = (m: MaintenanceHistory) => <>{"Admin"}</>;
-  const getOptions = (m: MaintenanceHistory) => {
+  const getCreatedBy = (m: Flag) => <>{"Admin"}</>;
+  const getOptions = (m: Flag) => {
     const linkValues: { [key: string]: string | string[] } = {};
-    linkValues.maintenance_name = m?.options?.maintenanceName ?? "";
-    const page_routes = m?.options?.page_routes ?? [];
+    linkValues.name = (m?.options as optionsObject)?.name ?? "";
+    const page_routes =
+      ((m?.options as optionsObject)?.page_routes as string[]) ?? [];
     linkValues.checked_page_routes = page_routes.filter((item) =>
       checkedValues.includes(item),
     );
@@ -145,30 +126,30 @@ export default function Maintenance() {
             </Link>
           </button>
         </div>
-        {showCurrent && (
+        {maintenance && (maintenance.enabled ?? false) && (
           <div className="maintenance-status">
             <div className="maintenance-status__row">
               <div className="maintenance-status__label">Name</div>
               <div className="maintenance-status__value">
-                {getName(currentMaintenance)}
+                {getName(maintenance)}
               </div>
             </div>
             <div className="maintenance-status__row">
               <div className="maintenance-status__label">Created By</div>
               <div className="maintenance-status__value">
-                {getCreatedBy(currentMaintenance)}
+                {getCreatedBy(maintenance)}
               </div>
             </div>
             <div className="maintenance-status__row">
               <div className="maintenance-status__label">Duration</div>
               <div className="maintenance-status__value">
-                {getDuration(currentMaintenance)}
+                {getDuration(maintenance)}
               </div>
             </div>
             <div className="maintenance-status__row">
               <div className="maintenance-status__label">Page Routes</div>
               <div className="maintenance-status__value">
-                {getPageRoutes(currentMaintenance)}
+                {getPageRoutes(maintenance)}
               </div>
             </div>
           </div>

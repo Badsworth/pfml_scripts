@@ -7,10 +7,10 @@
 /* eslint-disable */
 
 export const defaults: RequestOptions = {
-  baseUrl: "v1",
+  baseUrl: "/v1",
 };
 export const servers = {
-  developmentServer: "http://localhost:1550/v1",
+  developmentServer: "/v1",
 };
 export type RequestOptions = {
   baseUrl?: string;
@@ -161,10 +161,7 @@ export const http = {
       headers,
       fetch: customFetch,
       ...init
-    } = {
-      ...defaults,
-      ...req,
-    };
+    } = { ...defaults, ...req };
     const href = _.joinUrl(baseUrl, url);
     const res = await (customFetch || fetch)(href, {
       ...init,
@@ -318,6 +315,14 @@ export interface ErrorResponse {
   warnings?: Issue[];
   errors: Issue[];
 }
+export interface Flag {
+  start?: string | null;
+  end?: string | null;
+  name?: string;
+  options?: object;
+  enabled?: boolean;
+}
+export type FlagsResponse = Flag[];
 export type Fein = string;
 export interface UserCreateRequest {
   email_address?: string | null;
@@ -349,7 +354,7 @@ export interface UserResponse {
   user_leave_administrators?: UserLeaveAdminResponse[];
 }
 export interface EmployerAddFeinRequestBody {
-  employer_fein?: string;
+  employer_fein?: Fein | null;
 }
 export interface UserUpdateRequest {
   consented_to_data_sharing: boolean;
@@ -408,6 +413,14 @@ export interface EmployerResponse {
   employer_dba?: string;
   employer_fein?: string;
 }
+export interface ManagedRequirementResponse {
+  follow_up_date?: any;
+  responded_at?: any;
+  status?: string | null;
+  category?: string | null;
+  type?: string | null;
+  created_at?: any;
+}
 export interface ClaimResponse {
   employer?: EmployerResponse;
   employee?: EmployeeResponse;
@@ -415,9 +428,10 @@ export interface ClaimResponse {
   fineos_notification_id?: any;
   absence_period_start_date?: any;
   absence_period_end_date?: any;
-  fineos_absence_status?: any;
-  claim_type?: any;
+  claim_status?: any;
+  claim_type_description?: any;
   created_at?: any;
+  managed_requirements?: ManagedRequirementResponse[];
 }
 export interface GETClaimsByFineosAbsenceIdResponse extends SuccessfulResponse {
   data?: ClaimResponse;
@@ -874,7 +888,7 @@ export interface DocumentUploadRequest {
   name?: string;
   description?: string;
   mark_evidence_received?: boolean;
-  file: unknown; // TODO: Was typed as Blob when generated but encountered type errors, confirm if this was previously set to unknown manually or if further work is needed here;
+  file: Blob;
 }
 export interface POSTApplicationsByApplicationIdDocumentsResponse
   extends SuccessfulResponse {
@@ -892,15 +906,20 @@ export interface EligibilityRequest {
   employer_fein: Fein;
   leave_start_date: Date;
   application_submitted_date: Date;
-  employment_status: "Employed" | "Unemployed" | "Self-Employed";
+  employment_status:
+    | "Employed"
+    | "Unemployed"
+    | "Self-Employed"
+    | "Unknown"
+    | "Retired";
 }
 export interface EligibilityResponse {
   financially_eligible: boolean;
   description: string;
-  total_wages?: number;
-  state_average_weekly_wage?: number;
-  unemployment_minimum?: number;
-  employer_average_weekly_wage?: number;
+  total_wages?: number | null;
+  state_average_weekly_wage?: number | null;
+  unemployment_minimum?: number | null;
+  employer_average_weekly_wage?: number | null;
 }
 export interface POSTFinancialEligibilityResponse extends SuccessfulResponse {
   data?: EligibilityResponse;
@@ -961,6 +980,67 @@ export async function getStatus(
   options?: RequestOptions,
 ): Promise<ApiResponse<SuccessfulResponse>> {
   return await http.fetchJson("/status", {
+    ...options,
+  });
+}
+/**
+ * Get feature flags
+ */
+export async function getFlags(
+  options?: RequestOptions,
+): Promise<ApiResponse<FlagsResponse>> {
+  return await http.fetchJson("/flags", {
+    ...options,
+  });
+}
+/**
+ * Get a feature flag
+ */
+export async function getFlagsByName(
+  {
+    name,
+  }: {
+    name: string;
+  },
+  options?: RequestOptions,
+): Promise<ApiResponse<Flag>> {
+  return await http.fetchJson(`/flags/${name}`, {
+    ...options,
+  });
+}
+/**
+ * Update a feature flag
+ */
+export async function patchFlagsByName(
+  {
+    name,
+  }: {
+    name: string;
+  },
+  flag: Flag,
+  options?: RequestOptions,
+): Promise<ApiResponse<SuccessfulResponse>> {
+  return await http.fetchJson(
+    `/flags/${name}`,
+    http.json({
+      ...options,
+      method: "PATCH",
+      body: flag,
+    }),
+  );
+}
+/**
+ * Get feature flags
+ */
+export async function getFlagsByNameLogs(
+  {
+    name,
+  }: {
+    name: string;
+  },
+  options?: RequestOptions,
+): Promise<ApiResponse<FlagsResponse>> {
+  return await http.fetchJson(`/flags/${name}/logs`, {
     ...options,
   });
 }
@@ -1157,6 +1237,7 @@ export async function getClaims(
     order_direction,
     employer_id,
     claim_status,
+    search,
   }: {
     page_size?: number;
     page_offset?: number;
@@ -1164,6 +1245,7 @@ export async function getClaims(
     order_direction?: "ascending" | "descending";
     employer_id?: string;
     claim_status?: string;
+    search?: string;
   } = {},
   options?: RequestOptions,
 ): Promise<ApiResponse<GETClaimsResponse>> {
@@ -1176,6 +1258,7 @@ export async function getClaims(
         order_direction,
         employer_id,
         claim_status,
+        search,
       }),
     )}`,
     {
@@ -1227,13 +1310,19 @@ export async function getEmployersClaimsByFineos_absence_idDocuments(
 export async function getEmployersClaimsByFineos_absence_idReview(
   {
     fineos_absence_id,
+    xFfDefaultToV2,
   }: {
     fineos_absence_id: string;
+    xFfDefaultToV2?: string;
   },
   options?: RequestOptions,
 ): Promise<ApiResponse<GETEmployersClaimsByFineosAbsenceIdReviewResponse>> {
   return await http.fetchJson(`/employers/claims/${fineos_absence_id}/review`, {
     ...options,
+    headers: {
+      ...options?.headers,
+      "X-FF-Default-To-V2": xFfDefaultToV2,
+    },
   });
 }
 /**
