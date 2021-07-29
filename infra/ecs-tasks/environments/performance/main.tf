@@ -92,6 +92,10 @@ module "tasks" {
   enable_recurring_payments_schedule = false
   enable_register_admins_job         = true
 
+  enable_pub_automation_fineos           = true
+  enable_pub_automation_create_pub_files = false
+  enable_pub_automation_process_returns  = false
+
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
   dor_fineos_etl_schedule_expression = "cron(30 0 * * ? *)" # Daily at 00:30 UTC [19:30 EST] [20:30 EDT]

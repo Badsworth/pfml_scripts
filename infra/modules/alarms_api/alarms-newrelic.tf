@@ -363,7 +363,7 @@ module "pub_delegated_payments_errors" {
 
   enabled   = true
   name      = "Errors encountered by a PUB delegated payments ECS task"
-  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
+  policy_id = newrelic_alert_policy.low_priority_api_alerts.id
 
   nrql = <<-NRQL
     SELECT count(*) FROM Log
@@ -375,7 +375,7 @@ module "pub_delegated_payments_errors" {
 
 module "pub_delegated_payments_ecs_task_failures" {
   source    = "../newrelic_single_error_alarm"
-  policy_id = newrelic_alert_policy.api_alerts.id
+  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.api_alerts.id : newrelic_alert_policy.low_priority_api_alerts.id
 
   enabled = true
   name    = "PUB delegated payments ECS task failed"
