@@ -46,7 +46,7 @@ exports[`Employer dashboard renders a 'no results' message in the table, and no 
 
 exports[`Employer dashboard renders a beta info alert if all employers are registered in FINEOS 2`] = `
 Array [
-  "Our dashboard is in beta. You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can ",
+  "You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can ",
   <a
     href="https://www.mass.gov/paidleave-employer-feedback"
     key="1"
