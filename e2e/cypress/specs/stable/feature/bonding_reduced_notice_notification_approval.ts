@@ -30,10 +30,6 @@ describe("Approval (notifications/notices)", () => {
           ...claim,
           credentials,
         }).then((response) => {
-          if (!response.fineos_absence_id) {
-            throw new Error("Response contained no fineos_absence_id property");
-          }
-
           cy.stash("submission", {
             application_id: response.application_id,
             fineos_absence_id: response.fineos_absence_id,
@@ -68,7 +64,11 @@ describe("Approval (notifications/notices)", () => {
           claimPage.shouldHaveStatus("Restriction", "Passed");
           claimPage.shouldHaveStatus("PlanDecision", "Accepted");
           claimPage.approve();
-          claimPage.triggerNotice("Approval Notice");
+          claimPage
+            .triggerNotice("Designation Notice")
+            .documents((docPage) =>
+              docPage.assertDocumentExists("Approval Notice")
+            );
         });
       });
     }

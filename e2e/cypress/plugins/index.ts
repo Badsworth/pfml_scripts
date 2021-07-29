@@ -19,13 +19,16 @@ import {
   getPortalSubmitter,
   getVerificationFetcher,
 } from "../../src/util/common";
-import { Credentials, Scenarios } from "../../src/types";
+import {
+  ApplicationSubmissionResponse,
+  Credentials,
+  Scenarios,
+} from "../../src/types";
 import {
   generateCredentials,
   getClaimantCredentials,
   getLeaveAdminCredentials,
 } from "../../src/util/credentials";
-import { ApplicationResponse } from "../../src/api";
 
 import fs from "fs";
 import pdf from "pdf-parse";
@@ -97,7 +100,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         credentials?: Credentials;
         employerCredentials?: Credentials;
       }
-    ): Promise<ApplicationResponse> {
+    ): Promise<ApplicationSubmissionResponse> {
       if (!application.claim) throw new Error("Application missing!");
       const { credentials, employerCredentials, ...claim } = application;
       const { employer_fein } = application.claim;
@@ -140,7 +143,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       const claim = ClaimGenerator.generate(
         await getEmployeePool(),
         scenario.employee,
-        scenario.claim
+        scenario.claim as APIClaimSpec
       );
       // Dehydrate (save) documents to the temp directory, where they can be picked up later on.
       // The file for a document is normally a callback function, which cannot be serialized and

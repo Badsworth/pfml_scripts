@@ -17,13 +17,7 @@ import dataDirectory, {
   DataDirectory,
 } from "./../../../src/generation/DataDirectory";
 import { EmployerBenefit, OtherIncome, PreviousLeave } from "../../../src/_api";
-import {
-  differenceInCalendarWeeks,
-  parseISO,
-  isSunday,
-  isAfter,
-} from "date-fns";
-import { getCaringLeaveStartEndDates } from "../../../src/util/claims";
+import { parseISO } from "date-fns";
 import {
   assertIsTypedArray,
   isValidPreviousLeave,
@@ -180,15 +174,6 @@ const EMPLOYEE_TEST_DIR = "/employee_unit_test";
 const prepareStorage = async () => {
   storage = dataDirectory(EMPLOYEE_TEST_DIR);
   await storage.prepare();
-};
-
-const [start, end] = getCaringLeaveStartEndDates();
-const caring_leave_dates: ClaimSpecification = {
-  label: "Testing Caring Leave Dates",
-  reason: "Care for a Family Member",
-  work_pattern_spec: "0,720,0,720,0,720,0",
-  docs: {},
-  leave_dates: [start, end],
 };
 
 const removeStorage = async () => {
@@ -926,19 +911,6 @@ describe("ClaimPool", () => {
         )
       );
       expect(pool.length).toBe(1);
-    });
-
-    it("Should generate proper leave dates for caring leave claims", () => {
-      const { claim } = ClaimGenerator.generate(
-        employeePool,
-        {},
-        caring_leave_dates
-      );
-      const [start, end] = extractLeavePeriod(claim);
-      const leave_period_weeks = differenceInCalendarWeeks(end, start);
-      expect(isSunday(start)).toBe(true);
-      expect(isAfter(start, parseISO("2021-07-01"))).toBe(true);
-      expect(leave_period_weeks).toEqual(2);
     });
   });
 });

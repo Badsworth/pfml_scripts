@@ -597,6 +597,8 @@ def add_or_update_address(
 
     state_id = None
     address_to_update = None
+    fields_to_update = set()
+
     if address is not None:
         if address.state:
             state_id = GeoState.get_id(address.state)
@@ -608,6 +610,7 @@ def add_or_update_address(
             geo_state_id=state_id,
             zip_code=address.zip,
         )
+        fields_to_update = address.__fields_set__
 
     address_field_name, address_id_field_name, address_type_id = address_type_mapping(address_type)
 
@@ -629,24 +632,22 @@ def add_or_update_address(
         elif db_address is not None:
             db_address.address_line_one = (
                 address.line_1
-                if address.line_1 != mask.ADDRESS_MASK
+                if address.line_1 != mask.ADDRESS_MASK and "line_1" in fields_to_update
                 else db_address.address_line_one
             )
             db_address.address_line_two = (
                 address.line_2
-                if address.line_2 != mask.ADDRESS_MASK
+                if address.line_2 != mask.ADDRESS_MASK and "line_2" in fields_to_update
                 else db_address.address_line_two
             )
-            db_address.city = address.city
-            db_address.geo_state_id = state_id
-            zip_code = None
-            if address.zip:
+            if "city" in fields_to_update:
+                db_address.city = address.city
+            if "state" in fields_to_update:
+                db_address.geo_state_id = state_id
+            if "zip" in fields_to_update and address.zip:
                 # re-use the db value if zip is masked, otherwise, use the new value
-                if Regexes.MASKED_ZIP.match(address.zip):
-                    zip_code = db_address.zip_code
-                else:
-                    zip_code = address.zip
-            db_address.zip_code = zip_code
+                if not Regexes.MASKED_ZIP.match(address.zip):
+                    db_address.zip_code = address.zip
 
     # If we don't have an existing address but have a body, add an address.
     elif address_to_update is not None:

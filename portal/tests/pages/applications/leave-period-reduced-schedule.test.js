@@ -4,6 +4,7 @@ import {
   simulateEvents,
 } from "../../test-utils";
 import LeavePeriodReducedSchedule from "../../../src/pages/applications/leave-period-reduced-schedule";
+import { shallow } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -16,8 +17,12 @@ describe("LeavePeriodReducedSchedule", () => {
     const { wrapper } = renderWithAppLogic(LeavePeriodReducedSchedule, {
       claimAttrs: claim,
     });
+    const Label = wrapper.find("InputChoiceGroup").prop("label");
+    const labelWrapper = shallow(Label);
 
     expect(wrapper).toMatchSnapshot();
+    expect(labelWrapper).toMatchSnapshot();
+
     wrapper
       .find("Trans")
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
@@ -86,8 +91,11 @@ describe("LeavePeriodReducedSchedule", () => {
     const claim = new MockBenefitsApplicationBuilder()
       .reducedSchedule()
       .create();
-    const { end_date, start_date, leave_period_id } =
-      claim.leave_details.reduced_schedule_leave_periods[0];
+    const {
+      end_date,
+      start_date,
+      leave_period_id,
+    } = claim.leave_details.reduced_schedule_leave_periods[0];
 
     const { appLogic, wrapper } = renderWithAppLogic(
       LeavePeriodReducedSchedule,
@@ -125,8 +133,9 @@ describe("LeavePeriodReducedSchedule", () => {
       }
     );
 
-    const { changeField, changeRadioGroup, submitForm } =
-      simulateEvents(wrapper);
+    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
+      wrapper
+    );
 
     changeRadioGroup("has_reduced_schedule_leave_periods", "true");
     changeField(

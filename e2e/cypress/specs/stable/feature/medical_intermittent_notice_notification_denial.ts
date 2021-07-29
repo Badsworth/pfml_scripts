@@ -1,6 +1,5 @@
 import { fineos, portal, email, fineosPages } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
-import { ApplicationResponse } from "../../../../src/api";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 
@@ -25,21 +24,21 @@ describe("Denial Notification and Notice", () => {
         cy.task("submitClaimToAPI", {
           ...claim,
           credentials,
-        }).then((responseData: ApplicationResponse) => {
-          if (!responseData.fineos_absence_id) {
-            throw new Error("FINEOS ID must be specified");
-          }
+        }).then((res) => {
           cy.stash("claim", claim.claim);
           cy.stash("submission", {
-            application_id: responseData.application_id,
-            fineos_absence_id: responseData.fineos_absence_id,
+            application_id: res.application_id,
+            fineos_absence_id: res.fineos_absence_id,
             timestamp_from: Date.now(),
           });
 
-          fineosPages.ClaimPage.visit(responseData.fineos_absence_id)
+          fineosPages.ClaimPage.visit(res.fineos_absence_id)
             .shouldHaveStatus("Eligibility", "Not Met")
             .deny("Claimant wages failed 30x rule")
-            .triggerNotice("Denial Notice");
+            .triggerNotice("Leave Request Declined")
+            .documents((docPage) =>
+              docPage.assertDocumentExists("Denial Notice")
+            );
         });
       });
     }

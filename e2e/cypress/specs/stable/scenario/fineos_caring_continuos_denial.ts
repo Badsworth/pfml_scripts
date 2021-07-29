@@ -1,8 +1,7 @@
-import { extractLeavePeriod } from "../../../../src/util/claims";
-import { portal, fineos } from "../../../actions";
+import { portal, fineos, fineosPages } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
-import { LeaveReason } from "../../../../src/generation/Claim";
+import { Submission } from "../../../../src/types";
 describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
   const fineosSubmission = it(
     "Should be able to create a claim",
@@ -13,32 +12,37 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
       cy.task("generateClaim", "CDENY2").then((claim) => {
         cy.stash("claim", claim);
         assertValidClaim(claim.claim);
-        fineos.searchClaimantSSN(claim.claim.tax_identifier);
-        fineos.clickBottomWidgetButton("OK");
-        fineos.assertOnClaimantPage(
-          claim.claim.first_name,
-          claim.claim.last_name
-        );
-        const [startDate, endDate] = extractLeavePeriod(
-          claim.claim,
-          "continuous_leave_periods"
-        );
-        fineos.createNotification(startDate, endDate, "caring", claim.claim);
-        cy.get("a[name*='CaseMapWidget']")
-          .invoke("text")
-          .then((text) => {
-            const fineos_absence_id = text.slice(24);
-            cy.stash("fineos_absence_id", fineos_absence_id);
+        fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
+          .createNotification(claim.claim)
+          .then((fineos_absence_id) => {
             cy.log(fineos_absence_id);
-            const reason = claim.claim.leave_details?.reason;
-            fineos.visitClaim(fineos_absence_id);
-            fineos.assertClaimStatus("Adjudication");
-            fineos.reviewMailedDocumentsWithTasks(
-              fineos_absence_id,
-              reason as LeaveReason,
-              "Caring Certification Review",
-              true
-            );
+            cy.stash("submission", {
+              fineos_absence_id: fineos_absence_id,
+              timestamp_from: Date.now(),
+            });
+            fineosPages.ClaimPage.visit(fineos_absence_id)
+              .documents((docs) => {
+                claim.documents.forEach((document) =>
+                  docs
+                    .uploadDocument(document.document_type)
+                    .assertDocumentUploads(document.document_type)
+                );
+              })
+              .tasks((taskPage) => {
+                taskPage.add("ID Review");
+                taskPage.add("Caring Certification Review");
+              })
+              .adjudicate((adjudication) => {
+                adjudication.evidence((evidence) =>
+                  claim.documents.forEach(({ document_type }) =>
+                    evidence.receive(document_type)
+                  )
+                );
+              })
+              .tasks((taskPage) => {
+                taskPage.close("ID Review");
+                taskPage.close("Caring Certification Review");
+              });
           });
       });
     }
@@ -48,7 +52,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     cy.dependsOnPreviousPass([fineosSubmission]);
     portal.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<string>("fineos_absence_id").then((fineos_absence_id) => {
+      cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
         assertValidClaim(claim.claim);
         portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
         portal.selectClaimFromEmployerDashboard(fineos_absence_id, "--");
@@ -62,9 +66,10 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     cy.dependsOnPreviousPass([fineosSubmission, employerDenial]);
     fineos.before();
     cy.visit("/");
-    cy.unstash<string>("fineos_absence_id").then((fineos_absence_id) => {
-      fineos.visitClaim(fineos_absence_id);
-      fineos.denyClaim("Covered family relationship not established");
+    cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+      fineosPages.ClaimPage.visit(fineos_absence_id).deny(
+        "Covered family relationship not established"
+      );
     });
   });
 });

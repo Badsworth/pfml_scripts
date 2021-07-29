@@ -3,6 +3,7 @@ import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { getDocumentReviewTaskName } from "../../../../src/util/documents";
 
 describe("Submit caring application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest = it("As a claimant, I should be able to submit a continous caring application through the portal", () => {
@@ -57,12 +58,30 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
       cy.dependsOnPreviousPass();
       fineos.before();
       cy.visit("/");
-      cy.unstash<Submission>("submission").then((submission) => {
-        fineos.claimAdjudicationFlow(
-          submission.fineos_absence_id,
-          "Care for a Family Member",
-          true
-        );
+      cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+        cy.unstash<DehydratedClaim>("claim").then((claim) => {
+          fineosPages.ClaimPage.visit(fineos_absence_id)
+            .tasks((tasks) => {
+              claim.documents.forEach((doc) =>
+                tasks.assertTaskExists(
+                  getDocumentReviewTaskName(doc.document_type)
+                )
+              );
+            })
+            .shouldHaveStatus("Applicability", "Applicable")
+            .shouldHaveStatus("Eligibility", "Met")
+            .adjudicate((adjudication) => {
+              adjudication
+                .evidence((evidence) =>
+                  claim.documents.forEach((doc) =>
+                    evidence.receive(doc.document_type)
+                  )
+                )
+                .certificationPeriods((certPreiods) => certPreiods.prefill())
+                .acceptLeavePlan();
+            })
+            .approve();
+        });
       });
     }
   );

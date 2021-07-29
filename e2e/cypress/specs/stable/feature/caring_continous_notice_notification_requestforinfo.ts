@@ -25,20 +25,15 @@ describe("Request for More Information (notifications/notices)", () => {
         cy.task("submitClaimToAPI", {
           ...claim,
           credentials,
-        }).then((responseData: ApplicationResponse) => {
-          if (!responseData.fineos_absence_id) {
-            throw new Error("FINEOS ID must be specified");
-          }
+        }).then((res) => {
           cy.stash("claim", claim.claim);
           cy.stash("submission", {
-            application_id: responseData.application_id,
-            fineos_absence_id: responseData.fineos_absence_id,
+            application_id: res.application_id,
+            fineos_absence_id: res.fineos_absence_id,
             timestamp_from: Date.now(),
           });
 
-          const page = fineosPages.ClaimPage.visit(
-            responseData.fineos_absence_id
-          );
+          const page = fineosPages.ClaimPage.visit(res.fineos_absence_id);
           page.adjudicate((adjudication) => {
             adjudication.evidence((evidence) => {
               const certificationDocument = findCertificationDoc(
@@ -62,13 +57,17 @@ describe("Request for More Information (notifications/notices)", () => {
           });
           // This should trigger a change in plan status.
           page.shouldHaveStatus("PlanDecision", "Pending Evidence");
-          page.triggerNotice("Request for more Information");
+          page
+            .triggerNotice("SOM Generate Legal Notice")
+            .documents((docPage) =>
+              docPage.assertDocumentExists("Request for more Information")
+            );
         });
       });
     }
   );
 
-  it(
+  const upload = it(
     "Should allow claimant to upload additional documents and generate a legal notice (Request for Information) that the claimant can view",
     { retries: 0 },
     () => {
@@ -107,6 +106,7 @@ describe("Request for More Information (notifications/notices)", () => {
     "CSR rep can view the additional information uploaded by claimant",
     { baseUrl: getFineosBaseUrl() },
     () => {
+      cy.dependsOnPreviousPass([submit, upload]);
       fineos.before();
       cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {

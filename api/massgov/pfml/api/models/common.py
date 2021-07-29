@@ -6,13 +6,37 @@ from typing import Optional
 from pydantic import UUID4
 
 import massgov.pfml.db.models.applications as db_application_models
+import massgov.pfml.db.models.employees as db_employee_models
+import massgov.pfml.db.models.payments as db_payment_models
+import massgov.pfml.db.models.verifications as db_verification_models
+from massgov.pfml.db.lookup import LookupTable
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
 class LookupEnum(Enum):
     @classmethod
     def get_lookup_model(cls):
-        return getattr(db_application_models, cls.__name__)
+        for model_collection in [
+            db_application_models,
+            db_employee_models,
+            db_verification_models,
+            db_payment_models,
+        ]:
+            class_with_same_name = getattr(model_collection, cls.__name__, None)
+
+            if class_with_same_name is not None:
+                break
+
+        # we didn't find a matching model anywhere
+        if class_with_same_name is None:
+            raise ValueError(f"Can not find matching database lookup table for {cls.__name__}")
+
+        if issubclass(class_with_same_name, LookupTable):
+            db_table_model = class_with_same_name.model
+        else:
+            db_table_model = class_with_same_name
+
+        return db_table_model
 
     @classmethod
     def get_lookup_value_column_name(cls):
@@ -46,10 +70,6 @@ class PreviousLeaveQualifyingReason(str, LookupEnum):
     UNKNOWN = "Unknown"
     AN_ILLNESS_OR_INJURY = "An illness or injury"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkPreviousLeaveQualifyingReason
-
 
 class PreviousLeave(PydanticBaseModel):
     is_for_current_employer: Optional[bool]
@@ -76,10 +96,6 @@ class AmountFrequency(str, LookupEnum):
     all_at_once = "In Total"
     unknown = "Unknown"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkAmountFrequency
-
 
 class EmployerBenefitType(str, LookupEnum):
     accrued_paid_leave = "Accrued paid leave"
@@ -87,10 +103,6 @@ class EmployerBenefitType(str, LookupEnum):
     permanent_disability_insurance = "Permanent disability insurance"
     family_or_medical_leave_insurance = "Family or medical leave insurance"
     unknown = "Unknown"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkEmployerBenefitType
 
 
 class EmployerBenefit(PydanticBaseModel):

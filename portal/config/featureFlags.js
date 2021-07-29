@@ -20,8 +20,7 @@ const flagsConfig = {
     // When this flag is enabled, the "Other leave, income, and benefits" step of
     // the Claim flow becomes visible, and its validation rules are applied via
     // a X-FF-Require-Other-Leaves header on API requests.
-    // TODO (CP-1346): Show this step once it's been integrated w/ the API.
-    claimantShowOtherLeaveStep: false,
+    claimantShowOtherLeaveStep: true,
 
     // When this flag is enabled, the Leave Admin dashboard supports search functionality
     // TODO (EMPLOYER-1500): Remove flag
@@ -35,6 +34,12 @@ const flagsConfig = {
     // TODO (EMPLOYER-718): Remove flag
     employerShowPreviousLeaves: false,
 
+    // When this flag is enabled, the status column's current value of -- inside of the dashboard page will be replaced with either:
+    // Review by {date}
+    // No action required
+    // TODO (EMPLOYER-1587) Remove flag
+    employerShowReviewByStatus: false,
+
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
     noMaintenance: false,
@@ -45,12 +50,6 @@ const flagsConfig = {
     // update the reference to it in _app.js), but try to keep it prefixed with pfml.
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
-
-    // When this flag is enabled, the user can apply to take leave to
-    // "Care for a family member with a serious health condition" and
-    // Leave Admins can review Caring Leave claims
-    // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
-    showCaringLeaveType: true,
 
     // When this flag is enabled, the medical leave question numbers for leave periods
     // are updated to reflect the new "Certification of Your Serious Health Condition"

@@ -39,11 +39,13 @@ export const generators = {
   PREGNANCY_MATERNITY_FORM: new HealthCareProviderForm(
     "Pregnancy/Maternity form"
   ),
-  /**@NOTE following are stub documents for use only when submitting fineos specific claims */
+  /**Stub document for use only when submitting fineos specific claims */
   MILITARY_EXIGENCY_FORM: new StubFineosDoc("Military exigency form"),
+  /**Stub document for use only when submitting fineos specific claims */
   ACTIVE_SERVICE_PROOF: new StubFineosDoc(
     "Family Member Active Duty Service Proof"
   ),
+  /**Stub document for use only when submitting fineos specific claims */
   COVERED_SERVICE_MEMBER_ID: new StubFineosDoc(
     "Covered Service Member Identification Proof"
   ),

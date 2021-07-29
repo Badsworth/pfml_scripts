@@ -32,9 +32,7 @@ export const Welcome = ({ appLogic, user }) => {
   };
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const shouldShowOtherLeave = isFeatureEnabled("claimantShowOtherLeaveStep");
-  const shouldShowCaringLeave = isFeatureEnabled("showCaringLeaveType");
-  const shouldShowCaringLeaveAlert =
-    shouldShowCaringLeave && !shouldShowOtherLeave;
+  const shouldShowCaringLeaveAlert = !shouldShowOtherLeave;
 
   return (
     <React.Fragment>
@@ -142,9 +140,6 @@ export const Welcome = ({ appLogic, user }) => {
                     rel="noopener"
                   />
                 ),
-              }}
-              tOptions={{
-                context: shouldShowCaringLeave ? "caring" : undefined,
               }}
             />
           </p>

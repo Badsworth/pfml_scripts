@@ -11,6 +11,7 @@ import flask
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app
+from massgov.pfml import db
 from massgov.pfml.db.models.employees import ImportLog
 from massgov.pfml.reductions.dia import Metrics as DIAMetrics
 from massgov.pfml.reductions.dua import Metrics as DUAMetrics
@@ -27,21 +28,8 @@ def init(app, dashboard_password):
     def dashboard_batch(key):
         if not secrets.compare_digest(key, dashboard_password):
             raise NotFound
-        entries = import_jobs_get()
-        data: dict = {
-            "filtered": [],
-            "processed": [],
-        }
-
-        for entry in entries:
-            report = json.loads(entry.get("report")) if entry.get("report") else None
-            if report and (
-                report.get(DUAMetrics.DUA_PAYMENT_LISTS_DOWNLOADED_COUNT) == 0
-                or report.get(DIAMetrics.DIA_PAYMENT_LISTS_DOWNLOADED_COUNT) == 0
-            ):
-                data["filtered"].append(entry)
-            else:
-                data["processed"].append(entry)
+        with massgov.pfml.api.app.db_session() as db_session:
+            data = process_entries(db_session)
         return flask.render_template("dashboards.html", data=data, now=utcnow())
 
     @app.route("/dashboard/<key>/batch/<int:batch_id>")
@@ -56,8 +44,29 @@ def init(app, dashboard_password):
     def dashboard_batch_name(key, batch_name):
         if not secrets.compare_digest(key, dashboard_password):
             raise NotFound
-        entries = import_jobs_get(batch_name)
-        return flask.render_template("dashboards.html", data=entries, now=utcnow(), base_url="../")
+        with massgov.pfml.api.app.db_session() as db_session:
+            data = process_entries(db_session, batch_name)
+        return flask.render_template("dashboards.html", data=data, now=utcnow(), base_url="../")
+
+
+def process_entries(db_session: db.Session, batch_name: Optional[str] = None) -> dict:
+    data: dict = {
+        "filtered": [],
+        "processed": [],
+    }
+
+    entries = import_jobs_get(db_session, batch_name)
+
+    for entry in entries:
+        report = json.loads(entry.get("report")) if entry.get("report") else None
+        if report and (
+            report.get(DUAMetrics.DUA_PAYMENT_LISTS_DOWNLOADED_COUNT) == 0
+            or report.get(DIAMetrics.DIA_PAYMENT_LISTS_DOWNLOADED_COUNT) == 0
+        ):
+            data["filtered"].append(entry)
+        else:
+            data["processed"].append(entry)
+    return data
 
 
 class ImportLogResponse(PydanticBaseModel):
@@ -70,12 +79,11 @@ class ImportLogResponse(PydanticBaseModel):
     end: Optional[datetime]
 
 
-def import_jobs_get(source=None):
-    with massgov.pfml.api.app.db_session() as db_session:
-        query = db_session.query(ImportLog)
-        if source is not None:
-            query = query.filter(ImportLog.source == source)
-        import_logs = query.order_by(ImportLog.import_log_id.desc()).limit(1000)
+def import_jobs_get(db_session, source=None):
+    query = db_session.query(ImportLog)
+    if source is not None:
+        query = query.filter(ImportLog.source == source)
+    import_logs = query.order_by(ImportLog.import_log_id.desc()).limit(1000)
 
     import_logs_response = list(
         map(lambda import_log: ImportLogResponse.from_orm(import_log).dict(), import_logs,)

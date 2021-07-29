@@ -111,6 +111,7 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
     key="status"
   >
     <AbsenceCaseStatusTag
+      managedRequirements={null}
       status="Approved"
     />
   </td>

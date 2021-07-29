@@ -36,7 +36,6 @@ describe("LeaveReasonPage", () => {
   it("renders the page with all five reasons when type feature flags are enabled", () => {
     process.env.featureFlags = {
       claimantShowMilitaryLeaveTypes: true,
-      showCaringLeaveType: true,
     };
 
     const { wrapper } = setup();
@@ -55,10 +54,8 @@ describe("LeaveReasonPage", () => {
   });
 
   it("renders the page without military leave and caring leave options when type feature flags are disabled", () => {
-    // TODO (CP-2311): Remove showCaringLeaveType flag once caring leave is made available in Production
     process.env.featureFlags = {
       claimantShowMilitaryLeaveTypes: false,
-      showCaringLeaveType: false,
     };
 
     const { wrapper } = setup();
@@ -67,7 +64,7 @@ describe("LeaveReasonPage", () => {
 
     expect(choiceGroup.exists(`[value="${LeaveReason.medical}"]`)).toBe(true);
     expect(choiceGroup.exists(`[value="${LeaveReason.bonding}"]`)).toBe(true);
-    expect(choiceGroup.exists(`[value="${LeaveReason.care}"]`)).toBe(false);
+    expect(choiceGroup.exists(`[value="${LeaveReason.care}"]`)).toBe(true);
     expect(
       choiceGroup.exists(`[value="${LeaveReason.activeDutyFamily}"]`)
     ).toBe(false);

@@ -4,19 +4,28 @@ import connexion
 import flask
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
-from werkzeug.exceptions import BadRequest, Conflict, NotFound, Unauthorized
+from werkzeug.exceptions import Conflict, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import READ, requires
-from massgov.pfml.api.validation.exceptions import PaymentRequired
+from massgov.pfml.api.models.employers.requests import EmployerAddFeinRequest
+from massgov.pfml.api.models.employers.responses import EmployerAddFeinResponse
+from massgov.pfml.api.services.employer_rules import (
+    EmployerRequiresVerificationDataException,
+    validate_employer_being_added,
+)
+from massgov.pfml.api.validation.exceptions import (
+    PaymentRequired,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.employees import (
     Employer,
     EmployerQuarterlyContribution,
     UserLeaveAdministrator,
 )
-from massgov.pfml.util.strings import format_fein, sanitize_fein
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -58,49 +67,42 @@ def employer_get_most_recent_withholding_dates(employer_id: str) -> flask.Respon
 
 @requires(READ, "EMPLOYER_API")
 def employer_add_fein() -> flask.Response:
-    body = connexion.request.json
-    fein_to_add = sanitize_fein(body["employer_fein"])
-
+    add_fein_request = EmployerAddFeinRequest.parse_obj(connexion.request.json)
     current_user = app.current_user()
+
     if current_user is None:
         raise Unauthorized()
 
+    if add_fein_request.employer_fein is None:
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    field="employer_fein",
+                    type=response_util.IssueType.required,
+                    message="employer_fein is required",
+                )
+            ],
+        )
+
     with app.db_session() as db_session:
         employer = (
-            db_session.query(Employer).filter(Employer.employer_fein == fein_to_add).one_or_none()
+            db_session.query(Employer)
+            .filter(Employer.employer_fein == add_fein_request.employer_fein)
+            .one_or_none()
         )
 
-        if not employer or not employer.fineos_employer_id:
+        try:
+            validate_employer_being_added(employer)
+        except EmployerRequiresVerificationDataException as e:
             return response_util.error_response(
-                status_code=BadRequest,
-                message="Invalid FEIN",
-                errors=[
-                    response_util.custom_issue(
-                        type="invalid", message="Invalid FEIN", field="employer_fein",
-                    )
-                ],
-                data={},
+                status_code=PaymentRequired, errors=e.errors, data={}, message="Invalid request"
             ).to_api_response()
 
-        if employer.has_verification_data is False:
-            return response_util.error_response(
-                status_code=PaymentRequired,
-                message="Employer has no verification data",
-                errors=[
-                    response_util.custom_issue(
-                        type="employer_verification_data_required",
-                        message="Employer has no verification data",
-                        rule="employer_requires_verification_data",
-                        field="employer_fein",
-                    )
-                ],
-                data={},
-            ).to_api_response()
-
-        link = UserLeaveAdministrator(
-            user_id=current_user.user_id, employer_id=employer.employer_id,
-        )
-        db_session.add(link)
+        if employer is not None:
+            link = UserLeaveAdministrator(
+                user_id=current_user.user_id, employer_id=employer.employer_id,
+            )
+            db_session.add(link)
 
         try:
             db_session.commit()
@@ -113,20 +115,16 @@ def employer_add_fein() -> flask.Response:
                 status_code=Conflict,
                 message="Duplicate employer for user",
                 errors=[
-                    response_util.custom_issue(
+                    response_util.Issue(
                         field="employer_fein",
-                        type="duplicate",
+                        type=response_util.IssueType.duplicate,
                         message="Duplicate employer for user",
                     )
                 ],
             ).to_api_response()
 
-        response_data = {
-            "employer_dba": employer.employer_dba,
-            "employer_id": employer.employer_id,
-            "employer_fein": format_fein(employer.employer_fein),
-        }
-
         return response_util.success_response(
-            message="Successfully added FEIN to user", status_code=201, data=response_data
+            message="Successfully added FEIN to user",
+            status_code=201,
+            data=EmployerAddFeinResponse.from_orm(employer).dict(),
         ).to_api_response()

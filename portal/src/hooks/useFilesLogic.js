@@ -47,12 +47,8 @@ function optimizeFileSize(file, maximumFileSize) {
           originalSize: file.size,
           compressedSize: compressedBlob.size,
         });
-        resolve(
-          // convert Blob to File
-          new File([compressedBlob], fileNameWithPrefix, {
-            type: compressedBlob.type,
-          })
-        );
+        compressedBlob.name = fileNameWithPrefix;
+        resolve(compressedBlob);
       },
       error: (error) => {
         tracker.noticeError(error, {

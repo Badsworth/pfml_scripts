@@ -15,7 +15,6 @@ from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.claims.responses import ClaimResponse
 from massgov.pfml.api.services.administrator_fineos_actions import (
-    DOWNLOADABLE_DOC_TYPES,
     awaiting_leave_info,
     complete_claim_review,
     create_eform,
@@ -25,15 +24,9 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.applications import FINEOSWebIdExt
-from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
-    Claim,
-    Employee,
-    Employer,
-    UserLeaveAdministrator,
-)
-from massgov.pfml.db.queries.get_claims_query import GetClaimsQuery
-from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
+from massgov.pfml.db.models.employees import AbsenceStatus, Claim, Employer, UserLeaveAdministrator
+from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter, GetClaimsQuery
+from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData, Employee
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
@@ -380,13 +373,6 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
         )
         raise Forbidden(description="User does not have access to this document")
 
-    if document.document_type and document.document_type.lower() not in DOWNLOADABLE_DOC_TYPES:
-        log_attributes["document_type"] = document.document_type
-        logger.error(
-            "employer_document_download failed - document_type not found", extra={**log_attributes},
-        )
-        raise Forbidden(description="User does not have access to this document")
-
     document_data: Base64EncodedFileData = download_document_as_leave_admin(
         user_leave_admin.fineos_web_id, fineos_absence_id, fineos_document_id  # type: ignore
     )
@@ -614,7 +600,7 @@ def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
     """Confirm the absence statuses match a filterable status"""
 
     for absence_status in absence_statuses:
-        if absence_status == "Pending":
+        if absence_status in ActionRequiredStatusFilter.all():
             continue
 
         try:
@@ -626,7 +612,9 @@ def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
 
 
 def convert_pending_absence_status(absence_statuses: Set[str]) -> Set[str]:
-    if "Pending" in absence_statuses:
-        absence_statuses.remove("Pending")
+    if (
+        ActionRequiredStatusFilter.PENDING in absence_statuses
+        or ActionRequiredStatusFilter.PENDING_NO_ACTION in absence_statuses
+    ):
         absence_statuses.update(["Intake In Progress", "In Review", "Adjudication", None])  # type: ignore
     return absence_statuses

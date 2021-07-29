@@ -404,6 +404,23 @@ def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Iss
     return issues
 
 
+def get_leave_related_issues(application: Application) -> List[Issue]:
+
+    is_medical_leave_app = application.leave_reason_id in (
+        LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
+        LeaveReason.PREGNANCY_MATERNITY.leave_reason_id,
+    )
+
+    if application.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id:
+        return get_bonding_leave_issues(application)
+    elif is_medical_leave_app:
+        return get_medical_leave_issues(application)
+    elif application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id:
+        return get_caring_leave_issues(application)
+
+    return []
+
+
 def get_conditional_issues(application: Application, headers: Headers) -> List[Issue]:
     issues = []
     # TODO (CP-1674): This condition is temporary. It can be removed once we
@@ -437,21 +454,8 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
                 field="mailing_address",
             )
         )
-
-    if application.leave_reason_id in [
-        LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
-        LeaveReason.PREGNANCY_MATERNITY.leave_reason_id,
-    ]:
-        issues += get_medical_leave_issues(application)
-
-    if application.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id:
-        issues += get_bonding_leave_issues(application)
-
-    if (
-        application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
-        and application.caring_leave_metadata
-    ):
-        issues += get_caring_leave_issues(application)
+    if application.leave_reason_id is not None:
+        issues += get_leave_related_issues(application)
 
     if application.employer_notified:
         if not application.employer_notification_date:
@@ -615,8 +619,10 @@ def get_bonding_leave_issues(application: Application) -> List[Issue]:
 
 
 def get_caring_leave_issues(application: Application) -> List[Issue]:
-    issues = []
+    if not application.caring_leave_metadata:
+        return []
 
+    issues = []
     required_fields = [
         "family_member_first_name",
         "family_member_last_name",
@@ -1042,8 +1048,7 @@ def get_reduced_schedule_leave_issues(application: Application) -> List[Issue]:
 def get_reduced_schedule_leave_minutes_issues(
     leave_period: ReducedScheduleLeavePeriod, leave_period_path: str, application: Application
 ) -> List[Issue]:
-    """Validate the *_off_minutes fields of a reduced leave period
-    """
+    """Validate the *_off_minutes fields of a reduced leave period"""
 
     issues = []
     # These fields should be ordered in the same order as DayOfWeek (Sunday–Saturday)
@@ -1149,9 +1154,9 @@ def validate_application_state(
     existing_application: Application, db_session: db.Session
 ) -> List[Issue]:
     """
-        Utility method for validating an application's state in the entire system is valid
-        Currently the only check is one to potentially catch fraud where an SSN is being used
-        with multiple email addresses.
+    Utility method for validating an application's state in the entire system is valid
+    Currently the only check is one to potentially catch fraud where an SSN is being used
+    with multiple email addresses.
     """
     issues = []
 

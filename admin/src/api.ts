@@ -1,4 +1,4 @@
-import { http, RequestOptions } from "./_api";
+import { ApiResponse, http, RequestOptions } from "./_api";
 import configs from "./config.json";
 
 /**
@@ -26,6 +26,7 @@ http.fetch = (
   ...args: Parameters<typeof http.fetch>
 ): ReturnType<typeof http.fetch> => {
   args[1] = {
+    ...args[1],
     baseUrl: (
       configs as {
         [key: string]: RequestOptions;
@@ -35,6 +36,13 @@ http.fetch = (
   return _fetch(...args).catch((e) => {
     throw e;
   });
+};
+const _fetchJson = http.fetchJson;
+http.fetchJson = async (
+  ...args: Parameters<typeof http.fetchJson>
+): Promise<ApiResponse<any>> => {
+  const res = await _fetchJson(...args);
+  return res.data;
 };
 
 export * from "./_api";

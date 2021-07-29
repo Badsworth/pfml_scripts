@@ -46,10 +46,18 @@ export type LeavePeriods = Pick<
 >;
 
 export type Submission = {
+  /**Claim id given to it by the PFML API */
   application_id: string;
+  /**Absence Case number from fineos */
   fineos_absence_id: string;
+  /**Time when the claim was submitted. Used to find the right emails within the testmail. */
   timestamp_from: number;
 };
+
+export type ApplicationSubmissionResponse = RequireNotNull<
+  ApplicationResponse,
+  "fineos_absence_id" | "application_id" | "first_name" | "last_name"
+>;
 
 export type SubjectOptions =
   | "application started"

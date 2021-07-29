@@ -1,6 +1,5 @@
 import { ScenarioSpecification } from "../generation/Scenario";
 import * as CypressScenarios from "./cypress";
-import { getCaringLeaveStartEndDates } from "../util/claims";
 import { ClaimSpecification, EmployerResponseSpec } from "../generation/Claim";
 
 /**
@@ -100,7 +99,7 @@ export const LSTCHAP1: ScenarioSpecification = {
     reason: "Care for a Family Member",
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: { MASSID: {}, CARING: {} },
-    leave_dates: getCaringLeaveStartEndDates(),
+    shortClaim: true,
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",

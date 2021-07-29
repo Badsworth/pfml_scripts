@@ -844,3 +844,8 @@ class CaringLeaveMetadataFactory(BaseFactory):
     family_member_middle_name = factory.Faker("first_name")
     family_member_last_name = factory.Faker("last_name")
     family_member_date_of_birth = factory.Faker("date_object")
+
+
+class ImportLogFactory(BaseFactory):
+    class Meta:
+        model = employee_models.ImportLog

@@ -11,10 +11,12 @@ import {
 } from "../util/credentials";
 import { Fineos } from "../submission/fineos.pages";
 import { assertValidClaim } from "../util/typeUtils";
-import { AssertFullApplicationResponse } from "../util/claims";
 import { closeDocuments } from "../submission/PostSubmit";
-import { ApplicationResponse } from "../_api";
-import { Credentials, Scenarios } from "../types";
+import {
+  ApplicationSubmissionResponse,
+  Credentials,
+  Scenarios,
+} from "../types";
 
 async function generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
   if (!(scenarioID in scenarios)) {
@@ -24,7 +26,7 @@ async function generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
   const claim = ClaimGenerator.generate(
     await getEmployeePool(),
     scenario.employee,
-    scenario.claim
+    scenario.claim as APIClaimSpec
   );
   // Dehydrate (save) documents to the temp directory, where they can be picked up later on.
   // The file for a document is normally a callback function, which cannot be serialized and
@@ -37,7 +39,7 @@ async function submitClaimToAPI(
     credentials?: Credentials;
     employerCredentials?: Credentials;
   }
-): Promise<ApplicationResponse> {
+): Promise<ApplicationSubmissionResponse> {
   if (!application.claim) throw new Error("Application missing!");
   const submitter = getPortalSubmitter();
   const { credentials, employerCredentials, ...claim } = application;
@@ -58,7 +60,6 @@ async function submitClaimToAPI(
   const claim = await generateClaim("BHAP1ER");
   const res = await submitClaimToAPI(claim);
   assertValidClaim(claim.claim);
-  AssertFullApplicationResponse(res);
   console.log(res.fineos_absence_id);
   await Fineos.withBrowser(async (page) => {
     // await approveClaim(page, claim, res.fineos_absence_id);
