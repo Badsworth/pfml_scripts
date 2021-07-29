@@ -2,7 +2,12 @@ import { fineos, fineosPages } from "../../../actions";
 import { getFineosBaseUrl } from "../../../config";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { format, addDays } from "date-fns";
-import { onTab } from "../../../actions/fineos";
+// import { onTab } from "../../../actions/fineos";
+// import { clickTab } from "util/playwright";
+import {
+  findCertificationDoc,
+  getDocumentReviewTaskName,
+} from "../../../../src/util/documents";
 
 describe("Post-approval (notifications/notices)", () => {
   const credentials: Credentials = {
@@ -29,11 +34,11 @@ describe("Post-approval (notifications/notices)", () => {
             timestamp_from: Date.now(),
           });
           const newStartDate = format(
-            addDays(new Date(endDate), 1),
+            addDays(new Date(startDate), 2),
             "MM/dd/yyyy"
           );
           const newEndDate = format(
-            addDays(new Date(endDate), 8),
+            addDays(new Date(endDate), 2),
             "MM/dd/yyyy"
           );
           cy.stash("extensionLeaveDates", [startDate, newEndDate]);
@@ -87,10 +92,58 @@ describe("Post-approval (notifications/notices)", () => {
             cy.get("input[title='OK']").click();
             fineos.waitForAjaxComplete();
             cy.wait(200);
-            cy.get('input[id="p9_un114_next"][value="Next"]').click();
-            cy.wait(500);
-            onTab("Additional Information");
+            });
+          cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
+          fineos.waitForAjaxComplete();
+          cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
+          fineos.waitForAjaxComplete();
+          cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
+          fineos.waitForAjaxComplete();
+          cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
+          fineos.waitForAjaxComplete();
+          // cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
+          // fineos.waitForAjaxComplete();
+          cy.get('span[id="footerButtonsBar_cloned"]').contains("OK").click();
+          fineos.waitForAjaxComplete();
+          // Complete adjudication process for new leave plan 
+          claimPage.adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              // Receive and approve all of the documentation for the claim.
+              claim.documents.forEach((doc) =>
+                evidence.receive(doc.document_type)
+              );
+            });
+            adjudication.certificationPeriods((cert) => cert.prefill());
+            adjudication.acceptLeavePlan();
           });
+          claimPage.tasks((tasks) => {
+            const certificationDoc = findCertificationDoc(claim.documents);
+            const certificationTask = getDocumentReviewTaskName(
+              certificationDoc.document_type
+            );
+            tasks.assertTaskExists("ID Review");
+            tasks.assertTaskExists(certificationTask);
+          });
+          claimPage.shouldHaveStatus("Applicability", "Applicable");
+          claimPage.shouldHaveStatus("Eligibility", "Met");
+          claimPage.shouldHaveStatus("Evidence", "Satisfied");
+          claimPage.shouldHaveStatus("Availability", "Time Available");
+          claimPage.shouldHaveStatus("Restriction", "Passed");
+          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
+          claimPage.approve();
+          claimPage
+            .triggerNotice("Leave Request Declined")
+            .documents((docPage) =>
+              docPage.assertDocumentExists("Denial Notice")
+            );
+          cy.get('#DisplayCaseTabbedDialogWidget_un22_CaseTabControlBean_LeaveDetailsTab_cell > .TabOff').click();
+          cy.get('.ListRow2 > :nth-child(11)').click();
+
+          // Under the “Selected Leave Plan” highlight the Leave Extension plan and choose to Reject the Leave Extension plan.
+          
+            // Under the “Leave Request” highlight the Leave Extension claim.
+          // Click the Deny at the top right corner of the page.
+
         });
       });
     }
