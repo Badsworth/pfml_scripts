@@ -11,7 +11,6 @@ from werkzeug.exceptions import BadRequest
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
-import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.api.authorization.flask import CREATE, ensure
@@ -60,9 +59,6 @@ def notifications_post():
         # Persist the notification to the DB
         notification = Notification()
 
-        now = datetime_util.utcnow()
-        notification.created_at = now
-        notification.updated_at = now
         notification.fineos_absence_id = notification_request.absence_case_id
 
         notification.request_json = body
