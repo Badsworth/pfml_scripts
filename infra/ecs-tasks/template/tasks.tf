@@ -290,10 +290,15 @@ locals {
       ]
     },
 
-    "cps-errors" = {
-      command             = ["cps-errors"]
+    "cps-errors-crawler" = {
+      command             = ["cps-errors-crawler"]
       containers_template = "default_template.json"
-      task_role           = aws_iam_role.cps_errors_task_role.arn
+      task_role           = aws_iam_role.cps_errors_crawler_task_role.arn
+      env = [
+        { name : "CPS_ERROR_REPORTS_RECEIVED_S3_PATH", value : "s3://${data.aws_s3_bucket.agency_transfer.id}/cps-errors/received/" },
+        { name : "CPS_ERROR_REPORTS_PROCESSED_S3_PATH", value : "s3://${data.aws_s3_bucket.agency_transfer.id}/cps-errors/processed/" },
+      ]
+
     },
 
     "payments-rotate-data-mart-password" = {
