@@ -596,7 +596,7 @@ def test_run_step_payment_cap(payment_post_processing_step, local_test_db_sessio
     # All 4 payments should have been moved to the success state
     state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        end_state=State.PAYMENT_READY_FOR_ADDRESS_VALIDATION,
+        end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         db_session=local_test_db_session,
     )
 

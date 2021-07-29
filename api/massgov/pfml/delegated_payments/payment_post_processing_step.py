@@ -368,7 +368,7 @@ class PaymentPostProcessingStep(Step):
                 )
 
                 state_log_util.create_finished_state_log(
-                    end_state=State.PAYMENT_READY_FOR_ADDRESS_VALIDATION,
+                    end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
                     outcome=state_log_util.build_outcome(
                         "Success", payment_container.validation_container
                     ),

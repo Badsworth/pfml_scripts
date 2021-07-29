@@ -26,8 +26,8 @@ ALL = "ALL"
 RUN_AUDIT_CLEANUP = "audit-cleanup"
 CLAIMANT_EXTRACT = "claimant-extract"
 PAYMENT_EXTRACT = "payment-extract"
-PAYMENT_POST_PROCESSING = "payment-post-processing"
 VALIDATE_ADDRESSES = "validate-addresses"
+PAYMENT_POST_PROCESSING = "payment-post-processing"
 CREATE_AUDIT_REPORT = "audit-report"
 CREATE_PEI_WRITEBACK = "initial-writeback"
 REPORT = "report"
@@ -36,8 +36,8 @@ ALLOWED_VALUES = [
     RUN_AUDIT_CLEANUP,
     CLAIMANT_EXTRACT,
     PAYMENT_EXTRACT,
-    PAYMENT_POST_PROCESSING,
     VALIDATE_ADDRESSES,
+    PAYMENT_POST_PROCESSING,
     CREATE_AUDIT_REPORT,
     CREATE_PEI_WRITEBACK,
     REPORT,
@@ -48,8 +48,8 @@ class Configuration:
     do_audit_cleanup: bool
     do_claimant_extract: bool
     do_payment_extract: bool
-    do_payment_post_processing: bool
     validate_addresses: bool
+    do_payment_post_processing: bool
     make_audit_report: bool
     create_pei_writeback: bool
     make_reports: bool
@@ -73,8 +73,8 @@ class Configuration:
             self.do_audit_cleanup = True
             self.do_claimant_extract = True
             self.do_payment_extract = True
-            self.do_payment_post_processing = True
             self.validate_addresses = True
+            self.do_payment_post_processing = True
             self.make_audit_report = True
             self.create_pei_writeback = True
             self.make_reports = True
@@ -82,8 +82,8 @@ class Configuration:
             self.do_audit_cleanup = RUN_AUDIT_CLEANUP in steps
             self.do_claimant_extract = CLAIMANT_EXTRACT in steps
             self.do_payment_extract = PAYMENT_EXTRACT in steps
-            self.do_payment_post_processing = PAYMENT_POST_PROCESSING in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
+            self.do_payment_post_processing = PAYMENT_POST_PROCESSING in steps
             self.make_audit_report = CREATE_AUDIT_REPORT in steps
             self.create_pei_writeback = CREATE_PEI_WRITEBACK in steps
             self.make_reports = REPORT in steps
@@ -119,13 +119,13 @@ def _process_fineos_extracts(
     if config.do_payment_extract:
         PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
-    if config.do_payment_post_processing:
-        PaymentPostProcessingStep(
+    if config.validate_addresses:
+        AddressValidationStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 
-    if config.validate_addresses:
-        AddressValidationStep(
+    if config.do_payment_post_processing:
+        PaymentPostProcessingStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 
