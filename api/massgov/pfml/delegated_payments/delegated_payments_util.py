@@ -106,10 +106,13 @@ class Constants:
     )
 
     # States that indicate we have sent a payment to PUB
+    # and it has not yet errored.
     PAID_STATES = frozenset(
         [
             State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
             State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+            State.DELEGATED_PAYMENT_COMPLETE,
+            State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
         ]
     )
     PAID_STATE_IDS = frozenset([state.state_id for state in PAID_STATES])
@@ -852,10 +855,6 @@ def compare_address_fields(first: Address, second: Address, field: str) -> bool:
     value1 = getattr(first, field)
     value2 = getattr(second, field)
 
-    if field == "zip_code":
-        value1 = value1.strip()[:5] if value1 else None
-        value2 = value2.strip()[:5] if value2 else None
-
     if type(value1) is str:
         value1 = value1.strip().lower()
     if type(value2) is str:
@@ -901,7 +900,9 @@ def find_existing_address_pair(
         .all()
     )
 
-    # TODO
+    # For each address associated with prior payments for the claimant
+    # see if either the address from FINEOS matches or the one returned
+    # by Experian matches (in case FINEOS is updated to the more correct one)
     for experian_address_pair in experian_address_pairs:
 
         existing_fineos_address = experian_address_pair.fineos_address

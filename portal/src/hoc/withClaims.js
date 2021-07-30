@@ -63,7 +63,6 @@ const withClaims = (Component) => {
     return (
       <Component
         {...props}
-        activeFilters={appLogic.claims.activeFilters}
         claims={appLogic.claims.claims}
         paginationMeta={appLogic.claims.paginationMeta}
       />

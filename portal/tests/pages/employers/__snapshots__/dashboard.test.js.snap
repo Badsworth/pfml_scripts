@@ -46,7 +46,7 @@ exports[`Employer dashboard renders a 'no results' message in the table, and no 
 
 exports[`Employer dashboard renders a beta info alert if all employers are registered in FINEOS 2`] = `
 Array [
-  "Our dashboard is in beta. You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can ",
+  "You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can ",
   <a
     href="https://www.mass.gov/paidleave-employer-feedback"
     key="1"
@@ -111,6 +111,7 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
     key="status"
   >
     <AbsenceCaseStatusTag
+      managedRequirements={null}
       status="Approved"
     />
   </td>
@@ -205,21 +206,25 @@ exports[`Employer dashboard renders filters 1`] = `
         Array [
           Object {
             "checked": false,
+            "className": "bg-transparent",
             "label": "Approved",
             "value": "Approved",
           },
           Object {
             "checked": false,
+            "className": "bg-transparent",
             "label": "Closed",
             "value": "Closed",
           },
           Object {
             "checked": false,
+            "className": "bg-transparent",
             "label": "Denied",
             "value": "Declined",
           },
           Object {
             "checked": false,
+            "className": "bg-transparent",
             "label": "--",
             "value": "Pending",
           },
@@ -230,7 +235,7 @@ exports[`Employer dashboard renders filters 1`] = `
       onChange={[Function]}
       smallLabel={true}
       type="checkbox"
-      value=""
+      value={Array []}
     />
     <Dropdown
       autocomplete={true}
@@ -339,6 +344,61 @@ exports[`Employer dashboard renders search section when feature flags are enable
     </div>
   </form>
 </div>
+`;
+
+exports[`Employer dashboard renders status descriptions with review by when feature flags are enabled 1`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Review by:
+  </strong>,
+  " Review this application by this date to provide DFML with your input.",
+]
+`;
+
+exports[`Employer dashboard renders status descriptions with review by when feature flags are enabled 2`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    No action required:
+  </strong>,
+  " This leave request is awaiting a decision from DFML.",
+]
+`;
+
+exports[`Employer dashboard renders status descriptions with review by when feature flags are enabled 3`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Denied:
+  </strong>,
+  " DFML has denied this leave request.",
+]
+`;
+
+exports[`Employer dashboard renders status descriptions with review by when feature flags are enabled 4`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Approved:
+  </strong>,
+  " DFML has approved this leave request.",
+]
+`;
+
+exports[`Employer dashboard renders status descriptions with review by when feature flags are enabled 5`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Closed:
+  </strong>,
+  " The leave has passed or no action can be taken.",
+]
 `;
 
 exports[`Employer dashboard renders the page with expected content and pagination components 1`] = `

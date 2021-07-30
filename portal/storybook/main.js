@@ -8,7 +8,6 @@
  */
 const path = require("path");
 const nextConfig = require("../next.config");
-const postcssPresetEnv = require("postcss-preset-env");
 const webpack = require("webpack");
 
 module.exports = {
@@ -39,8 +38,9 @@ module.exports = {
            */
           loader: "postcss-loader",
           options: {
-            ident: "postcss",
-            plugins: () => [postcssPresetEnv()],
+            postcssOptions: {
+              plugins: ["postcss-preset-env"],
+            },
           },
         },
         {

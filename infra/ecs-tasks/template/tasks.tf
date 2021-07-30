@@ -290,10 +290,15 @@ locals {
       ]
     },
 
-    "cps-errors" = {
-      command             = ["cps-errors"]
+    "cps-errors-crawler" = {
+      command             = ["cps-errors-crawler"]
       containers_template = "default_template.json"
-      task_role           = aws_iam_role.cps_errors_task_role.arn
+      task_role           = aws_iam_role.cps_errors_crawler_task_role.arn
+      env = [
+        { name : "CPS_ERROR_REPORTS_RECEIVED_S3_PATH", value : "s3://${data.aws_s3_bucket.agency_transfer.id}/cps-errors/received/" },
+        { name : "CPS_ERROR_REPORTS_PROCESSED_S3_PATH", value : "s3://${data.aws_s3_bucket.agency_transfer.id}/cps-errors/processed/" },
+      ]
+
     },
 
     "payments-rotate-data-mart-password" = {
@@ -400,7 +405,7 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       # silently cause env vars to go missing which would definitely confuse someone for a day or two.
       #
       environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
-      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
+      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if ! contains(keys(val), "value")]
     },
     {
       name              = "newrelic-infra",

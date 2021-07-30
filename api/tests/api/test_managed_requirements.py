@@ -80,16 +80,6 @@ class TestManagedRequirementQuery:
     def fineos_managed_requirement(self):
         return ManagedRequirementDetails.parse_obj(self.managed_requirement())
 
-    # def _get_managed_requirement_by_managedReqId(self, test_db_session, fineos_managed_requirement):
-    #     return (
-    #         test_db_session.query(ManagedRequirement)
-    #         .filter(
-    #             ManagedRequirement.fineos_managed_requirement_id
-    #             == str(fineos_managed_requirement.managedReqId)
-    #         )
-    #         .one_or_none()
-    #     )
-
     def _assert_managed_requirement_data(
         self,
         claim: Claim,

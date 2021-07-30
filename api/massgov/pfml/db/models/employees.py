@@ -271,12 +271,21 @@ class LkLeaveRequestDecision(Base):
 
 class AbsencePeriod(Base, TimestampMixin):
     __tablename__ = "absence_period"
+    __table_args__ = (
+        UniqueConstraint(
+            "fineos_absence_period_index_id",
+            "fineos_absence_period_class_id",
+            name="uix_absence_period_index_id_absence_period_class_id",
+        ),
+    )
+
     absence_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
-    fineos_absence_period_id = Column(Integer, nullable=False, index=True, unique=True)
+    fineos_absence_period_class_id = Column(Integer, nullable=False, index=True)
+    fineos_absence_period_index_id = Column(Integer, nullable=False, index=True)
     fineos_leave_request_id = Column(Integer)
-    absence_period_start_date = Column(Date, nullable=False)
-    absence_period_end_date = Column(Date, nullable=False)
+    absence_period_start_date = Column(Date)
+    absence_period_end_date = Column(Date)
     leave_request_decision_id = Column(
         Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id"), nullable=False
     )

@@ -6,6 +6,7 @@ import {
 } from "../../src/_api";
 import {
   AllNotNull,
+  FineosTasks,
   NonEmptyArray,
   PersonalIdentificationDetails,
   ValidClaim,
@@ -29,23 +30,21 @@ import {
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
 import {
-  approveClaim,
-  assertHasTask,
   assertHasDocument,
   clickBottomWidgetButton,
-  denyClaim,
   onTab,
-  triggerNoticeRelease,
   visitClaim,
-  reviewClaim,
   wait,
-  enterReducedWorkHours,
   waitForAjaxComplete,
+  clickNext,
+  getFixtureDocumentName,
+  assertClaimStatus,
 } from "./fineos";
 
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
+import { format, parseISO } from "date-fns";
 
 type StatusCategory =
   | "Applicability"
@@ -55,6 +54,8 @@ type StatusCategory =
   | "Restriction"
   | "Protocols"
   | "PlanDecision";
+
+type PlanDecisions = "Accepted" | "Pending Evidence" | "Rejected" | "Undecided";
 
 /**
  * This is a page object for interacting with Fineos.
@@ -75,7 +76,12 @@ export class ClaimPage {
     visitClaim(id);
     return new ClaimPage();
   }
-
+  recordActualLeave<T>(cb: (page: RecordActualTime) => T): T {
+    // Start the submission process.
+    cy.findByText("Record Actual").click({ force: true });
+    waitForAjaxComplete();
+    return cb(new RecordActualTime());
+  }
   paidLeave(cb: (page: PaidLeavePage) => unknown): this {
     cy.findByText("Absence Paid Leave Case", { selector: "a" }).click();
     cb(new PaidLeavePage());
@@ -114,6 +120,11 @@ export class ClaimPage {
     onTab("Absence Hub");
     return this;
   }
+  leaveDetails(cb: (page: LeaveDetailsPage) => unknown): this {
+    onTab("Leave Details");
+    cb(new LeaveDetailsPage());
+    return this;
+  }
   benefitsExtension(cb: (page: BenefitsExtensionPage) => unknown): this {
     cy.findByText("Add Time").click({ force: true });
     cb(new BenefitsExtensionPage());
@@ -132,21 +143,74 @@ export class ClaimPage {
     });
     return this;
   }
-  triggerNotice(type: string): this {
-    triggerNoticeRelease(type);
+  triggerNotice(
+    type:
+      | "Designation Notice"
+      | "SOM Generate Legal Notice"
+      | "Leave Request Declined"
+      | "Leave Request Withdrawn"
+      | "Review Approval Notice"
+      | "Leave Cancellation Request"
+  ): this {
+    onTab("Task");
+    onTab("Processes");
+    cy.contains(".TreeNodeElement", type).click({
+      force: true,
+    });
+    cy.get('input[type="submit"][value="Properties"]').click();
+    cy.get('input[type="submit"][value="Continue"]').click();
+    cy.contains(".TreeNodeContainer", type, {
+      timeout: 20000,
+    })
+      .find("input[type='checkbox']")
+      .should("be.checked");
+
     return this;
   }
   approve(): this {
-    approveClaim();
+    // This button turns out to be unclickable without force, because selecting
+    // it seems to scroll it out of view. Force works around that.
+    cy.get('a[title="Approve the Pending Leaving Request"]').click({
+      force: true,
+    });
+    waitForAjaxComplete();
+    assertClaimStatus("Approved");
     return this;
   }
   deny(reason: string): this {
-    denyClaim(reason);
+    cy.get("input[type='submit'][value='Adjudicate']").click();
+    // Make sure the page is fully loaded by waiting for the leave plan to show up.
+    cy.get("table[id*='selectedLeavePlans'] tr")
+      .should("have.length", 1)
+      .click();
+    cy.get("input[type='submit'][value='Reject']").click();
+    clickBottomWidgetButton("OK");
+
+    cy.get('a[title="Deny the Pending Leave Request"]').click();
+    cy.get('span[id="leaveRequestDenialDetailsWidget"]')
+      .find("select")
+      .select(reason);
+    cy.get('input[type="submit"][value="OK"]').click();
+    assertClaimStatus("Declined");
+    return this;
+  }
+  withdraw(): this {
+    cy.get('a[title="Withdraw the Pending Leave Request"').click({
+      force: true,
+    });
+    cy.get("#leaveRequestWithdrawPopupWidget_PopupWidgetWrapper").within(() => {
+      cy.findByLabelText("Withdrawal Reason").select("Employee Withdrawal");
+      cy.findByText("OK").click({ force: true });
+    });
+    assertClaimStatus("Closed");
     return this;
   }
   reviewClaim(): this {
     onTab("Leave Details");
-    reviewClaim();
+    cy.contains("td", "Approved").click();
+    cy.get('input[title="Review a Leave Request"').click();
+    waitForAjaxComplete();
+    onTab("Absence Hub");
     return this;
   }
 }
@@ -185,12 +249,18 @@ class AdjudicationPage {
     this.onTab("Manage Request");
     cy.get("input[type='submit'][value='Accept']").click({ force: true });
   }
-  editPlanDecision(planStatus: string) {
+  editPlanDecision(planDecision: PlanDecisions) {
     this.onTab("Manage Request");
-    cy.wait(300);
+    waitForAjaxComplete();
     cy.get("input[type='submit'][value='Evaluate Plan']").click();
-    cy.findByLabelText("Leave Plan Status").select(planStatus);
+    cy.findByLabelText("Leave Plan Status").select(planDecision);
     cy.get("#footerButtonsBar input[value='OK']").click();
+  }
+  availability(cb: (page: AvailabilityPage) => unknown): this {
+    this.onTab("Availability");
+    cb(new AvailabilityPage());
+    this.onTab("Manage Request");
+    return this;
   }
 }
 
@@ -246,6 +316,7 @@ class EvidencePage {
 }
 class CertificationPeriodsPage {
   prefill() {
+    waitForAjaxComplete();
     cy.get("input[value='Prefill with Requested Absence Periods']").click();
     cy.get("#PopupContainer input[value='Yes']").click();
     return this;
@@ -255,11 +326,9 @@ class CertificationPeriodsPage {
       "input[type='submit'][title='Remove all certification periods']"
     ).click();
     cy.get("#PopupContainer input[value='Yes']").click();
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    waitForAjaxComplete();
     cy.get("#PopupContainer input[value='Yes']").click();
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    waitForAjaxComplete();
     cy.get("#PopupContainer input[value='Yes']").click();
     return this;
   }
@@ -292,6 +361,19 @@ class RequestInformationPage {
     cy.wait(200);
     this.enterNewLeaveDates(newStartDate, newEndDate);
   }
+
+  assertHoursWorkedPerWeek(hours_worked_per_week: number) {
+    onTab("Employment Information");
+    cy.findByLabelText("Hours worked per week").should((input) => {
+      expect(
+        input,
+        `Hours worked per week should be: ${hours_worked_per_week} hours`
+      )
+        .attr("value")
+        .equal(String(hours_worked_per_week));
+    });
+    onTab("Request Details");
+  }
 }
 class OutstandingRequirementsPage {
   add() {
@@ -316,9 +398,18 @@ class OutstandingRequirementsPage {
     });
   }
 }
+
 class TasksPage {
-  assertTaskExists(name: string): this {
-    assertHasTask(name);
+  /**
+   * Called from the tasks page, asserts that a particular task is found.
+   * @param name
+   */
+  assertTaskExists(name: FineosTasks): this {
+    cy.get("table[id*='TasksForCaseWidget']").should((table) => {
+      expect(table, `Expected to find a "${name}" task`).to.have.descendants(
+        `tr td:nth-child(6)[title="${name}"]`
+      );
+    });
     return this;
   }
 
@@ -326,21 +417,21 @@ class TasksPage {
    * Adds a task to a claim and asserts it has been assigned to DFML Program Integrity
    * @param name name of the task to be added
    */
-  add(
-    name:
-      | "Escalate Employer Reported Other Income"
-      | "Escalate employer reported past leave"
-      | "Escalate employer reported accrued paid leave (PTO)"
-      | "Escalate Employer Reported Fraud"
-      | "Approved Leave Start Date Change"
-      | "Update Paid Leave Case"
-  ): this {
+  add(name: FineosTasks): this {
     cy.findByTitle(`Add a task to this case`).click({ force: true });
     // Search for the task type
     cy.findByLabelText(`Find Work Types Named`).type(`${name}{enter}`);
     // Create task
     cy.findByTitle(name, { exact: false }).click({ force: true });
     clickBottomWidgetButton("Next");
+    return this;
+  }
+
+  close(name: FineosTasks): this {
+    cy.contains("td", name).click();
+    waitForAjaxComplete();
+    cy.get('input[title="Close selected task"]').click();
+    waitForAjaxComplete();
     return this;
   }
 
@@ -356,10 +447,13 @@ class TasksPage {
     );
     return this;
   }
-  assertIsAssignedToDepartment(taskName: string, departmentName: string): this {
+  assertIsAssignedToDepartment(
+    task: FineosTasks,
+    departmentName: string
+  ): this {
     // Find  task
     cy.contains("tbody", "This case and its subcases").within(() => {
-      cy.findByText(taskName).click();
+      cy.findByText(task).click();
     });
     // Assert it's in given department
     cy.get(`span[id^="BasicDetailsUsersDeptWidget"][id$="Department"]`).should(
@@ -381,15 +475,6 @@ class TasksPage {
     cy.get("#footerButtonsBar input[value='OK']").click();
     return this;
   }
-
-  close(name: string): this {
-    cy.contains("td", name).click();
-    cy.wait("@ajaxRender");
-    cy.get('input[title="Close selected task"]');
-    cy.wait("@ajaxRender");
-    cy.wait(150);
-    return this;
-  }
 }
 
 /**
@@ -403,15 +488,16 @@ export class DocumentsPage {
 
   /**
    * Goes through the document upload process and returns back to the documents page
-   * @param documentName
-   * @param documentType
+   * @param businessType - name of the document type in fineos
    * @returns
    */
-  uploadDocument(documentName: string, documentType: string): this {
+  uploadDocument(documentType: DocumentUploadRequest["document_type"]): this {
     this.startDocumentCreation(documentType);
-    const docName = documentName.replace(" ", "_");
-    cy.get("input[type='file']").attachFile(`./${docName}.pdf`);
+    cy.get("input[type='file']").attachFile(
+      `./${getFixtureDocumentName(documentType)}.pdf`
+    );
     clickBottomWidgetButton();
+    this.assertDocumentExists(documentType);
     return this;
   }
   /**
@@ -813,13 +899,29 @@ export class DocumentsPage {
 }
 
 class AvailabilityPage {
-  reevaluateAvailability() {
-    cy.get('input[title="Manage time for the selected Leave Plan"').click();
-    cy.get('input[title="Select All"').click();
-    cy.findByLabelText("Decision").select("Pending");
-    cy.findByLabelText("Reason").select("Additional Information");
-    cy.get('input[title]="Apply"').click();
-    cy.findByText("Close").click({ force: true });
+  reevaluateAvailability(decision: string, reason: string) {
+    cy.get('input[title="Manage time for the selected Leave Plan"]').click();
+    waitForAjaxComplete();
+    cy.get('input[title="Select All"]').click();
+    waitForAjaxComplete();
+    // findByLabelText() wont work here - labels do not have the "for" or "aria-labelledby" attributes
+    cy.contains("label", "Decision")
+      .parent()
+      .parent()
+      .within(() => {
+        cy.get("select").select(decision);
+      });
+    waitForAjaxComplete();
+    cy.contains("label", "Reason")
+      .parent()
+      .parent()
+      .within(() => {
+        cy.get("select").select(reason);
+      });
+    cy.get('input[type="submit"][value="Apply"]').click();
+    cy.get("#footerButtonsBar").within(() => {
+      cy.findByText("Close").click({ force: true });
+    });
   }
 }
 
@@ -1174,8 +1276,16 @@ class BenefitsExtensionPage {
 
 export class ClaimantPage {
   static visit(ssn: string): ClaimantPage {
-    fineos.searchClaimantSSN(ssn);
+    ssn = ssn.replace(/-/g, "");
+    cy.get('a[aria-label="Parties"]').click();
+    waitForAjaxComplete();
+    cy.contains("td", "Identification Number")
+      .next()
+      .within(() => cy.get("input").type(ssn));
+    cy.get('input[type="submit"][value="Search"]').click();
+    waitForAjaxComplete();
     fineos.clickBottomWidgetButton("OK");
+    waitForAjaxComplete();
     return new ClaimantPage();
   }
   /**
@@ -1555,30 +1665,30 @@ class DatesOfAbsence extends CreateNotificationStep {
     return this;
   }
   addFixedTimeOffPeriod(period: ContinuousLeavePeriod): this {
-    // wait() doesn't work within this widget, but we still need to use it. So we have to get out of .within() scope after every action.
+    // Since the widget also gets re-rendered from time to time, we need to re-query it frequently.
     const withinWidget = (cb: () => unknown) =>
       cy.get(`#timeOffAbsencePeriodDetailsQuickAddWidget`).within(cb);
 
     // Enter absence status
     withinWidget(() => {
       cy.findByLabelText("Absence status").select(period.status);
+      waitForAjaxComplete();
     });
-    wait();
 
     // Enter leave start and end dates
     withinWidget(() => {
       cy.findByLabelText("Absence start date").type(
         `${dateToMMddyyyy(period.start)}{enter}`
       );
+      waitForAjaxComplete();
     });
-    wait();
 
     withinWidget(() => {
       cy.findByLabelText("Absence end date").type(
         `${dateToMMddyyyy(period.end)}{enter}`
       );
+      waitForAjaxComplete();
     });
-    wait();
 
     // Enter work related dates if specified
     withinWidget(() => {
@@ -1587,54 +1697,79 @@ class DatesOfAbsence extends CreateNotificationStep {
           `${dateToMMddyyyy(period.last_day_worked)}{enter}`
         );
     });
+    waitForAjaxComplete();
 
-    wait();
     withinWidget(() => {
       if (period.return_to_work_date)
         cy.findByLabelText("Return to work date").type(
           `${dateToMMddyyyy(period.return_to_work_date)}{enter}`
         );
+      waitForAjaxComplete();
     });
-    wait();
 
     // Add the period
-    cy.findByTitle(`Quick Add`).click();
-    wait();
+    withinWidget(() => {
+      cy.findByTitle(`Quick Add`).click();
+      waitForAjaxComplete();
+    });
     return this;
+  }
+  private enterReducedWorkHours(
+    leave_details: ReducedScheduleLeavePeriods
+  ): void {
+    const hrs = (minutes: number | null | undefined) => {
+      return minutes ? Math.round(minutes / 60) : 0;
+    };
+    const weekdayInfo = [
+      { hours: hrs(leave_details.sunday_off_minutes) },
+      { hours: hrs(leave_details.monday_off_minutes) },
+      { hours: hrs(leave_details.tuesday_off_minutes) },
+      { hours: hrs(leave_details.wednesday_off_minutes) },
+      { hours: hrs(leave_details.thursday_off_minutes) },
+      { hours: hrs(leave_details.friday_off_minutes) },
+      { hours: hrs(leave_details.saturday_off_minutes) },
+    ];
+
+    cy.get("input[name*='_hours']").each((input, index) => {
+      cy.wrap(input).type(weekdayInfo[index].hours.toString());
+    });
   }
   addReducedSchedulePeriod(
     absenceStatus: AbsenceStatus,
     reducedLeavePeriod: ReducedScheduleLeavePeriods
   ): this {
-    // Same as addFixedTimeOffPeriod, wait() doesn't worked when scoped to this widget
     const withinWidget = (cb: () => unknown) =>
       cy.get(`#reducedScheduleAbsencePeriodDetailsQuickAddWidget`).within(cb);
-    // Enter absence status
+
     withinWidget(() => {
+      // Enter absence status
       this.chooseSelectOption("Absence status", absenceStatus);
-    });
-    wait();
-    // Enter reduced schedule period start/end dates
-    withinWidget(() => {
+      waitForAjaxComplete();
+
       if (reducedLeavePeriod.start_date)
-        cy.labelled("Absence start date").type(
-          `${dateToMMddyyyy(reducedLeavePeriod.start_date)}{enter}`
-        );
+        // Enter reduced schedule period start/end dates
+        cy.findByLabelText("Absence start date")
+          .type(`${dateToMMddyyyy(reducedLeavePeriod.start_date)}{enter}`)
+          .then(waitForAjaxComplete);
     });
-    wait();
+    // After this the entire widget re-renders and we need to re-query for it.
     withinWidget(() => {
       if (reducedLeavePeriod.end_date)
-        cy.labelled("Absence end date").type(
-          `${dateToMMddyyyy(reducedLeavePeriod.end_date)}{enter}`
-        );
+        cy.findByLabelText("Absence end date")
+          .type(`${dateToMMddyyyy(reducedLeavePeriod.end_date)}{enter}`)
+          .then(waitForAjaxComplete);
     });
-    wait();
-    // Enter hours for each weekday
-    withinWidget(() => enterReducedWorkHours(reducedLeavePeriod));
-    wait();
-    // Submit period
-    withinWidget(() => cy.findByTitle(`Quick Add`).click());
-    wait();
+    withinWidget(() => {
+      // Enter hours for each weekday
+      this.enterReducedWorkHours(reducedLeavePeriod);
+      waitForAjaxComplete();
+    });
+    withinWidget(() => {
+      // Submit period
+      cy.findByTitle(`Quick Add`).click();
+      waitForAjaxComplete();
+    });
+
     return this;
   }
   nextStep<T>(cb: (step: WorkAbsenceDetails) => T): T {
@@ -1696,5 +1831,116 @@ class WrapUp extends CreateNotificationStep {
       this.clickNext(20000);
       return cy.wrap(absenceId);
     });
+  }
+}
+
+type EpisodicLeavePeriodDescription = {
+  startDate: string;
+  endDate: string;
+  timeSpanHoursStart: string;
+  timeSpanHoursEnd: string;
+};
+class RecordActualTime {
+  fillTimePeriod({
+    startDate,
+    endDate,
+    timeSpanHoursStart,
+    timeSpanHoursEnd,
+  }: EpisodicLeavePeriodDescription) {
+    // Select the episodic leave period.
+    cy.findByTitle("Episodic").click();
+    // Open the modal.
+    cy.findByText("Record Actual").click();
+    cy.get(".popup-container").within(() => {
+      waitForAjaxComplete();
+      // Wait for focus to be captured on the "Last Day Worked" field. This happens automatically, and only occurs
+      // when the popup is ready for interaction. Annoyingly, it gets captured 2x on render, forcing us to wait as well.
+      cy.findByLabelText("Last day worked").should("have.focus");
+
+      const startDateFormatted = format(parseISO(startDate), "MM/dd/yyyy");
+      const endDateFormatted = format(parseISO(endDate), "MM/dd/yyyy");
+      // Start date
+      cy.findByLabelText("Absence start date")
+        .focus()
+        .type(`{selectall}{backspace}${startDateFormatted}`)
+        // After entering the date and losing focus, the form re-renders and cuptures focus again
+        .blur();
+      // Wait for the form to capture focus
+      cy.findByLabelText("Absence start date").should("have.focus");
+      // End date, same thing about focus
+      cy.findByLabelText("Absence end date")
+        .focus()
+        .type(`{selectall}{backspace}${endDateFormatted}`)
+        .blur();
+      cy.findByLabelText("Absence end date").should("have.focus");
+
+      cy.get(
+        `input[id^="timeOffAbsencePeriodDetailsWidget"][id$="timeSpanHoursStartDate"]`
+      ).type(`{selectall}{backspace}${timeSpanHoursStart}`);
+      cy.get(
+        `input[id^="timeOffAbsencePeriodDetailsWidget"][id$="timeSpanHoursEndDate"]`
+      ).type(`{selectall}{backspace}${timeSpanHoursEnd}`);
+      // Submit the actual period
+      cy.findByText("OK").click();
+    });
+    return this;
+  }
+  nextStep<T>(cb: (step: AdditionalReporting) => T): T {
+    clickNext();
+    waitForAjaxComplete();
+    return cb(new AdditionalReporting());
+  }
+}
+
+type AdditionalDetails = {
+  reported_by?: "Employee" | "Employee Manager" | "Employer Representative";
+  received_via?:
+    | "Unknown"
+    | "Phone"
+    | "E-Mail"
+    | "Paper"
+    | "Fax"
+    | "Mail/Post"
+    | "Self Service";
+  reported_date?: string;
+  accepted?: "Yes" | "No" | "Unknown";
+  additional_notes?: string;
+  reporting_party?: string;
+};
+export class AdditionalReporting {
+  reportAdditionalDetails(details: AdditionalDetails): this {
+    // Select the period
+    cy.contains("td", "Time off period").click({ force: true });
+    if (details.reported_by) {
+      cy.findByLabelText("Reported By").select(details.reported_by);
+      waitForAjaxComplete();
+    }
+    if (details.reporting_party)
+      cy.findByLabelText("Reporting Party Name").type(details.reporting_party);
+    if (details.received_via)
+      cy.findByLabelText("Received Via").select(details.received_via);
+    if (details.accepted)
+      cy.findByLabelText("Manager Accepted").select(details.accepted);
+    if (details.reporting_party)
+      cy.findByLabelText("Additional Notes").type(details.reporting_party);
+    cy.get("input[id*='applyActualTime']").click();
+    waitForAjaxComplete();
+    return this;
+  }
+  /**Returns back to the Claim page. */
+  finishRecordingActualLeave(): void {
+    clickNext();
+    waitForAjaxComplete();
+  }
+}
+class LeaveDetailsPage {
+  /**
+   * Function will redirect us to the claim adjudiction page
+   */
+  editLeavePostApproval(): AdjudicationPage {
+    cy.get('input[type="submit"][value="Review"]').click();
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Edit"]').click();
+    return new AdjudicationPage();
   }
 }

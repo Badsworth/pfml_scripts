@@ -43,6 +43,7 @@ def _create_payment_container(
     has_processed_state=False,
     has_errored_state=False,
     is_adhoc_payment=False,
+    later_failed=False,
     payment_transaction_type=PaymentTransactionType.STANDARD,
 ):
     if not start_date:
@@ -68,8 +69,20 @@ def _create_payment_container(
         state = State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK
 
     state_log_util.create_finished_state_log(
-        payment, state, state_log_util.build_outcome("MESSAGE"), db_session
+        payment,
+        state,
+        state_log_util.build_outcome(f"Payment set to {state.state_description}"),
+        db_session,
     )
+
+    # To represent a payment that succeeded and then failed with the bank
+    if has_processed_state and later_failed:
+        state_log_util.create_finished_state_log(
+            payment,
+            State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+            state_log_util.build_outcome("Payment later failed with the bank"),
+            db_session,
+        )
 
     return PaymentContainer(payment, payments_util.ValidationContainer(str(payment.payment_id)))
 
@@ -271,6 +284,33 @@ def test_validate_payments_not_exceeding_cap_adhoc_payments(
     assert not payment_container3.validation_container.has_validation_issues()
     assert not payment_container4.validation_container.has_validation_issues()
     assert payment_container5.validation_container.has_validation_issues()
+
+
+def test_validate_payments_not_exceeding_cap_prior_failed_payments(
+    payment_post_processing_step, local_test_db_session
+):
+    employee = EmployeeFactory.create()
+
+    # New payment being processed
+    payment_container1 = _create_payment_container(
+        employee, Decimal("850.00"), local_test_db_session
+    )
+
+    # A prior payment that was paid and then failed validation
+    # with the same date range will not be found and the above
+    # will pass
+    _create_payment_container(
+        employee,
+        Decimal("850.00"),
+        local_test_db_session,
+        has_processed_state=True,
+        later_failed=True,
+    )
+
+    payment_post_processing_step._validate_payments_not_exceeding_cap(
+        employee.employee_id, [payment_container1]
+    )
+    assert not payment_container1.validation_container.has_validation_issues()
 
 
 def test_get_all_active_payments_associated_with_employee(
@@ -556,7 +596,7 @@ def test_run_step_payment_cap(payment_post_processing_step, local_test_db_sessio
     # All 4 payments should have been moved to the success state
     state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        end_state=State.PAYMENT_READY_FOR_ADDRESS_VALIDATION,
+        end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         db_session=local_test_db_session,
     )
 

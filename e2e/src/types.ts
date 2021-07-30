@@ -46,8 +46,11 @@ export type LeavePeriods = Pick<
 >;
 
 export type Submission = {
+  /**Claim id given to it by the PFML API */
   application_id: string;
+  /**Absence Case number from fineos */
   fineos_absence_id: string;
+  /**Time when the claim was submitted. Used to find the right emails within the testmail. */
   timestamp_from: number;
 };
 
@@ -99,6 +102,7 @@ export type ERTasks =
   | "Escalate employer reported past leave";
 /**
  * Tasks associated with reviewing evidence.
+ * Separated because they are use to get the tasks assicoated with document review.
  */
 export type DocumentReviewTasks =
   | "Bonding Certification Review"
@@ -107,7 +111,15 @@ export type DocumentReviewTasks =
   | "Certification Review"
   | "Caring Certification Review"
   | "Medical Pregnancy Certification Review";
-export type FineosTasks = DocumentReviewTasks | ERTasks;
+/**Other fineos tasks, expand as needed. */
+export type OtherTasks =
+  | "Approved Leave Start Date Change"
+  | "Update Paid Leave Case"
+  | "Review and Decision Cancel Time Submitted"
+  | "Employee Reported Other Leave"
+  | "Employee Reported Other Income";
+/**Tasks avalable in fineos */
+export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
 
 export type ClaimStatus = "Adjudication" | "Approved" | "Completed";
 

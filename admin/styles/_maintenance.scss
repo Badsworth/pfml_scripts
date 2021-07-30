@@ -1,31 +1,35 @@
-/** @define maintenance-status */
-.maintenance-status {
+/** @define maintenance */
+.maintenance {
   background: #fff;
   border-radius: $Border-Radius;
   box-shadow: $Box-Shadow;
-  display: flex;
-  margin-bottom: 2.28em;
+  margin-bottom: 2.43em;
   padding: 1.43em 1.71em;
 }
 
-.maintenance-status__title {
+/** @define maintenance-info */
+.maintenance-info {
+  display: flex;
+}
+
+.maintenance-info__title {
   color: $Color-RevolutionGray;
   font-size: 1.14em;
   font-weight: 400;
   line-height: 1.71;
-  margin-bottom: 0.57em;
+  margin-bottom: 0.4em;
 }
 
-.maintenance-status__text {
+.maintenance-info__text {
   color: $Color-GraniteGray-700;
   flex: 1 1 auto;
 }
 
-.maintenance-status__a-config {
+.maintenance-info__a-config {
   text-decoration: none;
 }
 
-.maintenance-status__a-config::before {
+.maintenance-info__a-config::before {
   content: '\e905';
   font-family: 'SiteAdminPortal' !important;
 }
@@ -52,4 +56,34 @@
 
 .maintenance-configure__datetime-wrapper {
   width: 49%;
+}
+
+/** @define maintenance-status */
+.maintenance-status {
+  background: $Color-BayBlue-50;
+  border-radius: 8px;
+  box-shadow: $Box-Shadow;
+  color: $Color-RevolutionGray;
+  font-size: 1em;
+  line-height: 1.33;
+  margin-top: 1.45em;
+}
+
+.maintenance-status__row {
+  display: flex;
+  padding: 1.07em 1.1em;
+}
+
+.maintenance-status__row:not(:last-child) {
+  border-bottom: solid 1px $Color-BayBlue-100;
+}
+
+.maintenance-status__label {
+  flex: none;
+  padding-right: 1.1em;
+  width: 10.5em;
+}
+
+.maintenance-status__value {
+  flex: 1 1 auto;
 }

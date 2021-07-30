@@ -174,7 +174,7 @@ export default class Step extends BaseModel {
     );
     const pagesByStep = groupBy(pages, "meta.step");
 
-    // TODO (CP-1346) Remove this filter logic once the claimantShowOtherLeaveStep feature flag is no longer relevant
+    // TODO (CP-1658) Remove this filter logic once the claimantShowOtherLeaveStep feature flag is no longer relevant
     const filterOutHiddenSteps = (steps) => {
       if (context.showOtherLeaveStep) {
         return steps;

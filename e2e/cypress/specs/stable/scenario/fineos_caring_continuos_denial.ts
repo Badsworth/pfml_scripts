@@ -20,15 +20,29 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
               fineos_absence_id: fineos_absence_id,
               timestamp_from: Date.now(),
             });
-            const reason = claim.claim.leave_details?.reason;
-            fineos.visitClaim(fineos_absence_id);
-            fineos.assertClaimStatus("Adjudication");
-            fineos.reviewMailedDocumentsWithTasks(
-              fineos_absence_id,
-              reason,
-              "Caring Certification Review",
-              true
-            );
+            fineosPages.ClaimPage.visit(fineos_absence_id)
+              .documents((docs) => {
+                claim.documents.forEach((document) =>
+                  docs
+                    .uploadDocument(document.document_type)
+                    .assertDocumentUploads(document.document_type)
+                );
+              })
+              .tasks((taskPage) => {
+                taskPage.add("ID Review");
+                taskPage.add("Caring Certification Review");
+              })
+              .adjudicate((adjudication) => {
+                adjudication.evidence((evidence) =>
+                  claim.documents.forEach(({ document_type }) =>
+                    evidence.receive(document_type)
+                  )
+                );
+              })
+              .tasks((taskPage) => {
+                taskPage.close("ID Review");
+                taskPage.close("Caring Certification Review");
+              });
           });
       });
     }
@@ -53,8 +67,9 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     fineos.before();
     cy.visit("/");
     cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-      fineos.visitClaim(fineos_absence_id);
-      fineos.denyClaim("Covered family relationship not established");
+      fineosPages.ClaimPage.visit(fineos_absence_id).deny(
+        "Covered family relationship not established"
+      );
     });
   });
 });

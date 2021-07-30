@@ -3,21 +3,21 @@ import classNames from "classnames";
 
 type Props = {
   additionalClasses?: string[];
-  callback: Function;
+  onClick: Function;
   children?: React.ReactNode;
 };
 
-const Button = ({ additionalClasses = [], callback, children }: Props) => {
+const Button = ({ additionalClasses = [], onClick, children }: Props) => {
   const handleOnClick = (event: React.MouseEvent) => {
     event.preventDefault();
 
-    callback(event);
+    onClick(event);
   };
 
   const classes = classNames([...additionalClasses, "btn"]);
 
   return (
-    <button className={classes} onClick={handleOnClick}>
+    <button type="button" className={classes} onClick={handleOnClick}>
       {children}
     </button>
   );

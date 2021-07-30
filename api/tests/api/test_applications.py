@@ -677,6 +677,25 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
 
     update_request_body_dob = {"date_of_birth": "1970-01-01"}
 
+    # patching a partial update of the mailing address (zip code only)
+    update_request_body = {"mailing_address": {"zip": "12345",}}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("mailing_address")["city"] == "Chicago"
+    assert response_body.get("data").get("mailing_address")["line_1"] == "*******"
+    assert response_body.get("data").get("mailing_address")["zip"] == "12345"
+    assert application.mailing_address.city == "Chicago"
+    assert application.mailing_address.address_line_one == "123 Bar St."
+    assert application.mailing_address.zip_code == "12345"
+
     # patching another field and confirming mailing address still persists
     response_new_update = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -756,6 +775,25 @@ def test_application_patch_residential_address(client, user, auth_token, test_db
     assert response_body.get("data").get("residential_address")["line_1"] == "*******"
     assert application.residential_address.city == "Chicago"
     assert application.residential_address.address_line_one == "123 Bar St."
+
+    # patching a partial update of the residential address (zip code only)
+    update_request_body = {"residential_address": {"zip": "12345",}}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("residential_address")["city"] == "Chicago"
+    assert response_body.get("data").get("residential_address")["line_1"] == "*******"
+    assert response_body.get("data").get("residential_address")["zip"] == "12345"
+    assert application.residential_address.city == "Chicago"
+    assert application.residential_address.address_line_one == "123 Bar St."
+    assert application.residential_address.zip_code == "12345"
 
     # removing residential address
     update_request_body = {"residential_address": None}
@@ -2913,6 +2951,42 @@ def test_application_patch_invalid_values(client, user, auth_token):
             },
         ],
     )
+
+
+@pytest.mark.parametrize("state_string", ("ZZ", "New York"))
+def test_application_patch_state_invalid(client, user, auth_token, state_string):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"mailing_address": {"state": state_string}},
+    )
+
+    tests.api.validate_error_response(
+        response,
+        400,
+        errors=[
+            {
+                "field": "mailing_address.state",
+                "message": f"'{state_string}' is not a valid state",
+                "type": "enum",
+            },
+        ],
+    )
+
+
+def test_application_patch_state_valid(client, user, auth_token):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"mailing_address": {"state": "NY"}},
+    )
+
+    assert response.json["data"]["mailing_address"]["state"] == "NY"
+    assert response.status_code == 200
 
 
 def test_application_patch_fein_not_found(client, user, auth_token):

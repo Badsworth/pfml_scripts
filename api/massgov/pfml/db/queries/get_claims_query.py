@@ -1,5 +1,6 @@
 from datetime import date
-from typing import Callable, List, Optional, Set
+from enum import Enum
+from typing import Any, Callable, List, Optional, Set
 
 from sqlalchemy import Column, and_, asc, desc, or_
 from sqlalchemy.orm import contains_eager
@@ -24,9 +25,25 @@ from massgov.pfml.util.paginate.paginator import (
 )
 
 
+# Extra Absence Statuses defined in the UI
+# enum values for claim_status url param in claims endpoint
+class ActionRequiredStatusFilter(str, Enum):
+    PENDING = "Pending"
+    OPEN_REQUIREMENT = "Open requirement"
+    PENDING_NO_ACTION = "Pending - no action"
+
+    @classmethod
+    def all(cls):
+        return [cls.PENDING, cls.OPEN_REQUIREMENT, cls.PENDING_NO_ACTION]
+
+
+PendingAbsenceStatuses = ["Intake In Progress", "In Review", "Adjudication", None]
+
 # Wrapper for the DB layer of the `get_claims` endpoint
 # Create a query for filtering and ordering Claim results
 # The "get" methods are idempotent, the rest will change the query and affect the results
+
+
 class GetClaimsQuery:
     def __init__(self, db_session: db.Session):
         self.query = db_session.query(Claim)
@@ -39,6 +56,34 @@ class GetClaimsQuery:
         filter = Claim.application.has(Application.user_id == current_user.user_id)  # type: ignore
         self.query = self.query.filter(filter)
 
+    def get_managed_requirement_status_filters(self, absence_statuses: Set[str]) -> List[Any]:
+        has_pending_no_action = ActionRequiredStatusFilter.PENDING_NO_ACTION in absence_statuses
+        has_open_requirement = ActionRequiredStatusFilter.OPEN_REQUIREMENT in absence_statuses
+        has_pending = ActionRequiredStatusFilter.PENDING in absence_statuses
+
+        filters = []
+        filter = Claim.managed_requirements.any(  # type: ignore
+            ManagedRequirement.managed_requirement_status_id
+            == ManagedRequirementStatus.OPEN.managed_requirement_status_id
+        )
+        if has_open_requirement:
+            filters.append(filter)
+        if has_pending_no_action:
+            pending_no_action_filters = [
+                or_(
+                    LkAbsenceStatus.absence_status_description.in_(PendingAbsenceStatuses),
+                    Claim.fineos_absence_status_id.is_(None),
+                ),
+                ~filter,
+            ]
+            filters.append(and_(*pending_no_action_filters))
+        if has_pending:
+            absence_statuses.update(PendingAbsenceStatuses)  # type: ignore
+
+        # remove absence status not in database
+        absence_statuses.difference_update(ActionRequiredStatusFilter.all())  # update in place
+        return filters
+
     def add_absence_status_filter(self, absence_statuses: Set[str]) -> None:
         self.query = self.query.join(
             LkAbsenceStatus,
@@ -46,10 +91,14 @@ class GetClaimsQuery:
             isouter=True,
         )
 
-        filters = [LkAbsenceStatus.absence_status_description.in_(absence_statuses)]
-        if None in absence_statuses:
-            filters.extend([Claim.fineos_absence_status_id.is_(None)])
+        filters = self.get_managed_requirement_status_filters(absence_statuses)
+        if not len(absence_statuses):
+            self.query = self.query.filter(or_(*filters))
+            return
 
+        filters.append(LkAbsenceStatus.absence_status_description.in_(absence_statuses))
+        if None in absence_statuses:
+            filters.append(Claim.fineos_absence_status_id.is_(None))
         self.query = self.query.filter(or_(*filters))
 
     def add_search_filter(self, search_string: str) -> None:

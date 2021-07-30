@@ -1,5 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`AbsenceCaseStatusTag renders the component with 'No Action Required' when managedRequirements is empty and has a pending-line status value 1`] = `
+<Tag
+  label="No action required"
+  state="inactive"
+/>
+`;
+
+exports[`AbsenceCaseStatusTag renders the component with 'Review By {{date}}' when managedRequirements is not empty 1`] = `
+<Tag
+  label="Review by 7/22/2021"
+  state="warning"
+/>
+`;
+
 exports[`AbsenceCaseStatusTag renders the component with error state and mapped status for 'Declined' 1`] = `
 <Tag
   label="Denied"

@@ -25,41 +25,11 @@ exports[`Feedback renders the component 1`] = `
         Do you have any additional comments or concerns?
       </ReviewHeading>
     }
-    name="shouldShowCommentBox"
+    name="should_show_comment_box"
     onChange={[Function]}
     smallLabel={true}
     type="radio"
+    value=""
   />
-  <ConditionalContent
-    clearField={[Function]}
-    getField={[Function]}
-    updateFields={[Function]}
-    visible={false}
-  >
-    <div
-      className="usa-form-group"
-    >
-      <FormLabel
-        className="usa-label"
-        errorMsg={null}
-        htmlFor="comment"
-        small={true}
-      >
-        <Trans
-          i18nKey="components.employersFeedback.commentSolicitation"
-          tOptions={
-            Object {
-              "context": "",
-            }
-          }
-        />
-      </FormLabel>
-      <textarea
-        className="usa-textarea margin-top-3"
-        name="comment"
-        onChange={[Function]}
-      />
-    </div>
-  </ConditionalContent>
 </Fragment>
 `;

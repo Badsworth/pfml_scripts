@@ -336,13 +336,13 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
             AND errorMessage != 'cancelled'
             AND errorMessage != 'Network error'
             AND errorMessage NOT LIKE '%network connection%'
-            AND environment != 'development'
         ) / ${local.js_error_total_count}
       ) * clamp_max(floor(${local.js_error_uniq_count} / ${local.js_error_min_uniq_per_window}), 1)
       FROM JavaScriptError, BrowserInteraction
       WHERE appName = 'PFML-Portal-${upper(var.environment_name)}'
         AND pageUrl NOT LIKE '%localhost%'
         AND targetUrl NOT LIKE '%localhost%'
+        AND errorMessage != 'Cannot set property \'status\' of undefined'
     NRQL
 
     evaluation_offset = 1

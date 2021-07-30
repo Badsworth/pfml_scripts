@@ -58,7 +58,10 @@ export default class DocumentsApi extends BaseApi {
     }
 
     assert(file);
-    formData.append("file", file);
+    // we use Blob to support IE 11, formData is using "blob" as the default file name,
+    // so we pass the actual file name here
+    // https://developer.mozilla.org/en-US/docs/Web/API/FormData/append#append_parameters
+    formData.append("file", file, file.name);
     formData.append("name", file.name);
     formData.append("mark_evidence_received", mark_evidence_received);
 

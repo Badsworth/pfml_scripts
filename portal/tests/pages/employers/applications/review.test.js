@@ -72,6 +72,7 @@ describe("Review", () => {
     ({ wrapper } = renderComponent("shallow", claimWithV1Eform));
     const components = [
       "EmployeeInformation",
+      "EmployeeNotice",
       "EmployerBenefits",
       "EmployerDecision",
       "Feedback",
@@ -93,6 +94,7 @@ describe("Review", () => {
     const components = [
       "ConcurrentLeave",
       "EmployeeInformation",
+      "EmployeeNotice",
       "EmployerBenefits",
       "EmployerDecision",
       "Feedback",
@@ -151,13 +153,11 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'comment' based on the Feedback", async () => {
-    act(() => {
-      const setComment = wrapper.find("Feedback").prop("setComment");
-      setComment("my comment");
-    });
+  it("sets payload based on 'comment' input", async () => {
+    simulateEvents(wrapper).changeRadioGroup("should_show_comment_box", "true");
+    simulateEvents(wrapper.update()).changeField("comment", "my comment");
 
-    await simulateEvents(wrapper).submitForm();
+    await simulateEvents(wrapper.update()).submitForm();
 
     expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
@@ -165,13 +165,20 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'employer_decision' if the employer denies", async () => {
-    act(() => {
-      const updateFields = wrapper
-        .find("EmployerDecision")
-        .prop("updateFields");
-      updateFields({ employer_decision: "Deny" });
-    });
+  it("sets 'comment' to an empty string in the payload if it is falsy", async () => {
+    simulateEvents(wrapper).changeRadioGroup("should_show_comment_box", "true");
+    simulateEvents(wrapper.update()).changeField("comment", undefined);
+
+    await simulateEvents(wrapper.update()).submitForm();
+
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ comment: "" })
+    );
+  });
+
+  it("sets payload based on 'employer_decision' input", async () => {
+    simulateEvents(wrapper).changeRadioGroup("employer_decision", "Deny");
 
     await simulateEvents(wrapper).submitForm();
 
@@ -181,34 +188,192 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'employer_decision' if the employer approves", async () => {
-    act(() => {
-      const updateFields = wrapper
-        .find("EmployerDecision")
-        .prop("updateFields");
-      updateFields({ employer_decision: "Approve" });
+  describe("when leave request is denied", () => {
+    function getShouldShowCommentBoxChoices(wrapper) {
+      const feedbackOptions = wrapper
+        .find('InputChoiceGroup[name="should_show_comment_box"]')
+        .prop("choices");
+
+      return {
+        noFeedbackChoice: feedbackOptions.find(
+          (choice) => choice.label === "No"
+        ),
+        yesFeedbackChoice: feedbackOptions.find(
+          (choice) => choice.label === "Yes"
+        ),
+      };
+    }
+
+    it("disables 'No' and selects 'Yes' for 'should_show_comment_box'", () => {
+      simulateEvents(wrapper).changeRadioGroup("employer_decision", "Deny");
+
+      const { noFeedbackChoice, yesFeedbackChoice } =
+        getShouldShowCommentBoxChoices(wrapper.update());
+      expect(noFeedbackChoice.disabled).toBe(true);
+      expect(yesFeedbackChoice.checked).toBe(true);
     });
 
-    await simulateEvents(wrapper).submitForm();
+    describe("and is then approved", () => {
+      it("re-enables the 'No' should_show_comment_box choice", () => {
+        simulateEvents(wrapper).changeRadioGroup("employer_decision", "Deny");
+        simulateEvents(wrapper.update()).changeRadioGroup(
+          "employer_decision",
+          "Approve"
+        );
+
+        const { noFeedbackChoice } = getShouldShowCommentBoxChoices(
+          wrapper.update()
+        );
+        expect(noFeedbackChoice.disabled).toBe(false);
+      });
+
+      it("selects 'No' for should_show_comment_box if there is no comment", () => {
+        simulateEvents(wrapper).changeRadioGroup("employer_decision", "Deny");
+        simulateEvents(wrapper.update()).changeField("comment", "");
+        simulateEvents(wrapper).changeRadioGroup(
+          "employer_decision",
+          "Approve"
+        );
+
+        const { noFeedbackChoice } = getShouldShowCommentBoxChoices(
+          wrapper.update()
+        );
+        expect(noFeedbackChoice.checked).toBe(true);
+      });
+
+      it('selects "Yes" for should_show_comment_box if there is a comment', () => {
+        simulateEvents(wrapper).changeRadioGroup("employer_decision", "Deny");
+        simulateEvents(wrapper.update()).changeField("comment", "my comment");
+        simulateEvents(wrapper).changeRadioGroup(
+          "employer_decision",
+          "Approve"
+        );
+
+        const { yesFeedbackChoice } = getShouldShowCommentBoxChoices(
+          wrapper.update()
+        );
+        expect(yesFeedbackChoice.checked).toBe(true);
+      });
+    });
+  });
+
+  it("sets payload based on 'fraud' input", async () => {
+    const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
+    changeRadioGroup("fraud", "Yes");
+    await submitForm();
 
     expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
-      expect.objectContaining({ employer_decision: "Approve" })
+      expect.objectContaining({ fraud: "Yes" })
     );
   });
 
-  it("sets 'fraud' based on FraudReport", async () => {
-    act(() => {
-      const setFraud = wrapper.find("FraudReport").prop("onChange");
-      setFraud("No");
+  describe("when fraud is reported", () => {
+    it("disables all employee_notice choices", () => {
+      simulateEvents(wrapper).changeRadioGroup("fraud", "Yes");
+
+      const employeeNoticeChoices = wrapper
+        .update()
+        .find('InputChoiceGroup[name="employee_notice"]')
+        .prop("choices");
+      for (const choice of employeeNoticeChoices) {
+        expect(choice.disabled).toBe(true);
+      }
     });
 
-    await simulateEvents(wrapper).submitForm();
+    it("disables 'Approve' and selects 'Deny' for employer_decision", () => {
+      simulateEvents(wrapper).changeRadioGroup("fraud", "Yes");
 
-    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
-      "NTN-111-ABS-01",
-      expect.objectContaining({ fraud: "No" })
-    );
+      const employerDecisionChoices = wrapper
+        .update()
+        .find('InputChoiceGroup[name="employer_decision"]')
+        .prop("choices");
+      const approveChoice = employerDecisionChoices.find(
+        (choice) => choice.value === "Approve"
+      );
+      const denyChoice = employerDecisionChoices.find(
+        (choice) => choice.value === "Deny"
+      );
+      expect(approveChoice.disabled).toBe(true);
+      expect(denyChoice.checked).toBe(true);
+    });
+
+    it("disables 'No' and selects 'Yes' for should_show_comment_box choice", () => {
+      simulateEvents(wrapper).changeRadioGroup("fraud", "Yes");
+
+      const shouldShowCommentBoxChoices = wrapper
+        .update()
+        .find('InputChoiceGroup[name="should_show_comment_box"]')
+        .prop("choices");
+      const noChoice = shouldShowCommentBoxChoices.find(
+        (choice) => choice.value === "false"
+      );
+      const yesChoice = shouldShowCommentBoxChoices.find(
+        (choice) => choice.value === "true"
+      );
+      expect(noChoice.disabled).toBe(true);
+      expect(yesChoice.checked).toBe(true);
+    });
+
+    describe("and then reverted to not fraud", () => {
+      it("re-enables all employee_notice choices", () => {
+        simulateEvents(wrapper).changeRadioGroup("fraud", "Yes");
+        simulateEvents(wrapper.update()).changeRadioGroup("fraud", "No");
+
+        const employeeNoticeChoices = wrapper
+          .update()
+          .find('InputChoiceGroup[name="employee_notice"]')
+          .prop("choices");
+        for (const choice of employeeNoticeChoices) {
+          expect(choice.disabled).toBe(false);
+        }
+      });
+
+      it("re-enables and unselects all employer_decision choices", () => {
+        simulateEvents(wrapper).changeRadioGroup("fraud", "Yes");
+        simulateEvents(wrapper.update()).changeRadioGroup("fraud", "No");
+
+        const employerDecisionChoices = wrapper
+          .update()
+          .find('InputChoiceGroup[name="employer_decision"]')
+          .prop("choices");
+        for (const choice of employerDecisionChoices) {
+          // "disabled" prop can be undefined.
+          expect(choice.disabled).toBeFalsy();
+          expect(choice.checked).toBe(false);
+        }
+      });
+
+      it("selects 'No' for should_show_comment_box if there is no comment", () => {
+        simulateEvents(wrapper).changeRadioGroup("fraud", "Yes");
+        simulateEvents(wrapper.update()).changeField("comment", "");
+        simulateEvents(wrapper.update()).changeRadioGroup("fraud", "No");
+
+        const shouldShowCommentBoxOptions = wrapper
+          .update()
+          .find('InputChoiceGroup[name="should_show_comment_box"]')
+          .prop("choices");
+        const noOption = shouldShowCommentBoxOptions.find(
+          (choice) => choice.value === "false"
+        );
+        expect(noOption.checked).toBe(true);
+      });
+
+      it("selects 'Yes' for should_show_comment_box if there is a comment", () => {
+        simulateEvents(wrapper).changeRadioGroup("fraud", "Yes");
+        simulateEvents(wrapper.update()).changeField("comment", "my comment");
+        simulateEvents(wrapper.update()).changeRadioGroup("fraud", "No");
+
+        const shouldShowCommentBoxOptions = wrapper
+          .update()
+          .find('InputChoiceGroup[name="should_show_comment_box"]')
+          .prop("choices");
+        const yesOption = shouldShowCommentBoxOptions.find(
+          (choice) => choice.value === "true"
+        );
+        expect(yesOption.checked).toBe(true);
+      });
+    });
   });
 
   it("sets 'hours_worked_per_week' based on SupportingWorkDetails", async () => {
@@ -561,5 +726,13 @@ describe("Review", () => {
         })
       );
     });
+  });
+
+  it("disables submit button if comment is required but empty", () => {
+    const { changeRadioGroup } = simulateEvents(wrapper);
+    changeRadioGroup("should_show_comment_box", "true");
+    expect(
+      wrapper.update().find('button[type="submit"]').prop("disabled")
+    ).toBe(true);
   });
 });

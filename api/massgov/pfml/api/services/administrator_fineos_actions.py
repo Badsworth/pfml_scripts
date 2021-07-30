@@ -6,6 +6,8 @@ from typing import Dict, List, Optional
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
+from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
+from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import (
     Address,
     IntermittentLeavePeriod,
@@ -17,6 +19,8 @@ from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, Docume
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
+from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
+from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData, GroupClientDocument
 from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformConcurrentLeaveFromOtherLeaveEform,
@@ -28,21 +32,6 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EFormBody
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 LEAVE_ADMIN_INFO_REQUEST_TYPE = "Employer Confirmation of Leave Data"
-
-# Downloadable leave admin doc types: https://lwd.atlassian.net/wiki/spaces/DD/pages/691208493/Document+Categorization
-# Lower case to prevent casing discrepancies
-DOWNLOADABLE_DOC_TYPES = [
-    "state managed paid leave confirmation",
-    "approval notice",
-    "request for more information",
-    "denial notice",
-    "employer response additional documentation",
-    "care for a family member form",
-    "own serious health condition form",
-    "pregnancy/maternity form",
-    "child bonding evidence form",
-    "military exigency form",
-]
 
 logger = logging.get_logger(__name__)
 
@@ -149,10 +138,42 @@ def get_documents_as_leave_admin(fineos_user_id: str, absence_id: str) -> List[D
 
 def download_document_as_leave_admin(
     fineos_user_id: str, absence_id: str, fineos_document_id: str
-) -> massgov.pfml.fineos.models.group_client_api.Base64EncodedFileData:
+) -> Base64EncodedFileData:
+    log_attributes = {
+        "fineos_user_id": fineos_user_id,
+        "absence_id": absence_id,
+        "fineos_document_id": fineos_document_id,
+    }
+
+    document = _get_document(fineos_user_id, absence_id, fineos_document_id)
+
+    if document is None:
+        logger.warning("Unable to find FINEOS document for user", extra=log_attributes)
+        raise ObjectNotFound(description="Unable to find FINEOS document for user")
+
+    if not document.is_downloadable_by_leave_admin():
+        doc_type = document.name.lower()
+        logger.warning(
+            f"Leave Admin is not authorized to download documents of type {doc_type}",
+            extra=log_attributes,
+        )
+        raise NotAuthorizedForAccess(
+            description=f"User is not authorized to access documents of type: {doc_type}",
+            error_type="unauthorized_document_type",
+            data={"doc_type": doc_type},
+        )
+
+    fineos = massgov.pfml.fineos.create_client()
+    return fineos.download_document_as_leave_admin(fineos_user_id, absence_id, fineos_document_id)
+
+
+def _get_document(
+    fineos_user_id: str, absence_id: str, fineos_document_id: str
+) -> Optional[GroupClientDocument]:
     fineos = massgov.pfml.fineos.create_client()
 
-    return fineos.download_document_as_leave_admin(fineos_user_id, absence_id, fineos_document_id)
+    documents = fineos.group_client_get_documents(fineos_user_id, absence_id)
+    return next((doc for doc in documents if str(doc.documentId) == fineos_document_id), None)
 
 
 def get_claim_as_leave_admin(

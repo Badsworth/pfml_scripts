@@ -8,9 +8,10 @@
 @import 'globals';
 @import 'maintenance';
 @import 'page_sidebar';
+@import '../src/components/Alert';
 @import '../src/components/ConfirmationDialog';
 @import '../src/components/SlideOut';
 @import '../src/components/Table';
 @import '../src/components/Search';
-@import '../src/components/Table';
 @import '../src/components/Tag';
+@import '../src/components/Warning';

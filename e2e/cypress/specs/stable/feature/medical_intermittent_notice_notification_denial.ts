@@ -35,7 +35,10 @@ describe("Denial Notification and Notice", () => {
           fineosPages.ClaimPage.visit(res.fineos_absence_id)
             .shouldHaveStatus("Eligibility", "Not Met")
             .deny("Claimant wages failed 30x rule")
-            .triggerNotice("Denial Notice");
+            .triggerNotice("Leave Request Declined")
+            .documents((docPage) =>
+              docPage.assertDocumentExists("Denial Notice")
+            );
         });
       });
     }

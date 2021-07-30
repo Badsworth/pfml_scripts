@@ -982,9 +982,16 @@ def test_create_report_new_dua_payments_to_dfml(
 
     log_entry = LogEntry(test_db_session, "Test")
     # Build up payment records
-    reduction_payments = DuaReductionPaymentFactory.create_batch(
+    new_reduction_payments = DuaReductionPaymentFactory.create_batch(
         size=5, created_at=datetime_util.utcnow()
     )
+
+    # Insert entries older than 90 days to test if they are ignored.
+    old_reduction_payments = DuaReductionPaymentFactory.create_batch(
+        size=2, created_at=datetime_util.utcnow() - timedelta(days=91)
+    )
+
+    reduction_payments = new_reduction_payments + old_reduction_payments
 
     employees = [
         EmployeeFactory.create(fineos_customer_number=reduction_payment.fineos_customer_number)
@@ -1027,7 +1034,7 @@ def test_create_report_new_dua_payments_to_dfml(
     assert len(state_log) == 1
     assert ref_file[0].file_location == os.path.join(s3_bucket_uri, object_list[0]["Key"])
 
-    for payment in reduction_payments:
+    for payment in new_reduction_payments:
         _ref_file = ref_file[0]
         dua_reduction_ref_file = (
             test_db_session.query(DuaReductionPaymentReferenceFile)
@@ -1038,3 +1045,61 @@ def test_create_report_new_dua_payments_to_dfml(
             .one_or_none()
         )
         assert dua_reduction_ref_file is not None
+
+    # Payments older than 90 days should be ignored
+    for payment in old_reduction_payments:
+        _ref_file = ref_file[0]
+        dua_reduction_ref_file = (
+            test_db_session.query(DuaReductionPaymentReferenceFile)
+            .filter_by(
+                dua_reduction_payment_id=payment.dua_reduction_payment_id,
+                reference_file_id=_ref_file.reference_file_id,
+            )
+            .one_or_none()
+        )
+        assert dua_reduction_ref_file is None
+
+
+def test__get_non_submitted_reduction_payments_filters_old_records(
+    test_db_session, initialize_factories_session
+):
+    new_reduction_payments = DuaReductionPaymentFactory.create_batch(
+        size=2, created_at=datetime_util.utcnow() - timedelta(days=90)
+    )
+
+    old_reduction_payments = DuaReductionPaymentFactory.create_batch(
+        size=2, created_at=datetime_util.utcnow() - timedelta(days=91)
+    )
+
+    reduction_payments = new_reduction_payments + old_reduction_payments
+
+    employees = [
+        EmployeeFactory.create(fineos_customer_number=reduction_payment.fineos_customer_number)
+        for reduction_payment in reduction_payments
+    ]
+    [
+        ClaimFactory.create(
+            fineos_absence_status_id=AbsenceStatus.COMPLETED.absence_status_id,
+            created_at=datetime_util.utcnow(),
+            employee=employee,
+        )
+        for employee in employees
+    ]
+
+    payment_records = dua._get_non_submitted_reduction_payments(test_db_session)
+
+    assert len(payment_records) == 2
+
+    retrieved_ids = [record.dua_reduction_payment_id for record, _ in payment_records]
+
+    # Newer payments should match what is returned
+    assert all(
+        [payment.dua_reduction_payment_id in retrieved_ids for payment in new_reduction_payments]
+    )
+    # Older payments excluded
+    assert all(
+        [
+            payment.dua_reduction_payment_id not in retrieved_ids
+            for payment in old_reduction_payments
+        ]
+    )

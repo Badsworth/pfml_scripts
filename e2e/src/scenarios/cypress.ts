@@ -285,7 +285,10 @@ export const CDENY2: ScenarioSpecification = {
     shortClaim: true,
     has_continuous_leave_periods: true,
     reason: "Care for a Family Member",
-    docs: {},
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
   },
 };
 
@@ -495,6 +498,19 @@ export const CHAP_ER: ScenarioSpecification = {
   },
 };
 
+export const WDCLAIM: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "WDCLAIM",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+  },
+};
+
 export const HIST_CASE: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -503,5 +519,15 @@ export const HIST_CASE: ScenarioSpecification = {
     has_continuous_leave_periods: true,
     reason: "Serious Health Condition - Employee",
     docs: {},
+  },
+};
+
+// Leave start date change request
+export const MED_LSDCR: ScenarioSpecification = {
+  ...MHAP1ER,
+  claim: {
+    ...MHAP1ER.claim,
+    label: "MED_LSDCR",
+    leave_dates: [addWeeks(new Date(), 2), addWeeks(new Date(), 6)],
   },
 };

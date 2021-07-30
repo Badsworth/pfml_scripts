@@ -12,10 +12,12 @@ import massgov.pfml.api.claims
 import massgov.pfml.fineos.mock_client
 import massgov.pfml.util.datetime as datetime_util
 import tests.api
-from massgov.pfml.api.models.claims.responses import DocumentResponse
+from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
+from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
+    LkManagedRequirementStatus,
     ManagedRequirementStatus,
     ManagedRequirementType,
     Role,
@@ -30,8 +32,10 @@ from massgov.pfml.db.models.factories import (
     UserFactory,
     VerificationFactory,
 )
+from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
+from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 from massgov.pfml.util.strings import format_fein
 
@@ -286,22 +290,19 @@ class TestEmployerDocumentDownload:
         test_db_session.commit()
 
     @pytest.fixture
-    def document_id(self):
-        return "123"
-
-    @pytest.fixture
-    def document(self, document_id):
-        return DocumentResponse(
-            created_at=None,
-            document_type="state managed paid leave confirmation",
-            content_type="application/pdf",
-            fineos_document_id=document_id,
-            name="test.pdf",
-            description="Mock File",
+    def document_data(self):
+        return Base64EncodedFileData(
+            fileName="test.pdf",
+            fileExtension="pdf",
+            base64EncodedFileContents="Zm9v",  # decodes to "foo"
+            contentType="application/pdf",
+            description=None,
+            fileSizeInBytes=0,
+            managedReqId=None,
         )
 
     @pytest.fixture
-    def request_params(self, claim, document_id, employer_auth_token):
+    def request_params(self, claim, employer_auth_token):
         class EmployerDocumentDownloadRequestParams(object):
             __slots__ = ["absence_id", "document_id", "auth_token"]
 
@@ -311,7 +312,7 @@ class TestEmployerDocumentDownload:
                 self.auth_token = auth_token
 
         return EmployerDocumentDownloadRequestParams(
-            claim.fineos_absence_id, document_id, employer_auth_token
+            claim.fineos_absence_id, "doc_id", employer_auth_token
         )
 
     def download_document(self, client, params):
@@ -330,26 +331,49 @@ class TestEmployerDocumentDownload:
         message = response_json["message"]
         assert "does not have read access" in message
 
-    @mock.patch("massgov.pfml.api.claims.get_documents_as_leave_admin")
-    def test_employers_receive_200(self, mock_get_docs, document, client, request_params):
-        mock_get_docs.return_value = [document]
+    @mock.patch("massgov.pfml.api.claims.download_document_as_leave_admin")
+    def test_employers_receive_200(self, mock_download, document_data, client, request_params):
+        mock_download.return_value = document_data
 
         response = self.download_document(client, request_params)
         assert response.status_code == 200
 
-    @mock.patch("massgov.pfml.api.claims.get_documents_as_leave_admin")
+    @mock.patch("massgov.pfml.api.claims.download_document_as_leave_admin")
     def test_cannot_download_documents_not_attached_to_absence(
-        self, mock_get_docs, document, client, request_params, caplog
+        self, mock_download, client, request_params, caplog
     ):
-        document.fineos_document_id = "bad_doc_id"
-        mock_get_docs.return_value = [document]
+        mock_download.side_effect = ObjectNotFound(
+            description="Unable to find FINEOS document for user"
+        )
 
         response = self.download_document(client, request_params)
+        assert response.status_code == 404
 
-        tests.api.validate_error_response(
-            response, 403, message="User does not have access to this document"
+        response_json = response.get_json()
+        message = response_json["message"]
+        assert message == "Unable to find FINEOS document for user"
+
+        assert "Unable to find FINEOS document for user" in caplog.text
+
+    @mock.patch("massgov.pfml.api.claims.download_document_as_leave_admin")
+    def test_cannot_download_non_downloadable_doc_types(
+        self, mock_download, client, request_params, caplog
+    ):
+        error_message = "User is not authorized to access documents of type: identification proof"
+        mock_download.side_effect = NotAuthorizedForAccess(
+            description=error_message,
+            error_type="unauthorized_document_type",
+            data={"doc_type": "identification proof"},
         )
-        assert "document not found" in caplog.text
+
+        response = self.download_document(client, request_params)
+        assert response.status_code == 403
+
+        response_json = response.get_json()
+        message = response_json["message"]
+        assert message == error_message
+
+        assert error_message in caplog.text
 
 
 @pytest.mark.integration
@@ -2471,11 +2495,16 @@ class TestGetClaimsEndpoint:
 
     # Inner class for testing Claims with Managed Requirements
     class TestClaimsWithManagedRequirements:
-        @pytest.fixture()
-        def claim(self, employer_user, test_verification, test_db_session):
-            employer = EmployerFactory.create()
-            employee = EmployeeFactory.create()
+        @pytest.fixture
+        def employer(self):
+            return EmployerFactory.create()
 
+        @pytest.fixture
+        def employee(self):
+            return EmployeeFactory.create()
+
+        @pytest.fixture(autouse=True)
+        def link(self, test_db_session, employer_user, employer, test_verification):
             link = UserLeaveAdministrator(
                 user_id=employer_user.user_id,
                 employer_id=employer.employer_id,
@@ -2485,20 +2514,60 @@ class TestGetClaimsEndpoint:
             test_db_session.add(link)
             test_db_session.commit()
 
+        @pytest.fixture()
+        def claim(self, employer, employee):
+            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1,)
+
+        @pytest.fixture
+        def claim_pending_no_action(self, employer, employee):
+            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1,)
+
+        @pytest.fixture
+        def third_claim(self, employer, employee):
             return ClaimFactory.create(
-                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.get_id("Adjudication"),
+                claim_type_id=1,
             )
 
-        @pytest.fixture()
-        def managed_requirements(self, claim):
+        @pytest.fixture
+        def completed_claim(self, employer, employee):
+            return ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.get_id("Completed"),
+                claim_type_id=1,
+            )
+
+        def _add_managed_requirements_to_claim(
+            self, claim, status: LkManagedRequirementStatus, count=2
+        ):
             return [
                 ManagedRequirementFactory.create(
                     claim=claim,
                     managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
-                    managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                    managed_requirement_status_id=status.managed_requirement_status_id,
                 )
-                for _ in range(0, 2)
+                for _ in range(0, count)
             ]
+
+        @pytest.fixture
+        def claims_with_managed_requirements(
+            self, claim, claim_pending_no_action, third_claim, completed_claim
+        ):
+            # claim has both open and completed requirements
+            self._add_managed_requirements_to_claim(claim, ManagedRequirementStatus.OPEN)
+            self._add_managed_requirements_to_claim(claim, ManagedRequirementStatus.COMPLETE)
+
+            # claim_pending_no_action has completed requirements
+            self._add_managed_requirements_to_claim(
+                claim_pending_no_action, ManagedRequirementStatus.COMPLETE
+            )
+
+            # third_claim does not have managed requirements
+
+            # completed claim does not have managed requirements and is Completed, should NOT be returned
 
         @pytest.fixture()
         def old_managed_requirements(self, claim):
@@ -2509,24 +2578,11 @@ class TestGetClaimsEndpoint:
                 for _ in range(0, 2)
             ]
 
-        @pytest.fixture()
-        def complete_managed_requirements(self, claim):
-            return [
-                ManagedRequirementFactory.create(
-                    claim=claim,
-                    managed_requirement_status_id=ManagedRequirementStatus.COMPLETE.managed_requirement_status_id,
-                )
-                for _ in range(0, 2)
-            ]
-
         def test_claim_managed_requirements(
-            self,
-            client,
-            employer_auth_token,
-            managed_requirements,
-            old_managed_requirements,
-            complete_managed_requirements,
+            self, client, employer_auth_token, claim, old_managed_requirements,
         ):
+            self._add_managed_requirements_to_claim(claim, ManagedRequirementStatus.OPEN, 2)
+            self._add_managed_requirements_to_claim(claim, ManagedRequirementStatus.COMPLETE)
             resp = client.get(
                 "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
             )
@@ -2535,7 +2591,7 @@ class TestGetClaimsEndpoint:
             claim_data = response_body.get("data")
             assert len(claim_data) == 1
             claim = response_body["data"][0]
-            assert len(claim.get("managed_requirements", [])) == len(managed_requirements)
+            assert len(claim.get("managed_requirements", [])) == 2
             expected_type = (
                 ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_description
             )
@@ -2544,6 +2600,59 @@ class TestGetClaimsEndpoint:
                 assert req["follow_up_date"] >= date.today().strftime("%Y-%m-%d")
                 assert req["type"] == expected_type
                 assert req["status"] == expected_status
+
+        def test_claim_filter_has_open_managed_requirement(
+            self, client, employer_auth_token, claims_with_managed_requirements
+        ):
+            # claim has both open and completed requirements, should be returned
+            # claim_pending_no_action has completed requirements, should NOT be returned
+            # third_claim does not have managed requirements, should NOT be returned
+            # completed claim does not have managed requirements and is Completed, should NOT be returned
+
+            resp = client.get(
+                f"/v1/claims?claim_status={ActionRequiredStatusFilter.OPEN_REQUIREMENT}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == 1
+
+        def test_claim_filter_has_pending_no_action(
+            self, client, employer_auth_token, claims_with_managed_requirements
+        ):
+            # claim has both open and completed requirements, should NOT be returned
+            # claim_pending_no_action has completed requirements, should be returned
+            # third_claim does not have managed requirements, should be returned
+            # completed claim does not have managed requirements but is Completed, should NOT be returned
+
+            resp = client.get(
+                f"/v1/claims?claim_status={ActionRequiredStatusFilter.PENDING_NO_ACTION}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == 2
+            for returned_claim in claim_data:
+                assert len(returned_claim["managed_requirements"]) == 0
+
+        def test_claim_filter_has_open_managed_requirement_has_pending_no_action(
+            self, client, employer_auth_token, claims_with_managed_requirements
+        ):
+            # claim has both open and completed requirements, should be returned
+            # claim_pending_no_action has completed requirements, should be returned
+            # third_claim does not have managed requirements, should be returned
+            # completed claim does not have managed requirements and is Completed, should NOT be returned
+
+            resp = client.get(
+                f"/v1/claims?claim_status={ActionRequiredStatusFilter.PENDING_NO_ACTION},{ActionRequiredStatusFilter.OPEN_REQUIREMENT}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == 3
 
     # Inner class for testing Claims Search
     class TestClaimsSearch:

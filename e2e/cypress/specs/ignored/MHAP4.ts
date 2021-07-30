@@ -1,7 +1,8 @@
-import { portal, fineos } from "../../actions";
+import { portal, fineos, fineosPages } from "../../actions";
 import { getLeaveAdminCredentials, getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
 import { assertValidClaim } from "../../../src/util/typeUtils";
+import { getDocumentReviewTaskName } from "../../../src/util/documents";
 
 describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineos", () => {
   it("Create a financially eligible claim (MHAP4) in which an employer will respond", () => {
@@ -31,14 +32,32 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
     { baseUrl: getFineosBaseUrl() },
     () => {
       fineos.before();
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.visit("/");
-        fineos.claimAdjudicationFlow(
-          submission.fineos_absence_id,
-          "Serious Health Condition - Employee",
-          true
-        );
-        fineos.addBondingLeaveFlow(new Date());
+      cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+        cy.unstash<DehydratedClaim>("claim").then((claim) => {
+          cy.visit("/");
+          fineosPages.ClaimPage.visit(fineos_absence_id)
+            .tasks((tasks) => {
+              claim.documents.forEach((doc) =>
+                tasks.assertTaskExists(
+                  getDocumentReviewTaskName(doc.document_type)
+                )
+              );
+            })
+            .shouldHaveStatus("Applicability", "Applicable")
+            .shouldHaveStatus("Eligibility", "Met")
+            .adjudicate((adjudication) => {
+              adjudication
+                .evidence((evidence) =>
+                  claim.documents.forEach((doc) =>
+                    evidence.receive(doc.document_type)
+                  )
+                )
+                .certificationPeriods((certPreiods) => certPreiods.prefill())
+                .acceptLeavePlan();
+            })
+            .approve();
+          fineos.addBondingLeaveFlow(new Date());
+        });
       });
     }
   );

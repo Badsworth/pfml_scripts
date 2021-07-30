@@ -77,13 +77,6 @@ export function before(flags?: Partial<FeatureFlags>): void {
     { log: true }
   );
 
-  cy.on("uncaught:exception", (e) => {
-    if (e.message.match(/Cannot set property 'status' of undefined/)) {
-      return false;
-    }
-    return true;
-  });
-
   // Setup a route for application submission so we can extract claim ID later.
   cy.intercept({
     method: "POST",

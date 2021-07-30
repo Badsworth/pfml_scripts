@@ -33,11 +33,6 @@ exports[`GetReady renders get ready content 1`] = `
         }
       }
       i18nKey="pages.getReady.alertOnline"
-      tOptions={
-        Object {
-          "context": undefined,
-        }
-      }
     />
     <Heading
       level="3"
@@ -132,6 +127,23 @@ exports[`GetReady renders get ready content 1`] = `
       i18nKey="pages.getReady.stepTwoBondingLeaveBody"
     />
     <Heading
+      level="4"
+    >
+      To care for a family member with a serious health condition
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "caregiver-certification-form-link": <a
+            href="https://www.mass.gov/family-caring-form"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="pages.getReady.stepTwoCaringLeaveBody"
+    />
+    <Heading
       level="2"
     >
       <Icon
@@ -194,6 +206,11 @@ Array [
       key="1"
     >
       Family leave to bond with your child after birth, adoption, or foster placement — whether you are applying before or after the child arrives
+    </li>
+    <li
+      key="2"
+    >
+      Family leave to care for a family member with a serious medical condition
     </li>
   </ul>,
 ]
@@ -307,6 +324,23 @@ Array [
 `;
 
 exports[`GetReady renders get ready content 8`] = `
+<p
+  key="p-0"
+>
+  The health care provider of the person you're caring for must complete the 
+  <a
+    href="https://www.mass.gov/family-caring-form"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    Certification of Your Family Member’s Serious Health Condition
+  </a>
+  .
+</p>
+`;
+
+exports[`GetReady renders get ready content 9`] = `
 Array [
   <p
     key="p-0"

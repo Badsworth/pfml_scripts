@@ -1,6 +1,8 @@
-import { fineos, portal, email } from "../../actions";
+import { fineos, portal, email, fineosPages } from "../../actions";
 import { getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
+import { waitForAjaxComplete } from "../../actions/fineos";
+import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
 
 describe("Report of intermittent leave hours notification", () => {
   after(() => {
@@ -18,21 +20,59 @@ describe("Report of intermittent leave hours notification", () => {
         cy.stash("claim", claim.claim);
         cy.task("submitClaimToAPI", {
           ...claim,
-        }).then((res) => {
+        }).then(({ fineos_absence_id, application_id }) => {
           cy.stash("submission", {
-            application_id: res.application_id,
-            fineos_absence_id: res.fineos_absence_id,
+            application_id,
+            fineos_absence_id,
             timestamp_from: Date.now(),
           });
-          fineos.intermittentClaimAdjudicationFlow(
-            res.fineos_absence_id,
-            "Child Bonding",
-            true
+          const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
+          claimPage.shouldHaveStatus("Eligibility", "Met");
+          claimPage
+            .adjudicate((adjudication) => {
+              adjudication
+                .evidence((evidence) => {
+                  claim.documents.forEach(({ document_type }) =>
+                    evidence.receive(document_type)
+                  );
+                })
+                .certificationPeriods((certPeriods) => certPeriods.prefill())
+                .acceptLeavePlan();
+            })
+            .approve();
+          waitForAjaxComplete();
+          // Those are the specific dates fit to the scenario spec.
+          // We need those so that fineos approves the actual leave time and generates payments
+          const mostRecentSunday = startOfWeek(new Date());
+          const actualLeaveStart = formatISO(subDays(mostRecentSunday, 13), {
+            representation: "date",
+          });
+          const actualLeaveEnd = formatISO(
+            addDays(subDays(mostRecentSunday, 13), 4),
+            {
+              representation: "date",
+            }
           );
-          fineos.submitIntermittentActualHours(
-            claim.metadata?.spanHoursStart as string,
-            claim.metadata?.spanHoursEnd as string
-          );
+
+          new fineosPages.ClaimPage().recordActualLeave((recordActualTime) => {
+            if (claim.metadata?.spanHoursStart && claim.metadata?.spanHoursEnd)
+              recordActualTime.fillTimePeriod({
+                startDate: actualLeaveStart,
+                endDate: actualLeaveEnd,
+                // Just casting to string instead of asserting here.
+                timeSpanHoursStart: claim.metadata.spanHoursStart + "",
+                timeSpanHoursEnd: claim.metadata.spanHoursEnd + "",
+              });
+            return recordActualTime.nextStep((additionalReporting) => {
+              additionalReporting
+                .reportAdditionalDetails({
+                  reported_by: "Employee",
+                  received_via: "Phone",
+                  accepted: "Yes",
+                })
+                .finishRecordingActualLeave();
+            });
+          });
         });
       });
     }

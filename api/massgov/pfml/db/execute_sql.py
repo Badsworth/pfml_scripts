@@ -3,8 +3,9 @@
 #
 # This is intended to be run as an ECS task with the SQL passed as a command line argument.
 # Ex: ./bin/run-ecs-task/run-task.sh <env> execute-sql <firstname>.<lastname> execute-sql \
-#     "SELECT COUNT(*) FROM employer" "SELECT * FROM lk_geo_state
+#     "SELECT COUNT(*) FROM employer" "SELECT * FROM lk_geo_state"
 #
+# Results can be output to an S3 file by adding the --s3_output flag.
 
 import argparse
 import csv

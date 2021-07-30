@@ -11,6 +11,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
+from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.claims.responses import ClaimResponse
 from massgov.pfml.api.services.administrator_fineos_actions import (
@@ -23,7 +24,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import AbsenceStatus, Claim, Employer, UserLeaveAdministrator
-from massgov.pfml.db.queries.get_claims_query import GetClaimsQuery
+from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter, GetClaimsQuery
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
@@ -353,37 +354,49 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
     Calls out to the FINEOS Group Client API to download a document for a specified claim.
     The requesting user must be of the EMPLOYER role.
     """
-    log_attributes: Dict[str, Union[str, int]] = {}
-    log_attributes.update(get_employer_log_attributes(app))
+
+    log_attr: Dict[str, Union[str, int]] = {}
+    log_attr.update(get_employer_log_attributes(app))
+
     try:
         user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
-    except (VerificationRequired, NotAuthorizedForAccess) as error:
-        return error.to_api_response()
-
-    documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
-    document = next(
-        (doc for doc in documents if doc.fineos_document_id == fineos_document_id), None
-    )
-
-    if document is None:
+    except NotAuthorizedForAccess as not_authorized:
         logger.error(
-            "employer_document_download failed - document not found", extra={**log_attributes},
+            f"employer_document_download failed - {not_authorized.description}", extra=log_attr,
         )
-        raise Forbidden(description="User does not have access to this document")
+        return not_authorized.to_api_response()
+    except VerificationRequired as not_verified:
+        logger.error(
+            f"employer_document_download failed - {not_verified.description}", extra=log_attr,
+        )
+        return not_verified.to_api_response()
 
-    document_data: Base64EncodedFileData = download_document_as_leave_admin(
-        user_leave_admin.fineos_web_id, fineos_absence_id, fineos_document_id  # type: ignore
-    )
+    try:
+        document_data: Base64EncodedFileData = download_document_as_leave_admin(
+            user_leave_admin.fineos_web_id, fineos_absence_id, fineos_document_id  # type: ignore
+        )
+    except ObjectNotFound as not_found:
+        logger.error(
+            f"employer_document_download failed - {not_found.description}", extra=log_attr,
+        )
+        return not_found.to_api_response()
+    except NotAuthorizedForAccess as not_authorized:
+        doc_type = not_authorized.data["doc_type"]
+        logger.error(
+            f"employer_document_download failed - {not_authorized.description}",
+            extra={**log_attr, "document_type": doc_type},
+        )
+        return not_authorized.to_api_response()
+
     file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
-
     content_type = document_data.contentType or "application/octet-stream"
 
     claim = get_claim_from_db(fineos_absence_id)
     if claim:
-        log_attributes.update(get_claim_log_attributes(claim))
+        log_attr.update(get_claim_log_attributes(claim))
 
     logger.info(
-        "employer_document_download success", extra={**log_attributes},
+        "employer_document_download success", extra=log_attr,
     )
     return flask.Response(
         file_bytes,
@@ -482,6 +495,7 @@ def get_claims() -> flask.Response:
             else:
                 query.add_user_owns_claim_filter(current_user)
 
+            query.add_managed_requirements_filter()
             if len(absence_statuses):
                 # Log the values from the query params rather than the enum groups they
                 # might equate to, since what is sent into the API will be more familiar
@@ -490,14 +504,12 @@ def get_claims() -> flask.Response:
                     {"filter.absence_statuses": ", ".join(sorted(absence_statuses))}
                 )
 
-                absence_statuses = convert_pending_absence_status(absence_statuses)
                 query.add_absence_status_filter(absence_statuses)
 
             if search_string:
                 search_string = search_string.strip()
                 query.add_search_filter(search_string)
 
-            query.add_managed_requirements_filter()
             query.add_order_by(pagination_context)
 
             page = query.get_paginated_results(pagination_context)
@@ -537,7 +549,7 @@ def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
     """Confirm the absence statuses match a filterable status"""
 
     for absence_status in absence_statuses:
-        if absence_status == "Pending":
+        if absence_status in ActionRequiredStatusFilter.all():
             continue
 
         try:
@@ -546,10 +558,3 @@ def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
             raise BadRequest(f"Invalid claim status {absence_status}.")
 
     return
-
-
-def convert_pending_absence_status(absence_statuses: Set[str]) -> Set[str]:
-    if "Pending" in absence_statuses:
-        absence_statuses.remove("Pending")
-        absence_statuses.update(["Intake In Progress", "In Review", "Adjudication", None])  # type: ignore
-    return absence_statuses

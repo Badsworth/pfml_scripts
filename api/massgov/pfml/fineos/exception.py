@@ -35,11 +35,21 @@ class FINEOSFatalError(FINEOSClientError):
 
     def __str__(self) -> str:
         if self.cause:
-            return "(%s) %s: %s" % (self.method_name, type(self.cause).__name__, self.cause)
+            return "(%s) %s: %s: %s" % (
+                self.method_name,
+                type(self.cause).__name__,
+                self.cause,
+                self.message,
+            )
         elif self.response_status:
-            return "(%s) %s: %s" % (self.method_name, type(self).__name__, self.response_status)
+            return "(%s) %s: %s: %s" % (
+                self.method_name,
+                type(self).__name__,
+                self.response_status,
+                self.message,
+            )
         else:
-            return "(%s) %s" % (self.method_name, type(self).__name__)
+            return "(%s) %s: %s" % (self.method_name, type(self).__name__, self.message)
 
 
 class FINEOSFatalClientSideError(FINEOSFatalError):
@@ -62,6 +72,7 @@ class FINEOSClientBadResponse(FINEOSClientError):
     expected_status: int
     response_status: int
     method_name: str
+    message: str
 
     def __init__(
         self, method_name: str, expected_status: int, response_status: int, message: str = ""
@@ -72,10 +83,11 @@ class FINEOSClientBadResponse(FINEOSClientError):
         self.message = message
 
     def __str__(self) -> str:
-        return "(%s) expected %s, but got %s" % (
+        return "(%s) expected %s, but got %s: %s" % (
             self.method_name,
             self.expected_status,
             self.response_status,
+            self.message,
         )
 
 

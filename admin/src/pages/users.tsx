@@ -1,10 +1,13 @@
 import Search from "../components/Search";
 import Table from "../components/Table";
 import Tag from "../components/Tag";
-import SlideOut from "../components/SlideOut";
+import Button from "../components/Button";
+import Warning from "../components/Warning";
+import SlideOut, { Props as SlideOutProps } from "../components/SlideOut";
 import usePopup from "../hooks/usePopup";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
+import Image from "next/image";
 
 type User = {
   name: string;
@@ -43,9 +46,13 @@ const tempUsers = [
 
 export default function UserLookup() {
   const [users, setUsers] = useState<User[]>([]);
-  const quickView = usePopup<typeof SlideOut>({
-    title: "Quick view",
-  });
+  const { SlideOutPopup, openSlideOut } = usePopup<SlideOutProps<User>, User>(
+    SlideOut,
+  );
+
+  if (!SlideOutPopup || !openSlideOut) {
+    throw "Popup was not initialized!";
+  }
 
   const findUsers = async (searchTerm: string) => {
     return new Promise((resolve) =>
@@ -58,8 +65,18 @@ export default function UserLookup() {
   const getUsersType = (u: User) => <Tag text={u.type} color="green" />;
   const getUsersOptions = (u: User) => (
     <>
-      <button onClick={(e) => quickView.onOpen(e)}>Quick view</button> |&nbsp;
-      <button>View account</button>
+      <Button additionalClasses={["btn--plain"]} onClick={openSlideOut(u)}>
+        Quick view
+      </Button>
+      &nbsp; |&nbsp;
+      <Button
+        additionalClasses={["btn--plain"]}
+        onClick={() => {
+          //TODO link and pass state
+        }}
+      >
+        View account
+      </Button>
     </>
   );
 
@@ -69,9 +86,23 @@ export default function UserLookup() {
         <title>User Lookup</title>
       </Helmet>
       <h1 className="page__title">User Lookup</h1>
-      <SlideOut {...quickView}>
-        <p>ok</p>
-      </SlideOut>
+
+      <SlideOutPopup title="Account Information">
+        {(data) => (
+          <>
+            <div className="account-info-slideover__image-wrapper">
+              <Image
+                alt=""
+                src="https://via.placeholder.com/32"
+                layout="fill"
+              />
+            </div>
+            <p>{data?.name}</p>
+            <p>{data?.email}</p>
+            <p>{data?.type}</p>
+          </>
+        )}
+      </SlideOutPopup>
       <Search search={findUsers} setResults={setUsers} />
       <Table
         rows={users}
@@ -97,7 +128,11 @@ export default function UserLookup() {
             content: getUsersOptions,
           },
         ]}
-        noResults={<p>No results found</p>}
+        noResults={
+          <div className="users__warning-wrapper">
+            <Warning message="No accounts found with that email address." />
+          </div>
+        }
       />
     </>
   );

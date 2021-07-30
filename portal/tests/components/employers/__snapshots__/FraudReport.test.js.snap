@@ -43,10 +43,11 @@ exports[`FraudReport renders just the input choices by default 1`] = `
         Do you have any reason to suspect this is fraud?
       </ReviewHeading>
     }
-    name="isFraud"
+    name="fraud"
     onChange={[Function]}
     smallLabel={true}
     type="radio"
+    value=""
   />
   <ConditionalContent
     visible={false}
@@ -83,7 +84,7 @@ Array [
 ]
 `;
 
-exports[`FraudReport renders the alert if "Yes" is selected 1`] = `
+exports[`FraudReport renders the alert if fraud is reported 1`] = `
 <Fragment>
   <InputChoiceGroup
     choices={
@@ -126,10 +127,11 @@ exports[`FraudReport renders the alert if "Yes" is selected 1`] = `
         Do you have any reason to suspect this is fraud?
       </ReviewHeading>
     }
-    name="isFraud"
+    name="fraud"
     onChange={[Function]}
     smallLabel={true}
     type="radio"
+    value=""
   />
   <ConditionalContent
     visible={true}
@@ -153,7 +155,7 @@ exports[`FraudReport renders the alert if "Yes" is selected 1`] = `
 </Fragment>
 `;
 
-exports[`FraudReport renders the alert if "Yes" is selected 2`] = `
+exports[`FraudReport renders the alert if fraud is reported 2`] = `
 Array [
   "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at ",
   <a

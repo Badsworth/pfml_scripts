@@ -10,6 +10,15 @@ h1 {
   font-size: 1.71em;
   font-weight: 200;
   line-height: 1.33;
+  margin-bottom: 0.6em;
+}
+
+h2 {
+  color: $Color-RevolutionGray;
+  font-size: 1.43em;
+  font-weight: 300;
+  line-height: 1.4;
+  margin-bottom: 0.72em;
 }
 
 .page {
@@ -67,22 +76,31 @@ h1 {
 }
 
 .page__sidebar {
-  background: $Color-BerkshiresGreen-200;
-  display: flex;
-  flex-direction: column;
-  grid-column: 1 / 1;
-  grid-row: 2 / 2;
-  overflow-y: auto;
-  position: relative;
+  display: none;
+
+  @media screen and (min-width: 1024px) {
+    background: $Color-BerkshiresGreen-200;
+
+    display: flex;
+    flex-direction: column;
+    grid-column: 1 / 1;
+    grid-row: 2 / 2;
+    overflow-y: auto;
+    position: relative;
+  }
 }
 
 .page__main {
-  grid-column: 2 / 2;
-  grid-row: 2 / 2;
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding: 1.64em 2.29em;
-  position: relative;
+  grid-column: 1 / span 2;
+  padding: 1.9em 2.29em;
+
+  @media screen and (min-width: 1024px) {
+    grid-column: 2 / 2;
+    grid-row: 2 / 2;
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: relative;
+  }
 }
 
 // general input styling:
@@ -117,4 +135,14 @@ input {
   &:not(:placeholder-shown) {
     color: $Color-RevolutionGray;
   }
+}
+
+.users__warning-wrapper {
+  margin: 1.71em 0;
+}
+
+.account-info-slideover__image-wrapper {
+  height: 224px;
+  position: relative;
+  width: 400px;
 }

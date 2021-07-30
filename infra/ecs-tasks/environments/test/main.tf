@@ -91,7 +91,7 @@ module "tasks" {
   enable_recurring_payments_schedule = false
   enable_register_admins_job         = true
 
-  enable_pub_automation_fineos           = false
+  enable_pub_automation_fineos           = true
   enable_pub_automation_create_pub_files = false
   enable_pub_automation_process_returns  = false
 

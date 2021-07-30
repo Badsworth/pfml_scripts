@@ -57,7 +57,11 @@ describe("Request for More Information (notifications/notices)", () => {
           });
           // This should trigger a change in plan status.
           page.shouldHaveStatus("PlanDecision", "Pending Evidence");
-          page.triggerNotice("Request for more Information");
+          page
+            .triggerNotice("SOM Generate Legal Notice")
+            .documents((docPage) =>
+              docPage.assertDocumentExists("Request for more Information")
+            );
         });
       });
     }

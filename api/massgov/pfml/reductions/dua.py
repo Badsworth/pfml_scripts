@@ -2,7 +2,7 @@ import csv
 import io
 import os
 import pathlib
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -29,6 +29,7 @@ from massgov.pfml.payments.sftp_s3_transfer import (
 )
 from massgov.pfml.reductions.common import AgencyLoadResult, get_claimants_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
+from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.files import create_csv_from_list, upload_to_s3
 
 logger = logging.get_logger(__name__)
@@ -414,12 +415,17 @@ def _convert_cent_to_dollars(cent: str) -> Decimal:
 def _get_non_submitted_reduction_payments(
     db_session: db.Session,
 ) -> List[DuaReductionPaymentAndClaim]:
+    """
+    Include only payment records created within the last 90 days
+    """
+    ninety_days_ago = utcnow().date() - timedelta(days=90)
     return (
         db_session.query(DuaReductionPayment, Claim)
         .outerjoin(
             Employee, DuaReductionPayment.fineos_customer_number == Employee.fineos_customer_number,
         )
         .outerjoin(Claim, Claim.employee_id == Employee.employee_id)
+        .filter(DuaReductionPayment.created_at >= ninety_days_ago)
         .order_by(DuaReductionPayment.created_at, Claim.created_at)
         .all()
     )

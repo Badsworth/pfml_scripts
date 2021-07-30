@@ -654,21 +654,6 @@ def test_same_address_comparable(initialize_factories_session):
     )
     assert is_same_address(first, second) is True
 
-    # CTR normalized zip codes should be read as 5 digits
-    fineos_address = AddressFactory(
-        address_line_one="1234 main st",
-        address_line_two="#827 unit",
-        city="boston",
-        zip_code="02110",
-    )
-    ctr_address = AddressFactory(
-        address_line_one="1234 main st",
-        address_line_two="#827 unit",
-        city="boston",
-        zip_code="02110-12345",
-    )
-    assert is_same_address(fineos_address, ctr_address) is True
-
 
 def test_different_address(initialize_factories_session):
     first = AddressFactory()
@@ -705,7 +690,7 @@ def test_different_address(initialize_factories_session):
         address_line_two="#827 unit",
         city="boston",
         geo_state_id=GeoState.CA.geo_state_id,
-        zip_code="02111",
+        zip_code="02110",
     )
     assert is_same_address(third, sixth) is False
 
@@ -714,7 +699,7 @@ def test_different_address(initialize_factories_session):
         address_line_one="1234 main st",
         address_line_two="#827 unit",
         city="boston",
-        zip_code="02111",
+        zip_code="02110-1234",
     )
     assert is_same_address(third, seventh) is False
 
@@ -723,14 +708,14 @@ def test_different_address(initialize_factories_session):
         address_line_one="1234 main st",
         address_line_two="#827 unit",
         city="boston",
-        zip_code="02111",
+        zip_code="02110",
         country_id=Country.USA.country_id,
     )
     ninth = AddressFactory(
         address_line_one="1234 main st",
         address_line_two="#827 unit",
         city="boston",
-        zip_code="02111",
+        zip_code="02110",
         country_id=Country.TWN.country_id,
     )
     assert is_same_address(eighth, ninth) is False

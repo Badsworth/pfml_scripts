@@ -680,6 +680,7 @@ const shared = {
   absenceCaseStatus_approved: "Approved",
   absenceCaseStatus_closed: "Closed",
   absenceCaseStatus_denied: "Denied",
+  absenceCaseStatus_noAction: "No action required",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequencyLabel: "Frequency",
@@ -1051,9 +1052,6 @@ const pages = {
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
-      "<p>If you’re not sure what kind of leave to apply for, <which-paid-leave-link>learn more about Paid Family and Medical Leave</which-paid-leave-link>.</p><p><strong>Are you taking medical leave for your own serious health condition?</strong></p><p>You need to have a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p>",
-    // TODO (CP-2311) Merge leaveDetails and leaveDetailsWithCaring when showCaringLeave feature flag is not needed
-    stepHTMLDescription_leaveDetailsWithCaring:
       "<p>If you’re not sure what kind of leave to apply for, <which-paid-leave-link>learn more about Paid Family and Medical Leave</which-paid-leave-link>.</p><p><strong>Are you taking medical leave for your own serious health condition?</strong></p><p>You need to have a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>. Use your health care provider’s answers on the certification form to fill out some parts of the application.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p><strong>Are you taking leave to bond with a child?</strong></p><p>You need to know the child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</p><p>You also need to know when you want your leave to begin and end.</p><p><strong>Are you taking leave to care for a family member?</strong></p><p>You need to have the <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> completed by their health care provider. You will need to use the health care provider’s answers on the certification form to fill out some parts of the application.</p><p>You also need to be sure of the <caregiver-relationship-link>eligibility of your relationship</caregiver-relationship-link>.</p>",
     stepHTMLDescription_medical:
       "<p>You need to provide your completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
@@ -2120,14 +2118,17 @@ const pages = {
   employersDashboard: {
     betaHeader: "We're making it easier to manage paid leave applications",
     betaMessage:
-      "Our dashboard is in beta. You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can <user-feedback-link>use our feedback form</user-feedback-link> to tell us what you think of our new features.",
+      "You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can <user-feedback-link>use our feedback form</user-feedback-link> to tell us what you think of our new features.",
     filterNavLabel: "Filters:",
     filterOrgsLabel: "Organizations",
     filterRemove: "Remove filter:",
     filterStatusChoice_Approved: "$t(shared.absenceCaseStatus_approved)",
     filterStatusChoice_Closed: "$t(shared.absenceCaseStatus_closed)",
     filterStatusChoice_Declined: "$t(shared.absenceCaseStatus_denied)",
+    filterStatusChoice_OpenRequirement: "Review by",
+    // TODO (EMPLOYER-1587): Remove unused field
     filterStatusChoice_Pending: "--",
+    filterStatusChoice_PendingNoAction: "$t(shared.absenceCaseStatus_noAction)",
     filterStatusLabel: "Status",
     filtersApply: "Apply filters",
     filtersReset: "Reset all filters",
@@ -2151,8 +2152,12 @@ const pages = {
       "<strong>Closed:</strong> The leave has passed or no action can be taken.",
     statusDescription_denied:
       "<strong>Denied:</strong> DFML has denied this leave request.",
+    statusDescription_noAction:
+      "<strong>No action required:</strong> This leave request is awaiting a decision from DFML.",
     statusDescription_none:
       "<strong>“--” or no status:</strong> This leave request may require action from you; otherwise, it is awaiting a decision from DFML.",
+    statusDescription_reviewBy:
+      "<strong>Review by:</strong> Review this application by this date to provide DFML with your input.",
     statusDescriptionsLabel: "Status descriptions",
     tableColHeading_created_at: "Application start date",
     tableColHeading_employee_name: "Employee name",
@@ -2218,8 +2223,6 @@ const pages = {
     withholdingAmountLabel: "Paid leave contributions from {{date}}",
   },
   employersWelcome: {
-    caringLeaveInfoAlertBody:
-      "Employees can now take <about-caring-leave-link>paid leave to care for a family member with a serious health condition</about-caring-leave-link>. If your employee applies for this kind of leave, you’ll notice different documents available for your review.",
     checkEmailBody:
       "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
     checkEmailTitle: "Check your email regularly",
@@ -2240,8 +2243,6 @@ const pages = {
       "When you log into your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
     viewApplicationsTitle: "View all applications",
     viewFormsBody:
-      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>$t(shared.certificationFormMedical) form</healthcare-provider-form-link> during the review process. ",
-    viewFormsBody_caring:
       "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>$t(shared.certificationFormMedical) form</healthcare-provider-form-link> during the review process. For leave to care for a family member you can download the <caregiver-certification-form-link>Certification to Care for a Family Member</caregiver-certification-form-link> during the review process. ",
     viewFormsTitle: "View forms and notices online",
     welcomeBody:
@@ -2251,10 +2252,8 @@ const pages = {
   getReady: {
     alertHeading: "Only some people can apply online for now",
     alertOnline:
-      "<p>If you are currently employed in Massachusetts but not self-employed, you can apply online or by phone for the following types of paid leave:</p><ul><li>Medical leave due to your own illness, injury, or pregnancy</li><li>Family leave to bond with your child after birth, adoption, or foster placement — whether you are applying before or after the child arrives</li></ul>",
-    alertOnlineHeading: "Apply online",
-    alertOnline_caring:
       "<p>If you are currently employed in Massachusetts but not self-employed, you can apply online or by phone for the following types of paid leave:</p><ul><li>Medical leave due to your own illness, injury, or pregnancy</li><li>Family leave to bond with your child after birth, adoption, or foster placement — whether you are applying before or after the child arrives</li><li>Family leave to care for a family member with a serious medical condition</li></ul>",
+    alertOnlineHeading: "Apply online",
     alertPhone:
       "<p>Apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if <strong>any</strong> of the following are true:</p><ul><li>You are self-employed or unemployed and you are applying for paid leave</li><li>You need paid family leave to care for a family member who serves in the armed forces</li><li>You need paid family leave to manage family affairs when a family member is on active duty in the armed forces</li></ul>",
     alertPhoneHeading: "Apply by phone",
@@ -2337,6 +2336,8 @@ const components = {
     status_closed: "$t(shared.absenceCaseStatus_closed)",
     status_completed: "$t(shared.absenceCaseStatus_closed)",
     status_declined: "$t(shared.absenceCaseStatus_denied)",
+    status_noAction: "$t(shared.absenceCaseStatus_noAction)",
+    status_openRequirements: "Review by {{followupDate}}",
   },
   amendButton: {
     amend: "Amend",

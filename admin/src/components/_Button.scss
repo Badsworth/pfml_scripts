@@ -14,3 +14,10 @@
   margin: 0 0.25em;
   padding: 0.5em 1em;
 }
+
+.btn--plain {
+  background: none;
+  border: none;
+  color: $Color-BayBlue-500;
+  cursor: pointer;
+}

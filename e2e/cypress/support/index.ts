@@ -23,3 +23,24 @@ import "cypress-file-upload";
 Cypress.Keyboard.defaults({
   keystrokeDelay: 0,
 });
+
+// This will handle any Fineos or portal errors which are not caught by the applications themselves.
+// It helps prevent unhandled rejections from spilling into neighboring specs.
+Cypress.on("uncaught:exception", (err) => {
+  // Handles fineos errors.
+  if (
+    err.message.match(
+      /(#.(CaseOwnershipSummaryPanelElement|CaseParticipantsSummaryPanelElement)|panelsdrilldown|startHeartbeatMonitorForPage)/
+    )
+  )
+    return false;
+  // Those errors are encountered both in fineos and in portal
+  if (
+    err.message.match(
+      /Cannot (set|read) property ('status'|'range') of undefined/
+    )
+  )
+    return false;
+
+  return true;
+});

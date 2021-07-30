@@ -113,12 +113,12 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
     query             = <<-NRQL
       SELECT filter(
         count(error.message),
-        WHERE NOT error.message = '(mark_document_as_recieved) expected 200, but got 422'
-        AND NOT error.message = '(mark_document_as_recieved) FINEOSFatalResponseError: 500'
-        AND NOT error.message = '(get_customer_info) expected 200, but got 403'
-        AND NOT error.message = '(upload_documents) FINEOSFatalResponseError: 502'
-        AND NOT error.message = '(upload_documents) expected 200, but got 403'
-        AND NOT error.message = '(download_document_as_leave_admin) FINEOSFatalResponseError: 502'
+        WHERE NOT error.message LIKE '(mark_document_as_recieved) expected 200, but got 422%'
+        AND NOT error.message LIKE '(mark_document_as_recieved) FINEOSFatalResponseError: 500%'
+        AND NOT error.message LIKE '(get_customer_info) expected 200, but got 403%'
+        AND NOT error.message LIKE '(upload_documents) FINEOSFatalResponseError: 502%'
+        AND NOT error.message LIKE '(upload_documents) expected 200, but got 403%'
+        AND NOT error.message LIKE '(download_document_as_leave_admin) FINEOSFatalResponseError: 502%'
         AND NOT error.class = 'massgov.pfml.fineos.exception:FINEOSFatalUnavailable'
       ) * 100 * clamp_max(floor(uniqueCount(current_user.user_id) / 10), 1) / uniqueCount(traceId)
       FROM Transaction, TransactionError
@@ -213,6 +213,35 @@ resource "newrelic_alert_condition" "api_response_time" {
     duration      = 10    # units: minutes
     operator      = "above"
     threshold     = 2.5 # units: seconds
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "get_claims_response_time" {
+  # WARN: 95th percentile response time for GET /claims queries is > 1 second for any 15 minute period
+  # CRIT: 95th percentile response time for GET /claims queries is > 2 seconds for any 15-minute period
+  policy_id                    = newrelic_alert_policy.low_priority_api_alerts.id
+  name                         = "GET Claims response time too high (${upper(var.environment_name)})"
+  aggregation_window           = 900 # units: seconds
+  value_function               = "single_value"
+  violation_time_limit_seconds = 86400 # 24 hours
+
+  nrql {
+    query             = "SELECT percentile(duration, 95) FROM Transaction WHERE appName = 'PFML-API-${upper(var.environment_name)}' AND request.uri LIKE '/v1/claims' AND request.method = 'GET'"
+    evaluation_offset = 1
+  }
+
+  warning {
+    threshold_occurrences = "ALL"
+    threshold_duration    = 900 # units: seconds
+    operator              = "above"
+    threshold             = 1 # units: seconds
+  }
+
+  critical {
+    threshold_occurrences = "ALL"
+    threshold_duration    = 900 # units: seconds
+    operator              = "above"
+    threshold             = 2 # units: seconds
   }
 }
 
@@ -363,7 +392,7 @@ module "pub_delegated_payments_errors" {
 
   enabled   = true
   name      = "Errors encountered by a PUB delegated payments ECS task"
-  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
+  policy_id = newrelic_alert_policy.low_priority_api_alerts.id
 
   nrql = <<-NRQL
     SELECT count(*) FROM Log
@@ -375,7 +404,7 @@ module "pub_delegated_payments_errors" {
 
 module "pub_delegated_payments_ecs_task_failures" {
   source    = "../newrelic_single_error_alarm"
-  policy_id = newrelic_alert_policy.api_alerts.id
+  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.api_alerts.id : newrelic_alert_policy.low_priority_api_alerts.id
 
   enabled = true
   name    = "PUB delegated payments ECS task failed"
