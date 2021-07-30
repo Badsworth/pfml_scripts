@@ -14,7 +14,7 @@ describe("Post-approval (notifications/notices)", () => {
     username: Cypress.env("E2E_PORTAL_USERNAME"),
     password: Cypress.env("E2E_PORTAL_PASSWORD"),
   };
-  const extension = it(
+  it(
     "Given a fully approved claim, a CSR agent can extend the claim's leave dates",
     { baseUrl: getFineosBaseUrl() },
     () => {
@@ -55,6 +55,7 @@ describe("Post-approval (notifications/notices)", () => {
             );
             adjudication.acceptLeavePlan();
           });
+
           claimPage.tasks((task) => {
             task.close("Caring Certification Review");
             task.close("ID Review");
@@ -84,7 +85,7 @@ describe("Post-approval (notifications/notices)", () => {
             fineos.waitForAjaxComplete();
             cy.get("input[title='OK']").click();
             fineos.waitForAjaxComplete();
-            });
+          });
           cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
           fineos.waitForAjaxComplete();
           cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
@@ -97,8 +98,9 @@ describe("Post-approval (notifications/notices)", () => {
           fineos.waitForAjaxComplete();
           cy.get('span[id="footerButtonsBar_cloned"]').contains("OK").click();
           fineos.waitForAjaxComplete();
-          // Complete adjudication process for new leave plan 
-          claimPage.adjudicate((adjudication) => {
+          // Complete adjudication process for new leave plan
+          const claimPage2 = fineosPages.ClaimPage.visit(res.fineos_absence_id)
+          claimPage2.adjudicate((adjudication) => {
             adjudication.evidence((evidence) => {
               // Receive and approve all of the documentation for the claim.
               claim.documents.forEach((doc) =>
@@ -108,34 +110,13 @@ describe("Post-approval (notifications/notices)", () => {
             adjudication.certificationPeriods((cert) => cert.prefill());
             adjudication.acceptLeavePlan();
           });
-          claimPage.tasks((tasks) => {
-            const certificationDoc = findCertificationDoc(claim.documents);
-            const certificationTask = getDocumentReviewTaskName(
-              certificationDoc.document_type
-            );
-            tasks.assertTaskExists("ID Review");
-            tasks.assertTaskExists(certificationTask);
-          });
-          claimPage.shouldHaveStatus("Applicability", "Applicable");
-          claimPage.shouldHaveStatus("Eligibility", "Met");
-          claimPage.shouldHaveStatus("Evidence", "Satisfied");
-          claimPage.shouldHaveStatus("Availability", "Time Available");
-          claimPage.shouldHaveStatus("Restriction", "Passed");
-          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          // claimPage.approve();
-          // claimPage
-          //   .triggerNotice("Leave Request Declined")
-          //   .documents((docPage) =>
-          //     docPage.assertDocumentExists("Denial Notice")
-          //   );
           // cy.get('#DisplayCaseTabbedDialogWidget_un22_CaseTabControlBean_LeaveDetailsTab_cell > .TabOff').click();
           // cy.get('.ListRow2 > :nth-child(11)').click();
 
           // Under the “Selected Leave Plan” highlight the Leave Extension plan and choose to Reject the Leave Extension plan.
-          
-            // Under the “Leave Request” highlight the Leave Extension claim.
-          // Click the Deny at the top right corner of the page.
 
+          // Under the “Leave Request” highlight the Leave Extension claim.
+          // Click the Deny at the top right corner of the page.
         });
       });
     }
