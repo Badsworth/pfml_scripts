@@ -1,20 +1,21 @@
-import { fineos, fineosPages } from "../../../actions";
+import { fineos, portal, fineosPages } from "../../../actions";
 import { getFineosBaseUrl } from "../../../config";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { format, addDays } from "date-fns";
-// import { onTab } from "../../../actions/fineos";
-// import { clickTab } from "util/playwright";
-import {
-  findCertificationDoc,
-  getDocumentReviewTaskName,
-} from "../../../../src/util/documents";
+import { config } from "../../../actions/common";
+
 
 describe("Post-approval (notifications/notices)", () => {
+  after(() => {
+    portal.deleteDownloadsFolder();
+  });
+
   const credentials: Credentials = {
-    username: Cypress.env("E2E_PORTAL_USERNAME"),
-    password: Cypress.env("E2E_PORTAL_PASSWORD"),
+    username: config("PORTAL_USERNAME"),
+    password: config("PORTAL_PASSWORD"),
   };
-  it(
+
+  const submit = it(
     "Given a fully approved claim, a CSR agent can extend the claim's leave dates",
     { baseUrl: getFineosBaseUrl() },
     () => {
@@ -61,6 +62,7 @@ describe("Post-approval (notifications/notices)", () => {
             task.close("ID Review");
           });
           claimPage.approve();
+          // Add new leave date
           cy.findByText("Add Time").click({ force: true });
           cy.get('input[type="submit"][title="Add Time Off Period"]').click();
           fineos.waitForAjaxComplete();
@@ -86,6 +88,7 @@ describe("Post-approval (notifications/notices)", () => {
             cy.get("input[title='OK']").click();
             fineos.waitForAjaxComplete();
           });
+          // Click through to return to the absence hub
           cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
           fineos.waitForAjaxComplete();
           cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
@@ -98,18 +101,32 @@ describe("Post-approval (notifications/notices)", () => {
           fineos.waitForAjaxComplete();
           cy.get('span[id="footerButtonsBar_cloned"]').contains("OK").click();
           fineos.waitForAjaxComplete();
-          // Complete adjudication process for new leave plan
-          const claimPage2 = fineosPages.ClaimPage.visit(res.fineos_absence_id)
-          claimPage2.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              // Receive and approve all of the documentation for the claim.
-              claim.documents.forEach((doc) =>
-                evidence.receive(doc.document_type)
-              );
-            });
-            adjudication.certificationPeriods((cert) => cert.prefill());
-            adjudication.acceptLeavePlan();
-          });
+        });
+      });
+    }
+  );
+});
+
+it(
+  "Create new leave cause and complete adjudication until the plan is approved",
+  { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([submit]);
+      portal.before();
+      cy.visit("/");
+      portal.login(credentials);
+      // Complete adjudication process for new leave plan
+      const claimPage2 = fineosPages.ClaimPage.visit(res.fineos_absence_id)
+      claimPage2.adjudicate((adjudication) => {
+        adjudication.evidence((evidence) => {
+          // Receive and approve all of the documentation for the claim.
+          claim.documents.forEach((doc) =>
+            evidence.receive(doc.document_type)
+          );
+        });
+        adjudication.certificationPeriods((cert) => cert.prefill());
+        adjudication.acceptLeavePlan();
+      });
           // cy.get('#DisplayCaseTabbedDialogWidget_un22_CaseTabControlBean_LeaveDetailsTab_cell > .TabOff').click();
           // cy.get('.ListRow2 > :nth-child(11)').click();
 
@@ -117,8 +134,5 @@ describe("Post-approval (notifications/notices)", () => {
 
           // Under the “Leave Request” highlight the Leave Extension claim.
           // Click the Deny at the top right corner of the page.
-        });
-      });
-    }
-  );
-});
+      
+  )
