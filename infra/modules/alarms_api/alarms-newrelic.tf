@@ -113,12 +113,12 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
     query             = <<-NRQL
       SELECT filter(
         count(error.message),
-        WHERE NOT error.message = '(mark_document_as_recieved) expected 200, but got 422'
-        AND NOT error.message = '(mark_document_as_recieved) FINEOSFatalResponseError: 500'
-        AND NOT error.message = '(get_customer_info) expected 200, but got 403'
-        AND NOT error.message = '(upload_documents) FINEOSFatalResponseError: 502'
-        AND NOT error.message = '(upload_documents) expected 200, but got 403'
-        AND NOT error.message = '(download_document_as_leave_admin) FINEOSFatalResponseError: 502'
+        WHERE NOT error.message LIKE '(mark_document_as_recieved) expected 200, but got 422%'
+        AND NOT error.message LIKE '(mark_document_as_recieved) FINEOSFatalResponseError: 500%'
+        AND NOT error.message LIKE '(get_customer_info) expected 200, but got 403%'
+        AND NOT error.message LIKE '(upload_documents) FINEOSFatalResponseError: 502%'
+        AND NOT error.message LIKE '(upload_documents) expected 200, but got 403%'
+        AND NOT error.message LIKE '(download_document_as_leave_admin) FINEOSFatalResponseError: 502%'
         AND NOT error.class = 'massgov.pfml.fineos.exception:FINEOSFatalUnavailable'
       ) * 100 * clamp_max(floor(uniqueCount(current_user.user_id) / 10), 1) / uniqueCount(traceId)
       FROM Transaction, TransactionError
