@@ -85,24 +85,6 @@ exports[`Employer welcome renders page 1`] = `
           />
         </p>
       </Alert>
-      <Alert
-        state="info"
-      >
-        <p>
-          <Trans
-            components={
-              Object {
-                "about-caring-leave-link": <a
-                  href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
-                  rel="noopener"
-                  target="_blank"
-                />,
-              }
-            }
-            i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"
-          />
-        </p>
-      </Alert>
       <p>
         Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.
       </p>
@@ -261,21 +243,6 @@ Array [
 
 exports[`Employer welcome renders page 3`] = `
 Array [
-  "Employees can now take ",
-  <a
-    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-"
-    key="1"
-    rel="noopener"
-    target="_blank"
-  >
-    paid leave to care for a family member with a serious health condition
-  </a>,
-  ". If your employee applies for this kind of leave, you’ll notice different documents available for your review.",
-]
-`;
-
-exports[`Employer welcome renders page 4`] = `
-Array [
   "When you log into your account you can now use the ",
   <a
     href="/employers/dashboard"
@@ -287,7 +254,7 @@ Array [
 ]
 `;
 
-exports[`Employer welcome renders page 5`] = `
+exports[`Employer welcome renders page 4`] = `
 Array [
   "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the ",
   <a
@@ -311,7 +278,7 @@ Array [
 ]
 `;
 
-exports[`Employer welcome renders page 6`] = `
+exports[`Employer welcome renders page 5`] = `
 <ul
   className="usa-list desktop:font-body-2xs desktop:padding-top-05"
   key="0"

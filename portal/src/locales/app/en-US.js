@@ -2223,8 +2223,6 @@ const pages = {
     withholdingAmountLabel: "Paid leave contributions from {{date}}",
   },
   employersWelcome: {
-    caringLeaveInfoAlertBody:
-      "Employees can now take <about-caring-leave-link>paid leave to care for a family member with a serious health condition</about-caring-leave-link>. If your employee applies for this kind of leave, you’ll notice different documents available for your review.",
     checkEmailBody:
       "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
     checkEmailTitle: "Check your email regularly",

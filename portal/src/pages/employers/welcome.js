@@ -32,7 +32,6 @@ export const Welcome = ({ appLogic, user }) => {
   };
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const shouldShowOtherLeave = isFeatureEnabled("claimantShowOtherLeaveStep");
-  const shouldShowCaringLeaveAlert = !shouldShowOtherLeave;
 
   return (
     <React.Fragment>
@@ -54,27 +53,6 @@ export const Welcome = ({ appLogic, user }) => {
                   components={{
                     "your-organizations-link": (
                       <a href={routes.employers.organizations} />
-                    ),
-                  }}
-                />
-              </p>
-            </Alert>
-          )}
-
-          {shouldShowCaringLeaveAlert && (
-            <Alert state="info">
-              <p>
-                <Trans
-                  i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"
-                  components={{
-                    "about-caring-leave-link": (
-                      <a
-                        href={
-                          routes.external.massgov.benefitsGuide_aboutCaringLeave
-                        }
-                        target="_blank"
-                        rel="noopener"
-                      />
                     ),
                   }}
                 />
