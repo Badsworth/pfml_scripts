@@ -4,7 +4,6 @@ import { extractLeavePeriod } from "../../../../src/util/claims";
 import { format, addDays } from "date-fns";
 import { config } from "../../../actions/common";
 
-
 describe("Post-approval (notifications/notices)", () => {
   after(() => {
     portal.deleteDownloadsFolder();
@@ -15,7 +14,7 @@ describe("Post-approval (notifications/notices)", () => {
     password: config("PORTAL_PASSWORD"),
   };
 
-  const submit = it(
+  it(
     "Given a fully approved claim, a CSR agent can extend the claim's leave dates",
     { baseUrl: getFineosBaseUrl() },
     () => {
@@ -29,11 +28,6 @@ describe("Post-approval (notifications/notices)", () => {
           credentials,
         }).then((res) => {
           const [startDate, endDate] = extractLeavePeriod(claim.claim);
-          cy.stash("submission", {
-            application_id: res.application_id,
-            fineos_absence_id: res.fineos_absence_id,
-            timestamp_from: Date.now(),
-          });
           const newStartDate = format(
             addDays(new Date(startDate), 2),
             "MM/dd/yyyy"
@@ -42,7 +36,7 @@ describe("Post-approval (notifications/notices)", () => {
             addDays(new Date(endDate), 2),
             "MM/dd/yyyy"
           );
-          cy.stash("extensionLeaveDates", [startDate, newEndDate]);
+          
           const claimPage = fineosPages.ClaimPage.visit(res.fineos_absence_id);
           claimPage.adjudicate((adjudication) => {
             adjudication.evidence((evidence) => {
@@ -101,38 +95,30 @@ describe("Post-approval (notifications/notices)", () => {
           fineos.waitForAjaxComplete();
           cy.get('span[id="footerButtonsBar_cloned"]').contains("OK").click();
           fineos.waitForAjaxComplete();
+          const claimPage2 = fineosPages.ClaimPage.visit(
+            res.fineos_absence_id
+          );
+          claimPage2.adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              // Receive and approve all of the documentation for the claim.
+              claim.documents.forEach((doc) =>
+                evidence.receive(doc.document_type)
+              );
+            });
+            adjudication.certificationPeriods((cert) => cert.prefill());
+            adjudication.acceptLeavePlan();
+            });
+          // adjudicate process up until the plan decision is accepted
         });
       });
     }
   );
+
 });
+// cy.get('#DisplayCaseTabbedDialogWidget_un22_CaseTabControlBean_LeaveDetailsTab_cell > .TabOff').click();
+// cy.get('.ListRow2 > :nth-child(11)').click();
 
-it(
-  "Create new leave cause and complete adjudication until the plan is approved",
-  { retries: 0 },
-    () => {
-      cy.dependsOnPreviousPass([submit]);
-      portal.before();
-      cy.visit("/");
-      portal.login(credentials);
-      // Complete adjudication process for new leave plan
-      const claimPage2 = fineosPages.ClaimPage.visit(res.fineos_absence_id)
-      claimPage2.adjudicate((adjudication) => {
-        adjudication.evidence((evidence) => {
-          // Receive and approve all of the documentation for the claim.
-          claim.documents.forEach((doc) =>
-            evidence.receive(doc.document_type)
-          );
-        });
-        adjudication.certificationPeriods((cert) => cert.prefill());
-        adjudication.acceptLeavePlan();
-      });
-          // cy.get('#DisplayCaseTabbedDialogWidget_un22_CaseTabControlBean_LeaveDetailsTab_cell > .TabOff').click();
-          // cy.get('.ListRow2 > :nth-child(11)').click();
+// Under the “Selected Leave Plan” highlight the Leave Extension plan and choose to Reject the Leave Extension plan.
 
-          // Under the “Selected Leave Plan” highlight the Leave Extension plan and choose to Reject the Leave Extension plan.
-
-          // Under the “Leave Request” highlight the Leave Extension claim.
-          // Click the Deny at the top right corner of the page.
-      
-  )
+// Under the “Leave Request” highlight the Leave Extension claim.
+// Click the Deny at the top right corner of the page.
