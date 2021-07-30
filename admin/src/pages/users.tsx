@@ -65,11 +65,18 @@ export default function UserLookup() {
   const getUsersType = (u: User) => <Tag text={u.type} color="green" />;
   const getUsersOptions = (u: User) => (
     <>
-      <Button additionalClasses={["btn--plain"]} callback={openSlideOut(u)}>
+      <Button additionalClasses={["btn--plain"]} onClick={openSlideOut(u)}>
         Quick view
       </Button>
       &nbsp; |&nbsp;
-      <Button additionalClasses={["btn--plain"]}>View account</Button>
+      <Button
+        additionalClasses={["btn--plain"]}
+        onClick={() => {
+          //TODO link and pass state
+        }}
+      >
+        View account
+      </Button>
     </>
   );
 
@@ -84,7 +91,11 @@ export default function UserLookup() {
         {(data) => (
           <>
             <div className="account-info-slideover__image-wrapper">
-              <Image src="https://via.placeholder.com/32" layout="fill" />
+              <Image
+                alt=""
+                src="https://via.placeholder.com/32"
+                layout="fill"
+              />
             </div>
             <p>{data?.name}</p>
             <p>{data?.email}</p>

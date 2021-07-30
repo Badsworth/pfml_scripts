@@ -1,8 +1,8 @@
-@import "icons";
-@import "fonts";
-@import "reset";
-@import "colors";
-@import "variables";
+@import 'icons';
+@import 'fonts';
+@import 'reset';
+@import 'colors';
+@import 'variables';
 // Button is imported earlier to more easily override styling.
 @import '../src/components/Button';
 @import 'globals';
@@ -14,4 +14,4 @@
 @import '../src/components/Table';
 @import '../src/components/Search';
 @import '../src/components/Tag';
-@import "../src/components/Warning";
+@import '../src/components/Warning';
