@@ -1,35 +1,34 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "react-i18next";
 
-const EmployeeNotice = ({ fraud, onChange = () => {} }) => {
+const EmployeeNotice = ({
+  employeeNoticeInput,
+  fraudInput,
+  getFunctionalInputProps,
+  updateFields,
+}) => {
   const { t } = useTranslation();
-  const [employeeNotice, setEmployeeNotice] = useState();
   // keep track of previous value for fraud prop to know when to clear notice of leave response
-  const previouslyFraud = usePreviousValue(fraud);
-
-  const handleOnChange = (event) => {
-    setEmployeeNotice(event.target.value);
-  };
+  const previouslyFraud = usePreviousValue(fraudInput);
 
   useEffect(() => {
-    onChange(employeeNotice);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employeeNotice]);
-
-  useEffect(() => {
-    if (fraud === "Yes" || (fraud === "No" && previouslyFraud === "Yes")) {
-      setEmployeeNotice(undefined);
+    if (
+      fraudInput === "Yes" ||
+      (fraudInput === "No" && previouslyFraud === "Yes")
+    ) {
+      updateFields({ employee_notice: undefined });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fraud]);
+  }, [fraudInput]);
 
   return (
     <React.Fragment>
       <InputChoiceGroup
+        {...getFunctionalInputProps("employee_notice")}
         smallLabel
         label={
           <ReviewHeading level="2">
@@ -38,20 +37,18 @@ const EmployeeNotice = ({ fraud, onChange = () => {} }) => {
         }
         choices={[
           {
-            checked: employeeNotice === "Yes",
-            disabled: fraud === "Yes",
+            checked: employeeNoticeInput === "Yes",
+            disabled: fraudInput === "Yes",
             label: t("components.employersEmployeeNotice.choiceYes"),
             value: "Yes",
           },
           {
-            checked: employeeNotice === "No",
-            disabled: fraud === "Yes",
+            checked: employeeNoticeInput === "No",
+            disabled: fraudInput === "Yes",
             label: t("components.employersEmployeeNotice.choiceNo"),
             value: "No",
           },
         ]}
-        name="employeeNotice"
-        onChange={handleOnChange}
         type="radio"
       />
     </React.Fragment>
@@ -59,8 +56,10 @@ const EmployeeNotice = ({ fraud, onChange = () => {} }) => {
 };
 
 EmployeeNotice.propTypes = {
-  fraud: PropTypes.string,
-  onChange: PropTypes.func.isRequired,
+  employeeNoticeInput: PropTypes.oneOf(["Yes", "No"]),
+  fraudInput: PropTypes.string,
+  getFunctionalInputProps: PropTypes.func.isRequired,
+  updateFields: PropTypes.func.isRequired,
 };
 
 export default EmployeeNotice;

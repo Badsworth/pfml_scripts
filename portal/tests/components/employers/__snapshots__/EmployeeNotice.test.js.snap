@@ -26,10 +26,11 @@ exports[`EmployeeNotice renders the component 1`] = `
         Did the employee give you at least 30 days notice about their leave?
       </ReviewHeading>
     }
-    name="employeeNotice"
+    name="employee_notice"
     onChange={[Function]}
     smallLabel={true}
     type="radio"
+    value=""
   />
 </Fragment>
 `;

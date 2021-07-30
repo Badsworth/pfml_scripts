@@ -3,98 +3,118 @@ import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import Feedback from "../../../src/components/employers/Feedback";
 import React from "react";
-import { act } from "react-dom/test-utils";
-import { simulateEvents } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import { testHook } from "../../test-utils";
+import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("Feedback", () => {
-  const appLogic = useAppLogic();
   const updateFields = jest.fn();
-  let wrapper;
+  let getFunctionalInputProps;
+
+  function render(givenProps = {}, renderMode = "shallow") {
+    const defaultProps = {
+      context: "",
+      getFunctionalInputProps,
+      shouldDisableNoOption: false,
+      shouldShowCommentBox: false,
+    };
+
+    const props = { ...defaultProps, ...givenProps };
+    if (renderMode === "shallow") {
+      return shallow(<Feedback {...props} />);
+    } else {
+      return mount(<Feedback {...props} />);
+    }
+  }
+
+  function setUpFunctionalInputProps(customArgs = {}) {
+    const defaultArgs = {
+      appErrors: new AppErrorInfoCollection(),
+      formState: {},
+      updateFields,
+    };
+    const args = { ...defaultArgs, ...customArgs };
+    testHook(() => {
+      getFunctionalInputProps = useFunctionalInputProps(args);
+    });
+  }
 
   beforeEach(() => {
-    wrapper = shallow(
-      <Feedback
-        appLogic={appLogic}
-        isReportingFraud={false}
-        isDenyingRequest={false}
-        isEmployeeNoticeInsufficient={false}
-        comment=""
-        setComment={() => {}}
-        shouldShowCommentBox={false}
-        updateFields={updateFields}
-      />
-    );
+    setUpFunctionalInputProps();
   });
 
   it("renders the component", () => {
+    const wrapper = render();
     expect(wrapper).toMatchSnapshot();
   });
 
-  describe("when fraud is reported", () => {
-    beforeEach(() => {
-      wrapper = mount(
-        <Feedback
-          appLogic={appLogic}
-          isReportingFraud
-          isDenyingRequest
-          isEmployeeNoticeInsufficient={false}
-          comment=""
-          setComment={() => {}}
-          shouldShowCommentBox
-          updateFields={updateFields}
-        />
-      );
+  it("disables the 'No' option based on 'shouldDisableNoOption' prop", () => {
+    const wrapper = render({
+      shouldDisableNoOption: true,
+      shouldShowCommentBox: true,
+    });
+    const noOption = wrapper
+      .find("InputChoiceGroup")
+      .prop("choices")
+      .find((choice) => choice.label === "No");
+    expect(noOption.disabled).toBe(true);
+  });
+
+  describe("when 'shouldShowCommentBox' is true", () => {
+    function renderWithCommentBoxShown(props = {}) {
+      return render({ ...props, shouldShowCommentBox: true });
+    }
+
+    function getSolicitationMessage(wrapper) {
+      return wrapper
+        .find({ "data-test": "feedback-comment-solicitation" })
+        .dive()
+        .text();
+    }
+
+    it("shows the comment box", () => {
+      const wrapper = renderWithCommentBoxShown();
+      expect(wrapper.find('textarea[name="comment"]').exists()).toBe(true);
     });
 
-    it("disables the 'no' option and selects 'yes'", () => {
-      const choices = wrapper.find("InputChoiceGroup").prop("choices");
-      const noOption = choices.find((choice) => choice.label === "No");
-      const yesOption = choices.find((choice) => choice.label === "Yes");
+    it("displays the correct default help message", () => {
+      const wrapper = renderWithCommentBoxShown();
+      const message = getSolicitationMessage(wrapper);
 
-      expect(noOption.disabled).toBe(true);
-      expect(yesOption.checked).toBe(true);
+      expect(message).toEqual("Please tell us more.");
     });
 
-    it("displays a message prompting user to leave a comment about fraud", () => {
-      const message = wrapper.find("Trans").text();
+    it("displays the correct help message for 'fraud' context ", () => {
+      const wrapper = render({
+        shouldShowCommentBox: true,
+        context: "fraud",
+      });
+      const message = getSolicitationMessage(wrapper);
 
       expect(message).toEqual(
         "Please tell us why you believe this is fraudulent."
       );
     });
-  });
 
-  describe("when employee notice is within less than a month timeframe", () => {
-    beforeEach(() => {
-      wrapper = mount(
-        <Feedback
-          appLogic={appLogic}
-          isReportingFraud={false}
-          isDenyingRequest={false}
-          isEmployeeNoticeInsufficient
-          comment=""
-          commentContext=""
-          setComment={() => {}}
-          shouldShowCommentBox
-          updateFields={updateFields}
-        />
+    it("displays the correct help message for 'employerDecision' context", () => {
+      const wrapper = render({
+        shouldShowCommentBox: true,
+        context: "employerDecision",
+      });
+      const message = getSolicitationMessage(wrapper);
+
+      expect(message).toEqual(
+        "Please tell us why you denied this leave request."
       );
     });
 
-    it("disables the 'no' option and selects 'yes'", () => {
-      const choices = wrapper.find("InputChoiceGroup").prop("choices");
-      const noOption = choices.find((choice) => choice.label === "No");
-      const yesOption = choices.find((choice) => choice.label === "Yes");
-
-      expect(noOption.disabled).toBe(true);
-      expect(yesOption.checked).toBe(true);
-    });
-
-    it("displays a message prompting user to leave a comment", () => {
-      const message = wrapper.find("Trans").text();
+    it("displays the correct help message for 'employeeNotice' context", () => {
+      const wrapper = render({
+        shouldShowCommentBox: true,
+        context: "employeeNotice",
+      });
+      const message = getSolicitationMessage(wrapper);
 
       expect(message).toEqual(
         "Please tell us when your employee notified you about their leave."
@@ -102,181 +122,34 @@ describe("Feedback", () => {
     });
   });
 
-  describe("when leave request is denied", () => {
-    beforeEach(() => {
-      wrapper = mount(
-        <Feedback
-          appLogic={appLogic}
-          comment=""
-          isReportingFraud={false}
-          isDenyingRequest
-          isEmployeeNoticeInsufficient={false}
-          setComment={() => {}}
-          shouldShowCommentBox
-          updateFields={updateFields}
-        />
-      );
-    });
-
-    it("disables the 'No' option and selects 'Yes'", () => {
-      const choices = wrapper.find("InputChoiceGroup").prop("choices");
-      const noOption = choices.find((choice) => choice.label === "No");
-      const yesOption = choices.find((choice) => choice.label === "Yes");
-
-      expect(noOption.disabled).toBe(true);
-      expect(yesOption.checked).toBe(true);
-    });
-
-    it("displays a message prompting user to leave a comment about denial", () => {
-      const message = wrapper.find("Trans").text();
-
-      expect(message).toEqual(
-        "Please tell us why you denied this leave request."
-      );
-    });
-
-    describe("and is then approved", () => {
-      beforeEach(() => {
-        wrapper = mount(
-          <Feedback
-            appLogic={appLogic}
-            comment=""
-            isReportingFraud={false}
-            isDenyingRequest
-            isEmployeeNoticeInsufficient={false}
-            setComment={() => {}}
-            shouldShowCommentBox={false}
-            updateFields={updateFields}
-          />
-        );
-
-        act(() => {
-          wrapper.setProps({
-            isDenyingRequest: false,
-          });
-        });
-        // for useEffect to take place
-        wrapper.update();
-      });
-
-      it('re-enables the "No" option', () => {
-        const choices = wrapper.find("InputChoiceGroup").prop("choices");
-        const noOption = choices.find((choice) => choice.label === "No");
-        expect(noOption.disabled).toBe(false);
-      });
-
-      it('selects the "No" option if there is no comment typed', () => {
-        const choices = wrapper.find("InputChoiceGroup").prop("choices");
-        const noOption = choices.find((choice) => choice.label === "No");
-        expect(noOption.checked).toBe(true);
-      });
-
-      it('keeps "Yes" selected if there is a comment typed', () => {
-        wrapper = mount(
-          <Feedback
-            appLogic={appLogic}
-            comment="some comment"
-            isDenyingRequest
-            isReportingFraud={false}
-            isEmployeeNoticeInsufficient={false}
-            setComment={() => {}}
-            shouldShowCommentBox
-            updateFields={updateFields}
-          />
-        );
-
-        act(() => {
-          wrapper.setProps({ isDenyingRequest: false });
-        });
-        // for useEffect to take place
-        wrapper.update();
-
-        const choices = wrapper.find("InputChoiceGroup").prop("choices");
-        const yesOption = choices.find((choice) => choice.label === "Yes");
-        expect(yesOption.checked).toBe(true);
-      });
-    });
-  });
-
-  describe("when comments are not required", () => {
-    it("no options are disabled", () => {
-      const choices = wrapper.find("InputChoiceGroup").prop("choices");
-      const noOption = choices.find((choice) => choice.label === "No");
-      const yesOption = choices.find((choice) => choice.label === "Yes");
-
-      expect(noOption.disabled).toBeFalsy();
-      expect(yesOption.disabled).toBeFalsy();
-    });
-  });
-
-  describe("when user selects option to leave additional comments", () => {
-    it("shows comment box", () => {
-      const { changeRadioGroup } = simulateEvents(wrapper);
-      changeRadioGroup("shouldShowCommentBox", "true");
-
-      expect(wrapper.find("textarea").exists()).toEqual(true);
-      // TODO (EMPLOYER-665): Show file upload
-      // expect(wrapper.find(FileCardList).exists()).toEqual(true);
-    });
-  });
-
   it("renders inline error message when the text exceeds the limit", () => {
-    const appErrors = new AppErrorInfoCollection([
-      new AppErrorInfo({
-        field: "comment",
-        type: "maxLength",
-        message:
-          "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
-      }),
-    ]);
-    appLogic.appErrors = appErrors;
-    wrapper = mount(
-      <Feedback
-        appLogic={appLogic}
-        comment="some comment"
-        isDenyingRequest
-        isReportingFraud={false}
-        isEmployeeNoticeInsufficient={false}
-        setComment={() => {}}
-        shouldShowCommentBox
-        updateFields={updateFields}
-      />
+    testHook(() => {
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors: new AppErrorInfoCollection([
+          new AppErrorInfo({
+            field: "comment",
+            type: "maxLength",
+            message:
+              "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
+          }),
+        ]),
+        formState: {},
+        updateFields,
+      });
+    });
+    const wrapper = render(
+      {
+        getFunctionalInputProps,
+        shouldShowCommentBox: true,
+      },
+      "mount"
     );
 
-    expect(
-      wrapper.find("ConditionalContent").find("FormLabel").find("span").text()
-    ).toMatchInlineSnapshot(
+    expect(wrapper.find("FormLabel").find("span").text()).toMatchInlineSnapshot(
       `"Please shorten your comment. We cannot accept comments that are longer than 9999 characters."`
     );
     expect(
-      wrapper
-        .find("ConditionalContent")
-        .find("textarea[name='comment']")
-        .hasClass("usa-input--error")
+      wrapper.find("textarea[name='comment']").hasClass("usa-input--error")
     ).toEqual(true);
-  });
-
-  describe("when comment box should be shown", () => {
-    beforeEach(() => {
-      wrapper = mount(
-        <Feedback
-          appLogic={appLogic}
-          isReportingFraud={false}
-          isDenyingRequest={false}
-          isEmployeeNoticeInsufficient={false}
-          comment=""
-          commentContext=""
-          setComment={() => {}}
-          shouldShowCommentBox
-          updateFields={updateFields}
-        />
-      );
-    });
-
-    it("displays a message prompting user to leave a comment", () => {
-      const message = wrapper.find("Trans").text();
-
-      expect(message).toEqual("Please tell us more.");
-    });
   });
 });
