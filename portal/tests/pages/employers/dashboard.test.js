@@ -372,7 +372,7 @@ describe("Employer dashboard", () => {
     };
 
     const { wrapper } = setup({
-      activeFilters: {
+      query: {
         search: "Initial search field value",
       },
     });
@@ -432,7 +432,7 @@ describe("Employer dashboard", () => {
 
     const { wrapper: CollapsedWithoutFilters } = setup();
     const { wrapper: CollapsedWithFilters } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Pending",
         employer_id: user_leave_administrators[0].employer_id,
       },
@@ -467,7 +467,7 @@ describe("Employer dashboard", () => {
     ];
 
     const { wrapper } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Approved,Closed",
         employer_id: user_leave_administrators[0].employer_id,
       },
@@ -613,7 +613,7 @@ describe("Employer dashboard", () => {
     ];
 
     const { updateQuerySpy, wrapper } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Approved",
         employer_id: user_leave_administrators[0].employer_id,
       },
@@ -644,7 +644,7 @@ describe("Employer dashboard", () => {
     ];
 
     const { wrapper: wrapperWithActiveFilters } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Approved,Closed",
         employer_id: user_leave_administrators[0].employer_id,
       },
@@ -674,7 +674,7 @@ describe("Employer dashboard", () => {
     ];
 
     const { updateQuerySpy, wrapper } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Approved,Closed",
         employer_id: user_leave_administrators[0].employer_id,
       },
@@ -693,7 +693,7 @@ describe("Employer dashboard", () => {
 
   it("updates the claim_status param when one of several status FilterMenuButtons is clicked", () => {
     const { updateQuerySpy, wrapper } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Approved,Closed,Pending",
       },
     });
@@ -709,7 +709,7 @@ describe("Employer dashboard", () => {
 
   it("removes the claim_status param when the last remaining status FilterMenuButton is clicked", () => {
     const { updateQuerySpy, wrapper } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Closed",
       },
     });

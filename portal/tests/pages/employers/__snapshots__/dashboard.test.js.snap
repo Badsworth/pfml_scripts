@@ -235,7 +235,7 @@ exports[`Employer dashboard renders filters 1`] = `
       onChange={[Function]}
       smallLabel={true}
       type="checkbox"
-      value=""
+      value={Array []}
     />
     <Dropdown
       autocomplete={true}

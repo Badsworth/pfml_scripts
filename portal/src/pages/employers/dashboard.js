@@ -1,4 +1,5 @@
-import { camelCase, compact, find, get, pick, startCase } from "lodash";
+import React, { useCallback } from "react";
+import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
 import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
@@ -15,7 +16,6 @@ import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
 import PaginationSummary from "../../components/PaginationSummary";
 import PropTypes from "prop-types";
-import React from "react";
 import Table from "../../components/Table";
 import Title from "../../components/Title";
 import TooltipIcon from "../../components/TooltipIcon";
@@ -133,11 +133,11 @@ export const Dashboard = (props) => {
       </section>
 
       <Search
-        initialValue={get(props.activeFilters, "search", "")}
+        initialValue={get(props.query, "search", "")}
         updatePageQuery={updatePageQuery}
       />
       <Filters
-        activeFilters={props.activeFilters}
+        query={props.query}
         showFilters={props.query["show-filters"] === "true"}
         updatePageQuery={updatePageQuery}
         user={props.user}
@@ -161,10 +161,6 @@ export const Dashboard = (props) => {
 };
 
 Dashboard.propTypes = {
-  activeFilters: PropTypes.shape({
-    claim_status: PropTypes.string,
-    employer_id: PropTypes.string,
-  }).isRequired,
   appLogic: PropTypes.shape({
     portalFlow: PropTypes.shape({
       getNextPageRoute: PropTypes.func.isRequired,
@@ -174,9 +170,12 @@ Dashboard.propTypes = {
   }).isRequired,
   claims: PropTypes.instanceOf(ClaimCollection),
   query: PropTypes.shape({
+    claim_status: PropTypes.string,
+    employer_id: PropTypes.string,
     "show-filters": PropTypes.oneOf(["false", "true"]),
     order_by: PropTypes.string,
     order_direction: PropTypes.oneOf(["ascending", "descending"]),
+    search: PropTypes.string,
   }),
   paginationMeta: PropTypes.instanceOf(PaginationMeta),
   user: PropTypes.instanceOf(User).isRequired,
@@ -468,28 +467,39 @@ DashboardInfoAlert.propTypes = {
 };
 
 const Filters = (props) => {
-  const filterFields = ["claim_status", "employer_id"];
   const { showFilters, updatePageQuery, user } = props;
   const { t } = useTranslation();
 
-  const initialFormState = { ...pick(props.activeFilters, filterFields) };
-  if (initialFormState.claim_status) {
-    // Convert checkbox field query param into array, to conform to how we manage checkbox form state
-    initialFormState.claim_status = initialFormState.claim_status.split(",");
-  }
+  /**
+   * Returns all filter fields with their values set based on
+   * what's currently in the URL query string
+   * @returns { { employer_id: string, claim_status: string[] } }
+   */
+  const getFormStateFromQuery = useCallback(() => {
+    const claim_status = get(props.query, "claim_status");
+    return {
+      employer_id: get(props.query, "employer_id", ""),
+      // Convert checkbox field query param into array, to conform to how we manage checkbox form state
+      claim_status: claim_status ? claim_status.split(",") : [],
+    };
+  }, [props.query]);
 
-  const { formState, updateFields } = useFormState(initialFormState);
+  /**
+   * Form visibility and state management
+   */
+  const activeFilters = getFormStateFromQuery();
+  const { formState, updateFields } = useFormState(activeFilters);
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
   });
 
+  /**
+   * UI variables
+   */
   const filtersContainerId = "filters";
-  let activeFiltersCount = Object.values(initialFormState).length;
-  if (initialFormState.claim_status) {
-    // Count each selected status as an active filter
-    activeFiltersCount += initialFormState.claim_status.length - 1;
-  }
+  let activeFiltersCount = activeFilters.claim_status.length;
+  if (activeFilters.employer_id) activeFiltersCount++;
 
   /**
    * Event handler for when the user applies their status and
@@ -518,10 +528,13 @@ const Filters = (props) => {
     ]);
   };
 
+  /**
+   * Event handler for the "Reset filters" action
+   */
   const handleFilterReset = () => {
     const params = [];
 
-    Object.keys(initialFormState).forEach((name) => {
+    Object.keys(activeFilters).forEach((name) => {
       // Reset by setting to an empty string
       params.push({ name, value: "" });
     });
@@ -644,7 +657,7 @@ const Filters = (props) => {
           />
         )}
 
-        <Button type="submit" disabled={Object.values(formState).length === 0}>
+        <Button type="submit" disabled={isEqual(formState, activeFilters)}>
           {t("pages.employersDashboard.filtersApply")}
         </Button>
 
@@ -664,27 +677,27 @@ const Filters = (props) => {
           <strong className="margin-right-2 display-inline-block">
             {t("pages.employersDashboard.filterNavLabel")}
           </strong>
-          {initialFormState.employer_id && (
+          {activeFilters.employer_id && (
             <FilterMenuButton
               data-test="employer_id"
               onClick={() => handleRemoveFilterClick("employer_id")}
             >
               {
                 find(user.verifiedEmployers, {
-                  employer_id: initialFormState.employer_id,
+                  employer_id: activeFilters.employer_id,
                 }).employer_dba
               }
             </FilterMenuButton>
           )}
-          {initialFormState.claim_status &&
-            initialFormState.claim_status.map((status) => (
+          {activeFilters.claim_status &&
+            activeFilters.claim_status.map((status) => (
               <FilterMenuButton
                 data-test={`claim_status_${status}`}
                 key={status}
                 onClick={() =>
                   handleRemoveFilterClick(
                     "claim_status",
-                    initialFormState.claim_status.filter((s) => s !== status)
+                    activeFilters.claim_status.filter((s) => s !== status)
                   )
                 }
               >
@@ -700,7 +713,7 @@ const Filters = (props) => {
 };
 
 Filters.propTypes = {
-  activeFilters: PropTypes.shape({
+  query: PropTypes.shape({
     claim_status: PropTypes.string,
     employer_id: PropTypes.string,
   }).isRequired,

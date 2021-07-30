@@ -176,7 +176,6 @@ export const Default = (args) => {
   return (
     <Dashboard
       appLogic={appLogic}
-      activeFilters={{}}
       claims={new ClaimCollection(claims)}
       paginationMeta={
         new PaginationMeta({
