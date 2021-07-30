@@ -49,8 +49,7 @@ describe("Post-approval (notifications/notices)", () => {
                 evidence.receive(document.document_type);
               }
             });
-            cy.wait("@ajaxRender");
-            cy.wait(150);
+            fineos.waitForAjaxComplete();
             adjudication.certificationPeriods((certificationPeriods) =>
               certificationPeriods.prefill()
             );
@@ -63,35 +62,28 @@ describe("Post-approval (notifications/notices)", () => {
           claimPage.approve();
           cy.findByText("Add Time").click({ force: true });
           cy.get('input[type="submit"][title="Add Time Off Period"]').click();
-          cy.wait("@ajaxRender");
-          cy.wait(200);
+          fineos.waitForAjaxComplete();
           cy.get(".popup-container").within(() => {
             cy.labelled("Absence status").select("Known");
-            cy.wait("@ajaxRender");
-            cy.wait(200);
+            fineos.waitForAjaxComplete();
             cy.get(
               "input[id='timeOffAbsencePeriodDetailsWidget_un19_startDate']"
             ).type(`{selectall}{backspace}${newStartDate}{enter}`);
-            cy.wait("@ajaxRender");
-            cy.wait(200);
+            fineos.waitForAjaxComplete();
             cy.get(
               "input[id='timeOffAbsencePeriodDetailsWidget_un19_endDate']"
             ).type(`{selectall}{backspace}${newEndDate}{enter}`);
-            cy.wait("@ajaxRender");
-            cy.wait(200);
+            fineos.waitForAjaxComplete();
             cy.get(
               "input[name='timeOffAbsencePeriodDetailsWidget_un19_startDateAllDay_CHECKBOX']"
             ).click();
-            cy.wait("@ajaxRender");
-            cy.wait(200);
+            fineos.waitForAjaxComplete();
             cy.get(
               "input[name='timeOffAbsencePeriodDetailsWidget_un19_endDateAllDay_CHECKBOX']"
             ).click();
-            cy.wait("@ajaxRender");
-            cy.wait(200);
+            fineos.waitForAjaxComplete();
             cy.get("input[title='OK']").click();
             fineos.waitForAjaxComplete();
-            cy.wait(200);
             });
           cy.get('span[id="footerButtonsBar_cloned"]').contains("Next").click();
           fineos.waitForAjaxComplete();
@@ -130,14 +122,14 @@ describe("Post-approval (notifications/notices)", () => {
           claimPage.shouldHaveStatus("Availability", "Time Available");
           claimPage.shouldHaveStatus("Restriction", "Passed");
           claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          claimPage.approve();
-          claimPage
-            .triggerNotice("Leave Request Declined")
-            .documents((docPage) =>
-              docPage.assertDocumentExists("Denial Notice")
-            );
-          cy.get('#DisplayCaseTabbedDialogWidget_un22_CaseTabControlBean_LeaveDetailsTab_cell > .TabOff').click();
-          cy.get('.ListRow2 > :nth-child(11)').click();
+          // claimPage.approve();
+          // claimPage
+          //   .triggerNotice("Leave Request Declined")
+          //   .documents((docPage) =>
+          //     docPage.assertDocumentExists("Denial Notice")
+          //   );
+          // cy.get('#DisplayCaseTabbedDialogWidget_un22_CaseTabControlBean_LeaveDetailsTab_cell > .TabOff').click();
+          // cy.get('.ListRow2 > :nth-child(11)').click();
 
           // Under the “Selected Leave Plan” highlight the Leave Extension plan and choose to Reject the Leave Extension plan.
           
