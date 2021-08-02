@@ -69,7 +69,6 @@ class TaxId:
             return val.tax_identifier
 
         if not isinstance(val, str):
-            print("wwtf!!")
             raise TypeError("string required")
 
         return cls(val)
@@ -134,8 +133,6 @@ class Fein:
 
     @classmethod
     def validate_type(cls, val):
-        print(cls(val))
-
         if not isinstance(val, str):
             raise TypeError("string required")
 

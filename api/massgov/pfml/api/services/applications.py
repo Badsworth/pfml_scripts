@@ -205,7 +205,6 @@ def remove_masked_fields_from_request(
     """
     errors = []
     # tax identifier - partially masked field
-    print(existing_application.tax_identifier.tax_identifier)
     masked_existing_tax_identifier = (
         existing_application.tax_identifier.tax_identifier.to_masked_str()
         if existing_application.tax_identifier

@@ -47,9 +47,6 @@ class FEINFormattedStr(str):
 
     @classmethod
     def validate_type(cls, val: Optional[Union[Fein, str]]) -> Optional[str]:
-        print("VALIDATE")
-        print(val)
-
         if val is None:
             return None
 

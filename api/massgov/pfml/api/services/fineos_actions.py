@@ -117,7 +117,6 @@ def register_employee(
     # Generate external id
     employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
 
-    print(employee_ssn)
     employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
         user_id=employee_external_id,
         customer_number=None,
@@ -158,7 +157,6 @@ def send_to_fineos(
     # Create the FINEOS client.
     fineos = massgov.pfml.fineos.create_client()
 
-    print(application.employer_fein)
     fineos_user_id = register_employee(
         fineos, tax_identifier, application.employer_fein, db_session
     )

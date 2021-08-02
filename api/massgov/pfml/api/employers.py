@@ -67,7 +67,6 @@ def employer_get_most_recent_withholding_dates(employer_id: str) -> flask.Respon
 
 @requires(READ, "EMPLOYER_API")
 def employer_add_fein() -> flask.Response:
-    print("HERE!")
     add_fein_request = EmployerAddFeinRequest.parse_obj(connexion.request.json)
     current_user = app.current_user()
 
@@ -84,8 +83,6 @@ def employer_add_fein() -> flask.Response:
                 )
             ],
         )
-
-    print(add_fein_request.employer_fein)
 
     with app.db_session() as db_session:
         employer = (
@@ -126,7 +123,6 @@ def employer_add_fein() -> flask.Response:
                 ],
             ).to_api_response()
 
-        print(employer)
         return response_util.success_response(
             message="Successfully added FEIN to user",
             status_code=201,
