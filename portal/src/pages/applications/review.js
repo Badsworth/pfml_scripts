@@ -265,6 +265,12 @@ export const Review = (props) => {
         {get(claim, "phone.phone_number")}
       </ReviewRow>
 
+      {get(claim, "org_unit") && (
+        <ReviewRow level={reviewRowLevel} label="Department">
+          {get(claim, "org_unit")}
+        </ReviewRow>
+      )}
+
       <ReviewRow
         level={reviewRowLevel}
         label={t("pages.claimsReview.residentialAddressLabel")}
