@@ -1,7 +1,7 @@
 import mimetypes
 import uuid
 from datetime import date, datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import massgov.pfml.db
 import massgov.pfml.fineos.models
@@ -20,7 +20,11 @@ from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
 from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
-from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData, GroupClientDocument
+from massgov.pfml.fineos.models.group_client_api import (
+    Base64EncodedFileData,
+    GroupClientDocument,
+    ManagedRequirementDetails,
+)
 from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformConcurrentLeaveFromOtherLeaveEform,
@@ -182,7 +186,7 @@ def get_claim_as_leave_admin(
     employer: Employer,
     fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
     default_to_v2: Optional[bool] = False,
-) -> Optional[ClaimReviewResponse]:
+) -> Tuple[Optional[ClaimReviewResponse], List[ManagedRequirementDetails]]:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
     """
@@ -201,7 +205,7 @@ def get_claim_as_leave_admin(
                 "employer_id": employer.employer_id,
             },
         )
-        return None
+        return None, []
 
     customer_id = absence_periods["decisions"][0]["employee"]["id"]
     status = absence_periods["decisions"][0]["period"]["status"] or "Unknown"
@@ -219,13 +223,13 @@ def get_claim_as_leave_admin(
     follow_up_date = None
     contains_version_one_eforms = False
     contains_version_two_eforms = False
-    outstanding_requirement_status = None
 
     for req in managed_reqs:
         if req.type == LEAVE_ADMIN_INFO_REQUEST_TYPE:
             follow_up_date = req.followUpDate
-            outstanding_requirement_status = req.status
-            break
+            if follow_up_date is not None and req.status == "Open":
+                is_reviewable = date.today() < follow_up_date
+                break
 
     for eform_summary_obj in eform_summaries:
         eform_summary = eform_summary_obj.dict()
@@ -306,33 +310,36 @@ def get_claim_as_leave_admin(
         not contains_version_one_eforms and default_to_v2
     )
 
-    if follow_up_date is not None and outstanding_requirement_status == "Open":
-        is_reviewable = date.today() < follow_up_date
-
     leave_details = get_leave_details(absence_periods)
 
     logger.info("Count of info request employer benefits:", extra={"count": len(employer_benefits)})
 
-    return ClaimReviewResponse(
-        date_of_birth=customer_info["dateOfBirth"],
-        employer_benefits=employer_benefits,
-        employer_fein=employer.employer_fein,
-        employer_dba=employer.employer_dba,
-        employer_id=employer.employer_id,
-        fineos_absence_id=absence_id,
-        first_name=customer_info["firstName"],
-        hours_worked_per_week=hours_worked_per_week,
-        last_name=customer_info["lastName"],
-        leave_details=leave_details,
-        middle_name=customer_info["secondName"],
-        previous_leaves=previous_leaves,
-        concurrent_leave=concurrent_leave,
-        residential_address=claimant_address,
-        tax_identifier=customer_info["idNumber"] if customer_info["idNumber"] is not None else "",
-        status=status,
-        follow_up_date=follow_up_date,
-        is_reviewable=is_reviewable,
-        uses_second_eform_version=uses_second_eform_version,
+    return (
+        ClaimReviewResponse(
+            date_of_birth=customer_info["dateOfBirth"],
+            employer_benefits=employer_benefits,
+            employer_fein=employer.employer_fein,
+            employer_dba=employer.employer_dba,
+            employer_id=employer.employer_id,
+            fineos_absence_id=absence_id,
+            first_name=customer_info["firstName"],
+            hours_worked_per_week=hours_worked_per_week,
+            last_name=customer_info["lastName"],
+            leave_details=leave_details,
+            middle_name=customer_info["secondName"],
+            previous_leaves=previous_leaves,
+            concurrent_leave=concurrent_leave,
+            residential_address=claimant_address,
+            tax_identifier=customer_info["idNumber"]
+            if customer_info["idNumber"] is not None
+            else "",
+            status=status,
+            follow_up_date=follow_up_date,
+            is_reviewable=is_reviewable,
+            uses_second_eform_version=uses_second_eform_version,
+            managed_requirements=managed_reqs,
+        ),
+        managed_reqs,
     )
 
 

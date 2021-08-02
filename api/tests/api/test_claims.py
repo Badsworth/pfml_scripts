@@ -1,5 +1,6 @@
 import copy
 from datetime import date, datetime, timedelta
+from typing import List
 from unittest import mock
 
 import factory  # this is from the factory_boy package
@@ -18,6 +19,7 @@ from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
     LkManagedRequirementStatus,
+    ManagedRequirement,
     ManagedRequirementStatus,
     ManagedRequirementType,
     Role,
@@ -33,9 +35,13 @@ from massgov.pfml.db.models.factories import (
     VerificationFactory,
 )
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter
+from massgov.pfml.db.queries.managed_requirements import create_managed_requirement_from_fineos
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
-from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
+from massgov.pfml.fineos.models.group_client_api import (
+    Base64EncodedFileData,
+    ManagedRequirementDetails,
+)
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 from massgov.pfml.util.strings import format_fein
 
@@ -633,6 +639,187 @@ class TestGetClaimReview:
         assert handler == "get_absence_period_decisions"
         assert fineos_web_id == "employer2-fineos-web-id"
         assert params == {"absence_id": claim2.fineos_absence_id}
+
+    @pytest.fixture
+    def managed_requirements(self):
+        return [
+            {
+                "managedReqId": 123,
+                "category": "Employer Confirmation",
+                "type": "Employer Confirmation of Leave Data",
+                "followUpDate": date(2021, 2, 1),
+                "documentReceived": True,
+                "creator": "Fake Creator",
+                "status": "Open",
+                "subjectPartyName": "Fake Name",
+                "sourceOfInfoPartyName": "Fake Sourcee",
+                "creationDate": date(2020, 1, 1),
+                "dateSuppressed": date(2020, 3, 1),
+            },
+            {
+                "managedReqId": 124,
+                "category": "Employer Confirmation",
+                "type": "Employer Confirmation of Leave Data",
+                "followUpDate": date(2021, 2, 1),
+                "documentReceived": True,
+                "creator": "Fake Creator",
+                "status": "Complete",
+                "subjectPartyName": "Fake Name",
+                "sourceOfInfoPartyName": "Fake Sourcee",
+                "creationDate": date(2020, 1, 1),
+                "dateSuppressed": date(2020, 3, 1),
+            },
+        ]
+
+    @pytest.fixture
+    def fineos_managed_requirements(self, managed_requirements):
+        return [ManagedRequirementDetails.parse_obj(mr) for mr in managed_requirements]
+
+    def _managed_requirements_by_fineos_absence_id(
+        self, db_session, fineos_absence_id
+    ) -> List[ManagedRequirement]:
+        return (
+            db_session.query(ManagedRequirement)
+            .join(Claim)
+            .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .all()
+        )
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+    def test_employer_get_claim_review_create_managed_requirements(
+        self,
+        mock_get_req,
+        fineos_managed_requirements,
+        client,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+    ):
+        mock_get_req.return_value = fineos_managed_requirements
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        requirements = self._managed_requirements_by_fineos_absence_id(
+            test_db_session, claim.fineos_absence_id
+        )
+        assert len(requirements) == len(fineos_managed_requirements)
+        for db_mr in requirements:
+            searched_mr = [
+                m
+                for m in fineos_managed_requirements
+                if str(m.managedReqId) == db_mr.fineos_managed_requirement_id
+            ]
+            assert len(searched_mr) == 1
+            mr = searched_mr[0]
+            assert mr.followUpDate == db_mr.follow_up_date
+            assert mr.type == db_mr.managed_requirement_type.managed_requirement_type_description
+            assert (
+                mr.status == db_mr.managed_requirement_status.managed_requirement_status_description
+            )
+            assert (
+                mr.category
+                == db_mr.managed_requirement_category.managed_requirement_category_description
+            )
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+    def test_employer_get_claim_review_update_managed_requirements(
+        self,
+        mock_get_req,
+        fineos_managed_requirements,
+        client,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+    ):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        for mr in fineos_managed_requirements:
+            create_managed_requirement_from_fineos(test_db_session, claim.claim_id, mr, {})
+            mr.followUpDate = mr.followUpDate - timedelta(days=3)
+            mr.status = ManagedRequirementStatus.SUPPRESSED.managed_requirement_status_description
+        mock_get_req.return_value = fineos_managed_requirements
+
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        requirements = self._managed_requirements_by_fineos_absence_id(
+            test_db_session, claim.fineos_absence_id
+        )
+        assert len(requirements) == len(fineos_managed_requirements)
+        for db_mr in requirements:
+            searched_mr = [
+                m
+                for m in fineos_managed_requirements
+                if str(m.managedReqId) == db_mr.fineos_managed_requirement_id
+            ]
+            assert len(searched_mr) == 1
+            mr = searched_mr[0]
+            assert mr.followUpDate == db_mr.follow_up_date
+            assert mr.type == db_mr.managed_requirement_type.managed_requirement_type_description
+            assert (
+                mr.status == db_mr.managed_requirement_status.managed_requirement_status_description
+            )
+            assert (
+                mr.category
+                == db_mr.managed_requirement_category.managed_requirement_category_description
+            )
+
+    @mock.patch("massgov.pfml.api.claims.handle_managed_requirements")
+    def test_employer_get_claim_review_failure_managed_requirement_handling(
+        self,
+        mock_handle,
+        client,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+    ):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        mock_handle.side_effect = Exception("Unexpected failure")
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
 
 
 @pytest.mark.integration

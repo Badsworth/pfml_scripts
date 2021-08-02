@@ -1,8 +1,9 @@
 import base64
-from typing import Any, Dict, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 import connexion
 import flask
+from sqlalchemy.orm.session import Session
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
@@ -23,9 +24,23 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_documents_as_leave_admin,
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
-from massgov.pfml.db.models.employees import AbsenceStatus, Claim, Employer, UserLeaveAdministrator
+from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
+    Claim,
+    Employer,
+    ManagedRequirementType,
+    UserLeaveAdministrator,
+)
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter, GetClaimsQuery
-from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
+from massgov.pfml.db.queries.managed_requirements import (
+    create_managed_requirement_from_fineos,
+    get_managed_requirement_by_fineos_managed_requirement_id,
+    update_managed_requirement_from_fineos,
+)
+from massgov.pfml.fineos.models.group_client_api import (
+    Base64EncodedFileData,
+    ManagedRequirementDetails,
+)
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
@@ -266,7 +281,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
         try:
-            claim_review_response = get_claim_as_leave_admin(
+            claim_review_response, managed_requirements = get_claim_as_leave_admin(
                 user_leave_admin.fineos_web_id,
                 fineos_absence_id,
                 employer,
@@ -313,6 +328,16 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         logger.info(
             "employer_get_claim_review success", extra={**log_attributes},
         )
+        try:
+            handle_managed_requirements(
+                db_session, claim_from_db, managed_requirements, log_attributes,
+            )
+        except Exception as error:  # catch all exception handler
+            logger.error(
+                "Failed to handle the claim's managed requirements in employer claim review call",
+                extra=log_attributes,
+                exc_info=error,
+            )
         return response_util.success_response(
             message="Successfully retrieved claim",
             data=claim_review_response.dict(),
@@ -558,3 +583,25 @@ def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
             raise BadRequest(f"Invalid claim status {absence_status}.")
 
     return
+
+
+def handle_managed_requirements(
+    db_session: Session,
+    claim: Optional[Claim],
+    managed_requirements: List[ManagedRequirementDetails],
+    log_attributes: dict,
+) -> None:
+    if claim is None:
+        return
+    for mr in managed_requirements:
+        db_mr = get_managed_requirement_by_fineos_managed_requirement_id(
+            mr.managedReqId, db_session
+        )
+        if (
+            db_mr
+            and db_mr.managed_requirement_type_id
+            == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
+        ):
+            update_managed_requirement_from_fineos(db_session, mr, db_mr, log_attributes)
+        elif not db_mr:
+            create_managed_requirement_from_fineos(db_session, claim.claim_id, mr, log_attributes)
