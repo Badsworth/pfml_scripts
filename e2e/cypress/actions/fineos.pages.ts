@@ -1836,6 +1836,7 @@ class WrapUp extends CreateNotificationStep {
   finishNotificationCreation(): Cypress.Chainable<string> {
     return this.getLeaveCaseNumber().then((absenceId) => {
       this.clickNext(20000);
+      cy.contains(absenceId);
       return cy.wrap(absenceId);
     });
   }
