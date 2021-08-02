@@ -32,6 +32,7 @@ def flag_get_logs(name):
             .filter_by(name=name)
             .order_by(FlagLog.flag_log_id.desc())
             .limit(10)
+            .offset(1)
         )
         if logs is None:
             raise NotFound(description="Could not find {} with name {}".format(Flag.__name__, name))
