@@ -487,7 +487,8 @@ def get_claims() -> flask.Response:
                 employer_ids_list = [
                     e.employer_id
                     for e in employers_list
-                    if sanitize_fein(e.employer_fein or "") not in CLAIMS_DASHBOARD_BLOCKED_FEINS
+                    if sanitize_fein(e.employer_fein.to_unformatted_str() or "")
+                    not in CLAIMS_DASHBOARD_BLOCKED_FEINS
                     and current_user.verified_employer(e)
                 ]
 

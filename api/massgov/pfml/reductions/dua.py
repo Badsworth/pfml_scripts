@@ -175,7 +175,7 @@ def _format_claimants_for_dua_claimant_list(claimants: List[Employee]) -> List[D
 
         info = {
             Constants.CASE_ID_FIELD: fineos_customer_number,
-            Constants.SSN_FIELD: tax_id.tax_identifier.replace("-", ""),
+            Constants.SSN_FIELD: tax_id.tax_identifier.to_unformatted_str(),
             Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
         }
 

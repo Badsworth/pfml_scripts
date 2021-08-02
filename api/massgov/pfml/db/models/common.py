@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 import sqlalchemy.types as types
 from sqlalchemy.engine.interfaces import Dialect
 
+from massgov.pfml.types import Fein, TaxId
+
 # All type information in this file is provided for reference, because a
 # corresponding stub file exists at `common.pyi`, the types there are what's
 # actually used by the type checker.
@@ -51,3 +53,54 @@ class StrEnum(StrEnumType):
             return None
 
         return self._enum_type(value)
+
+
+if TYPE_CHECKING:
+    tax_id_type = types.TypeDecorator[TaxId]
+else:
+    tax_id_type = types.TypeDecorator
+
+
+class TaxIdColumn(tax_id_type):
+    impl = types.Text
+
+    def process_bind_param(self, value, dialect):
+
+        if isinstance(value, str):
+            value = TaxId(value)
+
+        if value is not None:
+            value = value.to_unformatted_str()
+
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = TaxId(value)
+
+        return value
+
+
+if TYPE_CHECKING:
+    fein_type = types.TypeDecorator[Fein]
+else:
+    fein_type = types.TypeDecorator
+
+
+class FeinColumn(fein_type):
+    impl = types.Text
+
+    def process_bind_param(self, value, dialect):
+        if isinstance(value, str):
+            value = Fein(value)
+
+        if value is not None:
+            value = value.to_unformatted_str()
+
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = Fein(value)
+
+        return value

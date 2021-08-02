@@ -23,7 +23,7 @@ from massgov.pfml.rmv.models import RmvAcknowledgement
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, uuid_gen
-from .common import StrEnum
+from .common import FeinColumn, StrEnum, TaxIdColumn
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -270,7 +270,7 @@ class Application(Base):
         UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True
     )
     phone_id = Column(UUID(as_uuid=True), ForeignKey("phone.phone_id"), nullable=True)
-    employer_fein = Column(Text)
+    employer_fein = Column(FeinColumn)
     first_name = Column(Text)
     last_name = Column(Text)
     middle_name = Column(Text, nullable=True)
@@ -687,8 +687,8 @@ class OtherIncomeType(LookupTable):
 
 class FINEOSWebIdExt(Base):
     __tablename__ = "link_fineos_web_id_ext"
-    employee_tax_identifier = Column(Text, primary_key=True)
-    employer_fein = Column(Text, primary_key=True)
+    employee_tax_identifier = Column(TaxIdColumn, primary_key=True)
+    employer_fein = Column(FeinColumn, primary_key=True)
     fineos_web_id = Column(Text)
 
 

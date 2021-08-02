@@ -1,7 +1,7 @@
 from typing import Optional
 
+from massgov.pfml.types import Fein
 from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import FEINUnformattedStr
 
 
 class RoleRequest(PydanticBaseModel):
@@ -9,7 +9,7 @@ class RoleRequest(PydanticBaseModel):
 
 
 class UserLeaveAdminRequest(PydanticBaseModel):
-    employer_fein: Optional[FEINUnformattedStr]
+    employer_fein: Optional[Fein]
 
 
 class UserCreateRequest(PydanticBaseModel):
@@ -25,4 +25,4 @@ class UserUpdateRequest(PydanticBaseModel):
 
 
 class UserConvertEmployerRequest(PydanticBaseModel):
-    employer_fein: FEINUnformattedStr
+    employer_fein: Fein

@@ -38,6 +38,7 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
     TaxIdentifierFactory,
 )
+from massgov.pfml.types import TaxId
 from tests.api.payments import validate_attributes, validate_elements
 
 # every test in here requires real resources
@@ -52,7 +53,7 @@ def get_base_employee(add_eft=True, use_random_tin=False):
     if use_random_tin:
         tax_identifier = TaxIdentifierFactory()
     else:
-        tax_identifier = TaxIdentifierFactory(tax_identifier="123456789")
+        tax_identifier = TaxIdentifierFactory(tax_identifier=TaxId("123456789"))
 
     eft = None
     if add_eft:
@@ -610,7 +611,7 @@ def test_build_individual_vcc_document_missing_required_values(initialize_factor
         )
 
     no_ssn_data = get_base_employee(use_random_tin=True)
-    no_ssn_data.tax_identifier.tax_identifier = ""
+    no_ssn_data.tax_identifier = None
     with pytest.raises(
         Exception, match="Value for tax_identifier is required to generate document."
     ):
@@ -643,7 +644,7 @@ def test_build_individual_vcc_document_too_long_values(initialize_factories_sess
     now = datetime.now()
 
     long_ssn_data = get_base_employee(use_random_tin=True)
-    long_ssn_data.tax_identifier.tax_identifier = "0" * 25
+    long_ssn_data.tax_identifier.tax_identifier = TaxId("0" * 25)
     with pytest.raises(
         Exception, match="Value for tax_identifier is longer than allowed length of 9."
     ):

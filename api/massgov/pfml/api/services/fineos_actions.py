@@ -54,6 +54,7 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
     OtherIncomesEFormBuilder,
     PreviousLeavesEFormBuilder,
 )
+from massgov.pfml.types import Fein, TaxId
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 
@@ -84,16 +85,16 @@ class LeaveNotificationReason(str, Enum):
 
 def register_employee(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
-    employee_ssn: str,
-    employer_fein: str,
+    employee_ssn: TaxId,
+    employer_fein: Fein,
     db_session: massgov.pfml.db.Session,
 ) -> str:
     # If a FINEOS Id exists for SSN/FEIN return it.
     fineos_web_id_ext = (
         db_session.query(FINEOSWebIdExt)
         .filter(
-            FINEOSWebIdExt.employee_tax_identifier == str(employee_ssn),
-            FINEOSWebIdExt.employer_fein == str(employer_fein),
+            FINEOSWebIdExt.employee_tax_identifier == employee_ssn,
+            FINEOSWebIdExt.employer_fein == employer_fein,
         )
         .one_or_none()
     )
@@ -116,6 +117,7 @@ def register_employee(
     # Generate external id
     employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
 
+    print(employee_ssn)
     employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
         user_id=employee_external_id,
         customer_number=None,
@@ -124,7 +126,7 @@ def register_employee(
         employer_id=employer_id,
         first_name=None,
         last_name=None,
-        national_insurance_no=employee_ssn,
+        national_insurance_no=employee_ssn.to_unformatted_str(),
     )
 
     fineos.register_api_user(employee_registration)
@@ -156,6 +158,7 @@ def send_to_fineos(
     # Create the FINEOS client.
     fineos = massgov.pfml.fineos.create_client()
 
+    print(application.employer_fein)
     fineos_user_id = register_employee(
         fineos, tax_identifier, application.employer_fein, db_session
     )
@@ -352,7 +355,7 @@ def build_customer_model(application, current_user):
         lastName=application.last_name,
         dateOfBirth=application.date_of_birth,
         # We have to send back the SSN as FINEOS wipes it from the Customer otherwise.
-        idNumber=tax_identifier,
+        idNumber=tax_identifier.to_unformatted_str(),
         classExtensionInformation=class_ext_info,
     )
 
@@ -706,7 +709,6 @@ def get_or_register_employee_fineos_user_id(
 ) -> str:
     tax_identifier = application.tax_identifier.tax_identifier
 
-    employer_fein = ""
     if application.employer_fein is None:
         raise ValueError("Missing employer fein")
     employer_fein = application.employer_fein

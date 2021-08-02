@@ -81,7 +81,10 @@ def application_get(application_id):
         existing_application = get_or_404(db_session, Application, application_id)
 
         ensure(READ, existing_application)
+        print(existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
+
+        print(application_response.dict())
 
     issues = application_rules.get_application_issues(existing_application, flask.request.headers)
 
@@ -121,8 +124,9 @@ def applications_get():
 
 
 def applications_start():
+    print("HERE!!")
     application = Application()
-
+    print("HERE!!")
     now = datetime_util.utcnow()
     application.start_time = now
     application.updated_time = now
@@ -141,6 +145,8 @@ def applications_start():
 
     log_attributes = get_application_log_attributes(application)
     logger.info("applications_start success", extra=log_attributes)
+
+    print("HERE!!")
 
     return response_util.success_response(
         message="Successfully created application",

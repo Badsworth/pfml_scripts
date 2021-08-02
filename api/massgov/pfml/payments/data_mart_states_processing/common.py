@@ -69,7 +69,7 @@ def query_data_mart_for_issues_and_updates_core(
     """
     result = DataMartIssuesAndUpdates()
 
-    vendor_info = data_mart_client.get_vendor_info(tax_id.tax_identifier)
+    vendor_info = data_mart_client.get_vendor_info(tax_id.tax_identifier.to_unformatted_str())
 
     if not vendor_info:
         return result

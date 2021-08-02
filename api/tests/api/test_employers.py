@@ -6,7 +6,7 @@ from freezegun import freeze_time
 
 from massgov.pfml.db.models.employees import EmployerQuarterlyContribution, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
-from massgov.pfml.util.strings import format_fein
+from massgov.pfml.types import Fein
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -16,7 +16,7 @@ def test_employers_receive_201_from_add_fein(
     monkeypatch, client, employer_user, employer_auth_token, test_db_session
 ):
     current_employer = EmployerFactory.create()
-    employer_to_add = EmployerFactory.create(employer_fein="999999999")
+    employer_to_add = EmployerFactory.create(employer_fein=Fein("999999999"))
     yesterday = datetime.now() - timedelta(days=1)
     EmployerQuarterlyContributionFactory.create(
         employer=employer_to_add, filing_period=yesterday.strftime("%Y-%m-%d")
@@ -42,12 +42,12 @@ def test_employers_receive_201_from_add_fein(
     response_data = response.get_json()["data"]
     assert response.status_code == 201
     assert response_data["employer_dba"] == employer_to_add.employer_dba
-    assert response_data["employer_fein"] == format_fein(employer_to_add.employer_fein)
+    assert response_data["employer_fein"] == employer_to_add.employer_fein.to_formatted_str()
     assert type(response_data["employer_id"]) is str
 
 
 def test_employers_receive_402_if_no_withholding_data(client, employer_auth_token):
-    EmployerFactory.create(employer_fein="999999999")
+    EmployerFactory.create(employer_fein=Fein("999999999"))
 
     post_body = {"employer_fein": "99-9999999"}
 
@@ -107,7 +107,7 @@ def test_employers_receive_400_if_ein_invalid_format(client, employer_auth_token
 def test_employers_receive_409_if_duplicate_fein(
     client, employer_user, employer_auth_token, test_db_session
 ):
-    employer_to_add = EmployerFactory.create(employer_fein="999999999")
+    employer_to_add = EmployerFactory.create(employer_fein=Fein("999999999"))
     yesterday = datetime.now() - timedelta(days=1)
     EmployerQuarterlyContributionFactory.create(
         employer=employer_to_add, filing_period=yesterday.strftime("%Y-%m-%d")

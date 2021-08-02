@@ -23,6 +23,7 @@ from massgov.pfml.db.models.employees import (
     LkTitle,
     TaxIdentifier,
 )
+from massgov.pfml.types import TaxId
 from massgov.pfml.util.bg import background_task
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import utcnow
@@ -186,7 +187,9 @@ def process_csv_row(
                 .one_or_none()
             )
             employee.tax_identifier = (
-                tax_identifier if tax_identifier else TaxIdentifier(tax_identifier=employee_tax_id)
+                tax_identifier
+                if tax_identifier
+                else TaxIdentifier(tax_identifier=TaxId(employee_tax_id))
             )
 
             first_name = row.get("EMPLOYEEFIRSTNAME", "")

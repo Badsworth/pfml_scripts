@@ -36,8 +36,8 @@ from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
+from massgov.pfml.types import Fein
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
-from massgov.pfml.util.strings import format_fein
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -390,7 +390,7 @@ class TestGetClaimReview:
     def test_employers_receive_200_from_get_claim_review(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification
     ):
-        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        employer = EmployerFactory.create(employer_fein=Fein("999999999"), employer_dba="Acme Co")
         claim = ClaimFactory.create(employer_id=employer.employer_id)
 
         link = UserLeaveAdministrator(
@@ -434,7 +434,7 @@ class TestGetClaimReview:
     def test_second_eform_version_defaults_to_true_when_ff_is_set(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification
     ):
-        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        employer = EmployerFactory.create(employer_fein=Fein("999999999"), employer_dba="Acme Co")
         claim = ClaimFactory.create(employer_id=employer.employer_id)
 
         link = UserLeaveAdministrator(
@@ -462,7 +462,7 @@ class TestGetClaimReview:
     def test_second_eform_version_defaults_to_false_when_ff_is_not_set(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification
     ):
-        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        employer = EmployerFactory.create(employer_fein=Fein("999999999"), employer_dba="Acme Co")
         claim = ClaimFactory.create(employer_id=employer.employer_id)
 
         link = UserLeaveAdministrator(
@@ -493,7 +493,7 @@ class TestGetClaimReview:
         test_db_session,
         test_verification,
     ):
-        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        employer = EmployerFactory.create(employer_fein=Fein("999999999"), employer_dba="Acme Co")
         claim = ClaimFactory.create(employer_id=employer.employer_id)
 
         link = UserLeaveAdministrator(
@@ -540,7 +540,7 @@ class TestGetClaimReview:
     def test_employers_with_int_hours_worked_per_week_receive_200_from_get_claim_review(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification
     ):
-        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        employer = EmployerFactory.create(employer_fein=Fein("999999999"), employer_dba="Acme Co")
         ClaimFactory.create(
             employer_id=employer.employer_id, fineos_absence_id="int_fake_hours_worked_per_week",
         )
@@ -2294,7 +2294,7 @@ class TestGetClaimsEndpoint:
 
         assert len(response_body["data"]) == 5
         for claim in response_body["data"]:
-            assert claim["employer"]["employer_fein"] == format_fein(employer.employer_fein)
+            assert claim["employer"]["employer_fein"] == employer.employer_fein.to_formatted_str()
 
     def test_get_claims_as_claimant(self, client, auth_token, user):
         employer = EmployerFactory.create()
@@ -2369,7 +2369,7 @@ class TestGetClaimsEndpoint:
         monkeypatch.setattr(
             massgov.pfml.api.claims,
             "CLAIMS_DASHBOARD_BLOCKED_FEINS",
-            set([employer.employer_fein]),
+            set([employer.employer_fein.to_unformatted_str()]),
         )
         response = client.get(
             "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -2380,7 +2380,10 @@ class TestGetClaimsEndpoint:
 
         assert len(response_body["data"]) == 5
         for claim in response_body["data"]:
-            assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
+            assert (
+                claim["employer"]["employer_fein"]
+                == other_employer.employer_fein.to_formatted_str()
+            )
 
     # Inner class for testing Claims With Status Filtering
     class TestClaimsWithStatus:

@@ -4,6 +4,8 @@ import os
 
 import pytest
 
+from massgov.pfml.types import Fein
+
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
 
@@ -28,7 +30,9 @@ def test_main_success_on_existing_fein_with_fineos_employer_id(
     import massgov.pfml.cognito_pre_signup_lambda.main as main
 
     caplog.set_level(logging.INFO)  # noqa: B1
-    employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
+    employer = Employer(
+        employer_fein=Fein("133701337"), employer_dba="Acme Corp", fineos_employer_id=93
+    )
 
     test_db_session.add(employer)
     test_db_session.commit()
@@ -47,7 +51,7 @@ def test_main_error_on_existing_fein_with_no_fineos(test_db_session, event_dict,
     from massgov.pfml.db.models.employees import Employer
     import massgov.pfml.cognito_pre_signup_lambda.main as main
 
-    employer = Employer(employer_fein="133701337", employer_dba="Acme Corp")
+    employer = Employer(employer_fein=Fein("133701337"), employer_dba="Acme Corp")
 
     test_db_session.add(employer)
     test_db_session.commit()

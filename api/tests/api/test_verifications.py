@@ -166,7 +166,7 @@ def test_verification_successful_for_valid_data(
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": format_fein(employer.employer_fein),
+            "employer_fein": employer.employer_fein.to_formatted_str(),
             "employer_id": str(employer.employer_id),
             "has_fineos_registration": True,
             "verified": True,
@@ -238,7 +238,7 @@ def test_verification_successful_for_data_within_threshold(
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": format_fein(employer.employer_fein),
+            "employer_fein": employer.employer_fein.to_formatted_str(),
             "employer_id": str(employer.employer_id),
             "has_fineos_registration": True,
             "verified": True,

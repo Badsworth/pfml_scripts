@@ -8,11 +8,12 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     WagesAndContributions,
 )
+from massgov.pfml.types import Fein
 
 
 def get_contributing_employer_or_employee_issue(
     db_session: db.Session,
-    maybe_employer_fein: Optional[str],
+    maybe_employer_fein: Optional[Fein],
     maybe_tax_identifier: Optional[TaxIdentifier],
 ) -> Optional[Issue]:
     """Validate an Employer exists and a specific Employee works there"""

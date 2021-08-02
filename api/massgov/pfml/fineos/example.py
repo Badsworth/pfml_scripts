@@ -12,6 +12,7 @@ import requests_oauthlib
 import massgov.pfml.fineos
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging
+from massgov.pfml.types import Fein
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.fineos.example")
 
@@ -52,7 +53,7 @@ def main():
 
     employer_fein = "179892886"
 
-    employer_id = cps.find_employer(employer_fein)
+    employer_id = cps.find_employer(Fein(employer_fein))
     logger.info("Employer ID is {}".format(employer_id))
 
     user_id = "pfml_api_{}".format(str(uuid.uuid4()))

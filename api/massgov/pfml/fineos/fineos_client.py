@@ -25,6 +25,7 @@ from massgov.pfml.fineos.util.response import (
     get_fineos_correlation_id,
     log_validation_error,
 )
+from massgov.pfml.types import Fein
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from . import client, exception, models
@@ -368,7 +369,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         headers = {"Content-Type": "application/xml; charset=utf-8"}
         return self._request(method, url, method_name, headers, data=xml_data.encode("utf-8"))
 
-    def read_employer(self, employer_fein: str) -> models.OCOrganisation:
+    def read_employer(self, employer_fein: Fein) -> models.OCOrganisation:
         """Retrieves FINEOS employer info given an FEIN.
 
         Raises
@@ -377,7 +378,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
             If no employer exists in FINEOS that matches the given FEIN.
         """
         response = self._wscomposer_request(
-            "GET", "ReadEmployer", "read_employer", {"param_str_taxId": employer_fein}, ""
+            "GET",
+            "ReadEmployer",
+            "read_employer",
+            {"param_str_taxId": employer_fein.to_unformatted_str()},
+            "",
         )
         response_decoded = read_employer_response_schema.decode(response.text)
 
@@ -386,7 +391,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         return models.OCOrganisation.parse_obj(response_decoded)
 
-    def find_employer(self, employer_fein: str) -> str:
+    def find_employer(self, employer_fein: Fein) -> str:
         """Retrieves the FINEOS customer number for an employer given an FEIN.
 
         Raises

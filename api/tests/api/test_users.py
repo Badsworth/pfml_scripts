@@ -45,7 +45,7 @@ def valid_employer_creation_request_body(employer_for_new_user) -> Dict[str, Any
         "email_address": fake.email(domain="example.com"),
         "password": fake.password(length=12),
         "role": {"role_description": "Employer"},
-        "user_leave_administrator": {"employer_fein": format_fein(ein)},
+        "user_leave_administrator": {"employer_fein": ein.to_formatted_str()},
     }
 
 
@@ -280,7 +280,7 @@ def test_users_get(client, employer_user, employer_auth_token, test_db_session):
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": format_fein(employer.employer_fein),
+            "employer_fein": employer.employer_fein.to_formatted_str(),
             "employer_id": str(employer.employer_id),
             "has_fineos_registration": True,
             "verified": False,
@@ -339,7 +339,7 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": format_fein(employer.employer_fein),
+            "employer_fein": employer.employer_fein.to_formatted_str(),
             "employer_id": str(employer.employer_id),
             "has_fineos_registration": True,
             "verified": False,
@@ -388,7 +388,7 @@ def test_users_patch(client, user, auth_token, test_db_session):
 
 def test_users_convert_employer(client, user, employer_for_new_user, auth_token, test_db_session):
     ein = employer_for_new_user.employer_fein
-    body = {"employer_fein": format_fein(ein)}
+    body = {"employer_fein": ein.to_formatted_str()}
     assert len(user.roles) == 0
     response = client.post(
         "v1/users/{}/convert_employer".format(user.user_id),
@@ -400,7 +400,7 @@ def test_users_convert_employer(client, user, employer_for_new_user, auth_token,
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer_for_new_user.employer_dba,
-            "employer_fein": format_fein(employer_for_new_user.employer_fein),
+            "employer_fein": employer_for_new_user.employer_fein.to_formatted_str(),
             "employer_id": str(employer_for_new_user.employer_id),
             "has_fineos_registration": False,
             "has_verification_data": False,
@@ -441,7 +441,7 @@ def test_users_unauthorized_convert_employer(
     user_2 = UserFactory.create()
     assert len(user_2.user_leave_administrators) == 0
     ein = employer_for_new_user.employer_fein
-    body = {"employer_fein": format_fein(ein)}
+    body = {"employer_fein": ein.to_formatted_str()}
     response = client.post(
         "v1/users/{}/convert_employer".format(user_2.user_id),
         headers={"Authorization": f"Bearer {auth_token}"},
@@ -539,7 +539,7 @@ def test_has_verification_data_flag(client, employer_user, employer_auth_token, 
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": format_fein(employer.employer_fein),
+            "employer_fein": employer.employer_fein.to_formatted_str(),
             "employer_id": str(employer.employer_id),
             "has_fineos_registration": True,
             "verified": False,
@@ -570,7 +570,7 @@ def test_has_verification_data_flag_old_data(
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": format_fein(employer.employer_fein),
+            "employer_fein": employer.employer_fein.to_formatted_str(),
             "employer_id": str(employer.employer_id),
             "has_fineos_registration": True,
             "verified": False,

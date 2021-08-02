@@ -7,6 +7,7 @@ import typing
 from decimal import Decimal
 
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
+from massgov.pfml.types import Fein
 
 from . import models
 
@@ -15,11 +16,11 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     """Abstract base class for a FINEOS API client."""
 
     @abc.abstractmethod
-    def read_employer(self, employer_fein: str) -> models.OCOrganisation:
+    def read_employer(self, employer_fein: Fein) -> models.OCOrganisation:
         pass
 
     @abc.abstractmethod
-    def find_employer(self, employer_fein: str) -> str:
+    def find_employer(self, employer_fein: Fein) -> str:
         """Create the employee account registration."""
         pass
 

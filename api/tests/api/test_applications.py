@@ -66,6 +66,7 @@ from massgov.pfml.fineos.exception import (
     FINEOSNotFound,
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
+from massgov.pfml.types import Fein, TaxId
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -289,8 +290,8 @@ def test_application_patch(client, user, auth_token, test_db_session):
 
     # Formatted fields are saved as unformatted (i.e. no dashes)
     assert application.tax_identifier
-    assert application.tax_identifier.tax_identifier == "123456789"
-    assert application.employer_fein == "227777777"
+    assert application.tax_identifier.tax_identifier == TaxId("123456789")
+    assert application.employer_fein == Fein("227777777")
 
     # CaringLeaveMetadata fields added
     assert application.caring_leave_metadata.family_member_first_name == "Jane"
@@ -388,7 +389,7 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
 
     # Verify values in the DB are updated and not masked
     test_db_session.refresh(application)
-    assert application.tax_identifier.tax_identifier == "123456789"
+    assert application.tax_identifier.tax_identifier == TaxId("123456789")
     assert application.mass_id == "123456789"
     assert application.date_of_birth.isoformat() == "1970-01-01"
     assert application.mailing_address.address_line_one == "123 Foo St."
@@ -421,7 +422,7 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
 
 def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    application.tax_identifier = TaxIdentifier(tax_identifier="123456789")
+    application.tax_identifier = TaxIdentifier(tax_identifier=TaxId("123456789"))
     application.has_state_id = True
     application.mass_id = "123456789"
     application.date_of_birth = date(1970, 1, 1)
@@ -492,7 +493,7 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
 
     # Nothing in the DB value was actually updated to the masked value
     test_db_session.refresh(application)
-    assert application.tax_identifier.tax_identifier == "123456789"
+    assert application.tax_identifier.tax_identifier == TaxId("123456789")
     assert application.mass_id == "123456789"
     assert application.date_of_birth.isoformat() == "1970-01-01"
     assert application.mailing_address.address_line_one == "123 Foo St."
@@ -509,7 +510,7 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
 
 def test_application_patch_masked_mismatch_fields(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    application.tax_identifier = TaxIdentifier(tax_identifier="123456789")
+    application.tax_identifier = TaxIdentifier(tax_identifier=TaxId("123456789"))
     application.has_state_id = True
     application.mass_id = None
     application.date_of_birth = date(1970, 1, 1)
@@ -1065,7 +1066,7 @@ def test_application_patch_fineos_forbidden(
 def test_application_patch_tax_identifier(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     assert application.tax_identifier
-    assert application.tax_identifier.tax_identifier != "123-45-6789"
+    assert application.tax_identifier.tax_identifier != TaxId("123-45-6789")
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -1078,7 +1079,7 @@ def test_application_patch_tax_identifier(client, user, auth_token, test_db_sess
 
     test_db_session.refresh(application)
     assert application.tax_identifier
-    assert application.tax_identifier.tax_identifier == "123456789"
+    assert application.tax_identifier.tax_identifier == TaxId("123456789")
 
 
 def test_application_patch_masked_tax_id_has_no_effect(client, user, auth_token, test_db_session):
@@ -3300,12 +3301,12 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
                     customer_number=None,
-                    employer_id=f"{application.employer_fein}1000",
+                    employer_id=f"{application.employer_fein.to_unformatted_str()}1000",
                     date_of_birth=date(1753, 1, 1),
                     email=None,
                     first_name=None,
                     last_name=None,
-                    national_insurance_no=application.tax_identifier.tax_identifier,
+                    national_insurance_no=application.tax_identifier.tax_identifier.to_unformatted_str(),
                 )
             },
         ),
@@ -3468,7 +3469,7 @@ def test_application_post_submit_ssn_second_app(
 def test_application_post_submit_app_fein_not_found(client, user, auth_token):
     # Assert that API returns a validation error when the application
     # includes an EIN that doesn't match an Employer record
-    application = ApplicationFactory.create(user=user, employer_fein="999999999")
+    application = ApplicationFactory.create(user=user, employer_fein=Fein("999999999"))
 
     response = client.post(
         "/v1/applications/{}/submit_application".format(application.application_id),
@@ -3488,7 +3489,7 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token):
 def test_application_post_submit_app_ssn_not_found(client, user, auth_token, test_db_session):
     # An FEIN of 999999999 is simulated as not found in MockFINEOSClient.
     employer = EmployerFactory.create()
-    tax_identifier = TaxIdentifierFactory.create(tax_identifier="999999999")
+    tax_identifier = TaxIdentifierFactory.create(tax_identifier=TaxId("999999999"))
     application = ApplicationFactory.create(
         user=user, tax_identifier=tax_identifier, employer_fein=employer.employer_fein,
     )
@@ -3702,9 +3703,9 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
             {
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
-                    employer_id=f"{application.employer_fein}1000",
+                    employer_id=f"{application.employer_fein.to_unformatted_str()}1000",
                     date_of_birth=date(1753, 1, 1),
-                    national_insurance_no=application.tax_identifier.tax_identifier,
+                    national_insurance_no=application.tax_identifier.tax_identifier.to_unformatted_str(),
                 )
             },
         ),
@@ -3717,7 +3718,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     lastName="Last",
                     secondName="Middle",
                     dateOfBirth=date(1977, 7, 27),
-                    idNumber=application.tax_identifier.tax_identifier,
+                    idNumber=application.tax_identifier.tax_identifier.to_unformatted_str(),
                     customerAddress=massgov.pfml.fineos.models.customer_api.CustomerAddress(
                         address=massgov.pfml.fineos.models.customer_api.Address(
                             addressLine1=application.residential_address.address_line_one,
@@ -4554,7 +4555,7 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
     claim = ClaimFactory.create(
         fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
     )
-    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
+    application.tax_identifier = TaxIdentifier(tax_identifier=TaxId("999004444"))
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
@@ -4585,7 +4586,7 @@ def test_application_complete_mark_document_received_fineos(
     claim = ClaimFactory.create(
         fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
     )
-    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
+    application.tax_identifier = TaxIdentifier(tax_identifier=TaxId("999004444"))
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()

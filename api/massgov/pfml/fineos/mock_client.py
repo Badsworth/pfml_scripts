@@ -18,6 +18,7 @@ import requests
 
 import massgov.pfml.util.logging
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
+from massgov.pfml.types import Fein
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from . import client, exception, fineos_client, models
@@ -210,7 +211,7 @@ def mock_customer_info():
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
-    def read_employer(self, employer_fein: str) -> models.OCOrganisation:
+    def read_employer(self, employer_fein: Fein) -> models.OCOrganisation:
         _capture_call("read_employer", None, employer_fein=employer_fein)
 
         if employer_fein == "999999999":
@@ -224,14 +225,14 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             ]
         )
 
-    def find_employer(self, employer_fein: str) -> str:
+    def find_employer(self, employer_fein: Fein) -> str:
         _capture_call("find_employer", None, employer_fein=employer_fein)
 
-        if employer_fein == "999999999":
+        if employer_fein == Fein("999999999"):
             raise exception.FINEOSNotFound("Employer not found.")
         else:
             # TODO: Match the FINEOS employer id format
-            return employer_fein + "1000"
+            return employer_fein.to_unformatted_str() + "1000"
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         _capture_call("register_api_user", None, employee_registration=employee_registration)

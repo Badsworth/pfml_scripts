@@ -25,7 +25,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     WagesAndContributionsFactory,
 )
-from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
+from massgov.pfml.types import TaxId
 
 # almost every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -60,7 +60,10 @@ def test_employee_to_eligibility_feed_record(initialize_factories_session):
     assert eligibility_feed_record.employeeLastName == employee.last_name
     assert eligibility_feed_record.employeeDateOfBirth == ef.DEFAULT_DATE
 
-    assert eligibility_feed_record.employeeNationalID == employee.tax_identifier.tax_identifier
+    assert (
+        eligibility_feed_record.employeeNationalID
+        == employee.tax_identifier.tax_identifier.to_unformatted_str()
+    )
     assert eligibility_feed_record.employeeNationalIDType == ef.NationalIdType.ssn
     assert eligibility_feed_record.employeeEmail == employee.email_address
 
@@ -74,9 +77,7 @@ def test_employee_to_eligibility_feed_record_with_itin(initialize_factories_sess
     wages_and_contributions = WagesAndContributionsFactory.create()
     employee = wages_and_contributions.employee
     employer = wages_and_contributions.employer
-    employee.tax_identifier = TaxIdentifier(
-        tax_identifier=TaxIdUnformattedStr.validate_type("999887777")
-    )
+    employee.tax_identifier = TaxIdentifier(tax_identifier=TaxId("999887777"))
     eligibility_feed_record = ef.employee_to_eligibility_feed_record(
         employee, wages_and_contributions, employer
     )
@@ -413,7 +414,9 @@ def test_write_employees_to_csv(tmp_path, test_db_session, initialize_factories_
                 # optional fields
                 "employeeTitle": "",
                 "employeeSecondName": employees[0].middle_name,
-                "employeeNationalID": employees[0].tax_identifier.tax_identifier,
+                "employeeNationalID": (
+                    employees[0].tax_identifier.tax_identifier.to_unformatted_str()
+                ),
                 "employeeNationalIDType": ef.NationalIdType.ssn.value,
                 "telephoneIntCode": phone_number.country_code,
                 "telephoneAreaCode": phone_number.area_code,
@@ -440,7 +443,7 @@ def test_write_employees_to_csv(tmp_path, test_db_session, initialize_factories_
                     .filter(TaxIdentifier.tax_identifier_id == employees[1].tax_identifier_id)
                     .first()
                     .tax_identifier
-                ),
+                ).to_unformatted_str(),
                 "employeeNationalIDType": ef.NationalIdType.ssn.value,
                 "employeeEmail": employees[1].email_address,
                 "addressType": "",

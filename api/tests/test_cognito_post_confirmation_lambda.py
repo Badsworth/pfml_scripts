@@ -7,6 +7,7 @@ import pytest
 import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
 from massgov.pfml.api.services.administrator_fineos_actions import register_leave_admin_with_fineos
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator
+from massgov.pfml.types import Fein
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -160,7 +161,9 @@ def test_user_sub_id_uniqueness(test_db_session, claimant_event_dict):
 def test_leave_admin_handler(test_db_session, leave_admin_event_dict, logging_fix):
     import massgov.pfml.cognito_post_confirmation_lambda.main as main
 
-    employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
+    employer = Employer(
+        employer_fein=Fein("133701337"), employer_dba="Acme Corp", fineos_employer_id=93
+    )
 
     test_db_session.add(employer)
     test_db_session.commit()
@@ -194,7 +197,9 @@ def test_leave_admin_handler(test_db_session, leave_admin_event_dict, logging_fi
 
 
 def test_leave_admin_create(test_db_session):
-    employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
+    employer = Employer(
+        employer_fein=Fein("133701337"), employer_dba="Acme Corp", fineos_employer_id=93
+    )
 
     test_db_session.add(employer)
     test_db_session.commit()
@@ -219,7 +224,9 @@ def test_leave_admin_create(test_db_session):
 
 
 def test_register_fineos_updates_ula_record(test_db_session):
-    employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
+    employer = Employer(
+        employer_fein=Fein("133701337"), employer_dba="Acme Corp", fineos_employer_id=93
+    )
 
     test_db_session.add(employer)
     test_db_session.commit()
@@ -273,7 +280,9 @@ def test_register_fineos_updates_ula_record(test_db_session):
 def test_leave_admin_create_existing_user(test_db_session, caplog, leave_admin_event_dict):
     """ Tests that the branch to create a user is skipped if exists """
 
-    employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
+    employer = Employer(
+        employer_fein=Fein("133701337"), employer_dba="Acme Corp", fineos_employer_id=93
+    )
     existing_user = User(
         sub_id="604fd58c-adda-4dbf-ad9e-ee4952c11866", email_address="user@example.com"
     )

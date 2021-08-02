@@ -19,8 +19,9 @@ from massgov.pfml.api.models.applications.common import (
 )
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.types import Fein, TaxId
 from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import FEINUnformattedStr, MassIdStr, TaxIdUnformattedStr
+from massgov.pfml.util.pydantic.types import MassIdStr
 
 MAX_FUTURE_BIRTH_MONTHS = 7
 
@@ -75,8 +76,8 @@ def future_date_of_birth_validator(date_of_birth, field):
 
 class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
-    tax_identifier: Optional[TaxIdUnformattedStr]
-    employer_fein: Optional[FEINUnformattedStr]
+    tax_identifier: Optional[TaxId]
+    employer_fein: Optional[Fein]
     first_name: Optional[str]
     middle_name: Optional[str]
     last_name: Optional[str]

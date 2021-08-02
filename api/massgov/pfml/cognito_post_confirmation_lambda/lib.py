@@ -7,6 +7,7 @@ import massgov.pfml.util.aws_lambda as aws_lambda
 import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
+from massgov.pfml.types import Fein
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -73,7 +74,7 @@ def handler(
             db_session=db_session,
             auth_id=cognito_user_attrs["sub"],
             email=cognito_user_attrs["email"],
-            employer_fein=re.sub("-", "", cognito_metadata["ein"]),
+            employer_fein=Fein(re.sub("-", "", cognito_metadata["ein"])),
             log_attributes=log_attributes,
         )
 
@@ -98,7 +99,7 @@ def handler(
 
 
 def leave_admin_create(
-    db_session: db.Session, auth_id: str, email: str, employer_fein: str, log_attributes: dict
+    db_session: db.Session, auth_id: str, email: str, employer_fein: Fein, log_attributes: dict
 ) -> User:
 
     employer = (

@@ -41,6 +41,7 @@ from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientE
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer, CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import Address as FineosAddress
 from massgov.pfml.fineos.models.customer_api import CustomerAddress
+from massgov.pfml.types import Fein, TaxId
 
 # almost every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -49,8 +50,8 @@ pytestmark = pytest.mark.integration
 def test_register_employee_pass(test_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
-    employer_fein = "179892886"
-    employee_ssn = "784569632"
+    employer_fein = Fein("179892886")
+    employee_ssn = TaxId("784569632")
     employee_external_id = fineos_actions.register_employee(
         fineos_client, employee_ssn, employer_fein, test_db_session
     )
@@ -61,8 +62,8 @@ def test_register_employee_pass(test_db_session):
 def test_using_existing_id(test_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
-    employer_fein = "179892886"
-    employee_ssn = "784569632"
+    employer_fein = Fein("179892886")
+    employee_ssn = TaxId("784569632")
     employee_external_id_1 = fineos_actions.register_employee(
         fineos_client, employee_ssn, employer_fein, test_db_session
     )
@@ -77,13 +78,13 @@ def test_using_existing_id(test_db_session):
 def test_create_different_id_for_other_employer(test_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
-    employer_fein = "179892886"
-    employee_ssn = "784569632"
+    employer_fein = Fein("179892886")
+    employee_ssn = TaxId("784569632")
     employee_external_id_1 = fineos_actions.register_employee(
         fineos_client, employee_ssn, employer_fein, test_db_session
     )
 
-    employer_fein = "179892897"
+    employer_fein = Fein("179892897")
     employee_external_id_2 = fineos_actions.register_employee(
         fineos_client, employee_ssn, employer_fein, test_db_session
     )
@@ -94,8 +95,8 @@ def test_create_different_id_for_other_employer(test_db_session):
 def test_register_employee_bad_fein(test_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
-    employer_fein = "999999999"
-    employee_ssn = "784569632"
+    employer_fein = Fein("999999999")
+    employee_ssn = TaxId("784569632")
 
     try:
         fineos_actions.register_employee(
@@ -108,8 +109,8 @@ def test_register_employee_bad_fein(test_db_session):
 def test_register_employee_bad_ssn(test_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
-    employer_fein = "179892886"
-    employee_ssn = "999999999"
+    employer_fein = Fein("179892886")
+    employee_ssn = TaxId("999999999")
 
     try:
         fineos_actions.register_employee(
@@ -194,8 +195,8 @@ def test_document_upload(user, test_db_session):
     application = ApplicationFactory.create(
         user=user, work_pattern=WorkPatternFixedFactory.create()
     )
-    application.employer_fein = "179892886"
-    application.tax_identifier.tax_identifier = "784569632"
+    application.employer_fein = Fein("179892886")
+    application.tax_identifier.tax_identifier = TaxId("784569632")
 
     fineos_actions.send_to_fineos(application, test_db_session, user)
     updated_application = test_db_session.query(Application).get(application.application_id)

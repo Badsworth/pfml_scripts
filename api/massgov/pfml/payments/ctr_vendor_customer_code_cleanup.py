@@ -22,6 +22,7 @@ import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import Employee, TaxIdentifier
+from massgov.pfml.types import TaxId
 from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
@@ -172,10 +173,10 @@ def cleanup_single_employee(config: Configuration, employee: Employee) -> bool:
         return False
 
 
-def get_vendor_info(tin: str) -> Optional[data_mart.VendorInfoResult]:
+def get_vendor_info(tin: TaxId) -> Optional[data_mart.VendorInfoResult]:
     """Connect to Data Mart and retrieve vendor info."""
     data_mart_config = data_mart.DataMartConfig()
     data_mart_engine = data_mart.init(data_mart_config)
     with data_mart_engine.connect() as data_mart_conn:
-        vendor_info = data_mart.get_vendor_info(data_mart_conn, tin)
+        vendor_info = data_mart.get_vendor_info(data_mart_conn, tin.to_unformatted_str())
     return vendor_info

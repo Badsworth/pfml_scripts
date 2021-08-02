@@ -34,6 +34,7 @@ from sqlalchemy.types import JSON, TypeEngine
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
+from .common import FeinColumn, TaxIdColumn
 from .verifications import Verification
 
 # (typed_hybrid_property) https://github.com/dropbox/sqlalchemy-stubs/issues/98
@@ -318,7 +319,7 @@ class Employer(Base, TimestampMixin):
     __tablename__ = "employer"
     employer_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     account_key = Column(Text, index=True)
-    employer_fein = Column(Text, nullable=False, index=True)
+    employer_fein = Column(FeinColumn, nullable=False, index=True)
     employer_name = Column(Text)
     employer_dba = Column(Text, nullable=False)
     family_exemption = Column(Boolean)
@@ -425,13 +426,13 @@ class PubEft(Base, TimestampMixin):
 class TaxIdentifier(Base):
     __tablename__ = "tax_identifier"
     tax_identifier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    tax_identifier = Column(Text, nullable=False, unique=True)
+    tax_identifier = Column(TaxIdColumn, nullable=False, unique=True)
 
     employee = relationship("Employee", back_populates="tax_identifier")
 
     @typed_hybrid_property
     def tax_identifier_last4(self) -> str:
-        return self.tax_identifier[-4:]
+        return self.tax_identifier.to_unformatted_str()[-4:]
 
     @tax_identifier_last4.expression
     def tax_identifier_last4(self):
@@ -1103,7 +1104,7 @@ class DuaReductionPayment(Base, TimestampMixin):
     dua_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
     fineos_customer_number = Column(Text, nullable=False)
-    employer_fein = Column(Text)
+    employer_fein = Column(FeinColumn)
     payment_date = Column(Date)
     request_week_begin_date = Column(Date)
     gross_payment_amount_cents = Column(Integer)

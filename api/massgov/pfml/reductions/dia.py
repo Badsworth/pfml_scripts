@@ -150,7 +150,7 @@ def _format_claimants_for_dia_claimant_list(claimants: List[Employee]) -> List[D
             Constants.FIRST_NAME_FIELD: employee.first_name.replace(",", ""),
             Constants.LAST_NAME_FIELD: employee.last_name.replace(",", ""),
             Constants.BIRTH_DATE_FIELD: date_of_birth.strftime(Constants.DATE_OF_BIRTH_FORMAT),
-            Constants.SSN_FIELD: tax_id.tax_identifier.replace("-", ""),
+            Constants.SSN_FIELD: tax_id.tax_identifier.to_unformatted_str(),
         }
 
         for key, value in info.items():

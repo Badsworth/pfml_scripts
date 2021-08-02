@@ -38,6 +38,7 @@ from massgov.pfml.delegated_payments.mock.scenarios import (
     get_scenario_by_name,
 )
 from massgov.pfml.experian.address_validate_soap.mock_caller import MockVerificationZeepCaller
+from massgov.pfml.types import TaxId
 
 logger = logging.get_logger(__name__)
 
@@ -147,7 +148,7 @@ def create_employer(fein: str, fineos_employer_id: str) -> Employer:
 def create_employee(ssn: str, fineos_customer_number: str) -> Employee:
     return EmployeeFactory.create(
         employee_id=uuid.uuid4(),
-        tax_identifier=TaxIdentifier(tax_identifier=ssn),
+        tax_identifier=TaxIdentifier(tax_identifier=TaxId(ssn)),
         fineos_customer_number=fineos_customer_number,
     )
 

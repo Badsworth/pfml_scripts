@@ -17,8 +17,8 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     WagesAndContributions,
 )
+from massgov.pfml.types import TaxId
 from massgov.pfml.util.datetime import to_datetime
-from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 
 logger = logging.get_logger(__name__)
 
@@ -167,14 +167,14 @@ def update_employer(db_session, existing_employer, employer_info, import_log_ent
 
 
 def tax_id_from_dict(employee_id, tax_identifier, uuid=uuid.uuid4):
-    formatted_tax_id = TaxIdUnformattedStr.validate_type(tax_identifier)
+    formatted_tax_id = TaxId(tax_identifier)
     tax_identifier = TaxIdentifier(tax_identifier_id=employee_id, tax_identifier=formatted_tax_id,)
 
     return tax_identifier
 
 
 def create_tax_id(db_session, tax_id):
-    formatted_tax_id = TaxIdUnformattedStr.validate_type(tax_id)
+    formatted_tax_id = TaxId(tax_id)
     tax_identifier = TaxIdentifier(tax_identifier=formatted_tax_id)
     db_session.add(tax_identifier)
     db_session.flush()
@@ -370,7 +370,7 @@ def get_wages_and_contributions_by_employee_id_and_filling_period(
 
 
 def get_tax_id(db_session, tax_id):
-    unformatted_tax_id = TaxIdUnformattedStr.validate_type(tax_id)
+    unformatted_tax_id = TaxId(tax_id)
     tax_id_row = (
         db_session.query(TaxIdentifier)
         .filter(TaxIdentifier.tax_identifier == unformatted_tax_id)

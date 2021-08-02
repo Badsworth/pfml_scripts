@@ -13,6 +13,7 @@ import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
 from massgov.pfml.db.models.employees import Employee, Employer, TaxIdentifier
+from massgov.pfml.types import Fein, TaxId
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -28,11 +29,11 @@ class EligibilityResponse(PydanticBaseModel):
 
 
 class EligibilityRequest(PydanticBaseModel):
-    employer_fein: str
+    employer_fein: Fein
     leave_start_date: date
     application_submitted_date: date
     employment_status: EligibilityEmploymentStatus
-    tax_identifier: str
+    tax_identifier: TaxId
 
 
 def eligibility_post():
@@ -75,11 +76,9 @@ def eligibility_post():
 
     with app.db_session() as db_session:
         tax_record = (
-            db_session.query(TaxIdentifier)
-            .filter_by(tax_identifier=tax_identifier.replace("-", ""))
-            .first()
+            db_session.query(TaxIdentifier).filter_by(tax_identifier=tax_identifier).first()
         )
-        employer = db_session.query(Employer).filter_by(employer_fein=fein.replace("-", "")).first()
+        employer = db_session.query(Employer).filter_by(employer_fein=fein).first()
         employee = db_session.query(Employee).filter_by(tax_identifier=tax_record).first()
 
         if tax_record is None or employer is None or employee is None:

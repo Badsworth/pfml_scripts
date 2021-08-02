@@ -7,12 +7,13 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     WagesAndContributions,
 )
+from massgov.pfml.types import Fein, TaxId
 
 
 @pytest.mark.integration
 def test_full_generate_wagesandcontributions(test_db_session):
-    employer_fein = "929292929"
-    employee_ssn = "123456789"
+    employer_fein = Fein("929292929")
+    employee_ssn = TaxId("123456789")
 
     assert test_db_session.query(Employer).count() == 0
     assert test_db_session.query(Employee).count() == 0

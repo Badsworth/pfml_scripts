@@ -936,15 +936,15 @@ def employee_to_eligibility_feed_record(
             if employee.marital_status
             else None
         ),
-        # TODO: use Pydantic TaxIdUnformattedStr? Or otherwise create a type for
-        # TaxId that can be formatted appropriately in the encoder?
         employeeNationalID=(
-            employee.tax_identifier.tax_identifier.replace("-", "")
+            employee.tax_identifier.tax_identifier.to_unformatted_str().replace("-", "")
             if employee.tax_identifier
             else None
         ),
         employeeNationalIDType=(
-            determine_national_id_type(str(employee.tax_identifier.tax_identifier))
+            determine_national_id_type(
+                employee.tax_identifier.tax_identifier.to_unformatted_str().replace("-", "")
+            )
             if employee.tax_identifier
             else None
         ),

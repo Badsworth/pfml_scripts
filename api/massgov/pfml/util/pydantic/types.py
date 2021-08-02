@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.db.models.employees import TaxIdentifier
+from massgov.pfml.types import Fein
 
 
 class Regexes:
@@ -22,48 +23,6 @@ class Regexes:
     MASKED_PHONE = re.compile(r"^\*{3}\-?\*{3}\-?[0-9]{4}$")
 
 
-class TaxIdUnformattedStr(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate_type
-
-    @classmethod
-    def validate_type(cls, val):
-        if not isinstance(val, str):
-            raise TypeError("is not a str")
-
-        elif Regexes.TAX_ID_FORMATTED.match(val):
-            return val.replace("-", "")
-
-        elif Regexes.TAX_ID.match(val):
-            return val
-
-        raise ValueError(
-            f"does not match one of: {Regexes.TAX_ID.pattern}, {Regexes.TAX_ID_FORMATTED}"
-        )
-
-
-class TaxIdFormattedStr(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate_type
-
-    @classmethod
-    def validate_type(cls, val):
-        if not isinstance(val, str):
-            raise TypeError("is not a str")
-
-        elif Regexes.TAX_ID.match(val):
-            return "{}-{}-{}".format(val[:3], val[3:5], val[5:])
-
-        elif Regexes.TAX_ID_FORMATTED.match(val):
-            return val
-
-        raise ValueError(
-            f"does not match one of: {Regexes.TAX_ID.pattern}, {Regexes.TAX_ID_FORMATTED}"
-        )
-
-
 class MaskedTaxIdFormattedStr(str):
     @classmethod
     def __get_validators__(cls):
@@ -75,28 +34,10 @@ class MaskedTaxIdFormattedStr(str):
             return None
 
         if isinstance(val, TaxIdentifier):
-            return mask.mask_tax_identifier(val.tax_identifier)
+            return val.tax_identifier.to_masked_str()
 
-        return mask.mask_tax_identifier(val)
-
-
-class FEINUnformattedStr(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate_type
-
-    @classmethod
-    def validate_type(cls, val):
-        if not isinstance(val, str):
-            raise TypeError("is not a str")
-
-        elif Regexes.FEIN_FORMATTED.match(val):
-            return val.replace("-", "")
-
-        elif Regexes.FEIN.match(val):
-            return val
-
-        raise ValueError(f"does not match one of: {Regexes.FEIN.pattern}, {Regexes.FEIN_FORMATTED}")
+        if isinstance(val, str):
+            return f"***-**-{val[-4:]}"
 
 
 class FEINFormattedStr(str):
@@ -105,15 +46,18 @@ class FEINFormattedStr(str):
         yield cls.validate_type
 
     @classmethod
-    def validate_type(cls, val):
+    def validate_type(cls, val: Optional[Union[Fein, str]]) -> Optional[str]:
+        print("VALIDATE")
+        print(val)
+
         if val is None:
             return None
 
-        elif Regexes.FEIN.match(val):
-            return "{}-{}".format(val[:2], val[2:])
+        if isinstance(val, Fein):
+            return val.to_formatted_str()
 
-        elif Regexes.FEIN_FORMATTED.match(val):
-            return val
+        if isinstance(val, str):
+            return Fein(val).to_formatted_str()
 
 
 class MaskedFinancialAcctNum(str):

@@ -12,6 +12,7 @@ from massgov.pfml.db.models.factories import (
     TaxIdentifierFactory,
     WagesAndContributionsFactory,
 )
+from massgov.pfml.types import Fein, TaxId
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -20,9 +21,9 @@ pytestmark = pytest.mark.integration
 def test_endpoint_with_employee_wages_data(
     client, test_db_session, initialize_factories_session, fineos_user_token
 ):
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
+    tax_id = TaxIdentifierFactory.create(tax_identifier=TaxId("088574541"))
     employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein="716779225")
+    employer = EmployerFactory.create(employer_fein=Fein("716779225"))
 
     WagesAndContributionsFactory.create(
         employee=employee,
@@ -170,9 +171,9 @@ def test_endpoint_unauthorized_user(
 def test_self_employed_two_quarters(
     client, test_db_session, initialize_factories_session, fineos_user_token
 ):
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
+    tax_id = TaxIdentifierFactory.create(tax_identifier=TaxId("088574541"))
     employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein="716779225")
+    employer = EmployerFactory.create(employer_fein=Fein("716779225"))
 
     wages_and_contribution1 = WagesAndContributionsFactory.create(
         employee=employee,
@@ -213,10 +214,10 @@ def test_self_employed_two_quarters(
 def test_self_employed_one_quarter(
     client, test_db_session, initialize_factories_session, fineos_user_token
 ):
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
+    tax_id = TaxIdentifierFactory.create(tax_identifier=TaxId("088574541"))
     employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein="716779225")
-    employer2 = EmployerFactory.create(employer_fein="553897622")
+    employer = EmployerFactory.create(employer_fein=Fein("716779225"))
+    employer2 = EmployerFactory.create(employer_fein=Fein("553897622"))
 
     wages_and_contribution1 = WagesAndContributionsFactory.create(
         employee=employee,
@@ -259,7 +260,7 @@ def test_self_employed_one_quarter(
 
 @pytest.fixture
 def tax_id():
-    return TaxIdentifierFactory.create(tax_identifier="088574541")
+    return TaxIdentifierFactory.create(tax_identifier=TaxId("088574541"))
 
 
 @pytest.fixture
@@ -269,7 +270,7 @@ def employee(tax_id):
 
 @pytest.fixture
 def employer():
-    return EmployerFactory.create(employer_fein="716779225")
+    return EmployerFactory.create(employer_fein=Fein("716779225"))
 
 
 @pytest.fixture
@@ -297,7 +298,7 @@ def test_claimant_A(
     fineos_user_token,
 ):
     # Claimant is eligible, with wages from 2 employers
-    employer2 = EmployerFactory.create(employer_fein="553897622")
+    employer2 = EmployerFactory.create(employer_fein=Fein("553897622"))
 
     WagesAndContributionsFactory.create(
         employee=employee,
@@ -404,8 +405,8 @@ def test_claimant_B(
     fineos_user_token,
 ):
     # claimant has 3 employers, and is eligible
-    employer2 = EmployerFactory.create(employer_fein="553897622")
-    employer3 = EmployerFactory.create(employer_fein="904721143")
+    employer2 = EmployerFactory.create(employer_fein=Fein("553897622"))
+    employer3 = EmployerFactory.create(employer_fein=Fein("904721143"))
 
     WagesAndContributionsFactory.create(
         employee=employee,
@@ -653,7 +654,7 @@ def test_claimant_E(
     fineos_user_token,
 ):
     # wages from 2 employers, eligible
-    employer2 = EmployerFactory.create(employer_fein="553897622")
+    employer2 = EmployerFactory.create(employer_fein=Fein("553897622"))
     WagesAndContributionsFactory.create(
         employee=employee,
         employer=employer,

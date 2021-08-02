@@ -101,6 +101,10 @@ def build_individual_vcc_document(
     last_name = payments_util.validate_db_input(
         key="last_name", db_object=employee, required=True, max_length=30, truncate=True
     )
+
+    if employee.tax_identifier is None:
+        raise Exception("Value for tax_identifier is required to generate document.")
+
     payee_ssn = payments_util.validate_db_input(
         key="tax_identifier",
         db_object=employee.tax_identifier,

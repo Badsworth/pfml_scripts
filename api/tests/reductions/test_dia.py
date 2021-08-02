@@ -36,6 +36,7 @@ from massgov.pfml.reductions.dia import (
     download_payment_list_from_moveit,
     upload_claimant_list_to_moveit,
 )
+from massgov.pfml.types import TaxId
 from massgov.pfml.util.batch.log import LogEntry
 
 fake = faker.Faker()
@@ -96,7 +97,7 @@ def test_format_claimants_for_dia_claimant_list():
             Constants.DATE_OF_BIRTH_FORMAT
         )
         assert isinstance(dia_claimant[Constants.BIRTH_DATE_FIELD], str)
-        assert dia_claimant[Constants.SSN_FIELD] == employee.tax_identifier.tax_identifier
+        assert TaxId(dia_claimant[Constants.SSN_FIELD]) == employee.tax_identifier.tax_identifier
         assert "-" not in dia_claimant[Constants.SSN_FIELD]
 
 

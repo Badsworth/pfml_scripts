@@ -20,6 +20,7 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     WagesAndContributions,
 )
+from massgov.pfml.types import Fein, TaxId
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.generate_wage")
 parser = argparse.ArgumentParser(description="Generate fake WagesAndContributions data")
@@ -29,7 +30,7 @@ parser.add_argument("--employee_ssn", type=str, help="SSN of employee")
 _faker = faker.Faker()
 
 
-def get_or_create_employer(employer_fein: str, db_session: db.Session) -> Employer:
+def get_or_create_employer(employer_fein: Fein, db_session: db.Session) -> Employer:
 
     employer = (
         db_session.query(Employer).filter(Employer.employer_fein == employer_fein).one_or_none()
@@ -43,7 +44,7 @@ def get_or_create_employer(employer_fein: str, db_session: db.Session) -> Employ
     return employer
 
 
-def get_or_create_tax_identifier(employee_ssn: str, db_session: db.Session) -> TaxIdentifier:
+def get_or_create_tax_identifier(employee_ssn: TaxId, db_session: db.Session) -> TaxIdentifier:
 
     tax_identifier = (
         db_session.query(TaxIdentifier)
@@ -121,7 +122,7 @@ def get_or_create_wages_and_contributions(
     return
 
 
-def generate(employer_fein: str, employee_ssn: str, db_session: db.Session) -> None:
+def generate(employer_fein: Fein, employee_ssn: TaxId, db_session: db.Session) -> None:
     """
         Generates a WagesAndContributions record for the provided employeer_fein and employee_ssn combo
         If Employer, Employee, or TaxIdentifier records do not exist, generates a record using faker
