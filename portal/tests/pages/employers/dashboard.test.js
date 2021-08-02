@@ -437,8 +437,8 @@ describe("Employer dashboard", () => {
       }),
     ];
 
-    const { wrapper: CollapsedWithoutFilters } = setup();
-    const { wrapper: CollapsedWithFilters } = setup({
+    const { wrapper: WrapperWithoutFilters } = setup();
+    const { wrapper: WrapperWithFilters } = setup({
       query: {
         claim_status: "Pending",
         employer_id: user_leave_administrators[0].employer_id,
@@ -448,18 +448,37 @@ describe("Employer dashboard", () => {
         user_leave_administrators,
       },
     });
-    const { wrapper: ExpandedWithoutFilters } = setup({
-      query: {
-        "show-filters": "true",
-      },
-    });
 
     const getButton = (w) =>
       w.find("Filters").dive().find("Button[aria-controls='filters']");
 
-    expect(getButton(CollapsedWithFilters)).toMatchSnapshot();
-    expect(getButton(CollapsedWithoutFilters)).toMatchSnapshot();
-    expect(getButton(ExpandedWithoutFilters)).toMatchSnapshot();
+    expect(getButton(WrapperWithFilters)).toMatchSnapshot();
+    expect(getButton(WrapperWithoutFilters)).toMatchSnapshot();
+  });
+
+  it("toggles filters visibility when Show Filters button is clicked", () => {
+    const { wrapper } = setup();
+    const filtersWrapper = wrapper.find("Filters").dive();
+    const findButton = () =>
+      filtersWrapper.find("Button[aria-controls='filters']");
+
+    let button = findButton();
+    expect(button.prop("aria-expanded")).toBe("false");
+    expect(filtersWrapper.find("form").prop("hidden")).toBe(true);
+
+    // Show the filters
+    button.simulate("click");
+
+    button = findButton();
+    expect(button.prop("aria-expanded")).toBe("true");
+    expect(button).toMatchSnapshot();
+    expect(filtersWrapper.find("form").prop("hidden")).toBe(false);
+
+    // Hide the filters
+    button.simulate("click");
+
+    button = findButton();
+    expect(button.prop("aria-expanded")).toBe("false");
   });
 
   it("sets initial filter form state from query prop", () => {
@@ -527,31 +546,6 @@ describe("Employer dashboard", () => {
     });
 
     expect(getCheckedStatuses(wrapper)).toEqual(["Approved"]);
-  });
-
-  it("shows filters section when show-filters query param is set", () => {
-    const { wrapper: collapsedWrapper } = setup();
-    const { wrapper: expandedWrapper } = setup({
-      query: {
-        "show-filters": "true",
-      },
-    });
-
-    const getFiltersContainer = (w) =>
-      w.find("Filters").dive().find("#filters");
-
-    expect(getFiltersContainer(collapsedWrapper).prop("hidden")).toBe(true);
-    expect(getFiltersContainer(expandedWrapper).prop("hidden")).toBe(false);
-  });
-
-  it("toggles show-filters param when toggle button is clicked", () => {
-    const { updateQuerySpy, wrapper } = setup();
-    const filters = wrapper.find("Filters").dive();
-    const { click } = simulateEvents(filters);
-
-    click("Button[aria-controls='filters']");
-
-    expect(updateQuerySpy).toHaveBeenCalledWith({ "show-filters": "true" });
   });
 
   it("renders organizations filter when there are multiple verified organizations", () => {

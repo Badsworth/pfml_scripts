@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
 import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
@@ -143,7 +143,6 @@ export const Dashboard = (props) => {
       />
       <Filters
         query={props.query}
-        showFilters={props.query["show-filters"] === "true"}
         updatePageQuery={updatePageQuery}
         user={props.user}
       />
@@ -177,7 +176,6 @@ Dashboard.propTypes = {
     employer_id: PropTypes.string,
     order_by: PropTypes.string,
     order_direction: PropTypes.oneOf(["ascending", "descending"]),
-    "show-filters": PropTypes.oneOf(["false", "true"]),
     search: PropTypes.string,
   }),
   user: PropTypes.instanceOf(User).isRequired,
@@ -469,7 +467,7 @@ DashboardInfoAlert.propTypes = {
 };
 
 const Filters = (props) => {
-  const { showFilters, updatePageQuery, user } = props;
+  const { updatePageQuery, user } = props;
   const { t } = useTranslation();
 
   /**
@@ -490,6 +488,7 @@ const Filters = (props) => {
    * Form visibility and state management
    */
   const activeFilters = getFormStateFromQuery();
+  const [showFilters, setShowFilters] = useState(false);
   const { formState, updateFields } = useFormState(activeFilters);
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
@@ -530,15 +529,13 @@ const Filters = (props) => {
     updatePageQuery([
       ...params,
       {
-        name: "show-filters",
-        value: false,
-      },
-      {
         // Reset the page to 1 since filters affect what shows on the first page
         name: "page_offset",
         value: "1",
       },
     ]);
+
+    setShowFilters(false);
   };
 
   /**
@@ -583,16 +580,7 @@ const Filters = (props) => {
   };
 
   const handleFilterToggleClick = () => {
-    // We use a query param instead of useState since the page re-mounts
-    // every time a filter changes, so we lose any local component state
-    // each time that happens.
-    // TODO (EMPLOYER-1542): Use useState instead of query param
-    updatePageQuery([
-      {
-        name: "show-filters",
-        value: !showFilters,
-      },
-    ]);
+    setShowFilters(!showFilters);
   };
 
   // TODO (EMPLOYER-1587): Remove variable
@@ -731,7 +719,6 @@ Filters.propTypes = {
     claim_status: PropTypes.string,
     employer_id: PropTypes.string,
   }).isRequired,
-  showFilters: PropTypes.bool,
   updatePageQuery: PropTypes.func.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };

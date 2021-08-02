@@ -289,17 +289,6 @@ exports[`Employer dashboard renders filters toggle button with expected label an
 </Button>
 `;
 
-exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 3`] = `
-<Button
-  aria-controls="filters"
-  aria-expanded="true"
-  onClick={[Function]}
-  variation="outline"
->
-  Hide filters
-</Button>
-`;
-
 exports[`Employer dashboard renders instructions if there are no verified employers 1`] = `
 Array [
   "You have not verified any organizations. ",
@@ -550,4 +539,15 @@ exports[`Employer dashboard shows buttons for removing active filters 1`] = `
     Closed
   </FilterMenuButton>
 </div>
+`;
+
+exports[`Employer dashboard toggles filters visibility when Show Filters button is clicked 1`] = `
+<Button
+  aria-controls="filters"
+  aria-expanded="true"
+  onClick={[Function]}
+  variation="outline"
+>
+  Hide filters
+</Button>
 `;
