@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
 import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
@@ -29,9 +29,11 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
+import withUser from "../../hoc/withUser";
 
 export const Dashboard = (props) => {
   const { t } = useTranslation();
+  const introElementRef = useRef(null);
 
   /**
    * Update the page's query string, to load a different page number,
@@ -59,6 +61,9 @@ export const Dashboard = (props) => {
     // Our withClaims component watches the query string and
     // will trigger an API request when it changes.
     props.appLogic.portalFlow.updateQuery(paramsObj);
+
+    // Scroll user back to top of the table actions
+    if (introElementRef.current) introElementRef.current.scrollIntoView();
   };
 
   const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
@@ -90,7 +95,7 @@ export const Dashboard = (props) => {
         <DashboardInfoAlert user={props.user} />
       </div>
 
-      <section className="margin-bottom-4">
+      <section className="margin-bottom-4" ref={introElementRef}>
         <p className="margin-y-2">
           {!showReviewByStatus && t("pages.employersDashboard.instructions")}
         </p>
@@ -144,9 +149,8 @@ export const Dashboard = (props) => {
       />
       <PaginatedClaimsTable
         appLogic={props.appLogic}
-        claims={props.claims}
         user={props.user}
-        paginationMeta={props.paginationMeta}
+        query={props.query}
         updatePageQuery={updatePageQuery}
         sort={
           <SortDropdown
@@ -168,20 +172,18 @@ Dashboard.propTypes = {
       updateQuery: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  claims: PropTypes.instanceOf(ClaimCollection),
   query: PropTypes.shape({
     claim_status: PropTypes.string,
     employer_id: PropTypes.string,
-    "show-filters": PropTypes.oneOf(["false", "true"]),
     order_by: PropTypes.string,
     order_direction: PropTypes.oneOf(["ascending", "descending"]),
+    "show-filters": PropTypes.oneOf(["false", "true"]),
     search: PropTypes.string,
   }),
-  paginationMeta: PropTypes.instanceOf(PaginationMeta),
   user: PropTypes.instanceOf(User).isRequired,
 };
 
-const PaginatedClaimsTable = (props) => {
+const PaginatedClaimsTable = withClaims((props) => {
   const { paginationMeta, updatePageQuery, user } = props;
   const { t } = useTranslation();
 
@@ -284,7 +286,7 @@ const PaginatedClaimsTable = (props) => {
       )}
     </React.Fragment>
   );
-};
+});
 
 PaginatedClaimsTable.propTypes = {
   appLogic: Dashboard.propTypes.appLogic,
@@ -400,7 +402,7 @@ const ClaimTableRows = (props) => {
 
 ClaimTableRows.propTypes = {
   appLogic: Dashboard.propTypes.appLogic,
-  claims: Dashboard.propTypes.claims,
+  claims: PropTypes.instanceOf(ClaimCollection),
   tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
@@ -495,6 +497,17 @@ const Filters = (props) => {
   });
 
   /**
+   * Watch the query string for changes, and update the selected form fields
+   * anytime those change. This is handy since a filter might get removed
+   * outside of this component, and it also saves us from calling
+   * updateFields every time we call updatePageQuery. Instead, we treat
+   * the query string as the source of truth, and react to its changes.
+   */
+  useEffect(() => {
+    updateFields(getFormStateFromQuery());
+  }, [getFormStateFromQuery, updateFields]);
+
+  /**
    * UI variables
    */
   const filtersContainerId = "filters";
@@ -573,6 +586,7 @@ const Filters = (props) => {
     // We use a query param instead of useState since the page re-mounts
     // every time a filter changes, so we lose any local component state
     // each time that happens.
+    // TODO (EMPLOYER-1542): Use useState instead of query param
     updatePageQuery([
       {
         name: "show-filters",
@@ -879,4 +893,4 @@ SortDropdown.propTypes = {
   updatePageQuery: PropTypes.func.isRequired,
 };
 
-export default withClaims(Dashboard);
+export default withUser(Dashboard);

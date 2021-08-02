@@ -91,7 +91,7 @@ const withClaims = (Component) => {
       order_direction: PropTypes.string,
       page_offset: PropTypes.string,
       search: PropTypes.string,
-    }),
+    }).isRequired,
   };
 
   return withUser(ComponentWithClaims);

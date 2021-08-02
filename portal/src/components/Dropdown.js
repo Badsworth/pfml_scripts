@@ -22,6 +22,13 @@ function Dropdown(props) {
   const hasError = !!props.errorMsg;
   const inputId = useUniqueId("Dropdown");
   const { autocomplete } = props;
+
+  // We set a unique key for the combobox when the autocomplete value changes, to workaround an issue
+  // where the USWDS component wouldn't display the new data-default-value value when it changed.
+  // A key forces a remount, which forces the USWDS JS to properly update the displayed value.
+  // Learn more about React keys: https://reactjs.org/docs/reconciliation.html#keys
+  const key = autocomplete ? props.value : undefined;
+
   useEffect(() => {
     if (autocomplete && comboBox) {
       comboBox.on();
@@ -30,7 +37,9 @@ function Dropdown(props) {
         comboBox.off();
       };
     }
-  }, [autocomplete]);
+    // see reasoning for `key` above. We include props.value here
+    // so that the USWDS JS reinitializes anytime the selected value changes.
+  }, [autocomplete, props.value]);
 
   const fieldClasses = classnames(
     "usa-select maxw-mobile-lg",
@@ -51,7 +60,7 @@ function Dropdown(props) {
   const comboBoxClasses = classnames({ "usa-combo-box": autocomplete });
 
   return (
-    <div className={formGroupClasses}>
+    <div className={formGroupClasses} key={key}>
       <FormLabel
         errorMsg={props.errorMsg}
         hint={props.hint}
