@@ -548,6 +548,23 @@ export default {
       on: {
         CONTINUE: [
           {
+            target: routes.applications.department,
+            cond: "isEmployed",
+          },
+          {
+            target: routes.applications.checklist,
+          },
+        ],
+      },
+    },
+    [routes.applications.department]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: employmentStatusFields,
+      },
+      on: {
+        CONTINUE: [
+          {
             target: routes.applications.notifiedEmployer,
             cond: "isEmployed",
           },
