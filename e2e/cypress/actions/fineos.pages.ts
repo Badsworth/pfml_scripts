@@ -1069,8 +1069,15 @@ class PaidLeavePage {
     cy.findByText(type).click();
 
     // Fill in the dates.
-    cy.findByLabelText("Start Date").type(dateToMMddyyyy(start_date));
-    cy.findByLabelText("End Date").type(dateToMMddyyyy(end_date));
+    cy.findByLabelText("Start Date")
+      .focus()
+      .type(`${dateToMMddyyyy(start_date)}{enter}`);
+    cy.findByLabelText("Start Date").should("have.focus");
+
+    cy.findByLabelText("End Date")
+      .focus()
+      .type(`${dateToMMddyyyy(end_date)}{enter}`);
+    cy.findByLabelText("End Date").should("have.focus");
 
     // Fill in the income/benefit amount. The label for this field isn't connected so we have to use a more direct selector.
     cy.get("input[type=text][id$=adjustmentAmountMoney]").type(
@@ -1851,8 +1858,8 @@ class RecordActualTime {
     cy.findByTitle("Episodic").click();
     // Open the modal.
     cy.findByText("Record Actual").click();
+    waitForAjaxComplete();
     cy.get(".popup-container").within(() => {
-      waitForAjaxComplete();
       // Wait for focus to be captured on the "Last Day Worked" field. This happens automatically, and only occurs
       // when the popup is ready for interaction. Annoyingly, it gets captured 2x on render, forcing us to wait as well.
       cy.findByLabelText("Last day worked").should("have.focus");
@@ -1863,15 +1870,18 @@ class RecordActualTime {
       cy.findByLabelText("Absence start date")
         .focus()
         .type(`{selectall}{backspace}${startDateFormatted}`)
-        // After entering the date and losing focus, the form re-renders and cuptures focus again
         .blur();
+      // After entering the date and losing focus, the form re-renders and captures focus again
       // Wait for the form to capture focus
+      waitForAjaxComplete();
       cy.findByLabelText("Absence start date").should("have.focus");
+
       // End date, same thing about focus
       cy.findByLabelText("Absence end date")
         .focus()
         .type(`{selectall}{backspace}${endDateFormatted}`)
         .blur();
+      waitForAjaxComplete();
       cy.findByLabelText("Absence end date").should("have.focus");
 
       cy.get(
