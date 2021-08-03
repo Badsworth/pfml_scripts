@@ -55,51 +55,49 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                     .fillAbsenceRelationship({
 
                     })
-                     */ return reasonOfAbsence.nextStep(
-                    (datesOfAbsence) => {
-                      assertValidClaim(claim.claim);
+                     */ return reasonOfAbsence.nextStep((datesOfAbsence) => {
+                    assertValidClaim(claim.claim);
 
-                      const [startDate, endDate] = getLeavePeriod(
-                        claim.claim.leave_details
-                      );
-                      if (claim.claim.has_continuous_leave_periods)
-                        // @TODO adjust leave period/status as needed
-                        datesOfAbsence
-                          .toggleLeaveScheduleSlider("continuos")
-                          .addFixedTimeOffPeriod({
-                            status: "Known",
-                            start: startDate,
-                            end: endDate,
-                          });
-                      if (claim.claim.has_intermittent_leave_periods)
-                        // @TODO adjust leave period/status as needed
-                        datesOfAbsence
-                          // @TODO add method to add intermittent leave period
-                          .toggleLeaveScheduleSlider("intermittent");
-                      if (
-                        claim.claim.has_reduced_schedule_leave_periods &&
-                        claim.claim.leave_details.reduced_schedule_leave_periods
-                      )
-                        // @TODO adjust leave period/status as needed
-                        datesOfAbsence
-                          .toggleLeaveScheduleSlider("continuos")
-                          .addReducedSchedulePeriod(
-                            "Known",
-                            claim.claim.leave_details
-                              .reduced_schedule_leave_periods[0]
-                          );
-                      return datesOfAbsence.nextStep((workAbsenceDetails) =>
-                        workAbsenceDetails
-                          .selectWorkPatternType("Fixed")
-                          .applyStandardWorkWeek()
-                          .nextStep((wrapUp) => {
-                            wrapUp.clickNext();
-                            // Bubble up Leave Case id number to outside scope
-                            return wrapUp.finishNotificationCreation();
-                          })
-                      );
-                    }
-                  );
+                    const [startDate, endDate] = getLeavePeriod(
+                      claim.claim.leave_details
+                    );
+                    if (claim.claim.has_continuous_leave_periods)
+                      // @TODO adjust leave period/status as needed
+                      datesOfAbsence
+                        .toggleLeaveScheduleSlider("continuos")
+                        .addFixedTimeOffPeriod({
+                          status: "Known",
+                          start: startDate,
+                          end: endDate,
+                        });
+                    if (claim.claim.has_intermittent_leave_periods)
+                      // @TODO adjust leave period/status as needed
+                      datesOfAbsence
+                        // @TODO add method to add intermittent leave period
+                        .toggleLeaveScheduleSlider("intermittent");
+                    if (
+                      claim.claim.has_reduced_schedule_leave_periods &&
+                      claim.claim.leave_details.reduced_schedule_leave_periods
+                    )
+                      // @TODO adjust leave period/status as needed
+                      datesOfAbsence
+                        .toggleLeaveScheduleSlider("continuos")
+                        .addReducedSchedulePeriod(
+                          "Known",
+                          claim.claim.leave_details
+                            .reduced_schedule_leave_periods[0]
+                        );
+                    return datesOfAbsence.nextStep((workAbsenceDetails) =>
+                      workAbsenceDetails
+                        .selectWorkPatternType("Fixed")
+                        .applyStandardWorkWeek()
+                        .nextStep((wrapUp) => {
+                          wrapUp.clickNext();
+                          // Bubble up Leave Case id number to outside scope
+                          return wrapUp.finishNotificationCreation();
+                        })
+                    );
+                  });
                 })
             );
           })

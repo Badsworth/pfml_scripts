@@ -10,9 +10,8 @@ function SSO(): void {
   cy.clearCookies();
   // Perform SSO login in a task. We can't visit other domains in Cypress.
   cy.task("completeSSOLoginFineos").then((cookiesJson) => {
-    const deserializedCookies: Record<string, string>[] = JSON.parse(
-      cookiesJson
-    );
+    const deserializedCookies: Record<string, string>[] =
+      JSON.parse(cookiesJson);
     // Filter out any cookies that will fail to be set. Those are ones where secure: false
     // and sameSite: "None"
     const noSecure = deserializedCookies.filter(

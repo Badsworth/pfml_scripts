@@ -351,10 +351,12 @@ export function selectClaimType(application: ApplicationRequestBody): void {
     throw new Error("Claim is missing reason or reason qualifier");
   }
   const reasonMap: Record<typeof reason, string | RegExp> = {
-    "Serious Health Condition - Employee": /I can’t work due to (an|my) illness, injury, or pregnancy./,
+    "Serious Health Condition - Employee":
+      /I can’t work due to (an|my) illness, injury, or pregnancy./,
     "Child Bonding":
       "I need to bond with my child after birth, adoption, or foster placement.",
-    "Pregnancy/Maternity": /I can’t work due to (an|my) illness, injury, or pregnancy./,
+    "Pregnancy/Maternity":
+      /I can’t work due to (an|my) illness, injury, or pregnancy./,
     "Care for a Family Member": "I need to care for my family member",
   };
   cy.contains(reasonMap[reason]).click();
@@ -601,12 +603,8 @@ export function addPaymentInfo(
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Add payment information"
-  const {
-    payment_method,
-    account_number,
-    routing_number,
-    bank_account_type,
-  } = paymentPreference.payment_preference as PaymentPreference;
+  const { payment_method, account_number, routing_number, bank_account_type } =
+    paymentPreference.payment_preference as PaymentPreference;
 
   cy.contains("fieldset", "How do you want to get your weekly benefit?").within(
     () => {
@@ -1279,7 +1277,7 @@ function reportOtherIncome(income: ValidOtherIncome, index: number): void {
  * Report other incomes. Must be navigated to the other incomes form.
  * @param other_incomes - array of OtherIncome objects with all the required properties.
  */
-"Tell us about your other sources of income during your leave dates for paid leave from PFML.";
+("Tell us about your other sources of income during your leave dates for paid leave from PFML.");
 function reportOtherIncomes(other_incomes: ValidOtherIncome[]): void {
   cy.contains(
     "form",

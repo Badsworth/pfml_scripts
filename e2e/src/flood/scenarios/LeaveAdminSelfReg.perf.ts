@@ -60,7 +60,7 @@ export const steps: Cfg.StoredStep[] = [
       );
       await browser.type(
         employerIdInput,
-        ((data as unknown) as EmployerData).fein
+        (data as unknown as EmployerData).fein
       );
 
       const createAccountButton = await Util.waitForElement(
@@ -120,7 +120,7 @@ export const steps: Cfg.StoredStep[] = [
   {
     name: "Verify Employer Account",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
-      const { withholdings, name } = (data as unknown) as EmployerData;
+      const { withholdings, name } = data as unknown as EmployerData;
       const withholding = withholdings.pop();
       if (typeof withholding !== "number") {
         throw new Error("No withholdings given");

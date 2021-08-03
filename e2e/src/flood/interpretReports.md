@@ -10,11 +10,12 @@ If you ran LST through a Github Action, using one of the given presets, you'll g
 
 First thing to consider before starting looking at the results is that they're always relative to previous runs, so if you do not have some context on how long a step usually takes, or if the step usually has 0.5% error rate due to a very rare situation, you might interpret the recent results differently.
 
-Simple comparisons to make are "how long it takes to run a particular step" and "how much % error rate does it have". 
+Simple comparisons to make are "how long it takes to run a particular step" and "how much % error rate does it have".
 
-The more time it takes, less performant it is. 
+The more time it takes, less performant it is.
 
 With increase of error rate, we would need further investigation on a case-by-case basis, but there are some common causes such as:
+
 - Some feature is not working as it should;
 - A feature was changed or recently updated, requiring the LST code to be updated accordingly;
 - The dataset we're using to run LST is no longer "valid/available" in that environment;
@@ -32,17 +33,17 @@ Check out the labels below the graph to understand which line refers to which pa
 
 We can see a very clear good starting point leading up to a higher and higher response time, which led up to an error spike. Let's analyse the results below.
 
-
 Just below the graph, we can see all the steps that ran during this LST:
 ![part2-end707](https://user-images.githubusercontent.com/9201063/109800117-b868d400-7c14-11eb-8aff-b7bf282a36e7.JPG)
 
 We can see from these images that we have a particular step in this Claim Submission LST that has an <b>100% error rate</b>, it's called "PortalClaimSubmit: <b>Point of Contact fills employer response</b>", and the <b>response time is 3 minutes</b>.
 
-Based on this alone, we can tell that something must not be working as it should. Could be the feature or the underlying test itself. An 100% error rate would not show up if this was due to high traffic. 
+Based on this alone, we can tell that something must not be working as it should. Could be the feature or the underlying test itself. An 100% error rate would not show up if this was due to high traffic.
 
 The 3 minute response time seems to be very high compared to other steps, but in this particular example, it just means that our LST code made "several attempts / retries" on that step before considering it an error.
 
 We also see that all other steps regarding claim submission are working very well, with 0% error rate and low response times, which means that in this run we detected that Employer Response in the Performance environment is not working properly, and that it is likely to be one of the following:
+
 - Employer Response is not working as it should;
 - Employer Response was changed or recently updated, requiring the LST code to be updated accordingly;
 - The dataset we're using to run LST is no longer "valid/available" in performance;
@@ -52,8 +53,8 @@ But it is possible that there might be other reasons.
 ## TL;DR
 
 - More error rate is bad.
-- More response time is bad. 
-- Always compare results to previous runs. 
-Example: You might think 17 seconds is too long to register / login but turns out that it's been like that for 6 months so it might be normal.
-- Some errors are being worked on, are not a high priority or affect a very small ammount of users or with little impact on user experience. 
+- More response time is bad.
+- Always compare results to previous runs.
+  Example: You might think 17 seconds is too long to register / login but turns out that it's been like that for 6 months so it might be normal.
+- Some errors are being worked on, are not a high priority or affect a very small ammount of users or with little impact on user experience.
 - A 1.5% error rate during an high traffic LST run can be normal, but it is always good to check the logs and confirm we can rule out those "low priority" errors for now.
