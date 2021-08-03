@@ -1,0 +1,19 @@
+config:
+  target: https://paidleave-performance.mass.gov/
+  processor: ./processor.js
+  includeFiles:
+    - .env
+    - ./employees
+    - ./forms
+  phases:
+    # @todo - can we delay the arrival period. this will send 1 user every second for 3 seconds. (3 runs)
+    - duration: 3
+      arrivalRate: 1
+      name: Warm Up
+
+scenarios:
+  - name: BHAP1 End to End
+    flow:
+      # Artillery has no capability to pass arguments to a function, so we have a 1-1 relationship
+      # between processor functions and E2E scenarios. That probably doesn't matter though.
+      - function: submitAndAdjudicate

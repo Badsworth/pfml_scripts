@@ -28,6 +28,6 @@
       "JSONStream": ["../types/JSONStream"]
     }
   },
-  "include": ["**/*.ts"],
+  "include": ["src/**/*.ts", "cypress/**/*.ts", "*.ts"],
   "exclude": ["scripts/*", "data/*"]
 }

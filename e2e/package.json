@@ -28,7 +28,8 @@
     "flood:PortalClaimSubmit": "element run src/flood/scenarios/PortalClaimSubmit.perf.ts --no-headless",
     "flood:FineosClaimSubmit": "element run src/flood/scenarios/FineosClaimSubmit.perf.ts --no-headless",
     "flood:SavilinxAgent": "element run src/flood/scenarios/SavilinxAgent.perf.ts --no-headless",
-    "flood:LeaveAdminSelfReg": "element run src/flood/scenarios/LeaveAdminSelfReg.perf.ts --no-headless"
+    "flood:LeaveAdminSelfReg": "element run src/flood/scenarios/LeaveAdminSelfReg.perf.ts --no-headless",
+    "artillery:run": "rm -rf ./dist && webpack --config=webpack.artillery.config.ts && artillery run dist/spec.yml"
   },
   "author": "",
   "license": "ISC",
@@ -68,6 +69,7 @@
     "ts-node": "^8.10.2",
     "typescript": "^4.1.3",
     "webpack": "^4.46.0",
+    "webpack-cli": "^4.7.2",
     "zip-webpack-plugin": "^4.0.1"
   },
   "dependencies": {
@@ -75,6 +77,7 @@
     "@flood/element-cli": "^1.5.4",
     "abort-controller": "^3.0.0",
     "amazon-cognito-identity-js": "^4.4.0",
+    "artillery": "^1.7.6",
     "aws-sdk": "^2.935.0",
     "cross-fetch": "^3.0.6",
     "csv": "^5.5.0",
