@@ -1128,6 +1128,15 @@ const pages = {
     sectionLabel: "What’s your date of birth?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
+  claimsDepartment: {
+    choiceNotListed: "My department is not listed",
+    choiceNotSure: "I'm not sure",
+    comboBoxLabel: "Select a department",
+    followupInfo:
+      "We will follow up with you after you apply to make sure the right department reviews your application.",
+    hint: "If you want to take leave from more than one department, you need to submit a separate application for each department.",
+    sectionLabel: "Which department are you applying to take leave from?",
+  },
   claimsEmployerBenefits: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
