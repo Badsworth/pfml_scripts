@@ -20,6 +20,7 @@ from massgov.pfml.db.models.employees import (
     Claim,
     LkManagedRequirementStatus,
     ManagedRequirement,
+    ManagedRequirementCategory,
     ManagedRequirementStatus,
     ManagedRequirementType,
     Role,
@@ -35,7 +36,10 @@ from massgov.pfml.db.models.factories import (
     VerificationFactory,
 )
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter
-from massgov.pfml.db.queries.managed_requirements import create_managed_requirement_from_fineos
+from massgov.pfml.db.queries.managed_requirements import (
+    create_managed_requirement_from_fineos,
+    get_managed_requirement_by_fineos_managed_requirement_id,
+)
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
 from massgov.pfml.fineos.models.group_client_api import (
@@ -1565,6 +1569,153 @@ class TestUpdateClaim:
                 },
             ),
         ]
+
+    class TestClaimReviewUpdatesManagedRequirements:
+        @pytest.fixture
+        def get_managed_requirement_by_fineos_managed_req_id(self, test_db_session):
+            def _managed_requirement_by_fineos_managed_req_id(fineos_managed_requirement_id):
+                return get_managed_requirement_by_fineos_managed_requirement_id(
+                    int(fineos_managed_requirement_id), test_db_session
+                )
+
+            return _managed_requirement_by_fineos_managed_req_id
+
+        @pytest.fixture
+        def fineos_man_req(self, claim):
+            def _fineos_managed_requirement(managed_req_id=None, status=None, type=None):
+                man_req = ManagedRequirementFactory.create(claim=claim)
+
+                requirement = {
+                    "managedReqId": int(man_req.fineos_managed_requirement_id),
+                    "status": ManagedRequirementStatus.get_description(2),
+                    "category": ManagedRequirementCategory.get_description(1),
+                    "type": ManagedRequirementType.get_description(1),
+                    "followUpDate": (date.today() + timedelta(days=10)).strftime("%Y-%m-%d"),
+                    "documentReceived": False,
+                    "creator": "unknown",
+                    "subjectPartyName": "unknown",
+                    "sourceOfInfoPartyName": "unknown",
+                    "creationDate": None,
+                    "dateSuppressed": None,
+                }
+
+                if managed_req_id is not None:
+                    requirement["managedReqId"] = int(managed_req_id)
+
+                if status is not None:
+                    requirement["status"] = status
+
+                if type is not None:
+                    requirement["type"] = type
+
+                return ManagedRequirementDetails.parse_obj(requirement)
+
+            return _fineos_managed_requirement
+
+        @pytest.fixture
+        def update_request_body(self):
+            return {
+                "comment": "",
+                "employer_benefits": [],
+                "employer_decision": "Approve",
+                "fraud": "Yes",
+                "has_amendments": False,
+                "hours_worked_per_week": 16,
+                "previous_leaves": [],
+            }
+
+        @pytest.fixture(autouse=True)
+        def with_mock_client_capture(self):
+            massgov.pfml.fineos.mock_client.start_capture()
+
+        @pytest.fixture(autouse=True)
+        def with_user_leave_admin(self, user_leave_admin, test_db_session):
+            test_db_session.add(user_leave_admin)
+            test_db_session.commit()
+
+        @pytest.fixture
+        def employer(self):
+            return EmployerFactory.create()
+
+        @pytest.fixture
+        def user_leave_admin(self, employer_user, employer, test_verification):
+            return UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+
+        @pytest.fixture
+        def claim(self, employer):
+            return ClaimFactory.create(employer_id=employer.employer_id)
+
+        @pytest.fixture
+        def complete_valid_fineos_managed_requirement(
+            self, fineos_man_req,
+        ):
+            return fineos_man_req()
+
+        @pytest.fixture
+        def wrong_type_invalid_fineos_managed_requirement(self, fineos_man_req):
+            man_req_id = None
+            man_req_status = None
+            return fineos_man_req(man_req_id, man_req_status, "Invalid Type")
+
+        @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+        def test_employer_update_claim_review_updates_valid_managed_requirements(
+            self,
+            mock_get_managed_requirements,
+            complete_valid_fineos_managed_requirement,
+            client,
+            employer_auth_token,
+            claim,
+            update_request_body,
+            user_leave_admin,
+            get_managed_requirement_by_fineos_managed_req_id,
+        ):
+            mock_get_managed_requirements.return_value = [complete_valid_fineos_managed_requirement]
+
+            client.patch(
+                f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=update_request_body,
+            )
+
+            managed_req = get_managed_requirement_by_fineos_managed_req_id(
+                complete_valid_fineos_managed_requirement.managedReqId
+            )
+
+            assert managed_req is not None
+            assert managed_req.respondent_user_id == user_leave_admin.user_id
+            assert (
+                managed_req.managed_requirement_status.managed_requirement_status_description
+                == complete_valid_fineos_managed_requirement.status
+            )
+
+        @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+        def test_employer_update_claim_review_does_not_fail_on_invalid_requirements(
+            self,
+            mock_get_managed_requirements,
+            wrong_type_invalid_fineos_managed_requirement,
+            client,
+            employer_auth_token,
+            claim,
+            update_request_body,
+        ):
+            mock_get_managed_requirements.return_value = [
+                wrong_type_invalid_fineos_managed_requirement
+            ]
+
+            response = client.patch(
+                f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=update_request_body,
+            )
+
+            errors = response.get_json().get("errors")
+            assert response.status_code == 200
+            assert errors is None
 
     def test_create_eform_for_comment_with_employer_update_claim_review(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification
