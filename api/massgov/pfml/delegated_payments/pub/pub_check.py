@@ -300,13 +300,13 @@ def _format_employee_name_for_ez_check(employee: Employee) -> str:
 
 def _get_ez_check_header() -> EzCheckHeader:
     return EzCheckHeader(
-        name_line_1="Department of Family and Medical Leave",
+        name_line_1="MA Department of Family and Medical Leave",
         name_line_2="Commonwealth of Massachusetts",
-        address_line_1="19 Staniford Street",
+        address_line_1="P.O. Box 838",
         address_line_2="",
-        city="Boston",
+        city="Lawrence",
         state="MA",
-        zip_code="02114",  # Pass the zip code in as a string since it starts with a zero.
+        zip_code="01842",  # Pass the zip code in as a string since it starts with a zero.
         country="US",
         account_number=int(os.environ.get("DFML_PUB_ACCOUNT_NUMBER")),  # type: ignore
         routing_number=int(os.environ.get("DFML_PUB_ROUTING_NUMBER")),  # type: ignore
