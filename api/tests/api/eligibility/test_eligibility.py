@@ -27,7 +27,7 @@ def test_compute_financial_eligibility_no_data(test_db_session):
         financially_eligible=False,
         description="Claimant wages under minimum",
         total_wages=decimal.Decimal("0"),
-        state_average_weekly_wage=1487,
-        unemployment_minimum=5400,
+        state_average_weekly_wage=decimal.Decimal("1487.78"),
+        unemployment_minimum=decimal.Decimal("5400"),
         employer_average_weekly_wage=decimal.Decimal("0"),
     )

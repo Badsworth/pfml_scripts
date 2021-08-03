@@ -16,8 +16,8 @@ class EligibilityResponse(PydanticBaseModel):
     financially_eligible: bool
     description: str
     total_wages: Optional[Decimal]
-    state_average_weekly_wage: Optional[int]
-    unemployment_minimum: Optional[int]
+    state_average_weekly_wage: Optional[Decimal]
+    unemployment_minimum: Optional[Decimal]
     employer_average_weekly_wage: Optional[Decimal]
 
 
