@@ -26,7 +26,10 @@ export const StateId = (props) => {
     // API requires any letters in the ID to be uppercase:
     requestData.mass_id = mass_id ? mass_id.toUpperCase() : mass_id;
 
-    appLogic.benefitsApplications.update(claim.application_id, requestData);
+    return appLogic.benefitsApplications.update(
+      claim.application_id,
+      requestData
+    );
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

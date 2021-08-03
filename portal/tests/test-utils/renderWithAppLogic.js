@@ -74,6 +74,7 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
     user_id: "mock_user_id",
     ...options.userAttrs,
   });
+  appLogic.benefitsApplications.update = jest.fn(() => Promise.resolve());
 
   if (options.hasLoadedClaimDocuments) {
     appLogic.documents.hasLoadedClaimDocuments = jest
