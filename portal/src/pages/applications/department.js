@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 
+import Alert from "../../components/Alert";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ComboBox from "../../components/ComboBox";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
+import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 // import { isFeatureEnabled } from "../../services/featureFlags";
@@ -24,7 +26,7 @@ export const Department = (props) => {
   const initialFormState = pick(props, fields).claim;
 
   // if (!showDepartments) {
-  //   // @todo: If the radio buttons are disabled, hard-code the field so that validations pass
+  // @todo: go to next page and ignore departments, auto-select "I'm not sure"
   // }
 
   const { formState, updateFields } = useFormState(initialFormState);
@@ -39,22 +41,48 @@ export const Department = (props) => {
   });
 
   const [departments, setDepartments] = useState([]);
-
+  const otherOptions = [
+    t("pages.claimsDepartment.choiceNotListed"),
+    t("pages.claimsDepartment.choiceNotSure"),
+  ];
   const populateDepartments = () => {
     // const occupationOptions = await appLogic.benefitsApplications.getDepartments();
     const departmentOptions = [
-      { department_description: "HR" },
-      { department_description: "DFML" },
-      { department_description: "Contact Center" },
-      { department_description: "DevOps" },
+      {
+        department_id: 1,
+        department_description: "HR",
+      },
+      {
+        department_id: 2,
+        department_description: "DFML",
+      },
+      {
+        department_id: 3,
+        department_description: "Contact Center",
+      },
+      {
+        department_id: 4,
+        department_description: "DevOps",
+      },
     ];
-    setDepartments(
-      departmentOptions.map((department) => ({
+    setDepartments([
+      ...departmentOptions.map((department) => ({
         label: department.department_description,
         value: department.department_description,
-      }))
-    );
+        // checked: department.department_description === formState.org_unit
+      })),
+      ...otherOptions.map((department) => ({
+        label: department,
+        value: department,
+        // checked: department === formState.org_unit
+      })),
+    ]);
   };
+
+  const isLongList = departments.length > 5;
+  const isSmallList = departments.length > 1 && departments.length <= 5;
+  // const isUnique = departments.length === 1;
+  const isOtherOptionSelected = otherOptions.includes(formState.org_unit);
 
   useEffect(() => {
     populateDepartments();
@@ -67,23 +95,42 @@ export const Department = (props) => {
       title={t("pages.claimsEmploymentStatus.title")}
       onSave={handleSave}
     >
-      <Fieldset>
-        <FormLabel
-          component="legend"
-          hint="This data helps us understand who is accessing our program to ensure it is built for everyone. Your answer will not be shared with your employer."
-        >
-          What is your current occupation?
-        </FormLabel>
-
-        <ComboBox
-          {...getFunctionalInputProps("occupation")}
-          choices={departments}
-          updateField={(value) => updateFields({ occupation: value })}
-          emptyChoiceLabel="No matches"
-          label="Department"
-          smallLabel
-        />
-      </Fieldset>
+      {isSmallList && (
+        <React.Fragment>
+          <InputChoiceGroup
+            {...getFunctionalInputProps("org_unit")}
+            choices={departments}
+            label={t("pages.claimsDepartment.sectionLabel")}
+            hint={t("pages.claimsDepartment.hint")}
+            type="radio"
+          />
+        </React.Fragment>
+      )}
+      {(isLongList || (isSmallList && isOtherOptionSelected)) && (
+        <React.Fragment>
+          <Fieldset>
+            {!isSmallList && (
+              <FormLabel
+                component="legend"
+                hint={t("pages.claimsDepartment.hint")}
+              >
+                {t("pages.claimsDepartment.sectionLabel")}
+              </FormLabel>
+            )}
+            <ComboBox
+              {...getFunctionalInputProps("org_unit")}
+              choices={departments}
+              label={t("pages.claimsDepartment.comboBoxLabel")}
+              smallLabel
+            />
+            {isOtherOptionSelected && (
+              <Alert className="measure-6" state="info" noIcon>
+                {t("pages.claimsDepartment.followupInfo")}
+              </Alert>
+            )}
+          </Fieldset>
+        </React.Fragment>
+      )}
     </QuestionPage>
   );
 };
