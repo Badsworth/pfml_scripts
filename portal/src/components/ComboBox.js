@@ -1,5 +1,6 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 
+import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
 import PropTypes from "prop-types";
 import classnames from "classnames";
@@ -17,16 +18,17 @@ function ComboBox(props) {
   const listRef = useRef(null);
   const inputRef = useRef(null);
   const boxRef = useRef(null);
-  const isPristine = props.choices.find((c) => c.value === props.value)
+  const isPristine = props.choices.find((c) => c.label === props.value)
     ? "usa-combo-box--pristine"
     : "";
 
-  const fieldClasses = classnames(
+  const [isMouseSelectingOption, setIsMouseSelectingOption] = useState(false);
+  /* const fieldClasses = classnames(
     "usa-select usa-sr-only usa-combo-box__select maxw-mobile-lg",
     {
       "usa-input--error": hasError,
     }
-  );
+  ); */
 
   const formGroupClasses = classnames(
     "usa-form-group",
@@ -36,106 +38,158 @@ function ComboBox(props) {
     }
   );
 
-  const onSearch = (e) => {
-    props.updateField(e.target.value);
-    searchResults = search();
+  const onClickToggleChoices = (e) => {
+    if (listRef.current.getAttribute("hidden")) {
+      listRef.current.removeAttribute("hidden");
+    } else {
+      hideOptionsList();
+      e.target.blur();
+    }
   };
-  const onMouseLeave = (e) => {
+
+  const hideOptionsList = () => {
     listRef.current.setAttribute("hidden", "hidden");
     inputRef.current.blur();
   };
-  // const onToggleChoices = (e) => {
-  //   if (listRef.current.getAttribute("hidden")) {
-  //     listRef.current.removeAttribute("hidden");
-  //   } else {
-  //     listRef.current.setAttribute("hidden", "hidden");
-  //   }
-  // };
-  const onFocus = (e) => {
+
+  const onFocus = () => {
     listRef.current.removeAttribute("hidden");
   };
-  const clearSearch = (e) => {
-    props.updateField("");
-    inputRef.current.focus();
+
+  const onBlur = () => {
+    if (!inputRef.current || !listRef.current) return;
+    if (!props.value && !isMouseSelectingOption) hideOptionsList();
   };
+
   const onChoiceFocus = (e) => {
     e.target.setAttribute("tabindex", "0");
     e.target.classList.add("usa-combo-box__list-option--focused");
     inputRef.current.setAttribute("aria-activedescendant", e.target.id);
   };
+
   const onChoiceBlur = (e) => {
     if (!e.target.classList.contains("usa-combo-box__list-option--selected")) {
       e.target.setAttribute("tabindex", "-1");
       e.target.classList.remove("usa-combo-box__list-option--focused");
+    } else if (!isMouseSelectingOption) {
+      hideOptionsList();
     }
   };
   const onChoiceMouseOver = onChoiceFocus;
   const onChoiceMouseOut = onChoiceBlur;
-  // eslint-disable-next-line no-console
-  const onChoiceKeyDown = (e) => console.log(e.key);
-  const onChoiceChange = (e) => {
-    props.updateField(e.target.getAttribute("data-value"));
-    listRef.current.setAttribute("hidden", "hidden");
-    inputRef.current.blur();
+
+  const onKeyDown = (e) => {
+    if (["ArrowUp", "ArrowDown"].includes(e.key)) {
+      e.preventDefault();
+      const listElement = document.querySelector(".usa-combo-box__list-option");
+      listElement.focus();
+      listElement.click();
+    }
+  };
+  const onChoiceKeyDown = (e) => {
+    e.preventDefault();
+    let { target } = e;
+
+    switch (e.key) {
+      case "ArrowUp":
+        target = target.previousSibling || inputRef.current;
+        break;
+      case "ArrowDown":
+        target = target.nextSibling || inputRef.current;
+        break;
+      case "Enter":
+        onBlur();
+        return true;
+    }
+
+    target.focus();
+    target.click();
   };
 
-  const search = () => {
-    const finalChoices = props.choices.reduce((choices, choice, i) => {
-      const isSelected = choice.value === props.value;
-      if (
-        choice.value.toLowerCase().includes(props.value.toLowerCase()) ||
-        choice.label.toLowerCase().includes(props.value.toLowerCase()) ||
-        isPristine
-      ) {
-        const choiceClasses = ["usa-combo-box__list-option"];
-        if (isSelected) {
-          choiceClasses.push("usa-combo-box__list-option--selected");
-          choiceClasses.push("usa-combo-box__list-option--focused");
-        }
-        choices.push(
-          <li
-            key={choice.value}
-            id={props.name + "--list--option-" + i}
-            className={choiceClasses.join(" ")}
-            data-value={choice.value}
-            aria-selected={isSelected}
-            role="option"
-            aria-setsize="64"
-            aria-posinset="1"
-            onMouseOver={onChoiceMouseOver}
-            onMouseOut={onChoiceMouseOut}
-            onFocus={onChoiceFocus}
-            onBlur={onChoiceBlur}
-            onClick={onChoiceChange}
-            onKeyDown={onChoiceKeyDown}
-            tabIndex={isSelected ? "0" : "-1"}
-          >
-            {choice.label}
-          </li>
-        );
-      }
-      return choices;
-    }, []);
-    if (finalChoices.length) {
-      return finalChoices;
-    } else {
-      return (
-        <li className="usa-combo-box__list-option--no-results">
-          {props.emptyChoiceLabel}
-        </li>
-      );
+  const onChoiceChange = (e) => {
+    const targetValue = e.target.getAttribute("data-value");
+    const selectedOption = props.choices.find(
+      (c) => c.value.toString() === targetValue
+    );
+    if (selectedOption) {
+      // <li> tags don't have a value, so we simulate an input onchange event
+      const onChangeEvent = new Event("onchange");
+      inputRef.current.dispatchEvent(onChangeEvent);
+      onChangeEvent.target.value = selectedOption.label;
+      props.onChange(onChangeEvent);
     }
   };
 
-  let searchResults = search();
-  const customBtnSpacing = {
-    right: "calc(2.1em + 2px)",
+  const onComboBoxMouseEnter = (e) => {
+    setIsMouseSelectingOption(true);
   };
+  const onComboBoxMouseLeave = (e) => {
+    setIsMouseSelectingOption(false);
+    hideOptionsList();
+  };
+
+  const clearSearch = (e) => {
+    // change button event target as if it's an input element
+    e.target.name = props.name;
+    e.target.value = "";
+    // trigger value change
+    props.onChange(e);
+    inputRef.current.focus();
+  };
+
+  const customBtnSpacing = {
+    right: "calc(2.45em + 2px)",
+  };
+
+  let searchResults = props.choices.reduce((choices, choice, i) => {
+    const isSelected = choice.label === props.value;
+    if (
+      choice.label
+        .toLowerCase()
+        .includes(props.value.toString().toLowerCase()) ||
+      isPristine
+    ) {
+      // @todo: use classnames package
+      const choiceClasses = ["usa-combo-box__list-option"];
+      if (isSelected) {
+        choiceClasses.push("usa-combo-box__list-option--selected");
+        choiceClasses.push("usa-combo-box__list-option--focused");
+      }
+      choices.push(
+        <li
+          key={choice.value}
+          id={props.name + "--list--option-" + i}
+          className={choiceClasses.join(" ")}
+          data-value={choice.value}
+          aria-selected={isSelected}
+          role="option"
+          aria-setsize="64"
+          aria-posinset="1"
+          onMouseOver={onChoiceMouseOver}
+          onMouseOut={onChoiceMouseOut}
+          onFocus={onChoiceFocus}
+          onBlur={onChoiceBlur}
+          onClick={onChoiceChange}
+          onKeyDown={onChoiceKeyDown}
+          tabIndex={isSelected ? "0" : "-1"}
+        >
+          {choice.label}
+        </li>
+      );
+    }
+    return choices;
+  }, []);
+
+  if (!searchResults.length) {
+    searchResults = (
+      <li className="usa-combo-box__list-option--no-results">
+        {props.emptyChoiceLabel || "No matches"}
+      </li>
+    );
+  }
+
   return (
-    <div
-      className={formGroupClasses}
-      onMouseLeave={props.onMouseLeave ? props.onMouseLeave : onMouseLeave}
-    >
+    <Fieldset className={formGroupClasses}>
       <FormLabel
         errorMsg={props.errorMsg}
         hint={props.hint}
@@ -149,25 +203,15 @@ function ComboBox(props) {
       <div
         ref={boxRef}
         className={["usa-combo-box", isPristine].join(" ")}
-        data-enhanced="true"
+        onMouseEnter={onComboBoxMouseEnter}
+        onMouseLeave={onComboBoxMouseLeave}
       >
-        <select
-          className={fieldClasses}
-          name={props.name}
-          onChange={props.onChange}
-          value={props.value}
-          tabIndex="-1"
-        >
-          {props.choices.map((choice) => (
-            <option key={choice.value} value={choice.value}>
-              {choice.label}
-            </option>
-          ))}
-        </select>
+        {/* "usa-select" class to use the "<select>" chevron */}
         <input
           id={props.name}
+          name={props.name}
           type="text"
-          className="usa-select usa-combo-box__input"
+          className="usa-combo-box__input"
           ref={inputRef}
           role="combobox"
           aria-owns={props.name + "--list"}
@@ -178,8 +222,10 @@ function ComboBox(props) {
           autoCapitalize="off"
           autoComplete="off"
           aria-activedescendant=""
-          onFocus={props.onFocus ? props.onFocus : onFocus}
-          onChange={onSearch}
+          onBlur={onBlur}
+          onFocus={onFocus}
+          onChange={props.onChange}
+          onKeyDown={onKeyDown}
           value={props.value}
         />
         <span className="usa-combo-box__clear-input__wrapper" tabIndex="-1">
@@ -193,24 +239,26 @@ function ComboBox(props) {
             &nbsp;
           </button>
         </span>
-        <span
-          className="usa-combo-box__input-button-separator"
-          style={customBtnSpacing}
-        >
-          &nbsp;
-        </span>
-        {/* Optional different chevron for the "select" field
+        {isPristine && (
+          <span
+            className="usa-combo-box__input-button-separator"
+            style={customBtnSpacing}
+          >
+            &nbsp;
+          </span>
+        )}
         <span className="usa-combo-box__toggle-list__wrapper" tabIndex="-1">
           <button
             type="button"
             tabIndex="-1"
             className="usa-combo-box__toggle-list"
             aria-label="Toggle the dropdown list"
-            onClick={onToggleChoices}
+            onClick={onClickToggleChoices}
+            onBlur={hideOptionsList}
           >
             &nbsp;
           </button>
-        </span> */}
+        </span>
         <ul
           ref={listRef}
           id={props.name + "--list"}
@@ -223,7 +271,7 @@ function ComboBox(props) {
           {searchResults}
         </ul>
       </div>
-    </div>
+    </Fieldset>
   );
 }
 
@@ -242,7 +290,7 @@ ComboBox.propTypes = {
   /**
    * Localized label for the initially selected option when no value is set
    */
-  emptyChoiceLabel: PropTypes.string.isRequired,
+  emptyChoiceLabel: PropTypes.string,
   /**
    * Localized error message. Setting this enables the error state styling.
    */
@@ -276,21 +324,11 @@ ComboBox.propTypes = {
    */
   onChange: PropTypes.func,
   /**
-   * HTML input `onMouseLeave` attribute
-   */
-  onMouseLeave: PropTypes.func,
-  /**
-   * HTML input `onFocus` attribute
-   */
-  onFocus: PropTypes.func,
-  /**
    * Enable the smaller label variant
    */
   smallLabel: PropTypes.bool,
   /** The `value` of the selected choice */
   value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-
-  updateField: PropTypes.func,
 };
 
 export default ComboBox;
