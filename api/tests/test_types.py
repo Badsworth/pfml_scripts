@@ -17,10 +17,8 @@ def test_tax_id_with_unformatted_str():
     assert tax_id.to_unformatted_str() == "000432123"
 
 
-# def test_tax_id_with_invalid_str():
-#     with pytest.raises(ValueError) as err:
-#         TaxId("00043212")
-#     assert "does not match" in str(err.value)
+def test_tax_id_with_invalid_str():
+    assert TaxId("00043212").is_valid is False
 
 
 def test_tax_id_with_invalid_type():

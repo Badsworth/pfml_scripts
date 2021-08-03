@@ -141,7 +141,6 @@ def applications_start():
     log_attributes = get_application_log_attributes(application)
     logger.info("applications_start success", extra=log_attributes)
 
-
     return response_util.success_response(
         message="Successfully created application",
         data=ApplicationResponse.from_orm(application).dict(),
