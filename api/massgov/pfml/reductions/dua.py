@@ -404,11 +404,9 @@ def download_payment_list_from_moveit(db_session: db.Session, log_entry: batch_l
     return len(copied_reference_files)
 
 
-def _convert_cent_to_dollars(cent: str) -> Decimal:
-    if len(cent) < 2:
-        raise ValueError("Cent value should have two or more character")
-
-    dollar = cent[:-2] + "." + cent[-2:]
+def _convert_cent_to_dollars(cent: Optional[int] = 0) -> Decimal:
+    cent_str = f"{cent or 0 :02}"
+    dollar = cent_str[:-2] + "." + cent_str[-2:]
     return Decimal(dollar)
 
 
@@ -460,10 +458,10 @@ def _format_reduction_payments_for_report(
                 payment.request_week_begin_date
             ),
             Constants.WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD: _convert_cent_to_dollars(
-                str(payment.gross_payment_amount_cents)
+                payment.gross_payment_amount_cents
             ),
             Constants.PAID_AM_OUTBOUND_DFML_REPORT_FIELD: _convert_cent_to_dollars(
-                str(payment.payment_amount_cents)
+                payment.payment_amount_cents
             ),
             Constants.FRAUD_IND_FIELD: payment.fraud_indicator,
             Constants.BYB_DT_FIELD: _format_date_for_report(payment.benefit_year_begin_date),
