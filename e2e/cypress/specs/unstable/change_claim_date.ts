@@ -119,7 +119,37 @@ describe("Claim date change", () => {
               parse(endDate, "MM/dd/yyyy", new Date(endDate)),
               "M/d/yyyy"
             );
-            portal.assertLeaveDatesAsLA(portalFormatStart, portalFormatEnd);
+            // This introduces some backward compatibility until we figure out the differences in ERI trigger
+            // between defferent envs. @see https://lwd.atlassian.net/browse/PFMLPB-1736
+            // Wait till the redirects are over and we are viewing the claim.
+            cy.url().should("not.include", "dashboard");
+            cy.contains(`${claim.first_name} ${claim.last_name}`);
+            // Check by url if we can review the claim
+            cy.url().then((url) => {
+              if (
+                url.includes(
+                  `/new-application/?absence_id=${submission.fineos_absence_id}`
+                )
+              ) {
+                cy.contains(
+                  "Are you the right person to respond to this application?"
+                );
+                cy.contains("Yes").click();
+                cy.contains("Agree and submit").click();
+                cy.findByText(
+                  // There's a strange unicode hyphen at this place.
+                  /This is your employe(.*)s expected leave schedule/
+                )
+                  .next()
+                  .should(
+                    "contain.text",
+                    `${portalFormatStart} to ${portalFormatEnd}`
+                  );
+                portal.respondToLeaveAdminRequest(false, true, true);
+              } else {
+                portal.assertLeaveDatesAsLA(portalFormatStart, portalFormatEnd);
+              }
+            });
           }
         );
       });
