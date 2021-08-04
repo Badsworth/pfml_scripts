@@ -980,7 +980,7 @@ export const Primary = (args) =&gt; {
 <p><strong><a href="https://storybook.js.org/docs/react/writing-stories/introduction">Learn more about writing stories →</a></strong></p>
 <h3 id="previewing-entire-pages">Previewing entire pages</h3>
 <p>In Next.js, <a href="https://nextjs.org/docs/basic-features/pages">a page is just a React component</a>. This enables some pretty cool capabilities when combined with Storybook. Specifically, this means we can create a Story that renders a Page component, which allows us to preview an entire page without navigating through the entire application flow to preview the page.</p>
-<p>For the Create Claim flow, we're <a href="https://github.com/EOLWD/pfml/tree/main/portal/bin/generate-claims-page-stories.js">generating a Storybook page for each page in the flow</a>. Engineers can override the generated story by adding a <code>*.stories.js</code> file for the page in the <code>storybook/stories/pages/claims/</code> directory.</p>
+<p>For the Create Claim flow, we're <a href="https://github.com/EOLWD/pfml/tree/main/portal/bin/generate-claims-page-stories.js">generating a Storybook page for each page in the flow</a>. Engineers can override the generated story by adding a <code>*.stories.js</code> file for the page in the <code>storybook/stories/pages/applications</code> directory.</p>
 <h3 id="how-storybook-interacts-with-our-source-code">How Storybook interacts with our source code</h3>
 <p>Storybook stories import and render the same components used in the live site. Below is a visualization attempting to demonstrate how assets are shared between our web application and the Storybook site.</p>
 <p><img alt="Storybook diagram" src="../assets/storybook.jpeg" /></p>
