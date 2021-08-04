@@ -1129,12 +1129,18 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsDepartment: {
+    choiceNo: "$t(shared.choiceNo)",
     choiceNotListed: "My department is not listed",
     choiceNotSure: "I'm not sure",
+    choiceYes: "$t(shared.choiceYes)",
     comboBoxLabel: "Select a department",
+    confirmHint:
+      "Based on what you’ve entered, our records show you work at <strong>{{department}}</strong>. Is this the department where you are applying to take leave?",
+    confirmSectionLabel: "Confirm your department",
     followupInfo:
       "We will follow up with you after you apply to make sure the right department reviews your application.",
     hint: "If you want to take leave from more than one department, you need to submit a separate application for each department.",
+    moreThanOne: "What if I work at more than one department?",
     sectionLabel: "Which department are you applying to take leave from?",
   },
   claimsEmployerBenefits: {
