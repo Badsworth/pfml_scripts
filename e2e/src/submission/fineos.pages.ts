@@ -12,7 +12,8 @@ export class Fineos {
     debug = false,
     screenshots?: string
   ): Promise<T> {
-    const isSSO = config("ENVIRONMENT") === "uat" || config("ENVIRONMENT") === "breakfix";
+    const isSSO =
+      config("ENVIRONMENT") === "uat" || config("ENVIRONMENT") === "breakfix";
     const browser = await chromium.launch({
       headless: !debug,
       slowMo: debug ? 100 : undefined,
@@ -69,6 +70,7 @@ export class Fineos {
           config("SSO_USERNAME")
         );
         await page.click("input[value='Next']");
+        await delay(1000);
         await page.fill(
           "input[type='password'][name='passwd']",
           config("SSO_PASSWORD")
