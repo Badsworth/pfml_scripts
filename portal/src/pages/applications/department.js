@@ -4,6 +4,7 @@ import Alert from "../../components/Alert";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ComboBox from "../../components/ComboBox";
 import ConditionalContent from "../../components/ConditionalContent";
+import Details from "../../components/Details";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -193,7 +194,11 @@ export const Department = (props) => {
           }
           type="radio"
         >
-          ok
+          <div className="margin-top-2">
+            <Details label={t("pages.claimsDepartment.moreThanOne")}>
+              {t("pages.claimsDepartment.hint")}
+            </Details>
+          </div>
         </InputChoiceGroup>
       </ConditionalContent>
 
