@@ -52,16 +52,14 @@ module "api" {
     "https://0mv19lqx41.execute-api.us-east-1.amazonaws.com"
   ]
 
-  cognito_user_pool_arn                            = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_29j6fKBDT"
-  cognito_user_pool_id                             = "us-east-1_29j6fKBDT"
-  cognito_user_pool_client_id                      = "1ajh0c38bs21k60bjtttegspvp"
-  cognito_user_pool_keys_url                       = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_29j6fKBDT/.well-known/jwks.json"
-  cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
-  cognito_pre_signup_lambda_artifact_s3_key        = local.cognito_pre_signup_lambda_artifact_s3_key
-  rmv_client_base_url                              = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
-  rmv_client_certificate_binary_arn                = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-uat/rmv_client_certificate-LWvMFe"
-  rmv_check_behavior                               = "partially_mocked" # TODO?
-  rmv_check_mock_success                           = "1"
+  cognito_user_pool_arn             = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_29j6fKBDT"
+  cognito_user_pool_id              = "us-east-1_29j6fKBDT"
+  cognito_user_pool_client_id       = "1ajh0c38bs21k60bjtttegspvp"
+  cognito_user_pool_keys_url        = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_29j6fKBDT/.well-known/jwks.json"
+  rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
+  rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-uat/rmv_client_certificate-LWvMFe"
+  rmv_check_behavior                = "partially_mocked" # TODO?
+  rmv_check_mock_success            = "1"
 
   # copied from stage for now, with replacements for idt --> uat. may not be right
   fineos_client_customer_api_url                      = "https://uat-api.masspfml.fineos.com/customerapi/"

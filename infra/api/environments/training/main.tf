@@ -56,8 +56,6 @@ module "api" {
   cognito_user_pool_id                                = "us-east-1_gHLjkp4A8"
   cognito_user_pool_client_id                         = "2hr6bckdopamvq92jahr542p5p"
   cognito_user_pool_keys_url                          = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_gHLjkp4A8/.well-known/jwks.json"
-  cognito_post_confirmation_lambda_artifact_s3_key    = local.cognito_post_confirmation_lambda_artifact_s3_key
-  cognito_pre_signup_lambda_artifact_s3_key           = local.cognito_pre_signup_lambda_artifact_s3_key
   cognito_enable_provisioned_concurrency              = false
   rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-training/rmv_client_certificate-uUtNEp"

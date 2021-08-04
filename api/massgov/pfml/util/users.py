@@ -5,7 +5,6 @@ import botocore
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import MultipleResultsFound
 
-import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
 from massgov.pfml.api.services.administrator_fineos_actions import (
@@ -168,10 +167,8 @@ def register_or_update_leave_admin(
             logger.debug("Existing PFML user found", extra={"user_id": user.user_id})
         else:
             try:
-                user = lib.leave_admin_create(
-                    db_session, existing_cognito_id, email, fein, {"auth_id": existing_cognito_id}
-                )
-            except lib.LeaveAdminCreationError:
+                user = create_user(db_session, email, existing_cognito_id, requested_employer)
+            except Exception:
                 return False, "Unable to create database records for user"
         if not user.roles:
             try:
@@ -185,19 +182,21 @@ def register_or_update_leave_admin(
     else:
         logger.debug("Creating new Cognito user", extra={"email": email})
         try:
-            user = create_verified_cognito_leave_admin_account(
+            sub_id = create_verified_cognito_leave_admin_account(
                 db_session=db_session,
                 email=email,
                 fein=fein,
                 cognito_user_pool_id=cognito_pool_id,
                 cognito_client=cognito_client,
             )
-        except lib.LeaveAdminCreationError:
-            return False, "Unable to create records for user"
         except CognitoAccountCreationFailure:
             return False, "Unable to create Cognito account for user"
         except CognitoPasswordSetFailure:
             return False, "Unable to set Cognito password for user"
+        try:
+            user = create_user(db_session, email, sub_id, requested_employer)
+        except Exception:
+            return False, "Unable to create records for user"
 
     if not force_registration:
         return True, "Successfully added user to Cognito and API DB"
