@@ -11,8 +11,9 @@ describe("Post-approval (notifications/notices)", () => {
     username: Cypress.env("E2E_PORTAL_USERNAME"),
     password: Cypress.env("E2E_PORTAL_PASSWORD"),
   };
-  const extension = it(
-    "Given a fully approved claim, a CSR agent can extend the claim's leave dates",
+
+  const submit = it(
+    "Given a fully approved claim",
     { baseUrl: getFineosBaseUrl() },
     () => {
       fineos.before();
@@ -24,21 +25,12 @@ describe("Post-approval (notifications/notices)", () => {
           ...claim,
           credentials,
         }).then((res) => {
-          const [startDate, endDate] = extractLeavePeriod(claim.claim);
           cy.stash("submission", {
             application_id: res.application_id,
             fineos_absence_id: res.fineos_absence_id,
             timestamp_from: Date.now(),
           });
-          const newStartDate = format(
-            addDays(new Date(endDate), 1),
-            "MM/dd/yyyy"
-          );
-          const newEndDate = format(
-            addDays(new Date(endDate), 8),
-            "MM/dd/yyyy"
-          );
-          cy.stash("extensionLeaveDates", [startDate, newEndDate]);
+
           const claimPage = fineosPages.ClaimPage.visit(res.fineos_absence_id);
           claimPage.adjudicate((adjudication) => {
             adjudication.evidence((evidence) => {
@@ -46,8 +38,6 @@ describe("Post-approval (notifications/notices)", () => {
                 evidence.receive(document.document_type);
               }
             });
-            cy.wait("@ajaxRender");
-            cy.wait(150);
             adjudication.certificationPeriods((certificationPeriods) =>
               certificationPeriods.prefill()
             );
@@ -58,18 +48,43 @@ describe("Post-approval (notifications/notices)", () => {
             task.close("ID Review");
           });
           claimPage.approve();
+          claimPage
+            .triggerNotice("Designation Notice")
+            .documents((docPage) =>
+              docPage.assertDocumentExists("Approval Notice")
+            );
+        });
+      });
+    }
+  );
+
+  const extension = it(
+    "Agent extends the claim",
+    { baseUrl: getFineosBaseUrl() },
+    () => {
+      cy.dependsOnPreviousPass([submit]);
+      fineos.before();
+      cy.visit("/");
+      cy.unstash<DehydratedClaim>("claim").then(({ claim, documents }) => {
+        cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+          const [startDate, endDate] = extractLeavePeriod(claim);
+          const newStartDate = format(
+            addDays(new Date(endDate), 1),
+            "MM/dd/yyyy"
+          );
+          const newEndDate = format(
+            addDays(new Date(endDate), 8),
+            "MM/dd/yyyy"
+          );
+          cy.stash("extensionLeaveDates", [startDate, newEndDate]);
+
+          const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
           claimPage.benefitsExtension((benefitsExtension) =>
             benefitsExtension.extendLeave(newStartDate, newEndDate)
           );
-          cy.wait(500);
-          // Including this visit helps to avoid the "Whoops there is no test to run" message by Cypress.
-          cy.visit("/");
-          const claimAfterExtension = fineosPages.ClaimPage.visit(
-            res.fineos_absence_id
-          );
-          claimAfterExtension.adjudicate((adjudication) => {
+          claimPage.adjudicate((adjudication) => {
             adjudication.evidence((evidence) => {
-              for (const document of claim.documents) {
+              for (const document of documents) {
                 evidence.receive(document.document_type);
               }
             });
@@ -141,30 +156,33 @@ describe("Post-approval (notifications/notices)", () => {
       });
     }
   );
-  it("As a leave admin, I should receive a notification regarding the time added to the claim", () => {
-    cy.dependsOnPreviousPass([extension]);
-    cy.unstash<Submission>("submission").then((submission) => {
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        const subjectClaimant = getNotificationSubject(
-          `${claim.claim.first_name} ${claim.claim.last_name}`,
-          "extension of benefits"
-        );
-        email
-          .getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectClaimant,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            // Reduced timeout, since we have multiple tests that run prior to this.
-            30000
-          )
-          .then(() => {
-            cy.contains(submission.fineos_absence_id);
-          });
+  it(
+    "As a leave admin, I should receive a notification regarding the time added to the claim",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([extension]);
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.unstash<DehydratedClaim>("claim").then((claim) => {
+          const subjectClaimant = getNotificationSubject(
+            `${claim.claim.first_name} ${claim.claim.last_name}`,
+            "extension of benefits"
+          );
+          email
+            .getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subjectClaimant,
+                messageWildcard: submission.fineos_absence_id,
+                timestamp_from: submission.timestamp_from,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              60000
+            )
+            .then(() => {
+              cy.contains(submission.fineos_absence_id);
+            });
+        });
       });
-    });
-  });
+    }
+  );
 });
