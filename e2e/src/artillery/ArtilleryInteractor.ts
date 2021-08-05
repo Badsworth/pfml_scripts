@@ -1,6 +1,6 @@
 import EmployeePool from "../generation/Employee";
 import AuthenticationManager from "../submission/AuthenticationManager";
-import { getAuthManager, getPortalSubmitter } from "../util/common";
+import { getAuthManager } from "../util/common";
 import { EventEmitter } from "events";
 import * as scenarios from "../scenarios/lst";
 import { ClaimGenerator, GeneratedClaim } from "../generation/Claim";
@@ -10,6 +10,7 @@ import { ApplicationResponse } from "../api";
 import { approveClaim } from "../submission/PostSubmit";
 import { Fineos } from "../submission/fineos.pages";
 import config from "../../src/config";
+import getArtillerySubmitter from "./ArtilleryClaimSubmitter";
 
 export type ArtilleryContext = {
   claimantCredentials?: Credentials;
@@ -81,8 +82,8 @@ export default class ArtilleryPFMLInteractor {
       const leaveAdminCredentials = getLeaveAdminCredentials(
         claim.claim.employer_fein
       );
-      const submitter = getPortalSubmitter();
-      context.submission = await submitter.submit(
+      const submitter = getArtillerySubmitter();
+      context.submission = await submitter.lstSubmit(
         claim,
         claimantCredentials,
         leaveAdminCredentials
