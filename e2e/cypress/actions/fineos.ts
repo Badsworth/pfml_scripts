@@ -24,12 +24,6 @@ function SSO(): void {
 }
 
 export function before(): void {
-  // Block new-relic.js outright due to issues with Cypress networking code.
-  // Without this block, test retries on the portal error out due to fetch() errors.
-  cy.intercept("https://js-agent.newrelic.com/*", (req) => {
-    req.reply("console.log('Fake New Relic script loaded');");
-  });
-
   // Fineos error pages have been found to cause test crashes when rendered. This is very hard to debug, as Cypress
   // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we replace the
   // page with an error page and capture the real response to a file for future debugging.

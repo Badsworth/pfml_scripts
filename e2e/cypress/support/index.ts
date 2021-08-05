@@ -44,3 +44,14 @@ Cypress.on("uncaught:exception", (err) => {
 
   return true;
 });
+
+beforeEach(() => {
+  // New Relic does not play well with Cypress, and results in a ton of errors
+  // being logged to New Relic. Globally block the New Relic JS script in all tests.
+  // Follow these issues for more info:
+  // * https://discuss.newrelic.com/t/playing-better-with-cypress/120046
+  // * https://github.com/cypress-io/cypress/issues/9058
+  cy.intercept(/new-?relic.*\.js/, (req) => {
+    req.reply("console.log('Fake New Relic script loaded');");
+  });
+});

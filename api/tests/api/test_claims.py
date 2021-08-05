@@ -15,6 +15,7 @@ import massgov.pfml.util.datetime as datetime_util
 import tests.api
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.exceptions import ObjectNotFound
+from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
@@ -896,237 +897,34 @@ class TestUpdateClaim:
 
         assert response.status_code == 200
 
-    def test_employer_update_claim_review_validates_hours_worked_per_week(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    @mock.patch("massgov.pfml.api.claims.claim_rules.get_employer_claim_review_issues")
+    def test_employer_update_claim_err_handling_response(
+        self, mock_get_issues, client, employer_auth_token, update_claim_body, claim
     ):
-        employer = EmployerFactory.create()
-        claim = ClaimFactory.create(employer_id=employer.employer_id)
-        link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(link)
-        test_db_session.commit()
-
-        base_request = {
-            "comment": "comment",
-            "employer_benefits": [
-                {
-                    "benefit_amount_dollars": 0,
-                    "benefit_amount_frequency": "Per Day",
-                    "benefit_end_date": "2021-04-10",
-                    "benefit_start_date": "2021-03-16",
-                    "benefit_type": "Accrued paid leave",
-                }
-            ],
-            "employer_decision": "Approve",
-            "fraud": "Yes",
-            "has_amendments": False,
-            # hours_worked_per_week intentionally excluded
-            "previous_leaves": [
-                {
-                    "leave_end_date": "2021-02-06",
-                    "leave_start_date": "2021-01-25",
-                    "leave_reason": "Pregnancy",
-                }
-            ],
-        }
-
-        request_without_hours = {**base_request, "hours_worked_per_week": None}
+        mock_get_issues.return_value = [
+            ValidationErrorDetail(
+                message="hours_worked_per_week must be populated",
+                type="missing_expected_field",
+                field="hours_worked_per_week",
+            )
+        ]
+        request_body = update_claim_body
         response = client.patch(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
-            json=request_without_hours,
+            json=request_body,
         )
-
-        errors = response.get_json().get("errors")
         assert response.status_code == 400
-        assert len(errors) == 1
-        assert errors[0].get("message") == "hours_worked_per_week must be populated"
-        assert errors[0].get("type") == "missing_expected_field"
-        assert errors[0].get("field") == "hours_worked_per_week"
-
-        request_with_zero_hours = {**base_request, "hours_worked_per_week": 0}
-        response = client.patch(
-            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-            json=request_with_zero_hours,
-        )
-
-        errors = response.get_json().get("errors")
-        assert response.status_code == 400
-        assert len(errors) == 1
-        assert errors[0].get("message") == "hours_worked_per_week must be greater than 0"
-        assert errors[0].get("type") == "minimum"
-        assert errors[0].get("field") == "hours_worked_per_week"
-
-        request_with_negative_hours = {**base_request, "hours_worked_per_week": -1}
-        response = client.patch(
-            "/v1/employers/claims/NTN-100-ABS-01/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-            json=request_with_negative_hours,
-        )
-
-        errors = response.get_json().get("errors")
-        assert response.status_code == 400
-        assert len(errors) == 1
-        assert errors[0].get("message") == "hours_worked_per_week must be greater than 0"
-        assert errors[0].get("type") == "minimum"
-        assert errors[0].get("field") == "hours_worked_per_week"
-
-        request_with_too_many_hours = {**base_request, "hours_worked_per_week": 170}
-        response = client.patch(
-            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-            json=request_with_too_many_hours,
-        )
-
-        errors = response.get_json().get("errors")
-        assert response.status_code == 400
-        assert len(errors) == 1
-        assert errors[0].get("message") == "hours_worked_per_week must be 168 or fewer"
-        assert errors[0].get("type") == "maximum"
-        assert errors[0].get("field") == "hours_worked_per_week"
-
-    def test_employer_update_claim_review_validates_previous_leaves(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
-    ):
-        employer = EmployerFactory.create()
-        claim = ClaimFactory.create(employer_id=employer.employer_id)
-        link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(link)
-        test_db_session.commit()
-
-        base_request = {
-            "comment": "comment",
-            "employer_benefits": [
-                {
-                    "benefit_amount_dollars": 0,
-                    "benefit_amount_frequency": "Per Day",
-                    "benefit_end_date": "2021-04-10",
-                    "benefit_start_date": "2021-03-16",
-                    "benefit_type": "Accrued paid leave",
-                }
-            ],
-            "employer_decision": "Approve",
-            "fraud": "Yes",
-            "has_amendments": False,
-            "hours_worked_per_week": 40,
-            # previous_leaves intentionally excluded
-        }
-
-        request_with_start_date_before_2021 = {
-            **base_request,
-            "previous_leaves": [
-                {
-                    "leave_end_date": "2021-01-05",
-                    "leave_start_date": "2020-12-06",
-                    "leave_reason": "Pregnancy",
-                }
-            ],
-        }
-        response = client.patch(
-            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-            json=request_with_start_date_before_2021,
-        )
-
-        errors = response.get_json().get("errors")
-        assert response.status_code == 400
-        assert len(errors) == 1
-        assert errors[0].get("message") == "Previous leaves cannot start before 2021"
-        assert errors[0].get("type") == "invalid_previous_leave_start_date"
-        assert errors[0].get("field") == "previous_leaves[0].leave_start_date"
-
-        request_with_start_after_end = {
-            **base_request,
-            "previous_leaves": [
-                {
-                    "leave_end_date": "2021-01-05",
-                    "leave_start_date": "2021-02-06",
-                    "leave_reason": "Pregnancy",
-                }
-            ],
-        }
-        response = client.patch(
-            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-            json=request_with_start_after_end,
-        )
-
-        errors = response.get_json().get("errors")
-        assert response.status_code == 400
-        assert len(errors) == 1
-        assert errors[0].get("message") == "leave_end_date cannot be earlier than leave_start_date"
-        assert errors[0].get("type") == "minimum"
-        assert errors[0].get("field") == "previous_leaves[0].leave_end_date"
-
-    def test_employer_update_claim_review_validates_employer_benefits(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
-    ):
-        employer = EmployerFactory.create()
-        claim = ClaimFactory.create(employer_id=employer.employer_id)
-        link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(link)
-        test_db_session.commit()
-
-        base_request = {
-            "comment": "comment",
-            # employer_benefits intentionally excluded
-            "employer_decision": "Approve",
-            "fraud": "Yes",
-            "has_amendments": False,
-            "hours_worked_per_week": 40,
-            "previous_leaves": [
-                {
-                    "leave_end_date": "2021-02-06",
-                    "leave_start_date": "2021-01-25",
-                    "leave_reason": "Pregnancy",
-                }
-            ],
-        }
-
-        request_with_start_after_end = {
-            **base_request,
-            "employer_benefits": [
-                {
-                    "benefit_amount_dollars": 0,
-                    "benefit_amount_frequency": "Per Day",
-                    "benefit_end_date": "2021-01-05",
-                    "benefit_start_date": "2021-02-06",
-                    "benefit_type": "Accrued paid leave",
-                }
-            ],
-        }
-        response = client.patch(
-            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-            json=request_with_start_after_end,
-        )
-
-        errors = response.get_json().get("errors")
-        assert response.status_code == 400
-        assert len(errors) == 1
-        assert (
-            errors[0].get("message") == "benefit_end_date cannot be earlier than benefit_start_date"
-        )
-        assert errors[0].get("type") == "minimum"
-        assert errors[0].get("field") == "employer_benefits[0].benefit_end_date"
+        assert response.get_json().get("errors")
 
     def test_employer_update_claim_review_validates_previous_leaves_length(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+        self,
+        client,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+        update_claim_body,
     ):
         employer = EmployerFactory.create()
         claim = ClaimFactory.create(employer_id=employer.employer_id)
@@ -1138,114 +936,16 @@ class TestUpdateClaim:
         )
         test_db_session.add(link)
         test_db_session.commit()
-
-        base_request = {
-            "comment": "comment",
-            "employer_benefits": [
-                {
-                    "benefit_amount_dollars": 0,
-                    "benefit_amount_frequency": "Per Day",
-                    "benefit_end_date": "2021-04-10",
-                    "benefit_start_date": "2021-03-16",
-                    "benefit_type": "Accrued paid leave",
-                }
-            ],
-            "employer_decision": "Approve",
-            "fraud": "Yes",
-            "has_amendments": False,
-            "hours_worked_per_week": 40,
-            # previous_leaves intentionally excluded
-        }
 
         previous_leaves = [
             {
                 "leave_end_date": "2020-10-04",
                 "leave_start_date": "2020-10-01",
                 "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2020-10-06",
-                "leave_start_date": "2020-10-05",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2020-10-15",
-                "leave_start_date": "2020-10-10",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2020-10-20",
-                "leave_start_date": "2020-10-16",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2020-10-30",
-                "leave_start_date": "2020-10-25",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2020-11-05",
-                "leave_start_date": "2020-11-01",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2020-11-10",
-                "leave_start_date": "2020-11-08",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2020-11-15",
-                "leave_start_date": "2020-11-11",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2020-12-01",
-                "leave_start_date": "2020-11-20",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2021-01-05",
-                "leave_start_date": "2020-12-06",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2021-01-15",
-                "leave_start_date": "2021-01-10",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2021-01-20",
-                "leave_start_date": "2021-01-16",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2021-01-30",
-                "leave_start_date": "2021-01-25",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2021-02-05",
-                "leave_start_date": "2021-02-01",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2021-02-10",
-                "leave_start_date": "2021-02-06",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2021-02-15",
-                "leave_start_date": "2021-02-11",
-                "leave_reason": "Pregnancy",
-            },
-            {
-                "leave_end_date": "2021-02-20",
-                "leave_start_date": "2021-02-16",
-                "leave_reason": "Pregnancy",
-            },
-        ]
+            }
+        ] * 17
 
-        request_with_17_previous_leaves = {**base_request, "previous_leaves": previous_leaves}
+        request_with_17_previous_leaves = {**update_claim_body, "previous_leaves": previous_leaves}
 
         response = client.patch(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
@@ -1384,139 +1084,6 @@ class TestUpdateClaim:
         assert errors[0].get("rule") == 10
         assert errors[0].get("type") == "maxItems"
         assert errors[0].get("field") == "employer_benefits"
-
-    def test_employer_update_claim_review_validates_v1_employer_benefits_length(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
-    ):
-        employer = EmployerFactory.create()
-        claim = ClaimFactory.create(employer_id=employer.employer_id)
-        link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(link)
-        test_db_session.commit()
-
-        base_request = {
-            "comment": "comment",
-            # employer_benefits intentionally excluded
-            "employer_decision": "Approve",
-            "fraud": "Yes",
-            "has_amendments": False,
-            "hours_worked_per_week": 40,
-            "previous_leaves": [
-                {
-                    "leave_end_date": "2021-02-06",
-                    "leave_start_date": "2021-01-25",
-                    "leave_reason": "Pregnancy",
-                }
-            ],
-            "uses_second_eform_version": False,
-        }
-
-        request_with_5_employer_benefits = {
-            **base_request,
-            "employer_benefits": [
-                {
-                    "benefit_amount_dollars": 0,
-                    "benefit_amount_frequency": "Per Day",
-                    "benefit_end_date": "2021-01-05",
-                    "benefit_start_date": "2021-02-06",
-                    "benefit_type": "Accrued paid leave",
-                },
-                {
-                    "benefit_amount_dollars": 0,
-                    "benefit_amount_frequency": "Per Day",
-                    "benefit_end_date": "2021-01-05",
-                    "benefit_start_date": "2021-02-06",
-                    "benefit_type": "Accrued paid leave",
-                },
-                {
-                    "benefit_amount_dollars": 0,
-                    "benefit_amount_frequency": "Per Day",
-                    "benefit_end_date": "2021-01-05",
-                    "benefit_start_date": "2021-02-06",
-                    "benefit_type": "Accrued paid leave",
-                },
-                {
-                    "benefit_amount_dollars": 0,
-                    "benefit_amount_frequency": "Per Day",
-                    "benefit_end_date": "2021-01-05",
-                    "benefit_start_date": "2021-02-06",
-                    "benefit_type": "Accrued paid leave",
-                },
-                {
-                    "benefit_amount_dollars": 0,
-                    "benefit_amount_frequency": "Per Day",
-                    "benefit_end_date": "2021-01-05",
-                    "benefit_start_date": "2021-02-06",
-                    "benefit_type": "Accrued paid leave",
-                },
-            ],
-        }
-        response = client.patch(
-            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-            json=request_with_5_employer_benefits,
-        )
-
-        errors = response.get_json().get("errors")
-        assert response.status_code == 400
-        assert errors[0].get("message") == "Employer benefits cannot exceed limit of 4"
-        assert errors[0].get("type") == "maximum"
-
-    def test_employer_update_claim_review_validates_multiple_fields_at_once(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
-    ):
-        employer = EmployerFactory.create()
-        claim = ClaimFactory.create(employer_id=employer.employer_id)
-        link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(link)
-        test_db_session.commit()
-
-        update_request_body = {
-            "comment": "comment",
-            "employer_benefits": [
-                {
-                    "benefit_amount_dollars": 0,
-                    "benefit_amount_frequency": "Per Day",
-                    "benefit_end_date": "2021-03-16",
-                    "benefit_start_date": "2021-04-10",
-                    "benefit_type": "Accrued paid leave",
-                }
-            ],
-            "employer_decision": "Approve",
-            "fraud": "Yes",
-            "has_amendments": False,
-            "hours_worked_per_week": 190,
-            "previous_leaves": [
-                {
-                    "leave_end_date": "2020-02-06",
-                    "leave_start_date": "2020-01-25",
-                    "leave_reason": "Pregnancy",
-                }
-            ],
-        }
-
-        response = client.patch(
-            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-            json=update_request_body,
-        )
-
-        errors = response.get_json().get("errors")
-        assert response.status_code == 400
-        assert len(errors) == 3
-        assert errors[0].get("field") == "hours_worked_per_week"
-        assert errors[1].get("field") == "previous_leaves[0].leave_start_date"
-        assert errors[2].get("field") == "employer_benefits[0].benefit_end_date"
 
     def test_employer_confirmation_sent_with_employer_update_claim_review(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification
