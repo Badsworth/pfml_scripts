@@ -83,12 +83,6 @@ export function before(flags?: Partial<FeatureFlags>): void {
     url: "**/api/v1/applications/*/submit_application",
   }).as("submitClaimResponse");
 
-  // Block new-relic.js outright due to issues with Cypress networking code.
-  // Without this block, test retries on the portal error out due to fetch() errors.
-  cy.intercept("**/new-relic.js", (req) => {
-    req.reply("console.log('Fake New Relic script loaded');");
-  });
-
   deleteDownloadsFolder();
 }
 
