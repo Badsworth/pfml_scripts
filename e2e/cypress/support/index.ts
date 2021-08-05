@@ -45,6 +45,12 @@ Cypress.on("uncaught:exception", (err) => {
   return true;
 });
 
+// Log every URL change as it happens. This is useful for debugging test hangs resulting from hitting Fineos error pages.
+// Cypress.on("url:changed", (url) => {
+//   // @ts-ignore
+//   cy.now("task", "syslog", `${Date.now()} - URL changed to: ${url}`, {log: false});
+// });
+
 beforeEach(() => {
   // New Relic does not play well with Cypress, and results in a ton of errors
   // being logged to New Relic. Globally block the New Relic JS script in all tests.
