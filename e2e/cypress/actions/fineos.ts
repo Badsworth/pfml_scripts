@@ -44,9 +44,9 @@ export function before(): void {
       //   })
       // );
 
-      // We need to extract this obsructive logic included in a FINEOS error page and replace it with a setTimeout to throw an error letting us know this page was encountered
+      // We need to extract this obstructive logic included in a FINEOS error page and replace it with a setTimeout to throw an error letting us know this page was encountered
       // Using the "modifyObstuctiveCode" property in the cypress.json was enough to get the error page to display but it was not enough to mitigate the test from hanging.
-      // This approach behaves in a much more predicatble manner (Error thrown)
+      // This approach behaves in a much more predictable manner (Error thrown)
       const body: string = res.body.replace(
         "if (top != self) { top.location=self.location }",
         "window.setTimeout(function _() { throw new Error('A FINEOS error page was detected during this test. An error is being thrown in order to prevent Cypress from crashing.') }, 500)\n"

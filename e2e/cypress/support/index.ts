@@ -48,7 +48,9 @@ Cypress.on("uncaught:exception", (err) => {
 // Log every URL change as it happens. This is useful for debugging test hangs resulting from hitting Fineos error pages.
 // Cypress.on("url:changed", (url) => {
 //   // @ts-ignore
-//   cy.now("task", "syslog", `${Date.now()} - URL changed to: ${url}`, {log: false});
+//   cy.now("task", "syslog", `${Date.now()} - URL changed to: ${url}`, {
+//     log: false,
+//   });
 // });
 
 beforeEach(() => {

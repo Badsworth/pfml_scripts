@@ -24,35 +24,30 @@ describe("Post-approval (notifications/notices)", () => {
         cy.task("submitClaimToAPI", {
           ...claim,
           credentials,
-        }).then((res) => {
+        }).then((response) => {
           cy.stash("submission", {
-            application_id: res.application_id,
-            fineos_absence_id: res.fineos_absence_id,
+            application_id: response.application_id,
+            fineos_absence_id: response.fineos_absence_id,
             timestamp_from: Date.now(),
           });
 
-          const claimPage = fineosPages.ClaimPage.visit(res.fineos_absence_id);
+          const claimPage = fineosPages.ClaimPage.visit(
+            response.fineos_absence_id
+          );
           claimPage.adjudicate((adjudication) => {
             adjudication.evidence((evidence) => {
-              for (const document of claim.documents) {
+              // Receive and approve all of the documentation for the claim.
+              claim.documents.forEach((document) => {
                 evidence.receive(document.document_type);
-              }
+              });
             });
             adjudication.certificationPeriods((certificationPeriods) =>
               certificationPeriods.prefill()
             );
             adjudication.acceptLeavePlan();
           });
-          claimPage.tasks((task) => {
-            task.close("Caring Certification Review");
-            task.close("ID Review");
-          });
           claimPage.approve();
-          claimPage
-            .triggerNotice("Designation Notice")
-            .documents((docPage) =>
-              docPage.assertDocumentExists("Approval Notice")
-            );
+          claimPage.triggerNotice("Preliminary Designation");
         });
       });
     }
@@ -162,9 +157,9 @@ describe("Post-approval (notifications/notices)", () => {
     () => {
       cy.dependsOnPreviousPass([extension]);
       cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
           const subjectClaimant = getNotificationSubject(
-            `${claim.claim.first_name} ${claim.claim.last_name}`,
+            `${claim.first_name} ${claim.last_name}`,
             "extension of benefits"
           );
           email
