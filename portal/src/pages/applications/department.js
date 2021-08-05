@@ -64,6 +64,27 @@ export const Department = (props) => {
   // @todo: go to next page and ignore departments, auto-select "I'm not sure"
   // }
 
+  const [departments, setDepartments] = useState([]);
+  const [employerDepartments, setEmployerDepartments] = useState([]);
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
+
+  const workarounds = [
+    t("pages.claimsDepartment.choiceNotListed"),
+    t("pages.claimsDepartment.choiceNotSure"),
+  ];
+  const hasSelectedRadioWorkaround = [...workarounds, "No"].includes(
+    formState.org_unit_radio
+  );
+  const hasSelectedComboboxWorkaround = workarounds.includes(
+    formState.org_unit
+  );
+
+  // API calls
   const handleSave = () => {
     // If user selects a workaround, then take the combobox's value
     // otherwise, take the radio group's value
@@ -111,47 +132,32 @@ export const Department = (props) => {
     appLogic.benefitsApplications.update(claim.application_id, formState);
   };
 
-  const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
-    formState,
-    updateFields,
-  });
-
-  const [departments, setDepartments] = useState([]);
-  const [employerDepartments, setEmployerDepartments] = useState([]);
-
-  const workarounds = [
-    t("pages.claimsDepartment.choiceNotListed"),
-    t("pages.claimsDepartment.choiceNotSure"),
-  ];
-
-  const hasSelectedRadioWorkaround = [...workarounds, "No"].includes(
-    formState.org_unit_radio
-  );
-  const hasSelectedComboboxWorkaround = workarounds.includes(
-    formState.org_unit
-  );
-
-  // API calls
   const populateDepartments = async () => {
+    let claimantDeps = [];
+    let employerDeps = [];
     // obtain the full list of departments connected to this claimant
-    if (departments.length < 1) {
+    if (!departments.length) {
       // const deps = await appLogic.benefitsApplications.getDepartments();
-      const deps = [
+      claimantDeps = [
         allDepartments[0],
         allDepartments[1],
-        // allDepartments[2],
+        allDepartments[2],
+        allDepartments[3],
+        allDepartments[4],
+        allDepartments[5],
       ];
-      setDepartments(deps);
     }
     // obtain the full list of departments connected to this claimant's employer
-    if (employerDepartments.length < 1) {
+    if (!employerDepartments.length) {
       // const deps = await appLogic.benefitsApplications.getDepartmentsByEmployer(claim.employer_fein)
-      const deps = await allDepartments;
-      setEmployerDepartments(deps);
+      employerDeps = await allDepartments;
     }
+
+    setDepartments(claimantDeps.length ? claimantDeps : employerDeps);
+    setEmployerDepartments(employerDeps);
   };
 
+  // Helpers
   const getDepartmentListSizes = (deps) => {
     const isLong = deps.length > 5;
     const isShort = deps.length > 1 && deps.length <= 5;
@@ -164,7 +170,7 @@ export const Department = (props) => {
   };
 
   const getDepartmentChoices = (deps) => {
-    if (deps.length < 1) return [];
+    if (!deps.length) return [];
 
     const { isLong, isShort, isUnique } = getDepartmentListSizes(deps);
 
@@ -185,14 +191,17 @@ export const Department = (props) => {
       return [...departmentChoices, ...workaroundChoices];
     }
     if (isUnique) {
+      const firstDep = deps[0]?.department_description;
       return [
         {
           label: t("pages.claimsDepartment.choiceYes"),
-          value: deps[0]?.department_description,
+          value: firstDep,
+          checked: formState.org_unit_radio === firstDep,
         },
         {
           label: t("pages.claimsDepartment.choiceNo"),
           value: "No",
+          checked: formState.org_unit_radio === "No",
         },
       ];
     }
@@ -203,10 +212,30 @@ export const Department = (props) => {
   const employerChoices = getDepartmentChoices(employerDepartments);
 
   useEffect(() => {
+    // lazy loads both departments lists into state
     populateDepartments();
     return () => null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (isLong || !departments.length) return () => null;
+    // sets radio options to the first workaround option
+    // when the claim org_unit is not one of the radio options shown
+    // and is instead selected in the combo box component
+    updateFields({
+      ...initialFormState,
+      org_unit_radio: claimantChoices.length
+        ? claimantChoices.find((c) => c.value === initialFormState.org_unit)
+          ? initialFormState.org_unit
+          : isUnique
+          ? "No"
+          : workarounds[0]
+        : null,
+    });
+    return () => null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [departments]);
 
   return (
     <QuestionPage
