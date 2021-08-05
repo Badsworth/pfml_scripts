@@ -34,8 +34,6 @@ function InputChoiceGroup({ type = "checkbox", ...props }) {
         {props.label}
       </FormLabel>
 
-      {props.children}
-
       <div className={fieldWrapperClasses}>
         {props.choices.map((choice) => (
           <InputChoice
@@ -52,10 +50,6 @@ function InputChoiceGroup({ type = "checkbox", ...props }) {
 }
 
 InputChoiceGroup.propTypes = {
-  /**
-   * Optional content between form label and the choices.
-   */
-  children: PropTypes.node,
   /**
    * List of choices to be rendered as individual checkbox/radio fields.
    */
