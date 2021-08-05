@@ -444,6 +444,7 @@ def generate_payment_audit_data_set_and_rejects_file(
     folder_path: str,
     db_session: db.Session,
     reject_rate: Optional[decimal.Decimal] = None,
+    file_name: str = "Payment-Audit-Report-Response",
 ) -> List[AuditScenarioData]:
     if not reject_rate:
         reject_rate = decimal.Decimal(0.5)
@@ -467,9 +468,7 @@ def generate_payment_audit_data_set_and_rejects_file(
             db_session,
         )
 
-    write_audit_report(
-        payment_audit_data_set, folder_path, db_session, report_name="Payment-Rejects"
-    )
+    write_audit_report(payment_audit_data_set, folder_path, db_session, report_name=file_name)
     return payment_audit_scenario_data_set
 
 
