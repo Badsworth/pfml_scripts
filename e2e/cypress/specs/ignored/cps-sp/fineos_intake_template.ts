@@ -5,9 +5,11 @@ import {
   AbsenceReasonDescription,
   ClaimantPage,
   ClaimPage,
+  PrimaryRelationshipDescription,
 } from "../../../actions/fineos.pages";
 import { Submission } from "../../../../src/types";
 import { getLeavePeriod } from "../../../../src/util/claims";
+import { waitForAjaxComplete } from "../../../actions/fineos";
 
 /**
  * Because there's too many scenarios for us to reasonably handle during the `Reason of Absence` step,
@@ -20,8 +22,17 @@ const absenceDescription: AbsenceReasonDescription = {
   // reason: "Military Caregiver",
   qualifier_1: "Other Additional Activities",
   // qualifier_1: "Active Duty",
-  qualifier_2: "Sickness/Injury",
+  // qualifier_2: "Sickness/Injury",
   // @todo Add more of you need to.
+};
+
+/**
+ * Same as above, there's too many scenarios for us to reasonably handle when describing primary relationship,
+ * specify the description here and use/expand it as needed.
+ */
+const _relationshipDescription: PrimaryRelationshipDescription = {
+  relationship_to_employee: "Sibling - Brother/Sister",
+  qualifier_1: "Biological",
 };
 
 describe("Submit a claim through Fineos intake process, verify the Absence Case", () => {
@@ -38,11 +49,17 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
         ClaimantPage.visit(claim.claim.tax_identifier)
           // Start intake process
           .startCreateNotification((occupationDetails) => {
+            // @note CPS-906-P (CPS-1650)/Check that you can't submit 0 as amount of hours worked per week
+            occupationDetails.enterHoursWorkedPerWeek(0);
+            occupationDetails.clickNext();
+            fineos.assertErrorMessage("Hours worked per week must be entered");
+            // @note end of testing CPS-906-P (CPS-1650)
             // Adjust as needed
             if (claim.claim.hours_worked_per_week)
               occupationDetails.enterHoursWorkedPerWeek(
                 claim.claim.hours_worked_per_week
               );
+
             //By returning something from the callback, you can bubble it up to outside scope.
             return occupationDetails.nextStep((notificationOptions) =>
               notificationOptions
@@ -50,12 +67,10 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                 .chooseTypeOfRequest("Out of work for another reason")
                 .nextStep((reasonOfAbsence) => {
                   reasonOfAbsence.fillAbsenceReason(absenceDescription);
-                  /* 
-                    // @TODO Fill absence relationship for caring leave or bonding claims
-                    .fillAbsenceRelationship({
 
-                    })
-                     */ return reasonOfAbsence.nextStep((datesOfAbsence) => {
+                  // @TODO Fill absence relationship for caring leave or bonding claims
+                  // .fillAbsenceRelationship(relationshipDescription);
+                  return reasonOfAbsence.nextStep((datesOfAbsence) => {
                     assertValidClaim(claim.claim);
 
                     const [startDate, endDate] = getLeavePeriod(
@@ -70,11 +85,13 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                           start: startDate,
                           end: endDate,
                         });
+                    // @note CPS-906-G (CPS-2449)/intermittent & reduced leave periods.
                     if (claim.claim.has_intermittent_leave_periods)
                       // @TODO adjust leave period/status as needed
                       datesOfAbsence
                         // @TODO add method to add intermittent leave period
-                        .toggleLeaveScheduleSlider("intermittent");
+                        .toggleLeaveScheduleSlider("intermittent")
+                        .addIntermittentLeavePeriod(startDate, endDate);
                     if (
                       claim.claim.has_reduced_schedule_leave_periods &&
                       claim.claim.leave_details.reduced_schedule_leave_periods
@@ -105,15 +122,74 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
             cy.log(fineos_absence_id);
             cy.stash("submission", { fineos_absence_id });
 
-            ClaimPage.visit(fineos_absence_id).adjudicate((adjudication) => {
-              adjudication.evidence((evidence) => {
-                claim.documents.forEach((doc) =>
-                  evidence.receive(doc.document_type)
-                );
+            const claimPage = ClaimPage.visit(fineos_absence_id);
+            // @NOTE  testing CPS-906-D (CPS-794)/notes character limit
+            // claimPage.notes((notes) => {
+            //   cy.findByText("Create New").click();
+            //   cy.findByText("Leave Request Review", {
+            //     selector: "span",
+            //   }).click();
+            //   waitForAjaxComplete();
+            //   // Can't seem to be able to get inspect the alert properly here
+            //   // So just checking that the limit works.
+            //   cy.get(`#CaseNotesPopupWidgetAdd_PopupWidgetWrapper`)
+            //     .should("be.visible")
+            //     .within(() => {
+            //       // Input 4000 chars
+            //       cy.findByLabelText("Review note")
+            //         .type("aaaa".repeat(1000))
+            //         .should((el) =>
+            //           expect(el.val()).to.eq("aaaa".repeat(1000))
+            //         );
 
-                // Military exigency unsupported docs
-                evidence.receive("Military exigency form");
-                evidence.receive("Family Member Active Duty Service Proof");
+            //       // Input few more chars, should still be at 4000.
+            //       cy.findByLabelText("Review note").type("a", { delay: 10 });
+            //       cy.findByLabelText("Review note").type("a", { delay: 10 });
+            //       cy.findByLabelText("Review note")
+            //         .type("a", { delay: 10 })
+            //         .should((el) => expect(el.val()).to.eq("aaaa".repeat(1000)));
+            //       cy.findByText("OK").click();
+            //       waitForAjaxComplete();
+            //     });
+            //   notes.assertHasNote("Leave Request Review", "a".repeat(4000));
+            // });
+            // @NOTE  End of testing CPS-906-D (CPS-794)
+
+            claimPage.adjudicate((adjudication) => {
+              adjudication.availability((_) => {
+                cy.get(`tr.ListRowSelected`).should("be.visible");
+                // @note CPS-906-H-0 (CPS-2449)/Checking for time increment config at "Availability" tab.
+                cy.findByTitle(
+                  "Manage time for the selected Leave Plan"
+                ).click();
+                waitForAjaxComplete();
+                cy.findByText("Minimum time increment")
+                  .parent()
+                  .next()
+                  .should("contain.text", "Does Not Apply");
+                cy.findByText("Minimum time threshold")
+                  .parent()
+                  .next()
+                  .should("contain.text", "Does Not Apply");
+                cy.get("#footerButtonsBar input[value='Close']").click();
+                waitForAjaxComplete();
+              });
+              // @note CPS-906-G (CPS-2449)/Check restriction decision
+              adjudication.restrictions((restrictions) => {
+                restrictions.assertRestrictionDecision("Passed");
+              });
+              adjudication.evidence((evidence) => {
+                claim.documents.forEach((doc) => {
+                  // @note CPS-906-H-0 (CPS-2449)
+                  // @note CPS-906-V (CPS-2454)
+                  // Checking for evidence and it's initial status as part of the adjudication.
+                  evidence.assertEvidenceStatus({
+                    evidenceType: doc.document_type,
+                    decision: "Pending",
+                    receipt: "Pending",
+                  });
+                  evidence.receive(doc.document_type);
+                });
               });
             });
           });

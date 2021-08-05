@@ -336,3 +336,13 @@ export function getFixtureDocumentName(
       return "HCP" as const;
   }
 }
+
+/**
+ * Asserts there's an error message displayed which matches a given text.
+ * @param message text of the message
+ * @example
+ * fineos.assertErrorMessage("Hours worked per week must be entered");
+ */
+export function assertErrorMessage(message: string): void {
+  cy.get(`#page_messages_container`).should("contain.text", message);
+}
