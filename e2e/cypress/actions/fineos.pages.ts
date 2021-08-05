@@ -157,6 +157,7 @@ export class ClaimPage {
       | "Leave Request Withdrawn"
       | "Review Approval Notice"
       | "Leave Cancellation Request"
+      | "Preliminary Designation"
   ): this {
     onTab("Task");
     onTab("Processes");
@@ -200,6 +201,22 @@ export class ClaimPage {
     assertClaimStatus("Declined");
     return this;
   }
+
+  // This will deny extended time in the Leave Details.
+  // No assert ClaimStatus for Declined for the absence case
+  // won't say "Declined".
+  denyExtendedTime(reason: string): this {
+    cy.get("tr.ListRowSelected").click();
+    cy.get('a[title="Deny the Pending Leave Request"]').click({
+      force: true,
+    });
+    cy.get('span[id="leaveRequestDenialDetailsWidget"]')
+      .find("select")
+      .select(reason);
+    cy.get('input[type="submit"][value="OK"]').click();
+    return this;
+  }
+
   withdraw(): this {
     cy.get('a[title="Withdraw the Pending Leave Request"').click({
       force: true,
@@ -2015,6 +2032,12 @@ class LeaveDetailsPage {
     cy.get('input[type="submit"][value="Review"]').click();
     waitForAjaxComplete();
     cy.get('input[type="submit"][value="Edit"]').click();
+    return new AdjudicationPage();
+  }
+  rejectSelectPlan(): AdjudicationPage {
+    cy.get("tr.ListRow2.planUndecided").click();
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Reject"]').click();
     return new AdjudicationPage();
   }
 }
