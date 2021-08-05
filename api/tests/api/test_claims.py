@@ -2830,3 +2830,115 @@ class TestGetClaimsEndpoint:
             response_body = response.get_json()
 
             assert len(response_body["data"]) >= 7
+
+    # Test the combination of claims feature
+    # ordering, filtering and search
+    class TestClaimsMultipleParams:
+        @pytest.fixture
+        def employee(self):
+            return EmployeeFactory.create()
+
+        @pytest.fixture
+        def other_employee(self):
+            return EmployeeFactory.create()
+
+        @pytest.fixture(autouse=True)
+        def load_test_db(
+            self, employer_user, test_verification, test_db_session, employee, other_employee
+        ):
+            employer = EmployerFactory.create()
+
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(link)
+
+            other_employer = EmployerFactory.create()
+
+            other_link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=other_employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(other_link)
+
+            for _ in range(5):
+                ClaimFactory.create(
+                    employer=employer,
+                    employee=employee,
+                    fineos_absence_status_id=AbsenceStatus.ADJUDICATION.absence_status_id,
+                    claim_type_id=1,
+                )
+                ClaimFactory.create(
+                    employer=other_employer,
+                    employee=other_employee,
+                    fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+                    claim_type_id=1,
+                    created_at=factory.Faker(
+                        "date_between_dates",
+                        date_start=date(2021, 1, 1),
+                        date_end=date(2021, 1, 15),
+                    ),
+                )
+                ClaimFactory.create(
+                    employer=other_employer,
+                    employee=other_employee,
+                    fineos_absence_status_id=AbsenceStatus.INTAKE_IN_PROGRESS.absence_status_id,
+                    claim_type_id=1,
+                    created_at=factory.Faker(
+                        "date_between_dates",
+                        date_start=date(2021, 1, 1),
+                        date_end=date(2021, 1, 15),
+                    ),
+                )
+                claim = ClaimFactory.create(
+                    employer=employer,
+                    employee=employee,
+                    fineos_absence_status_id=AbsenceStatus.IN_REVIEW.absence_status_id,
+                    claim_type_id=1,
+                )
+                ManagedRequirementFactory.create(
+                    claim=claim,
+                    managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                )
+            self.claims_count = 20
+            test_db_session.commit()
+
+        def _perform_api_call(self, request, client, employer_auth_token):
+            query_string = "&".join([f"{key}={value}" for key, value in request.items()])
+            return client.get(
+                f"/v1/claims?{query_string}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+
+        def test_get_claims_absence_status_order_filter_employee_search_pending_no_action(
+            self, client, employer_auth_token, other_employee
+        ):
+            params = {
+                "claim_status": ActionRequiredStatusFilter.PENDING_NO_ACTION,
+                "search": other_employee.first_name,
+                "order_by": "employee",
+            }
+            resp = self._perform_api_call(params, client, employer_auth_token)
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            data = response_body.get("data", [])
+            assert len(data) == self.claims_count / 4
+
+        def test_get_claims_absence_status_order_filter_employee_search_open_requirements(
+            self, client, employer_auth_token, employee
+        ):
+            params = {
+                "claim_status": ActionRequiredStatusFilter.OPEN_REQUIREMENT,
+                "search": employee.first_name,
+                "order_by": "employee",
+            }
+            resp = self._perform_api_call(params, client, employer_auth_token)
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            data = response_body.get("data", [])
+            assert len(data) == self.claims_count / 4
