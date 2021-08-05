@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 
 import Alert from "../../components/Alert";
+import AppErrorInfo from "../../models/AppErrorInfo";
+import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ComboBox from "../../components/ComboBox";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -18,7 +20,7 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const fields = ["claim.org_unit", "claim.org_unit_radio"];
+export const fields = ["claim.org_unit"];
 
 const allDepartments = [
   {
@@ -55,7 +57,8 @@ export const Department = (props) => {
 
   const initialFormState = pick(props, fields).claim;
 
-  const { formState, updateFields } = useFormState(initialFormState);
+  const { formState, updateFields, getField, clearField } =
+    useFormState(initialFormState);
 
   // if (!showDepartments) {
   // @todo: go to next page and ignore departments, auto-select "I'm not sure"
@@ -64,19 +67,48 @@ export const Department = (props) => {
   const handleSave = () => {
     // If user selects a workaround, then take the combobox's value
     // otherwise, take the radio group's value
+    const errors = [];
+
     const finalDepartmentDecision = hasSelectedRadioWorkaround
       ? formState.org_unit
       : formState.org_unit_radio;
 
     formState.org_unit = finalDepartmentDecision;
 
-    console.log(formState);
-    if (!finalDepartmentDecision) {
-      console.error("Invalid department", { finalDepartmentDecision });
-    } else {
-      console.log("Selected " + formState.org_unit);
-      appLogic.benefitsApplications.update(claim.application_id, formState);
+    if (isUnique && !formState.org_unit_radio) {
+      const noConfirmationError = new AppErrorInfo({
+        field: "org_unit_radio",
+        message: t("pages.claimsDepartment.errors.missingConfirmation"),
+        type: "required",
+      });
+
+      errors.push(noConfirmationError);
     }
+    if (
+      (isShort && !formState.org_unit_radio) ||
+      (isLong && !formState.org_unit) ||
+      (!isLong && formState.org_unit_radio && !formState.org_unit)
+    ) {
+      const missingDepartmentError = new AppErrorInfo({
+        field:
+          isShort && !formState.org_unit_radio ? "org_unit_radio" : "org_unit",
+        message: t("pages.claimsDepartment.errors.missingDepartment"),
+        type: "required",
+      });
+
+      errors.push(missingDepartmentError);
+    }
+
+    appLogic.setAppErrors(new AppErrorInfoCollection(errors));
+
+    console.log("Selected", finalDepartmentDecision);
+
+    if (errors.length > 0) return;
+
+    delete formState.org_unit_radio;
+    formState.org_unit = finalDepartmentDecision;
+
+    appLogic.benefitsApplications.update(claim.application_id, formState);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -107,7 +139,7 @@ export const Department = (props) => {
       // const deps = await appLogic.benefitsApplications.getDepartments();
       const deps = [
         allDepartments[0],
-        // allDepartments[1],
+        allDepartments[1],
         // allDepartments[2],
       ];
       setDepartments(deps);
@@ -187,19 +219,22 @@ export const Department = (props) => {
           choices={claimantChoices}
           label={t("pages.claimsDepartment.confirmSectionLabel")}
           hint={
-            <Trans
-              i18nKey="pages.claimsDepartment.confirmHint"
-              tOptions={{ department: departments[0]?.department_description }}
-            />
+            <React.Fragment>
+              <Trans
+                i18nKey="pages.claimsDepartment.confirmHint"
+                tOptions={{
+                  department: departments[0]?.department_description,
+                }}
+              />
+              <div className="margin-top-2">
+                <Details label={t("pages.claimsDepartment.moreThanOne")}>
+                  {t("pages.claimsDepartment.hint")}
+                </Details>
+              </div>
+            </React.Fragment>
           }
           type="radio"
-        >
-          <div className="margin-top-2">
-            <Details label={t("pages.claimsDepartment.moreThanOne")}>
-              {t("pages.claimsDepartment.hint")}
-            </Details>
-          </div>
-        </InputChoiceGroup>
+        />
       </ConditionalContent>
 
       <ConditionalContent visible={isShort}>
@@ -214,7 +249,13 @@ export const Department = (props) => {
         />
       </ConditionalContent>
 
-      <ConditionalContent visible={isLong || hasSelectedRadioWorkaround}>
+      <ConditionalContent
+        visible={isLong || hasSelectedRadioWorkaround}
+        fieldNamesClearedWhenHidden={["org_unit"]}
+        updateFields={updateFields}
+        clearField={clearField}
+        getField={getField}
+      >
         <Fieldset>
           <ConditionalContent visible={isLong}>
             <FormLabel
@@ -236,7 +277,7 @@ export const Department = (props) => {
             required
           />
           <ConditionalContent visible={hasSelectedComboboxWorkaround}>
-            <Alert className="measure-6" state="info" noIcon>
+            <Alert className="measure-6" state="info" slim>
               {t("pages.claimsDepartment.followupInfo")}
             </Alert>
           </ConditionalContent>
