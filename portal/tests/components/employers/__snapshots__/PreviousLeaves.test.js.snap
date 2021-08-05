@@ -81,11 +81,11 @@ exports[`PreviousLeaves renders the component 1`] = `
           Date range
         </th>
         <th
-          colSpan="2"
           scope="col"
         >
           Leave type
         </th>
+        <th />
       </tr>
     </thead>
     <tbody>
@@ -142,7 +142,6 @@ exports[`PreviousLeaves renders the component 1`] = `
       <tr>
         <td
           className="padding-y-2 padding-left-0"
-          colSpan="4"
         >
           <AddButton
             disabled={false}
@@ -150,6 +149,9 @@ exports[`PreviousLeaves renders the component 1`] = `
             onClick={[Function]}
           />
         </td>
+        <td />
+        <td />
+        <td />
       </tr>
     </tbody>
   </Table>

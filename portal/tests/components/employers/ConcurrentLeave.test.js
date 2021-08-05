@@ -44,7 +44,7 @@ describe("ConcurrentLeave", () => {
   it("displays 'None reported' and the add button if no leave periods are reported", () => {
     const wrapper = render({ concurrentLeave: null });
     expect(wrapper.find("AmendableConcurrentLeave").exists()).toEqual(false);
-    expect(wrapper.find("th").last().text()).toEqual("None reported");
+    expect(wrapper.find("td").at(0).text()).toEqual("None reported");
     expect(wrapper.find("AddButton").exists()).toBe(true);
   });
 

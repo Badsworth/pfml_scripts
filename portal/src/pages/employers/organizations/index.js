@@ -74,9 +74,8 @@ export const Index = (props) => {
             ))}
           {user_leave_administrators.length === 0 && (
             <tr>
-              <th scope="row" colSpan={2}>
-                <span>{t("shared.noneReported")}</span>
-              </th>
+              <td>{t("shared.noneReported")}</td>
+              <td />
             </tr>
           )}
         </tbody>
