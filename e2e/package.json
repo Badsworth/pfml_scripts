@@ -29,7 +29,9 @@
     "flood:FineosClaimSubmit": "element run src/flood/scenarios/FineosClaimSubmit.perf.ts --no-headless",
     "flood:SavilinxAgent": "element run src/flood/scenarios/SavilinxAgent.perf.ts --no-headless",
     "flood:LeaveAdminSelfReg": "element run src/flood/scenarios/LeaveAdminSelfReg.perf.ts --no-headless",
-    "artillery:run": "rm -rf ./dist && webpack --config=webpack.artillery.config.ts && artillery run dist/spec.yml"
+    "artillery:dev": "npm run artillery:bundle&& artillery run -e test dist/spec.yml",
+    "artillery:run": "E2E_ENVIRONMENT=performance npm run artillery:bundle && artillery run -e performance dist/spec.yml",
+    "artillery:bundle": "rm -rf ./dist && webpack --config=webpack.artillery.config.ts"
   },
   "author": "",
   "license": "ISC",
