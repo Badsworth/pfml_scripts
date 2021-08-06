@@ -95,8 +95,8 @@
     "COGNITO_POOL": "us-east-1_Bi6tPV5hz",
     "COGNITO_CLIENTID": "606qc6fmb1sn3pcujrav20h66l",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-06-30.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-06-30.json",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
+    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
     "HAS_FINEOS_SP": "true",
     "FINEOS_HAS_UPDATED_EFORMS": "true"
