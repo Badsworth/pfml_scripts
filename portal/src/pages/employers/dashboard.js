@@ -634,7 +634,6 @@ const Filters = (props) => {
             ...pendingStatusChoices,
           ].map((value) => ({
             checked: get(formState, "claim_status", []).includes(value),
-            className: "bg-transparent",
             label: t("pages.employersDashboard.filterStatusChoice", {
               context: startCase(camelCase(value)).replace(/[-\s]/g, ""),
             }),

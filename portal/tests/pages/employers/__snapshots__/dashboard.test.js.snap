@@ -206,25 +206,21 @@ exports[`Employer dashboard renders filters 1`] = `
         Array [
           Object {
             "checked": false,
-            "className": "bg-transparent",
             "label": "Approved",
             "value": "Approved",
           },
           Object {
             "checked": false,
-            "className": "bg-transparent",
             "label": "Closed",
             "value": "Closed",
           },
           Object {
             "checked": false,
-            "className": "bg-transparent",
             "label": "Denied",
             "value": "Declined",
           },
           Object {
             "checked": false,
-            "className": "bg-transparent",
             "label": "--",
             "value": "Pending",
           },
