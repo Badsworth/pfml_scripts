@@ -22,6 +22,9 @@ const flagsConfig = {
     // a X-FF-Require-Other-Leaves header on API requests.
     claimantShowOtherLeaveStep: true,
 
+    // When this flag is enabled, the claim status page for claimants will show
+    claimantShowStatusPage: false,
+
     // When this flag is enabled, the Leave Admin dashboard supports search functionality
     // TODO (EMPLOYER-1500): Remove flag
     employerShowDashboardSearch: false,
