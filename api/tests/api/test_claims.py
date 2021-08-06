@@ -19,6 +19,10 @@ from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
+    LkAbsencePeriodType,
+    LkAbsenceReason,
+    LkAbsenceReasonQualifierOne,
+    LkLeaveRequestDecision,
     LkManagedRequirementStatus,
     ManagedRequirement,
     ManagedRequirementCategory,
@@ -28,6 +32,7 @@ from massgov.pfml.db.models.employees import (
     UserLeaveAdministrator,
 )
 from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
     ApplicationFactory,
     ClaimFactory,
     EmployeeFactory,
@@ -1724,6 +1729,41 @@ def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> b
     assert claim_response["claim_type_description"] == claim_query.claim_type.claim_type_description
 
 
+def assert_detailed_claim_response_equal_to_claim_query(claim_response, claim_query) -> bool:
+    assert claim_response["fineos_absence_id"] == claim_query.fineos_absence_id
+    assert claim_response["fineos_notification_id"] == claim_query.fineos_notification_id
+    assert claim_response["employer"]["employer_dba"] == claim_query.employer.employer_dba
+    assert claim_response["employer"]["employer_fein"] == FEINFormattedStr.validate_type(
+        claim_query.employer.employer_fein
+    )
+    assert claim_response["employer"]["employer_id"] == str(claim_query.employer.employer_id)
+    assert claim_response["employee"]["first_name"] == claim_query.employee.first_name
+    assert claim_response["employee"]["middle_name"] == claim_query.employee.middle_name
+    assert claim_response["employee"]["last_name"] == claim_query.employee.last_name
+    assert claim_response["employee"]["other_name"] == claim_query.employee.other_name
+
+
+def leave_period_response_equal_leave_period_query(
+    leave_period_response, leave_period_query
+) -> bool:
+    return (
+        leave_period_response["fineos_leave_request_id"]
+        == leave_period_query.fineos_leave_request_id
+        and leave_period_response["absence_period_start_date"]
+        == leave_period_query.absence_period_start_date.isoformat()
+        and leave_period_response["absence_period_end_date"]
+        == leave_period_query.absence_period_end_date.isoformat()
+        and leave_period_response["request_decision"]
+        == leave_period_query.leave_request_decision.leave_request_decision_description
+        and leave_period_response["period_type"]
+        == leave_period_query.absence_period_type.absence_period_type_description
+        and leave_period_response["reason"]
+        == leave_period_query.absence_reason.absence_reason_description
+        and leave_period_response["reason_qualifier_one"]
+        == leave_period_query.absence_reason_qualifier_one.absence_reason_qualifier_one_description
+    )
+
+
 class TestGetClaimEndpoint:
     def test_get_claim_claim_does_not_exist(self, caplog, client, employer_auth_token):
         response = client.get(
@@ -1774,7 +1814,7 @@ class TestGetClaimEndpoint:
         assert response.status_code == 200
         response_body = response.get_json()
         claim_data = response_body.get("data")
-        assert_claim_response_equal_to_claim_query(claim_data, claim)
+        assert_detailed_claim_response_equal_to_claim_query(claim_data, claim)
 
     def test_get_claim_user_has_access_as_claimant(self, caplog, client, auth_token, user):
         employer = EmployerFactory.create()
@@ -1791,7 +1831,48 @@ class TestGetClaimEndpoint:
         assert response.status_code == 200
         response_body = response.get_json()
         claim_data = response_body.get("data")
-        assert_claim_response_equal_to_claim_query(claim_data, claim)
+        assert_detailed_claim_response_equal_to_claim_query(claim_data, claim)
+
+    def test_get_claim_with_leave_periods(self, caplog, client, auth_token, user, test_db_session):
+        employer = EmployerFactory.create()
+        employee = EmployeeFactory.create()
+        claim = ClaimFactory.create(
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+        )
+        request_decision = LkLeaveRequestDecision(
+            leave_request_decision_id=3, leave_request_decision_description="Approved"
+        )
+        test_db_session.add(request_decision)
+        absence_period_type = LkAbsencePeriodType(
+            absence_period_type_id=1, absence_period_type_description="Continuous"
+        )
+        test_db_session.add(absence_period_type)
+        absence_reason = LkAbsenceReason(
+            absence_reason_id=1, absence_reason_description="Child Bonding"
+        )
+        test_db_session.add(absence_reason)
+        absence_reason_qualifier_one = LkAbsenceReasonQualifierOne(
+            absence_reason_qualifier_one_id=1,
+            absence_reason_qualifier_one_description="Child Bonding",
+        )
+        test_db_session.add(absence_reason_qualifier_one)
+        test_db_session.commit()
+        leave_period = AbsencePeriodFactory.create(
+            claim=claim, leave_request_decision_id=request_decision.leave_request_decision_id,
+        )
+        ApplicationFactory.create(user=user, claim=claim)
+        response = client.get(
+            f"/v1/claims/{claim.fineos_absence_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert_detailed_claim_response_equal_to_claim_query(claim_data, claim)
+        assert leave_period_response_equal_leave_period_query(
+            claim_data["absence_periods"][0], leave_period
+        )
 
 
 class TestGetClaimsEndpoint:

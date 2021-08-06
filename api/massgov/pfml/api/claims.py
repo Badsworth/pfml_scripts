@@ -14,7 +14,7 @@ from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
-from massgov.pfml.api.models.claims.responses import ClaimResponse
+from massgov.pfml.api.models.claims.responses import ClaimResponse, DetailedClaimResponse
 from massgov.pfml.api.services.administrator_fineos_actions import (
     awaiting_leave_info,
     complete_claim_review,
@@ -513,7 +513,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
 
     return response_util.success_response(
         message="Successfully retrieved claim",
-        data=ClaimResponse.from_orm(claim).dict(),
+        data=DetailedClaimResponse.from_orm(claim).dict(),
         status_code=200,
     ).to_api_response()
 

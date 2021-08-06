@@ -651,6 +651,9 @@ class Claim(Base, TimestampMixin):
         Optional[List["ManagedRequirement"]],
         relationship("ManagedRequirement", back_populates="claim"),
     )
+    absence_periods = cast(
+        Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim"),
+    )
 
 
 class Payment(Base, TimestampMixin):
