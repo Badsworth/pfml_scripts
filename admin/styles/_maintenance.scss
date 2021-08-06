@@ -24,15 +24,6 @@
   flex: 1 1 auto;
 }
 
-.maintenance-info__a-config {
-  text-decoration: none;
-}
-
-.maintenance-info__a-config::before {
-  content: '\e905';
-  font-family: 'SiteAdminPortal' !important;
-}
-
 .maintenance-configure {
   background: #fff;
   border-radius: $Border-Radius;
