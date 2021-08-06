@@ -1,3 +1,4 @@
+import copy
 import pathlib
 import tempfile
 from datetime import datetime
@@ -254,6 +255,33 @@ def test_employer_address(test_db_session):
     assert persisted_address.country_id == Country.get_id(
         employer_international_address["employer_address_country"]
     )
+
+
+def test_employer_invalid_fein(test_db_session):
+    employer_data_invalid_type = copy.deepcopy(test_data.new_employer)
+    employer_data_invalid_length = copy.deepcopy(test_data.new_employer)
+    employer_data_invalid_type["fein"] = "abcdefghi"
+    employer_data_invalid_type["account_key"] = "00000000002"
+    employer_data_invalid_length["fein"] = "12345678"
+
+    before_employer_count = test_db_session.query(Employer).count()
+
+    report, report_log_entry = get_new_import_report(test_db_session)
+    import_dor.import_employers(
+        test_db_session,
+        [employer_data_invalid_type, employer_data_invalid_length,],
+        report,
+        report_log_entry.import_log_id,
+    )
+
+    assert report.created_employers_count == 0
+    assert len(report.invalid_employer_feins_by_account_key) == 2
+    assert employer_data_invalid_type["account_key"] in report.invalid_employer_feins_by_account_key
+    assert (
+        employer_data_invalid_length["account_key"] in report.invalid_employer_feins_by_account_key
+    )
+    after_employer_count = test_db_session.query(Employer).count()
+    assert before_employer_count == after_employer_count
 
 
 def test_log_employees_with_new_employers(test_db_session):

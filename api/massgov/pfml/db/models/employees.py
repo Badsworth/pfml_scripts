@@ -8,6 +8,7 @@
 # This allows us to build mock data and insert them easily in the database for tests
 # and seeding.
 #
+import re
 import uuid
 from datetime import date
 from typing import TYPE_CHECKING, List, Optional, cast
@@ -27,7 +28,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, deferred, dynamic_loader, relationship
+from sqlalchemy.orm import Query, deferred, dynamic_loader, relationship, validates
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON, TypeEngine
@@ -407,6 +408,14 @@ class Employer(Base, TimestampMixin):
             and quarter.filing_period < current_date
             for quarter in self.employer_quarterly_contribution
         )
+
+    @validates("employer_fein")
+    def validate_employer_fein(self, key: str, employer_fein: str) -> str:
+        fein = str(employer_fein)
+        error = re.match(r"^[0-9]{9}$", fein) is None
+        if error:
+            raise ValueError(f"Invalid FEIN: {employer_fein}. Expected a 9-digit integer value")
+        return employer_fein
 
 
 class EmployerQuarterlyContribution(Base):
