@@ -15,6 +15,11 @@ TASKS_TO_IGNORE = [
     ".*fineos-eligibility-feed-export",
     ".*fineos-import-employee-updates",
 
+    # pfml-api-test-pub-payments* tasks are run manually so there is no need 
+    # for monitoring on these
+    ".*test-pub-payments*",
+
+
     # The Leave Admin registration job runs every 15 minutes, so we avoid spamming
     # and will use PagerDuty for notifications as defined in INFRA-ABC.
     ".*register-leave-admins-with-fineos",
