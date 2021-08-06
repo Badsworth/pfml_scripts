@@ -95,16 +95,14 @@ export default function Maintenance() {
     );
     return (
       <>
-        <button type="button" className="btn">
-          <Link
-            href={{
-              pathname: "/maintenance/add",
-              query: linkValues,
-            }}
-          >
-            <a>Clone</a>
-          </Link>
-        </button>
+        <Link
+          href={{
+            pathname: "/maintenance/add",
+            query: linkValues,
+          }}
+        >
+          <a>Clone</a>
+        </Link>
       </>
     );
   };
@@ -113,10 +111,6 @@ export default function Maintenance() {
     <>
       <Helmet>
         <title>Maintenance</title>
-        <link
-          href="https://fonts.googleapis.com/icon?family=Material+Icons"
-          rel="stylesheet"
-        />
       </Helmet>
 
       <h1>Maintenance</h1>
@@ -135,15 +129,13 @@ export default function Maintenance() {
             </p>
           </div>
           <Toggle status={false} />
-          <button type="button" className="btn">
-            <Link
-              href={{
-                pathname: "/maintenance/add",
-              }}
-            >
-              <a className="maintenance-info__a-config"></a>
-            </Link>
-          </button>
+          <Link
+            href={{
+              pathname: "/maintenance/add",
+            }}
+          >
+            <a className="maintenance-info__a-config"></a>
+          </Link>
         </div>
         {showCurrent && (
           <div className="maintenance-status">

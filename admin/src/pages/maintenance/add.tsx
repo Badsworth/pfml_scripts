@@ -315,13 +315,12 @@ export default function Maintenance() {
               )}
             </fieldset>
             <button
-              className="maintenance-configure__btn btn"
+              className="maintenance-configure__btn btn btn--cancel"
               type="button"
               disabled={props.isSubmitting}
+              onClick={() => { router.push('/maintenance'); }}
             >
-              <Link href="/maintenance">
-                <a>Cancel</a>
-              </Link>
+              Cancel
             </button>
             <button
               className="maintenance-configure__btn btn"
