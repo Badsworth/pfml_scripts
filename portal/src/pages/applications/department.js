@@ -225,13 +225,14 @@ export const Department = (props) => {
     // and is instead selected in the combo box component
     updateFields({
       ...initialFormState,
-      org_unit_radio: claimantChoices.length
-        ? claimantChoices.find((c) => c.value === initialFormState.org_unit)
-          ? initialFormState.org_unit
-          : isUnique
-          ? "No"
-          : workarounds[0]
-        : null,
+      org_unit_radio:
+        claimantChoices.length && initialFormState.org_unit
+          ? claimantChoices.find((c) => c.value === initialFormState.org_unit)
+            ? initialFormState.org_unit
+            : isUnique
+            ? "No"
+            : workarounds[0]
+          : null,
     });
     return () => null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
