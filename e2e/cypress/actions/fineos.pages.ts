@@ -1289,6 +1289,17 @@ class PaidLeavePage {
     return this;
   }
 
+  assertOwnershipAssignTo(assign: string): this {
+    this.onTab("General Claim");
+    cy.get('span[id="CaseDetails_un29_AssignedTo"]').should((element) => {
+      expect(
+        element,
+        `Expected the Assigned To display the following "${assign}"`
+      ).to.have.text(assign);
+    })
+    return this;
+  }
+
   private numToPaymentFormat(num: number): string {
     const decimal = num % 1 ? "" : ".00";
     return `${new Intl.NumberFormat("en-US", {
