@@ -20,34 +20,7 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const fields = ["claim.org_unit"];
-
-const allDepartments = [
-  {
-    department_id: 1,
-    reporting_unit_description: "HR",
-  },
-  {
-    department_id: 2,
-    reporting_unit_description: "DFML",
-  },
-  {
-    department_id: 3,
-    reporting_unit_description: "Contact Center",
-  },
-  {
-    department_id: 4,
-    reporting_unit_description: "DevOps",
-  },
-  {
-    department_id: 5,
-    reporting_unit_description: "DevOps2",
-  },
-  {
-    department_id: 6,
-    reporting_unit_description: "DevOps3",
-  },
-];
+export const fields = ["claim.reporting_unit"];
 
 export const Department = (props) => {
   const { appLogic, claim } = props;
@@ -78,10 +51,10 @@ export const Department = (props) => {
     t("pages.claimsDepartment.choiceNotSure"),
   ];
   const hasSelectedRadioWorkaround = [...workarounds, "No"].includes(
-    formState.org_unit_radio
+    formState.radio_reporting_unit
   );
   const hasSelectedComboboxWorkaround = workarounds.includes(
-    formState.org_unit
+    formState.reporting_unit
   );
 
   // API calls
@@ -90,15 +63,16 @@ export const Department = (props) => {
     // otherwise, take the radio group's value
     const errors = [];
 
-    const finalDepartmentDecision = hasSelectedRadioWorkaround
-      ? formState.org_unit
-      : formState.org_unit_radio;
+    const finalDepartmentDecision =
+      hasSelectedRadioWorkaround || isLong
+        ? formState.reporting_unit
+        : formState.radio_reporting_unit;
 
-    formState.org_unit = finalDepartmentDecision;
+    formState.reporting_unit = finalDepartmentDecision;
 
-    if (isUnique && !formState.org_unit_radio) {
+    if (isUnique && !formState.radio_reporting_unit) {
       const noConfirmationError = new AppErrorInfo({
-        field: "org_unit_radio",
+        field: "radio_reporting_unit",
         message: t("pages.claimsDepartment.errors.missingConfirmation"),
         type: "required",
       });
@@ -106,13 +80,15 @@ export const Department = (props) => {
       errors.push(noConfirmationError);
     }
     if (
-      (isShort && !formState.org_unit_radio) ||
-      (isLong && !formState.org_unit) ||
-      (!isLong && formState.org_unit_radio && !formState.org_unit)
+      (isShort && !formState.radio_reporting_unit) ||
+      (isLong && !formState.reporting_unit) ||
+      (!isLong && formState.radio_reporting_unit && !formState.reporting_unit)
     ) {
       const missingDepartmentError = new AppErrorInfo({
         field:
-          isShort && !formState.org_unit_radio ? "org_unit_radio" : "org_unit",
+          isShort && !formState.radio_reporting_unit
+            ? "radio_reporting_unit"
+            : "reporting_unit",
         message: t("pages.claimsDepartment.errors.missingDepartment"),
         type: "required",
       });
@@ -126,8 +102,8 @@ export const Department = (props) => {
 
     if (errors.length > 0) return;
 
-    delete formState.org_unit_radio;
-    formState.org_unit = finalDepartmentDecision;
+    delete formState.radio_reporting_unit;
+    formState.reporting_unit = finalDepartmentDecision;
 
     appLogic.benefitsApplications.update(claim.application_id, formState);
   };
@@ -143,21 +119,12 @@ export const Department = (props) => {
         middle_name: claim.middle_name ?? "",
         tax_identifier_last4: claim.tax_identifier.slice(-4),
       });
-      console.log(
-        { employee },
-        {
-          first_name: claim.first_name,
-          last_name: claim.last_name,
-          middle_name: claim.middle_name ?? "",
-          tax_identifier_last4: claim.tax_identifier.slice(-4),
-        }
-      );
       if (employee) claimantDeps = employee.reporting_units;
     }
     // obtain the full list of departments connected to this claimant's employer
     if (!employerDepartments.length) {
       // const deps = await appLogic.benefitsApplications.getDepartmentsByEmployer(claim.employer_fein)
-      employerDeps = await allDepartments;
+      employerDeps = [];
     }
 
     setDepartments(claimantDeps.length ? claimantDeps : employerDeps);
@@ -184,14 +151,15 @@ export const Department = (props) => {
     const departmentChoices = deps.map((dep) => ({
       label: dep.reporting_unit_description,
       value: dep.reporting_unit_description,
-      checked: dep.reporting_unit_description === formState.org_unit_radio,
+      checked:
+        dep.reporting_unit_description === formState.radio_reporting_unit,
     }));
 
     // @todo: value cannot be a translated label text
     const workaroundChoices = workarounds.map((wa) => ({
       label: wa,
       value: wa,
-      checked: wa === formState.org_unit_radio,
+      checked: wa === formState.radio_reporting_unit,
     }));
 
     if (isLong || isShort) {
@@ -203,12 +171,12 @@ export const Department = (props) => {
         {
           label: t("pages.claimsDepartment.choiceYes"),
           value: firstDep,
-          checked: formState.org_unit_radio === firstDep,
+          checked: formState.radio_reporting_unit === firstDep,
         },
         {
           label: t("pages.claimsDepartment.choiceNo"),
           value: "No",
-          checked: formState.org_unit_radio === "No",
+          checked: formState.radio_reporting_unit === "No",
         },
       ];
     }
@@ -228,14 +196,16 @@ export const Department = (props) => {
   useEffect(() => {
     if (isLong || !departments.length) return () => null;
     // sets radio options to the first workaround option
-    // when the claim org_unit is not one of the radio options shown
+    // when the claim reporting_unit_id is not one of the radio options shown
     // and is instead selected in the combo box component
     updateFields({
       ...initialFormState,
-      org_unit_radio:
-        claimantChoices.length && initialFormState.org_unit
-          ? claimantChoices.find((c) => c.value === initialFormState.org_unit)
-            ? initialFormState.org_unit
+      radio_reporting_unit:
+        claimantChoices.length && initialFormState.reporting_unit
+          ? claimantChoices.find(
+              (c) => c.value === initialFormState.reporting_unit
+            )
+            ? initialFormState.reporting_unit
             : isUnique
             ? "No"
             : workarounds[0]
@@ -252,7 +222,7 @@ export const Department = (props) => {
     >
       <ConditionalContent visible={isUnique}>
         <InputChoiceGroup
-          {...getFunctionalInputProps("org_unit_radio")}
+          {...getFunctionalInputProps("radio_reporting_unit")}
           choices={claimantChoices}
           label={t("pages.claimsDepartment.confirmSectionLabel")}
           hint={
@@ -276,8 +246,8 @@ export const Department = (props) => {
 
       <ConditionalContent visible={isShort}>
         <InputChoiceGroup
-          {...getFunctionalInputProps("org_unit_radio", {
-            fallbackValue: formState.org_unit_radio || "",
+          {...getFunctionalInputProps("radio_reporting_unit", {
+            fallbackValue: formState.radio_reporting_unit || "",
           })}
           choices={claimantChoices}
           label={t("pages.claimsDepartment.sectionLabel")}
@@ -288,7 +258,7 @@ export const Department = (props) => {
 
       <ConditionalContent
         visible={isLong || hasSelectedRadioWorkaround}
-        fieldNamesClearedWhenHidden={["org_unit"]}
+        fieldNamesClearedWhenHidden={["reporting_unit"]}
         updateFields={updateFields}
         clearField={clearField}
         getField={getField}
@@ -303,8 +273,8 @@ export const Department = (props) => {
             </FormLabel>
           </ConditionalContent>
           <ComboBox
-            {...getFunctionalInputProps("org_unit", {
-              fallbackValue: formState.org_unit || "",
+            {...getFunctionalInputProps("reporting_unit", {
+              fallbackValue: formState.reporting_unit || "",
             })}
             choices={
               hasSelectedRadioWorkaround ? employerChoices : claimantChoices
