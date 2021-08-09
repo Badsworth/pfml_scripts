@@ -157,4 +157,20 @@ export class UserLeaveAdministrator extends BaseModel {
   }
 }
 
+export class Employee extends BaseModel {
+  get defaults() {
+    return {
+      email_address: null,
+      employee_id: null,
+      first_name: null,
+      last_name: null,
+      middle_name: null,
+      other_name: null,
+      phone_number: null,
+      reporting_units: null,
+      tax_identifier_last4: null,
+    };
+  }
+}
+
 export default User;

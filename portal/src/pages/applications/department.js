@@ -25,27 +25,27 @@ export const fields = ["claim.org_unit"];
 const allDepartments = [
   {
     department_id: 1,
-    department_description: "HR",
+    reporting_unit_description: "HR",
   },
   {
     department_id: 2,
-    department_description: "DFML",
+    reporting_unit_description: "DFML",
   },
   {
     department_id: 3,
-    department_description: "Contact Center",
+    reporting_unit_description: "Contact Center",
   },
   {
     department_id: 4,
-    department_description: "DevOps",
+    reporting_unit_description: "DevOps",
   },
   {
     department_id: 5,
-    department_description: "DevOps2",
+    reporting_unit_description: "DevOps2",
   },
   {
     department_id: 6,
-    department_description: "DevOps3",
+    reporting_unit_description: "DevOps3",
   },
 ];
 
@@ -137,15 +137,22 @@ export const Department = (props) => {
     let employerDeps = [];
     // obtain the full list of departments connected to this claimant
     if (!departments.length) {
-      // const deps = await appLogic.benefitsApplications.getDepartments();
-      claimantDeps = [
-        allDepartments[0],
-        allDepartments[1],
-        allDepartments[2],
-        allDepartments[3],
-        allDepartments[4],
-        allDepartments[5],
-      ];
+      const employee = await appLogic.employees.search({
+        first_name: claim.first_name,
+        last_name: claim.last_name,
+        middle_name: claim.middle_name ?? "",
+        tax_identifier_last4: claim.tax_identifier.slice(-4),
+      });
+      console.log(
+        { employee },
+        {
+          first_name: claim.first_name,
+          last_name: claim.last_name,
+          middle_name: claim.middle_name ?? "",
+          tax_identifier_last4: claim.tax_identifier.slice(-4),
+        }
+      );
+      if (employee) claimantDeps = employee.reporting_units;
     }
     // obtain the full list of departments connected to this claimant's employer
     if (!employerDepartments.length) {
@@ -175,9 +182,9 @@ export const Department = (props) => {
     const { isLong, isShort, isUnique } = getDepartmentListSizes(deps);
 
     const departmentChoices = deps.map((dep) => ({
-      label: dep.department_description,
-      value: dep.department_description,
-      checked: dep.department_description === formState.org_unit_radio,
+      label: dep.reporting_unit_description,
+      value: dep.reporting_unit_description,
+      checked: dep.reporting_unit_description === formState.org_unit_radio,
     }));
 
     // @todo: value cannot be a translated label text
@@ -191,7 +198,7 @@ export const Department = (props) => {
       return [...departmentChoices, ...workaroundChoices];
     }
     if (isUnique) {
-      const firstDep = deps[0]?.department_description;
+      const firstDep = deps[0]?.reporting_unit_description;
       return [
         {
           label: t("pages.claimsDepartment.choiceYes"),
@@ -253,7 +260,7 @@ export const Department = (props) => {
               <Trans
                 i18nKey="pages.claimsDepartment.confirmHint"
                 tOptions={{
-                  department: departments[0]?.department_description,
+                  department: departments[0]?.reporting_unit_description,
                 }}
               />
               <div className="margin-top-2">
