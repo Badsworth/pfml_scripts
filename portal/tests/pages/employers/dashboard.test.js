@@ -760,6 +760,25 @@ describe("Employer dashboard", () => {
     expect(claimsTable.find("SortDropdown").dive()).toMatchSnapshot();
   });
 
+  it("renders Sort by Status option when feature flag is enabled", () => {
+    process.env.featureFlags = {
+      employerShowReviewByStatus: true,
+      employerShowDashboardSort: true,
+    };
+
+    const { wrapper } = setup();
+    const claimsTable = findClaimsTable(wrapper);
+
+    expect(claimsTable.find("SortDropdown").dive().prop("choices")).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Status",
+          value: "fineos_absence_status,ascending",
+        }),
+      ])
+    );
+  });
+
   it("updates order_by and order_direction params when a sort choice is selected", () => {
     process.env.featureFlags = {
       employerShowDashboardSort: true,
