@@ -45,6 +45,7 @@ function ComboBox(props) {
       hideOptionsList();
       e.target.blur();
     }
+    inputRef.current.focus();
   };
 
   const hideOptionsList = () => {
