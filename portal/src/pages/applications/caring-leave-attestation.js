@@ -3,7 +3,7 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
-import Button from "../../components/Button";
+import ButtonLink from "../../components/ButtonLink";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
@@ -22,45 +22,45 @@ export const CaringLeaveAttestation = (props) => {
     "leave_details.caring_leave_metadata.relationship_to_caregiver"
   );
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    appLogic.portalFlow.goToNextPage({ claim }, query);
-  };
-
   return (
     <React.Fragment>
       <BackButton />
-      <form onSubmit={handleSubmit} className="usa-form" method="post">
-        <Title>{t("pages.claimsCaringLeaveAttestation.title")}</Title>
-        <Trans
-          i18nKey="pages.claimsCaringLeaveAttestation.lead"
-          components={{
-            "caregiver-relationship-link": (
-              <a
-                target="_blank"
-                rel="noopener"
-                href={routes.external.massgov.caregiverRelationship}
-              />
-            ),
-          }}
-        />
-        <Alert className="measure-6" state="info" noIcon>
-          <p>
-            {t("pages.claimsCaringLeaveAttestation.truthAttestation", {
-              context: findKeyByValue(RelationshipToCaregiver, relationship),
-            })}
-          </p>
-          <Button type="submit">
-            {t("pages.claimsCaringLeaveAttestation.submitApplicationButton")}
-          </Button>
-        </Alert>
-      </form>
+      <Title>{t("pages.claimsCaringLeaveAttestation.title")}</Title>
+      <Trans
+        i18nKey="pages.claimsCaringLeaveAttestation.lead"
+        components={{
+          "caregiver-relationship-link": (
+            <a
+              target="_blank"
+              rel="noopener"
+              href={routes.external.massgov.caregiverRelationship}
+            />
+          ),
+        }}
+      />
+      <Alert className="measure-6" state="info" noIcon>
+        <p>
+          {t("pages.claimsCaringLeaveAttestation.truthAttestation", {
+            context: findKeyByValue(RelationshipToCaregiver, relationship),
+          })}
+        </p>
+        <ButtonLink
+          className="text-no-underline text-white"
+          href={appLogic.portalFlow.getNextPageRoute("CONTINUE", {}, query)}
+        >
+          {t("pages.claimsCaringLeaveAttestation.submitApplicationButton")}
+        </ButtonLink>
+      </Alert>
     </React.Fragment>
   );
 };
 
 CaringLeaveAttestation.propTypes = {
-  appLogic: PropTypes.object.isRequired,
+  appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
+    }),
+  }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   query: PropTypes.object.isRequired,
 };
