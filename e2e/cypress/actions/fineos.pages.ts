@@ -1296,7 +1296,7 @@ class PaidLeavePage {
         element,
         `Expected the Assigned To display the following "${assign}"`
       ).to.have.text(assign);
-    })
+    });
     return this;
   }
 

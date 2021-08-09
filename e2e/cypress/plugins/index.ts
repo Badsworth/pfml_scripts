@@ -95,6 +95,10 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return true;
     },
 
+    getUserSession({ username, password }: Credentials) {
+      return getAuthManager().authenticate(username, password);
+    },
+
     async submitClaimToAPI(
       application: DehydratedClaim & {
         credentials?: Credentials;

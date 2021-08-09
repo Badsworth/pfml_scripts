@@ -4,6 +4,8 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************s
 import "@testing-library/cypress/add-commands";
+import "./authProvider";
+
 /**
  * This command selects an input by the HTML label "for" value.
  */

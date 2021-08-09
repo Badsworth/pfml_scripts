@@ -1,23 +1,23 @@
-import Auth, { CognitoUser } from "@aws-amplify/auth";
-import config from "../../src/config";
 // Configure Amplify for Auth behavior throughout the app
-Auth.configure({
-  cookieStorage: {
-    domain: process.env.domain,
-    // Require cookie transmission over a secure protocol (https) outside of local dev.
-    // We use env.domain instead of env.NODE_ENV here since our end-to-end test suite is
-    // ran against a production build on localhost.
-    secure: process.env.domain !== "localhost",
-    // Set cookie expiration to expire at end of session.
-    // (Amplify defaults to a year, which is wild)
-    expires: null,
-    // path: '/', (optional)
-  },
-  mandatorySignIn: false,
-  region: "us-east-1",
-  userPoolId: config("COGNITO_POOL"),
-  userPoolWebClientId: config("COGNITO_CLIENTID"),
-});
+// Auth.configure({
+//   cookieStorage: {
+//     domain: config("PORTAL_BASEURL"),
+//     // Require cookie transmission over a secure protocol (https) outside of local dev.
+//     // We use env.domain instead of env.NODE_ENV here since our end-to-end test suite is
+//     // ran against a production build on localhost.
+//     secure: process.env.domain !== "localhost",
+//     // Set cookie expiration to expire at end of session.
+//     // (Amplify defaults to a year, which is wild)
+//     expires: null,
+//     // path: '/', (optional)
+//   },
+//   mandatorySignIn: false,
+//   region: "us-east-1",
+//   userPoolId: config("COGNITO_POOL"),
+//   userPoolWebClientId: config("COGNITO_CLIENTID"),
+// });
+
+import { CognitoUserSession } from "amazon-cognito-identity-js";
 
 // Amazon Cognito
 Cypress.Commands.add("loginByCognitoApi", (username, password) => {
@@ -30,38 +30,45 @@ Cypress.Commands.add("loginByCognitoApi", (username, password) => {
 
   log.snapshot("before");
 
-  const signIn = Auth.signIn({ username, password });
-
-  cy.wrap(signIn, { log: false }).then((cognitoResponse) => {
-    const user: CognitoUser = cognitoResponse as CognitoUser;
-    const keyPrefixWithUsername = `${user.keyPrefix}.${user.username}`;
+  cy.task("getUserSession", { username, password }).then((cognitoResponse) => {
+    const userSession: CognitoUserSession =
+      cognitoResponse as CognitoUserSession;
+    const keyPrefix = userSession.idToken.payload.aud;
+    const username = userSession.idToken.payload.sub;
+    console.log(userSession);
+    console.log(userSession.accessToken);
+    console.log(userSession.idToken);
+    console.log(userSession.refreshToken);
+    const keyPrefixWithUsername = `${keyPrefix}.${username}`;
 
     cy.setCookie(
-      `${keyPrefixWithUsername}.idToken`,
-      user.signInUserSession.idToken.jwtToken
+      `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.idToken`,
+      userSession.idToken.jwtToken
     );
 
     cy.setCookie(
-      `${keyPrefixWithUsername}.accessToken`,
-      user.signInUserSession.accessToken.jwtToken
+      `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.accessToken`,
+      userSession.accessToken.jwtToken
     );
 
     cy.setCookie(
-      `${keyPrefixWithUsername}.refreshToken`,
-      user.signInUserSession.refreshToken.token
+      `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.refreshToken`,
+      userSession.refreshToken.token
     );
 
     cy.setCookie(
-      `${keyPrefixWithUsername}.clockDrift`,
-      user.signInUserSession.clockDrift
+      `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.clockDrift`,
+      "2"
     );
 
-    cy.setCookie(`${user.keyPrefix}.LastAuthUser`, user.username);
+    cy.setCookie(
+      `CognitoIdentityServiceProvider.${keyPrefix}.LastAuthUser`,
+      username
+    );
 
     cy.setCookie("amplify-authenticator-authState", "signedIn");
+    cy.setCookie("amplify-signin-with-hostedUI", "false");
     log.snapshot("after");
     log.end();
   });
-
-  cy.visit("/");
 });
