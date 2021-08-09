@@ -148,7 +148,7 @@ describe("Approval (notifications/notices)", () => {
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              180000
+              30000
             )
             .then(() => {
               cy.get(
@@ -184,7 +184,7 @@ describe("Approval (notifications/notices)", () => {
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
               // Reduced timeout, since we have multiple tests that run prior to this.
-              60000
+              30000
             )
             .then(() => {
               const dob =

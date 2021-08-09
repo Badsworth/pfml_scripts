@@ -60,7 +60,7 @@ describe("Denial Notification and Notice", () => {
             application_id: submission.application_id,
             document_type: "Denial Notice",
           },
-          { timeout: 300000 }
+          { timeout: 45000 }
         );
         cy.log("Finished waiting for documents");
         cy.visit("/applications");
@@ -123,7 +123,7 @@ describe("Denial Notification and Notice", () => {
                 messageWildcard: submission.fineos_absence_id,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              180000
+              45000
             )
             .then(() => {
               const dob =
@@ -163,7 +163,7 @@ describe("Denial Notification and Notice", () => {
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
               // Reduced timeout, since we have multiple tests that run prior to this.
-              60000
+              30000
             )
             .then(() => {
               const dob =
