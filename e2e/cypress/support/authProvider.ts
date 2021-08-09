@@ -30,44 +30,10 @@ Cypress.Commands.add("loginByCognitoApi", (username, password) => {
 
   log.snapshot("before");
 
-  cy.task("getUserSession", { username, password }).then((cognitoResponse) => {
-    const userSession: CognitoUserSession =
-      cognitoResponse as CognitoUserSession;
-    const keyPrefix = userSession.idToken.payload.aud;
-    const username = userSession.idToken.payload.sub;
-    console.log(userSession);
-    console.log(userSession.accessToken);
-    console.log(userSession.idToken);
-    console.log(userSession.refreshToken);
-    const keyPrefixWithUsername = `${keyPrefix}.${username}`;
-
-    cy.setCookie(
-      `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.idToken`,
-      userSession.idToken.jwtToken
+  cy.task("getUserSession", { username, password }).then((sessionCookies) => {
+    sessionCookies.forEach(([name, value]) =>
+      cy.setCookie(name, value, { log: false })
     );
-
-    cy.setCookie(
-      `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.accessToken`,
-      userSession.accessToken.jwtToken
-    );
-
-    cy.setCookie(
-      `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.refreshToken`,
-      userSession.refreshToken.token
-    );
-
-    cy.setCookie(
-      `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.clockDrift`,
-      "2"
-    );
-
-    cy.setCookie(
-      `CognitoIdentityServiceProvider.${keyPrefix}.LastAuthUser`,
-      username
-    );
-
-    cy.setCookie("amplify-authenticator-authState", "signedIn");
-    cy.setCookie("amplify-signin-with-hostedUI", "false");
     log.snapshot("after");
     log.end();
   });

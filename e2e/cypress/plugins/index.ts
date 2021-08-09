@@ -95,8 +95,37 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return true;
     },
 
-    getUserSession({ username, password }: Credentials) {
-      return getAuthManager().authenticate(username, password);
+    async getUserSession(credentials: Credentials) {
+      const userSession = await getAuthManager().authenticate(
+        credentials.username,
+        credentials.password
+      );
+
+      const keyPrefix = userSession.getIdToken().payload.aud;
+      const username = userSession.getIdToken().payload.sub;
+      const keyPrefixWithUsername = `${keyPrefix}.${username}`;
+      const cookies: [string, string][] = [
+        [
+          `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.idToken`,
+          userSession.getIdToken().getJwtToken(),
+        ],
+        [
+          `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.accessToken`,
+          userSession.getAccessToken().getJwtToken(),
+        ],
+        [
+          `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.refreshToken`,
+          userSession.getRefreshToken().getToken(),
+        ],
+        [
+          `CognitoIdentityServiceProvider.${keyPrefixWithUsername}.clockDrift`,
+          "2",
+        ],
+        [`CognitoIdentityServiceProvider.${keyPrefix}.LastAuthUser`, username],
+        ["amplify-authenticator-authState", "signedIn"],
+        ["amplify-signin-with-hostedUI", "false"],
+      ];
+      return cookies;
     },
 
     async submitClaimToAPI(
