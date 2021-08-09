@@ -192,6 +192,7 @@ def send_to_fineos(
         logger.warning(
             "Did not find Employee to associate to Claim.",
             extra={
+                "absence_case_id": new_case.absenceId,
                 "application.absence_case_id": new_case.absenceId,
                 "application.application_id": application.application_id,
             },
@@ -202,6 +203,7 @@ def send_to_fineos(
         logger.warning(
             "Did not find Employer to associate to Claim.",
             extra={
+                "absence_case_id": new_case.absenceId,
                 "application.absence_case_id": new_case.absenceId,
                 "application.application_id": application.application_id,
             },
@@ -806,6 +808,7 @@ def get_occupation(
         logger.warning(
             "get_occuption failure",
             extra={
+                "absence_case_id": application.claim.fineos_absence_id,
                 "application.absence_case_id": application.claim.fineos_absence_id,
                 "application.application_id": application.application_id,
                 "status": getattr(error, "response_status", None),
@@ -822,6 +825,7 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application, occupati
 
     week_based_work_pattern = build_week_based_work_pattern(application)
     log_attributes = {
+        "absence_case_id": application.claim.fineos_absence_id,
         "application.absence_case_id": application.claim.fineos_absence_id,
         "application.application_id": application.application_id,
         "occupation_id": occupation_id,

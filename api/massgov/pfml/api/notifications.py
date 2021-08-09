@@ -46,6 +46,7 @@ def notifications_post():
     # Use the pydantic models for validation
     notification_request = NotificationRequest.parse_obj(body)
     log_attributes = {
+        "absence_case_id": notification_request.absence_case_id,
         "notification.absence_case_id": notification_request.absence_case_id,
         "notification.recipient_type": notification_request.recipient_type,
         "notification.source": notification_request.source,
