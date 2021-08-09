@@ -1,33 +1,45 @@
-import { fineos, fineosPages } from "../../../actions";
-import { getFineosBaseUrl } from "../../../config";
-import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
-import { extractLeavePeriod } from "../../../../src/util/claims";
+import { fineos, fineosPages } from "../../actions";
+import { getFineosBaseUrl } from "../../config";
+import { Submission } from "../../../src/types";
+import { config } from "../../actions/common";
+import { extractLeavePeriod } from "../../../src/util/claims";
 import { addDays, format, subDays } from "date-fns";
-import { waitForAjaxComplete } from "../../../actions/fineos";
+import { waitForAjaxComplete } from "../../actions/fineos";
 
 describe("Approval (notifications/notices)", () => {
   const credentials: Credentials = {
     username: config("PORTAL_USERNAME"),
     password: config("PORTAL_PASSWORD"),
   };
-
-  it(
-    "Will submit and approve a medical leave",
+  const submission = it("Will submit a medical leave claim", () => {
+    cy.task("generateClaim", "MED_LSDCR").then((claim) => {
+      cy.stash("claim", claim);
+      cy.task("submitClaimToAPI", {
+        ...claim,
+        credentials,
+      }).then((response) => {
+        if (!response.fineos_absence_id) {
+          throw new Error("Response contained no fineos_absence_id property");
+        }
+        const submission: Submission = {
+          application_id: response.application_id,
+          fineos_absence_id: response.fineos_absence_id,
+          timestamp_from: Date.now(),
+        };
+        cy.stash("submission", submission);
+      });
+    });
+  });
+  const approval = it(
+    "CSR rep will approve a medical leave",
     { baseUrl: getFineosBaseUrl() },
     () => {
+      cy.dependsOnPreviousPass([submission]);
       fineos.before();
       cy.visit("/");
       // Submit a claim via the API, including Employer Response.
-      cy.task("generateClaim", "MED_LSDCR").then((claim) => {
-        cy.stash("claim", claim.claim);
-        cy.task("submitClaimToAPI", {
-          ...claim,
-          credentials,
-        }).then((response) => {
-          if (!response.fineos_absence_id) {
-            throw new Error("Response contained no fineos_absence_id property");
-          }
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.unstash<DehydratedClaim>("claim").then((claim) => {
           const [startDate, endDate] = extractLeavePeriod(claim.claim);
           const newStartDate = format(
             addDays(new Date(startDate), 5),
@@ -37,16 +49,9 @@ describe("Approval (notifications/notices)", () => {
             subDays(new Date(endDate), 5),
             "MM/dd/yyyy"
           );
-          const submission: Submission = {
-            application_id: response.application_id,
-            fineos_absence_id: response.fineos_absence_id,
-            timestamp_from: Date.now(),
-          };
-
           cy.stash("modifiedDates", [newStartDate, newEndDate]);
-          cy.stash("submission", submission);
           // approve claim
-          fineosPages.ClaimPage.visit(response.fineos_absence_id)
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id)
             .adjudicate((adjudication) => {
               adjudication
                 .evidence((evidence) => {
@@ -74,14 +79,13 @@ describe("Approval (notifications/notices)", () => {
       });
     }
   );
-
-  it(
-    'Generates and adds a "Change Leave Request Approved" document',
+  const modify = it(
+    "Will modify leave dates for an approved claim",
     { baseUrl: getFineosBaseUrl() },
     () => {
+      cy.dependsOnPreviousPass([submission, approval]);
       fineos.before();
       cy.visit("/");
-
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<[string, string]>("modifiedDates").then(
           ([startDate, endDate]) => {
@@ -114,36 +118,48 @@ describe("Approval (notifications/notices)", () => {
                 cy.get("#footerButtonsBar").within(() => {
                   cy.findByText("OK").click({ force: true });
                 });
-              })
-              .outstandingRequirements((outstandingRequirement) => {
-                outstandingRequirement.add();
-              })
-              .tasks((tasks) => {
-                tasks.close("Approved Leave Start Date Change");
-                tasks.add("Update Paid Leave Case");
-                tasks.assertIsAssignedToDepartment(
-                  "Update Paid Leave Case",
-                  "DFML Program Integrity"
-                );
-              })
-              .triggerNotice("Designation Notice")
-              .documents((docPage) =>
-                docPage.assertDocumentExists("Approval Notice")
-              )
-              .adjudicate((ad) => {
-                waitForAjaxComplete();
-                ad.acceptLeavePlan();
-              })
-              .outstandingRequirements((outstandingRequirement) =>
-                outstandingRequirement.complete()
-              )
-              .approve()
-              .triggerNotice("Review Approval Notice")
-              .documents((docPage) =>
-                docPage.assertDocumentExists("Change Request Approved")
-              );
+              });
           }
         );
+      });
+    }
+  );
+  it(
+    'Generates and adds a "Change Leave Request Approved" document',
+    { baseUrl: getFineosBaseUrl() },
+    () => {
+      cy.dependsOnPreviousPass([submission, approval, modify]);
+      fineos.before();
+      cy.visit("/");
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+          .outstandingRequirements((outstandingRequirement) => {
+            outstandingRequirement.add();
+          })
+          .tasks((tasks) => {
+            tasks.close("Approved Leave Start Date Change");
+            tasks.add("Update Paid Leave Case");
+            tasks.assertIsAssignedToDepartment(
+              "Update Paid Leave Case",
+              "DFML Program Integrity"
+            );
+          })
+          .triggerNotice("Designation Notice")
+          .documents((docPage) =>
+            docPage.assertDocumentExists("Approval Notice")
+          )
+          .adjudicate((ad) => {
+            waitForAjaxComplete();
+            ad.acceptLeavePlan();
+          })
+          .outstandingRequirements((outstandingRequirement) =>
+            outstandingRequirement.complete()
+          )
+          .approve()
+          .triggerNotice("Review Approval Notice")
+          .documents((docPage) =>
+            docPage.assertDocumentExists("Change Request Approved")
+          );
       });
     }
   );
