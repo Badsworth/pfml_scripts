@@ -2210,26 +2210,153 @@ class TestGetClaimsEndpoint:
             assert len(claims) == self.claims_count
             self._assert_data_order(absence_status_orders, desc=False)
 
-        def test_get_claims_with_order_fineos_absence_status_desc(
-            self, client, employer_auth_token, test_db_session
+    class TestClaimsOrderManagedRequirements:
+        @pytest.fixture
+        def employer(self):
+            return EmployerFactory.create()
+
+        @pytest.fixture
+        def employee(self):
+            return EmployeeFactory.create()
+
+        @pytest.fixture(autouse=True)
+        def link(self, employer_user, test_verification, employer, test_db_session):
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(link)
+            test_db_session.commit()
+
+        # first
+        @pytest.fixture
+        def claim_with_soonest_open_reqs(self, employer, employee):
+            # should be returned first because the managed requirements
+            #  have the soonest follow_up_date
+            claim = ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.CLOSED.absence_status_id,
+                claim_type_id=1,
+            )
+            # soonest managed requirement
+            ManagedRequirementFactory.create(
+                claim=claim,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                follow_up_date=datetime_util.utcnow() + timedelta(days=1),
+            )
+            for i in range(0, 2):
+                ManagedRequirementFactory.create(
+                    claim=claim,
+                    managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                    managed_requirement_status_id=ManagedRequirementStatus.COMPLETE.managed_requirement_status_id,
+                    follow_up_date=datetime_util.utcnow() + timedelta(days=20 + i),
+                )
+            return claim
+
+        # second
+        @pytest.fixture
+        def claim_with_open_reqs(self, employer, employee):
+            # should be returned second because it has the second soonest managed requirements
+            #  have the oldest follow_up_date
+            claim = ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.CLOSED.absence_status_id,
+                claim_type_id=1,
+            )
+            for i in range(0, 2):
+                ManagedRequirementFactory.create(
+                    claim=claim,
+                    managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                    managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                    follow_up_date=datetime_util.utcnow() + timedelta(days=15 + i),
+                )
+            return claim
+
+        # third
+        @pytest.fixture
+        def claim_without_reqs_intake_in_progress(self, employer, employee):
+            # should be returned third because it's status is intake in progress
+            # sort_order = 1 in lk_absence_status table
+            claim = ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.INTAKE_IN_PROGRESS.absence_status_id,
+                claim_type_id=1,
+            )
+            return claim
+
+        # fourth
+        @pytest.fixture(autouse=True)
+        def claim_with_complete_reqs(self, employer, employee):
+            # should be returned fourth because it has COMPLETE managed requirements
+            #  and it's status is closed
+            # sort_order = 7 in lk_absence_status table
+            claim = ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.CLOSED.absence_status_id,
+                claim_type_id=1,
+            )
+            for i in range(0, 2):
+                ManagedRequirementFactory.create(
+                    claim=claim,
+                    managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                    managed_requirement_status_id=ManagedRequirementStatus.COMPLETE.managed_requirement_status_id,
+                    follow_up_date=datetime_util.utcnow() + timedelta(days=100 + i),
+                )
+            return claim
+
+        @pytest.fixture
+        def claims_order_asc(
+            self,
+            claim_with_open_reqs,
+            claim_with_soonest_open_reqs,
+            claim_without_reqs_intake_in_progress,
+            claim_with_complete_reqs,
         ):
-            request = {"order_direction": "descending", "order_by": "fineos_absence_status"}
-            response = self._perform_api_call(request, client, employer_auth_token)
+            return [
+                claim_with_soonest_open_reqs,
+                claim_with_open_reqs,
+                claim_without_reqs_intake_in_progress,
+                claim_with_complete_reqs,
+            ]
+
+        def _perform_api_call(self, request, client, employer_auth_token):
+            query_string = "&".join([f"{key}={value}" for key, value in request.items()])
+            return client.get(
+                f"/v1/claims?{query_string}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+
+        def _perform_assertion(self, claims_order, response):
             assert response.status_code == 200
             response_body = response.get_json()
             claims = response_body.get("data", [])
+            assert len(claims) == len(claims_order)
+            for claim, expected in zip(claims, claims_order):
+                assert claim["fineos_absence_id"] == expected.fineos_absence_id
 
-            absence_status_orders = [
-                AbsenceStatus.get_instance(
-                    test_db_session, description=claim["claim_status"]
-                ).sort_order
-                if claim["claim_status"]
-                else 0
-                for claim in claims
-            ]
+        def test_get_claims_order_status_with_requirements_desc(
+            self, client, employer_auth_token, claims_order_asc
+        ):
+            claims_order = claims_order_asc.copy()
+            claims_order.reverse()
+            request = {"order_direction": "descending", "order_by": "fineos_absence_status"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            self._perform_assertion(claims_order, response)
 
-            assert len(claims) == self.claims_count
-            self._assert_data_order(absence_status_orders, desc=True)
+        def test_get_claims_order_status_with_requirements_asc(
+            self, client, employer_auth_token, claims_order_asc
+        ):
+            claims_order = claims_order_asc
+            request = {"order_direction": "ascending", "order_by": "fineos_absence_status"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            self._perform_assertion(claims_order, response)
 
     def test_get_claims_for_employer_id(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification

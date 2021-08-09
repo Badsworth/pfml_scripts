@@ -25,10 +25,12 @@ from sqlalchemy import (
     Numeric,
     Text,
     UniqueConstraint,
+    and_,
+    select,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, deferred, dynamic_loader, relationship, validates
+from sqlalchemy.orm import Query, aliased, deferred, dynamic_loader, relationship, validates
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON, TypeEngine
@@ -654,6 +656,44 @@ class Claim(Base, TimestampMixin):
     absence_periods = cast(
         Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim"),
     )
+
+    @typed_hybrid_property
+    def soonest_open_requirement_date(self) -> Optional[date]:
+        def _filter(requirement: ManagedRequirement) -> bool:
+            valid_status = (
+                requirement.managed_requirement_status_id
+                == ManagedRequirementStatus.OPEN.managed_requirement_status_id
+            )
+            valid_type = (
+                requirement.managed_requirement_type_id
+                == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
+            )
+            return valid_status and valid_type
+
+        if not self.managed_requirements:
+            return None
+        filtered_requirements = filter(_filter, self.managed_requirements)
+        requirements = sorted(filtered_requirements, key=lambda x: x.follow_up_date, reverse=True)
+        if len(requirements):
+            return requirements[0].follow_up_date
+        return None
+
+    @soonest_open_requirement_date.expression
+    def soonest_open_requirement_date(cls):  # noqa: B902
+        aliasManagedRequirement = aliased(ManagedRequirement)
+
+        status_id = aliasManagedRequirement.managed_requirement_status_id
+        type_id = aliasManagedRequirement.managed_requirement_type_id
+        filters = and_(
+            aliasManagedRequirement.claim_id == cls.claim_id,
+            status_id == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+            type_id == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+        )
+        return (
+            select([func.max(aliasManagedRequirement.follow_up_date)])
+            .where(filters)
+            .label("follow_up_date")
+        )
 
 
 class Payment(Base, TimestampMixin):
