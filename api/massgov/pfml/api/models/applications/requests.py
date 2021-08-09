@@ -76,6 +76,7 @@ def future_date_of_birth_validator(date_of_birth, field):
 class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
     tax_identifier: Optional[TaxIdUnformattedStr]
+    reporting_unit_id: Optional[str]
     employer_fein: Optional[FEINUnformattedStr]
     first_name: Optional[str]
     middle_name: Optional[str]

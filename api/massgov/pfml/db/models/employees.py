@@ -815,6 +815,7 @@ class UserLeaveAdministrator(Base, TimestampMixin):
     user = relationship(User)
     employer = relationship(Employer)
     verification = relationship(Verification)
+    reporting_units = relationship(LkUserLeaveAdminDepartment)
 
     @typed_hybrid_property
     def has_fineos_registration(self) -> bool:
@@ -825,6 +826,14 @@ class UserLeaveAdministrator(Base, TimestampMixin):
     @typed_hybrid_property
     def verified(self) -> bool:
         return bool(self.verification_id)
+
+
+class LkUserLeaveAdminDepartment(Base):
+    __tablename__ = "lk_user_leave_administrator_department"
+    __table_args__ = (UniqueConstraint("user_leave_administrator_id", "reporting_unit_id"),)
+    leave_admin_department_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    user_leave_administrator_id = Column(UUID(as_uuid=True), ForeignKey("link_user_leave_administrator.user_leave_administrator_id"), nullable=False)
+    reporting_unit_id = Column(Integer, ForeignKey("reporting_unit.reporting_unit_id"), nullable=False)
 
 
 class LkManagedRequirementStatus(Base):
@@ -2223,6 +2232,47 @@ class LeaveRequestDecision(LookupTable):
     DENIED = LkLeaveRequestDecision(4, "Denied")
 
 
+class LkWorksite(Base):
+    __tablename__ = "lk_worksite"
+    worksite_id = Column(Integer, primary_key=True)
+    worksite_description = Column(Text)
+    worksite_fineos_id = Column(Text)
+
+    def __init__(self, worksite_id, worksite_description, worksite_fineos_id):
+        self.worksite_id = worksite_id
+        self.worksite_description = worksite_description
+        self.worksite_fineos_id = worksite_fineos_id
+
+
+class LkReportingUnit(Base):
+    __tablename__ = "lk_reporting_unit"
+    reporting_unit_id = Column(Integer, primary_key=True)
+    reporting_unit_description = Column(Text)
+
+    def __init__(self, reporting_unit_id, reporting_unit_description):
+        self.reporting_unit_id = reporting_unit_id
+        self.reporting_unit_description = reporting_unit_description
+
+
+class Worksite(LookupTable):
+    model = LkWorksite
+    column_names = ("worksite_id", "worksite_description", "worksite_fineos_id")
+
+    DFML = LkWorksite(1, "DFML", None)
+
+
+class ReportingUnit(LookupTable):
+    model = LkReportingUnit
+    column_names = ("reporting_unit_id", "reporting_unit_description")
+
+    DFML = LkReportingUnit(1, "DFML")
+    PFML = LkReportingUnit(2, "PFML")
+    CCENTER = LkReportingUnit(3, "Contact Center")
+    DEVOPS = LkReportingUnit(4, "DevOps")
+    SAVILINX = LkReportingUnit(5, "Savilinx")
+    HR = LkReportingUnit(6, "HR")
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     AbsenceStatus.sync_to_database(db_session)
@@ -2251,4 +2301,6 @@ def sync_lookup_tables(db_session):
     ManagedRequirementStatus.sync_to_database(db_session)
     ManagedRequirementCategory.sync_to_database(db_session)
     ManagedRequirementType.sync_to_database(db_session)
+    Worksite.sync_to_database(db_session)
+    ReportingUnit.sync_to_database(db_session)
     db_session.commit()

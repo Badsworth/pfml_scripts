@@ -1495,6 +1495,11 @@ components:
           type: boolean
         verified:
           type: boolean
+        reporting_units: 
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportingUnitResponse"
+          nullable: true
 
     UserCreateRequest:
       type: object
@@ -1580,6 +1585,16 @@ components:
     EmployeeErrorResponse:
       type: object
 
+    ReportingUnitResponse:
+      type: object
+      properties:
+        reporting_unit_id: 
+          type: string
+          example: "1"
+        reporting_unit_description:
+          type: string
+          example: "DFML"
+        
     EmployeeResponse:
       type: object
       properties:
@@ -1613,6 +1628,11 @@ components:
         tax_identifier_last4:
           type: string
           example: "1234"
+        reporting_units: 
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportingUnitResponse"
+          nullable: true
       required: ["employee_id", "tax_identifier_last4"]
 
     EmployerClaimRequestBody:
@@ -3052,6 +3072,28 @@ components:
         - employer_id
         - withholding_amount
         - withholding_quarter
+
+    # LeaveAdminDepartmentsRequest:
+    #   type: object
+    #   properties:
+    #     employer_fein:
+    #       type: string
+    #       example: "12-3456789"
+    #     departments:
+    #       type: array
+    #       items:
+    #         type: object
+    #         properties:
+    #           department_id:
+    #             type: string
+    #             format: uuid
+    #             example: "5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32"
+    #           department_name:
+    #             type: string
+    #             example: "Finance"
+    #   required:
+    #     - employer_fein
+    #     - departments
 
     SsnItin:
       type: string

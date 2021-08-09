@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 import connexion
 from pydantic import UUID4
@@ -7,7 +7,7 @@ from werkzeug.exceptions import NotFound
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
-from massgov.pfml.db.models.employees import Employee, TaxIdentifier
+from massgov.pfml.db.models.employees import Employee, TaxIdentifier, ReportingUnit
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.sqlalchemy import get_or_404
 
@@ -17,6 +17,11 @@ class EmployeeUpdateRequest(PydanticBaseModel):
     middle_name: Optional[str]
     last_name: Optional[str]
     email_address: Optional[str]
+
+
+class ReportingUnitResponse(PydanticBaseModel):
+    reporting_unit_id: str
+    reporting_unit_description: str
 
 
 class EmployeeSearchRequest(PydanticBaseModel):
@@ -35,6 +40,7 @@ class EmployeeResponse(PydanticBaseModel):
     other_name: Optional[str]
     email_address: Optional[str]
     phone_number: Optional[str]
+    reporting_units: Optional[List[ReportingUnitResponse]]
 
     @classmethod
     def from_orm(cls, employee: Employee) -> "EmployeeResponse":
@@ -92,6 +98,9 @@ def employees_search():
             employee_query.filter(Employee.middle_name == request.middle_name)
 
         employee = employee_query.first()
+
+        # @todo: query for units connected to this employee, not all of them
+        employee.reporting_units = db_session.query(ReportingUnit).all()
 
     if employee is None:
         raise NotFound()
