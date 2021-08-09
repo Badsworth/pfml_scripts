@@ -859,8 +859,6 @@ const SortDropdown = (props) => {
     ]);
   };
 
-  if (!isFeatureEnabled("employerShowDashboardSort")) return null;
-
   return (
     <Dropdown
       {...getFunctionalInputProps("orderAndDirection")}
