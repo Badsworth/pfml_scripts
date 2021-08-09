@@ -11,7 +11,8 @@
 type Credentials = import("./src/types").Credentials;
 type ApplicationRequestBody = import("./src/api").ApplicationRequestBody;
 type ApplicationResponse = import("./src/api").ApplicationResponse;
-type waitForClaimDocuments = import("./cypress/plugins/DocumentWaiter").default["waitForClaimDocuments"];
+type waitForClaimDocuments =
+  import("./cypress/plugins/DocumentWaiter").default["waitForClaimDocuments"];
 type Email = import("./src/submission/TestMailClient").Email;
 type GetEmailsOpts = import("./src/submission/TestMailClient").GetEmailsOpts;
 type Result = import("pdf-parse").Result;
@@ -23,7 +24,8 @@ type Scenarios = import("./src/types").Scenarios;
 type ScenarioSpecs = import("./src/types").ScenarioSpecs;
 type APIClaimSpec = import("./src/generation/Claim").APIClaimSpec;
 type GeneratedClaim = import("./src/generation/Claim").GeneratedClaim;
-type FineosExclusiveLeaveReasons = import("./src/generation/Claim").FineosExclusiveLeaveReasons;
+type FineosExclusiveLeaveReasons =
+  import("./src/generation/Claim").FineosExclusiveLeaveReasons;
 
 declare namespace Cypress {
   interface Cypress {
@@ -33,6 +35,7 @@ declare namespace Cypress {
   }
   interface Chainable<Subject = any> {
     labelled(label: string | RegExp): Chainable<HTMLElement>;
+    loginByCognitoApi(username: string, password: string): void;
     typeMasked(
       text: string,
       options?: Partial<Cypress.TypeOptions>
