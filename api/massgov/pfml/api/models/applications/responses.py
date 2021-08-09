@@ -8,6 +8,7 @@ from pydantic import UUID4
 from massgov.pfml.api.models.applications.common import (
     EmploymentStatus,
     Gender,
+    ReportingUnit,
     MaskedAddress,
     MaskedApplicationLeaveDetails,
     MaskedPaymentPreference,
@@ -46,6 +47,7 @@ class ApplicationResponse(PydanticBaseModel):
     last_name: Optional[str]
     date_of_birth: Optional[MaskedDateStr]
     gender: Optional[Gender]
+    reporting_unit: Optional[ReportingUnit]
     has_continuous_leave_periods: Optional[bool]
     has_intermittent_leave_periods: Optional[bool]
     has_reduced_schedule_leave_periods: Optional[bool]

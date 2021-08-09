@@ -11,6 +11,7 @@ from massgov.pfml.api.models.applications.common import (
     DocumentType,
     EmploymentStatus,
     Gender,
+    ReportingUnit,
     Occupation,
     OtherIncome,
     PaymentPreference,
@@ -76,7 +77,7 @@ def future_date_of_birth_validator(date_of_birth, field):
 class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
     tax_identifier: Optional[TaxIdUnformattedStr]
-    reporting_unit_id: Optional[str]
+    reporting_unit: Optional[ReportingUnit]
     employer_fein: Optional[FEINUnformattedStr]
     first_name: Optional[str]
     middle_name: Optional[str]

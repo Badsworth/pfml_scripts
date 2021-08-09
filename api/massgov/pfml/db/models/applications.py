@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     LkBankAccountType,
     LkGender,
     LkOccupation,
+    LkReportingUnit,
     LkPaymentMethod,
     TaxIdentifier,
     User,
@@ -258,7 +259,7 @@ class Application(Base):
     __tablename__ = "application"
     application_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False, index=True)
-    reporting_unit_id = Column(Integer, ForeignKey("reporting_unit.reporting_unit_id"), nullable=True)
+    reporting_unit_id = Column(Integer, ForeignKey("lk_reporting_unit.reporting_unit_id"), nullable=True)
     tax_identifier_id = Column(
         UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True
     )
@@ -326,6 +327,7 @@ class Application(Base):
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
     claim = relationship(Claim, backref=backref("application", uselist=False))
     occupation = relationship(LkOccupation)
+    reporting_unit = relationship(LkReportingUnit)
     gender = relationship(LkGender)
     leave_reason = relationship(LkLeaveReason)
     leave_reason_qualifier = relationship(LkLeaveReasonQualifier)

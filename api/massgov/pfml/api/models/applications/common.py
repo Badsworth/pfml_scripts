@@ -34,6 +34,15 @@ class Occupation(str, LookupEnum):
     health_care = "Health Care"
 
 
+class ReportingUnit(str, LookupEnum):
+    dfml = "DFML"
+    pfml = "PFML"
+    contact_center = "Contact Center"
+    devops = "DevOps"
+    savilinx = "Savilinx"
+    hr = "HR"
+
+
 class EligibilityEmploymentStatus(str):
     employed = "Employed"
     unemployed = "Unemployed"
