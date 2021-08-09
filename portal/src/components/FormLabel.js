@@ -16,7 +16,8 @@ function FormLabel({
   ...props
 }) {
   const LabelElement = component;
-  const errorMsgId = props.inputId + "_error";
+  const errorMsgId = props.inputId ? props.inputId + "_error" : null;
+  const labelId = props.inputId ? `${props.inputId}_label` : null;
   const hasError = !!props.errorMsg;
 
   const labelClasses = classnames(`usa-label ${labelClassName}`, {
@@ -33,8 +34,8 @@ function FormLabel({
     <React.Fragment>
       <LabelElement
         className={labelClasses}
-        htmlFor={props.inputId}
-        id={`${props.inputId}_label`}
+        htmlFor={component === "label" ? props.inputId : null}
+        id={labelId}
       >
         {props.children}
         {props.optionalText && (
