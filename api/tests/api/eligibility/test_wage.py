@@ -97,6 +97,40 @@ def test_query_employee_wages(test_db_session, initialize_factories_session):
         assert row.employer_id in (EMPL1, EMPL2)
 
 
+def test_query_employee_wages_ignores_zero_dollar_contributions(
+    test_db_session, initialize_factories_session
+):
+    employer = factories.EmployerFactory(employer_id=EMPL1)
+    employee = factories.EmployeeFactory()
+    factories.WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=datetime.date(2020, 10, 1),
+        employee_qtr_wages=1000,
+    )
+    factories.WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=datetime.date(2020, 7, 1),
+        employee_qtr_wages=0,
+    )
+    factories.WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=datetime.date(2020, 4, 1),
+        employee_qtr_wages=1000,
+    )
+
+    rows = wage.query_employee_wages(
+        test_db_session, quarter.Quarter(2021, 1), employee.employee_id
+    )
+
+    # Expect 2 rows - Zero dollar reported wages ignored
+    assert len(rows) == 2
+    for row in rows:
+        assert row.employee_qtr_wages == 1000
+
+
 def test_get_employer_average_weekly_wage_calculator_one_employer_current_quarter():
     calculator = wage.WageCalculator()
     calculator.set_effective_quarter(quarter.Quarter(2022, 3))
