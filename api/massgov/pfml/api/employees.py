@@ -7,7 +7,7 @@ from werkzeug.exceptions import NotFound
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
-from massgov.pfml.db.models.employees import Employee, TaxIdentifier, ReportingUnit
+from massgov.pfml.db.models.employees import Employee, TaxIdentifier, LkReportingUnit
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.sqlalchemy import get_or_404
 
@@ -100,7 +100,7 @@ def employees_search():
         employee = employee_query.first()
 
         # @todo: query for units connected to this employee, not all of them
-        employee.reporting_units = db_session.query(ReportingUnit).all()
+        employee.reporting_units = db_session.query(LkReportingUnit).all()
 
     if employee is None:
         raise NotFound()

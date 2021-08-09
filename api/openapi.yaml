@@ -2068,6 +2068,10 @@ components:
             - Health Care
           example: "Sales Clerk"
           nullable: true
+        reporting_unit:
+          type: string
+          nullable: true
+          example: "3"
         gender:
           type: string
           nullable: true

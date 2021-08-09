@@ -801,10 +801,41 @@ class UserRole(Base, TimestampMixin):
     role = relationship(LkRole)
 
 
+class LkWorksite(Base):
+    __tablename__ = "lk_worksite"
+    worksite_id = Column(Integer, primary_key=True, autoincrement=True)
+    worksite_description = Column(Text)
+    worksite_fineos_id = Column(Text)
+
+    def __init__(self, worksite_id, worksite_description, worksite_fineos_id):
+        self.worksite_id = worksite_id
+        self.worksite_description = worksite_description
+        self.worksite_fineos_id = worksite_fineos_id
+
+
+class LkReportingUnit(Base):
+    __tablename__ = "lk_reporting_unit"
+    reporting_unit_id = Column(Integer, primary_key=True, autoincrement=True)
+    reporting_unit_description = Column(Text)
+
+    def __init__(self, reporting_unit_id, reporting_unit_description):
+        self.reporting_unit_id = reporting_unit_id
+        self.reporting_unit_description = reporting_unit_description
+
+
+class LkUserLeaveAdminDepartment(Base):
+    __tablename__ = "lk_user_leave_administrator_department"
+    # there is no unique constraint matching given keys for referenced table "link_user_leave_administrator"    
+    user_leave_administrator_id = Column(UUID(as_uuid=True), ForeignKey("link_user_leave_administrator.user_leave_administrator_id"), primary_key=True)
+    reporting_unit_id = Column(Integer, ForeignKey("lk_reporting_unit.reporting_unit_id"), primary_key=True)
+
+    reporting_unit = relationship(LkReportingUnit)
+
+
 class UserLeaveAdministrator(Base, TimestampMixin):
     __tablename__ = "link_user_leave_administrator"
     __table_args__ = (UniqueConstraint("user_id", "employer_id"),)
-    user_leave_administrator_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    user_leave_administrator_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen, unique=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False)
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False)
     fineos_web_id = Column(Text)
@@ -826,14 +857,6 @@ class UserLeaveAdministrator(Base, TimestampMixin):
     @typed_hybrid_property
     def verified(self) -> bool:
         return bool(self.verification_id)
-
-
-class LkUserLeaveAdminDepartment(Base):
-    __tablename__ = "lk_user_leave_administrator_department"
-    __table_args__ = (UniqueConstraint("user_leave_administrator_id", "reporting_unit_id"),)
-    leave_admin_department_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    user_leave_administrator_id = Column(UUID(as_uuid=True), ForeignKey("link_user_leave_administrator.user_leave_administrator_id"), nullable=False)
-    reporting_unit_id = Column(Integer, ForeignKey("reporting_unit.reporting_unit_id"), nullable=False)
 
 
 class LkManagedRequirementStatus(Base):
@@ -2230,28 +2253,6 @@ class LeaveRequestDecision(LookupTable):
     IN_REVIEW = LkLeaveRequestDecision(2, "In Review")
     APPROVED = LkLeaveRequestDecision(3, "Approved")
     DENIED = LkLeaveRequestDecision(4, "Denied")
-
-
-class LkWorksite(Base):
-    __tablename__ = "lk_worksite"
-    worksite_id = Column(Integer, primary_key=True)
-    worksite_description = Column(Text)
-    worksite_fineos_id = Column(Text)
-
-    def __init__(self, worksite_id, worksite_description, worksite_fineos_id):
-        self.worksite_id = worksite_id
-        self.worksite_description = worksite_description
-        self.worksite_fineos_id = worksite_fineos_id
-
-
-class LkReportingUnit(Base):
-    __tablename__ = "lk_reporting_unit"
-    reporting_unit_id = Column(Integer, primary_key=True)
-    reporting_unit_description = Column(Text)
-
-    def __init__(self, reporting_unit_id, reporting_unit_description):
-        self.reporting_unit_id = reporting_unit_id
-        self.reporting_unit_description = reporting_unit_description
 
 
 class Worksite(LookupTable):
