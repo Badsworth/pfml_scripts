@@ -18,7 +18,9 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
           username: config("PORTAL_USERNAME"),
           password: config("PORTAL_PASSWORD"),
         };
-        portal.login(credentials);
+        cy.loginByCognitoApi(credentials.username, credentials.password);
+
+        // portal.login(credentials);
         portal.goToDashboardFromApplicationsPage();
 
         // Submit Claim
@@ -101,7 +103,7 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
             ?.expected_weekly_payment as unknown as number;
           fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
             (leaveCase) => {
-              leaveCase.assertOwnershipAssignTo("DFML Program Integrity")
+              leaveCase.assertOwnershipAssignTo("DFML Program Integrity");
               leaveCase.assertAmountsPending([
                 {
                   net_payment_amount: payment,
