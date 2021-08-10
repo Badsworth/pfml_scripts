@@ -8,10 +8,10 @@ import pydantic
 class CreateOrUpdateLeaveAdmin(pydantic.BaseModel):
     fineos_web_id: str
     fineos_employer_id: int
-    admin_full_name: Optional[str]
+    admin_full_name: str
     admin_area_code: Optional[str]
     admin_phone_number: Optional[str]
-    admin_email: Optional[str]
+    admin_email: str
 
 
 class PhoneNumber(pydantic.BaseModel):

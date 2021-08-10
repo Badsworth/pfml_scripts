@@ -68,7 +68,7 @@ export default function UserLookup() {
       <Button additionalClasses={["btn--plain"]} onClick={openSlideOut(u)}>
         Quick view
       </Button>
-      &nbsp; |&nbsp;
+      &nbsp; | &nbsp;
       <Button
         additionalClasses={["btn--plain"]}
         onClick={() => {

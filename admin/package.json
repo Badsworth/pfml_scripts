@@ -13,6 +13,7 @@
     "lint": "tsc --pretty --noEmit && next lint && stylelint styles/*.scss src/components/*.scss"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.171",
     "@types/react-test-renderer": "^17.0.1",
     "classnames": "^2.3.1",
     "formik": "^2.2.9",

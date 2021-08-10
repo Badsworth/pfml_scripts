@@ -322,7 +322,7 @@ def get_standard_test_data(*, now, scenario_name, test_db_session, tmp_path, vcm
     scenario_config = scenario_generator.ScenarioDataConfig(
         scenario_list,
         ssn_id_base=fake.random_number(digits=9),
-        fein_id_base=fake.random_number(digits=9),
+        fein_id_base=fake.random_number(digits=9, fix_len=True),
     )
 
     # Generate the database records and extract files.

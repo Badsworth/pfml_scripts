@@ -1,0 +1,12 @@
+.page__main {
+  grid-column: 1 / span 2;
+  padding: 1.9em 2.29em;
+
+  @media screen and (min-width: 1024px) {
+    grid-column: 2 / 2;
+    grid-row: 2 / 2;
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: relative;
+  }
+}

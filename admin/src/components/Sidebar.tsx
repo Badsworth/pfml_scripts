@@ -1,29 +1,57 @@
 import Link from "next/link";
 import routes from "../routes";
+import { useRouter } from "next/router";
+import classNames from "classnames";
 
 export default function Sidebar() {
+  const router = useRouter();
+
   return (
     <aside className="page__sidebar" tabIndex={0}>
       <nav className="menu">
         <ul className="menu__list">
           <li className="menu__list-item">
-            <Link href="/dashboard">
-              <a className="menu__link menu__link--dashboard">Dashboard</a>
+            <Link href={routes.dashboard}>
+              <a
+                className={classNames("menu__link", "menu__link--dashboard", {
+                  "menu__link--active": router.pathname == routes.dashboard,
+                })}
+              >
+                Dashboard
+              </a>
             </Link>
           </li>
           <li className="menu__list-item">
-            <Link href="/users">
-              <a className="menu__link menu__link--user-lookup">User Lookup</a>
+            <Link href={routes.users}>
+              <a
+                className={classNames("menu__link", "menu__link--user-lookup", {
+                  "menu__link--active": router.pathname == routes.users,
+                })}
+              >
+                User Lookup
+              </a>
             </Link>
           </li>
           <li className="menu__list-item">
-            <a href="#" className="menu__link menu__link--maintenance">
-              Maintenance
-            </a>
+            <Link href={routes.maintenance}>
+              <a
+                className={classNames("menu__link", "menu__link--maintenance", {
+                  "menu__link--active": router.pathname == routes.maintenance,
+                })}
+              >
+                Maintenance
+              </a>
+            </Link>
           </li>
           <li className="menu__list-item">
-            <Link href="/features">
-              <a className="menu__link menu__link--features">Features</a>
+            <Link href={routes.features}>
+              <a
+                className={classNames("menu__link", "menu__link--features", {
+                  "menu__link--active": router.pathname == routes.features,
+                })}
+              >
+                Features
+              </a>
             </Link>
           </li>
         </ul>
@@ -31,14 +59,34 @@ export default function Sidebar() {
       <div className="settings">
         <ul className="settings__list">
           <li className="settings__list-item">
-            <a href="#" className="settings__link settings__link--settings">
-              Settings
-            </a>
+            <Link href={routes.settings}>
+              <a
+                className={classNames(
+                  "settings__link",
+                  "settings__link--settings",
+                  {
+                    "menu__link--active": router.pathname == routes.settings,
+                  },
+                )}
+              >
+                Settings
+              </a>
+            </Link>
           </li>
           <li className="settings__list-item">
-            <a href="#" className="settings__link settings__link--help">
-              Help
-            </a>
+            <Link href={routes.help}>
+              <a
+                className={classNames(
+                  "settings__link",
+                  "settings__link--help",
+                  {
+                    "menu__link--active": router.pathname == routes.help,
+                  },
+                )}
+              >
+                Help
+              </a>
+            </Link>
           </li>
         </ul>
       </div>

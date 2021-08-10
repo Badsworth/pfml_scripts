@@ -131,9 +131,8 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return ssoCookies;
     },
 
-    waitForClaimDocuments: documentWaiter.waitForClaimDocuments.bind(
-      documentWaiter
-    ),
+    waitForClaimDocuments:
+      documentWaiter.waitForClaimDocuments.bind(documentWaiter),
 
     async generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
       if (!(scenarioID in scenarios)) {

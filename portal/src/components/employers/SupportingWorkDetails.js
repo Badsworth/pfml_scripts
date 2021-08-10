@@ -34,40 +34,38 @@ const SupportingWorkDetails = (props) => {
         }
       >
         <p className="margin-top-0">{props.initialHoursWorkedPerWeek}</p>
-        <ConditionalContent
-          getField={props.getField}
-          clearField={props.clearField}
-          updateFields={props.updateFields}
-          fieldNamesClearedWhenHidden={["hours_worked_per_week"]}
-          visible={isAmendmentFormDisplayed}
-        >
-          <AmendmentForm
-            onDestroy={() => setIsAmendmentFormDisplayed(false)}
-            destroyButtonLabel={t("components.amendmentForm.cancel")}
-            className="bg-base-lightest border-base-lighter"
-          >
-            <Heading level="4" size="3">
-              {t("components.employersSupportingWorkDetails.heading_amend")}
-            </Heading>
-            <p>
-              {t("components.employersSupportingWorkDetails.subtitle_amend")}
-            </p>
-            <InputNumber
-              {...props.getFunctionalInputProps("hours_worked_per_week")}
-              label={t(
-                "components.employersSupportingWorkDetails.leavePeriodDurationLabel"
-              )}
-              hint={t(
-                "components.employersSupportingWorkDetails.leavePeriodDurationHint"
-              )}
-              mask="hours"
-              width="small"
-              smallLabel
-              valueType="integer"
-            />
-          </AmendmentForm>
-        </ConditionalContent>
       </ReviewRow>
+      <ConditionalContent
+        getField={props.getField}
+        clearField={props.clearField}
+        updateFields={props.updateFields}
+        fieldNamesClearedWhenHidden={["hours_worked_per_week"]}
+        visible={isAmendmentFormDisplayed}
+      >
+        <AmendmentForm
+          onDestroy={() => setIsAmendmentFormDisplayed(false)}
+          destroyButtonLabel={t("components.amendmentForm.cancel")}
+          className="bg-base-lightest border-base-lighter"
+        >
+          <Heading level="4" size="3">
+            {t("components.employersSupportingWorkDetails.heading_amend")}
+          </Heading>
+          <p>{t("components.employersSupportingWorkDetails.subtitle_amend")}</p>
+          <InputNumber
+            {...props.getFunctionalInputProps("hours_worked_per_week")}
+            label={t(
+              "components.employersSupportingWorkDetails.leavePeriodDurationLabel"
+            )}
+            hint={t(
+              "components.employersSupportingWorkDetails.leavePeriodDurationHint"
+            )}
+            mask="hours"
+            width="small"
+            smallLabel
+            valueType="integer"
+          />
+        </AmendmentForm>
+      </ConditionalContent>
     </React.Fragment>
   );
 };

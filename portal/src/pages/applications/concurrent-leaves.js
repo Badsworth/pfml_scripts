@@ -31,7 +31,10 @@ export const ConcurrentLeaves = (props) => {
     if (formState.has_concurrent_leave === false && claim.concurrent_leave) {
       formState.concurrent_leave = null;
     }
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+    return appLogic.benefitsApplications.update(
+      claim.application_id,
+      formState
+    );
   };
 
   return (

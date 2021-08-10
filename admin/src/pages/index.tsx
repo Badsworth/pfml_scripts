@@ -40,7 +40,7 @@ export default function Home() {
       {showConfirmationDialog && (
         <ConfirmationDialog
           title="Enable Caring Leave Type"
-          body="Lorum ipsum"
+          body="Lorem ipsum, dolor sit amet consectetur adip elit. Eius aliquam laudantium explicabo pari dolorem."
           handleCancelCallback={confirmationDialogCancelCallback}
           handleContinueCallback={confirmationDialogContinueCallback}
         />

@@ -10,9 +10,8 @@ function SSO(): void {
   cy.clearCookies();
   // Perform SSO login in a task. We can't visit other domains in Cypress.
   cy.task("completeSSOLoginFineos").then((cookiesJson) => {
-    const deserializedCookies: Record<string, string>[] = JSON.parse(
-      cookiesJson
-    );
+    const deserializedCookies: Record<string, string>[] =
+      JSON.parse(cookiesJson);
     // Filter out any cookies that will fail to be set. Those are ones where secure: false
     // and sameSite: "None"
     const noSecure = deserializedCookies.filter(
@@ -25,12 +24,6 @@ function SSO(): void {
 }
 
 export function before(): void {
-  // Block new-relic.js outright due to issues with Cypress networking code.
-  // Without this block, test retries on the portal error out due to fetch() errors.
-  cy.intercept("https://js-agent.newrelic.com/*", (req) => {
-    req.reply("console.log('Fake New Relic script loaded');");
-  });
-
   // Fineos error pages have been found to cause test crashes when rendered. This is very hard to debug, as Cypress
   // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we replace the
   // page with an error page and capture the real response to a file for future debugging.
@@ -51,9 +44,9 @@ export function before(): void {
       //   })
       // );
 
-      // We need to extract this obsructive logic included in a FINEOS error page and replace it with a setTimeout to throw an error letting us know this page was encountered
+      // We need to extract this obstructive logic included in a FINEOS error page and replace it with a setTimeout to throw an error letting us know this page was encountered
       // Using the "modifyObstuctiveCode" property in the cypress.json was enough to get the error page to display but it was not enough to mitigate the test from hanging.
-      // This approach behaves in a much more predicatble manner (Error thrown)
+      // This approach behaves in a much more predictable manner (Error thrown)
       const body: string = res.body.replace(
         "if (top != self) { top.location=self.location }",
         "window.setTimeout(function _() { throw new Error('A FINEOS error page was detected during this test. An error is being thrown in order to prevent Cypress from crashing.') }, 500)\n"
@@ -121,7 +114,7 @@ export function onTab(label: string): void {
       return; // We're already on the correct tab.
     }
     // Here we are splitting the action and assertion, because the tab class can be added after a re-render.
-    cy.contains(".TabStrip td", label).click();
+    cy.contains(".TabStrip td", label).click({ force: true });
     waitForAjaxComplete();
     cy.contains(".TabStrip td", label).should("have.class", "TabOn");
   });
@@ -342,4 +335,14 @@ export function getFixtureDocumentName(
     default:
       return "HCP" as const;
   }
+}
+
+/**
+ * Asserts there's an error message displayed which matches a given text.
+ * @param message text of the message
+ * @example
+ * fineos.assertErrorMessage("Hours worked per week must be entered");
+ */
+export function assertErrorMessage(message: string): void {
+  cy.get(`#page_messages_container`).should("contain.text", message);
 }

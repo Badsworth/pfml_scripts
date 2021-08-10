@@ -1,5 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Mask applies icon prefix to the child element when mask is currency 1`] = `
+<div
+  aria-hidden="true"
+  className="usa-input-prefix"
+>
+  <Icon
+    name="attach_money"
+  />
+</div>
+`;
+
 exports[`Mask renders ssn mask 1`] = `
 <div
   className=""

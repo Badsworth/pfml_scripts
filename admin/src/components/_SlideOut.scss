@@ -57,19 +57,25 @@
   padding-right: 1.71em;
 }
 
+.slide-out__btn-close {
+  align-items: center;
+  background-color: #fff;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  flex: none;
+  height: 24px;
+  justify-content: center;
+  margin-top: 0.35em;
+  width: 24px;
+}
+
 .slide-out__btn-close::before {
   @include IconFontProps;
   color: $Color-GraniteGray-300;
   content: $IconX;
   font-weight: 700;
-}
-
-.slide-out__btn-close {
-  background-color: #fff;
-  flex: none;
-  height: 24px;
-  margin-top: 0.35em;
-  width: 24px;
+  line-height: 1;
 }
 
 .slide-out__body {

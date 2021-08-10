@@ -1,3 +1,4 @@
+import Icon from "./Icon";
 import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
@@ -8,11 +9,6 @@ const maskDeliminatedRegex = {
   fein: /([*\d]{2})([*\d]+)?/,
   phone: /([*\d]{3})([*\d]{1,3})?([*\d]+)?/,
   zip: /([*\d]{5})([*\d]+)?/,
-};
-
-// Overlays in specific contexts
-const maskOverlayContent = {
-  currency: "$",
 };
 
 /**
@@ -182,24 +178,21 @@ function Mask(props) {
     onChange: field.props.onChange,
     onKeyDown: handleKeyDown,
     className: classnames(field.props.className, {
-      "c-inputtext-field--currency": props.mask === "currency",
+      "padding-left-0": props.mask === "currency",
     }),
   });
-
-  // UI overlayed on top of a field to support certain masks
-  const maskOverlay = maskOverlayContent[props.mask] ? (
-    <div className={`c-inputtext-mask__before--${props.mask}`}>
-      {maskOverlayContent[props.mask]}
-    </div>
-  ) : null;
 
   return (
     <div
       className={classnames({
-        "c-inputtext-mask--currency": props.mask === "currency",
+        "usa-input-group": props.mask === "currency",
       })}
     >
-      {maskOverlay}
+      {props.mask === "currency" && (
+        <div className="usa-input-prefix" aria-hidden="true">
+          <Icon name="attach_money" />
+        </div>
+      )}
       {modifiedInputText}
     </div>
   );

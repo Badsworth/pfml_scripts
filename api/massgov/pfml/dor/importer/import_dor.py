@@ -4,6 +4,7 @@
 #
 
 import os
+import re
 import resource
 import sys
 import uuid
@@ -86,6 +87,8 @@ class ImportReport:
     invalid_employer_lines_count: int = 0
     parsed_employers_exception_line_nums: List[Any] = field(default_factory=list)
     invalid_employer_addresses_by_account_key: Dict[Any, Any] = field(default_factory=dict)
+    invalid_employer_feins_by_account_key: Dict[Any, Any] = field(default_factory=dict)
+    errored_employers_fein_count: int = 0
     invalid_employee_lines_count: int = 0
     skipped_wages_count: int = 0
     parsed_employer_quarter_exception_count: int = 0
@@ -534,23 +537,38 @@ def bulk_save(db_session, models_list, model_name, commit=False, batch_size=1000
     batch_apply(models_list, f"Saving {model_name}", bulk_save_helper, batch_size=batch_size)
 
 
-def is_valid_employer_address(employee_info, report):
+def is_valid_employer_address(employer_info, report):
     try:
-        dor_persistence_util.employer_dict_to_country_and_state_values(employee_info)
+        dor_persistence_util.employer_dict_to_country_and_state_values(employer_info)
     except KeyError:
         invalid_address_msg = "city: {}, state: {}, zip: {}, country: {}".format(
-            employee_info["employer_address_city"],
-            employee_info["employer_address_state"],
-            employee_info["employer_address_zip"],
-            employee_info["employer_address_country"],
+            employer_info["employer_address_city"],
+            employer_info["employer_address_state"],
+            employer_info["employer_address_zip"],
+            employer_info["employer_address_country"],
         )
         logger.warning(f"Invalid employer address - {invalid_address_msg}")
         report.invalid_employer_addresses_by_account_key[
-            employee_info["account_key"]
+            employer_info["account_key"]
         ] = invalid_address_msg
         return False
 
     return True
+
+
+RE_FEIN = re.compile(r"^[0-9]{9}$")
+
+
+def is_valid_employer_fein(employer_info, report):
+    fein = str(employer_info.get("fein"))
+    correct = RE_FEIN.fullmatch(fein) is not None
+    if correct:
+        return True
+    err_msg = f"Invalid FEIN: {fein}. Expected a 9-digit integer value"
+    report.errored_employers_fein_count += 1
+    report.invalid_employer_feins_by_account_key[employer_info["account_key"]] = err_msg
+    logger.warning(f"Invalid employer fein - {fein}")
+    return False
 
 
 def import_employers(db_session, employers, report, import_log_entry_id):
@@ -581,7 +599,11 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         if not is_valid_employer_address(employer_info, report):
             continue
 
+        if not is_valid_employer_fein(employer_info, report):
+            continue
+
         fein = employer_info["fein"]
+
         if fein in staged_not_found_employer_ssns:
             # this means there is more than one line for the same employer
             # add it to the found list for later possible update processing

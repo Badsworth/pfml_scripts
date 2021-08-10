@@ -4,21 +4,20 @@
 # This is only needed if the API has changed. The output files should be committed to version control.
 #
 
-MODELS = customer_api.py
+MODELS = customer_api/spec.py group_client_api/spec.py
 
 models: $(MODELS)
 
 clean:
 	rm $(MODELS)
 
-%.py: %.cleaned.yaml
-	poetry run datamodel-codegen --field-constraints --input $< --output $@
-	poetry run black $@
+customer_api.yaml:
+	$(error Please fetch https://documentation.fineos.com/support/documentation/ manually)
 
 # Fix some issues in the OpenAPI file.
-%.cleaned.yaml: %.yaml
-	poetry run python preprocess-customer-api-spec.py $< > $@
+%.cleaned.json: %.json
+	poetry run python preprocess-fineos-models-spec.py $< > $@
 
-# This is difficult to automate as both an oauth2 session and valid userid header are needed.
-customer_api.yaml:
-	$(error Please fetch https://dt1-api.masspfml.fineos.com/customer-services/openapi.yaml manually)
+%.py: %.cleaned.json
+	poetry run datamodel-codegen --field-constraints --input $< --output $@
+	poetry run black $@

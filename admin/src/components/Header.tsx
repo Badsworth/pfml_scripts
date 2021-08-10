@@ -1,14 +1,16 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Header() {
   return (
     <header className="page__header">
       <div className="page__logo">
-        <a
-          href="#"
-          title="Paid Family & Medical Leave - Massachusetts"
-          className="page__logo-link"
-        ></a>
+        <Link href="/">
+          <a
+            title="Paid Family & Medical Leave - Massachusetts"
+            className="page__logo-link"
+          ></a>
+        </Link>
       </div>
       <div className="page__user-options">
         <a

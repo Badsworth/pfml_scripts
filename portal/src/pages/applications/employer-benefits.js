@@ -27,7 +27,10 @@ export const EmployerBenefits = (props) => {
     ) {
       formState.employer_benefits = null;
     }
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+    return appLogic.benefitsApplications.update(
+      claim.application_id,
+      formState
+    );
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

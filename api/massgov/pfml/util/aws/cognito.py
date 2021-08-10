@@ -9,8 +9,6 @@ import botocore
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
 from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.cognito_post_confirmation_lambda.lib import leave_admin_create
-from massgov.pfml.db.models.employees import User
 
 USER_ID_ATTRIBUTE = "sub"
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -139,7 +137,7 @@ def create_verified_cognito_leave_admin_account(
     fein: str,
     cognito_user_pool_id: str,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
-) -> User:
+) -> str:
     """Create Cognito and API records for a leave admin with a verified email and temporary password"""
 
     sub_id: Optional[str] = None
@@ -177,11 +175,7 @@ def create_verified_cognito_leave_admin_account(
     except botocore.exceptions.ClientError as exc:
         logger.warning("Unable to set password for user", exc_info=exc)
         raise CognitoPasswordSetFailure("Unable to set password for user")
-
-    log_attributes = {
-        "auth_id": sub_id,
-    }
-    return leave_admin_create(db_session, sub_id, email, fein, log_attributes)
+    return sub_id
 
 
 def create_cognito_account(

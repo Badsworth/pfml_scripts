@@ -77,7 +77,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
 resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
   count             = var.enable_alarm_api_ram ? 1 : 0
   alarm_name        = "${local.app_name}-${var.environment_name}_RAM-Warning"
-  alarm_description = "(${upper(var.environment_name)} API WARN) P95 RAM usage by API tasks exceeds 90% container allotment"
+  alarm_description = "(${upper(var.environment_name)} API WARN) P95 RAM usage by API tasks exceeds 75% container allotment"
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
@@ -86,7 +86,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
   extended_statistic  = "p95"
   metric_name         = "MemoryUtilized" # units: MiB
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = (2048 * 0.90)
+  threshold           = (2048 * 0.75)
   evaluation_periods  = "5"  # look back at the last five minutes
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals
@@ -102,7 +102,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
 resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
   count             = var.enable_alarm_api_ram ? 1 : 0
   alarm_name        = "${local.app_name}-${var.environment_name}_RAM-Critical"
-  alarm_description = "(${upper(var.environment_name)} API CRIT) P95 RAM usage by API tasks exceeds 95% container allotment"
+  alarm_description = "(${upper(var.environment_name)} API CRIT) P95 RAM usage by API tasks exceeds 85% container allotment"
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
@@ -111,7 +111,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
   extended_statistic  = "p95"
   metric_name         = "MemoryUtilized" # units: MiB
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = (2048 * 0.95)
+  threshold           = (2048 * 0.85)
   evaluation_periods  = "5"  # look back at the last five minutes
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals

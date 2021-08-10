@@ -74,7 +74,7 @@ describe("EmployerBenefits", () => {
   it("displays 'None reported' if no benefits are reported", () => {
     const wrapper = render({ employerBenefits: [] });
     expect(wrapper.find(AmendableEmployerBenefit).exists()).toEqual(false);
-    expect(wrapper.find("th").last().text()).toEqual("None reported");
+    expect(wrapper.find("td").at(0).text()).toEqual("None reported");
   });
 
   it('displays a row for each benefit in "employerBenefits"', () => {

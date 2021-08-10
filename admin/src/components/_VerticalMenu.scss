@@ -1,0 +1,49 @@
+.vertical-menu {
+  position: relative;
+}
+
+.vertical-menu__icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.14em;
+  position: relative;
+  vertical-align: middle;
+}
+
+.vertical-menu__dropdown {
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: $Box-Shadow;
+  left: -100px;
+  list-style: none;
+  margin-top: 0;
+  padding: 1.14em 1.14em 0;
+  position: absolute;
+  user-select: none;
+  width: 200px;
+}
+
+.vertical-menu__item {
+  display: inline-block;
+  margin-bottom: 1em;
+}
+
+.vertical-menu__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.vertical-menu__button {
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1em;
+  padding: 0;
+}
+
+.vertical-menu__item--disabled {
+  color: $Color-GraniteGray-300;
+}

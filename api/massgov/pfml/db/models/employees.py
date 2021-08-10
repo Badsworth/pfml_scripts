@@ -8,6 +8,7 @@
 # This allows us to build mock data and insert them easily in the database for tests
 # and seeding.
 #
+import re
 import uuid
 from datetime import date
 from typing import TYPE_CHECKING, List, Optional, cast
@@ -24,10 +25,12 @@ from sqlalchemy import (
     Numeric,
     Text,
     UniqueConstraint,
+    and_,
+    select,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, deferred, dynamic_loader, relationship
+from sqlalchemy.orm import Query, aliased, deferred, dynamic_loader, relationship, validates
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON, TypeEngine
@@ -48,6 +51,46 @@ if TYPE_CHECKING:
     PostgreSQLUUID = TypeEngine[uuid.UUID]
 else:
     PostgreSQLUUID = UUID(as_uuid=True)
+
+
+class LkAbsencePeriodType(Base):
+    __tablename__ = "lk_absence_period_type"
+    absence_period_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    absence_period_type_description = Column(Text)
+
+    def __init__(self, absence_period_type_id, absence_period_type_description):
+        self.absence_period_type_id = absence_period_type_id
+        self.absence_period_type_description = absence_period_type_description
+
+
+class LkAbsenceReason(Base):
+    __tablename__ = "lk_absence_reason"
+    absence_reason_id = Column(Integer, primary_key=True, autoincrement=True)
+    absence_reason_description = Column(Text)
+
+    def __init__(self, absence_reason_id, absence_reason_description):
+        self.absence_reason_id = absence_reason_id
+        self.absence_reason_description = absence_reason_description
+
+
+class LkAbsenceReasonQualifierOne(Base):
+    __tablename__ = "lk_absence_reason_qualifier_one"
+    absence_reason_qualifier_one_id = Column(Integer, primary_key=True, autoincrement=True)
+    absence_reason_qualifier_one_description = Column(Text)
+
+    def __init__(self, absence_reason_qualifier_one_id, absence_reason_qualifier_one_description):
+        self.absence_reason_qualifier_one_id = absence_reason_qualifier_one_id
+        self.absence_reason_qualifier_one_description = absence_reason_qualifier_one_description
+
+
+class LkAbsenceReasonQualifierTwo(Base):
+    __tablename__ = "lk_absence_reason_qualifier_two"
+    absence_reason_qualifier_two_id = Column(Integer, primary_key=True, autoincrement=True)
+    absence_reason_qualifier_two_description = Column(Text)
+
+    def __init__(self, absence_reason_qualifier_two_id, absence_reason_qualifier_two_description):
+        self.absence_reason_qualifier_two_id = absence_reason_qualifier_two_id
+        self.absence_reason_qualifier_two_description = absence_reason_qualifier_two_description
 
 
 class LkAbsenceStatus(Base):
@@ -280,20 +323,34 @@ class AbsencePeriod(Base, TimestampMixin):
     )
 
     absence_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    absence_period_start_date = Column(Date)
+    absence_period_end_date = Column(Date)
+    absence_period_type_id = Column(
+        Integer, ForeignKey("lk_absence_period_type.absence_period_type_id"), nullable=False
+    )
+    absence_reason_qualifier_one_id = Column(
+        Integer, ForeignKey("lk_absence_reason_qualifier_one.absence_reason_qualifier_one_id")
+    )
+    absence_reason_qualifier_two_id = Column(
+        Integer, ForeignKey("lk_absence_reason_qualifier_two.absence_reason_qualifier_two_id")
+    )
+    absence_reason_id = Column(
+        Integer, ForeignKey("lk_absence_reason.absence_reason_id"), nullable=False
+    )
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
     fineos_absence_period_class_id = Column(Integer, nullable=False, index=True)
     fineos_absence_period_index_id = Column(Integer, nullable=False, index=True)
     fineos_leave_request_id = Column(Integer)
-    absence_period_start_date = Column(Date)
-    absence_period_end_date = Column(Date)
     leave_request_decision_id = Column(
         Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id"), nullable=False
     )
     is_id_proofed = Column(Boolean)
-    claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"), nullable=False)
 
     claim = relationship("Claim")
-    claim_type = relationship(LkClaimType)
+    absence_period_type = relationship(LkAbsencePeriodType)
+    absence_reason = relationship(LkAbsenceReason)
+    absence_reason_qualifier_one = relationship(LkAbsenceReasonQualifierOne)
+    absence_reason_qualifier_two = relationship(LkAbsenceReasonQualifierTwo)
     leave_request_decision = relationship(LkLeaveRequestDecision)
 
 
@@ -353,6 +410,14 @@ class Employer(Base, TimestampMixin):
             and quarter.filing_period < current_date
             for quarter in self.employer_quarterly_contribution
         )
+
+    @validates("employer_fein")
+    def validate_employer_fein(self, key: str, employer_fein: str) -> str:
+        fein = str(employer_fein)
+        error = re.match(r"^[0-9]{9}$", fein) is None
+        if error:
+            raise ValueError(f"Invalid FEIN: {employer_fein}. Expected a 9-digit integer value")
+        return employer_fein
 
 
 class EmployerQuarterlyContribution(Base):
@@ -588,6 +653,47 @@ class Claim(Base, TimestampMixin):
         Optional[List["ManagedRequirement"]],
         relationship("ManagedRequirement", back_populates="claim"),
     )
+    absence_periods = cast(
+        Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim"),
+    )
+
+    @typed_hybrid_property
+    def soonest_open_requirement_date(self) -> Optional[date]:
+        def _filter(requirement: ManagedRequirement) -> bool:
+            valid_status = (
+                requirement.managed_requirement_status_id
+                == ManagedRequirementStatus.OPEN.managed_requirement_status_id
+            )
+            valid_type = (
+                requirement.managed_requirement_type_id
+                == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
+            )
+            return valid_status and valid_type
+
+        if not self.managed_requirements:
+            return None
+        filtered_requirements = filter(_filter, self.managed_requirements)
+        requirements = sorted(filtered_requirements, key=lambda x: x.follow_up_date, reverse=True)
+        if len(requirements):
+            return requirements[0].follow_up_date
+        return None
+
+    @soonest_open_requirement_date.expression
+    def soonest_open_requirement_date(cls):  # noqa: B902
+        aliasManagedRequirement = aliased(ManagedRequirement)
+
+        status_id = aliasManagedRequirement.managed_requirement_status_id
+        type_id = aliasManagedRequirement.managed_requirement_type_id
+        filters = and_(
+            aliasManagedRequirement.claim_id == cls.claim_id,
+            status_id == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+            type_id == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+        )
+        return (
+            select([func.max(aliasManagedRequirement.follow_up_date)])
+            .where(filters)
+            .label("follow_up_date")
+        )
 
 
 class Payment(Base, TimestampMixin):
@@ -1253,6 +1359,94 @@ class AddressType(LookupTable):
     BUSINESS = LkAddressType(2, "Business")
     MAILING = LkAddressType(3, "Mailing")
     RESIDENTIAL = LkAddressType(4, "Residential")
+
+
+class AbsencePeriodType(LookupTable):
+    model = LkAbsencePeriodType
+    column_names = ("absence_period_type_id", "absence_period_type_description")
+
+    TIME_OFF_PERIOD = LkAbsencePeriodType(1, "Time off period")
+    REDUCED_SCHEDULE = LkAbsencePeriodType(2, "Reduced Schedule")
+    EPISODIC = LkAbsencePeriodType(3, "Episodic")
+    OFFICE_VISIT = LkAbsencePeriodType(4, "Office Visit")
+    INCAPACITY = LkAbsencePeriodType(5, "Incapacity")
+    OFFICE_VISIT_EPISODIC = LkAbsencePeriodType(6, "Office Visit Episodic")
+    INCAPACITY_EPISODIC = LkAbsencePeriodType(7, "Incapacity Episodic")
+    BLACKOUT_PERIOD = LkAbsencePeriodType(8, "Blackout Period")
+    UNSPECIFIED = LkAbsencePeriodType(9, "Unspecified")
+
+
+class AbsenceReason(LookupTable):
+    model = LkAbsenceReason
+    column_names = ("absence_reason_id", "absence_reason_description")
+
+    SERIOUS_HEALTH_CONDITION_EMPLOYEE = LkAbsenceReason(1, "Serious Health Condition - Employee")
+    MEDICAL_DONATION_EMPLOYEE = LkAbsenceReason(2, "Medical Donation - Employee")
+    PREVENTATIVE_CARE_EMPLOYEE = LkAbsenceReason(3, "Preventative Care - Employee")
+    SICKENESS_NON_SERIOUS_HEALTH_CONDITION_EMPLOYEE = LkAbsenceReason(
+        4, "Sickness - Non-Serious Health Condition - Employee"
+    )
+    PREGNANCY_MATERNITY = LkAbsenceReason(5, "Pregnancy/Maternity")
+    CHILD_BONDING = LkAbsenceReason(6, "Child Bonding")
+    CARE_OF_A_FAMILY_MEMBER = LkAbsenceReason(7, "Care for a Family Member")
+    BEREAVEMENT = LkAbsenceReason(8, "Bereavement")
+    EDUCATIONAL_ACTIVITY_FAMILY = LkAbsenceReason(9, "Educational Activity - Family")
+    MEDICAL_DONATION_FAMILY = LkAbsenceReason(10, "Medical Donation - Family")
+    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(11, "Military Caregiver")
+    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency - Family")
+    PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
+    PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
+
+
+class AbsenceReasonQualifierOne(LookupTable):
+    model = LkAbsenceReasonQualifierOne
+    column_names = ("absence_reason_qualifier_one_id", "absence_reason_qualifier_one_description")
+
+    NOT_WORK_RELATED = LkAbsenceReason(1, "Not Work Related")
+    WORK_RELATED = LkAbsenceReason(2, "Work Related")
+    BLOOD = LkAbsenceReason(3, "Blood")
+    BLOOD_STEM_CELL = LkAbsenceReason(4, "Blood Stem Cell")
+    BONE_MARROW = LkAbsenceReason(5, "Bone Marrow")
+    ORGAN = LkAbsenceReason(6, "Organ")
+    OTHER = LkAbsenceReason(7, "Other")
+    POSTNATAL_DISABILITY = LkAbsenceReason(8, "Postnatal Disability")
+    PRENATAL_CARE = LkAbsenceReason(9, "Prenatal Care")
+    PRENATAL_DISABILITY = LkAbsenceReason(10, "Prenatal Disability")
+    ADOPTION = LkAbsenceReason(11, "Adoption")
+    FOSTER_CARE = LkAbsenceReason(12, "Foster Care")
+    NEWBORN = LkAbsenceReason(13, "Newborn")
+    PREGNANCY_RELATED = LkAbsenceReason(14, "Pregnancy Related")
+    RIGHT_TO_LEAVE = LkAbsenceReason(15, "Right to Leave")
+    SERIOUS_HEALTH_CONDITION = LkAbsenceReason(16, "Serious Health Condition")
+    SICKNESS_NON_SERIOUS_HEALTH_CONDITION = LkAbsenceReason(
+        17, "Sickness - Non-Serious Health Condition"
+    )
+    CHILDCARE = LkAbsenceReason(18, "Childcare")
+    COUNSELING = LkAbsenceReason(19, "Counseling")
+    FINANCIAL_AND_LEGAL_ARRANGEMENTS = LkAbsenceReason(20, "Financial & Legal Arrangements")
+    MILITARY_EVENTS_AND_RELATED_ACTIVITIES = LkAbsenceReason(
+        21, "Military Events & Related Activities"
+    )
+    OTHER_ADDITIONAL_ACTIVITIES = LkAbsenceReason(22, "Other Additional Activities")
+    PRENATAL_CARE = LkAbsenceReason(23, "Prenatal Care")
+    POST_DEPLOYMENT_ACTIVITES_INCLUDING_BEREAVEMENT = LkAbsenceReason(
+        24, "Post Deployment Activities - Including Bereavement"
+    )
+    REST_AND_RECUPERATION = LkAbsenceReason(25, "Rest & Recuperation")
+    SHORT_NOTICE_DEPLOYMENT = LkAbsenceReason(26, "Short Notice Deployment")
+    CLOSURE_OF_SCHOOL_CHILDCARE = LkAbsenceReason(27, "Closure of School/Childcare")
+    QUARANTINE_ISOLATION_NON_SICK = LkAbsenceReason(28, "Quarantine/Isolation - Not Sick")
+    BIRTH_DISABILITY = LkAbsenceReason(29, "Birth Disability")
+    CHILDCARE_AND_SCHOOL_ACTIVITIES = LkAbsenceReason(30, "Childcare and School Activities")
+
+
+class AbsenceReasonQualifierTwo(LookupTable):
+    model = LkAbsenceReasonQualifierTwo
+    column_names = ("absence_reason_qualifier_two_id", "absence_reason_qualifier_two_description")
+
+    ACCIDENT_INJURY = LkAbsenceReason(1, "Accident / Injury")
+    MEDICAL_RELATED = LkAbsenceReason(2, "Medical Related")
+    NON_MEDICAL = LkAbsenceReason(3, "Non Medical")
 
 
 class GeoState(LookupTable):

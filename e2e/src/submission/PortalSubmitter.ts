@@ -55,7 +55,9 @@ export default class PortalSubmitter {
     return session;
   }
 
-  private async getOptions(credentials: Credentials): Promise<RequestOptions> {
+  protected async getOptions(
+    credentials: Credentials
+  ): Promise<RequestOptions> {
     const session = await this.getSession(credentials);
     return {
       baseUrl: this.base,
@@ -203,13 +205,13 @@ export default class PortalSubmitter {
     await Promise.all(promises);
   }
 
-  private documentIsPromisedFile(
+  protected documentIsPromisedFile(
     document: DocumentUploadRequest | DocumentWithPromisedFile
   ): document is DocumentWithPromisedFile {
     return typeof document.file === "function";
   }
 
-  private async createApplication(options?: RequestOptions): Promise<string> {
+  protected async createApplication(options?: RequestOptions): Promise<string> {
     const response = await postApplications(options);
     if (response.data.data && response.data.data.application_id) {
       return response.data.data.application_id;
@@ -217,11 +219,11 @@ export default class PortalSubmitter {
     throw new Error("Unable to create new application");
   }
 
-  private async updateApplication(
+  protected async updateApplication(
     application_id: string,
     application: ApplicationRequestBody,
     options: RequestOptions
-  ) {
+  ): ReturnType<typeof patchApplicationsByApplication_id> {
     return patchApplicationsByApplication_id(
       { application_id },
       application,
@@ -229,10 +231,14 @@ export default class PortalSubmitter {
     );
   }
 
-  private async submitApplication(
+  protected async submitApplication(
     application_id: string,
     options?: RequestOptions
-  ) {
+  ): Promise<{
+    fineos_absence_id: string;
+    first_name: string;
+    last_name: string;
+  }> {
     const response = await postApplicationsByApplication_idSubmit_application(
       { application_id },
       options
@@ -254,21 +260,23 @@ export default class PortalSubmitter {
     );
   }
 
-  private async completeApplication(
+  protected async completeApplication(
     application_id: string,
     options?: RequestOptions
-  ) {
+  ): ReturnType<typeof postApplicationsByApplication_idComplete_application> {
     return postApplicationsByApplication_idComplete_application(
       { application_id },
       options
     );
   }
 
-  private async uploadPaymentPreference(
+  protected async uploadPaymentPreference(
     application_id: string,
     paymentPreference: PaymentPreferenceRequestBody,
     options?: RequestOptions
-  ) {
+  ): ReturnType<
+    typeof postApplicationsByApplication_idSubmit_payment_preference
+  > {
     return postApplicationsByApplication_idSubmit_payment_preference(
       { application_id },
       paymentPreference,

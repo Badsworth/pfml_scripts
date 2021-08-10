@@ -65,9 +65,7 @@ describe("PreviousLeaves", () => {
 
   it("displays 'None reported' if no leave periods are reported", () => {
     const wrapper = render({ previousLeaves: [] });
-
-    expect(wrapper.find("AmendablePreviousLeave").exists()).toEqual(false);
-    expect(wrapper.find("th").last().text()).toEqual("None reported");
+    expect(wrapper.find("td").at(0).text()).toEqual("None reported");
   });
 
   it('displays a row for each benefit in "previousLeaves"', () => {
