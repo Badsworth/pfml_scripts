@@ -11,7 +11,6 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
       portal.before();
       cy.task("generateClaim", "CCAP90").then((claim) => {
         cy.stash("claim", claim);
-        const application: ApplicationRequestBody = claim.claim;
         const paymentPreference = claim.paymentPreference;
 
         const credentials: Credentials = {
@@ -27,7 +26,7 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
 
         // Submit Claim
         portal.startClaim();
-        portal.submitClaimPartOne(application);
+        portal.submitClaimPartOne(claim.claim);
         portal.waitForClaimSubmission().then((data) => {
           cy.stash("submission", {
             application_id: data.application_id,
@@ -35,7 +34,7 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(application, paymentPreference);
+        portal.submitClaimPartsTwoThree(claim.claim, paymentPreference);
       });
     });
 
