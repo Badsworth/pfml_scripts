@@ -11,11 +11,11 @@ from massgov.pfml.api.models.applications.common import (
     DocumentType,
     EmploymentStatus,
     Gender,
-    ReportingUnit,
     Occupation,
     OtherIncome,
     PaymentPreference,
     Phone,
+    ReportingUnit,
     WorkPattern,
 )
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave

@@ -65,6 +65,12 @@ class GetClaimsQuery:
         else:
             self.query = self.query.join(model, isouter=isouter)
 
+    def add_reporting_units_filter(self, leave_admin_reporting_units: List[str]) -> None:
+        filter = Claim.application.has(
+            Application.reporting_unit_id.in_(leave_admin_reporting_units)
+        )
+        self.query = self.query.filter(filter)
+
     def add_employer_ids_filter(self, employer_ids: List[str]) -> None:
         self.query = self.query.filter(Claim.employer_id.in_(employer_ids))
 

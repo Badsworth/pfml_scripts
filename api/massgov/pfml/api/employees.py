@@ -7,7 +7,7 @@ from werkzeug.exceptions import NotFound
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
-from massgov.pfml.db.models.employees import Employee, TaxIdentifier, LkReportingUnit
+from massgov.pfml.db.models.employees import Employee, LkReportingUnit, TaxIdentifier
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.sqlalchemy import get_or_404
 

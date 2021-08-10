@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Set, Union
 
 import connexion
 import flask
+from sqlalchemy.orm import load_only
 from sqlalchemy.orm.session import Session
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
@@ -29,6 +30,7 @@ from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
     Employer,
+    LkUserLeaveAdministratorReportingUnit,
     ManagedRequirement,
     ManagedRequirementStatus,
     ManagedRequirementType,
@@ -562,6 +564,27 @@ def get_claims() -> flask.Response:
                 ]
 
                 query.add_employer_ids_filter(employer_ids_list)
+
+                leave_administrator_ids = [
+                    current_user.get_user_leave_admin_for_employer(e).user_leave_administrator_id
+                    for e in employers_list
+                    if sanitize_fein(e.employer_fein or "") not in CLAIMS_DASHBOARD_BLOCKED_FEINS
+                    and current_user.verified_employer(e)
+                ]
+                leave_administrator_reporting_units = (
+                    db_session.query(LkUserLeaveAdministratorReportingUnit)
+                    .filter(
+                        LkUserLeaveAdministratorReportingUnit.user_leave_administrator_id.in_(
+                            leave_administrator_ids
+                        )
+                    )
+                    .all()
+                )
+                leave_administrator_reporting_units_list = [
+                    laru.reporting_unit_id
+                    for laru in leave_administrator_reporting_units
+                ]
+                query.add_reporting_units_filter(leave_administrator_reporting_units_list)
             else:
                 query.add_user_owns_claim_filter(current_user)
 

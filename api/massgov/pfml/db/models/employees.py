@@ -929,19 +929,31 @@ class LkReportingUnit(Base):
         self.reporting_unit_description = reporting_unit_description
 
 
-class LkUserLeaveAdminDepartment(Base):
-    __tablename__ = "lk_user_leave_administrator_department"
-    # there is no unique constraint matching given keys for referenced table "link_user_leave_administrator"    
-    user_leave_administrator_id = Column(UUID(as_uuid=True), ForeignKey("link_user_leave_administrator.user_leave_administrator_id"), primary_key=True)
-    reporting_unit_id = Column(Integer, ForeignKey("lk_reporting_unit.reporting_unit_id"), primary_key=True)
+class LkUserLeaveAdministratorReportingUnit(Base):
+    __tablename__ = "lk_user_leave_administrator_reporting_unit"
+    # there is no unique constraint matching given keys for referenced table "link_user_leave_administrator"
+    user_leave_administrator_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("link_user_leave_administrator.user_leave_administrator_id"),
+        primary_key=True,
+    )
+    reporting_unit_id = Column(
+        Integer, ForeignKey("lk_reporting_unit.reporting_unit_id"), primary_key=True
+    )
 
     reporting_unit = relationship(LkReportingUnit)
+
+    def __init__(self, user_leave_administrator_id, reporting_unit_id):
+        self.user_leave_administrator_id = user_leave_administrator_id
+        self.reporting_unit_id = reporting_unit_id
 
 
 class UserLeaveAdministrator(Base, TimestampMixin):
     __tablename__ = "link_user_leave_administrator"
     __table_args__ = (UniqueConstraint("user_id", "employer_id"),)
-    user_leave_administrator_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen, unique=True)
+    user_leave_administrator_id = Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid_gen, unique=True
+    )
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False)
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False)
     fineos_web_id = Column(Text)
@@ -952,7 +964,7 @@ class UserLeaveAdministrator(Base, TimestampMixin):
     user = relationship(User)
     employer = relationship(Employer)
     verification = relationship(Verification)
-    reporting_units = relationship(LkUserLeaveAdminDepartment)
+    reporting_units = relationship(LkUserLeaveAdministratorReportingUnit)
 
     @typed_hybrid_property
     def has_fineos_registration(self) -> bool:
