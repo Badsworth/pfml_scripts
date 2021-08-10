@@ -737,6 +737,52 @@ def test_get_most_recent_employer_to_employee_info_for_single_employee_different
     assert len(employer_id_to_employee_ids) == len(employer_id_set)
 
 
+def test_process_list_of_employers_simple(test_db_session, initialize_factories_session, tmp_path):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employers_to_process = [wages_and_contributions.employer.employer_id]
+
+    process_results = ef.process_a_list_of_employers(
+        employers_to_process, test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
+
+    assert process_results.start
+    assert process_results.end
+    assert process_results.employers_total_count == 1
+    assert process_results.employers_success_count == 1
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
+    assert process_results.employee_and_employer_pairs_total_count == 1
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
+def test_process_list_of_employers_filter_correct_employers(
+    test_db_session, initialize_factories_session, tmp_path
+):
+    wages_and_contributions_one = WagesAndContributionsFactory.create()
+    employers_to_process = [wages_and_contributions_one.employer.employer_id]
+
+    wages_and_contributions_two = WagesAndContributionsFactory.create()
+    employers_to_process.append(wages_and_contributions_two.employer.employer_id)
+
+    WagesAndContributionsFactory.create()
+    WagesAndContributionsFactory.create()
+
+    process_results = ef.process_a_list_of_employers(
+        employers_to_process, test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
+
+    assert process_results.start
+    assert process_results.end
+    assert process_results.employers_total_count == 2
+    assert process_results.employers_success_count == 2
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
+    assert process_results.employee_and_employer_pairs_total_count == 2
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
 def test_process_employee_updates_simple(
     test_db_session, initialize_factories_session, tmp_path, create_triggers
 ):
