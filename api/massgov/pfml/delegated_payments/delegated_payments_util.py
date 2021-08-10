@@ -154,6 +154,7 @@ class ValidationReason(str, Enum):
     CLAIM_NOT_ID_PROOFED = "ClaimNotIdProofed"
     PAYMENT_EXCEEDS_PAY_PERIOD_CAP = "PaymentExceedsPayPeriodCap"
     ROUTING_NUMBER_FAILS_CHECKSUM = "RoutingNumberFailsChecksum"
+    LEAVE_REQUEST_IN_REVIEW = "LeaveRequestInReview"
 
 
 @dataclass(frozen=True, eq=True)

@@ -531,6 +531,9 @@ class FineosWritebackTransactionStatus(LookupTable):
     PROCESSED = LkFineosWritebackTransactionStatus(10, "Processed", ACTIVE_WRITEBACK_RECORD_STATUS)
     PAID = LkFineosWritebackTransactionStatus(11, "Paid", ACTIVE_WRITEBACK_RECORD_STATUS)
     POSTED = LkFineosWritebackTransactionStatus(12, "Posted", ACTIVE_WRITEBACK_RECORD_STATUS)
+    LEAVE_IN_REVIEW = LkFineosWritebackTransactionStatus(
+        13, "Leave Plan In Review", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
 
 
 def sync_lookup_tables(db_session):
