@@ -2,7 +2,8 @@ import { fineos, portal, email, fineosPages } from "../../../actions";
 import { getFineosBaseUrl } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
-import { findCertificationDoc } from "../../../../src/util/documents";
+
+// update state of claim at the end of the test
 
 describe("Request for More Information (notifications/notices)", () => {
   after(() => {
@@ -20,49 +21,40 @@ describe("Request for More Information (notifications/notices)", () => {
     () => {
       fineos.before();
       cy.visit("/");
-
-      cy.task("generateClaim", "CHAP_RFI").then((claim) => {
-        cy.task("submitClaimToAPI", {
-          ...claim,
-          credentials,
-        }).then((res) => {
-          cy.stash("claim", claim.claim);
-          cy.stash("submission", {
-            application_id: res.application_id,
-            fineos_absence_id: res.fineos_absence_id,
-            timestamp_from: Date.now(),
-          });
-
-          const page = fineosPages.ClaimPage.visit(res.fineos_absence_id);
-          page.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              const certificationDocument = findCertificationDoc(
-                claim.documents
-              );
-              evidence.requestAdditionalInformation(
-                certificationDocument.document_type,
-                {
-                  "Care Information incomplete": "This is incomplete",
-                },
-                "Please resubmit page 1 of the Caring Certification form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
-              );
-            });
-          });
-          page.tasks((task) => {
-            task.assertTaskExists("Caring Certification Review");
-            task.close("Caring Certification Review");
-          });
-          page.documents((document) => {
-            document.assertDocumentUploads("Care for a family member form", 1);
-          });
-          // This should trigger a change in plan status.
-          page.shouldHaveStatus("PlanDecision", "Pending Evidence");
-          page
-            .triggerNotice("SOM Generate Legal Notice")
-            .documents((docPage) =>
-              docPage.assertDocumentExists("Request for more Information")
-            );
+      cy.task<"CHAP_RFI">("getClaimFromDB", "CHAP_RFI").then((res) => {
+        cy.stash("submission", {
+          application_id: res.claimId,
+          fineos_absence_id: res.fineosAbsenceId,
+          timestamp_from: Date.now(),
         });
+        const page = fineosPages.ClaimPage.visit(res.fineosAbsenceId);
+        page.adjudicate((adjudication) => {
+          adjudication.evidence((evidence) => {
+            // @todo - utilized this function for presubmitted claims
+            // const certificationDocument = findCertificationDoc(claim.documents);
+            evidence.requestAdditionalInformation(
+              "Care for a family member form",
+              {
+                "Care Information incomplete": "This is incomplete",
+              },
+              "Please resubmit page 1 of the Caring Certification form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
+            );
+          });
+        });
+        page.tasks((task) => {
+          task.assertTaskExists("Caring Certification Review");
+          task.close("Caring Certification Review");
+        });
+        page.documents((document) => {
+          document.assertDocumentUploads("Care for a family member form", 1);
+        });
+        // This should trigger a change in plan status.
+        page.shouldHaveStatus("PlanDecision", "Pending Evidence");
+        page
+          .triggerNotice("SOM Generate Legal Notice")
+          .documents((docPage) =>
+            docPage.assertDocumentExists("Request for more Information")
+          );
       });
     }
   );

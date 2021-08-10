@@ -52,6 +52,8 @@ function getRawEnvironment() {
     FLOOD_API_TOKEN: process.env.E2E_FLOOD_API_TOKEN,
     LST_EMPLOYEES_FILE: process.env.E2E_LST_EMPLOYEES_FILE,
     LST_EMPLOYERS_FILE: process.env.E2E_LST_EMPLOYERS_FILE,
+
+    MONGO_CONNECTION_URI: process.env.E2E_MONGO_CONNECTION_URI,
   };
 }
 

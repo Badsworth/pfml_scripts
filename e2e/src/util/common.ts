@@ -5,7 +5,7 @@ import { CognitoUserPool } from "amazon-cognito-identity-js";
 import PortalSubmitter from "../submission/PortalSubmitter";
 import EmployerPool from "../generation/Employer";
 import EmployeePool from "../generation/Employee";
-
+import { ApplicationRequestBody } from "../_api";
 /**
  * @file This file contains utility functions that are commonly shared.
  *

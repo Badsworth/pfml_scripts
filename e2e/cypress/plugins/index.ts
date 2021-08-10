@@ -37,11 +37,19 @@ import TestMailClient, {
   GetEmailsOpts,
 } from "../../src/submission/TestMailClient";
 import DocumentWaiter from "./DocumentWaiter";
-import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
+import {
+  ClaimGenerator,
+  DehydratedClaim,
+  APIClaimSpec,
+} from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
 import * as postSubmit from "../../src/submission/PostSubmit";
 import pRetry from "p-retry";
+import { disconnectDB, connectDB } from "../claims_database/db";
+import { ClaimModel } from "../claims_database/claims/claim.model";
+import { IClaimDocument } from "../claims_database/claims/claim.types";
+import { submitClaimDirectlyToAPI } from "../actions/portal";
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
@@ -56,6 +64,8 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     config("API_BASEURL"),
     authenticator
   );
+  (async () => await connectDB(config("MONGO_CONNECTION_URI")))();
+
   // Keep a static cache of the SSO login cookies. This allows us to skip double-logins
   // in envrionments that use SSO. Double logins are a side effect of changing the baseUrl.
   let ssoCookies: string;
@@ -174,6 +184,30 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return true;
     },
 
+    async getClaimFromDB(spec: Scenarios): Promise<IClaimDocument | undefined> {
+      if (!(spec in scenarios)) {
+        throw new Error(`Invalid scenario: ${spec}`);
+      }
+      const scenario = scenarios[spec];
+      const { label, leave_dates } = scenario.claim;
+      const startDate = leave_dates ? leave_dates[0] : undefined;
+      const endDate = leave_dates ? leave_dates[1] : undefined;
+      const claim = await ClaimModel.findOne({
+        scenario: label,
+        startDate,
+        endDate,
+        clean: true,
+      });
+      if (!claim) {
+        // submit to api
+        await submitClaimDirectlyToAPI(label);
+        return;
+      }
+      claim.clean = false;
+      await claim.save();
+      return claim;
+    },
+
     syslog(arg: unknown | unknown[]): null {
       if (Array.isArray(arg)) {
         console.log(...arg);
@@ -189,6 +223,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
   };
   on("file:preprocessor", webpackPreprocessor(options));
 
+  on("after:run", disconnectDB);
   // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
   const configEntries = Object.entries(merged).map(([k, v]) => [`E2E_${k}`, v]);
   return {

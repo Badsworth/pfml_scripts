@@ -13,6 +13,9 @@ import * as util from "util";
 import chalk from "chalk";
 import { PostSubmitCallback } from "../scripts/util";
 import delay from "delay";
+import { ClaimModel } from "../../cypress/claims_database/claims/claim.model";
+import * as scenarios from "../scenarios";
+import { Scenarios } from "../../src/types";
 
 /**
  * Iterator callback to log progress as submission happens.
@@ -63,7 +66,8 @@ function log(claim: GeneratedClaim, message: string, error?: Error) {
  */
 export function submitAll(
   submitter: PortalSubmitter,
-  concurrency = 1
+  concurrency = 1,
+  cypress?: boolean
 ): (iterable: AnyIterable<GeneratedClaim>) => AsyncIterable<SubmissionResult> {
   return transform(concurrency, async (claim: GeneratedClaim) => {
     if (!claim.claim.employer_fein) {
@@ -76,6 +80,23 @@ export function submitAll(
         getClaimantCredentials(),
         getLeaveAdminCredentials(claim.claim.employer_fein)
       );
+      if (cypress) {
+        const scenario = scenarios[claim.scenario as Scenarios];
+        const startDate = scenario.claim.leave_dates
+          ? scenario.claim.leave_dates[0]
+          : undefined;
+        const endDate = scenario.claim.leave_dates
+          ? scenario.claim.leave_dates[0]
+          : undefined;
+        ClaimModel.create({
+          scenario: claim.scenario,
+          claimId: result.application_id,
+          fineosAbsenceId: result.fineos_absence_id,
+          clean: true,
+          startDate,
+          endDate,
+        });
+      }
       log(claim, `API submission completed as ${result.fineos_absence_id}`);
       return { claim, result };
     } catch (e) {

@@ -13,6 +13,7 @@ type SubmissionArgs = {
   concurrency?: number;
   cooldownMode?: boolean;
   errorLimit?: number;
+  cypress?: boolean;
 } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, SubmissionArgs> = {
@@ -41,6 +42,11 @@ const cmd: CommandModule<SystemWideArgs, SubmissionArgs> = {
         errorLimit: {
           description: "Amount of consecutive errors before exiting program",
           number: true,
+        },
+        cypress: {
+          description: "Presubmit claims for quicker Cypress runs",
+          boolean: true,
+          default: false,
         },
       });
   },
@@ -72,7 +78,8 @@ const cmd: CommandModule<SystemWideArgs, SubmissionArgs> = {
         tracker,
         args.concurrency,
         args.errorLimit || 3,
-        postSubmit
+        postSubmit,
+        args.cypress
       );
       await SubmittedClaimIndex.write(
         path.join(storage.dir, "submitted.csv"),

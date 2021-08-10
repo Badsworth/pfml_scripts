@@ -1,24 +1,13 @@
-import * as Mongoose from "mongoose";
-import dotenv from "dotenv";
-dotenv.config();
-let database: Mongoose.Connection;
-export const connect = () => {
-  // add your own uri below
-  if (database) {
-    return;
-  }
-  Mongoose.connect(process.env.MONGO_CONNECTION_URI as string);
-  database = Mongoose.connection;
-  database.once("open", async () => {
-    console.log("Connected to database");
-  });
-  database.on("error", () => {
-    console.log("Error connecting to database");
-  });
+import mongoose = require("mongoose");
+let db: mongoose.Connection;
+
+export const connectDB = async (connectionURI: string): Promise<void> => {
+  if (db) return;
+  db = mongoose.connection;
+  await mongoose.connect(connectionURI, { useNewUrlParser: true });
 };
-export const disconnect = (): void => {
-  if (!database) {
-    return;
-  }
-  Mongoose.disconnect();
+
+export const disconnectDB = async (): Promise<void> => {
+  if (!db) return;
+  await mongoose.disconnect();
 };

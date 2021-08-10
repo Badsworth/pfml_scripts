@@ -99,7 +99,7 @@
     "graphql-request": "^3.3.0",
     "js-yaml": "^4.0.0",
     "mongodb": "^4.1.0",
-    "mongoose": "^5.13.5",
+    "mongoose": "^5.13.6",
     "multipipe": "^4.0.0",
     "ndjson": "^2.0.0",
     "node-fetch": "^2.6.1",

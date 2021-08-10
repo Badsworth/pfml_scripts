@@ -15,6 +15,8 @@ import {
   closeDocuments,
 } from "../submission/PostSubmit";
 import { Fineos } from "../submission/fineos.pages";
+import { connectDB, disconnectDB } from "../../cypress/claims_database/db";
+import config from "../config";
 
 export type PostSubmitCallback = (
   claim: GeneratedClaim,
@@ -39,20 +41,23 @@ export async function submit(
   tracker: ClaimStateTracker,
   concurrency = 1,
   maxConsecErrors: number,
-  postSubmit?: PostSubmitCallback
+  postSubmit?: PostSubmitCallback,
+  cypress?: boolean
 ): Promise<void> {
+  if (cypress) await connectDB(config("MONGO_CONNECTION_URI"));
   // Use async iterables to consume all of the claims. Order of the processing steps in this pipeline matters!
   // Filtering must happen before submit, and tracking should happen before the failure watcher.
   await pipeline(
     () => claims,
     tracker.filter, // Filter out claims that have already been submitted.
-    submitAll(getPortalSubmitter(), concurrency), // Execute submission.
+    submitAll(getPortalSubmitter(), concurrency, cypress), // Execute submission.
     postProcess(postSubmit ?? (() => Promise.resolve()), concurrency), // Run post-processing steps (this is optional).
     tracker.track, // Track claims that have been submitted.
     logSubmissions, // Log submission results to console.
     (submission) => watchFailures(submission, maxConsecErrors), // Exit after 3 failures.
     consume
   );
+  if (cypress) await disconnectDB();
 }
 
 export const postSubmit: PostSubmitCallback = async (claim, response) => {
