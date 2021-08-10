@@ -59,6 +59,7 @@ const routes = {
     ssn: "/applications/ssn",
     start: "/applications/start",
     stateId: "/applications/state-id",
+    status: "/applications/status",
     success: "/applications/success",
     // For routes that don't have a page to point to yet, we can route them
     // to a placeholder page. This allows us to search our code for routes.applications.todo,
