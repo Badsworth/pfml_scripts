@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 from datetime import date, datetime, timedelta
@@ -411,6 +412,14 @@ def test_process_extract_data(
         assert (
             payment.fineos_extract_import_log_id == local_payment_extract_step.get_import_log_id()
         )
+
+        # One payment details record should have same values
+        # as the payment
+        assert len(payment.payment_details) == 1
+        payment_details = payment.payment_details[0]
+        assert payment_details.period_start_date == payment.period_start_date
+        assert payment_details.period_end_date == payment.period_end_date
+        assert payment_details.amount == payment.amount
 
         claim = payment.claim
         assert claim
@@ -1249,6 +1258,71 @@ def test_process_extract_is_adhoc(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_multiple_payment_details(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_payment_extract_step,
+    tmp_path,
+    local_initialize_factories_session,
+    monkeypatch,
+    local_create_triggers,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    # Create a standard payment, but give it a few payment periods
+    # by creating several copies of the payment data, but the others have
+    # other random dates/amounts
+    fineos_payment_data = FineosPaymentData(
+        payment_start="2021-01-01 12:00:00",
+        payment_end="2021-01-01 12:00:00",
+        payment_amount="100.00",
+    )
+    add_db_records_from_fineos_data(local_test_db_session, fineos_payment_data)
+
+    datasets = [fineos_payment_data]
+    for i in range(2, 5):  # 2, 3, 4
+        additional_data = copy.deepcopy(fineos_payment_data)
+        additional_data.include_vpei = False
+        additional_data.include_claim_details = False
+        additional_data.include_requested_absence = False
+        additional_data.payment_amount = f"{i}00.00"
+
+        additional_data.payment_start_period = f"2021-01-0{i} 12:00:00"
+        additional_data.payment_end_period = f"2021-01-0{i} 12:00:00"
+
+        datasets.append(additional_data)
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, datasets)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    payment = (
+        local_test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == fineos_payment_data.c_value,
+            Payment.fineos_pei_i_value == fineos_payment_data.i_value,
+        )
+        .one_or_none()
+    )
+
+    payment_details = payment.payment_details
+    assert len(payment_details) == 4
+
+    # Verify the payment details were parsed correctly
+    payment_details.sort(key=lambda payment_detail: payment_detail.period_start_date)
+    for i, payment_detail in enumerate(payment_details, start=1):
+        assert str(payment_detail.amount) == f"{i}00.00"
+        assert str(payment_detail.period_start_date) == f"2021-01-0{i}"
+        assert str(payment_detail.period_end_date) == f"2021-01-0{i}"
+
+    # Verify a few values on the payment itself
+    assert str(payment.amount) == "100.00"  # The file generates with the first value
+    assert str(payment.period_start_date) == "2021-01-01"  # Earliest date in list
+    assert str(payment.period_end_date) == "2021-01-04"  # Latest date in list
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_additional_payment_types(
     mock_s3_bucket,
     set_exporter_env_vars,
@@ -1422,7 +1496,8 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     # This tests that the behavior of non-standard payment types are handled properly
-    # In every scenario, only the VPEI file contains information for the records, and it will
+    # In every scenario, only the VPEI file and payment details file
+    # contains information for the records, and it will
     # fail to find anything in the other files. For non-standard payments, this will not
     # error them, and they will be moved to their respective success states, albeit without
     # finding a claim to attach to, and with several pieces of information missing. It is however
@@ -1434,7 +1509,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         payment_amount="0.00",
         payment_method="Elec Funds Transfer",
         include_claim_details=False,
-        include_payment_details=False,
+        include_payment_details=True,
         include_requested_absence=False,
     )
     add_db_records_from_fineos_data(local_test_db_session, zero_dollar_data)
@@ -1448,7 +1523,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         event_reason="Unknown",
         payment_method="Elec Funds Transfer",
         include_claim_details=False,
-        include_payment_details=False,
+        include_payment_details=True,
         include_requested_absence=False,
     )
     add_db_records_from_fineos_data(local_test_db_session, overpayment_data)
@@ -1460,7 +1535,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         payment_amount="-123.45",
         payment_method="Elec Funds Transfer",
         include_claim_details=False,
-        include_payment_details=False,
+        include_payment_details=True,
         include_requested_absence=False,
     )
     add_db_records_from_fineos_data(local_test_db_session, cancellation_data)
@@ -1473,7 +1548,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
         payment_method="Elec Funds Transfer",
         include_claim_details=False,
-        include_payment_details=False,
+        include_payment_details=True,
         include_requested_absence=False,
     )
     add_db_records_from_fineos_data(local_test_db_session, employer_reimbursement_data)
@@ -1579,6 +1654,9 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
             ValidationIssue(
                 ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
                 "Unknown payment scenario encountered. Payment Amount: None, Event Type: None, Event Reason: ",
@@ -1751,7 +1829,11 @@ def test_validation_payment_amount(initialize_factories_session, set_exporter_en
         assert set(
             [
                 ValidationIssue(
-                    ValidationReason.INVALID_VALUE, f"AMOUNT_MONAMT: {invalid_payment_amount}"
+                    ValidationReason.INVALID_VALUE, f"AMOUNT_MONAMT: {invalid_payment_amount}",
+                ),
+                ValidationIssue(
+                    ValidationReason.INVALID_VALUE,
+                    f"BALANCINGAMOU_MONAMT: {invalid_payment_amount}",
                 ),
                 ValidationIssue(
                     ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,

@@ -745,9 +745,22 @@ class Payment(Base, TimestampMixin):
     fineos_extract_import_log = relationship("ImportLog")
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
+    payment_details = relationship("PaymentDetails", back_populates="payment")
     leave_request = relationship(AbsencePeriod)
 
     check = relationship("PaymentCheck", backref="payment", uselist=False)
+
+
+class PaymentDetails(Base, TimestampMixin):
+    __tablename__ = "payment_details"
+    payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), primary_key=True)
+
+    period_start_date = Column(Date)
+    period_end_date = Column(Date)
+    amount = Column(Numeric(asdecimal=True), nullable=False)
+
+    payment = relationship(Payment)
 
 
 class PaymentCheck(Base, TimestampMixin):
