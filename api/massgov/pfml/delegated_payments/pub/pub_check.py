@@ -149,6 +149,7 @@ def create_check_file(
             import_log_id=import_log_id,
         )
         db_session.add(writeback_details)
+        payments_util.create_payment_log(payment, import_log_id, db_session)
 
     return ez_check_file, check_issue_file
 
