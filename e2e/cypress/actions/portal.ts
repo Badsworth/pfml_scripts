@@ -873,7 +873,7 @@ export function checkNoticeForLeaveAdmin(
 }
 
 export function confirmEligibleClaimant(): void {
-  cy.contains("button", "I understand and agree").click();
+  cy.contains("a", "I understand and agree").click();
 }
 
 export function submitClaimPartOne(application: ApplicationRequestBody): void {
