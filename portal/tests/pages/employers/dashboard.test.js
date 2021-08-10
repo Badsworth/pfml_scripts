@@ -610,8 +610,9 @@ describe("Employer dashboard", () => {
     });
 
     const filtersWrapper = wrapper.find("Filters").dive();
-    const { changeField, changeCheckbox, submitForm } =
-      simulateEvents(filtersWrapper);
+    const { changeField, changeCheckbox, submitForm } = simulateEvents(
+      filtersWrapper
+    );
 
     changeCheckbox("claim_status", true, "Approved");
     changeCheckbox("claim_status", true, "Closed");
@@ -749,11 +750,7 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("renders Sort section when feature flags are enabled", () => {
-    process.env.featureFlags = {
-      employerShowDashboardSort: true,
-    };
-
+  it("renders Sort dropdown", () => {
     const { wrapper } = setup();
     const claimsTable = findClaimsTable(wrapper);
 
@@ -780,10 +777,6 @@ describe("Employer dashboard", () => {
   });
 
   it("updates order_by and order_direction params when a sort choice is selected", () => {
-    process.env.featureFlags = {
-      employerShowDashboardSort: true,
-    };
-
     const { updateQuerySpy, wrapper } = setup();
     const claimsTable = findClaimsTable(wrapper);
 

@@ -462,10 +462,14 @@ class PaymentData:
             def leave_request_decision_validator(
                 leave_request_decision: str,
             ) -> Optional[payments_util.ValidationReason]:
-                if leave_request_decision not in ["In Review", "Pending", "Approved"]:
+                if leave_request_decision == "In Review":
+                    if count_incrementer is not None:
+                        count_incrementer(PaymentExtractStep.Metrics.IN_REVIEW_LEAVE_REQUEST_COUNT)
+                    return payments_util.ValidationReason.LEAVE_REQUEST_IN_REVIEW
+                if leave_request_decision != "Approved":
                     if count_incrementer is not None:
                         count_incrementer(
-                            PaymentExtractStep.Metrics.NOT_PENDING_OR_APPROVED_LEAVE_REQUEST_COUNT
+                            PaymentExtractStep.Metrics.NOT_APPROVED_LEAVE_REQUEST_COUNT
                         )
                     return payments_util.ValidationReason.INVALID_VALUE
                 return None
@@ -565,7 +569,8 @@ class PaymentExtractStep(Step):
         ERRORED_PAYMENT_COUNT = "errored_payment_count"
         NEW_EFT_COUNT = "new_eft_count"
         NOT_APPROVED_PRENOTE_COUNT = "not_approved_prenote_count"
-        NOT_PENDING_OR_APPROVED_LEAVE_REQUEST_COUNT = "not_pending_or_approved_leave_request_count"
+        NOT_APPROVED_LEAVE_REQUEST_COUNT = "not_approved_leave_request_count"
+        IN_REVIEW_LEAVE_REQUEST_COUNT = "in_review_leave_request_count"
         OVERPAYMENT_COUNT = "overpayment_count"
         PAYMENT_DETAILS_RECORD_COUNT = "payment_details_record_count"
         PEI_RECORD_COUNT = "pei_record_count"
@@ -1309,6 +1314,7 @@ class PaymentExtractStep(Step):
         # https://lwd.atlassian.net/wiki/spaces/API/pages/1319272855/Payment+Transaction+Scenarios
         validation_reasons = payment_data.validation_container.get_reasons()
         has_unfixable_issues = False
+        has_leave_in_review = False
         has_pending_prenote = False
         has_rejected_prenote = False
 
@@ -1327,6 +1333,11 @@ class PaymentExtractStep(Step):
                 payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
             ]:
                 has_unfixable_issues = True
+
+            # Payments with In Review leave decision status will be put in PendingActive as we are just
+            # waiting for them to be Approved on FINEOS
+            elif reason == payments_util.ValidationReason.LEAVE_REQUEST_IN_REVIEW:
+                has_leave_in_review = True
 
             # Pending prenotes will also be put in PendingActive as we are just
             # waiting to get the payment
@@ -1348,6 +1359,9 @@ class PaymentExtractStep(Step):
         # Unfixable issues take next precendence
         if has_unfixable_issues:
             return FineosWritebackTransactionStatus.DATA_ISSUE_IN_SYSTEM
+
+        if has_leave_in_review:
+            return FineosWritebackTransactionStatus.LEAVE_IN_REVIEW
 
         # Pending and rejected can't happen at the same time, so ordering
         # won't matter

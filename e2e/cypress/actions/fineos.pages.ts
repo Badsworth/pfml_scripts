@@ -164,13 +164,21 @@ export class ClaimPage {
     cy.contains(".TreeNodeElement", type).click({
       force: true,
     });
-    cy.get('input[type="submit"][value="Properties"]').click();
-    cy.get('input[type="submit"][value="Continue"]').click();
-    cy.contains(".TreeNodeContainer", type, {
-      timeout: 20000,
-    })
-      .find("input[type='checkbox']")
-      .should("be.checked");
+    // When we're firing time triggers, there's always the possibility that the trigger has already happened
+    // by the time we get here. When this happens, the "Properties" button will be grayed out and unclickable.
+    cy.get('input[type="submit"][value="Properties"]').then((el) => {
+      if (el.is(":disabled")) {
+        cy.log("Skipping trigger because this time trigger has already fired");
+        return;
+      }
+      cy.wrap(el).click();
+      cy.get('input[type="submit"][value="Continue"]').click({force: true});
+      cy.contains(".TreeNodeContainer", type, {
+        timeout: 20000,
+      })
+        .find("input[type='checkbox']")
+        .should("be.checked");
+    });
 
     return this;
   }
@@ -1296,7 +1304,7 @@ class PaidLeavePage {
         element,
         `Expected the Assigned To display the following "${assign}"`
       ).to.have.text(assign);
-    })
+    });
     return this;
   }
 

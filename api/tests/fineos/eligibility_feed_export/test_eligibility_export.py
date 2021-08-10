@@ -20,7 +20,7 @@ def test_main_requires_non_empty_env_vars(
 
     # check that error is raised if none of the environment variables are set
     with pytest.raises(pydantic.ValidationError):
-        main.main()
+        main.main_with_return()
 
     # and also check that they are required to be non-empty
     monkeypatch.setenv("OUTPUT_DIRECTORY_PATH", "")
@@ -28,7 +28,7 @@ def test_main_requires_non_empty_env_vars(
     monkeypatch.setenv("FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", "")
 
     with pytest.raises(pydantic.ValidationError):
-        main.main()
+        main.main_with_return()
 
 
 @moto.mock_ssm()

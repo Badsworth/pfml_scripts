@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Employer dashboard renders Sort section when feature flags are enabled 1`] = `
+exports[`Employer dashboard renders Sort dropdown 1`] = `
 <Dropdown
   choices={
     Array [

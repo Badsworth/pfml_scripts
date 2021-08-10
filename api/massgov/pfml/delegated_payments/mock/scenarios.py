@@ -20,8 +20,8 @@ class ScenarioName(Enum):
     HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
         "HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
     )
-    HAPPY_PENDING_LEAVE_REQUEST_DECISION = "HAPPY_PENDING_LEAVE_REQUEST_DECISION"
-    HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION = "HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION"
+    UNKNOWN_LEAVE_REQUEST_DECISION = "UNKNOWN_LEAVE_REQUEST_DECISION"
+    IN_REVIEW_LEAVE_REQUEST_DECISION = "IN_REVIEW_LEAVE_REQUEST_DECISION"
 
     HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
 
@@ -241,11 +241,10 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         employee_in_payment_extract_missing_in_db=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-        leave_request_decision="Pending",
+        scenario_name=ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION, leave_request_decision="Pending",
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+        scenario_name=ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION,
         leave_request_decision="In Review",
     ),
     ScenarioDescriptor(

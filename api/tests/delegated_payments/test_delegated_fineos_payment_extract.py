@@ -272,6 +272,7 @@ def validate_pei_writeback_state_for_payment(
     db_session,
     is_invalid=False,
     is_issue_in_system=False,
+    is_leave_in_review=False,
     is_pending_prenote=False,
     is_rejected_prenote=False,
 ):
@@ -299,6 +300,11 @@ def validate_pei_writeback_state_for_payment(
         assert (
             writeback_details.transaction_status_id
             == FineosWritebackTransactionStatus.DATA_ISSUE_IN_SYSTEM.transaction_status_id
+        )
+    elif is_leave_in_review:
+        assert (
+            writeback_details.transaction_status_id
+            == FineosWritebackTransactionStatus.LEAVE_IN_REVIEW.transaction_status_id
         )
     elif is_pending_prenote:
         assert (
@@ -1019,13 +1025,13 @@ def test_process_extract_data_leave_request_decision_validation(
 
     medical_claim_type_record = FineosPaymentData(claim_type="Employee")
     approved_record = FineosPaymentData(leave_request_decision="Approved")
-    pending_record = FineosPaymentData(leave_request_decision="Pending")
     in_review_record = FineosPaymentData(leave_request_decision="In Review")
     rejected_record = FineosPaymentData(leave_request_decision="Rejected")
+    unknown_record = FineosPaymentData(leave_request_decision="Pending")
 
     # setup both payments in DB
     add_db_records_from_fineos_data(local_test_db_session, approved_record)
-    add_db_records_from_fineos_data(local_test_db_session, pending_record)
+    add_db_records_from_fineos_data(local_test_db_session, unknown_record)
     add_db_records_from_fineos_data(local_test_db_session, in_review_record)
     add_db_records_from_fineos_data(local_test_db_session, rejected_record)
     add_db_records_from_fineos_data(local_test_db_session, medical_claim_type_record)
@@ -1035,7 +1041,7 @@ def test_process_extract_data_leave_request_decision_validation(
         mock_s3_bucket,
         [
             approved_record,
-            pending_record,
+            unknown_record,
             in_review_record,
             rejected_record,
             medical_claim_type_record,
@@ -1060,21 +1066,6 @@ def test_process_extract_data_leave_request_decision_validation(
         == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
     )
 
-    pending_payment = (
-        local_test_db_session.query(Payment)
-        .filter(
-            Payment.fineos_pei_c_value == pending_record.c_value,
-            Payment.fineos_pei_i_value == pending_record.i_value,
-        )
-        .one_or_none()
-    )
-    assert pending_payment
-    assert len(pending_payment.state_logs) == 1
-    assert (
-        pending_payment.state_logs[0].end_state_id
-        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
-    )
-
     in_review_payment = (
         local_test_db_session.query(Payment)
         .filter(
@@ -1084,10 +1075,16 @@ def test_process_extract_data_leave_request_decision_validation(
         .one_or_none()
     )
     assert in_review_payment
-    assert len(in_review_payment.state_logs) == 1
+    assert len(in_review_payment.state_logs) == 2
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        in_review_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
     assert (
-        in_review_payment.state_logs[0].end_state_id
-        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+        state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id
+    )
+    validate_pei_writeback_state_for_payment(
+        in_review_payment, local_test_db_session, is_leave_in_review=True
     )
 
     rejected_payment = (
@@ -1108,6 +1105,24 @@ def test_process_extract_data_leave_request_decision_validation(
         rejected_payment, local_test_db_session, is_invalid=True
     )
 
+    unknown_payment = (
+        local_test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == unknown_record.c_value,
+            Payment.fineos_pei_i_value == unknown_record.i_value,
+        )
+        .one_or_none()
+    )
+    assert unknown_payment
+    assert len(unknown_payment.state_logs) == 2
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        unknown_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+    validate_pei_writeback_state_for_payment(
+        unknown_payment, local_test_db_session, is_invalid=True
+    )
+
     medical_claim_type_record = (
         local_test_db_session.query(Payment)
         .filter(
@@ -1125,8 +1140,9 @@ def test_process_extract_data_leave_request_decision_validation(
     )
 
     import_log_report = json.loads(rejected_payment.fineos_extract_import_log.report)
-    assert import_log_report["not_pending_or_approved_leave_request_count"] == 1
-    assert import_log_report["standard_valid_payment_count"] == 4
+    assert import_log_report["in_review_leave_request_count"] == 1
+    assert import_log_report["not_approved_leave_request_count"] == 2
+    assert import_log_report["standard_valid_payment_count"] == 2
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
