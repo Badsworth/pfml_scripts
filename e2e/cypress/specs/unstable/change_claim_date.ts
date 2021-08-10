@@ -88,8 +88,9 @@ describe("Claim date change", () => {
               });
               claimPage.reviewClaim();
               cy.visit("/");
-              const claimReviewed =
-                fineosPages.ClaimPage.visit(fineos_absence_id);
+              const claimReviewed = fineosPages.ClaimPage.visit(
+                fineos_absence_id
+              );
               claimReviewed.adjudicate((adjudication) => {
                 adjudication.editPlanDecision("Undecided");
                 adjudication.certificationPeriods((certificationPeriods) =>
@@ -141,31 +142,21 @@ describe("Claim date change", () => {
             cy.url().should("not.include", "dashboard");
             cy.contains(`${claim.first_name} ${claim.last_name}`);
             // Check by url if we can review the claim
-            cy.url().then((url) => {
-              if (
-                url.includes(
-                  `/new-application/?absence_id=${fineos_absence_id}`
-                )
-              ) {
-                cy.contains(
-                  "Are you the right person to respond to this application?"
-                );
-                cy.contains("Yes").click();
-                cy.contains("Agree and submit").click();
-                cy.findByText(
-                  // There's a strange unicode hyphen at this place.
-                  /This is your employe(.*)s expected leave schedule/
-                )
-                  .next()
-                  .should(
-                    "contain.text",
-                    `${portalFormatStart} to ${portalFormatEnd}`
-                  );
-                portal.respondToLeaveAdminRequest(false, true, true);
-              } else {
-                portal.assertLeaveDatesAsLA(portalFormatStart, portalFormatEnd);
-              }
-            });
+            cy.contains(
+              "Are you the right person to respond to this application?"
+            );
+            cy.contains("Yes").click();
+            cy.contains("Agree and submit").click();
+            cy.findByText(
+              // There's a strange unicode hyphen at this place.
+              /This is your employe(.*)s expected leave schedule/
+            )
+              .next()
+              .should(
+                "contain.text",
+                `${portalFormatStart} to ${portalFormatEnd}`
+              );
+            portal.respondToLeaveAdminRequest(false, true, true);
           }
         );
       });

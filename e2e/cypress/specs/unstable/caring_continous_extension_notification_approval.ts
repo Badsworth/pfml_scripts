@@ -117,34 +117,21 @@ describe("Post-approval (notifications/notices)", () => {
               cy.url().should("not.include", "dashboard");
               cy.contains(`${claim.first_name} ${claim.last_name}`);
               // Check by url if we can review the claim
-              cy.url().then((url) => {
-                if (
-                  url.includes(
-                    `/new-application/?absence_id=${submission.fineos_absence_id}`
-                  )
-                ) {
-                  cy.contains(
-                    "Are you the right person to respond to this application?"
-                  );
-                  cy.contains("Yes").click();
-                  cy.contains("Agree and submit").click();
-                  cy.findByText(
-                    // There's a strange unicode hyphen at this place.
-                    /This is your employe(.*)s expected leave schedule/
-                  )
-                    .next()
-                    .should(
-                      "contain.text",
-                      `${portalFormatStart} to ${portalFormatEnd}`
-                    );
-                  portal.respondToLeaveAdminRequest(false, true, false);
-                } else {
-                  portal.assertLeaveDatesAsLA(
-                    portalFormatStart,
-                    portalFormatEnd
-                  );
-                }
-              });
+              cy.contains(
+                "Are you the right person to respond to this application?"
+              );
+              cy.contains("Yes").click();
+              cy.contains("Agree and submit").click();
+              cy.findByText(
+                // There's a strange unicode hyphen at this place.
+                /This is your employe(.*)s expected leave schedule/
+              )
+                .next()
+                .should(
+                  "contain.text",
+                  `${portalFormatStart} to ${portalFormatEnd}`
+                );
+              portal.respondToLeaveAdminRequest(false, true, false);
             }
           );
         });

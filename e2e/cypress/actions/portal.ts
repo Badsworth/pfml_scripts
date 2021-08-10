@@ -254,7 +254,7 @@ export function assertLoggedIn(): void {
 
 export function startClaim(): void {
   cy.get('[href="/applications/start/"]').click();
-  cy.contains("button", "I understand and agree").click();
+  cy.findByText("I understand and agree").click();
   cy.location({ timeout: 30000 }).should((location) => {
     expect(location.pathname, "Expect to be on the checklist page").to.equal(
       "/applications/checklist/"
@@ -873,7 +873,7 @@ export function checkNoticeForLeaveAdmin(
 }
 
 export function confirmEligibleClaimant(): void {
-  cy.contains("button", "I understand and agree").click();
+  cy.findByText("I understand and agree").click();
 }
 
 export function submitClaimPartOne(application: ApplicationRequestBody): void {
