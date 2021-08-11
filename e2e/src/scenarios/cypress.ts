@@ -523,11 +523,12 @@ export const HIST_CASE: ScenarioSpecification = {
 };
 
 // Leave start date change request
-export const MED_LSDCR: ScenarioSpecification = {
-  ...MHAP1ER,
+export const BHAP1_RED_LSDCR: ScenarioSpecification = {
+  ...BHAP1ER,
   claim: {
-    ...MHAP1ER.claim,
-    label: "MED_LSDCR",
+    ...BHAP1ER.claim,
+    label: "BHAP1_RED_LSDCR",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
     leave_dates: [addWeeks(new Date(), 2), addWeeks(new Date(), 6)],
   },
 };

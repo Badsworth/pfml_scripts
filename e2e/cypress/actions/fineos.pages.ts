@@ -172,7 +172,7 @@ export class ClaimPage {
         return;
       }
       cy.wrap(el).click();
-      cy.get('input[type="submit"][value="Continue"]').click({force: true});
+      cy.get('input[type="submit"][value="Continue"]').click({ force: true });
       cy.contains(".TreeNodeContainer", type, {
         timeout: 20000,
       })
@@ -405,22 +405,16 @@ class CertificationPeriodsPage {
 }
 class RequestInformationPage {
   private enterNewLeaveDates(newStartDate: string, newEndDate: string) {
-    cy.get(
-      "input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']"
-    ).click();
-    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']").type(
-      `{selectall}{backspace}${newStartDate}{enter}`
+    cy.get("input[type='text'][id$='_startDate']").click();
+    cy.get("input[type='text'][id$='_startDate']").type(
+      `{selectall}{backspace}${format(new Date(newStartDate), "MM/dd/yyyy")}`
     );
-    cy.wait("@ajaxRender");
-    cy.wait(300);
-    cy.get(
-      "input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']"
-    ).click();
-    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']").type(
-      `{selectall}{backspace}${newEndDate}{enter}`
+    waitForAjaxComplete();
+    cy.get("input[type='text'][id$='_endDate']").click();
+    cy.get("input[type='text'][id$='_endDate']").type(
+      `{selectall}{backspace}${format(new Date(newEndDate), "MM/dd/yyyy")}`
     );
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    waitForAjaxComplete();
     cy.get("input[title='OK']").click();
   }
 
@@ -536,7 +530,7 @@ class TasksPage {
   editActivityDescription(name: string, comment: string): this {
     cy.contains("td", "Approved Leave Start Date Change").click();
     cy.wait("@ajaxRender");
-    cy.get('input[title="Edit this Activity"').click();
+    cy.get('input[title="Edit this Activity"]').click();
     cy.wait("@ajaxRender");
     cy.get("textarea[name*='BasicDetailsWidget1_un11_Description']").type(
       comment
@@ -970,6 +964,7 @@ export class DocumentsPage {
 
 class AvailabilityPage {
   reevaluateAvailability(decision: string, reason: string) {
+    waitForAjaxComplete();
     cy.get('input[title="Manage time for the selected Leave Plan"]').click();
     waitForAjaxComplete();
     cy.get('input[title="Select All"]').click();
