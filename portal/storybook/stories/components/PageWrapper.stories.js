@@ -1,5 +1,6 @@
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import Flag from "src/models/Flag";
 import PageWrapper from "src/components/PageWrapper";
 import React from "react";
 import User from "src/models/User";
@@ -47,8 +48,14 @@ export const Default = (args) => {
       ? new User({ email_address: "test@example.com" })
       : null;
 
-  const maintenancePageRoutes =
-    args["Maintenance Page"] === "On" ? ["/*"] : undefined;
+  const maintenance = new Flag({
+    name: "maintenance",
+    enabled: args["Maintenance Page"] === "On",
+    options: {
+      page_routes: args["Maintenance Page"] === "On" ? ["/*"] : [],
+    },
+  });
+
   const pathname = "/storybook-example";
 
   const appLogic = {
@@ -66,7 +73,7 @@ export const Default = (args) => {
     <PageWrapper
       appLogic={appLogic}
       isLoading={args.isLoading}
-      maintenancePageRoutes={maintenancePageRoutes}
+      maintenance={maintenance}
     >
       <React.Fragment>
         <h1>Page body</h1>

@@ -17,6 +17,7 @@ describe("useAppLogic", () => {
       clearRequiredFieldErrors,
       documents,
       employers,
+      featureFlags,
       otherLeaves,
       portalFlow,
       rest,
@@ -28,15 +29,16 @@ describe("useAppLogic", () => {
         appErrors,
         _appErrorsLogic,
         auth,
+        benefitsApplications,
         catchError,
         claims,
-        benefitsApplications,
+        clearErrors,
         documents,
         employers,
-        clearErrors,
+        featureFlags,
         clearRequiredFieldErrors,
-        portalFlow,
         otherLeaves,
+        portalFlow,
         setAppErrors,
         users,
         ...rest
@@ -75,6 +77,10 @@ describe("useAppLogic", () => {
     expect(otherLeaves.removePreviousLeave).toBeInstanceOf(Function);
     expect(users.user).toBeUndefined();
     expect(users).toEqual(expect.anything());
+    expect(featureFlags).toBeInstanceOf(Object);
+    expect(featureFlags.flags).toBeInstanceOf(Array);
+    expect(featureFlags.getFlag).toBeInstanceOf(Function);
+    expect(featureFlags.loadFlags).toBeInstanceOf(Function);
     // there should be no other properties;
     expect(rest).toEqual({});
   });
