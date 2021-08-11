@@ -17,6 +17,11 @@ defaults:
   run:
     working-directory: e2e
 
+# Prevent this workflow from running more than 1x concurrently in any environment.
+# This prevents us from overloading the environment with requests, which causes false failures.
+# Cypress & Flood share the same concurrency key to prevent E2E and Flood running concurrently.
+concurrency: E2E-${{ github.event.inputs.target_environment }}
+
 jobs:
   deploy_lst:
     name: Deploy LST
