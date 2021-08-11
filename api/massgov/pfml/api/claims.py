@@ -86,11 +86,7 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
         if current_user is None:
             raise Unauthorized()
 
-        claim = (
-            db_session.query(Claim)
-            .filter(Claim.fineos_absence_id == fineos_absence_id)
-            .one_or_none()
-        )
+        claim = get_claim_from_db(fineos_absence_id)
 
         if claim is not None:
             associated_employer_id = claim.employer_id
@@ -120,6 +116,14 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
 
         if not user_leave_admin.verified:
             raise VerificationRequired(user_leave_admin, "User is not Verified")
+
+        # verifies if this leave administrator can perform actions to claims of this reporting unit
+        la_reporting_unit_ids = user_leave_admins_reporting_unit_ids([claim.employer], set())
+        if claim.application.reporting_unit_id not in la_reporting_unit_ids:
+            raise NotAuthorizedForAccess(
+                description="The leave administrator cannot access claims of this reporting unit",
+                error_type="unauthorized_leave_admin",
+            )
 
         return user_leave_admin
 
@@ -358,11 +362,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 )
             )
 
-        claim_from_db = (
-            db_session.query(Claim)
-            .filter(Claim.fineos_absence_id == fineos_absence_id)
-            .one_or_none()
-        )
+        claim_from_db = get_claim_from_db(fineos_absence_id)
 
         if claim_from_db and claim_from_db.fineos_absence_status:
             claim_review_response.status = (
@@ -476,17 +476,52 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
         headers={"Content-Disposition": f"attachment; filename={document_data.fileName}"},
     )
 
+def user_leave_admins_reporting_unit_ids(employers: List[Employer], hidden_employers: Optional[Set[str]]) -> Optional[Set[int]]:
+    current_user = app.current_user()
+    if current_user is None:
+        return False
+
+    # get all verified leave administrators' ids for each of the employers in the list
+    # except for the ones in hidden_employers
+    la_ids = [
+        current_user.get_user_leave_admin_for_employer(e).user_leave_administrator_id
+        for e in employers
+        if sanitize_fein(e.employer_fein or "") not in hidden_employers
+        and current_user.verified_employer(e)
+    ]
+
+    with app.db_session() as db_session:
+        # get all reporting units associated with previous list of leave administrators
+        la_reporting_units = (
+            db_session.query(LkUserLeaveAdministratorReportingUnit)
+            .filter(
+                LkUserLeaveAdministratorReportingUnit.user_leave_administrator_id.in_(
+                    la_ids
+                )
+            )
+            .all()
+        )
+    
+    # get all reporting unit ids in a list and then into a set
+    la_reporting_unit_ids = set([
+        laru.reporting_unit_id
+        for laru in la_reporting_units
+    ])
+
+    return la_reporting_unit_ids
 
 def user_has_access_to_claim(claim: Claim) -> bool:
     current_user = app.current_user()
     if current_user is None:
         return False
 
+    application = claim.application  # type: ignore
     if can(READ, "EMPLOYER_API") and claim.employer in current_user.employers:
         # User is leave admin for the employer associated with claim
-        return current_user.verified_employer(claim.employer)
-
-    application = claim.application  # type: ignore
+        la_reporting_unit_ids = user_leave_admins_reporting_unit_ids([claim.employer], set())
+        if application.reporting_unit_id in la_reporting_unit_ids:
+            # Leave admin has access to claim and of the respective application reporting unit
+            return current_user.verified_employer(claim.employer)
 
     if application and application.user == current_user:
         # User is claimant and this is their claim
@@ -565,26 +600,9 @@ def get_claims() -> flask.Response:
 
                 query.add_employer_ids_filter(employer_ids_list)
 
-                leave_administrator_ids = [
-                    current_user.get_user_leave_admin_for_employer(e).user_leave_administrator_id
-                    for e in employers_list
-                    if sanitize_fein(e.employer_fein or "") not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                    and current_user.verified_employer(e)
-                ]
-                leave_administrator_reporting_units = (
-                    db_session.query(LkUserLeaveAdministratorReportingUnit)
-                    .filter(
-                        LkUserLeaveAdministratorReportingUnit.user_leave_administrator_id.in_(
-                            leave_administrator_ids
-                        )
-                    )
-                    .all()
+                query.add_reporting_units_filter(
+                    user_leave_admins_reporting_unit_ids(employers_list, CLAIMS_DASHBOARD_BLOCKED_FEINS)
                 )
-                leave_administrator_reporting_units_list = [
-                    laru.reporting_unit_id
-                    for laru in leave_administrator_reporting_units
-                ]
-                query.add_reporting_units_filter(leave_administrator_reporting_units_list)
             else:
                 query.add_user_owns_claim_filter(current_user)
 
