@@ -553,32 +553,20 @@ jobs:
     needs: [ update-the-deploy-branch, invalidate-cloudfront ]
     if: github.event.inputs.deployment_env != 'prod' && github.event.inputs.deployment_env != 'uat'
     steps:
-      - uses: actions/checkout@v2
+      - name: Trigger E2E Workflow
+        uses: aurelien-baudet/workflow-dispatch@v2
         with:
-          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-
-      - name: "Determine E2E test suite ref"
-        id: determine_e2e_ref
-        run: |
-          # Run the E2E test suite based off of the last Portal deployment branch.
-          # This will ensure that the E2E test suite version is based off of the
-          # Portal version currently in the environment.
-          if [[ "${{ env.deployment_env }}" == "test" ]]; then
-            echo "::set-output name=e2e_ref::main"
-          else
-            echo "::set-output name=e2e_ref::deploy/portal/${{ env.deployment_env }}"
-          fi
-
-      - uses: ./.github/actions/trigger-cypress
-        name: "Trigger Cypress Run"
-        with:
-          target_environment: ${{ env.deployment_env }}
-          cypress_tags: "Deploy,Deploy-Portal"
-          github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          # Ensure the E2E test suite version is the one on our recently-deployed branch.
-          github_branch: ${{ steps.determine_e2e_ref.outputs.e2e_ref }}
-          # Limit to "stable" suite for any environment but test.
-          only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
+          workflow: e2e-cypress.yml
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          wait-for-completion: true
+          ref: "main"
+          inputs: |
+            {
+              "target_environment": ${{ toJSON(env.deployment_env) }},
+              "cypress_tags": "Deploy,Deploy-Portal",
+              "only_stable": "${{ env.deployment_env == 'test' && 'false' || 'true' }}",
+              "title_override": ${{ toJSON(format('Portal Deploy: {0} to {1}', env.version, env.deployment_env)) }}
+            }
 
   post-e2e-failures-to-slack:
     name: Post E2E failures to Slack
