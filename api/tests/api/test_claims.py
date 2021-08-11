@@ -854,11 +854,18 @@ class TestUpdateClaim:
 
         assert response.status_code == 403
 
+    @mock.patch("massgov.pfml.api.claims.logger.info")
     @mock.patch(
         "massgov.pfml.api.claims.claim_rules.get_employer_claim_review_issues", return_value=[]
     )
     def test_employer_update_claim_review_success_case(
-        self, mock_get_issues, employer_auth_token, claim, client, update_claim_body,
+        self,
+        mock_get_issues,
+        mock_info_logger,
+        employer_auth_token,
+        claim,
+        client,
+        update_claim_body,
     ):
         response = client.patch(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
@@ -867,6 +874,15 @@ class TestUpdateClaim:
         )
         assert response.status_code == 200
         mock_get_issues.assert_called_once_with(EmployerClaimReview.parse_obj(update_claim_body))
+
+        assert mock_info_logger.call_count == 2
+        msg_arg, kwargs = mock_info_logger.call_args_list[1]
+        assert msg_arg[0] == "Updated claim"
+        assert kwargs["extra"]["absence_case_id"] == claim.fineos_absence_id
+        assert kwargs["extra"]["user_leave_admin.employer_id"] == claim.employer_id
+        assert kwargs["extra"]["claim_request.employer_decision"] == "Approve"
+        assert kwargs["extra"]["num_employers"] == 1
+        assert kwargs["extra"]["claim_request.num_previous_leaves"] == 1
 
     @mock.patch("massgov.pfml.api.claims.claim_rules.get_employer_claim_review_issues")
     def test_employer_update_claim_err_handling_response(
