@@ -509,13 +509,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#lambda" class="md-nav__link">
-    Lambda
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -945,13 +938,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#lambda" class="md-nav__link">
-    Lambda
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -982,7 +968,6 @@
 <li><a href="#authorization">Authorization</a></li>
 <li><a href="#running-in-hosted-environments">Running In Hosted Environments</a></li>
 <li><a href="#ecs">ECS</a></li>
-<li><a href="#lambda">Lambda</a></li>
 </ul>
 <h2 id="key-technologies">Key Technologies</h2>
 <p>The API is written in Python, utilizing Connexion as the web application
@@ -1039,11 +1024,9 @@ modified versions of the functions provided by flask-bouncer directly) to check
 if the user in the current request context is authorized to perform the given
 action on the given subject.</p>
 <h2 id="running-in-hosted-environments">Running In Hosted Environments</h2>
-<p>There are two ways code gets run in hosted environments, as tasks on <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html">AWS
-Elastic Container Service (ECS) clusters</a> (backed by <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html">AWS
-Fargate</a>) and as <a href="https://docs.aws.amazon.com/lambda/latest/dg/welcome.html">AWS Lambdas</a>.</p>
-<p>For actually performing deploys, see
-<a href="https://github.com/EOLWD/pfml/tree/main/docs/deployment.md">/docs/deployment.md</a>.</p>
+<p>Application code gets run as tasks on <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html">AWS Elastic Container Service (ECS)
+clusters</a>, backed by <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html">AWS Fargate</a></p>
+<p>For actually performing deploys, see <a href="https://github.com/EOLWD/pfml/tree/main/docs/deployment.md">/docs/deployment.md</a>.</p>
 <h3 id="ecs">ECS</h3>
 <p>ECS tasks all share the same container as built by the <code>app</code> stage of the
 <code>Dockerfile</code>. This stage builds the project Python package (basically zip up
@@ -1062,19 +1045,6 @@ the tasks are running, provides mechanisms for autoscaling, and various other
 are not a part of an ECS service, the tasks are launched/started on demand
 (either by an automated process like a scheduled AWS EventBridge event, Step
 Function, or manually through the <a href="https://github.com/EOLWD/pfml/tree/main/bin/run-ecs-task/">/bin/run-ecs-task</a> tool).</p>
-<h3 id="lambda">Lambda</h3>
-<p>Lambdas are a little different. Their main source code lives somewhere in
-<a href="https://github.com/EOLWD/pfml/tree/main/api/massgov">massgov/</a>, with their build infrastructure in
-<a href="https://github.com/EOLWD/pfml/tree/main/api/lambdas">lambdas/</a> which is mostly boilerplate to import the correct
-module from <a href="https://github.com/EOLWD/pfml/tree/main/api/massgov">massgov/</a> and build it as appropriate for the Lambda
-runtime.</p>
-<p>The Lambda building happens via the AWS Serverless Application Model (SAM) CLI
-tool, which takes the project Python package and builds its dependencies inside
-a Docker container matching the Lambda runtime environment (for cases where a
-dependency needs a compiled component). This generates a ZIP of the Lambda,
-which can then be uploaded to S3.</p>
-<p>The Lambda configuration and deploys are done in Terraform, at
-<a href="https://github.com/EOLWD/pfml/tree/main/infra/api/template/lambda.tf">/infra/api/template/lambda.tf</a>.</p>
                 
               
               
