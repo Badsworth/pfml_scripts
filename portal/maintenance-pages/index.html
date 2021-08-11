@@ -711,6 +711,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#disable-site-wide" class="md-nav__link">
+    Disable site wide
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#testing" class="md-nav__link">
     Testing
   </a>
@@ -918,6 +925,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#disable-site-wide" class="md-nav__link">
+    Disable site wide
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#testing" class="md-nav__link">
     Testing
   </a>
@@ -950,23 +964,41 @@
                 
                 <h1 id="maintenance-pages">Maintenance pages</h1>
 <p>The Portal includes the ability to have maintenance pages that we can turn on in case we need to shut down all or part of the website.</p>
-<p>Maintenance pages are controlled through the <code>maintenancePageRoutes</code> <a href="../environment-variables/">environment variable</a>.</p>
-<p>Add the <code>maintenancePageRoutes</code> variable to the environment you want to target. It accepts an array of routes (without trailing slashes) that should render a maintenance page.</p>
+<p>Maintenance pages are controlled through the <code>maintenance</code> entry in the <a href="https://github.com/EOLWD/pfml/tree/main/feature_flags/">S3 feature-gate file</a> corresponding to the environment.</p>
+<p>To update the maintenance status, you should update the appropriate file (<code>feature_flags/test.yaml</code> to update the test environment) in a new branch. Once that branch is merged into the main branch, it will update the maintenance status on that environment due to the <a href="https://github.com/EOLWD/pfml/tree/main/.github/workflows/feature-flags-sync.yml">Github workflow</a> that will sync the yaml files in that directory to s3.</p>
+<p>The data is retrieved from the file via API request in the portal and then set in <code>appLogic.featureFlags.flags</code>. The API request is cached for five minutes and only executed once for every full page request (not on react render/re-render).</p>
+<p>It may take up to 20 minutes for the portal to read the updated maintenance status due to s3 file caching in the API and the browser caching the API response.</p>
+<p>All available options for maintenance are:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">maintenance</span><span class="p">:</span>
+  <span class="nt">start</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;ISO 8601 timestamp&gt;</span>
+  <span class="nt">end</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;ISO 8601 timestamp&gt;</span>
+  <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+  <span class="nt">options</span><span class="p">:</span>
+    <span class="nt">page_routes</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/*</span>
+</code></pre></div>
+<p>Add the <code>options:page_routes</code> key to the environment you want to target. It accepts an array of routes (without trailing slashes) that should render a maintenance page. The maintenance page will render on all routes by default if <code>page_routes</code> is omitted.</p>
 <h2 id="enable-site-wide">Enable site wide</h2>
 <p>Use <code>*</code> to match any string:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;maintenancePageRoutes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;/*&quot;</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="nt">options</span><span class="p">:</span>
+  <span class="nt">page_routes</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/*</span>
 </code></pre></div>
 <h2 id="enable-on-a-group-of-pages">Enable on a group of pages</h2>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;maintenancePageRoutes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;/applications/*&quot;</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="nt">options</span><span class="p">:</span>
+  <span class="nt">page_routes</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/applications/*</span>
 </code></pre></div>
 <h2 id="enable-on-specific-pages">Enable on specific pages</h2>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;maintenancePageRoutes&quot;</span><span class="p">:</span> <span class="p">[</span>
-  <span class="s2">&quot;/create-account&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;/employers/create-account&quot;</span>
-<span class="p">]</span>
+<div class="highlight"><pre><span></span><code><span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="nt">options</span><span class="p">:</span>
+  <span class="nt">page_routes</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/create-account</span>
 </code></pre></div>
 <h2 id="enable-scheduled-maintenance-page">Enable scheduled maintenance page</h2>
-<p>If the maintenance page is being added because of scheduled down time, you can optionally schedule the beginning and end of this maintenance time by setting the <code>maintenanceStart</code> and/or <code>maintenanceEnd</code> environment variable to an <a href="https://xkcd.com/1179/">ISO 8601</a> datetime string.</p>
+<p>If the maintenance page is being added because of scheduled down time, you can optionally schedule the beginning and end of this maintenance time by setting the <code>start</code> and/or <code>end</code> keys to an <a href="https://xkcd.com/1179/">ISO 8601</a> datetime string.</p>
 <ul>
 <li>Daylight savings time needs taken into account! For Eastern Daylight Time (EDT), use <code>-04:00</code>, for Eastern Standard Time (EST), use <code>-05:00</code>.</li>
 <li>The start and end time are optional.</li>
@@ -975,11 +1007,16 @@
 <li>When end time is set, it will be displayed to the user using their timezone and localization preferences.</li>
 </ul>
 <p>For example, to enable the maintenance page on all routes, starting at March 25 at 3:30am EDT and ending at March 26 at 8pm EDT.</p>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;maintenancePageRoutes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;/*&quot;</span><span class="p">],</span> <span class="err">//</span> <span class="err">required</span>
-<span class="nt">&quot;maintenanceStart&quot;</span><span class="p">:</span> <span class="s2">&quot;2021-03-25T03:30:00-04:00&quot;</span><span class="p">,</span>
-<span class="nt">&quot;maintenanceEnd&quot;</span><span class="p">:</span> <span class="s2">&quot;2021-03-26T20:00:00-04:00&quot;</span><span class="p">,</span>
+<div class="highlight"><pre><span></span><code><span class="nt">start</span><span class="p">:</span> <span class="s">&quot;2021-03-25T03:30:00-04:00&quot;</span>
+<span class="nt">end</span><span class="p">:</span> <span class="s">&quot;2021-03-26T20:00:00-04:00&quot;</span>
+<span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="nt">options</span><span class="p">:</span>
+  <span class="nt">page_routes</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/*</span>
 </code></pre></div>
 <p>We're using Eastern time zone above since that's what Massachusetts is, but it could technically be whatever timezone.</p>
+<h2 id="disable-site-wide">Disable site wide</h2>
+<p>Any time <code>enabled: 0</code> is set for maintenance, the maintenance status is disabled for the entire site. Disabling maintenance is very similar to enabling maintenance. Set <code>enabled: 0</code> in the relevant feature flag file for the environment in a new branch. Once the PR is merged into main, the maintenance status will be disabled on that environment within 20 minutes.</p>
 <h2 id="testing">Testing</h2>
 <p>If you are testing the configuration locally, just note that you need to restart the local development server in order for new environment variables to kick in.</p>
 <h2 id="bypassing-maintenance-pages">Bypassing maintenance pages</h2>
