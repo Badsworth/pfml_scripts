@@ -2091,7 +2091,7 @@ class TestGetClaimsEndpoint:
                 claim=claim,
                 managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
                 managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
-                follow_up_date=datetime_util.utcnow() + timedelta(days=1),
+                follow_up_date=datetime_util.utcnow(),
             )
             for i in range(0, 2):
                 ManagedRequirementFactory.create(
@@ -2106,7 +2106,6 @@ class TestGetClaimsEndpoint:
         @pytest.fixture
         def claim_with_open_reqs(self, employer, employee):
             # should be returned second because it has the second soonest managed requirements
-            #  have the oldest follow_up_date
             claim = ClaimFactory.create(
                 employer=employer,
                 employee=employee,
@@ -2139,12 +2138,12 @@ class TestGetClaimsEndpoint:
         @pytest.fixture(autouse=True)
         def claim_with_complete_reqs(self, employer, employee):
             # should be returned fourth because it has COMPLETE managed requirements
-            #  and it's status is closed
-            # sort_order = 7 in lk_absence_status table
+            #  and it's status is completed
+            # sort_order = 6 in lk_absence_status table
             claim = ClaimFactory.create(
                 employer=employer,
                 employee=employee,
-                fineos_absence_status_id=AbsenceStatus.CLOSED.absence_status_id,
+                fineos_absence_status_id=AbsenceStatus.COMPLETED.absence_status_id,
                 claim_type_id=1,
             )
             for i in range(0, 2):
@@ -2169,6 +2168,21 @@ class TestGetClaimsEndpoint:
                 claim_with_open_reqs,
                 claim_without_reqs_intake_in_progress,
                 claim_with_complete_reqs,
+            ]
+
+        @pytest.fixture
+        def claims_order_next_day(
+            self,
+            claim_with_open_reqs,
+            claim_with_soonest_open_reqs,
+            claim_without_reqs_intake_in_progress,
+            claim_with_complete_reqs,
+        ):
+            return [
+                claim_with_open_reqs,
+                claim_without_reqs_intake_in_progress,
+                claim_with_complete_reqs,
+                claim_with_soonest_open_reqs,
             ]
 
         def _perform_api_call(self, request, client, employer_auth_token):
@@ -2202,6 +2216,18 @@ class TestGetClaimsEndpoint:
             request = {"order_direction": "ascending", "order_by": "fineos_absence_status"}
             response = self._perform_api_call(request, client, employer_auth_token)
             self._perform_assertion(claims_order, response)
+
+        def test_get_claims_order_status_with_requirements_asc_next_day(
+            self, client, employer_auth_token, claims_order_next_day
+        ):
+            tomorrow = datetime_util.utcnow() + timedelta(days=1)
+            freezer = freeze_time(tomorrow.strftime("%Y-%m-%d %H:%M:%S"))
+            freezer.start()
+            claims_order = claims_order_next_day
+            request = {"order_direction": "ascending", "order_by": "fineos_absence_status"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            self._perform_assertion(claims_order, response)
+            freezer.stop()
 
     def test_get_claims_for_employer_id(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification
