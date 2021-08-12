@@ -44,7 +44,7 @@ import {
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
-import { format, parseISO } from "date-fns";
+import { differenceInBusinessDays, format, parseISO } from "date-fns";
 
 type StatusCategory =
   | "Applicability"
@@ -504,31 +504,54 @@ class TasksPage {
     waitForAjaxComplete();
     return this;
   }
-
-  assertIsAssignedToUser(taskName: string, userName: string): this {
-    // Find  task
-    cy.contains("tbody", "This case and its subcases").within(() => {
-      cy.findByText(taskName).click();
-    });
-    // Assert it's assigned to given user
-    cy.get(`span[id^="BasicDetailsUsersDeptWidget"][id$="AssignedTo"]`).should(
-      "contain.text",
-      `${userName}`
-    );
-    return this;
-  }
-  assertIsAssignedToDepartment(
-    task: FineosTasks,
-    departmentName: string
-  ): this {
+  select(task: string): this {
     // Find  task
     cy.contains("tbody", "This case and its subcases").within(() => {
       cy.findByText(task).click();
     });
+    cy.get(
+      `[id^="activitytabs"][id$="FINEOS.WorkManager.Activities.ViewActivityDialogue.Task"]`
+    ).should("contain.text", task);
+    return this;
+  }
+  /**Checks difference between creation date and target date of a task */
+  checkSLADifference(task: FineosTasks, diffInDays: number): this {
+    this.select(task);
+    cy.get(
+      `[id^="activitytabs"][id$="FINEOS.WorkManager.Activities.ViewActivityDialogue.Task"]`
+    ).then((el) => {
+      const creationDate = el
+        .find(`[id^="BasicDetailsUsersDeptWidget"][id$="_CreationDate"]`)
+        .text()
+        .split(" ")[0];
+      const targetDate = el
+        .find(`[id^="ActivityTargetDates"][id$="_TargetDate"]`)
+        .text()
+        .split(" ")[0];
+      console.log(creationDate);
+      console.log(targetDate);
+      expect(
+        differenceInBusinessDays(new Date(targetDate), new Date(creationDate))
+      ).to.eq(diffInDays);
+    });
+    return this;
+  }
+  assertIsAssignedToUser(task: FineosTasks, user: string): this {
+    this.select(task);
+    // Assert it's assigned to given user
+    cy.get(`span[id^="BasicDetailsUsersDeptWidget"][id$="AssignedTo"]`).should(
+      "contain.text",
+      `${user}`
+    );
+    return this;
+  }
+  assertIsAssignedToDepartment(task: FineosTasks, department: string): this {
+    // Find  task
+    this.select(task);
     // Assert it's in given department
     cy.get(`span[id^="BasicDetailsUsersDeptWidget"][id$="Department"]`).should(
       "contain.text",
-      `${departmentName}`
+      `${department}`
     );
     return this;
   }

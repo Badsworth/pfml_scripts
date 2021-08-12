@@ -88,9 +88,8 @@ describe("Claim date change", () => {
               });
               claimPage.reviewClaim();
               cy.visit("/");
-              const claimReviewed = fineosPages.ClaimPage.visit(
-                fineos_absence_id
-              );
+              const claimReviewed =
+                fineosPages.ClaimPage.visit(fineos_absence_id);
               claimReviewed.adjudicate((adjudication) => {
                 adjudication.editPlanDecision("Undecided");
                 adjudication.certificationPeriods((certificationPeriods) =>
