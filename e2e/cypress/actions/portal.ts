@@ -84,7 +84,7 @@ export function before(flags?: Partial<FeatureFlags>): void {
   }).as("submitClaimResponse");
 
   cy.intercept(
-    /\/api\/v1\/(employers\/claims|applications)\/.*\/documents\/\d+/,
+    /\/api\/v1\/(employers\/claims|applications)\/.*\/documents\/\d+/
   ).as("documentDownload");
 
   deleteDownloadsFolder();
@@ -177,32 +177,30 @@ export function deleteDownloadsFolder(): void {
  */
 export function downloadLegalNotice(claim_id: string): void {
   const downloadsFolder = Cypress.config("downloadsFolder");
-  cy.wait("@documentDownload", {timeout: 30000});
-  cy.task("getNoticeFileName", downloadsFolder).then(
-    (filename) => {
-      expect(
-        filename.length,
-        "downloads folder should contain only one file"
-      ).to.equal(1);
-      expect(
-        path.extname(filename[0]),
-        "Expect file extension to be a PDF"
-      ).to.equal(".pdf");
-      cy.task("getParsedPDF", path.join(downloadsFolder, filename[0])).then(
-        (pdf) => {
-          const application_id_from_notice = email.getTextBetween(
-            pdf.text,
-            "Application ID:",
-            "\n"
-          );
-          expect(
-            application_id_from_notice,
-            `The claim_id within the legal notice should be: ${application_id_from_notice}`
-          ).to.equal(claim_id);
-        }
-      );
-    }
-  );
+  cy.wait("@documentDownload", { timeout: 30000 });
+  cy.task("getNoticeFileName", downloadsFolder).then((filename) => {
+    expect(
+      filename.length,
+      "downloads folder should contain only one file"
+    ).to.equal(1);
+    expect(
+      path.extname(filename[0]),
+      "Expect file extension to be a PDF"
+    ).to.equal(".pdf");
+    cy.task("getParsedPDF", path.join(downloadsFolder, filename[0])).then(
+      (pdf) => {
+        const application_id_from_notice = email.getTextBetween(
+          pdf.text,
+          "Application ID:",
+          "\n"
+        );
+        expect(
+          application_id_from_notice,
+          `The claim_id within the legal notice should be: ${application_id_from_notice}`
+        ).to.equal(claim_id);
+      }
+    );
+  });
 }
 
 export function login(credentials: Credentials): void {
@@ -799,7 +797,9 @@ export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   cy.visit(
     `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
   );
-  cy.contains("Are you the right person to respond to this application?", {timeout: 20000});
+  cy.contains("Are you the right person to respond to this application?", {
+    timeout: 20000,
+  });
   cy.contains("Yes").click();
   cy.contains("Agree and submit").click();
 }
@@ -863,12 +863,12 @@ export function checkNoticeForLeaveAdmin(
 
   switch (noticeType) {
     case "approval":
-      cy.contains("h1", claimantName).should("be.visible");
+      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
       cy.findByText("Approval notice (PDF)").should("be.visible").click();
       break;
 
     case "denial":
-      cy.contains("h1", claimantName).should("be.visible");
+      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
       cy.findByText("Denial notice (PDF)").should("be.visible").click();
       break;
 
