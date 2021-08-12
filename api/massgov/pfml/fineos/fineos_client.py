@@ -805,14 +805,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         # Occupation ID is the only identifier we use to specify which occupation record we want to update in FINEOS.
         additional_data_set.additional_data.append(
-            models.AdditionalData(name="OccupationId", value=occupation_id)
+            models.AdditionalData(name="OccupationId", value=str(occupation_id))
         )
 
         # Application's hours_worked_per_week field is optional so we only update this value in FINEOS
         # if we've set it on the Application object in our database.
         if hours_worked_per_week:
             additional_data_set.additional_data.append(
-                models.AdditionalData(name="HoursPerWeek", value=hours_worked_per_week)
+                models.AdditionalData(name="HoursPerWeek", value=str(hours_worked_per_week))
             )
 
         if employment_status:
@@ -1176,7 +1176,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         leave_admin_create_payload = models.CreateOrUpdateLeaveAdminRequest(
             full_name=leave_admin_create_or_update.admin_full_name,
-            party_reference=leave_admin_create_or_update.fineos_employer_id,
+            party_reference=str(leave_admin_create_or_update.fineos_employer_id),
             user_id=leave_admin_create_or_update.fineos_web_id,
             email=leave_admin_create_or_update.admin_email,
             phone=leave_admin_phone,
@@ -1320,13 +1320,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
             name="CustomerNumber", value=str(fineos_employer_id)
         )
         absence_management_data = models.AdditionalData(
-            name="AbsenceManagement", value=service_agreement_inputs.absence_management_flag
+            name="AbsenceManagement", value=str(service_agreement_inputs.absence_management_flag)
         )
         leave_plans_data = models.AdditionalData(
             name="LeavePlans", value=service_agreement_inputs.leave_plans
         )
         unlink_leave_plans_data = models.AdditionalData(
-            name="UnlinkAllExistingLeavePlans", value=True
+            name="UnlinkAllExistingLeavePlans", value=str(True)
         )
 
         additional_data_set = models.AdditionalDataSet()

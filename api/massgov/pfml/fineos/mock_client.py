@@ -20,6 +20,7 @@ import massgov.pfml.util.logging
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
+from ..db.models.applications import PhoneType
 from . import client, exception, fineos_client, models
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -263,7 +264,10 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         return models.customer_api.ContactDetails(
             phoneNumbers=[
                 models.customer_api.PhoneNumber(
-                    id=1, intCode=None, telephoneNo=None, phoneNumberType=None
+                    id=1,
+                    intCode=None,
+                    telephoneNo=None,
+                    phoneNumberType=PhoneType.PHONE.phone_type_description,
                 )
             ]
         )
@@ -354,7 +358,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
         return models.group_client_api.CustomerOccupations(
-            elements=[models.group_client_api.CustomerOccupation(hrsWorkedPerWeek=hrsWorkedPerWeek)]
+            elements=[
+                models.group_client_api.CustomerOccupation(hrsWorkedPerWeek=str(hrsWorkedPerWeek))
+            ]
         )
 
     def get_outstanding_information(
