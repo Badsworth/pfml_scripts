@@ -427,3 +427,19 @@ export function assertDocumentsInFolder(
     );
   cy.get("#DocumentTypeListviewWidget").should("contain.text", documentName);
 }
+
+/**
+ * Returns claim adjudication status wrapped in Cypress.Chainable.
+ * @returns Adjudication status of the claim
+ * @example
+ * fineos.getClaimStatus().then((status) => {
+ *  if (status === "Approved"){
+ *    //...your code here
+ *  }
+ * }
+ */
+export function getClaimStatus(): Cypress.Chainable<
+  "Adjudication" | "Approved" | "Declined" | "Closed" | "In Review"
+> {
+  return cy.get(".key-info-bar .status dd").invoke("text");
+}
