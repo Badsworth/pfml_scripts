@@ -35,7 +35,10 @@ export const ReasonPregnancy = (props) => {
     } else if (pregnancyOrRecentBirth === false) {
       formState.leave_details.reason = LeaveReason.medical;
     }
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+    return appLogic.benefitsApplications.update(
+      claim.application_id,
+      formState
+    );
   };
   return (
     <QuestionPage

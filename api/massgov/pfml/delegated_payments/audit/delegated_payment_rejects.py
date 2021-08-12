@@ -9,6 +9,7 @@ import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
+from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Flow,
     LkState,
@@ -87,6 +88,23 @@ class PaymentRejectsStep(Step):
         REJECTED_PAYMENT_COUNT = "rejected_payment_count"
         SKIPPED_PAYMENT_COUNT = "skipped_payment_count"
         STATE_LOGS_COUNT = "state_logs_count"
+
+    def __init__(
+        self,
+        db_session: db.Session,
+        log_entry_db_session: db.Session,
+        payment_rejects_folder_path: str = "",
+    ) -> None:
+        """Constructor."""
+        super().__init__(db_session, log_entry_db_session)
+
+        self.payment_rejects_folder_path = payment_rejects_folder_path
+        if not payment_rejects_folder_path:
+            s3_config = payments_config.get_s3_config()
+            self.payment_rejects_folder_path = s3_config.pfml_payment_rejects_archive_path
+            self.payment_rejects_received_folder_path = os.path.join(
+                self.payment_rejects_folder_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
+            )
 
     def run_step(self) -> None:
         self.process_rejects()
@@ -330,17 +348,17 @@ class PaymentRejectsStep(Step):
 
         logger.info("Completed transition of not sampled payment audit pending states")
 
-    def process_rejects_and_send_report(self, payment_rejects_archive_path: str) -> None:
-        payment_rejects_received_folder_path = os.path.join(
-            payment_rejects_archive_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
-        )
+    def get_rejects_files_to_process(self) -> List[str]:
+        return file_util.list_files(self.payment_rejects_received_folder_path)
 
-        rejects_files = file_util.list_files(payment_rejects_received_folder_path)
+    def process_rejects_and_send_report(self) -> None:
+        rejects_files = self.get_rejects_files_to_process()
 
         if len(rejects_files) == 0:
             raise PaymentRejectsException("No Payment Rejects file found.")
 
         if len(rejects_files) > 1:
+            rejects_files.sort()
             rejects_file_names = ", ".join(rejects_files)
             raise PaymentRejectsException(
                 f"Too many Payment Rejects files found: {rejects_file_names}"
@@ -349,7 +367,7 @@ class PaymentRejectsStep(Step):
         # process the file
         rejects_file_name = rejects_files[0]
         payment_rejects_file_path = os.path.join(
-            payment_rejects_received_folder_path, rejects_file_name
+            self.payment_rejects_received_folder_path, rejects_file_name
         )
 
         logger.info("Start processing Payment Rejects file: %s", payment_rejects_file_path)
@@ -384,7 +402,7 @@ class PaymentRejectsStep(Step):
 
         # put file in processed folder
         processed_file_path = payments_util.build_archive_path(
-            payment_rejects_archive_path,
+            self.payment_rejects_folder_path,
             payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
             rejects_file_name,
         )
@@ -404,6 +422,27 @@ class PaymentRejectsStep(Step):
 
         logger.info("Done processing Payment Rejects file: %s", payment_rejects_file_path)
 
+    def move_rejects_file_to_error_archive_folder(self, payment_rejects_archive_path: str) -> None:
+        rejects_files = self.get_rejects_files_to_process()
+
+        for rejects_file_name in rejects_files:
+            payment_rejects_file_path = os.path.join(
+                self.payment_rejects_received_folder_path, rejects_file_name
+            )
+
+            errored_file_path = payments_util.build_archive_path(
+                payment_rejects_archive_path,
+                payments_util.Constants.S3_INBOUND_ERROR_DIR,
+                rejects_file_name,
+            )
+
+            file_util.rename_file(payment_rejects_file_path, errored_file_path)
+            logger.warning("Payment Rejects file moved to errored folder: %s", errored_file_path)
+
+        logger.info(
+            "Done moving Payment Rejects files to error folder: %s", ", ".join(rejects_files)
+        )
+
     def process_rejects(self):
         """Top level function to process payments rejects"""
 
@@ -412,7 +451,7 @@ class PaymentRejectsStep(Step):
 
             s3_config = payments_config.get_s3_config()
 
-            self.process_rejects_and_send_report(s3_config.pfml_payment_rejects_archive_path)
+            self.process_rejects_and_send_report()
 
             self.db_session.commit()
 
@@ -421,6 +460,10 @@ class PaymentRejectsStep(Step):
         except Exception:
             self.db_session.rollback()
             logger.exception("Error processing Payment Rejects file")
+
+            self.move_rejects_file_to_error_archive_folder(
+                s3_config.pfml_payment_rejects_archive_path
+            )
 
             # We do not want to run any subsequent steps if this fails
             raise

@@ -20,11 +20,13 @@ import { format } from "date-fns";
   });
   // Generate 1 employer with 0 withholdings for use in LA verification.
   const ineligibleLAEmployers = EmployerPool.generate(1, {
+    size: "small",
     withholdings: [0, 0, 0, 0],
     metadata: { register_leave_admins: true },
   });
   // Generate 2 employers with withholdings for use in LA verification.
   const eligibleLAEmployers = EmployerPool.generate(2, {
+    size: "small",
     metadata: { register_leave_admins: true },
   });
 

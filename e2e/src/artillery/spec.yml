@@ -1,0 +1,47 @@
+config:
+  processor: ./processor.js
+  includeFiles:
+    - .env
+    - ./employees
+    - ./forms
+  environments:
+    performance:
+      target: https://paidleave-performance.mass.gov/
+      phases:
+        - duration: 300 # Run minutes 0-5
+          arrivalRate: .25 # When starting our load test, we send one user per instance every 4 seconds until we reach maxVusers
+          maxVusers: 2
+          name: Warm Up
+        - duration: 300 # Run minutes 5-10
+          maxVusers: 3
+          arrivalRate: 1
+          name: Steady State
+        - duration: 900 # Run minutes 10-25
+          maxVusers: 7
+          arrivalRate: 1
+          name: Spike One
+        - duration: 900 # Run minutes 25-40
+          maxVusers: 9
+          arrivalRate: 1
+          name: Spike Two
+        - duration: 600 # Run minutes 40-50
+          maxVusers: 3
+          arrivalRate: 1
+          name: Steady State
+        - duration: 300 # Run minutes 50-60
+          maxVusers: 2
+          arrivalRate: 1
+          name: Cool Down
+    test:
+      target: https://paidleave-test.mass.gov/
+      phases:
+        - duration: 1
+          arrivalRate: 1
+          name: Development
+
+scenarios:
+  - name: BHAP1 End to End
+    flow:
+      # Artillery has no capability to pass arguments to a function, so we have a 1-1 relationship
+      # between processor functions and E2E scenarios. That probably doesn't matter though.
+      - function: submitAndAdjudicate

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import ConditionalContent from "../ConditionalContent";
@@ -7,6 +7,7 @@ import InputNumber from "../InputNumber";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
+import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -18,6 +19,26 @@ const SupportingWorkDetails = (props) => {
   const { t } = useTranslation();
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(false);
+  const functionalInputProps = props.getFunctionalInputProps(
+    "hours_worked_per_week"
+  );
+
+  // this forces open the amendment form if an error exists for it.
+  // without tracking the previous value, we run into this scenario:
+  // - "errorMsg" is truthy; component opens amendment form.
+  // - user clicks "Cancel amendment"; calls setIsAmendmentFormDisplayed(false).
+  // - component re-renders.
+  // - "errorMsg" is truthy; component opens amendment form.
+  // - user cannot ever close the amendment form.
+  const amendmentFormPreviouslyDisplayed = usePreviousValue(
+    isAmendmentFormDisplayed
+  );
+  useEffect(() => {
+    if (!amendmentFormPreviouslyDisplayed) {
+      setIsAmendmentFormDisplayed(!!functionalInputProps.errorMsg);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [functionalInputProps.errorMsg]);
 
   return (
     <React.Fragment>
@@ -34,40 +55,38 @@ const SupportingWorkDetails = (props) => {
         }
       >
         <p className="margin-top-0">{props.initialHoursWorkedPerWeek}</p>
-        <ConditionalContent
-          getField={props.getField}
-          clearField={props.clearField}
-          updateFields={props.updateFields}
-          fieldNamesClearedWhenHidden={["hours_worked_per_week"]}
-          visible={isAmendmentFormDisplayed}
-        >
-          <AmendmentForm
-            onDestroy={() => setIsAmendmentFormDisplayed(false)}
-            destroyButtonLabel={t("components.amendmentForm.cancel")}
-            className="bg-base-lightest border-base-lighter"
-          >
-            <Heading level="4" size="3">
-              {t("components.employersSupportingWorkDetails.heading_amend")}
-            </Heading>
-            <p>
-              {t("components.employersSupportingWorkDetails.subtitle_amend")}
-            </p>
-            <InputNumber
-              {...props.getFunctionalInputProps("hours_worked_per_week")}
-              label={t(
-                "components.employersSupportingWorkDetails.leavePeriodDurationLabel"
-              )}
-              hint={t(
-                "components.employersSupportingWorkDetails.leavePeriodDurationHint"
-              )}
-              mask="hours"
-              width="small"
-              smallLabel
-              valueType="integer"
-            />
-          </AmendmentForm>
-        </ConditionalContent>
       </ReviewRow>
+      <ConditionalContent
+        getField={props.getField}
+        clearField={props.clearField}
+        updateFields={props.updateFields}
+        fieldNamesClearedWhenHidden={["hours_worked_per_week"]}
+        visible={isAmendmentFormDisplayed}
+      >
+        <AmendmentForm
+          onDestroy={() => setIsAmendmentFormDisplayed(false)}
+          destroyButtonLabel={t("components.amendmentForm.cancel")}
+          className="bg-base-lightest border-base-lighter"
+        >
+          <Heading level="4" size="3">
+            {t("components.employersSupportingWorkDetails.heading_amend")}
+          </Heading>
+          <p>{t("components.employersSupportingWorkDetails.subtitle_amend")}</p>
+          <InputNumber
+            {...functionalInputProps}
+            label={t(
+              "components.employersSupportingWorkDetails.leavePeriodDurationLabel"
+            )}
+            hint={t(
+              "components.employersSupportingWorkDetails.leavePeriodDurationHint"
+            )}
+            mask="hours"
+            width="small"
+            smallLabel
+            valueType="integer"
+          />
+        </AmendmentForm>
+      </ConditionalContent>
     </React.Fragment>
   );
 };

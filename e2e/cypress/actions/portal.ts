@@ -83,12 +83,6 @@ export function before(flags?: Partial<FeatureFlags>): void {
     url: "**/api/v1/applications/*/submit_application",
   }).as("submitClaimResponse");
 
-  // Block new-relic.js outright due to issues with Cypress networking code.
-  // Without this block, test retries on the portal error out due to fetch() errors.
-  cy.intercept("**/new-relic.js", (req) => {
-    req.reply("console.log('Fake New Relic script loaded');");
-  });
-
   deleteDownloadsFolder();
 }
 
@@ -260,7 +254,7 @@ export function assertLoggedIn(): void {
 
 export function startClaim(): void {
   cy.get('[href="/applications/start/"]').click();
-  cy.contains("button", "I understand and agree").click();
+  cy.findByText("I understand and agree").click();
   cy.location({ timeout: 30000 }).should((location) => {
     expect(location.pathname, "Expect to be on the checklist page").to.equal(
       "/applications/checklist/"
@@ -351,10 +345,12 @@ export function selectClaimType(application: ApplicationRequestBody): void {
     throw new Error("Claim is missing reason or reason qualifier");
   }
   const reasonMap: Record<typeof reason, string | RegExp> = {
-    "Serious Health Condition - Employee": /I can’t work due to (an|my) illness, injury, or pregnancy./,
+    "Serious Health Condition - Employee":
+      /I can’t work due to (an|my) illness, injury, or pregnancy./,
     "Child Bonding":
       "I need to bond with my child after birth, adoption, or foster placement.",
-    "Pregnancy/Maternity": /I can’t work due to (an|my) illness, injury, or pregnancy./,
+    "Pregnancy/Maternity":
+      /I can’t work due to (an|my) illness, injury, or pregnancy./,
     "Care for a Family Member": "I need to care for my family member",
   };
   cy.contains(reasonMap[reason]).click();
@@ -601,12 +597,8 @@ export function addPaymentInfo(
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Add payment information"
-  const {
-    payment_method,
-    account_number,
-    routing_number,
-    bank_account_type,
-  } = paymentPreference.payment_preference as PaymentPreference;
+  const { payment_method, account_number, routing_number, bank_account_type } =
+    paymentPreference.payment_preference as PaymentPreference;
 
   cy.contains("fieldset", "How do you want to get your weekly benefit?").within(
     () => {
@@ -881,7 +873,7 @@ export function checkNoticeForLeaveAdmin(
 }
 
 export function confirmEligibleClaimant(): void {
-  cy.contains("button", "I understand and agree").click();
+  cy.findByText("I understand and agree").click();
 }
 
 export function submitClaimPartOne(application: ApplicationRequestBody): void {
@@ -1279,7 +1271,7 @@ function reportOtherIncome(income: ValidOtherIncome, index: number): void {
  * Report other incomes. Must be navigated to the other incomes form.
  * @param other_incomes - array of OtherIncome objects with all the required properties.
  */
-"Tell us about your other sources of income during your leave dates for paid leave from PFML.";
+("Tell us about your other sources of income during your leave dates for paid leave from PFML.");
 function reportOtherIncomes(other_incomes: ValidOtherIncome[]): void {
   cy.contains(
     "form",

@@ -28,23 +28,45 @@
 
 .confirmation-dialog__content {
   background: #fff;
-  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
+  border-radius: $Border-Radius;
+  box-shadow: 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   margin: auto;
-  max-width: 350px;
-  padding: 0.5em 1em;
+  max-width: 388px;
+  padding: 1.57em 2.14em;
   position: relative;
-  width: 70%;
+  width: 80%;
   z-index: 10;
 }
 
-.confirmation-dialog__action-buttons {
+.confirmation-dialog__title {
+  font-size: 1.14em;
+  font-weight: 700;
+  line-height: 1.5;
+  margin-bottom: 0.5em;
   text-align: center;
 }
 
-.confirmation-dialog__title {
-  font-size: 1.25em;
+.confirmation-dialog__body {
+  color: $Color-GraniteGray-500;
+  font-size: 1em;
+  line-height: 1.29;
+  padding-bottom: 1.65em;
+  text-align: center;
 }
 
-.confirmation-dialog__body {
-  font-size: 0.75em;
+.confirmation-dialog__action-buttons {
+  display: flex;
 }
+
+.confirmation-dialog__btn {
+  flex: 1 1 auto;
+}
+
+.confirmation-dialog__btn-continue {
+  margin-right: 0.43em;
+}
+
+.confirmation-dialog__btn-cancel {
+  margin-left: 0.43em;
+}
+

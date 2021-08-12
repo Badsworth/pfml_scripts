@@ -7,8 +7,9 @@ import xml.dom.minidom as minidom
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union, cast
 from xml.etree.ElementTree import Element
 
 import boto3
@@ -51,6 +52,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    PaymentLog,
 )
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.routing_number_validation import validate_routing_number
@@ -154,6 +156,7 @@ class ValidationReason(str, Enum):
     CLAIM_NOT_ID_PROOFED = "ClaimNotIdProofed"
     PAYMENT_EXCEEDS_PAY_PERIOD_CAP = "PaymentExceedsPayPeriodCap"
     ROUTING_NUMBER_FAILS_CHECKSUM = "RoutingNumberFailsChecksum"
+    LEAVE_REQUEST_IN_REVIEW = "LeaveRequestInReview"
 
 
 @dataclass(frozen=True, eq=True)
@@ -270,6 +273,14 @@ def routing_number_validator(routing_number: str) -> Optional[ValidationReason]:
     if not validate_routing_number(routing_number):
         return ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM
 
+    return None
+
+
+def amount_validator(amount_str: str) -> Optional[ValidationReason]:
+    try:
+        Decimal(amount_str)
+    except (InvalidOperation, TypeError):  # Amount is not numeric
+        return ValidationReason.INVALID_VALUE
     return None
 
 
@@ -1281,3 +1292,89 @@ def get_transaction_status_date(payment: Payment) -> date:
 
     # Otherwise the transaction status date is calculated using the current time.
     return get_now().date()
+
+
+def filter_dict(dict: Dict[str, Any], allowed_keys: Set[str]) -> Dict[str, Any]:
+    """
+    Filter a dictionary to a specified set of allowed keys.
+    If the key isn't present, will not cause an issue (ie. when we delete columns in the DB)
+    """
+    new_dict = {}
+    for k, v in dict.items():
+        if k in allowed_keys:
+            new_dict[k] = v
+
+    return new_dict
+
+
+employee_audit_log_keys = set(
+    [
+        "employee_id",
+        "tax_identifier_id",
+        "first_name",
+        "last_name",
+        "date_of_birth",
+        "fineos_customer_number",
+        "latest_import_log_id",
+        "created_at",
+        "updated_at",
+    ]
+)
+employer_audit_log_keys = set(
+    [
+        "employer_id",
+        "employer_fein",
+        "employer_name",
+        "dor_updated_date",
+        "latest_import_log_id",
+        "fineos_employer_id",
+        "created_at",
+        "updated_at",
+    ]
+)
+
+
+def create_payment_log(
+    payment: Payment,
+    import_log_id: Optional[int],
+    db_session: db.Session,
+    additional_details: Optional[Dict[str, Any]] = None,
+) -> None:
+    """
+    Create a log in the DB for information about a payment at a particular point
+    in the processing. Automatically adds a snapshot of
+    employee/employer/claim/absence period/payment check
+    """
+    absence_period = payment.leave_request
+    claim = payment.claim
+
+    snapshot = {}
+    if absence_period:
+        snapshot["absence_period"] = absence_period.for_json()
+    # When we refactor claim to be fetched from absence period, change this
+    # to be in the above if statement
+    claim = payment.claim
+    if claim:
+        snapshot["claim"] = claim.for_json()
+
+        employee = claim.employee
+        if employee:
+            employee_json = employee.for_json()
+            snapshot["employee"] = filter_dict(employee_json, employee_audit_log_keys)
+
+        employer = claim.employer
+        if employer:
+            employer_json = employer.for_json()
+            snapshot["employer"] = filter_dict(employer_json, employer_audit_log_keys)
+
+    check_details = payment.check
+    if check_details:
+        snapshot["payment_check"] = check_details.for_json()
+
+    audit_details = {}
+    audit_details["snapshot"] = snapshot
+    if additional_details:
+        audit_details.update(additional_details)
+
+    payment_log = PaymentLog(payment=payment, import_log_id=import_log_id, details=audit_details)
+    db_session.add(payment_log)

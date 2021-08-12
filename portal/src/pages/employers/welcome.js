@@ -32,7 +32,6 @@ export const Welcome = ({ appLogic, user }) => {
   };
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
   const shouldShowOtherLeave = isFeatureEnabled("claimantShowOtherLeaveStep");
-
   return (
     <React.Fragment>
       <div className="grid-row">

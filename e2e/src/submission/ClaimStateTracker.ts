@@ -78,24 +78,20 @@ export default class ClaimStateTracker implements ClaimStateTrackerInterface {
   /**
    * An iterator callback to filter out claims that have already been submitted.
    */
-  filter = filter(
-    async (claim: GeneratedClaim): Promise<boolean> => {
-      return this.has(claim.id).then((r) => !r);
-    }
-  );
+  filter = filter(async (claim: GeneratedClaim): Promise<boolean> => {
+    return this.has(claim.id).then((r) => !r);
+  });
 
   /**
    * An iterator callback to mark claims as submitted as they are processed.
    */
-  track = tap(
-    async (result: SubmissionResult): Promise<void> => {
-      await this.set({
-        claim_id: result.claim.id,
-        fineos_absence_id: result.result?.fineos_absence_id,
-        error: result.error?.message,
-      });
-    }
-  );
+  track = tap(async (result: SubmissionResult): Promise<void> => {
+    await this.set({
+      claim_id: result.claim.id,
+      fineos_absence_id: result.result?.fineos_absence_id,
+      error: result.error?.message,
+    });
+  });
 
   async set(result: StateRecord): Promise<void> {
     if (!this.records) {

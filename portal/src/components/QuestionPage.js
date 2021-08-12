@@ -3,6 +3,7 @@ import Button from "./Button";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "./Title";
+import tracker from "../services/tracker";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
@@ -18,7 +19,16 @@ export const QuestionPage = (props) => {
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await props.onSave();
+
+    const resp = props.onSave();
+    if (!(resp instanceof Promise)) {
+      tracker.trackEvent(
+        "onSave wasn't a Promise, so user isn't seeing a loading indicator."
+      );
+      // eslint-disable-next-line no-console
+      console.warn("onSave should be a Promise");
+    }
+    await resp;
   });
 
   return (

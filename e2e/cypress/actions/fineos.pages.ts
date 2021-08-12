@@ -120,6 +120,12 @@ export class ClaimPage {
     onTab("Absence Hub");
     return this;
   }
+  notes(cb: (page: NotesPage) => unknown): this {
+    onTab("Notes");
+    cb(new NotesPage());
+    onTab("Absence Hub");
+    return this;
+  }
   leaveDetails(cb: (page: LeaveDetailsPage) => unknown): this {
     onTab("Leave Details");
     cb(new LeaveDetailsPage());
@@ -151,19 +157,28 @@ export class ClaimPage {
       | "Leave Request Withdrawn"
       | "Review Approval Notice"
       | "Leave Cancellation Request"
+      | "Preliminary Designation"
   ): this {
     onTab("Task");
     onTab("Processes");
     cy.contains(".TreeNodeElement", type).click({
       force: true,
     });
-    cy.get('input[type="submit"][value="Properties"]').click();
-    cy.get('input[type="submit"][value="Continue"]').click();
-    cy.contains(".TreeNodeContainer", type, {
-      timeout: 20000,
-    })
-      .find("input[type='checkbox']")
-      .should("be.checked");
+    // When we're firing time triggers, there's always the possibility that the trigger has already happened
+    // by the time we get here. When this happens, the "Properties" button will be grayed out and unclickable.
+    cy.get('input[type="submit"][value="Properties"]').then((el) => {
+      if (el.is(":disabled")) {
+        cy.log("Skipping trigger because this time trigger has already fired");
+        return;
+      }
+      cy.wrap(el).click();
+      cy.get('input[type="submit"][value="Continue"]').click({ force: true });
+      cy.contains(".TreeNodeContainer", type, {
+        timeout: 20000,
+      })
+        .find("input[type='checkbox']")
+        .should("be.checked");
+    });
 
     return this;
   }
@@ -194,6 +209,22 @@ export class ClaimPage {
     assertClaimStatus("Declined");
     return this;
   }
+
+  // This will deny extended time in the Leave Details.
+  // No assert ClaimStatus for Declined for the absence case
+  // won't say "Declined".
+  denyExtendedTime(reason: string): this {
+    cy.get("tr.ListRowSelected").click();
+    cy.get('a[title="Deny the Pending Leave Request"]').click({
+      force: true,
+    });
+    cy.get('span[id="leaveRequestDenialDetailsWidget"]')
+      .find("select")
+      .select(reason);
+    cy.get('input[type="submit"][value="OK"]').click();
+    return this;
+  }
+
   withdraw(): this {
     cy.get('a[title="Withdraw the Pending Leave Request"').click({
       force: true,
@@ -230,6 +261,11 @@ class AdjudicationPage {
       this.activeTab = path.join(",");
     }
   }
+  restrictions(cb: (page: RestrictionsPage) => unknown): this {
+    this.onTab("Restrictions");
+    cb(new RestrictionsPage());
+    return this;
+  }
   evidence(cb: (page: EvidencePage) => unknown): this {
     this.onTab("Evidence");
     cb(new EvidencePage());
@@ -264,11 +300,17 @@ class AdjudicationPage {
   }
 }
 
+type EvidenceStatus = {
+  evidenceType: string;
+  receipt?: "Pending" | "Received" | "Not Received";
+  decision?: "Pending" | "Satisfied" | "Not Satisfied" | "Waived";
+  reason?: string;
+};
 class EvidencePage {
   receive(
     evidenceType: string,
-    receipt = "Received",
-    decision = "Satisfied",
+    receipt = "Received" as const,
+    decision = "Satisfied" as const,
     reason = "Evidence has been reviewed and approved"
   ): this {
     cy.findByText(evidenceType).click();
@@ -288,11 +330,39 @@ class EvidencePage {
       // Wait till modal has fully closed before moving on.
     });
     // Wait until the table has updated with the new status before we attempt to move on.
+    this.assertEvidenceStatus({
+      evidenceType,
+      receipt,
+      decision,
+      reason,
+    });
     cy.contains(".ListTable tr", evidenceType).should((row) => {
       expect(row.find("td:nth-child(3)")).to.contain.text(receipt);
       expect(row.find("td:nth-child(5)")).to.contain.text(decision);
     });
     return this;
+  }
+  /**
+   * Checks that there's evidence with given status, which includes receipt, decision, reason.
+   * @example
+   * evidence.assertEvidenceStatus({
+   *  evidenceType: "Military exigency form",
+   *  decision: "Pending",
+   *  receipt: "Pending",
+   * });
+   */
+  assertEvidenceStatus({
+    evidenceType,
+    receipt,
+    decision,
+    reason,
+  }: EvidenceStatus) {
+    cy.contains("tr", evidenceType).should("be.visible");
+    if (receipt)
+      cy.contains("tr", evidenceType).should("contain.text", receipt);
+    if (decision)
+      cy.contains("tr", evidenceType).should("contain.text", decision);
+    if (reason) cy.contains("tr", evidenceType).should("contain.text", reason);
   }
   requestAdditionalInformation(
     documentType: string,
@@ -900,6 +970,7 @@ export class DocumentsPage {
 
 class AvailabilityPage {
   reevaluateAvailability(decision: string, reason: string) {
+    waitForAjaxComplete();
     cy.get('input[title="Manage time for the selected Leave Plan"]').click();
     waitForAjaxComplete();
     cy.get('input[title="Select All"]').click();
@@ -1223,6 +1294,17 @@ class PaidLeavePage {
             .invoke("text")
             .should("eq", processingDate);
         });
+    });
+    return this;
+  }
+
+  assertOwnershipAssignTo(assign: string): this {
+    this.onTab("General Claim");
+    cy.get('span[id="CaseDetails_un29_AssignedTo"]').should((element) => {
+      expect(
+        element,
+        `Expected the Assigned To display the following "${assign}"`
+      ).to.have.text(assign);
     });
     return this;
   }
@@ -1590,7 +1672,7 @@ export type AbsenceReasonDescription = {
 /**
  * Maps to select inputs available to describe Primary Relationship
  */
-type PrimaryRelationshipDescription = {
+export type PrimaryRelationshipDescription = {
   relationship_to_employee?: string;
   qualifier_1?: string;
   qualifier_2?: string;
@@ -1669,6 +1751,24 @@ class DatesOfAbsence extends CreateNotificationStep {
     cy.contains("div.toggle-guidance-row", scheduleSliderMap[type])
       .find("span.slider")
       .click();
+    return this;
+  }
+  addIntermittentLeavePeriod(start: string, end: string): this {
+    // Since the widget also gets re-rendered from time to time, we need to re-query it frequently.
+    const withinWidget = (cb: () => unknown) =>
+      cy.get(`#captureEpisodicLeaveDetailsWidget`).within(cb);
+    withinWidget(() => {
+      cy.findByTitle("Add a new episodic absence period").click();
+      waitForAjaxComplete();
+    });
+    withinWidget(() => {
+      cy.findByLabelText("Valid from").type(`${dateToMMddyyyy(start)}{enter}`);
+      waitForAjaxComplete();
+    });
+    withinWidget(() => {
+      cy.findByLabelText("Valid to").type(`${dateToMMddyyyy(end)}{enter}`);
+      waitForAjaxComplete();
+    });
     return this;
   }
   addFixedTimeOffPeriod(period: ContinuousLeavePeriod): this {
@@ -1953,5 +2053,44 @@ class LeaveDetailsPage {
     waitForAjaxComplete();
     cy.get('input[type="submit"][value="Edit"]').click();
     return new AdjudicationPage();
+  }
+  rejectSelectPlan(): AdjudicationPage {
+    cy.get("tr.ListRow2.planUndecided").click();
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Reject"]').click();
+    return new AdjudicationPage();
+  }
+}
+
+type NoteTypes = "Leave Request Review";
+class NotesPage {
+  /** Adds a note of a given type and asserts it has been added succesfully. */
+  addNote(type: NoteTypes, text: string) {
+    cy.findByText("Create New").click();
+    cy.findByText(type, { selector: "span" }).click();
+    waitForAjaxComplete();
+    cy.get(`#CaseNotesPopupWidgetAdd_PopupWidgetWrapper`)
+      .should("be.visible")
+      .within(() => {
+        // @todo check if other review types have different labels
+        cy.findByLabelText("Review note").type(text);
+        cy.findByText("OK").click();
+        waitForAjaxComplete();
+      });
+    this.assertHasNote(type, text);
+  }
+  assertHasNote(type: NoteTypes, text: string) {
+    cy.get(`#CaseNotesWidgetList`)
+      .contains("div.WidgetListWidget", type)
+      .should("contain.text", text);
+  }
+}
+
+class RestrictionsPage {
+  assertRestrictionDecision(decision: "Passed") {
+    cy.contains(
+      "#planRestrictionsAbsencePatternsListviewWidget",
+      "Supported Absence Patterns"
+    ).should("contain.text", decision);
   }
 }

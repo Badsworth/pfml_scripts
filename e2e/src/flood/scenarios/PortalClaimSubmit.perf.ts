@@ -13,6 +13,7 @@ import type {
   EmployerClaimRequestBody,
   GETEmployersClaimsByFineosAbsenceIdReviewResponse,
 } from "../../_api";
+import { splitClaimToParts } from "../../util/common";
 
 let authToken: string;
 let username: string;
@@ -273,113 +274,7 @@ function getClaimParts(
   data: Cfg.LSTSimClaim
 ): Partial<Cfg.LSTSimClaim["claim"]>[] {
   const { claim } = data;
-  const { leave_details } = claim;
-  return [
-    {
-      first_name: claim.first_name,
-      middle_name: null,
-      last_name: claim.last_name,
-    },
-    {
-      has_mailing_address: claim.has_mailing_address,
-      residential_address: claim.residential_address,
-      mailing_address: claim.mailing_address,
-    },
-    {
-      date_of_birth: claim.date_of_birth,
-    },
-    {
-      has_state_id: claim.has_state_id,
-      mass_id: claim.mass_id,
-    },
-    {
-      tax_identifier: claim.tax_identifier,
-    },
-    {
-      employment_status: claim.employment_status,
-      employer_fein: claim.employer_fein,
-    },
-    {
-      leave_details: {
-        employer_notified: leave_details?.employer_notified,
-        employer_notification_date: leave_details?.employer_notification_date,
-      },
-    },
-    {
-      work_pattern: {
-        work_pattern_type: claim.work_pattern?.work_pattern_type,
-      },
-    },
-    {
-      hours_worked_per_week: claim.hours_worked_per_week,
-      work_pattern: {
-        work_pattern_days: claim.work_pattern?.work_pattern_days,
-      },
-    },
-    {
-      leave_details: {
-        reason: leave_details?.reason,
-        reason_qualifier: leave_details?.reason_qualifier,
-      },
-    },
-    {
-      leave_details: {
-        child_birth_date: leave_details?.child_birth_date,
-        child_placement_date: leave_details?.child_placement_date,
-        pregnant_or_recent_birth: leave_details?.pregnant_or_recent_birth,
-      },
-    },
-    {
-      has_continuous_leave_periods: claim.has_continuous_leave_periods,
-      leave_details: {
-        continuous_leave_periods: leave_details?.continuous_leave_periods,
-      },
-    },
-    {
-      has_reduced_schedule_leave_periods:
-        claim.has_reduced_schedule_leave_periods,
-    },
-    {
-      has_intermittent_leave_periods: claim.has_intermittent_leave_periods,
-    },
-    {
-      phone: {
-        int_code: "1",
-        phone_number: "844-781-3163",
-        phone_type: "Cell",
-      },
-    },
-    {
-      has_previous_leaves_same_reason: claim.has_previous_leaves_same_reason,
-    },
-    {
-      previous_leaves_same_reason: claim.previous_leaves_same_reason,
-    },
-    {
-      has_previous_leaves_other_reason: claim.has_previous_leaves_other_reason,
-    },
-    {
-      previous_leaves_other_reason: claim.previous_leaves_other_reason,
-    },
-    {
-      has_concurrent_leave: claim.has_concurrent_leave,
-    },
-    {
-      concurrent_leave: claim.concurrent_leave,
-    },
-    {
-      has_employer_benefits: claim.has_employer_benefits,
-    },
-    {
-      employer_benefits: claim.employer_benefits,
-    },
-    {
-      has_other_incomes: claim.has_other_incomes,
-    },
-    {
-      other_incomes: claim.other_incomes,
-    },
-  ];
+  return splitClaimToParts(claim);
 }
 
 async function createApplication(browser: Browser): Promise<void> {

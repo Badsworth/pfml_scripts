@@ -14,7 +14,10 @@ function InputChoice({ type = "checkbox", ...props }) {
   const inputId = useUniqueId("InputChoice");
   const id = props.id || inputId;
 
-  const fieldClassName = classnames(`usa-${type} measure-5`, props.className);
+  const fieldClassName = classnames(
+    `usa-${type} measure-5 bg-transparent`,
+    props.className
+  );
 
   return (
     <div className={fieldClassName}>

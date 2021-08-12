@@ -69,11 +69,12 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
                   )
                 )}
               </th>
-              <td colSpan="2">
+              <td>
                 {t(
                   "components.employersLeaveSchedule.claimDurationType_continuous"
                 )}
               </td>
+              <td></td>
             </tr>
           )}
           {isReducedSchedule && (

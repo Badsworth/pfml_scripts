@@ -38,7 +38,10 @@ export const PreviousLeavesSameReason = (props) => {
     ) {
       patchData.previous_leaves_same_reason = null;
     }
-    appLogic.benefitsApplications.update(claim.application_id, patchData);
+    return appLogic.benefitsApplications.update(
+      claim.application_id,
+      patchData
+    );
   };
 
   return (

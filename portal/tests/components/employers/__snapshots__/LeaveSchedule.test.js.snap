@@ -46,11 +46,10 @@ exports[`LeaveSchedule renders continuous schedule 1`] = `
         >
           1/1/2021 to 6/1/2021
         </th>
-        <td
-          colSpan="2"
-        >
+        <td>
           Continuous leave
         </td>
+        <td />
       </tr>
     </tbody>
   </Table>

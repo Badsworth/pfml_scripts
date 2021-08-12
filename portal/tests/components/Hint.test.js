@@ -48,11 +48,10 @@ describe("Hint", () => {
     `);
   });
 
-  it("generates id if no inputId is passed", () => {
+  it("does not set the `id` attribute when inputId is not set", () => {
     const { wrapper } = render({ inputId: undefined, children: "Text" });
-    const hint = wrapper.find(".usa-intro");
 
-    expect(hint.prop("id")).not.toBe("undefined_hint");
+    expect(wrapper.prop("id")).toBeNull();
   });
 
   it("adds className", () => {

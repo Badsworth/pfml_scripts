@@ -343,7 +343,7 @@ paths:
                   - $ref: '#/components/schemas/SuccessfulResponse'
                   - properties:
                       data:
-                        $ref: "#/components/schemas/ClaimResponse"
+                        $ref: "#/components/schemas/DetailedClaimResponse"
         "400":
           description: An unsuccessful request returns a 400 status code if one or more errors occurred.
           content:
@@ -2197,6 +2197,93 @@ components:
         created_at:
           format: date
 
+    AbsencePeriodStatusResponse:
+      type: object
+      properties:
+        fineos_leave_request_id:
+          type: string
+          example: "PL-14432-0000002026"
+        absence_period_start_date:
+          type: string
+          format: date
+          example: "2021-06-01"
+        absence_period_end_date:
+          type: string
+          format: date
+          example: "2021-06-08"
+        reason:
+          type: string
+          enum:
+            - Care for a Family Member
+            - Pregnancy/Maternity
+            - Child Bonding
+            - Serious Health Condition - Employ
+          example: "Child Bonding"
+        reason_qualifier_one:
+          type: string
+          enum:
+            - Newborn
+            - Adoption
+            - Foster Care
+          example: "Newborn"
+        reason_qualifier_two:
+          type: string
+        period_type:
+          type: string
+          enum:
+            - Continuous
+            - Intermittent
+            - Reduced Schedule
+          example: "Continuous"
+        request_decision:
+          type: string
+          enum:
+            - Pending
+            - Approved
+            - Denied
+            - Withdrawn
+          example: "Approved"
+        evidence_status:
+          type: string
+          enum:
+            - Pending
+            - Waived
+            - Satisfied
+            - Not Satisfied
+            - Not Required
+          example: "Satisfied"
+
+    DetailedClaimResponse:
+      type: object
+      properties:
+        employer:
+          $ref: "#/components/schemas/EmployerResponse"
+        employee:
+          $ref: "#/components/schemas/EmployeeResponse"
+        fineos_absence_id:
+          format: string
+          example: "NTN-01-ABS-01"
+        fineos_notification_id:
+          format: string
+          example: "NTN-01"
+        created_at:
+          format: date
+        absence_periods:
+            type: array
+            items:
+              $ref: "#/components/schemas/AbsencePeriodStatusResponse"
+        outstanding_evidence:
+          type: object
+          properties:
+            employee_evidence:
+              type: array
+              items:
+                $ref: "#/components/schemas/EvidenceStatusDetail"
+            employer_evidence:
+              type: array
+              items:
+                $ref: "#/components/schemas/EvidenceStatusDetail"
+
     ClaimResponse:
       type: object
       properties:
@@ -2234,6 +2321,16 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/ClaimResponse"
+
+    EvidenceStatusDetail:
+      type: object
+      properties:
+        document_name:
+          type: string
+          example: "Document Name"
+        is_document_received:
+          type: boolean
+          example: true
 
     EmployerAddFeinResponse:
       type: object

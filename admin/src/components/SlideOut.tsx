@@ -12,8 +12,12 @@ const SlideOut = <T,>(props: Props<T>) => {
       <div className="slide-out__content">
         <div className="slide-out__header">
           <h2 className="slide-out__title">{title}</h2>
-
-          <i className="pfml-icon--x slide-out__btn-close" onClick={close}></i>
+          <button
+            className="slide-out__btn-close"
+            type="button"
+            onClick={close}
+            aria-label={`Close ${title} window`}
+          ></button>
         </div>
         <div className="slide-out__body">
           {typeof children === "function" ? children(data) : children}

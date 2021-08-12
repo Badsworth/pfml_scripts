@@ -26,15 +26,33 @@ const ConfirmationDialog = ({
 
   return (
     <dialog open className="confirmation-dialog">
-      <div className="confirmation-dialog__background"></div>
+      <div
+        className="confirmation-dialog__background"
+        onClick={handleCancel}
+      ></div>
       <div className="confirmation-dialog__content">
         <h2 className="confirmation-dialog__title">{title}?</h2>
         <div className="confirmation-dialog__body">
           <p>{body}</p>
         </div>
-        <div className="confirmation-dialog__action-buttons confirmation-dialog__action-buttons--stacked">
-          <Button onClick={handleContinue}>Continue</Button>
-          <Button additionalClasses={["btn-cancel"]} onClick={handleCancel}>
+        <div className="confirmation-dialog__action-buttons">
+          <Button
+            additionalClasses={[
+              "confirmation-dialog__btn",
+              "confirmation-dialog__btn-continue",
+            ]}
+            onClick={handleContinue}
+          >
+            Continue
+          </Button>
+          <Button
+            additionalClasses={[
+              "confirmation-dialog__btn",
+              "confirmation-dialog__btn-cancel",
+              "btn--cancel",
+            ]}
+            onClick={handleCancel}
+          >
             Cancel
           </Button>
         </div>
