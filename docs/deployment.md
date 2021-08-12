@@ -8,7 +8,7 @@ Deployments to all environments are managed through GitHub Actions.
 
 ---
 
-### Deploying to an environment
+### Deploying to an API or Portal environment
 
 1. Visit the API or Portal Github Actions homepage:
 

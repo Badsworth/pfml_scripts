@@ -72,25 +72,3 @@ To apply changes to infrastructure:
 ```
 $ terraform apply
 ```
-
-### Running JS Lambda Tests
-
-To run the [test suite](../docs/tests.md):
-
-```
-npm test
-```
-
-Update _all_ [Jest snapshots](../docs/tests.md#Snapshot%20tests), accepting any updates as expected changes:
-
-```
-npm run test:update-snapshot
-```
-
-Run the project's test suite in watch mode:
-
-```
-npm run test:watch
-```
-
-> By default, this will attempt to identify which tests to run based on which files have changed in the current repository. After running, you can interact with the prompt to configure or filter which test files are ran.
