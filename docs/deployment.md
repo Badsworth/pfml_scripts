@@ -1,10 +1,16 @@
 # Deployment
 
-Deployments to all environments are managed through GitHub Actions.
+Deployments to all API and Portal environments are managed through GitHub Actions.
 
 - The `main` branch is automatically deployed to `test` as pull requests are merged into it.
 
 - Deployments to other environmments are triggered manually.
+
+Changes to the following components take effect immediately in all environments once they go into `main`:
+
+- Alerts and Pagerduty configuration in [infra/monitoring](../infra/monitoring)
+- Feature flags managed in the [feature_flags](../feature_flags) folder
+- Github action workflows, as defined in [.github/workflows](../.github/workflows).
 
 ---
 
