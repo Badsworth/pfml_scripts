@@ -8,7 +8,7 @@
 # pfml-github-actions does not.
 #
 # For PFML admins and developers that want to assume the role (i.e. pretend to be github actions),
-# see the infra/README.md for details.
+# see /docs/infra/extras/testing-github-action-permissions.md for details.
 #
 # Access for the role covers the following:
 # - full access to services used by our applications.
