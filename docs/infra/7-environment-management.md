@@ -1,4 +1,4 @@
-# Working with environments
+# Environment Management
 
 ### Setting up a new environment
 

@@ -7,7 +7,7 @@ Beware of PII! ECS Task output will be in the AWS CloudWatch logs. Do not run co
 * [terraform](https://www.terraform.io)
 * [jq](https://stedolan.github.io/jq)
 * [AWS Command Line Interface](https://aws.amazon.com/cli)
-* [EOTSS/PFML AWS Account](../../infra/README.md#Configure-AWS)
+* [EOTSS/PFML AWS Account](../../docs/infra/1-first-time-setup.md#Configure-AWS)
 
 Optional:
 
@@ -15,7 +15,7 @@ Optional:
 
 ## Usage
 
-1. [Authenticate with AWS](../../infra/README.md#Configure-AWS)
+* [Authenticate with AWS](../../docs/infra/1-first-time-setup.md#Configure-AWS)
 2. Initialize terraform for the environment you want to run the ECS task in
 
 ```sh
@@ -50,13 +50,6 @@ For example, to run the `execute-sql` command in the test environment:
 
 You can override specific env vars, settings, etc by making changes to `container_overrides.json.tpl`. If you DO NOT want overrides, make sure to run `git checkout` on the file before executing the `run-task.sh` command.
 
-## Using with `saw`
+## Viewing logs
 
-If you want to use `saw` to tail logs on the CLI while running tasks, use:
-
-```sh
-saw watch --raw <aws cloudwatch log group> | python3 massgov/pfml/util/logging/decodelog.py
-
-# For example, this will show all the logs for ECS tasks in the Test environment:
-saw watch --raw service/pfml-api-test/ecs-tasks | python3 massgov/pfml/util/logging/decodelog.py
-```
+The logs for your ECS task will be sent to Cloudwatch Logs and New Relic. See [Viewing ECS Task Logs](../../docs/infra/4-viewing-ecs-task-logs.md).

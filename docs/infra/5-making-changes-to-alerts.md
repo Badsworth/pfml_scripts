@@ -47,4 +47,4 @@ Here is a list of external documentation resources that could prove useful while
 
 ## Getting Access
 
-The documentation here assumes the reader has access to AWS and has Terraform configured locally. Additionally, it is useful to have access to New Relic to view and test queries. View the [Tools Access](https://lwd.atlassian.net/wiki/spaces/DD/pages/142049579/Tools+Access) documentation for instructions on how to get access, then see the [Infrastructure README](../../infra/README.md) for setup instructions.
+The documentation here assumes the reader has access to AWS and has Terraform configured locally. Additionally, it is useful to have access to New Relic to view and test queries. View the [Tools Access](https://lwd.atlassian.net/wiki/spaces/DD/pages/142049579/Tools+Access) documentation for instructions on how to get access, then see the [First Time Setup](./1-first-time-setup.md) for setup instructions.
