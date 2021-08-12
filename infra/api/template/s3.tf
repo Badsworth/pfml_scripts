@@ -50,6 +50,14 @@ resource "aws_s3_bucket" "business_intelligence_tool" {
   bucket = "massgov-pfml-${var.environment_name}-business-intelligence-tool"
   acl    = "private"
 
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name],
     public      = "no"

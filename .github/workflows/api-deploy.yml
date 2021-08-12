@@ -721,54 +721,41 @@ jobs:
     needs: [update-the-deploy-branch, api-release, api-gateway-release]
     if: github.event.inputs.deployment_env != 'prod' && github.event.inputs.deployment_env != 'uat'
     steps:
-      - uses: actions/checkout@v2
+      - name: Trigger E2E Workflow
+        uses: aurelien-baudet/workflow-dispatch@v2
         with:
-          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-
-      - name: "Determine E2E test suite ref"
-        id: determine_e2e_ref
-        run: |
-          # Run the E2E test suite based off of the last Portal deployment branch.
-          # This will ensure that the E2E test suite version is based off of the
-          # Portal version currently in the environment.
-          if [[ "${{ env.deployment_env }}" == "test" ]]; then
-            echo "::set-output name=e2e_ref::main"
-          else
-            echo "::set-output name=e2e_ref::deploy/portal/${{ env.deployment_env }}"
-          fi
-
-      - uses: ./.github/actions/trigger-cypress
-        name: "Trigger Cypress Run"
-        with:
-          target_environment: ${{ env.deployment_env }}
-          cypress_tags: "Deploy,Deploy-API"
-          github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          github_branch: ${{ steps.determine_e2e_ref.outputs.e2e_ref }}
-          # Limit to "stable" suite for any environment but test.
-          only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
+          workflow: e2e-cypress.yml
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          wait-for-completion: true
+          ref: "main"
+          inputs: |
+            {
+              "target_environment": ${{ toJSON(env.deployment_env) }},
+              "cypress_tags": "Deploy,Deploy-API",
+              "only_stable": "${{ env.deployment_env == 'test' && 'false' || 'true' }}"",
+              "title_override": ${{ toJSON(format('API Deploy: {0} to {1}', env.version, env.deployment_env)) }}
+            }
 
   load-test:
     name: "Trigger Load Testing"
     runs-on: ubuntu-latest
-    # We allow load testing to spin up at the same time as E2E tests. The assumption
-    # is that by the time LST spins up, E2E should be completed.
+    # We allow load testing to be triggered at the same time as E2E tests. Load testing and E2E testing share a
+    # concurrency key, so they are guaranteed not to run concurrently.
     needs: [ update-the-deploy-branch, api-release, api-gateway-release ]
     if: github.event.inputs.deployment_env == 'performance' && github.event.inputs.performLoadTest == 'true'
     steps:
       - name: Trigger LST run with Base preset on Flood
-        env:
-          GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
-          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          WORKFLOW_NAME: "e2e-flood.yml"
-          E2E_ENVIRONMENT: performance
-          E2E_LST_PRESET: base
-        run: |
-          echo "*** Triggering an LST run against Performance... ***"
-          curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
-                -H "Authorization: Bearer $GITHUB_TOKEN" \
-                -H "Accept: application/vnd.github.v3+json" \
-                -d "{ \"ref\": \"main\", \"inputs\": { \"target_environment\": \"$E2E_ENVIRONMENT\", \"preset\": \"$E2E_LST_PRESET\" } }"
-          echo "Done."
+        uses: aurelien-baudet/workflow-dispatch@v2
+        with:
+          workflow: e2e-flood.yml
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          wait-for-completion: false
+          ref: main
+          inputs: |
+            {
+              "target_environment": "performance",
+              "preset": "base",
+            }
 
   post-e2e-failures-to-slack:
     name: Post E2E failures to Slack

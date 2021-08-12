@@ -1,7 +1,8 @@
-import { fineos, portal, fineosPages } from "../../../actions";
-import { getFineosBaseUrl } from "../../../config";
-import { ApplicationResponse } from "../../../../src/api";
-import { config } from "../../../actions/common";
+import { fineos, portal, fineosPages } from "../../actions";
+import { getFineosBaseUrl } from "../../config";
+import { ApplicationResponse } from "../../../src/api";
+import { config } from "../../actions/common";
+import {Submission} from "../../../src/types";
 
 describe("Withdraw Notification and Notice", () => {
   after(() => {
@@ -14,7 +15,7 @@ describe("Withdraw Notification and Notice", () => {
   };
 
   it(
-    "Given a withdraw claim in Fineos",
+    "Submit a claim to Fineos through the API",
     { baseUrl: getFineosBaseUrl() },
     () => {
       fineos.before();
@@ -33,20 +34,26 @@ describe("Withdraw Notification and Notice", () => {
             fineos_absence_id: responseData.fineos_absence_id,
             timestamp_from: Date.now(),
           });
-          const claimPage = fineosPages.ClaimPage.visit(
-            responseData.fineos_absence_id
-          );
-          claimPage.tasks((tasks) => {
-            tasks.assertTaskExists("Medical Certification Review");
-            tasks.close("Medical Certification Review");
-            tasks.assertTaskExists("ID Review");
-            tasks.close("ID Review");
-          });
-          claimPage.withdraw();
-          claimPage.triggerNotice("Leave Request Withdrawn");
-          claimPage.documents((docsPage) => {
-            docsPage.assertDocumentExists("Pending Application Withdrawn");
-          });
+        });
+      });
+    }
+  );
+
+  it(
+    'Withdraw a claim in Fineos and check for a "Pending Application Withdrawn" notice',
+    { baseUrl: getFineosBaseUrl() },
+    () => {
+        fineos.before();
+        cy.visit("/");
+
+      cy.unstash<Submission>("submission").then((submission) => {
+        const claimPage = fineosPages.ClaimPage.visit(
+          submission.fineos_absence_id
+        );
+        claimPage.withdraw();
+        claimPage.triggerNotice("Leave Request Withdrawn");
+        claimPage.documents((docsPage) => {
+          docsPage.assertDocumentExists("Pending Application Withdrawn");
         });
       });
     }

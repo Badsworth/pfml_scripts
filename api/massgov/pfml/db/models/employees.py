@@ -25,10 +25,12 @@ from sqlalchemy import (
     Numeric,
     Text,
     UniqueConstraint,
+    and_,
+    select,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, deferred, dynamic_loader, relationship, validates
+from sqlalchemy.orm import Query, aliased, deferred, dynamic_loader, relationship, validates
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON, TypeEngine
@@ -655,6 +657,49 @@ class Claim(Base, TimestampMixin):
         Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim"),
     )
 
+    @typed_hybrid_property
+    def soonest_open_requirement_date(self) -> Optional[date]:
+        def _filter(requirement: ManagedRequirement) -> bool:
+            valid_status = (
+                requirement.managed_requirement_status_id
+                == ManagedRequirementStatus.OPEN.managed_requirement_status_id
+            )
+            valid_type = (
+                requirement.managed_requirement_type_id
+                == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
+            )
+            not_expired = (
+                requirement.follow_up_date is not None
+                and requirement.follow_up_date >= date.today()
+            )
+            return valid_status and valid_type and not_expired
+
+        if not self.managed_requirements:
+            return None
+        filtered_requirements = filter(_filter, self.managed_requirements)
+        requirements = sorted(filtered_requirements, key=lambda x: x.follow_up_date)
+        if len(requirements):
+            return requirements[0].follow_up_date
+        return None
+
+    @soonest_open_requirement_date.expression
+    def soonest_open_requirement_date(cls):  # noqa: B902
+        aliasManagedRequirement = aliased(ManagedRequirement)
+
+        status_id = aliasManagedRequirement.managed_requirement_status_id
+        type_id = aliasManagedRequirement.managed_requirement_type_id
+        filters = and_(
+            aliasManagedRequirement.claim_id == cls.claim_id,
+            status_id == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+            type_id == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+            aliasManagedRequirement.follow_up_date >= date.today(),
+        )
+        return (
+            select([func.min(aliasManagedRequirement.follow_up_date)])
+            .where(filters)
+            .label("follow_up_date")
+        )
+
 
 class Payment(Base, TimestampMixin):
     __tablename__ = "payment"
@@ -705,9 +750,22 @@ class Payment(Base, TimestampMixin):
     fineos_extract_import_log = relationship("ImportLog")
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
-    # fineos_writeback_details = relationship("FineosWritebackDetails", back_populates="payment", uselist=False)
+    payment_details = relationship("PaymentDetails", back_populates="payment")
+    leave_request = relationship(AbsencePeriod)
 
     check = relationship("PaymentCheck", backref="payment", uselist=False)
+
+
+class PaymentDetails(Base, TimestampMixin):
+    __tablename__ = "payment_details"
+    payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), primary_key=True)
+
+    period_start_date = Column(Date)
+    period_end_date = Column(Date)
+    amount = Column(Numeric(asdecimal=True), nullable=False)
+
+    payment = relationship(Payment)
 
 
 class PaymentCheck(Base, TimestampMixin):

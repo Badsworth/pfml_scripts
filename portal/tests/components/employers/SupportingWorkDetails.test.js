@@ -1,5 +1,6 @@
 import { mount, shallow } from "enzyme";
 import { simulateEvents, testHook } from "../../test-utils";
+import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
 import SupportingWorkDetails from "../../../src/components/employers/SupportingWorkDetails";
@@ -52,10 +53,29 @@ describe("SupportingWorkDetails", () => {
     return wrapper.find("ConditionalContent").prop("visible") === true;
   }
 
-  it("renders the component with the AmendmentForm closed", () => {
+  it("renders the component with the AmendmentForm hidden", () => {
     const wrapper = render();
     expect(isAmendmentFormVisible(wrapper)).toBe(false);
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("forces open the amendment form if there is an error", () => {
+    const appErrors = new AppErrorInfoCollection([
+      new AppErrorInfo({
+        field: "hours_worked_per_week",
+        message: "New error",
+      }),
+    ]);
+    testHook(() => {
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors,
+        formState: { hours_worked_per_week: 30 },
+        updateFields,
+      });
+    });
+    const wrapper = render("mount");
+
+    expect(isAmendmentFormVisible(wrapper)).toBe(true);
   });
 
   it("renders the initial weekly hours in the ReviewRow", () => {
@@ -79,6 +99,27 @@ describe("SupportingWorkDetails", () => {
     changeField("hours_worked_per_week", 10);
 
     expect(updateFields).toHaveBeenCalledWith({ hours_worked_per_week: 10 });
+  });
+
+  it("allows closing the amendment form if there is an error", () => {
+    const appErrors = new AppErrorInfoCollection([
+      new AppErrorInfo({
+        field: "hours_worked_per_week",
+        message: "New error",
+      }),
+    ]);
+    testHook(() => {
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors,
+        formState: { hours_worked_per_week: 30 },
+        updateFields,
+      });
+    });
+    const wrapper = render("mount");
+
+    expect(isAmendmentFormVisible(wrapper)).toBe(true);
+    wrapper.find({ "data-test": "amendment-destroy-button" }).simulate("click");
+    expect(wrapper.find("AmendmentForm").exists()).toBe(false);
   });
 
   describe("when amendment is canceled", () => {

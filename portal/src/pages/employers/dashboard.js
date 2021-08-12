@@ -807,12 +807,18 @@ Search.propTypes = {
 
 const SortDropdown = (props) => {
   const { order_by, order_direction, updatePageQuery } = props;
-  const choices = {
-    newest: "created_at,descending",
-    oldest: "created_at,ascending",
-    employee_az: "employee,ascending",
-    employee_za: "employee,descending",
-  };
+  const choices = new Map([
+    ["newest", "created_at,descending"],
+    ["oldest", "created_at,ascending"],
+    ["employee_az", "employee,ascending"],
+    ["employee_za", "employee,descending"],
+  ]);
+
+  // TODO (EMPLOYER-1587): Move the choice directly into the choices object definition
+  if (isFeatureEnabled("employerShowReviewByStatus")) {
+    choices.set("status", "fineos_absence_status,ascending");
+  }
+
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState({
     orderAndDirection: compact([order_by, order_direction]).join(","),
@@ -853,13 +859,11 @@ const SortDropdown = (props) => {
     ]);
   };
 
-  if (!isFeatureEnabled("employerShowDashboardSort")) return null;
-
   return (
     <Dropdown
       {...getFunctionalInputProps("orderAndDirection")}
       onChange={handleChange}
-      choices={Object.entries(choices).map(([key, value]) => ({
+      choices={Array.from(choices).map(([key, value]) => ({
         label: t("pages.employersDashboard.sortChoice", { context: key }),
         value,
       }))}

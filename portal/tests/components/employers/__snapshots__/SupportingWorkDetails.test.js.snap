@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`SupportingWorkDetails renders the component with the AmendmentForm closed 1`] = `
+exports[`SupportingWorkDetails renders the component with the AmendmentForm hidden 1`] = `
 <Fragment>
   <ReviewHeading
     level="2"

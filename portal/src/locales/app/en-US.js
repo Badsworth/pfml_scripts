@@ -2141,6 +2141,7 @@ const pages = {
     sortChoice_employee_za: "Last name – Z to A",
     sortChoice_newest: "Newest applications",
     sortChoice_oldest: "Oldest applications",
+    sortChoice_status: "Status",
     sortLabel: "Sort",
     startDateTooltip: "When an employee started a new leave application",
     statusDescription_approved:

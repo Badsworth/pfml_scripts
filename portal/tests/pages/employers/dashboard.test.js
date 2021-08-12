@@ -749,22 +749,33 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("renders Sort section when feature flags are enabled", () => {
-    process.env.featureFlags = {
-      employerShowDashboardSort: true,
-    };
-
+  it("renders Sort dropdown", () => {
     const { wrapper } = setup();
     const claimsTable = findClaimsTable(wrapper);
 
     expect(claimsTable.find("SortDropdown").dive()).toMatchSnapshot();
   });
 
-  it("updates order_by and order_direction params when a sort choice is selected", () => {
+  it("renders Sort by Status option when feature flag is enabled", () => {
     process.env.featureFlags = {
+      employerShowReviewByStatus: true,
       employerShowDashboardSort: true,
     };
 
+    const { wrapper } = setup();
+    const claimsTable = findClaimsTable(wrapper);
+
+    expect(claimsTable.find("SortDropdown").dive().prop("choices")).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Status",
+          value: "fineos_absence_status,ascending",
+        }),
+      ])
+    );
+  });
+
+  it("updates order_by and order_direction params when a sort choice is selected", () => {
     const { updateQuerySpy, wrapper } = setup();
     const claimsTable = findClaimsTable(wrapper);
 

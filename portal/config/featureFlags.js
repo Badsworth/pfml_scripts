@@ -29,10 +29,6 @@ const flagsConfig = {
     // TODO (EMPLOYER-1500): Remove flag
     employerShowDashboardSearch: false,
 
-    // When this flag is enabled, the Leave Admin dashboard supports sorting functionality
-    // TODO (EMPLOYER-1539): Remove flag
-    employerShowDashboardSort: false,
-
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
     // TODO (EMPLOYER-718): Remove flag
     employerShowPreviousLeaves: false,

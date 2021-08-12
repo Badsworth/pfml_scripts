@@ -114,7 +114,7 @@ export function onTab(label: string): void {
       return; // We're already on the correct tab.
     }
     // Here we are splitting the action and assertion, because the tab class can be added after a re-render.
-    cy.contains(".TabStrip td", label).click();
+    cy.contains(".TabStrip td", label).click({ force: true });
     waitForAjaxComplete();
     cy.contains(".TabStrip td", label).should("have.class", "TabOn");
   });

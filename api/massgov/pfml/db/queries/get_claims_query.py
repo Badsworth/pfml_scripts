@@ -144,7 +144,7 @@ class GetClaimsQuery:
             self.add_order_by_employee(sort_fn)
 
         elif context.order_key is Claim.fineos_absence_status:
-            self.add_order_by_absence_status(sort_fn)
+            self.add_order_by_absence_status(is_asc)
 
         elif context.order_by in Claim.__table__.columns:
             self.add_order_by_column(is_asc, context)
@@ -159,10 +159,18 @@ class GetClaimsQuery:
         self.join(Claim.employee, isouter=True)  # type:ignore
         self.query = self.query.order_by(*order_keys)
 
-    def add_order_by_absence_status(self, sort_fn: Callable) -> None:
-        order_key = sort_fn(LkAbsenceStatus.sort_order)
+    def add_order_by_absence_status(self, is_asc: bool) -> None:
+        sort_fn = asc_null_first if is_asc else desc_null_last
+        # oldest follow up date first if ascending
+        sort_req = asc if is_asc else desc
         self.join(Claim.fineos_absence_status, isouter=True)  # type:ignore
-        self.query = self.query.order_by(order_key)
+        self.join(Claim.employee, isouter=True)  # type:ignore
+        order = [
+            sort_req(Claim.soonest_open_requirement_date),  # type:ignore
+            sort_fn(LkAbsenceStatus.sort_order),
+            sort_fn(Employee.last_name),
+        ]
+        self.query = self.query.order_by(*order)
 
     def add_order_by_column(self, is_asc: bool, context: PaginationAPIContext) -> None:
         order_key = context.order_key.asc() if is_asc else context.order_key.desc()

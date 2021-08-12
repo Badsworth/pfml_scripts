@@ -172,6 +172,7 @@ class TransactionFileCreatorStep(Step):
                 import_log_id=self.get_import_log_id(),
             )
             self.db_session.add(writeback_details)
+            payments_util.create_payment_log(payment, self.get_import_log_id(), self.db_session)
 
         logger.info("Done adding ACH payments to PUB transaction file: %i", len(payments))
 

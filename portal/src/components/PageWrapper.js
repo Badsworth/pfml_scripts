@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Spinner from "../components/Spinner";
 import dynamic from "next/dynamic";
+import { get } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";
 import { useTranslation } from "../locales/i18n";
 
@@ -58,14 +59,13 @@ const isMaintenancePageRoute = (maintenancePageRoutes, pathname) => {
  * with this component as its parent.
  */
 const PageWrapper = (props) => {
-  const {
-    appLogic,
-    isLoading,
-    maintenancePageRoutes,
-    maintenanceStart,
-    maintenanceEnd,
-  } = props;
+  const { appLogic, isLoading, maintenance } = props;
   const { t } = useTranslation();
+
+  // If no page routes are specified, the entire site should be under maintenance.
+  const maintenancePageRoutes = get(maintenance, "options.page_routes", ["/*"]);
+  const maintenanceStart = maintenance.start;
+  const maintenanceEnd = maintenance.end;
 
   /**
    * What to show to the user within our page wrapper. Depends on
@@ -79,13 +79,14 @@ const PageWrapper = (props) => {
    * @type {boolean}
    */
   const showMaintenancePageBody =
+    maintenance.enabled &&
     isMaintenancePageRoute(
       maintenancePageRoutes,
       appLogic.portalFlow.pathname
-    ) && isInMaintenanceWindow(maintenanceStart, maintenanceEnd);
+    ) &&
+    isInMaintenanceWindow(maintenanceStart, maintenanceEnd);
 
-  // User-friendly representation of the maintenance end time
-  const maintenanceRemovalDayAndTimeText = maintenanceEnd
+  const maintenanceEndTime = maintenanceEnd
     ? DateTime.fromISO(maintenanceEnd).toLocaleString(DateTime.DATETIME_FULL)
     : null;
 
@@ -106,7 +107,7 @@ const PageWrapper = (props) => {
     pageBody = (
       <section id="page" data-test="maintenance page">
         <MaintenanceTakeover
-          scheduledRemovalDayAndTimeText={maintenanceRemovalDayAndTimeText}
+          scheduledRemovalDayAndTimeText={maintenanceEndTime}
         />
       </section>
     );
@@ -151,12 +152,8 @@ PageWrapper.propTypes = {
   children: PropTypes.node.isRequired,
   /** Is this page changing or in process of loading? */
   isLoading: PropTypes.bool,
-  /** Page routes that should render a maintenance page */
-  maintenancePageRoutes: PropTypes.arrayOf(PropTypes.string),
-  /** ISO 8601 date time for maintenance window start */
-  maintenanceStart: PropTypes.string,
-  /** ISO 8601 date time for maintenance window end */
-  maintenanceEnd: PropTypes.string,
+  /** Maintenance feature flag data */
+  maintenance: PropTypes.object,
 };
 
 export default PageWrapper;
