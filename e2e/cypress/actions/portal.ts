@@ -83,6 +83,10 @@ export function before(flags?: Partial<FeatureFlags>): void {
     url: "**/api/v1/applications/*/submit_application",
   }).as("submitClaimResponse");
 
+  cy.intercept(
+    /\/api\/v1\/(employers\/claims|applications)\/.*\/documents\/\d+/,
+  ).as("documentDownload");
+
   deleteDownloadsFolder();
 }
 
@@ -173,7 +177,8 @@ export function deleteDownloadsFolder(): void {
  */
 export function downloadLegalNotice(claim_id: string): void {
   const downloadsFolder = Cypress.config("downloadsFolder");
-  cy.task("getNoticeFileName", downloadsFolder, { timeout: 20000 }).then(
+  cy.wait("@documentDownload", {timeout: 30000});
+  cy.task("getNoticeFileName", downloadsFolder).then(
     (filename) => {
       expect(
         filename.length,

@@ -58,7 +58,7 @@ declare namespace Cypress {
     task(
       event: "getNoticeFileName",
       folderName: string,
-      options: Partial<Cypress.TypeOptions>
+      options?: Partial<Cypress.TypeOptions>
     ): Promise<string[]>;
 
     // Supplying multiple forms of submitClaimToAPI seems to be necessary to provide typing for
