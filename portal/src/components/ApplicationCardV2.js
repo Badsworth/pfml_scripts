@@ -1,67 +1,232 @@
-import BenefitsApplication, {
-  ReasonQualifier,
-} from "../models/BenefitsApplication";
-import Document, { DocumentType } from "../models/Document";
-import Alert from "../components/Alert";
+import BenefitsApplication from "../models/BenefitsApplication";
+import Document from "../models/Document";
 import ButtonLink from "../components/ButtonLink";
-import DownloadableDocument from "../components/DownloadableDocument";
 import Heading from "../components/Heading";
+import Icon from "../components/Icon";
 import LeaveReason from "../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
-import { Trans } from "react-i18next";
-import findDocumentsByTypes from "../utils/findDocumentsByTypes";
 import findKeyByValue from "../utils/findKeyByValue";
-import formatDateRange from "../utils/formatDateRange";
-import { get } from "lodash";
-import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
-import { isFeatureEnabled } from "../services/featureFlags";
-import routeWithParams from "../utils/routeWithParams";
-import routes from "../routes";
+import routeWithParams, {
+  createRouteWithQuery,
+} from "../utils/routeWithParams";
+
 import { useTranslation } from "../locales/i18n";
-import withClaimDocuments from "../hoc/withClaimDocuments";
+
+/**
+ * TODO action items:
+ * @todo configure translation strings as needed
+ * @todo add prop types for each of the components
+ * @todo include feature flag(s) in the logic
+ */
+
+/**
+ * Storing strings here until localization is hooked up.
+ */
+const text = {
+  applicationID: "Application ID",
+  employerEIN: "Employer Identification Number",
+  manageApplicationDocuments: "Manage your application documents",
+  uploadDocuments: "Upload documents",
+  viewNotices: "View notices",
+  viewStatusUpdatesAndDetails: "View status updates and details",
+};
+
+// REUSABLE STATUS CARD SECTIONS
+/**
+ * Single source for pre-styled status card
+ * @param {ReactElement} children - Child components
+ * @returns {ReactElement}
+ */
+const StatusCardContainer = ({ children }) => (
+  <React.Fragment>
+    <aside className="maxw-mobile-lg border-top-1 border-primary" />
+    <article className="maxw-mobile-lg border-left border-right border-bottom border-base-lighter margin-bottom-3">
+      {children}
+    </article>
+  </React.Fragment>
+);
+
+/**
+ * Main header for the top of status cards
+ * @param {string} title - Title of the status card
+ * @returns {ReactElement}
+ */
+const HeaderSection = ({ title }) => (
+  <Heading className="margin-bottom-1 padding-2 padding-top-3" level="2">
+    {title}
+  </Heading>
+);
+
+/**
+ * Group together details for status cards
+ * @param {string} title - Title of the detail being displayed (e.g., "Application ID")
+ * @param {string} details - Details to provide (e.g., actual ID or EIN)
+ * @returns {ReactElement}
+ */
+const GroupDetailSection = ({ title, details }) => (
+  <div className="padding-2 padding-bottom-1 padding-top-0 margin-top-0">
+    <Heading level="4" size="6">
+      {title}
+    </Heading>
+    <Heading className="margin-bottom-1 margin-top-1" level="4">
+      {details}
+    </Heading>
+  </div>
+);
+
+/**
+ * Button section with top border and optional header text/section
+ * @param {string} buttonText - Text to be displayed on button
+ * @param {ReactElement} [icon=null] - Optional children to pass (e.g., icon)
+ * @param {string} href - Link/URL path for href attribute
+ * @param {string} [headerText=''] - Optional header text
+ * @returns {ReactElement}
+ */
+const GroupButtonSection = ({
+  iconComponent = null,
+  href,
+  buttonText,
+  headerText = "",
+}) => {
+  const GroupButtonHeader = () => {
+    if (!headerText) return null;
+
+    /**
+     * @todo "in progress" status designs include a header
+     * section which can be added here when needed.
+     */
+  };
+
+  return (
+    <div className="border-top border-base-lighter padding-2 margin-1 margin-bottom-0">
+      <GroupButtonHeader />
+      <ButtonLink
+        className="display-flex flex-align-center flex-justify-center flex-column"
+        href={href}
+      >
+        <div>{buttonText}</div>
+        {iconComponent}
+      </ButtonLink>
+    </div>
+  );
+};
+
+/**
+ * Section to view notices and upload documents
+ * @param {Class} claim - Instance of BenefitsApplication
+ * @returns {ReactElement}
+ */
+const ManageDocumentSection = ({ claim }) => {
+  const { fineos_absence_id: absence_case_id } = claim;
+
+  const viewNoticesLink = createRouteWithQuery(
+    "/applications/status/#view_notices",
+    { absence_case_id }
+  );
+
+  const uploadDocumentsLink = createRouteWithQuery(
+    "/applications/status/#upload_documents",
+    { absence_case_id }
+  );
+
+  return (
+    <div className="border-top border-base-lighter padding-2 padding-top-0 margin-1 margin-top-0">
+      <Heading className="padding-bottom-3 padding-top-3" level="4">
+        {text.manageApplicationDocuments}
+      </Heading>
+      <ButtonLink
+        className="display-block margin-bottom-3"
+        href={viewNoticesLink}
+        variation="unstyled"
+      >
+        {text.viewNotices}
+      </ButtonLink>
+
+      <ButtonLink
+        className="display-block margin-bottom-2"
+        href={uploadDocumentsLink}
+        variation="unstyled"
+      >
+        {text.uploadDocuments}
+      </ButtonLink>
+    </div>
+  );
+};
+
+// STATUS CARDS
+/**
+ * Status card for claim.status = "Completed"
+ * @param {Class} claim - Instance of BenefitsApplication
+ * @param {function} t - Translation function for localization
+ * @returns {ReactElement}
+ */
+const CompletedStatusCard = ({ claim, t }) => {
+  // TODO: configure as text object?
+  const leaveReasonText = t("components.applicationCard.leaveReasonValue", {
+    context: findKeyByValue(LeaveReason, claim.leave_details?.reason),
+  });
+
+  const iconComponent = (
+    <Icon
+      className="position-absolute flex-align-self-end margin-right-neg-105"
+      fill="white"
+      name="arrow_forward"
+      size="3"
+    />
+  );
+
+  return (
+    <StatusCardContainer>
+      <HeaderSection title={leaveReasonText} />
+      <GroupDetailSection
+        title={text.applicationID}
+        details={claim.fineos_absence_id}
+      />
+      <GroupDetailSection
+        title={text.employerEIN}
+        details={claim.employer_fein}
+      />
+      <GroupButtonSection
+        buttonText={text.viewStatusUpdatesAndDetails}
+        href={routeWithParams("applications.uploadDocsOptions", {
+          claim_id: claim.application_id,
+        })}
+        iconComponent={iconComponent}
+      />
+      <ManageDocumentSection claim={claim} />
+    </StatusCardContainer>
+  );
+};
 
 /**
  * Main entry point for an existing benefits Application, allowing
  * claimants to continue an in progress application, view what
  * they've submitted, view notices and instructions, or upload
  * additional docs.
+ *
+ * @param {object} appLogic - Data for application logic.<br>
+ * @param {array} [documents=[]] - Potential documents for user.<br>
+ * @param {Class} claim - Instance of BenefitsApplication.<br>
+ * @param {function} t - Translation function for localization.<br>
+ * @returns {ReactElement}
  */
 export const ApplicationCardV2 = (props) => {
-  const { claim, number } = props;
+  const {
+    claim: { status },
+  } = props;
   const { t } = useTranslation();
+  const statusProps = { ...props, t };
 
-  const leaveReason = get(claim, "leave_details.reason");
+  // TODO: connect feature flag(s) here
+  // TODO: handle other statuses here
+  switch (status) {
+    case "Completed":
+      return <CompletedStatusCard {...statusProps} />;
 
-  return (
-    <article className="maxw-mobile-lg border border-base-lighter margin-bottom-3">
-      <header className="bg-base-lightest padding-3">
-        {claim.fineos_absence_id ? (
-          <Heading className="margin-bottom-1" level="2">
-            {claim.fineos_absence_id}
-          </Heading>
-        ) : (
-          <Heading className="margin-bottom-05" level="2">
-            {t("components.applicationCard.heading", { number })}
-          </Heading>
-        )}
-
-        {leaveReason && (
-          <Heading className="margin-top-0" size="2" level="3" weight="normal">
-            {t("components.applicationCard.leaveReasonValue", {
-              context: findKeyByValue(LeaveReason, leaveReason),
-            })}
-          </Heading>
-        )}
-      </header>
-
-      <div className="padding-3">
-        <ApplicationDetails {...props} />
-        <LegalNotices {...props} />
-        <ApplicationActions {...props} />
-      </div>
-    </article>
-  );
+    default:
+      return null;
+  }
 };
 
 ApplicationCardV2.propTypes = {
@@ -73,309 +238,10 @@ ApplicationCardV2.propTypes = {
   }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  /**
-   * Cards are displayed in a list. What position is this card?
-   */
-  number: PropTypes.number.isRequired,
 };
 
-/**
- * Details about the application, entered by the Claimant,
- * like Employer EIN and leave periods
- */
-function ApplicationDetails(props) {
-  const { t } = useTranslation();
-  const { claim } = props;
-
-  const headingProps = {
-    className: "margin-top-0 margin-bottom-05 text-base-dark",
-    level: "4",
-    size: "6",
-  };
-  const valueProps = {
-    className: "margin-top-0 margin-bottom-2 font-body-2xs text-medium",
-  };
-
-  // If an EIN isn't present yet, then this entire component is going to
-  // be empty, so we don't want to include a border
-  const containerClassName = claim.employer_fein
-    ? "border-bottom border-base-lighter margin-bottom-2"
-    : undefined;
-
-  return (
-    <div className={containerClassName}>
-      {claim.employer_fein && (
-        <React.Fragment>
-          <Heading {...headingProps}>
-            {t("components.applicationCard.feinHeading")}
-          </Heading>
-          <p {...valueProps}>{claim.employer_fein}</p>
-        </React.Fragment>
-      )}
-
-      {claim.isContinuous && (
-        <React.Fragment>
-          <Heading {...headingProps}>
-            {t("components.applicationCard.leavePeriodLabel_continuous")}
-          </Heading>
-          <p {...valueProps}>
-            {formatDateRange(
-              get(
-                claim,
-                "leave_details.continuous_leave_periods[0].start_date"
-              ),
-              get(claim, "leave_details.continuous_leave_periods[0].end_date")
-            )}
-          </p>
-        </React.Fragment>
-      )}
-
-      {claim.isReducedSchedule && (
-        <React.Fragment>
-          <Heading {...headingProps}>
-            {t("components.applicationCard.leavePeriodLabel_reduced")}
-          </Heading>
-          <p {...valueProps}>
-            {formatDateRange(
-              get(
-                claim,
-                "leave_details.reduced_schedule_leave_periods[0].start_date"
-              ),
-              get(
-                claim,
-                "leave_details.reduced_schedule_leave_periods[0].end_date"
-              )
-            )}
-          </p>
-        </React.Fragment>
-      )}
-
-      {claim.isIntermittent && (
-        <React.Fragment>
-          <Heading {...headingProps}>
-            {t("components.applicationCard.leavePeriodLabel_intermittent")}
-          </Heading>
-          <p {...valueProps}>
-            {formatDateRange(
-              get(
-                claim,
-                "leave_details.intermittent_leave_periods[0].start_date"
-              ),
-              get(claim, "leave_details.intermittent_leave_periods[0].end_date")
-            )}
-          </p>
-        </React.Fragment>
-      )}
-    </div>
-  );
-}
-
-ApplicationDetails.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+ApplicationCardV2.defaultProps = {
+  documents: [],
 };
 
-/**
- * Legal notices list and content
- */
-function LegalNotices(props) {
-  const { t } = useTranslation();
-  const { appLogic, claim, documents } = props;
-
-  const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appLogic.appErrors,
-    claim.application_id
-  );
-
-  const legalNotices = findDocumentsByTypes(documents, [
-    DocumentType.approvalNotice,
-    DocumentType.denialNotice,
-    DocumentType.requestForInfoNotice,
-  ]);
-
-  // If a claim doesn't have a corresponding FINEOS ID, then
-  // it's not yet in a state where it could have a legal notice
-  return !claim.fineos_absence_id ? null : (
-    <div
-      className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
-      data-test="legal-notices"
-    >
-      <Heading level="3" weight="normal">
-        {t("components.applicationCard.noticesHeading")}
-      </Heading>
-
-      {hasLoadingDocumentsError && (
-        <Alert noIcon>
-          <Trans
-            i18nKey="components.applicationCard.documentsLoadError"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
-        </Alert>
-      )}
-
-      {legalNotices.length === 0 && (
-        <p>{t("components.applicationCard.noticesFallback")}</p>
-      )}
-
-      {legalNotices.length > 0 && (
-        <React.Fragment>
-          <p>{t("components.applicationCard.noticesDownload")}</p>
-          <ul className="usa-list">
-            {legalNotices.map((notice) => (
-              <li key={notice.fineos_document_id}>
-                <DownloadableDocument
-                  document={notice}
-                  showCreatedAt
-                  onDownloadClick={appLogic.documents.download}
-                />
-              </li>
-            ))}
-          </ul>
-        </React.Fragment>
-      )}
-    </div>
-  );
-}
-
-LegalNotices.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    documents: PropTypes.shape({
-      download: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-};
-
-/**
- * Actions the user can take or will need to take, like calling for
- * reductions, uploading docs, or completing their claim.
- */
-function ApplicationActions(props) {
-  const { t } = useTranslation();
-  const { claim, documents } = props;
-
-  const certificationDocs = findDocumentsByTypes(
-    documents,
-    // TODO (CP-2029): Remove reference to `State managed Paid Leave Confirmation` (DocumentType.certification.medicalCertification) type when it's obsolete
-    [
-      DocumentType.certification.medicalCertification,
-      DocumentType.certification[LeaveReason.bonding],
-    ]
-  );
-  const hasDenialNotice =
-    findDocumentsByTypes(documents, [DocumentType.denialNotice]).length > 0;
-
-  const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
-  const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
-
-  const bondingContentContext = {
-    [ReasonQualifier.adoption]: "adopt_foster",
-    [ReasonQualifier.fosterCare]: "adopt_foster",
-    [ReasonQualifier.newBorn]: "newborn",
-  };
-
-  const showBondingLeaveDocRequirement =
-    hasFutureChildDate && certificationDocs.length === 0;
-  const showResumeButton = !claim.isCompleted && !hasDenialNotice;
-  const showUploadButton = claim.isCompleted || hasDenialNotice;
-
-  /**
-   * Which Other Leave instructions to display on ApplicationCardV2
-   * TODO (CP-2354) Remove CC guidance for claims with Part 1 submitted without reductions data
-   */
-  const hasReductionsData =
-    get(claim, "has_employer_benefits") !== null ||
-    get(claim, "has_other_incomes") !== null ||
-    get(claim, "has_previous_leaves_same_reason") !== null ||
-    get(claim, "has_previous_leaves_other_reason") !== null ||
-    get(claim, "has_concurrent_leave") !== null;
-  const reductionsEnabled = isFeatureEnabled("claimantShowOtherLeaveStep");
-  // Show no instructions by default
-  let reductionsI18nKey = null;
-  // After launch, show new instructions on completed claims
-  if (reductionsEnabled && claim.isCompleted) {
-    reductionsI18nKey = "components.applicationCard.reductionsInstructions";
-  }
-  // After launch, show prompt to report if Part 1 was submitted with null reductions data
-  else if (reductionsEnabled && !hasReductionsData && claim.isSubmitted) {
-    reductionsI18nKey =
-      "components.applicationCard.reductionsInstructions_missingData";
-  }
-  // Before launch, show old instructions on completed claims
-  else if (claim.isCompleted) {
-    reductionsI18nKey = "components.applicationCard.reductionsInstructions_old";
-  }
-
-  return (
-    <div>
-      <Heading level="3" weight="normal">
-        {t("components.applicationCard.actionsHeading")}
-      </Heading>
-
-      {reductionsI18nKey && (
-        <Trans
-          i18nKey={reductionsI18nKey}
-          components={{
-            "contact-center-phone-link": (
-              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-            ),
-            "when-can-i-use-pfml": (
-              <a href={routes.external.massgov.whenCanIUsePFML} />
-            ),
-            "reductions-overview-link": (
-              <a href={routes.external.massgov.reductionsOverview} />
-            ),
-            ul: <ul className="usa-list" />,
-            li: <li />,
-          }}
-        />
-      )}
-
-      {showBondingLeaveDocRequirement && (
-        <p>
-          {t("components.applicationCard.bondingLeaveDocsRequired", {
-            context: bondingContentContext[leaveReasonQualifier],
-          })}
-        </p>
-      )}
-
-      {showUploadButton && (
-        <ButtonLink
-          className="display-block"
-          href={routeWithParams("applications.uploadDocsOptions", {
-            claim_id: claim.application_id,
-          })}
-          variation={showResumeButton ? "outline" : null}
-        >
-          {t("components.applicationCard.uploadDocsButton")}
-        </ButtonLink>
-      )}
-
-      {showResumeButton && (
-        <ButtonLink
-          data-test="resume-button"
-          className="display-block margin-top-2"
-          href={routeWithParams("applications.checklist", {
-            claim_id: claim.application_id,
-          })}
-        >
-          {t("components.applicationCard.resumeClaimButton")}
-        </ButtonLink>
-      )}
-
-      
-    </div>
-  );
-}
-
-ApplicationActions.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-};
-
-export default withClaimDocuments(ApplicationCardV2);
+export default ApplicationCardV2;
