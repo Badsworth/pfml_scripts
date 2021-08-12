@@ -6,7 +6,7 @@ Currently, we do not use any infrastructure unit or integration testing tools li
 
 However, we do run `terraform plan` on affected modules whenever relevant code is updated. This is run using the [Infra CI Validation](https://github.com/EOLWD/pfml/actions/workflows/infra-validate.yml) Github Actions workflow (definition [here](https://github.com/EOLWD/pfml/blob/main/.github/workflows/infra-validate.yml)). This is a static validation for terraform formatting and module correctness, although certain domain-specific errors may occur when changes are actually applied.
 
-For most infrastructure changes, it is recommended that you follow the instructions for deploying your feature branch to the TEST environment in [Deployment](../deployment.md). For monitoring changes, follow the steps in [Making Changes to Alerts](./making-changes-to-alerts.md).
+For most infrastructure changes, it is recommended that you follow the instructions for deploying your feature branch to the TEST environment in [Deployment](../deployment.md). For monitoring changes, follow the steps in [Making Changes to Alerts](./4-making-changes-to-alerts.md).
 
 Common failure modes that are not caught by automated testing include:
 

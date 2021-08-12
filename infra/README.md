@@ -5,7 +5,7 @@ We use [Terraform](https://terraform.io) to manage our infra in a modular, conci
 
 ## First-time Setup
 
-For first-time setup, see [docs/infra/first-time-setup.md](../docs/infra/first-time-setup.md).
+For first-time setup, see [docs/infra/first-time-setup.md](../docs/infra/1-first-time-setup.md).
 
 ## Directory Structure
 

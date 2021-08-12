@@ -22,7 +22,7 @@ This module also launches a lambda which runs on a daily basis and does a rollin
 
 ## Testing
 
-For more details about making and testing changes, see [Making Changes to Alerts](../../docs/infra/making-changes-to-alerts.md).
+For more details about making and testing changes, see [Making Changes to Alerts](../../docs/infra/4-making-changes-to-alerts.md).
 
 ## Deployment
 

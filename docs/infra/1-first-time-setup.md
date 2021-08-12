@@ -36,7 +36,7 @@ Visit [https://coma.awsapps.com/start](https://coma.awsapps.com/start) and log i
 
 ## 2. Install Terraform
 
-Refer to the root-level [README](../README.md) for instructions on installing terraform.
+Refer to the root-level [README](../../README.md) for instructions on installing terraform.
 
 ## 3. Optionally install NPM dependencies
 

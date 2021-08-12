@@ -10,7 +10,7 @@ Infrastructure for background ECS tasks is defined in this directory.
 
 This module creates ECS task definitions for background jobs in [tasks.tf](./template/tasks.tf). The task definitions rely on the same ECR docker images as the Paid Leave API and specify different commands to be run. 
 
-For more details on how the API code connects to the ECS task infrastructure, see [docs/infra/creating-ecs-tasks.md](../../docs/infra/creating-ecs-tasks.md).
+For more details on how the API code connects to the ECS task infrastructure, see [docs/infra/creating-ecs-tasks.md](../../docs/infra/3-creating-ecs-tasks.md).
 
 ### DOR ETL Step Function
 
