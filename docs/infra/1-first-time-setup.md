@@ -45,3 +45,7 @@ To locally run tests for JS lambdas, you'll also need to run the following with 
 ```
 npm install
 ```
+
+## Next Steps
+
+After getting set up with local tooling, it is recommended that you familiarize yourself with [the technology stack we use](https://lwd.atlassian.net/wiki/spaces/DD/pages/1943568520/Infrastructure+Eng+Onboarding) and the [general code structure](../../infra/README.md) before moving forward. Note that most of the infra/* subfolders also contain a high-level architectural code overview for navigation.
