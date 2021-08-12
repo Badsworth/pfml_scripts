@@ -7,6 +7,7 @@ import xml.dom.minidom as minidom
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union, cast
 from xml.etree.ElementTree import Element
@@ -272,6 +273,14 @@ def routing_number_validator(routing_number: str) -> Optional[ValidationReason]:
     if not validate_routing_number(routing_number):
         return ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM
 
+    return None
+
+
+def amount_validator(amount_str: str) -> Optional[ValidationReason]:
+    try:
+        Decimal(amount_str)
+    except (InvalidOperation, TypeError):  # Amount is not numeric
+        return ValidationReason.INVALID_VALUE
     return None
 
 

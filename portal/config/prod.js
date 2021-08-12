@@ -18,9 +18,5 @@ module.exports = {
     auth: "M4sQ_RNEqsKttKJFMho1Mg",
     preview: "env-3",
   },
-  // See docs/portal/maintenance-pages.md
-  maintenancePageRoutes: ["/*"],
-  maintenanceStart: "2021-08-15T03:59:00-04:00",
-  maintenanceEnd: "2021-08-15T05:00:00-04:00",
   newRelicAppId: "847045300",
 };

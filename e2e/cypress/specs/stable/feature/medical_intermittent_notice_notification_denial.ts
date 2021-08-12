@@ -36,6 +36,7 @@ describe("Denial Notification and Notice", () => {
             .shouldHaveStatus("Eligibility", "Not Met")
             .deny("Claimant wages failed 30x rule")
             .triggerNotice("Leave Request Declined")
+            .triggerNotice("Preliminary Designation")
             .documents((docPage) =>
               docPage.assertDocumentExists("Denial Notice")
             );

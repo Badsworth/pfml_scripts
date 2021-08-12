@@ -5,6 +5,7 @@ import BenefitsApplicationCollection from "../../models/BenefitsApplicationColle
 import ClaimCollection from "../../models/ClaimCollection";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
+import Flag from "../../models/Flag";
 import PaginationMeta from "../../models/PaginationMeta";
 import { uniqueId } from "lodash";
 
@@ -126,5 +127,30 @@ export default jest.fn(() => ({
         }),
       ],
     }),
+  },
+  featureFlags: {
+    flags: [
+      new Flag({
+        enabled: false,
+        name: "maintenance",
+        options: {
+          page_routes: ["/*"],
+        },
+        start: null,
+        end: null,
+      }),
+    ],
+    getFlag: jest.fn(() => {
+      return new Flag({
+        enabled: false,
+        name: "maintenance",
+        options: {
+          page_routes: ["/*"],
+        },
+        start: null,
+        end: null,
+      });
+    }),
+    loadFlags: jest.fn(),
   },
 }));

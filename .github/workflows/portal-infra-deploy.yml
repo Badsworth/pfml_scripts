@@ -77,12 +77,17 @@ jobs:
     needs: [ release ]
     if: github.ref != 'refs/heads/deploy/portal/prod'
     steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/trigger-cypress
-        name: "Trigger Cypress Run"
+      - name: Trigger E2E Workflow
+        uses: aurelien-baudet/workflow-dispatch@v2
         with:
-          target_environment: ${{ env[github.ref] || 'test' }}
-          cypress_tags: "Deploy,Deploy-Portal"
-          github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          # Limit to "stable" suite for any environment but test.
-          only_stable: ${{ (env[github.ref] || 'test') == 'test' && 'false' || 'true' }}
+          workflow: e2e-cypress.yml
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          wait-for-completion: true
+          ref: "main"
+          inputs: |
+            {
+              "target_environment": ${{ toJSON(env[github.ref] || 'test') }},
+              "cypress_tags": "Deploy,Deploy-Infra",
+              "only_stable": "${{ (env[github.ref] || 'test') == 'test' && 'false' || 'true' }}",
+              "title_override": ${{ toJSON(format('Infra Deploy: {0} to {1}', env.version, (env[github.ref] || 'test'))) }
+            }

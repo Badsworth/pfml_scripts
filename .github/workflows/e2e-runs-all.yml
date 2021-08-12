@@ -12,6 +12,10 @@ on:
         description: "Cypress Run Tags"
         required: false
         default: "Manual"
+      only_stable:
+        description: "Only Stable Tests?"
+        required: false
+        default: "false"
   schedule:
     - cron:  '0 11 * * 1-5'
 
@@ -24,29 +28,16 @@ jobs:
       matrix:
         environment: [ "test", "stage", "performance", "training", "uat", "cps-preview" ]
     steps:
-      - uses: actions/checkout@v2
-      - name: Set output
-        id: vars
-        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
-
-      - name: "Trigger Manual Cypress Run in ${{ matrix.environment }}"
-        if: github.event_name == 'workflow_dispatch'
-        uses: ./.github/actions/trigger-cypress
+      - name: Trigger E2E Workflow
+        uses: aurelien-baudet/workflow-dispatch@v2
         with:
-          target_environment: "${{ matrix.environment }}"
-          cypress_tags: ${{ github.event.inputs.cypress_tags }}
-          github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          github_branch: ${{ steps.vars.outputs.short_ref }}
-          wait_for_results: "false"
-          only_stable: 'false'
-
-      - name: "Trigger Scheduled Cypress Run in ${{ matrix.environment }}"
-        if: github.event_name == 'schedule'
-        uses: ./.github/actions/trigger-cypress
-        with:
-          target_environment: "${{ matrix.environment }}"
-          cypress_tags: ${{ format('Morning Run ({0})', matrix.environment) }}
-          github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          github_branch: 'main'
-          wait_for_results: "false"
-          only_stable: 'true'
+          workflow: e2e-cypress.yml
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          wait-for-completion: false
+          inputs: |
+            {
+              "target_environment": "${{ matrix.environment }}",
+              "cypress_tags": ${{ toJSON(github.event_name == 'schedule' && format('Morning Run ({0})', matrix.environment) || github.event.inputs.cypress_tags) }},
+              "only_stable": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.only_stable }}",
+              "title_override": "${{ github.event_name == 'schedule' && format('Scheduled Run: {0}', matrix.environment) || '' }}"
+            }

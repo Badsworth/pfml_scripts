@@ -668,12 +668,16 @@ class Claim(Base, TimestampMixin):
                 requirement.managed_requirement_type_id
                 == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
             )
-            return valid_status and valid_type
+            not_expired = (
+                requirement.follow_up_date is not None
+                and requirement.follow_up_date >= date.today()
+            )
+            return valid_status and valid_type and not_expired
 
         if not self.managed_requirements:
             return None
         filtered_requirements = filter(_filter, self.managed_requirements)
-        requirements = sorted(filtered_requirements, key=lambda x: x.follow_up_date, reverse=True)
+        requirements = sorted(filtered_requirements, key=lambda x: x.follow_up_date)
         if len(requirements):
             return requirements[0].follow_up_date
         return None
@@ -688,9 +692,10 @@ class Claim(Base, TimestampMixin):
             aliasManagedRequirement.claim_id == cls.claim_id,
             status_id == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
             type_id == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+            aliasManagedRequirement.follow_up_date >= date.today(),
         )
         return (
-            select([func.max(aliasManagedRequirement.follow_up_date)])
+            select([func.min(aliasManagedRequirement.follow_up_date)])
             .where(filters)
             .label("follow_up_date")
         )
@@ -745,9 +750,22 @@ class Payment(Base, TimestampMixin):
     fineos_extract_import_log = relationship("ImportLog")
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
+    payment_details = relationship("PaymentDetails", back_populates="payment")
     leave_request = relationship(AbsencePeriod)
 
     check = relationship("PaymentCheck", backref="payment", uselist=False)
+
+
+class PaymentDetails(Base, TimestampMixin):
+    __tablename__ = "payment_details"
+    payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), primary_key=True)
+
+    period_start_date = Column(Date)
+    period_end_date = Column(Date)
+    amount = Column(Numeric(asdecimal=True), nullable=False)
+
+    payment = relationship(Payment)
 
 
 class PaymentCheck(Base, TimestampMixin):

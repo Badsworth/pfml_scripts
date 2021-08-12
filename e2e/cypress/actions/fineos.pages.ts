@@ -172,7 +172,7 @@ export class ClaimPage {
         return;
       }
       cy.wrap(el).click();
-      cy.get('input[type="submit"][value="Continue"]').click({force: true});
+      cy.get('input[type="submit"][value="Continue"]').click({ force: true });
       cy.contains(".TreeNodeContainer", type, {
         timeout: 20000,
       })
@@ -970,6 +970,7 @@ export class DocumentsPage {
 
 class AvailabilityPage {
   reevaluateAvailability(decision: string, reason: string) {
+    waitForAjaxComplete();
     cy.get('input[title="Manage time for the selected Leave Plan"]').click();
     waitForAjaxComplete();
     cy.get('input[title="Select All"]').click();
