@@ -35,6 +35,20 @@ def add_wage_row(employer, employee, filing_period, qtr_wage):
 
 
 @pytest.mark.integration
+def test_get_employer_average_weekly_wage_one_zero(test_db_session, initialize_factories_session):
+    employer = factories.EmployerFactory(employer_id=EMPL1)
+    employee = factories.EmployeeFactory()
+    add_wage_row(employer, employee, datetime.date(2022, 9, 30), 0)
+    add_wage_row(employer, employee, datetime.date(2022, 6, 30), 0)
+    wage_calculator = wage.get_wage_calculator(
+        employee.employee_id, datetime.date(2022, 9, 16), test_db_session
+    )
+    wage_calculator.set_each_employers_average_weekly_wage()
+    wage_calculator.compute_employer_average_weekly_wage(EMPL1)
+    assert wage_calculator.get_employer_average_weekly_wage(EMPL1) == 0
+
+
+@pytest.mark.integration
 def test_get_employer_average_weekly_wage_one_row(test_db_session, initialize_factories_session):
     employer = factories.EmployerFactory(employer_id=EMPL1)
     employee = factories.EmployeeFactory()
