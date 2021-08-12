@@ -5,7 +5,8 @@ import datetime
 import decimal
 import math
 import uuid
-from typing import Any, Dict, List, Tuple
+from collections import defaultdict
+from typing import Any, DefaultDict, Dict, List, Tuple
 
 import massgov.pfml.db
 import massgov.pfml.util.logging
@@ -77,7 +78,7 @@ class WageCalculator:
            wage to that value, otherwise increment the quarterly wage.
     """
 
-    employer_quarter_wage: Dict[uuid.UUID, Dict[quarter.Quarter, decimal.Decimal]]
+    employer_quarter_wage: DefaultDict[uuid.UUID, Dict[quarter.Quarter, decimal.Decimal]]
     effective_quarter: quarter.Quarter
     employer_average_weekly_wage: Dict[uuid.UUID, decimal.Decimal]
     base_period_quarters: Tuple[quarter.Quarter, ...]
@@ -85,7 +86,7 @@ class WageCalculator:
     consolidated_wages: Dict[quarter.Quarter, decimal.Decimal]
 
     def __init__(self):
-        self.employer_quarter_wage = {}
+        self.employer_quarter_wage = defaultdict(dict)
         self.effective_quarter = quarter.Quarter(2020, 1)
         self.employer_average_weekly_wage = {}
         self.consolidated_wages = {}
@@ -157,19 +158,21 @@ class WageCalculator:
         """Compute average weekly wage for an invidiaual employer."""
         if not self.base_period_quarters:
             self.set_base_period()
-        quarter_wages = self.employer_quarter_wage[employer_id]
 
+        quarter_wages = self.employer_quarter_wage[employer_id]
         wages = []
         for reported_quarter, wage in quarter_wages.items():
             if reported_quarter in self.base_period_quarters and wage != decimal.Decimal("0"):
                 wages.append(wage)
 
-        if wages and len(wages) <= 2:
-            max_wage = max(wages)
-            average_weekly_wage = max_wage / 13
-        else:
-            max_wage_0, max_wage_1 = sorted(wages)[-2:]
-            average_weekly_wage = (max_wage_0 + max_wage_1) / 26
+        average_weekly_wage = decimal.Decimal("0")
+        if wages:
+            if len(wages) <= 2:
+                max_wage = max(wages)
+                average_weekly_wage = max_wage / 13
+            else:
+                max_wage_0, max_wage_1 = sorted(wages)[-2:]
+                average_weekly_wage = (max_wage_0 + max_wage_1) / 26
         self.employer_average_weekly_wage[employer_id] = average_weekly_wage
         return average_weekly_wage
 
