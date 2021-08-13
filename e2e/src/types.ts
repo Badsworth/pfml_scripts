@@ -117,7 +117,16 @@ export type OtherTasks =
   | "Update Paid Leave Case"
   | "Review and Decision Cancel Time Submitted"
   | "Employee Reported Other Leave"
-  | "Employee Reported Other Income";
+  | "Employee Reported Other Income"
+  | "Future or overlapping Absence Request exists"
+  | "Confirm Employment"
+  | "Manual Intervention required to Approve Payments"
+  | "Absence Paid Leave Payments Failure"
+  | "Payment Change Request Received"
+  | "Manual Intervention required to Approve Periods"
+  | "Review Appeal "
+  | "Schedule Hearing"
+  | "Conduct Hearing";
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
 

@@ -23,7 +23,9 @@ def address_to_experian_search_request(address: Address) -> AddressSearchV1Reque
     ]
 
     return AddressSearchV1Request(
-        country_iso=address.country.country_description if address.country else "USA",
+        country_iso=address.country.country_description
+        if address.country and address.country.country_description
+        else "USA",
         components=AddressSearchV1InputComponent(unspecified=[",".join(address_parts)]),
     )
 

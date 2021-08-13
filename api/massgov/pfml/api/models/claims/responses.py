@@ -171,8 +171,8 @@ class ClaimReviewResponse(PydanticBaseModel):
 
 class DocumentResponse(PydanticBaseModel):
     created_at: Optional[date]
-    document_type: Optional[str]
+    document_type: str
     content_type: Optional[str]
-    fineos_document_id: Optional[str]
-    name: str
-    description: str
+    fineos_document_id: str
+    name: Optional[str]
+    description: Optional[str]

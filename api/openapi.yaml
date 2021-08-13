@@ -1,4 +1,4 @@
-openapi: 3.0.2
+openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
@@ -2351,6 +2351,7 @@ components:
         created_at:
           format: date
           example: "1970-06-01"
+          nullable: true
         document_type:
           type: string
           enum:
@@ -2368,15 +2369,18 @@ components:
         content_type:
           type: string
           example: "image/png"
+          nullable: true
         fineos_document_id:
           type: string
           example: "1234"
         name:
           type: string
           example: "passport.png"
+          nullable: true
         description:
           type: string
           example: "Jane Smith Passport"
+          nullable: true
       required:
         - created_at
         - document_type

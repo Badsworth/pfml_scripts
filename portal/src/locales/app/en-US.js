@@ -1880,6 +1880,15 @@ const pages = {
     idLabel: "Enter your license or ID number",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
+  claimsStatus: {
+    makeChangesBody:
+      "If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some Changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.",
+    makeChangesHeading: "Make changes to your application",
+    manageApplicationHeading: "Manage your application",
+    reportOtherBenefitsBody:
+      "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to: <ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for disability benefit after you submitted your application, report this change.</li></ul></p>",
+    reportOtherBenefitsHeading: "Report other benefits or income",
+  },
   claimsSuccess: {
     adjudicationProcess:
       "<ul> <li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li></ul>",

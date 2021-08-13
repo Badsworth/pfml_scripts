@@ -2,7 +2,7 @@ import { fineos, portal, fineosPages } from "../../actions";
 import { getFineosBaseUrl } from "../../config";
 import { ApplicationResponse } from "../../../src/api";
 import { config } from "../../actions/common";
-import {Submission} from "../../../src/types";
+import { Submission } from "../../../src/types";
 
 describe("Withdraw Notification and Notice", () => {
   after(() => {
@@ -43,8 +43,8 @@ describe("Withdraw Notification and Notice", () => {
     'Withdraw a claim in Fineos and check for a "Pending Application Withdrawn" notice',
     { baseUrl: getFineosBaseUrl() },
     () => {
-        fineos.before();
-        cy.visit("/");
+      fineos.before();
+      cy.visit("/");
 
       cy.unstash<Submission>("submission").then((submission) => {
         const claimPage = fineosPages.ClaimPage.visit(

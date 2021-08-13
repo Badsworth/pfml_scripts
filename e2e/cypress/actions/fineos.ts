@@ -346,3 +346,100 @@ export function getFixtureDocumentName(
 export function assertErrorMessage(message: string): void {
   cy.get(`#page_messages_container`).should("contain.text", message);
 }
+
+/**
+ * Selects the folder at the end of the path, opening subfolders along the way as needed.
+ * @param path path leading to the folder
+ * @example
+ * selectFolder(["State of Mass", "eForms"])
+ */
+export function selectFolder(path: string[]): void {
+  const log = Cypress.log({
+    displayName: "SELECT FOLDER",
+    message: [`Opening path: ${JSON.stringify(path)}`],
+    // @ts-ignore
+    autoEnd: false,
+  });
+  log.snapshot("before");
+  // Set a helper, since we need to reselect the whole tree widget often.
+  const withinTree = (
+    cb: () => unknown
+  ): Cypress.Chainable<JQuery<HTMLElement>> =>
+    cy
+      .get(`#DocTypeFolderTreeviewWidget .TreeRootContainer`, { log: false })
+      .within(cb);
+
+  path.forEach((subfolder, i) => {
+    if (i === path.length - 1) {
+      withinTree(() =>
+        cy.contains("#nodeElement", subfolder, { log: false }).then((el) => {
+          if (el.parent().hasClass("TreeNodeSelected")) return;
+          cy.wrap(el, { log: false }).click({ log: false });
+          waitForAjaxComplete();
+        })
+      );
+      withinTree(() => {
+        cy.contains("#nodeElement", subfolder, { log: false })
+          .parent({ log: false })
+          .should("have.class", "TreeNodeSelected", { log: false });
+      });
+      return;
+    }
+    withinTree(() =>
+      // Click on the handle to expand the subfolder.
+      cy
+        .contains("div.TreeNodeContainer", subfolder, { log: false })
+        .find(`#nodeHandle`, { log: false })
+        .then((el) => {
+          if (el.hasClass("TreeNodeHandleExpanded")) return;
+          cy.wrap(el, { log: false }).click({ log: false });
+          waitForAjaxComplete();
+        })
+    );
+    withinTree(() =>
+      cy
+        .contains("div.TreeNodeContainer", subfolder, { log: false })
+        .find(`#nodeHandle`, { log: false })
+        .should("have.class", "TreeNodeHandleExpanded", { log: false })
+    );
+  });
+  log.snapshot("after");
+  log.end();
+}
+
+/**
+ * Opens the folder at the end of a given path, checks if contains given document(s)
+ * @param documentName a string or an array of strings describing documents you expect to find.
+ * @param path path to folder containing the documents as an array of strings.
+ * @example
+ * const certificationDocuments = ["Own serious health condition form", "Pregnancy/Maternity form"]
+ * assertDocumentsInFolder(certificationDocuments, ["State of Mass", "Inbound Documents"]);
+ * //Opens folder located at root/"State of Mass"/"Inbound Documents"
+ */
+export function assertDocumentsInFolder(
+  documentName: string | string[],
+  path: string[]
+): void {
+  selectFolder(path);
+  if (Array.isArray(documentName))
+    return documentName.forEach((name) =>
+      cy.get("#DocumentTypeListviewWidget").should("contain.text", name)
+    );
+  cy.get("#DocumentTypeListviewWidget").should("contain.text", documentName);
+}
+
+/**
+ * Returns claim adjudication status wrapped in Cypress.Chainable.
+ * @returns Adjudication status of the claim
+ * @example
+ * fineos.getClaimStatus().then((status) => {
+ *  if (status === "Approved"){
+ *    //...your code here
+ *  }
+ * }
+ */
+export function getClaimStatus(): Cypress.Chainable<
+  "Adjudication" | "Approved" | "Declined" | "Closed" | "In Review"
+> {
+  return cy.get(".key-info-bar .status dd").invoke("text");
+}

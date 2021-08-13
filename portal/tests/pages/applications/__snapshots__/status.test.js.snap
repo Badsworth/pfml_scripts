@@ -15,5 +15,44 @@ exports[`status page renders the page 1`] = `
   <h1>
     Claim Status Page
   </h1>
+  <Heading
+    level="2"
+  >
+    Manage your application
+  </Heading>
+  <Heading
+    level="3"
+  >
+    Make changes to your application
+  </Heading>
+  <Trans
+    components={
+      Object {
+        "contact-center-phone-link": <a
+          href="tel:(833) 344‑7365"
+        />,
+      }
+    }
+    i18nKey="pages.claimsStatus.makeChangesBody"
+  />
+  <Heading
+    level="3"
+  >
+    Report other benefits or income
+  </Heading>
+  <Trans
+    components={
+      Object {
+        "contact-center-phone-link": <a
+          href="tel:(833) 344‑7365"
+        />,
+        "li": <li />,
+        "ul": <ul
+          className="usa-list"
+        />,
+      }
+    }
+    i18nKey="pages.claimsStatus.reportOtherBenefitsBody"
+  />
 </Fragment>
 `;
