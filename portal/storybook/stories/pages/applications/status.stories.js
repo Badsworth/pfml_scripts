@@ -7,5 +7,10 @@ export default {
 };
 
 export const DefaultStory = () => {
-  return <Status />;
+  const appLogic = {
+    portalFlow: {
+      getNextPageRoute: () => "/storybook-mock",
+    },
+  };
+  return <Status appLogic={appLogic} />;
 };
