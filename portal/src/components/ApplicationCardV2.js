@@ -31,7 +31,7 @@ HeaderSection.propTypes = {
 /**
  * Group together details for status cards
  */
-const TitleAndDetailSection = ({ details, title }) => (
+const TitleAndDetailSectionItem = ({ details, title }) => (
   <div className="padding-2 padding-bottom-1 padding-top-0 margin-top-0">
     <Heading level="4" size="6">
       {title}
@@ -42,7 +42,7 @@ const TitleAndDetailSection = ({ details, title }) => (
   </div>
 );
 
-TitleAndDetailSection.propTypes = {
+TitleAndDetailSectionItem.propTypes = {
   details: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
 };
@@ -142,11 +142,11 @@ const CompletedStatusCard = ({ claim }) => {
   return (
     <React.Fragment>
       <HeaderSection title={leaveReasonText} />
-      <TitleAndDetailSection
+      <TitleAndDetailSectionItem
         title={t("components.applicationCardV2.applicationID")}
         details={claim.fineos_absence_id}
       />
-      <TitleAndDetailSection
+      <TitleAndDetailSectionItem
         title={t("components.applicationCardV2.employerEIN")}
         details={claim.employer_fein}
       />
