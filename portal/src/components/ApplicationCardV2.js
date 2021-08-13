@@ -4,7 +4,6 @@ import routeWithParams, {
 
 import BenefitsApplication from "../models/BenefitsApplication";
 import ButtonLink from "../components/ButtonLink";
-import Document from "../models/Document";
 import Heading from "../components/Heading";
 import Icon from "../components/Icon";
 import LeaveReason from "../models/LeaveReason";
