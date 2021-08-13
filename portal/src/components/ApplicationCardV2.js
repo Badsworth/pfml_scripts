@@ -50,7 +50,7 @@ TitleAndDetailSectionItem.propTypes = {
 /**
  * Button section with top border and optional header text/section
  */
-const GroupButtonSection = ({ buttonText, href, iconComponent = null }) => {
+const ButtonSection = ({ buttonText, href, iconComponent = null }) => {
   return (
     <div className="border-top border-base-lighter padding-2 margin-1 margin-bottom-0">
       <ButtonLink
@@ -64,13 +64,13 @@ const GroupButtonSection = ({ buttonText, href, iconComponent = null }) => {
   );
 };
 
-GroupButtonSection.propTypes = {
+ButtonSection.propTypes = {
   buttonText: PropTypes.string.isRequired,
   href: PropTypes.string.isRequired,
   iconComponent: PropTypes.object,
 };
 
-GroupButtonSection.defaultProps = {
+ButtonSection.defaultProps = {
   iconComponent: null,
 };
 
@@ -151,7 +151,7 @@ const CompletedStatusCard = ({ claim }) => {
         details={claim.employer_fein}
       />
 
-      <GroupButtonSection
+      <ButtonSection
         buttonText={t(
           "components.applicationCardV2.viewStatusUpdatesAndDetails"
         )}
