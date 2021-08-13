@@ -6,8 +6,6 @@
 // Button is imported earlier to more easily override styling.
 @import '../src/components/Button';
 @import 'globals';
-@import 'maintenance';
-@import 'features';
 @import 'page_header';
 @import 'page_sidebar';
 @import 'page_main';
@@ -21,3 +19,5 @@
 @import '../src/components/Tooltip';
 @import '../src/components/Warning';
 @import '../src/components/VerticalMenu';
+@import 'maintenance';
+@import 'features';

@@ -7,7 +7,12 @@
   font-family: inherit;
   font-size: 1em;
   line-height: 1.14;
-  padding: 0.75em;
+  padding: 0.53em 1.09em;
+}
+
+.btn[disabled] {
+  background: $Color-GraniteGray-300;
+  border-color: $Color-GraniteGray-300;
 }
 
 .btn__text {
@@ -28,4 +33,10 @@
   background: $Color-BayBlue-50;
   border-color: $Color-BayBlue-500;
   color: $Color-BayBlue-700;
+}
+
+.btn--cancel[disabled] {
+  background: $Color-GraniteGray-50;
+  border-color: $Color-GraniteGray-300;
+  color: $Color-GraniteGray-400;
 }
