@@ -209,11 +209,6 @@ ApplicationCardV2.propTypes = {
     }),
   }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-};
-
-ApplicationCardV2.defaultProps = {
-  documents: [],
 };
 
 export default ApplicationCardV2;
