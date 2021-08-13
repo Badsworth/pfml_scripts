@@ -121,7 +121,12 @@ export type OtherTasks =
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
 
-export type ClaimStatus = "Adjudication" | "Approved" | "Completed";
+export type ClaimStatus =
+  | "Adjudication"
+  | "Approved"
+  | "Completed"
+  | "Denied"
+  | "In-Progress";
 
 /**
  * @note UTILITY TYPES
@@ -200,3 +205,14 @@ export type ValidClaim = RequireNotNull<
   | "date_of_birth"
   | "leave_details"
 >;
+
+export type DBClaimMetadata = {
+  scenario: Scenarios;
+  claimId: string;
+  fineosAbsenceId: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  environment: string;
+  submittedDate: Date;
+};

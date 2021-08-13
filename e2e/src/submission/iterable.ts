@@ -13,7 +13,7 @@ import * as util from "util";
 import chalk from "chalk";
 import { PostSubmitCallback } from "../scripts/util";
 import delay from "delay";
-import { ClaimModel } from "../../cypress/claims_database/claims/claim.model";
+import ClaimModel from "../../cypress/claims_database/models/claim";
 import * as scenarios from "../scenarios";
 import { Scenarios } from "../../src/types";
 

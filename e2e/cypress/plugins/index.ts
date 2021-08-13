@@ -47,9 +47,48 @@ import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
 import * as postSubmit from "../../src/submission/PostSubmit";
 import pRetry from "p-retry";
 import { disconnectDB, connectDB } from "../claims_database/db";
-import { ClaimModel } from "../claims_database/claims/claim.model";
-import { IClaimDocument } from "../claims_database/claims/claim.types";
-import { submitClaimDirectlyToAPI } from "../actions/portal";
+import ClaimModel, { ClaimDocument } from "../claims_database/models/claim";
+import { extractLeavePeriod } from "../../src/util/claims";
+import { Document as DBDocument } from "mongoose";
+
+async function generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
+  if (!(scenarioID in scenarios)) {
+    throw new Error(`Invalid scenario: ${scenarioID}`);
+  }
+  const scenario = scenarios[scenarioID];
+  const claim = ClaimGenerator.generate(
+    await getEmployeePool(),
+    scenario.employee,
+    scenario.claim as APIClaimSpec
+  );
+  // Dehydrate (save) documents to the temp directory, where they can be picked up later on.
+  // The file for a document is normally a callback function, which cannot be serialized and
+  // sent to the browser using Cypress.
+  return ClaimGenerator.dehydrate(claim, "/tmp");
+}
+
+async function submitClaimToAPI(
+  application: DehydratedClaim & {
+    credentials?: Credentials;
+    employerCredentials?: Credentials;
+  }
+): Promise<ApplicationSubmissionResponse> {
+  const submitter = getPortalSubmitter();
+  if (!application.claim) throw new Error("Application missing!");
+  const { credentials, employerCredentials, ...claim } = application;
+  const { employer_fein } = application.claim;
+  if (!employer_fein) throw new Error("Application is missing employer FEIN");
+  return submitter
+    .submit(
+      await ClaimGenerator.hydrate(claim, "/tmp"),
+      credentials ?? getClaimantCredentials(),
+      employerCredentials ?? getLeaveAdminCredentials(employer_fein)
+    )
+    .catch((err) => {
+      console.error("Failed to submit claim:", err.data);
+      throw new Error(err);
+    });
+}
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
@@ -59,7 +98,6 @@ import { submitClaimDirectlyToAPI } from "../actions/portal";
 export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
   const verificationFetcher = getVerificationFetcher();
   const authenticator = getAuthManager();
-  const submitter = getPortalSubmitter();
   const documentWaiter = new DocumentWaiter(
     config("API_BASEURL"),
     authenticator
@@ -69,7 +107,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
   // Keep a static cache of the SSO login cookies. This allows us to skip double-logins
   // in envrionments that use SSO. Double logins are a side effect of changing the baseUrl.
   let ssoCookies: string;
-
   // Declare tasks here.
   on("task", {
     getAuthVerification: (toAddress: string) => {
@@ -105,28 +142,9 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return true;
     },
 
-    async submitClaimToAPI(
-      application: DehydratedClaim & {
-        credentials?: Credentials;
-        employerCredentials?: Credentials;
-      }
-    ): Promise<ApplicationSubmissionResponse> {
-      if (!application.claim) throw new Error("Application missing!");
-      const { credentials, employerCredentials, ...claim } = application;
-      const { employer_fein } = application.claim;
-      if (!employer_fein)
-        throw new Error("Application is missing employer FEIN");
-      return submitter
-        .submit(
-          await ClaimGenerator.hydrate(claim, "/tmp"),
-          credentials ?? getClaimantCredentials(),
-          employerCredentials ?? getLeaveAdminCredentials(employer_fein)
-        )
-        .catch((err) => {
-          console.error("Failed to submit claim:", err.data);
-          throw new Error(err);
-        });
-    },
+    generateClaim,
+
+    submitClaimToAPI,
 
     async completeSSOLoginFineos(): Promise<string> {
       if (ssoCookies === undefined) {
@@ -143,22 +161,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
 
     waitForClaimDocuments:
       documentWaiter.waitForClaimDocuments.bind(documentWaiter),
-
-    async generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
-      if (!(scenarioID in scenarios)) {
-        throw new Error(`Invalid scenario: ${scenarioID}`);
-      }
-      const scenario = scenarios[scenarioID];
-      const claim = ClaimGenerator.generate(
-        await getEmployeePool(),
-        scenario.employee,
-        scenario.claim as APIClaimSpec
-      );
-      // Dehydrate (save) documents to the temp directory, where they can be picked up later on.
-      // The file for a document is normally a callback function, which cannot be serialized and
-      // sent to the browser using Cypress.
-      return ClaimGenerator.dehydrate(claim, "/tmp");
-    },
 
     async getParsedPDF(filename: string): Promise<pdf.Result> {
       return pdf(fs.readFileSync(filename));
@@ -184,30 +186,60 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return true;
     },
 
-    async getClaimFromDB(spec: Scenarios): Promise<IClaimDocument | undefined> {
-      if (!(spec in scenarios)) {
-        throw new Error(`Invalid scenario: ${spec}`);
+    async getClaimFromDB(
+      spec: Pick<
+        ClaimDocument,
+        Exclude<
+          keyof ClaimDocument,
+          DBDocument<ClaimDocument, unknown, unknown>
+        >
+      >
+    ): Promise<ClaimDocument> {
+      if (!(spec.scenario in scenarios)) {
+        throw new Error(`Invalid scenario: ${spec.scenario}`);
       }
-      const scenario = scenarios[spec];
+      const scenario = scenarios[spec.scenario];
       const { label, leave_dates } = scenario.claim;
       const startDate = leave_dates ? leave_dates[0] : undefined;
       const endDate = leave_dates ? leave_dates[1] : undefined;
-      const claim = await ClaimModel.findOne({
+      let claim = await ClaimModel.findOne({
         scenario: label,
         startDate,
         endDate,
-        clean: true,
+        status: "adjudication",
       });
       if (!claim) {
         // submit to api
-        await submitClaimDirectlyToAPI(label);
-        return;
+        const genApplication = await generateClaim(spec.scenario);
+        const submittedClaim = await submitClaimToAPI(genApplication);
+        const extractLeaveType = (application: DehydratedClaim) => {
+          if (application.claim.has_intermittent_leave_periods)
+            return "intermittent_leave_periods";
+          if (application.claim.has_reduced_schedule_leave_periods)
+            return "reduced_schedule_leave_periods";
+          return "continuous_leave_periods";
+        };
+        const [startDate, endDate] = extractLeavePeriod(
+          genApplication.claim,
+          extractLeaveType(genApplication)
+        );
+        const doc = {
+          scenario: label,
+          claimId: submittedClaim.application_id,
+          fineosAbsenceId: submittedClaim.fineos_absence_id,
+          startDate,
+          endDate,
+          status: "in-progress",
+          environment: config("ENVIRONMENT"),
+          submittedDate: Date.now(),
+        };
+        claim = await ClaimModel.create(doc);
+      } else {
+        claim.status = "in-progress";
+        await claim.save();
       }
-      claim.clean = false;
-      await claim.save();
       return claim;
     },
-
     syslog(arg: unknown | unknown[]): null {
       if (Array.isArray(arg)) {
         console.log(...arg);
