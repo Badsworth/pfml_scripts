@@ -68,8 +68,8 @@ export function before(): void {
 export function visitClaim(claimId: string): void {
   cy.get('a[aria-label="Cases"]').click();
   onTab("Case");
-  cy.labelled("Case Number").type(claimId);
-  cy.labelled("Case Type").select("Absence Case");
+  cy.findByLabelText("Case Number").type(claimId);
+  cy.findByLabelText("Case Type").select("Absence Case");
   cy.get('input[type="submit"][value="Search"]').click();
   assertAbsenceCaseNumber(claimId);
 }
@@ -168,19 +168,19 @@ export function addBondingLeaveFlow(timeStamp: Date): void {
   cy.wait("@ajaxRender");
   cy.wait(200);
   cy.get(".popup-container").within(() => {
-    cy.labelled("Absence status").select("Known");
+    cy.findByLabelText("Absence status").select("Known");
     cy.wait("@ajaxRender");
     cy.wait(200);
     const startDate = addMonths(timeStamp, 2);
     const startDateFormatted = format(startDate, "MM/dd/yyyy");
     const endDateFormatted = format(addDays(startDate, 2), "MM/dd/yyyy");
 
-    cy.labelled("Absence start date").type(
+    cy.findByLabelText("Absence start date").type(
       `{selectall}{backspace}${startDateFormatted}{enter}`
     );
     cy.wait("@ajaxRender");
     cy.wait(200);
-    cy.labelled("Absence end date").type(
+    cy.findByLabelText("Absence end date").type(
       `{selectall}{backspace}${endDateFormatted}{enter}`
     );
     cy.wait("@ajaxRender");
@@ -194,17 +194,17 @@ export function addBondingLeaveFlow(timeStamp: Date): void {
   cy.wait(200);
   // Work Pattern
   cy.get("input[type='checkbox'][id*='standardWorkWeek_CHECKBOX']").click();
-  cy.labelled("Pattern Status").select("Known");
+  cy.findByLabelText("Pattern Status").select("Known");
   clickBottomWidgetButton("Next");
   cy.wait("@ajaxRender");
   cy.wait(200);
   // Complete Details
-  cy.labelled("Primary Relationship to Employee").select("Child");
+  cy.findByLabelText("Primary Relationship to Employee").select("Child");
   cy.wait("@ajaxRender");
   cy.wait(200);
   cy.wait("@ajaxRender");
   cy.wait(200);
-  cy.labelled("Qualifier 1").select("Biological");
+  cy.findByLabelText("Qualifier 1").select("Biological");
   clickBottomWidgetButton("Next");
   // Additional Info
   clickBottomWidgetButton("Next");

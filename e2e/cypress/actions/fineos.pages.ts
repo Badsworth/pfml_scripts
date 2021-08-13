@@ -612,7 +612,7 @@ export class DocumentsPage {
   private startDocumentCreation(documentType: string): void {
     cy.get('input[type="submit"][title="Add Document"]').click();
     onTab("Search");
-    cy.labelled("Business Type").type(`${documentType}{enter}`);
+    cy.findByLabelText("Business Type").type(`${documentType}{enter}`);
     clickBottomWidgetButton();
   }
 
@@ -890,12 +890,12 @@ export class DocumentsPage {
    */
   private fillAccruedLeaveData(leave: ValidConcurrentLeave) {
     // If there's an accrued leave - we just say yes.
-    cy.labelled(
+    cy.findByLabelText(
       "Will you use any employer-sponsored accrued paid leave for a qualifying reason during this leave?"
     ).select("Yes");
-    cy.labelled("Will you use accrued paid leave from this employer?").select(
-      leave.is_for_current_employer ? "Yes" : "No"
-    );
+    cy.findByLabelText(
+      "Will you use accrued paid leave from this employer?"
+    ).select(leave.is_for_current_employer ? "Yes" : "No");
     cy.get(`input[type=text][id$=AccruedStartDate1]`).type(
       `${dateToMMddyyyy(leave.leave_start_date)}{enter}`
     );
@@ -1348,7 +1348,7 @@ class BenefitsExtensionPage {
   }
 
   private enterExtensionLeaveDates(newStartDate: string, newEndDate: string) {
-    cy.labelled("Absence status").select("Known");
+    cy.findByLabelText("Absence status").select("Known");
     cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un19_startDate']").type(
       `{selectall}{backspace}${newStartDate}{enter}`
     );

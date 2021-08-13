@@ -1,17 +1,15 @@
 import { portal } from "../../../actions";
-import { config } from "../../../actions/common";
+import { getClaimantCredentials } from "../../../config";
 
 describe("Submit medical pre-birth application via the web portal", () => {
   it("As a claimant, I should be able to submit a continuous medical pre-birth application through the portal", () => {
     portal.before();
     cy.task("generateClaim", "MED_PRE").then((claim) => {
       cy.stash("claim", claim);
-      const application: ApplicationRequestBody = claim.claim;
+      const application = claim.claim;
       const paymentPreference = claim.paymentPreference;
-      const credentials: Credentials = {
-        username: config("PORTAL_USERNAME"),
-        password: config("PORTAL_PASSWORD"),
-      };
+
+      const credentials = getClaimantCredentials();
       portal.login(credentials);
       portal.goToDashboardFromApplicationsPage();
 
