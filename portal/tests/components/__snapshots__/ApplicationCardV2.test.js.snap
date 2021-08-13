@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ApplicationCardV2 when the claim status is Completed matches existing snapshot 1`] = `
+<Fragment>
+  <aside
+    className="maxw-mobile-lg border-top-1 border-primary"
+  />
+  <article
+    className="maxw-mobile-lg border-left border-right border-bottom border-base-lighter margin-bottom-3"
+  >
+    <StatusCard />
+  </article>
+</Fragment>
+`;
