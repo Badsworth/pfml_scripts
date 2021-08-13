@@ -2376,6 +2376,23 @@ const components = {
     resumeClaimButton: "Continue application",
     uploadDocsButton: "Upload additional documents",
   },
+  applicationCardV2: {
+    applicationID: "Application ID",
+    employerEIN: "Employer Identification Number",
+    heading: "Application {{number}}",
+    leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    manageApplicationDocuments: "Manage your application documents",
+    uploadDocuments: "Upload documents",
+    viewNotices: "View notices",
+    viewStatusUpdatesAndDetails: "View status updates and details",
+  },
   authNav: {
     logOutButton: "Log out",
   },
