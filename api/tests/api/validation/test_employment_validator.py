@@ -1,6 +1,6 @@
 import pytest
 
-from massgov.pfml.api.services.employment_validator import (
+from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail

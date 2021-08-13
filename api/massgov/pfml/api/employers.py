@@ -12,7 +12,7 @@ import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import READ, requires
 from massgov.pfml.api.models.employers.requests import EmployerAddFeinRequest
 from massgov.pfml.api.models.employers.responses import EmployerAddFeinResponse
-from massgov.pfml.api.services.employer_rules import (
+from massgov.pfml.api.validation.employer_rules import (
     EmployerRequiresVerificationDataException,
     validate_employer_being_added,
 )

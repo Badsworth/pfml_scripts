@@ -10,9 +10,9 @@ from sqlalchemy import desc
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
 
 import massgov.pfml.api.app as app
-import massgov.pfml.api.services.application_rules as application_rules
 import massgov.pfml.api.services.applications as applications_service
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.api.validation.application_rules as application_rules
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, can, ensure
@@ -25,9 +25,6 @@ from massgov.pfml.api.models.applications.requests import (
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
 from massgov.pfml.api.services.applications import get_document_by_id
-from massgov.pfml.api.services.employment_validator import (
-    get_contributing_employer_or_employee_issue,
-)
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
     create_other_leaves_and_other_incomes_eforms,
@@ -38,6 +35,9 @@ from massgov.pfml.api.services.fineos_actions import (
     send_to_fineos,
     submit_payment_preference,
     upload_document,
+)
+from massgov.pfml.api.validation.employment_validator import (
+    get_contributing_employer_or_employee_issue,
 )
 from massgov.pfml.api.validation.exceptions import (
     IssueType,

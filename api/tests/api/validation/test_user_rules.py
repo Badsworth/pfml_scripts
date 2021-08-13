@@ -5,12 +5,12 @@ from massgov.pfml.api.models.users.requests import (
     UserCreateRequest,
     UserLeaveAdminRequest,
 )
-from massgov.pfml.api.services.user_rules import (
+from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
+from massgov.pfml.api.validation.user_rules import (
     get_users_convert_employer_issues,
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
-from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.employees import Role
 from massgov.pfml.db.models.factories import (
     ApplicationFactory,

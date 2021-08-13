@@ -13,13 +13,13 @@ from massgov.pfml.api.models.users.requests import (
     UserUpdateRequest,
 )
 from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
-from massgov.pfml.api.services.user_rules import (
+from massgov.pfml.api.util.deepgetattr import deepgetattr
+from massgov.pfml.api.validation.exceptions import IssueType
+from massgov.pfml.api.validation.user_rules import (
     get_users_convert_employer_issues,
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
-from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.api.validation.exceptions import IssueType
 from massgov.pfml.db.models.employees import Employer, Role, User
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404

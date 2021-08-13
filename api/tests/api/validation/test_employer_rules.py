@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from massgov.pfml.api.services.employer_rules import (
+from massgov.pfml.api.validation.employer_rules import (
     EmployerRequiresVerificationDataException,
     validate_employer_being_added,
 )

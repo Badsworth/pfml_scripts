@@ -7,8 +7,8 @@ from sqlalchemy.orm.session import Session
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
-import massgov.pfml.api.services.claim_rules as claim_rules
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.api.validation.claim_rules as claim_rules
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires

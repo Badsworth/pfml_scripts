@@ -5,7 +5,7 @@ from freezegun import freeze_time
 from werkzeug.datastructures import Headers
 
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
-from massgov.pfml.api.services.application_rules import (
+from massgov.pfml.api.validation.application_rules import (
     get_always_required_issues,
     get_conditional_issues,
     get_continuous_leave_issues,

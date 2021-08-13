@@ -4,7 +4,7 @@ import pytest
 
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
-from massgov.pfml.api.services.claim_rules import (
+from massgov.pfml.api.validation.claim_rules import (
     get_employer_benefits_issues,
     get_employer_claim_review_issues,
     get_hours_worked_per_week_issues,
