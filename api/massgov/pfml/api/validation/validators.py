@@ -39,9 +39,6 @@ DefaultsEnforcingDraft4ResponseValidator = extend_with_set_default(Draft4Respons
 
 
 def validate_schema_util(validator_decorator, data, error_message):
-    # Should this header string be defined as a global constant? If so, where?
-    warn_on_required = flask.request.headers.get("X-PFML-Warn-On-Missing-Required-Fields", None)
-
     errors = list(validator_decorator.validator.iter_errors(data))
     if errors:
         error_list = []
@@ -57,26 +54,12 @@ def validate_schema_util(validator_decorator, data, error_message):
                 )
             )
 
-        if warn_on_required:
-            warning_list = list(filter(lambda error: error.type == "required", error_list))
-            error_list = list(filter(lambda error: error.type != "required", error_list))
-
-            flask.request.warning_list = warning_list
-
-            if len(error_list) > 0:
-                invalid_data_payload = data
-                if isinstance(data, dict) and "data" in data:
-                    invalid_data_payload = data["data"]
-                raise ValidationException(
-                    errors=error_list, message=error_message, data=invalid_data_payload
-                )
-        else:
-            invalid_data_payload = data
-            if isinstance(data, dict) and "data" in data:
-                invalid_data_payload = data["data"]
-            raise ValidationException(
-                errors=error_list, message=error_message, data=invalid_data_payload
-            )
+        invalid_data_payload = data
+        if isinstance(data, dict) and "data" in data:
+            invalid_data_payload = data["data"]
+        raise ValidationException(
+            errors=error_list, message=error_message, data=invalid_data_payload
+        )
 
 
 class CustomParameterValidator(ParameterValidator):
