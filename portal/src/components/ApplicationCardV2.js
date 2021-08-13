@@ -12,7 +12,6 @@ import React from "react";
 import findKeyByValue from "../utils/findKeyByValue";
 import { useTranslation } from "../locales/i18n";
 
-// REUSABLE STATUS CARD SECTIONS
 /**
  * Main header for the top of status cards
  * @param {string} title - Title of the status card
@@ -36,9 +35,7 @@ const TitleAndDetailSectionItem = ({ details, title }) => (
     <Heading level="4" size="6">
       {title}
     </Heading>
-    <Heading className="margin-bottom-1 margin-top-1" level="4">
-      {details}
-    </Heading>
+    <p className="margin-bottom-05 margin-top-05 text-bold">{details}</p>
   </div>
 );
 
@@ -119,7 +116,6 @@ ManageDocumentSection.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
-// STATUS CARDS
 /**
  * Status card for claim.status = "Completed"
  */
@@ -201,12 +197,6 @@ export const ApplicationCardV2 = (props) => {
 };
 
 ApplicationCardV2.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    documents: PropTypes.shape({
-      download: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 

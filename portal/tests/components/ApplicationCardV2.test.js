@@ -23,10 +23,12 @@ describe("ApplicationCardV2", () => {
     return shallow(<ApplicationCardV2 claim={claim} number={2} {...props} />);
   };
 
-  describe("when the claim status is Completed", () => {
-    it("matches existing snapshot", () => {
-      const wrapper = render(new MockBenefitsApplicationBuilder().create());
-      expect(wrapper).toMatchSnapshot();
+  describe("claim statuses match snapshots", () => {
+    it("completed status matches its snapshot", () => {
+      const wrapper = render(
+        new MockBenefitsApplicationBuilder().completed().create()
+      );
+      expect(wrapper.find("StatusCard").dive()).toMatchSnapshot();
     });
   });
 });

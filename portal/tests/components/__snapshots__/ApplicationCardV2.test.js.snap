@@ -1,14 +1,123 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ApplicationCardV2 when the claim status is Completed matches existing snapshot 1`] = `
-<Fragment>
-  <aside
-    className="maxw-mobile-lg border-top-1 border-primary"
-  />
-  <article
-    className="maxw-mobile-lg border-left border-right border-bottom border-base-lighter margin-bottom-3"
-  >
-    <StatusCard />
-  </article>
-</Fragment>
+exports[`ApplicationCardV2 claim statuses match snapshots completed status matches its snapshot 1`] = `
+<CompletedStatusCard
+  appLogic={
+    Object {
+      "appErrors": AppErrorInfoCollection {
+        "items": Array [],
+        "itemsById": Object {},
+      },
+      "documents": Object {
+        "download": [MockFunction],
+      },
+    }
+  }
+  claim={
+    BenefitsApplication {
+      "application_id": "mock_application_id",
+      "concurrent_leave": null,
+      "created_at": null,
+      "date_of_birth": "****-07-17",
+      "employer_benefits": Array [],
+      "employer_fein": "12-3456789",
+      "employment_status": "Employed",
+      "fineos_absence_id": "NTN-111-ABS-01",
+      "first_name": "Jane",
+      "gender": "Woman",
+      "has_concurrent_leave": false,
+      "has_continuous_leave_periods": true,
+      "has_employer_benefits": false,
+      "has_intermittent_leave_periods": null,
+      "has_mailing_address": false,
+      "has_other_incomes": false,
+      "has_previous_leaves_other_reason": false,
+      "has_previous_leaves_same_reason": false,
+      "has_reduced_schedule_leave_periods": null,
+      "has_state_id": true,
+      "has_submitted_payment_preference": true,
+      "hours_worked_per_week": 30,
+      "last_name": "Doe",
+      "leave_details": Object {
+        "caring_leave_metadata": null,
+        "child_birth_date": null,
+        "child_placement_date": null,
+        "continuous_leave_periods": Array [
+          ContinuousLeavePeriod {
+            "end_date": "2021-06-01",
+            "leave_period_id": "mock-leave-period-id",
+            "start_date": "2021-01-01",
+          },
+        ],
+        "employer_notification_date": "2021-01-01",
+        "employer_notified": true,
+        "has_future_child_date": null,
+        "pregnant_or_recent_birth": null,
+        "reason": "Serious Health Condition - Employee",
+        "reason_qualifier": null,
+      },
+      "mailing_address": null,
+      "mass_id": "*********",
+      "middle_name": "",
+      "other_incomes": Array [],
+      "payment_preference": Object {
+        "account_number": "091000022",
+        "bank_account_type": "Checking",
+        "payment_method": "Elec Funds Transfer",
+        "routing_number": "1234567890",
+      },
+      "phone": Object {
+        "int_code": null,
+        "phone_number": "123-456-****",
+        "phone_type": "Cell",
+      },
+      "previous_leaves_other_reason": Array [],
+      "previous_leaves_same_reason": Array [],
+      "residential_address": Address {
+        "city": "Boston",
+        "line_1": "1234 My St.",
+        "line_2": null,
+        "state": "MA",
+        "zip": "00000",
+      },
+      "status": "Completed",
+      "tax_identifier": "***-**-****",
+      "work_pattern": WorkPattern {
+        "work_pattern_days": Array [
+          WorkPatternDay {
+            "day_of_week": "Sunday",
+            "minutes": null,
+          },
+          WorkPatternDay {
+            "day_of_week": "Monday",
+            "minutes": null,
+          },
+          WorkPatternDay {
+            "day_of_week": "Tuesday",
+            "minutes": null,
+          },
+          WorkPatternDay {
+            "day_of_week": "Wednesday",
+            "minutes": null,
+          },
+          WorkPatternDay {
+            "day_of_week": "Thursday",
+            "minutes": null,
+          },
+          WorkPatternDay {
+            "day_of_week": "Friday",
+            "minutes": null,
+          },
+          WorkPatternDay {
+            "day_of_week": "Saturday",
+            "minutes": null,
+          },
+        ],
+        "work_pattern_type": "Fixed",
+      },
+    }
+  }
+  documents={Array []}
+  number={2}
+/>
 `;
