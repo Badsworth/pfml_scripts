@@ -1,6 +1,8 @@
 # Feature flags
 
-[Original tech spec for feature flags is available on Confluence](https://lwd.atlassian.net/wiki/x/4oAPD)
+[Original tech spec for feature flags is available on Confluence](https://lwd.atlassian.net/wiki/x/4oAPD). 
+
+Note that a seperate system is currently maintained for maintenance pages; see [Maintenance Pages](./maintenance-pages.md) and [Feature Gate Flags](../../feature_flags/).
 
 ## Defining feature flags
 
